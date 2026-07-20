@@ -88,10 +88,7 @@ TreeVerify_Batch_4x4 PROC FRAME
     kmovw   k1, eax
     
     ; K2 = validity mask (which candidates exist in tree)
-    movzx   eax, byte ptr [r12]
-    movzx   edx, byte ptr [r12+1]
-    shl     edx, 8
-    or      eax, edx
+    movzx   eax, word ptr [r12]
     kmovw   k2, eax
     
     ;------------------------------------------------------------------------
@@ -112,34 +109,31 @@ TreeVerify_Batch_4x4 PROC FRAME
     
     ; Horizontal sum using AVX-512 reduction
     ; zmm4 = sum of all elements in zmm4
-    vpermpd zmm8, zmm4, 78
+    vpermpd zmm8, zmm4, 0x4E
     vaddps  zmm4, zmm4, zmm8
-    vpermpd zmm8, zmm4, 177
+    vpermpd zmm8, zmm4, 0xB1
     vaddps  zmm4, zmm4, zmm8
     
-    vpermpd zmm8, zmm5, 78
+    vpermpd zmm8, zmm5, 0x4E
     vaddps  zmm5, zmm5, zmm8
-    vpermpd zmm8, zmm5, 177
+    vpermpd zmm8, zmm5, 0xB1
     vaddps  zmm5, zmm5, zmm8
     
-    vpermpd zmm8, zmm6, 78
+    vpermpd zmm8, zmm6, 0x4E
     vaddps  zmm6, zmm6, zmm8
-    vpermpd zmm8, zmm6, 177
+    vpermpd zmm8, zmm6, 0xB1
     vaddps  zmm6, zmm6, zmm8
     
-    vpermpd zmm8, zmm7, 78
+    vpermpd zmm8, zmm7, 0x4E
     vaddps  zmm7, zmm7, zmm8
-    vpermpd zmm8, zmm7, 177
+    vpermpd zmm8, zmm7, 0xB1
     vaddps  zmm7, zmm7, zmm8
     
     ; Extract scalar scores and broadcast
     vbroadcastss zmm16, xmm4            ; Candidate 0 score
     vbroadcastss zmm17, xmm5            ; Candidate 1 score
-    ; Extract lanes for candidates 2,3
-    vextractf32x4 xmm8, zmm6, 0
-    vextractf32x4 xmm9, zmm7, 0
-    vbroadcastss zmm18, xmm8            ; Candidate 2 score
-    vbroadcastss zmm19, xmm9            ; Candidate 3 score
+    vbroadcastss zmm18, zmm6{cdab}      ; Candidate 2 score
+    vbroadcastss zmm19, zmm7{cdab}      ; Candidate 3 score
     
     ;------------------------------------------------------------------------
     ; Phase 4: Apply Tree Mask (branchless)
@@ -192,20 +186,16 @@ TreeVerify_Batch_4x4 PROC FRAME
     
     ; Compare: target_prob < draft_prob * 0.6
     vmulps  zmm26, zmm24, zmm25
-    vcmpltps k3, zmm26, zmm16    ; k3 = 1 where draft*0.6 < target (accept)
+    vcmpltps k3, zmm16, zmm26
     
-    ; Combine with validity mask
-    kandw   k4, k3, k2
-    kmovw   k1, k4
+    ; Invert to get acceptance
+    knotw   k4, k3
+    kandw   k1, k4, k2
     
     ;------------------------------------------------------------------------
     ; Phase 7: Immediate KV Cache Invalidation (BRANCHLESS)
     ;------------------------------------------------------------------------
-    ; K5 = rejected (inverted K1)
-    mov     edx, 0xFFFF
-    kmovw   eax, k1
-    xor     eax, edx
-    kmovw   k5, eax             ; K5 = rejected
+    knotw   k5, k1              ; K5 = rejected
     
     ; Zero out rejected entries (if KV cache pointer provided)
     mov     rax, [r12+192]      ; KV cache base from tree mask
@@ -224,9 +214,8 @@ SkipInvalidation:
     mov     [r13], ax
     
     ; Return rejection mask (inverted acceptance)
-    mov     edx, 0xFFFF
-    kmovw   eax, k1
-    xor     eax, edx          ; Invert to get rejection mask
+    knotw   k6, k1
+    kmovw   eax, k6
     and     eax, 0xFFFF
     
     ; Cleanup and return

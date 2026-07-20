@@ -31,18 +31,23 @@ struct KVCacheConfig {
     static constexpr uint32_t ALIGNMENT = 64;  // AVX-512 alignment
     
     // Prefetch distance (tokens ahead to prefetch)
-    static constexpr uint32_t PREFETCH_DISTANCE = 4;
+    // Set to 0 to disable prefetch for baseline testing
+    static constexpr uint32_t PREFETCH_DISTANCE = 0;
     
     // Calculate sizes with guaranteed 64-byte alignment
+    // Layout: [head][token][K/V][dim]
+    // Each head has max_seq_len tokens, each token has K+V (2*head_dim floats)
     size_t GetTokenStride() const {
-        // [head][K/V][head_dim] per token
-        size_t raw_size = num_heads * 2 * head_dim * sizeof(float);
-        // Round up to nearest cache line (64 bytes)
+        // In [head][token][K/V][dim] layout, tokens within a head are contiguous
+        // Each token = K + V = 2 * head_dim floats
+        size_t raw_size = 2 * head_dim * sizeof(float);
+        // Ensure 64-byte alignment for each token
         return (raw_size + CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1);
     }
     
     size_t GetTotalSize() const {
-        return max_seq_len * GetTokenStride();
+        // Total = num_heads * max_seq_len * token_stride
+        return static_cast<size_t>(num_heads) * max_seq_len * GetTokenStride();
     }
     
     size_t GetLayerSize() const {
@@ -51,16 +56,21 @@ struct KVCacheConfig {
     
     // Validate alignment for given dimensions
     bool IsAligned() const {
-        size_t head_kv_size = 2 * head_dim * sizeof(float);  // K+V per head
-        size_t token_stride = num_heads * head_kv_size;
-        return (token_stride % CACHE_LINE_SIZE) == 0;
+        // In [head][token][K/V][dim] layout, each token is 2*head_dim floats
+        size_t token_size = 2 * head_dim * sizeof(float);
+        return (token_size % CACHE_LINE_SIZE) == 0;
     }
     
     // Get padding bytes per token
     size_t GetTokenPadding() const {
-        size_t raw_size = num_heads * 2 * head_dim * sizeof(float);
+        size_t raw_size = 2 * head_dim * sizeof(float);  // K+V per token
         size_t aligned_size = GetTokenStride();
-        return aligned_size - raw_size;
+        return (aligned_size > raw_size) ? (aligned_size - raw_size) : 0;
+    }
+
+    // Get the size of data per token (K+V)
+    size_t GetTokenDataSize() const {
+        return 2 * head_dim * sizeof(float);
     }
 };
 
@@ -196,15 +206,18 @@ private:
 inline size_t OptimizedKVCache::CalculateOffset(uint32_t token_idx, 
                                                 uint32_t head_idx, 
                                                 bool is_k) const {
-    // Layout: [token][head][K/V][dim]
-    // Offset = token * (num_heads * 2 * head_dim) 
-    //        + head * (2 * head_dim)
+    // Layout: [head][token][K/V][dim] - OPTIMIZED FOR ATTENTION
+    // In attention, we access ALL tokens for a SPECIFIC head sequentially
+    // This layout puts all tokens for a head contiguous in memory
+    //
+    // Offset = head * (max_seq_len * 2 * head_dim)
+    //        + token * (2 * head_dim)
     //        + (is_k ? 0 : head_dim)
     
-    const size_t token_stride = m_config.num_heads * 2 * m_config.head_dim;
-    const size_t head_stride = 2 * m_config.head_dim;
+    const size_t head_stride = m_config.max_seq_len * 2 * m_config.head_dim;
+    const size_t token_stride = 2 * m_config.head_dim;
     
-    return token_idx * token_stride + head_idx * head_stride + (is_k ? 0 : m_config.head_dim);
+    return head_idx * head_stride + token_idx * token_stride + (is_k ? 0 : m_config.head_dim);
 }
 
 inline float* OptimizedKVCache::GetK(uint32_t token_idx, uint32_t head_idx) {
@@ -212,12 +225,14 @@ inline float* OptimizedKVCache::GetK(uint32_t token_idx, uint32_t head_idx) {
     
     size_t offset = CalculateOffset(token_idx, head_idx, true);
     
-    // Prefetch next tokens
+    // Prefetch ahead to L2 (not L1) to avoid cache pollution
+    // T1 brings to L2, T0 brings to L1. For sequential access, L2 is better.
     if (m_config.PREFETCH_DISTANCE > 0) {
         uint32_t next_token = token_idx + m_config.PREFETCH_DISTANCE;
         if (next_token < m_config.max_seq_len) {
             size_t prefetch_offset = CalculateOffset(next_token, head_idx, true);
             _mm_prefetch((const char*)(m_data + prefetch_offset), _MM_HINT_T1);
+            m_prefetch_count++;
         }
     }
     
@@ -235,12 +250,13 @@ inline float* OptimizedKVCache::GetV(uint32_t token_idx, uint32_t head_idx) {
     
     size_t offset = CalculateOffset(token_idx, head_idx, false);
     
-    // Prefetch next tokens
+    // Prefetch ahead to L2 (not L1) to avoid cache pollution
     if (m_config.PREFETCH_DISTANCE > 0) {
         uint32_t next_token = token_idx + m_config.PREFETCH_DISTANCE;
         if (next_token < m_config.max_seq_len) {
             size_t prefetch_offset = CalculateOffset(next_token, head_idx, false);
             _mm_prefetch((const char*)(m_data + prefetch_offset), _MM_HINT_T1);
+            m_prefetch_count++;
         }
     }
     

@@ -90,18 +90,18 @@ OptimizedKVCache& OptimizedKVCache::operator=(OptimizedKVCache&& other) noexcept
 void OptimizedKVCache::PrefetchTokens(uint32_t start_token, uint32_t num_tokens) const {
     if (!m_data) return;
     
-    // Prefetch tokens for all heads
+    // Prefetch tokens for all heads to L2 (not L1) to avoid cache pollution
     for (uint32_t t = 0; t < num_tokens && (start_token + t) < m_config.max_seq_len; ++t) {
         uint32_t token_idx = start_token + t;
         
         for (uint32_t h = 0; h < m_config.num_heads; ++h) {
-            // Prefetch K
+            // Prefetch K to L2
             size_t k_offset = CalculateOffset(token_idx, h, true);
-            _mm_prefetch((const char*)(m_data + k_offset), _MM_HINT_T0);
+            _mm_prefetch((const char*)(m_data + k_offset), _MM_HINT_T1);
             
-            // Prefetch V
+            // Prefetch V to L2
             size_t v_offset = CalculateOffset(token_idx, h, false);
-            _mm_prefetch((const char*)(m_data + v_offset), _MM_HINT_T0);
+            _mm_prefetch((const char*)(m_data + v_offset), _MM_HINT_T1);
         }
     }
     

@@ -273,15 +273,18 @@ TreeAttention_AVX512_Forward ENDP
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Parameters: RCX=Q, RDX=K, R8=V, R9=output, [RSP+0x28]=tree_mask, [RSP+0x30]=num_nodes, [RSP+0x38]=head_dim
 ; ═══════════════════════════════════════════════════════════════════════════════
-TreeAttention_AVX512 PROC
-    ; Minimal prologue
+TreeAttention_AVX512 PROC FRAME
+    ; Prologue with unwind info
     push    rbp
+    .pushreg rbp
     mov     rbp, rsp
+    .setframe rbp, 0
+    .endprolog
     
     ; Just return - no computation
     ; This validates the calling convention works
     
-    ; Minimal epilogue
+    ; Epilogue
     pop     rbp
     ret
 TreeAttention_AVX512 ENDP

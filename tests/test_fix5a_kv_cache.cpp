@@ -96,11 +96,11 @@ BenchmarkMetrics BenchmarkCacheAccessWithMetrics(OptimizedKVCache& cache, const 
                                                   uint32_t seq_len, uint32_t num_iterations = 1000) {
     BenchmarkMetrics metrics = {};
     
-    // Warmup
+    // Warmup - use optimized access pattern
     volatile float sum = 0;
     for (int i = 0; i < 100; ++i) {
-        for (uint32_t t = 0; t < std::min(seq_len, 100u); ++t) {
-            for (uint32_t h = 0; h < config.num_heads; ++h) {
+        for (uint32_t h = 0; h < config.num_heads; ++h) {
+            for (uint32_t t = 0; t < std::min(seq_len, 100u); ++t) {
                 float* k = cache.GetK(t, h);
                 float* v = cache.GetV(t, h);
                 if (k && v) {
@@ -116,9 +116,10 @@ BenchmarkMetrics BenchmarkCacheAccessWithMetrics(OptimizedKVCache& cache, const 
     auto start = std::chrono::high_resolution_clock::now();
     
     for (uint32_t iter = 0; iter < num_iterations; ++iter) {
-        // Simulate attention pattern: sequential token access
-        for (uint32_t t = 0; t < seq_len; ++t) {
-            for (uint32_t h = 0; h < config.num_heads; ++h) {
+        // OPTIMIZED: Iterate heads first, then tokens for [head][token][K/V][dim] layout
+        // This provides sequential memory access within each head
+        for (uint32_t h = 0; h < config.num_heads; ++h) {
+            for (uint32_t t = 0; t < seq_len; ++t) {
                 float* k = cache.GetK(t, h);
                 float* v = cache.GetV(t, h);
                 if (k && v) {
@@ -245,11 +246,12 @@ int main(int argc, char* argv[]) {
     std::cout << "  Window Size: " << config.window_size << std::endl;
     std::cout << std::endl;
     
-    // Check alignment
-    size_t raw_token = config.num_heads * 2 * config.head_dim * sizeof(float);
+    // Check alignment - [head][token][K/V][dim] layout
+    size_t raw_token = 2 * config.head_dim * sizeof(float);  // K+V per token
     size_t aligned_token = config.GetTokenStride();
+    size_t padding = (aligned_token > raw_token) ? (aligned_token - raw_token) : 0;
     std::cout << "Token Stride: " << aligned_token << " bytes (raw: " << raw_token 
-              << ", padding: " << (aligned_token - raw_token) << ")" << std::endl;
+              << ", padding: " << padding << ")" << std::endl;
     std::cout << "Alignment: " << (config.IsAligned() ? "PERFECT" : "PADDED") << std::endl;
     std::cout << std::endl;
     

@@ -8463,6 +8463,17 @@ build CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GhostText.cpp.obj: CX
   TARGET_PDB = bin\RawrXD-Win32IDE.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\RawrXD-Win32IDE.dir
 
+build CMakeFiles\RawrXD-Win32IDE.dir\src\ide\SovereignSharedMemoryBridge.cpp.obj: CXX_COMPILER__RawrXD-Win32IDE_unscanned_Release D$:\rawrxd\src\ide\SovereignSharedMemoryBridge.cpp || cmake_object_order_depends_target_RawrXD-Win32IDE
+  CONFIG = Release
+  DEFINES = -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=1 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=0 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_QUICKJS_STUB=0 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W0 /arch:AVX2 /Zi /O2
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\Ship -ID:\rawrxd\include -ID:\rawrxd\external\rawr_infra\Headers -ID:\rawrxd\external\rawr_infra\Source -ID:\rawrxd\src -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\server -ID:\rawrxd\src\agent -ID:\rawrxd\src\agentic -ID:\rawrxd\src\cli -ID:\rawrxd\src\win32app -ID:\rawrxd\src\modules -ID:\rawrxd\src\utils -ID:\rawrxd\src\config -ID:\rawrxd\src\asm -ID:\rawrxd\src\lsp -ID:\rawrxd\src\plugin_system -ID:\rawrxd\src\ide -ID:\rawrxd\src\llm_adapter -ID:\rawrxd\src\auth -ID:\rawrxd\src\context -ID:\rawrxd\src\multimodal_engine -ID:\rawrxd\src\telemetry -ID:\rawrxd\src\ui -ID:\rawrxd\src\git -ID:\rawrxd\3rdparty\quickjs_ng -ID:\rawrxd\src\reverse_engineering -ID:\rawrxd\src\reverse_engineering\pe_tools -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:IC:\VulkanSDK\1.4.328.1\include -external:W0
+  OBJECT_DIR = CMakeFiles\RawrXD-Win32IDE.dir
+  OBJECT_FILE_DIR = CMakeFiles\RawrXD-Win32IDE.dir\src\ide
+  TARGET_COMPILE_PDB = bin\RawrXD-Win32IDE.pdb
+  TARGET_PDB = bin\RawrXD-Win32IDE.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\RawrXD-Win32IDE.dir
+
 build CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_OutlinePanel.cpp.obj: CXX_COMPILER__RawrXD-Win32IDE_unscanned_Release D$:\rawrxd\src\win32app\Win32IDE_OutlinePanel.cpp || cmake_object_order_depends_target_RawrXD-Win32IDE
   CONFIG = Release
   DEFINES = -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_DISABLE_DUPLICATE_SHIMS=1 -DRAWRXD_HAS_MW_KERNEL=1 -DRAWRXD_HAS_PROMPT_ENGINE=1 -DRAWRXD_HAS_SOVEREIGN_GPU_ASM=0 -DRAWRXD_INFRA_AVAILABLE=1 -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_MASM_GLOBALS_LINKED=1 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWRXD_USE_DEDICATED_CODELENS=1 -DRAWRXD_USE_DEDICATED_HOVER=1 -DRAWRXD_USE_DEDICATED_INLAY=1 -DRAWRXD_USE_DEDICATED_MINIMAP=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_MODEL_ANATOMY=1 -DRAWR_HAS_QUICKJS=1 -DRAWR_HAS_RAWR_INFERENCE=0 -DRAWR_HAS_SOVEREIGN_ENGINES=0 -DRAWR_HAS_VULKAN=1 -DRAWR_QUICKJS_STUB=0 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
@@ -13951,7 +13962,7 @@ build CMakeFiles\RawrXD-Win32IDE.dir\src\asm\diff_engine.asm.obj: ASM_MASM_COMPI
 #############################################
 # Link the executable bin\RawrXD-Win32IDE.exe
 
-build bin\RawrXD-Win32IDE.exe: CXX_EXECUTABLE_LINKER__RawrXD-Win32IDE_Release CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_agent_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_autonomous_todo_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_multi_model_agent_cycling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_dynamic_time_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_missing_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_production_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\RawrXD_MainLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\webview2_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\debugger_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\agentic_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\RawrXD-Win32IDE.rc.res CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\Win32SwarmBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\SwarmIATRegistration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\UnifiedModelMetadata.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\subagent_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\SubAgentManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\RobustOllamaParser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\ErrorRecoveryManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gpu\speculative_decoder_v2.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\MemoryPressureGuard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\gpu_dispatch_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\brutal_gzip.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\gzip_brutal_inflate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\webview2_masm64_dispatcher.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CoreRuntimeSpine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Commands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\WindowManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\EditorOperations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\RouterOperations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Watchdog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SyntaxHighlight.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VisionEncoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Themes.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_StreamingUX.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Sidebar.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Debugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousDebugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Annotations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ReverseEngineering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\FullAgenticIDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\AgenticPlanningOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\AgenticIOCPBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TabManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Settings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousCommunicator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticComposerUX.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ContextMentionParser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_UnifiedTelemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Autonomy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PowerShell.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Session.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FileOps.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DecompilerView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NativePipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ModelAnatomy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\Ship\RawrXD_AutonomousAgenticPipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\Ship\RawrXD_AgentCoordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FeatureManifest.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GhostText.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_OutlinePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_RenamePreview.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier2Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier1Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Breadcrumbs.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PlanExecutor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_planning_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\failure_intelligence_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_orchestrator_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_audit_sink.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\change_impact_analyzer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticPlanningPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FailureDetector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FailureIntelligence.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LocalServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_BackendSwitcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AIBackend.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LLMRouter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSPClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PeekOverlay.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CaretAnimation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentOllamaClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ModelDiscovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SwarmModelSelector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AsmSemantic.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSP_AI_Bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MultiResponse.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ExecutionGovernor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LayerEviction.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SemanticIndexShim.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SubAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentHistory.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DiskRecovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32TerminalManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\TransparentRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\plugin_system\win32_plugin_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Plugins.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HandleExtensionCommand.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\config\IDEConfig.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\QuantBackend.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\GGUFRunner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\gguf_k_quants.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\auth\QuantumAuthUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentToolHandlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\BoundedAgentLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\OllamaProvider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiffEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DeterministicReplayEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_recovery_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgenticDeepThinkingEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\OrchestratorBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgenticNavigator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\ToolRegistry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\RawrXD_AgentLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_executor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\FIMPromptBuilder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_observability.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_subsystem_api.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tool_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\telemetry_collector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_repair_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agent_memory_indexer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_transaction.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agent_workflow_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\symbol_graph_indexer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\semantic_code_search.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\multi_file_reasoning.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\workspace_embeddings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\repo_refactor_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\DiskRecoveryAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiskRecoveryAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiskRecoveryToolHandler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_history.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_policy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_explainability.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\utils\ErrorReporter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\logging\Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\InputSanitizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ConfigurationValidator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\PerformanceMonitor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_inference.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_model_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_transformer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_tokenizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_sampler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\engine_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cpu_inference_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gguf_swarm_plan_builder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\memory_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\hot_patcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\streaming_gguf_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\utils\Diagnostics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gguf_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gguf_vocab_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_source_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\compression_interface.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\inference_kernels.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\transformer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\bpe_tokenizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\sampler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\core_generator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\pyre_compute.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\streaming_engine_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gpu_backend_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_license.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_licensev2_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_devunlock_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\monolithic_heap_globals.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tools\license_validator_manifest.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\license_anti_tampering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\camellia256_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\watchdog_service.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\flash_attention.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\execution_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\execution_governor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\multi_gpu.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agent_safety_contract.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\deterministic_replay.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\confidence_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\layer_offload_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_speed_layer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\local_ai_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_inference_pipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\70b_gguf_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\governor_throttling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_worker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SwarmPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DualAgentPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_debugger_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_debugger_symbols.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NativeDebugPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_memory_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\byte_level_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_hotpatch_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\proxy_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_bruteforce_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\server\gguf_server_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pt_driver_contract.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\shadow_page_detour.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sentinel_watchdog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HotpatchPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_hotpatch_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\llm_http_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\model_invoker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\planner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\meta_planner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\eval_framework.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\autonomous_subagent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_failure_detector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_deep_thinking_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_puppeteer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cloud_api_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\local_reasoning_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agent_self_repair.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agent_self_healing_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\vsix_loader_win32.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\codex_ultimate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\vscode_extension_api.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VSCodeExtAPI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_decision_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\universal_model_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\production_release.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quantum_safe_transport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\adaptive_pipeline_parallel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\universal_model_merger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\webrtc_signaling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gpu_kernel_autotuner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sandbox_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\amd_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_memory_executor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_runtime_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\intel_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\arm64_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cerebras_wse_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\accelerator_router.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_gsi_hash.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_reference_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_WebView2.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\AgenticBrowserLayer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticBrowser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MonacoThemes.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\RawrXD_LSPServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSPServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\lsp_hotpatch_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\hotpatch_symbol_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\gguf_diagnostic_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\MonacoCoreEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\WebView2EditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\RichEditEditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\EditorEngineFactory.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_native.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_lsp_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PDBSymbols.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\menu_auditor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_discovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AuditDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\final_gauntlet.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Gauntlet.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\voice_chat.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\voice_automation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VoiceChat.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VoiceAutomation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\shortcut_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\backup_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\alert_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_QuickWins.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_registration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\intent_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_training_pipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_trainer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentOllamaClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\hotpatch\Engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\observability\Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AdvancedAgentCoordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\autonomous_agentic_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_gguf_loader_link_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\compression.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_handlers_ext_isolated.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\v280_link_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_validation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_command_dispatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\startup_phase_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrengine_command_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\jsonrpc_parser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cli\swarm_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\chain_of_thought_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Telemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\mcp_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MCP.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FlightRecorder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_extension_host.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_vscode_bindings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_state_mmf.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\js_extension_host.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\extension_polyfill_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\vulkan_compute.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\live_binary_patcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\deterministic_swarm.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\input_guard_slicer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_agent_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\production_config_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agentic_task_graph.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\embedding_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vector_index.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_token_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_embedding_cache.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_kv_isolation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_quantized_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_gpu_staging.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\marketplace\extension_marketplace.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\auth\rbac_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_loop_state.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\transaction_journal.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\instructions_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Instructions.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\unity_engine_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\unreal_engine_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\game_engine_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GameEnginePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\crucible_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CruciblePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\copilot_gap_closer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CopilotGapPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\distributed_pipeline_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PipelinePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\hotpatch_control_plane.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HotpatchCtrlPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\static_analysis_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\code_linter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\diagnostic_consumer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_StaticAnalysisPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ProblemsPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_BuildRunner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SecurityScans.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\problems_panel_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\problems_aggregator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\secrets_scanner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\sast_rule_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\dependency_audit.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentStreamingBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\semantic_code_intelligence.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SemanticPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_telemetry_compliance.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier3Polish.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier3Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier5Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CrashReporter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ColorPicker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EmojiSupport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ShortcutEditor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MarketplacePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Collab.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IRCBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IRCBridgeCommands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\collab\websocket_hub.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TestExplorerTree.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NetworkPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\omega_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\omega_asm_native_kernel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\mesh_brain.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\speciator_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\neural_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\self_host_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\hardware_synthesizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\transcendence_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\integrated_runtime.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\reasoning_profile.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\VulkanRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\OSExplorerInterceptor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MCPHooks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\TodoManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\IocpFileWatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\IDEDiagnosticAutoHealer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ConsentPrompt.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\AutonomousAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\chat_message_renderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\tool_action_status.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\chat_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\crash_containment.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\patch_rollback_ledger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quant_hysteresis.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\perf_telemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\update_signature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cursor_github_parity_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_reconciliation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quickjs_sandbox.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\plugin_signature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_update_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_verification_loop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_background_daemon.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sqlite3.c.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\knowledge_graph_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_conflict_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\autonomous_debugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_communicator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\UnifiedTelemetryCore.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\telemetry_export.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_composer_ux.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\context\context_mention_parser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\multimodal_engine\vision_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\refactoring_plugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\language_plugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\context\semantic_index.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\resource_generator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CursorParity.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GUILayoutHotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tasks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GitPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Refactor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SearchPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FuzzySearch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Minimap.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DiffView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SettingsGUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CodeLens.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_InlayHints.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HoverTooltips.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ProvableAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AIReverseEngineering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AirgappedEnterprise.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FlagshipFeatures.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\project_context.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\universal_model_router.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_name_utils.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\checkpoint_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agentic_autonomous_config.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_feature_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\context_deterioration_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\interpretability_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\real_time_completion_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\LanguageServerIntegration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\interpretability_panel_enhanced.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\feature_registry_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\autonomous_feature_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\autonomous_intelligence_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\plan_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tool_registry_advanced.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\intelligent_codebase_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai_model_caller.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\hybrid_cloud_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\benchmark_menu_widget.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\benchmark_runner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\feature_registry_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\monaco_settings_dialog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\thermal\RAWRXD_ThermalDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\VSCodeMarketplaceAPI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\multi_file_search.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\license_manager_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LicenseCreator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\license_enforcement.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\feature_flags_runtime.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PeekView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutoSave.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TerminalSplit.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SnippetEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MultiCursor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\local_parity_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\json_instantiations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cot_fallback_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_loader_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_native_log_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\ggufrunner_link_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\gguf_d3d12_bridge_link_fallback.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\collab_cursor_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\rtp_protocol_fallback.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_node_shims.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ai_workers_queue.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\ImportBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\ExportBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\terminal\embedded_terminal.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\sovereign_gpu_link_stubs.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ai_agent_masm_core_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TranscendencePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatMessageRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ToolActionStatus.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatPanel_Ollama.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VulkanRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_OSExplorerInterceptor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IOCPFileWatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IDEDiagnosticAutoHealer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ConsentPrompt.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PerfTelemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_UpdateSignature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PluginSignature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EnterpriseStressTests.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SQLite3Core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryExport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_RefactoringPlugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LanguagePlugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ResourceGenerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_surface\RuntimeSurfaceModule.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_surface\GenerationStopwatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\memory\UnifiedMemoryPool.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\InferenceProfiler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\BackendOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_ring_allocator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\autonomous_workflow_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\workspace_reasoning_profiles.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\reasoning_schema_versioning.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\safe_refactor_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\rawr_globals.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\rawr_cpu_features.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\inference_core.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\FlashAttention_AVX512.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\quant_avx2.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_KQuant_Dequant.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_AVX512_Dequant_BPE.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PDBKernel_v3.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_ModuleEngine.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\request_patch.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\inference_kernels.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\model_bridge_x64.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\model_streamer_x64.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_DualAgent_Orchestrator.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_DiskRecoveryAgent.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\disk_recovery_scsi.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Telemetry_Kernel.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Prometheus_Exporter.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_SelfPatch_Agent.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_SourceEdit_Kernel.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\feature_dispatch_bridge.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\gui_dispatch_bridge.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\VulkanKernel_DispatchRaw.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_OverclockGov_Pure.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Emitter_v1.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_IPC_Dispatcher.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_AuditSystem_Pure.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\Advanced_Code_Deobfuscator.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\Code_Pattern_Reconstructor.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\agentic_deep_thinking_kernels.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_MissingSymbols.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PE_Importer.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PE_Exporter.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\ghost_text_ranker.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\diff_engine.asm.obj | requantize_q4km_to_q2k_avx512.obj gpu_requantize_rocm.obj swarm_tensor_stream.obj RawrXD_MonacoCore.obj RawrXD_PDBKernel.obj RawrXD_RouterBridge.obj RawrXD_GSIHash.obj RawrXD_RefProvider.obj RawrXD_StubDetector.obj rawrxd_cot_engine.obj rawrxd_cot_dll_entry.obj rawrxd_cot_phase39.obj RawrXD_LSP_SymbolIndex.obj RawrCodex.obj RawrXD_Debug_Engine.obj RawrXD_QuadBuffer_Streamer.obj RawrXD_Swarm_Network.obj RawrXD_EnterpriseLicense.obj RawrXD_License_Shield.obj RawrXD_VulkanBridge.obj RawrXD_SocketResponder.obj RawrXD_TridentBeacon.obj RawrXD_TridentBeacon_GPU.obj RawrXD_AgenticOrchestrator.obj RawrXD_GGUF_Vulkan_Loader.obj RawrXD_LSP_AI_Bridge.obj RawrXD_Streaming_QuadBuffer.obj RawrXD_SelfPatch_Engine.obj RawrXD_Camellia256.obj RawrXD_Camellia256_Auth.obj RawrXD_KQuant_Kernel.obj RawrXD_Watchdog.obj RawrXD_SelfHost_Engine.obj RawrXD_HardwareSynthesizer.obj RawrXD_MeshBrain.obj RawrXD_Speciator.obj RawrXD_NeuralBridge.obj RawrXD_OmegaOrchestrator.obj RawrXD_PerfCounters.obj RawrXD_Hotpatch_Kernel.obj RawrXD_Snapshot.obj RawrXD_Pyre_Compute.obj RawrXD_CopilotGapCloser.obj native_speed_kernels.obj deflate_brutal_masm.obj quickjs_static.lib src\reverse_engineering\RawrXD-RE-Library.lib RawrXD_MultiWindow_Kernel.lib C$:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib D$:\rawrxd\src\kernels\rdna3\obj\RDNA3_Full_Test.obj src\reverse_engineering\RawrXD_OmegaDeobfuscator.obj src\reverse_engineering\RawrXD_MetaReverse.obj RawrXD-ModelAnalysisLib.lib || RawrXD-ModelAnalysisLib.lib bin\RawrXD_MultiWindow_Kernel.dll masm_kernels quickjs_static.lib src\reverse_engineering\RawrXD-RE-Library.lib src\reverse_engineering\re_deobfuscator
+build bin\RawrXD-Win32IDE.exe: CXX_EXECUTABLE_LINKER__RawrXD-Win32IDE_Release CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\main_win32.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\HeadlessIDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_agent_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_autonomous_todo_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_multi_model_agent_cycling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_dynamic_time_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_missing_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\quantum_production_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\RawrXD_MainLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\webview2_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\debugger_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\agentic_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\RawrXD-Win32IDE.rc.res CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\Win32SwarmBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\SwarmIATRegistration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\bridge\UnifiedModelMetadata.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\subagent_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\SubAgentManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\RobustOllamaParser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\ErrorRecoveryManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gpu\speculative_decoder_v2.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\MemoryPressureGuard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\gpu_dispatch_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\brutal_gzip.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\gzip_brutal_inflate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\webview2_masm64_dispatcher.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CoreRuntimeSpine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Commands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VSCodeUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\WindowManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\EditorOperations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\RouterOperations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Watchdog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SyntaxHighlight.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VisionEncoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Themes.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_StreamingUX.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Sidebar.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Debugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousDebugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Annotations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ReverseEngineering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\FullAgenticIDE.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\AgenticPlanningOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\full_agentic_ide\AgenticIOCPBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentCommands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TabManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Settings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousCommunicator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticComposerUX.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ContextMentionParser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_UnifiedTelemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Autonomy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PowerShell.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PowerShellPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Session.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FileOps.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DecompilerView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NativePipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ModelAnatomy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\Ship\RawrXD_AutonomousAgenticPipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\Ship\RawrXD_AgentCoordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FeatureManifest.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GhostText.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\SovereignSharedMemoryBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_OutlinePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_RenamePreview.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier2Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier1Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Breadcrumbs.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PlanExecutor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_planning_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\failure_intelligence_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_orchestrator_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_audit_sink.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\change_impact_analyzer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticPlanningPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FailureDetector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FailureIntelligence.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LocalServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_BackendSwitcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AIBackend.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LLMRouter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSPClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PeekOverlay.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CaretAnimation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentOllamaClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ModelDiscovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SwarmModelSelector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AsmSemantic.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSP_AI_Bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MultiResponse.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ExecutionGovernor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LayerEviction.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SemanticIndexShim.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SubAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentHistory.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DiskRecovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32TerminalManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\TransparentRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\plugin_system\win32_plugin_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Plugins.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HandleExtensionCommand.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\config\IDEConfig.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\QuantBackend.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\GGUFRunner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\gguf_k_quants.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\auth\QuantumAuthUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentToolHandlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\BoundedAgentLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\OllamaProvider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiffEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DeterministicReplayEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_recovery_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgenticDeepThinkingEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\OrchestratorBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgenticNavigator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\ToolRegistry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\RawrXD_AgentLoop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_executor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\FIMPromptBuilder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_observability.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_subsystem_api.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tool_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\telemetry_collector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_repair_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agent_memory_indexer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_transaction.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agent_workflow_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\symbol_graph_indexer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\semantic_code_search.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\multi_file_reasoning.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\workspace_embeddings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai\repo_refactor_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\DiskRecoveryAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiskRecoveryAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\DiskRecoveryToolHandler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_history.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_policy.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent_explainability.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\utils\ErrorReporter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\logging\Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\InputSanitizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ConfigurationValidator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\PerformanceMonitor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_inference.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_model_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_transformer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_tokenizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\rawrxd_sampler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\engine_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cpu_inference_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gguf_swarm_plan_builder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\memory_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\hot_patcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\streaming_gguf_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\utils\Diagnostics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gguf_loader.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\gguf_vocab_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_source_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\compression_interface.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\inference_kernels.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\transformer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\bpe_tokenizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\sampler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\core_generator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\engine\pyre_compute.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\streaming_engine_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gpu_backend_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_license.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_licensev2_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_devunlock_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\monolithic_heap_globals.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tools\license_validator_manifest.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\license_anti_tampering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\camellia256_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\watchdog_service.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\flash_attention.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\execution_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\execution_governor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\multi_gpu.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agent_safety_contract.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\deterministic_replay.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\confidence_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\layer_offload_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_speed_layer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\local_ai_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_inference_pipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\70b_gguf_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\governor_throttling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_worker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SwarmPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DualAgentPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_debugger_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_debugger_symbols.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NativeDebugPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_memory_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\byte_level_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_hotpatch_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\proxy_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_bruteforce_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\server\gguf_server_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pt_driver_contract.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\shadow_page_detour.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sentinel_watchdog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HotpatchPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_hotpatch_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\llm_http_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\model_invoker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\planner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\meta_planner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\eval_framework.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\autonomous_subagent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_failure_detector.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_deep_thinking_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agentic_puppeteer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cloud_api_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\local_reasoning_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agent_self_repair.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agent\agent_self_healing_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\vsix_loader_win32.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\codex_ultimate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\vscode_extension_api.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VSCodeExtAPI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_decision_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\universal_model_hotpatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\production_release.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quantum_safe_transport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\adaptive_pipeline_parallel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\universal_model_merger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\webrtc_signaling.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\gpu_kernel_autotuner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sandbox_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\amd_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_memory_executor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_runtime_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\intel_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\arm64_gpu_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cerebras_wse_accelerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\accelerator_router.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_gsi_hash.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_reference_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_WebView2.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\AgenticBrowserLayer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgenticBrowser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MonacoThemes.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\RawrXD_LSPServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LSPServer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\lsp_hotpatch_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\hotpatch_symbol_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\gguf_diagnostic_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\MonacoCoreEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\WebView2EditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\RichEditEditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\EditorEngineFactory.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EditorEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_native.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\pdb_lsp_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PDBSymbols.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\menu_auditor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_discovery.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AuditDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\final_gauntlet.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Gauntlet.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\voice_chat.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\voice_automation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VoiceChat.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VoiceAutomation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\shortcut_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\backup_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\alert_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_QuickWins.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_registration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\feature_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\intent_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_training_pipeline.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_trainer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AgentOllamaClient.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\hotpatch\Engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\observability\Logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\AdvancedAgentCoordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\autonomous_agentic_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\native_gguf_loader_link_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\codec\compression.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_handlers_ext_isolated.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\v280_link_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ssot_validation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\unified_command_dispatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\startup_phase_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrengine_command_handlers.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\jsonrpc_parser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\cli\swarm_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\chain_of_thought_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Telemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\mcp_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MCP.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FlightRecorder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_extension_host.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_vscode_bindings.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_state_mmf.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\js_extension_host.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\extension_polyfill_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\vulkan_compute.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\live_binary_patcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\deterministic_swarm.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\input_guard_slicer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_agent_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\production_config_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agentic_task_graph.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\embedding_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vector_index.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_token_gate.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_embedding_cache.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_kv_isolation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_quantized_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\vision_gpu_staging.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\marketplace\extension_marketplace.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\auth\rbac_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic_loop_state.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\transaction_journal.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\instructions_provider.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Instructions.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\unity_engine_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\unreal_engine_integration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\game_engine_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GameEnginePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\crucible_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CruciblePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\copilot_gap_closer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CopilotGapPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\distributed_pipeline_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PipelinePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\hotpatch_control_plane.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HotpatchCtrlPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\static_analysis_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\code_linter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp\diagnostic_consumer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_StaticAnalysisPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ProblemsPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_BuildRunner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SecurityScans.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\problems_panel_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\problems_aggregator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\secrets_scanner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\sast_rule_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\security\dependency_audit.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AgentStreamingBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\semantic_code_intelligence.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SemanticPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_telemetry_compliance.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier3Polish.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier3Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tier5Cosmetics.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CrashReporter.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ColorPicker.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EmojiSupport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ShortcutEditor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MarketplacePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Collab.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IRCBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IRCBridgeCommands.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\collab\websocket_hub.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TestExplorerTree.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_NetworkPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\omega_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\omega_asm_native_kernel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\mesh_brain.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\speciator_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\neural_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\self_host_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\hardware_synthesizer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\transcendence_coordinator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\integrated_runtime.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\reasoning_profile.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\VulkanRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\OSExplorerInterceptor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MCPHooks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\TodoManager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\IocpFileWatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\IDEDiagnosticAutoHealer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ConsentPrompt.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\AutonomousAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\chat_message_renderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\tool_action_status.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\chat_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\crash_containment.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\patch_rollback_ledger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quant_hysteresis.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\perf_telemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\update_signature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cursor_github_parity_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_reconciliation.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\quickjs_sandbox.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\plugin_signature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\auto_update_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_verification_loop.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_background_daemon.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sqlite3.c.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\knowledge_graph_core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\swarm_conflict_resolver.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\autonomous_debugger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\autonomous_communicator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\UnifiedTelemetryCore.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\telemetry_export.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\agentic_composer_ux.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\context\context_mention_parser.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\multimodal_engine\vision_encoder.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\refactoring_plugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\language_plugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\context\semantic_index.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ide\resource_generator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CursorParity.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GUILayoutHotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Tasks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_GitPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Refactor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SearchPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FuzzySearch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_Minimap.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_DiffView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SettingsGUI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_CodeLens.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_InlayHints.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_HoverTooltips.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ProvableAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AIReverseEngineering.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AirgappedEnterprise.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_FlagshipFeatures.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\project_context.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\universal_model_router.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_registry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\model_name_utils.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\checkpoint_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\agentic_autonomous_config.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\enterprise_feature_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\context_deterioration_hotpatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\interpretability_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\real_time_completion_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\LanguageServerIntegration.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\interpretability_panel_enhanced.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\feature_registry_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\autonomous_feature_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\autonomous_intelligence_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\plan_orchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\tool_registry_advanced.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\lsp_client.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\intelligent_codebase_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ai_model_caller.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\hybrid_cloud_manager.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\benchmark_menu_widget.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\benchmark_runner.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\feature_registry_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\monaco_settings_dialog.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\thermal\RAWRXD_ThermalDashboard.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\VSCodeMarketplaceAPI.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\multi_file_search.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\license_manager_panel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\telemetry\logger.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LicenseCreator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\license_enforcement.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\feature_flags_runtime.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PeekView.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutoSave.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TerminalSplit.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SnippetEngine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_MultiCursor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\local_parity_bridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\json_instantiations.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\cot_fallback_system.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\model_loader_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\rawrxd_native_log_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\llm_adapter\ggufrunner_link_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\inference\gguf_d3d12_bridge_link_fallback.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\collab_cursor_fallbacks.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\rtp_protocol_fallback.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\modules\quickjs_node_shims.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\ai_workers_queue.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\ImportBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\ui\ExportBridge.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\terminal\embedded_terminal.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\sovereign_gpu_link_stubs.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\ai_agent_masm_core_impl.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TranscendencePanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_AutonomousAgent.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatMessageRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ToolActionStatus.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatPanel.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ChatPanel_Ollama.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_VulkanRenderer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_OSExplorerInterceptor.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IOCPFileWatcher.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_IDEDiagnosticAutoHealer.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ConsentPrompt.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PerfTelemetry.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_UpdateSignature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_PluginSignature.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_EnterpriseStressTests.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_SQLite3Core.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_TelemetryExport.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_RefactoringPlugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_LanguagePlugin.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\win32app\Win32IDE_ResourceGenerator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_surface\RuntimeSurfaceModule.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\runtime_surface\GenerationStopwatch.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\memory\UnifiedMemoryPool.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\InferenceProfiler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\BackendOrchestrator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_scheduler.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\sdma\sdma_ring_allocator.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\autonomous_workflow_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\workspace_reasoning_profiles.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\reasoning_schema_versioning.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\core\safe_refactor_engine.cpp.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\rawr_globals.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\rawr_cpu_features.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\inference_core.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\FlashAttention_AVX512.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\quant_avx2.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_KQuant_Dequant.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_AVX512_Dequant_BPE.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PDBKernel_v3.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_ModuleEngine.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\request_patch.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\inference_kernels.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\model_bridge_x64.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\model_streamer_x64.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_DualAgent_Orchestrator.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_DiskRecoveryAgent.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\disk_recovery_scsi.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Telemetry_Kernel.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Prometheus_Exporter.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_SelfPatch_Agent.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_SourceEdit_Kernel.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\feature_dispatch_bridge.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\gui_dispatch_bridge.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\VulkanKernel_DispatchRaw.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_OverclockGov_Pure.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_Emitter_v1.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_IPC_Dispatcher.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_AuditSystem_Pure.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\Advanced_Code_Deobfuscator.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\Code_Pattern_Reconstructor.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\agentic_deep_thinking_kernels.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_MissingSymbols.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PE_Importer.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\RawrXD_PE_Exporter.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\ghost_text_ranker.asm.obj CMakeFiles\RawrXD-Win32IDE.dir\src\asm\diff_engine.asm.obj | requantize_q4km_to_q2k_avx512.obj gpu_requantize_rocm.obj swarm_tensor_stream.obj RawrXD_MonacoCore.obj RawrXD_PDBKernel.obj RawrXD_RouterBridge.obj RawrXD_GSIHash.obj RawrXD_RefProvider.obj RawrXD_StubDetector.obj rawrxd_cot_engine.obj rawrxd_cot_dll_entry.obj rawrxd_cot_phase39.obj RawrXD_LSP_SymbolIndex.obj RawrCodex.obj RawrXD_Debug_Engine.obj RawrXD_QuadBuffer_Streamer.obj RawrXD_Swarm_Network.obj RawrXD_EnterpriseLicense.obj RawrXD_License_Shield.obj RawrXD_VulkanBridge.obj RawrXD_SocketResponder.obj RawrXD_TridentBeacon.obj RawrXD_TridentBeacon_GPU.obj RawrXD_AgenticOrchestrator.obj RawrXD_GGUF_Vulkan_Loader.obj RawrXD_LSP_AI_Bridge.obj RawrXD_Streaming_QuadBuffer.obj RawrXD_SelfPatch_Engine.obj RawrXD_Camellia256.obj RawrXD_Camellia256_Auth.obj RawrXD_KQuant_Kernel.obj RawrXD_Watchdog.obj RawrXD_SelfHost_Engine.obj RawrXD_HardwareSynthesizer.obj RawrXD_MeshBrain.obj RawrXD_Speciator.obj RawrXD_NeuralBridge.obj RawrXD_OmegaOrchestrator.obj RawrXD_PerfCounters.obj RawrXD_Hotpatch_Kernel.obj RawrXD_Snapshot.obj RawrXD_Pyre_Compute.obj RawrXD_CopilotGapCloser.obj native_speed_kernels.obj deflate_brutal_masm.obj quickjs_static.lib src\reverse_engineering\RawrXD-RE-Library.lib RawrXD_MultiWindow_Kernel.lib C$:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib D$:\rawrxd\src\kernels\rdna3\obj\RDNA3_Full_Test.obj src\reverse_engineering\RawrXD_OmegaDeobfuscator.obj src\reverse_engineering\RawrXD_MetaReverse.obj RawrXD-ModelAnalysisLib.lib || RawrXD-ModelAnalysisLib.lib bin\RawrXD_MultiWindow_Kernel.dll masm_kernels quickjs_static.lib src\reverse_engineering\RawrXD-RE-Library.lib src\reverse_engineering\re_deobfuscator
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL /MAP:D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO
@@ -14338,6 +14349,619 @@ build bin\RawrXD-KVBenchmark.exe: CXX_EXECUTABLE_LINKER__RawrXD-KVBenchmark_Rele
   TARGET_IMPLIB = RawrXD-KVBenchmark.lib
   TARGET_PDB = bin\RawrXD-KVBenchmark.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\RawrXD-KVBenchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target Fix3_NHWC_Benchmark
+
+
+#############################################
+# Order-only phony target for Fix3_NHWC_Benchmark
+
+build cmake_object_order_depends_target_Fix3_NHWC_Benchmark: phony || .
+
+build CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark_Stub.cpp.obj: CXX_COMPILER__Fix3_NHWC_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\Fix3_NHWC_Benchmark_Stub.cpp || cmake_object_order_depends_target_Fix3_NHWC_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\Fix3_NHWC_Benchmark.dir\
+  TARGET_PDB = bin\Fix3_NHWC_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Fix3_NHWC_Benchmark
+
+
+#############################################
+# Link the executable bin\Fix3_NHWC_Benchmark.exe
+
+build bin\Fix3_NHWC_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix3_NHWC_Benchmark_Release CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark_Stub.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\Fix3_NHWC_Benchmark.dir\
+  TARGET_FILE = bin\Fix3_NHWC_Benchmark.exe
+  TARGET_IMPLIB = Fix3_NHWC_Benchmark.lib
+  TARGET_PDB = bin\Fix3_NHWC_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target Fix4_FlashAttention_Benchmark
+
+
+#############################################
+# Order-only phony target for Fix4_FlashAttention_Benchmark
+
+build cmake_object_order_depends_target_Fix4_FlashAttention_Benchmark: phony || .
+
+build CMakeFiles\Fix4_FlashAttention_Benchmark.dir\src\benchmark\Fix4_FlashAttention_Benchmark.cpp.obj: CXX_COMPILER__Fix4_FlashAttention_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\Fix4_FlashAttention_Benchmark.cpp || cmake_object_order_depends_target_Fix4_FlashAttention_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\Fix4_FlashAttention_Benchmark.dir\
+  TARGET_PDB = bin\Fix4_FlashAttention_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Fix4_FlashAttention_Benchmark
+
+
+#############################################
+# Link the executable bin\Fix4_FlashAttention_Benchmark.exe
+
+build bin\Fix4_FlashAttention_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix4_FlashAttention_Benchmark_Release CMakeFiles\Fix4_FlashAttention_Benchmark.dir\src\benchmark\Fix4_FlashAttention_Benchmark.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\Fix4_FlashAttention_Benchmark.dir\
+  TARGET_FILE = bin\Fix4_FlashAttention_Benchmark.exe
+  TARGET_IMPLIB = Fix4_FlashAttention_Benchmark.lib
+  TARGET_PDB = bin\Fix4_FlashAttention_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix4_FlashAttention_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target Fix5_FusedQuantized_Benchmark
+
+
+#############################################
+# Order-only phony target for Fix5_FusedQuantized_Benchmark
+
+build cmake_object_order_depends_target_Fix5_FusedQuantized_Benchmark: phony || .
+
+build CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp.obj: CXX_COMPILER__Fix5_FusedQuantized_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp || cmake_object_order_depends_target_Fix5_FusedQuantized_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\
+  TARGET_PDB = bin\Fix5_FusedQuantized_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Fix5_FusedQuantized_Benchmark
+
+
+#############################################
+# Link the executable bin\Fix5_FusedQuantized_Benchmark.exe
+
+build bin\Fix5_FusedQuantized_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix5_FusedQuantized_Benchmark_Release CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\src\benchmark\Fix5_FusedQuantized_Benchmark.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir\
+  TARGET_FILE = bin\Fix5_FusedQuantized_Benchmark.exe
+  TARGET_IMPLIB = Fix5_FusedQuantized_Benchmark.lib
+  TARGET_PDB = bin\Fix5_FusedQuantized_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix5_FusedQuantized_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target VAL032_SpeculativeDecoding_Benchmark
+
+
+#############################################
+# Order-only phony target for VAL032_SpeculativeDecoding_Benchmark
+
+build cmake_object_order_depends_target_VAL032_SpeculativeDecoding_Benchmark: phony || .
+
+build CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir\src\benchmark\VAL032_SpeculativeDecoding_Benchmark.cpp.obj: CXX_COMPILER__VAL032_SpeculativeDecoding_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL032_SpeculativeDecoding_Benchmark.cpp || cmake_object_order_depends_target_VAL032_SpeculativeDecoding_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir\
+  TARGET_PDB = bin\VAL032_SpeculativeDecoding_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target VAL032_SpeculativeDecoding_Benchmark
+
+
+#############################################
+# Link the executable bin\VAL032_SpeculativeDecoding_Benchmark.exe
+
+build bin\VAL032_SpeculativeDecoding_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL032_SpeculativeDecoding_Benchmark_Release CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir\src\benchmark\VAL032_SpeculativeDecoding_Benchmark.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir\
+  TARGET_FILE = bin\VAL032_SpeculativeDecoding_Benchmark.exe
+  TARGET_IMPLIB = VAL032_SpeculativeDecoding_Benchmark.lib
+  TARGET_PDB = bin\VAL032_SpeculativeDecoding_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL032_SpeculativeDecoding_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target VAL032_AVX512_Benchmark
+
+
+#############################################
+# Order-only phony target for VAL032_AVX512_Benchmark
+
+build cmake_object_order_depends_target_VAL032_AVX512_Benchmark: phony || cmake_object_order_depends_target_telemetry_masm_kernels
+
+build CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp.obj: CXX_COMPILER__VAL032_AVX512_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp || cmake_object_order_depends_target_VAL032_AVX512_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -ID:\rawrxd\src\validation\kernels -ID:\rawrxd\src\validation\kernels\.. -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\VAL032_AVX512_Benchmark.dir\
+  TARGET_PDB = bin\VAL032_AVX512_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target VAL032_AVX512_Benchmark
+
+
+#############################################
+# Link the executable bin\VAL032_AVX512_Benchmark.exe
+
+build bin\VAL032_AVX512_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL032_AVX512_Benchmark_Release CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp.obj | src\validation\kernels\telemetry_masm_kernels.lib || src\validation\kernels\telemetry_masm_kernels.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  src\validation\kernels\telemetry_masm_kernels.lib  kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\VAL032_AVX512_Benchmark.dir\
+  TARGET_FILE = bin\VAL032_AVX512_Benchmark.exe
+  TARGET_IMPLIB = VAL032_AVX512_Benchmark.lib
+  TARGET_PDB = bin\VAL032_AVX512_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_bench_simple
+
+
+#############################################
+# Order-only phony target for tree_attention_bench_simple
+
+build cmake_object_order_depends_target_tree_attention_bench_simple: phony || .
+
+build CMakeFiles\tree_attention_bench_simple.dir\src\benchmark\tree_attention_avx512_intrinsics.cpp.obj: CXX_COMPILER__tree_attention_bench_simple_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_avx512_intrinsics.cpp || cmake_object_order_depends_target_tree_attention_bench_simple
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_bench_simple.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_bench_simple.dir\
+  TARGET_PDB = bin\tree_attention_bench_simple.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+
+build CMakeFiles\tree_attention_bench_simple.dir\src\benchmark\tree_attention_bench_simple.cpp.obj: CXX_COMPILER__tree_attention_bench_simple_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_bench_simple.cpp || cmake_object_order_depends_target_tree_attention_bench_simple
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_bench_simple.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_bench_simple.dir\
+  TARGET_PDB = bin\tree_attention_bench_simple.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_bench_simple
+
+
+#############################################
+# Link the executable bin\tree_attention_bench_simple.exe
+
+build bin\tree_attention_bench_simple.exe: CXX_EXECUTABLE_LINKER__tree_attention_bench_simple_Release CMakeFiles\tree_attention_bench_simple.dir\src\benchmark\tree_attention_avx512_intrinsics.cpp.obj CMakeFiles\tree_attention_bench_simple.dir\src\benchmark\tree_attention_bench_simple.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_bench_simple.dir\
+  TARGET_FILE = bin\tree_attention_bench_simple.exe
+  TARGET_IMPLIB = tree_attention_bench_simple.lib
+  TARGET_PDB = bin\tree_attention_bench_simple.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_bench_simple.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_profiled
+
+
+#############################################
+# Order-only phony target for tree_attention_profiled
+
+build cmake_object_order_depends_target_tree_attention_profiled: phony || .
+
+build CMakeFiles\tree_attention_profiled.dir\src\benchmark\tree_attention_profiled.cpp.obj: CXX_COMPILER__tree_attention_profiled_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_profiled.cpp || cmake_object_order_depends_target_tree_attention_profiled
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_profiled.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_profiled.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_profiled.dir\
+  TARGET_PDB = bin\tree_attention_profiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_profiled.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_profiled
+
+
+#############################################
+# Link the executable bin\tree_attention_profiled.exe
+
+build bin\tree_attention_profiled.exe: CXX_EXECUTABLE_LINKER__tree_attention_profiled_Release CMakeFiles\tree_attention_profiled.dir\src\benchmark\tree_attention_profiled.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_profiled.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_profiled.dir\
+  TARGET_FILE = bin\tree_attention_profiled.exe
+  TARGET_IMPLIB = tree_attention_profiled.lib
+  TARGET_PDB = bin\tree_attention_profiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_profiled.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_aligned
+
+
+#############################################
+# Order-only phony target for tree_attention_aligned
+
+build cmake_object_order_depends_target_tree_attention_aligned: phony || .
+
+build CMakeFiles\tree_attention_aligned.dir\src\benchmark\tree_attention_aligned.cpp.obj: CXX_COMPILER__tree_attention_aligned_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_aligned.cpp || cmake_object_order_depends_target_tree_attention_aligned
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_aligned.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_aligned.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_aligned.dir\
+  TARGET_PDB = bin\tree_attention_aligned.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_aligned.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_aligned
+
+
+#############################################
+# Link the executable bin\tree_attention_aligned.exe
+
+build bin\tree_attention_aligned.exe: CXX_EXECUTABLE_LINKER__tree_attention_aligned_Release CMakeFiles\tree_attention_aligned.dir\src\benchmark\tree_attention_aligned.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_aligned.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_aligned.dir\
+  TARGET_FILE = bin\tree_attention_aligned.exe
+  TARGET_IMPLIB = tree_attention_aligned.lib
+  TARGET_PDB = bin\tree_attention_aligned.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_aligned.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_tiled
+
+
+#############################################
+# Order-only phony target for tree_attention_tiled
+
+build cmake_object_order_depends_target_tree_attention_tiled: phony || .
+
+build CMakeFiles\tree_attention_tiled.dir\src\benchmark\tree_attention_tiled.cpp.obj: CXX_COMPILER__tree_attention_tiled_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_tiled.cpp || cmake_object_order_depends_target_tree_attention_tiled
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_tiled.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_tiled.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_tiled.dir\
+  TARGET_PDB = bin\tree_attention_tiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_tiled.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_tiled
+
+
+#############################################
+# Link the executable bin\tree_attention_tiled.exe
+
+build bin\tree_attention_tiled.exe: CXX_EXECUTABLE_LINKER__tree_attention_tiled_Release CMakeFiles\tree_attention_tiled.dir\src\benchmark\tree_attention_tiled.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_tiled.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_tiled.dir\
+  TARGET_FILE = bin\tree_attention_tiled.exe
+  TARGET_IMPLIB = tree_attention_tiled.lib
+  TARGET_PDB = bin\tree_attention_tiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_tiled.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_vectorized
+
+
+#############################################
+# Order-only phony target for tree_attention_vectorized
+
+build cmake_object_order_depends_target_tree_attention_vectorized: phony || .
+
+build CMakeFiles\tree_attention_vectorized.dir\src\benchmark\tree_attention_vectorized.cpp.obj: CXX_COMPILER__tree_attention_vectorized_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_vectorized.cpp || cmake_object_order_depends_target_tree_attention_vectorized
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_vectorized.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_vectorized.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_vectorized.dir\
+  TARGET_PDB = bin\tree_attention_vectorized.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_vectorized.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_vectorized
+
+
+#############################################
+# Link the executable bin\tree_attention_vectorized.exe
+
+build bin\tree_attention_vectorized.exe: CXX_EXECUTABLE_LINKER__tree_attention_vectorized_Release CMakeFiles\tree_attention_vectorized.dir\src\benchmark\tree_attention_vectorized.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_vectorized.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_vectorized.dir\
+  TARGET_FILE = bin\tree_attention_vectorized.exe
+  TARGET_IMPLIB = tree_attention_vectorized.lib
+  TARGET_PDB = bin\tree_attention_vectorized.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_vectorized.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_sparse
+
+
+#############################################
+# Order-only phony target for tree_attention_sparse
+
+build cmake_object_order_depends_target_tree_attention_sparse: phony || .
+
+build CMakeFiles\tree_attention_sparse.dir\src\benchmark\tree_attention_sparse.cpp.obj: CXX_COMPILER__tree_attention_sparse_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_sparse.cpp || cmake_object_order_depends_target_tree_attention_sparse
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_sparse.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_sparse.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_sparse.dir\
+  TARGET_PDB = bin\tree_attention_sparse.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_sparse.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_sparse
+
+
+#############################################
+# Link the executable bin\tree_attention_sparse.exe
+
+build bin\tree_attention_sparse.exe: CXX_EXECUTABLE_LINKER__tree_attention_sparse_Release CMakeFiles\tree_attention_sparse.dir\src\benchmark\tree_attention_sparse.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_sparse.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_sparse.dir\
+  TARGET_FILE = bin\tree_attention_sparse.exe
+  TARGET_IMPLIB = tree_attention_sparse.lib
+  TARGET_PDB = bin\tree_attention_sparse.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_sparse.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_fused_sparse
+
+
+#############################################
+# Order-only phony target for tree_attention_fused_sparse
+
+build cmake_object_order_depends_target_tree_attention_fused_sparse: phony || .
+
+build CMakeFiles\tree_attention_fused_sparse.dir\src\benchmark\tree_attention_fused_sparse.cpp.obj: CXX_COMPILER__tree_attention_fused_sparse_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_fused_sparse.cpp || cmake_object_order_depends_target_tree_attention_fused_sparse
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_fused_sparse.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_fused_sparse.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_fused_sparse.dir\
+  TARGET_PDB = bin\tree_attention_fused_sparse.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_fused_sparse.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_fused_sparse
+
+
+#############################################
+# Link the executable bin\tree_attention_fused_sparse.exe
+
+build bin\tree_attention_fused_sparse.exe: CXX_EXECUTABLE_LINKER__tree_attention_fused_sparse_Release CMakeFiles\tree_attention_fused_sparse.dir\src\benchmark\tree_attention_fused_sparse.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_fused_sparse.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_fused_sparse.dir\
+  TARGET_FILE = bin\tree_attention_fused_sparse.exe
+  TARGET_IMPLIB = tree_attention_fused_sparse.lib
+  TARGET_PDB = bin\tree_attention_fused_sparse.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_fused_sparse.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target VAL038_FusedAttention_Benchmark
+
+
+#############################################
+# Order-only phony target for VAL038_FusedAttention_Benchmark
+
+build cmake_object_order_depends_target_VAL038_FusedAttention_Benchmark: phony || .
+
+build CMakeFiles\VAL038_FusedAttention_Benchmark.dir\src\benchmark\VAL038_FusedAttention_Benchmark.cpp.obj: CXX_COMPILER__VAL038_FusedAttention_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL038_FusedAttention_Benchmark.cpp || cmake_object_order_depends_target_VAL038_FusedAttention_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\validation\kernels -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\VAL038_FusedAttention_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\VAL038_FusedAttention_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\VAL038_FusedAttention_Benchmark.dir\
+  TARGET_PDB = bin\VAL038_FusedAttention_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL038_FusedAttention_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target VAL038_FusedAttention_Benchmark
+
+
+#############################################
+# Link the executable bin\VAL038_FusedAttention_Benchmark.exe
+
+build bin\VAL038_FusedAttention_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL038_FusedAttention_Benchmark_Release CMakeFiles\VAL038_FusedAttention_Benchmark.dir\src\benchmark\VAL038_FusedAttention_Benchmark.cpp.obj | lib\TreeAttention_Fused_VAL038.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  lib\TreeAttention_Fused_VAL038.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\VAL038_FusedAttention_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\VAL038_FusedAttention_Benchmark.dir\
+  TARGET_FILE = bin\VAL038_FusedAttention_Benchmark.exe
+  TARGET_IMPLIB = VAL038_FusedAttention_Benchmark.lib
+  TARGET_PDB = bin\VAL038_FusedAttention_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL038_FusedAttention_Benchmark.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target VAL038_Validation_Benchmark
+
+
+#############################################
+# Order-only phony target for VAL038_Validation_Benchmark
+
+build cmake_object_order_depends_target_VAL038_Validation_Benchmark: phony || .
+
+build CMakeFiles\VAL038_Validation_Benchmark.dir\src\benchmark\VAL038_Validation_Benchmark.cpp.obj: CXX_COMPILER__VAL038_Validation_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL038_Validation_Benchmark.cpp || cmake_object_order_depends_target_VAL038_Validation_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\validation\kernels -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\VAL038_Validation_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\VAL038_Validation_Benchmark.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\VAL038_Validation_Benchmark.dir\
+  TARGET_PDB = bin\VAL038_Validation_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL038_Validation_Benchmark.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target VAL038_Validation_Benchmark
+
+
+#############################################
+# Link the executable bin\VAL038_Validation_Benchmark.exe
+
+build bin\VAL038_Validation_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL038_Validation_Benchmark_Release CMakeFiles\VAL038_Validation_Benchmark.dir\src\benchmark\VAL038_Validation_Benchmark.cpp.obj | lib\TreeAttention_Fused_VAL038_Debug.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  lib\TreeAttention_Fused_VAL038_Debug.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\VAL038_Validation_Benchmark.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\VAL038_Validation_Benchmark.dir\
+  TARGET_FILE = bin\VAL038_Validation_Benchmark.exe
+  TARGET_IMPLIB = VAL038_Validation_Benchmark.lib
+  TARGET_PDB = bin\VAL038_Validation_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\VAL038_Validation_Benchmark.dir
 
 # =============================================================================
 # Object build statements for EXECUTABLE target RawrXD-TpsSmoke
@@ -15189,6 +15813,403 @@ build bin\RawrXDScriptDAPAdapter.exe: CXX_EXECUTABLE_LINKER__RawrXDScriptDAPAdap
   TARGET_IMPLIB = RawrXDScriptDAPAdapter.lib
   TARGET_PDB = bin\RawrXDScriptDAPAdapter.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\RawrXDScriptDAPAdapter.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target TestSovereignBridge
+
+
+#############################################
+# Order-only phony target for TestSovereignBridge
+
+build cmake_object_order_depends_target_TestSovereignBridge: phony || .
+
+build CMakeFiles\TestSovereignBridge.dir\src\ide\test_sovereign_bridge.cpp.obj: CXX_COMPILER__TestSovereignBridge_unscanned_Release D$:\rawrxd\src\ide\test_sovereign_bridge.cpp || cmake_object_order_depends_target_TestSovereignBridge
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\src -ID:\rawrxd\src\ide -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\TestSovereignBridge.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestSovereignBridge.dir\src\ide
+  TARGET_COMPILE_PDB = CMakeFiles\TestSovereignBridge.dir\
+  TARGET_PDB = tests\TestSovereignBridge.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\TestSovereignBridge.dir
+
+build CMakeFiles\TestSovereignBridge.dir\src\ide\SovereignSharedMemoryBridge.cpp.obj: CXX_COMPILER__TestSovereignBridge_unscanned_Release D$:\rawrxd\src\ide\SovereignSharedMemoryBridge.cpp || cmake_object_order_depends_target_TestSovereignBridge
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\src -ID:\rawrxd\src\ide -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\TestSovereignBridge.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestSovereignBridge.dir\src\ide
+  TARGET_COMPILE_PDB = CMakeFiles\TestSovereignBridge.dir\
+  TARGET_PDB = tests\TestSovereignBridge.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\TestSovereignBridge.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target TestSovereignBridge
+
+
+#############################################
+# Link the executable tests\TestSovereignBridge.exe
+
+build tests\TestSovereignBridge.exe: CXX_EXECUTABLE_LINKER__TestSovereignBridge_Release CMakeFiles\TestSovereignBridge.dir\src\ide\test_sovereign_bridge.cpp.obj CMakeFiles\TestSovereignBridge.dir\src\ide\SovereignSharedMemoryBridge.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\TestSovereignBridge.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\TestSovereignBridge.dir\
+  TARGET_FILE = tests\TestSovereignBridge.exe
+  TARGET_IMPLIB = TestSovereignBridge.lib
+  TARGET_PDB = tests\TestSovereignBridge.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\TestSovereignBridge.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target TestDebugBridgeTelemetry
+
+
+#############################################
+# Order-only phony target for TestDebugBridgeTelemetry
+
+build cmake_object_order_depends_target_TestDebugBridgeTelemetry: phony || .
+
+build CMakeFiles\TestDebugBridgeTelemetry.dir\src\debug\test_debugbridge_telemetry.cpp.obj: CXX_COMPILER__TestDebugBridgeTelemetry_unscanned_Release D$:\rawrxd\src\debug\test_debugbridge_telemetry.cpp || cmake_object_order_depends_target_TestDebugBridgeTelemetry
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\TestDebugBridgeTelemetry.dir
+  OBJECT_FILE_DIR = CMakeFiles\TestDebugBridgeTelemetry.dir\src\debug
+  TARGET_COMPILE_PDB = CMakeFiles\TestDebugBridgeTelemetry.dir\
+  TARGET_PDB = tests\TestDebugBridgeTelemetry.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\TestDebugBridgeTelemetry.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target TestDebugBridgeTelemetry
+
+
+#############################################
+# Link the executable tests\TestDebugBridgeTelemetry.exe
+
+build tests\TestDebugBridgeTelemetry.exe: CXX_EXECUTABLE_LINKER__TestDebugBridgeTelemetry_Release CMakeFiles\TestDebugBridgeTelemetry.dir\src\debug\test_debugbridge_telemetry.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\TestDebugBridgeTelemetry.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\TestDebugBridgeTelemetry.dir\
+  TARGET_FILE = tests\TestDebugBridgeTelemetry.exe
+  TARGET_IMPLIB = TestDebugBridgeTelemetry.lib
+  TARGET_PDB = tests\TestDebugBridgeTelemetry.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\TestDebugBridgeTelemetry.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target stress_target
+
+
+#############################################
+# Order-only phony target for stress_target
+
+build cmake_object_order_depends_target_stress_target: phony || .
+
+build CMakeFiles\stress_target.dir\src\debug\stress_target.cpp.obj: CXX_COMPILER__stress_target_unscanned_Release D$:\rawrxd\src\debug\stress_target.cpp || cmake_object_order_depends_target_stress_target
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\stress_target.dir
+  OBJECT_FILE_DIR = CMakeFiles\stress_target.dir\src\debug
+  TARGET_COMPILE_PDB = CMakeFiles\stress_target.dir\
+  TARGET_PDB = tests\stress_target.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stress_target.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target stress_target
+
+
+#############################################
+# Link the executable tests\stress_target.exe
+
+build tests\stress_target.exe: CXX_EXECUTABLE_LINKER__stress_target_Release CMakeFiles\stress_target.dir\src\debug\stress_target.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\stress_target.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\stress_target.dir\
+  TARGET_FILE = tests\stress_target.exe
+  TARGET_IMPLIB = stress_target.lib
+  TARGET_PDB = tests\stress_target.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stress_target.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target stress_memory
+
+
+#############################################
+# Order-only phony target for stress_memory
+
+build cmake_object_order_depends_target_stress_memory: phony || .
+
+build CMakeFiles\stress_memory.dir\src\debug\stress_memory.cpp.obj: CXX_COMPILER__stress_memory_unscanned_Release D$:\rawrxd\src\debug\stress_memory.cpp || cmake_object_order_depends_target_stress_memory
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\stress_memory.dir
+  OBJECT_FILE_DIR = CMakeFiles\stress_memory.dir\src\debug
+  TARGET_COMPILE_PDB = CMakeFiles\stress_memory.dir\
+  TARGET_PDB = tests\stress_memory.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stress_memory.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target stress_memory
+
+
+#############################################
+# Link the executable tests\stress_memory.exe
+
+build tests\stress_memory.exe: CXX_EXECUTABLE_LINKER__stress_memory_Release CMakeFiles\stress_memory.dir\src\debug\stress_memory.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\stress_memory.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\stress_memory.dir\
+  TARGET_FILE = tests\stress_memory.exe
+  TARGET_IMPLIB = stress_memory.lib
+  TARGET_PDB = tests\stress_memory.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stress_memory.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target test_simulator
+
+
+#############################################
+# Order-only phony target for test_simulator
+
+build cmake_object_order_depends_target_test_simulator: phony || .
+
+build CMakeFiles\test_simulator.dir\src\rpc\test_simulator.cpp.obj: CXX_COMPILER__test_simulator_unscanned_Release D$:\rawrxd\src\rpc\test_simulator.cpp || cmake_object_order_depends_target_test_simulator
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\src -ID:\rawrxd\src\rpc -ID:\rawrxd\src\bridge -ID:\rawrxd\src\scheduler -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_simulator.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_simulator.dir\src\rpc
+  TARGET_COMPILE_PDB = CMakeFiles\test_simulator.dir\
+  TARGET_PDB = tests\test_simulator.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_simulator.dir
+
+build CMakeFiles\test_simulator.dir\src\rpc\SovereignRPC_Simulator.cpp.obj: CXX_COMPILER__test_simulator_unscanned_Release D$:\rawrxd\src\rpc\SovereignRPC_Simulator.cpp || cmake_object_order_depends_target_test_simulator
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\src -ID:\rawrxd\src\rpc -ID:\rawrxd\src\bridge -ID:\rawrxd\src\scheduler -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_simulator.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_simulator.dir\src\rpc
+  TARGET_COMPILE_PDB = CMakeFiles\test_simulator.dir\
+  TARGET_PDB = tests\test_simulator.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_simulator.dir
+
+build CMakeFiles\test_simulator.dir\src\rpc\SovereignRPC_Scheduler.cpp.obj: CXX_COMPILER__test_simulator_unscanned_Release D$:\rawrxd\src\rpc\SovereignRPC_Scheduler.cpp || cmake_object_order_depends_target_test_simulator
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\src -ID:\rawrxd\src\rpc -ID:\rawrxd\src\bridge -ID:\rawrxd\src\scheduler -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_simulator.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_simulator.dir\src\rpc
+  TARGET_COMPILE_PDB = CMakeFiles\test_simulator.dir\
+  TARGET_PDB = tests\test_simulator.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_simulator.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_simulator
+
+
+#############################################
+# Link the executable tests\test_simulator.exe
+
+build tests\test_simulator.exe: CXX_EXECUTABLE_LINKER__test_simulator_Release CMakeFiles\test_simulator.dir\src\rpc\test_simulator.cpp.obj CMakeFiles\test_simulator.dir\src\rpc\SovereignRPC_Simulator.cpp.obj CMakeFiles\test_simulator.dir\src\rpc\SovereignRPC_Scheduler.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\test_simulator.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\test_simulator.dir\
+  TARGET_FILE = tests\test_simulator.exe
+  TARGET_IMPLIB = test_simulator.lib
+  TARGET_PDB = tests\test_simulator.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_simulator.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target test_q4_fused_pipeline
+
+
+#############################################
+# Order-only phony target for test_q4_fused_pipeline
+
+build cmake_object_order_depends_target_test_q4_fused_pipeline: phony || cmake_object_order_depends_target_q4_preprocessed_avx512
+
+build CMakeFiles\test_q4_fused_pipeline.dir\tests\test_q4_fused_pipeline.cpp.obj: CXX_COMPILER__test_q4_fused_pipeline_unscanned_Release D$:\rawrxd\tests\test_q4_fused_pipeline.cpp || cmake_object_order_depends_target_test_q4_fused_pipeline
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_q4_fused_pipeline.dir\tests
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_fused_pipeline.dir\
+  TARGET_PDB = bin\test_q4_fused_pipeline.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+
+build CMakeFiles\test_q4_fused_pipeline.dir\src\memory\Q4WeightPreprocess.cpp.obj: CXX_COMPILER__test_q4_fused_pipeline_unscanned_Release D$:\rawrxd\src\memory\Q4WeightPreprocess.cpp || cmake_object_order_depends_target_test_q4_fused_pipeline
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_q4_fused_pipeline.dir\src\memory
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_fused_pipeline.dir\
+  TARGET_PDB = bin\test_q4_fused_pipeline.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_q4_fused_pipeline
+
+
+#############################################
+# Link the executable bin\test_q4_fused_pipeline.exe
+
+build bin\test_q4_fused_pipeline.exe: CXX_EXECUTABLE_LINKER__test_q4_fused_pipeline_Release CMakeFiles\test_q4_fused_pipeline.dir\tests\test_q4_fused_pipeline.cpp.obj CMakeFiles\test_q4_fused_pipeline.dir\src\memory\Q4WeightPreprocess.cpp.obj | lib\q4_preprocessed_avx512.lib || lib\q4_preprocessed_avx512.lib
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = lib\q4_preprocessed_avx512.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_fused_pipeline.dir\
+  TARGET_FILE = bin\test_q4_fused_pipeline.exe
+  TARGET_IMPLIB = test_q4_fused_pipeline.lib
+  TARGET_PDB = bin\test_q4_fused_pipeline.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_fused_pipeline.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target test_q4_cache_alignment
+
+
+#############################################
+# Order-only phony target for test_q4_cache_alignment
+
+build cmake_object_order_depends_target_test_q4_cache_alignment: phony || .
+
+build CMakeFiles\test_q4_cache_alignment.dir\tests\test_q4_cache_alignment.cpp.obj: CXX_COMPILER__test_q4_cache_alignment_unscanned_Release D$:\rawrxd\tests\test_q4_cache_alignment.cpp || cmake_object_order_depends_target_test_q4_cache_alignment
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_q4_cache_alignment.dir\tests
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_cache_alignment.dir\
+  TARGET_PDB = bin\test_q4_cache_alignment.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+
+build CMakeFiles\test_q4_cache_alignment.dir\src\memory\Q4WeightPreprocess.cpp.obj: CXX_COMPILER__test_q4_cache_alignment_unscanned_Release D$:\rawrxd\src\memory\Q4WeightPreprocess.cpp || cmake_object_order_depends_target_test_q4_cache_alignment
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_q4_cache_alignment.dir\src\memory
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_cache_alignment.dir\
+  TARGET_PDB = bin\test_q4_cache_alignment.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_q4_cache_alignment
+
+
+#############################################
+# Link the executable bin\test_q4_cache_alignment.exe
+
+build bin\test_q4_cache_alignment.exe: CXX_EXECUTABLE_LINKER__test_q4_cache_alignment_Release CMakeFiles\test_q4_cache_alignment.dir\tests\test_q4_cache_alignment.cpp.obj CMakeFiles\test_q4_cache_alignment.dir\src\memory\Q4WeightPreprocess.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\test_q4_cache_alignment.dir\
+  TARGET_FILE = bin\test_q4_cache_alignment.exe
+  TARGET_IMPLIB = test_q4_cache_alignment.lib
+  TARGET_PDB = bin\test_q4_cache_alignment.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_q4_cache_alignment.dir
+
+# =============================================================================
+# Object build statements for STATIC_LIBRARY target q4_preprocessed_avx512
+
+
+#############################################
+# Order-only phony target for q4_preprocessed_avx512
+
+build cmake_object_order_depends_target_q4_preprocessed_avx512: phony || .
+
+build CMakeFiles\q4_preprocessed_avx512.dir\src\kernels\q4_preprocessed_avx512.asm.obj: ASM_MASM_COMPILER__q4_preprocessed_avx512_unscanned_Release D$:\rawrxd\src\kernels\q4_preprocessed_avx512.asm || cmake_object_order_depends_target_q4_preprocessed_avx512
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  DEP_FILE = CMakeFiles\q4_preprocessed_avx512.dir\src\kernels\q4_preprocessed_avx512.asm.obj.d
+  FLAGS = /c /Zi /Zd /ID:/rawrxd/src/asm
+  INCLUDES = -Id:\rawrxd\include -I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -ID:\rawrxd\Ship\webview2\build\native\include
+  OBJECT_DIR = CMakeFiles\q4_preprocessed_avx512.dir
+  OBJECT_FILE_DIR = CMakeFiles\q4_preprocessed_avx512.dir\src\kernels
+  TARGET_COMPILE_PDB = CMakeFiles\q4_preprocessed_avx512.dir\
+  TARGET_PDB = lib\q4_preprocessed_avx512.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\q4_preprocessed_avx512.dir
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target q4_preprocessed_avx512
+
+
+#############################################
+# Link the static library lib\q4_preprocessed_avx512.lib
+
+build lib\q4_preprocessed_avx512.lib: ASM_MASM_STATIC_LIBRARY_LINKER__q4_preprocessed_avx512_Release CMakeFiles\q4_preprocessed_avx512.dir\src\kernels\q4_preprocessed_avx512.asm.obj
+  CONFIG = Release
+  LANGUAGE_COMPILE_FLAGS = /c /Zi /Zd /ID:/rawrxd/src/asm
+  LINK_FLAGS = /machine:x64
+  OBJECT_DIR = CMakeFiles\q4_preprocessed_avx512.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\q4_preprocessed_avx512.dir\
+  TARGET_FILE = lib\q4_preprocessed_avx512.lib
+  TARGET_PDB = lib\q4_preprocessed_avx512.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\q4_preprocessed_avx512.dir
 
 
 #############################################
@@ -16627,6 +17648,49 @@ build tests\test_swarm_scheduler_pin.exe: CXX_EXECUTABLE_LINKER__test_swarm_sche
   TARGET_IMPLIB = tests\test_swarm_scheduler_pin.lib
   TARGET_PDB = tests\test_swarm_scheduler_pin.pdb
   TARGET_SUPPORT_DIR = tests\CMakeFiles\test_swarm_scheduler_pin.dir
+
+# =============================================================================
+# Object build statements for EXECUTABLE target deterministic_replay_gate
+
+
+#############################################
+# Order-only phony target for deterministic_replay_gate
+
+build cmake_object_order_depends_target_deterministic_replay_gate: phony || .
+
+build tests\CMakeFiles\deterministic_replay_gate.dir\deterministic_replay_gate.cpp.obj: CXX_COMPILER__deterministic_replay_gate_unscanned_Release D$:\rawrxd\tests\deterministic_replay_gate.cpp || cmake_object_order_depends_target_deterministic_replay_gate
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = tests\CMakeFiles\deterministic_replay_gate.dir
+  OBJECT_FILE_DIR = tests\CMakeFiles\deterministic_replay_gate.dir
+  TARGET_COMPILE_PDB = tests\CMakeFiles\deterministic_replay_gate.dir\
+  TARGET_PDB = tests\deterministic_replay_gate.pdb
+  TARGET_SUPPORT_DIR = tests\CMakeFiles\deterministic_replay_gate.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target deterministic_replay_gate
+
+
+#############################################
+# Link the executable tests\deterministic_replay_gate.exe
+
+build tests\deterministic_replay_gate.exe: CXX_EXECUTABLE_LINKER__deterministic_replay_gate_Release tests\CMakeFiles\deterministic_replay_gate.dir\deterministic_replay_gate.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = tests\CMakeFiles\deterministic_replay_gate.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = tests\CMakeFiles\deterministic_replay_gate.dir\
+  TARGET_FILE = tests\deterministic_replay_gate.exe
+  TARGET_IMPLIB = tests\deterministic_replay_gate.lib
+  TARGET_PDB = tests\deterministic_replay_gate.pdb
+  TARGET_SUPPORT_DIR = tests\CMakeFiles\deterministic_replay_gate.dir
 
 # =============================================================================
 # Object build statements for EXECUTABLE target test_swarm_expert_heatmap_stress
@@ -18467,7 +19531,7 @@ build src\validation\install\strip: phony src\validation\CMakeFiles\install\stri
 #############################################
 # Order-only phony target for telemetry_masm_kernels
 
-build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
+build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\RawrXD_TreeAttention_Kernel.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
 
 build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj: CXX_COMPILER__telemetry_masm_kernels_unscanned_Release D$:\rawrxd\src\validation\kernels\masm_kernels_dummy.cpp || cmake_object_order_depends_target_telemetry_masm_kernels
   CONFIG = Release
@@ -18488,7 +19552,7 @@ build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_
 #############################################
 # Link the static library src\validation\kernels\telemetry_masm_kernels.lib
 
-build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
+build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\RawrXD_TreeAttention_Kernel.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
   CONFIG = Release
   LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64
@@ -18729,12 +19793,33 @@ build src\validation\kernels\q4_0_dequant_optimized.obj | ${cmake_ninja_workdir}
   DESC = [MASM] Assembling masm/q4_0_dequant_optimized.asm -> D:/rawrxd/build-ninja/src/validation/kernels/q4_0_dequant_optimized.obj
   restat = 1
 
+
+#############################################
+# Custom command for src\validation\kernels\RawrXD_TreeAttention_Kernel.obj
+
+build src\validation\kernels\RawrXD_TreeAttention_Kernel.obj | ${cmake_ninja_workdir}src\validation\kernels\RawrXD_TreeAttention_Kernel.obj: CUSTOM_COMMAND D$:\rawrxd\src\validation\kernels\masm\RawrXD_TreeAttention_Kernel.asm
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd/build-ninja/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj D:/rawrxd/src/validation/kernels/masm/RawrXD_TreeAttention_Kernel.asm"
+  DESC = [MASM] Assembling masm/RawrXD_TreeAttention_Kernel.asm -> D:/rawrxd/build-ninja/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj
+  restat = 1
+
 # =============================================================================
 # Target aliases.
 
 build BackendOrchestratorShardSmoke: phony bin\BackendOrchestratorShardSmoke.exe
 
 build BackendOrchestratorShardSmoke.exe: phony bin\BackendOrchestratorShardSmoke.exe
+
+build Fix3_NHWC_Benchmark: phony bin\Fix3_NHWC_Benchmark.exe
+
+build Fix3_NHWC_Benchmark.exe: phony bin\Fix3_NHWC_Benchmark.exe
+
+build Fix4_FlashAttention_Benchmark: phony bin\Fix4_FlashAttention_Benchmark.exe
+
+build Fix4_FlashAttention_Benchmark.exe: phony bin\Fix4_FlashAttention_Benchmark.exe
+
+build Fix5_FusedQuantized_Benchmark: phony bin\Fix5_FusedQuantized_Benchmark.exe
+
+build Fix5_FusedQuantized_Benchmark.exe: phony bin\Fix5_FusedQuantized_Benchmark.exe
 
 build InferenceEngine: phony InferenceEngine.lib
 
@@ -18812,6 +19897,30 @@ build SwarmSmokeTest: phony bin\SwarmSmokeTest.exe
 
 build SwarmSmokeTest.exe: phony bin\SwarmSmokeTest.exe
 
+build TestDebugBridgeTelemetry: phony tests\TestDebugBridgeTelemetry.exe
+
+build TestDebugBridgeTelemetry.exe: phony tests\TestDebugBridgeTelemetry.exe
+
+build TestSovereignBridge: phony tests\TestSovereignBridge.exe
+
+build TestSovereignBridge.exe: phony tests\TestSovereignBridge.exe
+
+build VAL032_AVX512_Benchmark: phony bin\VAL032_AVX512_Benchmark.exe
+
+build VAL032_AVX512_Benchmark.exe: phony bin\VAL032_AVX512_Benchmark.exe
+
+build VAL032_SpeculativeDecoding_Benchmark: phony bin\VAL032_SpeculativeDecoding_Benchmark.exe
+
+build VAL032_SpeculativeDecoding_Benchmark.exe: phony bin\VAL032_SpeculativeDecoding_Benchmark.exe
+
+build VAL038_FusedAttention_Benchmark: phony bin\VAL038_FusedAttention_Benchmark.exe
+
+build VAL038_FusedAttention_Benchmark.exe: phony bin\VAL038_FusedAttention_Benchmark.exe
+
+build VAL038_Validation_Benchmark: phony bin\VAL038_Validation_Benchmark.exe
+
+build VAL038_Validation_Benchmark.exe: phony bin\VAL038_Validation_Benchmark.exe
+
 build ab_test_runner: phony bin\ab_test_runner.exe
 
 build ab_test_runner.exe: phony bin\ab_test_runner.exe
@@ -18835,6 +19944,10 @@ build bench_cpu.exe: phony bin\bench_cpu.exe
 build comprehensive_benchmark: phony bin\comprehensive_benchmark.exe
 
 build comprehensive_benchmark.exe: phony bin\comprehensive_benchmark.exe
+
+build deterministic_replay_gate: phony tests\deterministic_replay_gate.exe
+
+build deterministic_replay_gate.exe: phony tests\deterministic_replay_gate.exe
 
 build gguf_api_server: phony bin\gguf_api_server.exe
 
@@ -18867,6 +19980,10 @@ build q4_0_differential_test.exe: phony bin\q4_0_differential_test.exe
 build q4_0_optimized_bench: phony bin\q4_0_optimized_bench.exe
 
 build q4_0_optimized_bench.exe: phony bin\q4_0_optimized_bench.exe
+
+build q4_preprocessed_avx512: phony lib\q4_preprocessed_avx512.lib
+
+build q4_preprocessed_avx512.lib: phony lib\q4_preprocessed_avx512.lib
 
 build quickjs_static: phony quickjs_static.lib
 
@@ -18909,6 +20026,14 @@ build simple_gpu_test.exe: phony bin\simple_gpu_test.exe
 build smoke_core: phony tests\smoke_core.exe
 
 build smoke_core.exe: phony tests\smoke_core.exe
+
+build stress_memory: phony tests\stress_memory.exe
+
+build stress_memory.exe: phony tests\stress_memory.exe
+
+build stress_target: phony tests\stress_target.exe
+
+build stress_target.exe: phony tests\stress_target.exe
 
 build telemetry_masm_kernels: phony src\validation\kernels\telemetry_masm_kernels.lib
 
@@ -18982,6 +20107,14 @@ build test_production_regression: phony tests\test_production_regression.exe
 
 build test_production_regression.exe: phony tests\test_production_regression.exe
 
+build test_q4_cache_alignment: phony bin\test_q4_cache_alignment.exe
+
+build test_q4_cache_alignment.exe: phony bin\test_q4_cache_alignment.exe
+
+build test_q4_fused_pipeline: phony bin\test_q4_fused_pipeline.exe
+
+build test_q4_fused_pipeline.exe: phony bin\test_q4_fused_pipeline.exe
+
 build test_rmsnorm_avx2: phony tests\test_rmsnorm_avx2.exe
 
 build test_rmsnorm_avx2.exe: phony tests\test_rmsnorm_avx2.exe
@@ -18993,6 +20126,10 @@ build test_sandboxed_terminal.exe: phony tests\test_sandboxed_terminal.exe
 build test_semantic_diff_analyzer: phony tests\test_semantic_diff_analyzer.exe
 
 build test_semantic_diff_analyzer.exe: phony tests\test_semantic_diff_analyzer.exe
+
+build test_simulator: phony tests\test_simulator.exe
+
+build test_simulator.exe: phony tests\test_simulator.exe
 
 build test_softmax_avx2: phony tests\test_softmax_avx2.exe
 
@@ -19018,6 +20155,34 @@ build test_zero_retention_manager: phony tests\test_zero_retention_manager.exe
 
 build test_zero_retention_manager.exe: phony tests\test_zero_retention_manager.exe
 
+build tree_attention_aligned: phony bin\tree_attention_aligned.exe
+
+build tree_attention_aligned.exe: phony bin\tree_attention_aligned.exe
+
+build tree_attention_bench_simple: phony bin\tree_attention_bench_simple.exe
+
+build tree_attention_bench_simple.exe: phony bin\tree_attention_bench_simple.exe
+
+build tree_attention_fused_sparse: phony bin\tree_attention_fused_sparse.exe
+
+build tree_attention_fused_sparse.exe: phony bin\tree_attention_fused_sparse.exe
+
+build tree_attention_profiled: phony bin\tree_attention_profiled.exe
+
+build tree_attention_profiled.exe: phony bin\tree_attention_profiled.exe
+
+build tree_attention_sparse: phony bin\tree_attention_sparse.exe
+
+build tree_attention_sparse.exe: phony bin\tree_attention_sparse.exe
+
+build tree_attention_tiled: phony bin\tree_attention_tiled.exe
+
+build tree_attention_tiled.exe: phony bin\tree_attention_tiled.exe
+
+build tree_attention_vectorized: phony bin\tree_attention_vectorized.exe
+
+build tree_attention_vectorized.exe: phony bin\tree_attention_vectorized.exe
+
 build zero_assembly_test: phony bin\zero_assembly_test.exe
 
 build zero_assembly_test.exe: phony bin\zero_assembly_test.exe
@@ -19030,7 +20195,7 @@ build zero_assembly_test.exe: phony bin\zero_assembly_test.exe
 #############################################
 # Folder: D:/rawrxd/build-ninja
 
-build all: phony bin\RawrEngine.exe gold\RawrXD_Gold.exe InferenceEngine.lib bin\rawrxd-monaco-gen.exe bin\RawrXD_MultiWindow_Kernel.dll bin\RawrXD-Win32IDE.exe quickjs_static.lib bin\RawrXD-InferenceRoutingTest.exe bin\test_autonomous_pipeline.exe bin\rawrxd.exe bin\RawrXD_LSPServer.exe bin\RawrXDScriptDAPAdapter.exe src\reverse_engineering\all tests\all src\tools\all src\validation\all
+build all: phony bin\RawrEngine.exe gold\RawrXD_Gold.exe InferenceEngine.lib bin\rawrxd-monaco-gen.exe bin\RawrXD_MultiWindow_Kernel.dll bin\RawrXD-Win32IDE.exe quickjs_static.lib bin\RawrXD-InferenceRoutingTest.exe bin\test_autonomous_pipeline.exe bin\rawrxd.exe bin\RawrXD_LSPServer.exe bin\RawrXDScriptDAPAdapter.exe lib\q4_preprocessed_avx512.lib src\reverse_engineering\all tests\all src\tools\all src\validation\all
 
 # =============================================================================
 
@@ -19065,7 +20230,7 @@ build src\validation\kernels\all: phony src\validation\kernels\telemetry_masm_ke
 #############################################
 # Folder: D:/rawrxd/build-ninja/tests
 
-build tests\all: phony tests\test_ai_completions.exe tests\test_llm_connectivity.exe tests\test_tool_registry.exe tests\test_voice_processor.exe tests\test_zero_retention_manager.exe tests\test_gui_components.exe tests\test_semantic_diff_analyzer.exe tests\test_ai_merge_resolver.exe tests\test_sandboxed_terminal.exe tests\test_agentic_file_operations.exe tests\model_registry_test.exe tests\test_gguf_integration.exe tests\test_swarm_scheduler_pin.exe tests\test_swarm_expert_heatmap_stress.exe tests\test_moe_mixture_reference.exe tests\test_moe_down_project_policy.exe tests\test_moe_plan_row_mixture_pack_cache.exe tests\moe_grouped_gemm_bench.exe tests\test_basic_profiler.exe tests\test_batch3_profiler_smoke.exe tests\test_production_regression.exe tests\test_instructions_provider.exe tests\test_model_loader_streamer_smoke.exe tests\smoke_core.exe tests\test_rmsnorm_avx2.exe tests\test_softmax_avx2.exe
+build tests\all: phony tests\test_ai_completions.exe tests\test_llm_connectivity.exe tests\test_tool_registry.exe tests\test_voice_processor.exe tests\test_zero_retention_manager.exe tests\test_gui_components.exe tests\test_semantic_diff_analyzer.exe tests\test_ai_merge_resolver.exe tests\test_sandboxed_terminal.exe tests\test_agentic_file_operations.exe tests\model_registry_test.exe tests\test_gguf_integration.exe tests\test_swarm_scheduler_pin.exe tests\deterministic_replay_gate.exe tests\test_swarm_expert_heatmap_stress.exe tests\test_moe_mixture_reference.exe tests\test_moe_down_project_policy.exe tests\test_moe_plan_row_mixture_pack_cache.exe tests\moe_grouped_gemm_bench.exe tests\test_basic_profiler.exe tests\test_batch3_profiler_smoke.exe tests\test_production_regression.exe tests\test_instructions_provider.exe tests\test_model_loader_streamer_smoke.exe tests\smoke_core.exe tests\test_rmsnorm_avx2.exe tests\test_softmax_avx2.exe
 
 # =============================================================================
 # Built-in targets

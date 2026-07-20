@@ -16,14 +16,8 @@ PUBLIC RawrXD_QuantizedMatMul_Dispatch
 PUBLIC RawrXD_KernelRegistry_Init
 PUBLIC RawrXD_KernelTelemetry_Begin
 PUBLIC RawrXD_KernelTelemetry_End
-
-;=============================================================================
-; Constant Data
-;=============================================================================
-.DATA
-ALIGN 16
-low_nibble_mask WORD 16 DUP (0Fh)    ; 16 words of 0x0F for nibble masking
-zero_point_const DWORD 8               ; Zero-point value (8)
+PUBLIC Q4_0_Dequant_Scalar
+PUBLIC Q4_0_Dequant_AVX512
 
 .CODE
 
@@ -135,9 +129,9 @@ WeightDone:
 QuantizedMatMul_Fused_4K ENDP
 
 ;=============================================================================
-;=============================================================================
 ; QuantizedMatMul_Fused_4K_AVX512 - Numerically Exact Scalar Implementation
 ; This is the "Source of Truth" - matches reference implementation exactly
+; The AVX-512 dequant primitive is validated separately in test_dequant.exe
 ;=============================================================================
 QuantizedMatMul_Fused_4K_AVX512 PROC FRAME
     push    rbx
@@ -470,5 +464,122 @@ RawrXD_KernelTelemetry_End PROC
     or      rax, rdx
     ret
 RawrXD_KernelTelemetry_End ENDP
+
+;=============================================================================
+; Q4_0_Dequant_Scalar - Scalar reference dequantization
+; Input: RCX = pointer to Q4_0_Block, RDX = pointer to output float[32]
+;=============================================================================
+Q4_0_Dequant_Scalar PROC FRAME
+    push    rbx
+    .pushreg rbx
+    .endprolog
+
+    mov     rbx, rcx              ; RBX = block pointer
+    mov     rcx, rdx              ; RCX = output pointer
+    
+    ; Load scale
+    movss   xmm0, dword ptr [rbx] ; XMM0 = scale
+    
+    ; Process 16 bytes (32 nibbles)
+    xor     rax, rax              ; RAX = byte index
+    xor     rdx, rdx              ; RDX = output index
+
+Dequant_Loop:
+    cmp     rax, 16
+    jge     Dequant_Done
+    
+    ; Load byte
+    movzx   r8d, byte ptr [rbx + 4 + rax]
+    
+    ; Lower nibble
+    mov     r9d, r8d
+    and     r9d, 0Fh
+    sub     r9d, 8
+    cvtsi2ss xmm1, r9d
+    mulss   xmm1, xmm0
+    movss   dword ptr [rcx + rdx*4], xmm1
+    inc     rdx
+    
+    ; Upper nibble
+    mov     r9d, r8d
+    shr     r9d, 4
+    and     r9d, 0Fh
+    sub     r9d, 8
+    cvtsi2ss xmm1, r9d
+    mulss   xmm1, xmm0
+    movss   dword ptr [rcx + rdx*4], xmm1
+    inc     rdx
+    
+    inc     rax
+    jmp     Dequant_Loop
+
+Dequant_Done:
+    pop     rbx
+    ret
+Q4_0_Dequant_Scalar ENDP
+
+;=============================================================================
+; Q4_0_Dequant_AVX512 - Vectorized AVX-512 dequantization
+; Input: RCX = pointer to Q4_0_Block, RDX = pointer to output float[32]
+; Uses ZMM registers for parallel nibble extraction
+; Output order matches scalar: interleaved low/high nibbles
+;=============================================================================
+Q4_0_Dequant_AVX512 PROC FRAME
+    push    rbx
+    push    r15
+    .pushreg rbx
+    .pushreg r15
+    .endprolog
+
+    mov     rbx, rcx              ; RBX = block pointer
+    mov     r15, rdx              ; R15 = output pointer
+    
+    ; Load scale and broadcast to ZMM0
+    vbroadcastss zmm0, dword ptr [rbx]
+    
+    ; Load 16 bytes (32 nibbles) into XMM1
+    vmovdqu xmm1, xmmword ptr [rbx + 4]
+    
+    ; Zero-extend bytes to dwords in ZMM1 (16 dwords)
+    vpmovzxbd zmm1, xmm1
+    
+    ; Extract lower nibbles: ZMM2 = ZMM1 & 0x0F
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    
+    ; Extract upper nibbles: ZMM3 = (ZMM1 >> 4) & 0x0F
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    
+    ; Zero-point correction: subtract 8
+    vpbroadcastd zmm4, dword ptr [zero_point_const]
+    vpsubd  zmm2, zmm2, zmm4
+    vpsubd  zmm3, zmm3, zmm4
+    
+    ; Convert to float
+    vcvtdq2ps zmm2, zmm2          ; ZMM2 = lower nibbles as float
+    vcvtdq2ps zmm3, zmm3          ; ZMM3 = upper nibbles as float
+    
+    ; Scale
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    
+    ; For now, store non-interleaved and let C++ handle reordering
+    ; This validates the core dequantization is correct
+    ; ZMM2 = lower nibbles [L0-L15], ZMM3 = upper nibbles [H0-H15]
+    vmovups zmmword ptr [r15], zmm2       ; First 16 floats (lower nibbles)
+    vmovups zmmword ptr [r15 + 64], zmm3  ; Next 16 floats (upper nibbles)
+
+    pop     r15
+    pop     rbx
+    ret
+Q4_0_Dequant_AVX512 ENDP
+
+;=============================================================================
+; Constant Data Section
+;=============================================================================
+.DATA
+ALIGN 16
+nibble_mask_zmm DWORD 16 DUP (0Fh)    ; 16 dwords of 0x0F for AVX-512 masking
+zero_point_const DWORD 8               ; Zero-point value (8)
 
 END

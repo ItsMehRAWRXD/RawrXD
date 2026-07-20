@@ -5166,6 +5166,166 @@ if(WIN32)
     message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-035 Tiled Q@K^T — Register-resident Q, streaming K
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_tiled EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_tiled.cpp
+    )
+    target_include_directories(tree_attention_tiled PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_tiled PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_tiled PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_tiled PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_tiled
+    )
+    message(STATUS "[VAL-035] Tiled Q@K^T: tree_attention_tiled")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-036 Vectorized Softmax — AVX-512 polynomial exp approximation
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_vectorized EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_vectorized.cpp
+    )
+    target_include_directories(tree_attention_vectorized PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_vectorized PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_vectorized PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_vectorized PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_vectorized
+    )
+    message(STATUS "[VAL-036] Vectorized softmax: tree_attention_vectorized")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-037 Tree Sparsity — Exploit tree structure to reduce computation
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_sparse EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_sparse.cpp
+    )
+    target_include_directories(tree_attention_sparse PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_sparse PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_sparse PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_sparse PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_sparse
+    )
+    message(STATUS "[VAL-037] Tree sparsity: tree_attention_sparse")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-037.1 Fused Online Softmax + Block-Sparse Attention
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_fused_sparse EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_fused_sparse.cpp
+    )
+    target_include_directories(tree_attention_fused_sparse PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_fused_sparse PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_fused_sparse PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_fused_sparse PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_fused_sparse
+    )
+    message(STATUS "[VAL-037.1] Fused online softmax: tree_attention_fused_sparse")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-037.2 Tree-Specialized Fused Attention — Exploit 4x4 tree topology
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_tree_specialized EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_tree_specialized.cpp
+    )
+    target_include_directories(tree_attention_tree_specialized PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_tree_specialized PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_tree_specialized PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_tree_specialized PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_tree_specialized
+    )
+    message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-038 Fused Attention — Q@K^T → Softmax → A@V in single kernel
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(VAL038_FusedAttention_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL038_FusedAttention_Benchmark.cpp
+    )
+    target_include_directories(VAL038_FusedAttention_Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/validation/kernels
+    )
+    if(MSVC)
+        target_compile_options(VAL038_FusedAttention_Benchmark PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(VAL038_FusedAttention_Benchmark PRIVATE
+        kernel32
+        user32
+        ${CMAKE_BINARY_DIR}/lib/TreeAttention_Fused_VAL038.lib
+    )
+    set_target_properties(VAL038_FusedAttention_Benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME VAL038_FusedAttention_Benchmark
+    )
+    message(STATUS "[VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-038 Validation Benchmark (B → C → A)
+    # Step B: Control flow validation with debug counters
+    # Step C: Numerical correctness vs scalar reference
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(VAL038_Validation_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL038_Validation_Benchmark.cpp
+    )
+    target_include_directories(VAL038_Validation_Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/validation/kernels
+    )
+    if(MSVC)
+        target_compile_options(VAL038_Validation_Benchmark PRIVATE /O2 /EHsc /W4)
+    endif()
+    target_link_libraries(VAL038_Validation_Benchmark PRIVATE
+        kernel32
+        user32
+        ${CMAKE_BINARY_DIR}/lib/TreeAttention_Fused_VAL038_Debug.lib
+    )
+    set_target_properties(VAL038_Validation_Benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME VAL038_Validation_Benchmark
+    )
+    message(STATUS "[VAL-038] Validation benchmark (B→C→A): VAL038_Validation_Benchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
@@ -5627,6 +5787,63 @@ set_target_properties(test_simulator PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
 )
 message(STATUS "[Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)")
+
+# ============================================================================
+# Q4_0 Preprocessed Kernel Validation Tests (VAL-Q4.0)
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_fused_pipeline.cpp")
+    add_executable(test_q4_fused_pipeline EXCLUDE_FROM_ALL
+        tests/test_q4_fused_pipeline.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(test_q4_fused_pipeline PRIVATE cxx_std_20)
+    target_include_directories(test_q4_fused_pipeline PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+    )
+    if(WIN32)
+        target_link_libraries(test_q4_fused_pipeline PRIVATE)
+    endif()
+    set_target_properties(test_q4_fused_pipeline PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "[VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
+    add_executable(test_q4_cache_alignment EXCLUDE_FROM_ALL
+        tests/test_q4_cache_alignment.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(test_q4_cache_alignment PRIVATE cxx_std_20)
+    target_include_directories(test_q4_cache_alignment PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+    )
+    if(WIN32)
+        target_link_libraries(test_q4_cache_alignment PRIVATE)
+    endif()
+    set_target_properties(test_q4_cache_alignment PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "[VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment")
+endif()
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm")
+    enable_language(ASM_MASM)
+    add_library(q4_preprocessed_avx512 STATIC
+        src/kernels/q4_preprocessed_avx512.asm
+    )
+    set_target_properties(q4_preprocessed_avx512 PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    )
+    target_link_libraries(test_q4_fused_pipeline PRIVATE q4_preprocessed_avx512)
+    message(STATUS "[VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512")
+endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
     add_subdirectory(src/tools)
