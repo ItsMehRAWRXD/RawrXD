@@ -90,19 +90,19 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     xor r10d, r10d                  ; R10 = query node index (0-15)
     
-.query_loop:
+query_loop:
     ; Load query vector for node r10
     vmovups zmm0, [rbx + r10*64]    ; ZMM0 = Q[r10] (first 64 bytes)
     
     xor r11d, r11d                  ; R11 = key node index (0-15)
     
-.key_loop:
+key_loop:
     ; Compute dot product Q[r10] . K[r11]
     vxorps zmm30, zmm30, zmm30      ; ZMM30 = accumulator
     
     xor r12d, r12d                  ; R12 = dimension chunk index
     
-.dim_loop:
+dim_loop:
     ; Load K chunk
     mov rax, r11
     imul rax, r8                    ; RAX = r11 * head_dim
@@ -122,7 +122,7 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     inc r12d
     cmp r12d, r9d
-    jl .dim_loop
+    jl dim_loop
     
     ; Horizontal sum of ZMM30
     vextractf64x4 ymm1, zmm30, 1    ; Extract high 256 bits
@@ -140,11 +140,11 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     inc r11d
     cmp r11d, 16
-    jl .key_loop
+    jl key_loop
     
     inc r10d
     cmp r10d, 16
-    jl .query_loop
+    jl query_loop
     
     ; =========================================================================
     ; Phase 2: Apply Tree Mask and Softmax
@@ -152,7 +152,7 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     xor r10d, r10d                  ; R10 = row index
     
-    .softmax_row_loop:
+softmax_row_loop:
     ; Load tree mask for this row
     mov rax, r10
     shl rax, 4                      ; RAX = r10 * 16
@@ -211,7 +211,7 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     inc r10d
     cmp r10d, 16
-    jl .softmax_row_loop
+    jl softmax_row_loop
     
     ; =========================================================================
     ; Phase 3: Compute Attention @ V (Output)
@@ -219,12 +219,12 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     xor r10d, r10d                  ; R10 = output row
     
-    .output_row_loop:
+output_row_loop:
     vxorps zmm30, zmm30, zmm30      ; ZMM30 = accumulator
     
     xor r11d, r11d                  ; R11 = column in V
     
-    .v_col_loop:
+v_col_loop:
     ; Load softmax weights for this row
     mov rax, r10
     shl rax, 4
@@ -241,7 +241,7 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     inc r11d
     cmp r11d, 16
-    jl .v_col_loop
+    jl v_col_loop
     
     ; Store output row
     mov rax, r10
@@ -250,7 +250,7 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     
     inc r10d
     cmp r10d, 16
-    jl .output_row_loop
+    jl output_row_loop
     
     ; =========================================================================
     ; Cleanup and return
@@ -269,18 +269,6 @@ TreeVerify_Batch_4x4_AVX512 PROC FRAME
     ret
     
 TreeVerify_Batch_4x4_AVX512 ENDP
-
-; -----------------------------------------------------------------------------
-; Constants
-; -----------------------------------------------------------------------------
-align 64
-one REAL4 1.0
-align 64
-half REAL4 0.5
-align 64
-one_sixth REAL4 0.166666667
-align 64
-one_twenty_fourth REAL4 0.041666667
 
 ; -----------------------------------------------------------------------------
 ; Feature Detection

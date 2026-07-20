@@ -128,6 +128,19 @@ bool Test4K() {
     // Run reference
     ReferenceMatMul(weights, activation, reference, N, K);
     
+    // Debug: print first few weights and activations
+    std::cout << "First weight block scale: " << weights[0].scale << "\n";
+    std::cout << "First weight block bytes: ";
+    for (int i = 0; i < 4; ++i) {
+        std::cout << (int)weights[0].weights[i] << " ";
+    }
+    std::cout << "\n";
+    std::cout << "First activations: ";
+    for (int i = 0; i < 4; ++i) {
+        std::cout << activation[i] << " ";
+    }
+    std::cout << "\n";
+    
     // Run optimized kernel
     auto* kernel = KernelRegistry::Instance().Resolve(N, K);
     if (!kernel) {
@@ -153,6 +166,50 @@ bool Test4K() {
     std::cout << "  Reference: " << reference[errorIdx] << "\n";
     std::cout << "  First output: " << output[0] << "\n";
     std::cout << "  First reference: " << reference[0] << "\n";
+    
+    if (maxError > 0.1f) {
+        std::cout << "FAIL: Error too large\n";
+        return false;
+    }
+    
+    std::cout << "PASS\n";
+    return true;
+}
+
+bool Test4K_AVX512() {
+    std::cout << "\n=== Test: 4K Dimension (AVX-512) ===\n";
+    
+    constexpr size_t N = 4096;
+    constexpr size_t K = 4096;
+    constexpr size_t numBlocks = (N * K) / 32;
+    
+    std::vector<Q4_0_Block> weights(numBlocks);
+    std::vector<float> activation(K);
+    std::vector<float> output(N);
+    std::vector<float> reference(N);
+    
+    GenerateQ4_0Weights(weights, numBlocks);
+    GenerateActivation(activation);
+    
+    // Run reference
+    ReferenceMatMul(weights, activation, reference, N, K);
+    
+    // Run AVX-512 kernel directly
+    auto kernel = std::make_shared<QuantizedMatMul_4K_AVX512>();
+    kernel->Execute(weights.data(), activation.data(), output.data(), N, K);
+    
+    // Compare
+    float maxError = 0.0f;
+    size_t errorIdx = 0;
+    for (size_t i = 0; i < N; ++i) {
+        float error = std::abs(output[i] - reference[i]);
+        if (error > maxError) {
+            maxError = error;
+            errorIdx = i;
+        }
+    }
+    
+    std::cout << "Max error: " << maxError << " at index " << errorIdx << "\n";
     
     if (maxError > 0.1f) {
         std::cout << "FAIL: Error too large\n";
@@ -248,39 +305,4 @@ void Benchmark4K() {
 
 /*===========================================================================
  * Main
- *===========================================================================*/
-int main() {
-    std::cout << "========================================================================\n";
-    std::cout << "  RawrXD Quantized Kernel Test Harness\n";
-    std::cout << "  Fix #4: Fused Q4_0 Dequant + MatMul\n";
-    std::cout << "========================================================================\n";
-    
-    // Initialize registry
-    if (!KernelRegistry::Instance().Initialize()) {
-        std::cout << "ERROR: Failed to initialize kernel registry\n";
-        std::cout << "AVX-512 may not be available on this CPU\n";
-        return 1;
-    }
-    
-    std::cout << "\nKernel registry initialized\n";
-    std::cout << "AVX-512: Available\n";
-    
-    // Run tests
-    bool allPassed = true;
-    allPassed &= Test4K();
-    allPassed &= Test5K();
-    
-    if (!allPassed) {
-        std::cout << "\n=== SOME TESTS FAILED ===\n";
-        return 1;
-    }
-    
-    // Run benchmarks
-    Benchmark4K();
-    
-    std::cout << "\n========================================================================\n";
-    std::cout << "  All tests passed\n";
-    std::cout << "========================================================================\n";
-    
-    return 0;
-}
+ *=====================

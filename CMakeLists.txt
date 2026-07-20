@@ -5071,6 +5071,34 @@ if(WIN32)
     message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-032: AVX-512 Assembly Kernel Benchmark
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL032_AVX512_Benchmark.cpp
+    )
+    target_include_directories(VAL032_AVX512_Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(VAL032_AVX512_Benchmark PRIVATE
+        RAWR_BENCHMARK=1
+    )
+    if(MSVC)
+        target_compile_options(VAL032_AVX512_Benchmark PRIVATE /EHsc /W4 /O2 /arch:AVX512)
+    endif()
+    target_link_libraries(VAL032_AVX512_Benchmark PRIVATE
+        kernel32
+        user32
+        ${CMAKE_BINARY_DIR}/lib/RawrXD_TreeAttention_AVX512.lib
+    )
+    set_target_properties(VAL032_AVX512_Benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME VAL032_AVX512_Benchmark
+    )
+    message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL

@@ -27,6 +27,7 @@ namespace Kernels {
 extern "C" {
     // Hot path kernels
     int QuantizedMatMul_Fused_4K(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
+    int QuantizedMatMul_Fused_4K_AVX512(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
     int QuantizedMatMul_Fused_5K(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
     
     // Cold path kernel
@@ -85,7 +86,7 @@ public:
  * Concrete Kernel Implementations
  *===========================================================================*/
 
-// Hot path: 4K dimension (most common)
+// Hot path: 4K dimension (most common) - Scalar
 class QuantizedMatMul_4K : public IQuantizedMatMulKernel {
 public:
     bool Execute(const void* weights, 
@@ -107,6 +108,34 @@ public:
         static KernelDescriptor desc = {
             4096, 4096, "QuantizedMatMul_4K",
             reinterpret_cast<void*>(&QuantizedMatMul_Fused_4K),
+            true
+        };
+        return desc;
+    }
+};
+
+// Hot path: 4K dimension - AVX-512 optimized
+class QuantizedMatMul_4K_AVX512 : public IQuantizedMatMulKernel {
+public:
+    bool Execute(const void* weights, 
+                 const float* activation,
+                 float* output,
+                 uint64_t N,
+                 uint64_t K) override {
+        (void)N; (void)K; // Statically known
+        int result = QuantizedMatMul_Fused_4K_AVX512(
+            const_cast<void*>(weights),
+            const_cast<float*>(activation),
+            output,
+            4096, 4096
+        );
+        return result == 1;
+    }
+    
+    const KernelDescriptor& GetDescriptor() const override {
+        static KernelDescriptor desc = {
+            4096, 4096, "QuantizedMatMul_4K_AVX512",
+            reinterpret_cast<void*>(&QuantizedMatMul_Fused_4K_AVX512),
             true
         };
         return desc;

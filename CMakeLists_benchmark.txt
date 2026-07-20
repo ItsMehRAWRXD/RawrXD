@@ -1,0 +1,31 @@
+# Tree Attention Benchmark Suite
+# Add to main CMakeLists.txt
+
+# Benchmark executable
+add_executable(benchmark_tree_attention
+    tests/benchmark_tree_attention.cpp
+    src/inference/RawrXD_TreeAttention.cpp
+    src/inference/TreeAttention_AVX512_Wrapper.cpp
+)
+
+target_include_directories(benchmark_tree_attention PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/inference
+    ${CMAKE_SOURCE_DIR}/src/kernels
+)
+
+target_link_libraries(benchmark_tree_attention PRIVATE
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+# Set optimization flags
+if(MSVC)
+    target_compile_options(benchmark_tree_attention PRIVATE /O2 /arch:AVX2)
+else()
+    target_compile_options(benchmark_tree_attention PRIVATE -O3 -march=native)
+endif()
+
+# Copy to bin directory
+add_custom_command(TARGET benchmark_tree_attention POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:benchmark_tree_attention> ${CMAKE_SOURCE_DIR}/bin/
+)
