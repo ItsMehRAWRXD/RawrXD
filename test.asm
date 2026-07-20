@@ -1,8 +1,7 @@
-; test.asm - Simple test program
-.code
-main proc
-    ; Just return 0
-    xor rax, rax
-    ret
-main endp
-end
+.CODE  
+  
+MyProc PROC  
+mov rax, 1  
+ret  
+MyProc ENDP  
+END  

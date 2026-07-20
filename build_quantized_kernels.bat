@@ -30,11 +30,14 @@ if not exist "%VSINSTALLPATH%" (
 echo Found VS at: %VSINSTALLPATH%
 
 REM Setup environment
-call "%VSINSTALLPATH%\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
+call "%VSINSTALLPATH%\VC\Auxiliary\Build\vcvars64.bat"
 if errorlevel 1 (
     echo ERROR: Failed to setup VS environment.
     exit /b 1
 )
+
+echo Environment configured for x64
+echo Using ml64 from: %VCToolsInstallDir%bin\Hostx64\x64\
 
 echo Environment configured for x64
 

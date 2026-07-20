@@ -4963,6 +4963,33 @@ if(WIN32)
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
 
     # ═══════════════════════════════════════════════════════════════════
+    # Fix #3 NHWC Layout Benchmark — Memory layout transformation validation
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/Fix3_NHWC_Benchmark.cpp
+    )
+    target_include_directories(Fix3_NHWC_Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(Fix3_NHWC_Benchmark PRIVATE
+        RAWR_BENCHMARK=1
+    )
+    if(MSVC)
+        target_compile_options(Fix3_NHWC_Benchmark PRIVATE /EHsc /W4 /O2 /arch:AVX512)
+    endif()
+    target_link_libraries(Fix3_NHWC_Benchmark PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(Fix3_NHWC_Benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME Fix3_NHWC_Benchmark
+    )
+    message(STATUS "[Fix #3] NHWC Layout Benchmark target: Fix3_NHWC_Benchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL

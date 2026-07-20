@@ -9,7 +9,13 @@ setlocal EnableDelayedExpansion
 REM Configuration
 set RAWRXD_ROOT=D:\RawrXD
 set BUILD_DIR=%RAWRXD_ROOT%\build_fix5a
-set CL_PATH=C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe
+
+REM Setup Visual Studio environment
+call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+if errorlevel 1 (
+    echo ERROR: Failed to setup Visual Studio environment
+    exit /b 1
+)
 
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build

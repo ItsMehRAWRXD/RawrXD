@@ -124,14 +124,14 @@ public:
      * Get element index in NHWC layout
      *=========================================================================*/
     static inline size_t IndexNHWC(int n, int h, int w, int c, int H, int W, int C) {
-        return ((size_t)n * H + h) * W + w) * C + c;
+        return (((size_t)n * H + h) * W + w) * C + c;
     }
     
     /**=========================================================================
      * Get element index in NCHW layout
      *=========================================================================*/
     static inline size_t IndexNCHW(int n, int c, int h, int w, int C, int H, int W) {
-        return ((size_t)n * C + c) * H + h) * W + w;
+        return (((size_t)n * C + c) * H + h) * W + w;
     }
 
 private:
@@ -149,7 +149,7 @@ private:
         for (int n = 0; n < N; ++n) {
             for (int h = 0; h < H; ++h) {
                 for (int w = 0; w < W; ++w) {
-                    float* dst_ptr = dst + ((size_t)n * H + h) * W + w) * C;
+                    float* dst_ptr = dst + (((size_t)n * H + h) * W + w) * C;
                     
                     // Process 16 channels at a time with AVX-512
                     int c = 0;
@@ -197,7 +197,7 @@ private:
                     for (int c = 0; c < C; ++c) {
                         // src[n][c][h][w] -> dst[n][h][w][c]
                         size_t src_idx = ((size_t)n * C + c) * H * W + h * W + w;
-                        size_t dst_idx = ((size_t)n * H + h) * W + w) * C + c;
+                        size_t dst_idx = (((size_t)n * H + h) * W + w) * C + c;
                         dst[dst_idx] = src[src_idx];
                     }
                 }
@@ -225,17 +225,17 @@ public:
     
     // Fast inline access
     inline T& operator()(int n, int h, int w, int c) {
-        return data_[((size_t)n * H_ + h) * W_ + w) * C_ + c];
+        return data_[(((size_t)n * H_ + h) * W_ + w) * C_ + c];
     }
     
     inline const T& operator()(int n, int h, int w, int c) const {
-        return data_[((size_t)n * H_ + h) * W_ + w) * C_ + c];
+        return data_[(((size_t)n * H_ + h) * W_ + w) * C_ + c];
     }
     
     // Get pointer to contiguous channel data at (n, h, w)
     // In NHWC, channels are contiguous - perfect for vectorized ops
     inline T* GetChannelPtr(int n, int h, int w) {
-        return data_ + ((size_t)n * H_ + h) * W_ + w) * C_;
+        return data_ + (((size_t)n * H_ + h) * W_ + w) * C_;
     }
     
     // Prefetch channels for upcoming access
@@ -268,7 +268,7 @@ public:
             int w = rand() % W;
             
             size_t nchw_idx = ((size_t)n * C + c) * H * W + h * W + w;
-            size_t nhwc_idx = ((size_t)n * H + h) * W + w) * C + c;
+            size_t nhwc_idx = (((size_t)n * H + h) * W + w) * C + c;
             
             if (original_nchw[nchw_idx] != converted_nhwc[nhwc_idx]) {
                 return false;

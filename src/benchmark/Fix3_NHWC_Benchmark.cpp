@@ -89,7 +89,7 @@ struct LayoutMicrobenchmark {
                 for (int w = 0; w < W; ++w) {
                     // Access all 64 channels at this spatial location
                     // In NHWC: 1 contiguous memory block
-                    size_t base_idx = ((size_t)N * H + h) * W + w) * C;
+                    size_t base_idx = (((size_t)N * H + h) * W + w) * C;
                     for (int c = 0; c < C; ++c) {
                         sum_nhwc += nhwc_data[base_idx + c];
                     }
@@ -162,7 +162,7 @@ struct ConversionCorrectnessTest {
             int w = dist_w(rng);
             
             size_t nchw_idx = ((size_t)n * C + c) * H * W + h * W + w;
-            size_t nhwc_idx = ((size_t)n * H + h) * W + w) * C + c;
+            size_t nhwc_idx = (((size_t)n * H + h) * W + w) * C + c;
             
             if (original[nchw_idx] != converted[nhwc_idx]) {
                 printf("  MISMATCH at n=%d, c=%d, h=%d, w=%d\n", n, c, h, w);
@@ -275,7 +275,7 @@ struct QuantizedConversionTest {
         
         // Sample check: first block at position (0,0,0)
         for (int cb = 0; cb < blocks_per_channel; ++cb) {
-            size_t nchw_offset = (((size_t)N * blocks_per_channel + cb) * H + 0) * W + 0) * block_bytes;
+            size_t nchw_offset = ((((size_t)N * blocks_per_channel + cb) * H + 0) * W + 0) * block_bytes;
             size_t nhwc_offset = ((((size_t)N * H + 0) * W + 0) * blocks_per_channel + cb) * block_bytes;
             
             if (std::memcmp(nchw_q4.data() + nchw_offset, 
