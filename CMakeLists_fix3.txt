@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.20)
+project(Fix3_NHWC_Benchmark LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# AVX-512 optimization
+if(MSVC)
+    add_compile_options(/arch:AVX512 /O2 /W4 /EHsc)
+else()
+    add_compile_options(-mavx512f -mavx512dq -O3 -Wall)
+endif()
+
+# Include directories
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# Benchmark executable
+add_executable(Fix3_NHWC_Benchmark
+    src/benchmark/Fix3_NHWC_Benchmark.cpp
+)
+
+# Install
+install(TARGETS Fix3_NHWC_Benchmark DESTINATION bin)

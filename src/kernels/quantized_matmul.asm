@@ -62,7 +62,7 @@ EXTERN RawrXD_KernelTelemetry_Record:PROC
 ; Clobbers: RAX, R10-R11 (volatile per Windows ABI)
 ; Preserves: RBX, RBP, RDI, RSI, R12-R15 (non-volatile)
 ;=============================================================================
-ALIGN 64
+ALIGN 16
 QuantizedMatMul_Fused_4K PROC FRAME
     ;-------------------------------------------------------------------------
     ; Prologue - Save non-volatile registers
@@ -114,7 +114,7 @@ QuantizedMatMul_Fused_4K PROC FRAME
 
     mov     rcx, 64               ; RCX = unroll count (64 blocks)
 
-ALIGN 32
+ALIGN 16
 Loop_Unroll4:
     ;=====================================================================
     ; Block 0: Process 32 weights (1 Q4_0 block)
@@ -209,7 +209,7 @@ QuantizedMatMul_Fused_4K ENDP
 ; HOT PATH: QuantizedMatMul_Fused_5K
 ; Statically unrolled for 5120-dimensional layers (e.g., 70B models)
 ;=============================================================================
-ALIGN 64
+ALIGN 16
 QuantizedMatMul_Fused_5K PROC FRAME
     push    rbx
     push    rbp
@@ -243,7 +243,7 @@ QuantizedMatMul_Fused_5K PROC FRAME
     mov     r15, rdx
     mov     rcx, 80
 
-ALIGN 32
+ALIGN 16
 Loop_5K_Unroll4:
     ; Block 0
     vbroadcastss zmm4, dword ptr [r14]
@@ -310,7 +310,7 @@ QuantizedMatMul_Fused_5K ENDP
 ; Generic implementation for non-standard dimensions
 ; Uses computed jump table for dimension dispatch
 ;=============================================================================
-ALIGN 64
+ALIGN 16
 QuantizedMatMul_Dynamic PROC FRAME
     ;-------------------------------------------------------------------------
     ; Prologue
@@ -409,7 +409,6 @@ QuantizedMatMul_Dynamic ENDP
 ; Kernel Registry Dispatch Table
 ; Function pointer table for computed jump dispatch
 ;=============================================================================
-ALIGN 64
 .DATA
 
 ; Dispatch table indexed by (dimension / 1024 - 1)
@@ -428,7 +427,6 @@ QuantizedMatMul_DispatchTable LABEL QWORD
 ; C API Exports
 ;-----------------------------------------------------------------------------
 .CODE
-ALIGN 64
 
 ;=============================================================================
 ; RawrXD_QuantizedMatMul_Dispatch
@@ -497,7 +495,6 @@ RawrXD_KernelRegistry_Init ENDP
 ; Telemetry Hooks
 ; Minimal overhead instrumentation for performance validation
 ;=============================================================================
-ALIGN 64
 RawrXD_KernelTelemetry_Begin PROC
     ; Read TSC into RAX
     rdtsc
@@ -506,7 +503,6 @@ RawrXD_KernelTelemetry_Begin PROC
     ret
 RawrXD_KernelTelemetry_Begin ENDP
 
-ALIGN 64
 RawrXD_KernelTelemetry_End PROC
     ; Read TSC and compute delta (simplified)
     rdtsc

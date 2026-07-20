@@ -28,9 +28,17 @@ OptimizedKVCache::OptimizedKVCache(const KVCacheConfig& config)
     m_size = config.GetTotalSize();
     size_t aligned_size = (m_size + config.ALIGNMENT - 1) & ~(config.ALIGNMENT - 1);
     
-    // Allocate aligned memory
+    // Allocate aligned memory - CRITICAL: base must be 64-byte aligned
     m_data = (float*)_aligned_malloc(aligned_size, config.ALIGNMENT);
+    
+    // Validate base pointer alignment
     if (m_data) {
+        if ((uintptr_t)m_data % config.ALIGNMENT != 0) {
+            // This should never happen with _aligned_malloc, but check anyway
+            _aligned_free(m_data);
+            m_data = nullptr;
+            return;
+        }
         std::memset(m_data, 0, aligned_size);
     }
     
