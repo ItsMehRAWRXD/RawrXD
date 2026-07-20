@@ -81,6 +81,10 @@ const std::vector<PatchEntry> g_NightmarePatchBatch = {
 const char* TEST_PROMPT = "Explain quantum entanglement in 10 tokens.";
 const uint64_t EXPECTED_HASH = 0x8A4F2B1C9D3E5A7F; // Pre-computed hash of known-good output
 
+// Gold Run mode: Set to true to capture hash from actual inference
+// After Gold Run, update EXPECTED_HASH with the captured value
+const bool GOLD_RUN_MODE = false;
+
 // Simple hash function for result validation
 uint64_t HashResult(void* result) {
     if (!result) return 0;
@@ -137,13 +141,23 @@ SovereignTestReport RunVAL038_E2ETest() {
 
     // 5. Validation
     std::cout << "[Step 5/5] Validation..." << std::endl;
-    bool correctness = (HashResult(result) == EXPECTED_HASH);
+    uint64_t actualHash = HashResult(result);
+    
+    // Gold Run: Capture hash for EXPECTED_HASH update
+    if (GOLD_RUN_MODE) {
+        std::cout << "\n*** GOLD RUN MODE ***" << std::endl;
+        std::cout << "Captured Hash: 0x" << std::hex << actualHash << std::dec << std::endl;
+        std::cout << "Update EXPECTED_HASH in source with this value." << std::endl;
+        std::cout << "*********************\n" << std::endl;
+    }
+    
+    bool correctness = (actualHash == EXPECTED_HASH);
     float speedup = (float)baseline / (float)patched_cycles;
     
     std::cout << "  [Metric] Performance Gain: " << speedup << "x" << std::endl;
     std::cout << "  [Metric] Hash Match: " << (correctness ? "YES" : "NO") << std::endl;
-    std::cout << "  [Metric] Expected: " << EXPECTED_HASH << std::endl;
-    std::cout << "  [Metric] Actual:   " << HashResult(result) << std::endl;
+    std::cout << "  [Metric] Expected: 0x" << std::hex << EXPECTED_HASH << std::dec << std::endl;
+    std::cout << "  [Metric] Actual:   0x" << std::hex << actualHash << std::dec << std::endl;
 
     // Success Criteria
     bool passed = correctness && (speedup > 1.2f); // Expect at least 20% gain
