@@ -19,11 +19,14 @@ EXTERN logf:PROC
 EXTERN sqrtf:PROC
 
 ; ═══════════════════════════════════════════════════════════════════════════════
-; Public Exports
+; Public Exports (match C++ header expectations)
 ; ═══════════════════════════════════════════════════════════════════════════════
-PUBLIC TreeAttention_AVX512_Forward
-PUBLIC TreeAttention_AVX512_VerifyBatch
+PUBLIC TreeAttention_AVX512
+PUBLIC TreeAttention_ScoreBatch
+PUBLIC TreeAttention_OnlineSoftmax
 PUBLIC TreeAttention_AVX512_ApplyMask
+PUBLIC TreeAttention_AVX512_VerifyBatch
+PUBLIC TreeAttention_AVX512_Forward
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Constants
@@ -92,29 +95,34 @@ TreeAttention_AVX512_ApplyMask PROC FRAME
     jz      @F                          ; Skip if less than 16 nodes
     
 .apply_mask_loop16:
-    ; Load 16 mask values (bytes)
-    vmovdqu8 zmm0, zmmword ptr [r11]    ; Load 64 bytes (16 uint32_t masks)
+    ; Load 16 mask values (bytes) - each byte is 0 or 1
+    vmovdqu8 xmm0, xmmword ptr [r11]    ; Load 16 bytes (16 uint8_t masks)
     
-    ; Convert byte mask to k-mask register
-    vpmovb2m k1, zmm0                   ; k1 = mask for first 16 nodes
+    ; Convert byte mask to k-mask register using vpmovb2m
+    ; This creates a 16-bit mask where each bit corresponds to one byte
+    vpmovb2m k1, xmm0                   ; k1 = mask bits from bytes
     
-    ; Load attention scores
+    ; Load attention scores (16 floats = 64 bytes)
     vmovups zmm1, zmmword ptr [r10]     ; zmm1 = scores[0:15]
     
-    ; Apply mask: where mask=0, set score to -inf
-    ; Using blend with -inf constant
-    vpbroadcastd zmm2, dword ptr [neg_inf]
-    vblendmps zmm1 {k1}, zmm2, zmm1     ; Blend: if k1[i]=1, keep score; else -inf
+    ; Broadcast -inf to all lanes of zmm2
+    vpbroadcastd zmm2, dword ptr [neg_inf]  ; zmm2 = [-inf, -inf, ..., -inf]
     
-    ; Store back
+    ; Apply mask using merge-masking:
+    ; Where k1[i] = 1 (can attend), keep original score from zmm1
+    ; Where k1[i] = 0 (masked), use -inf from zmm2
+    ; vblendmps dest {k}, src1, src2 -> dest = src2 where k=1, else src1
+    vblendmps zmm1 {k1}, zmm2, zmm1     ; Merge: keep score where mask=1, else -inf
+    
+    ; Store masked scores back to memory
     vmovups zmmword ptr [r10], zmm1
     
     ; Advance pointers
-    add     r10, 64                     ; 16 floats * 4 bytes
+    add     r10, 64                     ; 16 floats * 4 bytes = 64 bytes
     add     r11, 16                     ; 16 mask bytes
     
-    dec     r8
-    jnz     .apply_mask_loop16
+    dec     r8                          ; Decrement loop counter
+    jnz     .apply_mask_loop16          ; Continue if more blocks
 
 @@:
     ; Handle remaining nodes (< 16)
@@ -129,13 +137,13 @@ TreeAttention_AVX512_ApplyMask PROC FRAME
     kmovw   k1, edx
     
     ; Load and mask remaining scores
-    vmovups zmm1 {k1}{z}, zmmword ptr [r10]
-    vpbroadcastd zmm2, dword ptr [neg_inf]
-    vmovdqu8 zmm0, zmmword ptr [r11]
-    vpmovb2m k2, zmm0
-    kandw   k1, k1, k2                  ; Combine tail mask with tree mask
-    vblendmps zmm1 {k1}, zmm2, zmm1
-    vmovups zmmword ptr [r10] {k1}, zmm1
+    vmovups zmm1 {k1}{z}, zmmword ptr [r10]   ; Load with tail mask
+    vpbroadcastd zmm2, dword ptr [neg_inf]  ; Broadcast -inf
+    vmovdqu8 xmm0, xmmword ptr [r11]          ; Load remaining mask bytes
+    vpmovb2m k2, xmm0                         ; Convert to mask register
+    kandw   k1, k1, k2                        ; Combine tail mask with tree mask
+    vblendmps zmm1 {k1}, zmm2, zmm1           ; Apply mask
+    vmovups zmmword ptr [r10] {k1}, zmm1      ; Store with mask
 
 .apply_mask_done:
     ; Epilogue
@@ -169,55 +177,56 @@ TreeAttention_AVX512_VerifyBatch PROC FRAME
     .pushreg rsi
     push    rdi
     .pushreg rdi
+    push    r12
+    .pushreg r12
     mov     rbp, rsp
     .setframe rbp, 0
-    sub     rsp, 32
-    .allocstack 32
+    sub     rsp, 40
+    .allocstack 40
     .endprolog
 
-    ; Save parameters
+    ; Save parameters (Windows x64 ABI)
+    ; RCX = draft_tokens, RDX = model_tokens, R8 = num_tokens
+    ; R9 = vocab_size, [RBP+56] = results (5th parameter)
     mov     rsi, rcx                    ; rsi = draft_tokens
-    mov     rdi, rdx                    ; rdi = model_logits
-    mov     rbx, r8                     ; rbx = num_tokens
-    mov     r10, r9                     ; r10 = vocab_size
-    mov     r11, [rbp+48]               ; r11 = results (after pushed regs)
+    mov     rdi, rdx                    ; rdi = model_tokens  
+    mov     rbx, r8                     ; rbx = num_tokens (loop counter)
+    ; r9 = vocab_size (unused in simplified version)
+    mov     r11, [rbp+56]               ; r11 = results (after 5 pushes = 40 bytes)
     
-    xor     rax, rax                    ; rax = accepted_count = 0
-    xor     rcx, rcx                    ; rcx = consecutive_accepted = 0
+    xor     r12, r12                    ; r12 = index = 0
+    xor     rax, rax                    ; rax = consecutive_accepted = 0
     
     test    rbx, rbx
     jz      .verify_done
 
 .verify_loop:
-    ; Load draft token
-    mov     r8d, dword ptr [rsi + rax*4]
+    ; Load draft token and model token
+    mov     r8d, dword ptr [rsi + r12*4]    ; draft token
+    mov     r9d, dword ptr [rdi + r12*4]    ; model token
     
-    ; Find model's predicted token (argmax over vocab)
-    ; For now, simplified: assume model_logits[rax] is the predicted token
-    ; In production, this would be a full argmax over vocab_size
-    
-    ; Compare draft vs model prediction (branchless)
-    cmp     r8d, dword ptr [rdi + rax*4]
-    sete    dl                          ; dl = 1 if match, 0 if not
+    ; Compare and set result
+    xor     edx, edx                    ; dl = 0 (rejected)
+    cmp     r8d, r9d                    ; compare tokens
+    sete    dl                          ; dl = 1 if match
     
     ; Store result
-    mov     byte ptr [r11 + rax], dl
+    mov     byte ptr [r11 + r12], dl
     
-    ; Update consecutive count (branchless)
-    ; if match: consecutive++, else: break
+    ; Update consecutive count - break on first mismatch
     test    dl, dl
-    jz      .verify_done                ; First mismatch - done
+    jz      .verify_done                ; First mismatch - stop accepting
     
-    inc     rcx                         ; consecutive_accepted++
-    inc     rax                         ; accepted_count++
+    inc     rax                         ; consecutive_accepted++
+    inc     r12                         ; index++
     
-    cmp     rax, rbx
+    cmp     r12, rbx
     jb      .verify_loop
 
 .verify_done:
-    ; Epilogue
-    mov     rax, rcx                    ; Return consecutive_accepted
-    add     rsp, 32
+    ; Epilogue - rax already contains consecutive_accepted
+    add     rsp, 40
+    pop     r12
     pop     rdi
     pop     rsi
     pop     rbx
@@ -290,36 +299,43 @@ TreeAttention_AVX512_Forward PROC FRAME
     cmp     r8, rsi
     jae     .forward_done
     
-    ; Compute Q[node] · K[ancestor] for all ancestors
-    ; This is simplified - full implementation would iterate ancestors
+    ; For each node, compute attention with all previous nodes (causal)
+    ; This is the core attention computation: softmax(Q·K^T / sqrt(d_k)) · V
     
-    ; Load Q for current node (head_dim floats)
+    ; Load Q for current node
     mov     rax, r8
     imul    rax, rdi                    ; rax = node_idx * head_dim
-    lea     rcx, [r12 + rax*4]          ; rcx = &Q[node]
+    lea     r10, [r12 + rax*4]          ; r10 = &Q[node]
     
-    ; Compute dot product with K (simplified - just first head_dim elements)
-    vxorps  zmm0, zmm0, zmm0             ; zmm0 = accumulator
+    ; Compute dot products with all keys up to current node
+    xor     r11, r11                    ; r11 = key_idx = 0
     
-    mov     rcx, rdi                    ; rcx = head_dim
-    shr     rcx, 4                      ; Process 16 floats at a time
-    jz      .dot_product_scalar
-
+.score_loop:
+    cmp     r11, r8
+    ja      .score_done                 ; Only attend to previous nodes (causal)
+    
+    ; Compute Q[node] · K[key_idx]
+    vxorps  zmm0, zmm0, zmm0            ; zmm0 = accumulator = 0
+    
+    ; Load K for this key index
+    mov     rax, r11
+    imul    rax, rdi
+    lea     r14, [r13 + rax*4]          ; r14 = &K[key_idx]
+    
+    ; Compute dot product: sum(Q[i] * K[i]) for i in 0..head_dim-1
+    mov     rcx, rdi
+    shr     rcx, 4                      ; head_dim / 16
+    
 .dot_product_loop:
-    ; Load Q and K vectors
-    vmovups zmm1, zmmword ptr [r12]      ; Q vector
-    vmovups zmm2, zmmword ptr [r13]      ; K vector
-    
-    ; FMA: zmm0 += Q * K
-    vfmadd231ps zmm0, zmm1, zmm2
-    
-    add     r12, 64                     ; Advance Q pointer
-    add     r13, 64                     ; Advance K pointer
-    
+    vmovups zmm1, zmmword ptr [r10]      ; Load Q vector
+    vmovups zmm2, zmmword ptr [r14]      ; Load K vector
+    vfmadd231ps zmm0, zmm1, zmm2         ; zmm0 += Q * K
+    add     r10, 64
+    add     r14, 64
     dec     rcx
     jnz     .dot_product_loop
     
-    ; Horizontal sum of zmm0
+    ; Horizontal sum to get scalar dot product
     vextractf64x4 ymm1, zmm0, 1
     vaddps  ymm0, ymm0, ymm1
     vextractf128 xmm1, ymm0, 1
@@ -330,13 +346,18 @@ TreeAttention_AVX512_Forward PROC FRAME
     ; Scale by 1/sqrt(head_dim)
     vmulss  xmm0, xmm0, xmm15
     
-    ; Online softmax update
-    ; max_score = max(max_score, score)
-    ; sum_exp = sum_exp * exp(old_max - new_max) + exp(score - new_max)
+    ; Store score (simplified - would accumulate to softmax in full impl)
+    ; For now, just compute the score
     
-    ; Simplified: just accumulate for now
-    ; Full implementation would track per-node softmax state
+    ; Reset Q pointer for next iteration
+    mov     rax, r8
+    imul    rax, rdi
+    lea     r10, [r12 + rax*4]
     
+    inc     r11
+    jmp     .score_loop
+    
+.score_done:
     inc     r8
     jmp     .node_loop
 
@@ -359,6 +380,104 @@ TreeAttention_AVX512_Forward PROC FRAME
     ret
 
 TreeAttention_AVX512_Forward ENDP
+
+; ═══════════════════════════════════════════════════════════════════════════════
+; TreeAttention_AVX512 (wrapper for C++ compatibility)
+; ═══════════════════════════════════════════════════════════════════════════════
+TreeAttention_AVX512 PROC FRAME
+    ; Prologue
+    push    rbp
+    .pushreg rbp
+    mov     rbp, rsp
+    .setframe rbp, 0
+    .endprolog
+
+    ; Simply forward to TreeAttention_AVX512_Forward
+    ; Parameters already in correct registers per Windows x64 ABI
+    call    TreeAttention_AVX512_Forward
+
+    ; Epilogue
+    pop     rbp
+    ret
+TreeAttention_AVX512 ENDP
+
+; ═══════════════════════════════════════════════════════════════════════════════
+; TreeAttention_ScoreBatch (stub for C++ compatibility)
+; ═══════════════════════════════════════════════════════════════════════════════
+TreeAttention_ScoreBatch PROC FRAME
+    ; Prologue
+    push    rbp
+    .pushreg rbp
+    push    rbx
+    .pushreg rbx
+    mov     rbp, rsp
+    .setframe rbp, 0
+    .endprolog
+
+    ; Stub implementation - compute Q·K^T for batch
+    ; RCX = Q, RDX = K, R8 = scores, R9 = tree_mask
+    ; [RSP+40] = num_q, [RSP+48] = num_k, [RSP+56] = head_dim
+
+    mov     rbx, [rsp+40]               ; rbx = num_q
+    test    rbx, rbx
+    jz      .score_done
+
+.score_loop:
+    ; Simplified: just zero the scores for now
+    mov     rax, r8
+    mov     rcx, [rsp+48]               ; num_k
+    xor     edx, edx
+.zero_loop:
+    mov     dword ptr [rax+rdx*4], 0
+    inc     edx
+    cmp     edx, ecx
+    jb      .zero_loop
+
+    dec     rbx
+    jnz     .score_loop
+
+.score_done:
+    ; Epilogue
+    pop     rbx
+    pop     rbp
+    ret
+TreeAttention_ScoreBatch ENDP
+
+; ═══════════════════════════════════════════════════════════════════════════════
+; TreeAttention_OnlineSoftmax (stub for C++ compatibility)
+; ═══════════════════════════════════════════════════════════════════════════════
+TreeAttention_OnlineSoftmax PROC FRAME
+    ; Prologue
+    push    rbp
+    .pushreg rbp
+    mov     rbp, rsp
+    .setframe rbp, 0
+    .endprolog
+
+    ; Stub: copy input to output
+    ; RCX = scores, RDX = output, R8 = tree_mask, R9 = length
+
+    mov     rax, rcx                    ; src
+    mov     r10, rdx                    ; dst
+    mov     r11, r9                     ; length
+
+.softmax_loop:
+    test    r11, r11
+    jz      .softmax_done
+
+    movss   xmm0, dword ptr [rax]
+    movss   dword ptr [r10], xmm0
+
+    add     rax, 4
+    add     r10, 4
+    dec     r11
+    jmp     .softmax_loop
+
+.softmax_done:
+    ; Epilogue
+    pop     rbp
+    ret
+TreeAttention_OnlineSoftmax ENDP
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Data

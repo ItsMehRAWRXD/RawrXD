@@ -8059,13 +8059,13 @@ build bin\VAL032_SpeculativeDecoding_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL03
 #############################################
 # Order-only phony target for VAL032_AVX512_Benchmark
 
-build cmake_object_order_depends_target_VAL032_AVX512_Benchmark: phony || .
+build cmake_object_order_depends_target_VAL032_AVX512_Benchmark: phony || cmake_object_order_depends_target_telemetry_masm_kernels
 
-build CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark.cpp.obj: CXX_COMPILER__VAL032_AVX512_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL032_AVX512_Benchmark.cpp || cmake_object_order_depends_target_VAL032_AVX512_Benchmark
+build CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp.obj: CXX_COMPILER__VAL032_AVX512_Benchmark_unscanned_Release D$:\rawrxd\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp || cmake_object_order_depends_target_VAL032_AVX512_Benchmark
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -ID:\rawrxd\src\validation\kernels -ID:\rawrxd\src\validation\kernels\.. -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
   OBJECT_FILE_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark
   TARGET_COMPILE_PDB = CMakeFiles\VAL032_AVX512_Benchmark.dir\
@@ -8080,11 +8080,11 @@ build CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchma
 #############################################
 # Link the executable bin\VAL032_AVX512_Benchmark.exe
 
-build bin\VAL032_AVX512_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL032_AVX512_Benchmark_Release CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark.cpp.obj | lib\RawrXD_TreeAttention_AVX512.lib
+build bin\VAL032_AVX512_Benchmark.exe: CXX_EXECUTABLE_LINKER__VAL032_AVX512_Benchmark_Release CMakeFiles\VAL032_AVX512_Benchmark.dir\src\benchmark\VAL032_AVX512_Benchmark_Clean.cpp.obj | src\validation\kernels\telemetry_masm_kernels.lib || src\validation\kernels\telemetry_masm_kernels.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = kernel32.lib  user32.lib  lib\RawrXD_TreeAttention_AVX512.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = kernel32.lib  user32.lib  src\validation\kernels\telemetry_masm_kernels.lib  kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = CMakeFiles\VAL032_AVX512_Benchmark.dir
   POST_BUILD = cd .
@@ -12514,7 +12514,7 @@ build src\validation\install\strip: phony src\validation\CMakeFiles\install\stri
 #############################################
 # Order-only phony target for telemetry_masm_kernels
 
-build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
+build cmake_object_order_depends_target_telemetry_masm_kernels: phony || src\validation\kernels\RawrXD_TreeAttention_Kernel.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\silu_correct.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\test_minimal.obj
 
 build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj: CXX_COMPILER__telemetry_masm_kernels_unscanned_Release D$:\rawrxd\src\validation\kernels\masm_kernels_dummy.cpp || cmake_object_order_depends_target_telemetry_masm_kernels
   CONFIG = Release
@@ -12535,7 +12535,7 @@ build src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_
 #############################################
 # Link the static library src\validation\kernels\telemetry_masm_kernels.lib
 
-build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
+build src\validation\kernels\telemetry_masm_kernels.lib: CXX_STATIC_LIBRARY_LINKER__telemetry_masm_kernels_Release src\validation\kernels\silu_activation_avx512_fixed_v2.obj src\validation\kernels\rmsnorm_forward_avx2.obj src\validation\kernels\test_minimal.obj src\validation\kernels\silu_correct.obj src\validation\kernels\rmsnorm_fixed.obj src\validation\kernels\rmsnorm_tiled.obj src\validation\kernels\softmax_fixed.obj src\validation\kernels\silu_clamped.obj src\validation\kernels\abi_integrity_test.obj src\validation\kernels\abi_integrity_simple.obj src\validation\kernels\q4_0_dequant.obj src\validation\kernels\q4_0_dequant_optimized.obj src\validation\kernels\RawrXD_TreeAttention_Kernel.obj src\validation\kernels\CMakeFiles\telemetry_masm_kernels.dir\masm_kernels_dummy.cpp.obj
   CONFIG = Release
   LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64
@@ -12774,6 +12774,15 @@ build src\validation\kernels\q4_0_dequant.obj | ${cmake_ninja_workdir}src\valida
 build src\validation\kernels\q4_0_dequant_optimized.obj | ${cmake_ninja_workdir}src\validation\kernels\q4_0_dequant_optimized.obj: CUSTOM_COMMAND D$:\rawrxd\src\validation\kernels\masm\q4_0_dequant_optimized.asm
   COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build_fix3\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd/build_fix3/src/validation/kernels/q4_0_dequant_optimized.obj D:/rawrxd/src/validation/kernels/masm/q4_0_dequant_optimized.asm"
   DESC = [MASM] Assembling masm/q4_0_dequant_optimized.asm -> D:/rawrxd/build_fix3/src/validation/kernels/q4_0_dequant_optimized.obj
+  restat = 1
+
+
+#############################################
+# Custom command for src\validation\kernels\RawrXD_TreeAttention_Kernel.obj
+
+build src\validation\kernels\RawrXD_TreeAttention_Kernel.obj | ${cmake_ninja_workdir}src\validation\kernels\RawrXD_TreeAttention_Kernel.obj: CUSTOM_COMMAND D$:\rawrxd\src\validation\kernels\masm\RawrXD_TreeAttention_Kernel.asm
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build_fix3\src\validation\kernels && C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\ml64.exe /c /W3 /nologo /Zi /Fl /Fo D:/rawrxd/build_fix3/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj D:/rawrxd/src/validation/kernels/masm/RawrXD_TreeAttention_Kernel.asm"
+  DESC = [MASM] Assembling masm/RawrXD_TreeAttention_Kernel.asm -> D:/rawrxd/build_fix3/src/validation/kernels/RawrXD_TreeAttention_Kernel.obj
   restat = 1
 
 # =============================================================================

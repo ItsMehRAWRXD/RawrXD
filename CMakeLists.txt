@@ -5074,7 +5074,7 @@ if(WIN32)
     # VAL-032: AVX-512 Assembly Kernel Benchmark
     # ═══════════════════════════════════════════════════════════════════
     add_executable(VAL032_AVX512_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/VAL032_AVX512_Benchmark.cpp
+        src/benchmark/VAL032_AVX512_Benchmark_Clean.cpp
     )
     target_include_directories(VAL032_AVX512_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -5090,7 +5090,7 @@ if(WIN32)
     target_link_libraries(VAL032_AVX512_Benchmark PRIVATE
         kernel32
         user32
-        ${CMAKE_BINARY_DIR}/lib/RawrXD_TreeAttention_AVX512.lib
+        telemetry_masm_kernels
     )
     set_target_properties(VAL032_AVX512_Benchmark PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

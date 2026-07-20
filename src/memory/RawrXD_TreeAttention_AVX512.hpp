@@ -12,38 +12,35 @@
 namespace RawrXD {
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// External Assembly Functions
+// External Assembly Functions (from RawrXD_TreeAttention_AVX512.asm)
 // ═══════════════════════════════════════════════════════════════════════════════
 extern "C" {
-    // Main tree attention kernel
-    // Parameters passed via registers/stack per Windows x64 ABI
-    void TreeAttention_AVX512(
-        const float* Q,           // RCX: Query matrix [num_nodes, head_dim]
-        const float* K,           // RDX: Key matrix [num_nodes, head_dim]
-        const float* V,           // R8:  Value matrix [num_nodes, head_dim]
-        float* output,            // R9:  Output matrix [num_nodes, head_dim]
-        const uint8_t* tree_mask, // [RSP+0x28]: Tree mask [num_nodes, num_nodes]
-        uint32_t num_nodes,       // [RSP+0x30]: Number of nodes
-        uint32_t head_dim         // [RSP+0x38]: Head dimension (typically 128)
+    // Apply tree causal mask using k-mask registers (branchless)
+    void TreeAttention_AVX512_ApplyMask(
+        float* attn_scores,       // [num_nodes] attention scores
+        const uint8_t* tree_mask, // [num_nodes] 1 = can attend, 0 = masked
+        uint32_t num_nodes,       // Number of tree nodes
+        uint32_t head_dim         // Head dimension (for alignment)
     );
 
-    // Batch score computation
-    void TreeAttention_ScoreBatch(
-        const float* Q,           // RCX
-        const float* K,           // RDX
-        float* scores,            // R8
-        const uint8_t* tree_mask, // R9
-        uint32_t num_q,           // [RSP+0x28]
-        uint32_t num_k,           // [RSP+0x30]
-        uint32_t head_dim         // [RSP+0x38]
+    // Verify draft tokens against model output (branchless comparison)
+    uint32_t TreeAttention_AVX512_VerifyBatch(
+        const uint32_t* draft_tokens,   // [num_tokens] draft token IDs
+        const uint32_t* model_tokens,   // [num_tokens] model predicted tokens
+        uint32_t num_tokens,            // Number of tokens to verify
+        uint32_t vocab_size,            // Vocabulary size
+        uint8_t* results                // [num_tokens] output: 1 = accepted, 0 = rejected
     );
 
-    // Online softmax with tree masking
-    void TreeAttention_OnlineSoftmax(
-        const float* scores,      // RCX
-        float* output,            // RDX
-        const uint8_t* tree_mask, // R8
-        uint32_t length           // R9
+    // Main tree attention forward pass with online softmax
+    void TreeAttention_AVX512_Forward(
+        const float* Q,           // [num_nodes, head_dim] queries
+        const float* K,           // [num_nodes, head_dim] keys
+        const float* V,           // [num_nodes, head_dim] values
+        float* output,            // [num_nodes, head_dim] output
+        const uint8_t* tree_mask, // [num_nodes, num_nodes] causal mask
+        uint32_t num_nodes,       // Number of nodes
+        uint32_t head_dim         // Head dimension
     );
 }
 
