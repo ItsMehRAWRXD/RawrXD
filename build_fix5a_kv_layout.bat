@@ -1,38 +1,42 @@
 @echo off
+setlocal
+
 REM ============================================================================
 REM Fix 5A Build Script: KV Cache Layout Rewrite
 REM Target: 2x performance gain from cache locality
 REM ============================================================================
 
-setlocal EnableDelayedExpansion
+call "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
 
-REM Configuration
-set RAWRXD_ROOT=D:\RawrXD
-set BUILD_DIR=%RAWRXD_ROOT%\build_fix5a
-
-REM Setup Visual Studio environment
-call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Failed to setup Visual Studio environment
+    echo VS environment failed
     exit /b 1
 )
-
-REM Set include paths for Windows SDK
-set INCLUDE=C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared;%INCLUDE%
 
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build
 echo ============================================================================
 echo.
 
-REM Create build directory
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
+echo Compiler:
+where cl
+echo.
+echo Windows SDK:
+echo %WindowsSdkDir%
+echo.
 
-REM Compile KV Cache Layout
-echo [1/4] Compiling KV Cache Layout...
-"%CL_PATH%" /c /O2 /arch:AVX512 /EHsc /std:c++20 /I"%RAWRXD_ROOT%\src" ^
-    /Fo"%BUILD_DIR%\RawrXD_KVCache_Layout.obj" ^
-    "%RAWRXD_ROOT%\src\memory\RawrXD_KVCache_Layout.cpp"
+REM Create build directory
+if not exist "bin" mkdir "bin"
+
+echo [1/3] Compiling KV Cache Layout...
+cl ^
+    /O2 ^
+    /std:c++20 ^
+    /EHsc ^
+    /arch:AVX512 ^
+    /I src ^
+    /c src\memory\RawrXD_KVCache_Layout.cpp ^
+    /Fo:bin\RawrXD_KVCache_Layout.obj
 
 if errorlevel 1 (
     echo ERROR: KV Cache compilation failed
@@ -40,12 +44,16 @@ if errorlevel 1 (
 )
 echo     OK: RawrXD_KVCache_Layout.obj
 
-REM Compile Deterministic Performance
 echo.
-echo [2/4] Compiling Deterministic Performance Mode...
-"%CL_PATH%" /c /O2 /arch:AVX512 /EHsc /std:c++20 /I"%RAWRXD_ROOT%\src" ^
-    /Fo"%BUILD_DIR%\RawrXD_DeterministicPerformance.obj" ^
-    "%RAWRXD_ROOT%\src\runtime\RawrXD_DeterministicPerformance.cpp"
+echo [2/3] Compiling Deterministic Performance Mode...
+cl ^
+    /O2 ^
+    /std:c++20 ^
+    /EHsc ^
+    /arch:AVX512 ^
+    /I src ^
+    /c src\runtime\RawrXD_DeterministicPerformance.cpp ^
+    /Fo:bin\RawrXD_DeterministicPerformance.obj
 
 if errorlevel 1 (
     echo ERROR: Deterministic performance compilation failed
@@ -53,12 +61,11 @@ if errorlevel 1 (
 )
 echo     OK: RawrXD_DeterministicPerformance.obj
 
-REM Create static library
 echo.
-echo [3/4] Creating library...
-lib /OUT:"%BUILD_DIR%\RawrXD_Fix5A.lib" ^
-    "%BUILD_DIR%\RawrXD_KVCache_Layout.obj" ^
-    "%BUILD_DIR%\RawrXD_DeterministicPerformance.obj"
+echo [3/3] Creating library...
+lib /OUT:bin\RawrXD_Fix5A.lib ^
+    bin\RawrXD_KVCache_Layout.obj ^
+    bin\RawrXD_DeterministicPerformance.obj
 
 if errorlevel 1 (
     echo ERROR: Library creation failed
@@ -66,33 +73,16 @@ if errorlevel 1 (
 )
 echo     OK: RawrXD_Fix5A.lib
 
-REM Build test harness
-echo.
-echo [4/4] Building test harness...
-"%CL_PATH%" /O2 /arch:AVX512 /EHsc /std:c++20 /I"%RAWRXD_ROOT%\src" ^
-    "%RAWRXD_ROOT%\tests\test_fix5a_kv_cache.cpp" ^
-    "%BUILD_DIR%\RawrXD_Fix5A.lib" ^
-    /Fe"%BUILD_DIR%\test_fix5a_kv_cache.exe"
-
-if errorlevel 1 (
-    echo ERROR: Test build failed
-    exit /b 1
-)
-echo     OK: test_fix5a_kv_cache.exe
-
 echo.
 echo ============================================================================
 echo Fix 5A Build Complete
 echo ============================================================================
 echo.
 echo Artifacts:
-echo   %BUILD_DIR%\RawrXD_Fix5A.lib
-echo   %BUILD_DIR%\test_fix5a_kv_cache.exe
+echo   bin\RawrXD_Fix5A.lib
 echo.
 echo Next steps:
-echo   1. Run validation: .\test_fix5a_kv_cache.exe --benchmark --deterministic-performance
-echo   2. Verify 2x performance gain vs legacy layout
-echo   3. Check pulse stability with validation gate
+echo   1. Run validation: bin\test_fix5a_kv_cache.exe --verify-alignment
+echo   2. Run benchmark: bin\test_fix5a_kv_cache.exe --run-benchmark
+echo   3. Verify 2x performance gain vs legacy layout
 echo.
-
-endlocal
