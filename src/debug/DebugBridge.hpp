@@ -8,11 +8,21 @@
 #include <windows.h>
 #include <cstdint>
 #include <functional>
+#include <atomic>
+
+// Include DebugBackend for type definitions
+#include "DebugBackend.h"
 
 // Forward declarations
-struct DebugSession;
-struct StackFrame;
-struct RegisterContext;
+namespace RawrXD {
+namespace Debug {
+    class DebugSession;
+}
+}
+
+// Use types from Debug namespace
+using RawrXD::Debug::StackFrame;
+using RawrXD::Debug::RegisterContext;
 
 namespace RawrXD {
 namespace DebugUI {
@@ -170,9 +180,9 @@ public:
     bool Break();
     
     // Session management
-    void AttachSession(DebugSession* session);
+    void AttachSession(RawrXD::Debug::DebugSession* session);
     void DetachSession();
-    DebugSession* GetSession() const { return m_session; }
+    RawrXD::Debug::DebugSession* GetSession() const { return m_session; }
     
     // Telemetry access
     DebugTelemetry& GetTelemetry() { return m_telemetry; }
@@ -186,7 +196,7 @@ private:
     ~DebugBridge() = default;
     
     HWND m_hUIWindow = nullptr;
-    DebugSession* m_session = nullptr;
+    RawrXD::Debug::DebugSession* m_session = nullptr;
     EventCallback m_eventCallback;
     CRITICAL_SECTION m_cs;  // Protects session access
     

@@ -1480,7 +1480,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        src/agentic/AgentOllamaClient.cpp
+        # src/agentic/AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -3057,7 +3057,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
-        src/agentic/OllamaProvider.cpp
+        # src/agentic/OllamaProvider.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/agentic/DiffEngine.cpp
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
@@ -4178,7 +4178,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ChatMessageRenderer.cpp
         src/win32app/Win32IDE_ToolActionStatus.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
-        src/win32app/Win32IDE_ChatPanel_Ollama.cpp
+        # src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/win32app/Win32IDE_VulkanRenderer.cpp
         src/win32app/Win32IDE_OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_IOCPFileWatcher.cpp

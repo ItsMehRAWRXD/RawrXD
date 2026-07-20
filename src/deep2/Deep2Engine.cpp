@@ -15,7 +15,16 @@ extern "C" {
     void Deep2_VecDotProduct(const float* a, const float* b, float* out, size_t n);
     void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n);
     void Deep2_RMSNorm(const float* x, float* out, size_t n, float eps);
+    void Deep2_Q4K_GEMV(const void* weights, const float* input, float* output,
+                        uint32_t numBlocks, uint32_t rows);
 }
+
+// Q4_K_M Block structure (matches GGUF)
+struct alignas(32) Q4_K_M_Block {
+    uint16_t scales[32];      // FP16 scales
+    uint16_t mins[32];        // FP16 mins
+    uint8_t  weights[128];    // 256 x 4-bit packed
+};
 
 namespace Deep2 {
 
@@ -290,6 +299,153 @@ void Deep2Engine::enableKVCache(bool enable) {
         kvConfig.numHeads = config.numHeads;
         kvConfig.headDim = config.hiddenDim / config.numHeads;
         kvCache->initialize(kvConfig);
+    }
+}
+
+// ============================================================================
+// Linear Layer - Matrix-Vector Multiplication with Quantization Support
+// ============================================================================
+// Weight type enumeration matching GGML types
+enum class WeightType {
+    FP32 = 0,
+    FP16 = 1,
+    Q4_0 = 2,
+    Q4_1 = 3,
+    Q4_K_M = 12,  // GGML_TYPE_Q4_K
+    Q8_0 = 8
+};
+
+// Weight tensor descriptor
+struct WeightTensor {
+    void* data = nullptr;
+    WeightType type = WeightType::FP32;
+    size_t rows = 0;
+    size_t cols = 0;
+    size_t numBlocks = 0;  // For quantized types
+};
+
+// Global weight storage (simplified - production uses GGUF loader)
+static WeightTensor g_weightTensors[256];  // Max 256 weight tensors
+static size_t g_numWeights = 0;
+
+// Register a weight tensor for use by the engine
+int Deep2Engine::registerWeightTensor(void* data, WeightType type, size_t rows, size_t cols) {
+    if (g_numWeights >= 256) return -1;
+    
+    int idx = (int)g_numWeights++;
+    WeightTensor& wt = g_weightTensors[idx];
+    wt.data = data;
+    wt.type = type;
+    wt.rows = rows;
+    wt.cols = cols;
+    
+    // Calculate blocks for Q4_K_M
+    if (type == WeightType::Q4_K_M) {
+        wt.numBlocks = (cols + 255) / 256;
+    }
+    
+    return idx;
+}
+
+// ============================================================================
+// Linear Layer - The Critical Integration Point
+// Computes: output = weights * input + bias
+// ============================================================================
+void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias, 
+                         float* output, size_t outDim) {
+    if (weightIdx < 0 || weightIdx >= (int)g_numWeights) {
+        printf("[Deep2Engine] ERROR: Invalid weight index %d\n", weightIdx);
+        return;
+    }
+    
+    const WeightTensor& wt = g_weightTensors[weightIdx];
+    
+    // Dispatch based on weight type
+    switch (wt.type) {
+        case WeightType::Q4_K_M:
+            // Q4_K_M quantized path - MASM kernel
+            Deep2_Q4K_GEMV(wt.data, input, output, 
+                          static_cast<uint32_t>(wt.numBlocks),
+                          static_cast<uint32_t>(outDim));
+            break;
+            
+        case WeightType::FP32:
+        default:
+            // FP32 fallback - simple GEMV
+            // output[i] = sum_j(weights[i][j] * input[j])
+            for (size_t i = 0; i < outDim; ++i) {
+                float sum = 0.0f;
+                float* row = (float*)wt.data + i * wt.cols;
+                for (size_t j = 0; j < wt.cols; ++j) {
+                    sum += row[j] * input[j];
+                }
+                output[i] = sum;
+            }
+            break;
+    }
+    
+    // Add bias if provided
+    if (bias) {
+        for (size_t i = 0; i < outDim; ++i) {
+            output[i] += bias[i];
+        }
+    }
+}
+
+// ============================================================================
+// Parallel Linear - Multi-threaded GEMV using ThreadPool
+// ============================================================================
+void Deep2Engine::LinearParallel(int weightIdx, const float* input, const float* bias,
+                                  float* output, size_t outDim) {
+    if (!threadPool) {
+        // Fall back to single-threaded
+        Linear(weightIdx, input, bias, output, outDim);
+        return;
+    }
+    
+    const WeightTensor& wt = g_weightTensors[weightIdx];
+    
+    // Divide output rows among threads
+    size_t numThreads = threadPool->size();
+    size_t rowsPerThread = outDim / numThreads;
+    size_t remainder = outDim % numThreads;
+    
+    std::atomic<size_t> completed(0);
+    
+    for (size_t t = 0; t < numThreads; ++t) {
+        size_t startRow = t * rowsPerThread + std::min(t, remainder);
+        size_t endRow = startRow + rowsPerThread + (t < remainder ? 1 : 0);
+        
+        threadPool->enqueue([&, startRow, endRow]() {
+            // Process rows [startRow, endRow)
+            if (wt.type == WeightType::Q4_K_M) {
+                // Q4 path - process each row
+                for (size_t r = startRow; r < endRow; ++r) {
+                    // Each row has its own blocks
+                    uint8_t* rowData = (uint8_t*)wt.data + r * wt.numBlocks * sizeof(Q4_K_M_Block);
+                    float rowOutput;
+                    Deep2_Q4K_GEMV(rowData, input, &rowOutput, 
+                                  static_cast<uint32_t>(wt.numBlocks), 1);
+                    output[r] = rowOutput + (bias ? bias[r] : 0.0f);
+                }
+            } else {
+                // FP32 path
+                for (size_t r = startRow; r < endRow; ++r) {
+                    float sum = 0.0f;
+                    float* row = (float*)wt.data + r * wt.cols;
+                    for (size_t c = 0; c < wt.cols; ++c) {
+                        sum += row[c] * input[c];
+                    }
+                    output[r] = sum + (bias ? bias[r] : 0.0f);
+                }
+            }
+            completed++;
+        });
+    }
+    
+    // Wait for completion
+    while (completed < numThreads) {
+        _mm_pause();
     }
 }
 

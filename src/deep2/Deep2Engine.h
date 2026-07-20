@@ -83,6 +83,18 @@ public:
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);
     
+    // Linear layer with quantization support
+    // Returns weight index for use in Linear()
+    int registerWeightTensor(void* data, int type, size_t rows, size_t cols);
+    
+    // Matrix-vector multiplication: output = weights * input + bias
+    void Linear(int weightIdx, const float* input, const float* bias, 
+                float* output, size_t outDim);
+    
+    // Parallel version using ThreadPool
+    void LinearParallel(int weightIdx, const float* input, const float* bias,
+                        float* output, size_t outDim);
+    
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;

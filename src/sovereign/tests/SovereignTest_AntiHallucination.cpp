@@ -7,6 +7,9 @@
 #include <vector>
 #include <cstring>
 
+// Direct MASM function declaration for debugging
+extern "C" int AH_CompareBytes(const void* a, const void* b, size_t len);
+
 namespace Sovereign {
 
 // Test: Basic byte comparison
@@ -17,12 +20,21 @@ bool Test_ByteComparison() {
     uint8_t b[] = {0x90, 0x90, 0x90, 0x90};
     uint8_t c[] = {0x90, 0x90, 0xCC, 0x90};
     
+    // Debug: print addresses and values
+    std::cout << "  a addr: " << (void*)a << " values: " << (int)a[0] << " " << (int)a[1] << " " << (int)a[2] << " " << (int)a[3] << std::endl;
+    std::cout << "  b addr: " << (void*)b << " values: " << (int)b[0] << " " << (int)b[1] << " " << (int)b[2] << " " << (int)b[3] << std::endl;
+    std::cout << "  c addr: " << (void*)c << " values: " << (int)c[0] << " " << (int)c[1] << " " << (int)c[2] << " " << (int)c[3] << std::endl;
+    
     // Same bytes should match
-    bool match1 = AntiHallucinationGuard::ValidateBytes(a, b, 4);
+    int result1 = AH_CompareBytes(a, b, 4);
+    std::cout << "  AH_CompareBytes(a, b, 4) returned: " << result1 << std::endl;
+    bool match1 = (result1 != 0);
     std::cout << "  Same bytes match: " << (match1 ? "PASS" : "FAIL") << std::endl;
     
     // Different bytes should not match
-    bool match2 = AntiHallucinationGuard::ValidateBytes(a, c, 4);
+    int result2 = AH_CompareBytes(a, c, 4);
+    std::cout << "  AH_CompareBytes(a, c, 4) returned: " << result2 << std::endl;
+    bool match2 = (result2 != 0);
     std::cout << "  Different bytes mismatch: " << (!match2 ? "PASS" : "FAIL") << std::endl;
     
     return match1 && !match2;

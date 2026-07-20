@@ -11,9 +11,9 @@
 #pragma once
 
 #include "execution_contracts.h"
-#include "../kernels/kernel_registry.h"
-#include "../kernels/fused_quant_gemm.h"
-#include "../kernels/compression_codec.h"
+#include "../kernels/KernelRegistry.hpp"
+#include "../../kernels/fused_quant_gemm.h"
+#include "../../kernels/compression_codec.h"
 
 #include <memory>
 #include <thread>
@@ -26,6 +26,9 @@ namespace execution {
 class KernelRegistryGateway;
 class InferencePipeline;
 class TelemetryCollector;
+
+// Function pointer type for kernel validation
+using GemvFunc = void(*)(const uint8_t*, const float*, float*, size_t, size_t);
 
 // ============================================================================
 // Real Execution Gateway
@@ -47,7 +50,7 @@ public:
     std::vector<std::string> GetAvailableKernels() const override;
     
     // Direct kernel access (for advanced use)
-    kernels::KernelRegistry& GetKernelRegistry();
+    RawrXD::Kernels::KernelRegistry& GetKernelRegistry();
     
 private:
     // Command handlers
@@ -156,10 +159,10 @@ private:
     std::vector<uint32_t> generated_tokens_;
     
     // Kernel handles
-    kernels::RmsNormFn rmsnorm_fn_;
-    kernels::RopeFn rope_fn_;
-    kernels::SoftmaxFn softmax_fn_;
-    kernels::GemvFn gemv_fn_;
+    GemvFunc rmsnorm_fn_;
+    GemvFunc rope_fn_;
+    GemvFunc softmax_fn_;
+    GemvFunc gemv_fn_;
 };
 
 // ============================================================================
@@ -170,26 +173,26 @@ class KernelValidator {
 public:
     // Validate GEMM against reference
     static ValidationResult ValidateGEMM(
-        kernels::GemvFn test_kernel,
+        GemvFunc test_kernel,
         size_t rows, size_t cols,
         rawrxd::compression::CompressionType codec
     );
     
     // Validate RMSNorm against reference
     static ValidationResult ValidateRMSNorm(
-        kernels::RmsNormFn test_kernel,
+        GemvFunc test_kernel,
         size_t count
     );
     
     // Validate RoPE against reference
     static ValidationResult ValidateRoPE(
-        kernels::RopeFn test_kernel,
+        GemvFunc test_kernel,
         size_t head_dim, size_t num_heads
     );
     
     // Validate Softmax against reference
     static ValidationResult ValidateSoftmax(
-        kernels::SoftmaxFn test_kernel,
+        GemvFunc test_kernel,
         size_t count
     );
     

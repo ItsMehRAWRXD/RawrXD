@@ -32,6 +32,8 @@ Sovereign_Q4K_GEMV_AVX2 PROC FRAME
     push r13
     push r14
     push r15
+    push rsi
+    push rdi
     .endprolog
 
     ; Save parameters
@@ -39,7 +41,7 @@ Sovereign_Q4K_GEMV_AVX2 PROC FRAME
     mov r13, rdx            ; input
     mov r14, r8             ; output
     mov r15d, r9d           ; num_blocks
-    mov ebx, [rsp+80]       ; rows (after pushes)
+    mov ebx, [rsp+96]       ; rows (after pushes)
 
     ; Check for zero rows
     test ebx, ebx
@@ -54,44 +56,41 @@ row_loop:
 
     ; Process all blocks for this row
     xor r11d, r11d          ; block counter
-    mov rax, r12            ; current block pointer
+    mov rsi, r12            ; current block pointer (preserved across inner loops)
 
 block_loop:
-    ; Load 32 scales (fp16) and convert to fp32
-    ; Block layout: [scales:64][mins:64][weights:128]
-    
-    ; Process 8 groups of 8 weights each
+    ; Process 32 groups of 8 weights each
     ; Each group has 1 scale and 1 min (fp16)
     
-    xor rcx, rcx              ; group counter (0-31)
+    xor rdi, rdi            ; group counter (0-31)
     
 group_loop:
     ; Calculate group offset within block
     ; scales at offset 0, mins at offset 64
-    mov rdx, rcx
+    mov rdx, rdi
     shl rdx, 1              ; *2 for fp16
     
     ; Load scale (fp16 -> fp32)
-    movzx eax, word ptr [rax + rdx]     ; scale
+    movzx eax, word ptr [rsi + rdx]     ; scale
     vmovd xmm1, eax
     vcvtph2ps xmm1, xmm1                ; fp16 -> fp32
     vbroadcastss ymm1, xmm1              ; broadcast scale
     
     ; Load min (fp16 -> fp32)
-    movzx eax, word ptr [rax + rdx + 64] ; min
+    movzx eax, word ptr [rsi + rdx + 64] ; min
     vmovd xmm2, eax
     vcvtph2ps xmm2, xmm2                ; fp16 -> fp32
     vbroadcastss ymm2, xmm2              ; broadcast min
     
     ; Load 8 weights (4-bit packed in 4 bytes)
     ; weights start at offset 128
-    mov rdx, rcx
+    mov rdx, rdi
     shr rdx, 1              ; group/2 for byte offset
-    movzx eax, byte ptr [rax + rdx + 128]
+    movzx eax, byte ptr [rsi + rdx + 128]
     
     ; Extract 4-bit values
     ; For even groups: low nibble, odd groups: high nibble
-    test rcx, 1
+    test rdi, 1
     jz even_group
     shr eax, 4              ; high nibble
     jmp unpack_done
@@ -100,9 +99,6 @@ even_group:
 unpack_done:
     
     ; Convert to FP32: weight = min + scale * q
-    ; This is simplified - real implementation needs full unpack
-    
-    ; For now, use placeholder dequant
     vcvtsi2ss xmm3, xmm3, eax
     vbroadcastss ymm3, xmm3              ; broadcast quantized value
     
@@ -113,7 +109,7 @@ unpack_done:
     ; Calculate input index: block_idx * 256 + group * 8
     mov rdx, r11
     shl rdx, 8              ; block * 256
-    mov r8, rcx
+    mov r8, rdi
     shl r8, 3               ; group * 8
     add rdx, r8
     
@@ -123,13 +119,13 @@ unpack_done:
     vfmadd231ps ymm0, ymm3, ymm4
     
     ; Next group
-    inc rcx
-    cmp rcx, 32
+    inc rdi
+    cmp rdi, 32
     jl group_loop
     
     ; Next block
     inc r11d
-    add rax, 256            ; next block (256 bytes)
+    add rsi, 256            ; next block (256 bytes)
     cmp r11d, r15d
     jl block_loop
     

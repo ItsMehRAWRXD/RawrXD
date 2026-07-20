@@ -58,3 +58,5 @@ add_test([=[test_softmax_avx2]=] "D:/rawrxd/build_fix3/tests/test_softmax_avx2.e
 set_tests_properties([=[test_softmax_avx2]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;494;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
 add_test([=[sovereign_integrated_test]=] "D:/rawrxd/build_fix3/bin/sovereign_integrated_test.exe")
 set_tests_properties([=[sovereign_integrated_test]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;522;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
+add_test([=[test_agentic_supervisor]=] "D:/rawrxd/build_fix3/bin/test_agentic_supervisor.exe")
+set_tests_properties([=[test_agentic_supervisor]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;544;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
