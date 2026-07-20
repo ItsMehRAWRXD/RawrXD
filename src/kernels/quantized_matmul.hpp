@@ -191,11 +191,11 @@ public:
         }
         
         // Register hot path kernels
-        RegisterKernel(4096, 4096, std::make_unique<QuantizedMatMul_4K>());
-        RegisterKernel(5120, 5120, std::make_unique<QuantizedMatMul_5K>());
+        RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K>());
+        RegisterKernel(5120, 5120, std::make_shared<QuantizedMatMul_5K>());
         
         // Register fallback
-        genericKernel_ = std::make_unique<QuantizedMatMul_Generic>();
+        genericKernel_ = std::make_shared<QuantizedMatMul_Generic>();
         
         initialized_ = true;
         return true;
@@ -261,7 +261,7 @@ private:
         return RawrXD_KernelRegistry_Init() == 1;
     }
     
-    void RegisterKernel(uint64_t N, uint64_t K, std::unique_ptr<IQuantizedMatMulKernel> kernel) {
+    void RegisterKernel(uint64_t N, uint64_t K, std::shared_ptr<IQuantizedMatMulKernel> kernel) {
         auto key = (N << 32) | K;
         hotPathKernels_[key] = std::move(kernel);
     }
@@ -269,9 +269,9 @@ private:
     mutable std::mutex mutex_;
     bool initialized_ = false;
     
-    std::unordered_map<uint64_t, std::unique_ptr<IQuantizedMatMulKernel>> hotPathKernels_;
+    std::unordered_map<uint64_t, std::shared_ptr<IQuantizedMatMulKernel>> hotPathKernels_;
     std::unordered_map<uint64_t, std::shared_ptr<IQuantizedMatMulKernel>> kernelCache_;
-    std::unique_ptr<IQuantizedMatMulKernel> genericKernel_;
+    std::shared_ptr<IQuantizedMatMulKernel> genericKernel_;
     
     // Stats
     mutable size_t hotPathHits_ = 0;

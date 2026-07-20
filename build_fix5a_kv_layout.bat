@@ -11,11 +11,14 @@ set RAWRXD_ROOT=D:\RawrXD
 set BUILD_DIR=%RAWRXD_ROOT%\build_fix5a
 
 REM Setup Visual Studio environment
-call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Failed to setup Visual Studio environment
     exit /b 1
 )
+
+REM Set include paths for Windows SDK
+set INCLUDE=C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared;%INCLUDE%
 
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build

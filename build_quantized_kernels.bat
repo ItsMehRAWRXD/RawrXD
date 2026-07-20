@@ -52,7 +52,9 @@ REM ============================================================================
 echo.
 echo Assembling MASM kernels...
 
-ml64.exe ^
+set "ML64=C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\bin\Hostx64\x64\ml64.exe"
+
+"%ML64%" ^
     /c ^
     /Foobj\quantized_matmul.obj ^
     /W3 ^

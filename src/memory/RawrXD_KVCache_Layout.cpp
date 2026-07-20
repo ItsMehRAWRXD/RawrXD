@@ -5,6 +5,7 @@
 
 #include "RawrXD_KVCache_Layout.hpp"
 #include <cstring>
+#include <string>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -215,7 +216,7 @@ void OptimizedKVCache::GetLayoutInfo(std::string& info) const {
     
     size_t raw_token_size = m_config.num_heads * 2 * m_config.head_dim * sizeof(float);
     size_t token_stride = m_config.GetTokenStride();
-    size_t padding = token_stride - raw_token_size;
+    size_t padding = m_config.GetTokenPadding();
     
     oss << "Optimized KV Cache Layout:" << std::endl;
     oss << "  Layout: [token][head][K/V][dim]" << std::endl;
@@ -227,7 +228,7 @@ void OptimizedKVCache::GetLayoutInfo(std::string& info) const {
     oss << "  Token Stride: " << token_stride << " bytes" << std::endl;
     oss << "    Raw Data: " << raw_token_size << " bytes" << std::endl;
     oss << "    Padding: " << padding << " bytes" << std::endl;
-    oss << "    Alignment: " << (token_stride % 64 == 0 ? "64-byte ALIGNED" : "UNALIGNED") << std::endl;
+    oss << "    Alignment: " << (m_config.IsAligned() ? "64-byte ALIGNED" : "PADDED") << std::endl;
     oss << "  Total Size: " << (m_size / (1024.0 * 1024.0)) << " MB" << std::endl;
     oss << "  Cache Line: " << m_config.CACHE_LINE_SIZE << " bytes" << std::endl;
     oss << "  Prefetch Distance: " << m_config.PREFETCH_DISTANCE << " tokens" << std::endl;

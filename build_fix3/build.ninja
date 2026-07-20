@@ -7900,6 +7900,17 @@ build CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark.cpp.o
   TARGET_PDB = bin\Fix3_NHWC_Benchmark.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
 
+build CMakeFiles\Fix3_NHWC_Benchmark.dir\src\memory\RawrXD_TensorLayout_NHWC.cpp.obj: CXX_COMPILER__Fix3_NHWC_Benchmark_unscanned_Release D$:\rawrxd\src\memory\RawrXD_TensorLayout_NHWC.cpp || cmake_object_order_depends_target_Fix3_NHWC_Benchmark
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_BENCHMARK=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /EHsc /W4 /O2 /arch:AVX512
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\memory -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+  OBJECT_FILE_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir\src\memory
+  TARGET_COMPILE_PDB = CMakeFiles\Fix3_NHWC_Benchmark.dir\
+  TARGET_PDB = bin\Fix3_NHWC_Benchmark.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\Fix3_NHWC_Benchmark.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Fix3_NHWC_Benchmark
@@ -7908,7 +7919,7 @@ build CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark.cpp.o
 #############################################
 # Link the executable bin\Fix3_NHWC_Benchmark.exe
 
-build bin\Fix3_NHWC_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix3_NHWC_Benchmark_Release CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark.cpp.obj
+build bin\Fix3_NHWC_Benchmark.exe: CXX_EXECUTABLE_LINKER__Fix3_NHWC_Benchmark_Release CMakeFiles\Fix3_NHWC_Benchmark.dir\src\benchmark\Fix3_NHWC_Benchmark.cpp.obj CMakeFiles\Fix3_NHWC_Benchmark.dir\src\memory\RawrXD_TensorLayout_NHWC.cpp.obj
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG

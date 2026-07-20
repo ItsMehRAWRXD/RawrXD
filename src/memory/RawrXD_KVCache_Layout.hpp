@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <string>
 #include <immintrin.h>
 
 namespace RawrXD {

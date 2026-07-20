@@ -2,42 +2,21 @@
 setlocal EnableDelayedExpansion
 
 echo ========================================
-echo Compiling Standalone GGUF Test
+echo Compiling Test Harness
 echo ========================================
 
-REM Try to find cl.exe
-set "CL_PATH="
-
-REM Check common VS2022 locations
-for %%p in (
-    "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
-    "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC"
-    "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC"
-    "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC"
-    "D:\VS2022Enterprise\VC\Tools\MSVC"
-) do (
-    if exist "%%~p" (
-        for /f "delims=" %%v in ('dir /b /ad "%%~p" 2^>nul ^| sort /r') do (
-            set "CL_PATH=%%~p\%%v\bin\Hostx64\x64\cl.exe"
-            if exist "!CL_PATH!" goto :found_cl
-        )
-    )
-)
-
-:found_cl
-if not exist "%CL_PATH%" (
-    echo ERROR: Could not find cl.exe
-    echo Please run this from a Visual Studio Developer Command Prompt
+REM Setup VS environment
+call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+if errorlevel 1 (
+    echo ERROR: Failed to setup VS environment
     exit /b 1
 )
-
-echo Found compiler: %CL_PATH%
 
 cd /d d:\rawrxd
 
 echo.
-echo Compiling standalone_gguf_test.cpp...
-"%CL_PATH%" /EHsc /W3 /O2 /Fe:gguf_test.exe standalone_gguf_test.cpp
+echo Compiling test_quantized_kernels.cpp...
+cl.exe /std:c++17 /O2 /EHsc /W4 /Iinclude /Iinclude\kernels /Febin\test_quantized_kernels.exe src\kernels\test_quantized_kernels.cpp lib\RawrXD_QuantizedKernels.lib /link /NODEFAULTLIB:libcmt.lib kernel32.lib
 
 if errorlevel 1 (
     echo FAILED to compile
@@ -45,7 +24,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo SUCCESS: gguf_test.exe built
+echo SUCCESS: test_quantized_kernels.exe built
 echo.
-echo To test with your 40B model:
+echo To run: bin\test_quantized_kernels.exe
 echo   gguf_test.exe "F:\OllamaModels\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf"

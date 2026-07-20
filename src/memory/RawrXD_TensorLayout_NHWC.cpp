@@ -8,6 +8,7 @@
 #include "RawrXD_TensorLayout_NHWC.hpp"
 #include <cstring>
 #include <algorithm>
+#include <thread>
 
 namespace RawrXD {
 namespace Memory {

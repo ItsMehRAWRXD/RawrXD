@@ -275,8 +275,12 @@ struct QuantizedConversionTest {
         
         // Sample check: first block at position (0,0,0)
         for (int cb = 0; cb < blocks_per_channel; ++cb) {
-            size_t nchw_offset = ((((size_t)N * blocks_per_channel + cb) * H + 0) * W + 0) * block_bytes;
-            size_t nhwc_offset = ((((size_t)N * H + 0) * W + 0) * blocks_per_channel + cb) * block_bytes;
+            // NCHW: blocks are stored per-channel, then spatial
+            // For channel block cb at (n=0, h=0, w=0): offset = cb * H * W * block_bytes
+            size_t nchw_offset = (size_t)cb * H * W * block_bytes;
+            // NHWC: blocks are stored per-spatial, then channel block
+            // For spatial (0,0,0) and block cb: offset = cb * block_bytes
+            size_t nhwc_offset = (size_t)cb * block_bytes;
             
             if (std::memcmp(nchw_q4.data() + nchw_offset, 
                            nhwc_q4.data() + nhwc_offset, block_bytes) != 0) {
@@ -370,8 +374,8 @@ struct EndToEndSimulation {
                 for (int h = 0; h < H; ++h) {
                     for (int hp = 0; hp < H; ++hp) {
                         float dot = 0;
-                        size_t q_base = ((size_t)n * H + h) * W) * C;
-                        size_t k_base = ((size_t)n * H + hp) * W) * C;
+                        size_t q_base = (((size_t)n * H + h) * W) * C;
+                        size_t k_base = (((size_t)n * H + hp) * W) * C;
                         for (int c = 0; c < C; ++c) {
                             dot += query_nhwc[q_base + c] * key_nhwc[k_base + c];
                         }
