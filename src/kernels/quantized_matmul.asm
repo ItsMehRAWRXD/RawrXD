@@ -54,7 +54,7 @@ RowLoop:
     mov     rax, rbx
     imul    rax, 2304             ; RAX = row * bytes_per_row
     mov     r15, rsi
-    add     r15, rax              ; R15 = weights pointer for this row
+    add     r15, rax              ; R15 = weights pointer for this row (non-volatile!)
     
     vxorps  xmm0, xmm0, xmm0      ; Clear scalar accumulator
     mov     rcx, r13              ; RCX = blocks per row
@@ -65,8 +65,7 @@ BlockLoop:
     movss   xmm1, dword ptr [r15]
     
     ; Process 32 weights in this block
-    mov     r8, r15
-    add     r8, 4                 ; R8 = weights data
+    ; r15 points to current block, weights data is at r15+4
     mov     r9, 16                ; R9 = 16 bytes (32 nibbles)
     xor     r10, r10              ; R10 = byte index
 
@@ -74,13 +73,13 @@ WeightLoop:
     cmp     r10, r9
     jge     WeightDone
     
-    ; Load byte containing 2 weights
-    movzx   r11d, byte ptr [r8 + r10]
+    ; Load byte containing 2 weights (r15+4 is weights data, +r10 is byte offset)
+    movzx   r11d, byte ptr [r15 + 4 + r10]
     
     ; Process lower nibble (weight 0) - use eax as temp
     mov     eax, r11d
     and     eax, 0Fh              ; Lower 4 bits
-    sub     eax, 8                ; Center: 0-15 -> -8 to +7
+    sub     eax, 8                ; Center: 0-15 to -8 to +7
     cvtsi2ss xmm2, eax            ; Convert to float
     mulss   xmm2, xmm1            ; Scale
     movss   xmm3, dword ptr [rbp] ; Load activation[0]
