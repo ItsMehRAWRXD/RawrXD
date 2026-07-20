@@ -99,7 +99,7 @@ QuantizedMatMul_Fused_4K PROC FRAME
     vxorps  zmm2, zmm2, zmm2      ; Accumulator for output channels 32-47
     vxorps  zmm3, zmm3, zmm3      ; Accumulator for output channels 48-63
     
-    ; Load constant 8.0 for centering 4-bit weights (0-15 -> -8 to +7)
+    ; Load constant 8.0 for centering 4-bit weights (range -8 to +7)
     mov     eax, 0x41000000       ; 8.0 in IEEE 754
     vmovd   xmm7, eax
     vbroadcastss zmm7, xmm7      ; ZMM7 = 8.0 (broadcast to all elements)
@@ -243,6 +243,11 @@ QuantizedMatMul_Fused_5K PROC FRAME
     vxorps  zmm2, zmm2, zmm2
     vxorps  zmm3, zmm3, zmm3
     
+    ; Load constant 8.0 for centering
+    mov     eax, 0x41000000
+    vmovd   xmm7, eax
+    vbroadcastss zmm7, xmm7
+    
     mov     r14, rcx
     mov     r15, rdx
     mov     rcx, 80
@@ -254,6 +259,7 @@ Loop_5K_Unroll4:
     vmovdqu64 xmm5, xmmword ptr [r14+4]
     vpmovzxbd zmm5, xmm5
     vcvtdq2ps zmm5, zmm5
+    vsubps    zmm5, zmm5, zmm7
     vmulps    zmm5, zmm5, zmm4
     vbroadcastss zmm6, dword ptr [r15]
     vfmadd231ps zmm0, zmm5, zmm6
@@ -263,6 +269,7 @@ Loop_5K_Unroll4:
     vmovdqu64 xmm5, xmmword ptr [r14+Q4_0_BLOCK_SIZE+4]
     vpmovzxbd zmm5, xmm5
     vcvtdq2ps zmm5, zmm5
+    vsubps    zmm5, zmm5, zmm7
     vmulps    zmm5, zmm5, zmm4
     vbroadcastss zmm6, dword ptr [r15+4]
     vfmadd231ps zmm1, zmm5, zmm6
@@ -272,6 +279,7 @@ Loop_5K_Unroll4:
     vmovdqu64 xmm5, xmmword ptr [r14+Q4_0_BLOCK_SIZE*2+4]
     vpmovzxbd zmm5, xmm5
     vcvtdq2ps zmm5, zmm5
+    vsubps    zmm5, zmm5, zmm7
     vmulps    zmm5, zmm5, zmm4
     vbroadcastss zmm6, dword ptr [r15+8]
     vfmadd231ps zmm2, zmm5, zmm6
@@ -281,6 +289,7 @@ Loop_5K_Unroll4:
     vmovdqu64 xmm5, xmmword ptr [r14+Q4_0_BLOCK_SIZE*3+4]
     vpmovzxbd zmm5, xmm5
     vcvtdq2ps zmm5, zmm5
+    vsubps    zmm5, zmm5, zmm7
     vmulps    zmm5, zmm5, zmm4
     vbroadcastss zmm6, dword ptr [r15+12]
     vfmadd231ps zmm3, zmm5, zmm6
@@ -359,6 +368,11 @@ QuantizedMatMul_Dynamic PROC FRAME
     ; Initialize accumulators
     vxorps  zmm0, zmm0, zmm0
     
+    ; Load constant 8.0 for centering
+    mov     eax, 0x41000000
+    vmovd   xmm7, eax
+    vbroadcastss zmm7, xmm7
+    
     ;-------------------------------------------------------------------------
     ; Dynamic loop - not unrolled, handles any dimension
     ;-------------------------------------------------------------------------
@@ -376,6 +390,7 @@ Loop_Dynamic:
     vmovdqu64 xmm5, xmmword ptr [r15+4]          ; Packed weights
     vpmovzxbd zmm5, xmm5                         ; Expand to i32
     vcvtdq2ps zmm5, zmm5                         ; Convert to f32
+    vsubps    zmm5, zmm5, zmm7                   ; Center: subtract 8.0
     vmulps    zmm5, zmm5, zmm4                   ; Apply scale
     
     ; Load activation and FMA
