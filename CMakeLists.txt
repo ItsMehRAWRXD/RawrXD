@@ -5044,6 +5044,33 @@ if(WIN32)
     message(STATUS "[Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark")
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-032: Speculative Decoding (Medusa-style) Benchmark
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(VAL032_SpeculativeDecoding_Benchmark EXCLUDE_FROM_ALL
+        src/benchmark/VAL032_SpeculativeDecoding_Benchmark.cpp
+    )
+    target_include_directories(VAL032_SpeculativeDecoding_Benchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(VAL032_SpeculativeDecoding_Benchmark PRIVATE
+        RAWR_BENCHMARK=1
+    )
+    if(MSVC)
+        target_compile_options(VAL032_SpeculativeDecoding_Benchmark PRIVATE /EHsc /W4 /O2 /arch:AVX512)
+    endif()
+    target_link_libraries(VAL032_SpeculativeDecoding_Benchmark PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(VAL032_SpeculativeDecoding_Benchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME VAL032_SpeculativeDecoding_Benchmark
+    )
+    message(STATUS "[VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL

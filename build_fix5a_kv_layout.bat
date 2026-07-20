@@ -13,8 +13,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Windows SDK paths - add um directory for windows.h
-set "INCLUDE=%INCLUDE%;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um"
+REM Windows SDK paths - add um and shared directories
+set "INCLUDE=%INCLUDE%;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um;C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared"
 
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build

@@ -42,17 +42,23 @@ QuantizedMatMul_Fused_4K PROC FRAME
 
     mov     rsi, rcx              ; RSI = weights
     mov     rdi, r8               ; RDI = output
-    mov     r12d, 4096            ; N = 4096
+    mov     r12, 4096             ; N = 4096 (use 64-bit register)
     mov     r13, 128              ; blocks per row (4096/32)
 
     mov     r14, rdi              ; R14 = output pointer
-    mov     r15, rsi              ; R15 = weights pointer
     xor     rbx, rbx              ; RBX = row index
 
 RowLoop:
+    ; Calculate weights pointer for this row: weights + row * blocks_per_row * block_size
+    mov     rax, rbx
+    imul    rax, r13              ; RAX = row * blocks_per_row
+    imul    rax, Q4_0_BLOCK_SIZE  ; RAX = row * blocks_per_row * block_size
+    mov     r15, rsi
+    add     r15, rax              ; R15 = weights pointer for this row
+    
     vxorps  xmm0, xmm0, xmm0      ; Clear scalar accumulator
     mov     rcx, r13              ; RCX = blocks per row
-    mov     rbp, rdx              ; RBP = activation pointer
+    mov     rbp, rdx              ; RBP = activation pointer (reset for each row)
 
 BlockLoop:
     ; Load scale
@@ -71,22 +77,22 @@ WeightLoop:
     ; Load byte containing 2 weights
     movzx   r11d, byte ptr [r8 + r10]
     
-    ; Process lower nibble (weight 0) - use r15d as temp (r15 is preserved but we can use lower 32 bits)
-    mov     r15d, r11d
-    and     r15d, 0Fh             ; Lower 4 bits
-    sub     r15d, 8               ; Center: 0-15 -> -8 to +7
-    cvtsi2ss xmm2, r15d           ; Convert to float
+    ; Process lower nibble (weight 0) - use eax as temp
+    mov     eax, r11d
+    and     eax, 0Fh              ; Lower 4 bits
+    sub     eax, 8                ; Center: 0-15 -> -8 to +7
+    cvtsi2ss xmm2, eax            ; Convert to float
     mulss   xmm2, xmm1            ; Scale
     movss   xmm3, dword ptr [rbp] ; Load activation[0]
     mulss   xmm2, xmm3            ; Multiply
     addss   xmm0, xmm2            ; Accumulate
     
     ; Process upper nibble (weight 1)
-    mov     r15d, r11d
-    shr     r15d, 4               ; Upper 4 bits
-    and     r15d, 0Fh
-    sub     r15d, 8               ; Center
-    cvtsi2ss xmm2, r15d           ; Convert to float
+    mov     eax, r11d
+    shr     eax, 4                ; Upper 4 bits
+    and     eax, 0Fh
+    sub     eax, 8                ; Center
+    cvtsi2ss xmm2, eax            ; Convert to float
     mulss   xmm2, xmm1            ; Scale
     movss   xmm3, dword ptr [rbp + 4] ; Load activation[1]
     mulss   xmm2, xmm3            ; Multiply
@@ -141,7 +147,7 @@ QuantizedMatMul_Fused_5K PROC FRAME
 
     mov     rsi, rcx
     mov     rdi, r8
-    mov     r12d, 5120
+    mov     r12, 5120
     mov     r13, 160
 
     mov     r14, rdi

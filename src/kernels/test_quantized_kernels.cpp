@@ -139,12 +139,20 @@ bool Test4K() {
     
     // Compare (allow some tolerance for quantization)
     float maxError = 0.0f;
+    size_t errorIdx = 0;
     for (size_t i = 0; i < N; ++i) {
         float error = std::abs(output[i] - reference[i]);
-        maxError = std::max(maxError, error);
+        if (error > maxError) {
+            maxError = error;
+            errorIdx = i;
+        }
     }
     
-    std::cout << "Max error: " << maxError << "\n";
+    std::cout << "Max error: " << maxError << " at index " << errorIdx << "\n";
+    std::cout << "  Output: " << output[errorIdx] << "\n";
+    std::cout << "  Reference: " << reference[errorIdx] << "\n";
+    std::cout << "  First output: " << output[0] << "\n";
+    std::cout << "  First reference: " << reference[0] << "\n";
     
     if (maxError > 0.1f) {
         std::cout << "FAIL: Error too large\n";

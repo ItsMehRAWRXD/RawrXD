@@ -376,11 +376,11 @@ void PulseValidator::GetStabilityReport(std::string& report) {
     double freq_min = s_history[0].cpu_frequency_ghz, freq_max = s_history[0].cpu_frequency_ghz;
     
     for (const auto& sample : s_history) {
-        tps_min = std::min(tps_min, sample.tps);
-        tps_max = std::max(tps_max, sample.tps);
+        tps_min = (tps_min < sample.tps) ? tps_min : sample.tps;
+        tps_max = (tps_max > sample.tps) ? tps_max : sample.tps;
         tps_avg += sample.tps;
-        freq_min = std::min(freq_min, sample.cpu_frequency_ghz);
-        freq_max = std::max(freq_max, sample.cpu_frequency_ghz);
+        freq_min = (freq_min < sample.cpu_frequency_ghz) ? freq_min : sample.cpu_frequency_ghz;
+        freq_max = (freq_max > sample.cpu_frequency_ghz) ? freq_max : sample.cpu_frequency_ghz;
     }
     tps_avg /= s_history.size();
     
