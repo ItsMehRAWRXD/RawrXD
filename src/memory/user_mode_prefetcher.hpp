@@ -78,6 +78,9 @@ private:
 
 class UserModePrefetcher {
 public:
+    // Singleton access
+    static UserModePrefetcher& Instance();
+    
     // Initialize with model file
     bool Initialize(const wchar_t* model_path, size_t file_size);
     
@@ -103,6 +106,10 @@ public:
     double GetHitRate() const;
     
 private:
+    UserModePrefetcher() = default;
+    ~UserModePrefetcher() = default;
+    UserModePrefetcher(const UserModePrefetcher&) = delete;
+    UserModePrefetcher& operator=(const UserModePrefetcher&) = delete;
     HANDLE hFile_ = INVALID_HANDLE_VALUE;
     HANDLE hCompletionPort_ = nullptr;
     size_t file_size_ = 0;
