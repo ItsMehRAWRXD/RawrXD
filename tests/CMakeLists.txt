@@ -522,3 +522,25 @@ if(NOT TARGET sovereign_integrated_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
     add_test(NAME sovereign_integrated_test COMMAND sovereign_integrated_test)
     message(STATUS "  ✓ Added sovereign_integrated_test (Sovereign Burn-in)")
 endif()
+
+# Agentic Supervisor Test
+if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_agentic_supervisor.cpp")
+    add_executable(test_agentic_supervisor
+        test_agentic_supervisor.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic/AgenticSupervisor.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/IDE_Lifecycle_Hook.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignVCS.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignCheckpoint.cpp
+    )
+    target_include_directories(test_agentic_supervisor PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/sovereign
+    )
+    set_target_properties(test_agentic_supervisor PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_agentic_supervisor COMMAND test_agentic_supervisor)
+    message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
+endif()

@@ -345,6 +345,8 @@ typedef struct CompletionResult {
     WCHAR       text[512];                /* Suggestion text (Unicode) */
     float       confidence;                 /* Model confidence score */
     DWORD       timestamp;                /* When result was generated */
+    float       latencyMs;                /* Response latency in milliseconds */
+    float       tps;                      /* Tokens per second */
 } CompletionResult;
 
 /* ── Status bar parts ───────────────────────────────────────────────────── */

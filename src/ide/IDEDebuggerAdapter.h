@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "../debugger/DebugSession.h"
+#include "../debugger/Debugger_Backend.h"
 #include "IDEDebuggerTypes.h"
 #include <memory>
 #include <functional>

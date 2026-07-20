@@ -583,7 +583,7 @@ set(SOURCES
     src/agent/model_invoker.cpp
     src/agent/planner.cpp
     src/agent/eval_framework.cpp
-    src/ollama_client.cpp
+    # src/ollama_client.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
 
     # LocalReasoningEngine — API-free static analysis + pattern detection (no Qt, no API key)
     src/agent/local_reasoning_engine.cpp
@@ -902,6 +902,14 @@ set(SOURCES
     # GAP 9: Speculative Decoder v2 (Draft-Verify-Accept)
     src/gpu/speculative_decoder_v2.cpp
 
+    # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
+
     # Autonomous inference engine (required by speculative_decoder.cpp for draft token generation)
     src/inference/ultra_fast_inference.cpp
 
@@ -1016,9 +1024,9 @@ set(SOURCES
 
     # Unlinked symbols batches (required for production link closure)
     src/core/unlinked_symbols_batch_001.cpp
-    src/core/unlinked_symbols_batch_002.cpp
+    # src/core/unlinked_symbols_batch_002.cpp  # excluded: duplicate symbols with RawrXD_Pyre_Compute.asm (asm_pyre_*)
     src/core/unlinked_symbols_batch_003.cpp
-    src/core/unlinked_symbols_batch_004.cpp
+    # src/core/unlinked_symbols_batch_004.cpp  # excluded: duplicate symbols with RawrXD_Hotpatch_Kernel.asm and RawrXD_Snapshot.asm
     src/core/unlinked_symbols_batch_005.cpp
     src/core/unlinked_symbols_batch_006.cpp
     src/core/unlinked_symbols_batch_007.cpp
@@ -3012,7 +3020,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_LSPClient.cpp
         src/win32app/Win32IDE_PeekOverlay.cpp
         src/win32app/Win32IDE_CaretAnimation.cpp
-        src/win32app/Win32IDE_AgentOllamaClient.cpp
+        # src/win32app/Win32IDE_AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/win32app/Win32IDE_ModelDiscovery.cpp
         src/win32app/Win32IDE_SwarmModelSelector.cpp
         src/win32app/Win32IDE_AsmSemantic.cpp
@@ -3335,7 +3343,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
-        src/agentic/AgentOllamaClient.cpp
+        # src/agentic/AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
         src/agentic/hotpatch/Engine.cpp
         src/agentic/observability/Logger.cpp
         src/agentic/AdvancedAgentCoordinator.cpp
@@ -4872,6 +4880,153 @@ if(BUILD_DEEP2_BATCH_TEST)
         add_dependencies(SovereignTest_Suite Deep2_Batch_Test)
     endif()
 endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SovereignTest_PatchRegistry — PatchRegistry Abstraction Layer Tests
+# Validates CI/CD mock path and prepares for production hot-patching
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_PATCHREGISTRY_TEST "Build PatchRegistry abstraction tests" ON)
+if(BUILD_PATCHREGISTRY_TEST)
+    add_executable(SovereignTest_PatchRegistry EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_PatchRegistry.cpp
+    )
+    if(MSVC)
+        target_compile_options(SovereignTest_PatchRegistry PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(SovereignTest_PatchRegistry PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/sovereign/patcher
+    )
+    target_link_libraries(SovereignTest_PatchRegistry PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(SovereignTest_PatchRegistry PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_PatchRegistry
+    )
+    message(STATUS "[Sovereign] PatchRegistry test: SovereignTest_PatchRegistry")
+    
+    # Beaconism Gate: PatchRegistry test runs as part of validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite SovereignTest_PatchRegistry)
+    endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SovereignTest_HotPatcher — Production Live Binary Patching Tests
+# Validates VirtualProtectEx, WriteProcessMemory, FlushInstructionCache
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_HOTPATCHER_TEST "Build HotPatcher production tests" ON)
+if(BUILD_HOTPATCHER_TEST)
+    add_executable(SovereignTest_HotPatcher EXCLUDE_FROM_ALL
+        src/sovereign/patcher/HotPatcher.cpp
+        src/sovereign/tests/SovereignTest_HotPatcher.cpp
+    )
+    if(MSVC)
+        target_compile_options(SovereignTest_HotPatcher PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(SovereignTest_HotPatcher PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/sovereign/patcher
+    )
+    target_link_libraries(SovereignTest_HotPatcher PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(SovereignTest_HotPatcher PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_HotPatcher
+    )
+    message(STATUS "[Sovereign] HotPatcher test: SovereignTest_HotPatcher")
+    
+    # Beaconism Gate: HotPatcher test runs as part of validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite SovereignTest_HotPatcher)
+    endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SovereignTest_AutonomousAgent — End-to-End Autonomous Agent Integration Test
+# Validates: SessionStore -> AgentGraphRuntime -> ToolRegistry -> AutonomousAgent
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_AUTONOMOUS_AGENT_TEST "Build Autonomous Agent integration tests" ON)
+if(BUILD_AUTONOMOUS_AGENT_TEST)
+    add_executable(SovereignTest_AutonomousAgent EXCLUDE_FROM_ALL
+        src/sovereign/session/SessionStore.cpp
+        src/sovereign/agent/AgentGraphRuntime.cpp
+        src/sovereign/agent/AutonomousAgent.cpp
+        src/sovereign/tool/ToolRegistry.cpp
+        src/sovereign/tests/SovereignTest_AutonomousAgent.cpp
+    )
+    if(MSVC)
+        target_compile_options(SovereignTest_AutonomousAgent PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(SovereignTest_AutonomousAgent PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/sovereign/session
+        ${CMAKE_SOURCE_DIR}/src/sovereign/agent
+        ${CMAKE_SOURCE_DIR}/src/sovereign/tool
+    )
+    target_link_libraries(SovereignTest_AutonomousAgent PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(SovereignTest_AutonomousAgent PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_AutonomousAgent
+    )
+    message(STATUS "[Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent")
+    
+    # Beaconism Gate: AutonomousAgent test runs as part of validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite SovereignTest_AutonomousAgent)
+    endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# AntiHallucinationHotPatcher — MASM Anti-Hallucination Guard
+# Validates patches before application to prevent logic drift
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_ANTI_HALLUCINATION "Build Anti-Hallucination MASM patcher" ON)
+if(BUILD_ANTI_HALLUCINATION AND MSVC)
+    # Assemble the MASM file
+    set(ASM_SOURCE ${CMAKE_SOURCE_DIR}/src/sovereign/patcher/AntiHallucinationHotPatcher.asm)
+    set(ASM_OBJECT ${CMAKE_BINARY_DIR}/AntiHallucinationHotPatcher.obj)
+    
+    add_custom_command(
+        OUTPUT ${ASM_OBJECT}
+        COMMAND ${CMAKE_ASM_MASM_COMPILER} /c /Fo ${ASM_OBJECT} ${ASM_SOURCE}
+        DEPENDS ${ASM_SOURCE}
+        COMMENT "Assembling AntiHallucinationHotPatcher.asm"
+    )
+    
+    add_custom_target(AntiHallucinationASM DEPENDS ${ASM_OBJECT})
+    
+    add_executable(SovereignTest_AntiHallucination EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_AntiHallucination.cpp
+        ${ASM_OBJECT}
+    )
+    add_dependencies(SovereignTest_AntiHallucination AntiHallucinationASM)
+    
+    if(MSVC)
+        target_compile_options(SovereignTest_AntiHallucination PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(SovereignTest_AntiHallucination PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/sovereign/patcher
+    )
+    target_link_libraries(SovereignTest_AntiHallucination PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(SovereignTest_AntiHallucination PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_AntiHallucination
+    )
+    message(STATUS "[Sovereign] AntiHallucination test: SovereignTest_AntiHallucination")
+    
+    # Beaconism Gate: AntiHallucination test runs as part of validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite SovereignTest_AntiHallucination)
+    endif()
+endif()
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # CI gate: stress_test — build and note availability
@@ -5384,11 +5539,19 @@ if(WIN32)
     # ═══════════════════════════════════════════════════════════════════
     # VAL-038.1 MASM Mechanical Translation — Same algorithm, optimal registers
     # ═══════════════════════════════════════════════════════════════════
+    # Create the executable with C++ wrapper and ASM source
     add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_masm_val038_wrapper.cpp
         src/benchmark/tree_attention_masm_val038.asm
     )
+    target_include_directories(tree_attention_masm_val038 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
     if(MSVC)
-        target_compile_options(tree_attention_masm_val038 PRIVATE /O2 /arch:AVX512)
+        target_compile_options(tree_attention_masm_val038 PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+        # Enable MASM for the .asm file
+        set_source_files_properties(src/benchmark/tree_attention_masm_val038.asm 
+            PROPERTIES LANGUAGE ASM_MASM)
     endif()
     target_link_libraries(tree_attention_masm_val038 PRIVATE
         kernel32
@@ -5397,7 +5560,6 @@ if(WIN32)
     set_target_properties(tree_attention_masm_val038 PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME tree_attention_masm_val038
-        SUFFIX ".exe"
     )
     message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
