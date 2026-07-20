@@ -209,6 +209,11 @@ private:
     
     // Internal methods
     bool LoadWeights(const model::ModelContext& model);
+    bool LoadSyntheticWeights();
+    
+    // Tokenization helpers (simple implementations)
+    std::vector<uint32_t> TokenizeSimple(const std::string& text);
+    std::string Detokenize(const std::vector<uint32_t>& tokens);
     
     // Transformer layers
     void ApplyLayerNorm(std::vector<float>& hidden, const float* gamma, const float* beta);

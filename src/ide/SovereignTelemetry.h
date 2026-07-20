@@ -28,14 +28,11 @@ extern "C" {
 /*===========================================================================
  * CONSTANTS
  *=========================================================================*/
-#define STEL_SCHEMA_VERSION             1       // Telemetry schema version
-#define STEL_RUNTIME_VERSION            L"14.7.3" // RawrXD version
+#define STEL_VERSION                    1
 #define STEL_MAX_EVENT_QUEUE            1024
 #define STEL_HISTOGRAM_BUCKETS          10
 #define STEL_SESSION_ID_LEN             32
 #define STEL_MAX_STRING_LEN             256
-#define STEL_MAX_CORRELATION_ID         64
-#define STEL_DEFAULT_SAMPLE_RATE        100     // 100% = 1.0
 
 /*===========================================================================
  * EVENT TYPES
@@ -55,34 +52,8 @@ typedef enum STEL_EventType {
     STEL_EVENT_SESSION_START,
     STEL_EVENT_SESSION_END,
     STEL_EVENT_ADAPTIVE_DEBOUNCE_CHANGED,
-    STEL_EVENT_FLOW_BEGIN,
-    STEL_EVENT_FLOW_END,
     STEL_EVENT_COUNT
 } STEL_EventType;
-
-/*===========================================================================
- * TELEMETRY CONFIGURATION
- * Sampling and export controls
- *=========================================================================*/
-typedef struct STEL_Config {
-    BOOL        enabled;                    // Master switch
-    uint32_t    sampleRate;                 // 0-100 (percentage)
-    uint32_t    exportIntervalMinutes;      // Auto-export interval
-    BOOL        enableCorrelation;          // Track end-to-end flows
-    BOOL        enableMemoryTracking;       // Periodic memory snapshots
-    uint32_t    memorySnapshotIntervalSec;  // Memory snapshot frequency
-} STEL_Config;
-
-/*===========================================================================
- * CORRELATION CONTEXT
- * End-to-end request tracking
- *=========================================================================*/
-typedef struct STEL_CorrelationContext {
-    WCHAR       correlationId[STEL_MAX_CORRELATION_ID];  // Unique request ID
-    uint64_t    parentTimestamp;            // When flow started
-    STEL_EventType flowType;                // GHOSTTEXT, COMPLETION, etc.
-    uint32_t    stepNumber;                 // Sequence in flow
-} STEL_CorrelationContext;
 
 /*===========================================================================
  * INFERENCE TELEMETRY EVENT
@@ -91,13 +62,6 @@ typedef struct STEL_CorrelationContext {
 typedef struct STEL_InferenceEvent {
     uint64_t    timestamp;                    // UTC timestamp (microseconds)
     uint64_t    sessionId;                  // Anonymous session identifier
-    
-    // Schema versioning
-    uint32_t    schemaVersion;              // STEL_SCHEMA_VERSION
-    WCHAR       runtimeVersion[16];         // STEL_RUNTIME_VERSION
-    
-    // Correlation tracking
-    STEL_CorrelationContext correlation;
     
     // Event classification
     STEL_EventType eventType;
@@ -134,9 +98,6 @@ typedef struct STEL_InferenceEvent {
     uint32_t    acceptedLines;
     uint32_t    generatedLines;
     float       confidence;
-    
-    // End-to-end latency (keystroke to useful suggestion)
-    double      endToEndLatencyMs;          // Total UX latency
     
     // Adaptive runtime
     uint32_t    debounceMs;                 // Current debounce setting
@@ -239,23 +200,9 @@ typedef struct STEL_SessionSummary {
  * TELEMETRY COLLECTOR INTERFACE
  *=========================================================================*/
 
-/* Initialize telemetry system with configuration
+/* Initialize telemetry system
  * Returns: TRUE on success */
 BOOL STEL_Initialize(void);
-BOOL STEL_InitializeWithConfig(const STEL_Config* config);
-
-/* Get/set configuration */
-void STEL_GetConfig(STEL_Config* outConfig);
-void STEL_SetConfig(const STEL_Config* config);
-
-/* Check if event should be sampled (based on sample rate) */
-BOOL STEL_ShouldSample(void);
-
-/* Begin a correlated flow (e.g., GhostText request) */
-void STEL_BeginFlow(STEL_EventType flowType, STEL_CorrelationContext* outContext);
-
-/* End a correlated flow and record end-to-end metrics */
-void STEL_EndFlow(const STEL_CorrelationContext* context, BOOL success);
 
 /* Shutdown and cleanup */
 void STEL_Shutdown(void);
@@ -313,10 +260,6 @@ void STEL_Reset(void);
 /* Enable/disable telemetry collection */
 void STEL_SetEnabled(BOOL enabled);
 BOOL STEL_IsEnabled(void);
-
-/* Schema and version info */
-uint32_t STEL_GetSchemaVersion(void);
-const WCHAR* STEL_GetRuntimeVersion(void);
 
 #ifdef __cplusplus
 }

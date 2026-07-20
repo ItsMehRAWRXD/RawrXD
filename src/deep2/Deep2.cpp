@@ -212,27 +212,54 @@ void Context::Forward(const float* input, float* output, size_t tokenCount) {
 }
 
 void Context::RouteExperts(const float* input, ExpertRouting* routing, size_t count) {
-    if (!routing) return;
-    
-    // Simplified top-k routing
-    // In production, this would use a learned gating network
-    
+    if (!routing || !input) return;
+
+    // Top-k routing: compute a dot-product gate score per expert using the
+    // first hiddenDim elements of input as a proxy for the router logits,
+    // then select the top-k experts by score and softmax-normalise their weights.
     for (size_t i = 0; i < count; ++i) {
-        // Mock routing: select experts 0-7 with equal weights
-        routing[i].numExperts = static_cast<int32_t>(m_config.expertsPerToken);
-        
-        float weightSum = 0.0f;
-        for (size_t j = 0; j < m_config.expertsPerToken; ++j) {
-            routing[i].expertIds[j] = static_cast<int32_t>(j);
-            // Mock weight based on input magnitude
-            float w = 1.0f + (input[i * m_config.hiddenDim] * 0.1f);
-            routing[i].weights[j] = w > 0 ? w : 0.01f;
-            weightSum += routing[i].weights[j];
+        const float* token = input + i * m_config.hiddenDim;
+        const int32_t k    = static_cast<int32_t>(m_config.expertsPerToken);
+
+        // Compute a scalar gate score for each expert via a simple hash projection
+        // (replaces a learned linear layer when weights are unavailable)
+        float scores[256] = {};
+        for (size_t e = 0; e < m_config.numExperts && e < 256; ++e) {
+            float s = 0.0f;
+            for (size_t d = 0; d < m_config.hiddenDim; ++d) {
+                // Deterministic projection: sin-hash of (expert, dim)
+                s += token[d] * sinf((float)(e * 7 + d) * 0.01f);
+            }
+            scores[e] = s;
         }
-        
-        // Normalize weights
-        for (size_t j = 0; j < m_config.expertsPerToken; ++j) {
-            routing[i].weights[j] /= weightSum;
+
+        // Partial sort: find top-k indices
+        int32_t topIdx[8] = {};
+        for (int32_t ki = 0; ki < k; ++ki) {
+            float best = -1e38f;
+            int32_t bestE = 0;
+            for (size_t e = 0; e < m_config.numExperts && e < 256; ++e) {
+                bool already = false;
+                for (int32_t prev = 0; prev < ki; ++prev)
+                    if (topIdx[prev] == (int32_t)e) { already = true; break; }
+                if (!already && scores[e] > best) { best = scores[e]; bestE = (int32_t)e; }
+            }
+            topIdx[ki] = bestE;
+        }
+
+        // Softmax over top-k scores
+        float maxS = -1e38f;
+        for (int32_t ki = 0; ki < k; ++ki)
+            if (scores[topIdx[ki]] > maxS) maxS = scores[topIdx[ki]];
+        float sumExp = 0.0f;
+        for (int32_t ki = 0; ki < k; ++ki)
+            sumExp += expf(scores[topIdx[ki]] - maxS);
+        if (sumExp < 1e-12f) sumExp = 1e-12f;
+
+        routing[i].numExperts = k;
+        for (int32_t ki = 0; ki < k; ++ki) {
+            routing[i].expertIds[ki] = topIdx[ki];
+            routing[i].weights[ki]   = expf(scores[topIdx[ki]] - maxS) / sumExp;
         }
     }
 }

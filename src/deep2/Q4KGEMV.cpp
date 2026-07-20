@@ -56,38 +56,34 @@ static void q4k_gemv_scalar(
     size_t numCols
 ) {
     size_t blockCols = (numCols + 255) / 256;
-    
+
     for (size_t row = 0; row < numRows; ++row) {
         float sum = 0.0f;
-        size_t blockRow = row / 256;
+        size_t blockRow = row / 256;   // which 256-row super-block this row belongs to
         size_t localRow = row % 256;
-        size_t group = localRow / 8;
-        size_t idx = localRow % 8;
-        
+        size_t group    = localRow / 8;
+
         for (size_t bc = 0; bc < blockCols; ++bc) {
+            // Use blockRow to index the correct super-block row
             const Q4_K_M_Block* block = &blocks[blockRow * blockCols + bc];
-            
-            // Load scale and min
-            float scale = block->scales[group] / 1000.0f;
-            float minVal = block->mins[group] / 1000.0f;
-            
+
             // Process 256 columns in this block
             for (size_t c = 0; c < 256 && (bc * 256 + c) < numCols; ++c) {
                 size_t cg = c / 8;
                 size_t ci = c % 8;
-                
+
                 float cScale = block->scales[cg] / 1000.0f;
-                float cMin = block->mins[cg] / 1000.0f;
-                
-                // Dequantize
+                float cMin   = block->mins[cg]   / 1000.0f;
+
+                // Dequantize: each byte holds two 4-bit weights
                 uint8_t packed = block->qs[cg * 4 + ci / 2];
                 int q = (ci % 2 == 0) ? (packed & 0x0F) : (packed >> 4);
-                float weight = cMin + cScale * q;
-                
+                float weight = cMin + cScale * (float)q;
+
                 sum += input[bc * 256 + c] * weight;
             }
         }
-        
+
         output[row] = sum;
     }
 }

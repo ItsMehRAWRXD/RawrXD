@@ -71,6 +71,35 @@ bool EmbeddingLookup::Initialize(const model::ModelContext& model) {
     return true;
 }
 
+bool EmbeddingLookup::Initialize(uint32_t vocab_size, uint32_t embedding_dim) {
+    initialized_ = false;
+    last_error_.clear();
+    
+    vocab_size_ = vocab_size;
+    embedding_dim_ = embedding_dim;
+    
+    if (vocab_size_ == 0 || embedding_dim_ == 0) {
+        last_error_ = "Invalid dimensions: vocab_size=" + 
+                      std::to_string(vocab_size_) + ", embedding_dim=" + 
+                      std::to_string(embedding_dim_);
+        return false;
+    }
+    
+    // Create synthetic weights for standalone operation
+    weight_data_.resize(vocab_size_ * embedding_dim_);
+    
+    // Initialize with random-ish values for testing
+    for (size_t i = 0; i < weight_data_.size(); ++i) {
+        // Simple hash-based initialization for deterministic testing
+        uint32_t hash = static_cast<uint32_t>(i * 0x9e3779b9);
+        weight_data_[i] = (static_cast<float>(hash % 1000) / 1000.0f) - 0.5f;
+        weight_data_[i] *= 0.02f;  // Scale like typical embeddings
+    }
+    
+    initialized_ = true;
+    return true;
+}
+
 // ============================================================================
 // Weight Loading
 // ============================================================================

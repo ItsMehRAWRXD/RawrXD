@@ -76,13 +76,14 @@ bool KVCache::initialize(const KVCacheConfig& cfg) {
 }
 
 void KVCache::reset() {
-    currentPos = 0;
-    if (kCache && vCache) {
-        size_t cacheSize = config.numLayers * config.maxSeqLen * 
+    if (kCache && vCache && currentPos > 0) {
+        // Only zero the positions that were actually written
+        size_t usedSize = config.numLayers * currentPos *
                           config.numHeads * config.headDim;
-        memset(kCache, 0, cacheSize * sizeof(float));
-        memset(vCache, 0, cacheSize * sizeof(float));
+        memset(kCache, 0, usedSize * sizeof(float));
+        memset(vCache, 0, usedSize * sizeof(float));
     }
+    currentPos = 0;
 }
 
 void KVCache::getKVPointers(size_t layer, size_t head, float** kPtr, float** vPtr) {
@@ -130,7 +131,7 @@ size_t KVCache::getHeadOffset(size_t layer, size_t head, size_t pos) const {
 
 // ============================================================================
 // Attention with KV Cache
-// O(n) instead of O(n²)
+// Proper scaled dot-product attention with softmax over cached positions
 // ============================================================================
 void AttentionWithCache(const float* query,
                         const KVCache& cache,
@@ -138,34 +139,53 @@ void AttentionWithCache(const float* query,
                         size_t head,
                         float* output,
                         size_t seqLen) {
-    
-    size_t headDim = cache.maxLength(); // Actually headDim
-    // For simplicity, compute attention scores
-    
-    // Clear output
-    memset(output, 0, headDim * sizeof(float));
-    
-    // For each previous position
-    for (size_t pos = 0; pos < seqLen; ++pos) {
-        const float* k = cache.getK(layer, head, pos);
-        const float* v = cache.getV(layer, head, pos);
-        
-        if (!k || !v) continue;
-        
-        // Compute attention score: query · key
-        float score = 0.0f;
-        for (size_t i = 0; i < headDim; ++i) {
-            score += query[i] * k[i];
-        }
-        
-        // Scale
-        score /= sqrtf((float)headDim);
-        
-        // Accumulate weighted value
-        for (size_t i = 0; i < headDim; ++i) {
-            output[i] += score * v[i];
-        }
+
+    // headDim comes from the cache config, not maxLength()
+    const size_t headDim  = cache.headDimSize();
+    const float  scale    = 1.0f / sqrtf((float)headDim);
+    const size_t seqUsed  = cache.currentLength();
+    const size_t attend   = (seqLen < seqUsed) ? seqLen : seqUsed;
+
+    if (headDim == 0 || attend == 0) {
+        memset(output, 0, headDim * sizeof(float));
+        return;
     }
+
+    // --- Pass 1: compute raw scores and running softmax max (online softmax) ---
+    // Use a small VLA-style heap buffer to avoid stack overflow for large seqLen
+    float* scores = new float[attend];
+
+    float maxScore = -1e38f;
+    for (size_t pos = 0; pos < attend; ++pos) {
+        const float* k = cache.getK(layer, head, pos);
+        if (!k) { scores[pos] = -1e38f; continue; }
+
+        float dot = 0.0f;
+        for (size_t i = 0; i < headDim; ++i)
+            dot += query[i] * k[i];
+        scores[pos] = dot * scale;
+        if (scores[pos] > maxScore) maxScore = scores[pos];
+    }
+
+    // --- Pass 2: softmax denominator ---
+    float sumExp = 0.0f;
+    for (size_t pos = 0; pos < attend; ++pos) {
+        scores[pos] = expf(scores[pos] - maxScore);
+        sumExp += scores[pos];
+    }
+    if (sumExp < 1e-12f) sumExp = 1e-12f;
+
+    // --- Pass 3: weighted sum of values ---
+    memset(output, 0, headDim * sizeof(float));
+    for (size_t pos = 0; pos < attend; ++pos) {
+        const float* v = cache.getV(layer, head, pos);
+        if (!v) continue;
+        const float w = scores[pos] / sumExp;
+        for (size_t i = 0; i < headDim; ++i)
+            output[i] += w * v[i];
+    }
+
+    delete[] scores;
 }
 
 } // namespace Deep2

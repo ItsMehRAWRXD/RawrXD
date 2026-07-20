@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <atomic>
 #include "SovereignSharedMemoryServer.hpp"
 
 int main(int argc, char* argv[]) {
@@ -97,15 +98,30 @@ int main(int argc, char* argv[]) {
         DWORD waitResult = WaitForSingleObject(hResponseEvent, 5000);
         
         if (waitResult == WAIT_OBJECT_0) {
+            // Acquire fence ensures we see all writes from the server
+            std::atomic_thread_fence(std::memory_order_acquire);
+            
             if (pBlock->responseReady.load() == 1) {
                 auto& resp = pBlock->response;
-                printf("  Response received:\n");
+                uint32_t seq = resp.sequenceNumber.load();
+                
+                printf("  Response received (seq=%u):\n", seq);
                 printf("    Request ID: %llu\n", resp.requestId);
                 printf("    Status: %d\n", resp.status);
                 printf("    Tokens: %u\n", resp.tokenCount);
                 printf("    Latency: %u ms\n", resp.latencyMs);
                 printf("    TPS: %.1f\n", resp.tps);
                 printf("    Text: '%s'\n", resp.text);
+                printf("    Model: '%s'\n", resp.modelName);
+                printf("    Mode: '%s'\n", resp.executionMode);
+                printf("    Backend: '%s'\n", resp.backend);
+                printf("    Flags: 0x%08X\n", resp.flags);
+                
+                // Validate sequence number matches request ID (sanity check)
+                // In production, client would track expected sequence
+                if (seq == 0) {
+                    printf("  WARNING: Sequence number is 0, possible torn read\n");
+                }
                 
                 // Mark consumed
                 pBlock->responseReady.store(0);

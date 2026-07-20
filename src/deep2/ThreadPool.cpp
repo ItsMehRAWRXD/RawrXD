@@ -46,8 +46,16 @@ ThreadPool::ThreadPool(size_t numThreads) : stop(false) {
                     tasks.pop();
                 }
                 
-                // Execute task
+                // Execute task outside the lock
                 task();
+
+                // Notify waitAll() if queue is now empty and no active tasks remain
+                if (activeTasks.fetch_sub(1) == 1) {
+                    std::unique_lock<std::mutex> lock(queueMutex);
+                    if (tasks.empty()) {
+                        finished.notify_all();
+                    }
+                }
             }
         });
     }
@@ -74,6 +82,7 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::waitAll() {
     std::unique_lock<std::mutex> lock(queueMutex);
+    // Wait without holding the lock so workers can acquire it to notify us
     finished.wait(lock, [this] {
         return tasks.empty() && activeTasks.load() == 0;
     });

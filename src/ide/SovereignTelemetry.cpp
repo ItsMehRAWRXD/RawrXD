@@ -20,10 +20,6 @@ static struct {
     std::atomic<uint64_t>       sessionId{0};
     uint64_t                    sessionStart;
     
-    // Configuration
-    STEL_Config                 config;
-    CRITICAL_SECTION            configLock;
-    
     // Event ring buffer (lock-free)
     STEL_InferenceEvent         eventQueue[STEL_MAX_EVENT_QUEUE];
     std::atomic<uint32_t>       writeIndex{0};
@@ -50,12 +46,6 @@ static struct {
     WCHAR                       currentQuantization[16];
     std::atomic<uint32_t>       modelLoadCount{0};
     std::atomic<uint32_t>       modelUnloadCount{0};
-    
-    // Correlation tracking
-    std::atomic<uint64_t>       correlationCounter{0};
-    
-    // Sampling
-    std::atomic<uint32_t>       sampleCounter{0};
 } g_telemetry;
 
 /*===========================================================================
@@ -150,36 +140,11 @@ static void STEL_CalculatePercentiles(STEL_LatencyHistogram* hist) {
  * PUBLIC API
  *=========================================================================*/
 BOOL STEL_Initialize(void) {
-    STEL_Config defaultConfig = {};
-    defaultConfig.enabled = TRUE;
-    defaultConfig.sampleRate = STEL_DEFAULT_SAMPLE_RATE;
-    defaultConfig.exportIntervalMinutes = 30;
-    defaultConfig.enableCorrelation = TRUE;
-    defaultConfig.enableMemoryTracking = TRUE;
-    defaultConfig.memorySnapshotIntervalSec = 60;
-    
-    return STEL_InitializeWithConfig(&defaultConfig);
-}
-
-BOOL STEL_InitializeWithConfig(const STEL_Config* config) {
     if (g_telemetry.initialized.exchange(true)) {
         return TRUE; // Already initialized
     }
     
     InitializeCriticalSection(&g_telemetry.memoryLock);
-    InitializeCriticalSection(&g_telemetry.configLock);
-    
-    // Store configuration
-    if (config) {
-        memcpy(&g_telemetry.config, config, sizeof(STEL_Config));
-    } else {
-        g_telemetry.config.enabled = TRUE;
-        g_telemetry.config.sampleRate = STEL_DEFAULT_SAMPLE_RATE;
-        g_telemetry.config.exportIntervalMinutes = 30;
-        g_telemetry.config.enableCorrelation = TRUE;
-        g_telemetry.config.enableMemoryTracking = TRUE;
-        g_telemetry.config.memorySnapshotIntervalSec = 60;
-    }
     
     g_telemetry.sessionId = STEL_GenerateSessionId();
     g_telemetry.sessionStart = STEL_GetTimestampMicros();
@@ -438,19 +403,10 @@ BOOL STEL_ExportToJSON(const WCHAR* filePath) {
     STEL_GhostTextMetrics gt;
     STEL_GetGhostTextMetrics(&gt);
     
-    STEL_Config config;
-    STEL_GetConfig(&config);
-    
     fprintf(fp, "{\n");
-    fprintf(fp, "  \"schemaVersion\": %d,\n", STEL_SCHEMA_VERSION);
-    fprintf(fp, "  \"runtimeVersion\": \"14.7.3\",\n");
+    fprintf(fp, "  \"version\": %d,\n", STEL_VERSION);
     fprintf(fp, "  \"sessionId\": \"%llu\",\n", (unsigned long long)g_telemetry.sessionId.load());
     fprintf(fp, "  \"durationSeconds\": %llu,\n", (unsigned long long)summary.durationSeconds);
-    fprintf(fp, "  \"telemetryConfig\": {\n");
-    fprintf(fp, "    \"enabled\": %s,\n", config.enabled ? "true" : "false");
-    fprintf(fp, "    \"sampleRate\": %u,\n", config.sampleRate);
-    fprintf(fp, "    \"correlationEnabled\": %s\n", config.enableCorrelation ? "true" : "false");
-    fprintf(fp, "  },\n");
     fprintf(fp, "  \"inference\": {\n");
     fprintf(fp, "    \"totalInferences\": %llu,\n", (unsigned long long)summary.totalInferences);
     fprintf(fp, "    \"totalTokensGenerated\": %llu,\n", (unsigned long long)summary.totalTokensGenerated);
@@ -484,91 +440,6 @@ void STEL_SetEnabled(BOOL enabled) {
 
 BOOL STEL_IsEnabled(void) {
     return g_telemetry.enabled.load();
-}
-
-void STEL_GetConfig(STEL_Config* outConfig) {
-    if (!outConfig) return;
-    EnterCriticalSection(&g_telemetry.configLock);
-    memcpy(outConfig, &g_telemetry.config, sizeof(STEL_Config));
-    LeaveCriticalSection(&g_telemetry.configLock);
-}
-
-void STEL_SetConfig(const STEL_Config* config) {
-    if (!config) return;
-    EnterCriticalSection(&g_telemetry.configLock);
-    memcpy(&g_telemetry.config, config, sizeof(STEL_Config));
-    LeaveCriticalSection(&g_telemetry.configLock);
-}
-
-BOOL STEL_ShouldSample(void) {
-    if (!STEL_IsActive()) return FALSE;
-    
-    EnterCriticalSection(&g_telemetry.configLock);
-    uint32_t sampleRate = g_telemetry.config.sampleRate;
-    LeaveCriticalSection(&g_telemetry.configLock);
-    
-    if (sampleRate >= 100) return TRUE;
-    if (sampleRate == 0) return FALSE;
-    
-    // Simple sampling: counter modulo 100
-    uint32_t counter = g_telemetry.sampleCounter.fetch_add(1) % 100;
-    return counter < sampleRate;
-}
-
-void STEL_BeginFlow(STEL_EventType flowType, STEL_CorrelationContext* outContext) {
-    if (!outContext) return;
-    if (!STEL_IsActive()) {
-        outContext->correlationId[0] = L'\0';
-        return;
-    }
-    
-    // Generate correlation ID: sessionId + counter
-    uint64_t counter = g_telemetry.correlationCounter.fetch_add(1);
-    swprintf_s(outContext->correlationId, STEL_MAX_CORRELATION_ID, 
-               L"%llu-%llu", (unsigned long long)g_telemetry.sessionId.load(), (unsigned long long)counter);
-    
-    outContext->parentTimestamp = STEL_GetTimestampMicros();
-    outContext->flowType = flowType;
-    outContext->stepNumber = 0;
-    
-    // Record flow begin event
-    STEL_InferenceEvent event = {};
-    event.timestamp = outContext->parentTimestamp;
-    event.sessionId = g_telemetry.sessionId.load();
-    event.schemaVersion = STEL_SCHEMA_VERSION;
-    wcsncpy_s(event.runtimeVersion, 16, STEL_RUNTIME_VERSION, 15);
-    event.correlation = *outContext;
-    event.eventType = STEL_EVENT_FLOW_BEGIN;
-    
-    STEL_RecordInference(&event);
-}
-
-void STEL_EndFlow(const STEL_CorrelationContext* context, BOOL success) {
-    if (!context || !STEL_IsActive()) return;
-    
-    uint64_t endTime = STEL_GetTimestampMicros();
-    double endToEndMs = (endTime - context->parentTimestamp) / 1000.0;
-    
-    // Record flow end event
-    STEL_InferenceEvent event = {};
-    event.timestamp = endTime;
-    event.sessionId = g_telemetry.sessionId.load();
-    event.schemaVersion = STEL_SCHEMA_VERSION;
-    wcsncpy_s(event.runtimeVersion, 16, STEL_RUNTIME_VERSION, 15);
-    event.correlation = *context;
-    event.correlation.stepNumber = 999; // Mark as end
-    event.eventType = STEL_EVENT_FLOW_END;
-    event.endToEndLatencyMs = endToEndMs;
-    
-    STEL_RecordInference(&event);
-}
-
-uint32_t STEL_GetSchemaVersion(void) {
-    return STEL_SCHEMA_VERSION;
-}
-
-const WCHAR* STEL_GetRuntimeVersion(void) {
-    return STEL_RUNTIME_VERSION;
 }
 
 void STEL_Reset(void) {

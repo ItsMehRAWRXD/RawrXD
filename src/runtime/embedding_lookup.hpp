@@ -83,6 +83,9 @@ public:
     // Initialize with model context
     bool Initialize(const model::ModelContext& model);
     
+    // Initialize with synthetic vocab (for standalone operation)
+    bool Initialize(uint32_t vocab_size, uint32_t embedding_dim);
+    
     // Check if initialized
     bool IsInitialized() const { return initialized_; }
     

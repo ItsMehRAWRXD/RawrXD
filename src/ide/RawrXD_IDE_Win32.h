@@ -322,6 +322,7 @@
 #define IDT_AUTOSAVE                4003
 #define IDT_COMPLETION_DEBOUNCE     4004  /* 150ms debounce for completion (tuned for 301+ t/s backend) */
 #define IDT_GHOSTTEXT_DEBOUNCE      4005  /* Ghost text debounce timer */
+#define IDT_TELEMETRY_HEARTBEAT     4006  /* 1s heartbeat for DebugBridge telemetry (VAL-025) */
 
 /* ── Ghost Text Configuration ───────────────────────────────────────────── */
 #define GHOSTTEXT_DELAY_MS          150     /* Debounce delay in milliseconds (tuned for 301+ t/s) */

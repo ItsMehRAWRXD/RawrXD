@@ -140,12 +140,28 @@ function Start-ValidationRun {
     $baseArena = 5242880
     
     Write-Host "[2/4] Capturing telemetry stream..."
+    
+    # Initialize first sample immediately with baseline
+    $sample = [PSCustomObject]@{
+        Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+        Submitted = 0
+        Rendered = 0
+        Gaps = 0
+        Dropped = 0
+        Total = 0
+        LastAge = 0
+        MaxAge = 0
+        Arena = $baseArena
+        Sequence = ++$sequence
+    }
+    $samples += $sample
+    
     while (((Get-Date) - $startTime).TotalSeconds -lt $TestDurationSeconds) {
         $elapsed = ((Get-Date) - $startTime).TotalSeconds
         $progress = [math]::Min(100, ($elapsed / $TestDurationSeconds) * 100)
         Write-Progress -Activity "VAL-025 Validation" -Status "Capturing ($([math]::Round($elapsed))s / ${TestDurationSeconds}s)" -PercentComplete $progress
         
-        # Simulate realistic debugger telemetry
+        # Simulate realistic debugger telemetry (cumulative counters)
         $submitted = [math]::Floor($elapsed * 8333)  # 8333 events/sec
         $rendered = [math]::Floor($elapsed * 267)    # 267 renders/sec (coalesced)
         
@@ -226,14 +242,14 @@ function Analyze-ValidationResults {
         P99Latency = $sortedLatency[[math]::Floor($count * 0.99)]
         MaxLatency = ($Samples | Measure-Object -Property MaxAge -Maximum).Maximum
         
-        # Throughput (calculate from cumulative counters - use final values as rates)
-        $first = $Samples[0]
-        $last = $Samples[-1]
+        # Throughput (calculate from cumulative counters)
+        $firstSample = $Samples[0]
+        $lastSample = $Samples[-1]
         $actualDuration = $TestDurationSeconds
         
         # Calculate deltas from cumulative counters
-        $submittedDelta = $last.Submitted - $first.Submitted
-        $renderedDelta = $last.Rendered - $first.Rendered
+        $submittedDelta = $lastSample.Submitted - $firstSample.Submitted
+        $renderedDelta = $lastSample.Rendered - $firstSample.Rendered
         
         SubmissionRate = if ($actualDuration -gt 0) { $submittedDelta / $actualDuration } else { 0 }
         RenderRate = if ($actualDuration -gt 0) { $renderedDelta / $actualDuration } else { 0 }

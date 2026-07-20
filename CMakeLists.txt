@@ -5372,6 +5372,18 @@ set_target_properties(TestSovereignBridge PROPERTIES
 message(STATUS "[Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)")
 
 # ============================================================================
+# DebugBridge Telemetry Test
+# ============================================================================
+add_executable(TestDebugBridgeTelemetry EXCLUDE_FROM_ALL
+    src/debug/test_debugbridge_telemetry.cpp
+)
+target_compile_features(TestDebugBridgeTelemetry PRIVATE cxx_std_17)
+set_target_properties(TestDebugBridgeTelemetry PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
+
+# ============================================================================
 # Debugger Stress Tests
 # ============================================================================
 add_executable(stress_target EXCLUDE_FROM_ALL

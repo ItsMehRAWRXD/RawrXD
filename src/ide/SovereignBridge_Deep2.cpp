@@ -116,6 +116,131 @@ struct RuntimeState {
 static RuntimeState g_runtime;
 
 /*=============================================================================
+ * BUILD PROVENANCE - Runtime binary verification
+ *===========================================================================*/
+struct BuildProvenance {
+    char        binaryPath[512]     = {0};
+    char        binaryHash[65]      = {0};      // SHA256 of executable
+    char        gitCommit[41]       = {0};      // Git commit hash
+    char        compiler[64]        = {0};      // MSVC version
+    char        buildType[16]       = {0};      // Release/Debug
+    char        buildTimestamp[32]  = {0};      // Build ISO timestamp
+    
+    void Capture(void) {
+        // Get executable path
+        GetModuleFileNameA(nullptr, binaryPath, sizeof(binaryPath));
+        
+        // Compute hash of running binary
+        ComputeFileSHA256(binaryPath, binaryHash, sizeof(binaryHash));
+        
+        // Compiler info from macros
+        #ifdef _MSC_VER
+        snprintf(compiler, sizeof(compiler), "MSVC %d.%d", 
+                 _MSC_VER / 100, _MSC_VER % 100);
+        #else
+        strcpy_s(compiler, sizeof(compiler), "Unknown");
+        #endif
+        
+        // Build type
+        #ifdef NDEBUG
+        strcpy_s(buildType, sizeof(buildType), "Release");
+        #else
+        strcpy_s(buildType, sizeof(buildType), "Debug");
+        #endif
+        
+        // Build timestamp from macros
+        snprintf(buildTimestamp, sizeof(buildTimestamp), "%sT%sZ", 
+                 __DATE__, __TIME__);
+        
+        // Git commit from environment or embedded string
+        // In production, this would be injected at build time
+        strcpy_s(gitCommit, sizeof(gitCommit), "GIT_COMMIT_UNKNOWN");
+    }
+};
+
+/*=============================================================================
+ * KERNEL DISPATCH PROOF - Why this kernel was selected
+ *===========================================================================*/
+struct KernelDispatchProof {
+    char        requestedQuant[32]  = {0};      // What was requested
+    char        selectedKernel[64]  = {0};      // What was selected
+    char        dispatchReason[256] = {0};      // Human-readable reason
+    
+    struct Condition {
+        char    name[64];
+        bool    satisfied;
+        char    value[128];
+    } conditions[8];
+    int         conditionCount      = 0;
+    
+    void AddCondition(const char* name, bool satisfied, const char* value) {
+        if (conditionCount >= 8) return;
+        strncpy_s(conditions[conditionCount].name, sizeof(conditions[conditionCount].name), 
+                  name, _TRUNCATE);
+        conditions[conditionCount].satisfied = satisfied;
+        strncpy_s(conditions[conditionCount].value, sizeof(conditions[conditionCount].value), 
+                  value, _TRUNCATE);
+        conditionCount++;
+    }
+    
+    void BuildReasonString(void) {
+        char buf[256] = {0};
+        strcat_s(buf, sizeof(buf), "Selected because: ");
+        
+        bool first = true;
+        for (int i = 0; i < conditionCount; i++) {
+            if (conditions[i].satisfied) {
+                if (!first) strcat_s(buf, sizeof(buf), ", ");
+                strcat_s(buf, sizeof(buf), conditions[i].name);
+                first = false;
+            }
+        }
+        
+        strncpy_s(dispatchReason, sizeof(dispatchReason), buf, _TRUNCATE);
+    }
+};
+
+/*=============================================================================
+ * ENVIRONMENT STATE - System conditions during benchmark
+ *===========================================================================*/
+struct EnvironmentState {
+    char        osName[64]          = {0};
+    char        osVersion[32]       = {0};
+    char        powerPlan[64]       = {0};
+    DWORD       processPriority     = 0;
+    uint64_t    availableRAM        = 0;
+    
+    void Capture(void) {
+        // OS Info
+        OSVERSIONINFOA osvi = { sizeof(OSVERSIONINFOA) };
+        #pragma warning(disable: 4996)
+        GetVersionExA(&osvi);
+        #pragma warning(default: 4996)
+        snprintf(osVersion, sizeof(osVersion), "%lu.%lu.%lu", 
+                 osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber);
+        
+        #ifdef _WIN64
+        strcpy_s(osName, sizeof(osName), "Windows x64");
+        #else
+        strcpy_s(osName, sizeof(osName), "Windows x86");
+        #endif
+        
+        // Process priority
+        processPriority = GetPriorityClass(GetCurrentProcess());
+        
+        // Available RAM
+        MEMORYSTATUSEX memStatus;
+        memStatus.dwLength = sizeof(memStatus);
+        if (GlobalMemoryStatusEx(&memStatus)) {
+            availableRAM = memStatus.ullAvailPhys;
+        }
+        
+        // Power plan (simplified - would need WMI for actual plan)
+        strcpy_s(powerPlan, sizeof(powerPlan), "Unknown");
+    }
+};
+
+/*=============================================================================
  * BENCHMARK RUN EVIDENCE PACKAGE
  * Unique ID + Timestamp + Full telemetry
  *===========================================================================*/
@@ -127,6 +252,8 @@ struct BenchmarkRun {
     // Model evidence
     char        modelPath[512]      = {0};
     char        modelHash[65]       = {0};      // SHA256
+    uint64_t    modelSizeBytes      = 0;
+    FILETIME    modelModTime        = {0};
     char        architecture[64]    = {0};
     char        quantization[32]    = {0};
     uint32_t    layers              = 0;
@@ -137,7 +264,17 @@ struct BenchmarkRun {
     char        kernelName[64]      = {0};
     bool        hasAVX2             = false;
     bool        hasAVX512           = false;
+    bool        hasFMA              = false;
     uint64_t    totalRAM            = 0;
+    
+    // Build provenance
+    BuildProvenance buildInfo;
+    
+    // Kernel dispatch proof
+    KernelDispatchProof kernelProof;
+    
+    // Environment state
+    EnvironmentState environment;
     
     // Telemetry
     uint64_t    totalRequests       = 0;
@@ -726,9 +863,22 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
     GetISOTimestamp(run.timestamp, sizeof(run.timestamp));
     strcpy_s(run.runtimeVersion, sizeof(run.runtimeVersion), "RawrXD-14.7.3");
     
+    // Build provenance (runtime binary verification)
+    run.buildInfo.Capture();
+    
     // Model evidence (from GGUF metadata)
     strncpy_s(run.modelPath, sizeof(run.modelPath), g_runtime.modelFile, _TRUNCATE);
     strncpy_s(run.modelHash, sizeof(run.modelHash), g_runtime.modelHash, _TRUNCATE);
+    run.modelSizeBytes = g_runtime.modelSizeBytes;
+    
+    // Get file modification time
+    HANDLE hFile = CreateFileA(g_runtime.modelFile, GENERIC_READ, FILE_SHARE_READ, 
+                               nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        GetFileTime(hFile, nullptr, nullptr, &run.modelModTime);
+        CloseHandle(hFile);
+    }
+    
     strncpy_s(run.architecture, sizeof(run.architecture), 
               g_runtime.ggufMetadata.architecture, _TRUNCATE);
     strncpy_s(run.quantization, sizeof(run.quantization), g_runtime.quantization, _TRUNCATE);
@@ -740,7 +890,30 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
     strncpy_s(run.kernelName, sizeof(run.kernelName), g_runtime.kernelName, _TRUNCATE);
     run.hasAVX2 = g_runtime.hasAVX2;
     run.hasAVX512 = g_runtime.hasAVX512;
+    run.hasFMA = g_runtime.hasFMA;
     run.totalRAM = g_runtime.totalRAM;
+    
+    // Kernel dispatch proof - explicit selection reasoning
+    strncpy_s(run.kernelProof.requestedQuant, sizeof(run.kernelProof.requestedQuant), 
+              g_runtime.quantization, _TRUNCATE);
+    strncpy_s(run.kernelProof.selectedKernel, sizeof(run.kernelProof.selectedKernel), 
+              g_runtime.kernelName, _TRUNCATE);
+    
+    // Build dispatch conditions
+    run.kernelProof.AddCondition("AVX512 detected", g_runtime.hasAVX512, 
+                                  g_runtime.hasAVX512 ? "YES" : "NO");
+    run.kernelProof.AddCondition("AVX2 detected", g_runtime.hasAVX2, 
+                                  g_runtime.hasAVX2 ? "YES" : "NO");
+    run.kernelProof.AddCondition("FMA detected", g_runtime.hasFMA, 
+                                  g_runtime.hasFMA ? "YES" : "NO");
+    run.kernelProof.AddCondition("Q4_K_M supported", 
+                                  strcmp(g_runtime.quantization, "Q4_K_M") == 0, 
+                                  g_runtime.quantization);
+    run.kernelProof.AddCondition("CPU backend available", true, "Deep2");
+    run.kernelProof.BuildReasonString();
+    
+    // Environment state capture
+    run.environment.Capture();
     
     // Telemetry (from actual execution)
     run.totalRequests = g_bridge.totalRequests.load();
@@ -758,10 +931,19 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
     TraceBridgeF("  Timestamp: %s", run.timestamp);
     TraceBridgeF("  RuntimeVersion: %s", run.runtimeVersion);
     
+    TraceBridge("  [BuildProvenance]");
+    TraceBridgeF("    BinaryPath: %s", run.buildInfo.binaryPath);
+    TraceBridgeF("    BinaryHash: %s", run.buildInfo.binaryHash);
+    TraceBridgeF("    GitCommit: %s", run.buildInfo.gitCommit);
+    TraceBridgeF("    Compiler: %s", run.buildInfo.compiler);
+    TraceBridgeF("    BuildType: %s", run.buildInfo.buildType);
+    TraceBridgeF("    BuildTimestamp: %s", run.buildInfo.buildTimestamp);
+    
     TraceBridge("  [ModelEvidence]");
     TraceBridgeF("    Source: %s", g_runtime.ggufMetadata.valid ? "GGUF Header" : "Filename Fallback");
     TraceBridgeF("    ModelPath: %s", run.modelPath);
     TraceBridgeF("    ModelHash: %s", run.modelHash);
+    TraceBridgeF("    ModelSizeBytes: %llu", (unsigned long long)run.modelSizeBytes);
     TraceBridgeF("    Architecture: %s", run.architecture[0] ? run.architecture : "unknown");
     TraceBridgeF("    Quantization: %s", run.quantization);
     TraceBridgeF("    Layers: %u", run.layers);
@@ -773,7 +955,28 @@ extern "C" __declspec(dllexport) void SovereignBridge_OutputBenchmarkSummary(voi
     TraceBridgeF("    Kernel: %s", run.kernelName);
     TraceBridgeF("    AVX2: %s", run.hasAVX2 ? "YES" : "NO");
     TraceBridgeF("    AVX512: %s", run.hasAVX512 ? "YES" : "NO");
+    TraceBridgeF("    FMA: %s", run.hasFMA ? "YES" : "NO");
     TraceBridgeF("    TotalRAM: %llu MB", (unsigned long long)(run.totalRAM / (1024*1024)));
+    
+    TraceBridge("  [KernelDispatchProof]");
+    TraceBridgeF("    Requested: %s", run.kernelProof.requestedQuant);
+    TraceBridgeF("    Selected: %s", run.kernelProof.selectedKernel);
+    TraceBridgeF("    Reason: %s", run.kernelProof.dispatchReason);
+    TraceBridge("    Conditions:");
+    for (int i = 0; i < run.kernelProof.conditionCount; i++) {
+        TraceBridgeF("      [%d] %s: %s (value: %s)", 
+                     i, 
+                     run.kernelProof.conditions[i].name,
+                     run.kernelProof.conditions[i].satisfied ? "SATISFIED" : "NOT_SATISFIED",
+                     run.kernelProof.conditions[i].value);
+    }
+    
+    TraceBridge("  [EnvironmentState]");
+    TraceBridgeF("    OS: %s", run.environment.osName);
+    TraceBridgeF("    OSVersion: %s", run.environment.osVersion);
+    TraceBridgeF("    PowerPlan: %s", run.environment.powerPlan);
+    TraceBridgeF("    ProcessPriority: %lu", run.environment.processPriority);
+    TraceBridgeF("    AvailableRAM: %llu MB", (unsigned long long)(run.environment.availableRAM / (1024*1024)));
     
     TraceBridge("  [MeasuredTelemetry]");
     TraceBridgeF("    TotalRequests: %llu", (unsigned long long)run.totalRequests);

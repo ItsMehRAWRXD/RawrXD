@@ -200,6 +200,25 @@ if(NOT TARGET test_swarm_scheduler_pin AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/t
     message(STATUS "  ✓ Added test_swarm_scheduler_pin")
 endif()
 
+# Deterministic Replay Gate - IDE determinism validation
+if(NOT TARGET deterministic_replay_gate AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deterministic_replay_gate.cpp")
+    add_executable(deterministic_replay_gate deterministic_replay_gate.cpp)
+    target_include_directories(deterministic_replay_gate PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(deterministic_replay_gate PROPERTIES 
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" 
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(deterministic_replay_gate PRIVATE kernel32 user32)
+    endif()
+    add_test(NAME deterministic_replay_gate COMMAND deterministic_replay_gate)
+    set_tests_properties(deterministic_replay_gate PROPERTIES
+        TIMEOUT 120
+        LABELS "deterministic;ide;ghosttext"
+    )
+    message(STATUS "  ✓ Added deterministic_replay_gate")
+endif()
+
 if(NOT TARGET test_swarm_expert_heatmap_stress AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_swarm_expert_heatmap_stress.cpp")
     add_executable(test_swarm_expert_heatmap_stress
         test_swarm_expert_heatmap_stress.cpp

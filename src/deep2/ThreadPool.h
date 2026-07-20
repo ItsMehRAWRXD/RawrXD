@@ -63,10 +63,9 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::res
         if (stop) {
             throw std::runtime_error("enqueue on stopped ThreadPool");
         }
-        tasks.emplace([task, this]() {
-            activeTasks++;
+        activeTasks++;  // Increment before enqueue so waitAll() sees it immediately
+        tasks.emplace([task]() {
             (*task)();
-            activeTasks--;
         });
     }
     condition.notify_one();

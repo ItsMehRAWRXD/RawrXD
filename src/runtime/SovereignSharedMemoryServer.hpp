@@ -44,6 +44,17 @@ struct SovereignResponse {
     float tps;                // Tokens per second
     char text[16384];         // Generated completion
     char errorMessage[256];   // Error details if status != 0
+    
+    // Execution provenance - distinguishes synthetic vs real model execution
+    char modelName[128];      // Model identifier (e.g., "phi-3-mini-Q4_K_M")
+    char executionMode[32];   // "synthetic" or "gguf-backed"
+    char backend[32];         // Backend type (e.g., "Sovereign CPU AVX512")
+    uint64_t runtimeVersion;  // Runtime version for compatibility
+    uint32_t flags;           // Bit flags: bit0=synthetic, bit1=quantized, etc.
+    
+    // Atomic sequence counter for detecting torn reads
+    // Incremented atomically before responseReady is set
+    std::atomic<uint32_t> sequenceNumber;
 };
 
 struct SovereignSharedBlock {

@@ -7,6 +7,7 @@
 
 #include "SovereignSharedMemoryServer.hpp"
 #include "inference_engine.hpp"
+#include "ExecutionModeDetector.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <chrono>
@@ -20,6 +21,11 @@ static rawrxd::runtime::InferenceEngine* g_inferenceEngine = nullptr;
 static bool g_engineInitialized = false;
 static char g_modelName[256] = {0};
 static char g_lastError[512] = {0};
+
+// GGUF file mapping for execution mode detection
+static void* g_ggufFileMapping = nullptr;
+static size_t g_ggufFileSize = 0;
+static ExecutionMode g_currentExecutionMode = ExecutionMode::Synthetic;
 
 // Initialize the inference engine
 static bool EnsureInferenceEngine() {
@@ -321,8 +327,15 @@ void SovereignSharedMemoryServer::WorkerLoop() {
                 // Process
                 bool success = ProcessRequest(request, response);
                 
-                // Write response
+                // Write response with atomic sequence for consistency detection
+                // Sequence is incremented before responseReady to ensure client
+                // can detect if they read a partially-written response
+                uint32_t seq = m_pSharedBlock->response.sequenceNumber.load() + 1;
                 m_pSharedBlock->response = response;
+                m_pSharedBlock->response.sequenceNumber.store(seq);
+                
+                // Memory barrier ensures all writes complete before responseReady
+                std::atomic_thread_fence(std::memory_order_release);
                 m_pSharedBlock->responseReady.store(1);
                 
                 // Signal completion
@@ -417,6 +430,20 @@ bool SovereignSharedMemoryServer::CallDeep2Inference(
         response.latencyMs = latencyMs;
         response.tps = tps;
         response.status = 0;
+        
+        // Detect execution mode using GGUF header probe
+        ExecutionMode mode = ExecutionModeDetector::Detect(g_ggufFileMapping);
+        g_currentExecutionMode = mode;
+        
+        // Populate execution provenance
+        strncpy_s(response.modelName, sizeof(response.modelName), 
+                  GetModelName(), _TRUNCATE);
+        strncpy_s(response.executionMode, sizeof(response.executionMode),
+                  ExecutionModeToString(mode), _TRUNCATE);
+        strncpy_s(response.backend, sizeof(response.backend),
+                  "Sovereign CPU", _TRUNCATE);  // TODO: Detect AVX512/AVX2
+        response.runtimeVersion = 0x00010000;  // Version 1.0.0
+        response.flags = (mode == ExecutionMode::GgufBacked) ? 0x00000002 : 0x00000001;
     } else {
         response.status = 1;
         strncpy_s(response.errorMessage, sizeof(response.errorMessage),

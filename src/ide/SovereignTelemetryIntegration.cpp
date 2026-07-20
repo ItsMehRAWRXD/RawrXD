@@ -33,8 +33,6 @@ struct InferenceTelemetryContext {
     uint32_t debounceMs;
     uint32_t contextWindow;
     float confidence;
-    STEL_CorrelationContext correlation;
-    BOOL hasCorrelation;
 };
 
 static thread_local InferenceTelemetryContext* g_currentInference = nullptr;
@@ -42,9 +40,6 @@ static thread_local InferenceTelemetryContext* g_currentInference = nullptr;
 /* Called at start of inference request */
 void STEL_BeginInference(const SIB_CompletionRequest* request) {
     if (!STEL_IsActive()) return;
-    
-    // Check sampling
-    if (!STEL_ShouldSample()) return;
     
     if (g_currentInference) {
         delete g_currentInference;
@@ -58,7 +53,6 @@ void STEL_BeginInference(const SIB_CompletionRequest* request) {
     g_currentInference->completionMicros = 0;
     g_currentInference->promptTokens = 0;
     g_currentInference->generatedTokens = 0;
-    g_currentInference->hasCorrelation = FALSE;
     
     // Extract file extension from filePath
     if (request->filePath[0]) {
@@ -218,7 +212,6 @@ struct GhostTextTelemetryState {
     WCHAR fileExtension[8];
     float confidence;
     bool pending;
-    STEL_CorrelationContext correlation;
 };
 
 static GhostTextTelemetryState g_ghostTextState = {};
@@ -226,12 +219,6 @@ static GhostTextTelemetryState g_ghostTextState = {};
 /* Called when GhostText suggestion is generated */
 void STEL_GhostTextGenerated(const std::string& text, const WCHAR* filePath, float confidence) {
     if (!STEL_IsActive()) return;
-    
-    // Check sampling
-    if (!STEL_ShouldSample()) return;
-    
-    // Begin correlated flow
-    STEL_BeginFlow(STEL_EVENT_GHOSTTEXT_GENERATED, &g_ghostTextState.correlation);
     
     g_ghostTextState.generationTimestamp = 
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -283,9 +270,6 @@ void STEL_GhostTextAccepted(uint32_t acceptedLines) {
                          g_ghostTextState.fileExtension,
                          totalLines, acceptedLines, timeToAcceptanceMs,
                          g_ghostTextState.confidence);
-    
-    // End the correlated flow
-    STEL_EndFlow(&g_ghostTextState.correlation, TRUE);
     
     g_ghostTextState.pending = false;
 }

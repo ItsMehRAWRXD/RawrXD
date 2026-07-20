@@ -56,7 +56,8 @@ public:
     
     // Current sequence length
     size_t currentLength() const { return currentPos; }
-    size_t maxLength() const { return config.maxSeqLen; }
+    size_t maxLength()     const { return config.maxSeqLen; }
+    size_t headDimSize()   const { return config.headDim; }
     
     // Check if cache is full
     bool isFull() const { return currentPos >= config.maxSeqLen; }

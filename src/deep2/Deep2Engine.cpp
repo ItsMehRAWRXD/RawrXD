@@ -5,7 +5,10 @@
 #include "Deep2Engine.h"
 #include <cstdio>
 #include <cmath>
+#include <cstring>
 #include <chrono>
+#include <algorithm>
+#include <mutex>
 
 // Deep2 kernel interface
 extern "C" {
@@ -129,10 +132,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    // Initialize hidden states from prompt (simplified)
-    // In real implementation: embedding lookup
-    for (size_t i = 0; i < config.hiddenDim; ++i) {
-        hiddenStates[i] = 0.01f * (i % 100);  // Dummy embedding
+    // Embed prompt tokens: each token maps to a row in the embedding table.
+    // With no weight file loaded we use a deterministic hash-based embedding
+    // so at least different tokens produce different hidden states.
+    for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t) {
+        float* h = hiddenStates + t * config.hiddenDim;
+        int tok = promptTokens[t];
+        for (size_t i = 0; i < config.hiddenDim; ++i) {
+            // Simple but deterministic: sin/cos hash avoids all-same values
+            h[i] = sinf((float)(tok * 31 + (int)i) * 0.001f);
+        }
     }
     
     size_t tokensGenerated = 0;
@@ -157,10 +166,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
         
-        // Update hidden states for next token
-        // In real implementation: embedding of next token
+        // Embed the newly sampled token into hiddenStates for the next step
+        int tok = outputTokens[tokensGenerated - 1];
         for (size_t i = 0; i < config.hiddenDim; ++i) {
-            hiddenStates[i] = layerInput[i] * 0.99f;  // Decay for variety
+            hiddenStates[i] = sinf((float)(tok * 31 + (int)i) * 0.001f);
         }
         
         // Advance KV cache
@@ -205,44 +214,68 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 }
 
 void Deep2Engine::computeAttention(size_t layer, const float* input, float* output, size_t seqLen) {
-    // Simplified attention
-    // In real implementation: QKV projections, attention scores, softmax
-    
+    const size_t headDim = config.hiddenDim / config.numHeads;
+
     if (config.useKVCache && kvCache) {
-        // Use KV cache for O(n) attention
-        // For now, just copy input
-        memcpy(output, input, config.hiddenDim * sizeof(float));
+        // Write Q, K, V projections into the KV cache then attend
+        // (Without real weight matrices we project via RMSNorm of input)
+        for (size_t h = 0; h < config.numHeads; ++h) {
+            float* kPtr = nullptr;
+            float* vPtr = nullptr;
+            kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
+
+            const float* headIn = input + h * headDim;
+            if (kPtr) memcpy(kPtr, headIn, headDim * sizeof(float));
+            if (vPtr) memcpy(vPtr, headIn, headDim * sizeof(float));
+
+            // Attend: query = headIn, output per head
+            float* headOut = output + h * headDim;
+            AttentionWithCache(headIn, *kvCache, layer, h, headOut, seqLen);
+        }
     } else {
-        // Full attention (O(n²))
-        memcpy(output, input, config.hiddenDim * sizeof(float));
+        // No KV cache: single-token self-attention (identity fallback)
+        // Apply RMSNorm so output is at least normalised
+        Deep2_RMSNorm(input, output, config.hiddenDim, 1e-6f);
     }
 }
 
 void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
-    // Simplified FFN
-    // In real implementation: SwiGLU with Deep2 kernel
-    
-    // Just copy for now
-    memcpy(output, input, config.hiddenDim * sizeof(float));
+    // FFN with SwiGLU activation using the Deep2 MASM kernel.
+    // Gate vector = first half of ffnOutput, up-projection = second half.
+    // Without real weight matrices we use RMSNorm(input) as both projections
+    // so the kernel at least exercises the correct code path.
+    const size_t half = config.hiddenDim * 2; // SwiGLU expansion factor = 4, split in 2
+    float* gate = ffnOutput;          // first half
+    float* up   = ffnOutput + half;   // second half
+
+    // Normalise input into gate and up slots
+    Deep2_RMSNorm(input, gate, config.hiddenDim, 1e-6f);
+    memcpy(up, gate, config.hiddenDim * sizeof(float));
+
+    // SwiGLU: output = (gate * sigmoid(gate)) * up
+    Deep2_SwiGLU(gate, up, output, config.hiddenDim);
 }
 
 int Deep2Engine::sampleToken(const float* logits) {
-    // Simplified argmax sampling
-    // In real implementation: temperature, top-k, top-p
-    int maxIdx = 0;
+    // Argmax over the full vocab. logits must be vocabSize floats.
+    // (In production a linear lm_head projection maps hiddenDim -> vocabSize
+    //  before this call; here we clamp to whichever is smaller.)
+    const size_t searchLen = std::min(config.vocabSize, config.hiddenDim);
+    int   maxIdx = 0;
     float maxVal = logits[0];
-    for (size_t i = 1; i < config.vocabSize && i < config.hiddenDim; ++i) {
+    for (size_t i = 1; i < searchLen; ++i) {
         if (logits[i] > maxVal) {
             maxVal = logits[i];
-            maxIdx = i;
+            maxIdx = (int)i;
         }
     }
-    return maxIdx % config.vocabSize;
+    return maxIdx; // already within [0, searchLen) which is <= vocabSize
 }
 
 void Deep2Engine::setNumThreads(size_t numThreads) {
+    // Wait for any in-flight work before replacing the pool
     if (threadPool) {
-        // Recreate thread pool with new size
+        threadPool->waitAll();
         threadPool = std::make_unique<ThreadPool>(numThreads);
     }
 }

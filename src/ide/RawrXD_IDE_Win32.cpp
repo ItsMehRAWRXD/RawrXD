@@ -21,6 +21,7 @@
 #include "RawrXD_IDE_GhostText_Engine.hpp"
 #include "SovereignInferenceBridge.h"
 #include "IDE_DebuggerIntegration.h"
+#include "../debug/DebugBridge.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -358,6 +359,7 @@ BOOL RawrXD_IDE_Init(RawrXD_IDE* ide, HINSTANCE hInst) {
     SetTimer(ide->hWndMain, IDT_STATUS_UPDATE, 500,  NULL);
     SetTimer(ide->hWndMain, IDT_IPC_POLL,      2000, NULL);
     SetTimer(ide->hWndMain, IDT_AUTOSAVE,      60000, NULL);
+    SetTimer(ide->hWndMain, IDT_TELEMETRY_HEARTBEAT, 1000, NULL); /* VAL-025: 1s telemetry heartbeat */
 
     /* Show */
     ShowWindow(ide->hWndMain, SW_SHOWDEFAULT);
@@ -1504,6 +1506,7 @@ void RawrXD_IDE_OnDestroy(RawrXD_IDE* ide) {
     KillTimer(ide->hWndMain, IDT_IPC_POLL);
     KillTimer(ide->hWndMain, IDT_AUTOSAVE);
     KillTimer(ide->hWndMain, IDT_COMPLETION_DEBOUNCE);
+    KillTimer(ide->hWndMain, IDT_TELEMETRY_HEARTBEAT); /* VAL-025: Stop telemetry heartbeat */
 
     /* Disconnect IPC */
     RawrXD_IDE_IPCDisconnect(ide);
@@ -1559,6 +1562,11 @@ void RawrXD_IDE_OnTimer(RawrXD_IDE* ide, UINT_PTR timerId) {
     case IDT_GHOSTTEXT_DEBOUNCE:
         /* Ghost text debounce timer - user paused typing */
         RawrXD_IDE_GhostText_OnTimer(ide);
+        break;
+
+    case IDT_TELEMETRY_HEARTBEAT:
+        /* VAL-025: DebugBridge telemetry heartbeat - emit summary every 1s */
+        DebugBridge::LogTelemetrySummary();
         break;
 
     default:

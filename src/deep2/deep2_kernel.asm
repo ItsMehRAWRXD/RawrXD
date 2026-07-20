@@ -11,32 +11,33 @@
 ; Deep2_VecDotProduct - Vector dot product with AVX2
 ; void Deep2_VecDotProduct(float* a, float* b, float* out, size_t n);
 ; RCX = a, RDX = b, R8 = out, R9 = n
+; n must be a multiple of 8; caller is responsible for padding.
 ; ============================================================================
 Deep2_VecDotProduct PROC
-    vxorps ymm0, ymm0, ymm0     ; Zero out accumulation register
-    test r9, r9                 ; Check if n == 0
+    test r9, r9
     jz done
 
+    vxorps ymm0, ymm0, ymm0     ; Zero accumulator
+
 loop_start:
-    vmovups ymm1, [rcx]         ; Load 8 floats from a
-    vmovups ymm2, [rdx]         ; Load 8 floats from b
-    vfmadd231ps ymm0, ymm1, ymm2 ; Fused Multiply-Add: ymm0 += ymm1 * ymm2
+    vmovaps ymm1, [rcx]         ; Aligned load 8 floats from a
+    vfmadd231ps ymm0, ymm1, [rdx] ; ymm0 += a * b  (aligned load of b)
     
-    add rcx, 32                 ; Advance pointer by 8 floats (32 bytes)
+    add rcx, 32
     add rdx, 32
     sub r9, 8
     ja loop_start
 
-    ; Horizontal add of ymm0 to get final scalar
-    vextractf128 xmm1, ymm0, 1  ; Extract high 128 bits (lane 1)
-    vaddps xmm0, xmm0, xmm1     ; Add high and low
-    vhaddps xmm0, xmm0, xmm0    ; Horizontal add
-    vhaddps xmm0, xmm0, xmm0    ; Final horizontal add
+    ; Horizontal reduction of ymm0
+    vextractf128 xmm1, ymm0, 1
+    vaddps xmm0, xmm0, xmm1
+    vhaddps xmm0, xmm0, xmm0
+    vhaddps xmm0, xmm0, xmm0
     
-    movss dword ptr [r8], xmm0  ; Store result
+    vmovss dword ptr [r8], xmm0
 
 done:
-    vzeroupper                  ; Clear upper YMM state
+    vzeroupper
     ret
 Deep2_VecDotProduct ENDP
 
@@ -44,59 +45,68 @@ Deep2_VecDotProduct ENDP
 ; Deep2_SwiGLU - Swish-Gated Linear Unit activation
 ; void Deep2_SwiGLU(float* x, float* y, float* out, size_t n);
 ; RCX = x, RDX = y, R8 = out, R9 = n
-; Computes: out = (x * sigmoid(x)) * y
+; Computes: out[i] = (x[i] * sigmoid(x[i])) * y[i]   (SiLU(x) * y)
+; n must be a multiple of 8.
 ; ============================================================================
 Deep2_SwiGLU PROC
     test r9, r9
     jz done_swiglu
 
-    ; Load constants
-    vmovups ymm10, ymmword ptr const_log2e
-    vmovups ymm11, ymmword ptr const_one
-    vmovups ymm12, ymmword ptr const_0_5
-    vmovups ymm13, ymmword ptr const_0_1666
-    vmovups ymm14, ymmword ptr const_sign_mask
+    ; Broadcast constants
+    vbroadcastss ymm10, dword ptr [const_log2e]
+    vbroadcastss ymm11, dword ptr [const_one]
+    vbroadcastss ymm12, dword ptr [const_0_5]
+    vbroadcastss ymm13, dword ptr [const_0_1666]
+    vbroadcastss ymm14, dword ptr [const_sign_mask_f]
 
 loop_swiglu:
-    vmovups ymm0, [rcx]         ; Load x
-    vmovups ymm1, [rdx]         ; Load y
-    
-    ; Calculate sigmoid(x) = 1 / (1 + exp(-x))
-    ; First compute exp(-x)
-    vxorps ymm2, ymm0, ymm14    ; ymm2 = -x (flip sign bit)
-    
-    ; Fast exp approximation via 2^(x * log2e)
-    vmulps ymm2, ymm2, ymm10    ; ymm2 = -x * log2(e)
-    vroundps ymm3, ymm2, 1      ; ymm3 = floor(ymm2)
-    vsubps ymm2, ymm2, ymm3     ; ymm2 = fractional part
-    
-    ; Polynomial approximation: 2^f ≈ 1 + f*(1 + f*(0.5 + f*0.1666))
-    vmovaps ymm4, ymm13         ; ymm4 = 0.1666
-    vfmadd213ps ymm4, ymm2, ymm12 ; ymm4 = 0.5 + f*0.1666
-    vfmadd213ps ymm4, ymm2, ymm11 ; ymm4 = 1 + f*(0.5 + f*0.1666)
-    vfmadd213ps ymm4, ymm2, ymm11 ; ymm4 = 1 + f*(1 + f*(0.5 + f*0.1666))
-    vmulps ymm4, ymm4, ymm2     ; ymm4 *= f
-    vaddps ymm4, ymm4, ymm11    ; ymm4 += 1
-    
-    ; Add exponent: (int)floor << 23
-    vcvtps2dq ymm3, ymm3
-    vpslld ymm3, ymm3, 23
-    vpaddd ymm4, ymm4, ymm3     ; ymm4 = exp(-x)
-    
-    ; Sigmoid: 1 / (1 + exp(-x))
-    vaddps ymm4, ymm4, ymm11    ; ymm4 = 1 + exp(-x)
-    vrcpps ymm4, ymm4          ; ymm4 ≈ 1 / (1 + exp(-x))
-    
-    ; SwiGLU: (x * sigmoid(x)) * y
-    vmulps ymm0, ymm0, ymm4    ; ymm0 = x * sigmoid(x) = SiLU(x)
-    vmulps ymm0, ymm0, ymm1    ; ymm0 = SiLU(x) * y
-    
-    vmovups [r8], ymm0          ; Store result
-    
+    vmovaps ymm0, [rcx]         ; x  (aligned)
+    vmovaps ymm1, [rdx]         ; y  (aligned)
+
+    ; --- compute sigmoid(x) = 1 / (1 + exp(-x)) ---
+    ; negate x
+    vxorps  ymm2, ymm0, ymm14   ; ymm2 = -x
+
+    ; fast exp(-x) via 2^(-x * log2e)
+    vmulps  ymm2, ymm2, ymm10   ; ymm2 = -x * log2(e)
+    vroundps ymm3, ymm2, 1      ; ymm3 = floor(ymm2)  (round toward -inf)
+    vsubps  ymm2, ymm2, ymm3    ; ymm2 = fractional part f in [0,1)
+
+    ; Horner: 2^f ≈ 1 + f*(1 + f*(0.5 + f*0.16667))
+    ; ymm4 = 0.16667
+    vmovaps ymm4, ymm13
+    ; ymm4 = 0.5 + f*0.16667
+    vfmadd213ps ymm4, ymm2, ymm12
+    ; ymm4 = 1 + f*(0.5 + f*0.16667)
+    vfmadd213ps ymm4, ymm2, ymm11
+    ; ymm4 = 1 + f*(1 + f*(0.5 + f*0.16667))  -- correct Horner step
+    vfmadd132ps ymm4, ymm11, ymm2
+
+    ; Reconstruct 2^floor via integer exponent trick
+    vcvtps2dq ymm3, ymm3        ; floor as int32
+    vpslld    ymm3, ymm3, 23    ; shift into IEEE754 exponent field
+    vpaddd    ymm4, ymm4, ymm3  ; ymm4 = exp(-x)  (float reinterpret)
+
+    ; sigmoid = 1 / (1 + exp(-x))  -- use Newton-Raphson refinement
+    vaddps  ymm4, ymm4, ymm11   ; ymm4 = 1 + exp(-x)
+    vrcpps  ymm5, ymm4          ; ymm5 ≈ 1/ymm4  (12-bit approx)
+    ; NR step: r = r*(2 - d*r)
+    vmulps  ymm6, ymm4, ymm5    ; d*r
+    vsubps  ymm6, ymm11, ymm6   ; 1 - d*r  (use ymm11=1.0 as 2-d*r base)
+    vaddps  ymm6, ymm11, ymm6   ; 2 - d*r
+    vmulps  ymm5, ymm5, ymm6    ; refined sigmoid
+
+    ; SiLU(x) = x * sigmoid(x)
+    vmulps  ymm0, ymm0, ymm5
+    ; SwiGLU = SiLU(x) * y
+    vmulps  ymm0, ymm0, ymm1
+
+    vmovaps [r8], ymm0
+
     add rcx, 32
     add rdx, 32
-    add r8, 32
-    sub r9, 8
+    add r8,  32
+    sub r9,  8
     ja loop_swiglu
 
 done_swiglu:
@@ -159,14 +169,14 @@ done_rms:
 Deep2_RMSNorm ENDP
 
 ; ============================================================================
-; Data Segment - Constants
+; Data Segment - Constants (scalar, broadcast at runtime)
 ; ============================================================================
 .const
-align 16
-const_log2e     real4 1.44269504, 1.44269504, 1.44269504, 1.44269504, 1.44269504, 1.44269504, 1.44269504, 1.44269504
-const_one       real4 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
-const_0_5       real4 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5
-const_0_1666    real4 0.16666666, 0.16666666, 0.16666666, 0.16666666, 0.16666666, 0.16666666, 0.16666666, 0.16666666
-const_sign_mask dd 80000000h, 80000000h, 80000000h, 80000000h, 80000000h, 80000000h, 80000000h, 80000000h
+align 4
+const_log2e      real4 1.44269504
+const_one        real4 1.0
+const_0_5        real4 0.5
+const_0_1666     real4 0.16666667
+const_sign_mask_f dd 80000000h
 
 END
