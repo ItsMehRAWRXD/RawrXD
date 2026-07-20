@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // Measures actual AVX-512 performance using intrinsics
 
-#include <stdio>
+#include <cstdio>
 #include <cstdint>
 #include <vector>
 #include <chrono>

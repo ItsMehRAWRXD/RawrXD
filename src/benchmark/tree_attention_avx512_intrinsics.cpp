@@ -14,6 +14,19 @@
 
 extern "C" {
 
+// Horizontal sum of 16 floats in __m512
+inline float hsum512_ps(__m512 v) {
+    __m256 vlow = _mm512_castps512_ps256(v);
+    __m256 vhigh = _mm512_extractf32x8_ps(v, 1);
+    vlow = _mm256_add_ps(vlow, vhigh);
+    __m128 vlow128 = _mm256_castps256_ps128(vlow);
+    __m128 vhigh128 = _mm256_extractf128_ps(vlow, 1);
+    vlow128 = _mm_add_ps(vlow128, vhigh128);
+    vlow128 = _mm_hadd_ps(vlow128, vlow128);
+    vlow128 = _mm_hadd_ps(vlow128, vlow128);
+    return _mm_cvtss_f32(vlow128);
+}
+
 // Compute Q @ K^T for tree attention
 // Q: [num_nodes x head_dim], K: [num_nodes x head_dim]
 // Output scores: [num_nodes x num_nodes]
@@ -39,7 +52,7 @@ void TreeAttention_ComputeScores_AVX512(
             }
             
             // Horizontal sum of the 512-bit vector
-            float sum = _mm512_reduce_add_ps(sum_vec);
+            float sum = hsum512_ps(sum_vec);
             
             // Handle remaining elements
             for (; d < head_dim; d++) {
@@ -60,7 +73,7 @@ void TreeAttention_Softmax_AVX512(
 ) {
     for (uint32_t row = 0; row < num_nodes; row++) {
         // Find max for numerical stability
-        float max_val = -INFINITY;
+        float max_val = -1e30f;
         for (uint32_t col = 0; col < num_nodes; col++) {
             if (tree_mask[row * num_nodes + col]) {
                 float val = scores[row * num_nodes + col] * scale;

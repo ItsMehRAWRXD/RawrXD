@@ -80,8 +80,10 @@ bool TestCorrectness() {
     }
     
     TreeAttentionKernelAVX512 kernelAVX;
+    printf("  Calling AVX-512 Forward...\n");
     kernelAVX.Forward(Q.data(), K.data(), V.data(), output.data(),
                       branches.data(), numNodes, headDim);
+    printf("  AVX-512 Forward completed.\n");
     
     // Check output is not all zeros
     bool hasNonZero = false;

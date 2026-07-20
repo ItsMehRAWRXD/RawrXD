@@ -5099,6 +5099,29 @@ if(WIN32)
     message(STATUS "[VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark")
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-032 Simple Intrinsics Benchmark — Direct AVX-512 performance measurement
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_bench_simple EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_avx512_intrinsics.cpp
+        src/benchmark/tree_attention_bench_simple.cpp
+    )
+    target_include_directories(tree_attention_bench_simple PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_bench_simple PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_bench_simple PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_bench_simple PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_bench_simple
+    )
+    message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL

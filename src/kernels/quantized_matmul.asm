@@ -17,6 +17,14 @@ PUBLIC RawrXD_KernelRegistry_Init
 PUBLIC RawrXD_KernelTelemetry_Begin
 PUBLIC RawrXD_KernelTelemetry_End
 
+;=============================================================================
+; Constant Data
+;=============================================================================
+.DATA
+ALIGN 32
+low_nibble_mask WORD 16 DUP (0Fh)    ; 16 words of 0x0F for nibble masking
+zero_point DWORD 8                     ; Zero-point value (8)
+
 .CODE
 
 ;=============================================================================
@@ -128,8 +136,9 @@ QuantizedMatMul_Fused_4K ENDP
 
 ;=============================================================================
 ;=============================================================================
-; QuantizedMatMul_Fused_4K_AVX512 - AVX-512 kernel (scalar baseline)
-; Numerically exact - matches reference implementation
+; QuantizedMatMul_Fused_4K_AVX512 - Fully Vectorized AVX-512 Implementation
+; Processes 64 weights (2 blocks) per iteration using ZMM registers
+; Target: 2,000+ TPS through pipelined vectorization
 ;=============================================================================
 QuantizedMatMul_Fused_4K_AVX512 PROC FRAME
     push    rbx
@@ -158,6 +167,15 @@ QuantizedMatMul_Fused_4K_AVX512 PROC FRAME
     mov     r14, rdi              ; R14 = output pointer
     xor     rbx, rbx              ; RBX = row index
 
+    ; Precompute constants
+    ; ZMM31 = 8.0 (zero-point centering constant)
+    mov     eax, 41000000h        ; 8.0 in IEEE 754
+    vmovd   xmm30, eax
+    vbroadcastss zmm31, xmm30     ; ZMM31 = 8.0 (16 floats)
+    
+    ; ZMM30 = 0x0F (nibble mask as float for bitwise ops compatibility)
+    ; Actually we need integer mask, let's use different approach
+
 RowLoop_AVX512:
     ; Calculate weights pointer for this row
     mov     rax, rbx
@@ -165,25 +183,109 @@ RowLoop_AVX512:
     mov     r15, rsi
     add     r15, rax              ; R15 = weights pointer for this row
 
-    vxorps  xmm0, xmm0, xmm0      ; Clear accumulator
+    ; Initialize accumulator
+    vxorps  zmm0, zmm0, zmm0      ; ZMM0 = accumulator (16 floats)
 
     mov     rcx, r13              ; RCX = blocks per row (128)
-    mov     rbp, rdx              ; RBP = activation pointer
+    mov     rbp, rdx              ; RBP = activation pointer (reset for each row)
 
 BlockLoop_AVX512:
+    cmp     rcx, 2
+    jl      BlockLoop_Scalar_AVX512
+
+    ; Process 2 blocks (64 weights) using vectorized unpacking
+    
+    ; Load scale for both blocks
+    vbroadcastss zmm1, dword ptr [r15]       ; ZMM1 = scale0
+    vbroadcastss zmm2, dword ptr [r15+20]    ; ZMM2 = scale1
+
+    ; === Process Block 0, Weights 0-15 (16 bytes at r15+4) ===
+    ; Load 16 bytes into XMM3
+    vmovdqu xmm3, xmmword ptr [r15+4]
+    
+    ; Unpack to 16 words in YMM3
+    vpmovzxbw ymm3, xmm3
+    
+    ; Split low/high nibbles
+    ; Low: AND with 0x0F
+    vpand   ymm4, ymm3, ymmword ptr [low_nibble_mask]
+    ; High: Shift right 4, then AND
+    vpsrlw  ymm5, ymm3, 4
+    vpand   ymm5, ymm5, ymmword ptr [low_nibble_mask]
+    
+    ; Convert words to dwords, then to float
+    vpmovzxwd zmm4, ymm4         ; Low nibbles as dwords
+    vpmovzxwd zmm5, ymm5         ; High nibbles as dwords
+    
+    ; Subtract zero-point (8)
+    vpbroadcastd zmm6, dword ptr [zero_point]
+    vpsubd  zmm4, zmm4, zmm6
+    vpsubd  zmm5, zmm5, zmm6
+    
+    ; Convert to float
+    vcvtdq2ps zmm4, zmm4
+    vcvtdq2ps zmm5, zmm5
+    
+    ; Scale
+    vmulps  zmm4, zmm4, zmm1
+    vmulps  zmm5, zmm5, zmm1
+    
+    ; Load activations and FMA
+    vmovups zmm7, zmmword ptr [rbp]
+    vmovups zmm8, zmmword ptr [rbp+64]
+    vfmadd231ps zmm0, zmm4, zmm7
+    vfmadd231ps zmm0, zmm5, zmm8
+
+    ; === Process Block 0, Weights 16-31 ===
+    ; Same pattern for second half of block 0
+    vmovdqu xmm3, xmmword ptr [r15+4]
+    ; Actually we already processed all 16 bytes above
+    ; Each block has 16 bytes = 32 nibbles = 32 weights
+    ; We processed 16 weights (low nibbles) + 16 weights (high nibbles)
+    ; So block 0 is done, move to block 1
+
+    ; === Process Block 1 ===
+    vmovdqu xmm3, xmmword ptr [r15+24]       ; Block 1 weights at offset 24 (20+4)
+    vpmovzxbw ymm3, xmm3
+    
+    vpand   ymm4, ymm3, ymmword ptr [low_nibble_mask]
+    vpsrlw  ymm5, ymm3, 4
+    vpand   ymm5, ymm5, ymmword ptr [low_nibble_mask]
+    
+    vpmovzxwd zmm4, ymm4
+    vpmovzxwd zmm5, ymm5
+    
+    vpsubd  zmm4, zmm4, zmm6
+    vpsubd  zmm5, zmm5, zmm6
+    
+    vcvtdq2ps zmm4, zmm4
+    vcvtdq2ps zmm5, zmm5
+    
+    vmulps  zmm4, zmm4, zmm2
+    vmulps  zmm5, zmm5, zmm2
+    
+    vmovups zmm7, zmmword ptr [rbp+128]
+    vmovups zmm8, zmmword ptr [rbp+192]
+    vfmadd231ps zmm0, zmm4, zmm7
+    vfmadd231ps zmm0, zmm5, zmm8
+
+    add     r15, 40               ; 2 blocks * 20 bytes
+    add     rbp, 256              ; 64 weights * 4 bytes
+    sub     rcx, 2
+    jmp     BlockLoop_AVX512
+
+BlockLoop_Scalar_AVX512:
     test    rcx, rcx
     jz      DoneRow_AVX512
 
-    movss   xmm1, dword ptr [r15] ; Load scale
-    mov     r9, 16                ; 16 bytes per block
-    xor     r10, r10              ; Byte index
+    movss   xmm1, dword ptr [r15]
+    xor     r10, r10
 
-WeightLoop_AVX512:
-    cmp     r10, r9
-    jge     WeightDone_AVX512
+WeightLoop_Scalar_AVX512:
+    cmp     r10, 16
+    jge     WeightDone_Scalar_AVX512
     movzx   r11d, byte ptr [r15 + 4 + r10]
 
-    ; Lower nibble
     mov     eax, r11d
     and     eax, 0Fh
     sub     eax, 8
@@ -193,7 +295,6 @@ WeightLoop_AVX512:
     mulss   xmm2, xmm3
     addss   xmm0, xmm2
 
-    ; Upper nibble
     mov     eax, r11d
     shr     eax, 4
     and     eax, 0Fh
@@ -206,14 +307,23 @@ WeightLoop_AVX512:
 
     add     rbp, 8
     inc     r10
-    jmp     WeightLoop_AVX512
+    jmp     WeightLoop_Scalar_AVX512
 
-WeightDone_AVX512:
-    add     r15, Q4_0_BLOCK_SIZE
+WeightDone_Scalar_AVX512:
+    add     r15, 20
     dec     rcx
-    jmp     BlockLoop_AVX512
+    jmp     BlockLoop_Scalar_AVX512
 
 DoneRow_AVX512:
+    ; Horizontal sum
+    vextractf64x4 ymm1, zmm0, 1
+    vaddps  ymm0, ymm0, ymm1
+    vextractf128 xmm1, ymm0, 1
+    vaddps  xmm0, xmm0, xmm1
+    movhlps xmm1, xmm0
+    addps   xmm0, xmm0, xmm1
+    shufps  xmm1, xmm0, 1
+    addss   xmm0, xmm0, xmm1
     movss   dword ptr [r14], xmm0
 
     add     r14, 4
