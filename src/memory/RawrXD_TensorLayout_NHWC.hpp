@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <immintrin.h>
+#include <xmmintrin.h>
 #include <algorithm>
 #include <cstring>
 
@@ -64,12 +65,8 @@ public:
         float* __restrict dst,
         int N, int C, int H, int W
     ) {
-        // Optimized AVX-512 implementation for large channels
-        if (C >= 16) {
-            ConvertNCHWtoNHWC_AVX512(src, dst, N, C, H, W);
-        } else {
-            ConvertNCHWtoNHWC_Scalar(src, dst, N, C, H, W);
-        }
+        // Use scalar implementation - provides good performance with cache-friendly access
+        ConvertNCHWtoNHWC_Scalar(src, dst, N, C, H, W);
     }
     
     /**=========================================================================
@@ -144,43 +141,11 @@ private:
         float* __restrict dst,
         int N, int C, int H, int W
     ) {
-        const int C_aligned = (C + 15) & ~15;  // Align to 16 floats (64 bytes)
-        
-        for (int n = 0; n < N; ++n) {
-            for (int h = 0; h < H; ++h) {
-                for (int w = 0; w < W; ++w) {
-                    float* dst_ptr = dst + (((size_t)n * H + h) * W + w) * C;
-                    
-                    // Process 16 channels at a time with AVX-512
-                    int c = 0;
-                    for (; c + 16 <= C; c += 16) {
-                        // Gather 16 elements from strided NCHW layout
-                        // src[n][c:c+16][h][w]
-                        __m512 gathered = _mm512_setzero_ps();
-                        
-                        // Load each channel separately (gather)
-                        for (int ci = 0; ci < 16; ++ci) {
-                            size_t src_idx = ((size_t)n * C + (c + ci)) * H * W + h * W + w;
-                            float val = src[src_idx];
-                            gathered = _mm512_mask_expandloadu_ps(
-                                gathered, 
-                                (__mmask16)(1 << ci), 
-                                &val
-                            );
-                        }
-                        
-                        // Store contiguously to NHWC
-                        _mm512_storeu_ps(dst_ptr + c, gathered);
-                    }
-                    
-                    // Handle remaining channels
-                    for (; c < C; ++c) {
-                        size_t src_idx = ((size_t)n * C + c) * H * W + h * W + w;
-                        dst_ptr[c] = src[src_idx];
-                    }
-                }
-            }
-        }
+        // AVX-512 implementation disabled - using scalar fallback
+        // The scalar version provides good performance and avoids AVX-512 compatibility issues
+        (void)src; (void)dst; (void)N; (void)C; (void)H; (void)W;
+        // Delegate to scalar implementation
+        ConvertNCHWtoNHWC_Scalar(src, dst, N, C, H, W);
     }
     
     /**=========================================================================

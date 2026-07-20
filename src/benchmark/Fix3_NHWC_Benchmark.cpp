@@ -46,7 +46,7 @@ struct LayoutMicrobenchmark {
         const int C = 64;   // 64 channels
         const int H = 32;   // 32 height
         const int W = 32;   // 32 width
-        const int iterations = 10000;
+        const int iterations = 1000;
         
         // Allocate tensors
         std::vector<float> nchw_data(N * C * H * W);

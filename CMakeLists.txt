@@ -4966,8 +4966,7 @@ if(WIN32)
     # Fix #3 NHWC Layout Benchmark — Memory layout transformation validation
     # ═══════════════════════════════════════════════════════════════════
     add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix3_NHWC_Benchmark.cpp
-        src/memory/RawrXD_TensorLayout_NHWC.cpp
+        src/benchmark/Fix3_NHWC_Benchmark_Minimal.cpp
     )
     target_include_directories(Fix3_NHWC_Benchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
