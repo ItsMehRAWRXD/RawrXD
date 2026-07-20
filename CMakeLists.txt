@@ -405,7 +405,7 @@ if(RAWR_HAS_MASM)
         src/asm/Advanced_Code_Deobfuscator.asm
         src/asm/Code_Pattern_Reconstructor.asm
         src/asm/agentic_deep_thinking_kernels.asm
-        src/asm/RawrXD_MissingSymbols.asm
+        # src/asm/RawrXD_MissingSymbols.asm  # excluded: duplicates symbols from gold_link_stubs.cpp
         # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/x64/rawrxd_quantum_beaconism.asm  # excluded: MASM syntax errors (scaffold file)
@@ -1582,6 +1582,13 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/autonomous_recovery_orches
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/AgentOrchestrator\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/ToolRegistry\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_deep_thinking_engine\\.cpp$")
+# Exclude quantum files that reference AgenticDeepThinkingEngine (unresolved externals)
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_autonomous_todo_system\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_production_orchestrator\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_multi_model_agent_cycling\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_missing_impl\\.cpp$")
+# Exclude streaming_inference_engine.cpp that references KernelArbiter (unresolved externals)
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/streaming_inference_engine\\.cpp$")
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
