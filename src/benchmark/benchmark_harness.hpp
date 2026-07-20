@@ -13,7 +13,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
-#include <math>
+#include <cmath>
 
 namespace RawrXD {
 namespace Benchmark {

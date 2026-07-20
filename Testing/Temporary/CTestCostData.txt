@@ -2,6 +2,3 @@ RawrEngine_smoke 0 0
 RawrXD-Win32IDE_smoke 0 0
 RawrXD_Gold_smoke 0 0
 ---
-RawrEngine_smoke
-RawrXD_Gold_smoke
-RawrXD-Win32IDE_smoke

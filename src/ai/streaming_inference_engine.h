@@ -20,7 +20,9 @@
 #pragma once
 
 #include "kernel_arbiter.h"
-#include "vulkan_compute.h"
+#include "../vulkan_compute.h"
+#include "speculative_tree_attention_bridge.h"
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -229,6 +231,9 @@ private:
     
     // Speculative state
     SpeculativeState spec_state_;
+    
+    // VAL-032: Tree attention speculative bridge
+    std::unique_ptr<TreeAttentionSpeculativeBridge> tree_attention_bridge_;
     
     // Token batch (enhancement #8)
     TokenBatch current_batch_;

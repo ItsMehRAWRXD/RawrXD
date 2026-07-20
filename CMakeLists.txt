@@ -1100,6 +1100,14 @@ set(SOURCES
     # P5: Repo-Wide Refactor Engine (rename, extract, move, change-sig)
     src/ai/repo_refactor_engine.cpp
 
+    # VAL-032: ISA-Optimized Tree Attention Kernels for Speculative Decoding
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
+    src/kernels/tree_attention_dispatch.cpp
+    src/kernels/tree_attention_scalar.cpp
+    src/kernels/tree_attention_avx2.cpp
+    src/kernels/tree_attention_avx512_intrinsics.cpp
+
     # NOTE: Removed Transcendence fiction (self_host_engine, hardware_synthesizer,
     # mesh_brain, speciator_engine, neural_bridge, omega_orchestrator, transcendence_coordinator)
     # These were valuation theater - not implementable.
@@ -1680,6 +1688,7 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/win32app
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -4768,6 +4777,96 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     endif()
 endif()
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SovereignTest_Suite — Pre-Build CI/CD Gate (beaconism pattern)
+# Validates: atomic rollback, cache coherency, patch correctness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_SOVEREIGN_TEST_SUITE "Build SovereignTest_Suite pre-build gate" ON)
+if(BUILD_SOVEREIGN_TEST_SUITE)
+    add_executable(SovereignTest_Suite EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_Main.cpp
+        src/sovereign/tests/SovereignTest_AtomicRollback.cpp
+        src/sovereign/tests/SovereignTest_CacheCoherency.cpp
+        src/sovereign/tests/SovereignTest_Correctness.cpp
+    )
+    if(MSVC)
+        target_compile_options(SovereignTest_Suite PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(SovereignTest_Suite PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(SovereignTest_Suite PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_Suite
+    )
+    message(STATUS "[Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)")
+
+    # Add as dependency to self_test_gate
+    if(TARGET self_test_gate)
+        add_dependencies(self_test_gate SovereignTest_Suite)
+    endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SovereignTest_VAL038_E2E — Integration E2E Harness for VAL-038 Kernel
+# Live-fire validation: Cold-start -> Hot-patch -> Inference -> Hash validation
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_SOVEREIGN_VAL038_E2E "Build VAL-038 E2E integration test" ON)
+if(BUILD_SOVEREIGN_VAL038_E2E)
+    add_executable(SovereignTest_VAL038_E2E EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_VAL038_E2E.cpp
+    )
+    if(MSVC)
+        target_compile_options(SovereignTest_VAL038_E2E PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(SovereignTest_VAL038_E2E PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(SovereignTest_VAL038_E2E PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME SovereignTest_VAL038_E2E
+    )
+    message(STATUS "[Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E")
+
+    # Beaconism Gate: E2E test runs as part of the validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite SovereignTest_VAL038_E2E)
+    endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deep2_Batch_Test — Model Stress-Test Harness with PageFaultMonitor
+# Discovery-Load-Benchmark-Validation sequence for all models
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DEEP2_BATCH_TEST "Build Deep2 batch model stress-test harness" ON)
+if(BUILD_DEEP2_BATCH_TEST)
+    add_executable(Deep2_Batch_Test EXCLUDE_FROM_ALL
+        src/sovereign/tests/SovereignTest_Deep2_Batch.cpp
+    )
+    if(MSVC)
+        target_compile_options(Deep2_Batch_Test PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(Deep2_Batch_Test PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(Deep2_Batch_Test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME Deep2_Batch_Test
+    )
+    message(STATUS "[Sovereign] Deep2 batch test: Deep2_Batch_Test")
+
+    # Beaconism Gate: Batch test runs as part of the validation pipeline
+    if(TARGET SovereignTest_Suite)
+        add_dependencies(SovereignTest_Suite Deep2_Batch_Test)
+    endif()
+endif()
+# ═══════════════════════════════════════════════════════════════════════════════
+
 # CI gate: stress_test — build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
@@ -5274,6 +5373,26 @@ if(WIN32)
         OUTPUT_NAME tree_attention_tree_specialized
     )
     message(STATUS "[VAL-037.2] Tree-specialized: tree_attention_tree_specialized")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-038.1 MASM Mechanical Translation — Same algorithm, optimal registers
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_masm_val038 EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_masm_val038.asm
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_masm_val038 PRIVATE /O2 /arch:AVX512)
+    endif()
+    target_link_libraries(tree_attention_masm_val038 PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_masm_val038 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_masm_val038
+        SUFFIX ".exe"
+    )
+    message(STATUS "[VAL-038.1] MASM mechanical: tree_attention_masm_val038")
 
     # ═══════════════════════════════════════════════════════════════════
     # VAL-038 Fused Attention — Q@K^T → Softmax → A@V in single kernel
@@ -5833,6 +5952,28 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_cache_alignment.cpp")
     message(STATUS "[VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment")
 endif()
 
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_asm_debug.cpp")
+    add_executable(test_q4_asm_debug EXCLUDE_FROM_ALL
+        tests/test_q4_asm_debug.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(test_q4_asm_debug PRIVATE cxx_std_20)
+    target_include_directories(test_q4_asm_debug PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+    )
+    if(WIN32)
+        target_link_libraries(test_q4_asm_debug PRIVATE)
+    endif()
+    set_target_properties(test_q4_asm_debug PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "[VAL-Q4.0] ASM debug test: test_q4_asm_debug")
+endif()
+
+# Q4_0 AVX-512 kernel library - must be defined before tests that link to it
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm")
     enable_language(ASM_MASM)
     add_library(q4_preprocessed_avx512 STATIC
@@ -5841,8 +5982,36 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/kernels/q4_preprocessed_avx512.asm")
     set_target_properties(q4_preprocessed_avx512 PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     )
-    target_link_libraries(test_q4_fused_pipeline PRIVATE q4_preprocessed_avx512)
     message(STATUS "[VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512")
+endif()
+
+# Link tests to the Q4 kernel library (after it's defined)
+if(TARGET q4_preprocessed_avx512)
+    if(TARGET test_q4_fused_pipeline)
+        target_link_libraries(test_q4_fused_pipeline PRIVATE q4_preprocessed_avx512)
+    endif()
+    if(TARGET test_q4_asm_debug)
+        target_link_libraries(test_q4_asm_debug PRIVATE q4_preprocessed_avx512)
+    endif()
+endif()
+
+# Scalar SIMD simulation test (no ASM dependency)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_q4_scalar_simd.cpp")
+    add_executable(test_q4_scalar_simd EXCLUDE_FROM_ALL
+        tests/test_q4_scalar_simd.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(test_q4_scalar_simd PRIVATE cxx_std_20)
+    target_include_directories(test_q4_scalar_simd PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/memory
+    )
+    set_target_properties(test_q4_scalar_simd PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "[VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd")
 endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/tools/CMakeLists.txt")
@@ -5853,3 +6022,185 @@ endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/validation/CMakeLists.txt")
     add_subdirectory(src/validation)
 endif()
+
+# =============================================================================
+# MEASUREMENT FRAMEWORK - Rigorous Validation Tests
+# =============================================================================
+message(STATUS "========================================")
+message(STATUS "Measurement Framework Tests")
+message(STATUS "========================================")
+
+# 1. Dispatch Overhead Benchmark
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_overhead.cpp")
+    add_executable(benchmark_dispatch_overhead EXCLUDE_FROM_ALL
+        tests/benchmark_dispatch_overhead.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(benchmark_dispatch_overhead PRIVATE cxx_std_20)
+    target_include_directories(benchmark_dispatch_overhead PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/src/kernels
+    )
+    set_target_properties(benchmark_dispatch_overhead PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency")
+endif()
+
+# 2. Planner Amortization Benchmark
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_planner_amortization.cpp")
+    add_executable(benchmark_planner_amortization EXCLUDE_FROM_ALL
+        tests/benchmark_planner_amortization.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+    )
+    target_compile_features(benchmark_planner_amortization PRIVATE cxx_std_20)
+    target_include_directories(benchmark_planner_amortization PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+        ${CMAKE_SOURCE_DIR}/src/kernels
+    )
+    set_target_properties(benchmark_planner_amortization PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] benchmark_planner_amortization - Break-even analysis")
+endif()
+
+# 3. End-to-End Validation (Four Gates)
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/validate_end_to_end.cpp")
+    add_executable(validate_end_to_end EXCLUDE_FROM_ALL
+        tests/validate_end_to_end.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(validate_end_to_end PRIVATE cxx_std_20)
+    target_include_directories(validate_end_to_end PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/src/kernels
+    )
+    set_target_properties(validate_end_to_end PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] validate_end_to_end - Four independent gates")
+endif()
+
+# 4. NEVM Determinism Validation
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_determinism_validation.cpp")
+    add_executable(nevm_determinism_validation EXCLUDE_FROM_ALL
+        tests/nevm_determinism_validation.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+    )
+    target_compile_features(nevm_determinism_validation PRIVATE cxx_std_20)
+    target_include_directories(nevm_determinism_validation PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+        ${CMAKE_SOURCE_DIR}/src/kernels
+    )
+    if(WIN32)
+        target_link_libraries(nevm_determinism_validation PRIVATE psapi)
+    endif()
+    set_target_properties(nevm_determinism_validation PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing")
+endif()
+
+# 5. NEVM Stress Test
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/nevm_stress_test.cpp")
+    add_executable(nevm_stress_test EXCLUDE_FROM_ALL
+        tests/nevm_stress_test.cpp
+        src/nevm/nevm_execution_plan.cpp
+        src/nevm/nevm_mmu.cpp
+    )
+    target_compile_features(nevm_stress_test PRIVATE cxx_std_20)
+    target_include_directories(nevm_stress_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+    )
+    if(WIN32)
+        target_link_libraries(nevm_stress_test PRIVATE psapi)
+    endif()
+    set_target_properties(nevm_stress_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring")
+endif()
+
+# 6. PMC Profiler Library
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/pmc_profiler.cpp")
+    add_library(pmc_profiler STATIC
+        src/profiling/pmc_profiler.cpp
+    )
+    target_compile_features(pmc_profiler PRIVATE cxx_std_20)
+    target_include_directories(pmc_profiler PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    message(STATUS "  [MEASURE] pmc_profiler - Performance Monitoring Counters")
+endif()
+
+# 6b. Flame Graph Profiler Library
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/profiling/flame_graph.cpp")
+    add_library(flame_graph_profiler STATIC
+        src/profiling/flame_graph.cpp
+    )
+    target_compile_features(flame_graph_profiler PRIVATE cxx_std_20)
+    target_include_directories(flame_graph_profiler PUBLIC
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(WIN32)
+        target_link_libraries(flame_graph_profiler PRIVATE dbghelp)
+    endif()
+    message(STATUS "  [MEASURE] flame_graph_profiler - Flame graph generation")
+endif()
+
+# 7. PMC Dispatch Benchmark
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
+    add_executable(benchmark_dispatch_pmc EXCLUDE_FROM_ALL
+        tests/benchmark_dispatch_pmc.cpp
+        src/nevm/nevm_tensor_descriptor.cpp
+        src/nevm/nevm_kernel_bridge.cpp
+        src/memory/Q4WeightPreprocess.cpp
+    )
+    target_compile_features(benchmark_dispatch_pmc PRIVATE cxx_std_20)
+    target_include_directories(benchmark_dispatch_pmc PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/nevm
+        ${CMAKE_SOURCE_DIR}/src/memory
+        ${CMAKE_SOURCE_DIR}/src/kernels
+        ${CMAKE_SOURCE_DIR}/src/profiling
+    )
+    if(TARGET pmc_profiler)
+        target_link_libraries(benchmark_dispatch_pmc PRIVATE pmc_profiler)
+    endif()
+    set_target_properties(benchmark_dispatch_pmc PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_pmc - PMC profiling")
+endif()
+
+message(STATUS "========================================")

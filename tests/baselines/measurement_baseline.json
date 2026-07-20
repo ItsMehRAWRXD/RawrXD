@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "date": "2026-07-20",
+  "description": "Baseline measurements for RawrXD architectural claims",
+  "targets": {
+    "dispatch_speedup": {
+      "name": "Dispatch Overhead Reduction",
+      "target_value": 50.0,
+      "target_unit": "x",
+      "minimum_acceptable": 40.0,
+      "description": "v2.0 fast dispatch vs v1.0 full chain"
+    },
+    "cache_hit_rate": {
+      "name": "Descriptor Cache Hit Rate",
+      "target_value": 95.0,
+      "target_unit": "%",
+      "minimum_acceptable": 90.0,
+      "description": "Cache hit rate in typical workloads"
+    },
+    "planner_overhead": {
+      "name": "Planner Overhead per Token",
+      "target_value": 1.0,
+      "target_unit": "µs",
+      "maximum_acceptable": 2.0,
+      "description": "Planning cost amortized over tokens"
+    },
+    "break_even_tokens": {
+      "name": "Planner Break-Even Point",
+      "target_value": 128,
+      "target_unit": "tokens",
+      "maximum_acceptable": 256,
+      "description": "Tokens needed to amortize planning cost"
+    },
+    "numerical_error": {
+      "name": "Numerical Error vs FP32",
+      "target_value": 1.0,
+      "target_unit": "%",
+      "maximum_acceptable": 1.0,
+      "description": "Maximum error vs FP32 reference"
+    },
+    "determinism": {
+      "name": "Determinism",
+      "target_value": 100.0,
+      "target_unit": "%",
+      "minimum_acceptable": 100.0,
+      "description": "Identical outputs across runs"
+    },
+    "stress_test": {
+      "name": "Stress Test (100K tokens)",
+      "target_value": 0,
+      "target_unit": "errors",
+      "maximum_acceptable": 0,
+      "description": "Errors during 100K token generation"
+    }
+  },
+  "historical": {
+    "2026-07-20": {
+      "dispatch_speedup": 17.61,
+      "cache_hit_rate": 96.5,
+      "planner_overhead": 0.8,
+      "break_even_tokens": 85,
+      "numerical_error": 0.4,
+      "determinism": 100.0,
+      "stress_test": 0
+    }
+  }
+}

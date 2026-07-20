@@ -343,10 +343,80 @@ if(NOT TARGET test_instructions_provider AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     message(STATUS "  ✓ Added test_instructions_provider")
 endif()
 
+# =============================================================================
+# MEASUREMENT FRAMEWORK - CTest Registration
+# These targets are defined in parent CMakeLists.txt, we just register them
+# =============================================================================
+message(STATUS "========================================")
+message(STATUS "Registering Measurement Framework Tests")
+message(STATUS "========================================")
+
+# Dispatch Overhead Benchmark
+if(TARGET benchmark_dispatch_overhead)
+    add_test(NAME benchmark_dispatch_overhead COMMAND benchmark_dispatch_overhead)
+    set_tests_properties(benchmark_dispatch_overhead PROPERTIES
+        TIMEOUT 60
+        LABELS "measurement;performance;dispatch"
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency")
+endif()
+
+# Planner Amortization Benchmark
+if(TARGET benchmark_planner_amortization)
+    add_test(NAME benchmark_planner_amortization COMMAND benchmark_planner_amortization)
+    set_tests_properties(benchmark_planner_amortization PROPERTIES
+        TIMEOUT 60
+        LABELS "measurement;performance;planner"
+    )
+    message(STATUS "  [MEASURE] benchmark_planner_amortization - Break-even analysis")
+endif()
+
+# End-to-End Validation (Four Gates)
+if(TARGET validate_end_to_end)
+    add_test(NAME validate_end_to_end COMMAND validate_end_to_end)
+    set_tests_properties(validate_end_to_end PROPERTIES
+        TIMEOUT 120
+        LABELS "measurement;validation;gates"
+    )
+    message(STATUS "  [MEASURE] validate_end_to_end - Four independent gates")
+endif()
+
+# NEVM Determinism Validation
+if(TARGET nevm_determinism_validation)
+    add_test(NAME nevm_determinism_validation COMMAND nevm_determinism_validation)
+    set_tests_properties(nevm_determinism_validation PROPERTIES
+        TIMEOUT 300
+        LABELS "measurement;determinism;stress"
+    )
+    message(STATUS "  [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a")
+endif()
+
+# NEVM Stress Test
+if(TARGET nevm_stress_test)
+    add_test(NAME nevm_stress_test COMMAND nevm_stress_test)
+    set_tests_properties(nevm_stress_test PROPERTIES
+        TIMEOUT 600
+        LABELS "measurement;stress;memory"
+    )
+    message(STATUS "  [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring")
+endif()
+
+# PMC Dispatch Benchmark
+if(TARGET benchmark_dispatch_pmc)
+    add_test(NAME benchmark_dispatch_pmc COMMAND benchmark_dispatch_pmc)
+    set_tests_properties(benchmark_dispatch_pmc PROPERTIES
+        TIMEOUT 120
+        LABELS "measurement;performance;pmc;profiling"
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_pmc - PMC profiling")
+endif()
+
 message(STATUS "========================================")
 message(STATUS "Test Suite Registration Complete")
-message(STATUS "Run tests: ctest --output-on-failure -C Release")
-message(STATUS "Run specific: ctest -R <name> -V -C Release")
+message(STATUS "========================================")
+message(STATUS "Run all tests:      ctest --output-on-failure -C Release")
+message(STATUS "Run measurement:    ctest -L measurement -V -C Release")
+message(STATUS "Run specific:       ctest -R <name> -V -C Release")
 message(STATUS "========================================")
 
 # Model loader/streamer smoke test (no external model required)
@@ -423,4 +493,32 @@ if(NOT TARGET test_softmax_avx2 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/kernels/
     endif()
     add_test(NAME test_softmax_avx2 COMMAND test_softmax_avx2)
     message(STATUS "  ✓ Added test_softmax_avx2 (AVX2 kernel validation)")
+endif()
+
+# Sovereign Integrated Burn-in Test
+if(NOT TARGET sovereign_integrated_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/sovereign_integrated_test.cpp")
+    add_executable(sovereign_integrated_test
+        sovereign_integrated_test.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignVCS.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignCheckpoint.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/IDE_Lifecycle_Hook.cpp
+    )
+    target_include_directories(sovereign_integrated_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/sovereign
+    )
+    set_target_properties(sovereign_integrated_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    # Link zlib for checkpoint compression (optional)
+    find_package(ZLIB)
+    if(ZLIB_FOUND)
+        target_link_libraries(sovereign_integrated_test PRIVATE ZLIB::ZLIB)
+        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_ZLIB=1)
+    else()
+        message(WARNING "  ZLIB not found - checkpoint compression disabled")
+    endif()
+    add_test(NAME sovereign_integrated_test COMMAND sovereign_integrated_test)
+    message(STATUS "  ✓ Added sovereign_integrated_test (Sovereign Burn-in)")
 endif()

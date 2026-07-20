@@ -29,7 +29,8 @@ extern "C" {
     int QuantizedMatMul_Fused_4K(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
     int QuantizedMatMul_Fused_4K_AVX512(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
     int QuantizedMatMul_Fused_5K(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
-    
+    int QuantizedMatMul_4Way_4K(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
+
     // Cold path kernel
     int QuantizedMatMul_Dynamic(void* weights, void* activation, void* output, uint64_t N, uint64_t K);
     
@@ -142,6 +143,34 @@ public:
     }
 };
 
+// Hot path: 4K dimension - 4-Way Accumulator AVX-512 (VAL-Q4.2)
+class QuantizedMatMul_4K_4Way : public IQuantizedMatMulKernel {
+public:
+    bool Execute(const void* weights, 
+                 const float* activation,
+                 float* output,
+                 uint64_t N,
+                 uint64_t K) override {
+        (void)N; (void)K; // Statically known
+        int result = QuantizedMatMul_4Way_4K(
+            const_cast<void*>(weights),
+            const_cast<float*>(activation),
+            output,
+            4096, 4096
+        );
+        return result == 1;
+    }
+    
+    const KernelDescriptor& GetDescriptor() const override {
+        static KernelDescriptor desc = {
+            4096, 4096, "QuantizedMatMul_4K_4Way",
+            reinterpret_cast<void*>(&QuantizedMatMul_4Way_4K),
+            true
+        };
+        return desc;
+    }
+};
+
 // Hot path: 5K dimension (70B models)
 class QuantizedMatMul_5K : public IQuantizedMatMulKernel {
 public:
@@ -221,8 +250,9 @@ public:
         
         // Register hot path kernels
         RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K>());
+        RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K_4Way>());  // VAL-Q4.2
         RegisterKernel(5120, 5120, std::make_shared<QuantizedMatMul_5K>());
-        
+
         // Register fallback
         genericKernel_ = std::make_shared<QuantizedMatMul_Generic>();
         

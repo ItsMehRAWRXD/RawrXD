@@ -35,6 +35,8 @@ exp_lut LABEL REAL4
 
 scale_factor    REAL4   0.125           ; 1/sqrt(64)
 neg_inf         REAL4   -1.0e38         ; Approximate -infinity
+one             REAL4   1.0             ; Constant 1.0
+half            REAL4   0.5             ; Constant 0.5
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Code Section
@@ -81,20 +83,49 @@ TreeAttention_Fused_VAL038 PROC FRAME
     .allocstack 256
     .endprolog
 
+    ; IMMEDIATE DEBUG: Store marker in output before anything else
+    mov     dword ptr [rcx], 0DEADBEEFh
+    mov     dword ptr [rcx+4], 011111111h
+
     ; Save parameters
     mov     r12, rcx                    ; r12 = output
     mov     r13, rdx                    ; r13 = Q
     mov     r14, r8                     ; r14 = K
     mov     r15, r9                     ; r15 = V
-    mov     ebx, [rbp+64]               ; ebx = num_q
-    mov     esi, [rbp+72]               ; esi = num_k
-    mov     rdi, [rbp+80]               ; rdi = tree_mask
-
+    
+    ; Load stack parameters (corrected offsets)
+    ; After 8 pushes (64 bytes) + return address (8 bytes) = 72 bytes
+    ; Shadow space (32 bytes) at [rbp+72] to [rbp+96]
+    ; Parameters start at [rbp+104]
+    mov     ebx, [rbp+104]              ; ebx = num_q
+    mov     esi, [rbp+112]              ; esi = num_k
+    mov     rdi, [rbp+120]              ; rdi = tree_mask
+    
+    ; Debug: validate parameters and store them for inspection
+    test    ebx, ebx
+    jz      .done                       ; num_q == 0, nothing to do
+    test    esi, esi
+    jz      .done                       ; num_k == 0, nothing to do
+    
+    ; DEBUG: Store parameters in output buffer for verification
+    mov     dword ptr [r12], ebx        ; output[0] = num_q
+    mov     dword ptr [r12+4], esi      ; output[1] = num_k
+    
+    ; Safety guard: max iterations = num_q * num_k * 2
+    mov     eax, ebx
+    imul    eax, esi
+    shl     eax, 1
+    mov     r15d, eax                   ; r15d = max iterations
+    xor     r11d, r11d                  ; r11d = iteration counter
+    
     ; Broadcast scale factor
     vbroadcastss zmm15, dword ptr [scale_factor]
 
     ; Outer loop over queries
     xor     r8d, r8d                    ; r8d = q_idx = 0
+    
+    ; Outer loop: r8d = query index, ebx = num_q (unchanged throughout)
+    ; Inner loop: r9d = key index, esi = num_k (unchanged throughout)
 
 .query_loop:
     cmp     r8d, ebx
@@ -110,9 +141,9 @@ TreeAttention_Fused_VAL038 PROC FRAME
     vmovaps zmm2, zmmword ptr [rcx + 128]   ; Q[32:47]
     vmovaps zmm3, zmmword ptr [rcx + 192]   ; Q[48:63]
 
-    ; Initialize online softmax state
-    vbroadcastss zmm13, dword ptr [neg_inf] ; zmm13 = max_score = -inf
-    vxorps  zmm14, zmm14, zmm14             ; zmm14 = sum_exp = 0
+    ; Initialize online softmax state (scalar)
+    vmovss  xmm13, dword ptr [neg_inf]      ; xmm13 = max_score = -inf
+    vxorps  xmm14, xmm14, xmm14             ; xmm14 = sum_exp = 0
     vxorps  zmm4, zmm4, zmm4                ; zmm4 = accum output[0:15]
     vxorps  zmm5, zmm5, zmm5                ; zmm5 = accum output[16:31]
     vxorps  zmm6, zmm6, zmm6                ; zmm6 = accum output[32:47]
@@ -124,6 +155,11 @@ TreeAttention_Fused_VAL038 PROC FRAME
 .key_loop:
     cmp     r9d, esi
     jae     .store_output
+    
+    ; Safety guard
+    inc     r11d
+    cmp     r11d, r15d
+    jae     .done
 
     ; Check tree mask
     mov     rax, r8
@@ -159,33 +195,18 @@ TreeAttention_Fused_VAL038 PROC FRAME
     ; Scale by 1/sqrt(head_dim)
     vmulss  xmm12, xmm12, xmm15
 
-    ; Online softmax update
-    ; Broadcast score to compare with max
-    vbroadcastss zmm8, xmm12
-
-    ; Update max: new_max = max(old_max, score)
-    vmaxps  zmm13, zmm13, zmm8          ; zmm13 = max(max_score, score)
-
-    ; Compute exp(score - max) using scalar exp for now
-    ; (LUT version would be faster)
-    vsubss  xmm12, xmm12, xmm13         ; xmm12 = score - max
-
-    ; Store for exp computation
-    vmovss  dword ptr [rsp], xmm12
-
-    ; Call expf (simplified - inline exp would be faster)
-    ; For now, approximate with fast path
-    ; exp(x) ≈ 2^(x/ln2) using vgetexp/vgetmant
-
-    ; Compute exp using polynomial approximation
-    ; exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24 for x in [-1, 1]
-
-    ; Simplified: just use the value directly for now
-    ; (Real impl would use proper exp approximation)
-    vmovaps zmm9, zmm8                  ; weight = score (simplified)
-
-    ; Update sum_exp
-    vaddps  zmm14, zmm14, zmm9          ; sum_exp += weight
+    ; Online softmax update (simplified - just use score as weight)
+    ; xmm12 = score
+    
+    ; Use score directly as weight (simplified for debugging)
+    vmovaps xmm9, xmm12                 ; xmm9 = weight = score (copy register)
+    
+    ; Update sum_exp (scalar)
+    vaddss  xmm14, xmm14, xmm9          ; sum_exp += weight
+    
+    ; Broadcast weight for V accumulation
+    vmovss  dword ptr [rsp+128], xmm9   ; Store weight to memory
+    vbroadcastss zmm9, dword ptr [rsp+128] ; Broadcast from memory to zmm
 
     ; Load V row and accumulate weighted sum
     mov     rax, r9
@@ -205,11 +226,22 @@ TreeAttention_Fused_VAL038 PROC FRAME
 
 .skip_key:
     inc     r9d
-    jmp     .key_loop
+    cmp     r9d, esi
+    jb      .key_loop
+    jmp     .store_output
 
 .store_output:
     ; Normalize by sum_exp: output /= sum_exp
-    ; (Simplified - should broadcast sum_exp and divide)
+    ; Broadcast 1/sum_exp for division
+    vbroadcastss zmm8, xmm14            ; zmm8 = sum_exp (broadcasted)
+    vbroadcastss zmm9, dword ptr [one]  ; zmm9 = 1.0
+    vdivps  zmm8, zmm9, zmm8            ; zmm8 = 1/sum_exp
+    
+    ; Multiply accumulators by normalization factor
+    vmulps  zmm4, zmm4, zmm8
+    vmulps  zmm5, zmm5, zmm8
+    vmulps  zmm6, zmm6, zmm8
+    vmulps  zmm7, zmm7, zmm8
 
     ; Store output row
     mov     rax, r8
@@ -224,6 +256,11 @@ TreeAttention_Fused_VAL038 PROC FRAME
     ; Next query
     inc     r8d
     jmp     .query_loop
+
+.abort_debug:
+    ; Safety abort - return early with marker
+    mov     dword ptr [r12], 0DEADBEEFh     ; Marker: guard triggered
+    jmp     .done
 
 .done:
     ; Epilogue

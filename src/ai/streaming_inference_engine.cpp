@@ -26,6 +26,7 @@ static uint64_t HashContext(const std::string& context) {
 StreamingInferenceEngine::StreamingInferenceEngine(VulkanCompute* vulkan)
     : vulkan_(vulkan)
     , arbiter_()
+    , tree_attention_bridge_(std::make_unique<TreeAttentionSpeculativeBridge>())
 {
     // Initialize double buffers
     for (int i = 0; i < 2; i++) {
@@ -147,13 +148,14 @@ void StreamingInferenceEngine::SetKernelMode(int mode) {
     current_kernel_mode_.store(mode);
 }
 
-// Enhancement #1: Speculative decoding
+// Enhancement #1: Speculative decoding with VAL-032 tree attention
 void StreamingInferenceEngine::RunSpeculativeDecode(
     const std::vector<uint32_t>& prompt_tokens,
     int max_tokens,
     TokenCallback token_callback
 ) {
     // Use Q4_K for fast draft, Q6_K for verification
+    // VAL-032: Tree attention bridge for optimized verification
     
     spec_state_.active = true;
     spec_state_.draft_tokens.clear();
@@ -166,29 +168,59 @@ void StreamingInferenceEngine::RunSpeculativeDecode(
         // Generate draft tokens with Q4_K
         int draft_count = std::min(MAX_SPEC_DRAFT_TOKENS, max_tokens - tokens_generated);
         
-        // TODO: Run Q4_K inference for draft tokens
-        // for (int i = 0; i < draft_count; i++) {
-        //     uint32_t draft_token = GenerateDraftToken(...);
-        //     spec_state_.draft_tokens.push_back(draft_token);
-        // }
+        // Generate draft tokens (placeholder - actual implementation would call draft model)
+        std::vector<std::vector<float>> draft_candidates;
+        std::vector<float> draft_logits;
+        std::vector<float> draft_probs;
         
-        // Verify with Q6_K
-        // TODO: Run Q6_K inference and compare
-        // int accepted = VerifyDraftTokens(spec_state_.draft_tokens);
+        for (int i = 0; i < draft_count; i++) {
+            // TODO: Run Q4_K inference for draft tokens
+            // uint32_t draft_token = GenerateDraftToken(...);
+            // spec_state_.draft_tokens.push_back(draft_token);
+            
+            // Placeholder: generate dummy logits for demonstration
+            std::vector<float> candidate(64, 0.0f);
+            candidate[i % 64] = 1.0f;  // Simple pattern
+            draft_candidates.push_back(candidate);
+            draft_probs.push_back(0.5f + i * 0.1f);
+        }
+        
+        // VAL-032: Verify with tree attention bridge
+        // Get target model logits for verification
+        std::vector<float> target_logits(64, 0.0f);
+        // TODO: Run Q6_K inference to get actual target logits
+        
+        // Use tree attention bridge for verification
+        std::vector<uint32_t> accepted_tokens = 
+            tree_attention_bridge_->VerifyDraftBatch(
+                draft_candidates,
+                target_logits,
+                0.6f  // acceptance threshold
+            );
+        
+        int accepted = static_cast<int>(accepted_tokens.size());
         
         // Stream accepted tokens
-        // for (int i = 0; i < accepted; i++) {
-        //     std::string text = tokenizer_.Decode({spec_state_.draft_tokens[i]});
-        //     token_callback(text);
-        //     tokens_generated++;
-        // }
+        for (size_t i = 0; i < accepted_tokens.size(); i++) {
+            // TODO: Decode token ID to text
+            // std::string text = tokenizer_.Decode({spec_state_.draft_tokens[accepted_tokens[i]]});
+            std::string text = "token_" + std::to_string(accepted_tokens[i]);  // Placeholder
+            token_callback(text);
+            tokens_generated++;
+        }
         
         // Update stats
         {
             std::lock_guard<std::mutex> lock(stats_mutex_);
             stats_.tokens_generated += draft_count;
-            // stats_.tokens_accepted += accepted;
-            // stats_.tokens_rejected += draft_count - accepted;
+            stats_.tokens_accepted += accepted;
+            stats_.tokens_rejected += draft_count - accepted;
+        }
+        
+        // If no tokens accepted, fall back to single token generation
+        if (accepted == 0) {
+            // TODO: Generate single token with target model
+            break;
         }
     }
     
