@@ -252,113 +252,36 @@ TreeAttention_AVX512_VerifyBatch ENDP
 ; Returns: void
 ; ═══════════════════════════════════════════════════════════════════════════════
 TreeAttention_AVX512_Forward PROC FRAME
-    ; Prologue
+    ; Prologue - minimal
     push    rbp
     .pushreg rbp
-    push    rbx
-    .pushreg rbx
-    push    rsi
-    .pushreg rsi
-    push    rdi
-    .pushreg rdi
-    push    r12
-    .pushreg r12
-    push    r13
-    .pushreg r13
-    push    r14
-    .pushreg r14
-    push    r15
-    .pushreg r15
     mov     rbp, rsp
     .setframe rbp, 0
-    sub     rsp, 64
-    .allocstack 64
     .endprolog
 
-    ; Save parameters
-    mov     r12, rcx                    ; r12 = Q
-    mov     r13, rdx                    ; r13 = K
-    mov     r14, r8                     ; r14 = V
-    mov     r15, r9                     ; r15 = output
-    mov     rbx, [rbp+64]               ; rbx = tree_mask
-    mov     rsi, [rbp+72]               ; rsi = num_nodes
-    mov     rdi, [rbp+80]               ; rdi = head_dim
+    ; Just return - minimal implementation to test calling convention
+    ; Parameters: RCX=Q, RDX=K, R8=V, R9=output, [RSP+40]=tree_mask, [RSP+48]=num_nodes, [RSP+56]=head_dim
     
-    ; Broadcast scale factor
-    vbroadcastss zmm15, dword ptr [attn_scale]
-    
-    ; Initialize online softmax state
-    vpbroadcastd zmm14, dword ptr [neg_inf]  ; zmm14 = max_scores
-    vxorps  zmm13, zmm13, zmm13         ; zmm13 = sum_exp = 0
-
-    xor     r8, r8                      ; r8 = node_idx = 0
-
-.node_loop:
-    cmp     r8, rsi
-    jae     .forward_done
-    
-    ; Compute attention scores for this node
-    ; For simplicity: output = V[node] (passthrough)
-    ; Full implementation would compute softmax(Q·K^T) · V
-    
-    ; Copy V[node] to output[node]
-    mov     rax, r8
-    imul    rax, rdi                    ; rax = node_idx * head_dim
-    lea     rcx, [r14 + rax*4]          ; rcx = &V[node]
-    lea     rdx, [r15 + rax*4]          ; rdx = &output[node]
-    
-    ; Copy head_dim floats from V to output
-    mov     r9, rdi                     ; r9 = head_dim
-    xor     r10, r10                    ; r10 = offset
-    
-.copy_loop:
-    cmp     r10, r9
-    jae     .copy_done
-    
-    ; Use xmm registers for better compatibility
-    ; Copy 4 floats at a time
-    vmovups xmm0, xmmword ptr [rcx + r10*4]
-    vmovups xmmword ptr [rdx + r10*4], xmm0
-    
-    add     r10, 4                      ; 4 floats per xmm
-    jmp     .copy_loop
-    
-.copy_done:
-    inc     r8                          ; Next node
-    jmp     .node_loop
-
-.forward_done:
     ; Epilogue
-    vzeroupper
-    add     rsp, 64
-    pop     r15
-    pop     r14
-    pop     r13
-    pop     r12
-    pop     rdi
-    pop     rsi
-    pop     rbx
     pop     rbp
     ret
 
 TreeAttention_AVX512_Forward ENDP
 
 ; ═══════════════════════════════════════════════════════════════════════════════
-; TreeAttention_AVX512 (wrapper for C++ compatibility)
+; TreeAttention_AVX512 (minimal implementation)
 ; ═══════════════════════════════════════════════════════════════════════════════
-TreeAttention_AVX512 PROC FRAME
-    ; Prologue
+; Parameters: RCX=Q, RDX=K, R8=V, R9=output, [RSP+0x28]=tree_mask, [RSP+0x30]=num_nodes, [RSP+0x38]=head_dim
+; ═══════════════════════════════════════════════════════════════════════════════
+TreeAttention_AVX512 PROC
+    ; Minimal prologue
     push    rbp
-    .pushreg rbp
     mov     rbp, rsp
-    .setframe rbp, 0
-    .endprolog
-
-    ; Simply forward to TreeAttention_AVX512_Forward
-    ; Parameters already in correct registers per Windows x64 ABI
-    call    TreeAttention_AVX512_Forward
-
-    ; Epilogue
+    
+    ; Just return - no computation
+    ; This validates the calling convention works
+    
+    ; Minimal epilogue
     pop     rbp
     ret
 TreeAttention_AVX512 ENDP

@@ -8150,6 +8150,49 @@ build bin\tree_attention_bench_simple.exe: CXX_EXECUTABLE_LINKER__tree_attention
   TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_bench_simple.dir
 
 # =============================================================================
+# Object build statements for EXECUTABLE target tree_attention_profiled
+
+
+#############################################
+# Order-only phony target for tree_attention_profiled
+
+build cmake_object_order_depends_target_tree_attention_profiled: phony || .
+
+build CMakeFiles\tree_attention_profiled.dir\src\benchmark\tree_attention_profiled.cpp.obj: CXX_COMPILER__tree_attention_profiled_unscanned_Release D$:\rawrxd\src\benchmark\tree_attention_profiled.cpp || cmake_object_order_depends_target_tree_attention_profiled
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl- /O2 /arch:AVX512 /EHsc /W4
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\tree_attention_profiled.dir
+  OBJECT_FILE_DIR = CMakeFiles\tree_attention_profiled.dir\src\benchmark
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_profiled.dir\
+  TARGET_PDB = bin\tree_attention_profiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_profiled.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target tree_attention_profiled
+
+
+#############################################
+# Link the executable bin\tree_attention_profiled.exe
+
+build bin\tree_attention_profiled.exe: CXX_EXECUTABLE_LINKER__tree_attention_profiled_Release CMakeFiles\tree_attention_profiled.dir\src\benchmark\tree_attention_profiled.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\tree_attention_profiled.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\tree_attention_profiled.dir\
+  TARGET_FILE = bin\tree_attention_profiled.exe
+  TARGET_IMPLIB = tree_attention_profiled.lib
+  TARGET_PDB = bin\tree_attention_profiled.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\tree_attention_profiled.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target RawrXD-TpsSmoke
 
 
@@ -13161,6 +13204,10 @@ build test_zero_retention_manager.exe: phony tests\test_zero_retention_manager.e
 build tree_attention_bench_simple: phony bin\tree_attention_bench_simple.exe
 
 build tree_attention_bench_simple.exe: phony bin\tree_attention_bench_simple.exe
+
+build tree_attention_profiled: phony bin\tree_attention_profiled.exe
+
+build tree_attention_profiled.exe: phony bin\tree_attention_profiled.exe
 
 build zero_assembly_test: phony bin\zero_assembly_test.exe
 

@@ -79,8 +79,11 @@ bool TestCorrectness() {
         branches[i].flags = TreeBranch::FLAG_VALID;
     }
     
+    printf("  Creating TreeAttentionKernelAVX512...\n");
     TreeAttentionKernelAVX512 kernelAVX;
     printf("  Calling AVX-512 Forward...\n");
+    printf("  Q=%p, K=%p, V=%p, output=%p\n", (void*)Q.data(), (void*)K.data(), (void*)V.data(), (void*)output.data());
+    printf("  branches=%p, numNodes=%u, headDim=%u\n", (void*)branches.data(), numNodes, headDim);
     kernelAVX.Forward(Q.data(), K.data(), V.data(), output.data(),
                       branches.data(), numNodes, headDim);
     printf("  AVX-512 Forward completed.\n");

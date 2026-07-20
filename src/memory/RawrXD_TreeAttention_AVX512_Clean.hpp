@@ -85,8 +85,12 @@ public:
         uint32_t numBranches,
         uint32_t headDim = 128
     ) {
+        printf("  [C++] BuildMaskFromBranches starting...\n");
         BuildMaskFromBranches(branches, numBranches);
+        printf("  [C++] BuildMaskFromBranches done, maskBuffer size=%zu\n", maskBuffer_.size());
+        printf("  [C++] Calling TreeAttention_AVX512...\n");
         TreeAttention_AVX512(Q, K, V, output, maskBuffer_.data(), numBranches, headDim);
+        printf("  [C++] TreeAttention_AVX512 returned\n");
     }
 
     void ComputeScores(

@@ -5122,6 +5122,50 @@ if(WIN32)
     message(STATUS "[VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple")
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-033 Profiling Instrumentation — Per-stage cycle-accurate timing
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_profiled EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_profiled.cpp
+    )
+    target_include_directories(tree_attention_profiled PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_profiled PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_profiled PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_profiled PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_profiled
+    )
+    message(STATUS "[VAL-033] Profiling instrumentation: tree_attention_profiled")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # VAL-034 Q@K^T Alignment Optimization — 64-byte aligned loads
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(tree_attention_aligned EXCLUDE_FROM_ALL
+        src/benchmark/tree_attention_aligned.cpp
+    )
+    target_include_directories(tree_attention_aligned PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(MSVC)
+        target_compile_options(tree_attention_aligned PRIVATE /O2 /arch:AVX512 /EHsc /W4)
+    endif()
+    target_link_libraries(tree_attention_aligned PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(tree_attention_aligned PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME tree_attention_aligned
+    )
+    message(STATUS "[VAL-034] Q@K^T alignment optimization: tree_attention_aligned")
+
+    # ═══════════════════════════════════════════════════════════════════
     # TPS smoke — GGUFRunner + model_runtime_gate + runtime_surface unity + decode TPS vs ref (default 239)
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-TpsSmoke EXCLUDE_FROM_ALL
