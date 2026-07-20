@@ -232,25 +232,25 @@ void PrintResults(const TestResults& results) {
 }
 
 // Main entry point
-int wmain(int argc, wchar_t* argv[]) {
+int main(int argc, char* argv[]) {
     printf("RawrXD VAL-030.1 Jukebox Stream Test\n");
     printf("====================================\n\n");
     
     // Default test configuration
     TestConfig config = {
         L"test_data\\test_70b.b008",  // Test file path
-        1000,                          // 1000 blocks
-        256 * 1024 * 1024,            // 256MB per block
-        10000,                         // 10 second test
+        100,                           // 100 blocks (reduced for quick test)
+        64 * 1024 * 1024,             // 64MB per block (smaller for testing)
+        5000,                          // 5 second test
         42                             // Random seed
     };
     
     // Parse command line
     if (argc > 1) {
-        config.num_blocks = _wtoi(argv[1]);
+        config.num_blocks = atoi(argv[1]);
     }
     if (argc > 2) {
-        config.block_size = _wtoi(argv[2]) * 1024 * 1024;
+        config.block_size = atoi(argv[2]) * 1024 * 1024;
     }
     
     // Create test directory

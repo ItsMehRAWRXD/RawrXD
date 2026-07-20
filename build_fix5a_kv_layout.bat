@@ -13,6 +13,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Ensure Windows SDK is in include path
+if "%WindowsSdkDir%"=="" (
+    set WindowsSdkDir=C:\Program Files (x86)\Windows Kits\10\
+)
+set INCLUDE=%WindowsSdkDir%Include\10.0.26100.0\um;%WindowsSdkDir%Include\10.0.26100.0\shared;%INCLUDE%
+
 echo ============================================================================
 echo Fix 5A: KV Cache Layout Rewrite Build
 echo ============================================================================

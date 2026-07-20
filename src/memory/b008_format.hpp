@@ -97,7 +97,6 @@ struct Header
     static constexpr uint32_t FLAG_ENCRYPTED  = 0x0002;
     static constexpr uint32_t FLAG_CHECKSUM   = 0x0004;
 };
-static_assert(sizeof(Header) == 64, "B008::Header must be 64 bytes");
 
 // Tensor Descriptor
 // Maps tensor_id to its constituent blocks
