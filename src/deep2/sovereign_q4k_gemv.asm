@@ -1,30 +1,18 @@
 ; ============================================================================
-; sovereign_q4k_gemv.asm - Q4_K_M GEMV Kernel for Deep2
-; Matrix-Vector Multiplication with on-the-fly dequantization
-; Target: 120+ GB/s effective bandwidth
+; sovereign_q4k_gemv.asm - Q4_K_M GEMV Kernels
+; Two entry points:
+;   Sovereign_Q4K_GEMV_AVX2    - row-major y[r] = sum_k W[r,k] * x[k]
+;   Sovereign_Q4K_GEMV_AVX2_T  - column-strided y[r] = sum_k W[k,r] * x[k]
 ; ============================================================================
 
 .code
 
-; ============================================================================
-; Q4_K_M Block Structure (GGUF format)
-; ============================================================================
-; Each block: 256 weights
-; - 32 scales (fp16) - 64 bytes
-; - 32 mins (fp16) - 64 bytes  
-; - 256 weights (4-bit packed) - 128 bytes
-; Total: 256 bytes per 256 weights (vs 1024 bytes FP32)
-; Compression: 4x
+; Q4_K_M block: 32 scales(fp16)=64B, 32 mins(fp16)=64B, 256 weights(4-bit)=128B
+; Total: 256 bytes per 256 weights
 
 ; ============================================================================
 ; Sovereign_Q4K_GEMV_AVX2
-; void Sovereign_Q4K_GEMV_AVX2(
-;     const void* q4_weights,     ; RCX - Q4_K_M blocks
-;     const float* input,         ; RDX - input vector
-;     float* output,              ; R8  - output vector
-;     uint32_t num_blocks,        ; R9  - number of blocks per row
-;     uint32_t rows               ; [RSP+40] - number of rows
-; );
+;   void f(const void* q4, const float* x, float* y, uint32 num_blocks, uint32 rows)
 ; ============================================================================
 Sovereign_Q4K_GEMV_AVX2 PROC FRAME
     push rbx
@@ -36,115 +24,74 @@ Sovereign_Q4K_GEMV_AVX2 PROC FRAME
     push rdi
     .endprolog
 
-    ; Save parameters
     mov r12, rcx            ; q4_weights
     mov r13, rdx            ; input
     mov r14, r8             ; output
     mov r15d, r9d           ; num_blocks
-    mov ebx, [rsp+96]       ; rows (after pushes)
+    mov ebx, [rsp+96]       ; rows
 
-    ; Check for zero rows
     test ebx, ebx
-    jz done
+    jz done_rm
 
-    ; Process each row
-    xor r10d, r10d          ; row counter
+    xor r10d, r10d
 
-row_loop:
-    ; Zero accumulator for this output element
-    vxorps ymm0, ymm0, ymm0 ; accumulator
+row_loop_rm:
+    vxorps ymm0, ymm0, ymm0
+    xor r11d, r11d
+    mov rsi, r12
 
-    ; Process all blocks for this row
-    xor r11d, r11d          ; block counter
-    mov rsi, r12            ; current block pointer (preserved across inner loops)
-
-block_loop:
-    ; Process 32 groups of 8 weights each
-    ; Each group has 1 scale and 1 min (fp16)
-    
-    xor rdi, rdi            ; group counter (0-31)
-    
-group_loop:
-    ; Calculate group offset within block
-    ; scales at offset 0, mins at offset 64
+block_loop_rm:
+    xor rdi, rdi
+group_loop_rm:
     mov rdx, rdi
-    shl rdx, 1              ; *2 for fp16
-    
-    ; Load scale (fp16 -> fp32)
-    movzx eax, word ptr [rsi + rdx]     ; scale
+    shl rdx, 1
+    movzx eax, word ptr [rsi + rdx]
     vmovd xmm1, eax
-    vcvtph2ps xmm1, xmm1                ; fp16 -> fp32
-    vbroadcastss ymm1, xmm1              ; broadcast scale
-    
-    ; Load min (fp16 -> fp32)
-    movzx eax, word ptr [rsi + rdx + 64] ; min
+    vcvtph2ps xmm1, xmm1
+    vbroadcastss ymm1, xmm1
+    movzx eax, word ptr [rsi + rdx + 64]
     vmovd xmm2, eax
-    vcvtph2ps xmm2, xmm2                ; fp16 -> fp32
-    vbroadcastss ymm2, xmm2              ; broadcast min
-    
-    ; Load 8 weights (4-bit packed in 4 bytes)
-    ; weights start at offset 128
+    vcvtph2ps xmm2, xmm2
+    vbroadcastss ymm2, xmm2
     mov rdx, rdi
-    shr rdx, 1              ; group/2 for byte offset
+    shr rdx, 1
     movzx eax, byte ptr [rsi + rdx + 128]
-    
-    ; Extract 4-bit values
-    ; For even groups: low nibble, odd groups: high nibble
     test rdi, 1
-    jz even_group
-    shr eax, 4              ; high nibble
-    jmp unpack_done
-even_group:
-    and eax, 0Fh            ; low nibble
-unpack_done:
-    
-    ; Convert to FP32: weight = min + scale * q
+    jz even_g_rm
+    shr eax, 4
+    jmp ud_rm
+even_g_rm:
+    and eax, 0Fh
+ud_rm:
     vcvtsi2ss xmm3, xmm3, eax
-    vbroadcastss ymm3, xmm3              ; broadcast quantized value
-    
-    vmulps ymm3, ymm3, ymm1              ; * scale
-    vaddps ymm3, ymm3, ymm2              ; + min
-    
-    ; Load corresponding input elements
-    ; Calculate input index: block_idx * 256 + group * 8
+    vbroadcastss ymm3, xmm3
+    vmulps ymm3, ymm3, ymm1
+    vaddps ymm3, ymm3, ymm2
     mov rdx, r11
-    shl rdx, 8              ; block * 256
+    shl rdx, 8
     mov r8, rdi
-    shl r8, 3               ; group * 8
+    shl r8, 3
     add rdx, r8
-    
-    vmovups ymm4, [r13 + rdx * 4]       ; load 8 input floats
-    
-    ; FMA: acc += weight * input
+    vmovups ymm4, [r13 + rdx * 4]
     vfmadd231ps ymm0, ymm3, ymm4
-    
-    ; Next group
     inc rdi
     cmp rdi, 32
-    jl group_loop
-    
-    ; Next block
+    jl group_loop_rm
     inc r11d
-    add rsi, 256            ; next block (256 bytes)
+    add rsi, 256
     cmp r11d, r15d
-    jl block_loop
-    
-    ; Horizontal sum of ymm0 to get final output value
+    jl block_loop_rm
     vextractf128 xmm1, ymm0, 1
     vaddps xmm0, xmm0, xmm1
     vhaddps xmm0, xmm0, xmm0
     vhaddps xmm0, xmm0, xmm0
-    
-    ; Store result
     movss dword ptr [r14 + r10 * 4], xmm0
-    
-    ; Next row
     inc r10d
-    add r12, 256            ; Move to next row's blocks
+    add r12, 256
     cmp r10d, ebx
-    jl row_loop
+    jl row_loop_rm
 
-done:
+done_rm:
     vzeroupper
     pop r15
     pop r14
@@ -156,38 +103,104 @@ done:
 Sovereign_Q4K_GEMV_AVX2 ENDP
 
 ; ============================================================================
-; Sovereign_Q4K_GEMV_AVX512
-; AVX-512 version for newer CPUs
+; Sovereign_Q4K_GEMV_AVX2_T  - column-strided
+;   y[r] = sum_k W[k, r] * x[k]  for r in [0, rows)
+; W is row-major: W[k, r] at byte offset (k * num_blocks * 256) + (r * 256)
+; So row_stride_bytes = 256 (each column starts 256 bytes after the previous)
+; Wait - that's not right for general strides. Let me parameterize.
+; Actually the real case is: W is [K, N] stored row-major. y[n] = sum_k W[k,n] * x[k].
+; Each "column" of W spans K rows, each row is 256-aligned for the Q4K block.
+; For Q4K_M with 256 elements per block, the column stride between consecutive
+; outputs n and n+1 within a row is 256/8 = 32 BYTES (4 bits per weight).
+; And the row stride (advancing k) is num_blocks_per_row * 256 bytes.
 ; ============================================================================
-Sovereign_Q4K_GEMV_AVX512 PROC FRAME
+Sovereign_Q4K_GEMV_AVX2_T PROC FRAME
     push rbx
     push r12
     push r13
     push r14
     push r15
+    push rsi
+    push rdi
+    sub rsp, 16             ; space for row_stride
     .endprolog
 
-    ; Similar structure but uses AVX-512 registers
-    ; zmm0-7 for wider vectors (16 floats)
-    
-    ; Check for zero rows
-    mov ebx, [rsp+80]
-    test ebx, ebx
-    jz done_avx512
-    
-    ; Implementation placeholder - full AVX-512 version
-    ; would process 16 elements at once instead of 8
-    
-    ; For now, fall back to AVX2
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    jmp Sovereign_Q4K_GEMV_AVX2
+    mov r12, rcx            ; q4_weights
+    mov r13, rdx            ; input
+    mov r14, r8             ; output
+    mov r15d, r9d           ; num_blocks (= K / 256)
+    mov ebx, [rsp+96+16]   ; rows (= N)
+    mov eax, [rsp+104+16]  ; row_stride_bytes
+    mov [rsp], rax
 
-done_avx512:
+    test ebx, ebx
+    jz done_t
+
+    xor r10d, r10d
+
+row_loop_t:
+    vxorps ymm0, ymm0, ymm0
+    xor r11d, r11d
+    mov rsi, r12
+
+block_loop_t:
+    xor rdi, rdi
+group_loop_t:
+    mov rdx, rdi
+    shl rdx, 1
+    movzx eax, word ptr [rsi + rdx]
+    vmovd xmm1, eax
+    vcvtph2ps xmm1, xmm1
+    vbroadcastss ymm1, xmm1
+    movzx eax, word ptr [rsi + rdx + 64]
+    vmovd xmm2, eax
+    vcvtph2ps xmm2, xmm2
+    vbroadcastss ymm2, xmm2
+    mov rdx, rdi
+    shr rdx, 1
+    movzx eax, byte ptr [rsi + rdx + 128]
+    test rdi, 1
+    jz even_g_t
+    shr eax, 4
+    jmp ud_t
+even_g_t:
+    and eax, 0Fh
+ud_t:
+    vcvtsi2ss xmm3, xmm3, eax
+    vbroadcastss ymm3, xmm3
+    vmulps ymm3, ymm3, ymm1
+    vaddps ymm3, ymm3, ymm2
+    mov rdx, r11
+    shl rdx, 8
+    mov r8, rdi
+    shl r8, 3
+    add rdx, r8
+    vmovups ymm4, [r13 + rdx * 4]
+    vfmadd231ps ymm0, ymm3, ymm4
+    inc rdi
+    cmp rdi, 32
+    jl group_loop_t
+
+    inc r11d
+    add rsi, 256            ; next block along the column
+    cmp r11d, r15d
+    jl block_loop_t
+
+    vextractf128 xmm1, ymm0, 1
+    vaddps xmm0, xmm0, xmm1
+    vhaddps xmm0, xmm0, xmm0
+    vhaddps xmm0, xmm0, xmm0
+    movss dword ptr [r14 + r10 * 4], xmm0
+
+    mov rax, [rsp]          ; row_stride_bytes
+    add r12, rax            ; advance to next column's first row
+    inc r10d
+    cmp r10d, ebx
+    jl row_loop_t
+
+done_t:
     vzeroupper
+    add rsp, 16
     pop r15
     pop r14
     pop r13
@@ -195,17 +208,6 @@ done_avx512:
     pop rbx
     ret
 
-Sovereign_Q4K_GEMV_AVX512 ENDP
-
-; ============================================================================
-; C Interface Wrappers
-; ============================================================================
-PUBLIC Sovereign_Q4K_GEMV
-
-Sovereign_Q4K_GEMV PROC
-    ; Detect CPU features and dispatch
-    ; For now, always use AVX2 version
-    jmp Sovereign_Q4K_GEMV_AVX2
-Sovereign_Q4K_GEMV ENDP
+Sovereign_Q4K_GEMV_AVX2_T ENDP
 
 END
