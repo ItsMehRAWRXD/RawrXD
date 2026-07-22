@@ -9,6 +9,7 @@
 #include "Tokenizer.hpp"
 #include "Sampling.hpp"
 #include "MoERouter.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -492,8 +493,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             memset(output, 0, hiddenDim * sizeof(float));
         }
     } else {
-        // Quantized embeddings - dequantize the specific row on the fly
-        // Supports Q4_K, Q4_0, Q8_0, Q8_K
+        // --- Quant-agnostic embedding dequant via registry ---
         size_t hiddenDim = modelWeights.hiddenDim;
         size_t rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
         const uint8_t* embedData = (const uint8_t*)modelWeights.tokenEmbed.data;
@@ -501,8 +501,13 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             const uint8_t* row = embedData + tokenId * rowBytes;
             
-            if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
-                // Q4_K: 256 elements per block
+            auto& reg = Deep2::QuantKernelRegistry::Instance();
+            auto dequant = reg.GetDequant(modelWeights.tokenEmbed.type);
+            if (dequant) {
+                // Registry handles all quant types uniformly
+                dequant(row, output, hiddenDim);
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+                // Legacy fallback
                 size_t numBlocks = hiddenDim / 256;
                 const Q4_K_M_Block* blocks = (const Q4_K_M_Block*)row;
                 float* dequantBuf = alignedAlloc(256);
@@ -512,7 +517,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
                 }
                 alignedFree(dequantBuf);
             } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q8_0) {
-                // Q8_0: 32 elements per block, block = {d, qs[32]}
+                // Legacy fallback
                 size_t numBlocks = hiddenDim / 32;
                 const block_q8_0* blocks = (const block_q8_0*)row;
                 for (size_t b = 0; b < numBlocks; ++b) {
@@ -522,7 +527,6 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
                     }
                 }
             } else {
-                // Unknown quantization - zero (should not happen in production)
                 memset(output, 0, hiddenDim * sizeof(float));
             }
         } else {
@@ -628,21 +632,29 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     size_t cols = wt.cols;
     size_t rows = wt.rows;
 
-    switch (wt.type) {
-        case (int)GGMLType::GGML_TYPE_F32:
-            fp32GEMV((const float*)wt.data, input, output, rows, cols);
-            break;
-        case (int)GGMLType::GGML_TYPE_F16:
-            fp16GEMV((const uint16_t*)wt.data, input, output, rows, cols);
-            break;
-        case (int)GGMLType::GGML_TYPE_Q4_K:
-            // Try MASM kernel first, fall back to C++ if not available
-            q4kGEMV(wt.data, input, output, rows, cols);
-            break;
-        default:
-            // Unknown type - zero output
-            memset(output, 0, outDim * sizeof(float));
-            break;
+    // --- Quant-agnostic dispatch via QuantKernelRegistry ---
+    // Resolves the correct GEMV kernel once via function pointer; zero branches
+    // in the hot path.  Falls back to direct calls only if registry is empty.
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    auto kernel = reg.GetGEMV(wt.type);
+    if (kernel) {
+        kernel((const uint8_t*)wt.data, input, output, rows, cols);
+    } else {
+        // Legacy fallback (registry not yet initialized)
+        switch (wt.type) {
+            case (int)GGMLType::GGML_TYPE_F32:
+                fp32GEMV((const float*)wt.data, input, output, rows, cols);
+                break;
+            case (int)GGMLType::GGML_TYPE_F16:
+                fp16GEMV((const uint16_t*)wt.data, input, output, rows, cols);
+                break;
+            case (int)GGMLType::GGML_TYPE_Q4_K:
+                q4kGEMV(wt.data, input, output, rows, cols);
+                break;
+            default:
+                memset(output, 0, outDim * sizeof(float));
+                break;
+        }
     }
 
     // Add bias
@@ -1201,7 +1213,12 @@ void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias,
 
     const LegacyWeightTensor& wt = g_weightTensors[weightIdx];
 
-    if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+    // --- Quant-agnostic dispatch ---
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    auto kernel = reg.GetGEMV(wt.type);
+    if (kernel) {
+        kernel((const uint8_t*)wt.data, input, output, wt.rows, wt.cols);
+    } else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
         q4kGEMV(wt.data, input, output, wt.rows, wt.cols);
     } else if (wt.type == (int)GGMLType::GGML_TYPE_F16) {
         fp16GEMV((const uint16_t*)wt.data, input, output, wt.rows, wt.cols);
