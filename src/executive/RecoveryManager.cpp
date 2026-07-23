@@ -254,8 +254,20 @@ std::vector<uint64_t> RecoveryManager::predictPotentialFailures() {
 
 void RecoveryManager::registerPreventionMeasure(const std::string& failurePattern, 
                                                  const std::string& preventionAction) {
-    (void)failurePattern;
-    (void)preventionAction;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (failurePattern.empty() || preventionAction.empty()) {
+        return;
+    }
+    
+    // Store prevention measure - in production this would be used to proactively
+    // prevent failures matching the pattern before they occur
+    // For now, log it by associating with recent matching failures
+    for (auto& [id, failure] : failures_) {
+        if (failure.description.find(failurePattern) != std::string::npos && !failure.isRecovered) {
+            failure.recoveryAttempts.push_back("PREVENTION: " + preventionAction);
+        }
+    }
 }
 
 // ============================================================

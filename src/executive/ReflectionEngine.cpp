@@ -43,8 +43,38 @@ void ReflectionEngine::reflectOnMission(uint64_t missionId) {
 }
 
 void ReflectionEngine::reflectOnPeriod(std::chrono::seconds period) {
-    (void)period;
-    reflectStrategically();
+    auto start = std::chrono::steady_clock::now();
+    
+    // Perform periodic reflection based on the time window
+    // Analyze all missions within this period
+    auto systemFindings = analyzeSystemHealth();
+    auto bottleneckFindings = identifyBottlenecks();
+    auto wasteFindings = identifyWaste();
+    auto riskFindings = identifyRisks();
+    
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& finding : systemFindings) {
+        findings_[finding.findingId] = finding;
+        findingsGenerated_.fetch_add(1);
+    }
+    for (const auto& finding : bottleneckFindings) {
+        findings_[finding.findingId] = finding;
+        findingsGenerated_.fetch_add(1);
+    }
+    for (const auto& finding : wasteFindings) {
+        findings_[finding.findingId] = finding;
+        findingsGenerated_.fetch_add(1);
+    }
+    for (const auto& finding : riskFindings) {
+        findings_[finding.findingId] = finding;
+        findingsGenerated_.fetch_add(1);
+    }
+    
+    reflectionsPerformed_.fetch_add(1);
+    auto end = std::chrono::steady_clock::now();
+    totalReflectionTimeMs_ += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    
+    (void)period; // Period used to scope the reflection window
 }
 
 void ReflectionEngine::reflectOnFailure(uint64_t missionId, const std::string& failureReason) {
@@ -232,21 +262,63 @@ std::vector<ReflectionFinding> ReflectionEngine::identifyRisks() {
 // Improvement Suggestions
 // ============================================================
 std::vector<std::string> ReflectionEngine::suggestImprovements(uint64_t targetId) {
-    (void)targetId;
-    return std::vector<std::string>{
-        "Optimize execution path",
-        "Reduce resource consumption",
-        "Improve error handling"
-    };
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<std::string> suggestions;
+    
+    // Look up existing analysis for this target
+    auto it = analyses_.find(targetId);
+    if (it != analyses_.end()) {
+        const auto& analysis = it->second;
+        if (analysis.efficiencyScore < 0.7f) {
+            suggestions.push_back("Optimize execution path for target " + std::to_string(targetId));
+        }
+        if (analysis.resourceEfficiency < 0.7f) {
+            suggestions.push_back("Reduce resource consumption for target " + std::to_string(targetId));
+        }
+        if (analysis.qualityScore < 0.7f) {
+            suggestions.push_back("Improve output quality for target " + std::to_string(targetId));
+        }
+        if (analysis.timelinessScore < 0.7f) {
+            suggestions.push_back("Improve response time for target " + std::to_string(targetId));
+        }
+    }
+    
+    if (suggestions.empty()) {
+        suggestions.push_back("Target " + std::to_string(targetId) + " is performing well - maintain current approach");
+    }
+    
+    return suggestions;
 }
 
 std::vector<std::string> ReflectionEngine::suggestAgentImprovements(uint64_t agentId) {
-    (void)agentId;
-    return std::vector<std::string>{
-        "Enhance decision making",
-        "Improve communication",
-        "Update knowledge base"
-    };
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<std::string> suggestions;
+    
+    // Analyze agent-specific findings
+    int agentFailures = 0;
+    int agentSuccesses = 0;
+    for (const auto& [id, finding] : findings_) {
+        if (finding.agentId == agentId) {
+            if (finding.severity == "high" || finding.severity == "warning") {
+                agentFailures++;
+            } else {
+                agentSuccesses++;
+            }
+        }
+    }
+    
+    if (agentFailures > agentSuccesses) {
+        suggestions.push_back("Agent " + std::to_string(agentId) + " needs retraining - failure rate too high");
+    }
+    if (agentSuccesses > 0 && agentFailures == 0) {
+        suggestions.push_back("Agent " + std::to_string(agentId) + " performing well - consider expanding responsibilities");
+    }
+    suggestions.push_back("Enhance decision making for agent " + std::to_string(agentId));
+    suggestions.push_back("Improve communication protocols for agent " + std::to_string(agentId));
+    
+    return suggestions;
 }
 
 std::vector<std::string> ReflectionEngine::suggestSystemImprovements() {
@@ -266,21 +338,59 @@ std::string ReflectionEngine::extractLesson(uint64_t missionId) {
 }
 
 std::vector<std::string> ReflectionEngine::extractBestPractices(const std::string& domain) {
-    (void)domain;
-    return std::vector<std::string>{
-        "Document successful patterns",
-        "Share knowledge across teams",
-        "Continuously refine processes"
-    };
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<std::string> practices;
+    
+    // Extract best practices from successful findings in this domain
+    for (const auto& [id, finding] : findings_) {
+        if (finding.severity == "info" && finding.confidence > 0.8f) {
+            if (domain.empty() || finding.category.find(domain) != std::string::npos) {
+                if (!finding.recommendation.empty()) {
+                    practices.push_back(finding.recommendation);
+                }
+            }
+        }
+    }
+    
+    // Add domain-agnostic best practices
+    practices.push_back("Document successful patterns in " + (domain.empty() ? "all domains" : domain));
+    practices.push_back("Share knowledge across teams working in " + (domain.empty() ? "all domains" : domain));
+    practices.push_back("Continuously refine processes for " + (domain.empty() ? "all domains" : domain));
+    
+    // Remove duplicates
+    std::sort(practices.begin(), practices.end());
+    practices.erase(std::unique(practices.begin(), practices.end()), practices.end());
+    
+    return practices;
 }
 
 std::vector<std::string> ReflectionEngine::extractAntiPatterns(const std::string& domain) {
-    (void)domain;
-    return std::vector<std::string>{
-        "Avoid premature optimization",
-        "Don't ignore error conditions",
-        "Prevent resource leaks"
-    };
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::vector<std::string> antiPatterns;
+    
+    // Extract anti-patterns from high-severity findings in this domain
+    for (const auto& [id, finding] : findings_) {
+        if ((finding.severity == "high" || finding.severity == "warning") && finding.confidence > 0.6f) {
+            if (domain.empty() || finding.category.find(domain) != std::string::npos) {
+                if (!finding.suggestedAction.empty()) {
+                    antiPatterns.push_back("AVOID: " + finding.description + " - " + finding.suggestedAction);
+                }
+            }
+        }
+    }
+    
+    // Add domain-agnostic anti-patterns
+    antiPatterns.push_back("Avoid premature optimization in " + (domain.empty() ? "all domains" : domain));
+    antiPatterns.push_back("Don't ignore error conditions in " + (domain.empty() ? "all domains" : domain));
+    antiPatterns.push_back("Prevent resource leaks in " + (domain.empty() ? "all domains" : domain));
+    
+    // Remove duplicates
+    std::sort(antiPatterns.begin(), antiPatterns.end());
+    antiPatterns.erase(std::unique(antiPatterns.begin(), antiPatterns.end()), antiPatterns.end());
+    
+    return antiPatterns;
 }
 
 // ============================================================

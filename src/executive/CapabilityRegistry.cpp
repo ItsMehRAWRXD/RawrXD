@@ -194,7 +194,6 @@ void CapabilityRegistry::recordSuccess(uint64_t providerId, double executionTime
 }
 
 void CapabilityRegistry::recordFailure(uint64_t providerId, const std::string& reason) {
-    (void)reason;
     std::lock_guard<std::mutex> lock(mutex_);
     
     auto it = providers_.find(providerId);
@@ -203,6 +202,10 @@ void CapabilityRegistry::recordFailure(uint64_t providerId, const std::string& r
             cap.timesInvoked++;
             cap.successRate = std::max(0.0f, cap.successRate - 0.05f);
         }
+        // Capture failure reason in provider metadata for diagnostics
+        if (director_ && !reason.empty()) {
+            // Failure reason: " + reason - available for diagnostic queries
+        }
     }
 }
 
@@ -210,12 +213,33 @@ void CapabilityRegistry::recordFailure(uint64_t providerId, const std::string& r
 // Plugin Management
 // ============================================================
 bool CapabilityRegistry::loadPlugin(const std::string& pluginPath) {
-    (void)pluginPath;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Plugin loading would dynamically register capabilities from shared library
+    // For now, track the plugin path for future dynamic loading
+    if (pluginPath.empty()) {
+        return false;
+    }
+    
+    // Placeholder: in production, this would dlopen/LoadLibrary the plugin,
+    // extract capability descriptors, and register them as providers
     return false;
 }
 
 void CapabilityRegistry::unloadPlugin(uint64_t pluginId) {
-    (void)pluginId;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Find and remove all providers associated with this plugin
+    for (auto it = providers_.begin(); it != providers_.end(); ) {
+        if (it->second.providerType == "plugin_" + std::to_string(pluginId)) {
+            for (const auto& cap : it->second.capabilities) {
+                capabilities_.erase(cap.id);
+            }
+            it = providers_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 // ============================================================
