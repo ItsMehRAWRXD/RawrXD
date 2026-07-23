@@ -22,6 +22,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <chrono>
+#include <thread>
 #include <intrin.h>
 
 // ---------------------------------------------------------------------------
@@ -48,43 +50,68 @@ extern "C" {
 // ---------------------------------------------------------------------------
 // CPUID-serialized RDTSC timing
 // ---------------------------------------------------------------------------
-static inline uint64_t rdtsc_serialized() {
-    int regs[4];
-    __cpuid(regs, 0);              // serialize
-    uint32_t lo = __rdtscp((unsigned int*)&regs[0]); // read + serialize
-    __cpuid(regs, 0);              // serialize again
-    return ((uint64_t)regs[0] << 32) | lo;
-}
-
 static inline uint64_t rdtsc_start() {
     int regs[4];
-    __cpuid(regs, 0);
+    __cpuid(regs, 0);              // serialize pipeline before read
+    _mm_lfence();
     return __rdtsc();
 }
 
 static inline uint64_t rdtsc_end() {
     unsigned int aux;
-    uint64_t tsc = __rdtscp(&aux);
-    int regs[4];
-    __cpuid(regs, 0);
+    _mm_lfence();
+    uint64_t tsc = __rdtscp(&aux); // read + serialize
+    _mm_lfence();
     return tsc;
 }
 
 // ---------------------------------------------------------------------------
-// Get CPU base frequency (approximate, via CPUID 0x15)
+// Get CPU base frequency.
+// Uses CPUID 0x15 if available; otherwise calibrates TSC against a busy-wait
+// loop whose duration is bounded by a large iteration count.  No Windows API.
+// Guaranteed to return a positive frequency.
 // ---------------------------------------------------------------------------
 static double GetCPUGHz() {
     int regs[4];
-    __cpuid(regs, 0x15);
-    if (regs[0] != 0 && regs[1] != 0) {
-        // EBX/EAX = ratio, ECX = frequency in Hz
-        double ratio = (double)regs[1] / (double)regs[0];
-        if (regs[2] != 0) {
-            return (regs[2] * ratio) / 1e9;
+
+    // Check max CPUID leaf supported
+    __cpuid(regs, 0);
+    int max_leaf = regs[0];
+
+    // Try CPUID 0x15 (Time Stamp Counter and Nominal Core Crystal Clock)
+    if (max_leaf >= 0x15) {
+        __cpuid(regs, 0x15);
+        if (regs[0] != 0 && regs[1] != 0) {
+            // ECX * EBX / EAX = frequency in Hz
+            double freq_hz = (double)regs[2] * regs[1] / regs[0];
+            if (freq_hz > 0) {
+                return freq_hz / 1e9;  // Convert to GHz
+            }
         }
     }
-    // Fallback: assume 3.5 GHz
-    return 3.5;
+
+    // FALLBACK: calibrate TSC against wall-clock time.
+    // RDTSC is an invariant counter on modern CPUs; we measure how many TSC
+    // ticks elapse during a known-duration sleep to compute GHz directly.
+    const int64_t sleep_ms = 50;
+    uint64_t tsc_start = __rdtsc();
+    auto time_start = std::chrono::steady_clock::now();
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+    auto time_end = std::chrono::steady_clock::now();
+    uint64_t tsc_end = __rdtsc();
+
+    double elapsed_sec = std::chrono::duration<double>(time_end - time_start).count();
+    double tsc_delta = (double)(tsc_end - tsc_start);
+    if (elapsed_sec > 0.0 && tsc_delta > 0.0) {
+        double hz = tsc_delta / elapsed_sec;
+        if (hz >= 1.0e9 && hz <= 6.0e9) {
+            return hz / 1e9;
+        }
+    }
+
+    // Ultimate fallback: assume a common modern base clock.
+    fprintf(stderr, "[VAL038] Warning: Could not detect CPU frequency, assuming 3.0 GHz\n");
+    return 3.0;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,7 +140,7 @@ static void ScalarAttention(
     // Softmax
     float maxScore = scores[0];
     for (int t = 1; t < seq_len; ++t)
-        maxScore = std::max(maxScore, scores[t]);
+        maxScore = (maxScore > scores[t]) ? maxScore : scores[t];
 
     float sumExp = 0.0f;
     std::vector<float> weights(seq_len);
@@ -139,7 +166,7 @@ static void ScalarAttention(
 static void ScalarSoftmax(const float* input, float* output, int n) {
     float maxVal = input[0];
     for (int i = 1; i < n; ++i)
-        maxVal = std::max(maxVal, input[i]);
+        maxVal = (maxVal > input[i]) ? maxVal : input[i];
 
     float sum = 0.0f;
     for (int i = 0; i < n; ++i) {
@@ -225,7 +252,7 @@ static bool TestAttentionLatency() {
     std::vector<float> V(seq_len * head_dim, 0.3f);
     std::vector<float> out(head_dim, 0.0f);
 
-    double cpuGHz = GetCPUGHz();
+    volatile double cpuGHz = GetCPUGHz();
     printf("    CPU base frequency: %.2f GHz\n", cpuGHz);
 
     // Warmup: 1000 iterations
@@ -237,16 +264,22 @@ static bool TestAttentionLatency() {
     // Measure: 100000 iterations
     const int iterations = 100000;
     uint64_t totalCycles = 0;
+    uint64_t validSamples = 0;
 
     for (int i = 0; i < iterations; ++i) {
         uint64_t start = rdtsc_start();
         TreeAttention_Fused_VAL038(Q.data(), K.data(), V.data(), out.data(),
                                      seq_len, head_dim);
         uint64_t end = rdtsc_end();
-        totalCycles += (end - start);
+        if (end > start) {
+            totalCycles += (end - start);
+            validSamples++;
+        }
     }
 
-    double avgCycles = (double)totalCycles / iterations;
+    if (validSamples == 0) validSamples = 1;
+
+    double avgCycles = (double)totalCycles / validSamples;
     double avgNS = avgCycles / cpuGHz;
 
     char detail[128];
@@ -324,14 +357,20 @@ static bool TestSoftmaxLatency() {
     // Measure
     const int iterations = 100000;
     uint64_t totalCycles = 0;
+    uint64_t validSamples = 0;
     for (int i = 0; i < iterations; ++i) {
         uint64_t start = rdtsc_start();
         SoftmaxLUT_AVX512(input, out, expLUT, n);
         uint64_t end = rdtsc_end();
-        totalCycles += (end - start);
+        if (end > start) {
+            totalCycles += (end - start);
+            validSamples++;
+        }
     }
 
-    double avgCycles = (double)totalCycles / iterations;
+    if (validSamples == 0) validSamples = 1;
+
+    double avgCycles = (double)totalCycles / validSamples;
     double avgNS = avgCycles / cpuGHz;
 
     char detail[128];
@@ -415,16 +454,24 @@ static bool TestWarmupSeparation() {
 
     double cpuGHz = GetCPUGHz();
 
-    // Measure first 100 calls (cold)
-    uint64_t coldCycles = 0;
+    // Measure first 100 calls (cold).  Store valid samples in an array
+    // and mark the final average volatile so the compiler spills it to
+    // memory and reloads it after the AVX-512 kernel calls.
+    uint64_t coldSamples[100];
+    int coldCount = 0;
     for (int i = 0; i < 100; ++i) {
         uint64_t s = rdtsc_start();
         TreeAttention_Fused_VAL038(Q.data(), K.data(), V.data(), out.data(),
                                      seq_len, head_dim);
         uint64_t e = rdtsc_end();
-        coldCycles += (e - s);
+        if (e > s) {
+            coldSamples[coldCount++] = e - s;
+        }
     }
-    double coldAvg = (double)coldCycles / 100.0;
+    if (coldCount == 0) coldCount = 1;
+    uint64_t coldCycles = 0;
+    for (int i = 0; i < coldCount; ++i) coldCycles += coldSamples[i];
+    volatile double coldAvg = (double)coldCycles / (double)coldCount;
 
     // Warmup 1000 iterations
     for (int i = 0; i < 1000; ++i) {
@@ -434,14 +481,19 @@ static bool TestWarmupSeparation() {
 
     // Measure 100000 calls (hot)
     uint64_t hotCycles = 0;
+    uint64_t hotSamples = 0;
     for (int i = 0; i < 100000; ++i) {
         uint64_t s = rdtsc_start();
         TreeAttention_Fused_VAL038(Q.data(), K.data(), V.data(), out.data(),
                                      seq_len, head_dim);
         uint64_t e = rdtsc_end();
-        hotCycles += (e - s);
+        if (e > s) {
+            hotCycles += (e - s);
+            hotSamples++;
+        }
     }
-    double hotAvg = (double)hotCycles / 100000.0;
+    if (hotSamples == 0) hotSamples = 1;
+    double hotAvg = (double)hotCycles / (double)hotSamples;
 
     char detail[128];
     snprintf(detail, sizeof(detail), "cold=%.1f hot=%.1f cycles", coldAvg, hotAvg);

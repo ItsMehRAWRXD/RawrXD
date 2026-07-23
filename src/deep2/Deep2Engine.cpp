@@ -10,6 +10,12 @@
 #include "Sampling.hpp"
 #include "MoERouter.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "MedusaDecoder.hpp"
+#include "NUFusedPacker.hpp"
+#include "WarmupScheduler.hpp"
+#include "CompressedKVCache.h"
+#include "NVMeStream.h"
+#include "SlidingWindowEngine.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
