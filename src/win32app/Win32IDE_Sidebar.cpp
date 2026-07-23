@@ -133,11 +133,17 @@ void Win32IDE::createActivityBar(HWND hwndParent)
                    {IDC_ACTIVITY_EXTENSIONS, "Exts"}, {IDC_ACTIVITY_RECOVERY, "Recov"},
                    {IDC_ACTIVITY_CHAT, "Chat"}};
 
+    HFONT hBtnFont = CreateFontA(-9, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+
     for (const auto& btn : buttons)
     {
         HWND hwndBtn = CreateWindowExA(0, "BUTTON", btn.text, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_OWNERDRAW, 4,
-                                       y, 40, 40, m_hwndActivityBar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
-        y += 48;
+                                       y, 40, 44, m_hwndActivityBar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
+        if (hwndBtn && hBtnFont)
+            SendMessage(hwndBtn, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+        y += 50;
     }
 
     appendToOutput("Activity Bar created with 7 views (Files, Search, Source, Debug, Exts, Recov, Chat)\n", "Output",

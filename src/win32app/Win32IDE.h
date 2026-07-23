@@ -27,6 +27,14 @@
 #define WM_AI_BACKEND_STATUS (WM_USER + 0x500)  // wParam: 1=connected 0=offline
 #endif
 
+// Deferred initialization messages to prevent stack overflow in onCreate
+#ifndef WM_APP_INIT_CHILDREN
+#define WM_APP_INIT_CHILDREN (WM_APP + 99)  // Deferred UI child creation
+#endif
+#ifndef WM_APP_DEFERRED_INIT
+#define WM_APP_DEFERRED_INIT (WM_APP + 100) // Heavy initialization
+#endif
+
 #ifndef _Return_type_success_
 #define _Return_type_success_(expr)
 #endif
@@ -241,6 +249,7 @@ class Win32IDE
     friend class PeekOverlayWindow;
     friend class vscode::VSCodeExtensionAPI;
     friend void onCreateTrampoline(void* self, HWND hwnd);
+    friend void onCreateChildrenTrampoline(void* self, HWND hwnd);
     friend void deferredInitTrampoline(void* self);
     friend void bgInitBody(void* self);
 
@@ -485,6 +494,7 @@ class Win32IDE
     // Message handlers
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void onCreate(HWND hwnd);
+    void onCreateChildren(HWND hwnd);  // Deferred UI creation to prevent stack overflow
     void deferredHeavyInit();
     static DWORD WINAPI deferredHeavyInitThreadProc(LPVOID param);
     void onDestroy();

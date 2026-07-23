@@ -117,7 +117,7 @@ void CompressedKVCache::compressQ8_0(const float* src, KVBlock_Q8_0* dst, size_t
     }
 }
 
-void CompressedKVCache::decompressQ8_0(const KVBlock_Q8_0* src, float* dst, size_t n) {
+void CompressedKVCache::decompressQ8_0(const KVBlock_Q8_0* src, float* dst, size_t n) const {
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = src[b].d;
@@ -168,7 +168,7 @@ void CompressedKVCache::compressQ4_0(const float* src, KVBlock_Q4_0* dst, size_t
     }
 }
 
-void CompressedKVCache::decompressQ4_0(const KVBlock_Q4_0* src, float* dst, size_t n) {
+void CompressedKVCache::decompressQ4_0(const KVBlock_Q4_0* src, float* dst, size_t n) const {
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = src[b].d;

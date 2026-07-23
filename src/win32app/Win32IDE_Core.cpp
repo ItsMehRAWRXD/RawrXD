@@ -294,6 +294,9 @@ static void logStackUsage(const char* context)
     OutputDebugStringA(msg);
 }
 
+// Forward declaration — defined later near onCreate()
+extern thread_local int gCreateDepth;
+
 static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
 {
     logStackUsage("onCreate ENTRY");
@@ -306,6 +309,7 @@ static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         DWORD excCode = GetExceptionCode();
+        
         char crashMsg[512];
         if (excCode == STATUS_STACK_OVERFLOW)
         {
@@ -315,15 +319,17 @@ static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
                      "1. Recursive window creation (child sends message to parent during WM_CREATE)\n"
                      "2. Large stack-allocated buffers\n"
                      "3. Deep call chain in window creation\n\n"
+                     "Current onCreate depth: %d\n"
                      "The window will still display, but some panels may be missing.",
-                     excCode);
+                     excCode, gCreateDepth);
         }
         else
         {
             snprintf(crashMsg, sizeof(crashMsg),
                      "[RawrXD] SEH exception 0x%08lX caught in onCreate — window will still display.\n"
+                     "Current onCreate depth: %d\n"
                      "Some panels may be missing.",
-                     excCode);
+                     excCode, gCreateDepth);
         }
         OutputDebugStringA(crashMsg);
         MessageBoxA(hwnd, crashMsg, "RawrXD IDE - Startup Warning", MB_OK | MB_ICONWARNING);
@@ -347,6 +353,62 @@ static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
 void onCreateTrampoline(void* self, HWND hwnd)
 {
     static_cast<Win32IDE*>(self)->onCreate(hwnd);
+}
+
+// Trampoline for deferred UI child creation (prevents stack overflow)
+void onCreateChildrenTrampoline(void* self, HWND hwnd)
+{
+    static_cast<Win32IDE*>(self)->onCreateChildren(hwnd);
+}
+
+// SEH wrapper for onCreateChildren - prevents stack overflow crashes
+typedef void (*OnCreateChildrenFn)(void* self, HWND hwnd);
+
+static void sehCallOnCreateChildren(OnCreateChildrenFn fn, void* self, HWND hwnd)
+{
+    logStackUsage("onCreateChildren ENTRY");
+#if defined(_MSC_VER)
+    __try
+    {
+        fn(self, hwnd);
+        logStackUsage("onCreateChildren EXIT");
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        DWORD excCode = GetExceptionCode();
+        char crashMsg[512];
+        if (excCode == STATUS_STACK_OVERFLOW)
+        {
+            snprintf(crashMsg, sizeof(crashMsg),
+                     "[RawrXD] STACK OVERFLOW (0x%08lX) caught in onCreateChildren!\n\n"
+                     "Deferred UI creation failed due to stack overflow.\n"
+                     "Some panels may be missing.",
+                     excCode);
+        }
+        else
+        {
+            snprintf(crashMsg, sizeof(crashMsg),
+                     "[RawrXD] SEH exception 0x%08lX caught in onCreateChildren.\n"
+                     "Some panels may be missing.",
+                     excCode);
+        }
+        OutputDebugStringA(crashMsg);
+        MessageBoxA(hwnd, crashMsg, "RawrXD IDE - Deferred Init Warning", MB_OK | MB_ICONWARNING);
+    }
+#else
+    try
+    {
+        fn(self, hwnd);
+        logStackUsage("onCreateChildren EXIT");
+    }
+    catch (...)
+    {
+        const char* crashMsg = "[RawrXD] C++ exception caught in onCreateChildren.\n"
+                               "Some panels may be missing.";
+        OutputDebugStringA(crashMsg);
+        MessageBoxA(hwnd, crashMsg, "RawrXD IDE - Deferred Init Warning", MB_OK | MB_ICONWARNING);
+    }
+#endif
 }
 
 static void sehCallDeferredInit(DeferredInitFn fn, void* self)
@@ -610,6 +672,22 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_COMMAND:
             onCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
             return 0;
+
+        case WM_DRAWITEM:
+        {
+            DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
+            if (dis && m_hwndActivityBar && IsWindow(m_hwndActivityBar))
+            {
+                HWND hwndParent = GetParent(dis->hwndItem);
+                if (hwndParent == m_hwndActivityBar)
+                {
+                    // Forward to ActivityBarProc with the activity bar HWND
+                    // so GWLP_USERDATA resolves to Win32IDE* correctly
+                    return ActivityBarProc(m_hwndActivityBar, uMsg, wParam, lParam);
+                }
+            }
+            break;
+        }
 
         case WM_NOTIFY:
         {
@@ -977,6 +1055,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     forceWindowToForeground(m_hwndMain);
                     SetTimer(hwnd, 199, 400, nullptr);  // One-shot: force visible again in 400ms
                 }
+                return 0;
+            }
+            // Handle deferred UI child creation (posted from onCreate to prevent stack overflow)
+            if (uMsg == WM_APP + 99)
+            {
+                sehCallOnCreateChildren(onCreateChildrenTrampoline, this, hwnd);
                 return 0;
             }
             // Handle deferred heavy initialization (posted from onCreate)
@@ -1633,8 +1717,24 @@ int Win32IDE::runMessageLoop()
 // ============================================================================
 // onSize - Layout all child windows when the main window is resized
 // ============================================================================
+// Re-entrancy guard to prevent recursive onSize calls during window creation
+static thread_local bool s_inOnSize = false;
+
 void Win32IDE::onSize(int width, int height)
 {
+    // Re-entrancy guard: prevent recursive onSize calls
+    if (s_inOnSize)
+    {
+        OutputDebugStringA("[Win32IDE] RE-ENTRANT onSize BLOCKED\n");
+        return;
+    }
+    s_inOnSize = true;
+    
+    // Auto-reset guard for early returns
+    struct OnSizeGuard {
+        ~OnSizeGuard() { s_inOnSize = false; }
+    } onSizeGuard;
+
     // LOGGING AS REQUESTED
     char logBuf[256];
     sprintf_s(logBuf, "onSize: %dx%d (Explorer: %p, Terminal: %p)", width, height, m_hwndFileExplorer,
@@ -1660,25 +1760,25 @@ void Win32IDE::onSize(int width, int height)
     int contentHeight = contentBottom - contentTop;
 
     // Status bar
-    if (m_hwndStatusBar)
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
     {
         SendMessage(m_hwndStatusBar, WM_SIZE, 0, 0);
     }
 
     // Toolbar
-    if (m_hwndToolbar)
+    if (m_hwndToolbar && IsWindow(m_hwndToolbar))
     {
         MoveWindow(m_hwndToolbar, 0, 0, width, TOOLBAR_HEIGHT, TRUE);
     }
 
     // Activity bar (far left)
-    if (m_hwndActivityBar)
+    if (m_hwndActivityBar && IsWindow(m_hwndActivityBar))
     {
         MoveWindow(m_hwndActivityBar, 0, contentTop, ACTIVITY_BAR_WIDTH, contentHeight, TRUE);
     }
 
     // Primary sidebar
-    if (m_hwndSidebar && m_sidebarVisible)
+    if (m_hwndSidebar && IsWindow(m_hwndSidebar) && m_sidebarVisible)
     {
         MoveWindow(m_hwndSidebar, ACTIVITY_BAR_WIDTH, contentTop, sidebarWidth, contentHeight, TRUE);
     }
@@ -1691,7 +1791,7 @@ void Win32IDE::onSize(int width, int height)
 
     // Tab bar (above editor)
     int tabBarBottom = contentTop;
-    if (m_hwndTabBar)
+    if (m_hwndTabBar && IsWindow(m_hwndTabBar))
     {
         MoveWindow(m_hwndTabBar, editorLeft, contentTop, editorWidth, TAB_BAR_HEIGHT, TRUE);
         tabBarBottom = contentTop + TAB_BAR_HEIGHT;
@@ -1699,7 +1799,7 @@ void Win32IDE::onSize(int width, int height)
 
     // Breadcrumb bar (below tab bar, above editor) — ESP IE labeled
     int breadcrumbBottom = tabBarBottom;
-    if (m_hwndBreadcrumbs && m_settings.breadcrumbsEnabled)
+    if (m_hwndBreadcrumbs && IsWindow(m_hwndBreadcrumbs) && m_settings.breadcrumbsEnabled)
     {
         MoveWindow(m_hwndBreadcrumbs, editorLeft, tabBarBottom, editorWidth, m_breadcrumbHeight, TRUE);
         breadcrumbBottom = tabBarBottom + m_breadcrumbHeight;
@@ -1708,16 +1808,16 @@ void Win32IDE::onSize(int width, int height)
     int editorContentHeight = editorAreaHeight - (breadcrumbBottom - contentTop);
 
     // Line number gutter (left of editor)
-    int gutterWidth = m_hwndLineNumbers ? m_lineNumberWidth : 0;
-    if (m_hwndLineNumbers)
+    int gutterWidth = (m_hwndLineNumbers && IsWindow(m_hwndLineNumbers)) ? m_lineNumberWidth : 0;
+    if (m_hwndLineNumbers && IsWindow(m_hwndLineNumbers))
     {
         MoveWindow(m_hwndLineNumbers, editorLeft, breadcrumbBottom, gutterWidth, editorContentHeight, TRUE);
     }
 
     // Editor (right of gutter)
-    if (m_hwndEditor)
+    if (m_hwndEditor && IsWindow(m_hwndEditor))
     {
-        int minimapW = (m_minimapVisible && m_hwndMinimap) ? m_minimapWidth : 0;
+        int minimapW = (m_minimapVisible && m_hwndMinimap && IsWindow(m_hwndMinimap)) ? m_minimapWidth : 0;
         int editorX = editorLeft + gutterWidth;
         int editorW = editorWidth - gutterWidth - minimapW;
         MoveWindow(m_hwndEditor, editorX, breadcrumbBottom, editorW, editorContentHeight, TRUE);
@@ -1730,7 +1830,7 @@ void Win32IDE::onSize(int width, int height)
         }
 
         // Minimap
-        if (m_hwndMinimap && m_minimapVisible)
+        if (m_hwndMinimap && IsWindow(m_hwndMinimap) && m_minimapVisible)
         {
             MoveWindow(m_hwndMinimap, editorRight - minimapW, breadcrumbBottom, minimapW, editorContentHeight, TRUE);
         }
@@ -1741,7 +1841,7 @@ void Win32IDE::onSize(int width, int height)
     if (panelHeight > 0)
     {
         // Output tabs
-        if (m_hwndOutputTabs)
+        if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
         {
             MoveWindow(m_hwndOutputTabs, editorLeft, panelTop, editorWidth, panelHeight, TRUE);
         }
@@ -1751,13 +1851,13 @@ void Win32IDE::onSize(int width, int height)
         // Output tab windows (Output, Errors, Debug, Find Results)
         for (auto& kv : m_outputWindows)
         {
-            if (kv.second)
+            if (kv.second && IsWindow(kv.second))
             {
                 MoveWindow(kv.second, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
             }
         }
         // Problems ListView (5th tab) — same region
-        if (m_hwndProblemsListView)
+        if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
         {
             MoveWindow(m_hwndProblemsListView, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
         }
@@ -1777,7 +1877,7 @@ void Win32IDE::onSize(int width, int height)
     }
 
     // PowerShell panel
-    if (m_hwndPowerShellPanel && m_powerShellPanelVisible)
+    if (m_hwndPowerShellPanel && IsWindow(m_hwndPowerShellPanel) && m_powerShellPanelVisible)
     {
         MoveWindow(m_hwndPowerShellPanel, editorLeft, panelTop, editorWidth, powerShellHeight, TRUE);
         // Also layout internal PowerShell controls
@@ -1785,7 +1885,7 @@ void Win32IDE::onSize(int width, int height)
     }
 
     // Secondary sidebar (Copilot Chat / AI Panel)
-    if (m_hwndSecondarySidebar && m_secondarySidebarVisible)
+    if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar) && m_secondarySidebarVisible)
     {
         MoveWindow(m_hwndSecondarySidebar, editorRight, contentTop, secondarySidebarWidth, contentHeight, TRUE);
     }
@@ -1952,8 +2052,64 @@ static thread_local bool s_inOnCreate = false;
 static thread_local int s_onCreateDepth = 0;
 static constexpr int MAX_ONCREATE_DEPTH = 5;  // Prevent deep recursion
 
+// Depth tracking for recursion diagnostics
+thread_local int gCreateDepth = 0;
+
+struct DepthGuard {
+    DepthGuard() { 
+        ++gCreateDepth; 
+        char msg[128];
+        snprintf(msg, sizeof(msg), "[DepthGuard] onCreate depth = %d\n", gCreateDepth);
+        OutputDebugStringA(msg);
+    }
+    ~DepthGuard() { 
+        --gCreateDepth; 
+        char msg[128];
+        snprintf(msg, sizeof(msg), "[DepthGuard] onCreate depth = %d (exiting)\n", gCreateDepth);
+        OutputDebugStringA(msg);
+    }
+};
+
+// Capture and log stack backtrace when exception occurs
+static void LogStackBacktrace()
+{
+    void* stack[32];
+    USHORT frames = CaptureStackBackTrace(0, 32, stack, NULL);
+    
+    OutputDebugStringA("[StackTrace] === Begin Stack Backtrace ===\n");
+    
+    for (USHORT i = 0; i < frames; i++)
+    {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "[StackTrace] Frame %2d: 0x%p\n", i, stack[i]);
+        OutputDebugStringA(msg);
+    }
+    
+    OutputDebugStringA("[StackTrace] === End Stack Backtrace ===\n");
+}
+
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Depth tracking for recursion diagnostics
+    DepthGuard depthGuard;
+    
+    // Check for excessive recursion
+    if (gCreateDepth > 2)
+    {
+        char warnMsg[256];
+        snprintf(warnMsg, sizeof(warnMsg), 
+                 "[Win32IDE] WARNING: onCreate depth = %d - possible recursion issue\n", 
+                 gCreateDepth);
+        OutputDebugStringA(warnMsg);
+        
+        if (gCreateDepth > 10)
+        {
+            OutputDebugStringA("[Win32IDE] CRITICAL: Recursion depth > 10, breaking potential infinite loop\n");
+            LogStackBacktrace();
+            return;
+        }
+    }
+
     // Re-entrancy guard: prevent recursive onCreate calls
     if (s_inOnCreate)
     {
@@ -1962,6 +2118,7 @@ void Win32IDE::onCreate(HWND hwnd)
         {
             OutputDebugStringA("[Win32IDE] RE-ENTRANT onCreate BLOCKED - recursion limit exceeded\n");
             fileTrace("[onCreate] RE-ENTRANT BLOCKED");
+            LogStackBacktrace();
             s_onCreateDepth--;
             return;
         }
@@ -2151,25 +2308,10 @@ void Win32IDE::onCreate(HWND hwnd)
     createEnhancedStatusBar(hwnd);
     logStackUsage("onCreate after createEnhancedStatusBar");
 
-    OutputDebugStringA("[onCreate] createOutputTabs...\n");
-    logStackUsage("onCreate before createOutputTabs");
-    createOutputTabs();
-    logStackUsage("onCreate after createOutputTabs");
-    
-    OutputDebugStringA("[onCreate] createPowerShellPanel...\n");
-    logStackUsage("onCreate before createPowerShellPanel");
-    createPowerShellPanel();
-    logStackUsage("onCreate after createPowerShellPanel");
-    
-    OutputDebugStringA("[onCreate] createChatPanel...\n");
-    logStackUsage("onCreate before createChatPanel");
-    createChatPanel();
-    logStackUsage("onCreate after createChatPanel");
-    
-    OutputDebugStringA("[onCreate] initializeChatPanelOllama...\n");
-    logStackUsage("onCreate before initializeChatPanelOllama");
-    initializeChatPanelOllama();
-    logStackUsage("onCreate after initializeChatPanelOllama");
+    // DEFERRED: OutputTabs, PowerShellPanel, ChatPanel creation moved to WM_APP_INIT_CHILDREN
+    // to prevent stack overflow. These panels are created after WM_CREATE completes.
+    // See onCreateChildren() for the deferred creation.
+    logStackUsage("onCreate - deferred panels will be created via WM_APP_INIT_CHILDREN");
 
     if (m_hwndMain)
     {
@@ -2223,6 +2365,15 @@ void Win32IDE::onCreate(HWND hwnd)
     initBackendManager();
     initLLMRouter();
 
+    // Force initial layout so all child windows are sized before first paint
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    PostMessage(hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+
+    // Defer heavy UI creation to prevent stack overflow in onCreate
+    // WM_APP_INIT_CHILDREN (WM_APP + 99) will handle creation of panels that can be deferred
+    PostMessage(hwnd, WM_APP + 99, 0, 0);
+    
     // Defer heavy init to after window is fully created
     PostMessage(hwnd, WM_APP + 100, 0, 0);
 }
@@ -2236,6 +2387,49 @@ void Win32IDE::onCreate(HWND hwnd)
 // Cannot use lambdas inside __try (MSVC C2712), so we call through here.
 // Declared as friend in Win32IDE class (external linkage) to access private members.
 void bgInitBody(void* self);
+
+// ============================================================================
+// onCreateChildren - Deferred UI creation to prevent stack overflow
+// Called via WM_APP_INIT_CHILDREN after WM_CREATE completes
+// ============================================================================
+void Win32IDE::onCreateChildren(HWND hwnd)
+{
+    fileTrace("[onCreateChildren] START");
+    logStackUsage("onCreateChildren START");
+    
+    // Create panels that were deferred from onCreate to prevent stack overflow
+    OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");
+    logStackUsage("onCreateChildren before createOutputTabs");
+    createOutputTabs();
+    logStackUsage("onCreateChildren after createOutputTabs");
+    
+    OutputDebugStringA("[onCreateChildren] createPowerShellPanel...\n");
+    logStackUsage("onCreateChildren before createPowerShellPanel");
+    createPowerShellPanel();
+    logStackUsage("onCreateChildren after createPowerShellPanel");
+    
+    OutputDebugStringA("[onCreateChildren] createChatPanel...\n");
+    logStackUsage("onCreateChildren before createChatPanel");
+    createChatPanel();
+    logStackUsage("onCreateChildren after createChatPanel");
+    
+    OutputDebugStringA("[onCreateChildren] initializeChatPanelOllama...\n");
+    logStackUsage("onCreateChildren before initializeChatPanelOllama");
+    initializeChatPanelOllama();
+    logStackUsage("onCreateChildren after initializeChatPanelOllama");
+    
+    // Update HWND audit after deferred creation
+    if (m_hwndMain)
+    {
+        SetPropA(m_hwndMain, "RawrXD.IDE.Label", (HANDLE)RAWRXD_IDE_LABEL_MAIN_WINDOW);
+        if (m_interpretabilityPanel)
+            m_interpretabilityPanel->setParent(m_hwndMain);
+    }
+    
+    LOG_INFO("onCreateChildren complete — deferred panels created");
+    OutputDebugStringA("[onCreateChildren] all deferred panels created OK\n");
+    fileTrace("[onCreateChildren] END");
+}
 
 namespace
 {

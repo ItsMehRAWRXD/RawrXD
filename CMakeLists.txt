@@ -4830,6 +4830,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
     )
+    
+    # Increase stack size to 4MB to prevent stack overflow during window creation
+    # The default 1MB stack is insufficient for the deep call chains in onCreate
+    if(MSVC)
+        target_link_options(RawrXD-Win32IDE PRIVATE "/STACK:4194304")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(RawrXD-Win32IDE PRIVATE "-Wl,--stack,4194304")
+    endif()
     # RawrCodex.asm uses ADDR32 relocations — /LARGEADDRESSAWARE:NO already set in MAP block above
 
     # Final link-line hygiene: remove duplicate library/object entries that
@@ -5120,6 +5128,8 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/Deep2ExecutionGraph.cpp
         # VAL-000 Components
         src/deep2/ReverseIntegration.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/MedusaDecoder.cpp
         src/deep2/WarmupScheduler.cpp
         src/deep2/NUFusedPacker.cpp

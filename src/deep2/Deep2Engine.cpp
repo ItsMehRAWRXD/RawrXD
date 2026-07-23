@@ -31,6 +31,8 @@ extern "C" {
     void Deep2_VecDotProduct(const float* a, const float* b, float* out, size_t n);
     void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n);
     void Deep2_RMSNorm(const float* x, float* out, size_t n, float eps);
+    int Deep2_HasAVX2();
+    int Deep2_HasAVX512();
 
     // Real Q4_K GEMV from sovereign_q4k_gemv.asm (NOT a stub).
     void Sovereign_Q4K_GEMV_AVX2(
@@ -39,6 +41,69 @@ extern "C" {
         float* output,
         unsigned int num_blocks,
         unsigned int rows);
+    
+    // MoE kernel
+    void Sovereign_ExecuteMoEKernel(const void* weight_ptr, const void* activation_ptr,
+                                     void* output_ptr, size_t hidden_dim);
+}
+
+// CPU feature detection
+extern "C" int Deep2_HasAVX2() {
+    int cpuInfo[4] = {0};
+    __cpuid(cpuInfo, 1);
+    // Check bit 28 of ECX for AVX2
+    return (cpuInfo[2] & (1 << 28)) ? 1 : 0;
+}
+
+extern "C" int Deep2_HasAVX512() {
+    int cpuInfo[4] = {0};
+    __cpuid(cpuInfo, 7);
+    // Check bit 16 of EBX for AVX-512F
+    return (cpuInfo[1] & (1 << 16)) ? 1 : 0;
+}
+
+// Vector dot product implementation
+extern "C" void Deep2_VecDotProduct(const float* a, const float* b, float* out, size_t n) {
+    float sum = 0.0f;
+    for (size_t i = 0; i < n; ++i) {
+        sum += a[i] * b[i];
+    }
+    *out = sum;
+}
+
+// SwiGLU activation: out = x * sigmoid(y) * y (simplified)
+extern "C" void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        float sig = 1.0f / (1.0f + std::exp(-y[i]));
+        out[i] = x[i] * sig * y[i];
+    }
+}
+
+// RMSNorm implementation
+extern "C" void Deep2_RMSNorm(const float* x, float* out, size_t n, float eps) {
+    float sum = 0.0f;
+    for (size_t i = 0; i < n; ++i) {
+        sum += x[i] * x[i];
+    }
+    float rms = std::sqrt(sum / n + eps);
+    float scale = 1.0f / rms;
+    for (size_t i = 0; i < n; ++i) {
+        out[i] = x[i] * scale;
+    }
+}
+
+// MoE kernel stub
+extern "C" void Sovereign_ExecuteMoEKernel(const void* weight_ptr, const void* activation_ptr,
+                                            void* output_ptr, size_t hidden_dim) {
+    // Placeholder implementation
+    const float* weights = static_cast<const float*>(weight_ptr);
+    const float* input = static_cast<const float*>(activation_ptr);
+    float* output = static_cast<float*>(output_ptr);
+    
+    // Simple matvec for now
+    for (size_t i = 0; i < hidden_dim; ++i) {
+        output[i] = weights[i] * input[i];
+    }
 }
 
 // Q4_K_M Block structure (matches GGUF)
