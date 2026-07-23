@@ -362,7 +362,9 @@ private:
 class KVMigrationWorker {
 public:
     using MigrationCallback = std::function<void(uint64_t page_id, bool success, 
-                                                  uint64_t latency_us)>;
+                                                  uint64_t latency_us,
+                                                  ResidencyTier source_tier,
+                                                  ResidencyTier target_tier)>;
     
     explicit KVMigrationWorker(KVPageTable* page_table);
     ~KVMigrationWorker();
@@ -469,7 +471,8 @@ private:
     ResidencyTier DetermineTargetTier(uint32_t token_idx) const;
     void EvaluateMigrations(uint32_t current_seq_len);
     void QueuePageMigration(uint64_t page_id, ResidencyTier target, MigrationReason reason);
-    void OnMigrationComplete(uint64_t page_id, bool success, uint64_t latency_us);
+    void OnMigrationComplete(uint64_t page_id, bool success, uint64_t latency_us,
+                             ResidencyTier source_tier, ResidencyTier target_tier);
     void UpdateStats();
     
     // Components

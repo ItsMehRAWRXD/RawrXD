@@ -56,7 +56,11 @@ public:
     // Component access
     std::shared_ptr<AgenticIDE> getIDE() const { return m_ide; }
     std::shared_ptr<TokenGenerator> getTokenizer() const { return m_tokenizer; }
+    std::shared_ptr<MonacoEditor> getEditor() const { return m_editor; }
     RawrXD::IDE::ToolchainIntegration* getToolchain() const { return m_toolchain.get(); }
+    
+    // Task processing
+    void processTask(std::function<void()> task);
     
 private:
     IDEConfig m_config;

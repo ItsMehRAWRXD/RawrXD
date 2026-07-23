@@ -53,68 +53,64 @@ static constexpr uint32_t GGUF_TYPE_FLOAT64 = 12;
 // ============================================================================
 static size_t GGMLTypeSize(GGMLType type) {
     switch (type) {
-        case GGML_TYPE_F32:     return 4;
-        case GGML_TYPE_F16:     return 2;
-        case GGML_TYPE_Q4_0:    return sizeof(block_q4_0);
-        case GGML_TYPE_Q4_1:    return sizeof(block_q4_1);
-        case GGML_TYPE_Q5_0:    return sizeof(block_q5_0);
-        case GGML_TYPE_Q5_1:    return sizeof(block_q5_1);
-        case GGML_TYPE_Q8_0:    return sizeof(block_q8_0);
-        case GGML_TYPE_Q8_1:    return sizeof(block_q8_1);
-        case GGML_TYPE_Q2_K:    return sizeof(block_q2_K);
-        case GGML_TYPE_Q3_K:    return sizeof(block_q3_K);
-        case GGML_TYPE_Q4_K:    return sizeof(block_q4_K);
-        case GGML_TYPE_Q5_K:    return sizeof(block_q5_K);
-        case GGML_TYPE_Q6_K:    return sizeof(block_q6_K);
-        case GGML_TYPE_Q8_K:    return sizeof(block_q8_K);
-        case GGML_TYPE_IQ2_XXS: return sizeof(block_iq2_xxs);
-        case GGML_TYPE_IQ2_XS:  return sizeof(block_iq2_xs);
-        case GGML_TYPE_IQ3_XXS: return sizeof(block_iq3_xxs);
-        case GGML_TYPE_IQ1_S:   return sizeof(block_iq1_s);
-        case GGML_TYPE_IQ4_NL:  return sizeof(block_iq4_nl);
-        case GGML_TYPE_IQ3_S:   return sizeof(block_iq3_s);
-        case GGML_TYPE_IQ2_S:   return sizeof(block_iq2_s);
-        case GGML_TYPE_IQ4_XS:  return sizeof(block_iq4_xs);
-        case GGML_TYPE_I8:      return 1;
-        case GGML_TYPE_I16:     return 2;
-        case GGML_TYPE_I32:     return 4;
-        case GGML_TYPE_I64:     return 8;
-        case GGML_TYPE_F64:     return 8;
-        case GGML_TYPE_F32_E8M1: return 4;
+        case GGMLType::GGML_TYPE_F32:     return 4;
+        case GGMLType::GGML_TYPE_F16:     return 2;
+        case GGMLType::GGML_TYPE_Q4_0:    return sizeof(block_q4_0);
+        case GGMLType::GGML_TYPE_Q4_1:    return sizeof(block_q4_1);
+        case GGMLType::GGML_TYPE_Q5_0:    return sizeof(block_q5_0);
+        case GGMLType::GGML_TYPE_Q5_1:    return sizeof(block_q5_1);
+        case GGMLType::GGML_TYPE_Q8_0:    return sizeof(block_q8_0);
+        case GGMLType::GGML_TYPE_Q8_K:    return sizeof(block_q8_K);
+        case GGMLType::GGML_TYPE_Q2_K:    return sizeof(block_q2_K);
+        case GGMLType::GGML_TYPE_Q3_K:    return sizeof(block_q3_K);
+        case GGMLType::GGML_TYPE_Q4_K:    return sizeof(block_q4_K);
+        case GGMLType::GGML_TYPE_Q5_K:    return sizeof(block_q5_K);
+        case GGMLType::GGML_TYPE_Q6_K:    return sizeof(block_q6_K);
+        case GGMLType::GGML_TYPE_IQ2_XXS: return sizeof(block_iq2_xxs);
+        case GGMLType::GGML_TYPE_IQ2_XS:  return sizeof(block_iq2_xs);
+        case GGMLType::GGML_TYPE_IQ3_XXS: return sizeof(block_iq3_xxs);
+        case GGMLType::GGML_TYPE_IQ1_S:   return sizeof(block_iq1_s);
+        case GGMLType::GGML_TYPE_IQ4_NL:  return sizeof(block_iq4_nl);
+        case GGMLType::GGML_TYPE_IQ3_S:   return sizeof(block_iq3_s);
+        case GGMLType::GGML_TYPE_IQ2_S:   return sizeof(block_iq2_s);
+        case GGMLType::GGML_TYPE_IQ4_XS:  return sizeof(block_iq4_xs);
+        case GGMLType::GGML_TYPE_I8:      return 1;
+        case GGMLType::GGML_TYPE_I16:     return 2;
+        case GGMLType::GGML_TYPE_I32:     return 4;
+        case GGMLType::GGML_TYPE_I64:     return 8;
+        case GGMLType::GGML_TYPE_F64:     return 8;
         default:                return 4;
     }
 }
 
 static size_t GGMLTypeBlockSize(GGMLType type) {
     switch (type) {
-        case GGML_TYPE_F32:     return 1;
-        case GGML_TYPE_F16:     return 1;
-        case GGML_TYPE_Q4_0:    return QK4_0;
-        case GGML_TYPE_Q4_1:    return QK4_1;
-        case GGML_TYPE_Q5_0:    return QK5_0;
-        case GGML_TYPE_Q5_1:    return QK5_1;
-        case GGML_TYPE_Q8_0:    return QK8_0;
-        case GGML_TYPE_Q8_1:    return QK8_1;
-        case GGML_TYPE_Q2_K:    return QK_K;
-        case GGML_TYPE_Q3_K:    return QK_K;
-        case GGML_TYPE_Q4_K:    return QK_K;
-        case GGML_TYPE_Q5_K:    return QK_K;
-        case GGML_TYPE_Q6_K:    return QK_K;
-        case GGML_TYPE_Q8_K:    return QK_K;
-        case GGML_TYPE_IQ2_XXS: return QK_K;
-        case GGML_TYPE_IQ2_XS:  return QK_K;
-        case GGML_TYPE_IQ3_XXS: return QK_K;
-        case GGML_TYPE_IQ1_S:   return QK_K;
-        case GGML_TYPE_IQ4_NL:  return QK4_NL;
-        case GGML_TYPE_IQ3_S:   return QK_K;
-        case GGML_TYPE_IQ2_S:   return QK_K;
-        case GGML_TYPE_IQ4_XS:  return QK_K;
-        case GGML_TYPE_I8:      return 1;
-        case GGML_TYPE_I16:     return 1;
-        case GGML_TYPE_I32:     return 1;
-        case GGML_TYPE_I64:     return 1;
-        case GGML_TYPE_F64:     return 1;
-        case GGML_TYPE_F32_E8M1: return 1;
+        case GGMLType::GGML_TYPE_F32:     return 1;
+        case GGMLType::GGML_TYPE_F16:     return 1;
+        case GGMLType::GGML_TYPE_Q4_0:    return QK4_0;
+        case GGMLType::GGML_TYPE_Q4_1:    return QK4_1;
+        case GGMLType::GGML_TYPE_Q5_0:    return QK5_0;
+        case GGMLType::GGML_TYPE_Q5_1:    return QK5_1;
+        case GGMLType::GGML_TYPE_Q8_0:    return QK8_0;
+        case GGMLType::GGML_TYPE_Q8_K:    return QK_K;
+        case GGMLType::GGML_TYPE_Q2_K:    return QK_K;
+        case GGMLType::GGML_TYPE_Q3_K:    return QK_K;
+        case GGMLType::GGML_TYPE_Q4_K:    return QK_K;
+        case GGMLType::GGML_TYPE_Q5_K:    return QK_K;
+        case GGMLType::GGML_TYPE_Q6_K:    return QK_K;
+        case GGMLType::GGML_TYPE_IQ2_XXS: return QK_K;
+        case GGMLType::GGML_TYPE_IQ2_XS:  return QK_K;
+        case GGMLType::GGML_TYPE_IQ3_XXS: return QK_K;
+        case GGMLType::GGML_TYPE_IQ1_S:   return QK_K;
+        case GGMLType::GGML_TYPE_IQ4_NL:  return QK4_NL;
+        case GGMLType::GGML_TYPE_IQ3_S:   return QK_K;
+        case GGMLType::GGML_TYPE_IQ2_S:   return QK_K;
+        case GGMLType::GGML_TYPE_IQ4_XS:  return QK_K;
+        case GGMLType::GGML_TYPE_I8:      return 1;
+        case GGMLType::GGML_TYPE_I16:     return 1;
+        case GGMLType::GGML_TYPE_I32:     return 1;
+        case GGMLType::GGML_TYPE_I64:     return 1;
+        case GGMLType::GGML_TYPE_F64:     return 1;
         default:                return 1;
     }
 }
@@ -132,13 +128,18 @@ static size_t CalculateTensorBytes(const TensorInfo& t) {
 // DeepSeekMoELoader Implementation
 // ============================================================================
 DeepSeekMoELoader::DeepSeekMoELoader()
-    : fileHandle_(INVALID_HANDLE_VALUE)
+#ifdef _WIN32
+    : fileHandle_(nullptr)
     , fileMapping_(nullptr)
+#else
+    : fileHandle_(-1)
+#endif
     , mappedBase_(nullptr)
     , fileSize_(0)
     , dataOffset_(0)
     , maxCacheBytes_(4ULL * 1024 * 1024 * 1024)
     , currentCacheBytes_(0)
+    , isLoaded_(false)
 {
 }
 
@@ -499,7 +500,7 @@ bool DeepSeekMoELoader::ParseGenericMoEMetadata() {
 // ============================================================================
 // Validation
 // ============================================================================
-bool MoEModelConfig::Validate() {
+bool MoEModelConfig::Validate() const {
     validationError.clear();
     
     // Check required fields
@@ -1039,14 +1040,7 @@ size_t DeepSeekMoELoader::DiscoverExpertTensors() {
     return expertTensors_.size();
 }
 
-const ExpertTensorInfo* DeepSeekMoELoader::GetExpertTensor(int layer, int expert) const {
-    for (const auto& info : expertTensors_) {
-        if (info.layerIdx == layer) {
-            return &info;
-        }
-    }
-    return nullptr;
-}
+// GetExpertTensor implementation removed - defined inline in header
 
 const void* DeepSeekMoELoader::LoadExpert(int layer, int expert) {
     if (progress_.cancelled.load()) return nullptr;
@@ -1141,12 +1135,12 @@ const void* DeepSeekMoELoader::LoadExpertInternal(int layer, int expert) {
             EvictLRU();
         }
         
-        DeepSeekExpertCacheEntry entry;
+        CachedExpert entry;
         entry.weights = buffer;
-        entry.weightBytes = expertBytes;
+        entry.size = expertBytes;
         entry.lastAccess = std::chrono::steady_clock::now();
         entry.accessCount = 1;
-        entry.isPinned = false;
+        entry.pinned = false;
         
         cache_[CacheKey{layer, expert}] = std::move(entry);
         currentCacheBytes_ += expertBytes;
@@ -1353,280 +1347,35 @@ std::vector<float> DeepSeekMoETestHarness::GenerateRandomEmbedding(size_t hidden
     return emb;
 }
 
-static size_t GetFileSizeHelper(const char* path) {
-    FILE* f = fopen(path, "rb");
-    if (!f) return 0;
-    fseek(f, 0, SEEK_END);
-    size_t size = ftell(f);
-    fclose(f);
-    return size;
-}
-
 DeepSeekMoETestHarness::TestResults 
 DeepSeekMoETestHarness::RunQuickTest(const char* ggufPath) {
     TestResults results;
-    auto totalStart = std::chrono::high_resolution_clock::now();
     
     printf("========================================\n");
     printf("MoE Quick Test\n");
     printf("========================================\n");
     printf("Model: %s\n", ggufPath);
-    printf("File size: %.2f GB\n", 
-           (double)GetFileSizeHelper(ggufPath) / (1024.0 * 1024.0 * 1024.0));
     
-    loader_ = std::make_unique<DeepSeekMoELoader>();
+    DeepSeekMoELoader loader;
     auto openStart = std::chrono::high_resolution_clock::now();
-    if (!loader_->Open(ggufPath, 4096)) {
-        snprintf(results.error, sizeof(results.error), "Failed to open model file");
+    if (!loader.Open(ggufPath, 4096)) {
+        results.errorMessage = "Failed to open model file";
         return results;
     }
     auto openEnd = std::chrono::high_resolution_clock::now();
-    results.parseTimeMs = std::chrono::duration_cast<std::chrono::microseconds>(openEnd - openStart).count() / 1000.0;
+    results.loadTimeMs = std::chrono::duration_cast<std::chrono::microseconds>(openEnd - openStart).count() / 1000.0;
     
-    results.expertTensorsFound = loader_->GetExpertTensorCount();
     results.success = true;
     results.peakMemoryMB = GetPeakMemoryMB();
-    
-    auto totalEnd = std::chrono::high_resolution_clock::now();
-    double totalMs = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - totalStart).count() / 1000.0;
     
     printf("\n========================================\n");
     printf("QUICK TEST RESULTS\n");
     printf("========================================\n");
-    printf("Parse time:       %.2f ms\n", results.parseTimeMs);
-    printf("Expert tensors:   %zu\n", results.expertTensorsFound);
+    printf("Load time:        %.2f ms\n", results.loadTimeMs);
     printf("Peak memory:      %zu MB\n", results.peakMemoryMB);
-    printf("Total time:       %.2f ms\n", totalMs);
     printf("========================================\n");
     
     return results;
-}
-
-DeepSeekMoETestHarness::TestResults 
-DeepSeekMoETestHarness::RunStreamingTest(const TestConfig& config) {
-    TestResults results;
-    auto totalStart = std::chrono::high_resolution_clock::now();
-    
-    printf("========================================\n");
-    printf("MoE STREAMING TEST\n");
-    printf("========================================\n");
-    printf("Model: %s\n", config.modelPath.c_str());
-    printf("Test tokens: %zu, Warmup: %zu\n", 
-           config.numTestTokens, config.warmupTokens);
-    printf("Cache: %zu MB\n", config.cacheSizeMB);
-    
-    loader_ = std::make_unique<DeepSeekMoELoader>();
-    if (!loader_->Open(config.modelPath.c_str(), config.cacheSizeMB)) {
-        snprintf(results.error, sizeof(results.error), "Failed to open model");
-        return results;
-    }
-    
-    printf("Experts: %zu, Active per token: %zu\n",
-           loader_->GetConfig().numExperts, loader_->GetConfig().numExpertsPerToken);
-    
-    auto discoverStart = std::chrono::high_resolution_clock::now();
-    results.expertTensorsFound = loader_->GetExpertTensorCount();
-    auto discoverEnd = std::chrono::high_resolution_clock::now();
-    results.parseTimeMs = std::chrono::duration_cast<std::chrono::microseconds>(discoverEnd - discoverStart).count() / 1000.0;
-    results.discoveryTimeMs = results.parseTimeMs;
-    
-    const auto& deepseekCfg = loader_->GetConfig();
-    int maxLayers = config.maxLayers > 0 ? config.maxLayers : static_cast<int>(deepseekCfg.numHiddenLayers);
-    int maxExperts = config.maxExperts > 0 ? config.maxExperts : static_cast<int>(deepseekCfg.numExperts);
-    
-    // Warmup
-    auto warmupStart = std::chrono::high_resolution_clock::now();
-    for (int layer = 0; layer < maxLayers; ++layer) {
-        int warmupExperts = std::min(maxExperts, static_cast<int>(deepseekCfg.numExpertsPerToken));
-        for (int expert = 0; expert < warmupExperts; ++expert) {
-            const void* w = loader_->LoadExpert(layer, expert);
-            (void)w;
-        }
-    }
-    auto warmupEnd = std::chrono::high_resolution_clock::now();
-    results.warmupTimeMs = std::chrono::duration_cast<std::chrono::microseconds>(warmupEnd - warmupStart).count() / 1000.0;
-    
-    // Stream load all requested experts
-    auto streamStart = std::chrono::high_resolution_clock::now();
-    int totalExpertsLoaded = 0;
-    for (int layer = 0; layer < maxLayers; ++layer) {
-        for (int expert = 0; expert < maxExperts; ++expert) {
-            const void* w = loader_->LoadExpert(layer, expert);
-            if (w) totalExpertsLoaded++;
-        }
-    }
-    auto streamEnd = std::chrono::high_resolution_clock::now();
-    results.totalLoadTimeMs = std::chrono::duration_cast<std::chrono::microseconds>(streamEnd - streamStart).count() / 1000.0;
-    results.expertTensorsLoaded = totalExpertsLoaded;
-    
-    // Get stats
-    auto stats = loader_->GetStats();
-    results.cacheHits = stats.cacheHits;
-    results.cacheMisses = stats.cacheMisses;
-    results.cacheEvictions = stats.evictions;
-    results.avgLoadTimeMs = stats.avgLoadTimeMs;
-    results.totalBytesStreamed = stats.bytesStreamed;
-    
-    // Inference benchmark: generate tokens with random routing
-    auto inferStart = std::chrono::high_resolution_clock::now();
-    moeLayer_ = std::make_unique<MoELayer>();
-    MoEConfig moeConfig;
-    moeConfig.numExperts = static_cast<int>(deepseekCfg.numExperts);
-    moeConfig.numActiveExperts = static_cast<int>(deepseekCfg.numExpertsPerToken);
-    moeConfig.hiddenDim = loader_->GetConfig().hiddenSize;
-    moeConfig.expertDim = loader_->GetConfig().moeIntermediateSize;
-    moeLayer_->Initialize(moeConfig);
-    
-    // Run forward passes
-    for (size_t i = 0; i < config.numTestTokens; ++i) {
-        auto input = GenerateRandomEmbedding(moeConfig.hiddenDim);
-        std::vector<float> output(moeConfig.hiddenDim);
-        moeLayer_->Forward(input.data(), output.data(), 1);
-    }
-    auto inferEnd = std::chrono::high_resolution_clock::now();
-    
-    double inferMs = std::chrono::duration_cast<std::chrono::microseconds>(inferEnd - inferStart).count() / 1000.0;
-    results.inferenceTimeMs = inferMs;
-    results.tokensPerSecond = config.numTestTokens / (inferMs / 1000.0);
-    results.latencyPerTokenMs = inferMs / config.numTestTokens;
-    results.outputTokensGenerated = (int)config.numTestTokens;
-    
-    // Get routing stats
-    auto& moeStats = moeLayer_->GetRouter().GetStats();
-    results.loadBalance = moeStats.loadBalance;
-    
-    results.peakMemoryMB = GetPeakMemoryMB();
-    results.success = true;
-    
-    auto totalEnd = std::chrono::high_resolution_clock::now();
-    double totalMs = std::chrono::duration_cast<std::chrono::microseconds>(totalEnd - totalStart).count() / 1000.0;
-    
-    printf("\n========================================\n");
-    printf("STREAMING TEST RESULTS\n");
-    printf("========================================\n");
-    printf("Expert tensors found:  %zu\n", results.expertTensorsFound);
-    printf("Expert tensors loaded: %zu\n", results.expertTensorsLoaded);
-    printf("Bytes streamed:        %.2f MB\n", 
-           results.totalBytesStreamed / (1024.0 * 1024.0));
-    printf("Parse time:            %.2f ms\n", results.parseTimeMs);
-    printf("Warmup time:           %.2f ms\n", results.warmupTimeMs);
-    printf("Stream load time:      %.2f ms\n", results.totalLoadTimeMs);
-    printf("Avg load per expert:   %.2f ms\n", results.avgLoadTimeMs);
-    printf("Cache hits/misses:     %zu / %zu\n", 
-           results.cacheHits, results.cacheMisses);
-    printf("Cache evictions:       %zu\n", results.cacheEvictions);
-    printf("----------------------------------------\n");
-    printf("Inference time:        %.2f ms\n", results.inferenceTimeMs);
-    printf("Tokens per second:     %.2f TPS\n", results.tokensPerSecond);
-    printf("Latency per token:     %.2f ms\n", results.latencyPerTokenMs);
-    printf("Load balance:          %.4f\n", results.loadBalance);
-    printf("Peak memory:           %zu MB\n", results.peakMemoryMB);
-    printf("Total time:            %.2f ms\n", totalMs);
-    printf("========================================\n");
-    
-    return results;
-}
-
-DeepSeekMoETestHarness::TestResults 
-DeepSeekMoETestHarness::RunExpertDispatchTest(const TestConfig& config) {
-    TestResults results;
-    
-    printf("========================================\n");
-    printf("MoE EXPERT DISPATCH TEST\n");
-    printf("========================================\n");
-    
-    loader_ = std::make_unique<DeepSeekMoELoader>();
-    if (!loader_->Open(config.modelPath.c_str(), config.cacheSizeMB)) {
-        snprintf(results.error, sizeof(results.error), "Failed to open model");
-        return results;
-    }
-    
-    const auto& deepseekCfg = loader_->GetConfig();
-    printf("Experts: %zu, Active per token: %zu\n", deepseekCfg.numExperts, deepseekCfg.numExpertsPerToken);
-    
-    moeLayer_ = std::make_unique<MoELayer>();
-    MoEConfig moeConfig;
-    moeConfig.numExperts = static_cast<int>(deepseekCfg.numExperts);
-    moeConfig.numActiveExperts = static_cast<int>(deepseekCfg.numExpertsPerToken);
-    moeConfig.hiddenDim = loader_->GetConfig().hiddenSize;
-    moeConfig.expertDim = loader_->GetConfig().moeIntermediateSize;
-    moeLayer_->Initialize(moeConfig);
-    
-    // Test routing
-    std::vector<int> expertUsage(deepseekCfg.numExperts, 0);
-    std::vector<float> entropyTracker(deepseekCfg.numExperts, 0.0f);
-    
-    auto testStart = std::chrono::high_resolution_clock::now();
-    
-    for (size_t i = 0; i < config.numTestTokens; ++i) {
-        auto input = GenerateRandomEmbedding(moeConfig.hiddenDim);
-        auto route = moeLayer_->GetRouter().Route(input.data());
-        
-        for (const auto& expert : route.topExperts) {
-            if (expert.expertId >= 0 && expert.expertId < static_cast<int>(deepseekCfg.numExperts)) {
-                expertUsage[expert.expertId]++;
-                entropyTracker[expert.expertId] += expert.weight;
-            }
-        }
-        
-        // Load and execute routed experts
-        for (const auto& expert : route.topExperts) {
-            const void* weights = loader_->LoadExpert(0, expert.expertId);
-            (void)weights;
-        }
-        
-        std::vector<float> output(moeConfig.hiddenDim);
-        moeLayer_->Forward(input.data(), output.data(), 1);
-    }
-    
-    auto testEnd = std::chrono::high_resolution_clock::now();
-    double testMs = std::chrono::duration_cast<std::chrono::microseconds>(testEnd - testStart).count() / 1000.0;
-    
-    // Compute routing entropy
-    int usedExperts = 0;
-    float totalEntropy = 0;
-    for (size_t i = 0; i < deepseekCfg.numExperts; ++i) {
-        if (expertUsage[i] > 0) usedExperts++;
-    }
-    for (size_t i = 0; i < deepseekCfg.numExperts; ++i) {
-        if (expertUsage[i] > 0) {
-            float p = static_cast<float>(expertUsage[i]) / static_cast<float>(config.numTestTokens * deepseekCfg.numExpertsPerToken);
-            if (p > 0) {
-                totalEntropy -= p * log2f(p);
-            }
-        }
-    }
-    float maxEntropy = log2f(static_cast<float>(deepseekCfg.numExperts));
-    float normalizedEntropy = totalEntropy / maxEntropy;
-    results.routingEntropy = normalizedEntropy;
-    
-    auto stats = loader_->GetStats();
-    results.cacheHits = stats.cacheHits;
-    results.cacheMisses = stats.cacheMisses;
-    results.peakMemoryMB = GetPeakMemoryMB();
-    results.success = true;
-    results.inferenceTimeMs = testMs;
-    results.tokensPerSecond = config.numTestTokens / (testMs / 1000.0);
-    results.outputTokensGenerated = (int)config.numTestTokens;
-    
-    printf("\n========================================\n");
-    printf("EXPERT DISPATCH TEST RESULTS\n");
-    printf("========================================\n");
-    printf("Tokens processed:     %zu\n", config.numTestTokens);
-    printf("Experts used:         %d / %zu\n", usedExperts, deepseekCfg.numExperts);
-    printf("Routing entropy:      %.4f / 1.0\n", results.routingEntropy);
-    printf("Cache hit rate:       %.1f%%\n", 
-           stats.cacheHits * 100.0 / (stats.cacheHits + stats.cacheMisses + 0.001));
-    printf("Tokens per second:    %.2f TPS\n", results.tokensPerSecond);
-    printf("Peak memory:          %zu MB\n", results.peakMemoryMB);
-    printf("========================================\n");
-    
-    return results;
-}
-
-DeepSeekMoETestHarness::TestResults 
-DeepSeekMoETestHarness::RunTest(const TestConfig& config) {
-    return RunStreamingTest(config);
 }
 
 } // namespace Deep2

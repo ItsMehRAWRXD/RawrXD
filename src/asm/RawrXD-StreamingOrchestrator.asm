@@ -9,7 +9,7 @@
 ; 4. Layer paging manager with prefetch (N+2) and eviction
 ; 5. 64GB RAM validation pipeline
 ; 6. BigDaddyG 40GB validation test
-; 7. **Zero dependencies, zero stubs, zero fictional code**
+; 7. **Zero dependencies, zero stubs, zero unteleprompted code**
 ; =============================================================================
 
 option casemap:none

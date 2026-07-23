@@ -25,11 +25,11 @@ namespace Deep2 {
 #if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #include <intrin.h>
 #define DEEP2_CPUID(level, eax, ebx, ecx, edx) \
-    int info[4]; __cpuid(info, level); \
-    eax = info[0]; ebx = info[1]; ecx = info[2]; edx = info[3];
+    { int _info[4]; __cpuid(_info, level); \
+    eax = _info[0]; ebx = _info[1]; ecx = _info[2]; edx = _info[3]; }
 #define DEEP2_CPUIDEX(level, subleaf, eax, ebx, ecx, edx) \
-    int info[4]; __cpuidex(info, level, subleaf); \
-    eax = info[0]; ebx = info[1]; ecx = info[2]; edx = info[3];
+    { int _info[4]; __cpuidex(_info, level, subleaf); \
+    eax = _info[0]; ebx = _info[1]; ecx = _info[2]; edx = _info[3]; }
 #else
 #include <cpuid.h>
 #define DEEP2_CPUID(level, eax, ebx, ecx, edx) \
@@ -161,9 +161,9 @@ const char* UniversalTensorProxy::TypeName() const {
 
 // --- F32 GEMV (scalar) ---
 static void gemv_f32_scalar(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const float* weights = reinterpret_cast<const float*>(w);
@@ -203,9 +203,9 @@ static inline float f16_to_f32(uint16_t h) {
 }
 
 static void gemv_f16_scalar(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const uint16_t* weights = reinterpret_cast<const uint16_t*>(w);
@@ -220,15 +220,12 @@ static void gemv_f16_scalar(
 }
 
 // --- Q8_0 GEMV (scalar) ---
-struct block_q8_0 {
-    float d;
-    int8_t qs[32];
-};
+// block_q8_0 defined in GGUFLoader.hpp
 
 static void gemv_q8_0_scalar(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
@@ -248,17 +245,12 @@ static void gemv_q8_0_scalar(
 }
 
 // --- Q4_K GEMV (scalar) ---
-struct block_q4_K {
-    uint16_t d;
-    uint16_t dmin;
-    uint8_t  scales[12];
-    uint8_t  qs[128];
-};
+// block_q4_K defined in GGUFLoader.hpp
 
 static void gemv_q4_k_scalar(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
@@ -291,17 +283,12 @@ static void gemv_q4_k_scalar(
 }
 
 // --- Q6_K GEMV (scalar) ---
-struct block_q6_K {
-    uint8_t ql[128];
-    uint8_t qh[64];
-    int8_t  scales[16];
-    uint16_t d;
-};
+// block_q6_K defined in GGUFLoader.hpp
 
 static void gemv_q6_k_scalar(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(w);
@@ -332,7 +319,7 @@ static void gemv_q6_k_scalar(
 // ===========================================================================
 // AVX-512 KERNELS (selected when cpu_.avx512f && cpu_.avx512bw)
 // ===========================================================================
-#if defined(__AVX512F__) || (defined(_MSC_VER) && defined(__AVX2__)
+#if defined(__AVX512F__) || (defined(_MSC_VER) && defined(__AVX2__))
 #define DEEP2_HAS_AVX512 1
 #else
 // Runtime detection: we still compile the code, guarded by cpu flags
@@ -341,9 +328,9 @@ static void gemv_q6_k_scalar(
 
 // --- F32 GEMV (AVX-512) ---
 static void gemv_f32_avx512(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const float* weights = reinterpret_cast<const float*>(w);
@@ -369,9 +356,9 @@ static void gemv_f32_avx512(
 
 // --- F16 GEMV (AVX-512 with F16C) ---
 static void gemv_f16_avx512(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const uint16_t* weights = reinterpret_cast<const uint16_t*>(w);
@@ -399,9 +386,9 @@ static void gemv_f16_avx512(
 // nibbles simultaneously, applies super-block scale/min, and FMA's
 // directly into the accumulator with zero scalar branching.
 static void gemv_q4_k_avx512(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
@@ -459,9 +446,9 @@ static void gemv_q4_k_avx512(
 
 // --- Q8_0 GEMV (AVX-512) ---
 static void gemv_q8_0_avx512(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
@@ -492,9 +479,9 @@ static void gemv_q8_0_avx512(
 // ===========================================================================
 
 static void gemv_f32_avx2(
-    const uint8_t* __restrict__ w,
-    const float*  __restrict__ x,
-    float*        __restrict__ y,
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
     const float* weights = reinterpret_cast<const float*>(w);

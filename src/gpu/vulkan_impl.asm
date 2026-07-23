@@ -141585,7 +141585,7 @@ END
 ; 3. Performs structural analysis (identifies FFN/Attention patterns)
 ; 4. Distills to .exec format (operators + state rules, NO tensors)
 ; 5. **NEVER loads massive tensor data** (physically honest)
-; 6. Zero C dependencies, zero stubs, zero fictional code
+; 6. Zero C dependencies, zero stubs, zero unteleprompted code
 ; =============================================================================
 
 option casemap:none
@@ -142971,7 +142971,7 @@ END
 ; 4. Layer paging manager with prefetch (N+2) and eviction
 ; 5. 64GB RAM validation pipeline
 ; 6. BigDaddyG 40GB validation test
-; 7. **Zero dependencies, zero stubs, zero fictional code**
+; 7. **Zero dependencies, zero stubs, zero unteleprompted code**
 ; =============================================================================
 
 option casemap:none
@@ -145645,7 +145645,7 @@ END
 ; 4. Manages memory arenas (weights/activations/temp)
 ; 5. Executes layer-by-layer inference
 ; 6. Provides debugging and introspection
-; 7. **Zero dependencies, zero stubs, zero fictional code**
+; 7. **Zero dependencies, zero stubs, zero unteleprompted code**
 ; =============================================================================
 
 option casemap:none

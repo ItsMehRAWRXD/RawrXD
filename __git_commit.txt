@@ -1,0 +1,11 @@
+[session_7f014eb4 195b4c0fd] hotpatch: Replace 4 brain stem components with corrected bottle implementation
+ 8 files changed, 1809 insertions(+)
+ create mode 100644 src/executive/AutonomousLoop.cpp
+ create mode 100644 src/executive/AutonomousLoop.hpp
+ create mode 100644 src/executive/CognitiveMemory.cpp
+ create mode 100644 src/executive/CognitiveMemory.hpp
+ create mode 100644 src/executive/ExecutiveDirector.cpp
+ create mode 100644 src/executive/ExecutiveDirector.hpp
+ create mode 100644 src/executive/WorldModel.cpp
+ create mode 100644 src/executive/WorldModel.hpp
+EXIT: True

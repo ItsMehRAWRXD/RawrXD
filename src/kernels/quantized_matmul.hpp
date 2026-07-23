@@ -249,8 +249,9 @@ public:
         }
         
         // Register hot path kernels
+        // Note: Only register ONE kernel per dimension. The 4-way kernel is experimental.
         RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K>());
-        RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K_4Way>());  // VAL-Q4.2
+        // RegisterKernel(4096, 4096, std::make_shared<QuantizedMatMul_4K_4Way>());  // VAL-Q4.2 - disabled for now
         RegisterKernel(5120, 5120, std::make_shared<QuantizedMatMul_5K>());
 
         // Register fallback

@@ -22,6 +22,7 @@ class WorldModel;
 class AutonomousLoop;
 class GoalManager;
 class MetaAgentLayer;
+class BlockingAgent;
 
 // ============================================================
 // Mission: One unit of work for the system
@@ -120,6 +121,7 @@ public:
     CognitiveMemory& getMemory() { return *memory_; }
     WorldModel& getWorldModel() { return *worldModel_; }
     AutonomousLoop& getLoop() { return *loop_; }
+    BlockingAgent& getBlockingAgent() { return *blockingAgent_; }
     
     const Mission* getMission(uint64_t id);
     std::vector<Mission> getActiveMissions();
@@ -127,7 +129,7 @@ public:
     uint64_t getCurrentMissionId() { return currentMissionId_.load(); }
     void setCurrentMissionId(uint64_t id) { currentMissionId_.store(id); }
     
-    bool isRunning() { return loop_ && loop_->isRunning(); }
+    bool isRunning();
     bool isInitialized() { return initialized_.load(); }
 
 private:
@@ -141,6 +143,7 @@ private:
     std::unique_ptr<CognitiveMemory> memory_;
     std::unique_ptr<WorldModel> worldModel_;
     std::unique_ptr<AutonomousLoop> loop_;
+    std::unique_ptr<BlockingAgent> blockingAgent_;
     
     std::unordered_map<uint64_t, Mission> missions_;
     std::queue<uint64_t> missionQueue_;

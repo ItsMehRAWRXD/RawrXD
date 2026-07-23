@@ -6,6 +6,7 @@
 #include "CognitiveMemory.hpp"
 #include "WorldModel.hpp"
 #include "ExecutiveDirector.hpp"
+#include "AutonomousLoop_Integration.hpp"
 
 namespace RawrXD::Executive {
 
@@ -300,6 +301,12 @@ AutonomousLoop::ActResult AutonomousLoop::act(const PlanResult& plan) {
     result.tokensConsumed = 0;
     result.tokensSaved = 0;
     
+    // Generate unique goal ID for this ACT phase
+    uint64_t goalId = cycleCount_.load();
+    
+    // SWARM INTEGRATION: Record estimates before execution
+    SWARM_ACT_START(goalId, plan.actions, plan.estimatedCost);
+    
     // Dispatch actions to swarm
     for (const auto& action : plan.actions) {
         result.dispatchedActions.push_back(action);
@@ -310,10 +317,26 @@ AutonomousLoop::ActResult AutonomousLoop::act(const PlanResult& plan) {
         printf("[Loop]   ACT: %s\n", action.c_str());
     }
     
+    // Simulate token consumption (in real implementation: from actual execution)
+    result.tokensConsumed = static_cast<size_t>(plan.estimatedCost * 1.2f);  // 20% overhead
+    result.tokensSaved = 0;
+    
     result.efficiency = result.tokensConsumed > 0
         ? static_cast<float>(result.tokensSaved) /
           (result.tokensSaved + result.tokensConsumed)
         : 0.0f;
+    
+    // SWARM INTEGRATION: Record actuals after execution
+    SWARM_ACT_END(goalId, result.tokensConsumed, result.tokensSaved, 0);
+    
+    // Check for recommendations
+    auto recommendations = SWARM_GET_RECOMMENDATIONS(goalId);
+    if (!recommendations.empty()) {
+        printf("[Loop]   Swarm Recommendations:\n");
+        for (const auto& rec : recommendations) {
+            printf("[Loop]     - %s\n", rec.c_str());
+        }
+    }
     
     return result;
 }

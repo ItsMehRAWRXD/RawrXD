@@ -1,0 +1,1223 @@
+On branch session_7f014eb4
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   src/deep2/Deep2Engine.cpp
+	modified:   src/deep2/TreeAttention_Fused_VAL038.asm
+	modified:   src/deep2/softmax_lut_avx512.asm
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .github/workflows/codeql.yml
+	modified:   256/max_streamable_benchmark_20260419_013329.md
+	modified:   CMakeLists.txt
+	modified:   FICTIONALITY_AUDIT_REPORT_20260511.md
+	modified:   Full Source/architectural_enhancements/architectural_enhancement_report.md
+	modified:   Full Source/audit_output/DeploymentAudit.md
+	modified:   Full Source/build_qt_free/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   Full Source/docs/archive/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   Full Source/runoff/docs_txt_ps1/part_0001/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   Full Source/runoff/docs_txt_ps1/part_0002/SOURCE_STATUS_REPORT.md
+	modified:   OrganizedPiProject/projects/Spotify ADS Remover 1.2.62.580/App/Spotify/Apps/xpui.bak
+	modified:   README.md
+	modified:   RawrXD-ModelLoader/services/copilot-auth/node_modules/whatwg-url/README.md
+	modified:   RawrXD-ModelLoader/services/copilot-proxy/node_modules/whatwg-url/README.md
+	modified:   _deps/googletest-src/docs/gmock_cook_book.md
+	modified:   architectural_enhancements/architectural_enhancement_report.md
+	modified:   asm/KERNEL_INVENTORY.md
+	modified:   audit_output/DeploymentAudit.md
+	modified:   audit_results/Build_candidates.md
+	modified:   audit_results/GPU_candidates.md
+	modified:   audit_results/Kernel_candidates.md
+	modified:   audit_results/Loader_candidates.md
+	modified:   audit_results/ReverseEngineering_candidates.md
+	modified:   benchmarks/phase_e_validation/reports/phase_e/phase_e_report_2026-07-13_09-00-05.md
+	modified:   both_tres_systematic_report.md
+	modified:   build-autocomplete/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-codex-full/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-codex-test/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-ide-final/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-ide-new/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-master/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-ninja-clean/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-ninja-infer/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-ninja/.ninja_deps
+	modified:   build-ninja/.ninja_log
+	modified:   build-ninja/build.ninja
+	modified:   build-ninja/tests/CTestTestfile.cmake
+	modified:   build-ninja2/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-release/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-sovereign/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-supernode/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build-test/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build3/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_ci_probe/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_core_test/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_escalate/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_fix3/.ninja_deps
+	modified:   build_fix3/.ninja_log
+	modified:   build_fix3/build.ninja
+	modified:   build_gguf_profile_test/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_gguf_tight/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_gguf_tight2/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_ggufplan/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_hf_tok/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_iso/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_model_lab/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_ninja/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_pipeline/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_prod/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_serve_smoke/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_skill_test/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_smoke_behavior/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_smoke_verify2_ninja/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_spm_proto/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_streamer/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_swarm/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_toktest/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   build_v2/_deps/googletest-src/docs/gmock_cook_book.md
+	modified:   compilers/test_results/COMPILER_TEST_REPORT.md
+	modified:   deploy/docs/AGENTIC_REALITY_AUDIT_AUTO.md
+	modified:   deploy/docs/MAINFRAME_GGUF_BUILD_REALITY_CHECK.md
+	modified:   deploy/docs/REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md
+	modified:   deploy/docs/archive/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   docs/AGENTIC_REALITY_AUDIT_AUTO.md
+	modified:   docs/BENCHMARK_KERNEL_VARIANTS.md
+	modified:   docs/MAINFRAME_GGUF_BUILD_REALITY_CHECK.md
+	modified:   docs/REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md
+	modified:   docs/archive/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   gui/ide_chatbot.html
+	modified:   gui/ide_chatbot_engine.js
+	modified:   gui/webserver.asm
+	modified:   history/runoff/part_0015/d__RawrXD-ExecAI_DELIVERY-COMPLETE-ANALYZER.md
+	modified:   history/runoff/part_0015/d__RawrXD-ExecAI_DELIVERY_COMPLETE.md
+	modified:   history/runoff/part_0015/d__RawrXD-ExecAI_MASM64-ANALYZER-DOCUMENTATION.md
+	modified:   history/runoff/part_0015/d__RawrXD-ExecAI_README-COMPLETE-SYSTEM.md
+	modified:   history/runoff/part_0015/d__RawrXD-ExecAI_README.md
+	modified:   history/runoff/part_0016/d__RawrXD-production-lazy-init_REFERENCE_WIDGETS_INTEGRATION_SUMMARY.md
+	modified:   itsmehrawrxd-master/REAL_ONLINE_COMPILATION_GUIDE.md
+	modified:   native_toolchain/api_test_native.exe.backup
+	modified:   native_toolchain/bridge_stage1.exe.backup
+	modified:   native_toolchain/c_compiler_minimal.exe.backup
+	modified:   native_toolchain/c_lexer_test.exe.backup
+	modified:   native_toolchain/demo_linked.exe.backup
+	modified:   native_toolchain/language_backend_generator.exe.backup
+	modified:   native_toolchain/launcher_minimal.exe.backup
+	modified:   native_toolchain/launcher_minimal2.exe.backup
+	modified:   native_toolchain/linker_v2.exe.backup
+	modified:   native_toolchain/linker_v3.exe.backup
+	modified:   native_toolchain/linker_v4.exe.backup
+	modified:   native_toolchain/linker_v6.exe.backup
+	modified:   native_toolchain/linker_v7.exe.backup
+	modified:   native_toolchain/linker_with_imports.exe.backup
+	modified:   native_toolchain/linker_with_relocations.exe.backup
+	modified:   native_toolchain/minimal_assembler.exe.backup
+	modified:   native_toolchain/minimal_assembler_new.exe.backup
+	modified:   native_toolchain/minimal_assembler_v2.exe.backup
+	modified:   native_toolchain/minimal_assembler_v3.exe.backup
+	modified:   native_toolchain/minimal_assembler_v4.exe.backup
+	modified:   native_toolchain/minimal_assembler_v5.exe.backup
+	modified:   native_toolchain/minimal_assembler_v6.exe.backup
+	modified:   native_toolchain/minimal_assembler_v7.exe.backup
+	modified:   native_toolchain/minimal_assembler_with_relocs.exe.backup
+	modified:   native_toolchain/minimal_linker.exe.backup
+	modified:   native_toolchain/minimal_test.exe.backup
+	modified:   native_toolchain/native_librarian.exe.backup
+	modified:   native_toolchain/self_hosting_assembler.exe.backup
+	modified:   native_toolchain/self_hosting_v2.exe.backup
+	modified:   native_toolchain/sovereign_launcher.exe.backup
+	modified:   native_toolchain/stage1.exe.backup
+	modified:   native_toolchain/test.exe.backup
+	modified:   native_toolchain/test_call_exit.exe.backup
+	modified:   native_toolchain/test_data_rip.exe.backup
+	modified:   native_toolchain/test_data_section_v6.exe.backup
+	modified:   native_toolchain/test_demo.exe.backup
+	modified:   native_toolchain/test_exit2.exe.backup
+	modified:   native_toolchain/test_exit2_v7.exe.backup
+	modified:   native_toolchain/test_msvc.exe.backup
+	modified:   native_toolchain/test_multi_import.exe.backup
+	modified:   native_toolchain/test_multi_import_v4.exe.backup
+	modified:   native_toolchain/test_multi_import_v5.exe.backup
+	modified:   native_toolchain/test_proof.exe.backup
+	modified:   native_toolchain/test_simple.exe.backup
+	modified:   native_toolchain/test_universal.exe.backup
+	modified:   native_toolchain/test_with_imports.exe.backup
+	modified:   native_toolchain/universal_compiler.exe.backup
+	modified:   package.json
+	modified:   reconstructed/RawrXD-ExecAI/DELIVERY-COMPLETE-ANALYZER.md
+	modified:   reconstructed/RawrXD-ExecAI/DELIVERY/COMPLETE.md
+	modified:   reconstructed/RawrXD-ExecAI/MASM64-ANALYZER-DOCUMENTATION.md
+	modified:   reconstructed/RawrXD-ExecAI/README-COMPLETE-SYSTEM.md
+	modified:   reconstructed/RawrXD-ExecAI/README.md
+	modified:   reconstructed/RawrXD-production-lazy-init/REFERENCE/WIDGETS/INTEGRATION/SUMMARY.md
+	modified:   release/RawrXD-v15.0.1/docs/AGENTIC_REALITY_AUDIT_AUTO.md
+	modified:   release/RawrXD-v15.0.1/docs/MAINFRAME_GGUF_BUILD_REALITY_CHECK.md
+	modified:   release/RawrXD-v15.0.1/docs/REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md
+	modified:   release/RawrXD-v15.0.1/docs/archive/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   release/RawrXD-v15.0.4/docs/AGENTIC_REALITY_AUDIT_AUTO.md
+	modified:   release/RawrXD-v15.0.4/docs/BENCHMARK_KERNEL_VARIANTS.md
+	modified:   release/RawrXD-v15.0.4/docs/MAINFRAME_GGUF_BUILD_REALITY_CHECK.md
+	modified:   release/RawrXD-v15.0.4/docs/REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md
+	modified:   release/RawrXD-v15.0.4/docs/archive/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   runoff/root_docs_txt/part_0001/HEADLESS-AGENTIC-TEST-RESULTS.md
+	modified:   runoff/root_docs_txt/part_0001/IDE_BARE_RETURN_FUNCTIONS_AUDIT.md
+	modified:   runoff/root_docs_txt/part_0002/SOURCE_STATUS_REPORT.md
+	modified:   src/RawrXD_Lexer.cpp
+	modified:   src/agentic/GPU_DMA_COMPLETE_IMPLEMENTATIONS.asm
+	modified:   src/agentic/Phase3_Agent_Kernel_Complete.asm
+	modified:   src/agentic/RawrXD_Absolutely_Complete.asm
+	modified:   src/agentic/RawrXD_Compiler_Engine_Complete.asm
+	modified:   src/agentic/RawrXD_Compiler_Engine_Stubs_BACKUP.asm
+	modified:   src/agentic/RawrXD_Complete_Explicit.asm
+	modified:   src/agentic/RawrXD_Complete_Hidden_Logic.asm
+	modified:   src/agentic/RawrXD_Complete_Production_Fix.asm
+	modified:   src/agentic/RawrXD_Complete_Production_System.asm
+	modified:   src/agentic/RawrXD_Complete_ReverseEngineered.asm
+	modified:   src/agentic/RawrXD_Critical_Blockers_P0.asm
+	modified:   src/agentic/RawrXD_High_Priority_P1.asm
+	modified:   src/agentic/RawrXD_Low_Priority_P3.asm
+	modified:   src/agentic/RawrXD_Medium_Priority_P2.asm
+	modified:   src/agentic/RawrXD_Production_ReverseEngineered.asm
+	modified:   src/agentic/RawrXD_Titan_Master_GodSource_REVERSE_ENGINEERED.asm
+	modified:   src/agentic/Titan_FullLogic_Simplified_vs_Production.asm
+	modified:   src/agentic/Titan_Streaming_Orchestrator.asm
+	modified:   src/agentic/Titan_Streaming_Orchestrator_Complete.asm
+	modified:   src/agentic/gpu_dma_complete_final.asm
+	modified:   src/agentic/gpu_dma_complete_production.asm
+	modified:   src/agentic/gpu_dma_complete_production_FIXED.asm
+	modified:   src/agentic/memory_cleanup.asm
+	modified:   src/agentic/memory_cleanup_phase_integration.asm
+	modified:   src/agentic/rawrxd_complete_master_implementation.asm
+	modified:   src/agentic/rawrxd_final_complete_implementation.asm
+	modified:   src/agentic/titan_masm_real.asm
+	modified:   src/ai/digestion_scanner.asm
+	modified:   src/ai_model_caller_real.cpp
+	modified:   src/asm/RawrXD-AnalyzerDistiller.asm
+	modified:   src/asm/RawrXD-AnalyzerDistiller.asm.bak
+	modified:   src/asm/RawrXD-StreamingOrchestrator.asm
+	modified:   src/asm/RawrXD-StreamingOrchestrator.asm.bak
+	modified:   src/asm/RawrXD-VulkanKernel.asm
+	modified:   src/asm/RawrXD_StreamingWeights.asm
+	modified:   src/asm/RawrXD_UnifiedOverclockGovernor.asm
+	modified:   src/asm/RawrXD_UnifiedOverclock_Governor.asm
+	modified:   src/asm/quantum_beaconism_backend.asm.backup
+	modified:   src/asm/rawrxd_scc.asm
+	modified:   src/asm/vision_projection_kernel.asm
+	modified:   src/chat_workspace.cpp
+	modified:   src/chat_workspace.h
+	modified:   src/cli_shell.cpp
+	modified:   src/core/auto_feature_registry.cpp
+	modified:   src/core/ssot_handlers_ext_isolated.cpp
+	modified:   src/cpu_inference_engine.cpp
+	modified:   src/deep2/Deep2Engine.cpp
+	modified:   src/deep2/Deep2Engine.h
+	modified:   src/deep2/QuantKernelRegistry.hpp
+	modified:   src/deep2/TensorHop.cpp
+	modified:   src/deep2/TreeAttention_Fused_VAL038.asm
+	modified:   src/deep2/VAL038_Benchmark_Harness.cpp
+	modified:   src/deep2/softmax_lut_avx512.asm
+	modified:   src/deep2/sovereign_deep2_kernels.asm
+	modified:   src/deep2/sovereign_moe_fused.asm
+	modified:   src/digestion/RawrXD_DigestionEngine.asm
+	modified:   src/digestion/digestion_asm_x64.asm
+	modified:   src/direct_io/RAWRXD_BURSTCORE_X7.asm
+	modified:   src/direct_io/adaptive_burst_router.asm
+	modified:   src/direct_io/ghost_handshake.asm
+	modified:   src/direct_io/jit_lba_mapper.asm
+	modified:   src/direct_io/nvme_oracle_service.asm
+	modified:   src/direct_io/nvme_query.asm
+	modified:   src/direct_io/nvme_thermal_sidecar.asm
+	modified:   src/direct_io/nvme_thermal_sidecar_clean.asm
+	modified:   src/direct_io/nvme_thermal_sidecar_corrected.asm
+	modified:   src/direct_io/nvme_thermal_sidecar_entry.asm
+	modified:   src/direct_io/nvme_thermal_stressor.asm
+	modified:   src/direct_io/quantum_auth.asm
+	modified:   src/direct_io/sidecar_minimal.asm
+	modified:   src/direct_io/test_mmf.asm
+	modified:   src/dynamic_model_loader.cpp
+	modified:   src/extension_host/RawrXD_DAP.asm
+	modified:   src/extension_host/RawrXD_ExtensionHost.asm
+	modified:   src/extension_host/RawrXD_MarketplaceInstaller.asm
+	modified:   src/extension_host/RawrXD_WebView2.asm
+	modified:   src/foundation/Phase1_Master.asm
+	modified:   src/ggml-threading.cpp
+	modified:   src/ggml_masm/attention.asm
+	modified:   src/ggml_masm/compression.asm
+	modified:   src/ggml_masm/ggml_backend.asm
+	modified:   src/ggml_masm/quantization.asm
+	modified:   src/ggml_masm/tensor_ops.asm
+	modified:   src/gpu/cuda_impl.asm
+	modified:   src/gpu/rocm_impl.asm
+	modified:   src/gpu/vulkan_impl.asm
+	modified:   src/gpu_masm/cuda_api.asm
+	modified:   src/gpu_masm/gpu_backend.asm
+	modified:   src/gpu_masm/gpu_detection.asm
+	modified:   src/gpu_masm/gpu_kernels.asm
+	modified:   src/gpu_masm/gpu_memory.asm
+	modified:   src/gpu_masm/vk_instance.asm
+	modified:   src/gui_main.cpp
+	modified:   src/gui_main.h
+	modified:   src/hotpatch.cpp
+	modified:   src/ide_orchestrator.h
+	modified:   src/inference_gateway.cpp
+	modified:   src/kernels/quantized_matmul.asm
+	modified:   src/kernels/quantized_matmul.hpp
+	modified:   src/loader/Phase2_Master.asm
+	modified:   src/logging/Logger.h
+	modified:   src/masm/RawrXD_HttpChatServer.asm
+	modified:   src/masm/RawrXD_LazyTensorPager.asm
+	modified:   src/masm/RawrXD_NativeHttpServer.asm
+	modified:   src/masm/RawrXD_Streaming_Orchestrator.asm
+	modified:   src/masm/masm_solo_compiler.asm
+	modified:   src/masm/masm_solo_compiler_fixed.asm
+	modified:   src/masm/robust_tools.asm
+	modified:   src/memory/RawrXD_KVCache_QuantKernels.cpp
+	modified:   src/memory/RawrXD_KVCache_Residency_v2.cpp
+	modified:   src/memory/RawrXD_KVCache_Residency_v2.hpp
+	modified:   src/net/net.asm
+	modified:   src/observability_dashboard.cpp
+	modified:   src/orchestrator/Phase5_Master_Complete.asm
+	modified:   src/orchestrator/RawrXD_QuadBuffer_DMA_Orchestrator.asm
+	modified:   src/orchestrator/RawrXD_QuadBuffer_Validate.asm
+	modified:   src/orchestrator/RawrXD_Titan_Extensions.asm
+	modified:   src/reverse_engineering/CMakeLists.txt
+	modified:   src/reverse_engineering/binary_patcher.cpp
+	modified:   src/reverse_engineering/binary_patcher.h
+	modified:   src/scalar_server.cpp
+	modified:   src/shared_context.cpp
+	modified:   src/shared_context.h
+	modified:   src/todo_dock.cpp
+	modified:   src/tokenizer_selector.cpp
+	modified:   src/ultra_fast_inference.cpp
+	modified:   src/validation/kernels/masm/TreeAttention_Fused_VAL038.asm
+	modified:   src/validation/kernels/masm/softmax_lut_avx512.asm
+	modified:   src/win32app/HeadlessIDE.cpp
+	modified:   src/win32app/HeadlessIDE.h
+	modified:   src/win32app/mcp_hooks.asm
+	modified:   src/x64/rawrxd_audit.asm
+	modified:   src/x64/rawrxd_dual_engine.asm
+	modified:   src/x64/rawrxd_governor.asm
+	modified:   src/x64/rawrxd_quantum_beaconism.asm
+	modified:   test_results/Win32IDE_FeatureTest_20260425_013934.md
+	modified:   validation-reports/VAL-025-Report-20260719-190337.md
+	modified:   validation-reports/VAL-025-Report-20260719-190429.md
+	modified:   validation-reports/VAL-025-Report-20260719-190554.md
+	modified:   validation-reports/VAL-025_Certification_20260719_203641.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.github/workflows/sovereign-substrate-ci.yml
+	AGENT_PLATFORM_AUDIT_COMPLETE.md
+	API_REFERENCE.md
+	BUILD_SYSTEM_GUIDE.md
+	Build-MASM-Inference.ps1
+	CODE_OF_CONDUCT.md
+	COMPLETE_INDEX.md
+	COMPLETE_REVERSE_ENGINEERING_RAWRXD.md
+	COMPLETION_STATUS_2K_TPS.md
+	CONTROL_PLANE_UI_COMPLETE.md
+	DELIVERY_COMPLETE.md
+	DEMONSTRATION_ROADMAP.md
+	ENDPOINT_VALIDATION_REPORT.md
+	INTENT_GUARDRAILS_COMPLETE.md
+	INTENT_GUARDRAILS_IMPLEMENTATION_COMPLETE.md
+	INTENT_GUARDRAILS_TOGGLE_GUIDE.md
+	KIMI_K2_6_SWARM_INTEGRATION_COMPLETE.md
+	MASM_CONVERSION_SUMMARY.md
+	MASTER_SUMMARY.md
+	MIGRATION_GUIDE_SOVEREIGN.md
+	MODEL_ADAPTER_COMPLETE.md
+	PERSISTENCE_LAYER_COMPLETE.md
+	PRODUCTION_READINESS_CHECKLIST.md
+	PROJECT_COMPLETE.txt
+	PROJECT_MANIFEST.md
+	README_SOVEREIGN.md
+	REPOSITORY_MEMORY_GRAPH_COMPLETE.md
+	REVERSE_ENGINEERING_COMPLETE.md
+	REVERSE_ENGINEERING_SOVEREIGN_IDENTITY.md
+	SCRIPTS_GUIDE.md
+	SECURITY_HARDENING_COMPLETE.md
+	SECURITY_INTEGRATION_COMPLETE.md
+	SECURITY_POLICY.md
+	SOVEREIGN_AGENT_KERNEL_COMPLETE.md
+	SOVEREIGN_INTENT_ARCHITECTURE_COMPLETE.md
+	SOVEREIGN_PUPPETEER_ARCHITECTURE.md
+	SOVEREIGN_PUPPETEER_COMPLETE.md
+	SOVEREIGN_PUPPETEER_IMPLEMENTATION_COMPLETE.md
+	SOVEREIGN_PUPPETEER_INTEGRATION_SUMMARY.md
+	SOVEREIGN_REPLAY_ENGINE_COMPLETE.md
+	SOVEREIGN_SUBSTRATE_COMPLETE.md
+	SOVEREIGN_SUBSTRATE_DELIVERY.md
+	SOVEREIGN_SUBSTRATE_FINAL.md
+	SOVEREIGN_SUBSTRATE_MASTER_INDEX.md
+	SOVEREIGN_SUBSTRATE_PRODUCTION_READY.md
+	SOVEREIGN_SUBSTRATE_SUMMARY.md
+	START_HERE_SOVEREIGN.md
+	TOGGLE_QUICK_REFERENCE.md
+	TOOL_SYSTEM_COMPLETE.md
+	TROUBLESHOOTING.md
+	UNLINKED_STUBS_FULL.txt
+	UNLINKED_STUBS_REPORT.txt
+	UNLINKED_STUBS_SUMMARY.md
+	VAL038_EXECUTION_STATUS.md
+	VERIFICATION_CHECKLIST.md
+	VERSION_HISTORY.md
+	__git_status.txt
+	build-ninja-swarm/
+	build_agentic_platform.bat
+	build_masm_pure.bat
+	build_pattern_suite.bat
+	build_pattern_suite_full.bat
+	build_pattern_suite_gcc.bat
+	build_sovereign.bat
+	build_sovereign_puppeteer.bat
+	build_val000_complete.bat
+	build_val038.ps1
+	cmake/IntentGuardrails.cmake
+	cmake/SovereignSubstrate.cmake
+	config/sovereign.json
+	configs/BigDaddyG-Reverse-Model-v1.5.json
+	decrypt_payload.ps1
+	demo/README.md
+	demo/demo_sovereign_substrate.cpp
+	docker/Dockerfile.sovereign
+	docker/docker-compose.sovereign.yml
+	docs/UniversalRuntimeArchitecture.md
+	docs/VIEWSTATE_REVERSE_ENGINEERING.md
+	endpoint_validation_20260720_191303.json
+	endpoint_validation_20260720_194530.json
+	endpoint_validation_20260720_194755.json
+	endpoint_validator.bat
+	endpoint_validator.ps1
+	endpoint_validator.py
+	endpoint_validator_clean.ps1
+	endpoint_validator_simple.ps1
+	examples/SOVEREIGN_EXAMPLES.md
+	examples/api_integration_example.cpp
+	examples/intent_guardrails_example.cpp
+	examples/python_integration_example.py
+	examples/sovereign_agent_demo.cpp
+	examples/websocket_client_example.js
+	extensions/copilot-throttle/
+	find_stubs.py
+	find_stubs_v2.py
+	find_unlinked_stubs.ps1
+	find_unlinked_stubs_fast.ps1
+	include/shared_context.h
+	launch-throttled.ps1
+	launch.bat
+	scripts/ABSOLUTE-FINAL-SUMMARY.md
+	scripts/AUTOMATION-SUITE-SUMMARY.md
+	scripts/COMPLETE-SUITE-DELIVERABLE.md
+	scripts/ENTERPRISE-SUITE-COMPLETE.md
+	scripts/FINAL-COMPLETE-SUMMARY.md
+	scripts/FINAL-COMPLETION-REPORT.md
+	scripts/FINAL-DELIVERABLE-SUMMARY.md
+	scripts/FINAL-MASTER-SUMMARY.md
+	scripts/FINAL-SUITE-COMPLETE.md
+	scripts/FINAL-TOOLING-INVENTORY.md
+	scripts/GRAND-FINALE.md
+	scripts/PROJECT-COMPLETION-SUMMARY.md
+	scripts/QUICK-START-GUIDE.md
+	scripts/README-Production-Tooling.md
+	scripts/SESSION-SUMMARY.md
+	scripts/THE-ABSOLUTE-FINAL-COMPLETE-v2.md
+	scripts/THE-ABSOLUTE-FINAL-COMPLETE.md
+	scripts/THE-FINAL-COMPLETE.md
+	scripts/THE-ULTIMATE-FINAL.md
+	scripts/ULTIMATE-SUITE-FINAL.md
+	scripts/ab-testing-framework.ps1
+	scripts/advanced-monitoring-suite.ps1
+	scripts/analyze-unlinked-files.ps1
+	scripts/api-contract-tester.ps1
+	scripts/backup-disaster-recovery-manager.ps1
+	scripts/benchmark.sh
+	scripts/build-orchestrator.ps1
+	scripts/canary-analysis.ps1
+	scripts/cicd-pipeline-integration.ps1
+	scripts/cmake-generator.ps1
+	scripts/code-quality-gate.ps1
+	scripts/data-pipeline-validator.ps1
+	scripts/dependency-visualizer.ps1
+	scripts/deploy-sovereign.ps1
+	scripts/deploy-sovereign.sh
+	scripts/developer-experience-enhancer.ps1
+	scripts/distributed-training-coordinator.ps1
+	scripts/documentation-generator.ps1
+	scripts/execute-analysis.ps1
+	scripts/feature-flags-manager.ps1
+	scripts/ggml-optimizer.ps1
+	scripts/git-workflow-automation.ps1
+	scripts/gpu-stack-manager.ps1
+	scripts/hotpatch-validator.ps1
+	scripts/inference-engine-tuner.ps1
+	scripts/inference-latency-profiler.ps1
+	scripts/integrate-unlinked-files.ps1
+	scripts/license-compliance-manager.ps1
+	scripts/memory-profiler.ps1
+	scripts/model-comparison-matrix.ps1
+	scripts/model-governance-auditor.ps1
+	scripts/model-quantization-pipeline.ps1
+	scripts/model-registry-cli.ps1
+	scripts/performance-dashboard.ps1
+	scripts/performance-optimizer.ps1
+	scripts/prompt-engineering-workbench.ps1
+	scripts/quick-start.ps1
+	scripts/quick-start.sh
+	scripts/rawrxd-cli.ps1
+	scripts/release-manager.ps1
+	scripts/security-scanner.ps1
+	scripts/service-mesh-manager.ps1
+	scripts/symbol-analyzer.ps1
+	scripts/test-harness.ps1
+	scripts/tooling-overview.ps1
+	scripts/verify_build.ps1
+	scripts/vulkan-backend-manager.ps1
+	scripts/workspace-health-monitor.ps1
+	server.js
+	src/agentic/Agent.hpp
+	src/agentic/AgentOllamaClient_stubs.cpp
+	src/agentic/AgentTypes.hpp
+	src/agentic/AgenticReversePlatform.hpp
+	src/agentic/AutonomousOrchestrator.hpp
+	src/agentic/BaseAgent.cpp
+	src/agentic/BaseAgent.hpp
+	src/agentic/Blackboard.hpp
+	src/agentic/CognitiveBlackboard.cpp
+	src/agentic/CognitiveBlackboard.hpp
+	src/agentic/ConfidenceScheduler.hpp
+	src/agentic/DynamicPlanner.hpp
+	src/agentic/Evidence.cpp
+	src/agentic/Evidence.hpp
+	src/agentic/Hypothesis.cpp
+	src/agentic/Hypothesis.hpp
+	src/agentic/KnowledgeGraph.cpp
+	src/agentic/KnowledgeGraph.hpp
+	src/agentic/MissionDirector.hpp
+	src/agentic/MissionGenerator.cpp
+	src/agentic/MissionGenerator.hpp
+	src/agentic/MissionOrchestrator.cpp
+	src/agentic/MissionOrchestrator.hpp
+	src/agentic/ReflectionAgent.hpp
+	src/agentic/SelfImprovement.cpp
+	src/agentic/SelfImprovement.hpp
+	src/agentic/SubGoal.hpp
+	src/agentic/ToolRegistry.hpp
+	src/agentic/cognitive/
+	src/agentic/tests/AgenticPlatformTest.cpp
+	src/agentic/tests/HeaderCompileTest.cpp
+	src/agentic/tests/MinimalCompileTest.cpp
+	src/asm/TreeAttention_Fused_VAL038.asm
+	src/asm/asm_stubs_crypto.cpp
+	src/asm/asm_stubs_gguf.cpp
+	src/asm/asm_stubs_hwsynth.cpp
+	src/asm/asm_stubs_lsp.cpp
+	src/asm/asm_stubs_mesh.cpp
+	src/asm/asm_stubs_neural.cpp
+	src/asm/asm_stubs_patch.cpp
+	src/asm/asm_stubs_pattern.cpp
+	src/asm/asm_stubs_perf.cpp
+	src/asm/asm_stubs_speciator.cpp
+	src/asm/asm_stubs_spengine.cpp
+	src/asm/asm_stubs_subsystem.cpp
+	src/asm/asm_stubs_watchdog.cpp
+	src/asm/inference_tensor_ops_x64.asm
+	src/asm/softmax_lut_avx512.asm
+	src/asm/tensor_masm.asm
+	src/asm/view_state_x64.asm
+	src/controlplane/
+	src/core/unlinked_symbols_batch_018.cpp
+	src/core/unlinked_symbols_batch_019.cpp
+	src/core/unlinked_symbols_batch_020.cpp
+	src/core/view_state.hpp
+	src/core/view_state_masm.hpp
+	src/deep2/AntiPatcher.cpp
+	src/deep2/AntiPatcher.hpp
+	src/deep2/CPUFrequency.cpp
+	src/deep2/CPUFrequency.hpp
+	src/deep2/CompressedKVCache.cpp
+	src/deep2/CompressedKVCache.h
+	src/deep2/HotPatcher.cpp
+	src/deep2/HotPatcher.hpp
+	src/deep2/HotPatcherExample.cpp
+	src/deep2/HotPatcherSafety.cpp
+	src/deep2/HotPatcherSafety.hpp
+	src/deep2/HotPatcherSafetyTest.cpp
+	src/deep2/IQQuantKernels.cpp
+	src/deep2/KernelRegistry.hpp
+	src/deep2/MedusaDecoder.cpp
+	src/deep2/MedusaDecoder.hpp
+	src/deep2/NUFusedPacker.cpp
+	src/deep2/NUFusedPacker.hpp
+	src/deep2/NVMeStream.cpp
+	src/deep2/NVMeStream.h
+	src/deep2/PatchCache.cpp
+	src/deep2/PatchCache.hpp
+	src/deep2/ReverseIntegration.cpp
+	src/deep2/ReverseIntegration.hpp
+	src/deep2/RuntimeImage.hpp
+	src/deep2/RuntimePlanner.cpp
+	src/deep2/RuntimePlanner.hpp
+	src/deep2/SlidingWindowEngine.cpp
+	src/deep2/SlidingWindowEngine.h
+	src/deep2/TensorView.hpp
+	src/deep2/TheDualityExample.cpp
+	src/deep2/TransformerBlockExecutor.hpp
+	src/deep2/TreeAttention_Fused_VAL038_Optimized.asm
+	src/deep2/UniversalModelLoader.cpp
+	src/deep2/UniversalModelLoader.hpp
+	src/deep2/UniversalTensorDescriptor.hpp
+	src/deep2/VAL038_Benchmark_Harness.i
+	src/deep2/WarmupScheduler.cpp
+	src/deep2/WarmupScheduler.hpp
+	src/deep2/build_reverse_standalone.bat
+	src/deep2/build_val000_complete.bat
+	src/deep2/build_val038_now.bat
+	src/deep2/compile_kernels.bat
+	src/deep2/deep2_moe_bench_standalone.cpp
+	src/deep2/dump_tensors.cpp
+	src/deep2/moe_microbench.cpp
+	src/deep2/moe_simple_bench.cpp
+	src/deep2/moe_test.cpp
+	src/deep2/moe_validation_test.cpp
+	src/deep2/out.txt
+	src/deep2/out_stdout.txt
+	src/deep2/prep.txt
+	src/deep2/prep2.txt
+	src/deep2/prep3.txt
+	src/deep2/prep4.txt
+	src/deep2/prep4err.txt
+	src/deep2/prep5err.txt
+	src/deep2/prep6err.txt
+	src/deep2/prep6out.txt
+	src/deep2/prep7err.txt
+	src/deep2/prep7out.txt
+	src/deep2/prep8err.txt
+	src/deep2/prep8out.txt
+	src/deep2/prep9err.txt
+	src/deep2/prep9out.txt
+	src/deep2/reverse_integration_standalone_test.cpp
+	src/deep2/router_bench.cpp
+	src/deep2/router_latency_test.cpp
+	src/deep2/showinc.txt
+	src/deep2/showinc2.txt
+	src/deep2/val000_integration_test.cpp
+	src/deep2/val038_current_run.txt
+	src/deep2/val038_debug_cold.txt
+	src/deep2/val038_debug_cold2.txt
+	src/deep2/val038_debug_cold3.txt
+	src/deep2/val038_debug_freq.txt
+	src/deep2/val038_debug_latency.txt
+	src/deep2/val038_err.txt
+	src/deep2/val038_err2.txt
+	src/deep2/val038_err3.txt
+	src/deep2/val038_err4.txt
+	src/deep2/val038_out.txt
+	src/deep2/val038_out2.txt
+	src/deep2/val038_out3.txt
+	src/deep2/val038_out4.txt
+	src/deep2/val038_output.txt
+	src/deep2/val038_run1.txt
+	src/deep2/val038_run10.txt
+	src/deep2/val038_run100.txt
+	src/deep2/val038_run101.txt
+	src/deep2/val038_run102.txt
+	src/deep2/val038_run103.txt
+	src/deep2/val038_run104.txt
+	src/deep2/val038_run105.txt
+	src/deep2/val038_run106.txt
+	src/deep2/val038_run107.txt
+	src/deep2/val038_run108.txt
+	src/deep2/val038_run109.txt
+	src/deep2/val038_run11.txt
+	src/deep2/val038_run110.txt
+	src/deep2/val038_run111.txt
+	src/deep2/val038_run112.txt
+	src/deep2/val038_run113.txt
+	src/deep2/val038_run114.txt
+	src/deep2/val038_run115.txt
+	src/deep2/val038_run116.txt
+	src/deep2/val038_run117.txt
+	src/deep2/val038_run118.txt
+	src/deep2/val038_run119.txt
+	src/deep2/val038_run12.txt
+	src/deep2/val038_run120.txt
+	src/deep2/val038_run121.txt
+	src/deep2/val038_run122.txt
+	src/deep2/val038_run123.txt
+	src/deep2/val038_run124.txt
+	src/deep2/val038_run125.txt
+	src/deep2/val038_run126.txt
+	src/deep2/val038_run127.txt
+	src/deep2/val038_run128.txt
+	src/deep2/val038_run129.txt
+	src/deep2/val038_run13.txt
+	src/deep2/val038_run130.txt
+	src/deep2/val038_run131.txt
+	src/deep2/val038_run132.txt
+	src/deep2/val038_run133.txt
+	src/deep2/val038_run134.txt
+	src/deep2/val038_run135.txt
+	src/deep2/val038_run136.txt
+	src/deep2/val038_run137.txt
+	src/deep2/val038_run138.txt
+	src/deep2/val038_run139.txt
+	src/deep2/val038_run14.txt
+	src/deep2/val038_run140.txt
+	src/deep2/val038_run141.txt
+	src/deep2/val038_run142.txt
+	src/deep2/val038_run143.txt
+	src/deep2/val038_run144.txt
+	src/deep2/val038_run145.txt
+	src/deep2/val038_run146.txt
+	src/deep2/val038_run147.txt
+	src/deep2/val038_run148.txt
+	src/deep2/val038_run149.txt
+	src/deep2/val038_run15.txt
+	src/deep2/val038_run150.txt
+	src/deep2/val038_run151.txt
+	src/deep2/val038_run152.txt
+	src/deep2/val038_run153.txt
+	src/deep2/val038_run154.txt
+	src/deep2/val038_run155.txt
+	src/deep2/val038_run156.txt
+	src/deep2/val038_run157.txt
+	src/deep2/val038_run158.txt
+	src/deep2/val038_run159.txt
+	src/deep2/val038_run16.txt
+	src/deep2/val038_run160.txt
+	src/deep2/val038_run161.txt
+	src/deep2/val038_run162.txt
+	src/deep2/val038_run163.txt
+	src/deep2/val038_run164.txt
+	src/deep2/val038_run165.txt
+	src/deep2/val038_run166.txt
+	src/deep2/val038_run167.txt
+	src/deep2/val038_run168.txt
+	src/deep2/val038_run169.txt
+	src/deep2/val038_run17.txt
+	src/deep2/val038_run170.txt
+	src/deep2/val038_run171.txt
+	src/deep2/val038_run172.txt
+	src/deep2/val038_run173.txt
+	src/deep2/val038_run174.txt
+	src/deep2/val038_run175.txt
+	src/deep2/val038_run176.txt
+	src/deep2/val038_run177.txt
+	src/deep2/val038_run178.txt
+	src/deep2/val038_run179.txt
+	src/deep2/val038_run18.txt
+	src/deep2/val038_run180.txt
+	src/deep2/val038_run181.txt
+	src/deep2/val038_run182.txt
+	src/deep2/val038_run183.txt
+	src/deep2/val038_run184.txt
+	src/deep2/val038_run185.txt
+	src/deep2/val038_run186.txt
+	src/deep2/val038_run187.txt
+	src/deep2/val038_run188.txt
+	src/deep2/val038_run189.txt
+	src/deep2/val038_run19.txt
+	src/deep2/val038_run190.txt
+	src/deep2/val038_run191.txt
+	src/deep2/val038_run192.txt
+	src/deep2/val038_run193.txt
+	src/deep2/val038_run194.txt
+	src/deep2/val038_run195.txt
+	src/deep2/val038_run196.txt
+	src/deep2/val038_run197.txt
+	src/deep2/val038_run198.txt
+	src/deep2/val038_run199.txt
+	src/deep2/val038_run2.txt
+	src/deep2/val038_run20.txt
+	src/deep2/val038_run200.txt
+	src/deep2/val038_run201.txt
+	src/deep2/val038_run202.txt
+	src/deep2/val038_run203.txt
+	src/deep2/val038_run204.txt
+	src/deep2/val038_run205.txt
+	src/deep2/val038_run206.txt
+	src/deep2/val038_run207.txt
+	src/deep2/val038_run208.txt
+	src/deep2/val038_run209.txt
+	src/deep2/val038_run21.txt
+	src/deep2/val038_run210.txt
+	src/deep2/val038_run211.txt
+	src/deep2/val038_run212.txt
+	src/deep2/val038_run213.txt
+	src/deep2/val038_run214.txt
+	src/deep2/val038_run215.txt
+	src/deep2/val038_run216.txt
+	src/deep2/val038_run217.txt
+	src/deep2/val038_run218.txt
+	src/deep2/val038_run219.txt
+	src/deep2/val038_run22.txt
+	src/deep2/val038_run220.txt
+	src/deep2/val038_run221.txt
+	src/deep2/val038_run222.txt
+	src/deep2/val038_run223.txt
+	src/deep2/val038_run224.txt
+	src/deep2/val038_run225.txt
+	src/deep2/val038_run226.txt
+	src/deep2/val038_run227.txt
+	src/deep2/val038_run228.txt
+	src/deep2/val038_run229.txt
+	src/deep2/val038_run23.txt
+	src/deep2/val038_run230.txt
+	src/deep2/val038_run231.txt
+	src/deep2/val038_run232.txt
+	src/deep2/val038_run233.txt
+	src/deep2/val038_run234.txt
+	src/deep2/val038_run235.txt
+	src/deep2/val038_run236.txt
+	src/deep2/val038_run237.txt
+	src/deep2/val038_run238.txt
+	src/deep2/val038_run239.txt
+	src/deep2/val038_run24.txt
+	src/deep2/val038_run240.txt
+	src/deep2/val038_run241.txt
+	src/deep2/val038_run242.txt
+	src/deep2/val038_run243.txt
+	src/deep2/val038_run244.txt
+	src/deep2/val038_run245.txt
+	src/deep2/val038_run246.txt
+	src/deep2/val038_run247.txt
+	src/deep2/val038_run248.txt
+	src/deep2/val038_run249.txt
+	src/deep2/val038_run25.txt
+	src/deep2/val038_run250.txt
+	src/deep2/val038_run251.txt
+	src/deep2/val038_run252.txt
+	src/deep2/val038_run253.txt
+	src/deep2/val038_run254.txt
+	src/deep2/val038_run255.txt
+	src/deep2/val038_run256.txt
+	src/deep2/val038_run257.txt
+	src/deep2/val038_run258.txt
+	src/deep2/val038_run259.txt
+	src/deep2/val038_run26.txt
+	src/deep2/val038_run260.txt
+	src/deep2/val038_run261.txt
+	src/deep2/val038_run262.txt
+	src/deep2/val038_run263.txt
+	src/deep2/val038_run264.txt
+	src/deep2/val038_run265.txt
+	src/deep2/val038_run266.txt
+	src/deep2/val038_run267.txt
+	src/deep2/val038_run268.txt
+	src/deep2/val038_run269.txt
+	src/deep2/val038_run27.txt
+	src/deep2/val038_run270.txt
+	src/deep2/val038_run271.txt
+	src/deep2/val038_run272.txt
+	src/deep2/val038_run273.txt
+	src/deep2/val038_run274.txt
+	src/deep2/val038_run275.txt
+	src/deep2/val038_run276.txt
+	src/deep2/val038_run277.txt
+	src/deep2/val038_run278.txt
+	src/deep2/val038_run279.txt
+	src/deep2/val038_run28.txt
+	src/deep2/val038_run280.txt
+	src/deep2/val038_run281.txt
+	src/deep2/val038_run282.txt
+	src/deep2/val038_run283.txt
+	src/deep2/val038_run284.txt
+	src/deep2/val038_run285.txt
+	src/deep2/val038_run286.txt
+	src/deep2/val038_run287.txt
+	src/deep2/val038_run288.txt
+	src/deep2/val038_run289.txt
+	src/deep2/val038_run29.txt
+	src/deep2/val038_run290.txt
+	src/deep2/val038_run291.txt
+	src/deep2/val038_run292.txt
+	src/deep2/val038_run293.txt
+	src/deep2/val038_run294.txt
+	src/deep2/val038_run295.txt
+	src/deep2/val038_run296.txt
+	src/deep2/val038_run297.txt
+	src/deep2/val038_run298.txt
+	src/deep2/val038_run299.txt
+	src/deep2/val038_run3.txt
+	src/deep2/val038_run30.txt
+	src/deep2/val038_run300.txt
+	src/deep2/val038_run301.txt
+	src/deep2/val038_run302.txt
+	src/deep2/val038_run303.txt
+	src/deep2/val038_run304.txt
+	src/deep2/val038_run305.txt
+	src/deep2/val038_run306.txt
+	src/deep2/val038_run307.txt
+	src/deep2/val038_run308.txt
+	src/deep2/val038_run309.txt
+	src/deep2/val038_run31.txt
+	src/deep2/val038_run310.txt
+	src/deep2/val038_run311.txt
+	src/deep2/val038_run312.txt
+	src/deep2/val038_run313.txt
+	src/deep2/val038_run314.txt
+	src/deep2/val038_run315.txt
+	src/deep2/val038_run316.txt
+	src/deep2/val038_run317.txt
+	src/deep2/val038_run318.txt
+	src/deep2/val038_run319.txt
+	src/deep2/val038_run32.txt
+	src/deep2/val038_run320.txt
+	src/deep2/val038_run321.txt
+	src/deep2/val038_run322.txt
+	src/deep2/val038_run323.txt
+	src/deep2/val038_run324.txt
+	src/deep2/val038_run325.txt
+	src/deep2/val038_run326.txt
+	src/deep2/val038_run327.txt
+	src/deep2/val038_run328.txt
+	src/deep2/val038_run329.txt
+	src/deep2/val038_run33.txt
+	src/deep2/val038_run330.txt
+	src/deep2/val038_run331.txt
+	src/deep2/val038_run332.txt
+	src/deep2/val038_run333.txt
+	src/deep2/val038_run334.txt
+	src/deep2/val038_run335.txt
+	src/deep2/val038_run336.txt
+	src/deep2/val038_run337.txt
+	src/deep2/val038_run338.txt
+	src/deep2/val038_run339.txt
+	src/deep2/val038_run34.txt
+	src/deep2/val038_run340.txt
+	src/deep2/val038_run341.txt
+	src/deep2/val038_run342.txt
+	src/deep2/val038_run343.txt
+	src/deep2/val038_run344.txt
+	src/deep2/val038_run345.txt
+	src/deep2/val038_run346.txt
+	src/deep2/val038_run347.txt
+	src/deep2/val038_run348.txt
+	src/deep2/val038_run349.txt
+	src/deep2/val038_run35.txt
+	src/deep2/val038_run350.txt
+	src/deep2/val038_run351.txt
+	src/deep2/val038_run352.txt
+	src/deep2/val038_run353.txt
+	src/deep2/val038_run354.txt
+	src/deep2/val038_run355.txt
+	src/deep2/val038_run356.txt
+	src/deep2/val038_run357.txt
+	src/deep2/val038_run358.txt
+	src/deep2/val038_run359.txt
+	src/deep2/val038_run36.txt
+	src/deep2/val038_run360.txt
+	src/deep2/val038_run361.txt
+	src/deep2/val038_run362.txt
+	src/deep2/val038_run363.txt
+	src/deep2/val038_run364.txt
+	src/deep2/val038_run365.txt
+	src/deep2/val038_run366.txt
+	src/deep2/val038_run367.txt
+	src/deep2/val038_run368.txt
+	src/deep2/val038_run369.txt
+	src/deep2/val038_run37.txt
+	src/deep2/val038_run370.txt
+	src/deep2/val038_run371.txt
+	src/deep2/val038_run372.txt
+	src/deep2/val038_run373.txt
+	src/deep2/val038_run374.txt
+	src/deep2/val038_run375.txt
+	src/deep2/val038_run376.txt
+	src/deep2/val038_run377.txt
+	src/deep2/val038_run378.txt
+	src/deep2/val038_run379.txt
+	src/deep2/val038_run38.txt
+	src/deep2/val038_run380.txt
+	src/deep2/val038_run381.txt
+	src/deep2/val038_run382.txt
+	src/deep2/val038_run383.txt
+	src/deep2/val038_run384.txt
+	src/deep2/val038_run385.txt
+	src/deep2/val038_run386.txt
+	src/deep2/val038_run387.txt
+	src/deep2/val038_run388.txt
+	src/deep2/val038_run389.txt
+	src/deep2/val038_run39.txt
+	src/deep2/val038_run390.txt
+	src/deep2/val038_run391.txt
+	src/deep2/val038_run392.txt
+	src/deep2/val038_run393.txt
+	src/deep2/val038_run394.txt
+	src/deep2/val038_run395.txt
+	src/deep2/val038_run396.txt
+	src/deep2/val038_run397.txt
+	src/deep2/val038_run398.txt
+	src/deep2/val038_run399.txt
+	src/deep2/val038_run4.txt
+	src/deep2/val038_run40.txt
+	src/deep2/val038_run400.txt
+	src/deep2/val038_run401.txt
+	src/deep2/val038_run402.txt
+	src/deep2/val038_run403.txt
+	src/deep2/val038_run404.txt
+	src/deep2/val038_run405.txt
+	src/deep2/val038_run406.txt
+	src/deep2/val038_run407.txt
+	src/deep2/val038_run408.txt
+	src/deep2/val038_run409.txt
+	src/deep2/val038_run41.txt
+	src/deep2/val038_run410.txt
+	src/deep2/val038_run411.txt
+	src/deep2/val038_run412.txt
+	src/deep2/val038_run413.txt
+	src/deep2/val038_run414.txt
+	src/deep2/val038_run415.txt
+	src/deep2/val038_run42.txt
+	src/deep2/val038_run43.txt
+	src/deep2/val038_run44.txt
+	src/deep2/val038_run45.txt
+	src/deep2/val038_run46.txt
+	src/deep2/val038_run47.txt
+	src/deep2/val038_run48.txt
+	src/deep2/val038_run49.txt
+	src/deep2/val038_run5.txt
+	src/deep2/val038_run50.txt
+	src/deep2/val038_run51.txt
+	src/deep2/val038_run52.txt
+	src/deep2/val038_run53.txt
+	src/deep2/val038_run54.txt
+	src/deep2/val038_run55.txt
+	src/deep2/val038_run56.txt
+	src/deep2/val038_run57.txt
+	src/deep2/val038_run58.txt
+	src/deep2/val038_run59.txt
+	src/deep2/val038_run6.txt
+	src/deep2/val038_run60.txt
+	src/deep2/val038_run61.txt
+	src/deep2/val038_run62.txt
+	src/deep2/val038_run63.txt
+	src/deep2/val038_run64.txt
+	src/deep2/val038_run65.txt
+	src/deep2/val038_run66.txt
+	src/deep2/val038_run67.txt
+	src/deep2/val038_run68.txt
+	src/deep2/val038_run69.txt
+	src/deep2/val038_run7.txt
+	src/deep2/val038_run70.txt
+	src/deep2/val038_run71.txt
+	src/deep2/val038_run72.txt
+	src/deep2/val038_run73.txt
+	src/deep2/val038_run74.txt
+	src/deep2/val038_run75.txt
+	src/deep2/val038_run76.txt
+	src/deep2/val038_run77.txt
+	src/deep2/val038_run78.txt
+	src/deep2/val038_run79.txt
+	src/deep2/val038_run8.txt
+	src/deep2/val038_run80.txt
+	src/deep2/val038_run81.txt
+	src/deep2/val038_run82.txt
+	src/deep2/val038_run83.txt
+	src/deep2/val038_run84.txt
+	src/deep2/val038_run85.txt
+	src/deep2/val038_run86.txt
+	src/deep2/val038_run87.txt
+	src/deep2/val038_run88.txt
+	src/deep2/val038_run89.txt
+	src/deep2/val038_run9.txt
+	src/deep2/val038_run90.txt
+	src/deep2/val038_run91.txt
+	src/deep2/val038_run92.txt
+	src/deep2/val038_run93.txt
+	src/deep2/val038_run94.txt
+	src/deep2/val038_run95.txt
+	src/deep2/val038_run96.txt
+	src/deep2/val038_run97.txt
+	src/deep2/val038_run98.txt
+	src/deep2/val038_run99.txt
+	src/executive/
+	src/gguf_masm_weight_bridge.cpp
+	src/gguf_masm_weight_bridge.h
+	src/guardrails/
+	src/hotpatch/patch_transaction.cpp
+	src/hotpatch/patch_transaction.hpp
+	src/inference/ai_model_caller_real.cpp
+	src/inference/inference_engine_real.cpp
+	src/inference/tensor_ops_masm.hpp
+	src/inference_engine.cpp
+	src/intent/
+	src/kernel/AgentKernel.cpp
+	src/kernel/AgentKernel.hpp
+	src/kernel/BuildTelemetry.cpp
+	src/kernel/BuildTelemetry.hpp
+	src/kernel/IntentExecutionPipeline.cpp
+	src/kernel/IntentExecutionPipeline.hpp
+	src/kernel/IntentReplayEngine.cpp
+	src/kernel/IntentReplayEngine.hpp
+	src/kernel/SovereignAgentKernel.hpp
+	src/kernel/TelemetryInjector.cpp
+	src/kernel/TelemetryInjector.hpp
+	src/kernels/build_val_q42.bat
+	src/kernels/rebuild_asm.bat
+	src/masm/BUILD_VERIFICATION.md
+	src/masm/IMPLEMENTATION_SUMMARY.md
+	src/masm/INTEGRATION_COMPLETE.md
+	src/masm/build_masm_inference.ps1
+	src/masm/rawrxd_masm_bridge.h
+	src/masm/rawrxd_math_masm.asm
+	src/masm/rawrxd_quant_masm.asm
+	src/masm/rawrxd_tensor_masm.inc
+	src/masm/rawrxd_transformer_full.asm
+	src/masm/rawrxd_transformer_masm.asm
+	src/masm/rawrxd_transformer_masm_fixed.asm
+	src/memory/RepositoryMemoryGraph.cpp
+	src/memory/RepositoryMemoryGraph.hpp
+	src/prediction/
+	src/rawrxd_masm_tensor.h
+	src/reverse/
+	src/reverse_engineering/re_api.hpp
+	src/reverse_engineering/re_stubs.cpp
+	src/runtime/CanonicalModelGraph.cpp
+	src/runtime/CanonicalModelGraph.hpp
+	src/runtime/ExecutionPlanIR.cpp
+	src/runtime/ExecutionPlanIR.hpp
+	src/runtime/UniversalHeaderSniffer.cpp
+	src/runtime/UniversalHeaderSniffer.hpp
+	src/runtime/UniversalRuntimeBridge.cpp
+	src/runtime/UniversalRuntimeBridge.hpp
+	src/security/SecurityHardening.cpp
+	src/security/SecurityHardening.hpp
+	src/server/RawrXDApiGateway.cpp
+	src/sovereign/README.md
+	src/sovereign/SovereignIDEBridge.hpp
+	src/sovereign/agent/AgentArbitration.cpp
+	src/sovereign/agent/AgentArbitration.hpp
+	src/sovereign/agent/AgentLease.hpp
+	src/sovereign/agent/AgentMarketplace.cpp
+	src/sovereign/agent/AgentMarketplace.hpp
+	src/sovereign/agent/AgentPlanner.cpp
+	src/sovereign/agent/AgentPlanner.hpp
+	src/sovereign/agent/AgentReviewer.cpp
+	src/sovereign/agent/AgentReviewer.hpp
+	src/sovereign/agent/BuildRepairAgent.cpp
+	src/sovereign/agent/BuildRepairAgent.hpp
+	src/sovereign/agent/ExecutionSpine.cpp
+	src/sovereign/agent/ExecutionSpine.hpp
+	src/sovereign/agent/IntentCompression.cpp
+	src/sovereign/agent/IntentCompression.hpp
+	src/sovereign/agent/SpecializedAgents.cpp
+	src/sovereign/agent/SpecializedAgents.hpp
+	src/sovereign/awareness/
+	src/sovereign/bus/
+	src/sovereign/capsule/
+	src/sovereign/compression/
+	src/sovereign/context/
+	src/sovereign/control/
+	src/sovereign/debugger/
+	src/sovereign/deploy/
+	src/sovereign/diagnostics/
+	src/sovereign/docs/
+	src/sovereign/editor/
+	src/sovereign/extensions/
+	src/sovereign/fabric/
+	src/sovereign/gpu/
+	src/sovereign/guardrails/
+	src/sovereign/hive/
+	src/sovereign/hotpatch/
+	src/sovereign/ide/
+	src/sovereign/intent/
+	src/sovereign/introspection/
+	src/sovereign/io/
+	src/sovereign/main/
+	src/sovereign/mcp/
+	src/sovereign/memory/
+	src/sovereign/model/
+	src/sovereign/network/
+	src/sovereign/optimizer/
+	src/sovereign/patcher/NEVMP.hpp
+	src/sovereign/patcher/NEVMP_Loader.asm
+	src/sovereign/patcher/TensorPatchManager.cpp
+	src/sovereign/patcher/TensorPatchManager.hpp
+	src/sovereign/profiler/
+	src/sovereign/puppeteer/
+	src/sovereign/recovery/
+	src/sovereign/remote/
+	src/sovereign/render/
+	src/sovereign/sandbox/
+	src/sovereign/scheduler/
+	src/sovereign/security/
+	src/sovereign/server/
+	src/sovereign/spine/
+	src/sovereign/telemetry/
+	src/sovereign/templates/
+	src/sovereign/terminal/
+	src/sovereign/tests/TestFramework.cpp
+	src/sovereign/tests/TestFramework.hpp
+	src/sovereign/tools/
+	src/sovereign/ui/
+	src/sovereign/validator/
+	src/sovereign/verify_endpoints.ps1
+	src/sovereign/verify_integration.cpp
+	src/sovereign/workspace/
+	src/swarm/ArchitectAgent.cpp
+	src/swarm/ArchitectAgent.hpp
+	src/swarm/BackendCore.cpp
+	src/swarm/BackendCore.hpp
+	src/swarm/CinematicVibeEngine.cpp
+	src/swarm/CinematicVibeEngine.hpp
+	src/swarm/DeepContextManager.cpp
+	src/swarm/DeepContextManager.hpp
+	src/swarm/FrontendSquad.cpp
+	src/swarm/FrontendSquad.hpp
+	src/swarm/IDEIntegration.cpp
+	src/swarm/IDEIntegration.hpp
+	src/swarm/KimiSwarmOrchestrator.cpp
+	src/swarm/KimiSwarmOrchestrator.hpp
+	src/swarm/LegacyRefactorModule.cpp
+	src/swarm/LegacyRefactorModule.hpp
+	src/swarm/OpenClawBridge.cpp
+	src/swarm/OpenClawBridge.hpp
+	src/swarm/QAHive.cpp
+	src/swarm/QAHive.hpp
+	src/swarm/ReviewerAgents.cpp
+	src/swarm/ReviewerAgents.hpp
+	src/swarm/SwarmOrchestrator.cpp
+	src/swarm/SwarmOrchestrator.hpp
+	src/test_masm_inference.cpp
+	src/tests/AgenticPlatformTest.cpp
+	src/tests/MultiFormat_EquivalenceTest.cpp
+	src/tests/TestUniversalRuntime.cpp
+	src/tests/TestUniversalSniffer.cpp
+	src/tests/TransformerBlock_NumericalTest.cpp
+	src/tests/UniversalRuntime_SmokeTest.cpp
+	src/tests/build_multiformat_test.bat
+	src/tests/build_transformer_block_test.bat
+	src/tests/build_universal_runtime.bat
+	src/tools/tool_system.cpp
+	src/tools/tool_system.hpp
+	src/validation/VALIDATION_GATES_COMPLETE.md
+	src/validation/ValidationGate_Master.cpp
+	src/validation/ValidationGate_Master.h
+	src/validation/ValidationRunner.cpp
+	src/validation/gates/
+	src/validation/kernels/VAL038_Benchmark_Harness.cpp
+	src/validation/kernels/build_val038.bat
+	src/weaponized_agent_bridge.cpp
+	src/weaponized_agent_bridge.hpp
+	src/win32app/Win32IDE_OllamaStubs.cpp
+	src/win32app/Win32IDE_ViewState.hpp
+	start-throttled.bat
+	test-proxy.bat
+	test_endpoints.cmd
+	tests/SovereignIDE_IntegrationTest.cpp
+	tests/SovereignTest_NEVMP.cpp
+	tests/SovereignTest_Puppeteer.cpp
+	tests/test_agent_kernel.cpp
+	tests/test_intent_guardrails.cpp
+	tests/test_model_adapter.cpp
+	tests/test_persistence.cpp
+	tests/test_repository_memory_graph.cpp
+	tests/test_security_hardening.cpp
+	tests/test_sovereign_agent_kernel.cpp
+	tests/test_sovereign_puppeteer_integration.cpp
+	tests/test_sovereign_substrate_e2e.cpp
+	tools/heretic_nevmp_generator.py
+	validate_moe.ps1
+

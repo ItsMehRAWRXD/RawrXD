@@ -1,18 +1,22 @@
 {
-  "name": "rawrxd-ide-chatbot",
-  "version": "1.0.0",
-  "description": "RawrXD IDE Chatbot with 120B Model Support",
+  "name": "rawrxd-backend",
+  "version": "2.0.0",
+  "description": "RawrXD Backend Server - Bridges HTTP API to Deep2/Sovereign runtime",
   "main": "server.js",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "start": "node server.js",
+    "start:dev": "node server.js --port 8080",
+    "start:prod": "node server.js --port 8080 --host 0.0.0.0",
     "build": "build_phase3.bat",
     "dev": "nodemon server.js",
     "build:packages": "npm run build --workspaces"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "jsdom": "^28.0.0"
   },
   "devDependencies": {
@@ -20,12 +24,18 @@
     "nodemon": "^3.0.1"
   },
   "keywords": [
+    "rawrxd",
+    "llm",
+    "inference",
+    "deep2",
+    "moe",
     "ai",
     "chatbot",
-    "masm",
-    "120b",
-    "model"
+    "masm"
   ],
   "author": "RawrXD",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }

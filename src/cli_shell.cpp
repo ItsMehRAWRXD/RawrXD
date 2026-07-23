@@ -28,6 +28,10 @@
 #include "cli/cli_feature_bridge.h"
 #include "core/feature_handlers.h"
 
+// ── Browser Integration ───────────────────────────────────────────────────
+#define RAWRXD_CLI_BUILD
+#include "browser/BrowserIntegration.hpp"
+
 // CLI shell agentic engine wiring — Phase 31 implementation complete
 
 
@@ -1794,6 +1798,17 @@ void print_help() {
     std::cout << "\n╔════════════════════════════════════════════════════════════════════╗\n";
     std::cout << "║       RawrXD AI Runtime (CLI) - Feature Parity with Win32 IDE       ║\n";
     std::cout << "╚════════════════════════════════════════════════════════════════════╝\n";
+    std::cout << "\n🌐 BROWSER COMMANDS:\n";
+    std::cout << "  !browser <url>              Navigate to URL\n";
+    std::cout << "  !back                     Go back in history\n";
+    std::cout << "  !forward                  Go forward in history\n";
+    std::cout << "  !reload                   Reload current page\n";
+    std::cout << "  !stop                     Stop loading\n";
+    std::cout << "  !docs                     Open documentation\n";
+    std::cout << "  !github                   Open GitHub\n";
+    std::cout << "  !search <query>           Search the web\n";
+    std::cout << "  !fetch <url>              HTTP GET request\n";
+    std::cout << "  !post <url> [data]        HTTP POST request\n";
     std::cout << "\n🔧 FILE OPERATIONS:\n";
     std::cout << "  !new                          Create new file\n";
     std::cout << "  !open <path>                  Open file\n";
@@ -1983,11 +1998,23 @@ void route_command(const std::string& line) {
         return; // Handled by shared dispatch — same code path as Win32 GUI
     }
     
-    // ── LEGACY ROUTING — Commands not yet in shared dispatch ────────────
-    // Parse command and arguments
+    // ── BROWSER DISPATCH ─ Try browser commands ─────────────────────────
+    // Parse command and arguments for browser handling
     auto space = line.find(' ');
     std::string cmd = (space == std::string::npos) ? line : line.substr(0, space);
     std::string args = (space == std::string::npos) ? "" : line.substr(space + 1);
+    
+    // Remove leading ! if present for browser commands
+    std::string browserCmd = cmd;
+    if (!browserCmd.empty() && browserCmd[0] == '!') {
+        browserCmd = browserCmd.substr(1);
+    }
+    
+    if (RAWRXD_BROWSER_CLI_HANDLE(browserCmd, args)) {
+        return; // Browser handled it
+    }
+    
+    // ── LEGACY ROUTING — Commands not yet in shared dispatch ────────────
     
     // File operations
     if (cmd == "!new") cmd_new_file(args);
@@ -2177,6 +2204,9 @@ void route_command(const std::string& line) {
 int main() {
     init_runtime();
 
+    // Initialize browser CLI module
+    RAWRXD_BROWSER_CLI_INIT();
+
     // Phase 34: Persistent instructions context — load at startup
     {
         auto& provider = InstructionsProvider::instance();
@@ -2232,6 +2262,9 @@ int main() {
     
     // Clean shutdown of all headless systems
     cli_headless_shutdown();
+    
+    // Shutdown browser CLI module
+    RAWRXD_BROWSER_CLI_SHUTDOWN();
     
     // Phase 33: Clean shutdown of voice engine
     if (g_state.voiceInitialized && g_state.voiceChat) {

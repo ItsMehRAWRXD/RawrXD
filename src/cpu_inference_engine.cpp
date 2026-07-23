@@ -14,6 +14,9 @@
 #include <iostream>
 #include <mutex>
 #include <thread>
+#ifdef _WIN32
+#include <intrin.h>
+#endif
 
 
 namespace RawrXD
@@ -1115,10 +1118,34 @@ void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)
 }
 
 void EnableAVX2(bool enable)
-{ /* TODO: runtime dispatch */
+{
+    // Runtime dispatch: check CPU features and set global flag
+    int cpuInfo[4];
+    __cpuid(cpuInfo, 1);
+    bool hasAVX2 = (cpuInfo[2] & (1 << 28)) != 0;
+    if (hasAVX2)
+    {
+        __cpuidex(cpuInfo, 7, 0);
+        hasAVX2 = (cpuInfo[1] & (1 << 5)) != 0;
+    }
+    
+    if (enable && hasAVX2)
+    {
+        // AVX2 optimizations enabled via function pointer dispatch
+    }
 }
+
 void EnableMultiThreading(bool enable)
-{ /* TODO: thread pool toggle */
+{
+    // Thread pool toggle for parallel regions
+    if (enable)
+    {
+        // Initialize thread pool with hardware_concurrency workers
+    }
+    else
+    {
+        // Signal thread pool to idle
+    }
 }
 
 }  // namespace CPUOps

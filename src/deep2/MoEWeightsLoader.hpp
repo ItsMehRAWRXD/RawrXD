@@ -16,6 +16,9 @@
 #include <chrono>
 #include <cstdint>
 
+// Include GGUF types from GGUFLoader.hpp to avoid redefinition
+#include "GGUFLoader.hpp"
+
 #ifdef _WIN32
     #include <windows.h>
 #else
@@ -27,77 +30,7 @@
 
 namespace Deep2 {
 
-// GGML block sizes (matching llama.cpp)
-static constexpr size_t QK4_0 = 32;
-static constexpr size_t QK4_1 = 32;
-static constexpr size_t QK5_0 = 32;
-static constexpr size_t QK5_1 = 32;
-static constexpr size_t QK8_0 = 32;
-static constexpr size_t QK8_1 = 32;
-static constexpr size_t QK_K  = 256;
-static constexpr size_t QK4_NL = 32;
-
-// GGML quantization types (subset used by Q4_K and friends)
-enum class GGMLType : uint32_t {
-    GGML_TYPE_F32     = 0,
-    GGML_TYPE_F16     = 1,
-    GGML_TYPE_Q4_0    = 2,
-    GGML_TYPE_Q4_1    = 3,
-    GGML_TYPE_Q5_0    = 6,
-    GGML_TYPE_Q5_1    = 7,
-    GGML_TYPE_Q8_0    = 8,
-    GGML_TYPE_Q8_1    = 9,
-    GGML_TYPE_Q2_K    = 10,
-    GGML_TYPE_Q3_K    = 11,
-    GGML_TYPE_Q4_K    = 12,
-    GGML_TYPE_Q5_K    = 13,
-    GGML_TYPE_Q6_K    = 14,
-    GGML_TYPE_Q8_K    = 15,
-    GGML_TYPE_IQ2_XXS = 16,
-    GGML_TYPE_IQ2_XS  = 17,
-    GGML_TYPE_IQ3_XXS = 18,
-    GGML_TYPE_IQ1_S   = 19,
-    GGML_TYPE_IQ4_NL  = 20,
-    GGML_TYPE_IQ3_S   = 21,
-    GGML_TYPE_IQ2_S   = 22,
-    GGML_TYPE_IQ4_XS  = 23,
-    GGML_TYPE_I8      = 24,
-    GGML_TYPE_I16     = 25,
-    GGML_TYPE_I32     = 26,
-    GGML_TYPE_I64     = 27,
-    GGML_TYPE_F64     = 28,
-    GGML_TYPE_F32_E8M1 = 29
-};
-
-// Tensor info from the GGUF index
-struct TensorInfo {
-    std::string name;
-    GGMLType type = GGMLType::GGML_TYPE_F32;
-    std::vector<uint64_t> dimensions;
-    uint64_t offset = 0;       // offset within the data section
-    size_t size = 0;           // total bytes
-};
-
-struct alignas(8) block_q4_0 { uint16_t d; uint8_t qs[QK4_0/2]; };
-struct alignas(8) block_q4_1 { uint16_t d; uint16_t m; uint8_t qs[QK4_1/2]; };
-struct alignas(8) block_q5_0 { uint16_t d; uint8_t qh[4]; uint8_t qs[QK5_0/2]; };
-struct alignas(8) block_q5_1 { uint16_t d; uint16_t m; uint8_t qh[4]; uint8_t qs[QK5_1/2]; };
-struct alignas(8) block_q8_0 { uint16_t d; int8_t qs[QK8_0]; };
-struct alignas(8) block_q8_1 { uint16_t d; int8_t qs[QK8_1/2]; int8_t bsums[QK8_1/16]; };
-struct alignas(8) block_q2_K { uint8_t qs[QK_K/4]; uint8_t scales[QK_K/16]; uint16_t d; uint16_t dmin; };
-struct alignas(8) block_q3_K { uint8_t hmask[QK_K/8]; uint8_t qs[QK_K/4]; uint8_t scales[12]; uint16_t d; };
-struct alignas(8) block_q4_K { uint8_t scales[3*QK_K/64]; uint8_t qs[QK_K/2]; uint16_t d; uint16_t dmin; };
-struct alignas(8) block_q5_K { uint8_t scales[3*QK_K/64]; uint8_t qh[QK_K/8]; uint8_t qs[QK_K/2]; uint16_t d; uint16_t dmin; };
-struct alignas(8) block_q6_K { uint8_t ql[QK_K/2]; uint8_t qh[QK_K/4]; int8_t scales[QK_K/16]; uint16_t d; };
-struct alignas(8) block_q8_K { int8_t qs[QK_K]; float d; int8_t bsums[QK_K/16]; };
-struct alignas(8) block_iq2_xxs { uint16_t d; uint8_t qs[QK_K/8]; uint8_t signs[QK_K/32]; uint8_t scales[QK_K/32]; };
-struct alignas(8) block_iq2_xs  { uint16_t d; uint8_t qs[QK_K/8]; uint8_t signs[QK_K/32]; uint8_t scales[QK_K/16]; };
-struct alignas(8) block_iq3_xxs { uint16_t d; uint8_t qs[QK_K/8]; uint8_t signs[QK_K/32]; uint8_t scales[QK_K/16]; };
-struct alignas(8) block_iq1_s   { uint16_t d; uint8_t qs[QK_K/8]; uint16_t scales[QK_K/32]; };
-struct alignas(4) block_iq4_nl  { uint16_t d; int8_t qs[QK4_NL]; };
-struct alignas(8) block_iq3_s   { uint16_t d; uint8_t qs[QK_K/8]; uint8_t signs[QK_K/16]; int8_t scales[QK_K/32]; };
-struct alignas(8) block_iq2_s   { uint16_t d; uint8_t qs[QK_K/8]; uint8_t signs[QK_K/16]; uint8_t scales[QK_K/16]; };
-struct alignas(8) block_iq4_xs  { uint16_t d; int16_t scales[QK_K/32]; uint8_t qs[QK_K/4]; };
+// Use types from GGUFLoader.hpp
 
 // Projection type for MoE experts
 enum class ExpertProjection : uint8_t {

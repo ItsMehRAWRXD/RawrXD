@@ -3496,12 +3496,66 @@ var BRIDGE_MODEL_NAMES = [
 ];
 
 // Fetch all 24 profiles from MASM bridge endpoint
+// In directMode (Ollama), synthesize profiles from /api/tags
 async function fetchBridgeProfiles() {
   var badge = document.getElementById('bridgeBadge');
   badge.textContent = 'loading...';
   badge.style.background = 'rgba(255,204,0,0.15)';
   badge.style.color = '#ffcc00';
 
+  // Direct Mode: Synthesize profiles from Ollama /api/tags
+  if (State.backend.directMode) {
+    try {
+      var ollamaUrl = State.backend.ollamaDirectUrl;
+      var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var tagsData = await res.json();
+      var models = tagsData.models || [];
+
+      // Map Ollama models to bridge profiles
+      var profiles = models.map(function (m, idx) {
+        var name = m.name || m.model;
+        var sizeB = m.size ? Math.round(m.size / (1024 * 1024 * 1024)) : 0;
+        var tier = sizeB < 9 ? 'small' : sizeB < 28 ? 'medium' : sizeB < 71 ? 'large' : 'ultra';
+        return {
+          id: idx,
+          name: name,
+          tier: tier,
+          params_b: sizeB > 0 ? Math.round(sizeB / 2) : '?', // Rough estimate
+          quant: 'Q4_K_M',
+          ram_mb: sizeB * 1024,
+          requires_swarm: sizeB > 70,
+          requires_avx512: sizeB > 100
+        };
+      });
+
+      BridgeState.profiles = profiles;
+      BridgeState.hardware = null; // Ollama doesn't expose hardware info
+      BridgeState.bridge = 'ollama-direct';
+      BridgeState.fetched = true;
+
+      badge.textContent = 'ollama-direct';
+      badge.style.background = 'rgba(0,255,136,0.15)';
+      badge.style.color = '#00ff88';
+
+      renderBridgeProfiles();
+      updateBridgeStatusBar();
+      logDebug('[ModelBridge] Loaded ' + profiles.length + ' profiles from Ollama /api/tags (direct)', 'info');
+
+      // Also merge bridge profiles into model select dropdown
+      mergeBridgeIntoModelSelect();
+      return;
+    } catch (e) {
+      logDebug('[ModelBridge] Direct mode profile fetch failed: ' + e.message, 'error');
+      badge.textContent = 'error';
+      badge.style.background = 'rgba(255,68,102,0.15)';
+      badge.style.color = '#ff4466';
+      renderBridgeProfilesFallback();
+      return;
+    }
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/model/profiles', { signal: AbortSignal.timeout(8000) });
@@ -3649,6 +3703,7 @@ function selectBridgeProfile(profileId) {
 }
 
 // Load model via MASM bridge POST /api/model/load
+// In directMode (Ollama), this just sets state - Ollama lazy-loads on first /api/chat
 async function bridgeLoadModel() {
   if (BridgeState.selectedProfileId < 0) {
     addMessage('system', '\u26A0\uFE0F Select a model profile from the bridge list first.');
@@ -3657,6 +3712,50 @@ async function bridgeLoadModel() {
 
   var profileId = BridgeState.selectedProfileId;
   var nameStr = BRIDGE_MODEL_NAMES[profileId] || ('profile-' + profileId);
+
+  // Direct Mode: Ollama handles loading lazily - just set state
+  if (State.backend.directMode) {
+    addMessage('system', '\u26A1 Activating model for Ollama direct mode: **' + nameStr + '**...');
+    BridgeState.activeProfileId = profileId;
+    BridgeState.loaded = true;
+    BridgeState.bridge = 'ollama-direct';
+
+    // Set in main model state
+    State.model.current = nameStr;
+    var sel = document.getElementById('modelSelect');
+    if (sel) {
+      var found = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === nameStr) {
+          sel.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        var opt = document.createElement('option');
+        opt.value = nameStr;
+        opt.textContent = '\uD83E\uDDE9 ' + nameStr + ' (Ollama)';
+        sel.appendChild(opt);
+        sel.value = nameStr;
+      }
+    }
+    changeModel();
+
+    // Update card highlights
+    var cards = document.querySelectorAll('.bridge-model-card');
+    cards.forEach(function (card) {
+      var cardId = parseInt(card.getAttribute('data-profile-id'), 10);
+      card.classList.toggle('active', cardId === profileId);
+    });
+
+    addMessage('system', '\u2705 Model activated for Ollama direct: **' + nameStr + '** | Ollama will lazy-load on first generation.');
+    logDebug('[ModelBridge] Activated (direct): ' + nameStr, 'info');
+    updateBridgeStatusBar();
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   addMessage('system', '\u26A1 Loading model via MASM x64 bridge: **' + nameStr + '** (ID ' + profileId + ')...');
 
   try {
@@ -3720,7 +3819,26 @@ async function bridgeLoadModel() {
 }
 
 // Unload model via MASM bridge POST /api/model/unload
+// In directMode (Ollama), unload is handled via keep_alive:0 on next request or explicit unload
 async function bridgeUnloadModel() {
+  // Direct Mode: Ollama doesn't have explicit unload, just clear state
+  // The model will be unloaded from VRAM automatically when not used
+  if (State.backend.directMode) {
+    BridgeState.activeProfileId = -1;
+    BridgeState.loaded = false;
+    BridgeState.bridge = 'unknown';
+
+    // Clear card highlights
+    var cards = document.querySelectorAll('.bridge-model-card');
+    cards.forEach(function (card) { card.classList.remove('active'); });
+
+    addMessage('system', '\u23F9\uFE0F Model deactivated from Ollama direct mode. Ollama will release VRAM automatically.');
+    logDebug('[ModelBridge] Deactivated (direct)', 'info');
+    updateBridgeStatusBar();
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/model/unload', {
@@ -3754,7 +3872,56 @@ async function bridgeUnloadModel() {
 }
 
 // Fetch engine capabilities GET /api/engine/capabilities
+// In directMode (Ollama), synthesize capabilities from /api/tags and system info
 async function fetchBridgeCapabilities() {
+  // Direct Mode: Synthesize capabilities from Ollama
+  if (State.backend.directMode) {
+    try {
+      var ollamaUrl = State.backend.ollamaDirectUrl;
+      var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var tags = await res.json();
+      var modelCount = (tags.models && tags.models.length) || 0;
+
+      // Build synthetic capabilities
+      var caps = {
+        bridge: 'ollama-direct',
+        cpu: { avx2: true, fma3: true, avx512f: false, avx512bw: false }, // Assume AVX2 baseline
+        memory: { total_ram_gb: '?', free_ram_gb: '?' },
+        engine: {
+          swarm: false,
+          dual_engine: false,
+          five_drive: false,
+          tensor_hop: false,
+          flash_attention: true,  // Ollama supports flash attn
+          safe_decode: true
+        },
+        model_range: modelCount + ' models available',
+        supported_tiers: ['small', 'medium', 'large', 'ultra'],
+        profile_count: modelCount,
+        raw_caps: 'ollama-native'
+      };
+
+      BridgeState.hardware = caps;
+
+      var lines = [];
+      lines.push('**\uD83D\uDD0D Ollama Direct Capabilities**');
+      lines.push('Backend: Ollama Native (direct mode)');
+      lines.push('Models: ' + modelCount + ' available');
+      lines.push('Features: FlashAttention=\u2705 Streaming=\u2705');
+      lines.push('Note: CPU/RAM detection not available in direct mode');
+
+      addMessage('system', lines.join('\n'));
+      logDebug('[ModelBridge] Capabilities (direct): ' + modelCount + ' models', 'info');
+      updateBridgeStatusBar();
+    } catch (e) {
+      addMessage('system', '\u274C Ollama capabilities fetch failed: ' + e.message);
+      logDebug('[ModelBridge] Caps error (direct): ' + e.message, 'error');
+    }
+    return;
+  }
+
+  // MASM Bridge Mode: Call the native endpoint
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(8000) });

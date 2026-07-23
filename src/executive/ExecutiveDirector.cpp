@@ -6,6 +6,7 @@
 #include "CognitiveMemory.hpp"
 #include "WorldModel.hpp"
 #include "AutonomousLoop.hpp"
+#include "BlockingAgent.hpp"
 
 namespace RawrXD::Executive {
 
@@ -43,6 +44,13 @@ bool ExecutiveDirector::initialize(
     // Create autonomous loop (ties everything together)
     loop_ = std::make_unique<AutonomousLoop>(
         *memory_, *worldModel_, *this);
+    
+    // Create blocking agent for priority-based goal evaluation
+    blockingAgent_ = std::make_unique<BlockingAgent>();
+    if (!blockingAgent_->Initialize(nullptr)) {
+        printf("[Executive] ✗ BlockingAgent initialization failed\n");
+        return false;
+    }
     
     // Register default capabilities
     registerDefaultCapabilities();
@@ -210,6 +218,10 @@ uint64_t ExecutiveDirector::currentTimeMs() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
+}
+
+bool ExecutiveDirector::isRunning() { 
+    return loop_ && loop_->isRunning(); 
 }
 
 } // namespace RawrXD::Executive

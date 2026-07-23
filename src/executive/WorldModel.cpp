@@ -1,5 +1,5 @@
 // ============================================================
-// WorldModel.cpp - Implementation of Belief-based reasoning
+// WorldModel.cpp - Implementation of Belief-based reasoning-g87
 // ============================================================
 
 #include "WorldModel.hpp"

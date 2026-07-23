@@ -188,6 +188,11 @@ std::vector<float> AdvancedSampler::softmax(const std::vector<float>& logits) {
     return probs;
 }
 
+// ISampler static method definition
+std::vector<float> ISampler::softmax(const std::vector<float>& logits) {
+    return AdvancedSampler::softmax(logits);
+}
+
 std::string AdvancedSampler::methodToString(SamplingMethod method) {
     switch (method) {
         case SamplingMethod::GREEDY: return "Greedy";

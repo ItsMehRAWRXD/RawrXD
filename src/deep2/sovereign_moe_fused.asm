@@ -94,17 +94,17 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     vaddps ymm0, ymm0, ymm2
     vextractf128 xmm2, ymm0, 1
     vaddps xmm0, xmm0, xmm2
-    vhaddps xmm0, xmm0, xmm0
-    vhaddps xmm0, xmm0, xmm0
-    vmovss [rax+r8*4], xmm0              ; gate[i]
+    vhaddps xmm1, xmm0, xmm0
+    vhaddps xmm0, xmm1, xmm1
+    vmovss dword ptr [rax+r8*4], xmm0              ; gate[i]
     
     vextractf64x4 ymm2, zmm1, 1
     vaddps ymm1, ymm1, ymm2
     vextractf128 xmm2, ymm1, 1
     vaddps xmm1, xmm1, xmm2
-    vhaddps xmm1, xmm1, xmm1
-    vhaddps xmm1, xmm1, xmm1
-    vmovss [rcx+r8*4], xmm1              ; up[i]
+    vhaddps xmm0, xmm1, xmm1
+    vhaddps xmm1, xmm0, xmm0
+    vmovss dword ptr [rcx+r8*4], xmm1              ; up[i]
     
     inc r8
     jmp @gate_up_loop
@@ -118,21 +118,22 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     cmp r8, r13
     jge @activation_done
     
-    vmovss xmm0, [rax+r8*4]      ; gate
-    vmovss xmm1, [rcx+r8*4]      ; up
+    vmovss xmm0, dword ptr [rax+r8*4]      ; gate
+    vmovss xmm1, dword ptr [rcx+r8*4]      ; up
     
     ; sigmoid
     vxorps xmm2, xmm2, xmm2
     vsubss xmm2, xmm2, xmm0      ; -gate
     ; exp(-gate) - use approximation
-    vmovss xmm3, [__one_f]
+    vmovss xmm3, dword ptr [__one_f]
     vaddss xmm3, xmm3, xmm2      ; 1 + (-gate) approx
-    vdivss xmm4, [__one_f], xmm3 ; sigmoid
+    vmovss xmm5, dword ptr [__one_f]
+    vdivss xmm4, xmm5, xmm3      ; sigmoid
     
     vmulss xmm0, xmm0, xmm4      ; gate * sigmoid
     vmulss xmm0, xmm0, xmm1      ; * up
     
-    vmovss [rcx+r8*4], xmm0      ; store activated
+    vmovss dword ptr [rcx+r8*4], xmm0      ; store activated
     
     inc r8
     jmp @activation_loop
@@ -158,7 +159,8 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     cmp r11, r13
     jge @down_dot_done
     
-    vbroadcastss zmm1, [r9+r11*4]    ; activated[j]
+    vmovss xmm3, dword ptr [r9+r11*4]   ; activated[j]
+    vbroadcastss zmm1, xmm3              ; broadcast to zmm1
     vfmadd231ps zmm0, zmm1, [r10]    ; += activated[j] * weight[j]
     
     add r10, 64
@@ -171,13 +173,13 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     vaddps ymm0, ymm0, ymm2
     vextractf128 xmm2, ymm0, 1
     vaddps xmm0, xmm0, xmm2
-    vhaddps xmm0, xmm0, xmm0
-    vhaddps xmm0, xmm0, xmm0
+    vhaddps xmm1, xmm0, xmm0
+    vhaddps xmm0, xmm1, xmm1
     
     ; Add to output (residual)
-    vmovss xmm1, [rsi+r8*4]
+    vmovss xmm1, dword ptr [rsi+r8*4]
     vaddss xmm0, xmm0, xmm1
-    vmovss [rsi+r8*4], xmm0
+    vmovss dword ptr [rsi+r8*4], xmm0
     
     inc r8
     jmp @down_loop

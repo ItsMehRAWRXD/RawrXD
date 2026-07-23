@@ -256,8 +256,10 @@ if(RAWRXD_BUILD_CLI)
     endif()
 endif()
 
-# Resource compiler for icon/version
-enable_language(RC)
+# Resource compiler for icon/version (Windows only)
+if(WIN32)
+    enable_language(RC)
+endif()
 
 message(STATUS "RawrXD v14.7.3 Target Configured - Zero Bloat Mode")
 
@@ -318,8 +320,12 @@ if(WIN32 AND MSVC)
         "D:/rawrxd/Ship/webview2/build/native/x64"
     )
     message(STATUS "[Build Paths] MSVC CRT: ${_MSVC_BT_ROOT}")
-    message(STATUS "[Build Paths] SDK ${_SDK_VER}: ucrt + um + shared")
 endif()
+
+# =============================================================================
+# Intent Guardrails System - Toggleable Features
+# =============================================================================
+include(cmake/IntentGuardrails.cmake)
 
 # =============================================================================
 # MASM64 Assembly Kernel Support
@@ -394,6 +400,10 @@ if(RAWR_HAS_MASM)
         # src/asm/RawrXD_Hotpatch_Kernel.asm    # handled separately below
         # src/asm/RawrXD_Snapshot.asm           # handled separately below
         # src/asm/RawrXD_Pyre_Compute.asm       # handled separately below
+        # Pure MASM inference kernels (zero dependencies, no GGML)
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -405,6 +415,11 @@ if(RAWR_HAS_MASM)
         src/asm/Advanced_Code_Deobfuscator.asm
         src/asm/Code_Pattern_Reconstructor.asm
         src/asm/agentic_deep_thinking_kernels.asm
+        # Deep2 MoE kernels (2K TPS path)
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_moe_fused.asm
+        # Sovereign Puppeteer Architecture - Self-Modification System
+        src/sovereign/puppeteer/Puppeteer_CaptureState.asm
         # src/asm/RawrXD_MissingSymbols.asm  # excluded: duplicates symbols from gold_link_stubs.cpp
         # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
         # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
@@ -577,6 +592,30 @@ set(SOURCES
     src/agent/autonomous_subagent.cpp
     src/agent/agentic_failure_detector.cpp
     src/agent/agentic_puppeteer.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Sovereign Puppeteer Architecture — Self-Modification System
+    # ═══════════════════════════════════════════════════════════════════
+    src/sovereign/puppeteer/SymbolTableGenerator.cpp
+    src/sovereign/puppeteer/PuppeteerAPI.cpp
+    src/sovereign/puppeteer/VEH_Watchdog.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Intent-to-Execution Guardrails — Model Control Plane
+    # ═══════════════════════════════════════════════════════════════════
+    src/intent/intent_config.cpp
+    src/intent/intent_abi.cpp
+    src/guardrails/capability_policy.cpp
+    src/guardrails/patch_firewall.cpp
+    src/hotpatch/patch_transaction.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Sovereign Agent Kernel — Orchestration Layer
+    # ═══════════════════════════════════════════════════════════════════
+    src/kernel/AgentKernel.cpp
+    src/kernel/TelemetryInjector.cpp
+    src/kernel/IntentExecutionPipeline.cpp
+    src/kernel/IntentReplayEngine.cpp
 
     # HTTP Client — WinHTTP/curl async with future retention
     src/agent/llm_http_client.cpp
@@ -1036,6 +1075,11 @@ set(SOURCES
     src/core/unlinked_symbols_batch_011.cpp
     src/core/unlinked_symbols_batch_012.cpp
     # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
+    
+    # Batch 018-020: AgentOllamaClient, Win32IDE methods, Sovereign subsystem, Camellia256, Watchdog, Performance
+    src/core/unlinked_symbols_batch_018.cpp
+    src/core/unlinked_symbols_batch_019.cpp
+    src/core/unlinked_symbols_batch_020.cpp
 
     # Streaming orchestrator and analyzer distiller removed - symbols provided by unlinked_symbols_batch_*.cpp
     # src/core/streaming_orchestrator.cpp
@@ -1124,6 +1168,28 @@ set(SOURCES
     # coherent implementation. Real scheduler is swarm_scheduler.cpp above.
 
     # NOTE: Removed Transcendence IDE Panel - part of valuation theater fiction
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Cognitive Architecture — Autonomous Reverse Engineering OS
+    # ═══════════════════════════════════════════════════════════════════
+    src/agentic/cognitive/cognitive_types.cpp
+    src/agentic/cognitive/enhanced_blackboard.cpp
+    src/agentic/cognitive/mission_director.cpp
+    src/agentic/cognitive/reflection_agent.cpp
+    src/agentic/cognitive/dynamic_planner.cpp
+    src/agentic/cognitive/autonomous_orchestrator.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
+    # TrailBrake / HotPatcher / AntiPatcher Safety System
+    # ═══════════════════════════════════════════════════════════════════
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -1393,6 +1459,26 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Kimi K2.6 300-Agent Swarm Architecture
+    # ═══════════════════════════════════════════════════════════════════
+    src/swarm/SwarmOrchestrator.cpp
+    src/swarm/KimiSwarmOrchestrator.cpp
+    src/swarm/ArchitectAgent.cpp
+    src/swarm/FrontendSquad.cpp
+    src/swarm/BackendCore.cpp
+    src/swarm/QAHive.cpp
+    src/swarm/ReviewerAgents.cpp
+    src/swarm/CinematicVibeEngine.cpp
+    src/swarm/DeepContextManager.cpp
+    src/swarm/OpenClawBridge.cpp
+    src/swarm/LegacyRefactorModule.cpp
+    src/swarm/IDEIntegration.cpp
+    src/swarm/InfinitePerfectionTelemetry.cpp
+    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
+    src/swarm/TelemetryDashboardServer.cpp
+    src/swarm/LearningSimulator.cpp
 )
 
 # =============================================================================
@@ -1450,6 +1536,13 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tools
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/intent
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/swarm
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1704,6 +1797,12 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
     ${CMAKE_CURRENT_SOURCE_DIR}/src/win32app
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/intent
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -2819,6 +2918,7 @@ target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
     ${CMAKE_CURRENT_SOURCE_DIR}/src/codec
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
 )
 
 target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
@@ -2841,6 +2941,9 @@ endif()
             src/asm/RawrXD_KQuant_Kernel.asm
             src/asm/FlashAttention_AVX512.asm
             src/asm/RawrXD_Telemetry_Kernel.asm
+            # Pure MASM inference kernels (zero dependencies, no GGML)
+            src/masm/rawrxd_math_masm.asm
+            src/masm/rawrxd_transformer_masm_fixed.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -2936,15 +3039,39 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/gpu/speculative_decoder_v2.cpp
         src/inference/MemoryPressureGuard.cpp
         src/inference/gpu_dispatch_gate.cpp
+        src/inference/ai_model_caller_real.cpp
+        src/inference/inference_engine_real.cpp
+        src/gguf_masm_weight_bridge.cpp
         src/codec/brutal_gzip.cpp
         src/codec/gzip_brutal_inflate.cpp
     )
+
+    # AUTO provider: auto_feature_registry.cpp provides the real handlers
+    if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
+        list(APPEND WIN32IDE_SOURCES src/core/auto_feature_registry.cpp)
+        # ReverseEngineering (NativeDisassembler, BinaryAnalyzer, RECodex, NativeCompiler) — required by auto_feature_registry
+        list(APPEND WIN32IDE_SOURCES src/modules/ReverseEngineering.cpp)
+    endif()
 
     # MASM64 UI Dispatcher (MSVC/MASM-only).
     if(RAWR_HAS_MASM)
         set(WEBVIEW2_DISPATCHER src/asm/webview2_masm64_dispatcher.asm)
         set_source_files_properties(${WEBVIEW2_DISPATCHER} PROPERTIES LANGUAGE ASM_MASM)
         list(APPEND WIN32IDE_SOURCES ${WEBVIEW2_DISPATCHER})
+    endif()
+
+    # MASM64 ViewState - Enterprise-grade lock-free UI state management
+    if(RAWR_HAS_MASM)
+        set(VIEWSTATE_MASM src/asm/view_state_x64.asm)
+        set_source_files_properties(${VIEWSTATE_MASM} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${VIEWSTATE_MASM})
+    endif()
+
+    # MASM64 Tensor Operations - Pure x64 assembly inference kernels
+    if(RAWR_HAS_MASM)
+        set(TENSOR_OPS_MASM src/asm/tensor_masm.asm)
+        set_source_files_properties(${TENSOR_OPS_MASM} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND WIN32IDE_SOURCES ${TENSOR_OPS_MASM})
     endif()
 
     # NOTE:
@@ -3344,6 +3471,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
         # src/agentic/AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/agentic/AgentOllamaClient_stubs.cpp  # STUB: Provides link closure for AgentOllamaClient
         src/agentic/hotpatch/Engine.cpp
         src/agentic/observability/Logger.cpp
         src/agentic/AdvancedAgentCoordinator.cpp
@@ -3537,6 +3665,23 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/perf_telemetry.cpp
         src/core/convergence_stress_harness.cpp
 
+        # ASM Stub Implementations (C++ fallbacks for missing MASM kernels)
+        src/asm/asm_stubs_mesh.cpp
+        src/asm/asm_stubs_speciator.cpp
+        src/asm/asm_stubs_neural.cpp
+        src/asm/asm_stubs_hwsynth.cpp
+        src/asm/asm_stubs_perf.cpp
+        src/asm/asm_stubs_spengine.cpp
+        src/asm/asm_stubs_patch.cpp
+        src/asm/asm_stubs_gguf.cpp
+        src/asm/asm_stubs_lsp.cpp
+        src/asm/asm_stubs_crypto.cpp
+        src/asm/asm_stubs_watchdog.cpp
+        src/asm/asm_stubs_pattern.cpp
+        src/asm/asm_stubs_subsystem.cpp
+        src/win32app/Win32IDE_OllamaStubs.cpp
+        src/prediction/OllamaProvider_stub.cpp
+
         # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
         src/core/update_signature.cpp
         src/core/cursor_github_parity_bridge.cpp
@@ -3673,6 +3818,28 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_TerminalSplit.cpp
         src/win32app/Win32IDE_SnippetEngine.cpp
         src/win32app/Win32IDE_MultiCursor.cpp
+
+        # ═══════════════════════════════════════════════════════════════
+        # Cognitive Architecture — Autonomous Reverse Engineering OS
+        # ═══════════════════════════════════════════════════════════════
+        src/agentic/cognitive/cognitive_types.cpp
+        src/agentic/cognitive/enhanced_blackboard.cpp
+        src/agentic/cognitive/mission_director.cpp
+        src/agentic/cognitive/reflection_agent.cpp
+        src/agentic/cognitive/dynamic_planner.cpp
+        src/agentic/cognitive/autonomous_orchestrator.cpp
+
+        # ═══════════════════════════════════════════════════════════════
+        # TrailBrake / HotPatcher / AntiPatcher Safety System
+        # ═══════════════════════════════════════════════════════════════
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -3844,6 +4011,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/agentic_executor_link_stub.cpp
         src/core/beacon_link_stub.cpp
     )
+
+    # AUTO provider: ssot_handlers.cpp and auto_feature_registry.cpp both define
+    # some command handlers. Use /FORCE:MULTIPLE on the linker to tolerate the
+    # duplicates (auto_feature_registry takes priority due to link order).
+    # We keep ssot_handlers.cpp because it also provides unique handlers
+    # (handleTier1AutoUpdateCheck, handleTier1UpdateDismiss, isBeaconFullActive, etc.)
+    # that auto_feature_registry.cpp does not define.
 
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -4229,6 +4403,32 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/safe_refactor_engine.cpp
     )
 
+    # Sovereign Coordination System - 10 primitives + Execution Capsule
+    list(APPEND WIN32IDE_SOURCES
+        src/sovereign/spine/ExecutionSpine.cpp
+        src/sovereign/build/BuildStateGraph.cpp
+        src/sovereign/ide/SovereignIDEIntegration.cpp
+        src/sovereign/terminal/TerminalOwnership.cpp
+        src/sovereign/bus/CapabilityBus.cpp
+        src/sovereign/bus/BeaconBus.cpp
+        src/sovereign/awareness/SystemAwareness.cpp
+        src/sovereign/validator/RealityValidator.cpp
+        src/sovereign/recovery/AutonomousRecovery.cpp
+        src/sovereign/control/SovereignControlPlane.cpp
+        src/sovereign/compression/IntentCompression.cpp
+        src/sovereign/capsule/ExecutionCapsule.cpp
+    )
+
+    # Sovereign Autonomy Stack - Blackboard, TaskGraph, MissionPlanner, Reflection, Critic, Runtime
+    list(APPEND WIN32IDE_SOURCES
+        src/sovereign_autonomy/SovereignBlackboard.cpp
+        src/sovereign_autonomy/SovereignTaskGraph.cpp
+        src/sovereign_autonomy/SovereignMissionPlanner.cpp
+        src/sovereign_autonomy/SovereignReflectionEngine.cpp
+        src/sovereign_autonomy/SovereignCritic.cpp
+        src/sovereign_autonomy/SovereignAgentRuntime.cpp
+    )
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -4276,6 +4476,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     target_include_directories(RawrXD-Win32IDE PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/Ship"
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/masm"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign_autonomy"
     )
     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
         target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -4301,6 +4503,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
+            /FORCE:MULTIPLE
         )
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
@@ -4591,6 +4794,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
         ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
         ${CMAKE_CURRENT_SOURCE_DIR}/src/git
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/spine
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/terminal
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/build
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/agent
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/bus
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/compression
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/awareness
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/validator
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/recovery
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/control
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/capsule
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/ide
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
 
@@ -4879,6 +5095,69 @@ if(BUILD_DEEP2_BATCH_TEST)
     if(TARGET SovereignTest_Suite)
         add_dependencies(SovereignTest_Suite Deep2_Batch_Test)
     endif()
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deep2_Production_Bench — Production TPS Benchmark
+# Tests: ThreadPool + KVCache + Full Transformer Stack + All Quantization Kernels
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DEEP2_PRODUCTION_BENCH "Build Deep2 production TPS benchmark" ON)
+if(BUILD_DEEP2_PRODUCTION_BENCH)
+    add_executable(Deep2_Production_Bench EXCLUDE_FROM_ALL
+        # Core engine (verified working)
+        src/deep2/deep2_end_to_end_bench.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        # VAL-000 Components
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        # Sampling
+        src/sampling/advanced_sampler.cpp
+        # The Bottle + The Antidote + TrailBrake (Safe Runtime Patching)
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        # ASM kernels - Deep2 production kernels
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+    )
+    if(MSVC)
+        target_compile_options(Deep2_Production_Bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(Deep2_Production_Bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(Deep2_Production_Bench PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(Deep2_Production_Bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME Deep2_Production_Bench
+    )
+    message(STATUS "[Deep2] Production TPS benchmark: Deep2_Production_Bench (+ quantization kernels)")
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -6033,6 +6312,41 @@ set_target_properties(TestDebugBridgeTelemetry PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
 )
 message(STATUS "[Test] DebugBridge telemetry test: TestDebugBridgeTelemetry")
+
+# ============================================================================
+# Pure MASM Inference Test
+# ============================================================================
+add_executable(TestMASMInference EXCLUDE_FROM_ALL
+    src/test_masm_inference.cpp
+    src/gguf_masm_weight_bridge.cpp
+)
+target_compile_features(TestMASMInference PRIVATE cxx_std_17)
+target_include_directories(TestMASMInference PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/masm
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(RAWR_HAS_MASM)
+    target_sources(TestMASMInference PRIVATE
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
+    )
+    set_source_files_properties(
+        src/masm/rawrxd_math_masm.asm
+        src/masm/rawrxd_transformer_masm_fixed.asm
+        src/masm/rawrxd_transformer_full.asm
+        PROPERTIES LANGUAGE ASM_MASM
+    )
+endif()
+if(WIN32)
+    target_link_libraries(TestMASMInference PRIVATE)
+endif()
+set_target_properties(TestMASMInference PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+message(STATUS "[Test] Pure MASM inference test: TestMASMInference")
 
 # ============================================================================
 # Debugger Stress Tests

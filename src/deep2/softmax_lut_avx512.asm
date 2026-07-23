@@ -27,7 +27,7 @@ SoftmaxLUT_AVX512 PROC public
     vextractf32x8 ymm1, zmm0, 1
     vmaxps  ymm2, ymm1, ymm0
     vextractf32x4 xmm3, ymm2, 1
-    vmaxps  xmm4, xmm3, xmm3          ; simplified: max of lower half
+    vmaxps  xmm4, xmm2, xmm3          ; xmm4 = max across all 8 lanes of ymm2
     vshufps xmm5, xmm4, xmm4, 4Eh
     vmaxps  xmm5, xmm5, xmm4
     vshufps xmm6, xmm5, xmm5, 0B1h
@@ -39,8 +39,8 @@ SoftmaxLUT_AVX512 PROC public
 
     ; --- Step 4: Fast exp via 2^(x * log2(e)) ---
     mov  eax, 3FB8AA3Bh               ; log2(e)
-    vmovd xmm0, eax
-    vbroadcastss zmm12, xmm0
+    vmovd xmm1, eax
+    vbroadcastss zmm12, xmm1
     vmulps  zmm13, zmm11, zmm12       ; x * log2(e)
 
     ; Floor via cvtps2dq + cvtdq2ps
@@ -50,18 +50,18 @@ SoftmaxLUT_AVX512 PROC public
 
     ; 2^frac ≈ 1 + f * ln2 (vectorized)
     mov  eax, 3F317218h               ; ln2
-    vmovd xmm0, eax
-    vbroadcastss zmm16, xmm0
+    vmovd xmm1, eax
+    vbroadcastss zmm16, xmm1
     vmulps  zmm17, zmm15, zmm16       ; f * ln2
     mov  eax, 3F800000h               ; 1.0
-    vmovd xmm0, eax
-    vbroadcastss zmm18, xmm0
+    vmovd xmm1, eax
+    vbroadcastss zmm18, xmm1
     vaddps  zmm19, zmm18, zmm17       ; 1 + f*ln2
 
     ; 2^int: for each lane, extract int, add 127, shift left 23
-    ; Vectorized: use vcvtps2dq result, add 127, shift, convert back
     ; zmm14 has the integer parts as floats
     ; Store to stack, process as integers
+    sub  rsp, 64
     vmovups [rsp], zmm14
     vcvtps2dq ymm1, ymmword ptr [rsp]      ; lower 8 ints
     vcvtps2dq ymm2, ymmword ptr [rsp+32]   ; upper 8 ints
@@ -77,8 +77,7 @@ SoftmaxLUT_AVX512 PROC public
     vpslld  ymm1, ymm1, 23
     vpslld  ymm2, ymm2, 23
 
-    ; Convert back to float (reinterpret as float via vmovd + vpbroadcastd)
-    ; Store int values, load as floats
+    ; Store int values, load as floats (reinterpret bits)
     vmovups ymmword ptr [rsp], ymm1
     vmovups ymmword ptr [rsp+32], ymm2
     vmovups zmm20, [rsp]              ; zmm20 = 2^int (reinterpreted bits)
@@ -88,13 +87,13 @@ SoftmaxLUT_AVX512 PROC public
 
     ; --- Step 5: Sum reduction ---
     vextractf32x8 ymm22, zmm21, 1
-    vaddps  ymm23, ymm22, ymm22       ; combine halves (simplified: self-add)
+    vaddps  ymm23, ymm22, ymm21       ; combine halves (low + high)
     vextractf32x4 xmm24, ymm23, 1
-    vaddps  xmm25, xmm24, xmm24       ; combine quarters (simplified: self-add)
+    vaddps  xmm25, xmm24, xmm23       ; combine quarters (low + high)
     vshufps xmm26, xmm25, xmm25, 4Eh
     vaddps  xmm26, xmm26, xmm25
     vshufps xmm27, xmm26, xmm26, 0B1h
-    vaddss  xmm28, xmm26, xmm27       ; xmm28 = sum
+    vaddss  xmm28, xmm27, xmm26       ; xmm28 = sum
 
     ; --- Step 6: Reciprocal ---
     mov  eax, 3F800000h               ; 1.0
@@ -108,6 +107,7 @@ SoftmaxLUT_AVX512 PROC public
     ; --- Store ---
     vmovups [rdx], zmm0
 
+    add  rsp, 64
     add  rsp, 32
     pop  rbx
     vzeroupper

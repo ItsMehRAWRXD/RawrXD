@@ -291,7 +291,7 @@ const void* ExpertResidencyManager::GetExpert(uint32_t layer, uint32_t expert) {
     // Add to cache
     CacheEntry entry;
     entry.weights = weights;
-    entry.weightBytes = loader_.GetConfig().expertBytesQ4KM();
+    entry.weightBytes = loader_.GetConfig().expertBytesQ4KM;
     entry.lastAccess = std::chrono::steady_clock::now().time_since_epoch().count();
     entry.accessCount = 1;
     entry.isPinned = false;

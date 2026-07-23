@@ -30,9 +30,11 @@
 namespace Deep2 {
 
 // ---------------------------------------------------------------------------
-// Forward-declare GGMLType to avoid header coupling
+// Forward-declare GGMLType to avoid header coupling.
+// The underlying type MUST match the definition in GGUFLoader.hpp / MoEWeightsLoader.hpp
+// (enum class GGMLType : uint32_t).  A mismatch causes a redefinition error.
 // ---------------------------------------------------------------------------
-enum class GGMLType : int;
+enum class GGMLType : uint32_t;
 
 // ---------------------------------------------------------------------------
 // Universal GEMV kernel signature.
@@ -51,10 +53,16 @@ enum class GGMLType : int;
 //
 // Zero branches in the caller: the function pointer is resolved once.
 // ---------------------------------------------------------------------------
+#ifdef _MSC_VER
+#define RESTRICT __restrict
+#else
+#define RESTRICT __restrict__
+#endif
+
 using GEMVKernelFn = void(*)(
-    const uint8_t* __restrict__ weight_block_ptr,
-    const float*  __restrict__ activation_ptr,
-    float*        __restrict__ accumulator_ptr,
+    const uint8_t* RESTRICT weight_block_ptr,
+    const float*  RESTRICT activation_ptr,
+    float*        RESTRICT accumulator_ptr,
     size_t                        rows,
     size_t                        cols
 );
@@ -63,8 +71,8 @@ using GEMVKernelFn = void(*)(
 // Dequantize-only kernel (for embeddings, norms, and non-GEMV paths)
 // ---------------------------------------------------------------------------
 using DequantKernelFn = void(*)(
-    const uint8_t* __restrict__ src,
-    float*         __restrict__ dst,
+    const uint8_t* RESTRICT src,
+    float*         RESTRICT dst,
     size_t                        num_elements
 );
 

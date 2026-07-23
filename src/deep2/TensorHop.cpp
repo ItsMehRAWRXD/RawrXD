@@ -5,7 +5,7 @@
 #include "TensorHop.hpp"
 #include <cstring>
 #include <chrono>
-#include <windows.h>
+#include <algorithm>
 
 namespace Deep2 {
 

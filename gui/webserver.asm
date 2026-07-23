@@ -1,12 +1,19 @@
 ; ============================================================================
 ; RawrXD Pure MASM Web Server - Canonical native GUI server for the IDE
 ; ============================================================================
-; Purpose: Eliminate Python as a server dependency; use pure metal for performance.
-; Serves launcher + HTML from current directory; proxies /status, /health, /api/*
-; to backend on port 8080 (server_8080.exe or node server.js). server_8080 proxies
-; in turn to tool_server/Win32 IDE on 11435 — same features as CLI/Win32 GUI.
-; HTTPS: Use https://localhost:3000 behind a reverse proxy (e.g. stunnel, nginx)
-;        or a future SChannel (Windows TLS) build for native HTTPS.
+; Purpose: Eliminate Python/Node as server dependencies; use pure metal for performance.
+; Serves launcher + HTML from current directory; proxies API calls.
+; 
+; API Routing:
+;   /api/tags, /api/generate, /api/chat, /api/embed
+;       -> Ollama :11434 (or future Sovereign runtime)
+;   /api/rawrxd/*
+;       -> RawrXD native runtime :11435
+;   /health
+;       -> Internal MASM response (no proxy)
+;   /static/*, /*.html, /*.js, /*.css
+;       -> Local filesystem
+;
 ; Build: ml64 webserver.asm /link /subsystem:console /entry:start
 ;        /defaultlib:kernel32.lib /defaultlib:ws2_32.lib
 ;        /out:webserver.exe
@@ -21,9 +28,17 @@ includelib ws2_32.lib
 ; CONSTANTS
 ; ============================================================================
 PORT            equ     3000
-BACKEND_PORT    equ     8080        ; Win32/Node backend (server.js or HeadlessIDE)
+BACKEND_PORT    equ     8080        ; Legacy Win32/Node backend (optional)
+OLLAMA_PORT     equ     11434       ; Ollama API
+RAWRXD_PORT     equ     11435       ; RawrXD native runtime (Sovereign)
 BUFFER_SIZE     equ     65536
 MAX_FILE_SIZE   equ     10485760    ; 10MB max file size
+
+; Backend type constants
+BACKEND_NONE    equ     0
+BACKEND_OLLAMA  equ     1
+BACKEND_RAWRXD  equ     2
+BACKEND_LEGACY  equ     3
 
 ; Socket constants
 AF_INET         equ     2
@@ -88,9 +103,12 @@ extern inet_addr:proc
 .data
 align 16
 
-; Messages (pure metal GUI server — no Python dependency)
-szStartMsg      db      "RawrXD MASM Web Server (native GUI, no Python)", 13, 10
+; Messages (pure metal GUI server — no Python/Node dependency for API calls)
+szStartMsg      db      "RawrXD MASM Web Server (native GUI, no Python/Node required)", 13, 10
                 db      "HTTP:  http://localhost:3000/launcher.html", 13, 10
+                db      "API:   /api/* -> Ollama :11434", 13, 10
+                db      "       /api/rawrxd/* -> RawrXD :11435", 13, 10
+                db      "       /health -> Internal", 13, 10
                 db      "HTTPS: https://localhost:3000 (use reverse proxy)", 13, 10
                 db      "Press Ctrl+C to stop", 13, 10, 13, 10, 0
 szListening     db      "[Server] Listening on port 3000...", 13, 10, 0
@@ -98,10 +116,22 @@ szRequest       db      "[Request] ", 0
 szServing       db      "[Serving] ", 0
 szError         db      "[Error] ", 0
 szNewline       db      13, 10, 0
+szProxyOllama   db      "[Proxy] -> Ollama :11434", 13, 10, 0
+szProxyRawrXD   db      "[Proxy] -> RawrXD :11435", 13, 10, 0
+szProxyBackend  db      "[Proxy] -> Backend :8080", 13, 10, 0
+szHealthOk      db      "[Health] OK", 13, 10, 0
 
 ; HTTP Responses
 szHttpOk        db      "HTTP/1.1 200 OK", 13, 10
                 db      "Content-Type: text/html; charset=utf-8", 13, 10
+                db      "Access-Control-Allow-Origin: *", 13, 10
+                db      "Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE", 13, 10
+                db      "Access-Control-Allow-Headers: Content-Type, Accept, Authorization", 13, 10
+                db      "Connection: close", 13, 10
+                db      "Content-Length: ", 0
+
+szHttpJsonOk    db      "HTTP/1.1 200 OK", 13, 10
+                db      "Content-Type: application/json", 13, 10
                 db      "Access-Control-Allow-Origin: *", 13, 10
                 db      "Access-Control-Allow-Methods: GET, POST, OPTIONS", 13, 10
                 db      "Access-Control-Allow-Headers: Content-Type, Accept", 13, 10
@@ -117,20 +147,36 @@ szHttp404Len    equ     $ - szHttp404
 szHttp502       db      "HTTP/1.1 502 Bad Gateway", 13, 10
                 db      "Content-Type: application/json", 13, 10
                 db      "Connection: close", 13, 10, 13, 10
-                db      "{\"error\":\"Backend unreachable. Start node server.js or HeadlessIDE on port 8080.\"}", 0
+                db      "{\"error\":\"Backend not reachable. Start Ollama on :11434 or RawrXD on :11435.\"}", 0
 szHttp502Len    equ     $ - szHttp502
+
+; Health check response
+szHealthResponse db     "{\"status\":\"ok\",\"server\":\"rawrxd-masm\",\"version\":\"2.0\"}", 0
+szHealthResponseLen equ $ - szHealthResponse
 
 ; File paths (static GUI - served by MASM)
 szFilePath      db      "ide_chatbot.html", 0
 szLauncherPath  db      "launcher.html", 0
 szAgentsPath    db      "agents.html", 0
 szGetPrefix     db      "GET /", 0
-szPostPrefix    db      "POST ", 0
-szOptionsPrefix db      "OPTIONS ", 0
-szPutPrefix     db      "PUT ", 0
-szPatchPrefix   db      "PATCH ", 0
-szDeletePrefix  db      "DELETE ", 0
+szPostPrefix    db      "POST /", 0
+szOptionsPrefix db      "OPTIONS /", 0
+szPutPrefix     db      "PUT /", 0
+szPatchPrefix   db      "PATCH /", 0
+szDeletePrefix  db      "DELETE /", 0
 szBackendHost   db      "127.0.0.1", 0
+szOllamaHost    db      "127.0.0.1", 0
+szRawrXDHost    db      "127.0.0.1", 0
+
+; API path prefixes
+szApiPrefix     db      "api/", 0
+szApiRawrXDPrefix db    "api/rawrxd/", 0
+szHealthPrefix  db      "health", 0
+szTagsPrefix    db      "api/tags", 0
+szGeneratePrefix db     "api/generate", 0
+szChatPrefix    db      "api/chat", 0
+szEmbedPrefix   db      "api/embed", 0
+szPsPrefix      db      "api/ps", 0
 
 ; ============================================================================
 ; BSS SECTION
@@ -286,8 +332,8 @@ main_loop:
     test    al, al
     jnz     serve_agents
     
-    ; Other GET (e.g. /status, /health, /api/*) -> proxy to backend
-    jmp     do_proxy
+    ; Other GET paths -> smart proxy routing
+    jmp     do_smart_proxy
     
 serve_ide_chatbot:
     lea     rcx, szFilePath
@@ -314,36 +360,70 @@ serve_agents:
     jmp     close_client
     
 try_post_or_proxy:
-    ; POST, OPTIONS, PUT, PATCH, DELETE -> bridge to backend
-    lea     rcx, buffer
-    lea     rdx, szPostPrefix
-    call    StrStartsWith
-    test    al, al
-    jnz     do_proxy
-    lea     rcx, buffer
-    lea     rdx, szOptionsPrefix
-    call    StrStartsWith
-    test    al, al
-    jnz     do_proxy
-    lea     rcx, buffer
-    lea     rdx, szPutPrefix
-    call    StrStartsWith
-    test    al, al
-    jnz     do_proxy
-    lea     rcx, buffer
-    lea     rdx, szPatchPrefix
-    call    StrStartsWith
-    test    al, al
-    jnz     do_proxy
-    lea     rcx, buffer
-    lea     rdx, szDeletePrefix
-    call    StrStartsWith
-    test    al, al
-    jnz     do_proxy
-    jmp     send_404
+    ; POST/OPTIONS/PUT/PATCH/DELETE -> smart proxy routing
+    jmp     do_smart_proxy
     
-do_proxy:
-    ; Bridge to Win32/CLI backend (Node server.js or HeadlessIDE)
+do_smart_proxy:
+    ; Parse the request path and route to appropriate backend:
+    ;   /health -> Internal MASM response
+    ;   /api/rawrxd/* -> RawrXD native :11435
+    ;   /api/* -> Ollama :11434
+    ;   everything else -> Legacy backend :8080
+    
+    ; First, extract the path from the request
+    lea     rcx, buffer
+    lea     rdx, tempBuffer
+    call    ExtractRequestPath
+    
+    ; Check for /health (exact match)
+    lea     rcx, tempBuffer
+    lea     rdx, szHealthPrefix
+    call    StrEqual
+    test    al, al
+    jnz     serve_health
+    
+    ; Check for /api/rawrxd/* (RawrXD native)
+    lea     rcx, tempBuffer
+    lea     rdx, szApiRawrXDPrefix
+    call    StrStartsWith
+    test    al, al
+    jnz     proxy_to_rawrxd
+    
+    ; Check for /api/* (Ollama)
+    lea     rcx, tempBuffer
+    lea     rdx, szApiPrefix
+    call    StrStartsWith
+    test    al, al
+    jnz     proxy_to_ollama
+    
+    ; Everything else -> legacy backend
+    jmp     proxy_to_backend
+
+serve_health:
+    ; Internal health check - no proxy needed
+    lea     rcx, szHealthOk
+    call    PrintConsole
+    call    SendHealthResponse
+    jmp     close_client
+
+proxy_to_rawrxd:
+    ; Log RawrXD proxy
+    lea     rcx, szProxyRawrXD
+    call    PrintConsole
+    call    ProxyToRawrXD
+    jmp     close_client
+
+proxy_to_ollama:
+    ; Log Ollama proxy
+    lea     rcx, szProxyOllama
+    call    PrintConsole
+    call    ProxyToOllama
+    jmp     close_client
+
+proxy_to_backend:
+    ; Log backend proxy
+    lea     rcx, szProxyBackend
+    call    PrintConsole
     call    ProxyToBackend
     jmp     close_client
     
@@ -577,6 +657,96 @@ proxy_exit:
 ProxyToBackend endp
 
 ; ============================================================================
+; ProxyToOllama - Bridge API requests directly to Ollama on port 11434
+; No Node.js required - pure MASM to Ollama direct proxy
+; ============================================================================
+ProxyToOllama proc
+    push    rbx
+    push    rsi
+    sub     rsp, 38h
+    
+    ; Setup Ollama address (127.0.0.1:OLLAMA_PORT)
+    mov     backendAddr.sin_family, AF_INET
+    mov     ecx, OLLAMA_PORT
+    call    htons
+    mov     backendAddr.sin_port, ax
+    lea     rcx, szOllamaHost
+    call    inet_addr
+    mov     backendAddr.sin_addr, eax
+    
+    ; Create socket for Ollama
+    mov     ecx, AF_INET
+    mov     edx, SOCK_STREAM
+    mov     r8d, IPPROTO_TCP
+    call    socket
+    cmp     rax, INVALID_SOCKET
+    je      ollama_502
+    mov     backendSocket, rax
+    
+    ; Connect to Ollama with shorter timeout (it's usually fast)
+    mov     rcx, backendSocket
+    lea     rdx, backendAddr
+    mov     r8d, sizeof sockaddr_in
+    call    connect
+    test    eax, eax
+    jnz     ollama_close_502
+    
+    ; Send client request to Ollama
+    mov     rcx, backendSocket
+    lea     rdx, buffer
+    mov     r8d, requestLen
+    xor     r9d, r9d
+    call    send
+    cmp     eax, SOCKET_ERROR
+    je     ollama_close_502
+    
+ollama_loop:
+    ; Recv response from Ollama
+    mov     rcx, backendSocket
+    lea     rdx, buffer
+    mov     r8d, BUFFER_SIZE
+    xor     r9d, r9d
+    call    recv
+    test    eax, eax
+    jle     ollama_done
+    
+    ; Send to client
+    mov     rbx, rax
+    mov     rcx, clientSocket
+    lea     rdx, buffer
+    mov     r8d, ebx
+    xor     r9d, r9d
+    call    send
+    cmp     eax, SOCKET_ERROR
+    je      ollama_done
+    jmp     ollama_loop
+    
+ollama_done:
+    mov     rcx, backendSocket
+    call    closesocket
+    mov     backendSocket, 0
+    jmp     ollama_exit
+    
+ollama_close_502:
+    mov     rcx, backendSocket
+    call    closesocket
+    mov     backendSocket, 0
+ollama_502:
+    ; Ollama unreachable - send 502 to client
+    mov     rcx, clientSocket
+    lea     rdx, szHttp502
+    mov     r8d, szHttp502Len
+    xor     r9d, r9d
+    call    send
+    
+ollama_exit:
+    add     rsp, 38h
+    pop     rsi
+    pop     rbx
+    ret
+ProxyToOllama endp
+
+; ============================================================================
 ; UTILITY FUNCTIONS
 ; ============================================================================
 
@@ -736,5 +906,198 @@ its_done:
     pop     rbx
     ret
 IntToStr endp
+
+; ============================================================================
+; ExtractRequestPath - Extract the path from HTTP request line
+; Input: RCX = request buffer, RDX = output buffer
+; Output: Path extracted to output buffer (e.g., "api/tags" from "GET /api/tags HTTP/1.1")
+; ============================================================================
+ExtractRequestPath proc
+    push    rsi
+    push    rdi
+    push    rbx
+    
+    mov     rsi, rcx          ; Source: request buffer
+    mov     rdi, rdx          ; Dest: output buffer
+    
+    ; Skip method (GET/POST/etc) until space
+skip_method:
+    movzx   eax, byte ptr [rsi]
+    cmp     al, ' '
+    je      skip_space
+    cmp     al, 0
+    je      erp_done          ; Malformed request
+    inc     rsi
+    jmp     skip_method
+    
+skip_space:
+    inc     rsi               ; Skip the space
+    
+    ; Now at path start (after "GET ")
+    ; Copy until space, ?, or null
+extract_loop:
+    movzx   eax, byte ptr [rsi]
+    
+    cmp     al, ' '
+    je      erp_done
+    cmp     al, '?'
+    je      erp_done
+    cmp     al, 0
+    je      erp_done
+    
+    mov     byte ptr [rdi], al
+    inc     rsi
+    inc     rdi
+    jmp     extract_loop
+    
+erp_done:
+    mov     byte ptr [rdi], 0  ; Null terminate
+    
+    pop     rbx
+    pop     rdi
+    pop     rsi
+    ret
+ExtractRequestPath endp
+
+; ============================================================================
+; SendHealthResponse - Send internal health check response
+; ============================================================================
+SendHealthResponse proc
+    sub     rsp, 38h
+    
+    ; Send JSON OK header
+    mov     rcx, clientSocket
+    lea     rdx, szHttpJsonOk
+    lea     r8, szHttpJsonOk
+    call    lstrlenA
+    mov     r8d, eax
+    xor     r9d, r9d
+    call    send
+    
+    ; Send content-length value
+    mov     ecx, szHealthResponseLen
+    lea     rdx, tempBuffer
+    call    IntToStr
+    
+    mov     rcx, clientSocket
+    lea     rdx, tempBuffer
+    lea     r8, tempBuffer
+    call    lstrlenA
+    mov     r8d, eax
+    xor     r9d, r9d
+    call    send
+    
+    ; Send double CRLF
+    mov     rcx, clientSocket
+    lea     rdx, szNewline
+    mov     r8d, 2
+    xor     r9d, r9d
+    call    send
+    
+    mov     rcx, clientSocket
+    lea     rdx, szNewline
+    mov     r8d, 2
+    xor     r9d, r9d
+    call    send
+    
+    ; Send health JSON body
+    mov     rcx, clientSocket
+    lea     rdx, szHealthResponse
+    mov     r8d, szHealthResponseLen
+    xor     r9d, r9d
+    call    send
+    
+    add     rsp, 38h
+    ret
+SendHealthResponse endp
+
+; ============================================================================
+; ProxyToRawrXD - Bridge API requests to RawrXD native runtime on port 11435
+; ============================================================================
+ProxyToRawrXD proc
+    push    rbx
+    push    rsi
+    sub     rsp, 38h
+    
+    ; Setup RawrXD address (127.0.0.1:RAWRXD_PORT)
+    mov     backendAddr.sin_family, AF_INET
+    mov     ecx, RAWRXD_PORT
+    call    htons
+    mov     backendAddr.sin_port, ax
+    lea     rcx, szRawrXDHost
+    call    inet_addr
+    mov     backendAddr.sin_addr, eax
+    
+    ; Create socket for RawrXD
+    mov     ecx, AF_INET
+    mov     edx, SOCK_STREAM
+    mov     r8d, IPPROTO_TCP
+    call    socket
+    cmp     rax, INVALID_SOCKET
+    je      rawrxd_502
+    mov     backendSocket, rax
+    
+    ; Connect to RawrXD
+    mov     rcx, backendSocket
+    lea     rdx, backendAddr
+    mov     r8d, sizeof sockaddr_in
+    call    connect
+    test    eax, eax
+    jnz     rawrxd_close_502
+    
+    ; Send client request to RawrXD
+    mov     rcx, backendSocket
+    lea     rdx, buffer
+    mov     r8d, requestLen
+    xor     r9d, r9d
+    call    send
+    cmp     eax, SOCKET_ERROR
+    je      rawrxd_close_502
+    
+rawrxd_loop:
+    ; Recv response from RawrXD
+    mov     rcx, backendSocket
+    lea     rdx, buffer
+    mov     r8d, BUFFER_SIZE
+    xor     r9d, r9d
+    call    recv
+    test    eax, eax
+    jle     rawrxd_done
+    
+    ; Send to client immediately (streaming)
+    mov     rbx, rax
+    mov     rcx, clientSocket
+    lea     rdx, buffer
+    mov     r8d, ebx
+    xor     r9d, r9d
+    call    send
+    cmp     eax, SOCKET_ERROR
+    je      rawrxd_done
+    jmp     rawrxd_loop
+    
+rawrxd_done:
+    mov     rcx, backendSocket
+    call    closesocket
+    mov     backendSocket, 0
+    jmp     rawrxd_exit
+    
+rawrxd_close_502:
+    mov     rcx, backendSocket
+    call    closesocket
+    mov     backendSocket, 0
+rawrxd_502:
+    ; RawrXD unreachable - send 502 to client
+    mov     rcx, clientSocket
+    lea     rdx, szHttp502
+    mov     r8d, szHttp502Len
+    xor     r9d, r9d
+    call    send
+    
+rawrxd_exit:
+    add     rsp, 38h
+    pop     rsi
+    pop     rbx
+    ret
+ProxyToRawrXD endp
 
 end

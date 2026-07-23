@@ -7,7 +7,7 @@
 ## 1. Scale of Reality: What 500 Lines Can and Cannot Do
 
 - **Cannot:** Replicate or override distributed, server-validated ecosystems (Linux kernel ~27M+ LOC, Chromium 35M+, Windows ~50M). No single script replaces those stacks.
-- **Can:** Implement **core architectures** in under 500 lines (see “500 Lines or Less” / Architecture of Open Source Applications): e.g. 3D modeler (scene graph + OpenGL), minimal web server, CI dispatcher, visual block editor. These are real, compilable sources, not “fictionals.”
+- **Can:** Implement **core architectures** in under 500 lines (see “500 Lines or Less” / Architecture of Open Source Applications): e.g. 3D modeler (scene graph + OpenGL), minimal web server, CI dispatcher, visual block editor. These are real, compilable sources, not “unteleprompteds.”
 - **God algorithms (high leverage, small code):** FFT (<100 lines → Wi‑Fi, JPEG, MP3), PageRank (eigenvector of link matrix), backpropagation (<50 lines), Conway’s Game of Life (4 rules → unbounded complexity).
 
 ---

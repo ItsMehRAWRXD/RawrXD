@@ -57,7 +57,7 @@ struct block_q2_K { uint8_t scales[16]; uint8_t qs[64]; float d; float dmin; }; 
 struct block_q3_K { uint8_t hmask[32]; uint8_t qs[64]; uint16_t d; }; // 98 bytes
 struct block_q4_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; }; // 144 bytes, 256 elements
 struct block_q5_K { uint16_t d; uint8_t qh[64]; uint8_t qs[128]; }; // 176 bytes
-struct block_q6_K { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; }; // 210 bytes
+struct block_q6_K { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; uint16_t d; }; // 212 bytes
 struct block_q8_K { float d; float s; int16_t qs[256]; }; // 292 bytes
 struct block_iq2_xxs { uint8_t qs[32]; uint16_t d; }; // 98 bytes
 struct block_iq2_xs { uint8_t qs[32]; uint16_t d; }; // 136 bytes
@@ -76,6 +76,7 @@ constexpr size_t QK5_1 = 32;
 constexpr size_t QK8_0 = 32;
 constexpr size_t QK8_1 = 32;
 constexpr size_t QK_K  = 256;
+constexpr size_t QK4_NL = 32;
 
 // Q4_K_M block (alias for q4_K)
 struct alignas(32) Q4_K_M_Block {

@@ -56,3 +56,7 @@ add_test([=[test_rmsnorm_avx2]=] "D:/rawrxd/build-ninja/tests/test_rmsnorm_avx2.
 set_tests_properties([=[test_rmsnorm_avx2]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;473;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
 add_test([=[test_softmax_avx2]=] "D:/rawrxd/build-ninja/tests/test_softmax_avx2.exe")
 set_tests_properties([=[test_softmax_avx2]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;494;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
+add_test([=[sovereign_integrated_test]=] "D:/rawrxd/build-ninja/bin/sovereign_integrated_test.exe")
+set_tests_properties([=[sovereign_integrated_test]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;522;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
+add_test([=[test_agentic_supervisor]=] "D:/rawrxd/build-ninja/bin/test_agentic_supervisor.exe")
+set_tests_properties([=[test_agentic_supervisor]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;544;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")

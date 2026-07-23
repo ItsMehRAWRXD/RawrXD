@@ -278,20 +278,53 @@ static void drawLayoutDebugOverlay(HWND hwnd, HDC hdc)
 typedef void (*OnCreateFn)(void* self, HWND hwnd);
 typedef void (*DeferredInitFn)(void* self);
 
+// Stack usage diagnostic - helps identify stack overflow issues
+static size_t getApproximateStackUsed()
+{
+    // Simple heuristic: compare current stack pointer to a reference
+    volatile int localVar = 0;
+    return (size_t)&localVar;  // Lower values = more stack used
+}
+
+static void logStackUsage(const char* context)
+{
+    size_t stackPtr = getApproximateStackUsed();
+    char msg[256];
+    snprintf(msg, sizeof(msg), "[StackDiag] %s - stack ptr: 0x%p\n", context, (void*)stackPtr);
+    OutputDebugStringA(msg);
+}
+
 static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
 {
+    logStackUsage("onCreate ENTRY");
 #if defined(_MSC_VER)
     __try
     {
         fn(self, hwnd);
+        logStackUsage("onCreate EXIT");
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
-        char crashMsg[256];
-        snprintf(crashMsg, sizeof(crashMsg),
-                 "[RawrXD] SEH exception 0x%08lX caught in onCreate — window will still display.\n"
-                 "Some panels may be missing.",
-                 GetExceptionCode());
+        DWORD excCode = GetExceptionCode();
+        char crashMsg[512];
+        if (excCode == STATUS_STACK_OVERFLOW)
+        {
+            snprintf(crashMsg, sizeof(crashMsg),
+                     "[RawrXD] STACK OVERFLOW (0x%08lX) caught in onCreate!\n\n"
+                     "This usually means:\n"
+                     "1. Recursive window creation (child sends message to parent during WM_CREATE)\n"
+                     "2. Large stack-allocated buffers\n"
+                     "3. Deep call chain in window creation\n\n"
+                     "The window will still display, but some panels may be missing.",
+                     excCode);
+        }
+        else
+        {
+            snprintf(crashMsg, sizeof(crashMsg),
+                     "[RawrXD] SEH exception 0x%08lX caught in onCreate — window will still display.\n"
+                     "Some panels may be missing.",
+                     excCode);
+        }
         OutputDebugStringA(crashMsg);
         MessageBoxA(hwnd, crashMsg, "RawrXD IDE - Startup Warning", MB_OK | MB_ICONWARNING);
     }
@@ -299,6 +332,7 @@ static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
     try
     {
         fn(self, hwnd);
+        logStackUsage("onCreate EXIT");
     }
     catch (...)
     {
@@ -1911,10 +1945,45 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 // ============================================================================
 // onCreate - Called when WM_CREATE is received
 // ============================================================================
+// Re-entrancy guard to prevent stack overflow (0xC00000FD) from recursive
+// window creation. If CreateWindowEx sends a message back to the parent
+// during WM_CREATE handling, we could recurse back into onCreate.
+static thread_local bool s_inOnCreate = false;
+static thread_local int s_onCreateDepth = 0;
+static constexpr int MAX_ONCREATE_DEPTH = 5;  // Prevent deep recursion
+
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Re-entrancy guard: prevent recursive onCreate calls
+    if (s_inOnCreate)
+    {
+        s_onCreateDepth++;
+        if (s_onCreateDepth > MAX_ONCREATE_DEPTH)
+        {
+            OutputDebugStringA("[Win32IDE] RE-ENTRANT onCreate BLOCKED - recursion limit exceeded\n");
+            fileTrace("[onCreate] RE-ENTRANT BLOCKED");
+            s_onCreateDepth--;
+            return;
+        }
+        OutputDebugStringA("[Win32IDE] RE-ENTRANT onCreate detected (this is expected for child windows)\n");
+        s_onCreateDepth--;
+        return;
+    }
+
+    s_inOnCreate = true;
+    s_onCreateDepth = 1;
+
+    // Auto-reset guard for early returns
+    struct OnCreateGuard {
+        ~OnCreateGuard() {
+            s_inOnCreate = false;
+            s_onCreateDepth = 0;
+        }
+    } onCreateGuard;
+
     m_hwndMain = hwnd;
     fileTrace("[onCreate] START");
+    logStackUsage("onCreate START");
 
     // Initialize Common Controls
     INITCOMMONCONTROLSEX icex = {};
@@ -1923,6 +1992,7 @@ void Win32IDE::onCreate(HWND hwnd)
                  ICC_STANDARD_CLASSES;
     InitCommonControlsEx(&icex);
     fileTrace("[onCreate] InitCommonControlsEx done");
+    logStackUsage("onCreate after InitCommonControlsEx");
 
     // ================================================================
     // Create UI components — SEH-safe breadcrumb trail for diagnosis
@@ -2014,58 +2084,92 @@ void Win32IDE::onCreate(HWND hwnd)
 
     fileTrace("[onCreate] createMenuBar...");
     OutputDebugStringA("[onCreate] createMenuBar...\n");
+    logStackUsage("onCreate before createMenuBar");
     createMenuBar(hwnd);  // ESP:m_hMenu — menus/submenus wired end-to-end
     fileTrace("[onCreate] createMenuBar done");
+    logStackUsage("onCreate after createMenuBar");
     
     fileTrace("[onCreate] createToolbar...");
     OutputDebugStringA("[onCreate] createToolbar...\n");
+    logStackUsage("onCreate before createToolbar");
     createToolbar(hwnd);
     fileTrace("[onCreate] createToolbar done");
+    logStackUsage("onCreate after createToolbar");
 
     fileTrace("[onCreate] createActivityBar...");
     OutputDebugStringA("[onCreate] createActivityBar...\n");
+    logStackUsage("onCreate before createActivityBar");
     createActivityBar(hwnd);
     fileTrace("[onCreate] createActivityBar done");
+    logStackUsage("onCreate after createActivityBar");
     
     fileTrace("[onCreate] createPrimarySidebar...");
     OutputDebugStringA("[onCreate] createPrimarySidebar...\n");
+    logStackUsage("onCreate before createPrimarySidebar");
     createPrimarySidebar(hwnd);
     fileTrace("[onCreate] createPrimarySidebar done");
+    logStackUsage("onCreate after createPrimarySidebar");
 
     fileTrace("[onCreate] createTabBar...");
     OutputDebugStringA("[onCreate] createTabBar...\n");
+    logStackUsage("onCreate before createTabBar");
     fileTrace("[onCreate] About to call createTabBar(hwnd)...");
     OutputDebugStringA("[onCreate] About to call createTabBar(hwnd)...\n");
     createTabBar(hwnd);
     fileTrace("[onCreate] createTabBar returned");
     OutputDebugStringA("[onCreate] createTabBar returned\n");
     fileTrace("[onCreate] createTabBar done");
+    logStackUsage("onCreate after createTabBar");
     
     fileTrace("[onCreate] createBreadcrumbBar...");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
+    logStackUsage("onCreate before createBreadcrumbBar");
     createBreadcrumbBar(hwnd);  // ESP:IDC_BREADCRUMB_BAR — symbol path bar
     fileTrace("[onCreate] createBreadcrumbBar done");
+    logStackUsage("onCreate after createBreadcrumbBar");
     
     fileTrace("[onCreate] createLineNumberGutter...");
     OutputDebugStringA("[onCreate] createLineNumberGutter...\n");
+    logStackUsage("onCreate before createLineNumberGutter");
     createLineNumberGutter(hwnd);
     fileTrace("[onCreate] createLineNumberGutter done");
+    logStackUsage("onCreate after createLineNumberGutter");
+    
     OutputDebugStringA("[onCreate] createEditor...\n");
+    logStackUsage("onCreate before createEditor");
     createEditor(hwnd);
     createAnnotationOverlay(hwnd);
+    logStackUsage("onCreate after createEditor");
+    
     OutputDebugStringA("[onCreate] createTerminal...\n");
+    logStackUsage("onCreate before createTerminal");
     createTerminal(hwnd);
+    logStackUsage("onCreate after createTerminal");
+    
     OutputDebugStringA("[onCreate] createEnhancedStatusBar...\n");
+    logStackUsage("onCreate before createEnhancedStatusBar");
     createEnhancedStatusBar(hwnd);
+    logStackUsage("onCreate after createEnhancedStatusBar");
 
     OutputDebugStringA("[onCreate] createOutputTabs...\n");
+    logStackUsage("onCreate before createOutputTabs");
     createOutputTabs();
+    logStackUsage("onCreate after createOutputTabs");
+    
     OutputDebugStringA("[onCreate] createPowerShellPanel...\n");
+    logStackUsage("onCreate before createPowerShellPanel");
     createPowerShellPanel();
+    logStackUsage("onCreate after createPowerShellPanel");
+    
     OutputDebugStringA("[onCreate] createChatPanel...\n");
+    logStackUsage("onCreate before createChatPanel");
     createChatPanel();
+    logStackUsage("onCreate after createChatPanel");
+    
     OutputDebugStringA("[onCreate] initializeChatPanelOllama...\n");
+    logStackUsage("onCreate before initializeChatPanelOllama");
     initializeChatPanelOllama();
+    logStackUsage("onCreate after initializeChatPanelOllama");
 
     if (m_hwndMain)
     {

@@ -1,4 +1,4 @@
-﻿# RawrXD Deployment Audit Report
+# RawrXD Deployment Audit Report
 Generated: 2026-01-23 22:44:16
 Source: D:\lazy init ide\RawrXD.UI.psm1
 

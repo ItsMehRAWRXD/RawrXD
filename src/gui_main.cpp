@@ -5,6 +5,13 @@
 #include <sstream>
 #include <format> // Added for std::format
 
+// ── Browser Integration ───────────────────────────────────────────────────
+#define RAWRXD_GUI_BUILD
+#include "browser/BrowserIntegration.hpp"
+
+// ── Sovereign Coordination System Integration ───────────────────────────────
+#include "sovereign/SovereignIDEBridge.hpp"
+
 namespace RawrXD {
 
 GUIMain::GUIMain() {
@@ -19,7 +26,7 @@ GUIMain::~GUIMain() {
     shutdown();
 }
 
-std::expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
+RawrXD::Expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
     m_hInstance = hInstance;
     
     // Register window class
@@ -52,6 +59,19 @@ std::expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
     // Create docking panels
     createDockingPanels();
     
+    // Initialize Sovereign Coordination System
+    // This wires all 10 coordination primitives into the IDE
+    auto sovereignResult = RawrXD::SovereignBridge::InitializeSovereignSystem(
+        m_mainWindow, m_editorWindow, m_terminalPanel, m_buildPanel, m_statusBar
+    );
+    if (!sovereignResult) {
+        return RawrXD::unexpected(std::string("Sovereign system initialization failed"));
+    }
+    spdlog::info("Sovereign Coordination System initialized");
+    
+    // Initialize browser panel
+    RAWRXD_BROWSER_GUI_INIT();
+    
     // Setup layout
     auto layoutResult = setupLayout();
     if (!layoutResult) {
@@ -77,7 +97,7 @@ std::expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
     m_ide = std::make_unique<IDEOrchestrator>(config);
     auto ideResult = m_ide->initialize();
     if (!ideResult) {
-        return std::unexpected(std::string("IDE initialization failed"));
+        return RawrXD::unexpected(std::string("IDE initialization failed"));
     }
     
     // Initialize Monaco editor
@@ -94,50 +114,15 @@ std::expected<void, std::string> GUIMain::initialize(HINSTANCE hInstance) {
         return editorResult;
     }
     
-    // Wire IDE and editor
-    m_ide->getEditor() = m_editor.get(); // Assign raw pointer if getEditor returns reference or similar?
-    // Wait, getEditor() in orchestrator returns a shared_ptr<MonacoEditor> copy.
-    // The IDEOrchestrator has `std::shared_ptr<MonacoEditor> m_editor;`
-    // The GUIMain has `std::unique_ptr<MonacoEditor> m_editor;`
-    // This looks like a conflict in the user's provided code structure.
-    // However, I must faithfully reproduce it. 
-    // The line `m_ide->getEditor() = m_editor.get();` is problematic because `getEditor()` returns by value or if it returns ref, it's a shared_ptr.
-    // Let's look at `ide_orchestrator.h`: `std::shared_ptr<MonacoEditor> getEditor() const { return m_editor; }`
-    // It returns by value. Assigning to a rvalue is invalid.
-    // But maybe I should just implement what I see and fix if errors occur?
-    // User wrote: `m_ide->getEditor() = m_editor.get();` 
-    // This is C++ error. I will assume they meant to set it.
-    // But `setEditor` is not exposed in `IDEOrchestrator` public API in header I wrote.
-    // I wrote: `std::expected<void, IDEError> setupEditor();` which creates its own editor.
-    // In `initializeComponents`: `m_editor = MonacoFactory::createEditor`...
-    // The GUI version seems to want to inject its own editor?
-    // Or maybe the user meant `m_ide` manages it?
-    // The `GUIMain::initialize` creates `m_ide`, calls `initialize` (which creates its own editor), then creates `m_editor` (another one) and tries to assign?
-    // This logic is flawed.
-    // I'm supposed to be a "reverse engineer". I should fix this logic to be sound.
-    // Maybe `IDEConfig` has `enableMonaco`, if true `ide->initialize()` creates one.
-    // In GUI mode, we want the window handle.
-    // The `MonacoEditor::initialize` in `ide_orchestrator.cpp` passes `nullptr`.
-    // In `gui_main.cpp` it passes `m_mainWindow`.
-    // I will modify `gui_main.cpp` to use the editor from `m_ide` if available, or set it if `IDEOrchestrator` allows setter.
-    // `IDEOrchestrator` does NOT have a setter for m_editor.
-    // I will follow the user code but comment out the problematic line or adjust it.
-    // Actually, I'll assume the user code meant something like:
-    // `m_editor = m_ide->getEditor();` 
-    // But `m_editor` is unique_ptr in GUIMain.
-    // I'll make `GUIMain::m_editor` a `std::shared_ptr` to match.
-    // And I will assume `IDEOrchestrator` created it, giving it a window handle might be a separate step "attachWindow".
-    // I'll keep the user code format but use `m_ide->getEditor()` to access it, and maybe cast away constness if needed or fix header to return reference.
-    // Header: `std::shared_ptr<MonacoEditor> getEditor() const { return m_editor; }`
-    // I can't assign to the result of `getEditor()`.
-    // I will comment out the assignment for now to let it compile, or assume `m_ide` already has it interactively.
+    // Wire IDE and editor - use the editor from IDE orchestrator
+    m_editor = m_ide->getEditor();
     
     spdlog::info("GUI initialized successfully");
     
     return {};
 }
 
-std::expected<void, std::string> GUIMain::registerWindowClass() {
+RawrXD::Expected<void, std::string> GUIMain::registerWindowClass() {
     WNDCLASSEXW wc = {0};
     wc.cbSize = sizeof(wc);
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -153,13 +138,13 @@ std::expected<void, std::string> GUIMain::registerWindowClass() {
     wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
     
     if (!RegisterClassExW(&wc)) {
-        return std::unexpected(std::string("Failed to register window class"));
+        return RawrXD::unexpected(std::string("Failed to register window class"));
     }
     
     return {};
 }
 
-std::expected<void, std::string> GUIMain::createMainWindow() {
+RawrXD::Expected<void, std::string> GUIMain::createMainWindow() {
     m_mainWindow = CreateWindowExW(
         0,
         L"RawrXDMainWindow",
@@ -174,7 +159,7 @@ std::expected<void, std::string> GUIMain::createMainWindow() {
     );
     
     if (!m_mainWindow) {
-        return std::unexpected(std::string("Failed to create main window"));
+        return RawrXD::unexpected(std::string("Failed to create main window"));
     }
     
     SetWindowLongPtrW(m_mainWindow, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -259,6 +244,19 @@ void GUIMain::createMenus() {
     AppendMenuW(aiMenu, MF_STRING, 4004, L"Analyze &Codebase\tCtrl+A");
     AppendMenuW(m_mainMenu, MF_POPUP, (UINT_PTR)aiMenu, L"&AI");
     
+    // Sovereign menu (Coordination System)
+    HMENU sovereignMenu = CreatePopupMenu();
+    AppendMenuW(sovereignMenu, MF_STRING, 3004, L"&Build with Sovereign\tCtrl+Shift+B");
+    AppendMenuW(sovereignMenu, MF_STRING, 3005, L"&Cancel Build\tCtrl+Break");
+    AppendMenuW(sovereignMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(sovereignMenu, MF_STRING, 5001, L"Spawn &Editor Agent");
+    AppendMenuW(sovereignMenu, MF_STRING, 5002, L"Spawn &Build Agent");
+    AppendMenuW(sovereignMenu, MF_STRING, 5003, L"Spawn &Debug Agent");
+    AppendMenuW(sovereignMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(sovereignMenu, MF_STRING, 5004, L"Show &Active Agents");
+    AppendMenuW(sovereignMenu, MF_STRING, 5005, L"System &Health");
+    AppendMenuW(m_mainMenu, MF_POPUP, (UINT_PTR)sovereignMenu, L"&Sovereign");
+    
     SetMenu(m_mainWindow, m_mainMenu);
 }
 
@@ -305,6 +303,12 @@ void GUIMain::handleMenuCommand(int commandId) {
         case 3003: // Debug
             onDebugInternal();
             break;
+        case 3004: // Build with Sovereign
+            onSovereignBuild();
+            break;
+        case 3005: // Cancel Build
+            onSovereignCancelBuild();
+            break;
             
         case 4001: // AI Generate
             // Implementation
@@ -317,6 +321,22 @@ void GUIMain::handleMenuCommand(int commandId) {
             break;
         case 4004: // AI Analyze
             // Implementation
+            break;
+            
+        case 5001: // Spawn Editor Agent
+            onSpawnEditorAgent();
+            break;
+        case 5002: // Spawn Build Agent
+            onSpawnBuildAgent();
+            break;
+        case 5003: // Spawn Debug Agent
+            onSpawnDebugAgent();
+            break;
+        case 5004: // Show Active Agents
+            onShowActiveAgents();
+            break;
+        case 5005: // System Health
+            onShowSystemHealth();
             break;
     }
 }
@@ -391,7 +411,7 @@ void GUIMain::updateStatusBar(const std::string& message) {
     }
 }
 
-std::expected<void, std::string> GUIMain::run() {
+RawrXD::Expected<void, std::string> GUIMain::run() {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
@@ -402,11 +422,16 @@ std::expected<void, std::string> GUIMain::run() {
 }
 
 void GUIMain::shutdown() {
+    // Shutdown Sovereign Coordination System
+    RawrXD::SovereignBridge::ShutdownSovereignSystem();
+    spdlog::info("Sovereign Coordination System shutdown");
+    
     if (m_ide) {
         m_ide->stop();
     }
     
-    // m_editor is a unique_ptr, will clean itself up
+    // m_editor is a shared_ptr, will clean itself up when GUIMain is destroyed
+    m_editor.reset();
     
     if (m_mainWindow) {
         DestroyWindow(m_mainWindow);
@@ -415,7 +440,7 @@ void GUIMain::shutdown() {
 }
 
 // Real Win32 Implementations for GUI
-std::expected<void, std::string> GUIMain::createEditorWindow() {
+RawrXD::Expected<void, std::string> GUIMain::createEditorWindow() {
     // Create Monaco-like editor using RichEdit or WebView
     // Using RichEdit for simpler Win32 "RawrXD" feel
     LoadLibrary(TEXT("Msftedit.dll")); 
@@ -435,7 +460,7 @@ std::expected<void, std::string> GUIMain::createEditorWindow() {
         NULL
     );
     
-    if (!m_editorWindow) return std::unexpected("Failed to create editor window");
+    if (!m_editorWindow) return RawrXD::unexpected(std::string("Failed to create editor window"));
     
     // Set font
     HFONT hFont = CreateFont(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
@@ -446,7 +471,7 @@ std::expected<void, std::string> GUIMain::createEditorWindow() {
     return {};
 }
 
-std::expected<void, std::string> GUIMain::setupLayout() {
+RawrXD::Expected<void, std::string> GUIMain::setupLayout() {
     // Simple layout management handled in WM_SIZE usually
     return {};
 }
@@ -516,5 +541,72 @@ void GUIMain::onRunInternal() {
 }
 void GUIMain::onDebugInternal() {}
 
+// Sovereign Coordination System handlers
+void GUIMain::onSovereignBuild() {
+    // Trigger build through Sovereign Build State Graph
+    bool result = RawrXD::SovereignBridge::TriggerBuild("all");
+    if (result) {
+        updateStatusBar("Build triggered via Sovereign system");
+    } else {
+        updateStatusBar("Failed to trigger Sovereign build");
+    }
+}
+
+void GUIMain::onSovereignCancelBuild() {
+    bool result = RawrXD::SovereignBridge::CancelBuild();
+    if (result) {
+        updateStatusBar("Build cancelled via Sovereign system");
+    } else {
+        updateStatusBar("Failed to cancel build");
+    }
+}
+
+void GUIMain::onSpawnEditorAgent() {
+    std::string agentId = RawrXD::SovereignBridge::SpawnEditorAgent("Editor assistance");
+    if (!agentId.empty()) {
+        updateStatusBar("Editor agent spawned: " + agentId);
+    } else {
+        updateStatusBar("Failed to spawn editor agent");
+    }
+}
+
+void GUIMain::onSpawnBuildAgent() {
+    std::string agentId = RawrXD::SovereignBridge::SpawnBuildAgent("Build automation");
+    if (!agentId.empty()) {
+        updateStatusBar("Build agent spawned: " + agentId);
+    } else {
+        updateStatusBar("Failed to spawn build agent");
+    }
+}
+
+void GUIMain::onSpawnDebugAgent() {
+    std::string agentId = RawrXD::SovereignBridge::SpawnDebugAgent("Debug assistance");
+    if (!agentId.empty()) {
+        updateStatusBar("Debug agent spawned: " + agentId);
+    } else {
+        updateStatusBar("Failed to spawn debug agent");
+    }
+}
+
+void GUIMain::onShowActiveAgents() {
+    std::vector<std::string> agents = RawrXD::SovereignBridge::GetActiveAgents();
+    std::string message = "Active Agents: " + std::to_string(agents.size()) + "\n";
+    for (const auto& agent : agents) {
+        message += "- " + agent + "\n";
+    }
+    MessageBoxA(m_mainWindow, message.c_str(), "Sovereign Agents", MB_OK);
+}
+
+void GUIMain::onShowSystemHealth() {
+    auto snapshot = RawrXD::SovereignBridge::GetSystemSnapshot();
+    std::string health = (snapshot.overall_health == Sovereign::HealthStatus::HEALTHY) ? "HEALTHY" :
+                         (snapshot.overall_health == Sovereign::HealthStatus::DEGRADED) ? "DEGRADED" : "UNHEALTHY";
+    std::string message = "System Health: " + health + "\n" +
+                          "Active Agents: " + std::to_string(snapshot.active_agents) + "\n" +
+                          "Active Terminals: " + std::to_string(snapshot.active_terminals) + "\n" +
+                          "Active Builds: " + std::to_string(snapshot.active_builds) + "\n" +
+                          "Memory: " + std::to_string(snapshot.used_memory_mb) + "/" + std::to_string(snapshot.total_memory_mb) + " MB";
+    MessageBoxA(m_mainWindow, message.c_str(), "Sovereign System Health", MB_OK);
+}
 
 } // namespace RawrXD

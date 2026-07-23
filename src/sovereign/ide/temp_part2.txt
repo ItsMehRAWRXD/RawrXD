@@ -1,0 +1,253 @@
+    BuildConfiguration config;
+    config.name = "IDE_Build";
+    
+    bool result = capsule_->ExecuteBuild(target, config);
+    
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_.builds_triggered++;
+    
+    return result;
+}
+
+bool SovereignIDEIntegration::CancelBuild() {
+    if (!capsule_) return false;
+    return capsule_->CancelBuild();
+}
+
+BuildState SovereignIDEIntegration::GetBuildState() const {
+    if (!capsule_) return BuildState::IDLE;
+    auto status = capsule_->GetBuildStatus();
+    return status.state;
+}
+
+std::vector<std::string> SovereignIDEIntegration::GetBuildTargets() const {
+    return {};  // Would query build system
+}
+
+// Agent commands
+std::string SovereignIDEIntegration::SpawnEditorAgent(const std::string& purpose) {
+    if (!capsule_) return "";
+    
+    AgentDescriptor desc;
+    desc.agent_type = "editor";
+    desc.purpose = purpose;
+    desc.requested_tier = LeaseTier::STANDARD;
+    desc.required_capabilities = {"FILE_READ", "FILE_WRITE"};
+    
+    auto lease_id = capsule_->SpawnAgent(desc);
+    if (lease_id) {
+        agent_leases_[*lease_id] = *lease_id;
+        
+        std::lock_guard<std::mutex> lock(stats_mutex_);
+        stats_.agents_spawned++;
+    }
+    
+    return lease_id.value_or("");
+}
+
+std::string SovereignIDEIntegration::SpawnBuildAgent(const std::string& purpose) {
+    if (!capsule_) return "";
+    
+    AgentDescriptor desc;
+    desc.agent_type = "builder";
+    desc.purpose = purpose;
+    desc.requested_tier = LeaseTier::PRIVILEGED;
+    desc.required_capabilities = {"BUILD_TRIGGER", "TERMINAL_EXECUTE"};
+    
+    auto lease_id = capsule_->SpawnAgent(desc);
+    if (lease_id) {
+        agent_leases_[*lease_id] = *lease_id;
+        
+        std::lock_guard<std::mutex> lock(stats_mutex_);
+        stats_.agents_spawned++;
+    }
+    
+    return lease_id.value_or("");
+}
+
+std::string SovereignIDEIntegration::SpawnDebugAgent(const std::string& purpose) {
+    if (!capsule_) return "";
+    
+    AgentDescriptor desc;
+    desc.agent_type = "debugger";
+    desc.purpose = purpose;
+    desc.requested_tier = LeaseTier::PRIVILEGED;
+    desc.required_capabilities = {"TERMINAL_EXECUTE", "TERMINAL_KILL"};
+    
+    auto lease_id = capsule_->SpawnAgent(desc);
+    if (lease_id) {
+        agent_leases_[*lease_id] = *lease_id;
+        
+        std::lock_guard<std::mutex> lock(stats_mutex_);
+        stats_.agents_spawned++;
+    }
+    
+    return lease_id.value_or("");
+}
+
+bool SovereignIDEIntegration::TerminateAgent(const std::string& agent_id) {
+    if (!capsule_) return false;
+    
+    auto it = agent_leases_.find(agent_id);
+    if (it == agent_leases_.end()) {
+        return false;
+    }
+    
+    bool result = capsule_->TerminateAgent(it->second);
+    agent_leases_.erase(it);
+    return result;
+}
+
+std::vector<std::string> SovereignIDEIntegration::GetActiveAgents() const {
+    std::vector<std::string> agents;
+    for (const auto& [agent_id, lease_id] : agent_leases_) {
+        (void)lease_id;
+        agents.push_back(agent_id);
+    }
+    return agents;
+}
+
+// Chat/Intent commands
+std::string SovereignIDEIntegration::ProcessChatIntent(const std::string& message) {
+    if (!capsule_) return "";
+    
+    FullIntent intent;
+    intent.original_prompt = message;
+    intent.interpreted_goal = message;
+    intent.type = IntentType::CHAT_MESSAGE;
+    
+    auto result = capsule_->ExecuteIntent(intent);
+    
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_.intents_processed++;
+    
+    return std::get<std::string>(result.data);
+}
+
+std::string SovereignIDEIntegration::ProcessCodeIntent(const std::string& intent_str) {
+    if (!capsule_) return "";
+    
+    auto result = capsule_->ExecuteIntent(intent_str);
+    
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_.intents_processed++;
+    
+    return std::get<std::string>(result.data);
+}
+
+// Event handling
+void SovereignIDEIntegration::OnFileOpened(const std::string& path) {
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::FILE_CREATED, "ide", path);
+    }
+}
+
+void SovereignIDEIntegration::OnFileModified(const std::string& path) {
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::FILE_MODIFIED, "ide", path);
+    }
+}
+
+void SovereignIDEIntegration::OnBuildStarted() {
+    if (capsule_) {
+        BeaconBus::Instance().EmitInfo(BeaconType::BUILD_STARTED, "ide", "Build started");
+    }
+}
+
+void SovereignIDEIntegration::OnBuildCompleted(bool success) {
+    if (capsule_) {
+        auto type = success ? BeaconType::BUILD_COMPLETED : BeaconType::BUILD_FAILED;
+        BeaconBus::Instance().EmitInfo(type, "ide", success ? "Build succeeded" : "Build failed");
+    }
+}
+
+void SovereignIDEIntegration::OnTerminalOutput(const std::string& terminal_id, 
+                                                  const std::string& output) {
+    (void)terminal_id;
+    (void)output;
+    // Would update terminal panel
+}
+
+void SovereignIDEIntegration::OnAgentSpawned(const std::string& agent_id) {
+    (void)agent_id;
+    UpdateAgentPanel();
+}
+
+void SovereignIDEIntegration::OnAgentTerminated(const std::string& agent_id) {
+    (void)agent_id;
+    UpdateAgentPanel();
+}
+
+// UI Updates
+void SovereignIDEIntegration::UpdateStatusBar(const std::string& message) {
+    (void)message;
+    // Would update Win32 status bar
+}
+
+void SovereignIDEIntegration::UpdateBuildPanel() {
+    // Would update build panel with current state
+}
+
+void SovereignIDEIntegration::UpdateAgentPanel() {
+    // Would update agent panel with active agents
+}
+
+void SovereignIDEIntegration::UpdateTerminalPanel() {
+    // Would update terminal panel
+}
+
+// Beacon handling
+void SovereignIDEIntegration::ProcessBeacon(const Beacon& beacon) {
+    switch (beacon.type) {
+        case BeaconType::BUILD_STARTED:
+            OnBuildStarted();
+            break;
+        case BeaconType::BUILD_COMPLETED:
+            OnBuildCompleted(true);
+            break;
+        case BeaconType::BUILD_FAILED:
+            OnBuildCompleted(false);
+            break;
+        case BeaconType::AGENT_SPAWNED:
+            if (auto id = beacon.GetPayload<std::string>()) {
+                OnAgentSpawned(*id);
+            }
+            break;
+        case BeaconType::AGENT_TERMINATED:
+            if (auto id = beacon.GetPayload<std::string>()) {
+                OnAgentTerminated(*id);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+// Statistics
+SovereignIDEIntegration::IDEStats SovereignIDEIntegration::GetStats() const {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    return stats_;
+}
+
+// Convenience function
+SovereignIDEIntegration& GetIDEIntegration() {
+    return SovereignIDEIntegration::Instance();
+}
+
+// RAII guard
+IDEIntegrationGuard::IDEIntegrationGuard(const IDEWindowHandles& handles) {
+    initialized_ = SovereignIDEIntegration::Instance().Initialize(handles);
+}
+
+IDEIntegrationGuard::~IDEIntegrationGuard() {
+    if (initialized_) {
+        SovereignIDEIntegration::Instance().Shutdown();
+    }
+}
+
+bool IDEIntegrationGuard::IsReady() const {
+    return initialized_ && SovereignIDEIntegration::Instance().IsReady();
+}
+
+} // namespace IDE
+} // namespace Sovereign

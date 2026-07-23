@@ -6,16 +6,28 @@
 #ifndef DEEP2_ENGINE_H
 #define DEEP2_ENGINE_H
 
+#include "ReverseIntegration.hpp"
 #include "ThreadPool.h"
 #include "KVCache.h"
 #include "GGUFLoader.hpp"
 #include "Tokenizer.hpp"
-#include "../sampling/advanced_sampler.hpp"#include "MoERouter.hpp"
-#include "MoEWeightProxy.hpp"#include <memory>
+#include "../sampling/advanced_sampler.hpp"
+#include "MoERouter.hpp"
+#include "MoEWeightProxy.hpp"
+#include "MedusaDecoder.hpp"
+#include "NUFusedPacker.hpp"
+#include "WarmupScheduler.hpp"
+#include "CompressedKVCache.h"
+#include "NVMeStream.h"
+#include "SlidingWindowEngine.h"
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace Deep2 {
+
+// Forward declarations
+class ReverseIntegration;
 
 // ============================================================================
 // Weight Tensor - Real quantized weight storage
@@ -176,6 +188,34 @@ public:
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);
     
+    // VAL-000 Phase 3: Advanced feature control
+    void enableMedusa(bool enable);
+    void enableNUPacking(bool enable);
+    void enableWarmupScheduler(bool enable);
+    void enableCompressedKV(bool enable, KVQuantType quantType = KVQuantType::KV_Q8_0);
+    void enableNVMeStreaming(bool enable, const std::string& modelPath = "");
+    void enableSlidingWindow(bool enable, size_t windowSize = 4096);
+    
+    // BigDaddyG Reverse Engine integration
+    void enableReverseAnalysis(bool enable);
+    void disableReverseAnalysis();
+    ReverseIntegration* getReverseIntegration() const;
+    
+    // HotPatcher integration - The Bottle
+    void printHotPatcherStatus();
+    std::string registerKernelPatch(
+        const std::string& kernelName,
+        void* originalKernel,
+        void* newKernel,
+        float expectedSpeedup = 1.0f);
+    bool rollbackKernelPatch(const std::string& patchId);
+    void emergencyRollbackAllPatches();
+    
+    // Get feature stats
+    const MedusaStats& getMedusaStats() const;
+    const WarmupStats& getWarmupStats() const;
+    const NUFusedPacker::Stats& getNUPackerStats() const;
+    
     // Linear layer with quantization support
     // Returns weight index for use in Linear()
     int registerWeightTensor(void* data, int type, size_t rows, size_t cols);
@@ -204,14 +244,13 @@ public:
     void SwiGLU(const float* gate, const float* up, float* output, size_t dim);
     
     // Set sampler
-    void setSampler(std::unique_ptr<ISampler> sampler);
-    
+    void setSampler(std::unique_ptr<rawrxd::sampling::ISampler> sampler);
+
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
     std::unique_ptr<KVCache> kvCache;
-    std::unique_ptr<ISampler> sampler;
-    std::unique_ptr<ITokenizer> tokenizer;
+    std::unique_ptr<rawrxd::sampling::ISampler> sampler;
     
     // Real model weights
     ModelWeights modelWeights;
@@ -228,8 +267,37 @@ private:
     // Pinned during inference to prevent eviction
     std::vector<std::vector<MoEWeightHandle>> moePinnedHandles_;
     
+    // VAL-000 Phase 3: Advanced execution components
+    std::unique_ptr<MedusaDecoder> medusaDecoder_;       // Speculative decoding
+    std::unique_ptr<NUFusedPacker> nuPacker_;           // Compression engine
+    std::unique_ptr<WarmupScheduler> warmupScheduler_;  // Predictive prefetch
+    std::unique_ptr<CompressedKVCache> compressedKV_;   // KV compression
+    std::unique_ptr<NVMeStream> nvmeStream_;           // NVMe streaming
+    std::unique_ptr<SlidingWindowEngine> slidingWindow_;// Sliding context
+    std::unique_ptr<ReverseIntegration> reverseIntegration_; // BigDaddyG Reverse Engine
+    
+    // VAL-000 component configs
+    MedusaConfig medusaConfig_;
+    NUPackerConfig nuPackerConfig_;
+    WarmupConfig warmupConfig_;
+    CompressedKVConfig compressedKVConfig_;
+    NVMeStreamConfig nvmeConfig_;
+    SlidingWindowConfig slidingWindowConfig_;
+    
+    // Feature flags
+    bool medusaEnabled_ = false;
+    bool nuPackingEnabled_ = false;
+    bool warmupEnabled_ = false;
+    bool compressedKVEnabled_ = false;
+    bool nvmeStreamingEnabled_ = false;
+    bool slidingWindowEnabled_ = false;
+    bool reverseAnalysisEnabled_ = false;
+    
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
+    
+    // Tokenizer
+    std::unique_ptr<ITokenizer> tokenizer;
     
     // Weight tensors (legacy registration system)
     float* weights = nullptr;
@@ -286,6 +354,15 @@ private:
     
     // Load a tensor from GGUF into WeightTensor
     bool loadTensorFromGGUF(WeightTensor& wt, const std::string& name);
+    
+    // VAL-000 Phase 3: Internal helpers
+    bool initializeAdvancedFeatures();
+    void recordExpertAccess(int layerId, int expertId, float weight);
+    void prefetchNextExperts(int layerId);
+    size_t generateWithMedusa(const int* promptTokens, size_t promptLen,
+                               int* outputTokens, size_t maxOutputLen,
+                               InferenceStats* stats);
+    void applySlidingWindow(size_t& attentionStart, size_t& attentionEnd);
 };
 
 } // namespace Deep2

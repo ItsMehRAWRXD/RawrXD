@@ -60,9 +60,11 @@ RowLoop:
     imul    rax, 2560             ; RAX = row * bytes_per_row
     mov     r15, rsi
     add     r15, rax              ; R15 = weights pointer for this row (non-volatile!)
-    
+
     xorps   xmm0, xmm0            ; Clear scalar accumulator (SSE, not AVX)
     mov     rcx, r13              ; RCX = blocks per row
+    ; Activation pointer is reset to start of activation vector for EACH row
+    ; The activation vector is the same for all rows (matrix-vector multiply)
     mov     rbp, rdx              ; RBP = activation pointer (reset for each row)
 
 BlockLoop:
@@ -618,14 +620,16 @@ DoneRow_4Way:
     vaddps  zmm16, zmm16, zmm18   ; zmm16 = total
 
     ; Horizontal sum of ZMM16 (16 floats) into scalar output
-    vextractf64x4 ymm1, zmm16, 1
-    vaddps  ymm0, ymm16, ymm1
-    vextractf128 xmm1, ymm0, 1
-    vaddps  xmm0, xmm0, xmm1
-    vmovhlps xmm1, xmm0, xmm0
-    vaddps  xmm0, xmm0, xmm1
-    vshufps xmm1, xmm0, xmm0, 1
-    vaddss  xmm0, xmm0, xmm1
+    ; Move to zmm0 first to use same pattern as hybrid kernel
+    vmovaps zmm0, zmm16
+    vextractf64x4 ymm1, zmm0, 1             ; Extract high 256 bits
+    vaddps  ymm0, ymm0, ymm1                ; Add high and low halves
+    vextractf128 xmm1, ymm0, 1              ; Extract high 128 bits
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vmovhlps xmm1, xmm0, xmm0               ; Move high half to low
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vshufps xmm1, xmm0, xmm0, 1             ; Rotate
+    vaddss  xmm0, xmm0, xmm1                ; Final add
     vmovss  dword ptr [r14], xmm0
 
     add     r14, 4

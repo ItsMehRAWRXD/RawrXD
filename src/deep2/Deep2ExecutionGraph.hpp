@@ -9,6 +9,7 @@
 #include <memory>
 #include <functional>
 #include <cstdint>
+#include <mutex>
 
 namespace Deep2 {
 
@@ -59,12 +60,12 @@ struct ExecNode {
 };
 
 // ============================================================================
-// Expert Prefetch Request
+// Prefetch Request (shared)
 // ============================================================================
 struct PrefetchRequest {
     uint32_t layerIdx;
     uint32_t expertIdx;
-    uint32_t priority;  // Higher = load sooner
+    uint32_t priority;
     bool isPinned;
 };
 

@@ -2,7 +2,7 @@
 ; Vectorized Softmax with LUT + Linear Interpolation (AVX-512)
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Replaces polynomial exp with fast LUT-based approximation
-; Target: < 0.3 µs (down from 0.529 µs baseline, 55x better than polynomial)
+; LUT is initialized at runtime by Softmax_LUT_Init (avoids MASM FP initializer limits)
 ; ═══════════════════════════════════════════════════════════════════════════════
 
 OPTION DOTNAME
@@ -18,43 +18,119 @@ PUBLIC Softmax_LUT_Init
 ; Constants
 ; ═══════════════════════════════════════════════════════════════════════════════
 LUT_SIZE        EQU     256             ; LUT entries
-LUT_RANGE       EQU     8.0             ; Covers x in [-8, 0] (softmax range)
-INV_LUT_SCALE   EQU     32.0            ; 256 entries / 8 range
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Data Section
 ; ═══════════════════════════════════════════════════════════════════════════════
 .data
-ALIGN 64
 
-; Exp LUT: exp(x) for x in [-8, 0], linear interpolation between entries
-exp_lut LABEL REAL4
-    REPEAT LUT_SIZE
-        LOCAL val
-        val = $ - exp_lut
-        REAL4 (2.71828182845904523536 ** (-8.0 + (val / 32.0)))
-    ENDM
-
-; LUT for fast reciprocal (1/x) using Newton-Raphson
-rcp_lut LABEL REAL4
-    REPEAT 256
-        LOCAL val
-        val = $ - rcp_lut
-        ; Approximate 1/(1.0 + val/256) using linear approx
-        REAL4 (1.0 / (1.0 + (val / 256.0)))
-    ENDM
+; Exp LUT: exp(x) for x in [-8, 0], 256 entries (initialized at runtime)
+exp_lut         DWORD   LUT_SIZE DUP(0)
 
 ; Constants
-lut_scale       REAL4   32.0            ; LUT_SIZE / LUT_RANGE
+lut_scale       REAL4   32.0            ; LUT_SIZE / LUT_RANGE (256/8)
 neg_lut_min     REAL4   -8.0            ; Minimum LUT input
 one_f           REAL4   1.0
 zero_f          REAL4   0.0
-inv_255         REAL4   0.003921568627  ; 1/255 for interpolation
+two_f           REAL4   2.0
+lut_init_flag   DWORD   0               ; 0 = not initialized, 1 = initialized
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Code Section
 ; ═══════════════════════════════════════════════════════════════════════════════
 .code
+
+; ═══════════════════════════════════════════════════════════════════════════════
+; Softmax_LUT_Init
+;
+; Initializes the exp LUT at runtime
+; exp_lut[i] = exp(-8.0 + i * (8.0 / 256.0)) = exp(-8.0 + i / 32.0)
+; ═══════════════════════════════════════════════════════════════════════════════
+Softmax_LUT_Init PROC FRAME
+    push    rbx
+    .pushreg rbx
+    push    rsi
+    .pushreg rsi
+    .endprolog
+
+    ; Check if already initialized
+    mov     eax, dword ptr [lut_init_flag]
+    test    eax, eax
+    jnz     .init_done
+
+    ; Initialize LUT
+    lea     rsi, [exp_lut]              ; rsi = &exp_lut[0]
+    xor     ebx, ebx                    ; ebx = index = 0
+
+.init_loop:
+    cmp     ebx, LUT_SIZE
+    jae     .init_complete
+
+    ; Compute x = -8.0 + index * 0.03125
+    ; 0.03125 = 1/32
+    mov     eax, 03D000000h             ; 0.03125f in IEEE754
+    movd    xmm1, eax
+    cvtsi2ss xmm0, ebx
+    mulss   xmm0, xmm1                  ; xmm0 = index * 0.03125
+    addss   xmm0, dword ptr [neg_lut_min] ; xmm0 = -8.0 + index * 0.03125
+
+    ; Compute exp(x) using 2^(x * log2(e))
+    ; log2(e) = 1.44269504
+    mov     eax, 3FB8AA3Bh              ; 1.44269504f
+    movd    xmm1, eax
+    mulss   xmm0, xmm1                  ; xmm0 = x * log2(e)
+
+    ; Split into integer and fractional parts
+    ; 2^x = 2^int * 2^frac
+    roundss xmm2, xmm0, 3               ; xmm2 = floor(x) (round toward -inf)
+    movss   xmm3, xmm0
+    subss   xmm3, xmm2                  ; xmm3 = frac = x - floor(x)
+
+    ; 2^int via bit manipulation: float(2^n) = (n + 127) << 23
+    cvtss2si eax, xmm2                  ; eax = (int)floor(x)
+    add     eax, 127                    ; exponent bias
+    shl     eax, 23                     ; shift to exponent position
+    movd    xmm4, eax                   ; xmm4 = 2^int
+
+    ; 2^frac via polynomial: 2^f ≈ 1 + f*ln2 + (f*ln2)^2/2 + (f*ln2)^3/6
+    ; ln2 = 0.69314718
+    mov     eax, 3F317218h              ; 0.69314718f
+    movd    xmm5, eax
+    mulss   xmm5, xmm3                  ; xmm5 = f * ln2
+    ; exp(y) = 1 + y + y^2/2 + y^3/6 where y = f*ln2
+    movss   xmm6, dword ptr [one_f]     ; xmm6 = 1.0
+    addss   xmm6, xmm5                  ; 1 + y
+    movss   xmm7, xmm5
+    mulss   xmm7, xmm7                  ; y^2
+    mov     eax, 3F000000h              ; 0.5f
+    movd    xmm0, eax
+    mulss   xmm7, xmm0                  ; y^2 * 0.5
+    addss   xmm6, xmm7                  ; 1 + y + y^2/2
+    movss   xmm7, xmm5
+    mulss   xmm7, xmm7                  ; y^2
+    mulss   xmm7, xmm5                  ; y^3
+    mov     eax, 3E2AAAABh              ; 1/6 ≈ 0.16667f
+    movd    xmm0, eax
+    mulss   xmm7, xmm0                  ; y^3 / 6
+    addss   xmm6, xmm7                  ; 1 + y + y^2/2 + y^3/6
+
+    ; Final: exp(x) = 2^int * 2^frac
+    mulss   xmm4, xmm6                  ; xmm4 = 2^int * 2^frac = exp(x)
+
+    ; Store in LUT
+    movss   dword ptr [rsi + rbx*4], xmm4
+
+    inc     ebx
+    jmp     .init_loop
+
+.init_complete:
+    mov     dword ptr [lut_init_flag], 1
+
+.init_done:
+    pop     rsi
+    pop     rbx
+    ret
+Softmax_LUT_Init ENDP
 
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; Softmax_LUT_AVX512
@@ -68,10 +144,8 @@ inv_255         REAL4   0.003921568627  ; 1/255 for interpolation
 ;   R8  = length (uint32_t)
 ;
 ; Returns: void
-; Clobbers: zmm0-zmm7, k1-k2, rax-r11
 ; ═══════════════════════════════════════════════════════════════════════════════
 Softmax_LUT_AVX512 PROC FRAME
-    ; Prologue
     push    rbp
     .pushreg rbp
     push    rbx
@@ -91,38 +165,36 @@ Softmax_LUT_AVX512 PROC FRAME
     mov     rdi, rdx                    ; rdi = output
     mov     ebx, r8d                    ; ebx = length
 
+    test    ebx, ebx
+    jz      .done
+
     ; ═══════════════════════════════════════════════════════════════════════════
     ; Phase 1: Find max (horizontal reduction)
     ; ═══════════════════════════════════════════════════════════════════════════
-    vbroadcastss zmm0, dword ptr [rsi]  ; zmm0 = max_val (init to first element)
-    
-    mov     rax, 1                      ; Start from index 1
+    vmovss  xmm0, dword ptr [rsi]       ; xmm0 = input[0]
+    vbroadcastss zmm0, xmm0             ; zmm0 = max_val
+
+    mov     eax, 1
     cmp     ebx, 16
     jb      .find_max_scalar
 
 .find_max_vector:
     cmp     eax, ebx
     jae     .find_max_done
-    
-    ; Load 16 floats
     vmovups zmm1, zmmword ptr [rsi + rax*4]
-    vmaxps  zmm0, zmm0, zmm1            ; zmm0 = max(zmm0, zmm1)
-    
+    vmaxps  zmm0, zmm0, zmm1
     add     eax, 16
     jmp     .find_max_vector
 
 .find_max_scalar:
     cmp     eax, ebx
     jae     .find_max_done
-    
     vbroadcastss zmm1, dword ptr [rsi + rax*4]
     vmaxps  zmm0, zmm0, zmm1
-    
     inc     eax
     jmp     .find_max_scalar
 
 .find_max_done:
-    ; Horizontal max of zmm0
     vextractf64x4 ymm1, zmm0, 1
     vmaxps  ymm0, ymm0, ymm1
     vextractf128 xmm1, ymm0, 1
@@ -131,88 +203,66 @@ Softmax_LUT_AVX512 PROC FRAME
     vmaxps  xmm0, xmm0, xmm1
     vshufps xmm1, xmm0, xmm0, 01h
     vmaxps  xmm0, xmm0, xmm1
-    vbroadcastss zmm0, xmm0             ; zmm0 = max_val (broadcasted)
+    vbroadcastss zmm0, xmm0             ; zmm0 = max_val
 
     ; ═══════════════════════════════════════════════════════════════════════════
-    ; Phase 2: Compute exp(x - max) using LUT + linear interpolation
+    ; Phase 2: Compute exp(x - max) using LUT
     ; ═══════════════════════════════════════════════════════════════════════════
-    vbroadcastss zmm7, dword ptr [lut_scale]   ; zmm7 = lut_scale
-    vbroadcastss zmm6, dword ptr [neg_lut_min]   ; zmm6 = -8.0 (LUT min)
+    vbroadcastss zmm7, dword ptr [lut_scale]
+    vbroadcastss zmm6, dword ptr [neg_lut_min]
     vxorps  zmm5, zmm5, zmm5            ; zmm5 = sum_exp = 0
-    
-    mov     rax, 0                      ; index = 0
+
+    mov     eax, 0
     cmp     ebx, 16
     jb      .exp_scalar
 
 .exp_vector:
     cmp     eax, ebx
     jae     .exp_done
-    
-    ; Load input
     vmovups zmm1, zmmword ptr [rsi + rax*4]
-    
-    ; x' = x - max
-    vsubps  zmm1, zmm1, zmm0
-    
-    ; Clamp to LUT range [-8, 0]
-    vmaxps  zmm1, zmm1, zmm6            ; max(x', -8)
+    vsubps  zmm1, zmm1, zmm0            ; x' = x - max
+    vmaxps  zmm1, zmm1, zmm6            ; clamp to [-8, 0]
     vxorps  zmm2, zmm2, zmm2
-    vminps  zmm1, zmm1, zmm2            ; min(x', 0)
-    
-    ; LUT index: idx = (x' - (-8)) * scale = (x' + 8) * 32
-    vsubps  zmm2, zmm1, zmm6            ; zmm2 = x' - (-8) = x' + 8
-    vmulps  zmm2, zmm2, zmm7            ; zmm2 = idx (float)
-    
-    ; Split into integer and fractional parts
-    vcvtps2dq zmm3, zmm2                ; zmm3 = idx_int
-    vcvtdq2ps zmm4, zmm3                ; zmm4 = idx_int (float)
-    vsubps  zmm4, zmm2, zmm4            ; zmm4 = frac
-    
-    ; Gather from LUT
+    vminps  zmm1, zmm1, zmm2
+    vsubps  zmm2, zmm1, zmm6            ; x' + 8
+    vmulps  zmm2, zmm2, zmm7            ; idx
+    vcvtps2dq zmm3, zmm2                ; idx_int
+    kxnorw  k1, k1, k1                  ; k1 = all ones
     vgatherdps zmm2 {k1}, [exp_lut + zmm3*4]
-    
-    ; Linear interpolation: result = lut[idx] + frac * (lut[idx+1] - lut[idx])
-    ; Simplified: just use lut[idx] for now (can add lerp later)
-    
-    ; Store exp values
     vmovups zmmword ptr [rdi + rax*4], zmm2
-    
-    ; Accumulate sum
     vaddps  zmm5, zmm5, zmm2
-    
     add     eax, 16
     jmp     .exp_vector
 
 .exp_scalar:
     cmp     eax, ebx
     jae     .exp_done
-    
-    ; Scalar fallback
     vmovss  xmm1, dword ptr [rsi + rax*4]
-    vsubss  xmm1, xmm1, xmm0            ; x' = x - max
-    
-    ; Clamp
+    vsubss  xmm1, xmm1, xmm0
     vmaxss  xmm1, xmm1, xmm6
     vxorps  xmm2, xmm2, xmm2
     vminss  xmm1, xmm1, xmm2
-    
-    ; Compute LUT index
-    vsubss  xmm2, xmm1, xmm6            ; x' + 8
-    vmulss  xmm2, xmm2, xmm7            ; idx
-    vcvttss2si r8, xmm2                 ; r8 = idx_int
-    
-    ; Load from LUT
+    vsubss  xmm2, xmm1, xmm6
+    vmulss  xmm2, xmm2, xmm7
+    vcvttss2si r8, xmm2
+    cmp     r8, 0
+    jl      .clamp_low
+    cmp     r8, LUT_SIZE
+    jge     .clamp_high
+    jmp     .load_lut
+.clamp_low:
+    xor     r8, r8
+    jmp     .load_lut
+.clamp_high:
+    mov     r8, LUT_SIZE - 1
+.load_lut:
     vmovss  xmm2, dword ptr [exp_lut + r8*4]
-    
-    ; Store and accumulate
     vmovss  dword ptr [rdi + rax*4], xmm2
     vaddss  xmm5, xmm5, xmm2
-    
     inc     eax
     jmp     .exp_scalar
 
 .exp_done:
-    ; Horizontal sum of zmm5
     vextractf64x4 ymm1, zmm5, 1
     vaddps  ymm5, ymm5, ymm1
     vextractf128 xmm1, ymm5, 1
@@ -226,41 +276,35 @@ Softmax_LUT_AVX512 PROC FRAME
     ; ═══════════════════════════════════════════════════════════════════════════
     ; Phase 3: Normalize (output = exp(x) / sum_exp)
     ; ═══════════════════════════════════════════════════════════════════════════
-    ; Compute reciprocal of sum_exp using fast approximation
-    vrcp14ps zmm6, zmm5                 ; zmm6 = approx 1/sum_exp
-    
-    ; One Newton-Raphson iteration: r = r * (2 - sum * r)
-    vfnmadd231ps zmm7, zmm5, zmm6, dword ptr [one_f]{1to16}  ; zmm7 = 2 - sum*r
-    vmulps  zmm6, zmm6, zmm7            ; zmm6 = refined reciprocal
-    
-    mov     rax, 0
+    vrcp14ps zmm6, zmm5                 ; approx 1/sum_exp
+    vbroadcastss zmm7, dword ptr [two_f]
+    vfnmadd231ps zmm7, zmm5, zmm6       ; 2 - sum*r
+    vmulps  zmm6, zmm6, zmm7            ; refined reciprocal
+
+    mov     eax, 0
     cmp     ebx, 16
     jb      .normalize_scalar
 
 .normalize_vector:
     cmp     eax, ebx
     jae     .normalize_done
-    
     vmovups zmm1, zmmword ptr [rdi + rax*4]
-    vmulps  zmm1, zmm1, zmm6            ; zmm1 = exp(x) / sum_exp
+    vmulps  zmm1, zmm1, zmm6
     vmovups zmmword ptr [rdi + rax*4], zmm1
-    
     add     eax, 16
     jmp     .normalize_vector
 
 .normalize_scalar:
     cmp     eax, ebx
     jae     .normalize_done
-    
     vmovss  xmm1, dword ptr [rdi + rax*4]
     vmulss  xmm1, xmm1, xmm6
     vmovss  dword ptr [rdi + rax*4], xmm1
-    
     inc     eax
     jmp     .normalize_scalar
 
 .normalize_done:
-    ; Epilogue
+.done:
     vzeroupper
     add     rsp, 64
     pop     rdi
@@ -270,16 +314,5 @@ Softmax_LUT_AVX512 PROC FRAME
     ret
 
 Softmax_LUT_AVX512 ENDP
-
-; ═══════════════════════════════════════════════════════════════════════════════
-; Softmax_LUT_Init
-;
-; Initializes the LUT tables (call once at startup)
-; ═══════════════════════════════════════════════════════════════════════════════
-Softmax_LUT_Init PROC
-    ; LUT is pre-computed at assembly time
-    ; This function is a placeholder for runtime initialization if needed
-    ret
-Softmax_LUT_Init ENDP
 
 END

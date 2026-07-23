@@ -336,7 +336,8 @@ void KVMigrationWorker::WorkerLoop() {
         
         // Notify completion
         if (m_completion_callback) {
-            m_completion_callback(request.page_id, success, 0);  // Latency tracked inside
+            m_completion_callback(request.page_id, success, 0,
+                                  request.source_tier, request.target_tier);
         }
     }
 }
@@ -427,7 +428,8 @@ bool KVMigrationWorker::ExecuteMigration(const MigrationRequest& request) {
     page->current_tier = request.target_tier;
     page->state = (request.target_tier == ResidencyTier::FROZEN) ? 
                    PageState::EVICTED : PageState::RESIDENT;
-    page->migration_pending = false;
+    // NOTE: migration_pending is NOT cleared here - it's cleared in OnMigrationComplete
+    // This prevents EvaluateMigrations from re-queuing the page before logging completes
     page->migration_count++;
     
     // Record latency
@@ -495,13 +497,21 @@ bool KVTransitionLogger::CheckForDuplicates(uint64_t page_id, uint64_t window_ms
     auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     
-    uint32_t transition_count = 0;
+    // Track unique (from_tier, to_tier) pairs for this page
+    // A duplicate is the same transition type happening multiple times
+    std::vector<std::pair<ResidencyTier, ResidencyTier>> transitions;
+    
     for (const auto& entry : m_log) {
         if (entry.page_id == page_id && (now - entry.timestamp) < window_ms) {
-            transition_count++;
-            if (transition_count > 1) {
-                return true;  // Duplicate found
+            auto transition = std::make_pair(entry.from_tier, entry.to_tier);
+            
+            // Check if this exact transition already occurred
+            for (const auto& prev : transitions) {
+                if (prev.first == transition.first && prev.second == transition.second) {
+                    return true;  // Same transition type seen before = duplicate
+                }
             }
+            transitions.push_back(transition);
         }
     }
     return false;
@@ -597,8 +607,9 @@ bool KVCacheResidencyManagerV2::Initialize() {
     
     // Set up completion callback
     m_migration_worker->SetCompletionCallback(
-        [this](uint64_t page_id, bool success, uint64_t latency_us) {
-            OnMigrationComplete(page_id, success, latency_us);
+        [this](uint64_t page_id, bool success, uint64_t latency_us,
+               ResidencyTier source_tier, ResidencyTier target_tier) {
+            OnMigrationComplete(page_id, success, latency_us, source_tier, target_tier);
         });
     
     // Start worker
@@ -892,17 +903,31 @@ ResidencyTier KVCacheResidencyManagerV2::DetermineTargetTier(uint32_t token_idx)
 
 void KVCacheResidencyManagerV2::EvaluateMigrations(uint32_t current_seq_len) {
     // Check all pages for needed migrations
-    for (uint32_t page_idx = 0; page_idx <= current_seq_len / m_config.TOKENS_PER_PAGE; page_idx++) {
+    uint32_t max_page_idx = current_seq_len / m_config.TOKENS_PER_PAGE;
+    
+    for (uint32_t page_idx = 0; page_idx <= max_page_idx; page_idx++) {
         KVResidencyPage* page = m_page_table->GetPage(page_idx);
-        if (!page || page->migration_pending) continue;
+        if (!page) continue;
         
-        // Determine target tier based on first token in page
+        // Skip if migration already pending
+        if (page->migration_pending) continue;
+        
+        // Skip if page is already in target tier
         ResidencyTier target = DetermineTargetTier(page->first_token);
+        if (page->current_tier == target) continue;
         
-        if (page->current_tier != target) {
-            MigrationReason reason = MigrationReason::WINDOW_EXPIRED;
-            QueuePageMigration(page_idx, target, reason);
+        // Skip if page was recently migrated (prevent oscillation)
+        // Only allow migration if page has settled in current tier
+        if (page->migration_count > 0) {
+            // Check if this would be a redundant migration (back to previous tier)
+            if (page->current_tier == page->target_tier && 
+                page->target_tier != ResidencyTier::INVALID) {
+                continue;
+            }
         }
+        
+        MigrationReason reason = MigrationReason::WINDOW_EXPIRED;
+        QueuePageMigration(page_idx, target, reason);
     }
 }
 
@@ -928,7 +953,9 @@ void KVCacheResidencyManagerV2::QueuePageMigration(uint64_t page_id,
 }
 
 void KVCacheResidencyManagerV2::OnMigrationComplete(uint64_t page_id, bool success, 
-                                                    uint64_t latency_us) {
+                                                    uint64_t latency_us,
+                                                    ResidencyTier source_tier,
+                                                    ResidencyTier target_tier) {
     KVResidencyPage* page = m_page_table->GetPage(page_id);
     if (!page) return;
     
@@ -957,8 +984,8 @@ void KVCacheResidencyManagerV2::OnMigrationComplete(uint64_t page_id, bool succe
         entry.page_id = page_id;
         entry.first_token = page->first_token;
         entry.token_count = page->token_count;
-        entry.from_tier = page->current_tier;  // Old tier
-        entry.to_tier = page->target_tier;     // New tier
+        entry.from_tier = source_tier;   // Source tier from request
+        entry.to_tier = target_tier;     // Target tier from request
         entry.reason = MigrationReason::WINDOW_EXPIRED;  // Simplified
         entry.latency_us = latency_us;
         entry.success = success;
@@ -966,7 +993,7 @@ void KVCacheResidencyManagerV2::OnMigrationComplete(uint64_t page_id, bool succe
         
         m_logger->LogTransition(entry);
         
-        // Check for duplicates
+        // Check for duplicates - only count actual duplicates (same source->target)
         if (m_logger->CheckForDuplicates(page_id, 1000)) {
             m_stats.duplicate_migrations++;
         }
@@ -983,6 +1010,11 @@ void KVCacheResidencyManagerV2::OnMigrationComplete(uint64_t page_id, bool succe
     } else {
         m_stats.migrations_failed++;
     }
+    
+    // Clear migration_pending AFTER logging is complete
+    // This prevents duplicate migrations during the window between
+    // ExecuteMigration finishing and OnMigrationComplete being called
+    page->migration_pending = false;
 }
 
 void KVCacheResidencyManagerV2::UpdateStats() {

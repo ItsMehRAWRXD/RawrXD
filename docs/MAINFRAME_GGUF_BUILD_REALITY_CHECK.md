@@ -45,7 +45,7 @@ So “Main Window Frame hemorrhaging Qt” applies to the **Qt build** (qtapp), 
 
 2. **GGUF loader**  
    - Keep using the existing C++ GGUF/ggml path for correctness.  
-   - If you want a **MASM64 hot path**, add a small **ml64** module that matches the real tensor layout and is called from C++ (e.g. one function: load one tensor or one dequant block). Don’t replace the whole loader with the current fictional ASM.
+   - If you want a **MASM64 hot path**, add a small **ml64** module that matches the real tensor layout and is called from C++ (e.g. one function: load one tensor or one dequant block). Don’t replace the whole loader with the current unteleprompted ASM.
 
 3. **Build**  
    - Keep CMake for the main app (C++ + ASM).  

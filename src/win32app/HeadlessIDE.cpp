@@ -1740,6 +1740,52 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
         responseBody = "{\"success\":" + std::string(r.success ? "true" : "false") +
                        ",\"detail\":\"" + std::string(r.detail) + "\"}";
     }
+    // ========== Phase 35: RawrXD-Native API (Browser → C++ Runtime) ==========
+    // These endpoints restore the original RawrXD backend contract that the
+    // IDE frontend (gui/ide_chatbot.html) was designed for, eliminating the
+    // Ollama-only fallback. The browser now talks directly to the native
+    // C++ runtime via the HeadlessIDE HTTP server.
+    else if (path == "/api/models" && method == "GET") {
+        responseBody = getModelsJson();
+    }
+    else if (path == "/api/model/load" && method == "POST") {
+        std::string modelPath;
+        try {
+            auto j = nlohmann::json::parse(body);
+            modelPath = j.value("modelPath", j.value("model", j.value("name", "")));
+        } catch (...) { modelPath = body; }
+        bool ok = !modelPath.empty() && loadModel(modelPath);
+        responseBody = "{\"success\":" + std::string(ok ? "true" : "false") +
+                       ",\"model\":\"" + m_loadedModelName + "\"" +
+                       ",\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") + "}";
+        statusCode = ok ? 200 : 400;
+    }
+    else if (path == "/api/model/unload" && method == "POST") {
+        bool ok = unloadModel();
+        responseBody = "{\"success\":" + std::string(ok ? "true" : "false") + "}";
+        statusCode = ok ? 200 : 400;
+    }
+    else if (path == "/api/engine/capabilities" && method == "GET") {
+        responseBody = getEngineCapabilitiesJson();
+    }
+    else if (path == "/api/agent/dual/init" && method == "POST") {
+        responseBody = "{\"success\":true,\"agentId\":\"dual-headless-" +
+                       std::to_string(++m_inferenceRequestCount) +
+                       "\",\"status\":\"ready\",\"message\":\"DualAgent initialized (native)\"}";
+    }
+    else if (path == "/api/agent/dual/execute" && method == "POST") {
+        std::string prompt;
+        try {
+            auto j = nlohmann::json::parse(body);
+            prompt = j.value("prompt", "");
+        } catch (...) { prompt = body; }
+        std::string result = runInference(prompt);
+        responseBody = "{\"success\":true,\"output\":\"" + result + "\"}";
+    }
+    else if (path == "/api/tags" && method == "GET") {
+        // Ollama-compatible model list (for legacy frontend fallback)
+        responseBody = getModelsOllamaJson();
+    }
     else {
         statusCode = 404;
         responseBody = "{\"error\":\"Not found\",\"path\":\"" + path + "\"}";
@@ -1768,6 +1814,131 @@ std::string HeadlessIDE::getFeatureManifestMarkdown() const {
 
 std::string HeadlessIDE::getFeatureManifestJSON() const {
     return "{\"mode\":\"headless\",\"version\":\"" + std::string(VERSION) + "\",\"phase\":\"" + BUILD_PHASE + "\"}";
+}
+
+// ============================================================================
+// Phase 35: RawrXD-Native API Helpers
+// Provides the model registry, engine capabilities, and Ollama-compatible
+// model list that the IDE frontend (gui/ide_chatbot.html) expects when
+// running in RawrXD-native mode (no Ollama dependency).
+// ============================================================================
+
+std::string HeadlessIDE::getModelsJson() const {
+    std::ostringstream oss;
+    oss << "{\"models\":[";
+    bool first = true;
+
+    // 1) Currently loaded model (if any) — listed first so the frontend
+    //    auto-selects a runnable model.
+    if (m_modelLoaded && !m_loadedModelName.empty()) {
+        first = false;
+        oss << "{\"id\":\"" << m_loadedModelName << "\","
+            << "\"name\":\"" << m_loadedModelName << "\","
+            << "\"path\":\"" << m_loadedModelPath << "\","
+            << "\"type\":\"gguf\","
+            << "\"loaded\":true}";
+    }
+
+    // 2) Scan the configured model directory for .gguf files
+    const char* scanDirs[] = {
+        "D:/OllamaModels",
+        "C:/OllamaModels",
+        "D:/models",
+        "C:/models"
+    };
+    for (const char* dir : scanDirs) {
+        std::string search = std::string(dir) + "/*.gguf";
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA(search.c_str(), &fd);
+        if (hFind == INVALID_HANDLE_VALUE) continue;
+        do {
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+            if (!first) oss << ",";
+            first = false;
+            std::string fname = fd.cFileName;
+            std::string base = fname.substr(0, fname.find_last_of('.'));
+            std::string full = std::string(dir) + "/" + fname;
+            uint64_t size = (uint64_t(fd.nFileSizeHigh) << 32) | fd.nFileSizeLow;
+            oss << "{\"id\":\"" << base << "\","
+                << "\"name\":\"" << base << "\","
+                << "\"path\":\"" << full << "\","
+                << "\"type\":\"gguf\","
+                << "\"size\":" << size << ","
+                << "\"loaded\":false}";
+        } while (FindNextFileA(hFind, &fd));
+        FindClose(hFind);
+    }
+
+    oss << "]}";
+    return oss.str();
+}
+
+std::string HeadlessIDE::getModelsOllamaJson() const {
+    // Ollama /api/tags compatible format — keeps the legacy frontend path
+    // working until the user switches to RawrXD-native mode.
+    std::ostringstream oss;
+    oss << "{\"models\":[";
+    bool first = true;
+
+    if (m_modelLoaded && !m_loadedModelName.empty()) {
+        first = false;
+        oss << "{\"name\":\"" << m_loadedModelName << "\","
+            << "\"model\":\"" << m_loadedModelName << "\","
+            << "\"modified_at\":\"\","
+            << "\"size\":0,"
+            << "\"digest\":\"rawrxd-local\","
+            << "\"details\":{\"format\":\"gguf\",\"family\":\"rawrxd\","
+            << "\"parameter_size\":\"unknown\",\"quantization_level\":\"unknown\"}}";
+    }
+
+    const char* scanDirs[] = { "D:/OllamaModels", "C:/OllamaModels" };
+    for (const char* dir : scanDirs) {
+        std::string search = std::string(dir) + "/*.gguf";
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA(search.c_str(), &fd);
+        if (hFind == INVALID_HANDLE_VALUE) continue;
+        do {
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+            if (!first) oss << ",";
+            first = false;
+            std::string fname = fd.cFileName;
+            std::string base = fname.substr(0, fname.find_last_of('.'));
+            oss << "{\"name\":\"" << base << "\","
+                << "\"model\":\"" << base << "\","
+                << "\"modified_at\":\"\","
+                << "\"size\":0,"
+                << "\"digest\":\"rawrxd-local\","
+                << "\"details\":{\"format\":\"gguf\",\"family\":\"rawrxd\","
+                << "\"parameter_size\":\"unknown\",\"quantization_level\":\"unknown\"}}";
+        } while (FindNextFileA(hFind, &fd));
+        FindClose(hFind);
+    }
+
+    oss << "]}";
+    return oss.str();
+}
+
+std::string HeadlessIDE::getEngineCapabilitiesJson() const {
+    std::ostringstream oss;
+    oss << "{"
+        << "\"server\":\"RawrXD-HeadlessIDE\","
+        << "\"version\":\"" << VERSION << "\","
+        << "\"phase\":\"" << BUILD_PHASE << "\","
+        << "\"backends\":[\"cpu\",\"vulkan\",\"ollama\",\"openai\",\"claude\",\"gemini\"],"
+        << "\"features\":[\"moe\",\"flash_attention\",\"quantization\",\"streaming\","
+        << "\"dual_agent\",\"hotpatch\",\"lsp\",\"swarm\",\"replay\"],"
+        << "\"maxContextLength\":131072,"
+        << "\"maxBatchSize\":512,"
+        << "\"modelLoaded\":" << (m_modelLoaded ? "true" : "false") << ","
+        << "\"loadedModel\":\"" << m_loadedModelName << "\","
+        << "\"endpoints\":{"
+        << "\"chat\":\"/api/generate\","
+        << "\"completions\":\"/v1/chat/completions\","
+        << "\"models\":\"/api/models\","
+        << "\"agents\":\"/api/agent/dual\""
+        << "}"
+        << "}";
+    return oss.str();
 }
 
 std::string HeadlessIDE::getQuantumStatusJson() const {

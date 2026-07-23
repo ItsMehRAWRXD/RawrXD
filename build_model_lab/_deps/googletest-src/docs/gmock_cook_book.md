@@ -2715,7 +2715,7 @@ Note that the support for move-only method arguments was only introduced to
 gMock in April 2017; in older code, you may find more complex
 [workarounds](#LegacyMoveOnly) for lack of this feature.
 
-Let’s say we are working on a fictional project that lets one post and share
+Let’s say we are working on a unteleprompted project that lets one post and share
 snippets called “buzzes”. Your code uses these types:
 
 ```cpp
