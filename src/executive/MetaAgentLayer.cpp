@@ -132,8 +132,33 @@ void Negotiator::shutdown() {
 }
 
 std::vector<Negotiator::Conflict> Negotiator::detectConflicts() { 
+    std::vector<Conflict> conflicts;
+    if (!director_) return conflicts;
+    
     // Check for resource conflicts between active missions
-    return {}; 
+    // Two missions conflict if they require the same exclusive resource
+    auto missions1 = director_->getActiveMissions();
+    for (size_t i = 0; i < missions1.size(); ++i) {
+        for (size_t j = i + 1; j < missions1.size(); ++j) {
+            const auto& m1 = missions1[i];
+            const auto& m2 = missions1[j];
+            // Check for overlapping resource requirements
+            for (const auto& res1 : m1.requiredResources) {
+                for (const auto& res2 : m2.requiredResources) {
+                    if (res1 == res2 && !res1.empty()) {
+                        Conflict conflict;
+                        conflict.conflictId = nextConflictId_.fetch_add(1);
+                        conflict.missionId1 = m1.id;
+                        conflict.missionId2 = m2.id;
+                        conflict.conflictType = "resource_contention";
+                        conflict.description = "Both missions require resource: " + res1;
+                        conflicts.push_back(conflict);
+                    }
+                }
+            }
+        }
+    }
+    return conflicts;
 }
 
 std::string Negotiator::resolveConflict(const Conflict& conflict) {
@@ -180,17 +205,64 @@ Critic::PerformanceReview Critic::evaluateMission(uint64_t missionId) {
 }
 
 std::vector<Critic::PerformanceReview> Critic::evaluateRecentMissions(size_t count) {
-    return {};
+    std::vector<PerformanceReview> reviews;
+    if (!director_) return reviews;
+    
+    auto missions = director_->getRecentMissions(count);
+    for (const auto& mission : missions) {
+        reviews.push_back(evaluateMission(mission.id));
+    }
+    return reviews;
 }
 
 std::vector<std::string> Critic::detectPerformanceIssues() { 
-    return {}; 
+    std::vector<std::string> issues;
+    if (!director_) return issues;
+    
+    auto reviews = evaluateRecentMissions(10);
+    for (const auto& review : reviews) {
+        if (review.efficiencyScore < 0.6f) {
+            issues.push_back("Mission " + std::to_string(review.missionId) + ": low efficiency (" + 
+                           std::to_string(static_cast<int>(review.efficiencyScore * 100)) + "%)");
+        }
+        if (review.qualityScore < 0.6f) {
+            issues.push_back("Mission " + std::to_string(review.missionId) + ": low quality (" + 
+                           std::to_string(static_cast<int>(review.qualityScore * 100)) + "%)");
+        }
+    }
+    return issues;
 }
+
 std::vector<std::string> Critic::detectResourceWaste() { 
-    return {}; 
+    std::vector<std::string> waste;
+    if (!director_) return waste;
+    
+    auto reviews = evaluateRecentMissions(10);
+    for (const auto& review : reviews) {
+        if (review.resourceEfficiency < 0.5f) {
+            waste.push_back("Mission " + std::to_string(review.missionId) + ": resource efficiency low (" + 
+                          std::to_string(static_cast<int>(review.resourceEfficiency * 100)) + "%)");
+        }
+    }
+    return waste;
 }
+
 std::vector<std::string> Critic::detectRepeatedFailures() { 
-    return {}; 
+    std::vector<std::string> failures;
+    if (!director_) return failures;
+    
+    auto missions = director_->getFailedMissions(20);
+    std::unordered_map<std::string, int> failureCounts;
+    for (const auto& mission : missions) {
+        failureCounts[mission.description]++;
+    }
+    
+    for (const auto& [desc, count] : failureCounts) {
+        if (count >= 3) {
+            failures.push_back("Repeated failure pattern (" + std::to_string(count) + " times): " + desc);
+        }
+    }
+    return failures;
 }
 
 Critic::SystemHealth Critic::assessSystemHealth() {
@@ -228,7 +300,30 @@ void Teacher::generalizeWorkflow(const std::string& specificWorkflowId) {
 }
 
 std::vector<Teacher::TrainingExample> Teacher::generateTrainingSet(uint64_t agentId) {
-    return {};
+    std::vector<TrainingExample> examples;
+    if (!director_) return examples;
+    
+    // Generate training examples from successful missions
+    auto missions = director_->getCompletedMissions(10);
+    for (const auto& mission : missions) {
+        TrainingExample ex;
+        ex.input = "Mission: " + mission.description;
+        ex.expectedOutput = "Success";
+        ex.weight = mission.confidence;
+        examples.push_back(ex);
+    }
+    
+    // Generate examples from failed missions
+    auto failed = director_->getFailedMissions(5);
+    for (const auto& mission : failed) {
+        TrainingExample ex;
+        ex.input = "Mission: " + mission.description;
+        ex.expectedOutput = "Failure - review required";
+        ex.weight = 0.5f;
+        examples.push_back(ex);
+    }
+    
+    return examples;
 }
 
 // ResourceManager

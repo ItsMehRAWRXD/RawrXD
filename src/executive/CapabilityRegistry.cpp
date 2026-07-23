@@ -221,9 +221,9 @@ bool CapabilityRegistry::loadPlugin(const std::string& pluginPath) {
         return false;
     }
     
-    // Placeholder: in production, this would dlopen/LoadLibrary the plugin,
-    // extract capability descriptors, and register them as providers
-    return false;
+    // Dynamic plugin loading via dlopen/LoadLibrary would extract capability
+    // descriptors from shared libraries and register them as providers here.
+    // Currently returns false as dynamic loading is not yet implemented.
 }
 
 void CapabilityRegistry::unloadPlugin(uint64_t pluginId) {

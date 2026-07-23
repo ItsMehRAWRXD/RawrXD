@@ -371,8 +371,34 @@ void BlockingAgent::UpdateDependencyGraph() {
     // Clear existing graph
     dependencyGraph_.clear();
     
-    // TODO: Populate from GoalManager when API is available
-    // For now, the graph is built incrementally via RegisterGoal
+    // Populate from GoalManager active goals
+    auto activeGoals = goalManager_->getActiveGoals();
+    for (const auto& goal : activeGoals) {
+        DependencyNode node;
+        node.goalId = std::to_string(goal.id);
+        node.priority = static_cast<int>(goal.priority);
+        
+        // Convert uint64_t dependency IDs to strings
+        for (const auto& depId : goal.dependsOnGoals) {
+            node.dependencies.push_back(std::to_string(depId));
+        }
+        
+        node.isActive = (goal.state == GoalState::ACTIVE);
+        dependencyGraph_[node.goalId] = node;
+    }
+    
+    // Build reverse dependency links (dependents)
+    for (auto& [goalId, node] : dependencyGraph_) {
+        for (const auto& depId : node.dependencies) {
+            auto depIt = dependencyGraph_.find(depId);
+            if (depIt != dependencyGraph_.end()) {
+                auto& dependents = depIt->second.dependents;
+                if (std::find(dependents.begin(), dependents.end(), goalId) == dependents.end()) {
+                    dependents.push_back(goalId);
+                }
+            }
+        }
+    }
 }
 
 void BlockingAgent::AddDependency(const std::string& goalId, const std::string& dependsOn) {

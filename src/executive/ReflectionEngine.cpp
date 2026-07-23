@@ -73,8 +73,6 @@ void ReflectionEngine::reflectOnPeriod(std::chrono::seconds period) {
     reflectionsPerformed_.fetch_add(1);
     auto end = std::chrono::steady_clock::now();
     totalReflectionTimeMs_ += std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    
-    (void)period; // Period used to scope the reflection window
 }
 
 void ReflectionEngine::reflectOnFailure(uint64_t missionId, const std::string& failureReason) {
