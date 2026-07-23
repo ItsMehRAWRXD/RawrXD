@@ -33,7 +33,6 @@ set(RE_CPP_SOURCES
     pe_analyzer.cpp
     decompiler.cpp
     binary_patcher.cpp
-    re_stubs.cpp
 )
 
 set(RE_CPP_HEADERS

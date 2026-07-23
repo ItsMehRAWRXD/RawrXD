@@ -1421,7 +1421,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
     # src/core/rawrengine_missing_stubs.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
-    src/link_stubs/rawrengine_link_closure.cpp  # Re-added to resolve link errors
+    # REMOVED: src/link_stubs/rawrengine_link_closure.cpp - stub file deleted
 
     # NOTE: rawrengine_command_handlers.cpp removed - depends on SelfHostEngine,
     # SpeciatorEngine, TranscendenceCoordinator which are excluded from RawrEngine
@@ -1769,9 +1769,10 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 )
 
 # Add Gold stub implementations for excluded files
-list(APPEND GOLD_UNDERSCORE_SOURCES
-    src/gold_stubs/gold_link_stubs.cpp
-)
+# REMOVED: src/gold_stubs/gold_link_stubs.cpp - stub file deleted
+# list(APPEND GOLD_UNDERSCORE_SOURCES
+#     src/gold_stubs/gold_link_stubs.cpp
+# )
 
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
@@ -2850,9 +2851,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/PerformanceMonitor.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(APPEND INFERENCE_ENGINE_SOURCES src/inference/inference_standalone_link_shims.cpp)
-endif()
+# REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
+# if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+#     list(APPEND INFERENCE_ENGINE_SOURCES src/inference/inference_standalone_link_shims.cpp)
+# endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
     list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
@@ -3155,7 +3157,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_MultiResponse.cpp
         src/win32app/Win32IDE_ExecutionGovernor.cpp
         src/win32app/Win32IDE_LayerEviction.cpp
-        src/win32app/Win32IDE_SemanticIndexShim.cpp
         src/win32app/Win32IDE_SubAgent.cpp
         src/win32app/Win32IDE_AgentHistory.cpp
         src/win32app/Win32IDE_AgentPanel.cpp
@@ -3470,8 +3471,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/intent_engine.cpp
         src/core/model_training_pipeline.cpp
         src/model_trainer.cpp
-        # src/agentic/AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
-        src/agentic/AgentOllamaClient_stubs.cpp  # STUB: Provides link closure for AgentOllamaClient
+        # REMOVED: src/agentic/AgentOllamaClient.cpp - Ollama backend replaced with native GGUF loader
+        # REMOVED: src/agentic/AgentOllamaClient_stubs.cpp - stub file deleted
         src/agentic/hotpatch/Engine.cpp
         src/agentic/observability/Logger.cpp
         src/agentic/AdvancedAgentCoordinator.cpp
@@ -3665,22 +3666,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/perf_telemetry.cpp
         src/core/convergence_stress_harness.cpp
 
-        # ASM Stub Implementations (C++ fallbacks for missing MASM kernels)
-        src/asm/asm_stubs_mesh.cpp
-        src/asm/asm_stubs_speciator.cpp
-        src/asm/asm_stubs_neural.cpp
-        src/asm/asm_stubs_hwsynth.cpp
-        src/asm/asm_stubs_perf.cpp
-        src/asm/asm_stubs_spengine.cpp
-        src/asm/asm_stubs_patch.cpp
-        src/asm/asm_stubs_gguf.cpp
-        src/asm/asm_stubs_lsp.cpp
-        src/asm/asm_stubs_crypto.cpp
-        src/asm/asm_stubs_watchdog.cpp
-        src/asm/asm_stubs_pattern.cpp
-        src/asm/asm_stubs_subsystem.cpp
-        src/win32app/Win32IDE_OllamaStubs.cpp
-        src/prediction/OllamaProvider_stub.cpp
+        # ASM Stub Implementations - REMOVED: All stub files deleted, real implementations only
 
         # Phase 50: Enterprise Hardening — Auto-Update, Swarm Reconciliation, Plugin Sandbox/Signature, Stress Tests
         src/core/update_signature.cpp
@@ -4066,12 +4052,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                 # src/core/asm_symbols_stub.cpp  # Removed - duplicates symbols from unlinked_symbols_batch_*.cpp
                 src/core/json_instantiations.cpp
                 src/core/cot_fallback_system.cpp
-                src/core/model_loader_fallbacks.cpp
-                src/core/rawrxd_native_log_impl.cpp
-                src/llm_adapter/ggufrunner_link_fallbacks.cpp
-                src/inference/gguf_d3d12_bridge_link_fallback.cpp
-                src/win32app/collab_cursor_fallbacks.cpp
-                src/win32app/rtp_protocol_fallback.cpp
+                # REMOVED: src/core/model_loader_fallbacks.cpp - stub file deleted
+                # REMOVED: src/core/rawrxd_native_log_impl.cpp - stub file deleted
+                # REMOVED: src/llm_adapter/ggufrunner_link_fallbacks.cpp - stub file deleted
+                # REMOVED: src/inference/gguf_d3d12_bridge_link_fallback.cpp - stub file deleted
+                # REMOVED: src/win32app/collab_cursor_fallbacks.cpp - stub file deleted
+                # REMOVED: src/win32app/rtp_protocol_fallback.cpp - stub file deleted
                 src/modules/quickjs_node_shims.cpp
             )
             foreach(_rawr_fallback IN LISTS _RAWRXD_WIN32IDE_FALLBACK_UNITS)
@@ -4094,7 +4080,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ImportBridge.cpp
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
-        src/win32app/sovereign_gpu_link_stubs.cpp
+        # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
     )
 
     set(WIN32IDE_EXTRA_ASM "")
@@ -5513,31 +5499,10 @@ if(WIN32)
     message(STATUS "[Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark")
 
     # ═══════════════════════════════════════════════════════════════════
-    # Fix #3 NHWC Layout Benchmark — Memory layout transformation validation
+    # Fix #3 NHWC Layout Benchmark — REMOVED: stub file deleted
     # ═══════════════════════════════════════════════════════════════════
-    add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL
-        src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp
-    )
-    target_include_directories(Fix3_NHWC_Benchmark PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/memory
-        ${CMAKE_SOURCE_DIR}/include
-    )
-    target_compile_definitions(Fix3_NHWC_Benchmark PRIVATE
-        RAWR_BENCHMARK=1
-    )
-    if(MSVC)
-        target_compile_options(Fix3_NHWC_Benchmark PRIVATE /EHsc /W4 /O2 /arch:AVX512)
-    endif()
-    target_link_libraries(Fix3_NHWC_Benchmark PRIVATE
-        kernel32
-        user32
-    )
-    set_target_properties(Fix3_NHWC_Benchmark PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME Fix3_NHWC_Benchmark
-    )
-    message(STATUS "[Fix #3] NHWC Layout Benchmark target: Fix3_NHWC_Benchmark")
+    # add_executable(Fix3_NHWC_Benchmark EXCLUDE_FROM_ALL ...)
+    # TARGET REMOVED: src/benchmark/Fix3_NHWC_Benchmark_Stub.cpp was deleted
 
     # ═══════════════════════════════════════════════════════════════════
     # Fix #4 Flash Attention v2 Benchmark — Memory-efficient attention
@@ -5910,7 +5875,7 @@ if(WIN32)
         src/llm_adapter/GGUFRunner.cpp
         src/llm_adapter/gguf_k_quants.cpp
         src/llm_adapter/QuantBackend.cpp
-        src/llm_adapter/ggufrunner_link_fallbacks.cpp
+        # REMOVED: src/llm_adapter/ggufrunner_link_fallbacks.cpp - stub file deleted
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
         src/runtime_surface/GenerationStopwatch.cpp
@@ -6002,7 +5967,7 @@ if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         src/agentic/SubAgentManager.cpp
         src/agentic/RobustOllamaParser.cpp
         src/runtime_patcher.cpp
-        src/tests/swarm_smoke_stubs.cpp
+        # REMOVED: src/tests/swarm_smoke_stubs.cpp - stub file deleted
     )
     target_include_directories(SwarmSmokeTest PRIVATE
         ${CMAKE_SOURCE_DIR}
@@ -6019,7 +5984,7 @@ endif()
 # BackendOrchestrator model sharding smoke test (manual)
 add_executable(BackendOrchestratorShardSmoke EXCLUDE_FROM_ALL
     src/tests/backend_orchestrator_shard_smoke.cpp
-    src/tests/backend_orchestrator_shard_smoke_stubs.cpp
+    # REMOVED: src/tests/backend_orchestrator_shard_smoke_stubs.cpp - stub file deleted
     src/BackendOrchestrator.cpp
     src/InferenceProfiler.cpp
     src/gguf_loader.cpp

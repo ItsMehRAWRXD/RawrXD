@@ -44,7 +44,9 @@ PMCCounter::PMCCounter(PMCCounter&& other) noexcept
     , start_value_(other.start_value_)
 #endif
 {
+#if defined(PMC_PLATFORM_LINUX)
     other.fd_ = -1;
+#endif
     other.is_running_ = false;
     other.is_configured_ = false;
 }
@@ -226,7 +228,7 @@ uint64_t PMCCounter::Read() const {
 }
 
 const char* PMCCounter::GetEventName() const {
-    return GetEventName(event_);
+    return RawrXD::Profiling::GetEventName(event_);
 }
 
 //=============================================================================
