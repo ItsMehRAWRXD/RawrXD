@@ -81,7 +81,9 @@ ExplainabilityEngine::ExplainabilityEngine()
     , m_policyEngine(nullptr)
     , m_logCb(nullptr)
 {}
-ExplainabilityEngine::~ExplainabilityEngine() {}
+ExplainabilityEngine::~ExplainabilityEngine() {
+    // No cleanup needed - dependencies are externally managed raw pointers
+}
 
 // ============================================================================
 // DecisionNode::toJSON

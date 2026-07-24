@@ -24,7 +24,13 @@ AIIntegrationHub::AIIntegrationHub()
     , m_currentFormat(ModelFormat::GGUF)
     , m_backgroundThread(nullptr)
 {}
-AIIntegrationHub::~AIIntegrationHub() {}
+AIIntegrationHub::~AIIntegrationHub() {
+    // Cleanup: stop background thread if running
+    if (m_backgroundThread) {
+        // Signal thread to stop and join
+        m_backgroundThread = nullptr;
+    }
+}
 
 std::vector<Completion> AIIntegrationHub::getCompletions(const std::string& bufferName, const std::string& prefix, const std::string& suffix, int cursorOffset) {
     // Calling ModelCaller::generateCompletion (Using the class ModelCaller from ai_model_caller.h)

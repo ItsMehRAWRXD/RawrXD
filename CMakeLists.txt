@@ -3246,11 +3246,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
         src/collab/cursor_widget.cpp
         src/collab/crdt_buffer.cpp
-        src/core/mesh_brain_stubs.cpp
-        src/core/speciator_stubs.cpp
-        src/core/neural_bridge_stubs.cpp
-        src/core/hwsynth_stubs.cpp
-        src/core/spengine_stubs.cpp
+        # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
+        # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
+        # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
+        # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_private_stubs.cpp
         
