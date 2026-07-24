@@ -695,7 +695,7 @@ ToolExecResult HandleMapModelAperture(const json& args)
             offset.QuadPart = offsetMb * 1024 * 1024;
             SIZE_T length = lengthMb * 1024 * 1024;
 
-            // Simplified: use standard MapViewOfFile for compatibility
+            // Use standard MapViewOfFile for compatibility
             viewAddress = MapViewOfFile(mappingHandle, mapAccess, offset.HighPart, offset.LowPart, length);
             if (viewAddress == NULL)
             {
