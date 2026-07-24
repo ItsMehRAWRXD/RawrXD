@@ -654,6 +654,25 @@ bool HotPatcher::isAutoRollbackEnabled() const {
     return impl_->autoRollback.load();
 }
 
+bool HotPatcher::isInErrorState() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    for (const auto& [id, patch] : impl_->patches) {
+        if (patch->status == PatchStatus::FAILED) {
+            return true;
+        }
+    }
+    return false;
+}
+
+PatchMetadata HotPatcher::getMetadata(const std::string& patchId) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    auto it = impl_->patches.find(patchId);
+    if (it != impl_->patches.end()) {
+        return it->second->metadata;
+    }
+    return PatchMetadata{};
+}
+
 bool HotPatcher::emergencyRollback() {
     printf("[HotPatcher] EMERGENCY ROLLBACK initiated\n");
     

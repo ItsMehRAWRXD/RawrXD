@@ -235,4 +235,32 @@ bool MedusaDecoder::shouldSpeculate() const {
     return config_.enabled && !stats_.autoDisabled;
 }
 
+void MedusaDecoder::projectHead(size_t headIndex, const float* hiddenState, float* logits, size_t vocabSize) {
+    if (headIndex >= numHeads_ || !heads_[headIndex].weightData) {
+        // No weights loaded - return zeros
+        memset(logits, 0, vocabSize * sizeof(float));
+        return;
+    }
+
+    const auto& hw = heads_[headIndex];
+    if (!hw.weightData || hw.rows == 0 || hw.cols == 0) {
+        memset(logits, 0, vocabSize * sizeof(float));
+        return;
+    }
+
+    // Compute logits: logits[v] = dot(hiddenState, weight[v])
+    // This is a GEMV: [vocabSize, hiddenDim] @ [hiddenDim] -> [vocabSize]
+    const float* w = (const float*)hw.weightData;
+
+    // Simple GEMV implementation
+    for (size_t v = 0; v < vocabSize && v < hw.rows; ++v) {
+        float dot = 0.0f;
+        const float* row = w + v * hw.cols;
+        for (size_t d = 0; d < hw.cols; ++d) {
+            dot += hiddenState[d] * row[d];
+        }
+        logits[v] = dot;
+    }
+}
+
 } // namespace Deep2

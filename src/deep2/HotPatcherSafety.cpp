@@ -587,7 +587,7 @@ PatchSafety::PreFlightCheck PatchSafety::runPreFlight(const std::string& patchId
     result.noActiveWatchdog = !PatchSafetyMonitor::isWatchdogPanicked();
 
     // Check 4: Patch registry not in error state
-    result.noConflicts = !HotPatcher::Instance().isInErrorState();
+    result.noConflicts = !GetHotPatcher().isInErrorState();
 
     // Check 5: Checksum validation (patches must have valid metadata)
     // Note: Full SHA-256 verification happens at patch load time
@@ -601,8 +601,8 @@ float PatchSafety::calculateRiskScore(const std::string& patchId) {
     float score = 0.1f;
     
     // Look up patch metadata to assess risk
-    auto meta = HotPatcher::Instance().getMetadata(patchId);
-    auto status = HotPatcher::Instance().getStatus(patchId);
+    auto meta = GetHotPatcher().getMetadata(patchId);
+    auto status = GetHotPatcher().getStatus(patchId);
     if (status != PatchStatus::PENDING && status != PatchStatus::FAILED) {
         // Higher risk for certain patch types
         switch (meta.type) {
@@ -666,7 +666,7 @@ bool PatchSafety::verifySystemHealth() {
     }
     
     // Check 3: Patch system not already in error state
-    if (HotPatcher::Instance().isInErrorState()) {
+    if (GetHotPatcher().isInErrorState()) {
         issues.push_back("Patch registry in error state (failed/rolled back patches detected)");
         healthy = false;
     }

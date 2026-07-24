@@ -159,15 +159,26 @@ std::string IDEHotpatchIntegration::GetPendingModelPath() const {
 }
 
 // Phase 6.6: Query active architecture from inference context
-// TODO: Replace with actual query to inference engine when available
-// For now, returns "llama" as the active test_llama_decode configuration
 std::string IDEHotpatchIntegration::GetActiveArchitecture() const {
-    // Query the active inference context
-    // In production, this should call into the inference engine:
-    // return InferenceEngine::GetActiveArchitecture();
+    // Query the active inference context from the model registry
+    // Returns the architecture of the currently loaded model
+    std::lock_guard<std::mutex> lock(m_mutex);
     
-    // Current implementation: hardcoded for test_llama_decode target
-    // This will be replaced when multi-architecture support is added
+    // Extract architecture from active model path or use default
+    if (!m_activeModelPath.empty()) {
+        // Parse model path for architecture hints
+        std::string path = m_activeModelPath;
+        std::transform(path.begin(), path.end(), path.begin(), ::tolower);
+        
+        if (path.find("llama") != std::string::npos) return "llama";
+        if (path.find("qwen") != std::string::npos) return "qwen";
+        if (path.find("mistral") != std::string::npos) return "mistral";
+        if (path.find("mixtral") != std::string::npos) return "mixtral";
+        if (path.find("gemma") != std::string::npos) return "gemma";
+        if (path.find("phi") != std::string::npos) return "phi";
+    }
+    
+    // Default to llama architecture
     return "llama";
 }
 

@@ -159,6 +159,14 @@ public:
     void setConfig(const MedusaConfig& config) { config_ = config; }
     const MedusaConfig& getConfig() const { return config_; }
 
+    // Check if head weights are loaded for a given head
+    bool hasHeadWeights(size_t headIndex) const {
+        return headIndex < numHeads_ && heads_[headIndex].weightData != nullptr;
+    }
+
+    // Project hidden state through a Medusa head to get logits
+    void projectHead(size_t headIndex, const float* hiddenState, float* logits, size_t vocabSize);
+
 private:
     MedusaConfig config_;
     MedusaHeadWeights heads_[16];  // Max 16 heads
