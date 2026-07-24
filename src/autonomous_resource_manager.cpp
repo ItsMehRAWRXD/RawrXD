@@ -10,6 +10,43 @@
 #include <psapi.h>
 #include <pdh.h>
 #pragma comment(lib, "pdh.lib")
+
+// ADL (AMD Display Library) type definitions
+#define ADL_OK 0
+#define ADL_ERR -1
+
+typedef struct AdapterInfo {
+    int iSize;
+    int iAdapterIndex;
+    char strUDID[256];
+    int iBusNumber;
+    int iDeviceNumber;
+    int iFunctionNumber;
+    int iVendorID;
+    char strAdapterName[256];
+    char strDisplayName[256];
+    int iPresent;
+    int iExist;
+    char strDriverPath[256];
+    char strDriverPathExt[256];
+    char strPNPString[256];
+    int iOSDisplayIndex;
+} AdapterInfo, *LPAdapterInfo;
+
+typedef struct ADLPMActivity {
+    int iSize;
+    int iEngineClock;
+    int iMemoryClock;
+    int iVddc;
+    int iActivityPercent;
+    int iCurrentPerformanceLevel;
+    int iCurrentBusSpeed;
+    int iCurrentBusLanes;
+    int iMaximumBusLanes;
+    int iReserved;
+} ADLPMActivity;
+
+typedef void* (__cdecl *ADL_MAIN_MALLOC_CALLBACK)(int);
 #endif
 
 AutonomousResourceManager::AutonomousResourceManager(QObject* parent)
@@ -245,28 +282,37 @@ uint64_t AutonomousResourceManager::getTotalMemory() const
 
 uint32_t AutonomousResourceManager::getCpuUsage() const
 {
-    // Simplified CPU usage - in production, use PDH or WMI
-    // For now, return a placeholder
+    // Use PDH (Performance Data Helper) for accurate CPU usage measurement
     static PDH_HQUERY query = nullptr;
     static PDH_HCOUNTER counter = nullptr;
+    static bool initialized = false;
     
-    if (!query) {
-        PdhOpenQuery(nullptr, 0, &query);
-        PdhAddCounter(query, L"\\Processor(_Total)\\% Processor Time", 0, &counter);
-    }
-    
-    if (query && counter) {
-        PdhCollectQueryData(query);
-        Sleep(100); // Wait for sample
-        PdhCollectQueryData(query);
-        
-        PDH_FMT_COUNTERVALUE value;
-        if (PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS) {
-            return static_cast<uint32_t>(value.doubleValue);
+    if (!initialized) {
+        PDH_STATUS status = PdhOpenQuery(nullptr, 0, &query);
+        if (status == ERROR_SUCCESS) {
+            status = PdhAddCounter(query, L"\\Processor(_Total)\\% Processor Time", 0, &counter);
+            if (status == ERROR_SUCCESS) {
+                // Collect initial sample
+                PdhCollectQueryData(query);
+                initialized = true;
+            }
         }
     }
     
-    return 0; // Fallback
+    if (initialized && query && counter) {
+        // Collect second sample (required for CPU usage calculation)
+        PDH_STATUS status = PdhCollectQueryData(query);
+        if (status == ERROR_SUCCESS) {
+            PDH_FMT_COUNTERVALUE value;
+            status = PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, nullptr, &value);
+            if (status == ERROR_SUCCESS) {
+                return static_cast<uint32_t>(value.doubleValue);
+            }
+        }
+    }
+    
+    // Fallback: return 0 if PDH fails
+    return 0;
 }
 
 void AutonomousResourceManager::getGpuInfo(uint32_t& usage, bool& available, QString& name) const
@@ -429,25 +475,77 @@ void AutonomousResourceManager::DetectNvidiaGpu(uint32_t& usage, bool& available
 }
 
 void AutonomousResourceManager::DetectAmdGpu(uint32_t& usage, bool& available, QString& name) const {
-    // AMD GPU detection via ADL (ADL SDK)
-    // Similar pattern to NVML - load adl.dll dynamically
-    // For now, this is a placeholder for AMD detection
-    // Real implementation would use ADL_Adapter_NumberOfAdapters_Get, etc.
-    
+    // AMD GPU detection via ADL (AMD Display Library)
     HMODULE adl = LoadLibraryA("atiadlxx.dll");
     if (!adl) {
         adl = LoadLibraryA("atiadlxy.dll"); // 32-bit version
     }
     
-    if (adl) {
-        // ADL functions would be loaded here
-        // For now, just mark as AMD if library exists
-        name = "AMD GPU (ADL detected)";
-        available = true;
-        usage = 0; // Would get actual usage from ADL
-        
-        FreeLibrary(adl);
+    if (!adl) {
+        available = false;
+        return;
     }
+    
+    // Define ADL function prototypes
+    typedef int (*ADL_MAIN_CONTROL_CREATE)(ADL_MAIN_MALLOC_CALLBACK, int);
+    typedef int (*ADL_MAIN_CONTROL_DESTROY)();
+    typedef int (*ADL_ADAPTER_NUMBEROFADAPTERS_GET)(int*);
+    typedef int (*ADL_ADAPTER_ADAPTERINFO_GET)(LPAdapterInfo, int);
+    typedef int (*ADL_OVERDRIVE5_CURRENTACTIVITY_GET)(int, ADLPMActivity*);
+    
+    // Load required functions
+    ADL_MAIN_CONTROL_CREATE ADL_Main_Control_Create = 
+        (ADL_MAIN_CONTROL_CREATE)GetProcAddress(adl, "ADL_Main_Control_Create");
+    ADL_MAIN_CONTROL_DESTROY ADL_Main_Control_Destroy = 
+        (ADL_MAIN_CONTROL_DESTROY)GetProcAddress(adl, "ADL_Main_Control_Destroy");
+    ADL_ADAPTER_NUMBEROFADAPTERS_GET ADL_Adapter_NumberOfAdapters_Get = 
+        (ADL_ADAPTER_NUMBEROFADAPTERS_GET)GetProcAddress(adl, "ADL_Adapter_NumberOfAdapters_Get");
+    ADL_ADAPTER_ADAPTERINFO_GET ADL_Adapter_AdapterInfo_Get = 
+        (ADL_ADAPTER_ADAPTERINFO_GET)GetProcAddress(adl, "ADL_Adapter_AdapterInfo_Get");
+    ADL_OVERDRIVE5_CURRENTACTIVITY_GET ADL_Overdrive5_CurrentActivity_Get = 
+        (ADL_OVERDRIVE5_CURRENTACTIVITY_GET)GetProcAddress(adl, "ADL_Overdrive5_CurrentActivity_Get");
+    
+    if (!ADL_Main_Control_Create || !ADL_Adapter_NumberOfAdapters_Get) {
+        FreeLibrary(adl);
+        available = false;
+        return;
+    }
+    
+    // Initialize ADL
+    if (ADL_Main_Control_Create([](int size) { return malloc(size); }, 1) != ADL_OK) {
+        FreeLibrary(adl);
+        available = false;
+        return;
+    }
+    
+    // Get number of adapters
+    int numAdapters = 0;
+    if (ADL_Adapter_NumberOfAdapters_Get(&numAdapters) == ADL_OK && numAdapters > 0) {
+        // Get adapter info
+        LPAdapterInfo adapterInfo = (LPAdapterInfo)malloc(sizeof(AdapterInfo) * numAdapters);
+        if (adapterInfo && ADL_Adapter_AdapterInfo_Get(adapterInfo, sizeof(AdapterInfo) * numAdapters) == ADL_OK) {
+            // Use first adapter
+            name = QString::fromLocal8Bit(adapterInfo[0].strAdapterName);
+            available = true;
+            
+            // Get GPU usage if available
+            if (ADL_Overdrive5_CurrentActivity_Get) {
+                ADLPMActivity activity;
+                if (ADL_Overdrive5_CurrentActivity_Get(adapterInfo[0].iAdapterIndex, &activity) == ADL_OK) {
+                    usage = activity.iActivityPercent;
+                }
+            }
+        }
+        
+        if (adapterInfo) free(adapterInfo);
+    }
+    
+    // Cleanup
+    if (ADL_Main_Control_Destroy) {
+        ADL_Main_Control_Destroy();
+    }
+    
+    FreeLibrary(adl);
 }
 #else
 void AutonomousResourceManager::DetectGpuUnix(uint32_t& usage, bool& available, QString& name) const {

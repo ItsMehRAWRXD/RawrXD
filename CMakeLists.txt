@@ -3185,7 +3185,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
-        # src/agentic/OllamaProvider.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/agentic/OllamaProvider.cpp
         src/agentic/DiffEngine.cpp
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
@@ -3214,6 +3214,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/rdna3_stubs.cpp
         src/core/ollama_provider_stub.cpp
         src/core/gguf_runner_stub.cpp
+        src/llm_adapter/rawrxd_ggufrunner_signals.cpp
         src/core/subsystem_api_stubs.cpp
         src/core/crypto_stubs.cpp
         src/core/watchdog_stubs.cpp
@@ -3221,6 +3222,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/perf_telemetry_stubs.cpp
         src/core/native_log_stub.cpp
         src/core/collab_stubs.cpp
+        src/collab/cursor_widget.cpp
+        src/collab/crdt_buffer.cpp
         src/core/mesh_brain_stubs.cpp
         src/core/speciator_stubs.cpp
         src/core/neural_bridge_stubs.cpp
