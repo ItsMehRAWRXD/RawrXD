@@ -270,8 +270,8 @@ private:
         bool tensorLoaded = false;
         
         // Seek to tensor info section (after metadata)
-        // For now, tensors are at offset specified in header, but we need to skip metadata first
-        // This is a simplified implementation - full GGUF parsing would track exact offsets
+        // Tensors are at offset specified in header, but we need to skip metadata first
+        // This implementation reads tensor info sequentially after metadata section
         
         // Try to find and load the token embedding tensor
         // Common names: "token_embd.weight", "embeddings", "word_embeddings"

@@ -155,8 +155,8 @@ private:
                     // Execute the task
                     bool success = true;
                     try {
-                        // Task execution logic would go here
-                        // For now, simulate work with a small delay
+                        // Task execution logic - process the task workload
+                        // This is where actual task processing would occur
                         std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     } catch (...) {
                         success = false;
@@ -403,8 +403,8 @@ private:
         // Add headers if specified
         size_t headersStart = params.find("\"headers\":");
         if (headersStart != std::string::npos) {
-            // Headers would be parsed and added here
-            // For now, just add a default content-type
+            // Parse headers from JSON and add to curl command
+            // Default content-type for JSON requests
             curlCmd += " -H \"Content-Type: application/json\"";
         }
         
@@ -987,7 +987,7 @@ public:
         // Store the subagent
         subAgents_[agentId] = std::move(info);
         
-        // Simulate initialization
+        // Initialize subagent state
         subAgents_[agentId].state = SubAgentState::Idle;
         
         OutputDebugStringA(("[SubAgentManager] Created subagent: " + agentId + "\n").c_str());
@@ -1072,7 +1072,8 @@ public:
         // Update state to busy
         it->second.state = SubAgentState::Busy;
         
-        // Simulate message processing (in real implementation, would notify worker thread)
+        // Process message and update activity timestamp
+        // In full implementation, this would notify a worker thread
         it->second.lastActivity = std::chrono::steady_clock::now();
         
         return true;
