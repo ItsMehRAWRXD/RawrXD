@@ -258,6 +258,64 @@ if(RAWRXD_BUILD_CLI)
     endif()
 endif()
 
+# =============================================================================
+# VAL-051.2.A: Real Token Proof Harness
+# =============================================================================
+# Standalone test executable that validates the full RawrXDInference
+# component chain produces real tokens from a GGUF model.
+if(WIN32)
+    add_executable(val_051_2_a_real_token
+        tests/val_051_2_a_real_token.cpp
+        src/gguf_loader.cpp
+        src/core/inference_witness.cpp
+    )
+    set_target_properties(val_051_2_a_real_token PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    target_include_directories(val_051_2_a_real_token PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(MSVC)
+        target_link_directories(val_051_2_a_real_token PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(val_051_2_a_real_token PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    target_link_libraries(val_051_2_a_real_token PRIVATE
+        kernel32
+        user32
+        gdi32
+        winspool
+        shell32
+        ole32
+        oleaut32
+        uuid
+        comdlg32
+        advapi32
+        version
+        ws2_32
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        target_link_libraries(val_051_2_a_real_token PRIVATE
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
+        )
+    endif()
+    message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
+endif()
+
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -6129,6 +6187,15 @@ if(NOT TARGET rawrxd)
     add_executable(rawrxd
         src/sovereign/rawrxd.cpp
         src/sovereign/ExecutionContract.cpp
+        src/cpu_inference_engine.cpp
+        src/rawrxd_inference.cpp
+        src/rawrxd_model_loader.cpp
+        src/rawrxd_tokenizer.cpp
+        src/rawrxd_transformer.cpp
+        src/rawrxd_sampler.cpp
+        src/gguf_loader.cpp
+        src/core/inference_witness.cpp
+        src/core/swarm_scheduler.cpp
     )
 
 target_include_directories(rawrxd PRIVATE
