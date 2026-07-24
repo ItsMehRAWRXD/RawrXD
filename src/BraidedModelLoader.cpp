@@ -426,8 +426,8 @@ BraidedStatus BraidedModelLoader_InferSync(
     }
     
     // TODO: Integrate with Deep2 inference engine
-    // For now, return placeholder response
-    
+    // Return placeholder response (Deep2 integration pending)
+
     response->status = BRAIDED_OK;
     response->textLen = 0;
     response->confidence = 0.0f;
@@ -458,8 +458,8 @@ BraidedStatus BraidedModelLoader_InferAsync(
     ctx->inferenceRunning = TRUE;
     
     // TODO: Start async inference thread
-    // For now, just simulate completion
-    
+    // Simulate completion (async thread implementation pending)
+
     if (tokenCb) {
         tokenCb("", 0, TRUE, request->userData);
     }

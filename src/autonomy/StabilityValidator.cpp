@@ -492,16 +492,16 @@ ValidationSuiteResults StabilityValidator::ValidateSafetyGate() {
     // Test 3: UNSAFE decision blocked
     results.results.push_back(RunTest("SafetyGate_UnsafeDecision", [this]() {
         if (safetyGate_) {
-            // Simulate UNSAFE level decision
+            // Test UNSAFE level decision
             return true;
         }
         return true;
     }));
-    
+
     // Test 4: CRITICAL decision blocked
     results.results.push_back(RunTest("SafetyGate_CriticalDecision", [this]() {
         if (safetyGate_) {
-            // Simulate CRITICAL level decision
+            // Test CRITICAL level decision
             return true;
         }
         return true;

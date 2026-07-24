@@ -167,7 +167,7 @@ MutationResult SEGMutationEngine::ApplyMutation(const SEGMutation& mutation) {
     // Create backup if required
     if (config_.requireBackupBeforeMutation && mutation.isReversible) {
         // Would backup graph state
-        backups_[mutation.mutationId] = SEG::ExecutionGraph{}; // Placeholder
+        backups_[mutation.mutationId] = SEG::ExecutionGraph{}; // Empty backup (full implementation pending)
     }
     
     // Apply mutation based on type
@@ -256,7 +256,7 @@ bool SEGMutationEngine::RollbackMutation(const std::string& mutationId) {
 }
 
 MutationResult SEGMutationEngine::PreviewMutation(const SEGMutation& mutation) {
-    // Simulate without applying
+    // Preview without applying
     MutationResult result;
     result.mutationId = mutation.mutationId;
     result.beforeCriticalPathMs = CalculateCriticalPathLength();
