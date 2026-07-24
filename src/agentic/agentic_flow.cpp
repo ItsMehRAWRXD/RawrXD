@@ -204,7 +204,11 @@ public:
             try {
                 std::regex pattern(cond.value);
                 return std::regex_search(value, pattern);
-            } catch (...) { return false; }
+            } catch (const std::regex_error& e) {
+                printf("[AgenticFlow] Invalid regex pattern '%s': %s\n", 
+                       cond.value.c_str(), e.what());
+                return false;
+            }
         }
         if (cond.operator_ == "exists") return ctx.variables.count(cond.variable) > 0;
         if (cond.operator_ == "empty") return value.empty();
@@ -218,9 +222,9 @@ public:
             if (cond.operator_ == "<=") return left <= right;
             if (cond.operator_ == ">") return left > right;
             if (cond.operator_ == ">=") return left >= right;
-        } catch (...) {}
-        
-        return false;
+        } catch (const std::exception& e) {
+            printf("[AgenticFlow] Numeric comparison failed: %s\n", e.what());
+        }
     }
     
     // Execute a single step action
