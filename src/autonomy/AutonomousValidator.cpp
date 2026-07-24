@@ -14,6 +14,12 @@
 #include <chrono>
 #include <fstream>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <pdh.h>
+#pragma comment(lib, "pdh.lib")
+#endif
+
 namespace Autonomy {
 
 // ============================================================================
@@ -79,9 +85,25 @@ std::string ConvergenceMetrics::ToJson() const {
 void DecisionAccuracyMetrics::Calculate() {
     if (totalDecisions == 0) return;
     
+    // Calculate precision: TP / (TP + FP)
+    // Precision measures how many of the positive predictions were actually correct
     precision = static_cast<double>(correctDecisions) / totalDecisions;
-    recall = precision; // Simplified
-    f1Score = 2 * (precision * recall) / (precision + recall);
+    
+    // Calculate recall: TP / (TP + FN)
+    // Recall measures how many of the actual positives were correctly identified
+    // In this context, we track false negatives separately
+    if (falseNegatives + correctDecisions > 0) {
+        recall = static_cast<double>(correctDecisions) / (correctDecisions + falseNegatives);
+    } else {
+        recall = precision; // Fallback when no false negatives tracked
+    }
+    
+    // Calculate F1 score: harmonic mean of precision and recall
+    if (precision + recall > 0) {
+        f1Score = 2 * (precision * recall) / (precision + recall);
+    } else {
+        f1Score = 0.0;
+    }
 }
 
 std::string DecisionAccuracyMetrics::ToJson() const {
@@ -237,27 +259,63 @@ ValidationResult AutonomousValidator::ValidateConvergence() {
     
     auto startTime = std::chrono::steady_clock::now();
     
-    // Simulate convergence
+    // Real convergence measurement using actual system metrics
     convergenceMetrics_.stabilityHistory.clear();
-    double stability = 0.5;
     
+    // Get initial system state
+    SystemState initialState = MeasureSystemState();
+    double initialStability = CalculateStability(initialState);
+    
+    // Track convergence over multiple iterations
     for (int i = 0; i < config_.convergenceIterations; ++i) {
-        // Simulate convergence behavior
-        stability += (0.95 - stability) * 0.1;
-        stability += (static_cast<double>(rand() % 100) / 100.0 - 0.5) * 0.05;
-        stability = std::max(0.0, std::min(1.0, stability));
+        // Allow system to process and stabilize
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        
+        // Measure current system state
+        SystemState currentState = MeasureSystemState();
+        double stability = CalculateStability(currentState);
+        
+        // Calculate improvement from initial state
+        double improvement = (stability - initialStability) / (1.0 - initialStability);
         
         convergenceMetrics_.stabilityHistory.push_back(stability);
         
+        // Check if converged
         if (stability >= config_.convergenceThreshold) {
             convergenceMetrics_.didConverge = true;
             convergenceMetrics_.iterationsToConverge = i + 1;
             break;
         }
+        
+        // Check for divergence (stability decreasing)
+        if (i > 10 && stability < convergenceMetrics_.stabilityHistory[i - 10] * 0.8) {
+            // System appears to be diverging
+            convergenceMetrics_.didConverge = false;
+            break;
+        }
     }
     
-    convergenceMetrics_.finalStability = stability;
-    convergenceMetrics_.stabilityVariance = CalculateVariance(convergenceMetrics_.stabilityHistory);
+    // Calculate final metrics
+    if (!convergenceMetrics_.stabilityHistory.empty()) {
+        convergenceMetrics_.finalStability = convergenceMetrics_.stabilityHistory.back();
+        convergenceMetrics_.stabilityVariance = CalculateVariance(convergenceMetrics_.stabilityHistory);
+    }
+    
+    // Determine result
+    result.passed = convergenceMetrics_.didConverge;
+    result.score = convergenceMetrics_.finalStability;
+    
+    if (!result.passed) {
+        result.failureReason = "System did not converge within " + 
+                              std::to_string(config_.convergenceIterations) + " iterations. " +
+                              "Final stability: " + std::to_string(convergenceMetrics_.finalStability);
+    }
+    
+    auto endTime = std::chrono::steady_clock::now();
+    result.executionTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    
+    return result;
+}
     
     auto endTime = std::chrono::steady_clock::now();
     result.executionTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
@@ -608,6 +666,84 @@ double AutonomousValidator::CalculateVariance(const std::vector<double>& values)
     }
     
     return variance / values.size();
+}
+
+// ============================================================================
+// System Measurement Helpers
+// ============================================================================
+
+AutonomousValidator::SystemState AutonomousValidator::MeasureSystemState() {
+    SystemState state;
+    
+    // Get current timestamp
+    state.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    // Measure CPU usage using Performance Data Helper (PDH)
+    static PDH_HQUERY cpuQuery = nullptr;
+    static PDH_HCOUNTER cpuCounter = nullptr;
+    
+    if (!cpuQuery) {
+        PdhOpenQuery(nullptr, 0, &cpuQuery);
+        PdhAddCounter(cpuQuery, L"\\Processor(_Total)\\% Processor Time", 0, &cpuCounter);
+    }
+    
+    if (cpuQuery && cpuCounter) {
+        PdhCollectQueryData(cpuQuery);
+        PDH_FMT_COUNTERVALUE value;
+        if (PdhGetFormattedCounterValue(cpuCounter, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS) {
+            state.cpuUsage = value.doubleValue / 100.0; // Convert to 0-1 range
+        }
+    }
+    
+    // Measure memory usage
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(memInfo);
+    if (GlobalMemoryStatusEx(&memInfo)) {
+        state.memoryUsage = static_cast<double>(memInfo.dwMemoryLoad) / 100.0;
+    }
+    
+    // Measure task queue depth (from controller if available)
+    // This would integrate with the AutonomousController
+    state.taskQueueDepth = 0.0; // Placeholder - would get from controller
+    
+    // Measure decision latency
+    // This would track actual decision-making latency
+    state.decisionLatencyMs = 0.0; // Placeholder - would measure actual latency
+    
+    // Measure error rate
+    // This would track recent error rate from telemetry
+    state.errorRate = 0.0; // Placeholder - would calculate from recent errors
+    
+    return state;
+}
+
+double AutonomousValidator::CalculateStability(const SystemState& state) {
+    // Calculate stability score based on system metrics
+    // Higher score = more stable
+    
+    double stability = 1.0;
+    
+    // Penalize high CPU usage
+    stability -= state.cpuUsage * 0.2;
+    
+    // Penalize high memory usage
+    stability -= state.memoryUsage * 0.2;
+    
+    // Penalize deep task queue
+    stability -= std::min(state.taskQueueDepth / 100.0, 0.2);
+    
+    // Penalize high decision latency
+    if (state.decisionLatencyMs > 0) {
+        double latencyPenalty = std::min(state.decisionLatencyMs / 1000.0, 0.2);
+        stability -= latencyPenalty;
+    }
+    
+    // Penalize high error rate
+    stability -= state.errorRate * 0.3;
+    
+    // Ensure stability is in valid range
+    return std::max(0.0, std::min(1.0, stability));
 }
 
 // ============================================================================
