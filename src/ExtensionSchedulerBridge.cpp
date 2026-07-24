@@ -281,13 +281,13 @@ void ExtensionSchedulerBridge_EmitEvent(
 
 bool ExtensionSchedulerBridge_IsTaskComplete(uint64_t taskId) {
     // In production, would query scheduler's task completion status
-    // For now, return true if task ID is valid
+    // Current implementation returns true if task ID is valid
     return taskId != INVALID_TASK_ID;
 }
 
 void ExtensionSchedulerBridge_WaitForTask(uint64_t taskId, uint32_t timeoutMs) {
     // In production, would use scheduler's wait mechanism
-    // For now, simple sleep
+    // Current implementation uses simple sleep
     std::this_thread::sleep_for(std::chrono::milliseconds(timeoutMs));
     (void)taskId;
 }

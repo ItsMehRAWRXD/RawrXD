@@ -197,8 +197,8 @@ PlanExecutor::ExecutionResult PlanExecutor::execute(const ExecutionPlan& plan) {
 }
 
 bool PlanExecutor::executeStage(const StageConfig& stage) {
-    // Simplified stage execution
-    // In real implementation, would dispatch to actual backends
+    // Basic stage execution
+    // Full implementation would dispatch to actual backends
     switch (stage.stage) {
         case ExecutionStage::LOCAL_GGUF_LOAD:
             // Would load GGUF model
