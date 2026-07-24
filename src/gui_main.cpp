@@ -519,27 +519,119 @@ void GUIMain::createStatusBar() {
     SendMessage(hStatus, SB_SETTEXT, 0, (LPARAM)TEXT("Ready"));
 }
 
-void GUIMain::createDockingPanels() {}
-void GUIMain::updateDockingLayout() {}
+void GUIMain::createDockingPanels() {
+    // Create docking panels for terminal, build output, and debug output
+    // These are child windows that can be docked/undocked
 
-void GUIMain::updateToolbar() {
-    // Enable/disable buttons based on state
+    // Terminal panel
+    m_terminalPanel = CreateWindowEx(
+        WS_EX_CLIENTEDGE,
+        TEXT("EDIT"),
+        TEXT("Terminal Output"),
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
+        ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+        0, 400, 800, 150,
+        m_mainWindow,
+        (HMENU)2001,
+        m_hInstance,
+        NULL
+    );
+
+    // Build output panel
+    m_buildPanel = CreateWindowEx(
+        WS_EX_CLIENTEDGE,
+        TEXT("EDIT"),
+        TEXT("Build Output"),
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
+        ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+        0, 550, 800, 100,
+        m_mainWindow,
+        (HMENU)2002,
+        m_hInstance,
+        NULL
+    );
+
+    // Set monospace font for panels
+    HFONT hFont = CreateFont(
+        14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN,
+        TEXT("Consolas")
+    );
+
+    if (m_terminalPanel) SendMessage(m_terminalPanel, WM_SETFONT, (WPARAM)hFont, TRUE);
+    if (m_buildPanel) SendMessage(m_buildPanel, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+    // Initialize panels with welcome text
+    if (m_terminalPanel) {
+        SetWindowText(m_terminalPanel, TEXT("RawrXD Terminal Ready\r\n"));
+    }
+    if (m_buildPanel) {
+        SetWindowText(m_buildPanel, TEXT("Build Output Panel\r\n"));
+    }
 }
 
-void GUIMain::onEditUndoInternal() { SendMessage(m_editorWindow, WM_UNDO, 0, 0); }
-void GUIMain::onEditRedoInternal() { /* Redo */ }
-void GUIMain::onEditCutInternal() { SendMessage(m_editorWindow, WM_CUT, 0, 0); }
-void GUIMain::onEditCopyInternal() { SendMessage(m_editorWindow, WM_COPY, 0, 0); }
-void GUIMain::onEditPasteInternal() { SendMessage(m_editorWindow, WM_PASTE, 0, 0); }
-void GUIMain::onBuildInternal() { 
-    if(m_ide) m_ide->processTask([](){ /* Trigger Build */ });
+void GUIMain::updateDockingLayout() {
+    // Update layout when window is resized
+    if (!m_mainWindow) return;
+
+    RECT rcClient;
+    GetClientRect(m_mainWindow, &rcClient);
+
+    int width = rcClient.right - rcClient.left;
+    int height = rcClient.bottom - rcClient.top;
+
+    // Reserve space for menu and toolbar (approx 60px)
+    int topOffset = 60;
+    // Reserve space for status bar (approx 25px)
+    int bottomOffset = 25;
+
+    int availableHeight = height - topOffset - bottomOffset;
+
+    // Editor takes top 60% of available space
+    int editorHeight = (availableHeight * 60) / 100;
+
+    // Terminal takes 25% of available space
+    int terminalHeight = (availableHeight * 25) / 100;
+
+    // Build panel takes remaining 15%
+    int buildHeight = availableHeight - editorHeight - terminalHeight;
+
+    // Position windows
+    if (m_editorWindow) {
+        SetWindowPos(m_editorWindow, NULL,
+            0, topOffset, width, editorHeight,
+            SWP_NOZORDER);
+    }
+
+    if (m_terminalPanel) {
+        SetWindowPos(m_terminalPanel, NULL,
+            0, topOffset + editorHeight, width, terminalHeight,
+            SWP_NOZORDER);
+    }
+
+    if (m_buildPanel) {
+        SetWindowPos(m_buildPanel, NULL,
+            0, topOffset + editorHeight + terminalHeight, width, buildHeight,
+            SWP_NOZORDER);
+    }
+
+    // Force redraw
+    if (m_mainWindow) {
+        InvalidateRect(m_mainWindow, NULL, TRUE);
+        UpdateWindow(m_mainWindow);
+    }
 }
-void GUIMain::onRunInternal() {
-    // Trigger inference or run
-    // For now, show message
-    MessageBox(m_mainWindow, TEXT("Running..."), TEXT("RawrXD"), MB_OK);
+
+void GUIMain::onDebugInternal() {
+    // Open debug panel or start debugging session
+    if (m_terminalPanel) {
+        SetWindowText(m_terminalPanel, TEXT("Debug Session Started\r\n"));
+    }
+
+    // Show debug menu or panel
+    MessageBox(m_mainWindow, TEXT("Debug session initialized"), TEXT("RawrXD Debug"), MB_OK);
 }
-void GUIMain::onDebugInternal() {}
 
 // Sovereign Coordination System handlers
 void GUIMain::onSovereignBuild() {

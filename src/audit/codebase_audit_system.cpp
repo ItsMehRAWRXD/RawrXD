@@ -793,7 +793,7 @@ uint32_t CodebaseAuditSystem::count_classes(const std::string& content) {
 uint32_t CodebaseAuditSystem::calculate_cyclomatic_complexity(const std::string& content) {
     // Calculate cyclomatic complexity using McCabe's formula
     // Complexity = E - N + 2P, where E = edges, N = nodes, P = connected components
-    // Simplified: Count decision points + 1
+    // For a single function: Complexity = decision points + 1
     
     uint32_t decisionPoints = 0;
     
@@ -818,6 +818,22 @@ uint32_t CodebaseAuditSystem::calculate_cyclomatic_complexity(const std::string&
     decisionPoints += count_pattern_occurrences(content, ternary_pattern);
     
     // Count logical operators (&& and ||) as they create short-circuit paths
+    std::regex logical_and_pattern(R"(\&\&)");
+    std::regex logical_or_pattern(R"(\|\|)");
+    decisionPoints += count_pattern_occurrences(content, logical_and_pattern);
+    decisionPoints += count_pattern_occurrences(content, logical_or_pattern);
+    
+    // Count try blocks (each adds an exit path)
+    std::regex try_pattern(R"(\btry\s*\{)");
+    decisionPoints += count_pattern_occurrences(content, try_pattern);
+    
+    // Count goto statements
+    std::regex goto_pattern(R"(\bgoto\s+\w+)");
+    decisionPoints += count_pattern_occurrences(content, goto_pattern);
+    
+    // Cyclomatic complexity = decision points + 1 (for the entry point)
+    return decisionPoints + 1;
+}
     std::regex logical_and_pattern(R"(\&\&)");
     std::regex logical_or_pattern(R"(\|\|)");
     decisionPoints += count_pattern_occurrences(content, logical_and_pattern);

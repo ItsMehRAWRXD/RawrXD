@@ -60,30 +60,87 @@ bool AdaptiveTensorCodec::map_model(const wchar_t* model_path)
 
 bool AdaptiveTensorCodec::generate_tokens(int* input_ids, int num_tokens)
 {
-    // This is the main scheduler loop. It will iterate through layers and tiles.
-    // For now, this is a placeholder for the full logic.
-
-    // Example of a single tile processing flow:
-    // 1. Get TileMeta for the current tile from model metadata
-    // TileMeta current_tile = ...;
-
-    // 2. Prefetch the coarsest level of detail
-    // prefetch_tile(current_tile);
-
-    // 3. Decode and compute
-    // TileBuffer weights, inputs, outputs;
-    // decode_tile_l0(current_tile, &weights);
-    // compute_tile(&inputs, &weights, &outputs);
-
-    // 4. Check if refinement is needed
-    // if (needs_refinement(&outputs)) {
-    //     refine_tile(current_tile, 1, &weights);
-    //     compute_tile(&inputs, &weights, &outputs); // Re-compute with refined weights
-    // }
-
-    // 5. Hint to the OS that we're done with this memory for now
-    // DiscardVirtualMemory( ... pointer to mapped tile ... );
-
+    // Main scheduler loop for adaptive tensor codec
+    // Iterates through layers and tiles with dynamic quality adjustment
+    
+    if (!input_ids || num_tokens <= 0) {
+        return false;
+    }
+    
+    // Initialize generation state
+    GenerationState state;
+    state.current_token = 0;
+    state.current_layer = 0;
+    state.quality_level = m_config.initial_quality;
+    
+    // Process each token
+    for (int token_idx = 0; token_idx < num_tokens; ++token_idx) {
+        // Get current tile metadata
+        TileMeta current_tile = get_tile_metadata(token_idx);
+        
+        // Prefetch coarsest level of detail
+        if (!prefetch_tile(current_tile, state.quality_level)) {
+            std::cerr << "[ATC] Failed to prefetch tile " << token_idx << std::endl;
+            return false;
+        }
+        
+        // Decode and compute at current quality level
+        TileBuffer weights, inputs, outputs;
+        if (!decode_tile(current_tile, state.quality_level, &weights)) {
+            std::cerr << "[ATC] Failed to decode tile " << token_idx << std::endl;
+            return false;
+        }
+        
+        // Prepare inputs
+        if (!prepare_inputs(token_idx, input_ids, &inputs)) {
+            std::cerr << "[ATC] Failed to prepare inputs for token " << token_idx << std::endl;
+            return false;
+        }
+        
+        // Compute tile
+        if (!compute_tile(&inputs, &weights, &outputs)) {
+            std::cerr << "[ATC] Failed to compute tile " << token_idx << std::endl;
+            return false;
+        }
+        
+        // Check if refinement is needed based on output quality
+        if (needs_refinement(&outputs, m_config.quality_threshold)) {
+            // Refine to higher quality level
+            int refined_level = state.quality_level + 1;
+            if (refined_level <= m_config.max_quality_level) {
+                if (!refine_tile(current_tile, refined_level, &weights)) {
+                    std::cerr << "[ATC] Failed to refine tile " << token_idx << std::endl;
+                    return false;
+                }
+                
+                // Re-compute with refined weights
+                if (!compute_tile(&inputs, &weights, &outputs)) {
+                    std::cerr << "[ATC] Failed to re-compute refined tile " << token_idx << std::endl;
+                    return false;
+                }
+                
+                state.quality_level = refined_level;
+            }
+        }
+        
+        // Store output
+        if (!store_output(token_idx, &outputs)) {
+            std::cerr << "[ATC] Failed to store output for token " << token_idx << std::endl;
+            return false;
+        }
+        
+        // Hint to OS that we're done with this memory
+        discard_tile_memory(current_tile);
+        
+        // Update state
+        state.current_token = token_idx;
+        
+        // Adaptive quality adjustment based on performance
+        if (token_idx > 0 && token_idx % 10 == 0) {
+            adjust_quality_level(&state);
+        }
+    }
+    
     return true;
 }
 
