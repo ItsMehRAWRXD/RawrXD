@@ -53,7 +53,7 @@ struct KernelBenchResult
 };
 
 // These would be declared in their respective headers in production
-// For now, we provide interface assumptions:
+// Interface assumptions provided for compilation:
 namespace BackendOrchestrator
 {
 BackendHealth GetBackendHealth(const char* backendKind)
