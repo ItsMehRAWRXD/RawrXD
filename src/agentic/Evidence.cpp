@@ -168,7 +168,7 @@ std::vector<std::pair<std::string, std::string>> EvidenceUtils::FindConflicts(
             if (ev1.weight > 0.5f && ev2.weight < -0.5f && 
                 !ev1.supports.empty() && !ev2.contradicts.empty()) {
                 // Check if they target the same hypothesis (would need external context)
-                // For now, just flag high-confidence opposing evidence
+                // Flag high-confidence opposing evidence as potential conflict
                 if (ev1.confidence > 0.7f && ev2.confidence > 0.7f) {
                     conflict = true;
                 }

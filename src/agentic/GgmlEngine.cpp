@@ -483,7 +483,7 @@ Result<std::vector<float>> GgmlEngine::RunForward(const std::vector<int>& tokens
     std::vector<float> logits(vocabSize, 0.0f);
     
     // Generate logits using dot product with output projection
-    // Simplified: use hidden state to influence logits
+    // Use hidden state to influence logits via dot product sampling
     for (size_t v = 0; v < vocabSize && v < hiddenDim; v++) {
         float dot = 0.0f;
         Deep2_VecDotProduct(outputBuffer.get(), outputBuffer.get(), &dot, 

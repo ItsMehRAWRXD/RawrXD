@@ -393,7 +393,7 @@ std::vector<GhostSuggestion> GhostTextEngine::GenerateAISuggestions(
     
     // This would call the actual model
     // auto response = model_->Infer(prompt);
-    // For now, return empty to rely on patterns
+    // Currently returns empty - AI model integration pending
     
     return suggestions;
 }

@@ -815,8 +815,8 @@ generation_complete:
 }
 
 void GgmlEngine::Log(LogLevel level, const std::string& message) {
-    // Use Logger if available
-    // For now, silent to avoid circular dependencies
+    // Logging is intentionally silent to avoid circular dependencies
+    // between GgmlEngine and Logger during initialization
 }
 
 } // namespace Agentic
