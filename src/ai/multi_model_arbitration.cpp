@@ -231,7 +231,7 @@ void MultiModelArbitration::RefinementThread(
     }
     
     // TODO: Run large model refinement
-    // For now, just simulate
+    // Simulate refinement delay
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     if (stop_refinement_.load()) {

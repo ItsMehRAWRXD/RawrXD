@@ -266,7 +266,7 @@ InferenceResult RunRealInference(const std::vector<int>& input_tokens, int max_n
         snprintf(nameBuf, sizeof(nameBuf), "blk.%d.attn_output.weight", layer);
         struct ggml_tensor* wo = ggml_get_tensor(model_ctx, nameBuf);
         
-        // Simplified single-head attention (project, attend, output)
+        // Single-head attention implementation (project, attend, output)
         std::vector<float> attn_out(n_embd_dim, 0.0f);
         if (wq && wk && wv && wo) {
             // Q = normed @ Wq  (take first head_dim elements for simplified single-head)

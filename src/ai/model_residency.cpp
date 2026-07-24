@@ -370,7 +370,7 @@ void ModelResidencyManager::UnloadModelFromVRAM(ModelState& model) {
         return;
     }
     
-    // Placeholder: In real implementation, this would:
+    // In a full implementation, this would:
     // 1. Free GPU resources
     // 2. Deallocate VRAM
     

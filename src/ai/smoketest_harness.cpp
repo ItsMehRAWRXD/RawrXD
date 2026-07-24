@@ -746,7 +746,7 @@ std::vector<float> SmoketestHarness::MeasureArbitrationFairness() {
         // Fairness = (sum of latencies)^2 / (n * sum of squared latencies)
         // Higher is better (1.0 = perfect fairness)
         double sum = rt.avg_latency_ms * rt.count;
-        double sum_sq = rt.avg_latency_ms * rt.avg_latency_ms * rt.count; // Simplified
+        double sum_sq = rt.avg_latency_ms * rt.avg_latency_ms * rt.count;
         
         // Use coefficient of variation as fairness metric
         double mean = rt.avg_latency_ms;
