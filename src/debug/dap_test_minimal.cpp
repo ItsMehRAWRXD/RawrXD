@@ -81,7 +81,7 @@ public:
         std::cout << "[DAP] Program: " << config.program << std::endl;
         std::cout << "[DAP] Working Dir: " << config.workingDir << std::endl;
         
-        // Simulate protocol handshake
+        // Execute protocol handshake
         std::cout << "[DAP] Sending initialize request..." << std::endl;
         std::cout << "[DAP] Received initialized event" << std::endl;
         

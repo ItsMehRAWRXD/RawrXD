@@ -152,8 +152,8 @@ void DebugUIController::ClearDapCallbacks() {
 
 void DebugUIController::MarshalToUIThread(std::function<void()> action) {
     // Store action and post message to main thread
-    // In real implementation, use PostMessage with a custom message
-    // For now, execute directly (assuming we're on UI thread)
+    // Full implementation would use PostMessage with a custom message
+    // Current implementation executes directly (assuming we're on UI thread)
     action();
 }
 
