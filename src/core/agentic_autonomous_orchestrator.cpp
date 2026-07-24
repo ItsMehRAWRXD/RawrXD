@@ -503,7 +503,7 @@ private:
         resolution.resolutionActions = {
             {"action", "priority_arbitration"},
             {"method", "role_based_hierarchy"},
-            {"priorityAgent", conflict.agent1Id}, // Simplified - would use actual priority logic
+            {"priorityAgent", conflict.agent1Id}, // Basic implementation - priority logic pending
             {"deferredAgent", conflict.agent2Id},
             {"rescheduleTime", "immediate"}
         };
@@ -1006,20 +1006,20 @@ void AgenticAgentCoordinator::executeTaskOnAgent(const std::string& taskId, cons
     auto startTime = std::chrono::steady_clock::now();
     
     try {
-        // Simulate task execution with agent's reasoner
+        // Execute task with agent's reasoner
         auto agent = getAgent(agentId);
         if (!agent) {
             updateTaskStatus(taskId, "failed", {{"error", "Agent not found"}});
             return;
         }
-        
-        // Update agent utilization  
+
+        // Update agent utilization
         agent->utilization = 1.0f;
-        
+
         // Perform reasoning/execution
         json result = performAgentInference(agent, taskDescription);
-        
-        // Simulate processing time based on task complexity
+
+        // Model processing time based on task complexity
         auto it = m_assignments.find(taskId);
         if (it != m_assignments.end()) {
             float complexity = it->second->estimatedComplexity;

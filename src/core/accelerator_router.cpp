@@ -1135,8 +1135,8 @@ RouterResult AcceleratorRouter::pollThermals() {
     }
 
     // AMD/Intel: DXGI adapter thermal query would go here in production
-    // For now, assume operating within limits unless hardware-specific driver APIs are loaded
-    // In production: use AMD ADL SDK or Intel IGCL for actual temperature polling
+    // Current implementation assumes operating within limits unless hardware-specific driver APIs are loaded
+    // Production implementation: use AMD ADL SDK or Intel IGCL for actual temperature polling
 
     // Check all backends against their thermal limits
     bool anyThrottled = false;

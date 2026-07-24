@@ -389,8 +389,28 @@ bool TierManager::Compress(PhysicalAddress addr, size_t& compressedSize) {
 }
 
 bool TierManager::Decompress(PhysicalAddress addr, size_t originalSize) {
-    // Placeholder decompression
-    return true;
+    // Validate address
+    if (!addr.ptr || addr.size < originalSize) {
+        return false;
+    }
+    
+    // In a real implementation, this would:
+    // 1. Read compressed data from the address
+    // 2. Use LZ4 or similar to decompress
+    // 3. Write decompressed data back
+    
+    // For now, validate the memory region is accessible
+    __try {
+        volatile uint8_t* ptr = static_cast<uint8_t*>(addr.ptr);
+        // Touch first and last byte to verify accessibility
+        uint8_t first = ptr[0];
+        uint8_t last = ptr[originalSize - 1];
+        (void)first;
+        (void)last;
+        return true;
+    } __except(EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
 }
 
 // =============================================================================

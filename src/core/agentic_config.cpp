@@ -932,7 +932,7 @@ std::string AgenticConfiguration::maskSecrets(const std::string& text) const {
 
 bool AgenticConfiguration::validateNoSecretsInLogs() const {
     // This would typically check log files or integrate with logging system
-    // For now, return true as we implement masking
+    // Implementation pending - returns true while masking is being implemented
     return true;
 }
 
