@@ -965,7 +965,7 @@ void AutonomousFeatureEngine::onAnalysisTimerTimeout() {
     //   - File system watcher (ReadDirectoryChangesW on Windows)
     //   - Git status polling for modified files
     //   - IDE file change notifications
-    // For now, skip periodic re-analysis pending implementation
+    // Skip periodic re-analysis pending implementation
     (void)currentProjectPath;
 }
 AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(const std::string& c, const std::string& l) {

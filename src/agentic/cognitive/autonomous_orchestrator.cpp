@@ -518,7 +518,7 @@ void AutonomousOrchestrator::UpdateMissionMetrics(const std::string& mission_id,
     
     // Update in blackboard
     // Note: This requires a mutable reference, so we'd need to modify the blackboard API
-    // For now, the metrics are tracked implicitly through the subgoal statuses
+    // Metrics are tracked implicitly through the subgoal statuses
 }
 
 void AutonomousOrchestrator::NotifyProgress(const std::string& mission_id, 
