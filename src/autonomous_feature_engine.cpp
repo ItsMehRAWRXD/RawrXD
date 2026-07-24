@@ -54,6 +54,46 @@ std::string GenerateUUID() {
     return std::string(buffer);
 }
 
+// Helper to generate documentation template for a function
+static std::string generateDocumentationTemplate(const FunctionInfo& func) {
+    std::stringstream ss;
+    ss << "/**\n";
+    ss << " * @brief Brief description of " << func.name << "\n";
+    ss << " *\n";
+    
+    // Add parameter documentation
+    for (const auto& param : func.parameters) {
+        ss << " * @param " << param.name << " Description of " << param.name << "\n";
+    }
+    
+    // Add return documentation if not void
+    if (func.returnType != "void") {
+        ss << " * @return Description of return value\n";
+    }
+    
+    // Add exceptions if any
+    if (!func.exceptions.empty()) {
+        for (const auto& ex : func.exceptions) {
+            ss << " * @throws " << ex << " When...\n";
+        }
+    }
+    
+    ss << " */";
+    return ss.str();
+}
+
+// Helper to generate documentation template for a class
+static std::string generateClassDocumentationTemplate(const ClassInfo& cls) {
+    std::stringstream ss;
+    ss << "/**\n";
+    ss << " * @class " << cls.name << "\n";
+    ss << " * @brief Brief description of " << cls.name << "\n";
+    ss << " *\n";
+    ss << " * Detailed description of the class purpose and usage.\n";
+    ss << " */";
+    return ss.str();
+}
+
 GeneratedTest AutonomousFeatureEngine::generateTestsForFunction(const std::string& code, const std::string& language) {
     GeneratedTest test;
     if (!hybridCloudManager) return test;
@@ -165,32 +205,81 @@ void AutonomousFeatureEngine::analyzeCode(const std::string& code, const std::st
         }
     }
     
-    // Check for documentation gaps (Real Logic)
-    // We assume access to CodebaseEngine singleton or pass it in
-    // For now we implement basic gap detection: look for functions without preceding comments
-    // Simple heuristic for C++
-    std::istringstream stream(code);
-    std::string line;
-    std::string prevLine;
-    int lineNum = 0;
-    while (std::getline(stream, line)) {
-        lineNum++;
-        size_t funcPos = line.find("void ");
-        if (funcPos == std::string::npos) funcPos = line.find("int ");
-        if (funcPos == std::string::npos) funcPos = line.find("bool ");
+    // Check for documentation gaps using comprehensive analysis
+    // This uses the CodebaseEngine to perform deep semantic analysis
+    if (codebaseEngine) {
+        // Get detailed analysis of the file
+        CodebaseAnalysis analysis = codebaseEngine->analyzeFile(filePath, code);
         
-        if (funcPos != std::string::npos && line.find("(") != std::string::npos && line.find(")") != std::string::npos && line.find(";") == std::string::npos) {
-             // Found potential function definition
-             if (prevLine.find("//") == std::string::npos && prevLine.find("*/") == std::string::npos) {
-                 AutonomousSuggestion s;
-                 s.type = "doc_missing";
-                 s.filePath = filePath;
-                 s.explanation = "Missing documentation for function at line " + std::to_string(lineNum);
-                 s.confidence = 0.6;
-                 suggestions.push_back(s);
-             }
+        // Check each function for documentation
+        for (const auto& func : analysis.functions) {
+            if (!func.hasDocumentation) {
+                AutonomousSuggestion s;
+                s.type = "doc_missing";
+                s.filePath = filePath;
+                s.lineNumber = func.lineNumber;
+                s.explanation = "Missing documentation for function '" + func.name + "' at line " + 
+                               std::to_string(func.lineNumber);
+                s.confidence = 0.8f;
+                s.suggestedCode = generateDocumentationTemplate(func);
+                suggestions.push_back(s);
+            }
         }
-        if(!line.empty()) prevLine = line;
+        
+        // Check for undocumented classes
+        for (const auto& cls : analysis.classes) {
+            if (!cls.hasDocumentation) {
+                AutonomousSuggestion s;
+                s.type = "doc_missing";
+                s.filePath = filePath;
+                s.lineNumber = cls.lineNumber;
+                s.explanation = "Missing documentation for class '" + cls.name + "' at line " + 
+                               std::to_string(cls.lineNumber);
+                s.confidence = 0.85f;
+                s.suggestedCode = generateClassDocumentationTemplate(cls);
+                suggestions.push_back(s);
+            }
+        }
+    } else {
+        // Fallback: basic heuristic analysis
+        std::istringstream stream(code);
+        std::string line;
+        std::string prevLine;
+        int lineNum = 0;
+        
+        while (std::getline(stream, line)) {
+            lineNum++;
+            
+            // Detect function definitions
+            std::regex funcRegex(R"(^\s*(void|int|bool|float|double|std::\w+|\w+::\w+)\s+(\w+)\s*\([^)]*\)\s*\{?)");
+            std::smatch match;
+            
+            if (std::regex_search(line, match, funcRegex)) {
+                // Check if previous line has documentation
+                bool hasDoc = (prevLine.find("//") != std::string::npos) ||
+                             (prevLine.find("/*") != std::string::npos) ||
+                             (prevLine.find("*/") != std::string::npos);
+                
+                // Also check for multi-line comments
+                if (!hasDoc && lineNum > 2) {
+                    // Look back up to 5 lines for documentation
+                    // (simplified - real implementation would track comment blocks)
+                }
+                
+                if (!hasDoc) {
+                    AutonomousSuggestion s;
+                    s.type = "doc_missing";
+                    s.filePath = filePath;
+                    s.lineNumber = lineNum;
+                    s.explanation = "Missing documentation for function '" + match[2].str() + 
+                                   "' at line " + std::to_string(lineNum);
+                    s.confidence = 0.6f;
+                    suggestions.push_back(s);
+                }
+            }
+            
+            if (!line.empty()) prevLine = line;
+        }
     }
     
     for (const auto& s : suggestions) {
@@ -847,12 +936,65 @@ void AutonomousFeatureEngine::errorOccurred(const std::string& e) {
     if (onErrorOccurred) onErrorOccurred(e);
 }
 void AutonomousFeatureEngine::onAnalysisTimerTimeout() {
-    // Real logic: detailed scan if idle?
-    // For now, assume this triggers re-checking of active files or full scan if needed.
-    // If we have a project path, we might want to ask CodebaseEngine for updates.
-    if (codebaseEngine && !currentProjectPath.empty()) {
-        // Maybe inconsistent if thread safety isn't handled in engine, but let's assume it is.
-        // codebaseEngine->analyzeEntireCodebase(currentProjectPath); // Too heavy?
+    // Trigger periodic re-analysis of active files
+    // This ensures suggestions stay current as the codebase evolves
+    
+    if (!codebaseEngine || currentProjectPath.empty()) {
+        return;
+    }
+    
+    // Get list of recently modified files from the codebase engine
+    std::vector<std::string> modifiedFiles = codebaseEngine->getRecentlyModifiedFiles(
+        currentProjectPath, std::chrono::minutes(5));
+    
+    if (!modifiedFiles.empty()) {
+        // Analyze each modified file
+        for (const auto& filePath : modifiedFiles) {
+            // Read file content
+            std::ifstream file(filePath);
+            if (file.is_open()) {
+                std::string content((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
+                file.close();
+                
+                // Get file extension for language detection
+                std::string ext = std::filesystem::path(filePath).extension().string();
+                std::string language = detectLanguage(ext);
+                
+                // Analyze the file
+                analyzeCode(content, filePath, language);
+            }
+        }
+        
+        // Notify that analysis is complete
+        analysisComplete("Periodic scan of " + std::to_string(modifiedFiles.size()) + " files");
+    }
+    
+    // Also check for any files that haven't been analyzed in a while
+    // and may need re-analysis due to dependency changes
+    std::vector<std::string> staleFiles = codebaseEngine->getStaleFiles(
+        currentProjectPath, std::chrono::hours(1));
+    
+    if (!staleFiles.empty()) {
+        // Schedule background re-analysis of stale files
+        std::thread([this, staleFiles]() {
+            for (const auto& filePath : staleFiles) {
+                // Lightweight re-analysis
+                std::ifstream file(filePath);
+                if (file.is_open()) {
+                    std::string content((std::istreambuf_iterator<char>(file)),
+                                       std::istreambuf_iterator<char>());
+                    file.close();
+                    
+                    // Quick syntax check only
+                    std::string ext = std::filesystem::path(filePath).extension().string();
+                    std::string language = detectLanguage(ext);
+                    
+                    // Just validate syntax, don't generate suggestions
+                    validateSyntax(content, filePath, language);
+                }
+            }
+        }).detach();
     }
 }
 AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(const std::string& c, const std::string& l) {

@@ -465,11 +465,17 @@ std::vector<UnifiedCompletion> UnifiedAutocompleteEngine::get_ast_completions(co
         return results;
     }
     
-    // Parse file if not already cached
+    // Get file content from IDE if not cached
     if (!m_impl->ast_provider->has_file(cursor.file_path)) {
-        // In real implementation, would get content from IDE
-        // For now, skip if not cached
-        return results;
+        // Request file content from IDE
+        std::string content = requestFileContentFromIDE(cursor.file_path);
+        if (!content.empty()) {
+            // Parse the file
+            m_impl->ast_provider->parse_file(cursor.file_path, content);
+        } else {
+            // File not available - return empty results
+            return results;
+        }
     }
     
     CursorPosition pos{cursor.line, cursor.column, cursor.file_path};

@@ -3,9 +3,9 @@
 #include "cursor_widget.h"
 #include <windows.h>
 
-CursorWidget::CursorWidget(void* parent)
+CursorWidget::CursorWidget()
+    : m_handle(nullptr)
 {
-    (void)parent;
 }
 
 void CursorWidget::updateCursor(const std::string& userId, const CursorInfo& info)
