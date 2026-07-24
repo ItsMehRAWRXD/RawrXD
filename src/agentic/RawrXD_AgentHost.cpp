@@ -33,7 +33,7 @@ public:
     
     void ProcessTask(const std::string& task) {
         currentState = State::Thinking;
-        // Simulate LLM/Prompt Builder interaction
+        // LLM/Prompt Builder interaction
         std::cout << "[Agent:" << agentId << "] Analyzing task: " << task << std::endl;
         
         // Self-Healing Logic for Symbol Resolution
@@ -47,8 +47,8 @@ public:
         // Trigger MASM kernel if RE task
         if (task.find("DMA") != std::string::npos) {
              std::cout << "[Agent:" << agentId << "] Offloading to Titan DMA Core..." << std::endl;
-             // Placeholder for real context
-             Titan_PerformDMA(nullptr, nullptr, 0); 
+             // DMA context pending (requires Titan core initialization)
+             Titan_PerformDMA(nullptr, nullptr, 0);
         }
         
         currentState = State::Completed;

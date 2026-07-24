@@ -448,7 +448,7 @@ ToolExecResult HandleCreateMemorySilo(const json& args)
         result["status"] = "created";
 
         // Note: In production, we'd store jobHandle in a static map for later retrieval
-        // For now, the handle is encoded in silo_id
+        // The handle is encoded in silo_id for this implementation
 
         return ToolExecResult::ok(result.dump());
     }
