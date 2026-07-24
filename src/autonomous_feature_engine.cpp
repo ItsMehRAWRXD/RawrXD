@@ -959,8 +959,13 @@ void AutonomousFeatureEngine::onAnalysisTimerTimeout() {
         return;
     }
     
-    // Stub: getRecentlyModifiedFiles not available in codebaseEngine
-    // Skip periodic re-analysis for now
+    // Periodic re-analysis of recently modified files
+    // This feature requires filesystem monitoring integration
+    // TODO: Implement file modification tracking via:
+    //   - File system watcher (ReadDirectoryChangesW on Windows)
+    //   - Git status polling for modified files
+    //   - IDE file change notifications
+    // For now, skip periodic re-analysis pending implementation
     (void)currentProjectPath;
 }
 AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(const std::string& c, const std::string& l) {

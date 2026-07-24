@@ -152,7 +152,9 @@ public:
             }
 
             if (!symbol->documentation.empty()) {
-                info += "\nDocumentation:\n" + symbol->documentation + "\n";
+                info += "\nDocumentation:\n";
+                info += symbol->documentation;
+                info += "\n";
             }
 
             SetWindowTextA(hwndResults_, info.c_str());
