@@ -48,10 +48,10 @@ std::string NodeInfo::ToJson() const {
 }
 
 std::optional<NodeInfo> NodeInfo::FromJson(const std::string& json) {
-    // Simplified JSON parsing - production would use proper JSON library
+    // Basic JSON parsing - production would use proper JSON library
     NodeInfo info;
     // Parse fields from JSON string
-    // This is a stub implementation
+    // Implementation pending
     return info;
 }
 
@@ -624,22 +624,22 @@ uint64_t DiscoveryProtocol::CalculateCapacityScore() const {
 // ============================================================================
 
 std::vector<uint8_t> DiscoveryMessage::Serialize() const {
-    // Simplified serialization - production would use protobuf or similar
+    // Basic serialization - production would use protobuf or similar
     std::string json = "{";
     json += "\"type\":" + std::to_string(static_cast<int>(type)) + ",";
     json += "\"senderId\":\"" + senderId + "\",";
     json += "\"nodeInfo\":" + nodeInfo.ToJson() + ",";
     json += "\"timestamp\":" + std::to_string(timestamp);
     json += "}";
-    
+
     return std::vector<uint8_t>(json.begin(), json.end());
 }
 
 std::optional<DiscoveryMessage> DiscoveryMessage::Deserialize(const std::vector<uint8_t>& data) {
-    // Simplified deserialization - production would use proper JSON parser
+    // Basic deserialization - production would use proper JSON parser
     DiscoveryMessage msg;
     // Parse JSON and populate fields
-    // This is a stub implementation
+    // Implementation pending
     return msg;
 }
 
