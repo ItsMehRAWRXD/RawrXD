@@ -108,10 +108,6 @@ private:
     std::vector<TriggerTelemetry> telemetry_;
     Stats stats_;
     
-    std::unordered_map<std::string, GoalState> goalStates_;
-    std::vector<TriggerTelemetry> telemetry_;
-    Stats stats_;
-    
     bool shouldTrigger(const PatchContext& ctx, const GoalState& state);
     void recordTelemetry(const PatchContext& ctx);
     void updateGoalState(const std::string& goalId, const PatchContext& ctx);

@@ -274,6 +274,15 @@ class Win32IDE
         DebugConsole = 3
     };
 
+    // Startup phase tracking to prevent stack overflow from heavy init during WM_CREATE
+    enum class StartupPhase
+    {
+        PreCreate,           // Before any window creation
+        CreatingMainWindow,  // Inside WM_CREATE handler
+        ChildrenDeferred,    // After WM_CREATE, deferred init allowed
+        Running              // Fully initialized
+    };
+
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
@@ -1680,6 +1689,11 @@ class Win32IDE
 
     HINSTANCE m_hInstance;
     HWND m_hwndMain;
+
+    // Startup phase tracking to prevent stack overflow from heavy init during WM_CREATE
+    StartupPhase m_startupPhase = StartupPhase::PreCreate;
+    bool allowHeavyInitialization() const { return m_startupPhase >= StartupPhase::ChildrenDeferred; }
+
     // ── Parity-audit: Visibility Watchdog members ──────────────────────────
     HANDLE m_watchdogThread = nullptr;
     volatile LONG m_watchdogRunning = 0;  // 1 = active, 0 = stop requested

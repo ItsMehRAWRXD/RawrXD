@@ -14,6 +14,7 @@
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <chrono>
 
 namespace RawrXD {
 namespace Validation {
@@ -30,12 +31,17 @@ enum class GateStatus {
 // Validation Result
 struct ValidationResult {
     bool passed;
+    bool success = false;
     std::string gateId;
+    std::string gateName;
     std::string message;
     double durationMs;
     std::vector<std::string> details;
+    GateStatus status = GateStatus::NOT_IMPLEMENTED;
+    std::chrono::high_resolution_clock::time_point startTime;
+    std::chrono::high_resolution_clock::time_point endTime;
     
-    ValidationResult() : passed(false), durationMs(0.0) {}
+    ValidationResult() : passed(false), success(false), durationMs(0.0) {}
 };
 
 // Validation Gate Interface

@@ -2090,6 +2090,9 @@ static void LogStackBacktrace()
 
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Track startup phase to prevent heavy initialization during WM_CREATE
+    m_startupPhase = StartupPhase::CreatingMainWindow;
+    
     // Depth tracking for recursion diagnostics
     DepthGuard depthGuard;
     
@@ -2097,11 +2100,11 @@ void Win32IDE::onCreate(HWND hwnd)
     if (gCreateDepth > 2)
     {
         char warnMsg[256];
-        snprintf(warnMsg, sizeof(warnMsg), 
-                 "[Win32IDE] WARNING: onCreate depth = %d - possible recursion issue\n", 
+        snprintf(warnMsg, sizeof(warnMsg),
+                 "[Win32IDE] WARNING: onCreate depth = %d - possible recursion issue\n",
                  gCreateDepth);
         OutputDebugStringA(warnMsg);
-        
+
         if (gCreateDepth > 10)
         {
             OutputDebugStringA("[Win32IDE] CRITICAL: Recursion depth > 10, breaking potential infinite loop\n");
@@ -2267,16 +2270,12 @@ void Win32IDE::onCreate(HWND hwnd)
     fileTrace("[onCreate] createPrimarySidebar done");
     logStackUsage("onCreate after createPrimarySidebar");
 
-    fileTrace("[onCreate] createTabBar...");
-    OutputDebugStringA("[onCreate] createTabBar...\n");
-    logStackUsage("onCreate before createTabBar");
-    fileTrace("[onCreate] About to call createTabBar(hwnd)...");
-    OutputDebugStringA("[onCreate] About to call createTabBar(hwnd)...\n");
-    createTabBar(hwnd);
-    fileTrace("[onCreate] createTabBar returned");
-    OutputDebugStringA("[onCreate] createTabBar returned\n");
-    fileTrace("[onCreate] createTabBar done");
-    logStackUsage("onCreate after createTabBar");
+    // DEFERRED: createTabBar moved to onCreateChildren to prevent stack overflow
+    // The TabManager creates a window and does heavy initialization that can
+    // overflow the stack when called from within WM_CREATE processing.
+    // See onCreateChildren() for the deferred creation.
+    fileTrace("[onCreate] createTabBar DEFERRED to onCreateChildren");
+    OutputDebugStringA("[onCreate] createTabBar DEFERRED to onCreateChildren\n");
     
     fileTrace("[onCreate] createBreadcrumbBar...");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
@@ -2394,9 +2393,11 @@ void bgInitBody(void* self);
 // ============================================================================
 void Win32IDE::onCreateChildren(HWND hwnd)
 {
-    fileTrace("[onCreateChildren] START");
+    // Transition to ChildrenDeferred phase - heavy initialization now allowed
+    m_startupPhase = StartupPhase::ChildrenDeferred;
+    fileTrace("[onCreateChildren] START - phase transitioned to ChildrenDeferred");
     logStackUsage("onCreateChildren START");
-    
+
     // Create panels that were deferred from onCreate to prevent stack overflow
     OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");
     logStackUsage("onCreateChildren before createOutputTabs");
@@ -2417,6 +2418,25 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     logStackUsage("onCreateChildren before initializeChatPanelOllama");
     initializeChatPanelOllama();
     logStackUsage("onCreateChildren after initializeChatPanelOllama");
+    
+    // DEFERRED: createTabBar moved from onCreate to prevent stack overflow
+    // The TabManager creates a window and does heavy initialization that can
+    // overflow the stack when called from within WM_CREATE processing.
+    OutputDebugStringA("[onCreateChildren] createTabBar (deferred from onCreate)...\n");
+    logStackUsage("onCreateChildren before createTabBar");
+    createTabBar(hwnd);
+    logStackUsage("onCreateChildren after createTabBar");
+    
+    // DEFERRED: Apply sovereign theme to TabManager (post-WM_CREATE to avoid stack overflow)
+    // The theme was deferred from TabManager::initialize() due to nlohmann::json stack usage
+    OutputDebugStringA("[onCreateChildren] Applying deferred sovereign theme...\n");
+    logStackUsage("onCreateChildren before applySovereignTheme");
+    if (m_tabManager)
+    {
+        m_tabManager->applySovereignTheme();
+        OutputDebugStringA("[onCreateChildren] Sovereign theme applied to TabManager\n");
+    }
+    logStackUsage("onCreateChildren after applySovereignTheme");
     
     // Update HWND audit after deferred creation
     if (m_hwndMain)

@@ -7582,6 +7582,15 @@ void Win32IDE::createTabBar(HWND hwndParent)
 {
     OutputDebugStringA("[Win32IDE::createTabBar] START\n");
     fileTrace("[Win32IDE::createTabBar] START");
+
+    // GUARD: Prevent stack overflow by enforcing startup phase
+    if (!allowHeavyInitialization())
+    {
+        OutputDebugStringA("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase\n");
+        fileTrace("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase");
+        return;
+    }
+
     if (!hwndParent)
     {
         OutputDebugStringA("[Win32IDE::createTabBar] hwndParent is null, returning\n");
