@@ -191,8 +191,8 @@ FeatureRegistry::FeatureRegistry() {
 
 FeatureRegistry::~FeatureRegistry() {
     // Cleanup: clear all feature data
-    features_.clear();
-    usageStats_.clear();
+    m_features.clear();
+    m_usageStats.clear();
 }
 
 void FeatureRegistry::initializeBuiltInFeatures() {

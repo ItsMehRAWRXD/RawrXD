@@ -223,7 +223,14 @@ ToolRegistry::ToolRegistry()
     : auditEnabled_(false)
 {}
 
-ToolRegistry::~ToolRegistry() {}
+ToolRegistry::~ToolRegistry() {
+    // Cleanup: clear all tool data and audit logs
+    std::lock_guard<std::mutex> lock(mutex_);
+    tools_.clear();
+    callCounts_.clear();
+    lastCallTimes_.clear();
+    auditLog_.clear();
+}
 
 void ToolRegistry::RegisterTool(const ToolDefinition& tool) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1398,7 +1405,10 @@ FileExplorer::FileExplorer(const std::string& rootPath) : rootPath_(rootPath), s
     LoadDirectory(currentPath_);
 }
 
-FileExplorer::~FileExplorer() {}
+FileExplorer::~FileExplorer() {
+    // Cleanup: clear directory entries to release memory
+    entries_.clear();
+}
 
 void FileExplorer::NavigateTo(const std::string& path) {
     currentPath_ = path;

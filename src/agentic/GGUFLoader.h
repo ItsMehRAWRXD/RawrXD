@@ -64,6 +64,9 @@ struct LoadedModel {
     int numHeads = 0;
     int contextLength = 0;
     std::string architecture;
+    
+    // Tensor data offset in file (for memory mapping)
+    long tensorDataOffset = 0;
 };
 
 /**
