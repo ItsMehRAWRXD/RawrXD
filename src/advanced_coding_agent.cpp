@@ -88,8 +88,97 @@ std::vector<std::string> AdvancedCodingAgentIntegration::findBugs(
 
     std::vector<std::string> bugs;
     
-    // Analysis would go here
-    // For now, return empty - actual bugs would be detected
+    // Real static analysis: detect common bug patterns
+    
+    // 1. Null pointer dereference risk: dereference without null check
+    size_t arrowPos = 0;
+    while ((arrowPos = code.find("->", arrowPos)) != std::string::npos) {
+        // Check if preceded by a null check within 200 chars
+        size_t checkStart = (arrowPos > 200) ? arrowPos - 200 : 0;
+        std::string context = code.substr(checkStart, arrowPos - checkStart);
+        if (context.find("!= nullptr") == std::string::npos &&
+            context.find("!=" + std::string(" NULL")) == std::string::npos &&
+            context.find("if (") == std::string::npos) {
+            // Extract variable name before ->
+            size_t varEnd = arrowPos;
+            size_t varStart = varEnd;
+            while (varStart > 0 && (isalnum((unsigned char)code[varStart-1]) || code[varStart-1] == '_'))
+                varStart--;
+            std::string varName = code.substr(varStart, varEnd - varStart);
+            if (!varName.empty() && varName != "this" && varName != "self") {
+                bugs.push_back("Potential null dereference: " + varName + " not checked before -> access");
+            }
+        }
+        arrowPos += 2;
+    }
+    
+    // 2. Uninitialized variable: type declaration without assignment
+    std::vector<std::string> typeKeywords = {"int ", "float ", "double ", "bool ", "char*", "void*"};
+    for (const auto& kw : typeKeywords) {
+        size_t pos = 0;
+        while ((pos = code.find(kw, pos)) != std::string::npos) {
+            size_t varStart = pos + kw.length();
+            size_t varEnd = varStart;
+            while (varEnd < code.length() && (isalnum((unsigned char)code[varEnd]) || code[varEnd] == '_'))
+                varEnd++;
+            std::string varName = code.substr(varStart, varEnd - varStart);
+            // Check if followed by = or ;
+            size_t nextNonSpace = code.find_first_not_of(" \t", varEnd);
+            if (nextNonSpace != std::string::npos && code[nextNonSpace] == ';') {
+                if (!varName.empty() && varName != "i" && varName != "j" && varName != "k") {
+                    bugs.push_back("Uninitialized variable: " + varName + " declared without assignment");
+                }
+            }
+            pos = varEnd;
+        }
+    }
+    
+    // 3. Buffer overflow risk: memcpy/strcpy without size check
+    size_t memcpyPos = 0;
+    while ((memcpyPos = code.find("memcpy(", memcpyPos)) != std::string::npos) {
+        size_t parenEnd = code.find(')', memcpyPos);
+        if (parenEnd != std::string::npos) {
+            std::string args = code.substr(memcpyPos + 7, parenEnd - memcpyPos - 7);
+            if (args.find("sizeof") == std::string::npos) {
+                bugs.push_back("Potential buffer overflow: memcpy without sizeof");
+            }
+        }
+        memcpyPos += 7;
+    }
+    
+    // 4. Resource leak: open without close
+    if (code.find("fopen(") != std::string::npos || code.find("open(") != std::string::npos) {
+        if (code.find("fclose") == std::string::npos && code.find("close(") == std::string::npos) {
+            bugs.push_back("Resource leak: file opened but never closed");
+        }
+    }
+    
+    // 5. Integer overflow: arithmetic without bounds check
+    if (code.find("* ") != std::string::npos && code.find("INT_MAX") == std::string::npos) {
+        size_t mulPos = code.find("* ");
+        if (mulPos != std::string::npos && mulPos > 0) {
+            // Check if it's in an arithmetic context (not pointer)
+            if (code[mulPos-1] != '*' && code[mulPos-1] != '(' && code[mulPos-1] != '=') {
+                bugs.push_back("Potential integer overflow: multiplication without bounds check");
+            }
+        }
+    }
+    
+    // 6. Use-after-free: delete followed by use
+    size_t deletePos = 0;
+    while ((deletePos = code.find("delete ", deletePos)) != std::string::npos) {
+        size_t varStart = deletePos + 7;
+        size_t varEnd = varStart;
+        while (varEnd < code.length() && (isalnum((unsigned char)code[varEnd]) || code[varEnd] == '_'))
+            varEnd++;
+        std::string varName = code.substr(varStart, varEnd - varStart);
+        // Check if variable is used after delete
+        size_t nextUse = code.find(varName, varEnd);
+        if (nextUse != std::string::npos && nextUse < varEnd + 500) {
+            bugs.push_back("Use-after-free risk: " + varName + " used after delete");
+        }
+        deletePos = varEnd;
+    }
 
     m_metrics->incrementCounter("bug_analysis_runs");
     return bugs;

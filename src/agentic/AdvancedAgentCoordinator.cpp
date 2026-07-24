@@ -280,8 +280,20 @@ std::vector<std::shared_ptr<AgentTask>> AdvancedAgentCoordinator::getTasksByPrio
     std::lock_guard<std::mutex> lock(m_mutex);
 
     std::vector<std::shared_ptr<AgentTask>> tasks;
-    // This would require iterating through the priority queue, which is complex
-    // For now, return empty vector as this is a demonstration
+    
+    // Iterate through all tasks and filter by priority
+    for (const auto& [taskId, task] : m_tasks) {
+        if (task && task->priority == priority) {
+            tasks.push_back(task);
+        }
+    }
+    
+    // Sort by creation time (oldest first)
+    std::sort(tasks.begin(), tasks.end(),
+        [](const std::shared_ptr<AgentTask>& a, const std::shared_ptr<AgentTask>& b) {
+            return a->createdAt < b->createdAt;
+        });
+    
     return tasks;
 }
 
