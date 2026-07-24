@@ -11,10 +11,10 @@ namespace RawrXD {
 namespace Profiling {
 
 //=============================================================================
-// PMCCounter Implementation
+// RawrPMCCounter Implementation
 //=============================================================================
 
-PMCCounter::PMCCounter()
+RawrPMCCounter::RawrPMCCounter()
     : event_(PMCEvent::CPU_CYCLES)
     , is_running_(false)
     , is_configured_(false)
@@ -26,7 +26,7 @@ PMCCounter::PMCCounter()
 {
 }
 
-PMCCounter::~PMCCounter() {
+RawrPMCCounter::~RawrPMCCounter() {
 #if defined(PMC_PLATFORM_LINUX)
     if (fd_ >= 0) {
         close(fd_);
@@ -34,7 +34,7 @@ PMCCounter::~PMCCounter() {
 #endif
 }
 
-PMCCounter::PMCCounter(PMCCounter&& other) noexcept
+RawrPMCCounter::RawrPMCCounter(RawrPMCCounter&& other) noexcept
     : event_(other.event_)
     , is_running_(other.is_running_)
     , is_configured_(other.is_configured_)
@@ -51,7 +51,7 @@ PMCCounter::PMCCounter(PMCCounter&& other) noexcept
     other.is_configured_ = false;
 }
 
-PMCCounter& PMCCounter::operator=(PMCCounter&& other) noexcept {
+RawrPMCCounter& RawrPMCCounter::operator=(RawrPMCCounter&& other) noexcept {
     if (this != &other) {
 #if defined(PMC_PLATFORM_LINUX)
         if (fd_ >= 0) {
@@ -72,7 +72,7 @@ PMCCounter& PMCCounter::operator=(PMCCounter&& other) noexcept {
     return *this;
 }
 
-bool PMCCounter::Configure(PMCEvent event) {
+bool RawrPMCCounter::Configure(PMCEvent event) {
     if (is_running_) {
         return false;
     }
@@ -126,7 +126,7 @@ bool PMCCounter::Configure(PMCEvent event) {
     return true;
 }
 
-bool PMCCounter::ConfigureRaw(uint64_t raw_event_code) {
+bool RawrPMCCounter::ConfigureRaw(uint64_t raw_event_code) {
     if (is_running_) {
         return false;
     }
@@ -151,7 +151,7 @@ bool PMCCounter::ConfigureRaw(uint64_t raw_event_code) {
     return true;
 }
 
-bool PMCCounter::Start() {
+bool RawrPMCCounter::Start() {
     if (!is_configured_ || is_running_) {
         return false;
     }
@@ -172,7 +172,7 @@ bool PMCCounter::Start() {
     return true;
 }
 
-bool PMCCounter::Stop() {
+bool RawrPMCCounter::Stop() {
     if (!is_running_) {
         return false;
     }
@@ -187,7 +187,7 @@ bool PMCCounter::Stop() {
     return true;
 }
 
-bool PMCCounter::Reset() {
+bool RawrPMCCounter::Reset() {
     if (is_running_) {
         return false;
     }
@@ -203,7 +203,7 @@ bool PMCCounter::Reset() {
     return true;
 }
 
-uint64_t PMCCounter::Read() const {
+uint64_t RawrPMCCounter::Read() const {
     if (!is_configured_) {
         return 0;
     }
@@ -227,7 +227,7 @@ uint64_t PMCCounter::Read() const {
 #endif
 }
 
-const char* PMCCounter::GetEventName() const {
+const char* RawrPMCCounter::GetEventName() const {
     return RawrXD::Profiling::GetEventName(event_);
 }
 
@@ -255,7 +255,7 @@ bool PMCSession::AddCounter(PMCEvent event) {
         return false;
     }
     
-    PMCCounter counter;
+    RawrPMCCounter counter;
     if (!counter.Configure(event)) {
         return false;
     }

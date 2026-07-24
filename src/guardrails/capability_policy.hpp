@@ -156,7 +156,6 @@ public:
     static std::optional<CapabilityToken> FromJson(const std::string& json);
     
     // Copy/move constructors (required due to atomic members)
-    CapabilityToken() = default;
     CapabilityToken(const CapabilityToken& other);
     CapabilityToken(CapabilityToken&& other) noexcept;
     CapabilityToken& operator=(const CapabilityToken& other);

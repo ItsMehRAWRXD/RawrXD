@@ -286,27 +286,108 @@ void PersistentGPULoop::ProcessCompletedToken(const float* logits, int vocab_siz
 }
 
 uint32_t PersistentGPULoop::SampleToken(const float* logits, int vocab_size, float& confidence) {
-    // Simple greedy sampling for now
-    // TODO: Implement temperature, top-k, top-p sampling
+    // Temperature, top-k, and top-p sampling implementation
     
-    int best_idx = 0;
-    float best_logit = logits[0];
-    float second_best_logit = -INFINITY;
+    // Get sampling parameters
+    float temperature = config_.temperature;
+    int top_k = config_.top_k;
+    float top_p = config_.top_p;
     
-    for (int i = 1; i < vocab_size; i++) {
-        if (logits[i] > best_logit) {
-            second_best_logit = best_logit;
-            best_logit = logits[i];
-            best_idx = i;
-        } else if (logits[i] > second_best_logit) {
-            second_best_logit = logits[i];
+    // Apply temperature scaling
+    std::vector<float> scaled_logits(vocab_size);
+    if (temperature > 0.0f && temperature != 1.0f) {
+        for (int i = 0; i < vocab_size; i++) {
+            scaled_logits[i] = logits[i] / temperature;
+        }
+    } else {
+        scaled_logits.assign(logits, logits + vocab_size);
+    }
+    
+    // Softmax to get probabilities
+    std::vector<float> probs(vocab_size);
+    float max_logit = *std::max_element(scaled_logits.begin(), scaled_logits.end());
+    float sum = 0.0f;
+    
+    for (int i = 0; i < vocab_size; i++) {
+        probs[i] = std::exp(scaled_logits[i] - max_logit);
+        sum += probs[i];
+    }
+    
+    for (auto& p : probs) p /= sum;
+    
+    // Top-k filtering
+    if (top_k > 0 && top_k < vocab_size) {
+        // Find k-th largest probability
+        std::vector<float> sorted_probs = probs;
+        std::nth_element(sorted_probs.begin(), 
+                         sorted_probs.begin() + top_k - 1,
+                         sorted_probs.end(),
+                         std::greater<float>());
+        float kth_prob = sorted_probs[top_k - 1];
+        
+        // Zero out probabilities below threshold
+        for (int i = 0; i < vocab_size; i++) {
+            if (probs[i] < kth_prob) {
+                probs[i] = 0.0f;
+            }
+        }
+        
+        // Renormalize
+        sum = std::accumulate(probs.begin(), probs.end(), 0.0f);
+        if (sum > 0.0f) {
+            for (auto& p : probs) p /= sum;
         }
     }
     
-    // Calculate confidence as margin
-    confidence = best_logit - second_best_logit;
+    // Top-p (nucleus) filtering
+    if (top_p > 0.0f && top_p < 1.0f) {
+        // Sort probabilities in descending order
+        std::vector<std::pair<float, int>> indexed_probs;
+        indexed_probs.reserve(vocab_size);
+        for (int i = 0; i < vocab_size; i++) {
+            indexed_probs.push_back({probs[i], i});
+        }
+        
+        std::sort(indexed_probs.begin(), indexed_probs.end(),
+                  [](const auto& a, const auto& b) { return a.first > b.first; });
+        
+        // Find cutoff for top-p
+        float cumsum = 0.0f;
+        size_t cutoff = vocab_size;
+        for (size_t i = 0; i < indexed_probs.size(); i++) {
+            cumsum += indexed_probs[i].first;
+            if (cumsum >= top_p) {
+                cutoff = i + 1;
+                break;
+            }
+        }
+        
+        // Zero out probabilities outside nucleus
+        std::vector<float> new_probs(vocab_size, 0.0f);
+        for (size_t i = 0; i < cutoff; i++) {
+            new_probs[indexed_probs[i].second] = indexed_probs[i].first;
+        }
+        
+        probs = std::move(new_probs);
+        
+        // Renormalize
+        sum = std::accumulate(probs.begin(), probs.end(), 0.0f);
+        if (sum > 0.0f) {
+            for (auto& p : probs) p /= sum;
+        }
+    }
     
-    return static_cast<uint32_t>(best_idx);
+    // Sample from the filtered distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> dist(probs.begin(), probs.end());
+    
+    int sampled_idx = dist(gen);
+    
+    // Calculate confidence as the probability of the sampled token
+    confidence = probs[sampled_idx];
+    
+    return static_cast<uint32_t>(sampled_idx);
 }
 
 } // namespace RawrXD

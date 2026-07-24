@@ -163,7 +163,7 @@ public:
     size_t GetCounterCount() const { return counters_.size(); }
     
 private:
-    std::vector<PMCCounter> counters_;
+    std::vector<RawrPMCCounter> counters_;
     std::vector<uint64_t> start_values_;
     bool is_running_;
 };

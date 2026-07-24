@@ -229,6 +229,79 @@ std::string ReplayRecord::ComputeReplayHash() const {
     return ComputeSHA256(ss.str());
 }
 
+// Copy/move constructors (required due to unique_ptr member)
+ReplayRecord::ReplayRecord(const ReplayRecord& other)
+    : recordId(other.recordId),
+      timestamp(other.timestamp),
+      intent(other.intent),
+      abiIntent(other.abiIntent),
+      preSnapshot(other.preSnapshot),
+      postSnapshot(other.postSnapshot),
+      events(other.events),
+      leases(other.leases),
+      transaction(other.transaction ? std::make_unique<Hotpatch::PatchTransaction>(*other.transaction) : nullptr),
+      succeeded(other.succeeded),
+      errorMessage(other.errorMessage),
+      executionTimeMs(other.executionTimeMs),
+      patchData(other.patchData),
+      patchHash(other.patchHash) {}
+
+ReplayRecord::ReplayRecord(ReplayRecord&& other) noexcept
+    : recordId(other.recordId),
+      timestamp(other.timestamp),
+      intent(std::move(other.intent)),
+      abiIntent(std::move(other.abiIntent)),
+      preSnapshot(std::move(other.preSnapshot)),
+      postSnapshot(std::move(other.postSnapshot)),
+      events(std::move(other.events)),
+      leases(std::move(other.leases)),
+      transaction(std::move(other.transaction)),
+      succeeded(other.succeeded),
+      errorMessage(std::move(other.errorMessage)),
+      executionTimeMs(other.executionTimeMs),
+      patchData(std::move(other.patchData)),
+      patchHash(std::move(other.patchHash)) {}
+
+ReplayRecord& ReplayRecord::operator=(const ReplayRecord& other) {
+    if (this != &other) {
+        recordId = other.recordId;
+        timestamp = other.timestamp;
+        intent = other.intent;
+        abiIntent = other.abiIntent;
+        preSnapshot = other.preSnapshot;
+        postSnapshot = other.postSnapshot;
+        events = other.events;
+        leases = other.leases;
+        transaction = other.transaction ? std::make_unique<Hotpatch::PatchTransaction>(*other.transaction) : nullptr;
+        succeeded = other.succeeded;
+        errorMessage = other.errorMessage;
+        executionTimeMs = other.executionTimeMs;
+        patchData = other.patchData;
+        patchHash = other.patchHash;
+    }
+    return *this;
+}
+
+ReplayRecord& ReplayRecord::operator=(ReplayRecord&& other) noexcept {
+    if (this != &other) {
+        recordId = other.recordId;
+        timestamp = other.timestamp;
+        intent = std::move(other.intent);
+        abiIntent = std::move(other.abiIntent);
+        preSnapshot = std::move(other.preSnapshot);
+        postSnapshot = std::move(other.postSnapshot);
+        events = std::move(other.events);
+        leases = std::move(other.leases);
+        transaction = std::move(other.transaction);
+        succeeded = other.succeeded;
+        errorMessage = std::move(other.errorMessage);
+        executionTimeMs = other.executionTimeMs;
+        patchData = std::move(other.patchData);
+        patchHash = std::move(other.patchHash);
+    }
+    return *this;
+}
+
 // ============================================================================
 // ReplayJournal Implementation
 // ============================================================================
