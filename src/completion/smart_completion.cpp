@@ -1223,8 +1223,9 @@ public:
     
     void invalidateFile(const std::string& uri) override {
         // Invalidate any cached completions for this file
-        // For now, just clear usage stats for symbols from this file
-        // In a real implementation, we would track file-specific caches
+        // Clear usage stats for symbols from this file
+        // Full file-specific cache tracking would track per-file caches
+        (void)uri;
     }
 };
 
