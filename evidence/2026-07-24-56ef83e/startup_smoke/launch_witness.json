@@ -1,32 +1,38 @@
-{
-  "binary_size_bytes": 318285824,
-  "ready_state_reached": false,
-  "windows_created": [
-    {
-      "handle": "4785706",
-      "process_id": 5872,
-      "title": "RawrXD IDE - Native Win32 AI Development Environment"
-    }
-  ],
-  "error_message": "Unable to find type [WindowEnumerator].",
-  "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
-  "binary": "d:\\rxdn_ninja\\bin\\RawrXD-Win32IDE.exe",
-  "crash_code": null,
-  "launch_success": false,
-  "test_id": "VAL-051",
-  "timestamp": "2026-07-24T12:58:33Z",
-  "invariants": {
-    "no_stack_overflow": true,
-    "message_loop_running": true,
-    "no_access_violation": true,
-    "main_window_created": true,
-    "no_heap_corruption": true
-  },
-  "crash_detected": false,
-  "subsystems_initialized": [],
-  "exit_code": null,
-  "startup_ms": 2532.51,
-  "pid": 5872,
-  "launch_attempted": true,
-  "test_name": "IDE Launch Witness"
+﻿{
+    "test_name":  "IDE Launch Witness",
+    "ready_state_reached":  true,
+    "subsystems_initialized":  [
+                                   "Win32Core",
+                                   "WindowManager",
+                                   "MessageLoop",
+                                   "TabManager (deferred)",
+                                   "OutputPanels (deferred)",
+                                   "ChatPanel (deferred)"
+                               ],
+    "crash_detected":  false,
+    "binary_sha256":  "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "pid":  19344,
+    "timestamp":  "2026-07-24T12:59:43Z",
+    "launch_success":  true,
+    "crash_code":  null,
+    "exit_code":  null,
+    "windows_created":  [
+                            {
+                                "title":  "RawrXD IDE - Native Win32 AI Development Environment",
+                                "handle":  "7013748",
+                                "process_id":  19344
+                            }
+                        ],
+    "test_id":  "VAL-051",
+    "launch_attempted":  true,
+    "binary":  "d:\\rxdn_ninja\\bin\\RawrXD-Win32IDE.exe",
+    "binary_size_bytes":  318285824,
+    "startup_ms":  19989.27,
+    "invariants":  {
+                       "main_window_created":  true,
+                       "no_access_violation":  true,
+                       "no_heap_corruption":  true,
+                       "message_loop_running":  true,
+                       "no_stack_overflow":  true
+                   }
 }

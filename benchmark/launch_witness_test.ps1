@@ -159,11 +159,12 @@ try {
         Write-Host "[TEST] Enumerating process windows..." -ForegroundColor Yellow
         $processWindows = @()
         $sb = New-Object System.Text.StringBuilder 256
+        $targetPid = $proc.Id
         $enumCallback = [Win32+EnumWindowsProc] {
             param([IntPtr]$hWnd, [IntPtr]$lParam)
-            $pid = 0
-            [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$pid)
-            if ($pid -eq $proc.Id) {
+            $winPid = 0
+            [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$winPid)
+            if ($winPid -eq $targetPid) {
                 [void][Win32]::GetWindowText($hWnd, $sb, 256)
                 $processWindows += @{
                     handle = $hWnd.ToString()
