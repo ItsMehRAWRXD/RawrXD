@@ -110,8 +110,10 @@ static void HexMag_Emit_CallExitProcess(HexMagJitBuffer* buf, uint32_t iatRva) {
     HexMag_Emit_U8(buf, 0xFF);
     HexMag_Emit_U8(buf, 0x15);
     // disp32 = target_RVA - (current_RVA + 6)
-    // For now, emit placeholder 0 — will be patched by linker
-    HexMag_Emit_U32(buf, 0x00000000);
+    // Calculate actual displacement from current position to IAT entry
+    uint32_t currentRva = static_cast<uint32_t>(buf->size + 6); // +6 for instruction length
+    int32_t displacement = static_cast<int32_t>(iatRva) - static_cast<int32_t>(currentRva);
+    HexMag_Emit_U32(buf, static_cast<uint32_t>(displacement));
 }
 
 // ---------------------------------------------------------------------------
@@ -154,14 +156,27 @@ extern "C" __declspec(dllexport) int HexMagJIT_EmitExit42() {
 
     g_hexmagBuffer.size = 0;
 
-    // sub rsp, 0x28
+    // sub rsp, 0x28 (shadow space for Windows x64 ABI)
     HexMag_Emit_ShadowSpace(&g_hexmagBuffer);
 
-    // mov rcx, 42
+    // mov rcx, 42 (exit code)
     HexMag_Emit_MovRcxImm64(&g_hexmagBuffer, 42);
 
-    // call ExitProcess (stub — would be patched with real IAT)
-    // For now, emit a simple ret to avoid crash
+    // Get ExitProcess address from kernel32 IAT
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+    if (!hKernel32) return -1;
+    
+    FARPROC exitProc = GetProcAddress(hKernel32, "ExitProcess");
+    if (!exitProc) return -1;
+    
+    // Calculate IAT RVA (simplified - in real implementation would use actual IAT)
+    // For JIT code, we use direct address since we're in same process
+    uint32_t exitProcRva = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(exitProc));
+    
+    // call ExitProcess
+    HexMag_Emit_CallExitProcess(&g_hexmagBuffer, exitProcRva);
+
+    // Restore shadow space (never reached, but for completeness)
     HexMag_Emit_RestoreShadow(&g_hexmagBuffer);
     HexMag_Emit_Ret(&g_hexmagBuffer);
 
