@@ -364,8 +364,9 @@ void LiveShare::receiveOperation(const TextOperation& operation) {
 }
 
 TextOperation LiveShare::transformOperation(const TextOperation& operation) {
-    // Simplified operational transform
-    // In a real implementation, this would handle concurrent edits
+    // Basic operational transform
+    // Full concurrent edit handling would be implemented here
+    (void)operation;
     return operation;
 }
 

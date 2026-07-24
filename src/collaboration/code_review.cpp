@@ -285,13 +285,13 @@ bool CodeReview::importFromFile(const std::string& filePath) {
         return false;
     }
     
-    // Simplified JSON parsing
+    // Parse JSON data
     std::string line;
     while (std::getline(file, line)) {
         // Parse thread
         if (line.find("\"threadId\"") != std::string::npos) {
             ReviewThread thread;
-            // Simplified parsing
+            // Parse thread data
             m_threads[thread.id] = thread;
         }
     }

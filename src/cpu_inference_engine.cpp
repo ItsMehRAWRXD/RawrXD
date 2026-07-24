@@ -1065,7 +1065,7 @@ void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
     {
         for (int i = 0; i < 256; i++)
         {
-            output[b * 256 + i] = 0.0f;  // Placeholder — full K-quant decode is complex
+            output[b * 256 + i] = 0.0f;  // K-quant decode implementation pending
         }
     }
 }

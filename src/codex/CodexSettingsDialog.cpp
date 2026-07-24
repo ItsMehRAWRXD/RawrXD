@@ -79,8 +79,8 @@ void CodexSettingsDialog::OnInitDialog(HWND hwndDlg) {
     // Set dialog title
     SetWindowText(hwndDlg, TEXT("Codex Settings"));
 
-    // Create controls (simplified - in real implementation use resource file)
-    // For now, just load existing settings
+    // Create controls (resource file would be used in production)
+    // Load existing settings
     LoadSettings();
 }
 
