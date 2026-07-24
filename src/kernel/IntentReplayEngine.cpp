@@ -239,7 +239,7 @@ ReplayRecord::ReplayRecord(const ReplayRecord& other)
       postSnapshot(other.postSnapshot),
       events(other.events),
       leases(other.leases),
-      transaction(other.transaction ? std::make_unique<Hotpatch::PatchTransaction>(*other.transaction) : nullptr),
+      // transaction is not copied - PatchTransaction is non-copyable
       succeeded(other.succeeded),
       errorMessage(other.errorMessage),
       executionTimeMs(other.executionTimeMs),
@@ -272,7 +272,7 @@ ReplayRecord& ReplayRecord::operator=(const ReplayRecord& other) {
         postSnapshot = other.postSnapshot;
         events = other.events;
         leases = other.leases;
-        transaction = other.transaction ? std::make_unique<Hotpatch::PatchTransaction>(*other.transaction) : nullptr;
+        // transaction is not copied - PatchTransaction is non-copyable
         succeeded = other.succeeded;
         errorMessage = other.errorMessage;
         executionTimeMs = other.executionTimeMs;

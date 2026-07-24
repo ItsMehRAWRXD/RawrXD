@@ -370,13 +370,114 @@ std::optional<std::string> AICodeReview::generateFix(
 bool AICodeReview::applyFix(
     const std::string& filePath,
     const ReviewComment& comment) {
-    // Note: Apply fix requires file modification API
-    // Would need to:
-    // 1. Parse the suggested fix from comment
-    // 2. Apply edit to file (via IDE API or direct file write)
-    // 3. Handle line number offsets for multi-line fixes
-    OutputDebugStringA("[AICodeReview] Applying fix (not yet implemented)\n");
-    return false;
+    
+    printf("[AICodeReview] Applying fix to %s at line %d\n", 
+           filePath.c_str(), comment.line);
+    
+    // Validate inputs
+    if (filePath.empty() || comment.suggestedFix.empty()) {
+        OutputDebugStringA("[AICodeReview] Error: Empty file path or fix\n");
+        return false;
+    }
+    
+    // Read original file
+    std::ifstream inFile(filePath);
+    if (!inFile.is_open()) {
+        OutputDebugStringA("[AICodeReview] Error: Cannot open file for reading\n");
+        return false;
+    }
+    
+    std::vector<std::string> lines;
+    std::string line;
+    while (std::getline(inFile, line)) {
+        lines.push_back(line);
+    }
+    inFile.close();
+    
+    // Validate line number
+    if (comment.line < 1 || comment.line > static_cast<int>(lines.size())) {
+        OutputDebugStringA("[AICodeReview] Error: Invalid line number\n");
+        return false;
+    }
+    
+    // Create backup
+    std::string backupPath = filePath + ".backup." + std::to_string(time(nullptr));
+    std::ofstream backupFile(backupPath);
+    if (backupFile.is_open()) {
+        for (const auto& l : lines) {
+            backupFile << l << "\n";
+        }
+        backupFile.close();
+        printf("[AICodeReview] Created backup: %s\n", backupPath.c_str());
+    }
+    
+    // Apply the fix based on comment type
+    bool applied = false;
+    int targetLine = comment.line - 1; // Convert to 0-indexed
+    
+    switch (comment.type) {
+        case ReviewCommentType::STYLE_ISSUE:
+        case ReviewCommentType::BUG_FIX:
+        case ReviewCommentType::OPTIMIZATION: {
+            // Replace the line with the suggested fix
+            if (targetLine < static_cast<int>(lines.size())) {
+                lines[targetLine] = comment.suggestedFix;
+                applied = true;
+            }
+            break;
+        }
+        case ReviewCommentType::SECURITY_ISSUE: {
+            // Insert fix before the line
+            if (targetLine < static_cast<int>(lines.size())) {
+                lines.insert(lines.begin() + targetLine, comment.suggestedFix);
+                applied = true;
+            }
+            break;
+        }
+        case ReviewCommentType::DOCUMENTATION: {
+            // Insert documentation before the line
+            if (targetLine < static_cast<int>(lines.size())) {
+                lines.insert(lines.begin() + targetLine, comment.suggestedFix);
+                applied = true;
+            }
+            break;
+        }
+        default: {
+            // Generic replacement
+            if (targetLine < static_cast<int>(lines.size())) {
+                lines[targetLine] = comment.suggestedFix;
+                applied = true;
+            }
+        }
+    }
+    
+    if (!applied) {
+        OutputDebugStringA("[AICodeReview] Error: Failed to apply fix\n");
+        return false;
+    }
+    
+    // Write modified content back
+    std::ofstream outFile(filePath);
+    if (!outFile.is_open()) {
+        OutputDebugStringA("[AICodeReview] Error: Cannot open file for writing\n");
+        // Restore from backup
+        std::rename(backupPath.c_str(), filePath.c_str());
+        return false;
+    }
+    
+    for (const auto& l : lines) {
+        outFile << l << "\n";
+    }
+    outFile.close();
+    
+    // Log the fix application
+    printf("[AICodeReview] Fix applied successfully to %s:%d\n", 
+           filePath.c_str(), comment.line);
+    
+    // Record this fix application for learning
+    m_impl->recordFixApplication(filePath, comment);
+    
+    return true;
 }
 
 void AICodeReview::setReviewRules(const std::vector<std::string>& rules) {
@@ -416,12 +517,92 @@ void AICodeReview::recordFeedback(
 
 void AICodeReview::trainOnCodebase(
     const std::vector<std::string>& filePaths) {
-    // Note: Training requires ML pipeline with:
-    // 1. Code pattern extraction
-    // 2. Fine-tuning dataset creation
-    // 3. Model training infrastructure
-    // This is a long-term feature
-    OutputDebugStringA("[AICodeReview] Training on codebase (not yet implemented)\n");
+    
+    printf("[AICodeReview] Starting codebase training on %zu files...\n", filePaths.size());
+    
+    if (filePaths.empty()) {
+        OutputDebugStringA("[AICodeReview] Error: No files provided for training\n");
+        return;
+    }
+    
+    // Initialize training data structures
+    TrainingData trainingData;
+    trainingData.startTime = std::chrono::steady_clock::now();
+    trainingData.fileCount = filePaths.size();
+    
+    // Phase 1: Extract code patterns
+    printf("[AICodeReview] Phase 1: Extracting code patterns...\n");
+    int processedFiles = 0;
+    int totalPatterns = 0;
+    
+    for (const auto& filePath : filePaths) {
+        // Read file
+        std::ifstream file(filePath);
+        if (!file.is_open()) {
+            printf("[AICodeReview] Warning: Cannot open %s\n", filePath.c_str());
+            continue;
+        }
+        
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+        file.close();
+        
+        // Extract patterns based on file type
+        std::vector<CodePattern> patterns = extractPatterns(content, filePath);
+        
+        // Add to training data
+        for (const auto& pattern : patterns) {
+            trainingData.patterns.push_back(pattern);
+        }
+        
+        totalPatterns += patterns.size();
+        processedFiles++;
+        
+        // Progress update every 10 files
+        if (processedFiles % 10 == 0) {
+            printf("[AICodeReview]   Processed %d/%zu files, %d patterns found\n",
+                   processedFiles, filePaths.size(), totalPatterns);
+        }
+    }
+    
+    printf("[AICodeReview] Phase 1 complete: %d patterns from %d files\n",
+           totalPatterns, processedFiles);
+    
+    // Phase 2: Build pattern frequency map
+    printf("[AICodeReview] Phase 2: Building pattern frequency map...\n");
+    std::map<std::string, int> patternFrequency;
+    for (const auto& pattern : trainingData.patterns) {
+        patternFrequency[pattern.type]++;
+    }
+    
+    // Log top patterns
+    printf("[AICodeReview] Top patterns found:\n");
+    int count = 0;
+    for (const auto& [type, freq] : patternFrequency) {
+        printf("  %s: %d occurrences\n", type.c_str(), freq);
+        if (++count >= 10) break;
+    }
+    
+    // Phase 3: Update review rules based on patterns
+    printf("[AICodeReview] Phase 3: Updating review rules...\n");
+    updateReviewRulesFromPatterns(trainingData.patterns);
+    
+    // Phase 4: Save training data
+    printf("[AICodeReview] Phase 4: Saving training data...\n");
+    saveTrainingData(trainingData);
+    
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(
+        endTime - trainingData.startTime).count();
+    
+    printf("[AICodeReview] Training complete in %lld seconds\n", duration);
+    printf("[AICodeReview]   Files processed: %d\n", processedFiles);
+    printf("[AICodeReview]   Patterns extracted: %d\n", totalPatterns);
+    printf("[AICodeReview]   Unique pattern types: %zu\n", patternFrequency.size());
+    
+    // Mark model as trained
+    m_impl->m_modelTrained = true;
+    m_impl->m_lastTrainingTime = std::chrono::steady_clock::now();
 }
 
 AICodeReview& GetAICodeReview() {

@@ -229,6 +229,9 @@ private:
     // Current kernel mode
     std::atomic<int> current_kernel_mode_{1}; // Default: Q4_K
     
+    // Temperature for sampling
+    std::atomic<float> current_temperature_{0.8f};
+    
     // Speculative state
     SpeculativeState spec_state_;
     

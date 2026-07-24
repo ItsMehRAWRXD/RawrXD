@@ -87,11 +87,11 @@ bool IntentExecutionPipeline::Initialize() {
     Security::SecurityManager::Instance().Initialize(Security::SecurityLevel::STANDARD);
     
     // Register built-in handlers
-    INTENT_HANDLER_REGISTRY.Register("MODIFY_FUNCTION", HandleModifyFunction);
-    INTENT_HANDLER_REGISTRY.Register("BUILD_PROJECT", HandleBuildProject);
-    INTENT_HANDLER_REGISTRY.Register("RUN_TESTS", HandleRunTests);
-    INTENT_HANDLER_REGISTRY.Register("DEBUG_SESSION", HandleDebugSession);
-    INTENT_HANDLER_REGISTRY.Register("OPTIMIZE_CODE", HandleOptimizeCode);
+    IntentHandlerRegistry::Instance().Register("MODIFY_FUNCTION", HandleModifyFunction);
+    IntentHandlerRegistry::Instance().Register("BUILD_PROJECT", HandleBuildProject);
+    IntentHandlerRegistry::Instance().Register("RUN_TESTS", HandleRunTests);
+    IntentHandlerRegistry::Instance().Register("DEBUG_SESSION", HandleDebugSession);
+    IntentHandlerRegistry::Instance().Register("OPTIMIZE_CODE", HandleOptimizeCode);
     
     // Connect to telemetry
     ConnectToTelemetryInjector();
@@ -104,11 +104,11 @@ void IntentExecutionPipeline::Shutdown() {
     if (!initialized_.load()) return;
     
     // Unregister handlers
-    INTENT_HANDLER_REGISTRY.Unregister("MODIFY_FUNCTION");
-    INTENT_HANDLER_REGISTRY.Unregister("BUILD_PROJECT");
-    INTENT_HANDLER_REGISTRY.Unregister("RUN_TESTS");
-    INTENT_HANDLER_REGISTRY.Unregister("DEBUG_SESSION");
-    INTENT_HANDLER_REGISTRY.Unregister("OPTIMIZE_CODE");
+    IntentHandlerRegistry::Instance().Unregister("MODIFY_FUNCTION");
+    IntentHandlerRegistry::Instance().Unregister("BUILD_PROJECT");
+    IntentHandlerRegistry::Instance().Unregister("RUN_TESTS");
+    IntentHandlerRegistry::Instance().Unregister("DEBUG_SESSION");
+    IntentHandlerRegistry::Instance().Unregister("OPTIMIZE_CODE");
     
     // Shutdown security manager
     Security::SecurityManager::Instance().Shutdown();
@@ -151,7 +151,7 @@ ExecutionResult IntentExecutionPipeline::Execute(const IntentRequest& kernelInte
     }
     
     // Stage 3: Patch Firewall Check
-    Guardrails::PatchFirewall::ValidationResult fwResult;
+    Guardrails::FirewallResult fwResult;
     if (!Stage3_FirewallCheck(abiIntent, fwResult)) {
         result.outcome = ExecutionResult::Outcome::VALIDATION_FAILED;
         result.errorMessage = "Patch firewall rejected: " + fwResult.reason;
