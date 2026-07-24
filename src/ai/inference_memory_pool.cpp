@@ -200,8 +200,8 @@ size_t InferenceGarbageCollector::get_heap_fragmentation()
     size_t totalAllocated = 0;
     size_t totalUsed = 0;
     
-    // This would need access to the memory pool
-    // For now, use a heuristic based on collection stats
+    // This estimates fragmentation based on collection statistics
+    // Fragmentation heuristic: more collections triggered suggests higher fragmentation
     
     // Higher collections triggered suggests more fragmentation
     if (m_stats.collections_triggered > 100) {
