@@ -441,7 +441,7 @@ AccelResult AMDGPUAccelerator::allocGPU(uint64_t sizeBytes, GPUBuffer& outBuffer
 
     // In production: use ID3D12Device::CreateCommittedResource (DX12),
     // vkAllocateMemory (Vulkan), hipMalloc (ROCm), clCreateBuffer (OpenCL)
-    // For now: allocate pinned host memory that can be efficiently copied
+    // Current implementation: allocate pinned host memory that can be efficiently copied
     void* ptr = VirtualAlloc(nullptr, sizeBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!ptr)
     {
@@ -726,7 +726,7 @@ AccelResult AMDGPUAccelerator::dispatchAttention(const GPUBuffer& Q, const GPUBu
     m_stats.gpuDispatches.fetch_add(1, std::memory_order_relaxed);
 
     // In production: dispatch async compute, then sync on fence.
-    // For now, measure CPU-side dispatch overhead only.
+    // Current implementation measures CPU-side dispatch overhead only.
     // Attention FLOPs: 4 * H * S^2 * D (QK^T + softmax + AV)
     double totalGFLOPs = (4.0 * heads * seqLen * seqLen * headDim) / 1e9;
 
