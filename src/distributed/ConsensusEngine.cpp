@@ -892,8 +892,21 @@ void LogReplicator::SetMatchIndex(const std::string& peerNodeId, uint64_t index)
 }
 
 bool LogReplicator::IsCaughtUp(const std::string& peerNodeId) {
-    // TODO: Check if peer is caught up
-    return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto matchIt = matchIndex_.find(peerNodeId);
+    if (matchIt == matchIndex_.end()) {
+        return false; // No replication data for this peer
+    }
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    // Peer is caught up if match index equals or exceeds last log index
+    return matchIt->second >= lastLogIndex;
 }
 
 uint64_t LogReplicator::GetReplicationProgress(const std::string& peerNodeId) {

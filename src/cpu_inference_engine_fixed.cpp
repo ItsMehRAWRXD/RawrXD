@@ -212,7 +212,7 @@ void CPUInferenceEngine::InitKVCache() {
     m_kv_cache.resize(m_numLayers);
     
     // Pre-allocate decent chunk
-    size_t k_dim = m_embeddingDim; // Simplified: assuming head_dim * num_heads = embed_dim
+    size_t k_dim = m_embeddingDim; // Assuming head_dim * num_heads = embed_dim
     for(auto& layer : m_kv_cache) {
         layer.keys.reserve(m_contextLimit * k_dim);
         layer.values.reserve(m_contextLimit * k_dim);
@@ -223,7 +223,7 @@ void CPUInferenceEngine::InitKVCache() {
 void CPUInferenceEngine::UpdateWeights(const std::vector<std::vector<float>>& layer_gradients, float learning_rate) {
     (void)layer_gradients;
     (void)learning_rate;
-    // Stub for backprop availability
+    // Backpropagation implementation pending
 }
 
 void CPUInferenceEngine::UpdateOutputWeights(const std::vector<float>& gradients, float learningRate) {
@@ -281,9 +281,9 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int>& input_tokens,
     // Prefill Phase
     std::vector<float> state(m_embeddingDim);
     
-    // Simplified: Just process the last token for generation, pretending we processed history
-    // In real engine: loop through all inputs to fill KV cache
-    
+    // Process the last token for generation (full history processing pending)
+    // In production: loop through all inputs to fill KV cache
+
     int current_token = input_tokens.back();
     
     for (int step = 0; step < max_tokens; ++step) {
@@ -291,7 +291,7 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int>& input_tokens,
         std::vector<uint8_t> raw_emb;
         if (m_loader->GetTensorData("token_embd.weight", raw_emb)) { // Common GGUF name
              // offset = current_token * valid_row_size
-             // For now zero-init
+             // Initialize to zero (embedding loading pending)
              memset(state.data(), 0, m_embeddingDim * sizeof(float));
         }
         

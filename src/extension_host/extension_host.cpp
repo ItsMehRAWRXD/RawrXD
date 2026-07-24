@@ -498,17 +498,54 @@ void showErrorMessage(const std::string& message) {
 }
 
 std::string getWorkspaceFolder() {
-    // TODO: Return current workspace folder
+    // Return current workspace folder from IDE
+    if (g_pIDE && !g_pIDE->m_workspaceRoot.empty()) {
+        return g_pIDE->m_workspaceRoot;
+    }
+    // Fallback: return current working directory
+    char cwd[MAX_PATH];
+    if (GetCurrentDirectoryA(MAX_PATH, cwd)) {
+        return std::string(cwd);
+    }
     return "";
 }
 
 std::vector<std::string> getWorkspaceFolders() {
-    // TODO: Return all workspace folders
-    return {};
+    std::vector<std::string> folders;
+    
+    // Primary workspace
+    std::string primary = getWorkspaceFolder();
+    if (!primary.empty()) {
+        folders.push_back(primary);
+    }
+    
+    // Additional workspace folders from IDE
+    if (g_pIDE) {
+        for (const auto& folder : g_pIDE->m_workspaceFolders) {
+            if (std::find(folders.begin(), folders.end(), folder) == folders.end()) {
+                folders.push_back(folder);
+            }
+        }
+    }
+    
+    return folders;
 }
 
 std::string getConfiguration(const std::string& section) {
-    // TODO: Read from settings
+    // Read from IDE settings
+    if (g_pIDE) {
+        auto it = g_pIDE->m_settings.find(section);
+        if (it != g_pIDE->m_settings.end()) {
+            return it->second;
+        }
+    }
+    
+    // Fallback: check environment variables
+    char envValue[1024];
+    if (GetEnvironmentVariableA(("RAWRXD_" + section).c_str(), envValue, sizeof(envValue))) {
+        return std::string(envValue);
+    }
+    
     return "";
 }
 
@@ -517,7 +554,11 @@ void updateConfiguration(const std::string& section, const json& value) {
 }
 
 std::string getActiveEditor() {
-    // TODO: Return active editor path
+    // Return active editor path from IDE
+    if (g_pIDE && g_pIDE->m_activeTabIndex >= 0 && 
+        g_pIDE->m_activeTabIndex < static_cast<int>(g_pIDE->m_editorTabs.size())) {
+        return g_pIDE->m_editorTabs[g_pIDE->m_activeTabIndex].filePath;
+    }
     return "";
 }
 

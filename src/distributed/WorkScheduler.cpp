@@ -912,12 +912,41 @@ bool WorkScheduler::CancelTask(const std::string& taskId) {
 }
 
 bool WorkScheduler::PauseTask(const std::string& taskId) {
-    // TODO: Implement pause
+    std::lock_guard<std::mutex> lock(stateMutex_);
+    
+    auto it = taskStatus_.find(taskId);
+    if (it != taskStatus_.end() && it->second.state == TaskState::RUNNING) {
+        it->second.state = TaskState::PAUSED;
+        it->second.pausedAt = std::chrono::steady_clock::now();
+        
+        // Notify distributor if available
+        if (distributor_) {
+            distributor_->PauseTask(taskId);
+        }
+        
+        return true;
+    }
+    
     return false;
 }
 
 bool WorkScheduler::ResumeTask(const std::string& taskId) {
-    // TODO: Implement resume
+    std::lock_guard<std::mutex> lock(stateMutex_);
+    
+    auto it = taskStatus_.find(taskId);
+    if (it != taskStatus_.end() && it->second.state == TaskState::PAUSED) {
+        it->second.state = TaskState::RUNNING;
+        it->second.totalPausedTime += 
+            std::chrono::steady_clock::now() - it->second.pausedAt;
+        
+        // Notify distributor if available
+        if (distributor_) {
+            distributor_->ResumeTask(taskId);
+        }
+        
+        return true;
+    }
+    
     return false;
 }
 
