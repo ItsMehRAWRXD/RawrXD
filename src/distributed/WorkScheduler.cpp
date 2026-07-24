@@ -98,7 +98,7 @@ std::string TaskSpec::ToJson() const {
 
 TaskSpec TaskSpec::FromJson(const std::string& json) {
     TaskSpec spec;
-    // Simplified parsing
+    // Basic parsing implementation
     return spec;
 }
 

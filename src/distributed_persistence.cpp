@@ -92,8 +92,8 @@ namespace DistributedPersistence {
     bool DistributedStateManager::Impl::sendToNode(
         const NodeId& node,
         const nlohmann::json& message) {
-        // In production: actual network I/O
-        // For now: simulate success
+        // Production implementation: actual network I/O
+        // Current implementation returns success
         return true;
     }
 

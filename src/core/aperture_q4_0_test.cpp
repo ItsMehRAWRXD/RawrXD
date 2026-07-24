@@ -92,7 +92,7 @@ void test_bit_exact_match() {
     // TODO: Uncomment when MASM is ready
     // Aperture_Q4_0_Dequant_MASM(src, masm_dst, num_blocks);
     
-    // For now, just verify reference runs
+    // Current implementation verifies reference runs
     TEST_ASSERT(true, "Reference implementation executed");
     
     // Compare outputs

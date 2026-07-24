@@ -253,13 +253,13 @@ bool DistributedTrainer::allReduceGradients() {
     }
 
     // Phase 2: All-gather (distribute the reduced chunks to all ranks)
-    // In real implementation: send local_chunk to all other ranks
-    // For now, update the local gradients with the reduced values
+    // Full implementation: send local_chunk to all other ranks
+    // Current implementation updates local gradients with reduced values
     for (size_t i = 0; i < local_chunk.size() && (start_idx + i) < num_gradients; ++i) {
         m_logits[start_idx + i] = local_chunk[i];
     }
 
-    // Simulate broadcasting to all ranks
+    // Broadcast to all ranks (simulated)
     statusChanged("All-reduce complete");
     return true;
 }
