@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <vector>
 #include <unordered_map>
+#include <fstream>
+#include <algorithm>
 
 // LAZY SINGLETON PATTERN: Avoid SIOF - non-trivial constructors
 inline std::unordered_map<std::string, std::vector<BYTE>>& GetEncryptedKeys() {
@@ -117,13 +119,49 @@ extern "C" bool MonacoSettingsDialog_LoadFromFile(const char* path, MonacoSettin
         return false;
     }
     
-    // For now, just set defaults
+    // Real file loading: parse settings from JSON or INI file
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        // File doesn't exist - set defaults
+        strcpy_s(settings->theme, sizeof(settings->theme), "dark");
+        settings->fontSize = 14;
+        settings->lineHeight = 1.5f;
+        settings->backgroundColor = RGB(30, 30, 30);
+        settings->foregroundColor = RGB(220, 220, 220);
+        settings->wordWrap = true;
+        return true;
+    }
+    
+    // Set defaults first
     strcpy_s(settings->theme, sizeof(settings->theme), "dark");
     settings->fontSize = 14;
     settings->lineHeight = 1.5f;
     settings->backgroundColor = RGB(30, 30, 30);
     settings->foregroundColor = RGB(220, 220, 220);
     settings->wordWrap = true;
+    
+    // Parse settings from file (simple key=value format)
+    std::string line;
+    while (std::getline(file, line)) {
+        size_t eq = line.find('=');
+        if (eq == std::string::npos) continue;
+        std::string key = line.substr(0, eq);
+        std::string val = line.substr(eq + 1);
+        // Trim whitespace
+        while (!key.empty() && key.back() == ' ') key.pop_back();
+        while (!val.empty() && val.front() == ' ') val.erase(val.begin());
+        
+        if (key == "theme") {
+            strcpy_s(settings->theme, sizeof(settings->theme), val.c_str());
+        } else if (key == "fontSize") {
+            settings->fontSize = std::max(8, std::min(72, std::stoi(val)));
+        } else if (key == "lineHeight") {
+            settings->lineHeight = std::max(1.0f, std::min(3.0f, std::stof(val)));
+        } else if (key == "wordWrap") {
+            settings->wordWrap = (val == "true" || val == "1");
+        }
+    }
+    file.close();
     
     return true;
 }
