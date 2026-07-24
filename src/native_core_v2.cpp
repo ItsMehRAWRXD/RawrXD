@@ -92,12 +92,35 @@ static ModelContext g_ModelStore = { nullptr, 0, false };
 extern "C" __declspec(dllexport) bool LoadGGUFModel(const char* modelPath) {
     if (!modelPath) return false;
     
-    // Simulate GGUF Header Parsing & Allocation
-    // In a real scenario, this would call into the D3D12/AVX-512 backend
-    g_ModelStore.is_loaded = true;
-    g_ModelStore.layer_count = 32;
+    // Validate file exists and has GGUF magic
+    std::ifstream file(modelPath, std::ios::binary);
+    if (!file) {
+        return false;
+    }
     
-    // Placeholder for actual memory mapped I/O
+    // Read GGUF header magic
+    uint32_t magic = 0;
+    file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if (magic != GGUF_MAGIC) {
+        return false; // Not a valid GGUF file
+    }
+    
+    // Parse header version
+    uint32_t version = 0;
+    file.read(reinterpret_cast<char*>(&version), sizeof(version));
+    
+    // Read tensor count
+    uint64_t tensorCount = 0;
+    file.read(reinterpret_cast<char*>(&tensorCount), sizeof(tensorCount));
+    
+    // Store model info
+    g_ModelStore.is_loaded = true;
+    g_ModelStore.layer_count = static_cast<uint32_t>(tensorCount);
+    g_ModelStore.model_path = modelPath;
+    
+    // Memory-map the file for efficient access
+    // (Actual implementation would use CreateFileMapping/MapViewOfFile)
+    
     return true;
 }
 
