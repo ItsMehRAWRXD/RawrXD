@@ -1,14 +1,73 @@
 #include "SwarmOrchestrator.hpp"
+#include "CinematicVibeEngine.hpp"
+#include "DeepContextManager.hpp"
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <cctype>
 
 namespace rawrxd {
 namespace swarm {
 
 // ============================================================================
-// Agent Implementation
+// Task Implementation
 // ============================================================================
+
+Task::Task(const Task& other)
+    : id(other.id),
+      agentType(other.agentType),
+      priority(other.priority),
+      description(other.description),
+      context(other.context),
+      work(other.work),
+      created(other.created),
+      maxDuration(other.maxDuration),
+      dependencies(other.dependencies),
+      pendingDependencies(other.pendingDependencies.load()) {}
+
+Task::Task(Task&& other) noexcept
+    : id(other.id),
+      agentType(other.agentType),
+      priority(other.priority),
+      description(std::move(other.description)),
+      context(std::move(other.context)),
+      work(std::move(other.work)),
+      created(other.created),
+      maxDuration(other.maxDuration),
+      dependencies(std::move(other.dependencies)),
+      pendingDependencies(other.pendingDependencies.load()) {}
+
+Task& Task::operator=(const Task& other) {
+    if (this != &other) {
+        id = other.id;
+        agentType = other.agentType;
+        priority = other.priority;
+        description = other.description;
+        context = other.context;
+        work = other.work;
+        created = other.created;
+        maxDuration = other.maxDuration;
+        dependencies = other.dependencies;
+        pendingDependencies.store(other.pendingDependencies.load());
+    }
+    return *this;
+}
+
+Task& Task::operator=(Task&& other) noexcept {
+    if (this != &other) {
+        id = other.id;
+        agentType = other.agentType;
+        priority = other.priority;
+        description = std::move(other.description);
+        context = std::move(other.context);
+        work = std::move(other.work);
+        created = other.created;
+        maxDuration = other.maxDuration;
+        dependencies = std::move(other.dependencies);
+        pendingDependencies.store(other.pendingDependencies.load());
+    }
+    return *this;
+}
 
 Agent::Agent(const AgentConfig& config) : config_(config) {}
 
@@ -72,6 +131,9 @@ std::chrono::milliseconds Agent::getAverageTaskTime() const {
     if (completed == 0) return std::chrono::milliseconds(0);
     return std::chrono::milliseconds(totalTaskTimeMs_.load() / completed);
 }
+
+// Forward declaration
+std::string getAgentTypeName(AgentType type);
 
 // ============================================================================
 // AgentPool Implementation
@@ -437,216 +499,6 @@ std::string getAgentTypeName(AgentType type) {
         case AgentType::REVIEWER: return "Reviewer";
         default: return "Unknown";
     }
-}
-
-// ============================================================================
-// CinematicVibeEngine Implementation
-// ============================================================================
-
-CinematicVibeEngine::DesignSystem CinematicVibeEngine::generateDesignSystem(
-    const VibeConfig& config
-) {
-    DesignSystem system;
-    
-    // Generate color scheme based on mood
-    if (config.mood == "professional") {
-        system.primaryColor = "#1a365d";
-        system.secondaryColor = "#2d3748";
-        system.accentColor = "#3182ce";
-        system.fontHeading = "Inter";
-        system.fontBody = "Inter";
-    } else if (config.mood == "playful") {
-        system.primaryColor = "#9f7aea";
-        system.secondaryColor = "#f687b3";
-        system.accentColor = "#4fd1c5";
-        system.fontHeading = "Poppins";
-        system.fontBody = "Open Sans";
-    } else if (config.mood == "minimal") {
-        system.primaryColor = "#000000";
-        system.secondaryColor = "#ffffff";
-        system.accentColor = "#666666";
-        system.fontHeading = "Helvetica Neue";
-        system.fontBody = "Helvetica Neue";
-    } else {
-        // Bold/default
-        system.primaryColor = "#e53e3e";
-        system.secondaryColor = "#2d3748";
-        system.accentColor = "#38b2ac";
-        system.fontHeading = "Montserrat";
-        system.fontBody = "Roboto";
-    }
-    
-    system.spacingScale = "4px base (4, 8, 16, 24, 32, 48, 64)";
-    system.borderRadius = "8px";
-    system.shadowSystem = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
-    
-    return system;
-}
-
-std::string CinematicVibeEngine::generateComponent(
-    const std::string& type,
-    const DesignSystem& system
-) {
-    std::stringstream ss;
-    
-    if (type == "button") {
-        ss << ".button {\n";
-        ss << "  background-color: " << system.primaryColor << ";\n";
-        ss << "  color: white;\n";
-        ss << "  padding: 12px 24px;\n";
-        ss << "  border-radius: " << system.borderRadius << ";\n";
-        ss << "  font-family: " << system.fontBody << ";\n";
-        ss << "  box-shadow: " << system.shadowSystem << ";\n";
-        ss << "  transition: all 0.3s ease;\n";
-        ss << "}\n";
-    } else if (type == "card") {
-        ss << ".card {\n";
-        ss << "  background: white;\n";
-        ss << "  border-radius: " << system.borderRadius << ";\n";
-        ss << "  box-shadow: " << system.shadowSystem << ";\n";
-        ss << "  padding: 24px;\n";
-        ss << "}\n";
-    } else if (type == "input") {
-        ss << ".input {\n";
-        ss << "  border: 2px solid " << system.secondaryColor << ";\n";
-        ss << "  border-radius: " << system.borderRadius << ";\n";
-        ss << "  padding: 12px;\n";
-        ss << "  font-family: " << system.fontBody << ";\n";
-        ss << "  transition: border-color 0.2s;\n";
-        ss << "}\n";
-        ss << ".input:focus {\n";
-        ss << "  border-color: " << system.accentColor << ";\n";
-        ss << "}\n";
-    }
-    
-    return ss.str();
-}
-
-std::string CinematicVibeEngine::generateAnimation(
-    const std::string& component,
-    const std::string& mood
-) {
-    std::stringstream ss;
-    
-    ss << "@keyframes " << component << "-" << mood << " {\n";
-    
-    if (mood == "playful") {
-        ss << "  0% { transform: scale(1) rotate(0deg); }\n";
-        ss << "  50% { transform: scale(1.05) rotate(2deg); }\n";
-        ss << "  100% { transform: scale(1) rotate(0deg); }\n";
-    } else if (mood == "professional") {
-        ss << "  0% { opacity: 0; transform: translateY(10px); }\n";
-        ss << "  100% { opacity: 1; transform: translateY(0); }\n";
-    } else {
-        ss << "  0% { transform: scale(0.95); opacity: 0.8; }\n";
-        ss << "  100% { transform: scale(1); opacity: 1; }\n";
-    }
-    
-    ss << "}\n";
-    return ss.str();
-}
-
-// ============================================================================
-// DeepContextManager Implementation
-// ============================================================================
-
-void DeepContextManager::setProjectContext(const std::string& context) {
-    std::lock_guard<std::mutex> lock(contextMutex_);
-    projectContext_ = context;
-}
-
-std::string DeepContextManager::getProjectContext() const {
-    std::lock_guard<std::mutex> lock(contextMutex_);
-    return projectContext_;
-}
-
-void DeepContextManager::registerType(
-    const std::string& name,
-    const std::string& definition
-) {
-    std::lock_guard<std::mutex> lock(typeMutex_);
-    typeRegistry_[name] = definition;
-}
-
-std::string DeepContextManager::getType(const std::string& name) const {
-    std::lock_guard<std::mutex> lock(typeMutex_);
-    auto it = typeRegistry_.find(name);
-    if (it != typeRegistry_.end()) {
-        return it->second;
-    }
-    return "";
-}
-
-void DeepContextManager::markDirty(const std::string& component) {
-    std::lock_guard<std::mutex> lock(dirtyMutex_);
-    dirtyComponents_.insert(component);
-}
-
-std::vector<std::string> DeepContextManager::getDirtyComponents() const {
-    std::lock_guard<std::mutex> lock(dirtyMutex_);
-    return std::vector<std::string>(dirtyComponents_.begin(), dirtyComponents_.end());
-}
-
-void DeepContextManager::markClean(const std::string& component) {
-    std::lock_guard<std::mutex> lock(dirtyMutex_);
-    dirtyComponents_.erase(component);
-}
-
-std::string DeepContextManager::compressContext(const std::string& context) {
-    // Simple compression - remove extra whitespace and comments
-    std::string compressed;
-    compressed.reserve(context.size());
-    
-    bool inWhitespace = false;
-    for (char c : context) {
-        if (std::isspace(c)) {
-            if (!inWhitespace) {
-                compressed += ' ';
-                inWhitespace = true;
-            }
-        } else {
-            compressed += c;
-            inWhitespace = false;
-        }
-    }
-    
-    return compressed;
-}
-
-std::string DeepContextManager::decompressContext(const std::string& compressed) {
-    // For now, just return as-is (formatting would be done by pretty-printer)
-    return compressed;
-}
-
-// ============================================================================
-// SafeExecutionSandbox Implementation
-// ============================================================================
-
-bool SafeExecutionSandbox::validateCode(const std::string& code) {
-    for (const auto& pattern : dangerousPatterns_) {
-        if (code.find(pattern) != std::string::npos) {
-            return false;
-        }
-    }
-    return true;
-}
-
-std::pair<bool, std::string> SafeExecutionSandbox::execute(
-    const std::string& code,
-    const ExecutionConfig& config
-) {
-    if (!validateCode(code)) {
-        return {false, "Code contains dangerous patterns"};
-    }
-    
-    // In a real implementation, this would:
-    // 1. Create an isolated process/container
-    // 2. Apply seccomp/seccomp-bpf filters
-    // 3. Set memory limits (rlimit)
-    // 4. Execute with timeout
-    
-    // For now, return success (actual sandboxing would be platform-specific)
-    return {true, "Code validated and would execute in sandbox"};
 }
 
 } // namespace swarm

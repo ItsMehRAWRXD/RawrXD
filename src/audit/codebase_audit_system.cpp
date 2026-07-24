@@ -891,11 +891,32 @@ void CodebaseAuditSystem::generate_file_recommendations(FileAnalysisResult& resu
 }
 
 bool CodebaseAuditSystem::check_naming_conventions(const std::string& content) {
-    // Simplified naming convention check
-    std::regex snake_case_pattern(R"(\b[a-z][a-z0-9_]*\b)");
-    std::regex camel_case_pattern(R"(\b[a-z][a-zA-Z0-9]*\b)");
+    // Real naming convention check: verify identifiers follow consistent patterns
+    // Check for mixed naming (snake_case AND camelCase in same file is a violation)
+    std::regex snake_case_pattern(R"(\b[a-z][a-z0-9_]+\b)");
+    std::regex camel_case_pattern(R"(\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b)");
+    std::regex pascal_case_pattern(R"(\b[A-Z][a-zA-Z0-9]*\b)");
     
-    return contains_pattern(content, snake_case_pattern) || contains_pattern(content, camel_case_pattern);
+    auto snake_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), snake_case_pattern),
+                                        std::sregex_iterator());
+    auto camel_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), camel_case_pattern),
+                                        std::sregex_iterator());
+    auto pascal_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), pascal_case_pattern),
+                                         std::sregex_iterator());
+    
+    // Good: has identifiers and follows at least one convention
+    if (snake_matches + camel_matches + pascal_matches == 0) {
+        return false;  // No identifiers found
+    }
+    
+    // Check for consistency: if both snake_case and camelCase are heavily used, it's inconsistent
+    if (snake_matches > 10 && camel_matches > 10) {
+        // Mixed conventions - check if it's C++ (classes use PascalCase, functions use snake_case)
+        // This is acceptable in C++ codebases
+        return pascal_matches > 0;  // Has class names
+    }
+    
+    return true;
 }
 
 void CodebaseAuditSystem::update_statistics(const ProjectAuditResult& result) {

@@ -181,43 +181,192 @@ static BlockInfo GetBlockInfo(QuantType q) {
     }
 }
 
-bool GGUFFormatReader::ReadMetadata(const std::string& filePath, ModelMetadata& metadata) {
-    // Simplified GGUF metadata reader
-    // In production, this would parse the full GGUF metadata key-value store
-    // For now, we read the header and extract architecture from metadata keys
+// GGUF value types
+enum class GGUFValueType : uint32_t {
+    UINT8   = 0,
+    INT8    = 1,
+    UINT16  = 2,
+    INT16   = 3,
+    UINT32  = 4,
+    INT32   = 5,
+    FLOAT32 = 6,
+    BOOL    = 7,
+    STRING  = 8,
+    ARRAY   = 9,
+    UINT64  = 10,
+    INT64   = 11,
+    FLOAT64 = 12
+};
 
+static size_t GetGGUFValueTypeSize(GGUFValueType type) {
+    switch (type) {
+        case GGUFValueType::UINT8:   return 1;
+        case GGUFValueType::INT8:    return 1;
+        case GGUFValueType::UINT16:  return 2;
+        case GGUFValueType::INT16:   return 2;
+        case GGUFValueType::UINT32:  return 4;
+        case GGUFValueType::INT32:   return 4;
+        case GGUFValueType::FLOAT32: return 4;
+        case GGUFValueType::BOOL:    return 1;
+        case GGUFValueType::UINT64:  return 8;
+        case GGUFValueType::INT64:   return 8;
+        case GGUFValueType::FLOAT64: return 8;
+        default: return 0;
+    }
+}
+
+static std::string ReadGGUFString(std::ifstream& file) {
+    uint64_t len;
+    file.read(reinterpret_cast<char*>(&len), sizeof(len));
+    std::string str(len, '\0');
+    if (len > 0) {
+        file.read(&str[0], len);
+    }
+    return str;
+}
+
+static void SkipGGUFValue(std::ifstream& file, GGUFValueType type) {
+    if (type == GGUFValueType::STRING) {
+        ReadGGUFString(file);
+    } else if (type == GGUFValueType::ARRAY) {
+        uint32_t arrType;
+        uint64_t arrCount;
+        file.read(reinterpret_cast<char*>(&arrType), sizeof(arrType));
+        file.read(reinterpret_cast<char*>(&arrCount), sizeof(arrCount));
+        GGUFValueType elemType = static_cast<GGUFValueType>(arrType);
+        size_t elemSize = GetGGUFValueTypeSize(elemType);
+        if (elemSize > 0) {
+            file.seekg(elemSize * arrCount, std::ios::cur);
+        } else if (elemType == GGUFValueType::STRING) {
+            for (uint64_t i = 0; i < arrCount; i++) {
+                ReadGGUFString(file);
+            }
+        }
+    } else {
+        size_t size = GetGGUFValueTypeSize(type);
+        if (size > 0) {
+            file.seekg(size, std::ios::cur);
+        }
+    }
+}
+
+bool GGUFFormatReader::ReadMetadata(const std::string& filePath, ModelMetadata& metadata) {
     std::ifstream file(filePath, std::ios::binary);
     if (!file.is_open()) return false;
 
-    // Read magic
     uint32_t magic;
     file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
-    if (magic != GGUF_MAGIC) {
-        return false;
-    }
+    if (magic != GGUF_MAGIC) return false;
 
-    // Read version
     uint32_t version;
     file.read(reinterpret_cast<char*>(&version), sizeof(version));
+    if (version != 3) return false;
 
-    // Read tensor count
     uint64_t tensorCount;
     file.read(reinterpret_cast<char*>(&tensorCount), sizeof(tensorCount));
 
-    // Read metadata KV count
     uint64_t kvCount;
     file.read(reinterpret_cast<char*>(&kvCount), sizeof(kvCount));
 
-    // Parse metadata key-value pairs
-    // This is a simplified parser - production would handle all GGUF value types
     metadata.architecture = "unknown";
     metadata.weightQuant = QuantType::F32;
     metadata.kvQuant = QuantType::F16;
+    metadata.hiddenDim = 0;
+    metadata.numLayers = 0;
+    metadata.numHeads = 0;
+    metadata.numKVHeads = 0;
+    metadata.contextLength = 0;
+    metadata.vocabSize = 0;
 
-    // In a real implementation, we'd parse all KV pairs here:
-    // - general.architecture
-    // - llama.hidden_size, llama.num_layers, etc.
-    // - quantization info from tensor types
+    for (uint64_t i = 0; i < kvCount; i++) {
+        std::string key = ReadGGUFString(file);
+        
+        uint32_t valueTypeRaw;
+        file.read(reinterpret_cast<char*>(&valueTypeRaw), sizeof(valueTypeRaw));
+        GGUFValueType valueType = static_cast<GGUFValueType>(valueTypeRaw);
+
+        if (key == "general.architecture") {
+            if (valueType == GGUFValueType::STRING) {
+                metadata.architecture = ReadGGUFString(file);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.hidden_size" || key == "qwen2.hidden_size") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.hiddenDim = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.hiddenDim = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.block_count" || key == "qwen2.block_count") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numLayers = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numLayers = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.attention.head_count" || key == "qwen2.attention.head_count") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numHeads = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numHeads = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.attention.head_count_kv" || key == "qwen2.attention.head_count_kv") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numKVHeads = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.numKVHeads = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.context_length" || key == "qwen2.context_length") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.contextLength = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.contextLength = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else if (key == "llama.vocab_size" || key == "qwen2.vocab_size") {
+            if (valueType == GGUFValueType::UINT32) {
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.vocabSize = val;
+            } else if (valueType == GGUFValueType::INT32) {
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                metadata.vocabSize = static_cast<uint32_t>(val);
+            } else {
+                SkipGGUFValue(file, valueType);
+            }
+        } else {
+            SkipGGUFValue(file, valueType);
+        }
+    }
 
     file.close();
     return true;
@@ -225,9 +374,79 @@ bool GGUFFormatReader::ReadMetadata(const std::string& filePath, ModelMetadata& 
 
 bool GGUFFormatReader::ReadTensorCatalog(const std::string& filePath,
                                            std::vector<TensorEntry>& tensors) {
-    // Simplified - in production this reads the GGUF tensor info section
-    // For now, return empty catalog (real implementation parses tensor info)
+    // Full GGUF tensor catalog reader
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return false;
+
+    // Read header
+    uint32_t magic;
+    file.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    if (magic != GGUF_MAGIC) return false;
+
+    uint32_t version;
+    file.read(reinterpret_cast<char*>(&version), sizeof(version));
+    if (version != 3) return false;
+
+    uint64_t tensorCount;
+    file.read(reinterpret_cast<char*>(&tensorCount), sizeof(tensorCount));
+
+    uint64_t kvCount;
+    file.read(reinterpret_cast<char*>(&kvCount), sizeof(kvCount));
+
+    // Skip metadata KV pairs
+    for (uint64_t i = 0; i < kvCount; i++) {
+        std::string key = ReadGGUFString(file);
+        uint32_t valueTypeRaw;
+        file.read(reinterpret_cast<char*>(&valueTypeRaw), sizeof(valueTypeRaw));
+        SkipGGUFValue(file, static_cast<GGUFValueType>(valueTypeRaw));
+    }
+
+    // Read tensor info
     tensors.clear();
+    tensors.reserve(tensorCount);
+
+    for (uint64_t i = 0; i < tensorCount; i++) {
+        TensorEntry entry;
+        entry.name = ReadGGUFString(file);
+
+        // Read dimensions
+        uint32_t nDims;
+        file.read(reinterpret_cast<char*>(&nDims), sizeof(nDims));
+        entry.shape.dims = nDims;
+        entry.shape.elements = 1;
+
+        for (uint32_t d = 0; d < nDims && d < 4; d++) {
+            uint64_t dimSize;
+            file.read(reinterpret_cast<char*>(&dimSize), sizeof(dimSize));
+            entry.shape.dim[d] = static_cast<uint32_t>(dimSize);
+            entry.shape.elements *= dimSize;
+        }
+
+        // Read tensor type
+        uint32_t tensorType;
+        file.read(reinterpret_cast<char*>(&tensorType), sizeof(tensorType));
+        entry.quantType = MapGGUFType(tensorType);
+
+        // Read file offset
+        uint64_t offset;
+        file.read(reinterpret_cast<char*>(&offset), sizeof(offset));
+        entry.fileOffset = static_cast<size_t>(offset);
+
+        // Calculate byte size
+        BlockInfo blockInfo = GetBlockInfo(entry.quantType);
+        if (blockInfo.elements > 0) {
+            uint64_t numBlocks = (entry.shape.elements + blockInfo.elements - 1) / blockInfo.elements;
+            entry.byteSize = static_cast<size_t>(numBlocks * blockInfo.bytes);
+        } else {
+            // Dense types
+            size_t elemSize = (entry.quantType == QuantType::F16 || entry.quantType == QuantType::BF16) ? 2 : 4;
+            entry.byteSize = static_cast<size_t>(entry.shape.elements * elemSize);
+        }
+
+        tensors.push_back(entry);
+    }
+
+    file.close();
     return true;
 }
 

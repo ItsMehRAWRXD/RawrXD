@@ -136,7 +136,10 @@ private:
 struct PatchImpl {
     PatchMetadata metadata;
     PatchStatus status = PatchStatus::PENDING;
-    
+
+    // Patch code/data bytes
+    std::vector<uint8_t> code;
+
     // Type-specific data (no unions with non-trivial types)
     struct {
         void* target;
@@ -145,18 +148,18 @@ struct PatchImpl {
         uint8_t originalBytes[16];
         size_t patchSize;
     } funcHook;
-    
+
     struct {
         void* oldKernelPtr;
         void* newKernelPtr;
         void** vtableSlot;
     } kernelReplace;
-    
+
     struct {
         DecoderModePatch::Mode mode;
         DecoderModePatch::Config config;
     } decoderMode;
-    
+
     // Metrics
     PatchMetrics metrics;
     std::chrono::steady_clock::time_point applyTime;

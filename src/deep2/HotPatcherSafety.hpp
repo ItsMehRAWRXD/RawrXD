@@ -239,14 +239,20 @@ public:
     
     // Manual safety check
     SafetyReport checkSafety();
-    
+
     // Get last report
     SafetyReport getLastReport() const;
-    
+
     // Set violation handler
     using ViolationHandler = std::function<void(const SafetyReport&)>;
     void setViolationHandler(ViolationHandler handler);
-    
+
+    // Static accessor for global monitor instance
+    static PatchSafetyMonitor& instance();
+
+    // Check if watchdog is in panic state
+    static bool isWatchdogPanicked();
+
 private:
     std::atomic<bool> running_{false};
     uint64_t checkIntervalMs_{1000};
@@ -278,11 +284,13 @@ class PatchSafety {
 public:
     // Combined safety check before applying patch
     struct PreFlightCheck {
-        bool memoryAvailable;
-        bool stackSpaceAvailable;
-        bool noActiveWatchdog;
-        bool checksumValid;
-        bool dependenciesSafe;
+        bool memoryAvailable = true;
+        bool stackSpaceAvailable = true;
+        bool noActiveWatchdog = true;
+        bool checksumValid = true;
+        bool dependenciesSafe = true;
+        bool noConflicts = true;
+        float riskScore = 0.0f;
         std::vector<std::string> warnings;
         std::vector<std::string> blockers;
     };

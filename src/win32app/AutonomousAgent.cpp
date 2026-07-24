@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <shlobj.h>
+#include <shellapi.h>
 
 // Static members
 std::unique_ptr<AutonomousAgent> AutonomousAgent::s_instance;

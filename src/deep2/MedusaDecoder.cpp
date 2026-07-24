@@ -8,6 +8,10 @@
 #include <cstring>
 #include <queue>
 
+// External AVX2 GEMV kernel from Deep2Engine.cpp
+extern "C" void Deep2_MedusaGEMV(const float* weights, const float* input, float* output,
+                                  size_t rows, size_t cols);
+
 namespace Deep2 {
 
 MedusaDecoder::MedusaDecoder() {}
@@ -154,21 +158,12 @@ std::vector<SpeculativeTreeNode> MedusaDecoder::generateCandidates(
 
         // Compute logits: logits[v] = dot(hiddenState, weight[v])
         // This is a GEMV: [vocabSize, hiddenDim] @ [hiddenDim] -> [vocabSize]
-        // For efficiency, we only compute top-k via partial evaluation
-        // In production, this would use the QuantKernelRegistry GEMV
-
-        // For now, compute full logits (optimization: use partial GEMV)
+        // Production AVX2 implementation via Deep2_MedusaGEMV
         std::vector<float> logits(hw.rows);
 
-        // Simple scalar GEMV (production uses AVX-512 kernels)
+        // AVX2-optimized GEMV for Medusa head forward pass
         const float* w = (const float*)hw.weightData;
-        for (size_t v = 0; v < hw.rows; v++) {
-            float sum = 0.0f;
-            for (size_t d = 0; d < hiddenDim; d++) {
-                sum += w[v * hiddenDim + d] * hiddenState[d];
-            }
-            logits[v] = sum;
-        }
+        Deep2_MedusaGEMV(w, hiddenState, logits.data(), hw.rows, hiddenDim);
 
         // Select top-k
         topKFromLogits(logits.data(), hw.rows, config_.topKPerHead,

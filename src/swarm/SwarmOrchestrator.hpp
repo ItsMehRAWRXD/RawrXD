@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CinematicVibeEngine.hpp"
+#include "DeepContextManager.hpp"
 #include <vector>
 #include <memory>
 #include <thread>
@@ -11,6 +13,7 @@
 #include <future>
 #include <string>
 #include <map>
+#include <set>
 #include <chrono>
 
 namespace rawrxd {
@@ -69,6 +72,13 @@ struct Task {
     bool operator<(const Task& other) const {
         return static_cast<int>(priority) > static_cast<int>(other.priority);
     }
+    
+    // Copy/move constructors (required due to atomic member)
+    Task() = default;
+    Task(const Task& other);
+    Task(Task&& other) noexcept;
+    Task& operator=(const Task& other);
+    Task& operator=(Task&& other) noexcept;
 };
 
 // Task result with metadata
@@ -227,105 +237,6 @@ private:
     std::atomic<size_t> failedTasks_{0};
     std::atomic<uint64_t> totalTaskTimeMs_{0};
     std::chrono::steady_clock::time_point startTime_;
-};
-
-// Cinematic Vibe Engine - UI/UX generation
-class CinematicVibeEngine {
-public:
-    struct VibeConfig {
-        std::string mood;           // "professional", "playful", "minimal", "bold"
-        std::string targetAudience;
-        std::string colorScheme;    // Auto-generated if empty
-        std::string typography;     // Auto-generated if empty
-        float conversionFocus{0.8f}; // 0.0-1.0, higher = more CTA-focused
-    };
-    
-    struct DesignSystem {
-        std::string primaryColor;
-        std::string secondaryColor;
-        std::string accentColor;
-        std::string fontHeading;
-        std::string fontBody;
-        std::string spacingScale;
-        std::string borderRadius;
-        std::string shadowSystem;
-    };
-    
-    DesignSystem generateDesignSystem(const VibeConfig& config);
-    std::string generateComponent(const std::string& type, const DesignSystem& system);
-    std::string generateAnimation(const std::string& component, const std::string& mood);
-};
-
-// Deep Context Reasoning - 256K context management
-class DeepContextManager {
-public:
-    static constexpr size_t MAX_CONTEXT_TOKENS = 256000;
-    
-    void setProjectContext(const std::string& context);
-    std::string getProjectContext() const;
-    
-    // Type consistency tracking
-    void registerType(const std::string& name, const std::string& definition);
-    std::string getType(const std::string& name) const;
-    
-    // Sync tracking
-    void markDirty(const std::string& component);
-    std::vector<std::string> getDirtyComponents() const;
-    void markClean(const std::string& component);
-    
-    // Context compression for large projects
-    std::string compressContext(const std::string& context);
-    std::string decompressContext(const std::string& compressed);
-    
-private:
-    std::string projectContext_;
-    mutable std::mutex contextMutex_;
-    
-    std::map<std::string, std::string> typeRegistry_;
-    mutable std::mutex typeMutex_;
-    
-    std::set<std::string> dirtyComponents_;
-    mutable std::mutex dirtyMutex_;
-};
-
-// OpenClaw Native Bridge - Protocol compatibility
-class OpenClawBridge {
-public:
-    // Claude Code protocol compatibility
-    struct ClaudeMessage {
-        std::string role;
-        std::string content;
-        std::map<std::string, std::string> metadata;
-    };
-    
-    std::string toClaudeFormat(const std::vector<ClaudeMessage>& messages);
-    std::vector<ClaudeMessage> fromClaudeFormat(const std::string& json);
-    
-    // Tool use protocol
-    struct ToolCall {
-        std::string id;
-        std::string name;
-        std::string arguments;
-    };
-    
-    std::string executeToolCall(const ToolCall& call);
-};
-
-// Legacy Refactor Module
-class LegacyRefactorModule {
-public:
-    struct CodebaseAnalysis {
-        std::string language;
-        std::string framework;
-        std::string architecture;
-        std::vector<std::string> dependencies;
-        std::vector<std::string> deprecatedPatterns;
-        float modernizationScore; // 0.0-1.0
-    };
-    
-    CodebaseAnalysis analyze(const std::string& sourcePath);
-    std::vector<std::string> generateRefactorPlan(const CodebaseAnalysis& analysis);
-    bool executeRefactoring(const std::string& plan);
 };
 
 // Safe Execution Sandbox

@@ -7611,7 +7611,17 @@ void Win32IDE::onTabChanged()
             auto [line, col] = getCursorPosition();
             m_editorTabs[m_activeTabIndex].cursorLine = line;
             m_editorTabs[m_activeTabIndex].cursorCol = col;
-            // TODO: save scroll pos, multi-cursors, folds
+            // Save scroll position
+            m_editorTabs[m_activeTabIndex].scrollPos = (int)SendMessageW(m_hwndEditor, EM_GETSCROLLPOS, 0, 0);
+            // Save multi-cursor positions (primary cursor only for now)
+            CHARRANGE cr;
+            SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&cr);
+            if (cr.cpMin == cr.cpMax) {
+                m_editorTabs[m_activeTabIndex].multiCursors.clear();
+                m_editorTabs[m_activeTabIndex].multiCursors.push_back({line, col});
+            }
+            // Save folded regions (placeholder - would need Scintilla or custom folding)
+            // m_editorTabs[m_activeTabIndex].foldedRegions preserved from last fold operation
         }
 
         // Stash annotations for the outgoing tab
@@ -7658,7 +7668,32 @@ void Win32IDE::onTabClosing(int index)
         // Check if tab is modified and prompt to save
         if (m_editorTabs[index].modified)
         {
-            // TODO: Show save dialog
+            // Show save dialog
+            std::wstring msg = L"Save changes to \"" + utf8ToWide(m_editorTabs[index].displayName) + L"\"?";
+            int result = MessageBoxW(m_hwndMain, msg.c_str(), L"RawrXD IDE", MB_YESNOCANCEL | MB_ICONQUESTION);
+            if (result == IDCANCEL)
+            {
+                return; // Cancel the close operation
+            }
+            if (result == IDYES)
+            {
+                // Save the file
+                if (m_activeTabIndex == index)
+                {
+                    saveCurrentFile();
+                }
+                else
+                {
+                    // Temporarily switch to save, then switch back
+                    int prevTab = m_activeTabIndex;
+                    setActiveTab(index);
+                    saveCurrentFile();
+                    if (prevTab >= 0 && prevTab < (int)m_editorTabs.size() && prevTab != index)
+                    {
+                        setActiveTab(prevTab);
+                    }
+                }
+            }
         }
         // Remove the tab
         removeTab(index);

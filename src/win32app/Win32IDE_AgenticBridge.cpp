@@ -151,6 +151,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     METRICS.increment("agentic.commands_total");
     auto& perf = RawrXD::Inference::PerformanceMonitor::instance();
     perf.startOperation("agentic.bridge.execute");
+    auto startTime_ = std::chrono::high_resolution_clock::now();
     bool perfClosed = false;
     auto closePerf = [&]()
     {

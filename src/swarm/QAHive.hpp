@@ -1,6 +1,8 @@
 #pragma once
 
 #include "SwarmOrchestrator.hpp"
+#include "BackendCore.hpp"
+#include "ArchitectAgent.hpp"
 #include <vector>
 #include <string>
 #include <map>

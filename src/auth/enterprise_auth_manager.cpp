@@ -263,24 +263,34 @@ JWTPayload EnterpriseAuthManager::parseJWTPayload(const std::string& token)
 
 std::string EnterpriseAuthManager::base64UrlDecode(const std::string& input)
 {
-    // Simplified base64url decode (production would use proper base64 library)
+    // Real base64url decode implementation
+    static const int8_t decodeTable[256] = {
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,  // + and /
+        52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,  // 0-9
+        -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,  // A-O
+        15,16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,  // P-Z and -
+        -1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,  // a-o
+        41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1   // p-z and _
+    };
+    
     std::string output;
-    std::string normalized = input;
+    output.reserve(input.size() * 3 / 4);
     
-    // Replace URL-safe characters
-    for (auto& c : normalized) {
-        if (c == '-') c = '+';
-        else if (c == '_') c = '/';
+    int val = 0, valb = -8;
+    for (char c : input) {
+        int8_t d = decodeTable[(unsigned char)c];
+        if (d == -1) break;  // Invalid character or padding
+        val = (val << 6) | d;
+        valb += 6;
+        if (valb >= 0) {
+            output.push_back(static_cast<char>((val >> valb) & 0xFF));
+            valb -= 8;
+        }
     }
     
-    // Add padding if needed
-    while (normalized.length() % 4 != 0) {
-        normalized += '=';
-    }
-    
-    // Simple decode (production would use proper base64)
-    // For now, return as-is (this is a stub for the actual implementation)
-    return normalized;
+    return output;
 }
 
 std::string EnterpriseAuthManager::extractUPN(const std::string& token)

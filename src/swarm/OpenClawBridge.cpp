@@ -102,13 +102,12 @@ std::string OpenClawBridge::translateRequest(const UnifiedRequest& request, Prot
 }
 
 UnifiedResponse OpenClawBridge::translateResponse(const std::string& response, ProtocolType source) {
-    Json::Value root;
-    Json::CharReaderBuilder builder;
-    std::string errors;
+    nlohmann::json root;
     
-    std::istringstream responseStream(response);
-    if (!Json::parseFromStream(builder, responseStream, &root, &errors)) {
-        return createErrorResponse("Failed to parse JSON response: " + errors, -1);
+    try {
+        root = nlohmann::json::parse(response);
+    } catch (const std::exception& e) {
+        return createErrorResponse("Failed to parse JSON response: " + std::string(e.what()), -1);
     }
     
     switch (source) {

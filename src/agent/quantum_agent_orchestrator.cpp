@@ -1383,6 +1383,8 @@ MultiModelManager::ParallelResult MultiModelManager::executeParallel(
     result.success.reserve(m_impl->models_.size());
     result.durations.reserve(m_impl->models_.size());
     
+    auto startTime = std::chrono::steady_clock::now();
+    
     std::vector<std::future<std::pair<std::string, bool>>> futures;
     
     // Launch parallel executions

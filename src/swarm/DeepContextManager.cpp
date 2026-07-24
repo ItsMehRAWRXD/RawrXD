@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
-#include <math>
+#include <cmath>
 
 namespace rawrxd {
 namespace swarm {

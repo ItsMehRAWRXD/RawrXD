@@ -3205,6 +3205,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/RawrXD_AgentLoop.cpp
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
+        src/agentic/AgentOllamaClient.cpp
+
+        # ASM link stubs for missing symbols
+        src/core/asm_link_stubs.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp

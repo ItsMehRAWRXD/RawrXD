@@ -189,10 +189,10 @@ public:
             }
         } catch (const std::filesystem::filesystem_error& e) {
             printf("[WorkspaceEmbeddings] Filesystem error indexing %s: %s\n", 
-                   dir.c_str(), e.what());
+                   rootPath.c_str(), e.what());
         } catch (const std::exception& e) {
             printf("[WorkspaceEmbeddings] Error indexing directory %s: %s\n", 
-                   dir.c_str(), e.what());
+                   rootPath.c_str(), e.what());
         }
         return count;
     }

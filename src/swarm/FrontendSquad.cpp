@@ -13,7 +13,7 @@ namespace swarm {
 // Main generation function
 FrontendSquad::ComponentLibrary FrontendSquad::generateApplication(
     const std::vector<PageRequest>& requests,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     ComponentLibrary library;
     
@@ -38,7 +38,7 @@ FrontendSquad::ComponentLibrary FrontendSquad::generateApplication(
 // Page generator
 FrontendSquad::GeneratedPage FrontendSquad::generatePage(
     const PageRequest& request,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     GeneratedPage page;
     page.route = request.route;

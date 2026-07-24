@@ -564,13 +564,13 @@ size_t IntentQueue::GetPendingCount() const {
 
 size_t IntentQueue::GetCountForAgent(AgentId agent) const {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    
+
     // Iterate through priority queue to count intents for agent
     // Note: This is O(n) - in production, maintain a separate index
     size_t count = 0;
     auto tempQueue = queue_;
     while (!tempQueue.empty()) {
-        if (tempQueue.top().agentId == agent) {
+        if (tempQueue.top().sourceAgent == agent) {
             count++;
         }
         tempQueue.pop();
@@ -606,7 +606,7 @@ void IntentQueue::CancelIntent(IntentId intentId) {
         if (intent.intentId == intentId) {
             found = true;
             // Log cancellation
-            printf("[IntentQueue] Canceled intent %u\n", intentId);
+            printf("[IntentQueue] Canceled intent %llu\n", (unsigned long long)intentId);
         } else {
             remaining.push_back(std::move(intent));
         }
@@ -634,20 +634,20 @@ void IntentQueue::CancelAllForAgent(AgentId agent) {
     while (!queue_.empty()) {
         auto intent = std::move(const_cast<IntentRequest&>(queue_.top()));
         queue_.pop();
-        if (intent.agentId != agent) {
+        if (intent.sourceAgent != agent) {
             remaining.push_back(std::move(intent));
         }
     }
-    
+
     // Rebuild queue
     for (auto& intent : remaining) {
         queue_.push(std::move(intent));
     }
-    
+
     // Log cancellation
     size_t canceledCount = remaining.size() < queue_.size() ? 0 : queue_.size() - remaining.size();
     if (canceledCount > 0) {
-        printf("[IntentQueue] Canceled %zu intents for agent %u\n", canceledCount, agent);
+        printf("[IntentQueue] Canceled %zu intents for agent %llu\n", canceledCount, (unsigned long long)agent);
     }
 }
 
@@ -668,7 +668,7 @@ void IntentQueue::Reprioritize(IntentId intentId, IntentPriority newPriority) {
         // Update priority if this is the target intent
         if (intent.intentId == intentId) {
             intent.priority = newPriority;
-            intent.timestamp = std::chrono::steady_clock::now();
+            intent.submitted = std::chrono::steady_clock::now();
             found = true;
         }
         

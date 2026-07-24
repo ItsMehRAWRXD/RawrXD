@@ -56,10 +56,13 @@ struct ContextWindow {
 // KV cache entry for prefix reuse
 struct KVCacheEntry {
     uint64_t prefix_hash;
+    uint64_t hash;
     uint32_t seq_len;
     std::vector<uint32_t> token_ids;
     std::chrono::steady_clock::time_point last_used;
     bool valid;
+    // Vulkan buffer for GPU caching
+    size_t size{0};
 };
 
 // Streaming statistics for adaptive optimization

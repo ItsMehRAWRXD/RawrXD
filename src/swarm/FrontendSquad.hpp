@@ -63,33 +63,60 @@ public:
     // Main generation function - parallel execution
     ComponentLibrary generateApplication(
         const std::vector<PageRequest>& requests,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
     );
     
     // Individual component generators (can run in parallel)
     GeneratedPage generatePage(
         const PageRequest& request,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
+    );
+    
+    // Page generation helpers
+    std::string generateImports(
+        const PageRequest& request,
+        const DesignSystem& designSystem
+    );
+    std::string generatePageComponent(
+        const PageRequest& request,
+        const DesignSystem& designSystem
+    );
+    std::string generatePageStyles(
+        const PageRequest& request,
+        const DesignSystem& designSystem
+    );
+    std::string generatePageTest(
+        const PageRequest& request,
+        const DesignSystem& designSystem
+    );
+    std::string generateSharedComponents(
+        const DesignSystem& designSystem
+    );
+    std::string generateThemeFile(
+        const DesignSystem& designSystem
+    );
+    std::string generateGlobalStyles(
+        const DesignSystem& designSystem
     );
     
     std::string generateComponent(
         const ComponentSpec& spec,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
     );
     
     std::string generateForm(
         const std::vector<FormField>& fields,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
     );
     
     std::string generateStyles(
         const ComponentSpec& spec,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
     );
     
     std::string generateAnimation(
         const ComponentSpec& spec,
-        const CinematicVibeEngine::DesignSystem& designSystem
+        const DesignSystem& designSystem
     );
     
     // React-specific generators
