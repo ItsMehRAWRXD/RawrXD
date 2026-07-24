@@ -463,26 +463,328 @@ bool GGUFFormatReader::LoadTensor(const std::string& filePath,
 }
 
 // ============================================================================
-// Safetensors Format Reader (stub)
+// Safetensors Format Reader - Full Implementation
 // ============================================================================
 
+// Safetensors magic: 8-byte little-endian header length
+constexpr uint64_t SAFETENSORS_MAX_HEADER_SIZE = 100000000; // 100MB max header
+
+bool SafetensorsFormatReader::CanRead(const std::string& filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return false;
+    
+    // Read header size (first 8 bytes, little-endian uint64)
+    uint64_t headerLen;
+    file.read(reinterpret_cast<char*>(&headerLen), sizeof(headerLen));
+    
+    // Check if header size is reasonable
+    if (headerLen == 0 || headerLen > SAFETENSORS_MAX_HEADER_SIZE) {
+        return false;
+    }
+    
+    // Try to read and validate JSON header starts with '{'
+    std::string header(headerLen, '\0');
+    file.read(&header[0], headerLen);
+    
+    // Valid safetensors header starts with '{' and contains __metadata__
+    return header.length() > 2 && header[0] == '{';
+}
+
+const char* SafetensorsFormatReader::GetFormatName() const {
+    return "safetensors";
+}
+
+// Simple JSON parser for safetensors header
+static std::string ExtractJsonString(const std::string& json, size_t& pos) {
+    // Skip whitespace and opening quote
+    while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t' || 
+                                   json[pos] == '\n' || json[pos] == '\r')) pos++;
+    if (pos >= json.length() || json[pos] != '"') return "";
+    pos++; // skip opening quote
+    
+    std::string result;
+    while (pos < json.length() && json[pos] != '"') {
+        if (json[pos] == '\\' && pos + 1 < json.length()) {
+            pos++;
+            switch (json[pos]) {
+                case '"': result += '"'; break;
+                case '\\': result += '\\'; break;
+                case '/': result += '/'; break;
+                case 'b': result += '\b'; break;
+                case 'f': result += '\f'; break;
+                case 'n': result += '\n'; break;
+                case 'r': result += '\r'; break;
+                case 't': result += '\t'; break;
+                default: result += json[pos]; break;
+            }
+        } else {
+            result += json[pos];
+        }
+        pos++;
+    }
+    if (pos < json.length()) pos++; // skip closing quote
+    return result;
+}
+
+static int64_t ExtractJsonInt(const std::string& json, size_t& pos) {
+    while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+    bool negative = false;
+    if (pos < json.length() && json[pos] == '-') {
+        negative = true;
+        pos++;
+    }
+    int64_t value = 0;
+    while (pos < json.length() && json[pos] >= '0' && json[pos] <= '9') {
+        value = value * 10 + (json[pos] - '0');
+        pos++;
+    }
+    return negative ? -value : value;
+}
+
+static void SkipJsonValue(const std::string& json, size_t& pos);
+
+static void SkipJsonArray(const std::string& json, size_t& pos) {
+    if (pos >= json.length() || json[pos] != '[') return;
+    pos++; // skip '['
+    while (pos < json.length() && json[pos] != ']') {
+        SkipJsonValue(json, pos);
+        while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t' || 
+                                      json[pos] == '\n' || json[pos] == '\r')) pos++;
+        if (pos < json.length() && json[pos] == ',') pos++;
+    }
+    if (pos < json.length()) pos++; // skip ']'
+}
+
+static void SkipJsonObject(const std::string& json, size_t& pos) {
+    if (pos >= json.length() || json[pos] != '{') return;
+    pos++; // skip '{'
+    while (pos < json.length() && json[pos] != '}') {
+        // Skip key
+        ExtractJsonString(json, pos);
+        while (pos < json.length() && (json[pos] == ' ' || json[pos] == ':' || 
+                                      json[pos] == '\t' || json[pos] == '\n' || json[pos] == '\r')) pos++;
+        // Skip value
+        SkipJsonValue(json, pos);
+        while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t' || 
+                                      json[pos] == '\n' || json[pos] == '\r')) pos++;
+        if (pos < json.length() && json[pos] == ',') pos++;
+    }
+    if (pos < json.length()) pos++; // skip '}'
+}
+
+static void SkipJsonValue(const std::string& json, size_t& pos) {
+    while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t' || 
+                                   json[pos] == '\n' || json[pos] == '\r')) pos++;
+    if (pos >= json.length()) return;
+    
+    if (json[pos] == '{') {
+        SkipJsonObject(json, pos);
+    } else if (json[pos] == '[') {
+        SkipJsonArray(json, pos);
+    } else if (json[pos] == '"') {
+        ExtractJsonString(json, pos);
+    } else {
+        // Number or literal - skip until delimiter
+        while (pos < json.length() && json[pos] != ',' && json[pos] != '}' && 
+               json[pos] != ']' && json[pos] != ' ') pos++;
+    }
+}
+
+// Map safetensors dtype to QuantType
+static QuantType MapSafetensorsDtype(const std::string& dtype) {
+    if (dtype == "F32" || dtype == "float32") return QuantType::F32;
+    if (dtype == "F16" || dtype == "float16") return QuantType::F16;
+    if (dtype == "BF16" || dtype == "bfloat16") return QuantType::BF16;
+    if (dtype == "I32" || dtype == "int32") return QuantType::I32;
+    if (dtype == "I16" || dtype == "int16") return QuantType::I16;
+    if (dtype == "I8" || dtype == "int8") return QuantType::I8;
+    if (dtype == "U8" || dtype == "uint8") return QuantType::U8;
+    // Default to F32 for unknown types
+    return QuantType::F32;
+}
+
 bool SafetensorsFormatReader::ReadMetadata(const std::string& filePath, ModelMetadata& metadata) {
-    // Safetensors stores metadata in JSON header
-    // For now, stub - real implementation parses JSON header
-    metadata.architecture = "safetensors";
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return false;
+    
+    // Read header size
+    uint64_t headerLen;
+    file.read(reinterpret_cast<char*>(&headerLen), sizeof(headerLen));
+    if (headerLen == 0 || headerLen > SAFETENSORS_MAX_HEADER_SIZE) return false;
+    
+    // Read header
+    std::string header(headerLen, '\0');
+    file.read(&header[0], headerLen);
+    file.close();
+    
+    // Parse __metadata__ section if present
+    size_t metaPos = header.find("\"__metadata__\"");
+    if (metaPos != std::string::npos) {
+        size_t pos = metaPos + 15; // skip "__metadata__"
+        while (pos < header.length() && header[pos] != '{') pos++;
+        if (pos < header.length()) {
+            SkipJsonObject(header, pos);
+        }
+    }
+    
+    // Try to infer architecture from tensor names
+    if (header.find("model.layers.") != std::string::npos) {
+        metadata.architecture = "llama";
+    } else if (header.find("transformer.h.") != std::string::npos) {
+        metadata.architecture = "gpt2";
+    } else if (header.find("encoder.layer.") != std::string::npos) {
+        metadata.architecture = "bert";
+    } else {
+        metadata.architecture = "safetensors";
+    }
+    
+    // Extract model name from file path
+    size_t lastSlash = filePath.find_last_of("/\\");
+    size_t lastDot = filePath.find_last_of('.');
+    if (lastDot > lastSlash) {
+        metadata.modelName = filePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+    }
+    
+    // Default values - will be refined when reading tensors
+    metadata.weightQuant = QuantType::F16;
+    metadata.kvQuant = QuantType::F16;
+    
     return true;
 }
 
 bool SafetensorsFormatReader::ReadTensorCatalog(const std::string& filePath,
                                                   std::vector<TensorEntry>& tensors) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return false;
+    
+    // Read header size
+    uint64_t headerLen;
+    file.read(reinterpret_cast<char*>(&headerLen), sizeof(headerLen));
+    if (headerLen == 0 || headerLen > SAFETENSORS_MAX_HEADER_SIZE) return false;
+    
+    // Read header
+    std::string header(headerLen, '\0');
+    file.read(&header[0], headerLen);
+    
+    // Data starts after header
+    uint64_t dataStart = 8 + headerLen; // 8 bytes for header length + header
+    
+    // Parse JSON to extract tensor info
     tensors.clear();
-    return true;
+    
+    size_t pos = 0;
+    while (pos < header.length()) {
+        // Skip whitespace
+        while (pos < header.length() && (header[pos] == ' ' || header[pos] == '\t' || 
+                                          header[pos] == '\n' || header[pos] == '\r')) pos++;
+        if (pos >= header.length()) break;
+        
+        // Expect opening brace or skip __metadata__
+        if (header[pos] == '{') {
+            pos++;
+            continue;
+        }
+        
+        // Read tensor name (key)
+        std::string tensorName = ExtractJsonString(header, pos);
+        if (tensorName.empty() || tensorName == "__metadata__") {
+            // Skip metadata section
+            while (pos < header.length() && header[pos] != '}') {
+                if (header[pos] == '{') SkipJsonObject(header, pos);
+                else pos++;
+            }
+            if (pos < header.length()) pos++;
+            continue;
+        }
+        
+        // Expect colon
+        while (pos < header.length() && (header[pos] == ' ' || header[pos] == ':' || 
+                                          header[pos] == '\t')) pos++;
+        
+        // Expect opening brace for tensor info
+        if (pos >= header.length() || header[pos] != '{') {
+            SkipJsonValue(header, pos);
+            continue;
+        }
+        pos++; // skip '{'
+        
+        TensorEntry entry;
+        entry.name = tensorName;
+        entry.fileOffset = 0; // Will be calculated
+        
+        // Parse tensor info object
+        while (pos < header.length() && header[pos] != '}') {
+            std::string key = ExtractJsonString(header, pos);
+            while (pos < header.length() && (header[pos] == ' ' || header[pos] == ':' || 
+                                              header[pos] == '\t')) pos++;
+            
+            if (key == "dtype") {
+                std::string dtype = ExtractJsonString(header, pos);
+                entry.quantType = MapSafetensorsDtype(dtype);
+            } else if (key == "shape") {
+                // Parse array of dimensions
+                while (pos < header.length() && header[pos] != '[') pos++;
+                if (pos < header.length()) pos++; // skip '['
+                
+                entry.shape.dims = 0;
+                entry.shape.elements = 1;
+                
+                while (pos < header.length() && header[pos] != ']') {
+                    int64_t dim = ExtractJsonInt(header, pos);
+                    if (entry.shape.dims < 4) {
+                        entry.shape.dim[entry.shape.dims] = static_cast<uint32_t>(dim);
+                        entry.shape.elements *= dim;
+                    }
+                    entry.shape.dims++;
+                    while (pos < header.length() && (header[pos] == ' ' || header[pos] == ',' || 
+                                                      header[pos] == '\t')) pos++;
+                }
+                if (pos < header.length()) pos++; // skip ']'
+            } else if (key == "data_offsets") {
+                // Parse [start, end] array
+                while (pos < header.length() && header[pos] != '[') pos++;
+                if (pos < header.length()) pos++; // skip '['
+                
+                int64_t startOffset = ExtractJsonInt(header, pos);
+                while (pos < header.length() && (header[pos] == ' ' || header[pos] == ',')) pos++;
+                int64_t endOffset = ExtractJsonInt(header, pos);
+                
+                entry.fileOffset = dataStart + startOffset;
+                entry.byteSize = endOffset - startOffset;
+                
+                while (pos < header.length() && header[pos] != ']') pos++;
+                if (pos < header.length()) pos++; // skip ']'
+            } else {
+                SkipJsonValue(header, pos);
+            }
+            
+            while (pos < header.length() && (header[pos] == ' ' || header[pos] == ',' || 
+                                              header[pos] == '\t')) pos++;
+        }
+        
+        if (pos < header.length()) pos++; // skip '}'
+        
+        tensors.push_back(entry);
+        
+        while (pos < header.length() && (header[pos] == ' ' || header[pos] == ',' || 
+                                          header[pos] == '\t' || header[pos] == '\n' || 
+                                          header[pos] == '\r')) pos++;
+    }
+    
+    file.close();
+    return !tensors.empty();
 }
 
 bool SafetensorsFormatReader::LoadTensor(const std::string& filePath,
                                            const TensorEntry& entry,
                                            void* destBuffer) {
-    return false;
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) return false;
+    
+    file.seekg(entry.fileOffset, std::ios::beg);
+    file.read(static_cast<char*>(destBuffer), entry.byteSize);
+    
+    return file.good();
 }
 
 // ============================================================================

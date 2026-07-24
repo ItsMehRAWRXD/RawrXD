@@ -229,15 +229,32 @@ MockLLM::MockLLM(std::chrono::milliseconds simulated_delay)
 MockLLM::Response MockLLM::complete(const Request& request) {
     Response response;
 
-    // Simulate processing delay
-    std::this_thread::sleep_for(simulated_delay_);
-
-    // Generate mock response based on role
+    // Process the request with actual latency measurement
+    auto start_time = std::chrono::steady_clock::now();
+    
+    // Generate response based on role
     response.content = generate_mock_response(request);
+    
+    // Calculate actual processing time
+    auto end_time = std::chrono::steady_clock::now();
+    auto actual_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_time - start_time);
+    
+    // Add configured delay if actual processing was faster
+    if (actual_duration < simulated_delay_) {
+        std::this_thread::sleep_for(simulated_delay_ - actual_duration);
+        response.inference_time = simulated_delay_;
+    } else {
+        response.inference_time = actual_duration;
+    }
+    
     response.tokens_generated = static_cast<uint32_t>(response.content.length() / 4);
     response.success = true;
-    response.inference_time = simulated_delay_;
-
+    
+    // Update metrics
+    total_requests_++;
+    total_tokens_generated_ += response.tokens_generated;
+    
     return response;
 }
 

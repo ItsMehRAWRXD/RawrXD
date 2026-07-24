@@ -633,7 +633,7 @@ void StreamingModelInferenceEngine::ClearCache() {
 bool StreamingModelInferenceEngine::EnsureZonesLoaded(const std::vector<std::string>& zoneNames) {
     if (!m_bridge) return false;
     
-    // Real implementation: ensure all requested zones are loaded
+    // Real implementation: ensure all requested zones are loaded from disk/network
     bool allLoaded = true;
     for (const auto& zoneName : zoneNames) {
         // Check if zone is already loaded
@@ -641,27 +641,61 @@ bool StreamingModelInferenceEngine::EnsureZonesLoaded(const std::vector<std::str
             [&zoneName](const LoadedZone& z) { return z.name == zoneName; });
         
         if (it == m_loadedZones.end()) {
-            // Zone not loaded - attempt to load it
+            // Zone not loaded - load it from disk
             printf("[StreamingInference] Loading zone: %s\n", zoneName.c_str());
             
-            // Simulate zone loading (in production, this would load from disk/network)
-            LoadedZone newZone;
-            newZone.name = zoneName;
-            newZone.loadedAt = std::chrono::steady_clock::now();
-            newZone.lastAccessed = newZone.loadedAt;
-            newZone.dataSize = 1024 * 1024; // 1MB placeholder
+            // Construct zone file path
+            std::string zonePath = m_zonesBasePath + "/" + zoneName + ".zone";
             
-            // Check if we have enough memory
-            if (m_totalMemoryUsed + newZone.dataSize > m_maxMemoryAllowed) {
-                // Evict least recently used zones
-                EvictLRUZones(newZone.dataSize);
+            // Open and read zone file
+            std::ifstream zoneFile(zonePath, std::ios::binary | std::ios::ate);
+            if (!zoneFile) {
+                printf("[StreamingInference] ERROR: Failed to open zone file: %s\n", zonePath.c_str());
+                allLoaded = false;
+                continue;
             }
             
-            m_loadedZones.push_back(newZone);
-            m_totalMemoryUsed += newZone.dataSize;
+            // Get file size
+            size_t fileSize = zoneFile.tellg();
+            zoneFile.seekg(0, std::ios::beg);
             
-            printf("[StreamingInference] Zone '%s' loaded (%zu MB)\n",
-                   zoneName.c_str(), newZone.dataSize / (1024 * 1024));
+            // Check if we have enough memory
+            if (m_totalMemoryUsed + fileSize > m_maxMemoryAllowed) {
+                // Evict least recently used zones
+                EvictLRUZones(fileSize);
+            }
+            
+            // Read zone data
+            LoadedZone newZone;
+            newZone.name = zoneName;
+            newZone.data.resize(fileSize);
+            newZone.loadedAt = std::chrono::steady_clock::now();
+            newZone.lastAccessed = newZone.loadedAt;
+            newZone.dataSize = fileSize;
+            
+            if (!zoneFile.read(reinterpret_cast<char*>(newZone.data.data()), fileSize)) {
+                printf("[StreamingInference] ERROR: Failed to read zone data: %s\n", zonePath.c_str());
+                allLoaded = false;
+                continue;
+            }
+            
+            // Parse zone header to validate
+            if (fileSize >= sizeof(ZoneHeader)) {
+                ZoneHeader* header = reinterpret_cast<ZoneHeader*>(newZone.data.data());
+                if (header->magic == ZONE_MAGIC) {
+                    newZone.version = header->version;
+                    newZone.numTensors = header->numTensors;
+                    printf("[StreamingInference] Zone '%s' loaded (v%d, %zu tensors, %zu MB)\n",
+                           zoneName.c_str(), header->version, header->numTensors,
+                           fileSize / (1024 * 1024));
+                } else {
+                    printf("[StreamingInference] WARNING: Invalid zone magic for %s\n", zoneName.c_str());
+                }
+            }
+            
+            m_loadedZones.push_back(std::move(newZone));
+            m_totalMemoryUsed += fileSize;
+            
         } else {
             // Update last accessed time
             it->lastAccessed = std::chrono::steady_clock::now();

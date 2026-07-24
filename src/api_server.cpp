@@ -865,14 +865,58 @@ std::string APIServer::ExtractPromptFromRequest(const JsonValue& request) {
 
 std::vector<ChatMessage> APIServer::ExtractMessagesFromRequest(const JsonValue& request) {
     std::vector<ChatMessage> messages;
-    // Simple message extraction - would be enhanced for production
+    
     if (request.is_object && request.object_value.count("messages")) {
-        // For now, create a default message
-        ChatMessage msg;
-        msg.role = "user";
-        msg.content = "Hello";
-        messages.push_back(msg);
+        const auto& messages_val = request.object_value.at("messages");
+        if (messages_val.is_array) {
+            for (const auto& msg_val : messages_val.array_value) {
+                if (msg_val.is_object) {
+                    ChatMessage msg;
+                    
+                    // Extract role
+                    if (msg_val.object_value.count("role")) {
+                        const auto& role_val = msg_val.object_value.at("role");
+                        if (role_val.is_string) {
+                            msg.role = role_val.string_value;
+                        }
+                    }
+                    
+                    // Extract content
+                    if (msg_val.object_value.count("content")) {
+                        const auto& content_val = msg_val.object_value.at("content");
+                        if (content_val.is_string) {
+                            msg.content = content_val.string_value;
+                        }
+                    }
+                    
+                    // Extract optional name field
+                    if (msg_val.object_value.count("name")) {
+                        const auto& name_val = msg_val.object_value.at("name");
+                        if (name_val.is_string) {
+                            msg.name = name_val.string_value;
+                        }
+                    }
+                    
+                    // Only add valid messages
+                    if (!msg.role.empty() && !msg.content.empty()) {
+                        messages.push_back(msg);
+                    }
+                }
+            }
+        }
     }
+    
+    // If no messages found but prompt exists, create a single user message
+    if (messages.empty()) {
+        std::string prompt = ExtractPromptFromRequest(request);
+        if (!prompt.empty()) {
+            ChatMessage msg;
+            msg.role = "user";
+            msg.content = prompt;
+            messages.push_back(msg);
+        }
+    }
+    
     return messages;
 }
 
