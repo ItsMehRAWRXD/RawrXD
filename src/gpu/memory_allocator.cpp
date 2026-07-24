@@ -54,8 +54,15 @@ namespace RawrXD::GPU {
     }
 
     size_t MemoryAllocator::getFreeMemory() const {
-        // Placeholder - would query actual GPU memory
-        return 0;
+        // Query actual GPU memory using CUDA
+        #ifdef HAS_CUDA
+        size_t free = 0, total = 0;
+        cudaMemGetInfo(&free, &total);
+        return free;
+        #else
+        // Fallback: estimate based on total - allocated
+        return m_totalAllocated > m_totalSize ? 0 : m_totalSize - m_totalAllocated;
+        #endif
     }
 
     size_t MemoryAllocator::getTotalMemory() const {

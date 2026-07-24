@@ -3086,7 +3086,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Core.cpp
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
-        src/win32app/Win32IDE_CodexCommands.cpp  # ADDED: Codex command handlers + showSemanticIndex
         src/win32app/Win32IDE_VSCodeUI.cpp
             src/win32app/WindowManager.cpp
             src/win32app/EditorOperations.cpp
@@ -3254,7 +3253,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: showSemanticIndex now in Win32IDE_CodexCommands.cpp
+        src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
