@@ -3220,7 +3220,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/watchdog_stubs.cpp
         src/core/pattern_stubs.cpp
         src/core/perf_telemetry_stubs.cpp
-        src/core/native_log_stub.cpp
+        # src/core/native_log_stub.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
         src/collab/cursor_widget.cpp
         src/collab/crdt_buffer.cpp
@@ -3229,7 +3229,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/neural_bridge_stubs.cpp
         src/core/hwsynth_stubs.cpp
         src/core/spengine_stubs.cpp
-        src/core/model_router_stubs.cpp
+        # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         src/win32app/Win32IDE_private_stubs.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
