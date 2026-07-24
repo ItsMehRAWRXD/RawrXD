@@ -1,0 +1,50 @@
+# VAL-063 through VAL-066 Certification Environment
+# Dockerized certification pipeline for reproducible builds
+
+FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS base
+
+# Install Chocolatey
+RUN powershell -Command \
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install build tools
+RUN choco install -y git cmake ninja visualstudio2022buildtools
+
+# Install VS components
+RUN choco install -y visualstudio2022-workload-vctools
+
+# Set up working directory
+WORKDIR C:\\certification
+
+# Copy source code
+COPY . .
+
+# Build certification tests
+RUN cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    -DVAL063_ENABLE_TESTS=ON \
+    -DVAL064_ENABLE_TESTS=ON \
+    -DVAL065_ENABLE_TESTS=ON \
+    -DVAL066_ENABLE_TESTS=ON
+
+RUN cmake --build build --target val063_master_test val064_test val065_test val066_test
+
+# Run certification pipeline
+RUN .\build\\val063_master_test.exe
+
+# Final stage - minimal runtime
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
+
+WORKDIR C:\\certification
+
+# Copy built artifacts
+COPY --from=base C:\\certification\\build\\*.exe .
+COPY --from=base C:\\certification\\evidence .
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD val063_master_test.exe --dry-run || exit 1
+
+# Default command
+CMD ["val063_master_test.exe"]
