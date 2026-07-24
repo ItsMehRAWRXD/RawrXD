@@ -11,6 +11,8 @@ $ErrorActionPreference = "Stop"
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
+
 public class Win32 {
     [DllImport("user32.dll")]
     public static extern bool IsWindow(IntPtr hWnd);
@@ -22,7 +24,7 @@ public class Win32 {
     public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
     
     [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
-    public static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
     
     [DllImport("user32.dll", SetLastError=true)]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
@@ -156,22 +158,21 @@ try {
         # Enumerate all windows for this process
         Write-Host "[TEST] Enumerating process windows..." -ForegroundColor Yellow
         $processWindows = @()
-        $callback = {
-            param($hWnd, $lParam)
+        $sb = New-Object System.Text.StringBuilder 256
+        $enumCallback = [Win32+EnumWindowsProc] {
+            param([IntPtr]$hWnd, [IntPtr]$lParam)
             $pid = 0
             [void][Win32]::GetWindowThreadProcessId($hWnd, [ref]$pid)
             if ($pid -eq $proc.Id) {
-                $titleBuilder = New-Object System.Text.StringBuilder 256
-                [void][Win32]::GetWindowText($hWnd, $titleBuilder, 256)
+                [void][Win32]::GetWindowText($hWnd, $sb, 256)
                 $processWindows += @{
                     handle = $hWnd.ToString()
-                    title = $titleBuilder.ToString()
+                    title = $sb.ToString()
                 }
             }
             return $true
         }
-        $delegate = [Win32+EnumWindowsProc]::new($callback)
-        [void][Win32]::EnumWindows($delegate, [IntPtr]::Zero)
+        [void][Win32]::EnumWindows($enumCallback, [IntPtr]::Zero)
         
         Write-Host "[INFO] Found $($processWindows.Count) windows for process" -ForegroundColor Gray
         

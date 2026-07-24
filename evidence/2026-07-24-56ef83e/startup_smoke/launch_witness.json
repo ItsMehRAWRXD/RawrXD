@@ -1,46 +1,32 @@
-﻿{
-    "test_id": "VAL-051",
-    "test_name": "IDE Launch Witness",
-    "timestamp": "2026-07-24T12:47:25Z",
-    "status": "PASS",
-    "binary": "d:\\rxdn_ninja\\bin\\RawrXD-Win32IDE.exe",
-    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
-    "binary_size_bytes": 318285824,
-    "launch_attempted": true,
-    "launch_success": true,
-    "pid": 19424,
-    "startup_ms": 6236.31,
-    "windows_created": [
-        {
-            "title": "RawrXD IDE - Native Win32 AI Development Environment",
-            "handle": "14813094",
-            "process_id": 19424
-        }
-    ],
-    "subsystems_initialized": [
-        "Win32Core",
-        "WindowManager",
-        "MessageLoop",
-        "TabManager (deferred)",
-        "OutputPanels (deferred)",
-        "ChatPanel (deferred)"
-    ],
-    "crash_detected": false,
-    "crash_code": null,
-    "exit_code": null,
-    "ready_state_reached": true,
-    "invariants": {
-        "no_access_violation": true,
-        "no_stack_overflow": true,
-        "no_heap_corruption": true,
-        "main_window_created": true,
-        "message_loop_running": true
-    },
-    "notes": [
-        "Main window appeared in 6.2 seconds",
-        "Window title: 'RawrXD IDE - Native Win32 AI Development Environment'",
-        "Message loop responsive to WM_NULL ping",
-        "No exceptions detected",
-        "VAL-050 stack overflow fix verified - startup path stable"
-    ]
+{
+  "binary_size_bytes": 318285824,
+  "ready_state_reached": false,
+  "windows_created": [
+    {
+      "handle": "4785706",
+      "process_id": 5872,
+      "title": "RawrXD IDE - Native Win32 AI Development Environment"
+    }
+  ],
+  "error_message": "Unable to find type [WindowEnumerator].",
+  "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+  "binary": "d:\\rxdn_ninja\\bin\\RawrXD-Win32IDE.exe",
+  "crash_code": null,
+  "launch_success": false,
+  "test_id": "VAL-051",
+  "timestamp": "2026-07-24T12:58:33Z",
+  "invariants": {
+    "no_stack_overflow": true,
+    "message_loop_running": true,
+    "no_access_violation": true,
+    "main_window_created": true,
+    "no_heap_corruption": true
+  },
+  "crash_detected": false,
+  "subsystems_initialized": [],
+  "exit_code": null,
+  "startup_ms": 2532.51,
+  "pid": 5872,
+  "launch_attempted": true,
+  "test_name": "IDE Launch Witness"
 }
