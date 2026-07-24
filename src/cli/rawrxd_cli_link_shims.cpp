@@ -14,13 +14,33 @@ extern "C" {
 namespace RawrXD {
 namespace CLI {
 
-    // Placeholder for CLI initialization
+    // Initialize CLI subsystem
     int InitializeCLI() {
+        // Set up console output
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hOut != INVALID_HANDLE_VALUE) {
+            // Enable ANSI escape codes
+            DWORD mode = 0;
+            if (GetConsoleMode(hOut, &mode)) {
+                mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                SetConsoleMode(hOut, mode);
+            }
+        }
+        
+        // Initialize command registry
+        CommandRegistry::Instance().Initialize();
+        
         return 0;
     }
 
-    // Placeholder for CLI shutdown
+    // Shutdown CLI subsystem
     void ShutdownCLI() {
+        // Flush output
+        fflush(stdout);
+        fflush(stderr);
+        
+        // Cleanup command registry
+        CommandRegistry::Instance().Shutdown();
     }
 
 } // namespace CLI

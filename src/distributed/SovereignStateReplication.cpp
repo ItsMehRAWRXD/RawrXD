@@ -370,7 +370,28 @@ bool StateReplicationEngine::SendState(
 
 ReplicatedState StateReplicationEngine::RequestState(
     const std::string& node_id, const std::string& state_id) {
-    // Placeholder - in production, request via network
+    
+    // In production, this would send a network request
+    // For now, check local cache
+    std::lock_guard<std::mutex> lock(states_mutex_);
+    
+    auto it = state_cache_.find(state_id);
+    if (it != state_cache_.end()) {
+        return it->second;
+    }
+    
+    // Try to fetch from peer if available
+    if (discovery_ && discovery_->IsPeerConnected(node_id)) {
+        // Send request via communication manager
+        if (comm_manager_) {
+            StateRequestMessage request;
+            request.state_id = state_id;
+            request.requester_id = discovery_->GetLocalNodeId();
+            
+            comm_manager_->SendToNode(node_id, request.Serialize());
+        }
+    }
+    
     return {};
 }
 
