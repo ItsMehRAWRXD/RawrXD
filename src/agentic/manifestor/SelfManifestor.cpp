@@ -245,7 +245,7 @@ std::vector<PEParser::Export> PEParser::getExports() const {
     
     if (!valid_) return exports;
     
-    // Simplified export parsing - in production would use full PE parsing
+    // Basic export parsing - full PE export table parsing would be used in production
     auto dosHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(data_.data());
     auto ntHeaders = reinterpret_cast<const IMAGE_NT_HEADERS*>(data_.data() + dosHeader->e_lfanew);
     
