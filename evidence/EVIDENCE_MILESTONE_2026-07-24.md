@@ -150,6 +150,54 @@ capture evidence ⬜
 
 ---
 
+## Inference Witness System (VAL-051)
+
+Implemented execution manifest for deterministic generation evidence:
+
+### Files Added
+- `include/inference_witness.h` — VAL-051 schema definition
+- `src/core/inference_witness.cpp` — Witness recording implementation
+- `evidence/inference_witness_template.json` — Template/example output
+
+### Schema Structure
+```json
+{
+  "schema": "VAL-051",
+  "build": { "gitCommit", "binarySha256", "timestamp" },
+  "model": { "path", "sha256", "sizeBytes", "format" },
+  "parameters": { "seed", "temperature", "topP", "topK", "maxTokens" },
+  "stages": {
+    "modelLoad": { "completed", "success", "durationMicros", "checksum" },
+    "tokenizer": { ... },
+    "embedding": { ... },
+    "forwardPass": { ... },
+    "kvCache": { ... },
+    "sampler": { ... },
+    "tokenOutput": { ... }
+  },
+  "output": { "text", "tokenChecksum", "logitsChecksum", "tokenCount" },
+  "execution": { "success", "timestamp", "totalDurationMicros" },
+  "failure": { "stage", "reason" }
+}
+```
+
+### Usage
+```cpp
+RawrXD::Evidence::WitnessRecorder recorder(modelPath, prompt);
+recorder.SetParameters(42, 0.0f, 0.9f, 40, 512);
+
+recorder.RecordStageStart(InferenceStage::ModelLoad);
+// ... load model ...
+recorder.RecordStageComplete(InferenceStage::ModelLoad, true, tensorChecksum);
+
+// If failure occurs:
+recorder.RecordStageError(InferenceStage::ForwardPass, "Layer 12 OOM");
+
+// Finalize and save:
+recorder.Finalize(success);
+std::string path = recorder.SaveToDefaultLocation();
+```
+
 ## Recommended Next Actions
 
 1. **Run rawrxd.exe with model load**
@@ -158,12 +206,9 @@ capture evidence ⬜
    ```
 
 2. **Instrument inference pipeline**
-   - tokenizer
-   - embedding
-   - attention
-   - FFN
-   - logits
-   - sampler
+   - ✅ Witness system ready
+   - ⬜ Integrate into rawrxd.exe main()
+   - ⬜ Add stage checkpoints
 
 3. **Produce first full evidence bundle**
    - Token generation proof

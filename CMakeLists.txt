@@ -206,6 +206,8 @@ if(RAWRXD_BUILD_CLI)
         src/agentic/AgentOllamaClient.cpp
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
+        # Evidence/witness system for VAL-051 deterministic generation
+        src/core/inference_witness.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
