@@ -1,0 +1,86 @@
+{
+  "id": "VAL-056",
+  "name": "KV Cache Correctness",
+  "timestamp": "2026-07-24T13:10:00Z",
+  "status": "IN_PROGRESS",
+  "claim": "Token N+1 correctly depends on accumulated KV state from tokens 0..N",
+  "prerequisites": ["VAL-055"],
+  "observation_target": {
+    "test_binary": "test_chat_phase32.exe",
+    "model_layers": 34,
+    "kv_cache_type": "per_layer",
+    "attention_mechanism": "causal_masked"
+  },
+  "test_cases": {
+    "single_token_continuation": {
+      "description": "Generate 1 token after prompt, verify KV position increments",
+      "prompt": "The capital of France is",
+      "expected_kv_position_before": 5,
+      "expected_kv_position_after": 6,
+      "status": "PENDING"
+    },
+    "replay_determinism": {
+      "description": "Same prompt produces identical output across runs",
+      "runs": 2,
+      "matching_hashes": ["embedding_hash", "layer0_output_hash", "final_logits_hash", "sampled_token"],
+      "status": "PENDING"
+    },
+    "kv_reset_isolation": {
+      "description": "ResetState() produces clean state matching fresh process",
+      "reset_call": "ResetState()",
+      "verify_clean": true,
+      "status": "PENDING"
+    },
+    "memory_growth_telemetry": {
+      "description": "Track memory relationships during generation",
+      "metrics": ["model_mapped_bytes", "kv_allocated_bytes", "activation_bytes", "resident_pages"],
+      "expected": {
+        "model": "mapped address space constant",
+        "kv": "grows with context length",
+        "activations": "constant per token"
+      },
+      "status": "PENDING"
+    }
+  },
+  "kv_cache_structure": {
+    "enabled": true,
+    "layers": 34,
+    "heads_per_layer": 32,
+    "head_dim": 128,
+    "max_context": 8192,
+    "dtype": "float16"
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "kv_cache_initialized": true,
+    "initial_position": 0,
+    "final_position": null,
+    "writes_verified": false,
+    "attention_window_verified": false,
+    "determinism_verified": false,
+    "reset_isolation_verified": false
+  },
+  "invariants": {
+    "kv_position_increments": true,
+    "causal_attention_mask": true,
+    "k_v_write_pairs": true,
+    "kv_persists_between_tokens": true,
+    "reset_clears_cache": true
+  },
+  "evidence_path": "evidence/2026-07-24-56ef83e/kv_cache_witness.json",
+  "verification_method": "Multi-token generation with KV state tracking",
+  "success_criteria": [
+    "Single token generates and KV position increments",
+    "Replay produces identical hashes",
+    "ResetState produces clean cache",
+    "Memory growth follows expected pattern",
+    "Causal attention mask applied correctly"
+  ],
+  "notes": [
+    "VAL-056 is first temporal state validation (not single forward pass)",
+    "KV cache is the transformer's 'memory' across tokens",
+    "Causal masking ensures position N only attends to 0..N-1",
+    "Determinism proves no uninitialized memory or race conditions"
+  ],
+  "next_step": "VAL-057: Sampling Determinism"
+}

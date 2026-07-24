@@ -8,31 +8,35 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
 
-public class Win32 {
-    [DllImport("user32.dll")]
-    public static extern bool IsWindow(IntPtr hWnd);
-    
-    [DllImport("user32.dll")]
-    public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-    
-    [DllImport("user32.dll", SetLastError=true)]
-    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
-    
-    [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
-    public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-    
-    [DllImport("user32.dll", SetLastError=true)]
-    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-    
-    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-    public const uint WM_NULL = 0x0000;
-}
+# Only add Win32 type if not already defined
+if (-not ([System.Management.Automation.PSTypeName]'Win32').Type) {
+    Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    public class Win32 {
+        [DllImport("user32.dll")]
+        public static extern bool IsWindow(IntPtr hWnd);
+        
+        [DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        
+        [DllImport("user32.dll", SetLastError=true)]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+        
+        [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        
+        [DllImport("user32.dll", SetLastError=true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+        
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        public const uint WM_NULL = 0x0000;
+    }
 "@
+}
 
 $timestamp = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null
@@ -120,7 +124,7 @@ try {
             $witness.invariants.main_window_created = $true
             
             # Get window title
-            $titleBuilder = New-Object System.Text.StringBuilder 256
+            $titleBuilder = New-Object System.Text.StringBuilder -ArgumentList 256
             [void][Win32]::GetWindowText($mainWindow, $titleBuilder, 256)
             $windowTitle = $titleBuilder.ToString()
             
