@@ -1641,6 +1641,13 @@ target_compile_definitions(Omega1Engine PRIVATE
 
 set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# Use module definition file to ensure exports are preserved
+if(MSVC)
+    set_target_properties(Omega1Engine PROPERTIES
+        LINK_FLAGS "/OPT:NOREF /OPT:NOICF"
+    )
+endif()
+
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
@@ -1741,6 +1748,24 @@ endif()
 
 # Set MSVC runtime library for RawrEngine
 set_property(TARGET RawrEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Force inclusion of OMEGA-1 IAT symbols (prevent /OPT:REF stripping)
+if(MSVC)
+    target_link_options(RawrEngine PRIVATE
+        "/INCLUDE:Omega1_Initialize"
+        "/INCLUDE:Omega1_Shutdown"
+        "/INCLUDE:Omega1_GetModuleCount"
+        "/INCLUDE:Omega1_IsMutant"
+        "/INCLUDE:Omega1_GetMutationCount"
+        "/INCLUDE:Omega1_ExecuteReflective"
+        "/INCLUDE:Omega1_ValidateIntegrity"
+        "/INCLUDE:Omega1_TriggerMutation"
+        "/INCLUDE:Omega1_GetManifestJson"
+        "/INCLUDE:Omega1_ExecutePowerShell"
+        "/INCLUDE:Omega1_LoadModule"
+        "/INCLUDE:Omega1_InvokeModule"
+    )
+endif()
 
 # Win32 system libraries (same as Gold)
 if(WIN32)
@@ -2002,6 +2027,21 @@ if(MSVC)
     target_link_options(RawrXD_Gold PRIVATE /LARGEADDRESSAWARE:NO)
     # Set proper entry point for Windows subsystem application with wWinMain
     target_link_options(RawrXD_Gold PRIVATE /ENTRY:wWinMainCRTStartup)
+    # Force inclusion of OMEGA-1 IAT symbols (prevent /OPT:REF stripping)
+    target_link_options(RawrXD_Gold PRIVATE
+        "/INCLUDE:Omega1_Initialize"
+        "/INCLUDE:Omega1_Shutdown"
+        "/INCLUDE:Omega1_GetModuleCount"
+        "/INCLUDE:Omega1_IsMutant"
+        "/INCLUDE:Omega1_GetMutationCount"
+        "/INCLUDE:Omega1_ExecuteReflective"
+        "/INCLUDE:Omega1_ValidateIntegrity"
+        "/INCLUDE:Omega1_TriggerMutation"
+        "/INCLUDE:Omega1_GetManifestJson"
+        "/INCLUDE:Omega1_ExecutePowerShell"
+        "/INCLUDE:Omega1_LoadModule"
+        "/INCLUDE:Omega1_InvokeModule"
+    )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         set(_GOLD_MAP_PATH "${CMAKE_BINARY_DIR}/gold/RawrXD_Gold.map")
         set(_GOLD_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD_Gold.map")

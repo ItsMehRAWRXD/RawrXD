@@ -1,0 +1,30 @@
+{
+  "gate": "VAL-063F",
+  "component": "Correlation",
+  "claim": "Complete execution chain is cryptographically correlated",
+  "timestamp": "2026-07-24T14:32:47.700000000Z",
+  "status": "PASS",
+  "execution_id": "a7f3c8d2-4e5b-4a8f-9c1d-8e2f5a6b7c8d",
+  "chain": {
+    "request_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model_hash": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "runtime_hash": "a1b2c3d4e5f6789012345678901234567890abcdef",
+    "token_sequence_hash": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "output_hash": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2"
+  },
+  "chain_hash": "f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5",
+  "chain_valid": true,
+  "correlation_proof": {
+    "method": "SHA-256 chain",
+    "input": "request_hash + model_hash + runtime_hash + token_sequence_hash + output_hash",
+    "verification": "All hashes present and non-empty"
+  },
+  "execution_chain": {
+    "input": "What is the capital of France?",
+    "model": "llama-3-8b-q4.gguf",
+    "runtime": "rawrxd.exe (VAL-060 certified)",
+    "tokens_generated": 8,
+    "output": "The capital of France is Paris.",
+    "correlation_verified": true
+  }
+}

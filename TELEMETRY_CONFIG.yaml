@@ -1,0 +1,143 @@
+# RawrXD Telemetry Configuration v1.0
+# Production Release: v1.0.0-rc1.3
+
+telemetry:
+  version: "1.0.0"
+  enabled: true
+  
+  collection:
+    endpoint: "https://telemetry.rawrxd.ai/v1/collect"
+    api_key: "${TELEMETRY_API_KEY}"
+    
+    heartbeat:
+      interval_seconds: 60
+      timeout_ms: 5000
+      retry_count: 3
+      
+    batch:
+      max_size: 100
+      flush_interval_seconds: 30
+      max_queue_size: 1000
+      
+  metrics:
+    # Attestation metrics
+    attestation:
+      - name: "root_hash_integrity"
+        type: "gauge"
+        description: "Root hash verification status (1=valid, 0=invalid)"
+        
+      - name: "verification_drift"
+        type: "counter"
+        description: "Number of verification drift events"
+        
+    # Revocation metrics
+    revocation:
+      - name: "ocsp_lookup_latency_ms"
+        type: "histogram"
+        buckets: [50, 100, 200, 500, 1000]
+        description: "OCSP lookup latency in milliseconds"
+        
+      - name: "crl_update_success"
+        type: "counter"
+        description: "Successful CRL updates"
+        
+      - name: "crl_update_failure"
+        type: "counter"
+        description: "Failed CRL updates"
+        
+    # Runtime metrics
+    runtime:
+      - name: "startup_timing_ms"
+        type: "histogram"
+        buckets: [50, 100, 150, 200, 500]
+        description: "Runtime startup time in milliseconds"
+        
+      - name: "memory_allocation_efficiency"
+        type: "gauge"
+        unit: "percent"
+        description: "Memory allocation efficiency percentage"
+        
+      - name: "stack_depth_usage"
+        type: "gauge"
+        unit: "percent"
+        description: "Current stack depth usage percentage"
+        
+      - name: "stack_overflow_events"
+        type: "counter"
+        description: "Number of stack overflow events"
+        
+    # Loader metrics
+    loader:
+      - name: "gguf_mmap_latency_ms"
+        type: "histogram"
+        buckets: [50, 100, 150, 200, 500]
+        description: "GGUF memory-mapped loading latency"
+        
+      - name: "mmap_allocation_faults"
+        type: "counter"
+        description: "Memory-mapped allocation faults"
+        
+      - name: "safe_allocation_fallbacks"
+        type: "counter"
+        description: "Fallbacks to safe memory allocation"
+        
+    # IPC Gateway metrics
+    ipc:
+      - name: "attested_handshakes_total"
+        type: "counter"
+        description: "Total attested handshakes attempted"
+        
+      - name: "attested_handshakes_passed"
+        type: "counter"
+        description: "Successful attested handshakes"
+        
+      - name: "attested_handshakes_failed"
+        type: "counter"
+        description: "Failed attested handshakes"
+        
+      - name: "attestation_pass_rate"
+        type: "gauge"
+        unit: "percent"
+        description: "Attestation pass rate percentage"
+        
+      - name: "unverified_ipc_terminations"
+        type: "counter"
+        description: "IPC channels terminated due to failed attestation"
+        
+  logging:
+    level: "info"
+    format: "json"
+    
+    outputs:
+      - type: "stdout"
+      - type: "file"
+        path: "${LOG_DIR}/rawrxd-telemetry.log"
+        rotation: "daily"
+        max_files: 7
+        
+    sensitive_fields:
+      - "api_key"
+      - "gguf_buffer_contents"
+      - "model_weights"
+      
+  circuit_breakers:
+    attestation_failure:
+      threshold: 3
+      window_seconds: 60
+      action: "terminate"
+      
+    revocation_unreachable:
+      threshold: 5
+      window_seconds: 300
+      action: "fail_closed"
+      
+    memory_pressure:
+      threshold_percent: 95
+      action: "graceful_degradation"
+      
+  security:
+    encrypt_transmission: true
+    certificate_pinning: true
+    allowed_ciphers:
+      - "TLS_AES_256_GCM_SHA384"
+      - "TLS_CHACHA20_POLY1305_SHA256"

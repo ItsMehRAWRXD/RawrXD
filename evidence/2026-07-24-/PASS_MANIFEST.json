@@ -2,7 +2,7 @@
   "$schema": "https://rawrxd.dev/schemas/certification-v1.json",
   "schema_version": "1.0",
   "schema_name": "rawrxd-certification-v1",
-  "timestamp": "2026-07-24T12:41:33.0000000-04:00",
+  "timestamp": "2026-07-24T12:41:33-04:00",
   "certification": {
     "status": "CERTIFIED",
     "authority": "Automated Validation Framework",
@@ -42,16 +42,36 @@
     }
   },
   "validation": {
-    "total_gates": 47,
+    "total_gates": 48,
     "passed": 47,
     "failed": 0,
     "status": "CERTIFIED",
     "categories": {
-      "core_inference": { "gates": "VAL-001 to VAL-009", "status": "PASS" },
-      "model_support": { "gates": "VAL-010 to VAL-023", "status": "PASS" },
-      "distributed_advanced": { "gates": "VAL-039 to VAL-050", "status": "PASS" },
-      "win32ide_build": { "gates": "VAL-051 to VAL-060", "status": "PASS" },
-      "swarm_integration": { "gates": "VAL-061 to VAL-062", "status": "PASS" }
+      "core_inference": {
+        "gates": "VAL-001 to VAL-009",
+        "status": "PASS"
+      },
+      "model_support": {
+        "gates": "VAL-010 to VAL-023",
+        "status": "PASS"
+      },
+      "distributed_advanced": {
+        "gates": "VAL-039 to VAL-050",
+        "status": "PASS"
+      },
+      "win32ide_build": {
+        "gates": "VAL-051 to VAL-060",
+        "status": "PASS"
+      },
+      "swarm_integration": {
+        "gates": "VAL-061 to VAL-062",
+        "status": "PASS"
+      },
+      "cli_inference_gateway": {
+        "target": "v1.1",
+        "gates": "VAL-063",
+        "status": "PENDING"
+      }
     }
   },
   "startup_safety": {
@@ -130,5 +150,20 @@
     "inference_run/runtime.sha256",
     "inference_run/inference_result.json",
     "VAL051-057/result.json"
-  ]
+  ],
+  "roadmap": {
+    "v1_1": {
+      "requires": [
+        "VAL-063"
+      ],
+      "target_date": "TBD",
+      "gates": 1,
+      "status": "PENDING"
+    },
+    "v1_0": {
+      "gates": 47,
+      "date": "2026-07-24",
+      "status": "CERTIFIED"
+    }
+  }
 }

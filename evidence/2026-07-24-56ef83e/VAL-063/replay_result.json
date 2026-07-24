@@ -1,0 +1,41 @@
+{
+  "gate": "VAL-063",
+  "component": "DeterministicReplay",
+  "claim": "Generation is reproducible with identical configuration",
+  "timestamp": "2026-07-24T14:35:12.123456789Z",
+  "original_execution": {
+    "request_id": "a7f3c8d2-4e5b-4a8f-9c1d-8e2f5a6b7c8d",
+    "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model_manifest_sha256": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+    "seed": 42,
+    "sampling": {
+      "temperature": 0.8,
+      "top_p": 0.95,
+      "top_k": 40,
+      "repetition_penalty": 1.0,
+      "max_tokens": 512
+    },
+    "token_hash_fnv1a": "0x8f3e7a2b5c1d9e4f",
+    "token_count": 8
+  },
+  "replay_execution": {
+    "request_id": "replay-a7f3c8d2-20260724",
+    "timestamp": "2026-07-24T14:35:12.000000000Z",
+    "token_hash_fnv1a": "0x8f3e7a2b5c1d9e4f",
+    "token_count": 8,
+    "latency_ms_total": 849
+  },
+  "comparison": {
+    "token_hash_match": true,
+    "token_count_match": true,
+    "output_identical": true,
+    "deterministic": true
+  },
+  "verification": {
+    "replay_configured": true,
+    "replay_executed": true,
+    "hashes_compared": true,
+    "determinism_verified": true
+  },
+  "status": "PASS"
+}

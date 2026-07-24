@@ -211,12 +211,44 @@ std::string path = recorder.SaveToDefaultLocation();
 ## Current Validation Ladder
 
 ```
-VAL-050 Runtime Evidence Witness        ✅
-VAL-050.1 Startup Stack Safety            ✅
-WIN32-STACK-OVERFLOW-001 Containment      ✅
-VAL-051 Witness System Implementation     ✅
-VAL-051.1 First Inference Witness         ⏳
+VAL-050   Runtime Evidence Witness              ✅
+VAL-050.1 Startup Stack Safety                  ✅
+WIN32-STACK-OVERFLOW-001 Containment            ✅
+VAL-051   Inference Witness System            ✅ IMPLEMENTED
+VAL-051.1 First Inference Witness               ⏳ PARTIAL PASS
+VAL-051.2 Real Inference Gateway Binding        ⏳ NEXT MILESTONE
+VAL-052   Runtime Component Lifecycle Evidence  ⏳
 ```
+
+## VAL-051.1 Status: PARTIAL PASS
+
+### PASS Criteria ✅
+- Model artifact acquired (tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf, 668MB)
+- CLI accepts GGUF path
+- Runtime launches without crash
+- Argument propagation works
+- Validation mode executes
+- Witness framework ready
+
+### NOT YET PROVEN ⏳
+- GGUF tensors consumed by inference path
+- Tokenizer invoked
+- Embedding lookup executed
+- Transformer layers executed
+- KV cache updated
+- Generated token originated from model weights
+
+### Root Cause
+**Production execution gateway not wired to inference backend**
+
+Current path: `CLI handler → Simulation response`
+
+Required path: `CLI handler → ExecutionRequest → NativeBackend → MappedModelLoader → Tokenizer → TransformerExecutor → KV Cache → Sampler → Token stream`
+
+### Evidence
+- `evidence/VAL-051-1-PARTIAL-PASS.json` — Detailed status
+- `evidence/VAL-051-2-TestPlan.md` — Next milestone plan
+- `evidence/VAL-051-2-IMPLEMENTATION-PLAN.md` — Implementation guide
 
 ---
 
