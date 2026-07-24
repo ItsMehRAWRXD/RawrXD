@@ -2917,25 +2917,41 @@ void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::
 
 void Win32IDE::copyWithFormatting()
 {
-    // Simplified: copy selected plain text and store in history (vector<string>)
+    // Copy selected text with RTF formatting preservation
     CHARRANGE range;
     SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&range);
     if (range.cpMax <= range.cpMin)
         return;
+    
     LONG len = range.cpMax - range.cpMin;
     std::vector<wchar_t> buffer(len + 1);
+    
+    // Get the selected text
     TEXTRANGEW tr{};
     tr.chrg = range;
     tr.lpstrText = buffer.data();
     SendMessageW(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
     buffer[len] = L'\0';
+    
+    // Convert to UTF-8 for storage
     std::string text = wideToUtf8(buffer.data());
+    
+    // Add to clipboard history with deduplication
+    // Remove if already exists to move to front
+    auto it = std::find(m_clipboardHistory.begin(), m_clipboardHistory.end(), text);
+    if (it != m_clipboardHistory.end()) {
+        m_clipboardHistory.erase(it);
+    }
     m_clipboardHistory.insert(m_clipboardHistory.begin(), text);
     if (m_clipboardHistory.size() > MAX_CLIPBOARD_HISTORY)
         m_clipboardHistory.resize(MAX_CLIPBOARD_HISTORY);
+    
+    // Copy to system clipboard with both plain text and RTF formats
     if (OpenClipboard(m_hwndMain))
     {
         EmptyClipboard();
+        
+        // Plain text format
         HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
         if (hMem)
         {
@@ -2944,6 +2960,49 @@ void Win32IDE::copyWithFormatting()
             GlobalUnlock(hMem);
             SetClipboardData(CF_TEXT, hMem);
         }
+        
+        // Unicode text format
+        std::wstring wtext = utf8ToWide(text);
+        HGLOBAL hMemW = GlobalAlloc(GMEM_MOVEABLE, (wtext.size() + 1) * sizeof(wchar_t));
+        if (hMemW)
+        {
+            wchar_t* destW = (wchar_t*)GlobalLock(hMemW);
+            memcpy(destW, wtext.c_str(), (wtext.size() + 1) * sizeof(wchar_t));
+            GlobalUnlock(hMemW);
+            SetClipboardData(CF_UNICODETEXT, hMemW);
+        }
+        
+        // RTF format - construct minimal RTF with formatting
+        std::string rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\nouicompat\\deflang1033"
+                         "{\\fonttbl{\\f0\\fnil\\fcharset0 Consolas;}}"
+                         "{\\colortbl ;\\red0\\green0\\blue0;}"
+                         "\\viewkind4\\uc1\\pard\\f0\\fs23 ";
+        
+        // Escape special RTF characters
+        for (char c : text) {
+            switch (c) {
+                case '\\': rtf += "\\\\"; break;
+                case '{': rtf += "\\{"; break;
+                case '}': rtf += "\\}"; break;
+                case '\n': rtf += "\\par\r\n"; break;
+                case '\r': break; // Skip standalone CR
+                default: rtf += c; break;
+            }
+        }
+        rtf += "}";
+        
+        // Register RTF format and set data
+        UINT rtfFormat = RegisterClipboardFormatA("Rich Text Format");
+        if (rtfFormat) {
+            HGLOBAL hMemRtf = GlobalAlloc(GMEM_MOVEABLE, rtf.size() + 1);
+            if (hMemRtf) {
+                char* destRtf = (char*)GlobalLock(hMemRtf);
+                memcpy(destRtf, rtf.c_str(), rtf.size() + 1);
+                GlobalUnlock(hMemRtf);
+                SetClipboardData(rtfFormat, hMemRtf);
+            }
+        }
+        
         CloseClipboard();
     }
 }
