@@ -149,8 +149,8 @@ bool TypeSafetyValidator::ValidateTypeSafety(const std::string& original,
 }
 
 bool TypeSafetyValidator::TypesCompatible(const std::string& type1, const std::string& type2) {
-    // Simplified type compatibility check
-    // Real implementation would use proper type system
+    // Type compatibility check using normalized type comparison
+    // Handles common C++ type conversions and promotions
     
     // Normalize types (remove whitespace)
     std::string norm1 = type1;
@@ -161,10 +161,26 @@ bool TypeSafetyValidator::TypesCompatible(const std::string& type1, const std::s
     // Direct match
     if (norm1 == norm2) return true;
     
-    // Check for compatible conversions
-    // int -> long is safe, long -> int is not
-    if (norm1 == "int" && norm2 == "long") return true;
-    if (norm1 == "float" && norm2 == "double") return true;
+    // Check for compatible conversions (widening conversions are safe)
+    // Integer promotions
+    if (norm1 == "bool" && (norm2 == "int" || norm2 == "short" || norm2 == "long" || norm2 == "longlong")) return true;
+    if (norm1 == "char" && (norm2 == "int" || norm2 == "short" || norm2 == "long" || norm2 == "longlong")) return true;
+    if (norm1 == "short" && (norm2 == "int" || norm2 == "long" || norm2 == "longlong")) return true;
+    if (norm1 == "int" && (norm2 == "long" || norm2 == "longlong")) return true;
+    if (norm1 == "long" && norm2 == "longlong") return true;
+    
+    // Floating point promotions
+    if (norm1 == "float" && (norm2 == "double" || norm2 == "longdouble")) return true;
+    if (norm1 == "double" && norm2 == "longdouble") return true;
+    
+    // Signed/unsigned same-size compatibility (with caution)
+    if (norm1 == "unsignedint" && norm2 == "int") return true;
+    if (norm1 == "unsignedlong" && norm2 == "long") return true;
+    if (norm1 == "unsignedshort" && norm2 == "short") return true;
+    if (norm1 == "unsignedchar" && norm2 == "char") return true;
+    
+    // Pointer compatibility (void* can convert to any pointer)
+    if (norm2 == "void*" && norm1.find("*") != std::string::npos) return true;
     
     return false;
 }

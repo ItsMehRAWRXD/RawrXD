@@ -264,12 +264,84 @@ private:
             row.resize(dimensions);
         }
         
-        // Read tensor data (simplified - real implementation would parse tensor info)
-        // For now, initialize with random values as fallback
-        for (int i = 0; i < vocabSize; ++i) {
-            for (int j = 0; j < dimensions; ++j) {
-                float r = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
-                m_embedMatrix[i][j] = r * 0.1f;
+        // Read tensor data from GGUF file
+        // GGUF tensor format: name (string) + dimensions (uint32[n_dims]) + type (uint32) + offset (uint64) + data
+        // Skip to tensor data section and read embedding weights
+        bool tensorLoaded = false;
+        
+        // Seek to tensor info section (after metadata)
+        // For now, tensors are at offset specified in header, but we need to skip metadata first
+        // This is a simplified implementation - full GGUF parsing would track exact offsets
+        
+        // Try to find and load the token embedding tensor
+        // Common names: "token_embd.weight", "embeddings", "word_embeddings"
+        for (uint64_t i = 0; i < header.tensorCount && file.good() && !tensorLoaded; ++i) {
+            // Read tensor name
+            uint64_t nameLen;
+            if (!file.read(reinterpret_cast<char*>(&nameLen), sizeof(nameLen))) break;
+            
+            std::string tensorName(nameLen, '\0');
+            if (!file.read(tensorName.data(), nameLen)) break;
+            
+            // Read number of dimensions
+            uint32_t nDims;
+            if (!file.read(reinterpret_cast<char*>(&nDims), sizeof(nDims))) break;
+            
+            // Read dimensions
+            std::vector<uint64_t> tensorDims(nDims);
+            for (uint32_t d = 0; d < nDims; ++d) {
+                if (!file.read(reinterpret_cast<char*>(&tensorDims[d]), sizeof(tensorDims[d]))) break;
+            }
+            
+            // Read tensor type
+            uint32_t tensorType;
+            if (!file.read(reinterpret_cast<char*>(&tensorType), sizeof(tensorType))) break;
+            
+            // Read tensor data offset
+            uint64_t tensorOffset;
+            if (!file.read(reinterpret_cast<char*>(&tensorOffset), sizeof(tensorOffset))) break;
+            
+            // Check if this is the token embedding tensor
+            if (tensorName.find("token_embd") != std::string::npos ||
+                tensorName.find("embeddings") != std::string::npos ||
+                tensorName == "weight" || tensorName == "embed") {
+                
+                // Save current position
+                auto currentPos = file.tellg();
+                
+                // Seek to tensor data
+                file.seekg(tensorOffset, std::ios::beg);
+                
+                // Calculate tensor size (assuming float32 for now)
+                size_t tensorSize = vocabSize * dimensions;
+                if (tensorDims.size() >= 2) {
+                    tensorSize = tensorDims[0] * tensorDims[1];
+                }
+                
+                // Read tensor data
+                if (tensorSize == vocabSize * dimensions) {
+                    for (int v = 0; v < vocabSize && file.good(); ++v) {
+                        file.read(reinterpret_cast<char*>(m_embedMatrix[v].data()), 
+                                  dimensions * sizeof(float));
+                    }
+                    tensorLoaded = true;
+                }
+                
+                // Restore position
+                file.seekg(currentPos, std::ios::beg);
+            }
+        }
+        
+        // Fallback: if tensor not loaded, use random initialization
+        if (!tensorLoaded) {
+            // Initialize with Xavier initialization for better convergence
+            float scale = std::sqrt(6.0f / (vocabSize + dimensions));
+            for (int i = 0; i < vocabSize; ++i) {
+                for (int j = 0; j < dimensions; ++j) {
+                    // Uniform random in [-scale, scale]
+                    float r = ((float)rand() / RAND_MAX) * 2.0f - 1.0f;
+                    m_embedMatrix[i][j] = r * scale;
+                }
             }
         }
         
