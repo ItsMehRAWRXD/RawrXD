@@ -245,7 +245,7 @@ ExecutionResult IntentExecutionPipeline::ValidateOnly(const IntentRequest& kerne
         return result;
     }
     
-    Guardrails::PatchFirewall::ValidationResult fwResult;
+    Guardrails::FirewallResult fwResult;
     if (!Stage3_FirewallCheck(abiIntent, fwResult)) {
         result.success = false;
         result.outcome = ExecutionResult::Outcome::VALIDATION_FAILED;
