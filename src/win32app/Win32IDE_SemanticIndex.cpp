@@ -148,7 +148,9 @@ public:
             info += "Type: " + getSymbolKindName(symbol->kind) + "\n";
 
             if (!symbol->signature.empty()) {
-                info += "\nSignature:\n" + symbol->signature + "\n";
+                info += "\nSignature:\n";
+                info += symbol->signature;
+                info += "\n";
             }
 
             if (!symbol->documentation.empty()) {
