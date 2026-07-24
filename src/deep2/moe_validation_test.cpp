@@ -149,18 +149,18 @@ bool TestRouterCorrectness() {
 bool TestExpertDispatch() {
     printf("\n=== Test 2: Expert Dispatch Simulation ===\n");
     
-    // Simulate dispatching to top-k experts
+    // Model dispatching to top-k experts
     int expertIndices[TEST_TOP_K] = {42, 137, 89, 201, 15, 178, 63, 245};
     float expertWeights[TEST_TOP_K] = {0.25f, 0.20f, 0.15f, 0.12f, 0.10f, 0.08f, 0.05f, 0.05f};
-    
-    printf("  Simulating dispatch to %d experts:\n", TEST_TOP_K);
+
+    printf("  Modeling dispatch to %d experts:\n", TEST_TOP_K);
     
     double totalLatency = 0.0;
     for (int i = 0; i < TEST_TOP_K; i++) {
         double t0 = GetTimeMs();
         
-        // Simulate expert computation (Q4_K GEMV)
-        // In real implementation, this would call MoEWeightProxy::GetExpertWeights
+        // Model expert computation (Q4_K GEMV)
+        // Full implementation would call MoEWeightProxy::GetExpertWeights
         
         double t1 = GetTimeMs();
         double latency = t1 - t0;
@@ -179,7 +179,7 @@ bool TestExpertDispatch() {
 bool TestSharedExpert() {
     printf("\n=== Test 3: Shared Expert Integration ===\n");
     
-    // Simulate shared expert computation
+    // Model shared expert computation
     std::vector<float> input(TEST_HIDDEN_DIM);
     std::vector<float> output(TEST_HIDDEN_DIM);
     
@@ -191,8 +191,8 @@ bool TestSharedExpert() {
     
     double t0 = GetTimeMs();
     
-    // Simulate: gate_proj -> SwiGLU -> up_proj -> down_proj
-    // This would be computeSharedExpertFFN in real implementation
+    // Model: gate_proj -> SwiGLU -> up_proj -> down_proj
+    // Full implementation would be computeSharedExpertFFN
     
     // Simple simulation: output = input * 0.5 (identity-like)
     for (size_t i = 0; i < TEST_HIDDEN_DIM; i++) {

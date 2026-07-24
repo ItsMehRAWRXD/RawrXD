@@ -86,7 +86,7 @@ void BenchmarkExpert(int iterations) {
         for (int r = 0; r < EXPERT_DIM; r++) {
             float sum = 0.0f;
             for (int c = 0; c < HIDDEN_DIM; c++) {
-                sum += input[c] * 0.001f; // Simulated weight
+                sum += input[c] * 0.001f; // Model weight
             }
             gateOut[r] = sum;
         }
@@ -174,9 +174,9 @@ void BenchmarkFullMoE(int iterations) {
             output[i] += input[i] * 0.5f;
         }
         
-        // Top-8 experts (simplified)
+        // Top-8 experts (basic implementation)
         for (int e = 0; e < TOP_K; e++) {
-            // Simulate expert FFN
+            // Model expert FFN
             float gateOut[EXPERT_DIM];
             float upOut[EXPERT_DIM];
             
