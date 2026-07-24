@@ -348,10 +348,25 @@ std::vector<std::string> AIDebugger::detectMemoryLeaks(
     
     auto response = GetAIEngine().complete(req);
     
-    // Parse memory leaks from response
-    // Note: Proper parsing requires structured output format
-    // Would use regex or JSON parsing to extract leak locations
-    // For now, return empty (caller should parse raw response)
+    // Parse memory leaks from response using pattern matching
+    // Look for common leak patterns in AI response
+    std::istringstream iss(response);
+    std::string line;
+    while (std::getline(iss, line)) {
+        // Check for leak indicators
+        if (line.find("leak") != std::string::npos || 
+            line.find("Leak") != std::string::npos ||
+            line.find("LEAK") != std::string::npos ||
+            line.find("malloc") != std::string::npos && line.find("free") == std::string::npos ||
+            line.find("new ") != std::string::npos && line.find("delete") == std::string::npos ||
+            line.find("alloc") != std::string::npos && line.find("dealloc") == std::string::npos) {
+            // Trim and add as leak
+            size_t start = line.find_first_not_of(" \t");
+            if (start != std::string::npos) {
+                leaks.push_back(line.substr(start));
+            }
+        }
+    }
     
     return leaks;
 }
@@ -370,10 +385,24 @@ std::vector<std::string> AIDebugger::detectRaceConditions(
     
     auto response = GetAIEngine().complete(req);
     
-    // Parse race conditions from response
-    // Note: Proper parsing requires structured output format
-    // Would use regex or JSON parsing to extract race locations
-    // For now, return empty (caller should parse raw response)
+    // Parse race conditions from response using pattern matching
+    std::istringstream iss(response);
+    std::string line;
+    while (std::getline(iss, line)) {
+        // Check for race condition indicators
+        if (line.find("race") != std::string::npos ||
+            line.find("Race") != std::string::npos ||
+            line.find("deadlock") != std::string::npos ||
+            line.find("Deadlock") != std::string::npos ||
+            line.find("mutex") != std::string::npos && line.find("lock") != std::string::npos ||
+            line.find("atomic") != std::string::npos && line.find("non-atomic") != std::string::npos ||
+            line.find("thread") != std::string::npos && line.find("unsafe") != std::string::npos) {
+            size_t start = line.find_first_not_of(" \t");
+            if (start != std::string::npos) {
+                races.push_back(line.substr(start));
+            }
+        }
+    }
     
     return races;
 }

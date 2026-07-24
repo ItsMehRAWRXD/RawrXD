@@ -339,11 +339,44 @@ BenchmarkResult RunBenchmark(const std::string& name,
         static_cast<float>(accepted_speculative) / total_speculative : 0.0f;
     result.early_exit_rate = total_tokens > 0 ? 
         static_cast<float>(early_exits) / total_tokens : 0.0f;
-    result.arbitration_fairness = 0.88f;  // Simulated
+    // Real arbitration fairness: compute from request timing variance
+    if (!end_to_end_samples.empty()) {
+        float mean = 0.0f;
+        for (float s : end_to_end_samples) mean += s;
+        mean /= end_to_end_samples.size();
+        float variance = 0.0f;
+        for (float s : end_to_end_samples) variance += (s - mean) * (s - mean);
+        variance /= end_to_end_samples.size();
+        float stddev = std::sqrt(variance);
+        // Fairness = 1 - coefficient of variation (lower variance = higher fairness)
+        result.arbitration_fairness = mean > 0 ? std::max(0.0f, 1.0f - stddev / mean) : 0.0f;
+    } else {
+        result.arbitration_fairness = 0.0f;
+    }
     
-    // Stability
-    result.latency_drift_percent = 2.5f;  // Simulated
-    result.loop_stability_score = 0.92f;  // Simulated
+    // Real latency drift: compute from first vs last samples
+    if (per_token_samples.size() > 10) {
+        float earlyAvg = 0.0f, lateAvg = 0.0f;
+        size_t halfSize = per_token_samples.size() / 2;
+        for (size_t i = 0; i < halfSize; i++) earlyAvg += per_token_samples[i];
+        for (size_t i = halfSize; i < per_token_samples.size(); i++) lateAvg += per_token_samples[i];
+        earlyAvg /= halfSize;
+        lateAvg /= (per_token_samples.size() - halfSize);
+        result.latency_drift_percent = earlyAvg > 0 ? 
+            std::abs(lateAvg - earlyAvg) / earlyAvg * 100.0f : 0.0f;
+    } else {
+        result.latency_drift_percent = 0.0f;
+    }
+    
+    // Real loop stability: based on consistency of token generation rate
+    if (end_to_end_samples.size() > 5) {
+        float minVal = *std::min_element(end_to_end_samples.begin(), end_to_end_samples.end());
+        float maxVal = *std::max_element(end_to_end_samples.begin(), end_to_end_samples.end());
+        float range = maxVal - minVal;
+        result.loop_stability_score = maxVal > 0 ? std::max(0.0f, 1.0f - range / maxVal) : 1.0f;
+    } else {
+        result.loop_stability_score = 1.0f;
+    }
     result.loop_resets = 0;
     
     // Health score
