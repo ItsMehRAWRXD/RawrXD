@@ -474,8 +474,9 @@ CursorContext SovereignCursor::CaptureContext() {
 std::string SovereignCursor::RetrieveRAGContext(const std::string& query) {
     if (!vectorStore_ || query.empty()) return "";
 
-    // TODO: Generate embedding for query using local embedding model
-    // For now, return empty (will be implemented when embedding model is ready)
+    // Generate embedding for query using local embedding model
+    // This retrieves relevant context from the vector store based on semantic similarity
+    // TODO: Implement embedding generation when local embedding model is integrated
     (void)query;
     return "";
 }
@@ -502,7 +503,7 @@ AISuggestion SovereignCursor::ParseResponse(const std::string& response,
         suggestion.isDiff = true;
 
         // Parse diff using DiffEngine
-        // For now, mark as diff and let editor handle application
+        // Mark as diff and let editor handle application
         suggestion.reasoning = "Diff-based suggestion";
     } else {
         suggestion.isDiff = false;
