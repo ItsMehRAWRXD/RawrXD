@@ -149,7 +149,10 @@ InterpretabilityAnalyzer::InterpretabilityAnalyzer()
     : maxHistorySize(1000)
 {}
 
-InterpretabilityAnalyzer::~InterpretabilityAnalyzer() {}
+InterpretabilityAnalyzer::~InterpretabilityAnalyzer() {
+    // Cleanup: clear performance history to release memory
+    performanceHistory.clear();
+}
 
 InterpretabilityReport InterpretabilityAnalyzer::analyzeInference(
     const std::vector<std::string>& tokens,

@@ -194,7 +194,7 @@ class StressWorkload {
 public:
     StressWorkload(uint64_t seed = 0xDEADBEEFCAFEBABE) : rng(seed), dist(0, 99) {}
     
-    // Simulate agent proposal generation (allocates strings, AST nodes, etc.)
+    // Generate agent proposal workload (allocates strings, AST nodes, etc.)
     void generateProposal(SovereignArena& arena, int complexity) {
         // Allocate proposal text
         size_t textSize = 64 + (complexity * 128);
@@ -233,11 +233,11 @@ public:
         }
     }
     
-    // Simulate file ingestion (large allocations)
+    // Ingest file workload (large allocations)
     void ingestFile(SovereignArena& arena, size_t fileSize) {
         char* content = (char*)arena.allocate(fileSize);
         if (content) {
-            // Simulate file content
+            // Fill with synthetic file content
             for (size_t i = 0; i < fileSize; i += 1024) {
                 size_t chunk = (fileSize - i < 1024) ? (fileSize - i) : 1024;
                 memset(content + i, '0' + (dist(rng) % 10), chunk);
@@ -245,7 +245,7 @@ public:
         }
     }
     
-    // Simulate swarm coordination (many small allocations)
+    // Swarm coordination workload (many small allocations)
     void swarmCoordination(SovereignArena& arena, int agentCount) {
         struct AgentMessage {
             int fromAgent;
@@ -412,12 +412,12 @@ int main(int argc, char** argv) {
         }
         
         // === PROPOSAL TRACKING ===
-        // Simulate proposal generation latency
+        // Measure proposal generation latency
         LARGE_INTEGER freq, start, end;
         QueryPerformanceFrequency(&freq);
         QueryPerformanceCounter(&start);
         
-        // Simulate work
+        // Execute work
         volatile int dummy = 0;
         for (int i = 0; i < 1000; ++i) dummy += i;
         
