@@ -219,6 +219,9 @@ public:
     // Configure batch size
     void SetBatchSize(uint32_t batchSize);
     
+    // Initialize router configuration (must be called before first use)
+    void InitializeRouter(uint32_t numExperts, uint32_t topK, uint32_t hiddenDim, const float* routerWeights);
+    
     // Add token to batch
     void AddToken(uint32_t tokenId, const float* hiddenState);
     

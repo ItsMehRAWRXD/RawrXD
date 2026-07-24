@@ -397,6 +397,13 @@ void TokenBatchRouter::SetBatchSize(uint32_t batchSize) {
     batchSize_ = batchSize;
 }
 
+void TokenBatchRouter::InitializeRouter(uint32_t numExperts, uint32_t topK, uint32_t hiddenDim, const float* routerWeights) {
+    numExperts_ = numExperts;
+    topK_ = topK;
+    hiddenDim_ = hiddenDim;
+    routerWeights_ = routerWeights;
+}
+
 void TokenBatchRouter::AddToken(uint32_t tokenId, const float* hiddenState) {
     tokenIds_.push_back(tokenId);
     hiddenStates_.push_back(const_cast<float*>(hiddenState));
