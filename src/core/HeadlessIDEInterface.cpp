@@ -232,18 +232,144 @@ IDEResult HeadlessIDEInterface::GetBufferLength(BufferHandle buffer, size_t* out
 }
 
 IDEResult HeadlessIDEInterface::InsertText(BufferHandle buffer, TextPosition pos, const char* text) {
-    // Simplified implementation
-    return IDEResult::ErrorNotImplemented;
+    if (!IsReady()) return IDEResult::ErrorDisconnected;
+    if (!text) return IDEResult::ErrorInvalidArgument;
+    
+    size_t index = reinterpret_cast<size_t>(buffer) - 1;
+    if (index >= m_buffers.size()) return IDEResult::ErrorNotFound;
+    
+    auto& buf = m_buffers[index];
+    size_t insertPos = pos.line * buf.lineWidth + pos.column;
+    
+    // Clamp insert position to valid range
+    if (insertPos > buf.content.size()) {
+        insertPos = buf.content.size();
+    }
+    
+    // Insert text
+    try {
+        buf.content.insert(insertPos, text);
+        buf.modified = true;
+        buf.version++;
+        
+        // Update line count
+        buf.lineCount = 1;
+        for (char c : buf.content) {
+            if (c == '\n') buf.lineCount++;
+        }
+        
+        // Publish event
+        if (m_eventBus) {
+            m_eventBus->PublishBufferModified(buffer);
+        }
+        
+        return IDEResult::Success;
+    } catch (const std::exception& e) {
+        printf("[HeadlessIDE] InsertText failed: %s\n", e.what());
+        return IDEResult::ErrorUnknown;
+    }
 }
 
 IDEResult HeadlessIDEInterface::DeleteText(BufferHandle buffer, TextRange range) {
-    // Simplified implementation
-    return IDEResult::ErrorNotImplemented;
+    if (!IsReady()) return IDEResult::ErrorDisconnected;
+    
+    size_t index = reinterpret_cast<size_t>(buffer) - 1;
+    if (index >= m_buffers.size()) return IDEResult::ErrorNotFound;
+    
+    auto& buf = m_buffers[index];
+    
+    // Calculate byte positions from line/column
+    size_t startPos = 0;
+    size_t currentLine = 0;
+    for (size_t i = 0; i < buf.content.size() && currentLine < range.start.line; ++i) {
+        if (buf.content[i] == '\n') currentLine++;
+        if (currentLine < range.start.line) startPos++;
+    }
+    startPos += range.start.column;
+    
+    size_t endPos = startPos;
+    currentLine = range.start.line;
+    for (size_t i = startPos; i < buf.content.size() && currentLine < range.end.line; ++i) {
+        if (buf.content[i] == '\n') currentLine++;
+        if (currentLine < range.end.line) endPos++;
+    }
+    endPos += range.end.column;
+    
+    // Clamp positions
+    if (startPos > buf.content.size()) startPos = buf.content.size();
+    if (endPos > buf.content.size()) endPos = buf.content.size();
+    if (startPos >= endPos) return IDEResult::ErrorInvalidArgument;
+    
+    // Delete text
+    try {
+        buf.content.erase(startPos, endPos - startPos);
+        buf.modified = true;
+        buf.version++;
+        
+        // Update line count
+        buf.lineCount = 1;
+        for (char c : buf.content) {
+            if (c == '\n') buf.lineCount++;
+        }
+        
+        // Publish event
+        if (m_eventBus) {
+            m_eventBus->PublishBufferModified(buffer);
+        }
+        
+        return IDEResult::Success;
+    } catch (const std::exception& e) {
+        printf("[HeadlessIDE] DeleteText failed: %s\n", e.what());
+        return IDEResult::ErrorUnknown;
+    }
 }
 
 IDEResult HeadlessIDEInterface::GetTextRange(BufferHandle buffer, TextRange range, char* outData, size_t* inOutLen) {
-    // Simplified implementation
-    return IDEResult::ErrorNotImplemented;
+    if (!IsReady()) return IDEResult::ErrorDisconnected;
+    if (!outData || !inOutLen) return IDEResult::ErrorInvalidArgument;
+    
+    size_t index = reinterpret_cast<size_t>(buffer) - 1;
+    if (index >= m_buffers.size()) return IDEResult::ErrorNotFound;
+    
+    const auto& buf = m_buffers[index];
+    
+    // Calculate byte positions from line/column
+    size_t startPos = 0;
+    size_t currentLine = 0;
+    for (size_t i = 0; i < buf.content.size() && currentLine < range.start.line; ++i) {
+        if (buf.content[i] == '\n') currentLine++;
+        if (currentLine < range.start.line) startPos++;
+    }
+    startPos += range.start.column;
+    
+    size_t endPos = startPos;
+    currentLine = range.start.line;
+    for (size_t i = startPos; i < buf.content.size() && currentLine < range.end.line; ++i) {
+        if (buf.content[i] == '\n') currentLine++;
+        if (currentLine < range.end.line) endPos++;
+    }
+    endPos += range.end.column;
+    
+    // Clamp positions
+    if (startPos > buf.content.size()) startPos = buf.content.size();
+    if (endPos > buf.content.size()) endPos = buf.content.size();
+    
+    size_t rangeLen = endPos - startPos;
+    
+    // Check buffer size
+    if (*inOutLen < rangeLen + 1) {
+        *inOutLen = rangeLen + 1;  // Return required size
+        return IDEResult::ErrorBufferTooSmall;
+    }
+    
+    // Copy text
+    if (rangeLen > 0) {
+        memcpy(outData, buf.content.data() + startPos, rangeLen);
+    }
+    outData[rangeLen] = '\0';
+    *inOutLen = rangeLen;
+    
+    return IDEResult::Success;
 }
 
 // Command Execution

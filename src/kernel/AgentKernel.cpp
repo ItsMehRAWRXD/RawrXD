@@ -591,8 +591,35 @@ std::vector<IntentRequest> IntentQueue::GetPendingIntents() const {
 
 void IntentQueue::CancelIntent(IntentId intentId) {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    // Priority queue doesn't support removal
-    // In production, use a custom data structure
+    
+    // Priority queue doesn't support direct removal
+    // Strategy: Rebuild queue without the canceled intent
+    std::vector<IntentRequest> remaining;
+    remaining.reserve(queue_.size());
+    
+    // Extract all intents except the one to cancel
+    bool found = false;
+    while (!queue_.empty()) {
+        auto intent = std::move(const_cast<IntentRequest&>(queue_.top()));
+        queue_.pop();
+        
+        if (intent.intentId == intentId) {
+            found = true;
+            // Log cancellation
+            printf("[IntentQueue] Canceled intent %u\n", intentId);
+        } else {
+            remaining.push_back(std::move(intent));
+        }
+    }
+    
+    // Rebuild queue
+    for (auto& intent : remaining) {
+        queue_.push(std::move(intent));
+    }
+    
+    if (!found) {
+        printf("[IntentQueue] Intent %u not found for cancellation\n", intentId);
+    }
 }
 
 void IntentQueue::CancelAllForAgent(AgentId agent) {
