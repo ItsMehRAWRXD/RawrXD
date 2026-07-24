@@ -4387,7 +4387,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ChatMessageRenderer.cpp
         src/win32app/Win32IDE_ToolActionStatus.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
-        # src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # RESTORED: Required for HandleCopilotSend_Ollama and initializeChatPanelOllama
         src/win32app/Win32IDE_VulkanRenderer.cpp
         src/win32app/Win32IDE_OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_IOCPFileWatcher.cpp
