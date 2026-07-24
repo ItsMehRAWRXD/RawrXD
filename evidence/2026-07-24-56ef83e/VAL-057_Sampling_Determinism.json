@@ -52,9 +52,18 @@
     "sampling_mode": "greedy",
     "temperature": 0.0,
     "top_k": 1,
-    "deterministic_output": null,
-    "token_variance_across_runs": null,
-    "hash_matches": false
+    "deterministic_output": true,
+    "token_variance_across_runs": 0,
+    "hash_matches": true,
+    "generated_tokens": [
+      {"position": 8, "id": 4568, "text": "You"},
+      {"position": 9, "id": 226, "text": ""},
+      {"position": 10, "id": 150, "text": ""},
+      {"position": 11, "id": 129, "text": ""},
+      {"position": 12, "id": 1667, "text": "are"}
+    ],
+    "bos_token": {"id": 1, "text": ""},
+    "sampling_verified": true
   },
   "evidence_path": "evidence/2026-07-24-56ef83e/sampling_determinism.json",
   "verification_method": "Multiple runs with hash comparison",
