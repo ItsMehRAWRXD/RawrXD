@@ -219,7 +219,9 @@ ToolRegistry& ToolRegistry::Instance() {
     return instance;
 }
 
-ToolRegistry::ToolRegistry() {}
+ToolRegistry::ToolRegistry()
+    : auditEnabled_(false)
+{}
 
 ToolRegistry::~ToolRegistry() {}
 
@@ -1476,7 +1478,11 @@ void FileExplorer::LoadDirectory(const std::string& path) {
 // ============================================================================
 // Code Navigator Implementation
 // ============================================================================
-CodeNavigator::CodeNavigator() {}
+CodeNavigator::CodeNavigator()
+    : symbols_()
+    , references_()
+    , indexedFiles_()
+{}
 
 CodeNavigator::~CodeNavigator() {}
 

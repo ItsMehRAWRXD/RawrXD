@@ -7,13 +7,15 @@
 
 extern "C" {
 
-void asm_perf_begin(const char* name) {
-    (void)name;
-    // Stub - no operation
+// Version for slot-based telemetry (used by speculative decoder)
+uint64_t asm_perf_begin(uint32_t slot) {
+    (void)slot;
+    return 0; // Return 0 as start timestamp
 }
 
-void asm_perf_end(const char* name) {
-    (void)name;
+void asm_perf_end(uint32_t slot, uint64_t start_tsc) {
+    (void)slot;
+    (void)start_tsc;
     // Stub - no operation
 }
 

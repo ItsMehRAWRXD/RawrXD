@@ -145,7 +145,9 @@ private:
 };
 
 // Implementation
-InterpretabilityAnalyzer::InterpretabilityAnalyzer() {}
+InterpretabilityAnalyzer::InterpretabilityAnalyzer()
+    : maxHistorySize(1000)
+{}
 
 InterpretabilityAnalyzer::~InterpretabilityAnalyzer() {}
 

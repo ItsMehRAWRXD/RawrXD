@@ -147,11 +147,64 @@ void Window::resizeEvent(int w, int h) {
     // Default: resize children?
 }
 
-void Window::mousePressEvent(int x, int y, int button) {}
-void Window::mouseReleaseEvent(int x, int y, int button) {}
-void Window::mouseMoveEvent(int x, int y, int mods) {}
-void Window::keyPressEvent(int key, int mods) {}
-void Window::charEvent(wchar_t c) {}
+void Window::mousePressEvent(int x, int y, int button) {
+    // Track mouse button state
+    if (button >= 0 && button < 3) {
+        m_mouseButtons[button] = true;
+    }
+    m_lastMouseX = x;
+    m_lastMouseY = y;
+    
+    // Notify any registered mouse press callbacks
+    if (m_mousePressCallback) {
+        m_mousePressCallback(x, y, button);
+    }
+}
+
+void Window::mouseReleaseEvent(int x, int y, int button) {
+    // Update button state
+    if (button >= 0 && button < 3) {
+        m_mouseButtons[button] = false;
+    }
+    m_lastMouseX = x;
+    m_lastMouseY = y;
+    
+    // Notify any registered mouse release callbacks
+    if (m_mouseReleaseCallback) {
+        m_mouseReleaseCallback(x, y, button);
+    }
+}
+
+void Window::mouseMoveEvent(int x, int y, int mods) {
+    m_lastMouseX = x;
+    m_lastMouseY = y;
+    m_mouseModifiers = mods;
+    
+    // Notify any registered mouse move callbacks
+    if (m_mouseMoveCallback) {
+        m_mouseMoveCallback(x, y, mods);
+    }
+}
+
+void Window::keyPressEvent(int key, int mods) {
+    // Update key state
+    if (key >= 0 && key < 256) {
+        m_keyStates[key] = true;
+    }
+    m_keyModifiers = mods;
+    
+    // Notify any registered key press callbacks
+    if (m_keyPressCallback) {
+        m_keyPressCallback(key, mods);
+    }
+}
+
+void Window::charEvent(wchar_t c) {
+    // Handle character input (for text entry)
+    if (m_charCallback) {
+        m_charCallback(c);
+    }
+}
 
 void Window::closeEvent() {
     DestroyWindow(hwnd);

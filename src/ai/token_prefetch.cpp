@@ -130,10 +130,11 @@ void TokenPrefetch::InvalidatePrefetch(const std::string& file_path) {
     
     // Remove all results for this file
     for (auto it = result_cache_.begin(); it != result_cache_.end(); ) {
-        // Note: In practice, we'd need to track file_path in PrefetchResult
-        // For now, just invalidate all
-        it->second.is_valid = false;
-        ++it;
+        if (it->second.file_path == file_path) {
+            it = result_cache_.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 

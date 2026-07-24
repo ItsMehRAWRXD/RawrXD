@@ -3210,9 +3210,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # ASM link stubs for missing symbols
         src/core/asm_link_stubs.cpp
         src/core/gguf_d3d12_bridge_stub.cpp
-        src/core/rtp_stubs.cpp
-        src/core/rdna3_stubs.cpp
-        src/core/ollama_provider_stub.cpp
+        # src/core/rtp_stubs.cpp  # REMOVED: Real implementation in src/asm/monolithic/rtp_protocol.cpp
+        # src/core/rdna3_stubs.cpp  # REMOVED: Functions not actually referenced anywhere
+        # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         src/core/gguf_runner_stub.cpp
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
         src/core/subsystem_api_stubs.cpp
@@ -3221,7 +3221,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/pattern_stubs.cpp
         src/core/perf_telemetry_stubs.cpp
         src/core/native_log_stub.cpp
-        src/core/collab_stubs.cpp
+        # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
         src/collab/cursor_widget.cpp
         src/collab/crdt_buffer.cpp
         src/core/mesh_brain_stubs.cpp
@@ -3230,7 +3230,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/hwsynth_stubs.cpp
         src/core/spengine_stubs.cpp
         src/core/model_router_stubs.cpp
-        src/win32app/Win32IDE_private_stubs.cpp
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: Real implementations in Win32IDE_ChatPanel_Ollama.cpp and Win32IDE_SemanticIndex.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp

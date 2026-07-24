@@ -76,7 +76,11 @@ std::string ExplainabilityEngine::nowISO8601() const {
 // Constructor / Destructor
 // ============================================================================
 
-ExplainabilityEngine::ExplainabilityEngine() {}
+ExplainabilityEngine::ExplainabilityEngine()
+    : m_historyRecorder(nullptr)
+    , m_policyEngine(nullptr)
+    , m_logCb(nullptr)
+{}
 ExplainabilityEngine::~ExplainabilityEngine() {}
 
 // ============================================================================

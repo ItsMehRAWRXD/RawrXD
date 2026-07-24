@@ -15,7 +15,28 @@
 
 using namespace RawrXD;
 
-AutonomousFeatureEngine::AutonomousFeatureEngine(void* parent) {}
+AutonomousFeatureEngine::AutonomousFeatureEngine(void* parent)
+    : hybridCloudManager(nullptr)
+    , codebaseEngine(nullptr)
+    , realTimeAnalysisEnabled(false)
+    , analysisIntervalMs(5000)
+    , isRunning(false)
+{
+    // Initialize user profile with defaults
+    userProfile.languagePreferences["cpp"] = 50;
+    userProfile.languagePreferences["python"] = 50;
+    userProfile.averageAcceptanceRate = 0.0;
+    
+    // Initialize suggestion tracking
+    acceptedSuggestionsByType["test"] = 0;
+    acceptedSuggestionsByType["refactor"] = 0;
+    acceptedSuggestionsByType["optimize"] = 0;
+    acceptedSuggestionsByType["security"] = 0;
+    rejectedSuggestionsByType["test"] = 0;
+    rejectedSuggestionsByType["refactor"] = 0;
+    rejectedSuggestionsByType["optimize"] = 0;
+    rejectedSuggestionsByType["security"] = 0;
+}
 AutonomousFeatureEngine::~AutonomousFeatureEngine() {}
 
 void AutonomousFeatureEngine::setHybridCloudManager(HybridCloudManager* manager) {

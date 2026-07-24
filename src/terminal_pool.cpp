@@ -5,7 +5,9 @@
 
 namespace RawrXD {
 
-TerminalPool::TerminalPool() {}
+TerminalPool::TerminalPool()
+    : m_nextId(1)
+{}
 
 TerminalPool::~TerminalPool() {
     std::lock_guard<std::mutex> lock(m_mutex);
