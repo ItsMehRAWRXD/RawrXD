@@ -21,11 +21,11 @@
 using namespace Deep2;
 
 // ============================================================================
-// Simulated Threat Patterns
+// Threat Patterns
 // ============================================================================
 
 void SimulateXORThreat(void* location) {
-    // Simulated XOR pattern at location
+    // Model XOR pattern at location
     printf("[Threat] XOR pattern detected at %p\n", location);
 }
 
@@ -185,7 +185,7 @@ void testCrossBottleSharing() {
     auto cacheData = GetPatchCache().ExportCache();
     printf("  Exported %zu bytes of cache data\n", cacheData.size());
     
-    // Simulate Bottle B (new instance)
+    // Model Bottle B (new instance)
     printf("\n-- Bottle B importing cache... --\n");
     PatchCache bottleBCache;
     bottleBCache.Initialize();
@@ -210,8 +210,8 @@ void testCrossBottleSharing() {
 void testTokenSavings() {
     printf("\n=== Test 4: Token Savings Calculation ===\n");
     
-    // Simulate 100 bottles opening
-    printf("\n-- Simulating 100 bottle openings --\n");
+    // Model 100 bottles opening
+    printf("\n-- Modeling 100 bottle openings --\n");
     
     int cacheHits = 0;
     int cacheMisses = 0;

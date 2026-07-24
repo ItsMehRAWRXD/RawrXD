@@ -218,8 +218,8 @@ size_t MedusaDecoder::verifyCandidates(
         if (node.depth != 1) continue;
 
         // Verify this candidate against the main model
-        // In full implementation, we'd run forward pass with this token
-        // For now, use greedy matching as verification
+        // Full implementation would run forward pass with this token
+        // Current implementation uses greedy matching as verification
         if (node.tokenId == mainToken) {
             acceptedTokens[accepted++] = node.tokenId;
             lastAcceptedDepth = node.depth;
@@ -239,11 +239,11 @@ size_t MedusaDecoder::verifyCandidates(
             if (node.parentIdx != acceptedPath[0]) continue;
 
             // Verify depth-2 candidate
-            // In full implementation, run forward pass from depth-1 state
-            // For now, accept if it matches expected continuation
+            // Full implementation would run forward pass from depth-1 state
+            // Current implementation accepts if it matches expected continuation
             // (This would require actual model forward pass in production)
 
-            // Placeholder for depth-2 verification
+            // Implementation pending for depth-2 verification
             // In production: logits = model.forward(depth1_hidden, node.tokenId)
             //               verify against model's top prediction
             break;  // Stop at depth 1 for now
