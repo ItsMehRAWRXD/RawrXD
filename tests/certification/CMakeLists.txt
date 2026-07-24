@@ -6,6 +6,10 @@ cmake_minimum_required(VERSION 3.20)
 # Certification test executable
 add_executable(test_certification_framework
     test_certification_framework.cpp
+    test_manifest_signer.cpp
+    test_fault_injection.cpp
+    test_supply_chain_provenance.cpp
+    test_continuous_certification.cpp
 )
 
 # Include directories
