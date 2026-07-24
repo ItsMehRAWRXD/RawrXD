@@ -10,8 +10,11 @@
 #include <filesystem>
 #include <cstring>
 #include <algorithm>
+#include <nlohmann/json.hpp>
 
 namespace RawrXD::Settings::Batch3 {
+
+    using json = nlohmann::json;
 
     /// Item 39: Load Settings from Disk
     /// - Read from RawrXD_Settings.sovereign
@@ -36,22 +39,25 @@ namespace RawrXD::Settings::Batch3 {
         buffer << file.rdbuf();
         std::string configJson = buffer.str();
 
-        // Parse JSON and populate outSettings
-        // Simplified parsing (real version uses nlohmann::json)
-        size_t pos = 0;
-        while ((pos = configJson.find("\"", pos)) != std::string::npos) {
-            size_t keyStart = ++pos;
-            pos = configJson.find("\"", pos);
-            std::string key = configJson.substr(keyStart, pos - keyStart);
-
-            pos = configJson.find(":", pos);
-            pos = configJson.find("\"", pos);
-            size_t valStart = ++pos;
-            pos = configJson.find("\"", pos);
-            std::string value = configJson.substr(valStart, pos - valStart);
-
-            outSettings[key] = value;
-            pos++;
+        // Parse JSON using nlohmann/json library
+        try {
+            json j = json::parse(configJson);
+            for (auto& [key, value] : j.items()) {
+                if (value.is_string()) {
+                    outSettings[key] = value.get<std::string>();
+                } else if (value.is_number_integer()) {
+                    outSettings[key] = std::to_string(value.get<int>());
+                } else if (value.is_number_float()) {
+                    outSettings[key] = std::to_string(value.get<double>());
+                } else if (value.is_boolean()) {
+                    outSettings[key] = value.get<bool>() ? "true" : "false";
+                } else {
+                    outSettings[key] = value.dump();
+                }
+            }
+        } catch (const json::exception& e) {
+            // JSON parsing failed, return false
+            return false;
         }
 
         return true;

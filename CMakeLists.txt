@@ -3214,20 +3214,21 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_004.cpp  # ADDED: Provides asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
         src/core/unlinked_symbols_batch_006.cpp  # ADDED: Provides asm_mesh_init, asm_mesh_quorum_vote, asm_mesh_crdt_merge
-        src/core/unlinked_symbols_batch_007.cpp  # ADDED: Provides asm_mesh_fedavg_aggregate, asm_mesh_zkp_generate
-        src/core/unlinked_symbols_batch_008.cpp
+        src/core/unlinked_symbols_batch_007.cpp  # ADDED: Provides asm_mesh_fedavg_aggregate, asm_mesh_zkp_generate, asm_speciator_*
+        src/core/unlinked_symbols_batch_008.cpp  # ADDED: Provides asm_neural_*, asm_hwsynth_*
+        src/core/unlinked_symbols_batch_009.cpp  # ADDED: Provides asm_hwsynth_profile_dataflow, asm_hwsynth_predict_perf
         src/core/unlinked_symbols_batch_010.cpp  # ADDED: Provides SO_InitializeVulkan
         src/core/unlinked_symbols_batch_011.cpp
         src/core/unlinked_symbols_batch_012.cpp
-        src/core/unlinked_symbols_batch_018.cpp
+        src/core/unlinked_symbols_batch_018.cpp  # ADDED: Provides asm_gguf_loader_close, asm_lsp_bridge_shutdown, asm_spengine_cpu_optimize
         src/core/unlinked_symbols_batch_019.cpp
         src/core/unlinked_symbols_batch_020.cpp
 
         # ASM link stubs for missing symbols
-        src/core/asm_link_stubs.cpp
+        # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)
         src/core/gguf_d3d12_bridge_stub.cpp
-        src/core/rtp_stubs.cpp
-        src/core/rdna3_stubs.cpp
+        # src/core/rtp_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (RTP_* functions)
+        src/core/rdna3_stubs.cpp  # KEPT: No real implementations found for RDNA3_* functions
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
@@ -3235,9 +3236,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
         # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
         # src/core/pattern_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_019.cpp (find_pattern_asm)
-        src/core/perf_telemetry_stubs.cpp
+        # src/core/perf_telemetry_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_perf_init, asm_perf_begin, asm_perf_end), batch_020.cpp
         # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/native_log_stub.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp
+        # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
+        # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
+        # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        # src/core/spengine_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp (asm_spengine_cpu_optimize)
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
         src/collab/cursor_widget.cpp
         src/collab/crdt_buffer.cpp
