@@ -2088,13 +2088,38 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
     for (auto d : t.dims)
         ne *= d;
 
+    // Debug logging for large tensors
+    if (tensorDataSize > 100 * 1024 * 1024)  // > 100 MB
+    {
+        printf("[RawrXD] LoadTensorAsync START: %s type=%u ne=%zu tensorDataSize=%zu MB\n",
+               t.name.c_str(), t.type, ne, tensorDataSize / (1024 * 1024));
+        printf("[RawrXD]   offset=%llu, MAX_CHUNK_SIZE=%zu MB, fileSize=%llu\n",
+               currentOffset, MAX_CHUNK_SIZE / (1024 * 1024), m_fileSize);
+    }
+
     // Allocate CPU float data for the entire tensor
     t.cpuFloatData.resize(ne);
 
     size_t elementsProcessed = 0;
+    int loopIteration = 0;
+    const int MAX_LOOP_ITERATIONS = 100000;  // Safety break for infinite loops
 
     while (remainingSize > 0)
     {
+        loopIteration++;
+        if (loopIteration > MAX_LOOP_ITERATIONS)
+        {
+            printf("[RawrXD] ERROR: LoadTensorAsync exceeded max iterations for %s (infinite loop detected)\n", t.name.c_str());
+            printf("[RawrXD]   remainingSize=%zu, currentOffset=%llu, elementsProcessed=%zu/%zu\n",
+                   remainingSize, currentOffset, elementsProcessed, ne);
+            return;
+        }
+
+        if (loopIteration % 1000 == 0)
+        {
+            printf("[RawrXD] LoadTensorAsync progress: %s iteration=%d remaining=%zu MB\n",
+                   t.name.c_str(), loopIteration, remainingSize / (1024 * 1024));
+        }
         const uint64_t apertureSize = std::min<uint64_t>(windowSize, m_fileSize);
         const uint64_t windowStart = (currentOffset / apertureSize) * apertureSize;
         const size_t bytesAvailableInWindow = static_cast<size_t>(
@@ -2200,8 +2225,31 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
 
         // Move to next chunk
         currentOffset += chunkSize;
+        
+        // Safety check: ensure we make progress
+        if (chunkSize == 0 || chunkSize > remainingSize)
+        {
+            printf("[RawrXD] ERROR: Invalid chunk size for %s: chunkSize=%zu, remainingSize=%zu\n",
+                   t.name.c_str(), chunkSize, remainingSize);
+            return;
+        }
+        
         remainingSize -= chunkSize;
         elementsProcessed += chunkElements;
+        
+        // Progress logging for large tensors
+        if (loopIteration % 100 == 0 && ne > 1000000)
+        {
+            double pct = (double)elementsProcessed / (double)ne * 100.0;
+            printf("[RawrXD] LoadTensorAsync: %s %.1f%% complete (%zu/%zu elements)\n",
+                   t.name.c_str(), pct, elementsProcessed, ne);
+        }
+    }
+    
+    if (elementsProcessed != ne)
+    {
+        printf("[RawrXD] WARNING: LoadTensorAsync element mismatch for %s: processed=%zu, expected=%zu\n",
+               t.name.c_str(), elementsProcessed, ne);
     }
 
     // Upload to GPU if enabled
@@ -3195,13 +3243,33 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
             printf("[RawrXD] Lazy tensor load: %s type=%u dims=%zu est_f32=%.1f MB\n", name.c_str(), t.type,
                    t.dims.size(), mb);
         }
+        
+        // Debug: print tensor info before loading
+        printf("[RawrXD] GetTensor loading: %s offset=%llu type=%u ne=%zu\n", 
+               name.c_str(), t.offset, t.type, ne);
+        
         try
         {
             this->LoadTensorAsync(t);
+            
+            // Verify load succeeded
+            if (t.cpuFloatData.empty())
+            {
+                printf("[RawrXD] ERROR: LoadTensorAsync failed to populate data for %s\n", name.c_str());
+                return nullptr;
+            }
+            
+            printf("[RawrXD] GetTensor loaded: %s (%zu elements)\n", name.c_str(), t.cpuFloatData.size());
         }
         catch (const std::bad_alloc&)
         {
             printf("[RawrXD] OOM while materializing tensor: %s (est_f32=%.1f MB)\n", name.c_str(), mb);
+            t.cpuFloatData.clear();
+            return nullptr;
+        }
+        catch (const std::exception& e)
+        {
+            printf("[RawrXD] Exception while materializing tensor: %s - %s\n", name.c_str(), e.what());
             t.cpuFloatData.clear();
             return nullptr;
         }

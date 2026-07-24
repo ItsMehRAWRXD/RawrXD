@@ -1114,6 +1114,21 @@ set(SOURCES
     src/core/input_guard_slicer.cpp
 
     # ═══════════════════════════════════════════════════════════════════
+    # VAL-050 to VAL-082: Certification Framework (Production Trust Infrastructure)
+    # ═══════════════════════════════════════════════════════════════════
+    src/certification/manifest_signer.cpp
+    src/certification/supply_chain_provenance.cpp
+    src/certification/fault_injection.cpp
+    src/certification/continuous_certification_runner.cpp
+    src/certification/external_verifier.cpp
+    src/certification/artifact_compatibility.cpp
+    src/certification/cross_platform_verification.cpp
+    src/certification/reproducible_build_proof.cpp
+    src/certification/certification_revocation.cpp
+    src/certification/evidence_verifier.cpp
+    src/certification/threat_boundary_tests.cpp
+
+    # ═══════════════════════════════════════════════════════════════════
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
     # ═══════════════════════════════════════════════════════════════════
     src/test_harness/replay_fixture.cpp

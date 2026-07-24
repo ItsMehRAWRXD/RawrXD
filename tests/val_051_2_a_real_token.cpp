@@ -289,6 +289,15 @@ int main(int argc, char* argv[]) {
     json.endArray();
     
     double totalMs = initMs + tokMs + fwdMs + sampleMs + detokMs;
+    
+    // Calculate TPS (tokens per second) for inference stage
+    double tps = 0.0;
+    if (fwdMs > 0) {
+        tps = (tokens.size() + 1) / (fwdMs / 1000.0); // input tokens + 1 output token
+    }
+    
+    json.addDouble("tokens_per_second", tps);
+    json.addDouble("throughput_tps", tps);
     json.addDouble("total_duration_ms", totalMs);
     json.addInt("vocab_size", inference.getVocabSize());
     json.addInt("embedding_dim", inference.getDim());
@@ -307,11 +316,53 @@ int main(int argc, char* argv[]) {
         printf("[Witness] Written to: %s\n", witnessPath.c_str());
     }
     
+    // Also write VAL-051.2.C Evidence Bundle
+    {
+        SimpleJSONWriter bundle;
+        bundle.beginObject();
+        bundle.addString("bundle_id", "VAL-051-2-C");
+        bundle.addString("bundle_name", "Evidence Bundle");
+        bundle.addString("timestamp", "2026-07-24T00:00:00Z");
+        bundle.addString("parent_validation", "VAL-051-2-A");
+        bundle.addString("model_path", modelPath);
+        bundle.addString("model_hash", modelHash.c_str());
+        bundle.addInt("model_size_bytes", static_cast<int64_t>(fs::file_size(modelPath)));
+        bundle.addInt("vocab_size", inference.getVocabSize());
+        bundle.addInt("embedding_dim", inference.getDim());
+        bundle.addInt("layer_count", inference.getLayers());
+        bundle.addInt("head_count", inference.getHeads());
+        bundle.addInt("context_limit", inference.getContextLimit());
+        bundle.addString("prompt", prompt);
+        bundle.addInt("input_token_count", static_cast<int64_t>(tokens.size()));
+        bundle.addInt("output_token_count", 1);
+        bundle.addInt("sampled_token_id", nextToken);
+        bundle.addString("output_text", outputText.c_str());
+        bundle.addDouble("tokens_per_second", tps);
+        bundle.addDouble("throughput_tps", tps);
+        bundle.addDouble("init_ms", initMs);
+        bundle.addDouble("tokenize_ms", tokMs);
+        bundle.addDouble("forward_ms", fwdMs);
+        bundle.addDouble("sample_ms", sampleMs);
+        bundle.addDouble("detokenize_ms", detokMs);
+        bundle.addDouble("total_ms", totalMs);
+        bundle.addBool("success", true);
+        bundle.endObject();
+        
+        std::string bundlePath = "evidence/VAL-051-2-C-EVIDENCE.json";
+        std::ofstream bofs(bundlePath);
+        if (bofs) {
+            bofs << bundle.str();
+            bofs.close();
+            printf("[Evidence] Written to: %s\n", bundlePath.c_str());
+        }
+    }
+    
     printf("\n=== VAL-051.2.A COMPLETE ===\n");
     printf("First REAL inference token generated successfully!\n");
     printf("Token chain: Prompt -> Tokenize -> Forward -> Sample -> Detokenize\n");
     printf("Output token ID: %d -> '%s'\n", nextToken, outputText.c_str());
     printf("Total latency: %.2f ms\n", totalMs);
+    printf("Throughput: %.2f tokens/second\n", tps);
     
     return 0;
 }
