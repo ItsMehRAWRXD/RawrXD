@@ -3252,8 +3252,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
         src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
-        src/win32app/Win32IDE_SemanticIndex.cpp  # ADDED: Real implementation for showSemanticIndex()
-        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_019.cpp (HandleCopilotSend_Ollama, initializeChatPanelOllama) and Win32IDE_SemanticIndex.cpp (showSemanticIndex)
+        # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
+        src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
