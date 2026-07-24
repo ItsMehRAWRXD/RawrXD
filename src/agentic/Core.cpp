@@ -709,13 +709,183 @@ private:
 
 class SubAgentManagerImpl : public SubAgentManager {
 public:
-    bool Initialize() override { return true; }
-    void Shutdown() override {}
-    std::string CreateSubAgent(const SubAgentConfig& config) override { return "subagent-0"; }
-    bool DestroySubAgent(const std::string& agentId) override { return true; }
-    std::optional<SubAgentInfo> GetSubAgentInfo(const std::string& agentId) override { return std::nullopt; }
-    std::vector<SubAgentInfo> GetAllSubAgents() override { return {}; }
-    bool SendMessageToSubAgent(const std::string& agentId, const std::string& message) override { return false; }
+    SubAgentManagerImpl() : nextAgentId_(1), shutdown_(false) {}
+    
+    bool Initialize() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        subAgents_.clear();
+        messageQueues_.clear();
+        nextAgentId_ = 1;
+        shutdown_ = false;
+        return true; 
+    }
+    
+    void Shutdown() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        shutdown_ = true;
+        
+        // Signal all subagents to shutdown
+        for (auto& [id, info] : subAgents_) {
+            info.state = SubAgentState::ShuttingDown;
+        }
+        
+        // Clear message queues
+        messageQueues_.clear();
+        subAgents_.clear();
+    }
+    
+    std::string CreateSubAgent(const SubAgentConfig& config) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        if (shutdown_) {
+            return "";
+        }
+        
+        // Check max subagents limit
+        if (subAgents_.size() >= 100) {
+            OutputDebugStringA("[SubAgentManager] Max subagents limit reached\n");
+            return "";
+        }
+        
+        std::string agentId = "subagent-" + std::to_string(nextAgentId_++);
+        
+        SubAgentInfo info;
+        info.id = agentId;
+        info.name = config.name.empty() ? agentId : config.name;
+        info.type = config.type;
+        info.state = SubAgentState::Initializing;
+        info.createdAt = std::chrono::steady_clock::now();
+        info.config = config;
+        
+        // Initialize message queue for this agent
+        messageQueues_[agentId] = std::queue<std::string>();
+        
+        // Store the subagent
+        subAgents_[agentId] = std::move(info);
+        
+        // Simulate initialization
+        subAgents_[agentId].state = SubAgentState::Idle;
+        
+        OutputDebugStringA(("[SubAgentManager] Created subagent: " + agentId + "\n").c_str());
+        
+        return agentId;
+    }
+    
+    bool DestroySubAgent(const std::string& agentId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto it = subAgents_.find(agentId);
+        if (it == subAgents_.end()) {
+            return false;
+        }
+        
+        // Set state to shutting down
+        it->second.state = SubAgentState::ShuttingDown;
+        
+        // Remove message queue
+        messageQueues_.erase(agentId);
+        
+        // Remove subagent
+        subAgents_.erase(it);
+        
+        OutputDebugStringA(("[SubAgentManager] Destroyed subagent: " + agentId + "\n").c_str());
+        
+        return true;
+    }
+    
+    std::optional<SubAgentInfo> GetSubAgentInfo(const std::string& agentId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto it = subAgents_.find(agentId);
+        if (it == subAgents_.end()) {
+            return std::nullopt;
+        }
+        
+        return it->second;
+    }
+    
+    std::vector<SubAgentInfo> GetAllSubAgents() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        std::vector<SubAgentInfo> result;
+        result.reserve(subAgents_.size());
+        
+        for (const auto& [id, info] : subAgents_) {
+            result.push_back(info);
+        }
+        
+        return result;
+    }
+    
+    bool SendMessageToSubAgent(const std::string& agentId, const std::string& message) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Check if subagent exists
+        auto it = subAgents_.find(agentId);
+        if (it == subAgents_.end()) {
+            return false;
+        }
+        
+        // Check if subagent is in a valid state
+        if (it->second.state != SubAgentState::Idle && 
+            it->second.state != SubAgentState::Busy) {
+            return false;
+        }
+        
+        // Add message to queue
+        auto queueIt = messageQueues_.find(agentId);
+        if (queueIt == messageQueues_.end()) {
+            return false;
+        }
+        
+        // Limit queue size
+        if (queueIt->second.size() >= 100) {
+            queueIt->second.pop(); // Remove oldest message
+        }
+        
+        queueIt->second.push(message);
+        
+        // Update state to busy
+        it->second.state = SubAgentState::Busy;
+        
+        // Simulate message processing (in real implementation, would notify worker thread)
+        it->second.lastActivity = std::chrono::steady_clock::now();
+        
+        return true;
+    }
+    
+    // Additional method to check for messages (would be called by subagent)
+    std::optional<std::string> GetNextMessage(const std::string& agentId) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto it = messageQueues_.find(agentId);
+        if (it == messageQueues_.end() || it->second.empty()) {
+            return std::nullopt;
+        }
+        
+        std::string message = it->second.front();
+        it->second.pop();
+        
+        return message;
+    }
+    
+    // Update subagent state
+    void SetSubAgentState(const std::string& agentId, SubAgentState state) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto it = subAgents_.find(agentId);
+        if (it != subAgents_.end()) {
+            it->second.state = state;
+            it->second.lastActivity = std::chrono::steady_clock::now();
+        }
+    }
+
+private:
+    mutable std::mutex mutex_;
+    std::unordered_map<std::string, SubAgentInfo> subAgents_;
+    std::unordered_map<std::string, std::queue<std::string>> messageQueues_;
+    uint64_t nextAgentId_;
+    bool shutdown_;
 };
 
 // ============================================================================
