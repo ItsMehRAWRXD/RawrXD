@@ -316,6 +316,63 @@ if(WIN32)
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 endif()
 
+# =============================================================================
+# OMEGA-1 Bridge Test Harness
+# Validates IAT slots 64-75 for self-mutating engine integration
+# =============================================================================
+if(WIN32)
+    add_executable(test_omega1_bridge
+        tests/test_omega1_bridge.cpp
+        src/omega1_modules/OmegaPowerShellBridge.cpp
+    )
+    set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    target_include_directories(test_omega1_bridge PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/omega1_modules
+    )
+    if(MSVC)
+        target_link_directories(test_omega1_bridge PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(test_omega1_bridge PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    target_link_libraries(test_omega1_bridge PRIVATE
+        Omega1Engine
+        kernel32
+        user32
+        gdi32
+        winspool
+        shell32
+        ole32
+        oleaut32
+        uuid
+        comdlg32
+        advapi32
+        version
+        ws2_32
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        target_link_libraries(test_omega1_bridge PRIVATE
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
+        )
+    endif()
+    message(STATUS "OMEGA-1 Bridge Test Harness configured")
+endif()
+
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -1564,6 +1621,35 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# OMEGA-1 Self-Mutating Engine + PowerShell Bridge
+# IAT Slots 64-75: Self-mutation, reflective execution, PowerShell integration
+# =============================================================================
+set(OMEGA1_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules")
+
+set(OMEGA1_SOURCES
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp
+)
+
+set(OMEGA1_HEADERS
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.h
+)
+
+# OMEGA-1 Engine as static library
+add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
+
+target_include_directories(Omega1Engine PUBLIC
+    ${OMEGA1_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_definitions(Omega1Engine PRIVATE
+    OMEGA1_BUILDING=1
+    RAWRXD_OMEGA1_ENABLED=1
+)
+
+set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
 add_subdirectory(src/reverse_engineering)
@@ -1574,10 +1660,23 @@ if(WIN32)
     add_dependencies(RawrEngine regen-ssot-beacons verify-ssot-ext-ownership)
 endif()
 
+# ═════════════════════════════════════════════════════════════════════════════
+# OMEGA-1 Post-Build Manifest Generation
+# ═════════════════════════════════════════════════════════════════════════════
+if(WIN32)
+    add_custom_command(TARGET RawrEngine POST_BUILD
+        COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
+                -BinaryPath $<TARGET_FILE:RawrEngine>
+                -OutputPath ${CMAKE_BINARY_DIR}/omega1_manifest.json
+        COMMENT "Generating OMEGA-1 manifest for RawrEngine"
+        VERBATIM
+    )
+endif()
+
 # Lane B: curated sources already include required stubs.
 
-# Link RE library into RawrEngine
-target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library)
+# Link RE library and OMEGA-1 Engine into RawrEngine
+target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library Omega1Engine)
 
 target_include_directories(RawrEngine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -1603,6 +1702,7 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/swarm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1624,6 +1724,7 @@ target_compile_definitions(RawrEngine PRIVATE
     RAWRXD_STANDALONE_MAIN=1
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
     $<$<BOOL:${_RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}>:RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=1>
+    RAWRXD_OMEGA1_ENABLED=1
 )
 
 # Lane B: keep RawrEngine minimal (no debugger/ollama shims).
@@ -1840,7 +1941,20 @@ if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
 endif()
 
-target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library)
+# ═════════════════════════════════════════════════════════════════════════════
+# OMEGA-1 Post-Build Manifest Generation for Gold
+# ═════════════════════════════════════════════════════════════════════════════
+if(WIN32)
+    add_custom_command(TARGET RawrXD_Gold POST_BUILD
+        COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
+                -BinaryPath $<TARGET_FILE:RawrXD_Gold>
+                -OutputPath ${CMAKE_BINARY_DIR}/gold/omega1_manifest.json
+        COMMENT "Generating OMEGA-1 manifest for RawrXD_Gold"
+        VERBATIM
+    )
+endif()
+
+target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine)
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -1864,6 +1978,7 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1881,6 +1996,7 @@ target_compile_definitions(RawrXD_Gold PRIVATE
     RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=${_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}
     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
+    RAWRXD_OMEGA1_ENABLED=1
 )
 if(RAWR_HAS_MASM)
     target_compile_definitions(RawrXD_Gold PRIVATE HAS_BRUTAL_GZIP_MASM=1)
@@ -6194,8 +6310,13 @@ if(NOT TARGET rawrxd)
         src/rawrxd_transformer.cpp
         src/rawrxd_sampler.cpp
         src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
         src/core/inference_witness.cpp
         src/core/swarm_scheduler.cpp
+        src/core/memory_stubs.cpp
+        src/core/link_stubs.cpp
+        src/core/gguf_swarm_plan_builder.cpp
+        src/logging/Logger.cpp
     )
 
 target_include_directories(rawrxd PRIVATE

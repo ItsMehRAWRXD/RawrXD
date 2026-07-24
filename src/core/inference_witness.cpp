@@ -20,6 +20,10 @@
 namespace RawrXD {
 namespace Evidence {
 
+// Forward declarations
+std::string EscapeJsonString(const std::string& input);
+std::string StageToString(InferenceStage stage);
+
 // ============================================================================
 // InferenceWitness Methods
 // ============================================================================

@@ -59,7 +59,7 @@ typedef struct
 #include "rawrxd_sampler.h"
 #include "rawrxd_tokenizer.h"
 #include "rawrxd_transformer.h"
-#include "swarm_scheduler.hpp"
+#include "core/swarm_scheduler.hpp"
 
 /// Snapshot of MoE grouped pack cache + async prepack counters (Win32IDE HUD / staging telemetry).
 struct MoEPackHudMetrics
