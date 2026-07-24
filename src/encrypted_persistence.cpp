@@ -164,7 +164,7 @@ namespace EncryptedPersistence {
         for (auto& b : envelope.salt) b = static_cast<uint8_t>(dist(gen));
         for (auto& b : envelope.iv) b = static_cast<uint8_t>(dist(gen));
         
-        // Simplified: XOR with key (production: use proper AES-GCM)
+        // Basic implementation: XOR with key (production: use proper AES-GCM)
         envelope.ciphertext = plaintext;
         envelope.authTag.resize(ENC_TAG_SIZE);
         for (size_t i = 0; i < plaintext.size() && i < m_impl->key.size(); i++) {

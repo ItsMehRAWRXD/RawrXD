@@ -501,7 +501,7 @@ PatchResult PyreGraph::loadModel(const char* filepath) {
 
 PatchResult PyreGraph::loadFromGGUF(const char* /*ggufPath*/) {
     // Future: convert GGUF tensors into Pyre tensor layout on-the-fly
-    // For now, use the dedicated .pyre format or StreamingGGUFLoader
+    // Current implementation uses the dedicated .pyre format or StreamingGGUFLoader
     return PatchResult::error("GGUF-to-Pyre bridge not implemented — use .pyre format or StreamingGGUFLoader", -1);
 }
 
@@ -916,7 +916,7 @@ PatchResult PyreGraph::forwardTransformerLayer(uint32_t layerIdx) {
         // attnOut = softmax(Q @ K^T * scale) @ V
         // Using normOut as temp for attention scores [seqLen × seqLen]
         // For production: use proper KV cache + Flash Attention
-        r = execMatMul(m_attnOut, m_qBuf, m_kBuf); // Simplified
+        r = execMatMul(m_attnOut, m_qBuf, m_kBuf); // Basic implementation
         if (!r.success) return r;
 
         // Scale

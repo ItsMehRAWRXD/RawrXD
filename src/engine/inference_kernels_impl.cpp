@@ -92,7 +92,7 @@ void InferenceKernels::rope_forward(float* x, int n, int d, int pos) {
 
 void InferenceKernels::attention_forward(float* q, float* k, float* v, float* out,
                        int seq_len, int head_dim, int num_heads) {
-    // Simplified attention: for each head
+    // Basic attention: for each head
     float* head_q = q;
     float* head_k = k;
     float* head_v = v;

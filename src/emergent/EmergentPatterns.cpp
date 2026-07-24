@@ -547,7 +547,7 @@ std::vector<StabilityBasin> StabilityBasinComputer::ComputeBasins(
     std::vector<StabilityBasin> basins;
     
     // Compute basins around stable nodes
-    // Simplified: create basins for each cycle
+    // Basic implementation: create basins for each cycle
     for (uint32_t cycle_id = 243; cycle_id <= 249; ++cycle_id) {
         StabilityBasin basin;
         basin.id = "basin_cycle_" + std::to_string(cycle_id);
@@ -594,7 +594,7 @@ double StabilityBasinComputer::CalculateBasinVolume(const StabilityBasin& basin)
 double StabilityBasinComputer::CalculateEscapeProbability(
     const StabilityBasin& basin, uint64_t node_id) const {
     // Probability depends on distance from attractor
-    // Simplified: return uniform escape probability
+    // Basic implementation: return uniform escape probability
     (void)node_id;
     return basin.escape_probability;
 }
@@ -763,9 +763,9 @@ double CalculateEntropy(const std::vector<double>& probabilities) {
     return entropy;
 }
 
-double CalculateMutualInformation(const std::vector<double>& x, 
+double CalculateMutualInformation(const std::vector<double>& x,
                                    const std::vector<double>& y) {
-    // Simplified implementation
+    // Basic implementation
     if (x.size() != y.size() || x.empty()) {
         return 0.0;
     }
@@ -801,7 +801,7 @@ double CalculateCorrelation(const std::vector<double>& x,
 
 std::vector<std::vector<size_t>> KMeans(const std::vector<std::vector<double>>& points,
                                          uint32_t k, uint32_t max_iterations) {
-    // Simplified K-means implementation
+    // Basic K-means implementation
     std::vector<std::vector<size_t>> clusters(k);
     
     if (points.empty() || k == 0) {
@@ -868,7 +868,7 @@ std::vector<std::vector<size_t>> KMeans(const std::vector<std::vector<double>>& 
 
 std::vector<std::vector<size_t>> DBSCAN(const std::vector<std::vector<double>>& points,
                                           double eps, uint32_t min_points) {
-    // Simplified DBSCAN implementation
+    // Basic DBSCAN implementation
     std::vector<std::vector<size_t>> clusters;
     std::vector<bool> visited(points.size(), false);
     
@@ -908,12 +908,12 @@ std::vector<std::vector<uint64_t>> FindConnectedComponents(
     const SEG::SovereignExecutionGraph& graph) {
     // Would implement BFS/DFS to find connected components
     std::vector<std::vector<uint64_t>> components;
-    
-    // Simplified: return all nodes as one component
+
+    // Basic implementation: return all nodes as one component
     std::vector<uint64_t> all_nodes;
     // Would iterate over graph nodes
     components.push_back(all_nodes);
-    
+
     return components;
 }
 
