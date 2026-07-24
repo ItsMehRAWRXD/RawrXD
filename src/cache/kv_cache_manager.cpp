@@ -365,8 +365,9 @@ CacheCompressor::CacheCompressor()
 }
 
 void CacheCompressor::quantizeFP16(std::vector<float>& data) {
-    // Placeholder for FP16 quantization
-    // In production, this would convert float32 to float16
+    // FP16 quantization implementation pending
+    // Would convert float32 to float16 for memory savings
+    (void)data;
     compression_ratio_ = 0.5f;
 }
 
