@@ -3207,6 +3207,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/AgentOllamaClient.cpp
 
+        # Unlinked symbols batches - provide real implementations for link closure
+        src/core/unlinked_symbols_batch_001.cpp
+        src/core/unlinked_symbols_batch_003.cpp
+        src/core/unlinked_symbols_batch_005.cpp
+        src/core/unlinked_symbols_batch_006.cpp
+        src/core/unlinked_symbols_batch_007.cpp
+        src/core/unlinked_symbols_batch_008.cpp
+        src/core/unlinked_symbols_batch_011.cpp
+        src/core/unlinked_symbols_batch_012.cpp
+        src/core/unlinked_symbols_batch_018.cpp
+        src/core/unlinked_symbols_batch_019.cpp
+        src/core/unlinked_symbols_batch_020.cpp
+
         # ASM link stubs for missing symbols
         src/core/asm_link_stubs.cpp
         src/core/gguf_d3d12_bridge_stub.cpp

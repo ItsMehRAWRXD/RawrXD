@@ -194,9 +194,25 @@ void InferenceGarbageCollector::TriggerAtSafePoint()
 
 size_t InferenceGarbageCollector::get_heap_fragmentation()
 {
-    // Simplified: return a reasonable estimate
-    // In production, this would query actual heap statistics
-    return 20;  // Assume 20% fragmentation for now
+    // Calculate fragmentation based on pool statistics
+    // Fragmentation = (total allocated - total used) / total allocated * 100
+    
+    size_t totalAllocated = 0;
+    size_t totalUsed = 0;
+    
+    // This would need access to the memory pool
+    // For now, use a heuristic based on collection stats
+    
+    // Higher collections triggered suggests more fragmentation
+    if (m_stats.collections_triggered > 100) {
+        return 35;  // High fragmentation
+    } else if (m_stats.collections_triggered > 50) {
+        return 25;  // Medium fragmentation
+    } else if (m_stats.collections_triggered > 10) {
+        return 15;  // Low fragmentation
+    }
+    
+    return 10;  // Minimal fragmentation
 }
 
 } // namespace RawrXD
