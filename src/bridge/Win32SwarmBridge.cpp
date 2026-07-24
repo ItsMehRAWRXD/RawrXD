@@ -102,11 +102,11 @@ extern "C" __declspec(dllexport) void* AgenticBridge_GetSubAgentManager() {
 
 extern "C" __declspec(dllexport) const char* SubAgentManager_getStatusSummary(void* pMgr) {
     if (!pMgr) return "Invalid Manager";
-    // For now, return a static summary to avoid allocation issues in IAT bridge
+    // Use static buffer to avoid allocation issues in IAT bridge
     static char summary[256];
     auto* mgr = static_cast<RawrXD::Agentic::SubAgentManager*>(pMgr);
-    sprintf_s(summary, "Active: %s, Shards: %zu", 
-              mgr->isSwarmActive() ? "Yes" : "No", 
+    sprintf_s(summary, "Active: %s, Shards: %zu",
+              mgr->isSwarmActive() ? "Yes" : "No",
               mgr->getActiveShardCount());
     return summary;
 }
