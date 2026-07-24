@@ -3,8 +3,6 @@
 #include "cursor_widget.h"
 #include <windows.h>
 
-namespace RawrXD {
-
 CursorWidget::CursorWidget(void* parent)
 {
     (void)parent;
@@ -25,5 +23,3 @@ void CursorWidget::removeCursor(const std::string& userId)
         InvalidateRect((HWND)m_handle, nullptr, TRUE);
     }
 }
-
-} // namespace RawrXD

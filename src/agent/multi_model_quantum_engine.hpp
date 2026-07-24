@@ -500,6 +500,13 @@ private:
     std::vector<std::string> select_models_for_request(const MultiModelRequest& request);
     ModelExecutionResult execute_single_model(const std::string& model_id, const MultiModelRequest& request);
     
+    // Backend execution methods
+    bool ExecuteLocalGGUF(const ModelConfiguration& config, const InferenceRequest& request, InferenceResponse& response);
+    bool ExecuteOllama(const ModelConfiguration& config, const InferenceRequest& request, InferenceResponse& response);
+    bool ExecuteOpenAI(const ModelConfiguration& config, const InferenceRequest& request, InferenceResponse& response);
+    bool ExecuteClaude(const ModelConfiguration& config, const InferenceRequest& request, InferenceResponse& response);
+    uint32_t CalculateQuantumOptimizations(const InferenceResponse& response);
+    
     void worker_thread_function();
     void health_monitor_function();
     

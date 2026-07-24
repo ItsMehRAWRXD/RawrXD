@@ -4,8 +4,6 @@
 #include <chrono>
 #include <algorithm>
 
-namespace RawrXD {
-
 CRDTBuffer::CRDTBuffer()
     : m_siteId(generateSiteId()), m_logicalClock(0)
 {
@@ -154,6 +152,4 @@ void CRDTBuffer::deleteText(int position, int length)
     // Emit operation for replication
     operationGenerated(oss.str());
 }
-
-} // namespace RawrXD
 
