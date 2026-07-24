@@ -155,3 +155,5 @@ void CRDTBuffer::deleteText(int position, int length)
     operationGenerated(oss.str());
 }
 
+} // namespace RawrXD
+
