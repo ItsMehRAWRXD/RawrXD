@@ -75,15 +75,15 @@ bool IDEHotpatchIntegration::RequestHotpatch(const std::string& modelPath) {
                          "RawrXD Hotpatch Error", MB_OK | MB_ICONERROR);
         }
         
-        // TODO: Wire to telemetry pipeline
-        // Telemetry::LogEvent("HOTPATCH_VALIDATION_FAILED", {{"path", modelPath}, {"error", GGUFValidator::ErrorToString(validation.error())}});
+        // Log to telemetry pipeline via IDELogger
+        LOG_ERROR("HOTPATCH_VALIDATION_FAILED: path=" + modelPath + 
+                  " error=" + std::string(GGUFValidator::ErrorToString(validation.error())));
         
         return false;
     }
     
     printf("[IDEHotpatchIntegration] GGUF validation passed\n");
-    // TODO: Wire to telemetry pipeline
-    // Telemetry::LogEvent("HOTPATCH_VALIDATION_PASSED", {{"path", modelPath}});
+    LOG_INFO("HOTPATCH_VALIDATION_PASSED: path=" + modelPath);
     
     // Phase 6.6: Architecture compatibility gate
     std::string incomingArch = GGUFValidator::ExtractArchitecture(modelPath);
@@ -103,8 +103,8 @@ bool IDEHotpatchIntegration::RequestHotpatch(const std::string& modelPath) {
                          "RawrXD Security Gate Failure", MB_OK | MB_ICONERROR);
         }
         
-        // TODO: Wire to telemetry pipeline
-        // Telemetry::LogEvent("HOTPATCH_ARCH_MISMATCH", {{"path", modelPath}, {"incoming", incomingArch}, {"active", activeArch}});
+        LOG_ERROR("HOTPATCH_ARCH_MISMATCH: path=" + modelPath + 
+                  " incoming=" + incomingArch + " active=" + activeArch);
         
         return false;
     }
