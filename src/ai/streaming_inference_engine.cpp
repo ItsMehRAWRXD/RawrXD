@@ -386,18 +386,73 @@ void StreamingInferenceEngine::GenerateLoop(
     }
 }
 
-// Token sampling with confidence
+// Token sampling with confidence using temperature and top-k
 StreamingInferenceEngine::SampleResult StreamingInferenceEngine::SampleToken(
     const float* logits,
     size_t vocab_size
 ) {
-    // TODO: Implement actual sampling
-    // For now, return placeholder
-    
     SampleResult result;
-    result.token = 0;
-    result.confidence = 0.9f;
-    result.logits.clear();
+    result.logits.assign(logits, logits + vocab_size);
+    
+    // Apply temperature scaling
+    float temperature = current_temperature_.load();
+    if (temperature <= 0.0f) temperature = 0.8f;
+    
+    // Softmax with temperature
+    std::vector<float> probs(vocab_size);
+    float max_logit = *std::max_element(result.logits.begin(), result.logits.end());
+    float sum = 0.0f;
+    
+    for (size_t i = 0; i < vocab_size; ++i) {
+        probs[i] = std::exp((result.logits[i] - max_logit) / temperature);
+        sum += probs[i];
+    }
+    
+    // Normalize
+    for (auto& p : probs) p /= sum;
+    
+    // Top-k sampling (k=50)
+    const size_t k = 50;
+    std::vector<std::pair<float, size_t>> indexed_probs;
+    indexed_probs.reserve(vocab_size);
+    for (size_t i = 0; i < vocab_size; ++i) {
+        indexed_probs.push_back({probs[i], i});
+    }
+    
+    // Partial sort to get top k
+    std::partial_sort(indexed_probs.begin(), 
+                      indexed_probs.begin() + std::min(k, vocab_size),
+                      indexed_probs.end(),
+                      std::greater<std::pair<float, size_t>>());
+    
+    // Renormalize top-k
+    float topk_sum = 0.0f;
+    for (size_t i = 0; i < std::min(k, vocab_size); ++i) {
+        topk_sum += indexed_probs[i].first;
+    }
+    
+    // Sample from top-k distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(0.0f, topk_sum);
+    float sample = dist(gen);
+    
+    float cumsum = 0.0f;
+    for (size_t i = 0; i < std::min(k, vocab_size); ++i) {
+        cumsum += indexed_probs[i].first;
+        if (cumsum >= sample) {
+            result.token = static_cast<int>(indexed_probs[i].second);
+            result.confidence = indexed_probs[i].first;
+            break;
+        }
+    }
+    
+    // Fallback to argmax if sampling failed
+    if (result.token == 0 && result.confidence == 0.0f) {
+        auto max_it = std::max_element(probs.begin(), probs.end());
+        result.token = static_cast<int>(std::distance(probs.begin(), max_it));
+        result.confidence = *max_it;
+    }
     
     return result;
 }

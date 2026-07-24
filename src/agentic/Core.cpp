@@ -289,20 +289,58 @@ bool CoreImpl::Initialize() {
         return true;
     }
     
-    // Initialize subsystems
-    // TODO: Initialize actual subsystem implementations
+    // Initialize actual subsystem implementations
+    printf("[AgenticCore] Initializing subsystems...\n");
+    
+    // 1. Initialize memory manager
+    if (!InitializeMemoryManager()) {
+        fprintf(stderr, "[AgenticCore] Failed to initialize memory manager\n");
+        return false;
+    }
+    printf("[AgenticCore]   \u2713 Memory manager initialized\n");
+    
+    // 2. Initialize inference engine
+    if (!InitializeInferenceEngine()) {
+        fprintf(stderr, "[AgenticCore] Failed to initialize inference engine\n");
+        return false;
+    }
+    printf("[AgenticCore]   \u2713 Inference engine initialized\n");
+    
+    // 3. Initialize tool registry
+    if (!InitializeToolRegistry()) {
+        fprintf(stderr, "[AgenticCore] Failed to initialize tool registry\n");
+        return false;
+    }
+    printf("[AgenticCore]   \u2713 Tool registry initialized\n");
+    
+    // 4. Initialize knowledge base
+    if (!InitializeKnowledgeBase()) {
+        fprintf(stderr, "[AgenticCore] Failed to initialize knowledge base\n");
+        return false;
+    }
+    printf("[AgenticCore]   \u2713 Knowledge base initialized\n");
+    
+    // 5. Initialize telemetry
+    if (!InitializeTelemetry()) {
+        fprintf(stderr, "[AgenticCore] Failed to initialize telemetry\n");
+        return false;
+    }
+    printf("[AgenticCore]   \u2713 Telemetry initialized\n");
     
     // Start worker threads
     size_t numWorkers = m_config.maxConcurrentTasks;
     if (numWorkers == 0) {
         numWorkers = std::thread::hardware_concurrency();
+        if (numWorkers == 0) numWorkers = 4; // Fallback
     }
     
+    printf("[AgenticCore] Starting %zu worker threads...\n", numWorkers);
     for (size_t i = 0; i < numWorkers; ++i) {
         m_workers.emplace_back(&CoreImpl::WorkerLoop, this);
     }
     
     m_initialized = true;
+    printf("[AgenticCore] Initialization complete\n");
     return true;
 }
 
@@ -977,10 +1015,56 @@ TaskResult CoreImpl::ExecuteSearchTask(const Task& task) {
     TaskResult result;
     result.taskId = task.id;
     
-    // TODO: Implement actual codebase search
-    // For now, return a placeholder
-    result.output = "Search not fully implemented. Query: " + task.searchParams.query;
+    // Real codebase search implementation
+    printf("[AgenticCore] Executing search task: %s\n", task.searchParams.query.c_str());
+    
+    // Use the symbol index for searching
+    if (!m_symbolIndex) {
+        result.success = false;
+        result.errorMessage = "Symbol index not initialized";
+        return result;
+    }
+    
+    // Perform search based on query type
+    std::vector<SymbolMatch> matches;
+    
+    if (task.searchParams.query.empty()) {
+        result.success = false;
+        result.errorMessage = "Empty search query";
+        return result;
+    }
+    
+    // Search by pattern
+    matches = m_symbolIndex->SearchSymbols(
+        task.searchParams.query,
+        task.searchParams.maxResults,
+        task.searchParams.caseSensitive
+    );
+    
+    // Format results
+    std::ostringstream oss;
+    oss << "Found " << matches.size() << " matches for '\"" << task.searchParams.query << "'\":\n\n";
+    
+    for (size_t i = 0; i < matches.size() && i < task.searchParams.maxResults; ++i) {
+        const auto& match = matches[i];
+        oss << i + 1 << ". " << match.symbol.name;
+        if (!match.symbol.container.empty()) {
+            oss << " (in " << match.symbol.container << ")";
+        }
+        oss << "\n";
+        oss << "   File: " << match.symbol.filePath << ":" << match.symbol.line << "\n";
+        oss << "   Type: " << SymbolTypeToString(match.symbol.type) << "\n";
+        if (match.score < 1.0f) {
+            oss << "   Relevance: " << std::fixed << std::setprecision(2) << match.score << "\n";
+        }
+        oss << "\n";
+    }
+    
     result.success = true;
+    result.output = oss.str();
+    result.searchResults = matches;
+    
+    printf("[AgenticCore] Search complete: %zu matches found\n", matches.size());
     
     return result;
 }
@@ -1014,9 +1098,69 @@ TaskResult CoreImpl::ExecuteToolTask(const Task& task) {
     TaskResult result;
     result.taskId = task.id;
     
-    // TODO: Implement tool execution via ToolRegistry
-    result.success = false;
-    result.errorMessage = "Tool execution not yet implemented";
+    // Real tool execution via ToolRegistry
+    printf("[AgenticCore] Executing tool task: %s\n", task.toolParams.toolName.c_str());
+    
+    if (!m_toolRegistry) {
+        result.success = false;
+        result.errorMessage = "Tool registry not initialized";
+        return result;
+    }
+    
+    // Validate tool exists
+    if (!m_toolRegistry->HasTool(task.toolParams.toolName)) {
+        result.success = false;
+        result.errorMessage = "Unknown tool: " + task.toolParams.toolName;
+        return result;
+    }
+    
+    // Get tool definition
+    const ToolDefinition* tool = m_toolRegistry->GetTool(task.toolParams.toolName);
+    if (!tool) {
+        result.success = false;
+        result.errorMessage = "Failed to get tool definition: " + task.toolParams.toolName;
+        return result;
+    }
+    
+    // Validate parameters
+    std::vector<std::string> validationErrors;
+    if (!ValidateToolParameters(*tool, task.toolParams.parameters, validationErrors)) {
+        result.success = false;
+        result.errorMessage = "Parameter validation failed:\n";
+        for (const auto& err : validationErrors) {
+            result.errorMessage += "  - " + err + "\n";
+        }
+        return result;
+    }
+    
+    // Execute tool with timeout
+    auto startTime = std::chrono::steady_clock::now();
+    
+    ToolExecutionContext context;
+    context.taskId = task.id;
+    context.parameters = task.toolParams.parameters;
+    context.workingDirectory = task.toolParams.workingDirectory;
+    context.timeoutMs = task.toolParams.timeoutMs;
+    
+    ToolExecutionResult toolResult = m_toolRegistry->ExecuteTool(
+        task.toolParams.toolName, 
+        context
+    );
+    
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        endTime - startTime).count();
+    
+    result.success = toolResult.success;
+    result.output = toolResult.output;
+    result.errorMessage = toolResult.error;
+    result.toolExecutionTimeMs = duration;
+    result.toolExitCode = toolResult.exitCode;
+    
+    printf("[AgenticCore] Tool execution %s in %lld ms (exit=%d)\n",
+           result.success ? "succeeded" : "failed", 
+           duration, 
+           toolResult.exitCode);
     
     return result;
 }

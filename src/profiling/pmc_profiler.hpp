@@ -82,18 +82,18 @@ struct PMCEventConfig {
 // PMC Counter
 //=============================================================================
 
-class PMCCounter {
+class RawrPMCCounter {
 public:
-    PMCCounter();
-    ~PMCCounter();
+    RawrPMCCounter();
+    ~RawrPMCCounter();
     
     // Disable copy
-    PMCCounter(const PMCCounter&) = delete;
-    PMCCounter& operator=(const PMCCounter&) = delete;
+    RawrPMCCounter(const RawrPMCCounter&) = delete;
+    RawrPMCCounter& operator=(const RawrPMCCounter&) = delete;
     
     // Enable move
-    PMCCounter(PMCCounter&& other) noexcept;
-    PMCCounter& operator=(PMCCounter&& other) noexcept;
+    RawrPMCCounter(RawrPMCCounter&& other) noexcept;
+    RawrPMCCounter& operator=(RawrPMCCounter&& other) noexcept;
     
     // Configuration
     bool Configure(PMCEvent event);

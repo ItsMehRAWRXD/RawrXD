@@ -351,6 +351,16 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
     switch (uMsg)
     {
+        case WM_ERASEBKGND:
+        {
+            HDC hdc = (HDC)wParam;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            HBRUSH brush = CreateSolidBrush(RGB(37, 37, 38));
+            FillRect(hdc, &rc, brush);
+            DeleteObject(brush);
+            return 1;
+        }
         case WM_CTLCOLORSTATIC:
         {
             // Make sidebar title bar readable: dark background, light text
@@ -364,7 +374,12 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
                     s_titleBrush = CreateSolidBrush(RGB(45, 45, 48));
                 return (LRESULT)s_titleBrush;
             }
-            break;
+            // Dark background for all other STATIC child controls
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
         }
         case WM_PAINT:
         {
@@ -421,6 +436,24 @@ LRESULT CALLBACK Win32IDE::SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
     switch (uMsg)
     {
+        case WM_ERASEBKGND:
+        {
+            HDC hdc = (HDC)wParam;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            HBRUSH brush = CreateSolidBrush(RGB(37, 37, 38));
+            FillRect(hdc, &rc, brush);
+            DeleteObject(brush);
+            return 1;
+        }
+        case WM_CTLCOLORSTATIC:
+        {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
+        }
         case WM_COMMAND:
         {
             int id = LOWORD(wParam);
