@@ -294,7 +294,11 @@ public:
         
         PatchCacheStats stats;
         stats.totalEntries = entries.size();
-        stats.totalBytes = 0;  // TODO: calculate
+        stats.totalBytes = 0;
+        for (const auto& [id, entry] : entries) {
+            stats.totalBytes += entry.patchBytes.size();
+            stats.totalBytes += entry.targetSignature.size();
+        }
         stats.hits = hits.load();
         stats.misses = misses.load();
         stats.evictions = evictions.load();

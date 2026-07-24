@@ -291,8 +291,13 @@ public:
         
         // Verify checksum using SHA-256
         if (!patch->metadata.checksum.empty()) {
-            // In real implementation, compute hash of patch data
-            result.checksumValid = true;  // Placeholder - would verify actual hash
+            SHA256Checksum::Hash currentHash = SHA256Checksum::compute(
+                patch->code.data(), patch->code.size());
+            SHA256Checksum::Hash expectedHash = SHA256Checksum::fromString(patch->metadata.checksum);
+            result.checksumValid = SHA256Checksum::equal(currentHash, expectedHash);
+            if (!result.checksumValid) {
+                result.errors.push_back("Checksum mismatch for patch: " + patchId);
+            }
         } else {
             result.checksumValid = true;  // No checksum provided, skip
         }

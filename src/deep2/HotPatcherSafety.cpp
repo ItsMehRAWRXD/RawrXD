@@ -554,11 +554,53 @@ void PatchSafetyMonitor::setViolationHandler(ViolationHandler handler) {
 
 PatchSafety::PreFlightCheck PatchSafety::runPreFlight(const std::string& patchId) {
     PreFlightCheck result;
-    result.memoryAvailable = true;  // TODO: Check actual memory
-    result.stackSpaceAvailable = true;  // TODO: Check stack space
-    result.noActiveWatchdog = true;  // TODO: Check for active watchdog
-    result.checksumValid = true;  // TODO: Verify checksum
-    result.dependenciesSafe = true;  // TODO: Check dependencies
+
+    // Check 1: Memory available (need at least 100MB free)
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        DWORDLONG freeMB = memStatus.ullAvailPhys / (1024 * 1024);
+        result.memoryAvailable = (freeMB >= 100);
+        if (!result.memoryAvailable) {
+            printf("[PatchSafety] PreFlight: Low memory (%llu MB free)\n", freeMB);
+        }
+    } else {
+        result.memoryAvailable = false;
+    }
+
+    // Check 2: Stack space (simplified - check if we can allocate on stack)
+    {
+        volatile char stackProbe[4096];
+        stackProbe[0] = 1; stackProbe[4095] = 2;
+        result.stackSpaceAvailable = (stackProbe[0] == 1 && stackProbe[4095] == 2);
+    }
+
+    // Check 3: No active watchdog in panic state
+    result.noActiveWatchdog = !PatchSafetyMonitor::isWatchdogPanicked();
+
+    // Check 4: Verify checksum if patch data available
+    auto patch = PatchRegistry::Instance().GetPatch(patchId);
+    if (patch && !patch->metadata.checksum.empty()) {
+        SHA256Checksum::Hash currentHash = SHA256Checksum::compute(
+            patch->code.data(), patch->code.size());
+        SHA256Checksum::Hash expectedHash = SHA256Checksum::fromString(patch->metadata.checksum);
+        result.checksumValid = SHA256Checksum::equal(currentHash, expectedHash);
+    } else {
+        result.checksumValid = true;  // No checksum to verify
+    }
+
+    // Check 5: Dependencies
+    if (patch) {
+        result.dependenciesSafe = true;
+        for (const auto& dep : patch->metadata.dependencies) {
+            auto depPatch = PatchRegistry::Instance().GetPatch(dep);
+            if (!depPatch || depPatch->status != PatchStatus::ACTIVE) {
+                result.dependenciesSafe = false;
+                break;
+            }
+        }
+    }
+
     return result;
 }
 
