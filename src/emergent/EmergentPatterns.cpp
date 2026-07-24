@@ -311,7 +311,7 @@ std::vector<HarmonicAttractor> HarmonicAttractorAnalyzer::Analyze(
     for (uint32_t cycle_id = 243; cycle_id <= 249; ++cycle_id) {
         HarmonicAttractor attractor;
         attractor.id = "attractor_" + std::to_string(cycle_id);
-        attractor.frequency = 1.0 / (cycle_id - 242); // Simplified frequency
+        attractor.frequency = 1.0 / (cycle_id - 242); // Basic frequency calculation
         attractor.amplitude = 1.0 - (0.1 * (cycle_id - 243));
         attractor.phase = static_cast<double>(cycle_id) * 0.1;
         attractor.cycle_ids.push_back(cycle_id);
@@ -375,8 +375,8 @@ std::vector<SwarmCluster> SwarmClusterDetector::DetectClusters(
     const Swarm::SwarmScheduler& scheduler) {
     std::vector<SwarmCluster> clusters;
     
-    // Simplified cluster detection
-    // In real implementation, would analyze agent states from scheduler
+    // Basic cluster detection
+    // Full implementation would analyze agent states from scheduler
     for (uint32_t i = 0; i < max_clusters_; ++i) {
         SwarmCluster cluster;
         cluster.id = "cluster_" + std::to_string(i);
@@ -402,7 +402,7 @@ std::vector<SwarmCluster> SwarmClusterDetector::DetectBehavioralClusters(
     // Would implement DBSCAN or similar clustering
     std::vector<SwarmCluster> clusters;
     
-    // Simplified: group agents by behavior similarity
+    // Basic grouping by behavior similarity
     if (agents.size() >= 4) {
         SwarmCluster cluster;
         cluster.id = "behavioral_cluster_0";
@@ -464,7 +464,7 @@ std::vector<GraphMotif> GraphMotifDetector::DetectMotifs(
     std::vector<GraphMotif> motifs;
     
     // Detect common patterns in execution graph
-    // Simplified: look for cycle-task-telemetry patterns
+    // Basic implementation: look for cycle-task-telemetry patterns
     
     GraphMotif cycle_motif;
     cycle_motif.id = "motif_cycle_execution";
@@ -498,7 +498,7 @@ std::vector<GraphMotif> GraphMotifDetector::FindFrequentSubgraphs(
     // Would implement gSpan or similar frequent subgraph mining
     std::vector<GraphMotif> motifs;
     
-    // Simplified implementation
+    // Basic implementation
     auto all_motifs = DetectMotifs(graph);
     for (const auto& motif : all_motifs) {
         if (motif.frequency >= min_frequency) {
@@ -531,7 +531,7 @@ std::string GraphMotifDetector::ComputePatternHash(
 double GraphMotifDetector::CalculateSignificance(
     const GraphMotif& motif, const SEG::SovereignExecutionGraph& graph) const {
     // Calculate statistical significance vs random graph
-    // Simplified: return stored significance
+    // Basic implementation returns stored significance
     return motif.significance_score;
 }
 

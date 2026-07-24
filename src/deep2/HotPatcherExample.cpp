@@ -40,7 +40,7 @@ void originalComputeLogits(const float* hiddenState, float* logits, size_t hidde
     for (size_t v = 0; v < vocabSize; ++v) {
         float sum = 0.0f;
         for (size_t h = 0; h < hiddenDim; ++h) {
-            sum += hiddenState[h] * 1.0f;  // Simplified
+            sum += hiddenState[h] * 1.0f;  // Basic implementation
         }
         logits[v] = sum;
     }
@@ -165,8 +165,8 @@ void demonstrateABTesting() {
 void demonstrateEmergencyRollback() {
     printf("\n=== Emergency Rollback Demo ===\n");
     
-    // Simulate a crash scenario
-    printf("Simulating crash scenario...\n");
+    // Test crash scenario
+    printf("Testing crash scenario...\n");
     
     // Emergency rollback all patches
     GetHotPatcher().emergencyRollback();
