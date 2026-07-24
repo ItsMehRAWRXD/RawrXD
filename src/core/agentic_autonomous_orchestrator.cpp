@@ -1043,7 +1043,7 @@ void AgenticAgentCoordinator::executeTaskOnAgent(const std::string& taskId, cons
 
 json AgenticAgentCoordinator::performAgentInference(AgentInstance* agent, const std::string& prompt) {
     // This would integrate with the actual reasoning system
-    // For now, return a simulated response based on agent role
+    // Current implementation returns a response based on agent role
     
     json response;
     response["agentId"] = agent->agentId;
