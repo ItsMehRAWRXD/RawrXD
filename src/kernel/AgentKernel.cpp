@@ -564,9 +564,18 @@ size_t IntentQueue::GetPendingCount() const {
 
 size_t IntentQueue::GetCountForAgent(AgentId agent) const {
     std::lock_guard<std::mutex> lock(queueMutex_);
-    // Note: This requires iterating the priority queue
-    // In production, maintain a separate index
-    return 0; // TODO: Implement
+    
+    // Iterate through priority queue to count intents for agent
+    // Note: This is O(n) - in production, maintain a separate index
+    size_t count = 0;
+    auto tempQueue = queue_;
+    while (!tempQueue.empty()) {
+        if (tempQueue.top().agentId == agent) {
+            count++;
+        }
+        tempQueue.pop();
+    }
+    return count;
 }
 
 std::vector<IntentRequest> IntentQueue::GetPendingIntents() const {
@@ -587,11 +596,67 @@ void IntentQueue::CancelIntent(IntentId intentId) {
 }
 
 void IntentQueue::CancelAllForAgent(AgentId agent) {
-    // TODO: Implement
+    std::lock_guard<std::mutex> lock(queueMutex_);
+    
+    // Priority queue doesn't support bulk removal
+    // Strategy: Rebuild queue without canceled agent's intents
+    std::vector<IntentRequest> remaining;
+    remaining.reserve(queue_.size());
+    
+    // Extract all intents not belonging to the agent
+    while (!queue_.empty()) {
+        auto intent = std::move(const_cast<IntentRequest&>(queue_.top()));
+        queue_.pop();
+        if (intent.agentId != agent) {
+            remaining.push_back(std::move(intent));
+        }
+    }
+    
+    // Rebuild queue
+    for (auto& intent : remaining) {
+        queue_.push(std::move(intent));
+    }
+    
+    // Log cancellation
+    size_t canceledCount = remaining.size() < queue_.size() ? 0 : queue_.size() - remaining.size();
+    if (canceledCount > 0) {
+        printf("[IntentQueue] Canceled %zu intents for agent %u\n", canceledCount, agent);
+    }
 }
 
 void IntentQueue::Reprioritize(IntentId intentId, IntentPriority newPriority) {
-    // TODO: Implement
+    std::lock_guard<std::mutex> lock(queueMutex_);
+    
+    // Priority queue doesn't support direct modification
+    // Strategy: Rebuild queue with updated priority
+    std::vector<IntentRequest> intents;
+    intents.reserve(queue_.size());
+    bool found = false;
+    
+    // Extract all intents
+    while (!queue_.empty()) {
+        auto intent = std::move(const_cast<IntentRequest&>(queue_.top()));
+        queue_.pop();
+        
+        // Update priority if this is the target intent
+        if (intent.intentId == intentId) {
+            intent.priority = newPriority;
+            intent.timestamp = std::chrono::steady_clock::now();
+            found = true;
+        }
+        
+        intents.push_back(std::move(intent));
+    }
+    
+    // Rebuild queue
+    for (auto& intent : intents) {
+        queue_.push(std::move(intent));
+    }
+    
+    if (found) {
+        printf("[IntentQueue] Reprioritized intent %u to priority %d\n", 
+               intentId, static_cast<int>(newPriority));
+    }
 }
 
 void IntentQueue::PruneStaleIntents(std::chrono::minutes maxAge) {

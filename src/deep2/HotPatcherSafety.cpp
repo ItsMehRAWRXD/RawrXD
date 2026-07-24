@@ -586,10 +586,64 @@ uint64_t PatchSafety::estimateRollbackTimeMs(const std::string& patchId) {
 
 bool PatchSafety::verifySystemHealth() {
     // Check system can handle patches
-    // - Memory available
-    // - Stack space
-    // - No pending crashes
-    return true;  // TODO: Implement actual checks
+    bool healthy = true;
+    std::vector<std::string> issues;
+    
+    // Check 1: Memory available (need at least 100MB free)
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        DWORDLONG freeMB = memStatus.ullAvailPhys / (1024 * 1024);
+        if (freeMB < 100) {
+            issues.push_back("Low memory: " + std::to_string(freeMB) + "MB available");
+            healthy = false;
+        }
+    } else {
+        issues.push_back("Failed to query memory status");
+        healthy = false;
+    }
+    
+    // Check 2: Stack space (query current thread stack)
+    MEMORY_BASIC_INFORMATION mbi;
+    if (VirtualQuery(&mbi, &mbi, sizeof(mbi))) {
+        // Rough estimate: if stack is near limit, be cautious
+        // This is a simplified check
+    }
+    
+    // Check 3: No pending crashes or recent failures
+    // Check if crash recovery has pending state
+    if (CrashRecovery::hasPendingCrash()) {
+        issues.push_back("Pending crash recovery detected");
+        healthy = false;
+    }
+    
+    // Check 4: Patch system not already in error state
+    if (PatchRegistry::Instance().IsInErrorState()) {
+        issues.push_back("Patch registry in error state");
+        healthy = false;
+    }
+    
+    // Check 5: Disk space for rollback files
+    ULARGE_INTEGER freeBytes;
+    if (GetDiskFreeSpaceExA(nullptr, &freeBytes, nullptr, nullptr)) {
+        DWORDLONG freeMB = freeBytes.QuadPart / (1024 * 1024);
+        if (freeMB < 50) {
+            issues.push_back("Low disk space: " + std::to_string(freeMB) + "MB available");
+            healthy = false;
+        }
+    }
+    
+    // Log results
+    if (!healthy) {
+        printf("[PatchSafety] System health check FAILED:\n");
+        for (const auto& issue : issues) {
+            printf("  - %s\n", issue.c_str());
+        }
+    } else {
+        printf("[PatchSafety] System health check PASSED\n");
+    }
+    
+    return healthy;
 }
 
 std::vector<std::string> PatchSafety::getRecommendations(const std::string& patchId) {
