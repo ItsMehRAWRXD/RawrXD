@@ -3,9 +3,8 @@
 #include <iomanip>
 #include <chrono>
 #include <algorithm>
-#include <sstream>
-#include <iomanip>
-#include <chrono>
+
+namespace RawrXD {
 
 CRDTBuffer::CRDTBuffer()
     : m_siteId(generateSiteId()), m_logicalClock(0)
