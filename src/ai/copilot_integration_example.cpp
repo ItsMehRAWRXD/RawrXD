@@ -136,10 +136,10 @@ void ExampleRealTimeTyping() {
     config.max_completion_tokens = 30;  // Shorter completions
     pipeline->SetIDEConfig(config);
     
-    // Simulate typing with real-time completion requests
+    // Interactive typing demo with real-time completion requests
     std::string code = "int main() {\n    std::cout << \"Hello";
     
-    // Simulate typing character by character
+    // Process typing character by character
     for (size_t i = 0; i < code.length(); ++i) {
         std::string currentCode = code.substr(0, i + 1);
         
@@ -157,7 +157,7 @@ void ExampleRealTimeTyping() {
             }
         });
         
-        // Simulate typing delay
+        // Add delay between keystrokes to mimic human typing speed
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }

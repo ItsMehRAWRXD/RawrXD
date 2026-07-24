@@ -3209,11 +3209,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # Unlinked symbols batches - provide real implementations for link closure
         src/core/unlinked_symbols_batch_001.cpp
+        src/core/unlinked_symbols_batch_002.cpp  # ADDED: Provides matmul_kernel_avx2, ggml_gemm_q4_0
         src/core/unlinked_symbols_batch_003.cpp
+        src/core/unlinked_symbols_batch_004.cpp  # ADDED: Provides asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
-        src/core/unlinked_symbols_batch_006.cpp
-        src/core/unlinked_symbols_batch_007.cpp
+        src/core/unlinked_symbols_batch_006.cpp  # ADDED: Provides asm_mesh_init, asm_mesh_quorum_vote, asm_mesh_crdt_merge
+        src/core/unlinked_symbols_batch_007.cpp  # ADDED: Provides asm_mesh_fedavg_aggregate, asm_mesh_zkp_generate
         src/core/unlinked_symbols_batch_008.cpp
+        src/core/unlinked_symbols_batch_010.cpp  # ADDED: Provides SO_InitializeVulkan
         src/core/unlinked_symbols_batch_011.cpp
         src/core/unlinked_symbols_batch_012.cpp
         src/core/unlinked_symbols_batch_018.cpp
@@ -3226,13 +3229,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/rtp_stubs.cpp
         src/core/rdna3_stubs.cpp
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
-        src/core/gguf_runner_stub.cpp
+        # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
-        src/core/subsystem_api_stubs.cpp
-        src/core/crypto_stubs.cpp
-        src/core/watchdog_stubs.cpp
-        src/core/pattern_stubs.cpp
+        # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
+        # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
+        # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
+        # src/core/pattern_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_019.cpp (find_pattern_asm)
         src/core/perf_telemetry_stubs.cpp
+        # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
         # src/core/native_log_stub.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp
         # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
         src/collab/cursor_widget.cpp

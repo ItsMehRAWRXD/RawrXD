@@ -1516,3 +1516,8 @@
 848	1398	8065693788121175	D:/rawrxd/build-ninja/CMakeFiles/verify-ssot-ext-ownership	e6483e7480c23b92
 1398	5005	8065693793636124	CMakeFiles/RawrEngine.dir/src/agent_history.cpp.obj	a8627b25fe7b8bde
 5005	8398	8065693829699138	CMakeFiles/RawrEngine.dir/src/agent_explainability.cpp.obj	cbdb238915479cfd
+64	614	8065694224957266	CMakeFiles/regen-ssot-beacons	27de29be0709a9b4
+64	614	8065694224957266	D:/rawrxd/build-ninja/CMakeFiles/regen-ssot-beacons	27de29be0709a9b4
+614	1007	8065694230472887	CMakeFiles/verify-ssot-ext-ownership	e6483e7480c23b92
+614	1007	8065694230472887	D:/rawrxd/build-ninja/CMakeFiles/verify-ssot-ext-ownership	e6483e7480c23b92
+1007	1138	8065694234397286	CMakeFiles/RawrEngine.dir/src/core/ssot_beacon.cpp.obj	76db9c4e1fdd84c7
