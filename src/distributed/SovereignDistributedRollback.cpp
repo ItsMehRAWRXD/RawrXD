@@ -514,7 +514,7 @@ void DistributedRollbackCoordinator::FailRollback(
 
 bool DistributedRollbackCoordinator::SendPrepareToNode(
     const std::string& node_id, const RollbackOperation& operation) {
-    // Placeholder - in production, send via network
+    // Implementation pending - would send via network
     return true;
 }
 

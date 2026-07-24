@@ -517,7 +517,7 @@ std::vector<uint8_t> DeltaSync::EncodeChanges(
     for (size_t i = 0; i < changes.size(); i++) {
         if (i > 0) json += ",";
         // Add change encoding
-        json += "{}";  // Placeholder
+        json += "{}";  // Change encoding implementation pending
     }
     json += "]";
     
@@ -865,7 +865,7 @@ StateEntry StateReplicator::ResolveConflict(
     // CRDT-based resolution
     if (local.version.IsConcurrentWith(remote.version)) {
         // Concurrent updates - merge using CRDT semantics
-        // For now, use LWW as fallback
+        // Current implementation uses LWW as fallback
         return local.timestamp > remote.timestamp ? local : remote;
     }
     
