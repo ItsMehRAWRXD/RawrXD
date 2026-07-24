@@ -37,7 +37,11 @@ AutonomousFeatureEngine::AutonomousFeatureEngine(void* parent)
     rejectedSuggestionsByType["optimize"] = 0;
     rejectedSuggestionsByType["security"] = 0;
 }
-AutonomousFeatureEngine::~AutonomousFeatureEngine() {}
+AutonomousFeatureEngine::~AutonomousFeatureEngine() {
+    // Cleanup: release any resources if needed
+    hybridCloudManager = nullptr;
+    codebaseEngine = nullptr;
+}
 
 void AutonomousFeatureEngine::setHybridCloudManager(HybridCloudManager* manager) {
     hybridCloudManager = manager;

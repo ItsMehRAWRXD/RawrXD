@@ -41,7 +41,10 @@ CPUInferenceEngine::CPUInferenceEngine()
     m_loader = std::make_unique<StreamingGGUFLoader>();
 }
 
-CPUInferenceEngine::~CPUInferenceEngine() {}
+CPUInferenceEngine::~CPUInferenceEngine() {
+    // Cleanup: reset the loader to release model resources
+    m_loader.reset();
+}
 
 bool CPUInferenceEngine::LoadModel(const std::string& path) {
     if (!m_loader->Open(path)) return false;

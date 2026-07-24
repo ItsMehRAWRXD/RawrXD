@@ -11,7 +11,10 @@ ChainOfThought::ChainOfThought() {
     m_config = Config{};
 }
 
-ChainOfThought::~ChainOfThought() {}
+ChainOfThought::~ChainOfThought() {
+    // Cleanup: reset the tree root to release memory
+    m_root.reset();
+}
 
 void ChainOfThought::setConfig(const Config& config) {
     m_config = config;

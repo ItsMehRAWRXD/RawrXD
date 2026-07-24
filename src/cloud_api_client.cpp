@@ -35,7 +35,11 @@ CloudApiClient::CloudApiClient(UniversalModelRouter* parent) {
     // Initialize with empty call history
     callHistory.reserve(100); // Pre-allocate space for 100 calls
 }
-CloudApiClient::~CloudApiClient() {}
+CloudApiClient::~CloudApiClient() {
+    // Cleanup: clear call history to release memory
+    std::lock_guard<std::mutex> lock(m_mutex);
+    callHistory.clear();
+}
 
 ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlohmann::json& body, const CloudModelConfig& config, std::function<void(const std::string&)> streamCallback) {
     ApiResponse response;
