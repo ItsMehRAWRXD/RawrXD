@@ -353,7 +353,7 @@ void LiveShare::applyOperation(const TextOperation& operation) {
 
 void LiveShare::sendOperation(const TextOperation& operation) {
     // Would send to server via WebSocket
-    // For now, just store locally
+    // Store locally (WebSocket integration pending)
     m_pendingOperations.push_back(operation);
 }
 

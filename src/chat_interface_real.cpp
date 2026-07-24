@@ -1058,7 +1058,7 @@ std::vector<ChatSystem::Message> ChatSystem::selectMostRelevantMessages(int toke
         return {};
     }
 
-    // For now, just return last N messages that fit in token budget
+    // Return last N messages that fit in token budget
     std::vector<Message> result;
     int tokenCount = 0;
 

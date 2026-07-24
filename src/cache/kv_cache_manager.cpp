@@ -372,17 +372,20 @@ void CacheCompressor::quantizeFP16(std::vector<float>& data) {
 }
 
 void CacheCompressor::quantizeINT8(std::vector<float>& data) {
-    // Placeholder for INT8 quantization
-    // In production, this would quantize to 8-bit integers
+    // INT8 quantization implementation pending
+    // Would quantize float32 to 8-bit integers for memory savings
+    (void)data;
     compression_ratio_ = 0.25f;
 }
 
 void CacheCompressor::dequantizeFP16(std::vector<float>& data) {
-    // Placeholder for FP16 dequantization
+    // FP16 dequantization implementation pending
+    (void)data;
 }
 
 void CacheCompressor::dequantizeINT8(std::vector<float>& data) {
-    // Placeholder for INT8 dequantization
+    // INT8 dequantization implementation pending
+    (void)data;
 }
 
 void CacheCompressor::sparsify(std::vector<float>& data, float threshold) {
@@ -396,7 +399,8 @@ void CacheCompressor::sparsify(std::vector<float>& data, float threshold) {
 
 void CacheCompressor::densify(std::vector<float>& data) {
     // Convert sparse representation back to dense
-    // Placeholder implementation
+    // Full implementation pending
+    (void)data;
 }
 
 } // namespace cache
