@@ -3532,7 +3532,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
-        src/core/beacon_link_stub.cpp
+        # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 

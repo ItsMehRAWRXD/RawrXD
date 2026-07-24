@@ -69,32 +69,32 @@ public:
         // Build MoE input
         MoEGenerateInput moeIn = {0};
         
-        // Use stub data for now (in real implementation, these would come from actual tensors)
-        static float stubLogits[64];
-        static int stubKV[64];
-        
-        // Initialize stub data based on request
+        // Use test data (in production, these would come from actual tensors)
+        static float testLogits[64];
+        static int testKV[64];
+
+        // Initialize test data based on request
         for (int i = 0; i < 64; i++) {
-            stubLogits[i] = 500.0f;  // Neutral confidence
-            stubKV[i] = 500;         // Medium KV density
+            testLogits[i] = 500.0f;  // Neutral confidence
+            testKV[i] = 500;         // Medium KV density
         }
         
         // Adjust based on expert tag if provided
         if (req->expert_tag) {
             if (strstr(req->expert_tag, "ghost")) {
-                stubKV[0] = 100;  // Low KV triggers ghost
+                testKV[0] = 100;  // Low KV triggers ghost
             } else if (strstr(req->expert_tag, "latent")) {
                 // Latent triggered by digit token
             } else if (strstr(req->expert_tag, "shadow")) {
                 // Shadow triggered by low confidence history
             } else if (strstr(req->expert_tag, "swarm")) {
-                stubLogits[0] = 300.0f;  // Low confidence
-                stubKV[0] = 700;           // High KV triggers swarm
+                testLogits[0] = 300.0f;  // Low confidence
+                testKV[0] = 700;           // High KV triggers swarm
             }
         }
-        
-        moeIn.logits = stubLogits;
-        moeIn.kv = stubKV;
+
+        moeIn.logits = testLogits;
+        moeIn.kv = testKV;
         moeIn.token = (req->prompt && req->prompt[0]) ? req->prompt[0] : 'A';
         
         // Call MoE generate

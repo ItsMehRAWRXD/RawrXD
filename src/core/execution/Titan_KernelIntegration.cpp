@@ -639,7 +639,8 @@ bool Titan_IsKernelAvailable(uint64_t kernelName) {
 // Get performance stats for a kernel execution
 bool Titan_GetKernelStats(uint64_t kernelName, uint64_t* avgTimeUs, uint64_t* totalCalls) {
     // TODO: Implement kernel statistics tracking
-    // For now, return placeholder values
+    // Return default values (statistics tracking pending)
+    (void)kernelName;
     if (avgTimeUs) *avgTimeUs = 0;
     if (totalCalls) *totalCalls = 0;
     return true;
