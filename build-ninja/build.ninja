@@ -11653,6 +11653,60 @@ build bin\test_q4_scalar_simd.exe: CXX_EXECUTABLE_LINKER__test_q4_scalar_simd_Re
   TARGET_SUPPORT_DIR = CMakeFiles\test_q4_scalar_simd.dir
 
 # =============================================================================
+# Object build statements for EXECUTABLE target witness_system_test
+
+
+#############################################
+# Order-only phony target for witness_system_test
+
+build cmake_object_order_depends_target_witness_system_test: phony || .
+
+build CMakeFiles\witness_system_test.dir\src\validation\witness_system_test.cpp.obj: CXX_COMPILER__witness_system_test_unscanned_Release D$:\rawrxd\src\validation\witness_system_test.cpp || cmake_object_order_depends_target_witness_system_test
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\witness_system_test.dir
+  OBJECT_FILE_DIR = CMakeFiles\witness_system_test.dir\src\validation
+  TARGET_COMPILE_PDB = CMakeFiles\witness_system_test.dir\
+  TARGET_PDB = bin\witness_system_test.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\witness_system_test.dir
+
+build CMakeFiles\witness_system_test.dir\src\core\inference_witness.cpp.obj: CXX_COMPILER__witness_system_test_unscanned_Release D$:\rawrxd\src\core\inference_witness.cpp || cmake_object_order_depends_target_witness_system_test
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\witness_system_test.dir
+  OBJECT_FILE_DIR = CMakeFiles\witness_system_test.dir\src\core
+  TARGET_COMPILE_PDB = CMakeFiles\witness_system_test.dir\
+  TARGET_PDB = bin\witness_system_test.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\witness_system_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target witness_system_test
+
+
+#############################################
+# Link the executable bin\witness_system_test.exe
+
+build bin\witness_system_test.exe: CXX_EXECUTABLE_LINKER__witness_system_test_Release CMakeFiles\witness_system_test.dir\src\validation\witness_system_test.cpp.obj CMakeFiles\witness_system_test.dir\src\core\inference_witness.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\witness_system_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\witness_system_test.dir\
+  TARGET_FILE = bin\witness_system_test.exe
+  TARGET_IMPLIB = witness_system_test.lib
+  TARGET_PDB = bin\witness_system_test.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\witness_system_test.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target benchmark_dispatch_overhead
 
 
@@ -16945,6 +16999,10 @@ build tree_attention_vectorized.exe: phony bin\tree_attention_vectorized.exe
 build validate_end_to_end: phony bin\validate_end_to_end.exe
 
 build validate_end_to_end.exe: phony bin\validate_end_to_end.exe
+
+build witness_system_test: phony bin\witness_system_test.exe
+
+build witness_system_test.exe: phony bin\witness_system_test.exe
 
 build zero_assembly_test: phony bin\zero_assembly_test.exe
 

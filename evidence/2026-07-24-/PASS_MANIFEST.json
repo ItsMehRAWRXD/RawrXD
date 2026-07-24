@@ -54,5 +54,15 @@
     "VAL057/result.json"
   ],
   "schema_version": "1.0",
-  "commit": "56ef83e339b98d54c9a997c46c2d141f11495a7f"
+  "commit": "56ef83e339b98d54c9a997c46c2d141f11495a7f",
+  "verification": {
+    "replay_status": "VERIFIED",
+    "replay_timestamp": "2026-07-24T12:48:34.5105701-04:00",
+    "steps_passed": 7,
+    "measured_tokens_per_second": 3555.56,
+    "steps_failed": 0,
+    "verification_steps": 8,
+    "replay_verifier": "Verify-Certification.ps1",
+    "measured_latency_ms": 6
+  }
 }

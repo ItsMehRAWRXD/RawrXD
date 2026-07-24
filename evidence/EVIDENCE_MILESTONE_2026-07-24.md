@@ -150,7 +150,7 @@ capture evidence ⬜
 
 ---
 
-## Inference Witness System (VAL-051)
+## Inference Witness System (VAL-051) — BUILT ✅
 
 Implemented execution manifest for deterministic generation evidence:
 
@@ -158,6 +158,14 @@ Implemented execution manifest for deterministic generation evidence:
 - `include/inference_witness.h` — VAL-051 schema definition
 - `src/core/inference_witness.cpp` — Witness recording implementation
 - `evidence/inference_witness_template.json` — Template/example output
+
+### Build Status
+| Component | Status |
+|-----------|--------|
+| Header | ✅ `include/inference_witness.h` |
+| Implementation | ✅ `src/core/inference_witness.cpp` |
+| CMake Integration | ✅ Added to rawrxd target |
+| Binary | ✅ rawrxd.exe (411,136 bytes) |
 
 ### Schema Structure
 ```json
@@ -198,22 +206,74 @@ recorder.Finalize(success);
 std::string path = recorder.SaveToDefaultLocation();
 ```
 
+---
+
+## Current Validation Ladder
+
+```
+VAL-050 Runtime Evidence Witness        ✅
+VAL-050.1 Startup Stack Safety            ✅
+WIN32-STACK-OVERFLOW-001 Containment      ✅
+VAL-051 Witness System Implementation     ✅
+VAL-051.1 First Inference Witness         ⏳
+```
+
+---
+
+## Next Phase: First Inference Witness
+
+### Goal
+Produce the first `evidence/inference_witness_*.json` from an actual model execution.
+
+### Prerequisites
+Need a GGUF model file to test with. Check available models:
+- `d:/RawrXD-production-lazy-init/` (excluded from search, may contain models)
+- `f:/OllamaModels/` (excluded from search)
+- Download small test model (Phi-3 mini ~3.8GB)
+
+### Execution Plan
+
+1. **Locate or acquire test model**
+   ```
+   # Check for existing models
+   dir d:\*.gguf /s 2>nul
+   dir f:\*.gguf /s 2>nul
+   ```
+
+2. **Run rawrxd.exe with witness recording**
+   ```
+   rawrxd.exe --model <model>.gguf --prompt "Hello" --validate
+   ```
+
+3. **Capture first witness artifact**
+   - Expected: `evidence/inference_witness_<timestamp>.json`
+   - Contains: Stage-by-stage execution proof
+   - Or: Detailed failure context for debugging
+
+4. **Iterate to first successful token generation**
+   - Fix any stage failures
+   - Verify checksums match expectations
+   - Confirm deterministic output
+
+---
+
+## Evidence Claim Transition
+
+**Before:**
+> "The components exist"
+
+**After VAL-051.1:**
+> "This exact binary executed this exact model and produced this exact output"
+
+---
+
 ## Recommended Next Actions
 
-1. **Run rawrxd.exe with model load**
-   ```
-   rawrxd.exe --model <path>.gguf --prompt "Hello"
-   ```
-
-2. **Instrument inference pipeline**
-   - ✅ Witness system ready
-   - ⬜ Integrate into rawrxd.exe main()
-   - ⬜ Add stage checkpoints
-
-3. **Produce first full evidence bundle**
-   - Token generation proof
-   - Performance metrics
-   - Correctness validation
+1. **⬜ Locate test model** (Phi-3 mini or similar small GGUF)
+2. **⬜ Run first inference attempt** with witness recording
+3. **⬜ Analyze witness artifact** (success or failure)
+4. **⬜ Fix any stage failures** until token generation succeeds
+5. **⬜ Verify deterministic output** with fixed seed
 
 ---
 

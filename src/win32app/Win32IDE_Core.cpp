@@ -2393,10 +2393,25 @@ void bgInitBody(void* self);
 // ============================================================================
 void Win32IDE::onCreateChildren(HWND hwnd)
 {
+    // RECURSION GUARD: Prevent re-entrant calls that could cause stack overflow
+    static thread_local bool s_inOnCreateChildren = false;
+    if (s_inOnCreateChildren)
+    {
+        OutputDebugStringA("[onCreateChildren] BLOCKED: recursive call detected\n");
+        fileTrace("[onCreateChildren] BLOCKED: recursive call detected");
+        return;
+    }
+    s_inOnCreateChildren = true;
+    struct Guard
+    {
+        ~Guard() { s_inOnCreateChildren = false; }
+    } guard;
+
     // Transition to ChildrenDeferred phase - heavy initialization now allowed
     m_startupPhase = StartupPhase::ChildrenDeferred;
     fileTrace("[onCreateChildren] START - phase transitioned to ChildrenDeferred");
     logStackUsage("onCreateChildren START");
+    OutputDebugStringA("[STARTUP] entering onCreateChildren\n");
 
     // Create panels that were deferred from onCreate to prevent stack overflow
     OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");

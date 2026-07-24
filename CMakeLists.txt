@@ -6533,6 +6533,18 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/validation/CMakeLists.txt")
 endif()
 
 # =============================================================================
+# VAL-051 Witness System Test
+# =============================================================================
+add_executable(witness_system_test EXCLUDE_FROM_ALL
+    src/validation/witness_system_test.cpp
+    src/core/inference_witness.cpp
+)
+target_include_directories(witness_system_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_features(witness_system_test PRIVATE cxx_std_17)
+
+# =============================================================================
 # MEASUREMENT FRAMEWORK - Rigorous Validation Tests
 # =============================================================================
 message(STATUS "========================================")
