@@ -278,8 +278,8 @@ void AutonomousIntelligenceOrchestrator::generateImplementation(const std::strin
     // Call AI model to generate code based on requirement
     std::string generatedCode;
     
-    // Use the ModelCaller to generate actual implementation
-    if (RawrXD::ModelCaller::IsReady()) {
+    // Use the model router to generate actual implementation
+    if (m_modelRouter && m_modelRouter->isModelAvailable("local")) {
         // Generate code using the loaded model
         std::string prompt = "Generate C++ implementation for: " + requirement + "\n\n";
         prompt += "Requirements:\n";
@@ -289,9 +289,9 @@ void AutonomousIntelligenceOrchestrator::generateImplementation(const std::strin
         prompt += "- Follow RawrXD coding standards\n\n";
         prompt += "Implementation:\n";
         
-        auto completions = RawrXD::ModelCaller::generateCompletion(prompt, "cpp", "");
-        if (!completions.empty()) {
-            generatedCode = completions[0].text;
+        std::string result = m_modelRouter->routeQuery("local", prompt, 0.7f);
+        if (!result.empty()) {
+            generatedCode = result;
         }
     }
     

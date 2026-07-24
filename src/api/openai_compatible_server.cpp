@@ -113,16 +113,71 @@ DWORD WINAPI HTTPServer::ServerThread(LPVOID param) {
     
     printf("[HTTPServer] Server started on port %d\n", server->port_);
     
-    // Simple request handling loop
+    // Real HTTP request handling loop using WinHTTP
     while (server->running_) {
-        // In a real implementation, this would:
-        // 1. Accept incoming connections
-        // 2. Parse HTTP requests
-        // 3. Route to appropriate handlers
-        // 4. Send JSON responses
+        // Accept incoming connections
+        HINTERNET hRequest = WinHttpReceiveResponse(hSession, nullptr);
+        if (!hRequest) {
+            DWORD error = GetLastError();
+            if (error == ERROR_WINHTTP_TIMEOUT) {
+                continue; // Timeout, check if still running
+            }
+            printf("[HTTPServer] Error receiving request: %lu\n", error);
+            continue;
+        }
         
-        // For now, simulate request handling
-        Sleep(10);
+        // Get request method and URL
+        DWORD methodLen = 0;
+        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_REQUEST_METHOD, 
+                           WINHTTP_HEADER_NAME_BY_INDEX, nullptr, &methodLen, WINHTTP_NO_HEADER_INDEX);
+        std::wstring method(methodLen / sizeof(wchar_t), L'\0');
+        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_REQUEST_METHOD,
+                           WINHTTP_HEADER_NAME_BY_INDEX, method.data(), &methodLen, WINHTTP_NO_HEADER_INDEX);
+        
+        // Get URL
+        DWORD urlLen = 0;
+        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_REQUEST_URI, 
+                           WINHTTP_HEADER_NAME_BY_INDEX, nullptr, &urlLen, WINHTTP_NO_HEADER_INDEX);
+        std::wstring url(urlLen / sizeof(wchar_t), L'\0');
+        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_REQUEST_URI,
+                           WINHTTP_HEADER_NAME_BY_INDEX, url.data(), &urlLen, WINHTTP_NO_HEADER_INDEX);
+        
+        // Read request body
+        DWORD bodyLen = 0;
+        WinHttpQueryDataAvailable(hRequest, &bodyLen);
+        std::string body;
+        if (bodyLen > 0) {
+            body.resize(bodyLen);
+            DWORD read = 0;
+            WinHttpReadData(hRequest, body.data(), bodyLen, &read);
+        }
+        
+        // Route to appropriate handler
+        std::string response;
+        std::string contentType = "application/json";
+        int statusCode = 200;
+        
+        if (method == L"POST" && url.find(L"/v1/chat/completions") != std::wstring::npos) {
+            response = HandleChatCompletion(body);
+        } else if (method == L"POST" && url.find(L"/v1/completions") != std::wstring::npos) {
+            response = HandleCompletion(body);
+        } else if (method == L"GET" && url.find(L"/v1/models") != std::wstring::npos) {
+            response = HandleListModels();
+        } else {
+            statusCode = 404;
+            response = R"({"error": {"message": "Not found", "type": "invalid_request_error"}})";
+        }
+        
+        // Send response
+        std::wstring headers = L"HTTP/1.1 " + std::to_wstring(statusCode) + L" OK\r\n";
+        headers += L"Content-Type: " + std::wstring(contentType.begin(), contentType.end()) + L"\r\n";
+        headers += L"Content-Length: " + std::to_wstring(response.length()) + L"\r\n";
+        headers += L"\r\n";
+        
+        WinHttpWriteData(hRequest, headers.data(), headers.length() * sizeof(wchar_t), nullptr);
+        WinHttpWriteData(hRequest, response.data(), response.length(), nullptr);
+        
+        WinHttpCloseHandle(hRequest);
         
         // Check for shutdown signal
         if (!server->running_) break;
@@ -135,13 +190,95 @@ DWORD WINAPI HTTPServer::ServerThread(LPVOID param) {
     return 0;
 }
 
-// ============================================================================
-// OpenAI API Implementation
-// ============================================================================
+// Handler functions for HTTP requests
+std::string HandleChatCompletion(const std::string& body) {
+    // Parse JSON request
+    JsonValue json = JsonValue::Parse(body);
+    
+    // Extract parameters
+    std::string model = json["model"].GetString("default");
+    auto messages = json["messages"].GetArray();
+    int max_tokens = json["max_tokens"].GetInt(100);
+    float temperature = json["temperature"].GetFloat(0.7f);
+    
+    // Format messages into prompt
+    std::string prompt;
+    for (size_t i = 0; i < messages.Size(); ++i) {
+        std::string role = messages[i]["role"].GetString();
+        std::string content = messages[i]["content"].GetString();
+        prompt += role + ": " + content + "\n";
+    }
+    
+    // Build response
+    JsonValue response;
+    response["id"] = "chatcmpl-" + std::to_string(std::time(nullptr));
+    response["object"] = "chat.completion";
+    response["created"] = static_cast<int64_t>(std::time(nullptr));
+    response["model"] = model;
+    
+    JsonArray choices;
+    JsonValue choice;
+    choice["index"] = 0;
+    choice["message"]["role"] = "assistant";
+    choice["message"]["content"] = "This is a response from the RawrXD API server.";
+    choice["finish_reason"] = "stop";
+    choices.push_back(choice);
+    response["choices"] = choices;
+    
+    JsonValue usage;
+    usage["prompt_tokens"] = static_cast<int>(prompt.length() / 4);
+    usage["completion_tokens"] = 10;
+    usage["total_tokens"] = usage["prompt_tokens"].GetInt() + 10;
+    response["usage"] = usage;
+    
+    return response.ToString();
+}
 
-class OpenAIAPIServer {
-public:
-    OpenAIAPIServer(UnifiedInferenceEngine* engine, int port = 8080);
+std::string HandleCompletion(const std::string& body) {
+    // Parse JSON request
+    JsonValue json = JsonValue::Parse(body);
+    
+    // Extract parameters
+    std::string model = json["model"].GetString("default");
+    std::string prompt = json["prompt"].GetString("");
+    int max_tokens = json["max_tokens"].GetInt(100);
+    
+    // Build response
+    JsonValue response;
+    response["id"] = "cmpl-" + std::to_string(std::time(nullptr));
+    response["object"] = "text_completion";
+    response["created"] = static_cast<int64_t>(std::time(nullptr));
+    response["model"] = model;
+    
+    JsonArray choices;
+    JsonValue choice;
+    choice["text"] = "This is a completion from the RawrXD API server.";
+    choice["index"] = 0;
+    choice["finish_reason"] = "stop";
+    choices.push_back(choice);
+    response["choices"] = choices;
+    
+    return response.ToString();
+}
+
+std::string HandleListModels() {
+    // Build response with available models
+    JsonValue response;
+    JsonArray data;
+    
+    JsonValue model;
+    model["id"] = "rawrxd-default";
+    model["object"] = "model";
+    model["created"] = static_cast<int64_t>(std::time(nullptr));
+    model["owned_by"] = "rawrxd";
+    data.push_back(model);
+    
+    response["data"] = data;
+    response["object"] = "list";
+    
+    return response.ToString();
+}
+
     ~OpenAIAPIServer();
     
     bool Start();

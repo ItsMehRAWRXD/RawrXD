@@ -379,9 +379,112 @@ void CPUInferenceEngine::RoPE(float* data, int dim, int pos, int rotary_dim) { C
 void CPUInferenceEngine::SiLU(float* data, int size) { CPUOps::SiLU(data, size); }
 void CPUInferenceEngine::GELU(float* data, int size) { CPUOps::GELU(data, size); }
 void CPUInferenceEngine::LayerNorm(float* data, int size, float epsilon) { CPUOps::LayerNorm(data, size, epsilon); }
-void CPUInferenceEngine::FeedForward(const float* input, float* output, int layer_idx) {}
-// MultiHeadAttention is declared in header but no stub here?
-void CPUInferenceEngine::MultiHeadAttention(const float*, const float*, const float*, float*, int, int, int, int) {}
+void CPUInferenceEngine::FeedForward(const float* input, float* output, int layer_idx) {
+    // FeedForward network: output = SiLU(input * W_gate) * (input * W_up) * W_down
+    // This is the SwiGLU variant used in modern LLMs like LLaMA
+    
+    if (!input || !output) return;
+    
+    // Get dimensions from config
+    int hidden_dim = config_.hidden_size;
+    int ffn_dim = config_.intermediate_size;
+    if (ffn_dim == 0) ffn_dim = hidden_dim * 4; // Default expansion factor
+    
+    // Temporary buffers for intermediate results
+    std::vector<float> gate_buf(ffn_dim);
+    std::vector<float> up_buf(ffn_dim);
+    
+    // Load weights for this layer (gate, up, down projections)
+    // Weight shapes: gate/up [hidden_dim, ffn_dim], down [ffn_dim, hidden_dim]
+    const float* w_gate = GetLayerWeight(layer_idx, "ffn_gate");
+    const float* w_up = GetLayerWeight(layer_idx, "ffn_up");
+    const float* w_down = GetLayerWeight(layer_idx, "ffn_down");
+    
+    if (!w_gate || !w_up || !w_down) {
+        // Fallback: identity mapping if weights not available
+        std::memcpy(output, input, hidden_dim * sizeof(float));
+        return;
+    }
+    
+    // Compute gate and up projections: gate = input * W_gate, up = input * W_up
+    MatMul(input, w_gate, gate_buf.data(), 1, ffn_dim, hidden_dim);
+    MatMul(input, w_up, up_buf.data(), 1, ffn_dim, hidden_dim);
+    
+    // Apply SiLU activation to gate: gate = SiLU(gate)
+    SiLU(gate_buf.data(), ffn_dim);
+    
+    // Element-wise multiply: hidden = gate * up
+    for (int i = 0; i < ffn_dim; ++i) {
+        gate_buf[i] *= up_buf[i];
+    }
+    
+    // Down projection: output = hidden * W_down
+    MatMul(gate_buf.data(), w_down, output, 1, hidden_dim, ffn_dim);
+}
+
+void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key, const float* value, 
+                                             float* output, int seq_len, int head_dim, int num_heads, int layer_idx) {
+    // Multi-head scaled dot-product attention
+    // query/key/value shape: [seq_len, num_heads, head_dim]
+    // output shape: [seq_len, num_heads, head_dim]
+    
+    if (!query || !key || !value || !output) return;
+    if (seq_len <= 0 || head_dim <= 0 || num_heads <= 0) return;
+    
+    int hidden_dim = num_heads * head_dim;
+    float scale = 1.0f / std::sqrt(static_cast<float>(head_dim));
+    
+    // Temporary buffers
+    std::vector<float> scores(seq_len);  // Attention scores for one query position
+    std::vector<float> attn_weights(seq_len); // Softmaxed attention weights
+    
+    // Process each position in the sequence
+    for (int pos = 0; pos < seq_len; ++pos) {
+        // For each head
+        for (int h = 0; h < num_heads; ++h) {
+            const float* q_head = query + pos * hidden_dim + h * head_dim;
+            float* out_head = output + pos * hidden_dim + h * head_dim;
+            
+            // Compute attention scores: score[i] = dot(q, k[i]) * scale for all i <= pos (causal)
+            float max_score = -std::numeric_limits<float>::infinity();
+            for (int i = 0; i <= pos; ++i) {  // Causal mask: only attend to previous positions
+                const float* k_head = key + i * hidden_dim + h * head_dim;
+                float score = 0.0f;
+                for (int d = 0; d < head_dim; ++d) {
+                    score += q_head[d] * k_head[d];
+                }
+                score *= scale;
+                scores[i] = score;
+                if (score > max_score) max_score = score;
+            }
+            
+            // Apply causal mask: set scores for future positions to -inf
+            for (int i = pos + 1; i < seq_len; ++i) {
+                scores[i] = -std::numeric_limits<float>::infinity();
+            }
+            
+            // Softmax over scores
+            float sum_exp = 0.0f;
+            for (int i = 0; i <= pos; ++i) {
+                attn_weights[i] = std::exp(scores[i] - max_score);
+                sum_exp += attn_weights[i];
+            }
+            for (int i = 0; i <= pos; ++i) {
+                attn_weights[i] /= sum_exp;
+            }
+            
+            // Compute weighted sum of values: out = sum(attn_weights[i] * value[i])
+            std::fill(out_head, out_head + head_dim, 0.0f);
+            for (int i = 0; i <= pos; ++i) {
+                const float* v_head = value + i * hidden_dim + h * head_dim;
+                float w = attn_weights[i];
+                for (int d = 0; d < head_dim; ++d) {
+                    out_head[d] += w * v_head[d];
+                }
+            }
+        }
+    }
+}
 float* CPUInferenceEngine::AllocateTensor(size_t size) { return new float[size]; }
 void CPUInferenceEngine::DeallocateTensor(float* ptr) { delete[] ptr; }
 

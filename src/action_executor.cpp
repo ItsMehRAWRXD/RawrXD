@@ -717,8 +717,13 @@ bool ActionExecutor::handleQueryUser(Action& action)
         std::string prompt = action.params.value("prompt", "Confirm?");
         std::vector<std::string> options = action.params.value("options", std::vector<std::string>{"Yes", "No"});
 
-        onUserInputNeeded(prompt, options);
+        std::string userInput = onUserInputNeeded(prompt, options);
+        action.result = json({{"user_input", userInput}}).dump();
     }
-    action.result = json({{"user_input", "simulated_ack"}}).dump();
+    else
+    {
+        // No callback registered - use default response
+        action.result = json({{"user_input", "default"}}).dump();
+    }
     return true;
 }
