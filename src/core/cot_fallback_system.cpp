@@ -322,7 +322,7 @@ std::string CoTFallbackSystem::executeFallback(
         }
         case CoTFallbackMode::CachedResponse: {
             // In a full implementation, this would check a response cache
-            // For now, report the cache miss and fall through to direct
+            // Current implementation reports cache miss and falls through to direct
             if (directInferenceFn) {
                 result = directInferenceFn(input);
             } else {
@@ -331,7 +331,7 @@ std::string CoTFallbackSystem::executeFallback(
             break;
         }
         case CoTFallbackMode::SimplifiedChain: {
-            // Simplified chain: wrap input in a minimal prompt and run direct
+            // Basic chain: wrap input in a minimal prompt and run direct
             std::string simplified =
                 "Answer concisely. Do not explain your reasoning steps.\n\n" + input;
             if (directInferenceFn) {

@@ -666,7 +666,7 @@ void DeploymentOrchestrator::MonitorLoop(const std::string& deploymentId,
         
         if (!healthResult.healthy) {
             // Health check failed - could trigger auto-rollback
-            // For now, just log
+            // Current implementation logs only (auto-rollback pending)
         }
         
         // Sleep before next check

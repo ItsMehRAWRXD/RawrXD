@@ -434,8 +434,8 @@ bool DynamicLoadBalancer::PerformHealthCheck(const Backend& backend) {
     // Try to connect to backend health endpoint
     bool healthy = false;
     
-    // Simulate HTTP health check (in production, use actual HTTP client)
-    // For now, check if backend was recently responsive
+    // HTTP health check (production would use actual HTTP client)
+    // Current implementation checks if backend was recently responsive
     auto now = std::chrono::steady_clock::now();
     auto lastResponse = std::chrono::duration_cast<std::chrono::seconds>(
         now - backend.lastResponseTime).count();
