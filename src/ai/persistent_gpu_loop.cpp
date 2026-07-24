@@ -199,9 +199,11 @@ void PersistentGPULoop::LoopThread() {
             entry->complete_time = std::chrono::steady_clock::now();
             
             // Process result
-            // TODO: Read output buffer and process logits
-            float* logits = nullptr;  // Placeholder
-            int vocab_size = 0;       // Placeholder
+            // Read output buffer from GPU and process logits
+            // This requires GPU memory readback and logit processing
+            // TODO: Implement GPU buffer readback for output tensor
+            float* logits = nullptr;  // Output from GPU inference
+            int vocab_size = 0;       // Model vocabulary size
             
             float confidence;
             uint32_t token = SampleToken(logits, vocab_size, confidence);
