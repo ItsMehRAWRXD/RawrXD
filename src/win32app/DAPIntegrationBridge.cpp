@@ -187,14 +187,36 @@ void DAPIntegrationBridge::ToggleBreakpoint(const std::wstring& file, int line) 
     if (!m_service) return;
     
     std::string filePath(file.begin(), file.end());
-    // Note: DapService doesn't have direct toggle, we'd need to track state
-    // For now, just set breakpoint
-    m_service->setBreakpoint(filePath, line);
+    // Track breakpoint state and toggle
+    auto key = filePath + ":" + std::to_string(line);
+    auto it = m_breakpointStates.find(key);
+    if (it != m_breakpointStates.end() && it->second) {
+        // Breakpoint exists, remove it
+        m_service->clearBreakpoint(filePath, line);
+        m_breakpointStates[key] = false;
+    } else {
+        // Set new breakpoint
+        m_service->setBreakpoint(filePath, line);
+        m_breakpointStates[key] = true;
+    }
 }
 
 void DAPIntegrationBridge::ClearAllBreakpoints() {
     if (!m_service) return;
-    // Would need to iterate and remove all
+    
+    // Clear all tracked breakpoints
+    for (auto& [key, active] : m_breakpointStates) {
+        if (active) {
+            size_t colonPos = key.find(':');
+            if (colonPos != std::string::npos) {
+                std::string file = key.substr(0, colonPos);
+                int line = std::stoi(key.substr(colonPos + 1));
+                m_service->clearBreakpoint(file, line);
+            }
+            active = false;
+        }
+    }
+    m_breakpointStates.clear();
 }
 
 //=============================================================================
@@ -202,24 +224,24 @@ void DAPIntegrationBridge::ClearAllBreakpoints() {
 //=============================================================================
 
 const std::vector<Debug::StackFrame>& DAPIntegrationBridge::GetStackTrace() const {
-    // Return cached stack trace
-    static std::vector<Debug::StackFrame> empty;
-    return empty;  // TODO: cache from callback
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    return m_cachedStackTrace;
 }
 
 void DAPIntegrationBridge::SelectFrame(int frameId) {
     if (!m_service) return;
     // Request scopes/variables for this frame
+    m_service->requestScopes(frameId);
 }
 
 void DAPIntegrationBridge::RequestVariables(int variablesReference) {
     if (!m_service) return;
-    // m_service->requestVariables(variablesReference);
+    m_service->requestVariables(variablesReference);
 }
 
 const std::vector<Debug::Variable>& DAPIntegrationBridge::GetVariables() const {
-    static std::vector<Debug::Variable> empty;
-    return empty;  // TODO: cache from callback
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    return m_cachedVariables;
 }
 
 //=============================================================================
@@ -253,13 +275,25 @@ void DAPIntegrationBridge::OnContinued(uint32_t threadId) {
 }
 
 void DAPIntegrationBridge::OnStackTraceReceived(const std::vector<Debug::StackFrame>& frames) {
-    // Cache and notify UI
+    // Cache the stack trace
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_cachedStackTrace = frames;
+    }
+    
+    // Notify UI
     if (m_ide && IsWindow((HWND)m_ide)) {
         PostMessage((HWND)m_ide, WM_USER_STACK_RECEIVED, frames.size(), 0);
     }
 }
 
 void DAPIntegrationBridge::OnVariablesReceived(int reference, const std::vector<Debug::Variable>& vars) {
+    // Cache the variables
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_cachedVariables = vars;
+    }
+    
     if (m_ide && IsWindow((HWND)m_ide)) {
         PostMessage((HWND)m_ide, WM_USER_VARS_RECEIVED, reference, vars.size());
     }
@@ -280,23 +314,65 @@ void DAPIntegrationBridge::OnError(const std::string& error, bool fatal) {
 //=============================================================================
 
 void DAPIntegrationBridge::UpdateCallStackPanel() {
-    // TODO: Update Win32IDE's call stack panel
+    // Update Win32IDE's call stack panel with cached data
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    if (m_ide && !m_cachedStackTrace.empty()) {
+        // Send message to IDE to refresh call stack view
+        PostMessage((HWND)m_ide, WM_USER_DEBUG_EVENT, 
+            (WPARAM)DebugEventType_Win32::StackTrace, 0);
+    }
 }
 
 void DAPIntegrationBridge::UpdateVariablesPanel() {
-    // TODO: Update Win32IDE's variables panel
+    // Update Win32IDE's variables panel with cached data
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    if (m_ide && !m_cachedVariables.empty()) {
+        PostMessage((HWND)m_ide, WM_USER_DEBUG_EVENT,
+            (WPARAM)DebugEventType_Win32::Variables, 0);
+    }
 }
 
 void DAPIntegrationBridge::UpdateDebugToolbar() {
-    // TODO: Enable/disable buttons based on state
+    // Enable/disable debug buttons based on current state
+    if (!m_ide) return;
+    
+    Debug::DapState state = GetState();
+    bool isRunning = (state == Debug::DapState::Running);
+    bool isPaused = (state == Debug::DapState::Paused);
+    bool isStopped = (state == Debug::DapState::Stopped);
+    
+    // Post message to IDE to update toolbar state
+    LPARAM toolbarState = (isRunning ? 1 : 0) | (isPaused ? 2 : 0) | (isStopped ? 4 : 0);
+    PostMessage((HWND)m_ide, WM_USER_DEBUG_EVENT,
+        (WPARAM)DebugEventType_Win32::StateChanged, toolbarState);
 }
 
 void DAPIntegrationBridge::ShowCurrentLine() {
-    // TODO: Highlight current execution line in editor
+    // Highlight current execution line in editor
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    if (m_ide && !m_cachedStackTrace.empty()) {
+        const auto& topFrame = m_cachedStackTrace[0];
+        // Post message with file and line info
+        std::wstring filePath(topFrame.source.begin(), topFrame.source.end());
+        // Use WM_USER_DEBUG_EVENT with line number in lParam
+        PostMessage((HWND)m_ide, WM_USER_DEBUG_EVENT,
+            (WPARAM)DebugEventType_Win32::Stopped, 
+            (LPARAM)topFrame.line);
+    }
 }
 
 void DAPIntegrationBridge::ClearDebugUI() {
-    // TODO: Clear all debug panels
+    // Clear all debug panels
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_cachedStackTrace.clear();
+        m_cachedVariables.clear();
+    }
+    
+    if (m_ide) {
+        PostMessage((HWND)m_ide, WM_USER_DEBUG_EVENT,
+            (WPARAM)DebugEventType_Win32::None, 0);
+    }
 }
 
 } // namespace Win32
