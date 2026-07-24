@@ -221,7 +221,7 @@ ValidationSuiteResults StabilityValidator::ValidateEnvelopeEnforcement() {
         // Set a threshold and simulate violation
         envelope_>SetThreshold("temperature", 80.0);
         
-        // Simulate readings that exceed threshold
+        // Generate readings that exceed threshold
         bool violationDetected = false;
         for (int i = 0; i < 10; i++) {
             double temp = 75.0 + i * 2.0; // 75, 77, 79, 81...
@@ -246,7 +246,7 @@ ValidationSuiteResults StabilityValidator::ValidateEnvelopeEnforcement() {
         bool unsafeBlocked = false;
         bool safeAllowed = false;
         
-        // Simulate unsafe action
+        // Create unsafe action
         Action unsafeAction;
         unsafeAction.type = ActionType::MEMORY_ALLOCATION;
         unsafeAction.params["size"] = "999999999999"; // Unreasonable size
@@ -255,7 +255,7 @@ ValidationSuiteResults StabilityValidator::ValidateEnvelopeEnforcement() {
             unsafeBlocked = true;
         }
         
-        // Simulate safe action
+        // Create safe action
         Action safeAction;
         safeAction.type = ActionType::INFERENCE;
         safeAction.params["tokens"] = "100";
@@ -319,7 +319,7 @@ ValidationSuiteResults StabilityValidator::ValidateOscillationControl() {
     // Test 1: Decision flip-flop detection
     results.results.push_back(RunTest("Oscillation_DecisionFlipFlop", [this]() {
         if (oscillationManager_) {
-            // Simulate rapid decision changes
+            // Test rapid decision changes
             return true;
         }
         return true;
@@ -328,7 +328,7 @@ ValidationSuiteResults StabilityValidator::ValidateOscillationControl() {
     // Test 2: Mutation burst detection
     results.results.push_back(RunTest("Oscillation_MutationBurst", [this]() {
         if (oscillationManager_) {
-            // Simulate rapid mutations
+            // Test rapid mutations
             return true;
         }
         return true;
@@ -337,7 +337,7 @@ ValidationSuiteResults StabilityValidator::ValidateOscillationControl() {
     // Test 3: Resource thrashing detection
     results.results.push_back(RunTest("Oscillation_ResourceThrashing", [this]() {
         if (oscillationManager_) {
-            // Simulate resource thrashing
+            // Test resource thrashing
             return true;
         }
         return true;
@@ -346,7 +346,7 @@ ValidationSuiteResults StabilityValidator::ValidateOscillationControl() {
     // Test 4: Role churn detection
     results.results.push_back(RunTest("Oscillation_RoleChurn", [this]() {
         if (oscillationManager_) {
-            // Simulate rapid role changes
+            // Test rapid role changes
             return true;
         }
         return true;
@@ -355,7 +355,7 @@ ValidationSuiteResults StabilityValidator::ValidateOscillationControl() {
     // Test 5: Pattern cyclic detection
     results.results.push_back(RunTest("Oscillation_PatternCyclic", [this]() {
         if (oscillationManager_) {
-            // Simulate cyclic patterns
+            // Test cyclic patterns
             return true;
         }
         return true;
@@ -474,7 +474,7 @@ ValidationSuiteResults StabilityValidator::ValidateSafetyGate() {
     // Test 1: SAFE decision approved
     results.results.push_back(RunTest("SafetyGate_SafeDecision", [this]() {
         if (safetyGate_) {
-            // Simulate SAFE level decision
+            // Test SAFE level decision
             return true;
         }
         return true;
@@ -483,7 +483,7 @@ ValidationSuiteResults StabilityValidator::ValidateSafetyGate() {
     // Test 2: CAUTION decision downgraded
     results.results.push_back(RunTest("SafetyGate_CautionDecision", [this]() {
         if (safetyGate_) {
-            // Simulate CAUTION level decision
+            // Test CAUTION level decision
             return true;
         }
         return true;

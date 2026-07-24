@@ -1,4 +1,4 @@
-// Win32IDE.cpp - RawrXD Win32 IDE Implementation
+// Win32IDE.cpp - RawrXD Win32 IDE Implementation - g87
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
