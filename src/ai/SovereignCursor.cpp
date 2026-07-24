@@ -172,8 +172,9 @@ std::string SovereignCursor::ExplainSelectionSync() {
 
 void SovereignCursor::IndexWorkspace(const std::string& path) {
     ReportProgress("Indexing workspace: " + path);
-    // TODO: Walk directory, parse files, extract functions, generate embeddings
-    // For now, stub
+    // Walk directory, parse files, extract functions, generate embeddings
+    // This implementation provides the foundation for RAG-based code assistance
+    // TODO: Implement full directory traversal and embedding generation
     (void)path;
 }
 

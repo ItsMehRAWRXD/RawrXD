@@ -506,5 +506,4 @@ void Win32IDE::shutdownSemanticIndex() {
     }
 
     // Note: SemanticCodeIntelligence is a singleton, so we don't explicitly shut it down
-}</content>
-<parameter name="filePath">d:\rawrxd\src\win32app\Win32IDE_SemanticIndex.cpp
+}
