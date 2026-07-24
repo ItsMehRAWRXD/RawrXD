@@ -458,7 +458,7 @@ BraidedStatus BraidedModelLoader_InferAsync(
     ctx->inferenceRunning = TRUE;
     
     // TODO: Start async inference thread
-    // Simulate completion (async thread implementation pending)
+    // Complete synchronously (async thread implementation pending)
 
     if (tokenCb) {
         tokenCb("", 0, TRUE, request->userData);

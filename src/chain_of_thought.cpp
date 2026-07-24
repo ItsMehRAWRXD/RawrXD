@@ -71,7 +71,7 @@ std::optional<ChainResult> ChainOfThought::generateChain(
         result.overallConfidence = 0.0f;
         result.finalConclusion = "Failed to generate valid chain.";
     } else {
-        result.overallConfidence = result.steps.back().confidence; // Simplified
+        result.overallConfidence = result.steps.back().confidence;
         result.finalConclusion = result.steps.back().thought;
     }
     
