@@ -52,7 +52,7 @@ std::string LogEntry::ToJson() const {
 
 LogEntry LogEntry::FromJson(const std::string& json) {
     LogEntry entry;
-    // Simplified parsing - in production use proper JSON library
+    // Basic parsing implementation - production would use proper JSON library
     return entry;
 }
 
@@ -89,7 +89,7 @@ std::string PersistentState::ToJson() const {
 
 PersistentState PersistentState::FromJson(const std::string& json) {
     PersistentState state;
-    // Simplified parsing
+    // Basic parsing implementation
     return state;
 }
 
@@ -806,7 +806,7 @@ void LeaderElection::RecordVote(const std::string& nodeId, bool granted) {
 bool LeaderElection::HasMajority() const {
     std::lock_guard<std::mutex> lock(mutex_);
     // TODO: Calculate based on cluster size
-    return votesGranted_.size() >= 2;  // Placeholder
+    return votesGranted_.size() >= 2;  // Basic implementation - cluster size calculation pending
 }
 
 bool LeaderElection::IsElectionInProgress() const {

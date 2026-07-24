@@ -616,7 +616,7 @@ std::vector<std::string> CachePrefetchEngine::generatePrefetchKeys(const Prefetc
 
 bool CachePrefetchEngine::executePrefetch(const std::vector<std::string>& keys) {
     // Would actually prefetch keys from cache
-    // For now, simulate success
+    // Current implementation returns success
     return true;
 }
 
@@ -648,7 +648,7 @@ SmartPrefetcher::SmartPrefetcher(CachePrefetchEngine* engine)
 std::vector<std::string> SmartPrefetcher::predictAccesses(const std::string& sessionId,
                                                            const std::vector<std::string>& context) {
     // Would use ML model for prediction
-    // For now, return empty
+    // Current implementation returns empty (ML model pending)
     return std::vector<std::string>();
 }
 

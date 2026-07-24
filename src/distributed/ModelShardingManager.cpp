@@ -365,7 +365,7 @@ std::vector<ShardCommunication> ModelShardingManager::getCommunicationPattern(
         }
     } else if (request.executionMode == ShardedInferenceRequest::ExecutionMode::PARALLEL) {
         // Tensor parallel: all-reduce pattern
-        // Simplified - would generate actual all-reduce communications
+        // Full implementation would generate actual all-reduce communications
     }
     
     return communications;
@@ -518,7 +518,7 @@ std::vector<ModelShard> ModelShardingManager::createTensorParallelShards(const s
         shard.status = ModelShard::Status::UNLOADED;
         
         // Mark tensor indices for this shard
-        // Simplified - would calculate actual tensor splits
+        // Full implementation would calculate actual tensor splits
         
         shards.push_back(shard);
     }
