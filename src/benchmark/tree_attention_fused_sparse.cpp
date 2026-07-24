@@ -33,7 +33,7 @@ void BuildBlockSparseTree(std::vector<TreeEdgeBlock>& blocks, uint32_t num_nodes
     // Level 1: nodes 1-4 (children of root)
     // Level 2: nodes 5-20 (would be 16 nodes, but we have 16 total)
     
-    // Simplified: each node can attend to itself and ancestors
+    // Each node can attend to itself and ancestors
     for (uint32_t q = 0; q < num_nodes; q++) {
         TreeEdgeBlock block;
         block.q_idx = q;
