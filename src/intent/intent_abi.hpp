@@ -199,6 +199,13 @@ struct CapabilityToken {
     bool IsExpired() const;
     bool IsExhausted() const;
     bool Consume();
+    
+    // Copy/move constructors (required due to atomic member)
+    CapabilityToken() = default;
+    CapabilityToken(const CapabilityToken& other);
+    CapabilityToken(CapabilityToken&& other) noexcept;
+    CapabilityToken& operator=(const CapabilityToken& other);
+    CapabilityToken& operator=(CapabilityToken&& other) noexcept;
 };
 
 // Intent Validator - checks if intent is valid

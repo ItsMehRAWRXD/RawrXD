@@ -224,6 +224,15 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_CTLCOLORSTATIC:
+        {
+            // Paint sidebar title bar and child STATIC labels with dark background
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
+        }
     }
 
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);

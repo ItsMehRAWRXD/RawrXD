@@ -155,6 +155,13 @@ public:
     std::string ToJson() const;
     static std::optional<CapabilityToken> FromJson(const std::string& json);
     
+    // Copy/move constructors (required due to atomic members)
+    CapabilityToken() = default;
+    CapabilityToken(const CapabilityToken& other);
+    CapabilityToken(CapabilityToken&& other) noexcept;
+    CapabilityToken& operator=(const CapabilityToken& other);
+    CapabilityToken& operator=(CapabilityToken&& other) noexcept;
+    
 private:
     uint64_t token_id_ = 0;
     uint64_t intent_id_ = 0;

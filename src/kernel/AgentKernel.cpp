@@ -503,7 +503,7 @@ std::vector<BeaconEvent> BeaconBus::GetHistoryForAgent(AgentId agent, uint64_t m
         }
     }
     if (result.size() > maxEvents) {
-        result.erase(result.begin(), result.size() - maxEvents);
+        result.erase(result.begin(), result.begin() + (result.size() - maxEvents));
     }
     return result;
 }

@@ -33,10 +33,10 @@ void TransactionConfig::LoadFromFile(const std::filesystem::path& path) {
         if (j.contains("keep_journal")) keep_journal = j["keep_journal"];
         if (j.contains("atomic_activation")) atomic_activation = j["atomic_activation"];
         
-        if (j.contains("max_patches_per_transaction")) max_patches_per_transaction = j["max_patches_per_transaction"];
-        if (j.contains("max_file_size_mb")) max_file_size_mb = j["max_file_size_mb"];
-        if (j.contains("max_transaction_time_ms")) max_transaction_time_ms = j["max_transaction_time_ms"];
-        if (j.contains("max_rollback_time_ms")) max_rollback_time_ms = j["max_rollback_time_ms"];
+        if (j.contains("max_patches_per_transaction")) max_patches_per_transaction = j["max_patches_per_transaction"].get<uint32_t>();
+        if (j.contains("max_file_size_mb")) max_file_size_mb = j["max_file_size_mb"].get<uint32_t>();
+        if (j.contains("max_transaction_time_ms")) max_transaction_time_ms = j["max_transaction_time_ms"].get<uint32_t>();
+        if (j.contains("max_rollback_time_ms")) max_rollback_time_ms = j["max_rollback_time_ms"].get<uint32_t>();
         
         if (j.contains("journal_path")) journal_path = j["journal_path"].get<std::string>();
         if (j.contains("snapshot_path")) snapshot_path = j["snapshot_path"].get<std::string>();

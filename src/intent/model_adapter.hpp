@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>

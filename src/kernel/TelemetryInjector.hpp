@@ -25,6 +25,7 @@
 #include <memory>
 #include <functional>
 #include <unordered_map>
+#include <mutex>
 
 namespace RawrXD {
 namespace Kernel {

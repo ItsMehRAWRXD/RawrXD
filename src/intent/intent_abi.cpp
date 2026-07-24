@@ -326,5 +326,57 @@ bool IntentRouter::IsRoutingEnabled() const {
     return enabled_.load();
 }
 
+// =============================================================================
+// CapabilityToken
+// =============================================================================
+
+CapabilityToken::CapabilityToken(const CapabilityToken& other)
+    : token_id(other.token_id),
+      intent_id(other.intent_id),
+      allowed_types(other.allowed_types),
+      allowed_paths(other.allowed_paths),
+      denied_paths(other.denied_paths),
+      expiry_timestamp(other.expiry_timestamp),
+      max_executions(other.max_executions),
+      executions_used(other.executions_used.load()) {}
+
+CapabilityToken::CapabilityToken(CapabilityToken&& other) noexcept
+    : token_id(other.token_id),
+      intent_id(other.intent_id),
+      allowed_types(std::move(other.allowed_types)),
+      allowed_paths(std::move(other.allowed_paths)),
+      denied_paths(std::move(other.denied_paths)),
+      expiry_timestamp(other.expiry_timestamp),
+      max_executions(other.max_executions),
+      executions_used(other.executions_used.load()) {}
+
+CapabilityToken& CapabilityToken::operator=(const CapabilityToken& other) {
+    if (this != &other) {
+        token_id = other.token_id;
+        intent_id = other.intent_id;
+        allowed_types = other.allowed_types;
+        allowed_paths = other.allowed_paths;
+        denied_paths = other.denied_paths;
+        expiry_timestamp = other.expiry_timestamp;
+        max_executions = other.max_executions;
+        executions_used.store(other.executions_used.load());
+    }
+    return *this;
+}
+
+CapabilityToken& CapabilityToken::operator=(CapabilityToken&& other) noexcept {
+    if (this != &other) {
+        token_id = other.token_id;
+        intent_id = other.intent_id;
+        allowed_types = std::move(other.allowed_types);
+        allowed_paths = std::move(other.allowed_paths);
+        denied_paths = std::move(other.denied_paths);
+        expiry_timestamp = other.expiry_timestamp;
+        max_executions = other.max_executions;
+        executions_used.store(other.executions_used.load());
+    }
+    return *this;
+}
+
 } // namespace Intent
 } // namespace RawrXD

@@ -31,9 +31,9 @@ void PolicyConfig::LoadFromFile(const std::filesystem::path& path) {
         if (j.contains("auto_revoke_on_violation")) auto_revoke_on_violation = j["auto_revoke_on_violation"];
         if (j.contains("log_all_capability_checks")) log_all_capability_checks = j["log_all_capability_checks"];
         
-        if (j.contains("max_modifications_per_minute")) max_modifications_per_minute = j["max_modifications_per_minute"];
-        if (j.contains("max_executions_per_minute")) max_executions_per_minute = j["max_executions_per_minute"];
-        if (j.contains("max_high_risk_per_hour")) max_high_risk_per_hour = j["max_high_risk_per_hour"];
+        if (j.contains("max_modifications_per_minute")) max_modifications_per_minute = j["max_modifications_per_minute"].get<uint32_t>();
+        if (j.contains("max_executions_per_minute")) max_executions_per_minute = j["max_executions_per_minute"].get<uint32_t>();
+        if (j.contains("max_high_risk_per_hour")) max_high_risk_per_hour = j["max_high_risk_per_hour"].get<uint32_t>();
         
         if (j.contains("protected_files")) {
             protected_files.clear();
@@ -56,7 +56,7 @@ void PolicyConfig::SaveToFile(const std::filesystem::path& path) const {
     j["auto_revoke_on_violation"] = auto_revoke_on_violation;
     j["log_all_capability_checks"] = log_all_capability_checks;
     j["max_modifications_per_minute"] = max_modifications_per_minute;
-    j["max_executions_per_minute"] = max_executions_per_min_minute;
+    j["max_executions_per_minute"] = max_executions_per_minute;
     j["max_high_risk_per_hour"] = max_high_risk_per_hour;
     
     std::ofstream file(path);
@@ -199,6 +199,63 @@ std::optional<CapabilityToken> CapabilityToken::FromJson(const std::string& json
     } catch (...) {
         return std::nullopt;
     }
+}
+
+// Copy/move constructors (required due to atomic members)
+CapabilityToken::CapabilityToken(const CapabilityToken& other)
+    : token_id_(other.token_id_),
+      intent_id_(other.intent_id_),
+      capabilities_(other.capabilities_),
+      allowed_paths_(other.allowed_paths_),
+      denied_paths_(other.denied_paths_),
+      expiry_timestamp_(other.expiry_timestamp_),
+      max_uses_(other.max_uses_),
+      uses_remaining_(other.uses_remaining_.load()),
+      revoked_(other.revoked_.load()),
+      revoke_reason_(other.revoke_reason_) {}
+
+CapabilityToken::CapabilityToken(CapabilityToken&& other) noexcept
+    : token_id_(other.token_id_),
+      intent_id_(other.intent_id_),
+      capabilities_(other.capabilities_),
+      allowed_paths_(std::move(other.allowed_paths_)),
+      denied_paths_(std::move(other.denied_paths_)),
+      expiry_timestamp_(other.expiry_timestamp_),
+      max_uses_(other.max_uses_),
+      uses_remaining_(other.uses_remaining_.load()),
+      revoked_(other.revoked_.load()),
+      revoke_reason_(std::move(other.revoke_reason_)) {}
+
+CapabilityToken& CapabilityToken::operator=(const CapabilityToken& other) {
+    if (this != &other) {
+        token_id_ = other.token_id_;
+        intent_id_ = other.intent_id_;
+        capabilities_ = other.capabilities_;
+        allowed_paths_ = other.allowed_paths_;
+        denied_paths_ = other.denied_paths_;
+        expiry_timestamp_ = other.expiry_timestamp_;
+        max_uses_ = other.max_uses_;
+        uses_remaining_.store(other.uses_remaining_.load());
+        revoked_.store(other.revoked_.load());
+        revoke_reason_ = other.revoke_reason_;
+    }
+    return *this;
+}
+
+CapabilityToken& CapabilityToken::operator=(CapabilityToken&& other) noexcept {
+    if (this != &other) {
+        token_id_ = other.token_id_;
+        intent_id_ = other.intent_id_;
+        capabilities_ = other.capabilities_;
+        allowed_paths_ = std::move(other.allowed_paths_);
+        denied_paths_ = std::move(other.denied_paths_);
+        expiry_timestamp_ = other.expiry_timestamp_;
+        max_uses_ = other.max_uses_;
+        uses_remaining_.store(other.uses_remaining_.load());
+        revoked_.store(other.revoked_.load());
+        revoke_reason_ = std::move(other.revoke_reason_);
+    }
+    return *this;
 }
 
 // =============================================================================

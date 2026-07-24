@@ -1606,8 +1606,8 @@ void Win32IDE::recreateFonts()
 
 void Win32IDE::createEditor(HWND hwnd)
 {
-
-    m_hwndEditor = CreateWindowExW(WS_EX_CLIENTEDGE, RICHEDIT_CLASSW, L"",
+    // WS_EX_COMPOSITED reduces flicker by double-buffering the client area
+    m_hwndEditor = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_COMPOSITED, RICHEDIT_CLASSW, L"",
                                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL |
                                        ES_AUTOHSCROLL | ES_WANTRETURN,
                                    0, 0, 0, 0, hwnd, (HMENU)IDC_EDITOR, m_hInstance, nullptr);
@@ -7873,20 +7873,30 @@ void Win32IDE::drawTabItem(DRAWITEMSTRUCT* dis)
     SelectObject(hdc, hOldPen);
     DeleteObject(hPen);
 
+    // Set tab font (Segoe UI 9pt) so text isn't jumbled
+    HFONT hTabFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTabFont);
+
     // Text
     SetBkMode(hdc, TRANSPARENT);
     COLORREF textColor = isModified ? RGB(255, 200, 100) : RGB(200, 200, 200);
     SetTextColor(hdc, textColor);
 
-    rc.left += 5;
-    rc.right -= 20;  // Space for close button
+    RECT textRc = rc;
+    textRc.left += 8;
+    textRc.right -= 22;  // Space for close button
 
     std::wstring displayW = utf8ToWide(tab.displayName);
-    DrawTextW(hdc, displayW.c_str(), -1, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawTextW(hdc, displayW.c_str(), -1, &textRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
 
     // Close button
-    RECT closeRc = {rc.right + 5, rc.top + 2, rc.right + 15, rc.bottom - 2};
-    DrawTextW(hdc, L"×", 1, &closeRc, DT_CENTER | DT_VCENTER);
+    RECT closeRc = {textRc.right + 4, rc.top + 3, textRc.right + 16, rc.bottom - 3};
+    DrawTextW(hdc, L"×", 1, &closeRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTabFont);
 }
 
 void Win32IDE::handleTabClick(POINT pt)

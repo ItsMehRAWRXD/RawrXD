@@ -103,6 +103,15 @@ struct FirewallResult {
     bool requires_sandbox = false;
     bool requires_approval = false;
     std::optional<CapabilityToken> token;
+    
+    // Default constructor
+    FirewallResult() = default;
+    
+    // Copy/move constructors (required due to CapabilityToken having atomic members)
+    FirewallResult(const FirewallResult& other);
+    FirewallResult(FirewallResult&& other) noexcept;
+    FirewallResult& operator=(const FirewallResult& other);
+    FirewallResult& operator=(FirewallResult&& other) noexcept;
 };
 
 // Patch Firewall - validates all patches

@@ -5,6 +5,9 @@
 #include <memory>
 #include <functional>
 #include <filesystem>
+#include <mutex>
+#include <atomic>
+#include <unordered_map>
 #include "../intent/intent_config.hpp"
 
 // =============================================================================

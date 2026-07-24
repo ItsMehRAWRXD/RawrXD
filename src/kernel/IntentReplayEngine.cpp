@@ -174,7 +174,7 @@ bool BuildSnapshot::IsValid() const {
 
 std::string BuildSnapshot::ComputeAggregateHash() const {
     std::stringstream ss;
-    ss << buildConfig << ":" <> cmakeCacheHash << ":" << executableHash;
+    ss << buildConfig << ":" << cmakeCacheHash << ":" << executableHash;
     for (const auto& obj : objectFiles) {
         ss << ":" << obj;
     }
@@ -336,7 +336,7 @@ void ReplayJournal::RecordTransaction(uint64_t recordId, Hotpatch::PatchTransact
     auto it = records_.find(recordId);
     if (it == records_.end()) return;
     
-    it->second.transaction = std::move(tx);
+    it->second.transaction = std::make_unique<Hotpatch::PatchTransaction>(std::move(tx));
 }
 
 void ReplayJournal::RecordResult(uint64_t recordId, bool success, 

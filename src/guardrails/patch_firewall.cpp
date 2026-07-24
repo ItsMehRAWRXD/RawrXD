@@ -110,6 +110,54 @@ bool FirewallConfig::IsExtensionDenied(const std::filesystem::path& path) const 
 }
 
 // =============================================================================
+// FirewallResult
+// =============================================================================
+
+FirewallResult::FirewallResult(const FirewallResult& other)
+    : allowed(other.allowed),
+      rule(other.rule),
+      reason(other.reason),
+      warnings(other.warnings),
+      requires_sandbox(other.requires_sandbox),
+      requires_approval(other.requires_approval),
+      token(other.token) {}
+
+FirewallResult::FirewallResult(FirewallResult&& other) noexcept
+    : allowed(other.allowed),
+      rule(other.rule),
+      reason(std::move(other.reason)),
+      warnings(std::move(other.warnings)),
+      requires_sandbox(other.requires_sandbox),
+      requires_approval(other.requires_approval),
+      token(std::move(other.token)) {}
+
+FirewallResult& FirewallResult::operator=(const FirewallResult& other) {
+    if (this != &other) {
+        allowed = other.allowed;
+        rule = other.rule;
+        reason = other.reason;
+        warnings = other.warnings;
+        requires_sandbox = other.requires_sandbox;
+        requires_approval = other.requires_approval;
+        token = other.token;
+    }
+    return *this;
+}
+
+FirewallResult& FirewallResult::operator=(FirewallResult&& other) noexcept {
+    if (this != &other) {
+        allowed = other.allowed;
+        rule = other.rule;
+        reason = std::move(other.reason);
+        warnings = std::move(other.warnings);
+        requires_sandbox = other.requires_sandbox;
+        requires_approval = other.requires_approval;
+        token = std::move(other.token);
+    }
+    return *this;
+}
+
+// =============================================================================
 // PatchFirewall
 // =============================================================================
 
@@ -276,14 +324,6 @@ void PatchFirewall::Resume() {
     stop_reason_.clear();
 }
 
-void PatchFirewall::EnableFirewall(bool enable) {
-    enabled_.store(enable);
-}
-
-bool PatchFirewall::IsEnabled() const {
-    return enabled_.load();
-}
-
 void PatchFirewall::RegisterValidator(const std::string& name, CustomValidator validator) {
     std::lock_guard<std::mutex> lock(validators_mutex_);
     custom_validators_[name] = validator;
@@ -416,14 +456,6 @@ Intent::IntentResponse ExecutionGateway::Execute(
     
     // Execute
     return Execute(intent);
-}
-
-void ExecutionGateway::EnableGateway(bool enable) {
-    enabled_.store(enable);
-}
-
-bool ExecutionGateway::IsEnabled() const {
-    return enabled_.load();
 }
 
 // =============================================================================

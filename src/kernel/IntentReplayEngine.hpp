@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <functional>
 #include <chrono>
+#include <mutex>
+#include <atomic>
 
 namespace RawrXD {
 namespace Kernel {
@@ -102,7 +104,7 @@ struct ReplayRecord {
     // Execution
     std::vector<BeaconEvent> events;
     std::vector<std::shared_ptr<ResourceLease>> leases;
-    Hotpatch::PatchTransaction transaction;
+    std::unique_ptr<Hotpatch::PatchTransaction> transaction;
     
     // Results
     bool succeeded;

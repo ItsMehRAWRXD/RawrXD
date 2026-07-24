@@ -241,7 +241,7 @@ public:
     
     // Owned resources
     std::vector<LeaseId> activeLeases;
-    std::mutex leaseMutex;
+    mutable std::mutex leaseMutex;
     
     // Memory context
     std::vector<uint64_t> recentIntentHistory;
