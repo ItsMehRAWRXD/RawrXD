@@ -12,7 +12,7 @@
 // ============================================================================
 
 #include "HotPatcherSafety.hpp"
-#include "HotPatcher.hpp"  // For PatchStatus, PatchMetadata
+#include "HotPatcher.hpp"  // For PatchStatus, PatchMetadata, GetHotPatcher
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -146,6 +146,18 @@ bool SHA256Checksum::verify(const void* data, size_t len, const Hash& expected) 
 
 bool SHA256Checksum::equal(const Hash& a, const Hash& b) {
     return memcmp(a.data(), b.data(), HASH_SIZE) == 0;
+}
+
+SHA256Checksum::Hash SHA256Checksum::fromString(const std::string& hex) {
+    Hash hash{};
+    if (hex.length() != HASH_SIZE * 2) {
+        return hash;  // Return zero hash on invalid input
+    }
+    for (size_t i = 0; i < HASH_SIZE; ++i) {
+        std::string byteStr = hex.substr(i * 2, 2);
+        hash[i] = static_cast<uint8_t>(std::stoul(byteStr, nullptr, 16));
+    }
+    return hash;
 }
 
 // ============================================================================

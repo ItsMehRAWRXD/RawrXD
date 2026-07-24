@@ -3209,6 +3209,20 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         # ASM link stubs for missing symbols
         src/core/asm_link_stubs.cpp
+        src/core/gguf_d3d12_bridge_stub.cpp
+        src/core/rtp_stubs.cpp
+        src/core/rdna3_stubs.cpp
+        src/core/ollama_provider_stub.cpp
+        src/core/gguf_runner_stub.cpp
+        src/core/subsystem_api_stubs.cpp
+        src/core/crypto_stubs.cpp
+        src/core/watchdog_stubs.cpp
+        src/core/pattern_stubs.cpp
+        src/core/perf_telemetry_stubs.cpp
+        src/core/native_log_stub.cpp
+        src/core/collab_stubs.cpp
+        src/core/mesh_brain_stubs.cpp
+        src/win32app/Win32IDE_private_stubs.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp

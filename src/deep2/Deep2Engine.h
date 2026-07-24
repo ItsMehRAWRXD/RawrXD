@@ -246,6 +246,12 @@ public:
     // Set sampler
     void setSampler(std::unique_ptr<rawrxd::sampling::ISampler> sampler);
 
+    // Token embedding lookup (public for tree speculative decoding)
+    void embedToken(int tokenId, float* output);
+
+    // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
+    void computeLogits(const float* hiddenState, float* logits);
+
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
@@ -340,15 +346,9 @@ private:
     // Shared expert FFN
     void computeSharedExpertFFN(size_t layer, const float* input, float* output);
     
-    // Token embedding lookup
-    void embedToken(int tokenId, float* output);
-    
-    // LM head projection: hiddenDim -> vocabSize
-    void computeLogits(const float* hiddenState, float* logits);
-    
     // Sampling
     int sampleToken(const float* logits);
-    
+
     // Find tensor in GGUF by name pattern
     WeightTensor* findTensor(const std::string& namePattern);
     

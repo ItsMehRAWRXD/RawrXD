@@ -230,6 +230,7 @@ public:
         uint32_t tokenId;
         float* outputHidden;
         uint32_t selectedExperts[8];
+        float expertWeights[8];
         uint8_t numExperts;
     };
     const std::vector<BatchResult>& GetResults() const;
@@ -246,7 +247,13 @@ private:
     std::vector<uint32_t> tokenIds_;
     std::vector<float*> hiddenStates_;
     std::vector<BatchResult> results_;
-    
+
+    // Router configuration
+    uint32_t numExperts_ = 0;
+    uint32_t topK_ = 0;
+    uint32_t hiddenDim_ = 0;
+    const float* routerWeights_ = nullptr;
+
     void ExecuteBatched();
 };
 
