@@ -375,12 +375,82 @@ int WorkspaceAnalyzer::estimateRebuildTime(const std::vector<std::string>& chang
 }
 
 void WorkspaceAnalyzer::analyzeWithCMake() {
-    // Try to extract build info from CMakeLists.txt or cmake cache
-    // For now, set reasonable defaults
+    // Extract build info from CMakeLists.txt or cmake cache
+    std::string cmakeListsPath = m_root + "/CMakeLists.txt";
+    std::string cmakeCachePath = m_root + "/build/CMakeCache.txt";
+    
+    // Try to read from CMake cache first (most accurate)
+    if (std::filesystem::exists(cmakeCachePath)) {
+        std::ifstream cacheFile(cmakeCachePath);
+        if (cacheFile) {
+            std::string line;
+            while (std::getline(cacheFile, line)) {
+                // Parse CMAKE_BUILD_TYPE
+                if (line.find("CMAKE_BUILD_TYPE:") != std::string::npos) {
+                    size_t pos = line.find("=");
+                    if (pos != std::string::npos) {
+                        m_analysis.build_info.build_type = line.substr(pos + 1);
+                    }
+                }
+                // Parse CMAKE_CXX_COMPILER
+                if (line.find("CMAKE_CXX_COMPILER:") != std::string::npos) {
+                    size_t pos = line.find("=");
+                    if (pos != std::string::npos) {
+                        m_analysis.build_info.compiler = line.substr(pos + 1);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Parse CMakeLists.txt for project info
+    if (std::filesystem::exists(cmakeListsPath)) {
+        std::ifstream cmakeFile(cmakeListsPath);
+        if (cmakeFile) {
+            std::string content((std::istreambuf_iterator<char>(cmakeFile)),
+                               std::istreambuf_iterator<char>());
+            
+            // Extract project name
+            std::regex projectRegex(R"(project\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)");
+            std::smatch match;
+            if (std::regex_search(content, match, projectRegex)) {
+                m_analysis.build_info.project_name = match[1].str();
+            }
+            
+            // Extract C++ standard
+            std::regex cxxStandardRegex(R"(set\s*\(\s*CMAKE_CXX_STANDARD\s+(\d+)\s*\))");
+            if (std::regex_search(content, match, cxxStandardRegex)) {
+                m_analysis.build_info.cpp_standard = std::stoi(match[1].str());
+            }
+            
+            // Count targets (add_executable, add_library)
+            std::regex targetRegex(R"((add_executable|add_library)\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)");
+            std::sregex_iterator iter(content.begin(), content.end(), targetRegex);
+            std::sregex_iterator end;
+            while (iter != end) {
+                m_analysis.build_info.targets.push_back((*iter)[2].str());
+                ++iter;
+            }
+        }
+    }
+    
+    // Set build directory
     m_analysis.build_info.build_dir = m_root + "/build";
     m_analysis.build_info.source_dir = m_root;
-    m_analysis.build_info.recommended_jobs = 4;
+    
+    // Determine recommended parallel jobs based on CPU count
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    DWORD numCores = sysInfo.dwNumberOfProcessors;
+    m_analysis.build_info.recommended_jobs = std::max(1u, numCores - 1);  // Leave one core free
     m_analysis.build_info.parallel_build_supported = true;
+    
+    // Check for Ninja or Make
+    if (std::filesystem::exists(m_analysis.build_info.build_dir + "/build.ninja")) {
+        m_analysis.build_info.generator = "Ninja";
+    } else if (std::filesystem::exists(m_analysis.build_info.build_dir + "/Makefile")) {
+        m_analysis.build_info.generator = "Unix Makefiles";
+    }
 }
 
 void WorkspaceAnalyzer::refresh() {

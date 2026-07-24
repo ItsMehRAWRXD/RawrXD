@@ -17,4 +17,19 @@ void asm_perf_end(const char* name) {
     // Stub - no operation
 }
 
+void asm_perf_init() {
+    OutputDebugStringA("[PerfTelemetry] asm_perf_init stub called\n");
+}
+
+uint64_t asm_perf_read_slot(int slot) {
+    (void)slot;
+    OutputDebugStringA("[PerfTelemetry] asm_perf_read_slot stub called\n");
+    return 0;
+}
+
+void asm_perf_reset_slot(int slot) {
+    (void)slot;
+    OutputDebugStringA("[PerfTelemetry] asm_perf_reset_slot stub called\n");
+}
+
 } // extern "C"

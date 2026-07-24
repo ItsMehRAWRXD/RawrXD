@@ -3222,6 +3222,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/native_log_stub.cpp
         src/core/collab_stubs.cpp
         src/core/mesh_brain_stubs.cpp
+        src/core/speciator_stubs.cpp
+        src/core/neural_bridge_stubs.cpp
+        src/core/hwsynth_stubs.cpp
+        src/core/spengine_stubs.cpp
+        src/core/model_router_stubs.cpp
         src/win32app/Win32IDE_private_stubs.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
