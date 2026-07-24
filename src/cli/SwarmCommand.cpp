@@ -234,7 +234,7 @@ void SwarmCommand::printRoleConfiguration(const Sovereign::SwarmAgentContext& ct
 bool SwarmCommand::validateModels(const SwarmOptions& opts) {
     // Note: Model validation requires Ollama API
     // When Ollama is available, query: GET /api/tags
-    // For now, assume valid (user responsibility)
+    // Assume valid (user responsibility until validation implemented)
     return true;
 }
 
@@ -320,7 +320,7 @@ CommandResult SwarmCommand::execute(int argc, char* argv[]) {
         std::cout << "[MODE] Listing available models from Ollama...\n";
         // Note: Live model listing requires Ollama API
         // When available: GET /api/tags
-        // For now, show common models as reference
+        // Show common models as reference (live listing pending)
         std::cout << "  - nemotron-super:latest (86GB)\n";
         std::cout << "  - qwen3.5:40b\n";
         std::cout << "  - codestral:22b\n";

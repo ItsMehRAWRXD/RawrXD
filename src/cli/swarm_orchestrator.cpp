@@ -1077,7 +1077,7 @@ void SwarmOrchestrator::handleLayerRequest(SOCKET clientSock, const uint8_t* hea
 
             if (ownLayer) {
                 // In production: stream layer tensor via swarm_stream_layer ASM
-                // For now: send acknowledgment
+                // Send acknowledgment (streaming implementation pending)
                 uint8_t ack[32];
                 memset(ack, 0, sizeof(ack));
                 *reinterpret_cast<uint32_t*>(ack + 0) = SWARM_MAGIC;

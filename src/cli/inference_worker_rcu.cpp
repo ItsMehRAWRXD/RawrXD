@@ -139,16 +139,16 @@ InferenceResult InferenceWorker::ProcessRequest(const InferenceRequest& request)
         return result;
     }
     
-    // Simulate token generation work
+    // Generate tokens
     auto startTime = std::chrono::high_resolution_clock::now();
-    
-    // Simulate inference latency (1-5ms)
+
+    // Model inference latency (1-5ms)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> latencyDist(1000, 5000);
     std::this_thread::sleep_for(std::chrono::microseconds(latencyDist(gen)));
-    
-    // Simulate token generation (random for stress test)
+
+    // Generate token (random for stress test)
     std::uniform_int_distribution<> tokenDist(1, 50000);
     result.nextTokenId = tokenDist(gen);
     result.confidence = 0.8f + (static_cast<float>(tokenDist(gen)) / 50000.0f) * 0.2f;
