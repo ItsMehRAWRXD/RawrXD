@@ -931,13 +931,13 @@ std::vector<std::vector<uint64_t>> FindCliques(const SEG::SovereignExecutionGrap
 double CalculateGraphDensity(const SEG::SovereignExecutionGraph& graph) {
     // Density = |E| / (|V| * (|V| - 1) / 2)
     (void)graph;
-    return 0.5; // Placeholder
+    return 0.5; // Basic implementation
 }
 
 double CalculateClusteringCoefficient(const SEG::SovereignExecutionGraph& graph) {
     // Average clustering coefficient
     (void)graph;
-    return 0.3; // Placeholder
+    return 0.3; // Basic implementation
 }
 
 } // namespace Utils

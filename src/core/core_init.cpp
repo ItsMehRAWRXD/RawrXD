@@ -140,7 +140,7 @@ SystemInfo GetSystemInfo() {
     }
 #elif defined(__x86_64__) || defined(__i386__)
     // Linux CPU feature detection would go here
-    // For now, leave as false
+    // Implementation pending
     info.hasAVX = false;
     info.hasAVX2 = false;
     info.hasAVX512 = false;
