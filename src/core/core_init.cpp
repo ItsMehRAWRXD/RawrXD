@@ -214,8 +214,32 @@ void PrintFeatureFlags() {
 }
 
 MemoryStats GetMemoryStats() {
-    // Placeholder - would integrate with actual memory tracker
     MemoryStats stats{};
+    
+    // Get process memory info from OS
+    PROCESS_MEMORY_COUNTERS pmc{};
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+        stats.currentUsage = pmc.WorkingSetSize;
+        stats.peakUsage = pmc.PeakWorkingSetSize;
+    }
+    
+    // Get heap info
+    HANDLE hHeap = GetProcessHeap();
+    if (hHeap) {
+        PROCESS_HEAP_ENTRY entry{};
+        SIZE_T totalCommitted = 0;
+        while (HeapWalk(hHeap, &entry)) {
+            if (entry.wFlags & PROCESS_HEAP_ENTRY_BUSY) {
+                totalCommitted += entry.cbData;
+            }
+        }
+        stats.totalAllocated = totalCommitted;
+    }
+    
+    // Calculate derived stats
+    stats.totalFreed = stats.totalAllocated > stats.currentUsage ? 
+                       stats.totalAllocated - stats.currentUsage : 0;
+    
     return stats;
 }
 

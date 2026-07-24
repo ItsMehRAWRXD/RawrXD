@@ -200,7 +200,7 @@ static uint32_t ProcessJsonCommand(const char* json, uint32_t jsonLen) {
         // 1. Create Vulkan buffer
         // 2. Upload tensor data
         // 3. Return GPU handle
-        // For now, return CPU handle with note
+        // Return CPU handle with note (Vulkan upload pending)
         char response[512];
         snprintf(response, sizeof(response),
             "{\"status\":\"ok\",\"model_handle\":\"0x%llX\",\"note\":\"GPU upload pipeline ready (Vulkan SDK required for actual upload)\"}",
