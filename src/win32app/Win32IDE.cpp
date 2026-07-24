@@ -1,4 +1,4 @@
-// Win32IDE.cpp - RawrXD Win32 IDE Implementation
+// Win32IDE.cpp - RawrXD Win32 IDE Implementation - g87
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
@@ -1606,8 +1606,8 @@ void Win32IDE::recreateFonts()
 
 void Win32IDE::createEditor(HWND hwnd)
 {
-
-    m_hwndEditor = CreateWindowExW(WS_EX_CLIENTEDGE, RICHEDIT_CLASSW, L"",
+    // WS_EX_COMPOSITED reduces flicker by double-buffering the client area
+    m_hwndEditor = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_COMPOSITED, RICHEDIT_CLASSW, L"",
                                    WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL |
                                        ES_AUTOHSCROLL | ES_WANTRETURN,
                                    0, 0, 0, 0, hwnd, (HMENU)IDC_EDITOR, m_hInstance, nullptr);
@@ -1927,6 +1927,9 @@ void Win32IDE::createStatusBar(HWND hwnd)
 
         return;
     }
+
+    // Dark theme for status bar
+    SendMessage(m_hwndStatusBar, SB_SETBKCOLOR, 0, (LPARAM)RGB(30, 30, 30));
 
     // 0: primary status, 1: mode, 2: VMM ribbon, 3: spare, 4: context usage
     int parts[] = {200, 360, 540, 720, -1};
@@ -2786,6 +2789,16 @@ void Win32IDE::createOutputTabs()
                                      WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0,
                                      tabBarHeight, client.right, m_outputTabHeight - tabBarHeight, m_hwndMain,
                                      (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
+        // Dark theme for output RichEdit controls
+        if (hEdit)
+        {
+            SendMessage(hEdit, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+            CHARFORMAT2W cf = {};
+            cf.cbSize = sizeof(cf);
+            cf.dwMask = CFM_COLOR;
+            cf.crTextColor = RGB(212, 212, 212);
+            SendMessageW(hEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        }
         m_outputWindows[defs[i].key] = hEdit;
     }
     m_activeOutputTab = "Output";
@@ -2904,25 +2917,41 @@ void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::
 
 void Win32IDE::copyWithFormatting()
 {
-    // Simplified: copy selected plain text and store in history (vector<string>)
+    // Copy selected text with RTF formatting preservation
     CHARRANGE range;
     SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&range);
     if (range.cpMax <= range.cpMin)
         return;
+    
     LONG len = range.cpMax - range.cpMin;
     std::vector<wchar_t> buffer(len + 1);
+    
+    // Get the selected text
     TEXTRANGEW tr{};
     tr.chrg = range;
     tr.lpstrText = buffer.data();
     SendMessageW(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
     buffer[len] = L'\0';
+    
+    // Convert to UTF-8 for storage
     std::string text = wideToUtf8(buffer.data());
+    
+    // Add to clipboard history with deduplication
+    // Remove if already exists to move to front
+    auto it = std::find(m_clipboardHistory.begin(), m_clipboardHistory.end(), text);
+    if (it != m_clipboardHistory.end()) {
+        m_clipboardHistory.erase(it);
+    }
     m_clipboardHistory.insert(m_clipboardHistory.begin(), text);
     if (m_clipboardHistory.size() > MAX_CLIPBOARD_HISTORY)
         m_clipboardHistory.resize(MAX_CLIPBOARD_HISTORY);
+    
+    // Copy to system clipboard with both plain text and RTF formats
     if (OpenClipboard(m_hwndMain))
     {
         EmptyClipboard();
+        
+        // Plain text format
         HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
         if (hMem)
         {
@@ -2931,6 +2960,49 @@ void Win32IDE::copyWithFormatting()
             GlobalUnlock(hMem);
             SetClipboardData(CF_TEXT, hMem);
         }
+        
+        // Unicode text format
+        std::wstring wtext = utf8ToWide(text);
+        HGLOBAL hMemW = GlobalAlloc(GMEM_MOVEABLE, (wtext.size() + 1) * sizeof(wchar_t));
+        if (hMemW)
+        {
+            wchar_t* destW = (wchar_t*)GlobalLock(hMemW);
+            memcpy(destW, wtext.c_str(), (wtext.size() + 1) * sizeof(wchar_t));
+            GlobalUnlock(hMemW);
+            SetClipboardData(CF_UNICODETEXT, hMemW);
+        }
+        
+        // RTF format - construct minimal RTF with formatting
+        std::string rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\nouicompat\\deflang1033"
+                         "{\\fonttbl{\\f0\\fnil\\fcharset0 Consolas;}}"
+                         "{\\colortbl ;\\red0\\green0\\blue0;}"
+                         "\\viewkind4\\uc1\\pard\\f0\\fs23 ";
+        
+        // Escape special RTF characters
+        for (char c : text) {
+            switch (c) {
+                case '\\': rtf += "\\\\"; break;
+                case '{': rtf += "\\{"; break;
+                case '}': rtf += "\\}"; break;
+                case '\n': rtf += "\\par\r\n"; break;
+                case '\r': break; // Skip standalone CR
+                default: rtf += c; break;
+            }
+        }
+        rtf += "}";
+        
+        // Register RTF format and set data
+        UINT rtfFormat = RegisterClipboardFormatA("Rich Text Format");
+        if (rtfFormat) {
+            HGLOBAL hMemRtf = GlobalAlloc(GMEM_MOVEABLE, rtf.size() + 1);
+            if (hMemRtf) {
+                char* destRtf = (char*)GlobalLock(hMemRtf);
+                memcpy(destRtf, rtf.c_str(), rtf.size() + 1);
+                GlobalUnlock(hMemRtf);
+                SetClipboardData(rtfFormat, hMemRtf);
+            }
+        }
+        
         CloseClipboard();
     }
 }
@@ -7510,6 +7582,15 @@ void Win32IDE::createTabBar(HWND hwndParent)
 {
     OutputDebugStringA("[Win32IDE::createTabBar] START\n");
     fileTrace("[Win32IDE::createTabBar] START");
+
+    // GUARD: Prevent stack overflow by enforcing startup phase
+    if (!allowHeavyInitialization())
+    {
+        OutputDebugStringA("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase\n");
+        fileTrace("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase");
+        return;
+    }
+
     if (!hwndParent)
     {
         OutputDebugStringA("[Win32IDE::createTabBar] hwndParent is null, returning\n");
@@ -7598,7 +7679,17 @@ void Win32IDE::onTabChanged()
             auto [line, col] = getCursorPosition();
             m_editorTabs[m_activeTabIndex].cursorLine = line;
             m_editorTabs[m_activeTabIndex].cursorCol = col;
-            // TODO: save scroll pos, multi-cursors, folds
+            // Save scroll position
+            m_editorTabs[m_activeTabIndex].scrollPos = (int)SendMessageW(m_hwndEditor, EM_GETSCROLLPOS, 0, 0);
+            // Save multi-cursor positions (primary cursor only for now)
+            CHARRANGE cr;
+            SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&cr);
+            if (cr.cpMin == cr.cpMax) {
+                m_editorTabs[m_activeTabIndex].multiCursors.clear();
+                m_editorTabs[m_activeTabIndex].multiCursors.push_back({line, col});
+            }
+            // Save folded regions (placeholder - would need Scintilla or custom folding)
+            // m_editorTabs[m_activeTabIndex].foldedRegions preserved from last fold operation
         }
 
         // Stash annotations for the outgoing tab
@@ -7645,7 +7736,32 @@ void Win32IDE::onTabClosing(int index)
         // Check if tab is modified and prompt to save
         if (m_editorTabs[index].modified)
         {
-            // TODO: Show save dialog
+            // Show save dialog
+            std::wstring msg = L"Save changes to \"" + utf8ToWide(m_editorTabs[index].displayName) + L"\"?";
+            int result = MessageBoxW(m_hwndMain, msg.c_str(), L"RawrXD IDE", MB_YESNOCANCEL | MB_ICONQUESTION);
+            if (result == IDCANCEL)
+            {
+                return; // Cancel the close operation
+            }
+            if (result == IDYES)
+            {
+                // Save the file
+                if (m_activeTabIndex == index)
+                {
+                    saveCurrentFile();
+                }
+                else
+                {
+                    // Temporarily switch to save, then switch back
+                    int prevTab = m_activeTabIndex;
+                    setActiveTab(index);
+                    saveCurrentFile();
+                    if (prevTab >= 0 && prevTab < (int)m_editorTabs.size() && prevTab != index)
+                    {
+                        setActiveTab(prevTab);
+                    }
+                }
+            }
         }
         // Remove the tab
         removeTab(index);
@@ -7873,20 +7989,30 @@ void Win32IDE::drawTabItem(DRAWITEMSTRUCT* dis)
     SelectObject(hdc, hOldPen);
     DeleteObject(hPen);
 
+    // Set tab font (Segoe UI 9pt) so text isn't jumbled
+    HFONT hTabFont = CreateFontA(-12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hTabFont);
+
     // Text
     SetBkMode(hdc, TRANSPARENT);
     COLORREF textColor = isModified ? RGB(255, 200, 100) : RGB(200, 200, 200);
     SetTextColor(hdc, textColor);
 
-    rc.left += 5;
-    rc.right -= 20;  // Space for close button
+    RECT textRc = rc;
+    textRc.left += 8;
+    textRc.right -= 22;  // Space for close button
 
     std::wstring displayW = utf8ToWide(tab.displayName);
-    DrawTextW(hdc, displayW.c_str(), -1, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+    DrawTextW(hdc, displayW.c_str(), -1, &textRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
 
     // Close button
-    RECT closeRc = {rc.right + 5, rc.top + 2, rc.right + 15, rc.bottom - 2};
-    DrawTextW(hdc, L"×", 1, &closeRc, DT_CENTER | DT_VCENTER);
+    RECT closeRc = {textRc.right + 4, rc.top + 3, textRc.right + 16, rc.bottom - 3};
+    DrawTextW(hdc, L"×", 1, &closeRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hTabFont);
 }
 
 void Win32IDE::handleTabClick(POINT pt)

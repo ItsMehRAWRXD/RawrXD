@@ -491,8 +491,14 @@ void Win32IDE::ensureAutonomousPipelineInitialized()
 
     m_autonomousPipeline = std::make_unique<RawrXD::AutonomousAgenticPipelineCoordinator>();
 
-    // E6: context window size — not yet exposed on pipeline coordinator
-    // TODO: add setContextWindow() to AutonomousAgenticPipelineCoordinator
+    // E6: context window size — configure on pipeline coordinator
+    if (m_agenticBridge) {
+        auto eng = m_agenticBridge->GetEngine();
+        if (eng) {
+            int ctxLimit = eng->GetContextLimit();
+            m_autonomousPipeline->setContextWindowSize(ctxLimit);
+        }
+    }
 
     // E1 + E5: workspace root + recent memory snapshot injected into every prompt
     m_autonomousPipeline->setBuildPrompt(

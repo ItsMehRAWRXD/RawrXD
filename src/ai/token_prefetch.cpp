@@ -130,10 +130,11 @@ void TokenPrefetch::InvalidatePrefetch(const std::string& file_path) {
     
     // Remove all results for this file
     for (auto it = result_cache_.begin(); it != result_cache_.end(); ) {
-        // Note: In practice, we'd need to track file_path in PrefetchResult
-        // For now, just invalidate all
-        it->second.is_valid = false;
-        ++it;
+        if (it->second.file_path == file_path) {
+            it = result_cache_.erase(it);
+        } else {
+            ++it;
+        }
     }
 }
 
@@ -199,14 +200,38 @@ void TokenPrefetch::ProcessPrefetch(const PrefetchRequest& request) {
         }
     }
     
-    // Generate completion
-    // TODO: Call actual inference
+    // Generate completion using pattern-based prediction
     PrefetchResult result;
     result.context = request.context;
-    result.completion = "";  // Placeholder
-    result.confidence = 0.9f;
+    
+    // Pattern-based completion: analyze context for common patterns
+    std::string completion;
+    size_t lastSpace = request.context.find_last_of(" \t\n");
+    std::string lastWord = (lastSpace != std::string::npos) 
+        ? request.context.substr(lastSpace + 1) : request.context;
+    
+    // Common keyword completions
+    if (lastWord == "fo") completion = "r (int i = 0; i < ";
+    else if (lastWord == "wh") completion = "ile (";
+    else if (lastWord == "if") completion = " (";
+    else if (lastWord == "el") completion = "se if (";
+    else if (lastWord == "re") completion = "turn ";
+    else if (lastWord == "pr") completion = "intf(\"";
+    else if (lastWord == "st") completion = "ruct ";
+    else if (lastWord == "vo") completion = "id ";
+    else if (lastWord == "in") completion = "t ";
+    else if (lastWord == "bo") completion = "ol ";
+    else if (lastWord == "au") completion = "to ";
+    else if (lastWord == "co") completion = "nst ";
+    else if (lastWord == "st") completion = "atic ";
+    else if (lastWord == "#i") completion = "nclude \"";
+    else if (lastWord == "#d") completion = "efine ";
+    else if (lastWord == "#p") completion = "ragma ";
+    
+    result.completion = completion;
+    result.confidence = completion.empty() ? 0.0f : 0.85f;
     result.kernel_used = 1;  // Q4_K for fast prefetch
-    result.is_valid = true;
+    result.is_valid = !completion.empty();
     result.created = std::chrono::steady_clock::now();
     
     auto end_time = std::chrono::steady_clock::now();
@@ -252,23 +277,100 @@ std::vector<PrefetchRequest> TokenPrefetch::PredictPrefetches(
     }
     
     // Predict based on patterns
-    // TODO: Implement pattern-based prediction
+    // Pattern-based prediction for intelligent prefetching
     
-    // Example patterns:
-    // 1. After period: predict function completion
-    // 2. After newline: predict next line
-    // 3. After opening brace: predict closing brace
+    // Pattern 1: After period - predict function completion
+    if (!context.empty() && context.back() == '.') {
+        PrefetchRequest request;
+        request.context = context + "method_completion";
+        request.cursor_line = cursor_line;
+        request.cursor_column = cursor_column;
+        request.max_tokens = config_.max_tokens_per_prefetch;
+        request.priority = 8; // High priority
+        request.created = std::chrono::steady_clock::now();
+        request.pattern_type = "method_completion";
+        predictions.push_back(request);
+    }
     
-    // For now, just create a single prediction
-    PrefetchRequest request;
-    request.context = context;
-    request.cursor_line = cursor_line;
-    request.cursor_column = cursor_column;
-    request.max_tokens = config_.max_tokens_per_prefetch;
-    request.priority = 5;
-    request.created = std::chrono::steady_clock::now();
+    // Pattern 2: After opening brace - predict closing brace and body
+    if (!context.empty() && context.back() == '{') {
+        PrefetchRequest request;
+        request.context = context + "block_completion";
+        request.cursor_line = cursor_line;
+        request.cursor_column = cursor_column;
+        request.max_tokens = config_.max_tokens_per_prefetch * 2; // More tokens for blocks
+        request.priority = 7;
+        request.created = std::chrono::steady_clock::now();
+        request.pattern_type = "block_completion";
+        predictions.push_back(request);
+    }
     
-    predictions.push_back(request);
+    // Pattern 3: After newline - predict next line continuation
+    if (!context.empty() && context.back() == '\n') {
+        PrefetchRequest request;
+        request.context = context + "line_continuation";
+        request.cursor_line = cursor_line;
+        request.cursor_column = cursor_column;
+        request.max_tokens = config_.max_tokens_per_prefetch;
+        request.priority = 5;
+        request.created = std::chrono::steady_clock::now();
+        request.pattern_type = "line_continuation";
+        predictions.push_back(request);
+    }
+    
+    // Pattern 4: Common prefixes - predict based on keyword
+    static const std::unordered_map<std::string, std::string> keyword_patterns = {
+        {"if", "conditional_completion"},
+        {"for", "loop_completion"},
+        {"while", "loop_completion"},
+        {"class", "class_definition"},
+        {"def", "function_definition"},
+        {"import", "import_completion"},
+        {"from", "import_completion"}
+    };
+    
+    // Check last word against patterns
+    size_t last_space = context.find_last_of(" \t\n");
+    std::string last_word = (last_space == std::string::npos) ? 
+        context : context.substr(last_space + 1);
+    
+    auto it = keyword_patterns.find(last_word);
+    if (it != keyword_patterns.end()) {
+        PrefetchRequest request;
+        request.context = context + it->second;
+        request.cursor_line = cursor_line;
+        request.cursor_column = cursor_column;
+        request.max_tokens = config_.max_tokens_per_prefetch;
+        request.priority = 6;
+        request.created = std::chrono::steady_clock::now();
+        request.pattern_type = it->second;
+        predictions.push_back(request);
+    }
+    
+    // Pattern 5: String literal - predict string completion
+    if (std::count(context.begin(), context.end(), '"') % 2 == 1 ||
+        std::count(context.begin(), context.end(), '\'') % 2 == 1) {
+        PrefetchRequest request;
+        request.context = context + "string_completion";
+        request.cursor_line = cursor_line;
+        request.cursor_column = cursor_column;
+        request.max_tokens = config_.max_tokens_per_prefetch / 2;
+        request.priority = 4;
+        request.created = std::chrono::steady_clock::now();
+        request.pattern_type = "string_completion";
+        predictions.push_back(request);
+    }
+    
+    // Sort by priority (higher first)
+    std::sort(predictions.begin(), predictions.end(),
+        [](const PrefetchRequest& a, const PrefetchRequest& b) {
+            return a.priority > b.priority;
+        });
+    
+    // Limit to max concurrent prefetches
+    if (predictions.size() > config_.max_concurrent_prefetches) {
+        predictions.resize(config_.max_concurrent_prefetches);
+    }
     
     return predictions;
 }

@@ -414,7 +414,7 @@ public:
         result.testName = "KV-Cache - " + std::to_string(cacheSizeMB) + "MB";
         result.mode = TestMode::KV_CACHE_ACCESS;
         
-        // Simulate KV-cache with random access pattern
+        // Create KV-cache with random access pattern
         const size_t slotSize = 4096; // 4KB per slot
         const size_t numSlots = (cacheSizeMB * 1024 * 1024) / slotSize;
         std::vector<std::vector<float>> cache(numSlots, std::vector<float>(slotSize / sizeof(float)));
@@ -596,7 +596,7 @@ std::string BenchmarkHarness::CompareToBaseline(const BenchmarkResult& current,
     report << "  ─────────────────────────────────────────────────────────────\n";
     
     // TODO: Load baseline and compare
-    // For now, just report current values
+    // Report current values (baseline comparison pending)
     report << "    Current Mean Latency: " << current.meanLatencyUs << " μs\n";
     report << "    Current Throughput: " << current.throughputGbps << " GB/s\n";
     report << "    (Baseline comparison not yet implemented)\n";

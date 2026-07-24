@@ -12,6 +12,128 @@
 #include <cstdlib>
 #include <immintrin.h>
 
+#ifdef _MSC_VER
+#include <intrin.h>  // For __cpuid on Windows
+#else
+#include <cpuid.h>
+#include <malloc.h>  // For posix_memalign
+#endif
+
+//============================================================================
+// External exports from kernel implementations
+//============================================================================
+
+// AVX-512 stub implementations - these are overridden when tree_attention_avx512_intrinsics.cpp is linked
+// The "weak" attribute allows the real implementations to replace these
+extern "C" {
+#ifdef _MSC_VER
+    // MSVC doesn't support __attribute__((weak)), use pragma instead
+    #pragma comment(linker, "/alternatename:TreeAttentionVerify_AVX512_Export=TreeAttentionVerify_AVX512_Stub")
+    #pragma comment(linker, "/alternatename:KVCacheInvalidate_AVX512_Export=KVCacheInvalidate_AVX512_Stub")
+    #pragma comment(linker, "/alternatename:HasAVX512F_Export=HasAVX512F_Stub")
+    
+    uint32_t TreeAttentionVerify_AVX512_Stub(
+        const float* candidate_logits,
+        const float* draft_logits,
+        const float* tree_mask,
+        float* output_probs,
+        uint32_t num_candidates,
+        float acceptance_threshold
+    ) {
+        (void)candidate_logits; (void)draft_logits; (void)tree_mask;
+        (void)output_probs; (void)num_candidates; (void)acceptance_threshold;
+        return 0;  // All rejected
+    }
+    
+    void KVCacheInvalidate_AVX512_Stub(
+        uint8_t* kv_cache_base,
+        uint32_t rejection_mask,
+        uint32_t entry_size
+    ) {
+        (void)kv_cache_base; (void)rejection_mask; (void)entry_size;
+    }
+    
+    int HasAVX512F_Stub() {
+        return 0;  // Not supported
+    }
+    
+    // Declare the actual exports as extern (will be resolved at link time)
+    __declspec(dllimport) uint32_t TreeAttentionVerify_AVX512_Export(
+        const float* candidate_logits,
+        const float* draft_logits,
+        const float* tree_mask,
+        float* output_probs,
+        uint32_t num_candidates,
+        float acceptance_threshold
+    );
+    
+    __declspec(dllimport) void KVCacheInvalidate_AVX512_Export(
+        uint8_t* kv_cache_base,
+        uint32_t rejection_mask,
+        uint32_t entry_size
+    );
+    
+    __declspec(dllimport) int HasAVX512F_Export();
+#else
+    __attribute__((weak)) uint32_t TreeAttentionVerify_AVX512_Export(
+        const float* candidate_logits,
+        const float* draft_logits,
+        const float* tree_mask,
+        float* output_probs,
+        uint32_t num_candidates,
+        float acceptance_threshold
+    ) {
+        (void)candidate_logits; (void)draft_logits; (void)tree_mask;
+        (void)output_probs; (void)num_candidates; (void)acceptance_threshold;
+        return 0;  // All rejected
+    }
+    
+    __attribute__((weak)) void KVCacheInvalidate_AVX512_Export(
+        uint8_t* kv_cache_base,
+        uint32_t rejection_mask,
+        uint32_t entry_size
+    ) {
+        (void)kv_cache_base; (void)rejection_mask; (void)entry_size;
+    }
+    
+    __attribute__((weak)) int HasAVX512F_Export() {
+        return 0;  // Not supported
+    }
+#endif
+    
+    // AVX2 exports
+    uint32_t TreeAttentionVerify_AVX2_Export(
+        const float* candidate_logits,
+        const float* draft_logits,
+        const float* tree_mask,
+        float* output_probs,
+        uint32_t num_candidates,
+        float acceptance_threshold
+    );
+    
+    void KVCacheInvalidate_AVX2_Export(
+        uint8_t* kv_cache_base,
+        uint32_t rejection_mask,
+        uint32_t entry_size
+    );
+    
+    // Scalar exports
+    uint32_t TreeAttentionVerify_Scalar_Export(
+        const float* candidate_logits,
+        const float* draft_logits,
+        const float* tree_mask,
+        float* output_probs,
+        uint32_t num_candidates,
+        float acceptance_threshold
+    );
+    
+    void KVCacheInvalidate_Scalar_Export(
+        uint8_t* kv_cache_base,
+        uint32_t rejection_mask,
+        uint32_t entry_size
+    );
+}
+
 namespace RawrXD {
 namespace Kernels {
 
@@ -20,59 +142,59 @@ namespace Kernels {
 //============================================================================
 
 void* SpeculativeExecutionEngine::aligned_alloc(size_t size, size_t alignment) {
-#ifdef _MSC_VER
     return _aligned_malloc(size, alignment);
-#else
-    // GCC/Clang: use posix_memalign or aligned_alloc
-    void* ptr = nullptr;
-    if (posix_memalign(&ptr, alignment, size) != 0) {
-        return nullptr;
-    }
-    return ptr;
-#endif
 }
 
 void SpeculativeExecutionEngine::aligned_free(void* ptr) {
     if (ptr) {
-#ifdef _MSC_VER
         _aligned_free(ptr);
-#else
-        std::free(ptr);
-#endif
     }
-}
-
-uint64_t SpeculativeExecutionEngine::ReadTSC() {
-    _mm_lfence();
-    uint64_t tsc = __rdtsc();
-    _mm_lfence();
-    return tsc;
 }
 
 //============================================================================
 // Kernel Selection
 //============================================================================
 
-bool TreeAttentionDispatcher::DetectAVX512() {
+//============================================================================
+// ISA Feature Detection
+//============================================================================
+
+//============================================================================
+// CPU Feature Detection with proper OSXSAVE/XGETBV checks
+//============================================================================
+
+// Helper: Check if OSXSAVE is enabled (CPUID.1:ECX[27])
+static bool CheckOSXSAVE() {
 #ifdef _MSC_VER
     int cpuInfo[4] = {0};
-    __cpuid(cpuInfo, 7);
-    bool hasAVX512F = (cpuInfo[1] & (1 << 16)) != 0;
-    
-    if (!hasAVX512F) return false;
-    
-    // Check OS support via XCR0
-    uint64_t xcr0 = _xgetbv(0);
-    return (xcr0 & 0xE0) == 0xE0;
+    __cpuidex(cpuInfo, 1, 0);
+    return (cpuInfo[2] & (1 << 27)) != 0;
 #else
-    // GCC/Clang version
-    unsigned int eax, ebx, ecx, edx;
-    if (!__get_cpuid(7, &eax, &ebx, &ecx, &edx)) return false;
-    bool hasAVX512F = (ebx & (1 << 16)) != 0;
-    
-    if (!hasAVX512F) return false;
-    
-    // Check OS support
+    unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
+    if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx)) return false;
+    return (ecx & (1 << 27)) != 0;
+#endif
+}
+
+// Helper: Check XCR0 state for AVX (bits 1-2 must be set)
+static bool CheckXCR0_AVX() {
+#ifdef _MSC_VER
+    uint64_t xcr0 = _xgetbv(0);
+    return (xcr0 & 0x06) == 0x06;  // XMM and YMM state enabled
+#else
+    unsigned int xcr0_eax, xcr0_edx;
+    __asm__ __volatile__("xgetbv" : "=a"(xcr0_eax), "=d"(xcr0_edx) : "c"(0));
+    uint64_t xcr0 = ((uint64_t)xcr0_edx << 32) | xcr0_eax;
+    return (xcr0 & 0x06) == 0x06;
+#endif
+}
+
+// Helper: Check XCR0 state for AVX-512 (bits 5-7 must be set)
+static bool CheckXCR0_AVX512() {
+#ifdef _MSC_VER
+    uint64_t xcr0 = _xgetbv(0);
+    return (xcr0 & 0xE0) == 0xE0;  // OPMASK, ZMM_HI256, HI16_ZMM enabled
+#else
     unsigned int xcr0_eax, xcr0_edx;
     __asm__ __volatile__("xgetbv" : "=a"(xcr0_eax), "=d"(xcr0_edx) : "c"(0));
     uint64_t xcr0 = ((uint64_t)xcr0_edx << 32) | xcr0_eax;
@@ -80,11 +202,89 @@ bool TreeAttentionDispatcher::DetectAVX512() {
 #endif
 }
 
+bool TreeAttentionDispatcher::DetectAVX512() {
+    // Step 1: Check CPUID leaf 7, subleaf 0 for AVX-512F (bit 16 of EBX)
+    unsigned int eax = 7, ebx = 0, ecx = 0, edx = 0;
+    
+#ifdef _MSC_VER
+    int cpuInfo[4] = {0};
+    __cpuidex(cpuInfo, 7, 0);
+    ebx = cpuInfo[1];
+#else
+    if (!__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx)) {
+        return false;
+    }
+#endif
+    
+    bool hasAVX512F = (ebx & (1 << 16)) != 0;
+    if (!hasAVX512F) return false;
+    
+    // Step 2: Check OSXSAVE (required for XGETBV)
+    if (!CheckOSXSAVE()) return false;
+    
+    // Step 3: Check XCR0 for AVX-512 state
+    return CheckXCR0_AVX512();
+}
+
+bool TreeAttentionDispatcher::DetectAVX2() {
+    // Step 1: Check CPUID leaf 7 for AVX2 (bit 5 of EBX)
+    unsigned int eax = 7, ebx = 0, ecx = 0, edx = 0;
+    
+#ifdef _MSC_VER
+    int cpuInfo[4] = {0};
+    __cpuidex(cpuInfo, 7, 0);
+    ebx = cpuInfo[1];
+#else
+    if (!__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx)) {
+        return false;
+    }
+#endif
+    
+    bool hasAVX2 = (ebx & (1 << 5)) != 0;
+    if (!hasAVX2) return false;
+    
+    // Step 2: Check OSXSAVE
+    if (!CheckOSXSAVE()) return false;
+    
+    // Step 3: Check XCR0 for AVX state
+    return CheckXCR0_AVX();
+}
+
+bool TreeAttentionDispatcher::DetectSSE42() {
+    unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0;
+    
+#ifdef _MSC_VER
+    int cpuInfo[4] = {0};
+    __cpuidex(cpuInfo, 1, 0);
+    ecx = cpuInfo[2];
+#else
+    if (!__get_cpuid(1, &eax, &ebx, &ecx, &edx)) return false;
+#endif
+    
+    // SSE4.2 is bit 20 of ECX (leaf 1)
+    return (ecx & (1 << 20)) != 0;
+}
+
 TreeAttentionKernel TreeAttentionDispatcher::SelectKernel() {
-    if (DetectAVX512()) {
+    // Check if AVX-512 is both supported by CPU AND has real implementation linked
+    // We check HasAVX512F_Export() which returns 1 only if real implementation is linked
+    if (DetectAVX512() && HasAVX512F_Export()) {
         return GetAVX512Kernel();
     }
+    if (DetectAVX2()) {
+        return GetAVX2Kernel();
+    }
     return GetScalarKernel();
+}
+
+TreeAttentionKernel TreeAttentionDispatcher::GetAVX2Kernel() {
+    return TreeAttentionKernel{
+        TreeAttentionVerify_AVX2_Export,
+        KVCacheInvalidate_AVX2_Export,
+        nullptr,  // No TSC export for AVX2
+        "AVX2",
+        2
+    };
 }
 
 TreeAttentionKernel TreeAttentionDispatcher::GetAVX512Kernel() {
@@ -98,52 +298,10 @@ TreeAttentionKernel TreeAttentionDispatcher::GetAVX512Kernel() {
 }
 
 TreeAttentionKernel TreeAttentionDispatcher::GetScalarKernel() {
-    // Scalar fallback implementation
-    static auto scalar_verify = [](
-        const float* candidate_logits,
-        const float* draft_logits,
-        const float* tree_mask,
-        float* output_probs,
-        uint32_t num_candidates,
-        float acceptance_threshold
-    ) -> uint32_t {
-        if (num_candidates != 16) return 0;
-        
-        uint32_t accept_mask = 0;
-        uint32_t validity = *(const uint16_t*)tree_mask;
-        
-        for (uint32_t i = 0; i < 16; i++) {
-            if (!(validity & (1 << i))) continue;
-            
-            float target_prob = candidate_logits[i * 64]; // Simplified
-            float draft_prob = tree_mask[16 + i];
-            
-            if (target_prob >= draft_prob * acceptance_threshold) {
-                accept_mask |= (1 << i);
-                output_probs[i] = target_prob;
-            }
-        }
-        return accept_mask;
-    };
-    
-    static auto scalar_invalidate = [](
-        uint8_t* kv_cache_base,
-        uint32_t rejection_mask,
-        uint32_t entry_size
-    ) {
-        for (uint32_t i = 0; i < 16; i++) {
-            if (rejection_mask & (1 << i)) {
-                memset(kv_cache_base + i * entry_size, 0, entry_size);
-            }
-        }
-    };
-    
-    static auto scalar_has_avx512 = []() -> int { return 0; };
-    
     return TreeAttentionKernel{
-        scalar_verify,
-        scalar_invalidate,
-        scalar_has_avx512,
+        TreeAttentionVerify_Scalar_Export,
+        KVCacheInvalidate_Scalar_Export,
+        nullptr,  // No AVX-512 check for scalar
         "Scalar",
         1
     };
@@ -156,11 +314,7 @@ TreeAttentionKernel TreeAttentionDispatcher::GetScalarKernel() {
 SpeculativeExecutionEngine::SpeculativeExecutionEngine(
     const TreeAttentionConfig& config
 ) : config_(config),
-    kernel_(TreeAttentionDispatcher::SelectKernel()),
-    aligned_query_(nullptr, &aligned_free),
-    aligned_keys_(nullptr, &aligned_free),
-    aligned_mask_(nullptr, &aligned_free),
-    aligned_output_(nullptr, &aligned_free) {
+    kernel_(TreeAttentionDispatcher::SelectKernel()) {
     
     // Allocate aligned buffers
     if (config_.embedding_dim > 0) {
@@ -185,6 +339,12 @@ VerificationResult SpeculativeExecutionEngine::VerifyCandidates(
 ) {
     VerificationResult result{};
     result.first_reject_idx = 16;  // Default: all accepted
+    
+    // Safety check: ensure kernel matches CPU capabilities
+    if (strcmp(kernel_.name, "AVX-512") == 0 && !TreeAttentionDispatcher::DetectAVX512()) {
+        // AVX-512 kernel selected but CPU doesn't support it - fallback to scalar
+        kernel_ = TreeAttentionDispatcher::GetScalarKernel();
+    }
     
     // Prefetch draft tensors if residency planner available
     if (config_.enable_residency_hooks && residency_planner_) {

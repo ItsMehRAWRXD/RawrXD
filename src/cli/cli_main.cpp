@@ -129,7 +129,7 @@ bool ExecuteHotpatch(const uint8_t* data, size_t len) {
     fprintf(stderr, "[INFO] Payload validated successfully (hotpatch router not linked in this build)\n");
     
     // In production, this would call RawrXD_RequestHotpatch from rawrxd_hotpatch_router.asm
-    // For now, we just validate the payload format
+    // Currently validates payload format only (hotpatch router integration pending)
     return true;
 }
 

@@ -11,7 +11,10 @@ ChainOfThought::ChainOfThought() {
     m_config = Config{};
 }
 
-ChainOfThought::~ChainOfThought() {}
+ChainOfThought::~ChainOfThought() {
+    // Cleanup: reset the tree root to release memory
+    m_root.reset();
+}
 
 void ChainOfThought::setConfig(const Config& config) {
     m_config = config;
@@ -68,7 +71,7 @@ std::optional<ChainResult> ChainOfThought::generateChain(
         result.overallConfidence = 0.0f;
         result.finalConclusion = "Failed to generate valid chain.";
     } else {
-        result.overallConfidence = result.steps.back().confidence; // Simplified
+        result.overallConfidence = result.steps.back().confidence;
         result.finalConclusion = result.steps.back().thought;
     }
     

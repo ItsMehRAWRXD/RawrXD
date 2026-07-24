@@ -134,7 +134,7 @@ public:
     
     std::optional<uint64_t> ResolveSourceLine(const std::wstring& filePath, uint32_t lineNumber) {
         // This would require iterating symbols to find matching line
-        // Simplified implementation
+        // Basic implementation
         return std::nullopt;
     }
 };

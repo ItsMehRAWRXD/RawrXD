@@ -243,6 +243,11 @@ public:
     std::string getFeatureManifestJSON() const;
     std::string getQuantumStatusJson() const;
 
+    // ---- Phase 35: RawrXD-Native API helpers ----
+    std::string getModelsJson() const;
+    std::string getModelsOllamaJson() const;
+    std::string getEngineCapabilitiesJson() const;
+
     // ---- Diagnostics ----
     std::string getFullStatusDump() const;
     std::string getVersionString() const;

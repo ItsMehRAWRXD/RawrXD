@@ -295,7 +295,7 @@ private:
     }
     
     void extractSymbols(const std::string& content, const std::string& filePath, uint64_t modTime) {
-        // Simplified symbol extraction (real impl would use AST/LSP)
+        // Basic symbol extraction (full implementation would use AST/LSP)
         // Look for common patterns: "class X", "func X", "def X", etc.
         
         std::istringstream stream(content);

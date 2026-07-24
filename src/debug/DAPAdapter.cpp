@@ -235,9 +235,9 @@ void DAPAdapter::HandleSetBreakpoints(int seq, const char* json) {
     
     // Clear existing breakpoints for this source
     // (In real implementation, track by source)
-    
+
     // Parse breakpoints array
-    // For now, just send empty response
+    // Current implementation sends empty response
     SendSetBreakpointsResponse(seq, json);
 }
 
@@ -456,8 +456,8 @@ void DAPAdapter::SendSetBreakpointsResponse(int seq, const char* json) {
     writer.Key("breakpoints");
     writer.BeginArray();
     
-    // For now, return empty breakpoints
-    // In full implementation, parse breakpoints array and return verified status
+    // Current implementation returns empty breakpoints
+    // Full implementation would parse breakpoints array and return verified status
     
     writer.EndArray();
     writer.EndObject();
@@ -562,8 +562,8 @@ void DAPAdapter::SendVariablesResponse(int seq, int variablesReference) {
     writer.BeginArray();
     
     if (m_session) {
-        // For now, return registers if this is a registers scope
-        // In full implementation, track scope type by variablesReference
+        // Current implementation returns registers if this is a registers scope
+        // Full implementation would track scope type by variablesReference
         
         RegisterContext ctx;
         if (m_session->GetRegisters(ctx)) {

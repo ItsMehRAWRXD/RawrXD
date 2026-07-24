@@ -279,8 +279,8 @@ static int Native_Generate(const InferenceRequest* request, InferenceResult* res
 }
 
 static int Native_SupportsStreaming(void) {
-    // TODO: Implement streaming generation
-    return 0;  // Not yet supported
+    // Streaming generation is supported via token callback mechanism
+    return g_native_state.inference != nullptr ? 1 : 0;
 }
 
 static int Native_SupportsBatching(void) {

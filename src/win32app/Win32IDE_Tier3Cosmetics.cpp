@@ -1276,11 +1276,40 @@ void Win32IDE::applyCodeAction(const CodeAction& action) {
 
     if (action.kind == "source.organizeImports") {
         appendToOutput("[CodeAction] Organizing imports...\n");
-        // If LSP supports it, send textDocument/codeAction with only this action kind
-        // TODO: wire m_lspClientPtr once LSP client bridge is integrated
-        // if (m_lspClientPtr) {
-        //     m_lspClientPtr->GetCodeActions(m_currentFile, 0, 0, 0, 0);
-        // }
+        // LSP client bridge integration point
+        // When m_lspClientPtr is available, this will send textDocument/codeAction
+        // For now, we provide basic import organization via regex-based heuristics
+        if (m_hwndEditor && !m_currentFile.empty()) {
+            // Basic import organization: sort #include lines alphabetically
+            std::string content = getWindowText(m_hwndEditor);
+            std::vector<std::string> includes;
+            std::istringstream stream(content);
+            std::string line;
+            std::string nonIncludeContent;
+            
+            while (std::getline(stream, line)) {
+                // Trim whitespace
+                size_t start = line.find_first_not_of(" \t");
+                if (start != std::string::npos && line.substr(start, 8) == "#include") {
+                    includes.push_back(line);
+                } else {
+                    nonIncludeContent += line + "\n";
+                }
+            }
+            
+            // Sort includes
+            std::sort(includes.begin(), includes.end());
+            
+            // Reconstruct content
+            std::string organized;
+            for (const auto& inc : includes) {
+                organized += inc + "\n";
+            }
+            organized += nonIncludeContent;
+            
+            setWindowText(m_hwndEditor, organized);
+            appendToOutput("[CodeAction] Imports organized\n");
+        }
         return;
     }
 

@@ -487,15 +487,16 @@ void RawrXDTransformer::maybeSampleMoEReuseFromHeatmap()
     }
 }
 
-std::expected<void, RawrXD::Swarm::SchedulerError> RawrXDTransformer::pinSwarmSlicesForLayer(
+bool RawrXDTransformer::pinSwarmSlicesForLayer(
     const std::uint32_t modelIndex, const std::uint32_t layer, const std::uint32_t* activeExpertOrdinals,
     const std::size_t activeExpertOrdinalCount, std::vector<std::size_t>& outPinnedPlanRows,
+    RawrXD::Swarm::SchedulerError* outError,
     const SwarmPinLayerParts parts, const bool appendPinnedRows)
 {
     if (!appendPinnedRows)
         outPinnedPlanRows.clear();
     if (!m_swarmScheduler)
-        return {};
+        return true;
 
     constexpr std::uint32_t kStaticExpert = 0xFFFFFFFFu;
     std::vector<std::size_t> rows;
@@ -544,13 +545,15 @@ std::expected<void, RawrXD::Swarm::SchedulerError> RawrXDTransformer::pinSwarmSl
     }
 
     if (rows.empty())
-        return {};
+        return true;
 
     const auto pinned = m_swarmScheduler->pinPlanRows(std::span<const std::size_t>(rows.data(), rows.size()));
-    if (!pinned)
-        return pinned;
+    if (!pinned) {
+        if (outError) *outError = pinned.error();
+        return false;
+    }
     outPinnedPlanRows.insert(outPinnedPlanRows.end(), rows.begin(), rows.end());
-    return {};
+    return true;
 }
 
 bool RawrXDTransformer::swarmLayerHasExpertSlices(const std::uint32_t layer) const
@@ -1508,12 +1511,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 (void)m_swarmScheduler->onLayerComputeStarted(0u, static_cast<std::uint32_t>(l));
                 const SwarmPinLayerParts pinPart =
                     moeTwoPhasePin ? SwarmPinLayerParts::StaticOnly : SwarmPinLayerParts::Full;
-                if (const auto pinned = pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), nullptr, 0,
-                                                               layerPinnedPlanRows, pinPart, false);
-                    !pinned)
+                if (RawrXD::Swarm::SchedulerError pinErr{};
+                    !pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), nullptr, 0,
+                                                               layerPinnedPlanRows, &pinErr, pinPart, false))
                 {
                     printf("[Forward] WARN: pinSwarmSlicesForLayer layer %d failed: %s\n", l,
-                           RawrXD::Swarm::schedulerErrorMessage(pinned.error()));
+                           RawrXD::Swarm::schedulerErrorMessage(pinErr));
                 }
             }
 
@@ -1686,12 +1689,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                                               moeMixtureWeights);
                 const std::uint32_t* const pickData = moeExpertPick.empty() ? nullptr : moeExpertPick.data();
                 const std::size_t pickCount = moeExpertPick.size();
-                if (const auto pe = pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), pickData, pickCount,
-                                                           layerPinnedPlanRows, SwarmPinLayerParts::ExpertsOnly, true);
-                    !pe)
+                if (RawrXD::Swarm::SchedulerError pinErr{};
+                    !pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), pickData, pickCount,
+                                                           layerPinnedPlanRows, &pinErr, SwarmPinLayerParts::ExpertsOnly, true))
                 {
                     printf("[Forward] WARN: pinSwarmSlicesForLayer experts layer %d failed: %s\n", l,
-                           RawrXD::Swarm::schedulerErrorMessage(pe.error()));
+                           RawrXD::Swarm::schedulerErrorMessage(pinErr));
                 }
             }
 

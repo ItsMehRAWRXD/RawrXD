@@ -1254,11 +1254,41 @@ json NetworkManager::getNetworkStatus() const {
     };
 }
 
-size_t ConnectionPool::getActiveConnections() const { return 0; } // TODO
-size_t ConnectionPool::getIdleConnections() const { return 0; } // TODO
-json ConnectionPool::getStatus() const { return {{"active", 0}}; } // TODO
-RawrXD::Expected<void, NetError> WebSocketClient::ping() { return {}; }
-RawrXD::Expected<void, NetError> WebSocketClient::pong() { return {}; }
+size_t ConnectionPool::getActiveConnections() const { 
+    std::lock_guard<std::mutex> lock(m_mutex);
+    size_t active = 0;
+    for (const auto& conn : m_connections) {
+        if (conn.isActive) active++;
+    }
+    return active;
+}
+size_t ConnectionPool::getIdleConnections() const { 
+    std::lock_guard<std::mutex> lock(m_mutex);
+    size_t idle = 0;
+    for (const auto& conn : m_connections) {
+        if (!conn.isActive && conn.handle != nullptr) idle++;
+    }
+    return idle;
+}
+json ConnectionPool::getStatus() const { 
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return {
+        {"active", getActiveConnections()},
+        {"idle", getIdleConnections()},
+        {"total", m_connections.size()},
+        {"max", m_maxConnections}
+    };
+}
+RawrXD::Expected<void, NetError> WebSocketClient::ping() { 
+    // Send WebSocket ping frame
+    std::vector<uint8_t> pingFrame = {0x89, 0x00}; // FIN=1, opcode=ping, mask=0, len=0
+    return sendRaw(pingFrame.data(), pingFrame.size());
+}
+RawrXD::Expected<void, NetError> WebSocketClient::pong() { 
+    // Send WebSocket pong frame
+    std::vector<uint8_t> pongFrame = {0x8A, 0x00}; // FIN=1, opcode=pong, mask=0, len=0
+    return sendRaw(pongFrame.data(), pongFrame.size());
+}
 void WebSocketClient::setMessageHandler(std::function<void(const WebSocketFrame&)> handler) {
     std::lock_guard lock(m_handlerMutex);
     m_messageHandler = handler;

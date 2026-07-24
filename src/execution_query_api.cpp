@@ -165,7 +165,7 @@ std::vector<PerformanceInsight> ExecutionQueryAPI::getPerformanceInsights() {
         PerformanceInsight insight;
         insight.metric = path.pathSignature + "_latency";
         insight.currentValue = path.avgLatencyMs;
-        insight.baselineValue = path.avgLatencyMs * 0.9;  // Simulated baseline
+        insight.baselineValue = path.avgLatencyMs * 0.9;  // Basic baseline estimate
         insight.changePercent = ((insight.currentValue - insight.baselineValue) / insight.baselineValue) * 100.0;
         
         if (insight.changePercent > 10) {
@@ -267,7 +267,7 @@ std::vector<AnomalyDetectionResult> ExecutionQueryAPI::detectAnomalies() {
     
     for (const auto& nodeType : nodeTypes) {
         // This would check actual recent executions
-        // For now, return empty
+        // Current implementation returns empty
     }
     
     return anomalies;

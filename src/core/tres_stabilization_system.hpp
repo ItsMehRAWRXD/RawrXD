@@ -13,7 +13,7 @@
 #pragma once
 
 #include "execution_fabric_kernel.hpp"
-#include <math>
+#include <cmath>
 #include <deque>
 #include <algorithm>
 

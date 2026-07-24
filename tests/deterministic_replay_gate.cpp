@@ -188,7 +188,7 @@ public:
             << "\"timestampUs\":" << snapshot.timestampUs << ","
             << "\"sequenceId\":" << snapshot.sequenceId << ","
             << "\"editorVersion\":" << snapshot.editorVersion << ","
-            << "\"attention\":{"n\":" << snapshot.attention.sequenceLength << ","
+            << "\"attention\":{\"n\":" << snapshot.attention.sequenceLength << ","
             << "\"kvCacheTokens\":" << snapshot.attention.kvCacheTokens << ","
             << "\"kvCacheBytes\":" << snapshot.attention.kvCacheBytes << ","
             << "\"kernelLatencyUs\":" << snapshot.attention.kernelLatencyUs << ","

@@ -1,4 +1,4 @@
-﻿# RawrXD Architectural Enhancement Report
+# RawrXD Architectural Enhancement Report
 Generated: 2026-01-23 22:55:35
 
 ## Executive Summary

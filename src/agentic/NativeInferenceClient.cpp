@@ -84,7 +84,7 @@ extern "C" int64_t NativeInferenceClient_Infer(const char* prompt, char* outBuf,
     }
     
     // Real FIM inference using llama.cpp integration
-    // For now, use a simple placeholder that shows we're processing real FIM
+    // Basic FIM processing (full llama.cpp integration pending)
     std::string promptStr(prompt);
     
     // Extract prefix and suffix from FIM format

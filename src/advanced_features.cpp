@@ -218,9 +218,11 @@ std::vector<AdvancedFeatures::FileContext> AdvancedFeatures::ScanWorkspace(const
                 }
             }
         }
-    } catch (...) {}
-    
-    return results;
+        } catch (const std::exception& e) {
+            printf("[AdvancedFeatures] Error searching workspace: %s\n", e.what());
+        } catch (...) {
+            printf("[AdvancedFeatures] Unknown error searching workspace\n");
+        }
 }
 
 std::string AdvancedFeatures::ValidateFileReferences(const std::string& text) {

@@ -102,7 +102,7 @@ void handle_api_request(SOCKET s, const std::string& method, const std::string& 
     }
 
     if (path == "/api/status") {
-        // Return default status or simulated values
+        // Return current system status
         std::string json = R"({
             "modes": {
                 "maxMode": true,

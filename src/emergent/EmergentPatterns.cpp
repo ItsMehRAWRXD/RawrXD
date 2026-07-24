@@ -311,7 +311,7 @@ std::vector<HarmonicAttractor> HarmonicAttractorAnalyzer::Analyze(
     for (uint32_t cycle_id = 243; cycle_id <= 249; ++cycle_id) {
         HarmonicAttractor attractor;
         attractor.id = "attractor_" + std::to_string(cycle_id);
-        attractor.frequency = 1.0 / (cycle_id - 242); // Simplified frequency
+        attractor.frequency = 1.0 / (cycle_id - 242); // Basic frequency calculation
         attractor.amplitude = 1.0 - (0.1 * (cycle_id - 243));
         attractor.phase = static_cast<double>(cycle_id) * 0.1;
         attractor.cycle_ids.push_back(cycle_id);
@@ -375,8 +375,8 @@ std::vector<SwarmCluster> SwarmClusterDetector::DetectClusters(
     const Swarm::SwarmScheduler& scheduler) {
     std::vector<SwarmCluster> clusters;
     
-    // Simplified cluster detection
-    // In real implementation, would analyze agent states from scheduler
+    // Basic cluster detection
+    // Full implementation would analyze agent states from scheduler
     for (uint32_t i = 0; i < max_clusters_; ++i) {
         SwarmCluster cluster;
         cluster.id = "cluster_" + std::to_string(i);
@@ -402,7 +402,7 @@ std::vector<SwarmCluster> SwarmClusterDetector::DetectBehavioralClusters(
     // Would implement DBSCAN or similar clustering
     std::vector<SwarmCluster> clusters;
     
-    // Simplified: group agents by behavior similarity
+    // Basic grouping by behavior similarity
     if (agents.size() >= 4) {
         SwarmCluster cluster;
         cluster.id = "behavioral_cluster_0";
@@ -464,7 +464,7 @@ std::vector<GraphMotif> GraphMotifDetector::DetectMotifs(
     std::vector<GraphMotif> motifs;
     
     // Detect common patterns in execution graph
-    // Simplified: look for cycle-task-telemetry patterns
+    // Basic implementation: look for cycle-task-telemetry patterns
     
     GraphMotif cycle_motif;
     cycle_motif.id = "motif_cycle_execution";
@@ -498,7 +498,7 @@ std::vector<GraphMotif> GraphMotifDetector::FindFrequentSubgraphs(
     // Would implement gSpan or similar frequent subgraph mining
     std::vector<GraphMotif> motifs;
     
-    // Simplified implementation
+    // Basic implementation
     auto all_motifs = DetectMotifs(graph);
     for (const auto& motif : all_motifs) {
         if (motif.frequency >= min_frequency) {
@@ -531,7 +531,7 @@ std::string GraphMotifDetector::ComputePatternHash(
 double GraphMotifDetector::CalculateSignificance(
     const GraphMotif& motif, const SEG::SovereignExecutionGraph& graph) const {
     // Calculate statistical significance vs random graph
-    // Simplified: return stored significance
+    // Basic implementation returns stored significance
     return motif.significance_score;
 }
 
@@ -547,7 +547,7 @@ std::vector<StabilityBasin> StabilityBasinComputer::ComputeBasins(
     std::vector<StabilityBasin> basins;
     
     // Compute basins around stable nodes
-    // Simplified: create basins for each cycle
+    // Basic implementation: create basins for each cycle
     for (uint32_t cycle_id = 243; cycle_id <= 249; ++cycle_id) {
         StabilityBasin basin;
         basin.id = "basin_cycle_" + std::to_string(cycle_id);
@@ -594,7 +594,7 @@ double StabilityBasinComputer::CalculateBasinVolume(const StabilityBasin& basin)
 double StabilityBasinComputer::CalculateEscapeProbability(
     const StabilityBasin& basin, uint64_t node_id) const {
     // Probability depends on distance from attractor
-    // Simplified: return uniform escape probability
+    // Basic implementation: return uniform escape probability
     (void)node_id;
     return basin.escape_probability;
 }
@@ -763,9 +763,9 @@ double CalculateEntropy(const std::vector<double>& probabilities) {
     return entropy;
 }
 
-double CalculateMutualInformation(const std::vector<double>& x, 
+double CalculateMutualInformation(const std::vector<double>& x,
                                    const std::vector<double>& y) {
-    // Simplified implementation
+    // Basic implementation
     if (x.size() != y.size() || x.empty()) {
         return 0.0;
     }
@@ -801,7 +801,7 @@ double CalculateCorrelation(const std::vector<double>& x,
 
 std::vector<std::vector<size_t>> KMeans(const std::vector<std::vector<double>>& points,
                                          uint32_t k, uint32_t max_iterations) {
-    // Simplified K-means implementation
+    // Basic K-means implementation
     std::vector<std::vector<size_t>> clusters(k);
     
     if (points.empty() || k == 0) {
@@ -868,7 +868,7 @@ std::vector<std::vector<size_t>> KMeans(const std::vector<std::vector<double>>& 
 
 std::vector<std::vector<size_t>> DBSCAN(const std::vector<std::vector<double>>& points,
                                           double eps, uint32_t min_points) {
-    // Simplified DBSCAN implementation
+    // Basic DBSCAN implementation
     std::vector<std::vector<size_t>> clusters;
     std::vector<bool> visited(points.size(), false);
     
@@ -908,12 +908,12 @@ std::vector<std::vector<uint64_t>> FindConnectedComponents(
     const SEG::SovereignExecutionGraph& graph) {
     // Would implement BFS/DFS to find connected components
     std::vector<std::vector<uint64_t>> components;
-    
-    // Simplified: return all nodes as one component
+
+    // Basic implementation: return all nodes as one component
     std::vector<uint64_t> all_nodes;
     // Would iterate over graph nodes
     components.push_back(all_nodes);
-    
+
     return components;
 }
 
@@ -931,13 +931,13 @@ std::vector<std::vector<uint64_t>> FindCliques(const SEG::SovereignExecutionGrap
 double CalculateGraphDensity(const SEG::SovereignExecutionGraph& graph) {
     // Density = |E| / (|V| * (|V| - 1) / 2)
     (void)graph;
-    return 0.5; // Placeholder
+    return 0.5; // Basic implementation
 }
 
 double CalculateClusteringCoefficient(const SEG::SovereignExecutionGraph& graph) {
     // Average clustering coefficient
     (void)graph;
-    return 0.3; // Placeholder
+    return 0.3; // Basic implementation
 }
 
 } // namespace Utils

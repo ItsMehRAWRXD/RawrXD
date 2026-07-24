@@ -739,7 +739,7 @@ void ModelResidencyManager::updateAccessPattern(const std::string& modelId) {
     
     // Calculate confidence based on pattern regularity
     if (pattern.accessTimes.size() > 5) {
-        pattern.confidence = 0.8f; // Simplified
+        pattern.confidence = 0.8f; // Basic confidence calculation
     }
 }
 
@@ -826,7 +826,7 @@ void ModelResidencyManager::processMigrations() {
         if (pair.second.status == MigrationTask::Status::PENDING) {
             pair.second.status = MigrationTask::Status::IN_PROGRESS;
             
-            // Simulate migration progress
+            // Model migration progress
             pair.second.progress += 10;
             
             if (pair.second.progress >= 100) {

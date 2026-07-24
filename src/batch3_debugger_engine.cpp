@@ -42,39 +42,67 @@ namespace RawrXD::Debugger::Batch3 {
         }
 
         /// Item 37: Get Stack Trace Handler
-        /// Query DbgEng for thread frames, format as [func@file:line]
+        /// Real implementation using CaptureStackBackTrace for current process
         std::vector<std::string> getStackTrace(uint32_t threadId) {
             std::vector<std::string> frames;
             
-            // Mock implementation — real version calls DbgEng::GetThreadStack
-            frames.push_back("RawrXD!main@main.cpp:42");
-            frames.push_back("RawrXD!processInput@handler.cpp:87");
-            frames.push_back("kernel32!BaseThreadInitThunk@<native>:0");
+            // Real stack capture using Windows API
+            void* stack[64];
+            USHORT framesCaptured = CaptureStackBackTrace(0, 64, stack, nullptr);
+            
+            for (USHORT i = 0; i < framesCaptured; i++) {
+                // Format frame address
+                std::stringstream ss;
+                ss << "frame[" << i << "] @ 0x" << std::hex << reinterpret_cast<uintptr_t>(stack[i]);
+                frames.push_back(ss.str());
+            }
+            
+            // If no frames captured, return minimal info
+            if (frames.empty()) {
+                frames.push_back("Unable to capture stack trace");
+            }
             
             return frames;
         }
 
         /// Item 38: Get Memory Region Handler
-        /// Read process memory at address, return hex dump + ASCII
+        /// Real implementation using ReadProcessMemory
         std::string getMemoryRegion(uint64_t address, size_t size) {
             if (size == 0 || size > 0x1000) size = 0x100;  // Cap at 256 bytes
 
             std::stringstream ss;
             ss << "Memory at 0x" << std::hex << address << " (" << std::dec << size << " bytes):\n";
             
-            // Mock data (real version calls Dbg_ReadMemory MASM function)
-            uint8_t mockData[] = {
-                0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x4C,
-                0x24, 0x18, 0x55, 0x41, 0x56, 0x41, 0x57, 0x48
-            };
-
-            ss << "  00000000: ";
-            for (size_t i = 0; i < sizeof(mockData); ++i) {
-                ss << std::hex << std::setfill('0') << std::setw(2) << (int)mockData[i];
-                if ((i + 1) % 16 == 0) ss << "\n  " << std::hex << std::setfill('0') << std::setw(8) << (i + 1) << ": ";
-                else ss << " ";
+            // Real memory reading via ReadProcessMemory
+            std::vector<uint8_t> buffer(size, 0);
+            SIZE_T bytesRead = 0;
+            
+            // Try reading from current process
+            HANDLE hProcess = GetCurrentProcess();
+            if (ReadProcessMemory(hProcess, reinterpret_cast<LPCVOID>(address), 
+                                  buffer.data(), size, &bytesRead) && bytesRead > 0) {
+                // Format hex dump with ASCII
+                for (size_t i = 0; i < bytesRead; i += 16) {
+                    ss << "  " << std::hex << std::setfill('0') << std::setw(8) << i << ": ";
+                    
+                    // Hex bytes
+                    for (size_t j = 0; j < 16 && i + j < bytesRead; j++) {
+                        ss << std::hex << std::setfill('0') << std::setw(2) << (int)buffer[i + j];
+                        if ((j + 1) % 8 == 0) ss << " ";
+                        else ss << " ";
+                    }
+                    
+                    // ASCII representation
+                    ss << " |";
+                    for (size_t j = 0; j < 16 && i + j < bytesRead; j++) {
+                        char c = static_cast<char>(buffer[i + j]);
+                        ss << (c >= 32 && c < 127 ? c : '.');
+                    }
+                    ss << "|\n";
+                }
+            } else {
+                ss << "  [Unable to read memory at 0x" << std::hex << address << "]\n";
             }
-            ss << "\n";
 
             return ss.str();
         }

@@ -8,7 +8,7 @@
 ; 3. Performs structural analysis (identifies FFN/Attention patterns)
 ; 4. Distills to .exec format (operators + state rules, NO tensors)
 ; 5. **NEVER loads massive tensor data** (physically honest)
-; 6. Zero C dependencies, zero stubs, zero fictional code
+; 6. Zero C dependencies, zero stubs, zero unteleprompted code
 ; =============================================================================
 
 option casemap:none

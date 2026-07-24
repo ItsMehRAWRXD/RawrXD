@@ -313,6 +313,9 @@ private:
     // Callbacks
     std::function<void(float)> progress_callback_;
     
+    // Certificate pinning
+    std::string pinned_fingerprint_;
+    
     // Internal helpers
     std::string build_request(const InferenceRequest& request);
     InferenceResponse parse_response(const std::string& response);

@@ -3,8 +3,11 @@
 
 #include "live_parameter_tuning.h"
 #include <sstream>
+#include <nlohmann/json.hpp>
 
 namespace RawrXD {
+
+using json = nlohmann::json;
 
 LiveParameterTuner::LiveParameterTuner(FinalProductionPipeline* pipeline)
     : pipeline_(pipeline)
@@ -215,12 +218,76 @@ std::string LiveParameterTuner::ExportParametersJSON() const {
     return json.str();
 }
 
-bool LiveParameterTuner::ImportParametersJSON(const std::string& json) {
-    // Note: JSON parsing requires nlohmann/json or similar library
-    // Would parse JSON and update parameter values
-    // For now, return success (parameters unchanged)
-    (void)json; // Suppress unused warning
-    return true;
+bool LiveParameterTuner::ImportParametersJSON(const std::string& json_str) {
+    std::lock_guard<std::mutex> lock(params_mutex_);
+    
+    try {
+        json j = json::parse(json_str);
+        
+        for (auto& [key, value] : j.items()) {
+            auto it = definitions_.find(key);
+            if (it == definitions_.end()) {
+                continue; // Skip unknown parameters
+            }
+            
+            const auto& def = it->second;
+            ParameterValue param_value;
+            param_value.name = key;
+            param_value.type = def.type;
+            
+            switch (def.type) {
+                case ParameterType::FLOAT:
+                    if (value.is_number()) {
+                        param_value.float_value = value.get<double>();
+                        // Clamp to range
+                        param_value.float_value = std::max(def.range.min_float,
+                            std::min(def.range.max_float, param_value.float_value));
+                    }
+                    break;
+                case ParameterType::INT:
+                    if (value.is_number_integer()) {
+                        param_value.int_value = value.get<int>();
+                        // Clamp to range
+                        param_value.int_value = std::max(def.range.min_int,
+                            std::min(def.range.max_int, param_value.int_value));
+                    }
+                    break;
+                case ParameterType::BOOL:
+                    if (value.is_boolean()) {
+                        param_value.bool_value = value.get<bool>();
+                    }
+                    break;
+                case ParameterType::STRING:
+                    if (value.is_string()) {
+                        param_value.string_value = value.get<std::string>();
+                    }
+                    break;
+                case ParameterType::ENUM:
+                    if (value.is_string()) {
+                        std::string enum_val = value.get<std::string>();
+                        // Validate enum value
+                        bool valid = false;
+                        for (const auto& allowed : def.range.enum_values) {
+                            if (allowed == enum_val) {
+                                valid = true;
+                                break;
+                            }
+                        }
+                        if (valid) {
+                            param_value.string_value = enum_val;
+                        }
+                    }
+                    break;
+            }
+            
+            values_[key] = param_value;
+        }
+        
+        return true;
+    } catch (const json::exception& e) {
+        // JSON parsing failed
+        return false;
+    }
 }
 
 bool LiveParameterTuner::ResetParameter(const std::string& name) {
@@ -288,10 +355,28 @@ bool LiveParameterTuner::ValidateParameter(const std::string& name, const Parame
 }
 
 bool LiveParameterTuner::ApplyParameter(const std::string& name, const ParameterValue& value) {
-    // Note: Parameter application requires pipeline component access
-    // Would update scheduler, arbitration, etc. configuration
-    // For now, store value (components read on next update)
-    (void)name; (void)value; // Suppress unused warnings
+    // Parameter application updates the stored value
+    // Components read parameters on their next update cycle
+    std::lock_guard<std::mutex> lock(params_mutex_);
+    
+    auto it = definitions_.find(name);
+    if (it == definitions_.end()) {
+        return false; // Unknown parameter
+    }
+    
+    // Validate type matches
+    if (value.type != it->second.type) {
+        return false; // Type mismatch
+    }
+    
+    // Store the value
+    values_[name] = value;
+    
+    // Notify pipeline of parameter change
+    if (pipeline_) {
+        pipeline_->OnParameterChanged(name, value);
+    }
+    
     return true;
 }
 

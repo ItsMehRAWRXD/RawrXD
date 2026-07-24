@@ -144,7 +144,7 @@ TestResult RunMemorySafetyTest() {
         }
         printf("[TEST] ✓ Mapped base address: %p\n", mappedBase);
         
-        // Simulate data copy to heap (what hotpatch_model_manager does)
+        // Copy data to heap (as hotpatch_model_manager does)
         dataSize = sizeof(kMinimalGGUF);
         heapBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dataSize);
         if (!heapBuffer) {

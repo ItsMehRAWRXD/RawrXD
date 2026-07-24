@@ -156,6 +156,7 @@ public:
     // Insert CALL instruction
     bool InsertCall(uint64_t fromRva, uint64_t toRva);
     bool InsertCall32(uint64_t fromRva, uint64_t toRva);
+    bool InsertCall64(uint64_t fromRva, uint64_t toRva);
     
     // Insert RET instruction
     bool InsertRet(uint64_t rva, uint16_t stackBytes = 0);

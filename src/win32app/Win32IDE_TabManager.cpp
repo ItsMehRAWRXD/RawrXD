@@ -55,11 +55,11 @@ bool Win32IDE_TabManager::initialize(HWND hwndParent)
     OutputDebugStringA("[TabManager] ShowWindow done\n");
     fileTrace("[TabManager] ShowWindow done");
 
-    OutputDebugStringA("[TabManager] Applying sovereign theme...\n");
-    fileTrace("[TabManager] Applying sovereign theme...");
-    // Apply sovereign theme
-    applySovereignTheme();
-    OutputDebugStringA("[TabManager] Sovereign theme applied\n");
+    // DEFERRED: applySovereignTheme() moved to deferred post-WM_CREATE init
+    // to prevent stack overflow from nlohmann::json parsing during window creation.
+    // Theme will be applied via WM_APP_INIT_CHILDREN or first paint.
+    OutputDebugStringA("[TabManager] Sovereign theme deferred (post-WM_CREATE)\n");
+    fileTrace("[TabManager] Sovereign theme deferred (post-WM_CREATE)");
 
     OutputDebugStringA("[TabManager] Loading persisted tabs...\n");
     // Load persisted tabs

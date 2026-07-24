@@ -154,7 +154,7 @@ void DebugBridge::LogTelemetrySummary() {
         entry.MarkValid();
         
         // Non-blocking push - if buffer full, entry is dropped
-        sharedTelemetry.TryPush(entry);
+        sharedTelemetry.Push(entry);
     }
     
     // Fallback: Also output to debugger if no debugger attached
@@ -182,7 +182,7 @@ void DebugBridge::SetEventCallback(EventCallback callback) {
     m_eventCallback = callback;
 }
 
-void DebugBridge::AttachSession(DebugSession* session) {
+void DebugBridge::AttachSession(RawrXD::Debug::DebugSession* session) {
     Lock();
     m_session = session;
     Unlock();

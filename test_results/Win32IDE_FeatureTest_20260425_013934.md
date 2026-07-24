@@ -1,4 +1,4 @@
-﻿# Win32IDE Feature Test Report
+# Win32IDE Feature Test Report
 
 **Generated:** 2026-04-25 01:39:34
 **Model:** f:\ollamamodels\Phi-3-mini-4k-instruct-q8_0.gguf

@@ -1196,7 +1196,7 @@ bool MapStubWeights(ModelWeights& weights) {
     weights.w_gate = new float*[weights.n_layers];
     weights.w_down = new float*[weights.n_layers];
     
-    // Allocate per-layer weights (stub values)
+    // Allocate per-layer weights (initialized to default values)
     for (uint32_t i = 0; i < weights.n_layers; i++) {
         weights.attn_norm[i] = static_cast<float*>(
             VirtualAlloc(nullptr, weights.hidden_dim * sizeof(float), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));

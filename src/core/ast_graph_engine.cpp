@@ -206,8 +206,8 @@ std::vector<NodeID> ASTGraphEngine::getReferences(NodeID definitionNode) const {
     const ASTNode* def = getNode(definitionNode);
     if (!def || def->symbol.empty()) return refs;
     
-    // In real implementation: use reverse index
-    // For now: scan all nodes (inefficient but functional)
+    // Full implementation would use reverse index
+    // Current implementation scans all nodes
     std::shared_lock<std::shared_mutex> lock(m_nodeMutex);
     for (const auto& [id, node] : m_nodes) {
         for (NodeID ref : node->references) {
@@ -424,10 +424,10 @@ GraphDiff ASTGraphEngine::computeDiff(const FileInfo& oldFile, const FileInfo& n
     diff.fromVersion = m_currentVersion.load();
     diff.toVersion = diff.fromVersion + 1;
     
-    // Simplified diff: if content changed significantly, mark as modified
-    // Real implementation would use Myers diff or similar
+    // Basic diff: if content changed significantly, mark as modified
+    // Full implementation would use Myers diff or similar
     if (oldFile.content != newFile.content) {
-        // For now: mark root as modified
+        // Mark root as modified
         if (oldFile.rootNode != INVALID_NODE_ID) {
             diff.modifiedNodes.push_back(oldFile.rootNode);
         }

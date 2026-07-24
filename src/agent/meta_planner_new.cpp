@@ -20,9 +20,9 @@ static std::string trim(const std::string& s) {
     return std::string(start, end + 1);
 }
 
-// Mimic QString::section (simplified)
+// Mimic QString::section
 // section(sep, start, end)
-// For now, simple tokenization
+// Tokenizes string by separator and returns the token at the specified index
 static std::string section(const std::string& s, char sep, int index) {
     std::vector<std::string> tokens;
     std::stringstream ss(s);

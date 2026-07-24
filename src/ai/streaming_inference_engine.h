@@ -20,7 +20,9 @@
 #pragma once
 
 #include "kernel_arbiter.h"
-#include "vulkan_compute.h"
+#include "../vulkan_compute.h"
+#include "speculative_tree_attention_bridge.h"
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -54,10 +56,13 @@ struct ContextWindow {
 // KV cache entry for prefix reuse
 struct KVCacheEntry {
     uint64_t prefix_hash;
+    uint64_t hash;
     uint32_t seq_len;
     std::vector<uint32_t> token_ids;
     std::chrono::steady_clock::time_point last_used;
     bool valid;
+    // Vulkan buffer for GPU caching
+    size_t size{0};
 };
 
 // Streaming statistics for adaptive optimization
@@ -227,8 +232,14 @@ private:
     // Current kernel mode
     std::atomic<int> current_kernel_mode_{1}; // Default: Q4_K
     
+    // Temperature for sampling
+    std::atomic<float> current_temperature_{0.8f};
+    
     // Speculative state
     SpeculativeState spec_state_;
+    
+    // VAL-032: Tree attention speculative bridge
+    std::unique_ptr<TreeAttentionSpeculativeBridge> tree_attention_bridge_;
     
     // Token batch (enhancement #8)
     TokenBatch current_batch_;

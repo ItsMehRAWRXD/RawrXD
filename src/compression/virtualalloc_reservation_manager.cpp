@@ -148,8 +148,8 @@ uint64_t VirtualAllocReservationManager::GetTotalReservedBytes() const {
 }
 
 uint64_t VirtualAllocReservationManager::EvictLRU() {
-    // Simplified: evict first releasable reservation
-    // In production, track access times and evict least-recently-used
+    // Evict first releasable reservation
+    // Production: track access times and evict least-recently-used
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto it = reservations_.begin(); it != reservations_.end(); ++it) {
         auto& res = *it;

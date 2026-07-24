@@ -395,9 +395,33 @@ LRESULT CALLBACK Win32IDE::TerminalInputSubclassProc(HWND hwnd, UINT msg, WPARAM
         return 0;
     }
 
-    // History: Up/Down arrows for command history (basic)
+    // History: Up/Down arrows for command history
     if (msg == WM_KEYDOWN && (wParam == VK_UP || wParam == VK_DOWN)) {
-        // TODO: implement command history ring buffer
+        // Get tab index from window property
+        int tabIdx = (int)(LONG_PTR)GetPropA(hwnd, "TAB_IDX");
+        if (tabIdx >= 0 && tabIdx < (int)m_terminalTabs.size()) {
+            auto& tab = m_terminalTabs[tabIdx];
+            
+            if (wParam == VK_UP) {
+                // Navigate backwards through history
+                if (!tab.commandHistory.empty()) {
+                    if (tab.historyIndex > 0) {
+                        tab.historyIndex--;
+                    }
+                    SetWindowTextA(hwnd, tab.commandHistory[tab.historyIndex].c_str());
+                }
+            } else { // VK_DOWN
+                // Navigate forwards through history
+                if (!tab.commandHistory.empty() && tab.historyIndex < tab.commandHistory.size() - 1) {
+                    tab.historyIndex++;
+                    SetWindowTextA(hwnd, tab.commandHistory[tab.historyIndex].c_str());
+                } else {
+                    // Clear if at end of history
+                    tab.historyIndex = tab.commandHistory.size();
+                    SetWindowTextA(hwnd, "");
+                }
+            }
+        }
         return 0;
     }
 

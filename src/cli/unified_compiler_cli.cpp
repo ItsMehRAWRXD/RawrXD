@@ -386,7 +386,7 @@ int main(int argc, char** argv) {
         std::cout << "Generated Plan:\n";
         std::cout << plan << "\n\n";
         
-        // Simulate execution
+        // Execute plan steps
         std::cout << "Executing plan steps...\n";
         std::cout << "[Step 1] Analyzing requirements...\n";
         std::cout << "[Step 2] Generating code...\n";

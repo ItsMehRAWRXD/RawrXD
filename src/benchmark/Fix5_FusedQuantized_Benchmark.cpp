@@ -319,7 +319,7 @@ void RunKVCacheMemoryTest() {
 void RunTransformerLayerSimulation() {
     printf("\n=== Test E: Transformer Layer Simulation ===\n\n");
     
-    // Simulate a single transformer layer with Q4_0 weights
+    // Model a single transformer layer with Q4_0 weights
     const int batch = 1;
     const int seq_len = 512;
     const int hidden_dim = 4096;

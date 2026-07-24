@@ -36,6 +36,15 @@ struct MultiResponseResult {
     }
 };
 
+// ── Response template ID enum (cli_headless_systems.cpp compatibility) ──
+enum class ResponseTemplateId : int {
+    Strategic      = 0,   // High-confidence, executive / acquisition framing
+    Grounded       = 1,   // Conservative, engineering-centric, audit-safe
+    Creative       = 2,   // Exploratory, lateral-thinking, novel angles
+    Concise        = 3,   // Minimal, direct, no fluff — bullet-point style
+    Count          = 4
+};
+
 // ── Response template ──
 struct ResponseTemplate {
     const char* name = "";
@@ -57,6 +66,8 @@ struct MultiResponseSession {
         uint32_t templateId = 0;
         double latencyMs = 0.0;
         bool success = false;
+        bool complete = false;  // cli_headless_systems.cpp compatibility
+        bool error = false;     // cli_headless_systems.cpp compatibility
     };
     std::vector<Response> responses;
 };
@@ -65,7 +76,9 @@ struct MultiResponseSession {
 struct MultiResponseStats {
     uint64_t totalSessions = 0;
     uint64_t totalResponses = 0;
+    uint64_t totalResponsesGenerated = 0;  // Alias for totalResponses (cli_headless_systems.cpp compatibility)
     uint64_t preferenceSelections = 0;
+    uint64_t totalPreferencesRecorded = 0; // Alias for preferenceSelections (cli_headless_systems.cpp compatibility)
 };
 
 // ============================================================================
@@ -131,6 +144,11 @@ public:
         return empty;
     }
 
+    // Overload for ResponseTemplateId enum (cli_headless_systems.cpp compatibility)
+    const ResponseTemplate& getTemplate(ResponseTemplateId id) const {
+        return getTemplate(static_cast<uint32_t>(id));
+    }
+
     std::vector<ResponseTemplate> getAllTemplates() const {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_templates;
@@ -149,6 +167,11 @@ public:
             }
             return;
         }
+    }
+
+    // Overload for ResponseTemplateId enum (cli_headless_systems.cpp compatibility)
+    void setTemplateEnabled(ResponseTemplateId id, bool enabled) {
+        setTemplateEnabled(static_cast<uint32_t>(id), enabled);
     }
 
     int getEnabledTemplateCount() const {
@@ -212,6 +235,7 @@ public:
             resp.success = true;
             session.responses.push_back(resp);
             m_stats.totalResponses++;
+            m_stats.totalResponsesGenerated++;
             count++;
         }
 
@@ -246,7 +270,10 @@ public:
         const bool changed = (it->second.preferredIndex != index);
         it->second.preferredIndex = index;
         m_preferences[sid] = index;
-        if (changed) m_stats.preferenceSelections++;
+        if (changed) {
+            m_stats.preferenceSelections++;
+            m_stats.totalPreferencesRecorded++;
+        }
         return MultiResponseResult::ok("Preference set");
     }
 

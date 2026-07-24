@@ -3080,9 +3080,12 @@ void bgInitBody(void* self)
 
 void Win32IDE::deferredHeavyInitBody()
 {
+    OutputDebugStringA("[STARTUP] entering deferredHeavyInitBody\n");
+    
     // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
     try
     {
+        OutputDebugStringA("[STARTUP] loading config\n");
         std::string logPath = "RawrXD_IDE.log";
         char appData[MAX_PATH] = {};
         if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, appData)))
@@ -3103,6 +3106,7 @@ void Win32IDE::deferredHeavyInitBody()
     // ================================================================
     // Enterprise License System — initialize FIRST (gates engine registration)
     // ================================================================
+    OutputDebugStringA("[STARTUP] initializing enterprise license\n");
     try
     {
         initializeEnterpriseSubsystemsSafe(this);
@@ -3115,6 +3119,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize Native CPU Inference Engine
+    OutputDebugStringA("[STARTUP] initializing CPU inference engine\n");
     try
     {
         m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
@@ -3133,6 +3138,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize DirectX renderer (needs to be on UI thread ideally, but creation is OK)
+    OutputDebugStringA("[STARTUP] initializing DirectX renderer\n");
     try
     {
         m_renderer = std::make_unique<TransparentRenderer>();
@@ -3144,6 +3150,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize PowerShell state
+    OutputDebugStringA("[STARTUP] initializing PowerShell state\n");
     try
     {
         initializePowerShellState();
@@ -3156,6 +3163,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Theme already applied in onCreate — skip here
 
     // Load code snippets
+    OutputDebugStringA("[STARTUP] loading code snippets\n");
     try
     {
         loadCodeSnippets();
@@ -3166,6 +3174,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Agent
+    OutputDebugStringA("[STARTUP] initializing agent\n");
     try
     {
         if (m_nativeEngine)
@@ -3184,6 +3193,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Extension Loader
+    OutputDebugStringA("[STARTUP] loading plugins\n");
     try
     {
         m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
@@ -3198,6 +3208,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialise the agentic bridge (needs m_hwndMain, which is set)
+    OutputDebugStringA("[STARTUP] initializing agentic bridge\n");
     try
     {
         initializeAgenticBridge();
@@ -3210,6 +3221,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize AI/Extensions panels so menu -> show() creates real UI
     if (isShuttingDown())
         return;
+    OutputDebugStringA("[STARTUP] initializing AI panels\n");
     try
     {
         if (m_modelRegistry)
@@ -3228,6 +3240,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Ghost Text renderer (Copilot-style inline completions)
+    OutputDebugStringA("[STARTUP] initializing ghost text\n");
     try
     {
         initGhostText();
@@ -3238,6 +3251,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Failure Detector (agent self-correction)
+    OutputDebugStringA("[STARTUP] initializing failure detector\n");
     try
     {
         initFailureDetector();
@@ -3248,6 +3262,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Agent Diff Panel (Win32IDE_AgentPanel.cpp)
+    OutputDebugStringA("[STARTUP] initializing agent panel\n");
     try
     {
         initAgentPanel();
@@ -3258,6 +3273,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Load persistent settings from %APPDATA%\RawrXD\settings.json
+    OutputDebugStringA("[STARTUP] loading settings\n");
     try
     {
         loadSettings();
@@ -3272,6 +3288,7 @@ void Win32IDE::deferredHeavyInitBody()
 
     // Startup hardening: keep optional discovery, bridge-adjacent clients, and plugin managers
     // off the WinMain path so failures cannot abort startup before the first paint.
+    OutputDebugStringA("[STARTUP] initializing core runtime spine\n");
     try
     {
         initializeCoreRuntimeSpine();
@@ -3280,6 +3297,7 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initializeCoreRuntimeSpine failed\n");
     }
+    OutputDebugStringA("[STARTUP] initializing Ollama client\n");
     try
     {
         initAgentOllamaClient();
@@ -3288,6 +3306,7 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: initAgentOllamaClient failed\n");
     }
+    OutputDebugStringA("[STARTUP] model discovery\n");
     try
     {
         initModelDiscovery();
@@ -3333,6 +3352,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize Agent History (append-only JSONL event log)
+    OutputDebugStringA("[STARTUP] initializing agent history\n");
     try
     {
         initAgentHistory();
@@ -3343,6 +3363,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Failure Intelligence — Phase 6 (classification + retry strategies)
+    OutputDebugStringA("[STARTUP] initializing failure intelligence\n");
     try
     {
         initFailureIntelligence();
@@ -3353,6 +3374,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Unified Model Source Resolver (HuggingFace, Ollama blobs, HTTP, local)
+    OutputDebugStringA("[STARTUP] initializing model resolver\n");
     try
     {
         m_modelResolver = std::make_unique<RawrXD::ModelSourceResolver>();
@@ -3376,6 +3398,7 @@ void Win32IDE::deferredHeavyInitBody()
 
     // GPU Backend Bridge — detect and initialize Vulkan compute if available.
     // RT-01 triage gate: allow deterministic startup isolation without code churn.
+    OutputDebugStringA("[STARTUP] GPU initialization\n");
     {
         const bool disableVulkanProbe = (std::getenv("RAWRXD_DISABLE_VULKAN_PROBE_STARTUP") != nullptr);
         if (disableVulkanProbe)
@@ -3403,6 +3426,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 10: Execution Governor + Safety + Replay + Confidence
+    OutputDebugStringA("[STARTUP] initializing phase 10\n");
     try
     {
         initPhase10();
@@ -3413,6 +3437,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize MultiResponse, LSP Server, Hotpatch UI (lazy-ready)
+    OutputDebugStringA("[STARTUP] initializing LSP server\n");
     try
     {
         initMultiResponse();
@@ -3439,6 +3464,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 11: Distributed Swarm Compilation
+    OutputDebugStringA("[STARTUP] initializing phase 11\n");
     try
     {
         initPhase11();
@@ -3449,6 +3475,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 12: Native Debugger Engine
+    OutputDebugStringA("[STARTUP] initializing phase 12\n");
     try
     {
         initPhase12();
@@ -3459,6 +3486,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Decompiler View (Phase 18B)
+    OutputDebugStringA("[STARTUP] initializing decompiler view\n");
     try
     {
         initDecompilerView();
@@ -3469,6 +3497,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 33: Voice Chat Engine
+    OutputDebugStringA("[STARTUP] initializing voice chat\n");
     try
     {
         initVoiceChat();
@@ -3511,6 +3540,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Tier 1: Critical Cosmetics (smooth scroll, minimap, fuzzy palette, etc.)
+    OutputDebugStringA("[STARTUP] initializing tier 1 cosmetics\n");
     try
     {
         initTier1Cosmetics();
@@ -3521,6 +3551,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Tier 2: High-visibility cosmetics (git diff viewer, terminal tabs, hover, refs, CodeLens, inlay)
+    OutputDebugStringA("[STARTUP] initializing tier 2 cosmetics\n");
     try
     {
         initTier2Cosmetics();
@@ -3531,6 +3562,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 33: Quick-Win Systems (Shortcuts, Backups, Alerts, SLO)
+    OutputDebugStringA("[STARTUP] initializing quick-win systems\n");
     try
     {
         initQuickWinSystems();
@@ -3541,6 +3573,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 32B: Chain-of-Thought Multi-Model Review Engine
+    OutputDebugStringA("[STARTUP] initializing chain-of-thought\n");
     try
     {
         initChainOfThought();
@@ -3551,6 +3584,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 34: Telemetry Export Subsystem
+    OutputDebugStringA("[STARTUP] initializing telemetry\n");
     try
     {
         initTelemetry();
@@ -3561,6 +3595,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 36: Flight Recorder — persistent binary ring-buffer
+    OutputDebugStringA("[STARTUP] initializing flight recorder\n");
     try
     {
         initFlightRecorder();
@@ -3571,6 +3606,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 36: MCP Integration — Model Context Protocol
+    OutputDebugStringA("[STARTUP] initializing MCP\n");
     try
     {
         initMCP();
@@ -3581,6 +3617,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 29+36: VS Code Extension API + QuickJS VSIX Host
+    OutputDebugStringA("[STARTUP] initializing VS Code extension API\n");
     try
     {
         initVSCodeExtensionAPI();
@@ -3645,6 +3682,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Tier 5 cosmetic features (Emoji, Telemetry Dashboard, Shortcut Editor, etc.)
+    OutputDebugStringA("[STARTUP] initializing tier 5 cosmetics\n");
     if (!isShuttingDown())
     {
         try
@@ -3658,6 +3696,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Standby StreamingGGUFLoader so load/inspect paths never hit a nullptr gate (non-authoritative vs CPU engine).
+    OutputDebugStringA("[STARTUP] initializing GGUF loader\n");
     if (!isShuttingDown() && !m_ggufLoader)
     {
         try
@@ -3673,7 +3712,7 @@ void Win32IDE::deferredHeavyInitBody()
         }
     }
 
-    OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
+    OutputDebugStringA("[STARTUP] deferredHeavyInit complete\n");
 
     // Initialize AI backend probe (background thread, posts WM_AI_BACKEND_STATUS on result)
     if (!isShuttingDown())

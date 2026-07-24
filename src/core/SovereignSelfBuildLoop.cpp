@@ -351,8 +351,15 @@ void SovereignManifestor_Run()
 
 bool SovereignManifestor_NeedsUpdate()
 {
-    // TODO: Check if manifest needs update
-    return false;
+    // Check if manifest needs update by comparing timestamps
+    std::string manifestPath = GetExecutablePath() + ".manifest";
+    std::string sourcePath = GetExecutablePath() + ".cpp";
+    
+    // If source is newer than manifest, rebuild needed
+    auto sourceTime = GetFileTimestamp(sourcePath);
+    auto manifestTime = GetFileTimestamp(manifestPath);
+    
+    return sourceTime > manifestTime;
 }
 
 void SovereignGenerators_Run()

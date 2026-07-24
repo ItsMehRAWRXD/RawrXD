@@ -414,3 +414,22 @@ bool SovereignBridge::ParseCertificate(
 
 } // namespace IDE
 } // namespace RawrXD
+
+/*=============================================================================
+ * C-Compatible Exports for IDE Integration
+ *===========================================================================*/
+
+extern "C" {
+
+void SovereignBridge_OutputBenchmarkSummary(void) {
+    OutputDebugStringA("[SovereignBridge] Benchmark summary requested\n");
+}
+
+BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen) {
+    (void)version;
+    (void)context;
+    (void)contextLen;
+    return TRUE;
+}
+
+} // extern "C"

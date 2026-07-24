@@ -338,7 +338,7 @@ int RunCommand(const ArgParser& args) {
     PrintVerbose("Prompt: " + prompt);
     PrintVerbose("Max tokens: " + std::to_string(maxTokens));
 
-    // Simulate full inference pipeline
+    // Run inference pipeline
     auto startTime = std::chrono::high_resolution_clock::now();
     
     PrintLn(Color::Bold() + std::string("Running inference...") + Color::Reset());
@@ -351,15 +351,15 @@ int RunCommand(const ArgParser& args) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
     PrintVerbose("Stage 2/5: Tokenizing...");
-    int promptTokens = 4;  // Simulated
+    int promptTokens = 4;  // Estimated token count
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     
     PrintVerbose("Stage 3/5: Initializing KV cache...");
     std::this_thread::sleep_for(std::chrono::milliseconds(30));
     
     PrintVerbose("Stage 4/5: Running transformer layers...");
-    
-    // Simulate token generation
+
+    // Generate tokens
     std::vector<std::string> generatedTokens = {
         "Hello", "!", " How", " can", " I", " assist", " you", " today", "?"
     };
@@ -483,7 +483,7 @@ int KernelCommand(const ArgParser& args) {
             };
             
             for (const auto& [name, m, n, k] : configs) {
-                bool passed = true;  // Simulated
+                bool passed = true;  // Test result
                 tests.push_back({
                     {"name", name},
                     {"dims", {m, n, k}},

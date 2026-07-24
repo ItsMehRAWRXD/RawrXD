@@ -5218,22 +5218,8 @@ CommandResult handleTransparencyToggle(const CommandContext& ctx) {
 // ============================================================================
 // View State — Persistent view configuration (shared across handlers)
 // ============================================================================
-static struct ViewState {
-    bool floatingPanelVisible = false;
-    bool minimapEnabled = true;
-    bool moduleBrowserVisible = false;
-    bool monacoDevtoolsOpen = false;
-    bool monacoVisible = true;
-    bool outputPanelVisible = true;
-    bool sidebarVisible = true;
-    bool terminalVisible = false;
-    bool fullscreen = false;
-    int  zoomLevel = 100;  // percentage
-    int  monacoZoomLevel = 100;
-    bool streamingLoaderActive = false;
-    bool vulkanRendererActive = false;
-    const char* currentTheme = "dark-rawrxd";
-} g_viewState;
+#include "view_state.hpp"
+// g_viewState is now defined in view_state.hpp as a singleton
 
 CommandResult handleViewFloatingPanel(const CommandContext& ctx) {
     g_viewState.floatingPanelVisible = !g_viewState.floatingPanelVisible;

@@ -253,12 +253,12 @@ int main(int argc, char** argv) {
     Telemetry_Init();
     printf("Telemetry initialized.\n");
     
-    // Simulate some activity
+    // Generate test telemetry activity
     for (int i = 0; i < 100; ++i) {
         Telemetry_ProposalGenerated();
         Telemetry_FileIngested();
     }
-    printf("Simulated 100 proposals and files.\n");
+    printf("Generated 100 telemetry events.\n");
     
     // Force a crash (if requested)
     if (argc > 1 && strcmp(argv[1], "--crash") == 0) {

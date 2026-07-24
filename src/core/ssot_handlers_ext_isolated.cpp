@@ -138,9 +138,7 @@ CommandResult runAiPrompt(const CommandContext& ctx, const char* systemPrompt, c
 
 CommandResult handleDecompRenameVar(const CommandContext& ctx) { return delegateToGui(ctx, 8001, "decomp.renameVar"); }
 CommandResult handleDecompGotoDef(const CommandContext& ctx)   { return delegateToGui(ctx, 8002, "decomp.gotoDef"); }
-CommandResult handleDecompFindRefs(const CommandContext& ctx)  { return delegateToGui(ctx, 8003, "decomp.findRefs"); }
-CommandResult handleDecompCopyLine(const CommandContext& ctx)  { return delegateToGui(ctx, 8004, "decomp.copyLine"); }
-CommandResult handleDecompCopyAll(const CommandContext& ctx)   { return delegateToGui(ctx, 8005, "decomp.copyAll"); }
+// Note: handleDecompFindRefs, handleDecompCopyLine, handleDecompCopyAll defined in auto_feature_registry.cpp
 CommandResult handleDecompGotoAddr(const CommandContext& ctx)  { return delegateToGui(ctx, 8006, "decomp.gotoAddr"); }
 
 CommandResult handleVoiceAutoToggle(const CommandContext& ctx)    { return delegateToGui(ctx, 10200, "voice.autoToggle"); }

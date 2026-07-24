@@ -559,7 +559,7 @@ uint32_t CDB_SetBreakpoint(uint64_t address, const char* symbolName) {
 
 uint32_t CDB_SetBreakpointByName(const char* symbolName) {
     // TODO: Resolve symbol to address using DbgHelp
-    // For now, return 0 (not implemented)
+    // Implementation pending - returns 0
     (void)symbolName;
     return 0;
 }

@@ -395,7 +395,7 @@ bool ConfigManager::ValidateAgainstSchema(const std::string& schemaPath) {
 }
 
 bool ConfigManager::ValidateAgainstSchemaJson(const json& schema) {
-    // Simplified validation - in production, use a proper JSON Schema validator
+    // Basic validation - production would use a proper JSON Schema validator
     pImpl->validationErrors_.clear();
     
     try {
@@ -435,7 +435,7 @@ void ConfigManager::UnsubscribeFromChanges(int subscriptionId) {
 
 bool ConfigManager::StartFileWatcher(const std::string& path) {
     // Implementation would use platform-specific file watching
-    // For now, just store the path
+    // Current implementation stores the path
     pImpl->configFilePath_ = path;
     return true;
 }

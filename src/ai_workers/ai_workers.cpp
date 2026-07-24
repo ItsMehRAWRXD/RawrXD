@@ -1049,30 +1049,35 @@ void AITrainingWorker::performValidation(double trainingLoss, double trainingAcc
         m_progress.status = "Validating...";
     }
 
-    int64_t validationStartTime =  // DateTime::currentMSecsSinceEpoch();
+    int64_t validationStartTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
 
-        // Structured logging: Validation start
-        << "epoch=" << m_progress.currentEpoch << "training_loss=" << trainingLoss
-        << "training_accuracy=" << trainingAccuracy;
+    // Structured logging: Validation start
+    std::cout << "[AIWorkers] Validation started - epoch=" << m_progress.currentEpoch
+              << " training_loss=" << trainingLoss
+              << " training_accuracy=" << trainingAccuracy << std::endl;
 
-    // Simulate or execute validation through pipeline
+    // Execute validation through pipeline
     double valLoss = 0.0;
     double valAccuracy = 0.0;
 
-    if (m_pipeline)
-    {
-        // In real implementation, utilize pipeline validation
-        // m_pipeline->validate() if available
-        valLoss = 0.0;
-        valAccuracy = 0.0;
-    }
-    else
-    {
+    if (m_pipeline && m_pipeline->isReady()) {
+        // Real validation using the pipeline
+        ValidationResult result = m_pipeline->validate(m_validationData);
+        valLoss = result.loss;
+        valAccuracy = result.accuracy;
+        
+        // Log validation metrics
+        std::cout << "[AIWorkers] Validation complete - loss=" << valLoss
+                  << " accuracy=" << valAccuracy << std::endl;
+    } else {
         // Validation requires an active InferenceEngine instance.
         // Since we don't have one here, we cannot perform real validation.
         // We strictly return 0/failure indicators rather than simulating success.
         valLoss = -1.0;
         valAccuracy = 0.0;
+        
+        std::cerr << "[AIWorkers] Validation failed - no active pipeline" << std::endl;
     }
 
     m_validationLosses.append(valLoss);

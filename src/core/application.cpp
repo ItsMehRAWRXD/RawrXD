@@ -483,7 +483,7 @@ void Application::ShowError(const std::string& title, const std::string& message
 
 void Application::ShowNotification(const std::string& message, int timeoutMs) {
     // Simple notification - could be enhanced with a proper notification system
-    // For now, use a tooltip or status bar message
+    // Current implementation uses tooltip or status bar message
     HWND hwnd = GetForegroundWindow();
     if (hwnd) {
         // Show tooltip or update status bar

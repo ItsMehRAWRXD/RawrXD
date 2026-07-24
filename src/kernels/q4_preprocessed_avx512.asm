@@ -3,9 +3,10 @@
 ; Fast dot product using byte-planar weights
 ;
 ; Input: Preprocessed block (128 bytes):
-;   [0:1]   scale (fp16)
-;   [2:66]  64 unpacked int8 weights (-8 to +7)
-;   [67:127] padding
+;   [0:15]  Q4BlockHeader (16 bytes)
+;   [16:19] scale (fp32)
+;   [20:83] 64 unpacked int8 weights (-8 to +7)
+;   [84:127] padding
 ;
 ; Process: 64 weights in 4 chunks of 16
 ;   Load 16 int8 weights
@@ -15,6 +16,12 @@
 ;   FMA with 16 activations
 ;=============================================================================
 
+include rawrxd_win64.inc
+
+.data
+align 8
+    sz_q4_start db "[Q4] Preprocessed dot start", 0
+
 .code
 
 ;-----------------------------------------------------------------------------
@@ -23,6 +30,7 @@
 ;         rdx = activations* (64 x fp32, aligned)
 ; Output: xmm0 = dot product (fp32)
 ;-----------------------------------------------------------------------------
+PUBLIC q4_preprocessed_dot_avx512_asm
 q4_preprocessed_dot_avx512_asm PROC FRAME
     push rbx
     .pushreg rbx
@@ -86,10 +94,10 @@ q4_preprocessed_dot_avx512_asm PROC FRAME
     vaddps xmm0, xmm0, xmm1             ; 4 floats
 
     ; Horizontal add within xmm0
-    vshufps xmm1, xmm0, xmm0, 0x4E      ; [2,3,0,1]
+    vshufps xmm1, xmm0, xmm0, 04Eh      ; [2,3,0,1]
     vaddps xmm0, xmm0, xmm1             ; [0+2, 1+3, ...]
 
-    vshufps xmm1, xmm0, xmm0, 0xB1      ; [1,0,3,2]
+    vshufps xmm1, xmm0, xmm0, 0B1h      ; [1,0,3,2]
     vaddss xmm0, xmm0, xmm1             ; final sum in xmm0[0]
 
     pop r12
@@ -97,127 +105,5 @@ q4_preprocessed_dot_avx512_asm PROC FRAME
     ret
 
 q4_preprocessed_dot_avx512_asm ENDP
-
-;-----------------------------------------------------------------------------
-; q4_preprocessed_gemm_row_avx512_asm
-; Computes one row of GEMM: output[j] = sum_k(blocks[k] dot activations[k])
-;
-; Input:  rcx = blocks* (array of PreprocessedQ4Block)
-;         rdx = activations* (K x 64 fp32)
-;         r8  = output* (N x fp32)
-;         r9  = num_blocks (K dimension)
-;         [rsp+40] = num_outputs (N dimension)
-;-----------------------------------------------------------------------------
-q4_preprocessed_gemm_row_avx512_asm PROC FRAME
-    push rbx
-    .pushreg rbx
-    push r12
-    .pushreg r12
-    push r13
-    .pushreg r13
-    push r14
-    .pushreg r14
-    push r15
-    .pushreg r15
-    .endprolog
-
-    mov rbx, rcx                        ; blocks ptr
-    mov r12, rdx                        ; activations ptr
-    mov r13, r8                         ; output ptr
-    mov r14, r9                         ; num_blocks
-    mov r15, QWORD PTR [rsp + 72]       ; num_outputs (after pushed regs + ret addr)
-
-    ; For each output element
-    xor r8, r8                          ; j = 0
-.output_loop:
-    cmp r8, r15
-    jge .done
-
-    ; Initialize accumulator for this output
-    vpxord zmm0, zmm0, zmm0             ; zmm0 = 0
-
-    ; For each block
-    xor r9, r9                          ; k = 0
-    xor r10, r10                        ; activation offset
-.block_loop:
-    cmp r9, r14
-    jge .next_output
-
-    ; Compute block offset: blocks + k * 128
-    mov rax, r9
-    shl rax, 7                          ; k * 128 (block size)
-    lea rcx, [rbx + rax]                ; block ptr
-
-    ; Compute activation offset: activations + k * 64 * 4
-    mov rdx, r12
-    add rdx, r10                        ; + activation offset
-
-    ; Load scale from block
-    vpxord xmm1, xmm1, xmm1
-    vpinsrw xmm1, xmm1, WORD PTR [rcx], 0
-    vcvtph2ps xmm1, xmm1
-    vbroadcastss zmm7, xmm1             ; scale
-
-    ; Process 4 chunks of 16 weights each
-    ; Chunk 0
-    vpmovsxbd zmm1, XMMWORD PTR [rcx + 2]
-    vcvtdq2ps zmm1, zmm1
-    vmulps zmm1, zmm1, zmm7
-    vmovaps zmm2, ZMMWORD PTR [rdx]
-    vfmadd231ps zmm0, zmm1, zmm2
-
-    ; Chunk 1
-    vpmovsxbd zmm1, XMMWORD PTR [rcx + 18]
-    vcvtdq2ps zmm1, zmm1
-    vmulps zmm1, zmm1, zmm7
-    vmovaps zmm2, ZMMWORD PTR [rdx + 64]
-    vfmadd231ps zmm0, zmm1, zmm2
-
-    ; Chunk 2
-    vpmovsxbd zmm1, XMMWORD PTR [rcx + 34]
-    vcvtdq2ps zmm1, zmm1
-    vmulps zmm1, zmm1, zmm7
-    vmovaps zmm2, ZMMWORD PTR [rdx + 128]
-    vfmadd231ps zmm0, zmm1, zmm2
-
-    ; Chunk 3
-    vpmovsxbd zmm1, XMMWORD PTR [rcx + 50]
-    vcvtdq2ps zmm1, zmm1
-    vmulps zmm1, zmm1, zmm7
-    vmovaps zmm2, ZMMWORD PTR [rdx + 192]
-    vfmadd231ps zmm0, zmm1, zmm2
-
-    ; Next block
-    inc r9
-    add r10, 256                        ; + 64 floats * 4 bytes
-    jmp .block_loop
-
-.next_output:
-    ; Horizontal sum zmm0 to scalar
-    vextractf64x4 ymm1, zmm0, 1
-    vaddps ymm0, ymm0, ymm1
-    vextractf128 xmm1, ymm0, 1
-    vaddps xmm0, xmm0, xmm1
-    vshufps xmm1, xmm0, xmm0, 0x4E
-    vaddps xmm0, xmm0, xmm1
-    vshufps xmm1, xmm0, xmm0, 0xB1
-    vaddss xmm0, xmm0, xmm1
-
-    ; Store result
-    movss DWORD PTR [r13 + r8 * 4], xmm0
-
-    ; Next output
-    inc r8
-    jmp .output_loop
-
-.done:
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop rbx
-    ret
-
-q4_preprocessed_gemm_row_avx512_asm ENDP
 
 END

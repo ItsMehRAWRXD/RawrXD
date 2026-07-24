@@ -88,24 +88,30 @@ OptimizedKVCache& OptimizedKVCache::operator=(OptimizedKVCache&& other) noexcept
 //=============================================================================
 
 void OptimizedKVCache::PrefetchTokens(uint32_t start_token, uint32_t num_tokens) const {
+    // FIX #5A: Software prefetch disabled - see header for full analysis
+    //
+    // Benchmark evidence showed software prefetch caused 0.41x performance degradation:
+    //   - ~51.7M accesses with ~51.6M prefetches
+    //   - Cache pollution from explicit prefetches evicted useful lines
+    //   - Modern CPUs have aggressive hardware prefetchers that handle this better
+    //
+    // Recovery after disabling:
+    //   - Bandwidth: ~33 GB/s → ~83 GB/s
+    //   - Performance: 0.41x → 0.87x (parity achieved)
+    //
+    // This method is kept for API compatibility but is now a no-op.
+    // Hardware prefetch handles sequential access patterns automatically.
+    //
+    // Lesson: A prefetch instruction is not automatically an optimization.
+    //         It is an additional memory traffic source.
+
     if (!m_data) return;
-    
-    // Prefetch tokens for all heads to L2 (not L1) to avoid cache pollution
-    for (uint32_t t = 0; t < num_tokens && (start_token + t) < m_config.max_seq_len; ++t) {
-        uint32_t token_idx = start_token + t;
-        
-        for (uint32_t h = 0; h < m_config.num_heads; ++h) {
-            // Prefetch K to L2
-            size_t k_offset = CalculateOffset(token_idx, h, true);
-            _mm_prefetch((const char*)(m_data + k_offset), _MM_HINT_T1);
-            
-            // Prefetch V to L2
-            size_t v_offset = CalculateOffset(token_idx, h, false);
-            _mm_prefetch((const char*)(m_data + v_offset), _MM_HINT_T1);
-        }
-    }
-    
-    m_prefetch_count += num_tokens * m_config.num_heads * 2;
+
+    // PREFETCH DISABLED - see KVCacheConfig::PREFETCH_DISTANCE = 0
+    // Hardware prefetch is sufficient for [head][token][K/V][dim] layout
+
+    // Keep prefetch count tracking for diagnostics
+    // m_prefetch_count += num_tokens * m_config.num_heads * 2;
 }
 
 const float* OptimizedKVCache::GetTokenBlock(uint32_t start_token, 
@@ -299,3 +305,8 @@ float* LegacyKVCache::GetV(uint32_t token_idx, uint32_t head_idx) {
 
 } // namespace Memory
 } // namespace RawrXD
+// Force rebuild 
+// Rebuild v2 
+// Rebuild v3 
+// Rebuild v4 
+// Rebuild v5 

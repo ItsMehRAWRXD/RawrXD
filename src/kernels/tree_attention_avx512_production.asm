@@ -19,8 +19,9 @@ PUBLIC KVCacheInvalidate_AVX512_Export
 PUBLIC HasAVX512F_Export
 PUBLIC ReadTSC_Export
 
-; Data segment for constants
-.data
+; Constant data in read-only section
+.const
+ALIGN 16
 
 ; Threshold value (0.6) as IEEE 754 float
 Threshold_0_6 DWORD 03F19999Ah
@@ -51,28 +52,18 @@ ZeroVec DWORD 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ;
 ; Clobbers: None (all non-volatile preserved)
 ;----------------------------------------------------------------------------
-TreeAttentionVerify_AVX512_Export PROC FRAME
-    ; Save non-volatile registers
+TreeAttentionVerify_AVX512_Export PROC
+    ; Save non-volatile registers (minimal set)
     push rbx
-    .pushreg rbx
     push rbp
-    .pushreg rbp
     push rdi
-    .pushreg rdi
     push rsi
-    .pushreg rsi
     push r12
-    .pushreg r12
     push r13
-    .pushreg r13
     push r14
-    .pushreg r14
     push r15
-    .pushreg r15
     
     sub rsp, 128
-    .allocstack 128
-    .endprolog
     
     ; Load parameters
     mov r10, rcx            ; r10 = candidate_logits
@@ -145,7 +136,7 @@ Cleanup:
     pop rbp
     pop rbx
     ret
-    
+
 TreeAttentionVerify_AVX512_Export ENDP
 
 ;----------------------------------------------------------------------------
@@ -160,10 +151,8 @@ TreeAttentionVerify_AVX512_Export ENDP
 ;
 ; Output: None
 ;----------------------------------------------------------------------------
-KVCacheInvalidate_AVX512_Export PROC FRAME
+KVCacheInvalidate_AVX512_Export PROC
     push rbx
-    .pushreg rbx
-    .endprolog
     
     mov r9, rcx             ; r9 = kv_cache_base
     movzx r10, dx           ; r10 = rejection_mask (16 bits)
@@ -237,10 +226,8 @@ KVCacheInvalidate_AVX512_Export ENDP
 ; Output:
 ;   RAX = 1 if supported, 0 otherwise
 ;----------------------------------------------------------------------------
-HasAVX512F_Export PROC FRAME
+HasAVX512F_Export PROC
     push rbx
-    .pushreg rbx
-    .endprolog
     
     ; Check CPUID for AVX-512F (Function 7, EBX bit 16)
     mov eax, 7

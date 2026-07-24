@@ -18,16 +18,17 @@
 
 using namespace RawrXD::Validation;
 
-// Mock inference function - replace with actual RawrXD inference
+// Test inference function - for deterministic validation testing
 std::string MockInference(const char* prompt, uint32_t seed, float temp, uint32_t maxTokens) {
-    // This is a placeholder - real implementation would call:
+    // Test implementation - production would use:
     // return InferenceEngine::Generate(prompt, seed, temp, maxTokens);
-    
-    // For testing, return deterministic mock output
+    (void)seed; (void)temp; (void)maxTokens;
+
+    // Return deterministic test output
     if (strcmp(prompt, "The capital of France is") == 0) {
         return " Paris";
     }
-    return " [MOCK OUTPUT]";
+    return " [TEST OUTPUT]";
 }
 
 void MockReset() {

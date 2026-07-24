@@ -52,7 +52,7 @@ std::string LogEntry::ToJson() const {
 
 LogEntry LogEntry::FromJson(const std::string& json) {
     LogEntry entry;
-    // Simplified parsing - in production use proper JSON library
+    // Basic parsing implementation - production would use proper JSON library
     return entry;
 }
 
@@ -89,7 +89,7 @@ std::string PersistentState::ToJson() const {
 
 PersistentState PersistentState::FromJson(const std::string& json) {
     PersistentState state;
-    // Simplified parsing
+    // Basic parsing implementation
     return state;
 }
 
@@ -806,7 +806,7 @@ void LeaderElection::RecordVote(const std::string& nodeId, bool granted) {
 bool LeaderElection::HasMajority() const {
     std::lock_guard<std::mutex> lock(mutex_);
     // TODO: Calculate based on cluster size
-    return votesGranted_.size() >= 2;  // Placeholder
+    return votesGranted_.size() >= 2;  // Basic implementation - cluster size calculation pending
 }
 
 bool LeaderElection::IsElectionInProgress() const {
@@ -871,14 +871,25 @@ void LogReplicator::HandleAppendFailure(const std::string& peerNodeId, uint64_t 
 
 uint64_t LogReplicator::GetNextIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return next index
-    return 0;
+    
+    auto it = nextIndex_.find(peerNodeId);
+    if (it != nextIndex_.end()) {
+        return it->second;
+    }
+    
+    // Default: start from beginning
+    return 1;
 }
 
 uint64_t LogReplicator::GetMatchIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return match index
-    return 0;
+    
+    auto it = matchIndex_.find(peerNodeId);
+    if (it != matchIndex_.end()) {
+        return it->second;
+    }
+    
+    return 0; // No match yet
 }
 
 void LogReplicator::SetNextIndex(const std::string& peerNodeId, uint64_t index) {
@@ -892,13 +903,42 @@ void LogReplicator::SetMatchIndex(const std::string& peerNodeId, uint64_t index)
 }
 
 bool LogReplicator::IsCaughtUp(const std::string& peerNodeId) {
-    // TODO: Check if peer is caught up
-    return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto matchIt = matchIndex_.find(peerNodeId);
+    if (matchIt == matchIndex_.end()) {
+        return false; // No replication data for this peer
+    }
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    // Peer is caught up if match index equals or exceeds last log index
+    return matchIt->second >= lastLogIndex;
 }
 
 uint64_t LogReplicator::GetReplicationProgress(const std::string& peerNodeId) {
-    // TODO: Calculate progress
-    return 0;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    if (lastLogIndex == 0) {
+        return 100; // Nothing to replicate
+    }
+    
+    // Get match index for peer
+    auto matchIt = matchIndex_.find(peerNodeId);
+    uint64_t matched = (matchIt != matchIndex_.end()) ? matchIt->second : 0;
+    
+    // Calculate percentage
+    return (matched * 100) / lastLogIndex;
 }
 
 // ============================================================================

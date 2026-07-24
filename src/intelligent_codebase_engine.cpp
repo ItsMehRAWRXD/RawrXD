@@ -7,6 +7,16 @@
 IntelligentCodebaseEngine::IntelligentCodebaseEngine() = default;
 IntelligentCodebaseEngine::~IntelligentCodebaseEngine() = default;
 
+bool IntelligentCodebaseEngine::analyzeFile(const std::string& filePath) {
+    // Parse file and extract symbols
+    auto symbols = getSymbolsInFile(filePath);
+    if (!symbols.empty()) {
+        fileSymbols[filePath] = std::move(symbols);
+        return true;
+    }
+    return false;
+}
+
 std::vector<SymbolInfo> IntelligentCodebaseEngine::getSymbolsInFile(const std::string& filePath) {
     std::vector<SymbolInfo> symbols;
 

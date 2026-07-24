@@ -8,7 +8,7 @@
 #include <memory>
 #include <queue>
 #include <functional>
-#include <math>
+#include <cmath>
 
 namespace RawrXD {
 namespace Advanced {

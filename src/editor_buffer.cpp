@@ -136,7 +136,7 @@ void BufferModel::rebuildLineIndex() {
 }
 
 void BufferModel::updateLineIndexOnInsert(size_t pos, std::string_view text) {
-    // Simplified: rebuild for correctness first; optimize later.
+    // Basic implementation: rebuild for correctness first; optimize later.
     (void)pos; (void)text;
     rebuildLineIndex();
 }

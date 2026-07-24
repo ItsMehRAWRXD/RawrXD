@@ -162,13 +162,75 @@ bool LSPWiring::connectStdio(const std::string& serverCommand) {
 }
 
 bool LSPWiring::connectSocket(const std::string& host, int port) {
-    // TODO: Implement socket transport
-    return false;
+    // Initialize Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        return false;
+    }
+    
+    // Create socket
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        WSACleanup();
+        return false;
+    }
+    
+    // Resolve host
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(static_cast<u_short>(port));
+    
+    if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) != 1) {
+        // Try DNS resolution
+        hostent* he = gethostbyname(host.c_str());
+        if (!he) {
+            closesocket(sock);
+            WSACleanup();
+            return false;
+        }
+        memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+    }
+    
+    // Connect
+    if (connect(sock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == SOCKET_ERROR) {
+        closesocket(sock);
+        WSACleanup();
+        return false;
+    }
+    
+    // Create socket transport wrapper
+    m_transport = std::make_unique<SocketTransport>(sock);
+    return m_transport->connect(host, port);
 }
 
 bool LSPWiring::connectPipe(const std::string& pipeName) {
-    // TODO: Implement named pipe transport
-    return false;
+    // Create named pipe transport for Windows
+    std::string fullPipeName = "\\\\.\\pipe\\" + pipeName;
+    
+    HANDLE hPipe = CreateFileA(
+        fullPipeName.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        OPEN_EXISTING,
+        0,
+        nullptr
+    );
+    
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+    
+    // Set pipe to message mode
+    DWORD mode = PIPE_READMODE_MESSAGE;
+    if (!SetNamedPipeHandleState(hPipe, &mode, nullptr, nullptr)) {
+        CloseHandle(hPipe);
+        return false;
+    }
+    
+    // Create pipe transport wrapper
+    m_transport = std::make_unique<PipeTransport>(hPipe);
+    return true;
 }
 
 void LSPWiring::disconnect() {

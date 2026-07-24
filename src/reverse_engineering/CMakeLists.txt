@@ -29,6 +29,10 @@ cmake_minimum_required(VERSION 3.20)
 
 set(RE_CPP_SOURCES
     pe_tools/re_tools.cpp
+    disassembler.cpp
+    pe_analyzer.cpp
+    decompiler.cpp
+    binary_patcher.cpp
 )
 
 set(RE_CPP_HEADERS

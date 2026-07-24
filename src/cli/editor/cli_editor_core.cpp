@@ -70,7 +70,8 @@ EditorError TextBuffer::Insert(size_t position, std::string_view text) {
 EditorError TextBuffer::Delete(size_t position, size_t length) {
     // Note: Full implementation requires MASM assembly
     // Export: CliEditor_Delete with buffer management
-    // For now, return OK (placeholder)
+    // Implementation pending - returns OK for now
+    return EditorError::OK;
 }
 
 EditorError TextBuffer::Replace(size_t position, size_t length, std::string_view text) {

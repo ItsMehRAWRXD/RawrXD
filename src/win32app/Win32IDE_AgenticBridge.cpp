@@ -151,6 +151,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     METRICS.increment("agentic.commands_total");
     auto& perf = RawrXD::Inference::PerformanceMonitor::instance();
     perf.startOperation("agentic.bridge.execute");
+    auto startTime_ = std::chrono::high_resolution_clock::now();
     bool perfClosed = false;
     auto closePerf = [&]()
     {
@@ -381,7 +382,19 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         response = response.substr(0, kMaxResponseBytes) + "\n[truncated]";
 
     // E6: record per-call latency via performance monitor
-    // TODO: add recordLatency to PerformanceMonitor when timing infra lands
+    static std::atomic<uint64_t> totalLatencyUs{0};
+    static std::atomic<uint64_t> callCount{0};
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime_).count();
+    totalLatencyUs.fetch_add(elapsedUs, std::memory_order_relaxed);
+    callCount.fetch_add(1, std::memory_order_relaxed);
+    
+    // Log latency metrics
+    if (callCount.load(std::memory_order_relaxed) % 100 == 0) {
+        auto avgUs = totalLatencyUs.load(std::memory_order_relaxed) / callCount.load(std::memory_order_relaxed);
+        LOG_INFO("AgenticBridge avg latency: " + std::to_string(avgUs) + "us over " + 
+                 std::to_string(callCount.load(std::memory_order_relaxed)) + " calls");
+    }
 
     AgentResponse r;
     r.content = response;

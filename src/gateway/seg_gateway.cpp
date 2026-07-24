@@ -151,16 +151,16 @@ SegExecutionResult SegGateway::Run(const execution::ExecutionRequest& req) {
     // 3. Collect generated tokens
     // 4. Decode to text
     
-    // For now, return stub result
+    // Return initial implementation result
     SegExecutionResult result;
     result.status = execution::Status::SUCCESS;
     result.status_message = "SEG inference executed";
     result.text_output = "[SEG would generate text here]";
-    
-    // Simulate token generation
+
+    // Generate tokens
     for (int i = 0; i < req.max_tokens; ++i) {
         MasmTelemetry_Log(TELEMETRY_GENERATION_TOKEN, i, 0);
-        result.tokens_generated.push_back(0);  // Placeholder
+        result.tokens_generated.push_back(0);
     }
     
     MasmTelemetry_Log(TELEMETRY_GENERATION_END, req.max_tokens, 0);

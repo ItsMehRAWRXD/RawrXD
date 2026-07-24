@@ -1,0 +1,13 @@
+[SSOT AUDIT] WARNING: Registry integrity issue detected!
+  Total: 533  GUI: 507  CLI: 519
+  Null handlers: 0  Duplicate IDs: 3  Duplicate aliases: 0
+[Prometheus] Listening on port 9090 for /metrics...
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-07-24 12:23:32 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+[IDEConfig] Config file not found: rawrxd.config.json — using defaults.
+[IDEConfig] Config file not found: D:\rxdn_ninja\bin\rawrxd.config.json — using defaults.

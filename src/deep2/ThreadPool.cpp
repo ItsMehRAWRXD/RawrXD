@@ -111,8 +111,8 @@ void ParallelGEMV(ThreadPool& pool,
     futures.reserve(numThreads);
     
     for (size_t t = 0; t < numThreads; ++t) {
-        int startRow = t * rowsPerThread;
-        int endRow = std::min(startRow + rowsPerThread, rows);
+        int startRow = static_cast<int>(t * rowsPerThread);
+        int endRow = static_cast<int>(std::min<size_t>(startRow + rowsPerThread, static_cast<size_t>(rows)));
         
         if (startRow >= rows) break;
         

@@ -289,7 +289,7 @@ void CPUEngine::generate_streaming(const std::vector<int32_t>& prompt_tokens, in
             return;
         }
 
-        // Mock acceptance rate for now (0.7-0.9) until draft model is fully wired
+        // Basic acceptance rate (0.7-0.9) until draft model is fully wired
         float acceptance_rate = 0.85f;
         
         std::vector<float> logits = m_engine.Eval({cur});
@@ -305,7 +305,7 @@ void CPUEngine::generate_streaming(const std::vector<int32_t>& prompt_tokens, in
             float tps = (seconds > 0) ? (tokens_generated / seconds) : 0.0f;
             RawrXD::GlobalRuntimeOrchestrator::Get().UpdateInferenceMetrics(acceptance_rate, tps);
             
-            // Mock memory pressure and cache reuse for HUD demonstration
+            // Basic memory pressure and cache reuse for HUD demonstration
             RawrXD::GlobalRuntimeOrchestrator::Get().UpdateMemoryMetrics(0.45f + (step * 0.001f));
             RawrXD::GlobalRuntimeOrchestrator::Get().UpdateCacheMetrics(0.92f);
         }

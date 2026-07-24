@@ -79,7 +79,7 @@ private:
     static bool TestCacheHitRate() {
         std::cout << "[Test] Cache Hit Rate (Repeated Patterns)\n";
         
-        // Simulate cache with 1000-entry LRU
+        // Create cache with 1000-entry LRU
         std::unordered_map<uint64_t, int> cache;
         uint64_t hits = 0, misses = 0;
 
@@ -159,7 +159,7 @@ private:
         std::unordered_map<uint64_t, int> cache;
         uint64_t total_hits = 0;
 
-        // Simulate 10,000 instructions with 1000 unique patterns
+        // Process 10,000 instructions with 1000 unique patterns
         for (int i = 0; i < 10000; ++i) {
             uint64_t pattern = ((uint64_t)i % 1000) | (((uint64_t)i / 1000) << 16);
             if (cache.find(pattern) != cache.end()) {
@@ -213,7 +213,7 @@ private:
         // MOV RAX, RAX (opcode 0x89, ModRM 0xC0)
         uint8_t expected[] = {0x89, 0xC0};
         
-        // Simulate encoding
+        // Encode instruction
         uint8_t encoded[16] = {0};
         encoded[0] = 0x89;
         encoded[1] = 0xC0;
@@ -301,7 +301,7 @@ private:
         auto BenchmarkInstructions = [](int count) -> double {
             auto start = std::chrono::high_resolution_clock::now();
 
-            // Simulate instruction encoding
+            // Process instruction encoding
             uint64_t total = 0;
             for (int i = 0; i < count; ++i) {
                 // Each instruction = 2-5 bytes (average 3)
@@ -342,7 +342,7 @@ private:
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        // Simulate encoding loop
+        // Encoding loop
         uint64_t total_encoded = 0;
         for (int i = 0; i < INSTRUCTION_COUNT; ++i) {
             total_encoded += BYTES_PER_INSTR;

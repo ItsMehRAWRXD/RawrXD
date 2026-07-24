@@ -101,16 +101,71 @@ ImageFormat ImageLoader::DetectFormatFromBuffer(const std::vector<uint8_t>& buff
 }
 
 ImageData ImageLoader::DecodePNG(const std::vector<uint8_t>& buffer, const ImageLoadOptions& options) {
-    // Placeholder - would use libpng or similar
-    // For now, return empty data
-    lastError_ = "PNG decoding not yet implemented";
-    return ImageData();
+    // Basic PNG header validation
+    if (buffer.size() < 8) {
+        lastError_ = "Invalid PNG file (too small)";
+        return ImageData();
+    }
+    
+    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+    const uint8_t pngSignature[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    if (memcmp(buffer.data(), pngSignature, 8) != 0) {
+        lastError_ = "Invalid PNG signature";
+        return ImageData();
+    }
+    
+    // Parse IHDR chunk (starts at byte 16)
+    if (buffer.size() < 24) {
+        lastError_ = "Invalid PNG file (truncated IHDR)";
+        return ImageData();
+    }
+    
+    ImageData result;
+    result.width = (buffer[16] << 24) | (buffer[17] << 16) | (buffer[18] << 8) | buffer[19];
+    result.height = (buffer[20] << 24) | (buffer[21] << 16) | (buffer[22] << 8) | buffer[23];
+    result.channels = 4; // Assume RGBA
+    
+    // For now, return metadata only (full decoding requires zlib)
+    lastError_ = "PNG metadata extracted; full decode requires zlib";
+    return result;
 }
 
 ImageData ImageLoader::DecodeJPEG(const std::vector<uint8_t>& buffer, const ImageLoadOptions& options) {
-    // Placeholder - would use libjpeg-turbo or similar
-    lastError_ = "JPEG decoding not yet implemented";
-    return ImageData();
+    // Basic JPEG validation
+    if (buffer.size() < 2) {
+        lastError_ = "Invalid JPEG file (too small)";
+        return ImageData();
+    }
+    
+    // JPEG SOI marker: FF D8
+    if (buffer[0] != 0xFF || buffer[1] != 0xD8) {
+        lastError_ = "Invalid JPEG signature";
+        return ImageData();
+    }
+    
+    // Parse SOF markers to find dimensions
+    ImageData result;
+    for (size_t i = 2; i < buffer.size() - 9; ++i) {
+        if (buffer[i] == 0xFF) {
+            uint8_t marker = buffer[i + 1];
+            // SOF0, SOF1, SOF2 markers contain dimensions
+            if (marker >= 0xC0 && marker <= 0xC2) {
+                result.height = (buffer[i + 5] << 8) | buffer[i + 6];
+                result.width = (buffer[i + 7] << 8) | buffer[i + 8];
+                result.channels = buffer[i + 9];
+                break;
+            }
+        }
+    }
+    
+    if (result.width == 0 || result.height == 0) {
+        lastError_ = "Could not find JPEG dimensions";
+        return ImageData();
+    }
+    
+    // For now, return metadata only (full decoding requires libjpeg)
+    lastError_ = "JPEG metadata extracted; full decode requires libjpeg";
+    return result;
 }
 
 ImageData ImageLoader::DecodeBMP(const std::vector<uint8_t>& buffer, const ImageLoadOptions& options) {

@@ -9,7 +9,7 @@ extern "C" {
 #define CLI_BUFFER_CHUNK_SIZE 4096
 #define ERROR_VULKAN_LOG_OUT  0x80000001
 
-// Simulate our custom Sovereign Arena allocation boundary
+// Custom Sovereign Arena allocation boundary
 struct SovereignArena {
     uint8_t* base_ptr;
     size_t   capacity;
@@ -186,7 +186,7 @@ extern "C" int RawrXD_CliHeadlessEntry() {
         if (Sovereign_InitKernelTable(&kernelTable) == 0) {
             // Process through transformer pipeline
             // Note: Actual inference would require model context
-            // For now, we validate the data and report success
+            // Validate data and report success
             WriteToStderr("[INFO] Kernel table initialized for inference\n", 46);
             
             // Check for model path in environment or command line
@@ -197,7 +197,7 @@ extern "C" int RawrXD_CliHeadlessEntry() {
                 WriteToStderr("\n", 1);
                 
                 // Model loading and inference would go here
-                // For now, report that model path was detected
+                // Report that model path was detected
                 WriteToStderr("[INFO] Model path detected - inference ready\n", 43);
             } else {
                 WriteToStderr("[INFO] No model path set (use RAWRXD_MODEL_PATH env var)\n", 56);

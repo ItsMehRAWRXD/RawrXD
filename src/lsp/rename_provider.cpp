@@ -219,8 +219,27 @@ std::vector<TextEdit> RenameProvider::findOccurrences(const std::string& uri,
 }
 
 std::vector<TextEdit> RenameProvider::findOccurrencesInWorkspace(const std::string& symbol) {
-    // TODO: Search across all files in workspace
-    return {};
+    std::vector<TextEdit> edits;
+    
+    if (symbol.empty() || !index_) {
+        return edits;
+    }
+    
+    // Query the symbol index for all occurrences
+    auto occurrences = index_->findAllOccurrences(symbol);
+    
+    for (const auto& occ : occurrences) {
+        TextEdit edit;
+        edit.filePath = occ.filePath;
+        edit.startLine = occ.line;
+        edit.startColumn = occ.column;
+        edit.endLine = occ.line;
+        edit.endColumn = occ.column + symbol.length();
+        edit.newText = symbol; // Will be replaced with new name
+        edits.push_back(edit);
+    }
+    
+    return edits;
 }
 
 bool RenameProvider::isScopeValid(const std::string& content,

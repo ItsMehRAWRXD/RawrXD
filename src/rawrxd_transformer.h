@@ -166,9 +166,11 @@ class RawrXDTransformer
 
     /// On success, appends plan row indices passed to `pinPlanRows` (for matching `unpinPlanRows`).
     /// When \p appendPinnedRows is false, \p outPinnedPlanRows is cleared first.
-    [[nodiscard]] std::expected<void, RawrXD::Swarm::SchedulerError> pinSwarmSlicesForLayer(
+    /// Returns true on success; on failure, sets \p outError.
+    [[nodiscard]] bool pinSwarmSlicesForLayer(
         std::uint32_t modelIndex, std::uint32_t layer, const std::uint32_t* activeExpertOrdinals,
         std::size_t activeExpertOrdinalCount, std::vector<std::size_t>& outPinnedPlanRows,
+        RawrXD::Swarm::SchedulerError* outError = nullptr,
         SwarmPinLayerParts parts = SwarmPinLayerParts::Full, bool appendPinnedRows = false);
 
     [[nodiscard]] bool swarmLayerHasExpertSlices(std::uint32_t layer) const;

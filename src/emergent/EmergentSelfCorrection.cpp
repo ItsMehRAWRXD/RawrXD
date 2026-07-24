@@ -46,7 +46,7 @@ std::string SelfCorrectionResult::ToJson() const {
     std::ostringstream json;
     json << "{";
     json << "\"detectedInstabilities\":[";
-    // Simplified - would include full instability objects
+    // Basic implementation - full instability objects pending
     json << "],";
     json << "\"appliedCorrections\":[";
     for (size_t i = 0; i < appliedCorrections.size(); ++i) {
@@ -165,7 +165,7 @@ SelfCorrectionResult EmergentSelfCorrection::Correct() {
         result.overallImprovement = totalImprovement / result.appliedCorrections.size();
     }
     
-    // Simulate health after correction
+    // Model health after correction
     result.healthAfter = currentHealth;
     result.healthAfter.overallHealth = std::min(1.0, currentHealth.overallHealth + result.overallImprovement);
     result.healthAfter.activeInstabilities.clear();
@@ -347,7 +347,7 @@ bool EmergentSelfCorrection::SaveCorrectionHistory(const std::string& path) cons
 }
 
 bool EmergentSelfCorrection::LoadCorrectionHistory(const std::string& path) {
-    // Simplified load
+    // Basic implementation
     return false;
 }
 

@@ -1,0 +1,77 @@
+{
+  "name": "copilot-throttle",
+  "displayName": "Copilot Response Throttle",
+  "description": "Prevents 'Response too long' errors by throttling local model outputs",
+  "version": "1.0.0",
+  "publisher": "rawrxd",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Copilot Throttle",
+      "properties": {
+        "copilotThrottle.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable response throttling"
+        },
+        "copilotThrottle.maxTokens": {
+          "type": "number",
+          "default": 1024,
+          "description": "Maximum tokens per response"
+        },
+        "copilotThrottle.maxChars": {
+          "type": "number",
+          "default": 131072,
+          "description": "Maximum characters per response"
+        },
+        "copilotThrottle.streamChunkSize": {
+          "type": "number",
+          "default": 512,
+          "description": "Characters per stream chunk"
+        },
+        "copilotThrottle.localModelPatterns": {
+          "type": "array",
+          "default": [
+            "rawrxd",
+            "ollama",
+            "localhost",
+            "127.0.0.1"
+          ],
+          "description": "URL patterns that indicate local models"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "copilotThrottle.toggle",
+        "title": "Toggle Copilot Throttle"
+      },
+      {
+        "command": "copilotThrottle.status",
+        "title": "Show Throttle Status"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "20.x",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "http-proxy": "^1.18.1"
+  }
+}

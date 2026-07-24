@@ -439,7 +439,7 @@ public:
         
         // Copy existing metadata
         // (In production, we'd parse and preserve all metadata properly)
-        // For now, we'll append our key at the end of metadata section
+        // Current implementation appends our key at the end of metadata section
         
         // ... (Full implementation would stream-copy metadata here)
         

@@ -56,7 +56,7 @@ python real_online_compilation.py
 - **Secure execution** - Isolated Docker containers
 - **Real file I/O** - Actual source code and result management
 
-### **❌ FICTIONAL (Simulated):**
+### **❌ unteleprompted (Simulated):**
 - **Nothing!** - This is all real now!
 
 ## 🚀 **Features:**

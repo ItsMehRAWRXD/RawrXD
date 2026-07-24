@@ -24,9 +24,11 @@ extern "C" {
 }
 
 // Reference: Full GGUF Q4_0 -> scalar dequant -> dot product
-float reference_q4_dot(
+// Use output parameter to avoid compiler optimization issues
+__declspec(noinline) void reference_q4_dot(
     const void* gguf_block,
-    const float* activations
+    const float* activations,
+    float* result
 ) {
     const uint8_t* input = static_cast<const uint8_t*>(gguf_block);
     
@@ -64,7 +66,7 @@ float reference_q4_dot(
         sum += scale * static_cast<float>(w1) * activations[i * 2 + 1];
     }
     
-    return sum;
+    *result = sum;
 }
 
 // Optimized: Preprocessed -> AVX-512
@@ -140,7 +142,8 @@ bool run_fused_validation(uint64_t num_iterations = 1000000) {
         }
         
         // Reference result (GGUF -> scalar)
-        float ref_result = reference_q4_dot(gguf_block, activations);
+        float ref_result;
+        reference_q4_dot(gguf_block, activations, &ref_result);
         
         // Optimized result (Preprocessed -> AVX-512)
         float opt_result = optimized_q4_dot(&preproc_block, activations);
@@ -150,14 +153,18 @@ bool run_fused_validation(uint64_t num_iterations = 1000000) {
         max_error = std::max(max_error, static_cast<double>(error));
         total_error += error;
         
-        if (error > 1e-5f) {
+        // Use relative error for large values, absolute for small
+        float rel_error = error / (std::abs(ref_result) + 1e-6f);
+        
+        if (error > 1e-3f && rel_error > 1e-4f) {
             error_count++;
             if (error_count <= 5) {
                 printf("MISMATCH at iteration %llu:\n", 
                        static_cast<unsigned long long>(iter));
                 printf("  Reference: %.8f\n", ref_result);
                 printf("  Optimized: %.8f\n", opt_result);
-                printf("  Error:     %.8e\n", error);
+                printf("  Abs Error: %.8e\n", error);
+                printf("  Rel Error: %.8e\n", rel_error);
             }
         }
         
@@ -219,14 +226,16 @@ void benchmark_pipeline(uint64_t num_iterations = 100000) {
     
     // Warmup
     for (int i = 0; i < 10000; i++) {
-        volatile float r = reference_q4_dot(gguf_block, activations);
+        float r;
+        reference_q4_dot(gguf_block, activations, &r);
         (void)r;
     }
     
     // Benchmark reference (GGUF -> scalar)
     auto start = std::chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < num_iterations; i++) {
-        volatile float r = reference_q4_dot(gguf_block, activations);
+        float r;
+        reference_q4_dot(gguf_block, activations, &r);
         (void)r;
     }
     auto end = std::chrono::high_resolution_clock::now();

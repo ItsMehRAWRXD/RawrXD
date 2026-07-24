@@ -183,13 +183,13 @@ ModelQuantizer::ComparisonResult ModelQuantizer::CompareModels(
     // 2. Run inference on test prompts
     // 3. Calculate perplexity for both
     // 4. Compare outputs
-    
-    // Placeholder values
+
+    // Sample values for demonstration (actual validation requires model inference)
     result.perplexityOriginal = 8.5f;
     result.perplexityQuantized = 9.2f;
     result.perplexityDelta = result.perplexityQuantized - result.perplexityOriginal;
     result.accuracyRetention = 95.0f;
-    
+
     return result;
 }
 

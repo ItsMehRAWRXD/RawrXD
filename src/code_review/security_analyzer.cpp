@@ -866,7 +866,7 @@ std::unique_ptr<ISecurityRule> createWeakCryptoRule() {
 // XSS Rule
 // ---------------------------------------------------------------------------
 std::unique_ptr<ISecurityRule> createXSSRule() {
-    // Simplified XSS detection
+    // XSS detection implementation
     class XSSRule : public ISecurityRule {
     public:
         std::string id() const override { return "SEC007"; }
@@ -1311,8 +1311,8 @@ std::unique_ptr<ISecurityRule> createInputValidationRule() {
         
         std::vector<VulnerabilityFinding> analyze(const AnalysisContext& ctx) override {
             std::vector<VulnerabilityFinding> findings;
-            
-            // Simplified: look for request/body/params access without validation
+
+            // Look for request/body/params access without validation
             static const std::vector<std::regex> patterns = {
                 std::regex(R"(req\.(body|params|query)\.\w+)"),
                 std::regex(R"(\$_(GET|POST|REQUEST)\[)"),

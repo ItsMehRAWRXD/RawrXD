@@ -395,7 +395,11 @@ bool DecisionMemory::Save(const std::string& path) const {
 }
 
 bool DecisionMemory::Load(const std::string& path) {
-    // Simplified load - would parse JSON
+    // Load decision memory from JSON file
+    // This implementation provides the foundation for persistence
+    // TODO: Implement full JSON parsing using nlohmann/json library
+    // Current implementation returns false to indicate load not yet implemented
+    (void)path;
     return false;
 }
 

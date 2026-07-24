@@ -361,8 +361,8 @@ bool GGUFChunkedLoader::ParseMetadata() {
             
             // Skip array elements
             for (uint64_t j = 0; j < arrLen; j++) {
-                // Simplified - just advance offset
-                m_currentOffset += 4; // Assume strings
+                // Advance offset (assumes string elements)
+                m_currentOffset += 4;
             }
             value = "[array]";
         } else {

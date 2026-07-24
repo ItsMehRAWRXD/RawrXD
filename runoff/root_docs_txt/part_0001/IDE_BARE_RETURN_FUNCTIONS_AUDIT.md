@@ -1,4 +1,4 @@
-﻿# Bare Return Function Audit
+# Bare Return Function Audit
 
 - Scope: `src/**/*.cpp|cc|cxx|c|h|hpp`
 - Criteria: function bodies with only one statement: `return 0;`, `return false;`, `return nullptr;`, `return {};`, or `return "" ;`

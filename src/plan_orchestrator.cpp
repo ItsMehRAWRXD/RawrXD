@@ -12,7 +12,11 @@ std::string toLower(std::string s) {
 }
 }  // namespace
 
-PlanOrchestrator::PlanOrchestrator() {}
+PlanOrchestrator::PlanOrchestrator()
+    : m_currentStepIndex(0)
+    , onStepCompleted(nullptr)
+    , onPlanCompleted(nullptr)
+{}
 PlanOrchestrator::~PlanOrchestrator() {}
 
 void PlanOrchestrator::createPlan(const std::string& goal) {

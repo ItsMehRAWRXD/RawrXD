@@ -124,7 +124,7 @@ struct IDStorageFile;
 struct IDStorageCompressionCodec;
 struct IDStorageStatusArray;
 
-// Mock COM interfaces (simplified)
+// Compatibility COM interfaces
 struct IDStorageFactory {
     virtual HRESULT CreateQueue(const DSTORAGE_QUEUE_DESC* desc, const GUID& riid, void** ppv) = 0;
     virtual HRESULT OpenFile(const wchar_t* path, const GUID& riid, void** ppv) = 0;

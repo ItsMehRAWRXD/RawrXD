@@ -252,7 +252,7 @@ bool Test_DebugUIController_Marshalling(std::string& error) {
     bool stateChanged = false;
     DapState newState = DapState::Disconnected;
     
-    // Simulate state change
+    // Trigger state change
     DebugUIController::instance().OnStateChanged(DapState::Disconnected, DapState::Paused);
     
     // Verify UI state updated

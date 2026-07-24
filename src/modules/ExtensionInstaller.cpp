@@ -960,15 +960,57 @@ void ExtensionInstaller::registerToolsWithAgenticSystem(class AgentToolHandlers*
 // ============================================================================
 
 std::vector<ExtensionManifest> ExtensionInstaller::search(const std::string& query, int maxResults) {
-    (void)query;
     (void)maxResults;
-    // TODO: Query marketplace API
-    return {};
+    std::vector<ExtensionManifest> results;
+    
+    if (query.empty()) {
+        return results;
+    }
+    
+    // Search in local extension cache
+    std::string lowerQuery = query;
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+    
+    for (const auto& [id, manifest] : extensionCache_) {
+        std::string lowerName = manifest.displayName;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        
+        std::string lowerDesc = manifest.description;
+        std::transform(lowerDesc.begin(), lowerDesc.end(), lowerDesc.begin(), ::tolower);
+        
+        if (lowerName.find(lowerQuery) != std::string::npos ||
+            lowerDesc.find(lowerQuery) != std::string::npos ||
+            id.find(query) != std::string::npos) {
+            results.push_back(manifest);
+        }
+    }
+    
+    // Sort by relevance (name match first)
+    std::sort(results.begin(), results.end(), 
+        [&query](const ExtensionManifest& a, const ExtensionManifest& b) {
+            bool aNameMatch = (a.displayName.find(query) != std::string::npos);
+            bool bNameMatch = (b.displayName.find(query) != std::string::npos);
+            return aNameMatch > bNameMatch;
+        });
+    
+    return results;
 }
 
 std::vector<ExtensionManifest> ExtensionInstaller::checkForUpdates() {
-    // TODO: Query marketplace for newer versions of installed extensions
-    return {};
+    std::vector<ExtensionManifest> updates;
+    
+    for (const auto& [id, manifest] : installedExtensions_) {
+        // Check if newer version exists in cache
+        auto it = extensionCache_.find(id);
+        if (it != extensionCache_.end()) {
+            // Simple version comparison (assumes semantic versioning)
+            if (it->second.version > manifest.version) {
+                updates.push_back(it->second);
+            }
+        }
+    }
+    
+    return updates;
 }
 
 } // namespace RawrXD

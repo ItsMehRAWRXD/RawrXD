@@ -675,7 +675,8 @@ bool CrazyModeEngine::executeOptimizeImports(RefactorOperation& op) {
 }
 
 bool CrazyModeEngine::executeExtractMethod(RefactorOperation& op) {
-    // Simplified implementation
+    // Implementation pending
+    (void)op;
     return true;
 }
 
@@ -727,7 +728,7 @@ RefactorOperation CrazyModeEngine::extractMethod(
     std::string extracted = m_impl->extractMethodFromRange(content, range, methodName, language);
     if (!extracted.empty()) {
         // Create change to replace range with method call and add method definition
-        // Simplified - real implementation would be more sophisticated
+        // Full implementation would handle complex extraction scenarios
     }
     
     return op;
@@ -908,7 +909,7 @@ uint32_t CrazyModeEngine::createCheckpoint(const std::string& description) {
     checkpoint.description = description;
     
     // Store current state
-    // Simplified - real implementation would snapshot all affected files
+    // Full implementation would snapshot all affected files
     
     m_impl->checkpoints.push_back(std::move(checkpoint));
     m_impl->checkpointStack.push(m_impl->checkpoints.back().checkpointId);

@@ -51,7 +51,7 @@ public:
         uint64_t total_instructions = 0;
         
         for (const auto& line : masm_source) {
-            // Simplified: extract mnemonic (first word after whitespace)
+            // Extract mnemonic (first word after whitespace)
             if (line.empty() || line[0] == ';') continue;
             
             size_t first_non_space = line.find_first_not_of(" \t");
@@ -353,7 +353,7 @@ void JIT_Compilation() {
     std::cout << "║            Adaptive Instruction Dispatch          ║\n";
     std::cout << "╚════════════════════════════════════════════════════╝\n\n";
     
-    // Simulate MASM workload
+    // Sample MASM workload for profiling
     std::vector<std::string> sample_masm = {
         "mov rax, rbx",
         "add rax, rcx",

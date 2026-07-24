@@ -267,7 +267,7 @@ private:
     bool ExecuteStep(const DeploymentStep& step) {
         // Execute command with timeout
         // Implementation would use subprocess with timeout
-        return true; // Placeholder
+        return true; // Basic implementation - subprocess integration pending
     }
 
     std::string GeneratePipelineId() const {

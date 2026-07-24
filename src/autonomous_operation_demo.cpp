@@ -556,7 +556,7 @@ bool AutonomousOperationDemo::executeWithTiming(
     return ok;
 }
 
-// Placeholder for end-of-file
+bool AutonomousOperationDemo::runRegressionTests()
 {
     recordLog("=== Running Regression Tests ===");
 

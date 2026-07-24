@@ -569,8 +569,28 @@ double ABTestingFramework::calculatePValue(const std::vector<double>& controlVal
     double controlMean = std::accumulate(controlValues.begin(), controlValues.end(), 0.0) / controlValues.size();
     double treatmentMean = std::accumulate(treatmentValues.begin(), treatmentValues.end(), 0.0) / treatmentValues.size();
     
-    // Placeholder calculation
-    return 0.05;
+    // Calculate p-value using Welch's t-test
+    double controlVar = 0.0, treatmentVar = 0.0;
+    for (double v : controlValues) {
+        controlVar += std::pow(v - controlMean, 2);
+    }
+    for (double v : treatmentValues) {
+        treatmentVar += std::pow(v - treatmentMean, 2);
+    }
+    controlVar /= controlValues.size();
+    treatmentVar /= treatmentValues.size();
+    
+    // Welch-Satterthwaite equation for degrees of freedom
+    double se = std::sqrt(controlVar / controlValues.size() + treatmentVar / treatmentValues.size());
+    if (se == 0.0) return 1.0; // No variance
+    
+    double t = (treatmentMean - controlMean) / se;
+    
+    // Approximate p-value (two-tailed)
+    // Using normal approximation for large samples
+    double pValue = 2.0 * (1.0 - std::erf(std::abs(t) / std::sqrt(2.0)));
+    return std::min(pValue, 1.0);
+}
 }
 
 double ABTestingFramework::calculateConfidenceInterval(const std::vector<double>& values,

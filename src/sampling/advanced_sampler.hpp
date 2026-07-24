@@ -8,6 +8,8 @@
 #include <memory>
 #include <random>
 #include <functional>
+#include <unordered_set>
+#include <unordered_map>
 
 namespace rawrxd {
 namespace sampling {
@@ -77,8 +79,12 @@ struct SamplingContext {
     int current_step;
     float entropy;
     float perplexity;
+    int top_k;           // Top-k parameter
+    float top_p;         // Top-p (nucleus) parameter
     
-    SamplingContext() : vocab_size(0), current_step(0), entropy(0.0f), perplexity(0.0f) {}
+    SamplingContext() 
+        : vocab_size(0), current_step(0), entropy(0.0f), perplexity(0.0f)
+        , top_k(40), top_p(0.9f) {}
 };
 
 // Sampling result
@@ -152,6 +158,25 @@ public:
                                    const SamplingContext& context) = 0;
     virtual std::string getName() const = 0;
     virtual std::string getDescription() const = 0;
+    
+    // Reset sampler state for new conversation
+    virtual void Reset() {}
+    
+    // Sample from logits directly (convenience method)
+    virtual int Sample(const std::vector<float>& logits) {
+        SamplingContext ctx;
+        ctx.vocab_size = static_cast<int>(logits.size());
+        auto probs = softmax(logits);
+        auto result = sample(probs, ctx);
+        return result.selected_token;
+    }
+    
+    // Accept a token (for speculative decoding)
+    virtual void AcceptToken(int token) {}
+    
+protected:
+    // Helper for subclasses
+    static std::vector<float> softmax(const std::vector<float>& logits);
 };
 
 /**
@@ -185,12 +210,22 @@ public:
  */
 class TopKSampler : public ISampler {
 public:
+    TopKSampler(int k = 40, float temperature = 0.8f)
+        : k_(k), temperature_(temperature) {}
+    
     SamplingResult sample(const std::vector<float>& probabilities,
                            const SamplingContext& context) override;
     std::string getName() const override { return "Top-K"; }
     std::string getDescription() const override {
         return "Samples from top k most likely tokens";
     }
+    
+    void setK(int k) { k_ = k; }
+    void setTemperature(float temp) { temperature_ = temp; }
+    
+private:
+    int k_;
+    float temperature_;
 };
 
 /**

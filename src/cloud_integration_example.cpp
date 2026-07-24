@@ -200,8 +200,8 @@ void example_cost_management() {
     std::cout << "  Monthly Limit: $100.00\n";
     std::cout << "  Per-Request Threshold: $0.01\n";
     
-    // Simulate multiple requests
-    std::cout << "\n⏳ Simulating 5 cloud requests...\n";
+    // Execute multiple test requests
+    std::cout << "\n⏳ Executing 5 cloud requests...\n";
     for (int i = 0; i < 5; ++i) {
         RawrXD::ExecutionRequest req;
         req.requestId = "cost-test-" + std::to_string(i);

@@ -654,7 +654,7 @@ bool ComposerEngine::executePlan(CompositionPlan& plan) {
             
             if (shouldConfirm && !change->isConfirmed) {
                 // Would need user confirmation here
-                // For now, auto-confirm in aggressive mode
+                // Auto-confirm in aggressive mode (interactive confirmation pending)
                 if (plan.mode == CompositionMode::Aggressive) {
                     change->isConfirmed = true;
                 } else {
@@ -915,9 +915,9 @@ std::vector<FileChange> ComposerEngine::suggestChanges(
     std::vector<FileChange> changes;
     
     // This is where AI integration would happen
-    // For now, return empty - actual implementation would call LLM
-    
-    // Placeholder: Parse prompt for simple refactoring instructions
+    // LLM integration pending - returns empty for now
+
+    // Parse prompt for simple refactoring instructions
     // e.g., "rename X to Y", "extract function Z", etc.
     
     static const std::regex renamePattern(R"(rename\s+(\w+)\s+to\s+(\w+))", 

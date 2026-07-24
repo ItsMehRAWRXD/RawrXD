@@ -442,7 +442,7 @@ void Bridge_AbortInference(void)
     // The DLL doesn't export a cancel function yet, but we can at least
     // clear the pending flag so the next suggestion request goes through.
     // When DLL adds Titan_Cancel(), wire it here.
-    // For now: clear bridge-side state to allow retry
+    // Clear bridge-side state to allow retry
     g_hasResponse   = false;
     g_suggestionLen = 0;
 }

@@ -11,6 +11,8 @@ Q4_0_BLOCK_SIZE EQU 20
 PUBLIC QuantizedMatMul_Fused_4K
 PUBLIC QuantizedMatMul_Fused_4K_AVX512
 PUBLIC QuantizedMatMul_Fused_5K
+PUBLIC QuantizedMatMul_Hybrid_4K
+PUBLIC QuantizedMatMul_4Way_4K
 PUBLIC QuantizedMatMul_Dynamic
 PUBLIC RawrXD_QuantizedMatMul_Dispatch
 PUBLIC RawrXD_KernelRegistry_Init
@@ -58,9 +60,11 @@ RowLoop:
     imul    rax, 2560             ; RAX = row * bytes_per_row
     mov     r15, rsi
     add     r15, rax              ; R15 = weights pointer for this row (non-volatile!)
-    
-    vxorps  xmm0, xmm0, xmm0      ; Clear scalar accumulator
+
+    xorps   xmm0, xmm0            ; Clear scalar accumulator (SSE, not AVX)
     mov     rcx, r13              ; RCX = blocks per row
+    ; Activation pointer is reset to start of activation vector for EACH row
+    ; The activation vector is the same for all rows (matrix-vector multiply)
     mov     rbp, rdx              ; RBP = activation pointer (reset for each row)
 
 BlockLoop:
@@ -124,6 +128,7 @@ WeightDone:
     pop     rdi
     pop     rbp
     pop     rbx
+    vzeroupper                    ; Clear upper ZMM state before returning
     mov     rax, 1
     ret
 QuantizedMatMul_Fused_4K ENDP
@@ -322,6 +327,327 @@ WeightDone_5K:
     mov     rax, 1
     ret
 QuantizedMatMul_Fused_5K ENDP
+
+;=============================================================================
+; QuantizedMatMul_Hybrid_4K - Hybrid AVX-512 Dequant + FMA
+; Uses validated AVX-512 dequant with immediate FMA consumption
+; No temporary FP32 buffer - processes 32 weights per block
+;=============================================================================
+QuantizedMatMul_Hybrid_4K PROC FRAME
+    push    rbx
+    push    rbp
+    push    rdi
+    push    rsi
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    .pushreg rbx
+    .pushreg rbp
+    .pushreg rdi
+    .pushreg rsi
+    .pushreg r12
+    .pushreg r13
+    .pushreg r14
+    .pushreg r15
+    .endprolog
+
+    mov     rsi, rcx              ; RSI = weights
+    mov     rdi, r8               ; RDI = output
+    mov     r12, 4096             ; N = 4096
+    mov     r13, 128              ; blocks per row (4096/32)
+
+    mov     r14, rdi              ; R14 = output pointer
+    xor     rbx, rbx              ; RBX = row index
+
+RowLoop_Hybrid:
+    ; Calculate weights pointer for this row
+    mov     rax, rbx
+    imul    rax, 2560             ; RAX = row * bytes_per_row
+    mov     r15, rsi
+    add     r15, rax              ; R15 = weights pointer for this row
+
+    ; Initialize ZMM accumulator
+    vxorps  zmm0, zmm0, zmm0      ; ZMM0 = accumulator (16 floats)
+
+    mov     rcx, r13              ; RCX = blocks per row (128)
+    mov     rbp, rdx              ; RBP = activation pointer
+
+BlockLoop_Hybrid:
+    cmp     rcx, 1
+    jl      DoneRow_Hybrid        ; No blocks left
+
+    ; === Hybrid: AVX-512 Dequant + Immediate FMA ===
+    
+    ; Load scale and broadcast
+    vbroadcastss zmm1, dword ptr [r15]       ; ZMM1 = scale
+    
+    ; Load 16 bytes (32 nibbles) into XMM2
+    vmovdqu xmm2, xmmword ptr [r15+4]        ; XMM2 = packed weights
+    
+    ; Zero-extend bytes to dwords
+    vpmovzxbd zmm2, xmm2                     ; ZMM2 = 16 dwords (0-255)
+    
+    ; Extract lower nibbles: ZMM3 = ZMM2 & 0x0F
+    vpandd  zmm3, zmm2, zmmword ptr [nibble_mask_zmm]
+    
+    ; Extract upper nibbles: ZMM4 = (ZMM2 >> 4) & 0x0F
+    vpsrld  zmm4, zmm2, 4
+    vpandd  zmm4, zmm4, zmmword ptr [nibble_mask_zmm]
+    
+    ; Zero-point correction: subtract 8
+    vpbroadcastd zmm5, dword ptr [zero_point_const]
+    vpsubd  zmm3, zmm3, zmm5
+    vpsubd  zmm4, zmm4, zmm5
+    
+    ; Convert to float
+    vcvtdq2ps zmm3, zmm3                     ; ZMM3 = lower nibbles as float
+    vcvtdq2ps zmm4, zmm4                     ; ZMM4 = upper nibbles as float
+    
+    ; Scale
+    vmulps  zmm3, zmm3, zmm1
+    vmulps  zmm4, zmm4, zmm1
+    
+    ; Load activations (32 floats = 2 ZMM registers)
+    vmovups zmm6, zmmword ptr [rbp]          ; ZMM6 = activations 0-15
+    vmovups zmm7, zmmword ptr [rbp+64]       ; ZMM7 = activations 16-31
+    
+    ; FMA: accumulator += dequantized * activation
+    vfmadd231ps zmm0, zmm3, zmm6             ; ZMM0 += lower_nibbles * activations_low
+    vfmadd231ps zmm0, zmm4, zmm7             ; ZMM0 += upper_nibbles * activations_high
+
+    add     r15, 20               ; Next block (20 bytes)
+    add     rbp, 128              ; 32 weights * 4 bytes
+    dec     rcx
+    jmp     BlockLoop_Hybrid
+
+DoneRow_Hybrid:
+    ; Horizontal sum of ZMM0 (16 floats) into scalar output
+    vextractf64x4 ymm1, zmm0, 1             ; Extract high 256 bits
+    vaddps  ymm0, ymm0, ymm1                ; Add high and low halves
+    vextractf128 xmm1, ymm0, 1              ; Extract high 128 bits
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vmovhlps xmm1, xmm0, xmm0              ; Move high half to low
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vshufps xmm1, xmm0, xmm0, 1             ; Rotate
+    vaddss  xmm0, xmm0, xmm1                ; Final add
+    vmovss  dword ptr [r14], xmm0
+
+    add     r14, 4
+    inc     rbx
+    cmp     rbx, r12
+    jl      RowLoop_Hybrid
+
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rsi
+    pop     rdi
+    pop     rbp
+    pop     rbx
+    mov     rax, 1
+    ret
+QuantizedMatMul_Hybrid_4K ENDP
+
+;=============================================================================
+; QuantizedMatMul_4Way_4K - 4-Way Accumulator AVX-512 Implementation
+; VAL-Q4.2: Breaks FMA dependency chain using 4 independent accumulators
+; Processes 4 blocks per iteration with interleaved FMA operations
+; Target: 1.5-2x speedup over single-accumulator hybrid
+;=============================================================================
+QuantizedMatMul_4Way_4K PROC FRAME
+    push    rbx
+    push    rbp
+    push    rdi
+    push    rsi
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    .pushreg rbx
+    .pushreg rbp
+    .pushreg rdi
+    .pushreg rsi
+    .pushreg r12
+    .pushreg r13
+    .pushreg r14
+    .pushreg r15
+    .endprolog
+
+    mov     rsi, rcx              ; RSI = weights
+    mov     rdi, r8               ; RDI = output
+    mov     r12, 4096             ; N = 4096
+    mov     r13, 128              ; blocks per row (4096/32)
+
+    mov     r14, rdi              ; R14 = output pointer
+    xor     rbx, rbx              ; RBX = row index
+
+    ; Precompute constants
+    vpbroadcastd zmm31, dword ptr [zero_point_const]  ; ZMM31 = 8 (zero-point)
+
+RowLoop_4Way:
+    ; Calculate weights pointer for this row
+    mov     rax, rbx
+    imul    rax, 2560             ; RAX = row * bytes_per_row
+    mov     r15, rsi
+    add     r15, rax              ; R15 = weights pointer for this row
+
+    ; Initialize 4 ZMM accumulators (breaks dependency chain)
+    vxorps  zmm16, zmm16, zmm16   ; Accumulator 0
+    vxorps  zmm17, zmm17, zmm17   ; Accumulator 1
+    vxorps  zmm18, zmm18, zmm18   ; Accumulator 2
+    vxorps  zmm19, zmm19, zmm19   ; Accumulator 3
+
+    mov     rcx, r13              ; RCX = blocks per row (128)
+    mov     rbp, rdx              ; RBP = activation pointer
+
+BlockLoop_4Way:
+    cmp     rcx, 4
+    jl      BlockLoop_4Way_Remainder  ; Less than 4 blocks left
+
+    ; === Process 4 blocks with 4 independent accumulators ===
+    ; This breaks the FMA dependency chain
+
+    ; ----- Block 0 -----
+    vbroadcastss zmm0, dword ptr [r15]           ; Scale 0
+    vmovdqu xmm1, xmmword ptr [r15+4]            ; Weights 0
+    vpmovzxbd zmm1, xmm1
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    vpsubd  zmm2, zmm2, zmm31
+    vpsubd  zmm3, zmm3, zmm31
+    vcvtdq2ps zmm2, zmm2
+    vcvtdq2ps zmm3, zmm3
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    vmovups zmm4, zmmword ptr [rbp]
+    vmovups zmm5, zmmword ptr [rbp+64]
+    vfmadd231ps zmm16, zmm2, zmm4
+    vfmadd231ps zmm16, zmm3, zmm5
+
+    ; ----- Block 1 -----
+    vbroadcastss zmm0, dword ptr [r15+20]        ; Scale 1
+    vmovdqu xmm1, xmmword ptr [r15+24]          ; Weights 1
+    vpmovzxbd zmm1, xmm1
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    vpsubd  zmm2, zmm2, zmm31
+    vpsubd  zmm3, zmm3, zmm31
+    vcvtdq2ps zmm2, zmm2
+    vcvtdq2ps zmm3, zmm3
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    vmovups zmm4, zmmword ptr [rbp+128]
+    vmovups zmm5, zmmword ptr [rbp+192]
+    vfmadd231ps zmm17, zmm2, zmm4
+    vfmadd231ps zmm17, zmm3, zmm5
+
+    ; ----- Block 2 -----
+    vbroadcastss zmm0, dword ptr [r15+40]        ; Scale 2
+    vmovdqu xmm1, xmmword ptr [r15+44]          ; Weights 2
+    vpmovzxbd zmm1, xmm1
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    vpsubd  zmm2, zmm2, zmm31
+    vpsubd  zmm3, zmm3, zmm31
+    vcvtdq2ps zmm2, zmm2
+    vcvtdq2ps zmm3, zmm3
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    vmovups zmm4, zmmword ptr [rbp+256]
+    vmovups zmm5, zmmword ptr [rbp+320]
+    vfmadd231ps zmm18, zmm2, zmm4
+    vfmadd231ps zmm18, zmm3, zmm5
+
+    ; ----- Block 3 -----
+    vbroadcastss zmm0, dword ptr [r15+60]        ; Scale 3
+    vmovdqu xmm1, xmmword ptr [r15+64]          ; Weights 3
+    vpmovzxbd zmm1, xmm1
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    vpsubd  zmm2, zmm2, zmm31
+    vpsubd  zmm3, zmm3, zmm31
+    vcvtdq2ps zmm2, zmm2
+    vcvtdq2ps zmm3, zmm3
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    vmovups zmm4, zmmword ptr [rbp+384]
+    vmovups zmm5, zmmword ptr [rbp+448]
+    vfmadd231ps zmm19, zmm2, zmm4
+    vfmadd231ps zmm19, zmm3, zmm5
+
+    add     r15, 80               ; 4 blocks * 20 bytes
+    add     rbp, 512              ; 128 weights * 4 bytes
+    sub     rcx, 4
+    jmp     BlockLoop_4Way
+
+BlockLoop_4Way_Remainder:
+    ; Process remaining blocks (0-3) with single accumulator
+    test    rcx, rcx
+    jz      DoneRow_4Way
+
+    vbroadcastss zmm0, dword ptr [r15]
+    vmovdqu xmm1, xmmword ptr [r15+4]
+    vpmovzxbd zmm1, xmm1
+    vpandd  zmm2, zmm1, zmmword ptr [nibble_mask_zmm]
+    vpsrld  zmm3, zmm1, 4
+    vpandd  zmm3, zmm3, zmmword ptr [nibble_mask_zmm]
+    vpsubd  zmm2, zmm2, zmm31
+    vpsubd  zmm3, zmm3, zmm31
+    vcvtdq2ps zmm2, zmm2
+    vcvtdq2ps zmm3, zmm3
+    vmulps  zmm2, zmm2, zmm0
+    vmulps  zmm3, zmm3, zmm0
+    vmovups zmm4, zmmword ptr [rbp]
+    vmovups zmm5, zmmword ptr [rbp+64]
+    vfmadd231ps zmm16, zmm2, zmm4
+    vfmadd231ps zmm16, zmm3, zmm5
+
+    add     r15, 20
+    add     rbp, 128
+    dec     rcx
+    jmp     BlockLoop_4Way_Remainder
+
+DoneRow_4Way:
+    ; Reduce 4 accumulators into single result
+    vaddps  zmm16, zmm16, zmm17   ; zmm16 = acc0 + acc1
+    vaddps  zmm18, zmm18, zmm19   ; zmm18 = acc2 + acc3
+    vaddps  zmm16, zmm16, zmm18   ; zmm16 = total
+
+    ; Horizontal sum of ZMM16 (16 floats) into scalar output
+    ; Move to zmm0 first to use same pattern as hybrid kernel
+    vmovaps zmm0, zmm16
+    vextractf64x4 ymm1, zmm0, 1             ; Extract high 256 bits
+    vaddps  ymm0, ymm0, ymm1                ; Add high and low halves
+    vextractf128 xmm1, ymm0, 1              ; Extract high 128 bits
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vmovhlps xmm1, xmm0, xmm0               ; Move high half to low
+    vaddps  xmm0, xmm0, xmm1                ; Add
+    vshufps xmm1, xmm0, xmm0, 1             ; Rotate
+    vaddss  xmm0, xmm0, xmm1                ; Final add
+    vmovss  dword ptr [r14], xmm0
+
+    add     r14, 4
+    inc     rbx
+    cmp     rbx, r12
+    jl      RowLoop_4Way
+
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rsi
+    pop     rdi
+    pop     rbp
+    pop     rbx
+    mov     rax, 1
+    ret
+QuantizedMatMul_4Way_4K ENDP
 
 QuantizedMatMul_Dynamic PROC FRAME
     push    rbx

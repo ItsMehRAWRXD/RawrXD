@@ -137,6 +137,9 @@ public:
     };
     Stats getStats() const;
 
+    // Context window configuration
+    void setContextWindowSize(int size);
+
 private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;

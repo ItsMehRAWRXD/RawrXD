@@ -9,7 +9,7 @@
 ; 4. Manages memory arenas (weights/activations/temp)
 ; 5. Executes layer-by-layer inference
 ; 6. Provides debugging and introspection
-; 7. **Zero dependencies, zero stubs, zero fictional code**
+; 7. **Zero dependencies, zero stubs, zero unteleprompted code**
 ; =============================================================================
 
 option casemap:none

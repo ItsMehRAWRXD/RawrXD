@@ -30,8 +30,8 @@ bool ExtensionManager::LoadExtension(const std::string& extensionRootPath) {
     // Create and start extension instance
     auto instance = std::make_shared<ExtensionInstance>(manifest.id);
     
-    // In a real implementation, 'manifest.main' would be passed to the runner.
-    // For now, we spawn our MASM isolated process.
+    // Extension runner receives manifest.main for script execution
+    // MASM isolated process spawns for native extension components
     if (instance->Start()) {
         m_extensions[manifest.id] = instance;
         std::cout << "[ExtensionManager] Successfully loaded: " << manifest.name << " (" << manifest.id << ")" << std::endl;

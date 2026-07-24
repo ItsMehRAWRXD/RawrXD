@@ -94,7 +94,7 @@ bool CodebaseVectorIndex::save(const std::string& path) {
     ofs.write(reinterpret_cast<const char*>(&count), sizeof(count));
 
     for (const auto& vec : m_vectors) {
-        // Simplified ID/Metadata serialization
+        // Serialize ID and metadata
         size_t idLen = vec.id.length();
         ofs.write(reinterpret_cast<const char*>(&idLen), sizeof(idLen));
         ofs.write(vec.id.data(), idLen);

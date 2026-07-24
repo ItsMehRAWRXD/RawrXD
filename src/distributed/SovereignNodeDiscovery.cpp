@@ -376,34 +376,29 @@ void NodeDiscovery::HeartbeatLoop() {
 }
 
 void NodeDiscovery::SendHeartbeat(const NodeIdentity& node) {
-    // Placeholder for actual network implementation
-    // In production, this would send UDP/TCP heartbeat
+    // Implementation pending - would send UDP/TCP heartbeat
 }
 
 void NodeDiscovery::CheckStaleNodes() {
-    // Placeholder for stale node detection
-    // In production, check last_heartbeat timestamps
+    // Implementation pending - would check last_heartbeat timestamps
 }
 
 void NodeDiscovery::MulticastDiscovery() {
-    // Placeholder for multicast discovery
-    // In production, join multicast group and listen for announcements
+    // Implementation pending - would join multicast group and listen for announcements
     while (running_) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
 void NodeDiscovery::ConsulDiscovery() {
-    // Placeholder for Consul discovery
-    // In production, query Consul API for service instances
+    // Implementation pending - would query Consul API for service instances
     while (running_) {
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
 }
 
 void NodeDiscovery::KubernetesDiscovery() {
-    // Placeholder for Kubernetes discovery
-    // In production, query K8s API for endpoints
+    // Implementation pending - would query K8s API for endpoints
     while (running_) {
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }

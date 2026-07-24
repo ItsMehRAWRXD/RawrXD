@@ -504,3 +504,52 @@ void AgenticAgentCoordinator::updateAgentMetrics(const std::string& agentId) {
         a->utilization = std::min(1.0f, a->utilization + 0.1f);
     }
 }
+
+// ── Sovereign Autonomy Runtime Integration ──
+
+void AgenticAgentCoordinator::initializeSovereignRuntime() {
+    if (m_sovereignRuntime) return;
+    RawrXD::Autonomy::RuntimeConfig config;
+    config.enable_reflection = true;
+    config.enable_critic = true;
+    config.enable_replanning = true;
+    config.max_concurrent_missions = 5;
+    config.tick_interval_ms = 100;
+    m_sovereignRuntime = std::make_shared<RawrXD::Autonomy::SovereignAgentRuntime>(config);
+    m_sovereignRuntime->Initialize();
+    m_sovereignRuntime->SetLogCallback([](const std::string& msg) {
+        // Could forward to IDE logger
+    });
+    m_sovereignRuntime->SetStatusCallback([](const std::string& status) {
+        // Could forward to IDE status bar
+    });
+}
+
+std::shared_ptr<RawrXD::Autonomy::SovereignAgentRuntime> AgenticAgentCoordinator::getSovereignRuntime() const {
+    return m_sovereignRuntime;
+}
+
+std::string AgenticAgentCoordinator::launchSovereignMission(const std::string& name, const std::string& goal) {
+    if (!m_sovereignRuntime) initializeSovereignRuntime();
+    return m_sovereignRuntime->LaunchMission(name, goal);
+}
+
+bool AgenticAgentCoordinator::cancelSovereignMission(const std::string& missionId) {
+    if (!m_sovereignRuntime) return false;
+    return m_sovereignRuntime->CancelMission(missionId);
+}
+
+RawrXD::Autonomy::MissionState AgenticAgentCoordinator::getSovereignMissionState(const std::string& missionId) const {
+    if (!m_sovereignRuntime) return RawrXD::Autonomy::MissionState::Failed;
+    return m_sovereignRuntime->GetMissionState(missionId);
+}
+
+float AgenticAgentCoordinator::getSovereignMissionProgress(const std::string& missionId) const {
+    if (!m_sovereignRuntime) return 0.0f;
+    return m_sovereignRuntime->GetMissionProgress(missionId);
+}
+
+std::vector<std::string> AgenticAgentCoordinator::getActiveSovereignMissions() const {
+    if (!m_sovereignRuntime) return {};
+    return m_sovereignRuntime->GetActiveMissions();
+}
