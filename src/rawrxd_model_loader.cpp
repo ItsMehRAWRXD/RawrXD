@@ -2120,14 +2120,40 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
             printf("[RawrXD] LoadTensorAsync progress: %s iteration=%d remaining=%zu MB\n",
                    t.name.c_str(), loopIteration, remainingSize / (1024 * 1024));
         }
+        // Safety check: ensure windowSize is valid
+        if (windowSize == 0)
+        {
+            printf("[RawrXD] ERROR: windowSize is 0 for tensor %s\n", t.name.c_str());
+            windowSize = 256ULL * 1024ULL * 1024ULL; // Default to 256MB
+        }
+        
         const uint64_t apertureSize = std::min<uint64_t>(windowSize, m_fileSize);
         const uint64_t windowStart = (currentOffset / apertureSize) * apertureSize;
+        const uint64_t offsetInWindow = currentOffset - windowStart;
+        const uint64_t bytesRemainingInWindow = (apertureSize > offsetInWindow) ? (apertureSize - offsetInWindow) : 0;
+        const uint64_t bytesRemainingInFile = m_fileSize - currentOffset;
         const size_t bytesAvailableInWindow = static_cast<size_t>(
-            std::min<uint64_t>(apertureSize - (currentOffset - windowStart), m_fileSize - currentOffset));
+            std::min<uint64_t>(bytesRemainingInWindow, bytesRemainingInFile));
+        
         size_t chunkSize = std::min(remainingSize, std::min(MAX_CHUNK_SIZE, bytesAvailableInWindow));
+        
+        // Debug: log chunk calculation details (always for first iteration, or if chunkSize is 0)
+        if (loopIteration == 1 || chunkSize == 0 || remainingSize > 100 * 1024 * 1024)
+        {
+            printf("[RawrXD] LoadTensorAsync CHUNK DEBUG %s: iter=%d\n", t.name.c_str(), loopIteration);
+            printf("  currentOffset=%llu, windowSize=%llu, apertureSize=%llu\n", currentOffset, windowSize, apertureSize);
+            printf("  windowStart=%llu, offsetInWindow=%llu\n", windowStart, offsetInWindow);
+            printf("  bytesRemainingInWindow=%llu, bytesRemainingInFile=%llu\n", bytesRemainingInWindow, bytesRemainingInFile);
+            printf("  bytesAvailableInWindow=%zu, MAX_CHUNK_SIZE=%zu\n", bytesAvailableInWindow, MAX_CHUNK_SIZE);
+            printf("  remainingSize=%zu, chunkSize=%zu\n", remainingSize, chunkSize);
+        }
+        
         if (chunkSize == 0)
         {
             printf("[RawrXD] Zero-sized chunk while loading tensor %s at offset %llu\n", t.name.c_str(), currentOffset);
+            printf("  apertureSize=%llu, windowStart=%llu, bytesAvailableInWindow=%zu\n", 
+                   apertureSize, windowStart, bytesAvailableInWindow);
+            printf("  CRITICAL: Breaking to avoid infinite loop!\n");
             return;
         }
 
@@ -2137,6 +2163,8 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
         {
             printf("[RawrXD] Failed to map tensor chunk for %s at offset %llu, size %zu\n", t.name.c_str(),
                    currentOffset, chunkSize);
+            printf("[RawrXD]   m_fileSize=%llu, m_hFile=%p, m_hMapping=%p\n", 
+                   m_fileSize, (void*)m_hFile, (void*)m_hMapping);
             return;
         }
 
