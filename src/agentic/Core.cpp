@@ -50,51 +50,661 @@ class SubAgentManagerImpl;
 
 class TaskSchedulerImpl : public TaskScheduler {
 public:
-    bool Initialize() override { return true; }
-    void Shutdown() override {}
-    std::string ScheduleTask(const Task& task) override { 
-        return "task-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()); 
+    TaskSchedulerImpl() : maxConcurrent_(4), shutdown_(false) {}
+    
+    bool Initialize() override { 
+        shutdown_ = false;
+        return true; 
     }
-    bool CancelTask(const std::string& taskId) override { return true; }
-    TaskStatus GetTaskStatus(const std::string& taskId) override { return TaskStatus::Pending; }
-    std::vector<std::string> GetActiveTasks() override { return {}; }
-    void SetMaxConcurrent(size_t max) override {}
-    size_t GetMaxConcurrent() const override { return 4; }
+    
+    void Shutdown() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        shutdown_ = true;
+        cv_.notify_all();
+    }
+    
+    std::string ScheduleTask(const Task& task) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string taskId = "task-" + std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        
+        TaskEntry entry;
+        entry.task = task;
+        entry.status = TaskStatus::Pending;
+        entry.createdAt = std::chrono::steady_clock::now();
+        tasks_[taskId] = std::move(entry);
+        
+        // Try to execute if we have capacity
+        TryExecuteNext();
+        
+        return taskId;
+    }
+    
+    bool CancelTask(const std::string& taskId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = tasks_.find(taskId);
+        if (it == tasks_.end()) return false;
+        
+        if (it->second.status == TaskStatus::Running) {
+            // Can't cancel running tasks
+            return false;
+        }
+        
+        it->second.status = TaskStatus::Cancelled;
+        return true;
+    }
+    
+    TaskStatus GetTaskStatus(const std::string& taskId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = tasks_.find(taskId);
+        if (it == tasks_.end()) return TaskStatus::Unknown;
+        return it->second.status;
+    }
+    
+    std::vector<std::string> GetActiveTasks() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<std::string> active;
+        for (const auto& [id, entry] : tasks_) {
+            if (entry.status == TaskStatus::Pending || entry.status == TaskStatus::Running) {
+                active.push_back(id);
+            }
+        }
+        return active;
+    }
+    
+    void SetMaxConcurrent(size_t max) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        maxConcurrent_ = max;
+        TryExecuteNext();
+    }
+    
+    size_t GetMaxConcurrent() const override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        return maxConcurrent_; 
+    }
+
+private:
+    struct TaskEntry {
+        Task task;
+        TaskStatus status;
+        std::chrono::steady_clock::time_point createdAt;
+        std::chrono::steady_clock::time_point startedAt;
+    };
+    
+    mutable std::mutex mutex_;
+    std::condition_variable cv_;
+    std::unordered_map<std::string, TaskEntry> tasks_;
+    size_t maxConcurrent_;
+    size_t runningCount_ = 0;
+    bool shutdown_;
+    
+    void TryExecuteNext() {
+        if (runningCount_ >= maxConcurrent_) return;
+        
+        for (auto& [id, entry] : tasks_) {
+            if (entry.status == TaskStatus::Pending) {
+                entry.status = TaskStatus::Running;
+                entry.startedAt = std::chrono::steady_clock::now();
+                runningCount_++;
+                
+                // In real implementation, would spawn thread here
+                // For now, mark as completed immediately
+                entry.status = TaskStatus::Completed;
+                runningCount_--;
+                break;
+            }
+        }
+    }
 };
 
 class ToolRegistryImpl : public ToolRegistry {
 public:
-    bool Initialize() override { return true; }
-    void Shutdown() override {}
-    bool RegisterTool(const Tool& tool) override { return true; }
-    bool UnregisterTool(const std::string& toolId) override { return true; }
-    std::optional<Tool> GetTool(const std::string& toolId) override { return std::nullopt; }
-    std::vector<Tool> GetAllTools() override { return {}; }
-    std::vector<Tool> GetToolsByCategory(ToolCategory category) override { return {}; }
+    ToolRegistryImpl() = default;
+    
+    bool Initialize() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        tools_.clear();
+        handlers_.clear();
+        return true; 
+    }
+    
+    void Shutdown() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        tools_.clear();
+        handlers_.clear();
+    }
+    
+    bool RegisterTool(const Tool& tool) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (tool.id.empty()) return false;
+        
+        // Check for duplicate
+        if (tools_.find(tool.id) != tools_.end()) {
+            return false;
+        }
+        
+        tools_[tool.id] = tool;
+        
+        // Register default handler if not already set
+        if (handlers_.find(tool.id) == handlers_.end()) {
+            handlers_[tool.id] = nullptr; // No handler by default
+        }
+        
+        return true;
+    }
+    
+    bool UnregisterTool(const std::string& toolId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = tools_.find(toolId);
+        if (it == tools_.end()) return false;
+        
+        tools_.erase(it);
+        handlers_.erase(toolId);
+        return true;
+    }
+    
+    std::optional<Tool> GetTool(const std::string& toolId) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = tools_.find(toolId);
+        if (it == tools_.end()) return std::nullopt;
+        return it->second;
+    }
+    
+    std::vector<Tool> GetAllTools() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<Tool> result;
+        result.reserve(tools_.size());
+        for (const auto& [id, tool] : tools_) {
+            result.push_back(tool);
+        }
+        return result;
+    }
+    
+    std::vector<Tool> GetToolsByCategory(ToolCategory category) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<Tool> result;
+        for (const auto& [id, tool] : tools_) {
+            if (tool.category == category) {
+                result.push_back(tool);
+            }
+        }
+        return result;
+    }
+    
     bool ExecuteTool(const std::string& toolId, const std::string& params, std::string& output) override { 
-        return false; 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = tools_.find(toolId);
+        if (it == tools_.end()) {
+            output = "Error: Tool not found: " + toolId;
+            return false;
+        }
+        
+        // Check if tool is enabled
+        if (!it->second.enabled) {
+            output = "Error: Tool is disabled: " + toolId;
+            return false;
+        }
+        
+        // Execute based on tool type
+        switch (it->second.category) {
+            case ToolCategory::FileOperation:
+                return ExecuteFileOperation(it->second, params, output);
+            case ToolCategory::SystemCommand:
+                return ExecuteSystemCommand(it->second, params, output);
+            case ToolCategory::NetworkRequest:
+                return ExecuteNetworkRequest(it->second, params, output);
+            case ToolCategory::CodeAnalysis:
+                return ExecuteCodeAnalysis(it->second, params, output);
+            default:
+                output = "Error: Unknown tool category";
+                return false;
+        }
+    }
+
+private:
+    mutable std::mutex mutex_;
+    std::unordered_map<std::string, Tool> tools_;
+    std::unordered_map<std::string, std::function<bool(const std::string&, std::string&)>> handlers_;
+    
+    bool ExecuteFileOperation(const Tool& tool, const std::string& params, std::string& output) {
+        // Parse JSON params
+        if (params.find("read") != std::string::npos) {
+            // Extract file path from params
+            size_t pathStart = params.find("\"path\":");
+            if (pathStart != std::string::npos) {
+                pathStart = params.find("\"", pathStart + 7);
+                if (pathStart != std::string::npos) {
+                    size_t pathEnd = params.find("\"", pathStart + 1);
+                    std::string path = params.substr(pathStart + 1, pathEnd - pathStart - 1);
+                    
+                    std::ifstream file(path);
+                    if (file.is_open()) {
+                        std::stringstream ss;
+                        ss << file.rdbuf();
+                        output = ss.str();
+                        return true;
+                    } else {
+                        output = "Error: Cannot open file: " + path;
+                        return false;
+                    }
+                }
+            }
+        }
+        output = "Error: Invalid file operation params";
+        return false;
+    }
+    
+    bool ExecuteSystemCommand(const Tool& tool, const std::string& params, std::string& output) {
+        // Extract command from params
+        size_t cmdStart = params.find("\"command\":");
+        if (cmdStart != std::string::npos) {
+            cmdStart = params.find("\"", cmdStart + 10);
+            if (cmdStart != std::string::npos) {
+                size_t cmdEnd = params.find("\"", cmdStart + 1);
+                std::string command = params.substr(cmdStart + 1, cmdEnd - cmdStart - 1);
+                
+                // Security check - block dangerous commands
+                if (command.find("rm -rf /") != std::string::npos ||
+                    command.find("del /") != std::string::npos ||
+                    command.find("format") != std::string::npos) {
+                    output = "Error: Dangerous command blocked";
+                    return false;
+                }
+                
+                // Execute command
+                FILE* pipe = popen(command.c_str(), "r");
+                if (pipe) {
+                    char buffer[4096];
+                    output.clear();
+                    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                        output += buffer;
+                    }
+                    pclose(pipe);
+                    return true;
+                }
+            }
+        }
+        output = "Error: Invalid command params";
+        return false;
+    }
+    
+    bool ExecuteNetworkRequest(const Tool& tool, const std::string& params, std::string& output) {
+        // Placeholder for network request execution
+        output = "Network request execution not fully implemented";
+        return false;
+    }
+    
+    bool ExecuteCodeAnalysis(const Tool& tool, const std::string& params, std::string& output) {
+        // Placeholder for code analysis
+        output = "Code analysis execution not fully implemented";
+        return false;
     }
 };
 
 class HistoryRecorderImpl : public HistoryRecorder {
 public:
-    bool Initialize() override { return true; }
-    void Shutdown() override {}
-    void RecordTask(const Task& task, const TaskResult& result) override {}
-    std::vector<TaskHistoryEntry> GetHistory(size_t limit) override { return {}; }
-    std::vector<TaskHistoryEntry> GetHistoryByType(TaskType type, size_t limit) override { return {}; }
-    void ClearHistory() override {}
-    void SetMaxHistorySize(size_t max) override {}
+    HistoryRecorderImpl() : maxHistorySize_(1000) {}
+    
+    bool Initialize() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        history_.clear();
+        
+        // Load persisted history if available
+        LoadHistoryFromDisk();
+        return true; 
+    }
+    
+    void Shutdown() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        // Persist history to disk
+        SaveHistoryToDisk();
+    }
+    
+    void RecordTask(const Task& task, const TaskResult& result) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        TaskHistoryEntry entry;
+        entry.taskId = task.id;
+        entry.taskType = task.type;
+        entry.taskDescription = task.description;
+        entry.status = result.status;
+        entry.timestamp = std::chrono::system_clock::now();
+        entry.durationMs = result.durationMs;
+        entry.outputPreview = result.output.substr(0, 200); // First 200 chars
+        entry.errorMessage = result.errorMessage;
+        
+        history_.push_back(std::move(entry));
+        
+        // Trim history if exceeds max size
+        if (history_.size() > maxHistorySize_) {
+            history_.erase(history_.begin(), history_.begin() + (history_.size() - maxHistorySize_));
+        }
+        
+        // Auto-save every 10 entries
+        if (history_.size() % 10 == 0) {
+            SaveHistoryToDisk();
+        }
+    }
+    
+    std::vector<TaskHistoryEntry> GetHistory(size_t limit) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (limit == 0 || limit > history_.size()) {
+            limit = history_.size();
+        }
+        
+        // Return most recent entries first
+        std::vector<TaskHistoryEntry> result;
+        result.reserve(limit);
+        auto start = history_.rbegin();
+        for (size_t i = 0; i < limit && start != history_.rend(); ++i, ++start) {
+            result.push_back(*start);
+        }
+        return result;
+    }
+    
+    std::vector<TaskHistoryEntry> GetHistoryByType(TaskType type, size_t limit) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<TaskHistoryEntry> result;
+        result.reserve(limit);
+        
+        // Search from most recent
+        for (auto it = history_.rbegin(); it != history_.rend() && result.size() < limit; ++it) {
+            if (it->taskType == type) {
+                result.push_back(*it);
+            }
+        }
+        return result;
+    }
+    
+    void ClearHistory() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        history_.clear();
+        SaveHistoryToDisk();
+    }
+    
+    void SetMaxHistorySize(size_t max) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        maxHistorySize_ = max;
+        
+        // Trim if necessary
+        if (history_.size() > maxHistorySize_) {
+            history_.erase(history_.begin(), history_.begin() + (history_.size() - maxHistorySize_));
+        }
+    }
+
+private:
+    mutable std::mutex mutex_;
+    std::vector<TaskHistoryEntry> history_;
+    size_t maxHistorySize_;
+    
+    std::string GetHistoryFilePath() const {
+        std::string path = std::getenv("APPDATA") ? std::getenv("APPDATA") : ".";
+        return path + "/RawrXD/task_history.json";
+    }
+    
+    void SaveHistoryToDisk() {
+        try {
+            std::filesystem::path dir = std::filesystem::path(GetHistoryFilePath()).parent_path();
+            std::filesystem::create_directories(dir);
+            
+            std::ofstream file(GetHistoryFilePath());
+            if (!file.is_open()) return;
+            
+            // Simple JSON serialization
+            file << "[\n";
+            for (size_t i = 0; i < history_.size(); ++i) {
+                const auto& entry = history_[i];
+                file << "  {\n";
+                file << "    \"taskId\": \"" << entry.taskId << "\",\n";
+                file << "    \"taskType\": " << static_cast<int>(entry.taskType) << ",\n";
+                file << "    \"description\": \"" << EscapeJson(entry.taskDescription) << "\",\n";
+                file << "    \"status\": " << static_cast<int>(entry.status) << ",\n";
+                file << "    \"durationMs\": " << entry.durationMs << ",\n";
+                file << "    \"outputPreview\": \"" << EscapeJson(entry.outputPreview) << "\"\n";
+                file << "  }";
+                if (i < history_.size() - 1) file << ",";
+                file << "\n";
+            }
+            file << "]\n";
+        } catch (...) {
+            // Ignore save errors
+        }
+    }
+    
+    void LoadHistoryFromDisk() {
+        try {
+            std::ifstream file(GetHistoryFilePath());
+            if (!file.is_open()) return;
+            
+            // Simple JSON parsing - just clear and let new history be recorded
+            // Full deserialization would require a JSON parser
+            history_.clear();
+        } catch (...) {
+            // Ignore load errors
+        }
+    }
+    
+    std::string EscapeJson(const std::string& str) const {
+        std::string result;
+        for (char c : str) {
+            switch (c) {
+                case '"': result += "\\\""; break;
+                case '\\': result += "\\\\"; break;
+                case '\b': result += "\\b"; break;
+                case '\f': result += "\\f"; break;
+                case '\n': result += "\\n"; break;
+                case '\r': result += "\\r"; break;
+                case '\t': result += "\\t"; break;
+                default: result += c;
+            }
+        }
+        return result;
+    }
 };
 
 class PolicyEngineImpl : public PolicyEngine {
 public:
-    bool Initialize() override { return true; }
-    void Shutdown() override {}
-    bool ValidateTask(const Task& task, std::string& reason) override { return true; }
-    bool CheckPermission(const std::string& action, const std::string& resource) override { return true; }
-    void SetPolicy(PolicyType type, bool enabled) override {}
-    bool GetPolicy(PolicyType type) const override { return true; }
+    PolicyEngineImpl() {
+        // Initialize default policies
+        policies_[PolicyType::AllowFileRead] = true;
+        policies_[PolicyType::AllowFileWrite] = false; // Restricted by default
+        policies_[PolicyType::AllowNetworkAccess] = false; // Restricted by default
+        policies_[PolicyType::AllowSystemCommand] = false; // Restricted by default
+        policies_[PolicyType::AllowCodeExecution] = false; // Restricted by default
+        policies_[PolicyType::RequireApproval] = true;
+        policies_[PolicyType::LogAllActions] = true;
+        policies_[PolicyType::RestrictSandbox] = true;
+    }
+    
+    bool Initialize() override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        actionLog_.clear();
+        return true; 
+    }
+    
+    void Shutdown() override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        // Save policy violations log
+        SaveViolationLog();
+    }
+    
+    bool ValidateTask(const Task& task, std::string& reason) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Check task type against policies
+        switch (task.type) {
+            case TaskType::FileOperation:
+                if (task.description.find("write") != std::string::npos ||
+                    task.description.find("delete") != std::string::npos ||
+                    task.description.find("modify") != std::string::npos) {
+                    if (!policies_[PolicyType::AllowFileWrite]) {
+                        reason = "File write operations are restricted by policy";
+                        LogViolation("FILE_WRITE_BLOCKED", task.id, reason);
+                        return false;
+                    }
+                }
+                break;
+                
+            case TaskType::SystemCommand:
+                if (!policies_[PolicyType::AllowSystemCommand]) {
+                    reason = "System commands are restricted by policy";
+                    LogViolation("SYS_CMD_BLOCKED", task.id, reason);
+                    return false;
+                }
+                // Additional security check for dangerous commands
+                if (IsDangerousCommand(task.description)) {
+                    reason = "Command matches dangerous pattern";
+                    LogViolation("DANGEROUS_CMD_BLOCKED", task.id, reason);
+                    return false;
+                }
+                break;
+                
+            case TaskType::NetworkRequest:
+                if (!policies_[PolicyType::AllowNetworkAccess]) {
+                    reason = "Network access is restricted by policy";
+                    LogViolation("NETWORK_BLOCKED", task.id, reason);
+                    return false;
+                }
+                break;
+                
+            case TaskType::CodeExecution:
+                if (!policies_[PolicyType::AllowCodeExecution]) {
+                    reason = "Code execution is restricted by policy";
+                    LogViolation("CODE_EXEC_BLOCKED", task.id, reason);
+                    return false;
+                }
+                break;
+                
+            default:
+                break;
+        }
+        
+        // Check if approval is required
+        if (policies_[PolicyType::RequireApproval] && task.requiresApproval) {
+            reason = "Task requires manual approval";
+            return false; // Would queue for approval in real implementation
+        }
+        
+        reason = "Task validated successfully";
+        
+        // Log the validation if logging is enabled
+        if (policies_[PolicyType::LogAllActions]) {
+            LogAction("TASK_VALIDATED", task.id, reason);
+        }
+        
+        return true;
+    }
+    
+    bool CheckPermission(const std::string& action, const std::string& resource) override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        // Define permission matrix
+        if (action == "read") {
+            return policies_[PolicyType::AllowFileRead];
+        }
+        if (action == "write" || action == "delete") {
+            return policies_[PolicyType::AllowFileWrite];
+        }
+        if (action == "network") {
+            return policies_[PolicyType::AllowNetworkAccess];
+        }
+        if (action == "execute") {
+            return policies_[PolicyType::AllowSystemCommand];
+        }
+        if (action == "code") {
+            return policies_[PolicyType::AllowCodeExecution];
+        }
+        
+        // Default deny for unknown actions
+        return false;
+    }
+    
+    void SetPolicy(PolicyType type, bool enabled) override {
+        std::lock_guard<std::mutex> lock(mutex_);
+        policies_[type] = enabled;
+    }
+    
+    bool GetPolicy(PolicyType type) const override { 
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it = policies_.find(type);
+        if (it == policies_.end()) return false; // Default deny
+        return it->second;
+    }
+
+private:
+    mutable std::mutex mutex_;
+    std::unordered_map<PolicyType, bool, std::hash<int>> policies_;
+    std::vector<std::string> actionLog_;
+    std::vector<std::string> violationLog_;
+    
+    bool IsDangerousCommand(const std::string& cmd) const {
+        std::string lower = cmd;
+        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        
+        // List of dangerous patterns
+        const std::vector<std::string> dangerous = {
+            "rm -rf /", "rm -rf /*", "del /f /s /q", "format", "mkfs",
+            "dd if=/dev/zero", ":(){ :|:& };:", "> /dev/sda",
+            "powershell -enc", "iex(", "invoke-expression",
+            "regsvr32", "mshta", "certutil -decode"
+        };
+        
+        for (const auto& pattern : dangerous) {
+            if (lower.find(pattern) != std::string::npos) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    void LogAction(const std::string& action, const std::string& taskId, const std::string& details) {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
+        ss << " [" << action << "] Task: " << taskId << " - " << details;
+        
+        actionLog_.push_back(ss.str());
+        
+        // Trim log if too large
+        if (actionLog_.size() > 10000) {
+            actionLog_.erase(actionLog_.begin(), actionLog_.begin() + 1000);
+        }
+    }
+    
+    void LogViolation(const std::string& violation, const std::string& taskId, const std::string& reason) {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
+        ss << " [VIOLATION: " << violation << "] Task: " << taskId << " - " << reason;
+        
+        violationLog_.push_back(ss.str());
+        
+        // Also output to debug
+        OutputDebugStringA(("[PolicyEngine] " + ss.str() + "\n").c_str());
+    }
+    
+    void SaveViolationLog() {
+        try {
+            std::string path = std::getenv("APPDATA") ? std::getenv("APPDATA") : ".";
+            path += "/RawrXD/policy_violations.log";
+            
+            std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+            
+            std::ofstream file(path, std::ios::app);
+            if (file.is_open()) {
+                for (const auto& violation : violationLog_) {
+                    file << violation << "\n";
+                }
+                violationLog_.clear();
+            }
+        } catch (...) {
+            // Ignore save errors
+        }
+    }
 };
 
 class SubAgentManagerImpl : public SubAgentManager {
