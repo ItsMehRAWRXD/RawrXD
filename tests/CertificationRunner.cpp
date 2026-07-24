@@ -13,6 +13,8 @@
 #include <iomanip>
 #include <sstream>
 #include <filesystem>
+#include <functional>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
