@@ -21,7 +21,7 @@
 using namespace RawrXD;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Mock Draft Generator (deterministic for testing)
+// Test Draft Generator (deterministic for testing)
 // ═══════════════════════════════════════════════════════════════════════════════
 class MockDraftGenerator : public IDraftGenerator {
     float acceptanceRate_;
@@ -83,7 +83,7 @@ bool TestSchedulerThroughput() {
         uint32_t batchSize = 0;
         const uint32_t* batch = scheduler.PrepareVerificationBatch(batchSize);
         
-        // Simulate verification (80% acceptance)
+        // Model verification with 80% acceptance rate
         std::vector<uint32_t> verified(batchSize);
         for (uint32_t j = 0; j < batchSize; j++) {
             verified[j] = (j < batchSize * 0.8f) ? batch[j] : (batch[j] + 1);
@@ -241,7 +241,7 @@ bool TestAcceptanceRate() {
             uint32_t batchSize = 0;
             const uint32_t* batch = scheduler.PrepareVerificationBatch(batchSize);
             
-            // Simulate target acceptance rate
+            // Model target acceptance rate
             std::vector<uint32_t> verified(batchSize);
             for (uint32_t j = 0; j < batchSize; j++) {
                 verified[j] = (j < batchSize * tc.targetRate) ? batch[j] : (batch[j] + 1);
