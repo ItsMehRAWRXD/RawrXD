@@ -1,4 +1,4 @@
-#include "crdt_buffer.h"
+#include "collab/crdt_buffer.h"
 #include <sstream>
 
 void CRDTBuffer::applyRemoteOperation(const std::string &operationJson)

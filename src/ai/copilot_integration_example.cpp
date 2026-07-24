@@ -136,22 +136,30 @@ void ExampleRealTimeTyping() {
     config.max_completion_tokens = 30;  // Shorter completions
     pipeline->SetIDEConfig(config);
     
-    // Simulate typing
+    // Simulate typing with real-time completion requests
     std::string code = "int main() {\n    std::cout << \"Hello";
     
-    CompletionRequest request;
-    request.type = IDEContextType::CODE_COMPLETION;
-    request.file_content = code;
-    request.cursor_line = 1;
-    request.cursor_column = static_cast<int>(code.length() - code.find_last_of('\n') - 1);
-    request.max_tokens = 30;
-    
-    // Each keystroke cancels previous request (debounce handles this)
-    pipeline->RequestCompletion(request, [](const CompletionResult& result) {
-        if (result.accepted) {
-            std::cout << "Completion: " << result.text << "\n";
-        }
-    });
+    // Simulate typing character by character
+    for (size_t i = 0; i < code.length(); ++i) {
+        std::string currentCode = code.substr(0, i + 1);
+        
+        CompletionRequest request;
+        request.type = IDEContextType::CODE_COMPLETION;
+        request.file_content = currentCode;
+        request.cursor_line = 1;
+        request.cursor_column = static_cast<int>(currentCode.length() - currentCode.find_last_of('\n') - 1);
+        request.max_tokens = 30;
+        
+        // Each keystroke cancels previous request (debounce handles this)
+        pipeline->RequestCompletion(request, [](const CompletionResult& result) {
+            if (result.accepted) {
+                std::cout << "Completion: " << result.text << "\n";
+            }
+        });
+        
+        // Simulate typing delay
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
 }
 
 // Example: Speculative decoding

@@ -1,12 +1,7 @@
 // CursorWidget — Win32/native. No Qt. Presence cursors for collaboration.
 
-#include "cursor_widget.h"
+#include "collab/cursor_widget.h"
 #include <windows.h>
-
-CursorWidget::CursorWidget()
-    : m_handle(nullptr)
-{
-}
 
 void CursorWidget::updateCursor(const std::string& userId, const CursorInfo& info)
 {
