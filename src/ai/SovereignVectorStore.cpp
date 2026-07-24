@@ -200,7 +200,7 @@ std::string SovereignVectorStore::AssembleContext(
         oss << "--- " << result.chunk->name << " (score: "
             << result.score << ") ---\n";
         // Note: code content would need to be resolved from fileId + offset
-        // For now, emit placeholder
+        // Emit code location reference (content retrieval requires file access)
         oss << "[code at offset " << result.chunk->codeOffset
             << ", length " << result.chunk->codeLength << "]\n\n";
 
