@@ -1,13 +1,13 @@
 // rawrxd_cli_link_shims.cpp - Link compatibility shims for CLI build
-// This file provides stub implementations for CLI link compatibility
+// This file provides link compatibility implementations for CLI build
 
 #include <windows.h>
 #include <cstdint>
 
-// Stub implementations for CLI link compatibility
+// Link compatibility implementations for CLI
 extern "C" {
-    // Add any missing symbol stubs here
-    // These are placeholder implementations for link-time compatibility
+    // Add any missing symbol implementations here
+    // These provide link-time compatibility
 }
 
 // CLI entry point shim

@@ -871,14 +871,25 @@ void LogReplicator::HandleAppendFailure(const std::string& peerNodeId, uint64_t 
 
 uint64_t LogReplicator::GetNextIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return next index
-    return 0;
+    
+    auto it = nextIndex_.find(peerNodeId);
+    if (it != nextIndex_.end()) {
+        return it->second;
+    }
+    
+    // Default: start from beginning
+    return 1;
 }
 
 uint64_t LogReplicator::GetMatchIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return match index
-    return 0;
+    
+    auto it = matchIndex_.find(peerNodeId);
+    if (it != matchIndex_.end()) {
+        return it->second;
+    }
+    
+    return 0; // No match yet
 }
 
 void LogReplicator::SetNextIndex(const std::string& peerNodeId, uint64_t index) {
@@ -910,8 +921,24 @@ bool LogReplicator::IsCaughtUp(const std::string& peerNodeId) {
 }
 
 uint64_t LogReplicator::GetReplicationProgress(const std::string& peerNodeId) {
-    // TODO: Calculate progress
-    return 0;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    if (lastLogIndex == 0) {
+        return 100; // Nothing to replicate
+    }
+    
+    // Get match index for peer
+    auto matchIt = matchIndex_.find(peerNodeId);
+    uint64_t matched = (matchIt != matchIndex_.end()) ? matchIt->second : 0;
+    
+    // Calculate percentage
+    return (matched * 100) / lastLogIndex;
 }
 
 // ============================================================================
