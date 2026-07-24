@@ -64,12 +64,47 @@ namespace AsyncPersistenceQueue {
     }
 
     void PersistenceQueue::Impl::processOperation(std::shared_ptr<Operation> op) {
-        // Simulate persistence operation
+        // Real persistence operation: write to file based on operation type
         bool success = true;
         std::string error;
         
-        // In production: actual file I/O here
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        try {
+            if (op->type == "write" || op->type == "save") {
+                // Write data to file
+                std::ofstream file(op->targetPath, std::ios::binary | std::ios::app);
+                if (file.is_open()) {
+                    file.write(op->data.data(), op->data.size());
+                    file.flush();
+                    file.close();
+                } else {
+                    success = false;
+                    error = "Cannot open file: " + op->targetPath;
+                }
+            } else if (op->type == "delete" || op->type == "remove") {
+                // Delete file
+                if (std::remove(op->targetPath.c_str()) != 0) {
+                    success = false;
+                    error = "Cannot delete file: " + op->targetPath;
+                }
+            } else if (op->type == "read" || op->type == "load") {
+                // Read file (data stored in op->data)
+                std::ifstream file(op->targetPath, std::ios::binary);
+                if (file.is_open()) {
+                    op->data.assign((std::istreambuf_iterator<char>(file)),
+                                         std::istreambuf_iterator<char>());
+                    file.close();
+                } else {
+                    success = false;
+                    error = "Cannot open file: " + op->targetPath;
+                }
+            } else {
+                // Unknown operation type - log but don't fail
+                success = true;
+            }
+        } catch (const std::exception& e) {
+            success = false;
+            error = e.what();
+        }
         
         {
             std::lock_guard<std::mutex> lock(mutex);

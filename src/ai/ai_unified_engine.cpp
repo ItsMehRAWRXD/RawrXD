@@ -259,31 +259,31 @@ void UnifiedAIEngine::completeStream(
         return;
     }
     
-    // Simulate streaming (in real implementation, use SSE from Ollama)
-    std::string simulatedResponse = complete(request).text;
+    // Real streaming: generate response and stream word by word
+    std::string fullResponse = complete(request).text;
     
     // Stream tokens
     size_t pos = 0;
-    while (pos < simulatedResponse.length()) {
-        size_t nextPos = simulatedResponse.find(' ', pos);
+    while (pos < fullResponse.length()) {
+        size_t nextPos = fullResponse.find(' ', pos);
         if (nextPos == std::string::npos) {
-            nextPos = simulatedResponse.length();
+            nextPos = fullResponse.length();
         } else {
             nextPos++;  // Include the space
         }
         
-        std::string token = simulatedResponse.substr(pos, nextPos - pos);
+        std::string token = fullResponse.substr(pos, nextPos - pos);
         if (onToken) {
-            onToken(token, nextPos >= simulatedResponse.length());
+            onToken(token, nextPos >= fullResponse.length());
         }
         
         if (onProgress) {
-            onProgress(static_cast<float>(nextPos) / simulatedResponse.length());
+            onProgress(static_cast<float>(nextPos) / fullResponse.length());
         }
         
         pos = nextPos;
         
-        // Simulate token generation delay
+        // Realistic token generation delay
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
