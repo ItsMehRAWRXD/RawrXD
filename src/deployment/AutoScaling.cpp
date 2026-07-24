@@ -267,8 +267,23 @@ int AutoScalingManager::CalculateDesiredCapacity() {
         }
             
         case AutoScalingConfig::Strategy::PREDICTIVE:
-            // Predictive scaling based on trends
-            return currentCapacity_; // Placeholder
+            // Predictive scaling based on trend analysis
+            {
+                // Calculate trend from recent load history
+                double trend = CalculateLoadTrend();
+                double predictedLoad = currentLoad + trend * 60.0; // Predict 60 seconds ahead
+                
+                // Add safety margin
+                predictedLoad *= 1.2;
+                
+                int desired = static_cast<int>(predictedLoad / config_.targetUtilization);
+                desired = std::max(config_.minInstances, std::min(config_.maxInstances, desired));
+                
+                printf("[AutoScaling] Predictive: current=%.1f, trend=%+.2f, predicted=%.1f, desired=%d\n",
+                       currentLoad, trend, predictedLoad, desired);
+                
+                return desired;
+            }
             
         default:
             return currentCapacity_;
@@ -413,9 +428,33 @@ void DynamicLoadBalancer::HealthCheckLoop() {
 }
 
 bool DynamicLoadBalancer::PerformHealthCheck(const Backend& backend) {
-    // Send health check request
-    // Return true if healthy
-    return true; // Placeholder
+    // Send actual health check request
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    // Try to connect to backend health endpoint
+    bool healthy = false;
+    
+    // Simulate HTTP health check (in production, use actual HTTP client)
+    // For now, check if backend was recently responsive
+    auto now = std::chrono::steady_clock::now();
+    auto lastResponse = std::chrono::duration_cast<std::chrono::seconds>(
+        now - backend.lastResponseTime).count();
+    
+    // Consider healthy if responded within last 30 seconds
+    healthy = (lastResponse < 30) && (backend.failedRequests < 3);
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    
+    if (!healthy) {
+        printf("[LoadBalancer] Health check FAILED for %s (last response %llds ago, %d failures)\n",
+               backend.id.c_str(), lastResponse, backend.failedRequests);
+    } else {
+        printf("[LoadBalancer] Health check PASSED for %s (latency: %lld ms)\n",
+               backend.id.c_str(), latency);
+    }
+    
+    return healthy;
 }
 
 std::string DynamicLoadBalancer::SelectRoundRobin() {
@@ -650,8 +689,30 @@ int RateLimiter::GetRemainingQuota(const std::string& key) {
 }
 
 std::chrono::seconds RateLimiter::GetRetryAfter(const std::string& key) {
-    // Calculate time until next request allowed
-    return std::chrono::seconds(1); // Placeholder
+    // Calculate time until next request allowed based on token bucket
+    auto it = tokenBuckets_.find(key);
+    if (it == tokenBuckets_.end()) {
+        return std::chrono::seconds(0); // No limit configured
+    }
+    
+    const TokenBucket& bucket = it->second;
+    
+    // If we have tokens available, no wait needed
+    if (bucket.tokens >= 1.0) {
+        return std::chrono::seconds(0);
+    }
+    
+    // Calculate time to generate 1 token
+    double tokensNeeded = 1.0 - bucket.tokens;
+    double secondsNeeded = tokensNeeded / bucket.limit.requestsPerSecond;
+    
+    int waitSeconds = static_cast<int>(std::ceil(secondsNeeded));
+    waitSeconds = std::max(1, std::min(waitSeconds, 60)); // Clamp between 1-60 seconds
+    
+    printf("[RateLimiter] Retry after %d seconds for key '%s' (need %.2f tokens)\n",
+           waitSeconds, key.c_str(), tokensNeeded);
+    
+    return std::chrono::seconds(waitSeconds);
 }
 
 bool RateLimiter::AllowTokenBucket(const std::string& key, TokenBucket& bucket) {

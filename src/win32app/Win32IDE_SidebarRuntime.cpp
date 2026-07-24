@@ -250,6 +250,27 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 LRESULT CALLBACK Win32IDE::SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    switch (uMsg)
+    {
+        case WM_ERASEBKGND:
+        {
+            HDC hdc = (HDC)wParam;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            HBRUSH brush = CreateSolidBrush(RGB(37, 37, 38));
+            FillRect(hdc, &rc, brush);
+            DeleteObject(brush);
+            return 1;
+        }
+        case WM_CTLCOLORSTATIC:
+        {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
+        }
+    }
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);
 }
 
