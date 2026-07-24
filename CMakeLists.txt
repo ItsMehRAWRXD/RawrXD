@@ -266,53 +266,45 @@ endif()
 if(WIN32)
     add_executable(val_051_2_a_real_token
         tests/val_051_2_a_real_token.cpp
+        src/rawrxd_inference.cpp
+        src/rawrxd_model_loader.cpp
+        src/rawrxd_tokenizer.cpp
+        src/rawrxd_transformer.cpp
+        src/rawrxd_sampler.cpp
         src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
         src/core/inference_witness.cpp
+        src/core/swarm_scheduler.cpp
+        src/core/memory_stubs.cpp
+        src/core/link_stubs.cpp
+        src/core/gguf_swarm_plan_builder.cpp
+        src/logging/Logger.cpp
     )
-    set_target_properties(val_051_2_a_real_token PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(val_051_2_a_real_token PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
     target_include_directories(val_051_2_a_real_token PRIVATE
+        ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/include/core
     )
-    if(MSVC)
-        target_link_directories(val_051_2_a_real_token PRIVATE ${_RAWR_MSVC_LIBPATHS})
-        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
-            if(EXISTS "${_rawr_lib}")
-                target_link_options(val_051_2_a_real_token PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
-            endif()
-        endforeach()
-    endif()
-    target_link_libraries(val_051_2_a_real_token PRIVATE
-        kernel32
-        user32
-        gdi32
-        winspool
-        shell32
-        ole32
-        oleaut32
-        uuid
-        comdlg32
-        advapi32
-        version
-        ws2_32
-    )
+    # Add LIBPATH directly using the SDK paths defined at top of file
     if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        target_link_libraries(val_051_2_a_real_token PRIVATE
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
-        )
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
     endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    # Use short library names - LIBPATH above provides the paths
+    target_link_libraries(val_051_2_a_real_token PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 endif()
 
