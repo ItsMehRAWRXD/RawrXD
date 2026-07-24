@@ -191,8 +191,8 @@ extern "C" __declspec(dllexport) void AgenticBridge_ResetContext() {
 
 // Win32IDE UI Components (Slots 21-23)
 extern "C" __declspec(dllexport) void* Win32IDE_createAcceleratorTable(void* pTableData, int count) {
-    // Stub implementation for UI accelerator table
-    OutputDebugStringA("[Win32IDE] createAcceleratorTable stub called\n");
+    // UI accelerator table implementation
+    OutputDebugStringA("[Win32IDE] createAcceleratorTable called\n");
     return CreateAcceleratorTableA(static_cast<LPACCEL>(pTableData), count);
 }
 
