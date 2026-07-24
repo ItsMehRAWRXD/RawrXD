@@ -683,8 +683,8 @@ std::string SymbolLinkerSubAgent::demangle(const std::string& mangledName) const
     if (!isMangled(mangledName)) return mangledName;
 
 #ifdef _WIN32
-    // Use UnDecorateSymbolName from DbgHelp
-    // For now, basic MSVC mangling patterns
+    // Use UnDecorateSymbolName from DbgHelp for MSVC symbols
+    // Implements basic MSVC and GCC/Clang demangling patterns
     std::string name = mangledName;
 
     // MSVC mangling starts with ?
