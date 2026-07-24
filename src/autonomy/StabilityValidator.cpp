@@ -216,21 +216,58 @@ ValidationSuiteResults StabilityValidator::ValidateEnvelopeEnforcement() {
     
     // Test 1: Threshold violation detection
     results.results.push_back(RunTest("Envelope_ThresholdViolation", [this]() {
-        // Simulate a threshold violation
-        if (envelope_) {
-            // Would trigger violation in real implementation
-            return true;  // Placeholder - actual test would verify detection
+        if (!envelope_) return false;
+        
+        // Set a threshold and simulate violation
+        envelope_>SetThreshold("temperature", 80.0);
+        
+        // Simulate readings that exceed threshold
+        bool violationDetected = false;
+        for (int i = 0; i < 10; i++) {
+            double temp = 75.0 + i * 2.0; // 75, 77, 79, 81...
+            envelope_>RecordMetric("temperature", temp);
+            
+            if (envelope_>IsThresholdViolated("temperature")) {
+                violationDetected = true;
+                break;
+            }
         }
-        return true;
+        
+        printf("[StabilityValidator] Threshold violation test: %s\n",
+               violationDetected ? "PASSED" : "FAILED");
+        return violationDetected;
     }));
     
     // Test 2: Safety constraint enforcement
     results.results.push_back(RunTest("Envelope_SafetyConstraint", [this]() {
-        if (safetyGate_) {
-            // Verify safety gate blocks unsafe actions
-            return true;
+        if (!safetyGate_) return false;
+        
+        // Test that safety gate blocks unsafe actions
+        bool unsafeBlocked = false;
+        bool safeAllowed = false;
+        
+        // Simulate unsafe action
+        Action unsafeAction;
+        unsafeAction.type = ActionType::MEMORY_ALLOCATION;
+        unsafeAction.params["size"] = "999999999999"; // Unreasonable size
+        
+        if (!safetyGate_>ValidateAction(unsafeAction)) {
+            unsafeBlocked = true;
         }
-        return true;
+        
+        // Simulate safe action
+        Action safeAction;
+        safeAction.type = ActionType::INFERENCE;
+        safeAction.params["tokens"] = "100";
+        
+        if (safetyGate_>ValidateAction(safeAction)) {
+            safeAllowed = true;
+        }
+        
+        printf("[StabilityValidator] Safety constraint test: unsafe_blocked=%s, safe_allowed=%s\n",
+               unsafeBlocked ? "true" : "false", safeAllowed ? "true" : "false");
+        
+        return unsafeBlocked && safeAllowed;
     }));
     
     // Test 3: Resource budget enforcement

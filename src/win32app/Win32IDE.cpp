@@ -1928,6 +1928,9 @@ void Win32IDE::createStatusBar(HWND hwnd)
         return;
     }
 
+    // Dark theme for status bar
+    SendMessage(m_hwndStatusBar, SB_SETBKCOLOR, 0, (LPARAM)RGB(30, 30, 30));
+
     // 0: primary status, 1: mode, 2: VMM ribbon, 3: spare, 4: context usage
     int parts[] = {200, 360, 540, 720, -1};
     SendMessage(m_hwndStatusBar, SB_SETPARTS, 5, (LPARAM)parts);
@@ -2786,6 +2789,16 @@ void Win32IDE::createOutputTabs()
                                      WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0,
                                      tabBarHeight, client.right, m_outputTabHeight - tabBarHeight, m_hwndMain,
                                      (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
+        // Dark theme for output RichEdit controls
+        if (hEdit)
+        {
+            SendMessage(hEdit, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+            CHARFORMAT2W cf = {};
+            cf.cbSize = sizeof(cf);
+            cf.dwMask = CFM_COLOR;
+            cf.crTextColor = RGB(212, 212, 212);
+            SendMessageW(hEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        }
         m_outputWindows[defs[i].key] = hEdit;
     }
     m_activeOutputTab = "Output";
