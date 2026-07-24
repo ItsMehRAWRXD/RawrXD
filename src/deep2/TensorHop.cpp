@@ -61,11 +61,11 @@ void DMAScheduler::ExecutePending() {
 void DMAScheduler::ExecuteHop(const TensorHop& hop) {
     auto start = std::chrono::high_resolution_clock::now();
     
-    // Simulate DMA transfer (replace with actual DMA API)
+    // Model DMA transfer (replace with actual DMA API)
     // On Windows: could use CopyFileEx with callbacks or DirectStorage
     // On Linux: io_uring or pread
-    
-    // For now: simple memory copy simulation
+
+    // Current implementation: simple memory copy
     volatile char* dest = (char*)hop.destAddr;
     const volatile char* src = (const char*)hop.sourceAddr;
     

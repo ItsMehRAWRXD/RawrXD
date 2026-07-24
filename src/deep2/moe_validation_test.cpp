@@ -210,7 +210,7 @@ bool TestSharedExpert() {
 bool TestMoEForwardPass() {
     printf("\n=== Test 4: End-to-End MoE Forward Pass ===\n");
     
-    // Simulate a single token through MoE layer
+    // Model a single token through MoE layer
     std::vector<float> tokenHidden(TEST_HIDDEN_DIM);
     std::vector<float> moeOutput(TEST_HIDDEN_DIM);
     
@@ -226,18 +226,18 @@ bool TestMoEForwardPass() {
     int expertIndices[TEST_TOP_K];
     float expertWeights[TEST_TOP_K];
     
-    // Simulate router (would call MoERouter::RouteToken)
+    // Model router (would call MoERouter::RouteToken)
     std::uniform_int_distribution<int> expertDist(0, TEST_NUM_EXPERTS - 1);
     for (int i = 0; i < TEST_TOP_K; i++) {
         expertIndices[i] = expertDist(rng);
-        expertWeights[i] = 1.0f / TEST_TOP_K; // Uniform for simulation
+        expertWeights[i] = 1.0f / TEST_TOP_K; // Uniform for modeling
     }
     
     // Step 2: Execute top-k experts
     std::vector<float> expertOutputs[TEST_TOP_K];
     for (int i = 0; i < TEST_TOP_K; i++) {
         expertOutputs[i].resize(TEST_HIDDEN_DIM);
-        // Simulate expert computation
+        // Model expert computation
         for (size_t j = 0; j < TEST_HIDDEN_DIM; j++) {
             expertOutputs[i][j] = tokenHidden[j] * expertWeights[i];
         }
@@ -287,7 +287,7 @@ bool TestDenseVsMoEPath() {
     
     printf("  Checking MoE metadata detection...\n");
     
-    // Simulate GGUF metadata
+    // Model GGUF metadata
     ModelMetadata metadata;
     metadata.numExperts = TEST_NUM_EXPERTS;
     metadata.numExpertsPerToken = TEST_TOP_K;

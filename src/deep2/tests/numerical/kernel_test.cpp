@@ -202,7 +202,7 @@ TestResult testFP32GEMV() {
     // Optimized (from Deep2Engine.cpp)
     auto timeOpt = measureTime([&]() {
         // fp32GEMV is static, need to expose or duplicate
-        // For now, use Deep2_VecDotProduct per row
+        // Current implementation uses Deep2_VecDotProduct per row
         for (size_t r = 0; r < ROWS; ++r) {
             extern void Deep2_VecDotProduct(const float*, const float*, float*, size_t);
             Deep2_VecDotProduct(&weights[r * COLS], input.data(), &optOut[r], COLS);

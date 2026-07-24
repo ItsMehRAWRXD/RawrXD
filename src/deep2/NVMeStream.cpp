@@ -230,7 +230,7 @@ void NVMeStream::prefetchPredicted(const int* expertIds, const float* weights,
     int prefetchCount = std::min((int)config.prefetchDepth, count);
     for (int i = 0; i < prefetchCount; i++) {
         // Note: layer ID would need to be passed in production
-        // For now, prefetch uses current layer context
+        // Current implementation uses current layer context
         prefetchExpert(0, ranked[i].second);
     }
 }

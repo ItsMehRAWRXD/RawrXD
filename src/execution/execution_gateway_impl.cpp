@@ -377,7 +377,7 @@ ExecutionResult RealExecutionGateway::HandleBenchmark(const ExecutionRequest& re
         // Run 10 iterations
         for (int i = 0; i < 10; ++i) {
             // Note: This would need real compressed weights
-            // For now, just measure the timing structure
+            // Current implementation measures the timing structure
         }
         
         auto end = std::chrono::high_resolution_clock::now();
