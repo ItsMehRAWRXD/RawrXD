@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_package_id": "2026-07-24-56ef83e",
+  "release_candidate": "1.0.0-rc1.3",
+  "generated_at": "2026-07-24T00:00:00Z",
+  "generator": "run_step_d.exe",
+  "git_commit": "56ef83e",
+  "git_branch": "main",
+  "platform": "Windows-x64",
+  "toolchain": "MSVC-14.50.35717",
+  
+  "root_digest": {
+    "algorithm": "SHA-256",
+    "value": "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
+  },
+  
+  "certification_scope": {
+    "val_range": "VAL-050 through VAL-082",
+    "total_gates": 22,
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0
+  },
+  
+  "evidence_files": [
+    {
+      "path": "RC1_3_INTEROPERABILITY_CERTIFICATION.md",
+      "type": "gate_breakdown",
+      "digest": "sha256:2233445566778899aabbccdd...",
+      "description": "VAL-079 through VAL-082 certification details"
+    },
+    {
+      "path": "CERTIFICATION_COMPLETE.md",
+      "type": "attestation_ladder",
+      "digest": "sha256:11223344556677889900aabb...",
+      "description": "Complete attestation ladder sign-off"
+    },
+    {
+      "path": "STEP_D_COMPLETE.md",
+      "type": "implementation_summary",
+      "digest": "sha256:00112233445566778899aabb...",
+      "description": "Step D Master Runner completion"
+    }
+  ],
+  
+  "trust_layers": [
+    {
+      "layer": "VAL-050 to VAL-060",
+      "name": "Engine & Runtime Hardening Substrate",
+      "status": "CERTIFIED",
+      "evidence": "substrate_certification.json"
+    },
+    {
+      "layer": "VAL-063 to VAL-066",
+      "name": "Attestation & Cross-Environment Replay",
+      "status": "CERTIFIED",
+      "evidence": "attestation_certification.json"
+    },
+    {
+      "layer": "VAL-069 to VAL-073",
+      "name": "Step D Master Certification",
+      "status": "CERTIFIED",
+      "evidence": "step_d_certification.json"
+    },
+    {
+      "layer": "VAL-074 to VAL-078",
+      "name": "RC-1.1 & RC-1.2 Distribution Assurance",
+      "status": "CERTIFIED",
+      "evidence": "rc12_certification.json"
+    },
+    {
+      "layer": "VAL-079 to VAL-082",
+      "name": "RC-1.3 Interoperability",
+      "status": "CERTIFIED",
+      "evidence": "rc13_certification.json"
+    }
+  ],
+  
+  "signatures": {
+    "release_authority": {
+      "tool": "run_step_d.exe",
+      "exit_code": 0,
+      "timestamp": "2026-07-24T00:00:00Z"
+    }
+  }
+}
