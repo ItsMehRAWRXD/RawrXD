@@ -141,11 +141,17 @@ public:
         }
 
         if (symbol) {
-            std::string info = "Definition of " + symbol->name + ":\n\n";
-            info += "File: " + symbol->definition.filePath + "\n";
+            std::string info = "Definition of ";
+            info += symbol->name;
+            info += ":\n\n";
+            info += "File: ";
+            info += symbol->definition.filePath;
+            info += "\n";
             info += "Line: " + std::to_string(symbol->definition.line) + "\n";
             info += "Column: " + std::to_string(symbol->definition.column) + "\n";
-            info += "Type: " + getSymbolKindName(symbol->kind) + "\n";
+            info += "Type: ";
+            info += getSymbolKindName(symbol->kind);
+            info += "\n";
 
             if (!symbol->signature.empty()) {
                 info += "\nSignature:\n";
