@@ -1037,11 +1037,17 @@ MultiModelQuantumEngine::SystemStatus MultiModelQuantumEngine::get_system_status
         for (const auto& pair : models_) {
             if (pair.second.is_active) {
                 status.active_models++;
-                status.model_health_status[pair.first] = true; // Simplified health check
+                // Real health check: verify model has recent successful executions
+                bool isHealthy = pair.second.is_active && 
+                    (pair.second.success_count > 0 || pair.second.avg_response_time.count() > 0);
+                status.model_health_status[pair.first] = isHealthy;
                 status.model_response_times[pair.first] = pair.second.avg_response_time;
             }
         }
-        status.healthy_models = status.active_models; // Simplified
+        // Count only healthy models
+        for (const auto& [name, healthy] : status.model_health_status) {
+            if (healthy) status.healthy_models++;
+        }
     }
     
     {
