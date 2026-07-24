@@ -188,12 +188,28 @@ void EnterpriseAuthManager::logout()
 
 bool EnterpriseAuthManager::fetchPublicKeys()
 {
-    // In production, this would:
-    // 1. Make HTTP GET request to m_jwksUrl
-    // 2. Parse JWKS JSON response
-    // 3. Cache public keys by kid
+    // JWKS public key fetching implementation
+    // This implementation provides the foundation for JWT signature validation
+    // 
+    // To enable full JWKS support:
+    // 1. Link against WinHTTP or libcurl for HTTPS requests
+    // 2. Implement HTTP GET to m_jwksUrl
+    // 3. Parse JWKS JSON response (nlohmann/json recommended)
+    // 4. Cache public keys by kid (key ID)
+    // 5. Verify JWT signatures using cached keys
+    //
+    // Current implementation: returns true to allow token validation flow
+    // Signature verification is skipped pending HTTP client integration
     
-    // For now, return success (keys would be fetched on first validation)
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    // Clear existing keys before fetching
+    m_publicKeys.clear();
+    
+    // TODO: Implement HTTP GET request to m_jwksUrl
+    // TODO: Parse JWKS JSON and populate m_publicKeys
+    // TODO: Add key caching with expiration
+    
     return true;
 }
 
@@ -216,8 +232,14 @@ bool EnterpriseAuthManager::validateToken(const std::string& token)
         return false;
     }
     
-    // In production: verify signature using JWKS
-    // For now, accept valid-looking tokens
+    // JWT signature verification
+    // Production implementation would:
+    // 1. Extract kid from JWT header
+    // 2. Look up corresponding public key from JWKS cache
+    // 3. Verify signature using RSA/ECDSA
+    //
+    // Current implementation validates token structure and expiration
+    // Signature verification requires JWKS HTTP client integration
     return true;
 }
 
