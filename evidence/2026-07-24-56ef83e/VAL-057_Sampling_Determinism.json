@@ -1,0 +1,74 @@
+{
+  "id": "VAL-057",
+  "name": "Sampling Determinism",
+  "timestamp": "2026-07-24T13:15:00Z",
+  "status": "IN_PROGRESS",
+  "claim": "Greedy sampling produces deterministic token output from identical hidden states",
+  "prerequisites": ["VAL-056"],
+  "observation_target": {
+    "sampling_mode": "greedy",
+    "temperature": 0.0,
+    "top_k": 1,
+    "determinism_scope": "single_token"
+  },
+  "sampling_pipeline": {
+    "hidden_state": "layer_33_output",
+    "output_norm": "RMSNorm",
+    "output_projection": "token_embd.weight^T",
+    "logits": "float32[ vocab_size ]",
+    "sampling": "argmax",
+    "token_id": "int32",
+    "tokenizer_decode": "string"
+  },
+  "determinism_tests": {
+    "single_run_consistency": {
+      "description": "Same hidden state produces same token",
+      "runs": 3,
+      "expected": "identical_token_ids",
+      "status": "PENDING"
+    },
+    "replay_determinism": {
+      "description": "Full replay produces identical output",
+      "runs": 2,
+      "matching_hashes": ["hidden_state_hash", "logits_hash", "token_id", "decoded_text"],
+      "status": "PENDING"
+    },
+    "no_randomness_in_greedy": {
+      "description": "Greedy sampling has no random component",
+      "temperature": 0.0,
+      "top_k": 1,
+      "expected_variance": 0,
+      "status": "PENDING"
+    }
+  },
+  "invariants": {
+    "argmax_deterministic": true,
+    "no_floating_point_drift": true,
+    "tokenizer_decode_consistent": true,
+    "bos_eos_handling_stable": true
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "sampling_mode": "greedy",
+    "temperature": 0.0,
+    "top_k": 1,
+    "deterministic_output": null,
+    "token_variance_across_runs": null,
+    "hash_matches": false
+  },
+  "evidence_path": "evidence/2026-07-24-56ef83e/sampling_determinism.json",
+  "verification_method": "Multiple runs with hash comparison",
+  "success_criteria": [
+    "Greedy sampling produces identical token from same hidden state",
+    "Full replay produces identical output hashes",
+    "No variance in token selection across runs",
+    "Tokenizer decode is consistent"
+  ],
+  "notes": [
+    "VAL-057 is the final boundary before complete inference validation",
+    "Greedy sampling (temp=0, top_k=1) removes all randomness",
+    "Determinism proves no uninitialized memory or race conditions",
+    "Once VAL-057 passes, the inference path is proven end-to-end"
+  ],
+  "next_step": "Complete inference validation - optimization phase"
+}

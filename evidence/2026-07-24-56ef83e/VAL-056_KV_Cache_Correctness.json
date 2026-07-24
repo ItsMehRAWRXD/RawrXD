@@ -53,12 +53,20 @@
   "execution_results": {
     "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
     "kv_cache_initialized": true,
+    "kv_allocation": {
+      "k_cache_mb": 17.0,
+      "v_cache_mb": 17.0,
+      "total_mb": 34.0,
+      "layers": 34,
+      "max_context": 128
+    },
     "initial_position": 0,
-    "final_position": null,
-    "writes_verified": false,
-    "attention_window_verified": false,
+    "final_position": 55,
+    "reset_state_verified": true,
+    "writes_verified": true,
+    "attention_window_verified": true,
     "determinism_verified": false,
-    "reset_isolation_verified": false
+    "reset_isolation_verified": true
   },
   "invariants": {
     "kv_position_increments": true,
