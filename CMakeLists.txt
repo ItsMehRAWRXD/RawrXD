@@ -1664,6 +1664,75 @@ if(MSVC)
 endif()
 
 # =============================================================================
+# OMEGA-1 Language Bindings Build Targets
+# =============================================================================
+
+# C# Bindings
+if(WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/csharp/Omega1Engine.csproj")
+    add_custom_target(Omega1Bindings-CSharp
+        COMMENT "Building C# OMEGA-1 bindings"
+    )
+    add_custom_command(TARGET Omega1Bindings-CSharp
+        COMMAND dotnet build "${CMAKE_CURRENT_SOURCE_DIR}/bindings/csharp/Omega1Engine.csproj" -c Release
+        COMMENT "Building C# bindings"
+        VERBATIM
+    )
+endif()
+
+# Rust Bindings
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/rust/omega1_engine/Cargo.toml")
+    add_custom_target(Omega1Bindings-Rust
+        COMMENT "Building Rust OMEGA-1 bindings"
+    )
+    add_custom_command(TARGET Omega1Bindings-Rust
+        COMMAND cargo build --release --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/bindings/rust/omega1_engine/Cargo.toml"
+        COMMENT "Building Rust bindings"
+        VERBATIM
+    )
+endif()
+
+# Go Bindings
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/go/omega1/go.mod")
+    add_custom_target(Omega1Bindings-Go
+        COMMENT "Building Go OMEGA-1 bindings"
+    )
+    add_custom_command(TARGET Omega1Bindings-Go
+        COMMAND go build -C "${CMAKE_CURRENT_SOURCE_DIR}/bindings/go/omega1"
+        COMMENT "Building Go bindings"
+        VERBATIM
+    )
+endif()
+
+# Python Bindings (validation only - no build needed)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/python/omega1_engine.py")
+    add_custom_target(Omega1Bindings-Python
+        COMMENT "Validating Python OMEGA-1 bindings"
+    )
+    add_custom_command(TARGET Omega1Bindings-Python
+        COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/bindings/python/omega1_engine.py" --help
+        COMMENT "Validating Python bindings"
+        VERBATIM
+    )
+endif()
+
+# Combined bindings target
+add_custom_target(Omega1Bindings
+    COMMENT "Building all OMEGA-1 language bindings"
+)
+if(TARGET Omega1Bindings-CSharp)
+    add_dependencies(Omega1Bindings Omega1Bindings-CSharp)
+endif()
+if(TARGET Omega1Bindings-Rust)
+    add_dependencies(Omega1Bindings Omega1Bindings-Rust)
+endif()
+if(TARGET Omega1Bindings-Go)
+    add_dependencies(Omega1Bindings Omega1Bindings-Go)
+endif()
+if(TARGET Omega1Bindings-Python)
+    add_dependencies(Omega1Bindings Omega1Bindings-Python)
+endif()
+
+# =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
 add_subdirectory(src/reverse_engineering)

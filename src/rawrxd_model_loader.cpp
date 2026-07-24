@@ -3250,8 +3250,17 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
     for (auto d : t.dims)
         ne *= d;
 
-    if (t.type == 0)
-    {  // F32
+    // WORKAROUND: Force eager loading for token_embd.weight to avoid lazy load hang
+    // This is a temporary fix while we debug the lazy loading issue
+    bool forceEager = (name == "token_embd.weight" || name.find("embed") != std::string::npos);
+
+    if (t.type == 0 || forceEager)
+    {  // F32 or forced eager
+        if (forceEager && t.type != 0)
+        {
+            printf("[RawrXD] WORKAROUND: Force eager load for %s (type=%u)\n", name.c_str(), t.type);
+        }
+        
         t.cpuFloatData.resize(ne);
         const size_t byteCount = ne * sizeof(float);
         void* incidentalBase = nullptr;
@@ -3260,6 +3269,11 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
             return nullptr;
         memcpy(t.cpuFloatData.data(), incidentalData, byteCount);
         UnmapIncidentalWindow(incidentalBase);
+        
+        if (forceEager)
+        {
+            printf("[RawrXD] WORKAROUND: Eager load complete for %s (%zu elements)\n", name.c_str(), t.cpuFloatData.size());
+        }
     }
     else
     {
