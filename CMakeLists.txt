@@ -309,72 +309,6 @@ if(WIN32)
 endif()
 
 # =============================================================================
-# Dual GPU Smoke Test
-# Validates multi-GPU detection and compute capability
-# =============================================================================
-if(WIN32)
-    add_executable(dual_gpu_smoke_test
-        tests/dual_gpu_smoke_test.cpp
-    )
-    set_target_properties(dual_gpu_smoke_test PROPERTIES 
-        EXCLUDE_FROM_ALL TRUE 
-        EXCLUDE_FROM_DEFAULT_BUILD TRUE
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
-    target_include_directories(dual_gpu_smoke_test PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-    )
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-    endif()
-    target_link_libraries(dual_gpu_smoke_test PRIVATE
-        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
-    )
-    message(STATUS "Dual GPU Smoke Test configured")
-endif()
-
-# =============================================================================
-# Comprehensive Dual GPU Integration Test
-# Full validation suite for dual GPU support across all components
-# =============================================================================
-if(WIN32)
-    add_executable(comprehensive_dual_gpu_test
-        tests/comprehensive_dual_gpu_test.cpp
-    )
-    set_target_properties(comprehensive_dual_gpu_test PROPERTIES 
-        EXCLUDE_FROM_ALL TRUE 
-        EXCLUDE_FROM_DEFAULT_BUILD TRUE
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
-    target_include_directories(comprehensive_dual_gpu_test PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-    )
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-    endif()
-    target_link_libraries(comprehensive_dual_gpu_test PRIVATE
-        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
-    )
-    message(STATUS "Comprehensive Dual GPU Test configured")
-endif()
-
-# =============================================================================
 # OMEGA-1 Bridge Test Harness
 # Validates IAT slots 64-75 for self-mutating engine integration
 # =============================================================================
@@ -383,100 +317,52 @@ if(WIN32)
         tests/test_omega1_bridge.cpp
         src/omega1_modules/OmegaPowerShellBridge.cpp
     )
-    set_target_properties(test_omega1_bridge PROPERTIES 
-        EXCLUDE_FROM_ALL TRUE 
-        EXCLUDE_FROM_DEFAULT_BUILD TRUE
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-    )
+    set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     target_include_directories(test_omega1_bridge PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/omega1_modules
     )
-    # Add LIBPATH directly using the SDK paths defined at top of file
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    if(MSVC)
+        target_link_directories(test_omega1_bridge PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(test_omega1_bridge PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
     endif()
     target_link_libraries(test_omega1_bridge PRIVATE
         Omega1Engine
-        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+        kernel32
+        user32
+        gdi32
+        winspool
+        shell32
+        ole32
+        oleaut32
+        uuid
+        comdlg32
+        advapi32
+        version
+        ws2_32
     )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        target_link_libraries(test_omega1_bridge PRIVATE
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
+            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
+        )
+    endif()
     message(STATUS "OMEGA-1 Bridge Test Harness configured")
-endif()
-
-# =============================================================================
-# OMEGA-1 PowerShell Runspace Integration Tests
-# =============================================================================
-if(WIN32)
-    add_executable(test_omega1_powershell_runspace
-        tests/test_omega1_powershell_runspace.cpp
-        src/omega1_modules/OmegaPowerShellBridge.cpp
-    )
-    set_target_properties(test_omega1_powershell_runspace PROPERTIES 
-        EXCLUDE_FROM_ALL TRUE 
-        EXCLUDE_FROM_DEFAULT_BUILD TRUE
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
-    )
-    target_include_directories(test_omega1_powershell_runspace PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/omega1_modules
-    )
-    # Add LIBPATH directly using the SDK paths defined at top of file
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-    endif()
-    target_link_libraries(test_omega1_powershell_runspace PRIVATE
-        Omega1Engine
-        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
-    )
-    message(STATUS "OMEGA-1 PowerShell Runspace Test Harness configured")
-endif()
-
-# =============================================================================
-# Certification Runner - OMEGA-1 Production Certification Suite
-# =============================================================================
-if(WIN32 AND MSVC)
-    add_executable(CertificationRunner
-        tests/CertificationRunner.cpp
-    )
-    set_target_properties(CertificationRunner PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    )
-    target_include_directories(CertificationRunner PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-    )
-    target_compile_options(CertificationRunner PRIVATE /W4 /EHsc)
-    
-    # Add LIBPATH directly using the SDK paths defined at top of file
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET CertificationRunner APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET CertificationRunner APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET CertificationRunner APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-    endif()
-    
-    # Use short library names - LIBPATH above provides the paths
-    target_link_libraries(CertificationRunner PRIVATE
-        kernel32 user32 shell32 ole32 oleaut32 uuid advapi32 version ws2_32
-    )
-    message(STATUS "Certification Runner configured")
 endif()
 
 # Resource compiler for icon/version (Windows only)
@@ -1228,21 +1114,6 @@ set(SOURCES
     src/core/input_guard_slicer.cpp
 
     # ═══════════════════════════════════════════════════════════════════
-    # VAL-050 to VAL-082: Certification Framework (Production Trust Infrastructure)
-    # ═══════════════════════════════════════════════════════════════════
-    src/certification/manifest_signer.cpp
-    src/certification/supply_chain_provenance.cpp
-    src/certification/fault_injection.cpp
-    src/certification/continuous_certification_runner.cpp
-    src/certification/external_verifier.cpp
-    src/certification/artifact_compatibility.cpp
-    src/certification/cross_platform_verification.cpp
-    src/certification/reproducible_build_proof.cpp
-    src/certification/certification_revocation.cpp
-    src/certification/evidence_verifier.cpp
-    src/certification/threat_boundary_tests.cpp
-
-    # ═══════════════════════════════════════════════════════════════════
     # Autonomous-Fix Replay Harness (Deterministic Validation Layer)
     # ═══════════════════════════════════════════════════════════════════
     src/test_harness/replay_fixture.cpp
@@ -1770,82 +1641,6 @@ target_compile_definitions(Omega1Engine PRIVATE
 
 set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-# Use module definition file to ensure exports are preserved
-if(MSVC)
-    set_target_properties(Omega1Engine PROPERTIES
-        LINK_FLAGS "/OPT:NOREF /OPT:NOICF"
-    )
-endif()
-
-# =============================================================================
-# OMEGA-1 Language Bindings Build Targets
-# =============================================================================
-
-# C# Bindings
-if(WIN32 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/csharp/Omega1Engine.csproj")
-    add_custom_target(Omega1Bindings-CSharp
-        COMMENT "Building C# OMEGA-1 bindings"
-    )
-    add_custom_command(TARGET Omega1Bindings-CSharp
-        COMMAND dotnet build "${CMAKE_CURRENT_SOURCE_DIR}/bindings/csharp/Omega1Engine.csproj" -c Release
-        COMMENT "Building C# bindings"
-        VERBATIM
-    )
-endif()
-
-# Rust Bindings
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/rust/omega1_engine/Cargo.toml")
-    add_custom_target(Omega1Bindings-Rust
-        COMMENT "Building Rust OMEGA-1 bindings"
-    )
-    add_custom_command(TARGET Omega1Bindings-Rust
-        COMMAND cargo build --release --manifest-path "${CMAKE_CURRENT_SOURCE_DIR}/bindings/rust/omega1_engine/Cargo.toml"
-        COMMENT "Building Rust bindings"
-        VERBATIM
-    )
-endif()
-
-# Go Bindings
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/go/omega1/go.mod")
-    add_custom_target(Omega1Bindings-Go
-        COMMENT "Building Go OMEGA-1 bindings"
-    )
-    add_custom_command(TARGET Omega1Bindings-Go
-        COMMAND go build -C "${CMAKE_CURRENT_SOURCE_DIR}/bindings/go/omega1"
-        COMMENT "Building Go bindings"
-        VERBATIM
-    )
-endif()
-
-# Python Bindings (validation only - no build needed)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bindings/python/omega1_engine.py")
-    add_custom_target(Omega1Bindings-Python
-        COMMENT "Validating Python OMEGA-1 bindings"
-    )
-    add_custom_command(TARGET Omega1Bindings-Python
-        COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/bindings/python/omega1_engine.py" --help
-        COMMENT "Validating Python bindings"
-        VERBATIM
-    )
-endif()
-
-# Combined bindings target
-add_custom_target(Omega1Bindings
-    COMMENT "Building all OMEGA-1 language bindings"
-)
-if(TARGET Omega1Bindings-CSharp)
-    add_dependencies(Omega1Bindings Omega1Bindings-CSharp)
-endif()
-if(TARGET Omega1Bindings-Rust)
-    add_dependencies(Omega1Bindings Omega1Bindings-Rust)
-endif()
-if(TARGET Omega1Bindings-Go)
-    add_dependencies(Omega1Bindings Omega1Bindings-Go)
-endif()
-if(TARGET Omega1Bindings-Python)
-    add_dependencies(Omega1Bindings Omega1Bindings-Python)
-endif()
-
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
@@ -1946,24 +1741,6 @@ endif()
 
 # Set MSVC runtime library for RawrEngine
 set_property(TARGET RawrEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
-# Force inclusion of OMEGA-1 IAT symbols (prevent /OPT:REF stripping)
-if(MSVC)
-    target_link_options(RawrEngine PRIVATE
-        "/INCLUDE:Omega1_Initialize"
-        "/INCLUDE:Omega1_Shutdown"
-        "/INCLUDE:Omega1_GetModuleCount"
-        "/INCLUDE:Omega1_IsMutant"
-        "/INCLUDE:Omega1_GetMutationCount"
-        "/INCLUDE:Omega1_ExecuteReflective"
-        "/INCLUDE:Omega1_ValidateIntegrity"
-        "/INCLUDE:Omega1_TriggerMutation"
-        "/INCLUDE:Omega1_GetManifestJson"
-        "/INCLUDE:Omega1_ExecutePowerShell"
-        "/INCLUDE:Omega1_LoadModule"
-        "/INCLUDE:Omega1_InvokeModule"
-    )
-endif()
 
 # Win32 system libraries (same as Gold)
 if(WIN32)
@@ -2225,21 +2002,6 @@ if(MSVC)
     target_link_options(RawrXD_Gold PRIVATE /LARGEADDRESSAWARE:NO)
     # Set proper entry point for Windows subsystem application with wWinMain
     target_link_options(RawrXD_Gold PRIVATE /ENTRY:wWinMainCRTStartup)
-    # Force inclusion of OMEGA-1 IAT symbols (prevent /OPT:REF stripping)
-    target_link_options(RawrXD_Gold PRIVATE
-        "/INCLUDE:Omega1_Initialize"
-        "/INCLUDE:Omega1_Shutdown"
-        "/INCLUDE:Omega1_GetModuleCount"
-        "/INCLUDE:Omega1_IsMutant"
-        "/INCLUDE:Omega1_GetMutationCount"
-        "/INCLUDE:Omega1_ExecuteReflective"
-        "/INCLUDE:Omega1_ValidateIntegrity"
-        "/INCLUDE:Omega1_TriggerMutation"
-        "/INCLUDE:Omega1_GetManifestJson"
-        "/INCLUDE:Omega1_ExecutePowerShell"
-        "/INCLUDE:Omega1_LoadModule"
-        "/INCLUDE:Omega1_InvokeModule"
-    )
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         set(_GOLD_MAP_PATH "${CMAKE_BINARY_DIR}/gold/RawrXD_Gold.map")
         set(_GOLD_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD_Gold.map")

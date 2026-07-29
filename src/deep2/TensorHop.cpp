@@ -61,6 +61,7 @@ void DMAScheduler::ExecutePending() {
 void DMAScheduler::ExecuteHop(const TensorHop& hop) {
     auto start = std::chrono::high_resolution_clock::now();
     
+<<<<<<< HEAD
     // DMA transfer implementation
     // Supports multiple backends: CPU memcpy, GPU async copy, OS-specific APIs
     // Dual GPU: hop.deviceId specifies target GPU (0 = CPU, 1+ = GPU index)
@@ -79,6 +80,20 @@ void DMAScheduler::ExecuteHop(const TensorHop& hop) {
         // For now, fall back to CPU copy (GPU memory is host-visible)
         std::memcpy((void*)dest, (const void*)src, hop.bytes);
     }
+=======
+    // Model DMA transfer (replace with actual DMA API)
+    // On Windows: could use CopyFileEx with callbacks or DirectStorage
+    // On Linux: io_uring or pread
+
+    // Current implementation: simple memory copy
+    volatile char* dest = (char*)hop.destAddr;
+    const volatile char* src = (const char*)hop.sourceAddr;
+    
+    // In real implementation, this would be:
+    // - DirectStorage API on Windows
+    // - cuMemcpyAsync for GPU
+    // - io_uring for async disk I/O
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     
     auto end = std::chrono::high_resolution_clock::now();
     double elapsedMs = std::chrono::duration_cast<std::chrono::microseconds>(

@@ -211,6 +211,7 @@ std::string path = recorder.SaveToDefaultLocation();
 ## Current Validation Ladder
 
 ```
+<<<<<<< HEAD
 VAL-050   Runtime Evidence Witness              ✅
 VAL-050.1 Startup Stack Safety                  ✅
 WIN32-STACK-OVERFLOW-001 Containment            ✅
@@ -250,6 +251,15 @@ Required path: `CLI handler → ExecutionRequest → NativeBackend → MappedMod
 - `evidence/VAL-051-2-TestPlan.md` — Next milestone plan
 - `evidence/VAL-051-2-IMPLEMENTATION-PLAN.md` — Implementation guide
 
+=======
+VAL-050 Runtime Evidence Witness        ✅
+VAL-050.1 Startup Stack Safety            ✅
+WIN32-STACK-OVERFLOW-001 Containment      ✅
+VAL-051 Witness System Implementation     ✅
+VAL-051.1 First Inference Witness         ⏳
+```
+
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
 ---
 
 ## Next Phase: First Inference Witness

@@ -33,9 +33,13 @@
 namespace Deep2 {
 
 // ============================================================================
+<<<<<<< HEAD
 // SHA-256 Implementation
 // Complete implementation - production-ready for patch integrity verification
 // Can be replaced with OpenSSL/Bcrypt for FIPS compliance if required
+=======
+// SHA-256 Implementation (simplified - use OpenSSL in production)
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
 // ============================================================================
 
 // SHA-256 constants
@@ -590,14 +594,21 @@ PatchSafety::PreFlightCheck PatchSafety::runPreFlight(const std::string& patchId
         result.memoryAvailable = false;
     }
 
+<<<<<<< HEAD
     // Check 2: Stack space validation
     // Verify stack is accessible and has sufficient remaining space
+=======
+    // Check 2: Stack space (simplified - check if we can allocate on stack)
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     {
         volatile char stackProbe[4096];
         stackProbe[0] = 1; stackProbe[4095] = 2;
         result.stackSpaceAvailable = (stackProbe[0] == 1 && stackProbe[4095] == 2);
+<<<<<<< HEAD
         // Note: Full stack depth check would require OS-specific APIs
         // This validates basic stack accessibility for patch operations
+=======
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     }
 
     // Check 3: No active watchdog in panic state
@@ -678,6 +689,7 @@ bool PatchSafety::verifySystemHealth() {
     // Check 2: Stack space (query current thread stack)
     MEMORY_BASIC_INFORMATION mbi;
     if (VirtualQuery(&mbi, &mbi, sizeof(mbi))) {
+<<<<<<< HEAD
         // Calculate stack usage percentage
         // Stack grows downward on x64, so check if we're near the limit
         size_t stackUsed = (size_t)mbi.AllocationBase - (size_t)mbi.BaseAddress;
@@ -686,6 +698,10 @@ bool PatchSafety::verifySystemHealth() {
         if (stackCommitted < 256 * 1024) {
             issues.push_back("Low stack space: " + std::to_string(stackCommitted / 1024) + "KB remaining");
         }
+=======
+        // Rough estimate: if stack is near limit, be cautious
+        // This is a simplified check
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     }
     
     // Check 3: Patch system not already in error state
@@ -743,12 +759,16 @@ PatchOperationGuard::PatchOperationGuard(const std::string& patchId, const std::
 PatchOperationGuard::~PatchOperationGuard() {
     if (valid_ && !success_) {
         printf("[SAFETY] Operation failed, initiating rollback: %s\n", operation_.c_str());
+<<<<<<< HEAD
         // Trigger automatic rollback on failure
         auto& patcher = GetHotPatcher();
         if (patcher.isPatchActive(patchId_)) {
             patcher.rollback(patchId_);
             printf("[SAFETY] Rollback completed for patch: %s\n", patchId_.c_str());
         }
+=======
+        // In real implementation, trigger rollback here
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     }
     CrashRecovery::clearContext();
 }

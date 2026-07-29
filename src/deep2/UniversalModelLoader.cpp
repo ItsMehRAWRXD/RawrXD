@@ -10,7 +10,10 @@
 #include <algorithm>
 #include <fstream>
 #include <cstdint>
+<<<<<<< HEAD
 #include <zlib.h>  // For ZIP decompression
+=======
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
 
 #ifdef _MSC_VER
     #include <intrin.h>
@@ -934,6 +937,7 @@ static bool ReadZipEntryData(std::ifstream& file, const ZipEntry& entry, std::ve
     data.resize(entry.compressedSize);
     file.read(reinterpret_cast<char*>(data.data()), entry.compressedSize);
     
+<<<<<<< HEAD
     // Handle compressed entries
     if (entry.compressionMethod != 0) {
         // Compression method 8 = DEFLATE (zlib)
@@ -953,6 +957,13 @@ static bool ReadZipEntryData(std::ifstream& file, const ZipEntry& entry, std::ve
                    entry.compressionMethod);
             return false;
         }
+=======
+    // For now, only support stored (uncompressed) entries
+    // TODO: Add zlib decompression for compressed entries
+    if (entry.compressionMethod != 0) {
+        // Would need zlib decompression here
+        return false;
+>>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
     }
     
     return file.good();
