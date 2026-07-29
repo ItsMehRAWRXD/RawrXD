@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-28T22:57:01.289216",
+  "timestamp": "2026-07-28T23:10:27.541177",
   "total_tests": 10,
   "passed": 10,
   "failed": 0,
@@ -35,7 +35,7 @@
     {
       "test": "Synchronization",
       "status": "PASS",
-      "latency_ms": 50.77075958251953
+      "latency_ms": 51.59282684326172
     },
     {
       "test": "Failover",
@@ -44,12 +44,12 @@
     {
       "test": "Throughput",
       "status": "PASS",
-      "tokens_per_sec": 19979.89769738127
+      "tokens_per_sec": 19990.039066875037
     },
     {
       "test": "Latency",
       "status": "PASS",
-      "latency_ms": 50.55737495422363
+      "latency_ms": 50.39191246032715
     },
     {
       "test": "Full Validation",

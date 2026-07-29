@@ -342,6 +342,39 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# Comprehensive Dual GPU Integration Test
+# Full validation suite for dual GPU support across all components
+# =============================================================================
+if(WIN32)
+    add_executable(comprehensive_dual_gpu_test
+        tests/comprehensive_dual_gpu_test.cpp
+    )
+    set_target_properties(comprehensive_dual_gpu_test PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(comprehensive_dual_gpu_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(comprehensive_dual_gpu_test PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Comprehensive Dual GPU Test configured")
+endif()
+
+# =============================================================================
 # OMEGA-1 Bridge Test Harness
 # Validates IAT slots 64-75 for self-mutating engine integration
 # =============================================================================
@@ -385,51 +418,30 @@ if(WIN32)
         tests/test_omega1_powershell_runspace.cpp
         src/omega1_modules/OmegaPowerShellBridge.cpp
     )
-    set_target_properties(test_omega1_powershell_runspace PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(test_omega1_powershell_runspace PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
     target_include_directories(test_omega1_powershell_runspace PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/omega1_modules
     )
-    if(MSVC)
-        target_link_directories(test_omega1_powershell_runspace PRIVATE ${_RAWR_MSVC_LIBPATHS})
-        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
-            if(EXISTS "${_rawr_lib}")
-                target_link_options(test_omega1_powershell_runspace PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
-            endif()
-        endforeach()
+    # Add LIBPATH directly using the SDK paths defined at top of file
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_omega1_powershell_runspace APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
     endif()
     target_link_libraries(test_omega1_powershell_runspace PRIVATE
         Omega1Engine
-        kernel32
-        user32
-        gdi32
-        winspool
-        shell32
-        ole32
-        oleaut32
-        uuid
-        comdlg32
-        advapi32
-        version
-        ws2_32
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
     )
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        target_link_libraries(test_omega1_powershell_runspace PRIVATE
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
-        )
-    endif()
     message(STATUS "OMEGA-1 PowerShell Runspace Test Harness configured")
 endif()
 

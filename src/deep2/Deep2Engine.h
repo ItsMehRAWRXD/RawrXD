@@ -129,6 +129,11 @@ struct EngineConfig {
     
     // Model path for GGUF loading
     std::string modelPath;
+    
+    // Dual GPU Configuration
+    uint32_t numDevices = 1;           // Number of compute devices (1 = CPU only, 2+ = multi-GPU)
+    uint32_t gpuLayers = 0;            // Number of layers to offload to GPU (0 = CPU only)
+    std::vector<uint32_t> deviceLayerSplit;  // Layer ranges per device for load balancing
 };
 
 // ============================================================================

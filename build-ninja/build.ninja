@@ -274,6 +274,48 @@ build bin\dual_gpu_smoke_test.exe: CXX_EXECUTABLE_LINKER__dual_gpu_smoke_test_Re
   TARGET_SUPPORT_DIR = CMakeFiles\dual_gpu_smoke_test.dir
 
 # =============================================================================
+# Object build statements for EXECUTABLE target comprehensive_dual_gpu_test
+
+
+#############################################
+# Order-only phony target for comprehensive_dual_gpu_test
+
+build cmake_object_order_depends_target_comprehensive_dual_gpu_test: phony || .
+
+build CMakeFiles\comprehensive_dual_gpu_test.dir\tests\comprehensive_dual_gpu_test.cpp.obj: CXX_COMPILER__comprehensive_dual_gpu_test_unscanned_Release D$:\rawrxd\tests\comprehensive_dual_gpu_test.cpp || cmake_object_order_depends_target_comprehensive_dual_gpu_test
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MD /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\comprehensive_dual_gpu_test.dir
+  OBJECT_FILE_DIR = CMakeFiles\comprehensive_dual_gpu_test.dir\tests
+  TARGET_COMPILE_PDB = CMakeFiles\comprehensive_dual_gpu_test.dir\
+  TARGET_PDB = bin\comprehensive_dual_gpu_test.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\comprehensive_dual_gpu_test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target comprehensive_dual_gpu_test
+
+
+#############################################
+# Link the executable bin\comprehensive_dual_gpu_test.exe
+
+build bin\comprehensive_dual_gpu_test.exe: CXX_EXECUTABLE_LINKER__comprehensive_dual_gpu_test_Release CMakeFiles\comprehensive_dual_gpu_test.dir\tests\comprehensive_dual_gpu_test.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MD
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console  /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64" /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64" /LIBPATH:"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64"  /LTCG
+  LINK_LIBRARIES = kernel32.lib  user32.lib  gdi32.lib  winspool.lib  shell32.lib  ole32.lib  oleaut32.lib  uuid.lib  comdlg32.lib  advapi32.lib  version.lib  ws2_32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  OBJECT_DIR = CMakeFiles\comprehensive_dual_gpu_test.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\comprehensive_dual_gpu_test.dir\
+  TARGET_FILE = bin\comprehensive_dual_gpu_test.exe
+  TARGET_IMPLIB = comprehensive_dual_gpu_test.lib
+  TARGET_PDB = bin\comprehensive_dual_gpu_test.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\comprehensive_dual_gpu_test.dir
+
+# =============================================================================
 # Object build statements for EXECUTABLE target test_omega1_bridge
 
 
@@ -285,7 +327,7 @@ build cmake_object_order_depends_target_test_omega1_bridge: phony || cmake_objec
 build CMakeFiles\test_omega1_bridge.dir\tests\test_omega1_bridge.cpp.obj: CXX_COMPILER__test_omega1_bridge_unscanned_Release D$:\rawrxd\tests\test_omega1_bridge.cpp || cmake_object_order_depends_target_test_omega1_bridge
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MD /GS- /sdl-
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
   INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\omega1_modules -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_omega1_bridge.dir
   OBJECT_FILE_DIR = CMakeFiles\test_omega1_bridge.dir\tests
@@ -296,7 +338,7 @@ build CMakeFiles\test_omega1_bridge.dir\tests\test_omega1_bridge.cpp.obj: CXX_CO
 build CMakeFiles\test_omega1_bridge.dir\src\omega1_modules\OmegaPowerShellBridge.cpp.obj: CXX_COMPILER__test_omega1_bridge_unscanned_Release D$:\rawrxd\src\omega1_modules\OmegaPowerShellBridge.cpp || cmake_object_order_depends_target_test_omega1_bridge
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MD /GS- /sdl-
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
   INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\omega1_modules -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_omega1_bridge.dir
   OBJECT_FILE_DIR = CMakeFiles\test_omega1_bridge.dir\src\omega1_modules
@@ -314,7 +356,7 @@ build CMakeFiles\test_omega1_bridge.dir\src\omega1_modules\OmegaPowerShellBridge
 
 build bin\test_omega1_bridge.exe: CXX_EXECUTABLE_LINKER__test_omega1_bridge_Release CMakeFiles\test_omega1_bridge.dir\tests\test_omega1_bridge.cpp.obj CMakeFiles\test_omega1_bridge.dir\src\omega1_modules\OmegaPowerShellBridge.cpp.obj | Omega1Engine.lib || Omega1Engine.lib
   CONFIG = Release
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MD
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console  /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64" /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64" /LIBPATH:"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64"  /LTCG
   LINK_LIBRARIES = Omega1Engine.lib  kernel32.lib  user32.lib  gdi32.lib  winspool.lib  shell32.lib  ole32.lib  oleaut32.lib  uuid.lib  comdlg32.lib  advapi32.lib  version.lib  ws2_32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   OBJECT_DIR = CMakeFiles\test_omega1_bridge.dir
@@ -338,7 +380,7 @@ build cmake_object_order_depends_target_test_omega1_powershell_runspace: phony |
 build CMakeFiles\test_omega1_powershell_runspace.dir\tests\test_omega1_powershell_runspace.cpp.obj: CXX_COMPILER__test_omega1_powershell_runspace_unscanned_Release D$:\rawrxd\tests\test_omega1_powershell_runspace.cpp || cmake_object_order_depends_target_test_omega1_powershell_runspace
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MD /GS- /sdl-
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
   INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\omega1_modules -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_omega1_powershell_runspace.dir
   OBJECT_FILE_DIR = CMakeFiles\test_omega1_powershell_runspace.dir\tests
@@ -349,7 +391,7 @@ build CMakeFiles\test_omega1_powershell_runspace.dir\tests\test_omega1_powershel
 build CMakeFiles\test_omega1_powershell_runspace.dir\src\omega1_modules\OmegaPowerShellBridge.cpp.obj: CXX_COMPILER__test_omega1_powershell_runspace_unscanned_Release D$:\rawrxd\src\omega1_modules\OmegaPowerShellBridge.cpp || cmake_object_order_depends_target_test_omega1_powershell_runspace
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MD /GS- /sdl-
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++latest -MT /GS- /sdl-
   INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\omega1_modules -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_omega1_powershell_runspace.dir
   OBJECT_FILE_DIR = CMakeFiles\test_omega1_powershell_runspace.dir\src\omega1_modules
@@ -365,11 +407,11 @@ build CMakeFiles\test_omega1_powershell_runspace.dir\src\omega1_modules\OmegaPow
 #############################################
 # Link the executable bin\test_omega1_powershell_runspace.exe
 
-build bin\test_omega1_powershell_runspace.exe: CXX_EXECUTABLE_LINKER__test_omega1_powershell_runspace_Release CMakeFiles\test_omega1_powershell_runspace.dir\tests\test_omega1_powershell_runspace.cpp.obj CMakeFiles\test_omega1_powershell_runspace.dir\src\omega1_modules\OmegaPowerShellBridge.cpp.obj | Omega1Engine.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\kernel32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\user32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\gdi32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\winspool.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\shell32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\ole32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\oleaut32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\uuid.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\comdlg32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\advapi32.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\version.lib C$:\Program$ Files$ (x86)\Windows$ Kits\10\Lib\10.0.22621.0\um\x64\ws2_32.lib || Omega1Engine.lib
+build bin\test_omega1_powershell_runspace.exe: CXX_EXECUTABLE_LINKER__test_omega1_powershell_runspace_Release CMakeFiles\test_omega1_powershell_runspace.dir\tests\test_omega1_powershell_runspace.cpp.obj CMakeFiles\test_omega1_powershell_runspace.dir\src\omega1_modules\OmegaPowerShellBridge.cpp.obj | Omega1Engine.lib || Omega1Engine.lib
   CONFIG = Release
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MD
-  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = Omega1Engine.lib  kernel32.lib  user32.lib  gdi32.lib  winspool.lib  shell32.lib  ole32.lib  oleaut32.lib  uuid.lib  comdlg32.lib  advapi32.lib  version.lib  ws2_32.lib  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\kernel32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\user32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\gdi32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\winspool.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\shell32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\ole32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\oleaut32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\uuid.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\comdlg32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\advapi32.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\version.lib"  "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\ws2_32.lib"  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console  /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64" /LIBPATH:"C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64" /LIBPATH:"C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64"  /LTCG
+  LINK_LIBRARIES = Omega1Engine.lib  kernel32.lib  user32.lib  gdi32.lib  winspool.lib  shell32.lib  ole32.lib  oleaut32.lib  uuid.lib  comdlg32.lib  advapi32.lib  version.lib  ws2_32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   OBJECT_DIR = CMakeFiles\test_omega1_powershell_runspace.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
@@ -17579,6 +17621,10 @@ build comprehensive_benchmark: phony bin\comprehensive_benchmark.exe
 
 build comprehensive_benchmark.exe: phony bin\comprehensive_benchmark.exe
 
+build comprehensive_dual_gpu_test: phony bin\comprehensive_dual_gpu_test.exe
+
+build comprehensive_dual_gpu_test.exe: phony bin\comprehensive_dual_gpu_test.exe
+
 build deterministic_replay_gate: phony tests\deterministic_replay_gate.exe
 
 build deterministic_replay_gate.exe: phony tests\deterministic_replay_gate.exe
@@ -17950,22 +17996,4 @@ build build.ninja D$:\rawrxd\build-ninja\cmake_install.cmake D$:\rawrxd\build-ni
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckCSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckIncludeFile.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckLibraryExists.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageHandleStandardArgs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageMessage.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython3.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython\Support.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindThreads.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindVulkan.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindZLIB.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CheckSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\SelectLibraryConfigurations.cmake CMakeCache.txt CMakeFiles\4.2.0\CMakeASM_MASMCompiler.cmake CMakeFiles\4.2.0\CMakeCCompiler.cmake CMakeFiles\4.2.0\CMakeCXXCompiler.cmake CMakeFiles\4.2.0\CMakeRCCompiler.cmake CMakeFiles\4.2.0\CMakeSystem.cmake D$:\rawrxd\CMakeLists.txt D$:\rawrxd\cmake\AutoFeatureRegistry.cmake D$:\rawrxd\cmake\IntentGuardrails.cmake D$:\rawrxd\src\reverse_engineering\CMakeLists.txt D$:\rawrxd\src\tools\CMakeLists.txt D$:\rawrxd\src\validation\CMakeLists.txt D$:\rawrxd\src\validation\kernels\CMakeLists.txt D$:\rawrxd\tests\CMakeLists.txt: phony
-
-
-#############################################
-# Clean all the built files.
-
-build clean: CLEAN
-
-
-#############################################
-# Print all primary targets available.
-
-build help: HELP
-
-
-#############################################
-# Make the all target the default.
-
-default all
+build C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeIniti
