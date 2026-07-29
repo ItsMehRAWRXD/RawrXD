@@ -1381,7 +1381,7 @@ void RawrXD_IDE_OnCommand(RawrXD_IDE* ide, WORD cmdId, WORD notifyCode, HWND hCt
     case IDM_TOOLS_EXT_MANAGER:   RawrXD_IDE_LaunchExtManager(ide);   break;
     case IDM_TOOLS_DEBUG_TELEMETRY: RawrXD_IDE_ShowDebugTelemetry(ide); break;
     case IDM_TOOLS_OPTIONS:
-        MessageBoxW(ide->hWndMain, L"Options dialog - TODO", L"Options", MB_OK);
+        RawrXD_IDE_ShowOptionsDialog(ide);
         break;
 
     /* ── Platform ───────────────────────────────────────────────────── */
