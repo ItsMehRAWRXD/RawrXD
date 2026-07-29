@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-07-28T22:57:01.289216",
+  "total_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "results": [
+    {
+      "test": "GPU Enumeration",
+      "status": "PASS",
+      "gpus_found": 2
+    },
+    {
+      "test": "P2P Access",
+      "status": "PASS"
+    },
+    {
+      "test": "Memory Split 50/50",
+      "status": "PASS",
+      "gpu0_gb": 11.5,
+      "gpu1_gb": 11.5
+    },
+    {
+      "test": "Memory Split 70/30",
+      "status": "PASS",
+      "gpu0_gb": 15.4,
+      "gpu1_gb": 6.6
+    },
+    {
+      "test": "Load Balancing",
+      "status": "PASS",
+      "gpu0_tasks": 520,
+      "gpu1_tasks": 480,
+      "balance_ratio": 0.9230769230769231
+    },
+    {
+      "test": "Synchronization",
+      "status": "PASS",
+      "latency_ms": 50.77075958251953
+    },
+    {
+      "test": "Failover",
+      "status": "PASS"
+    },
+    {
+      "test": "Throughput",
+      "status": "PASS",
+      "tokens_per_sec": 19979.89769738127
+    },
+    {
+      "test": "Latency",
+      "status": "PASS",
+      "latency_ms": 50.55737495422363
+    },
+    {
+      "test": "Full Validation",
+      "status": "PASS"
+    }
+  ]
+}
