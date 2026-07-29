@@ -1494,7 +1494,12 @@ CodeNavigator::CodeNavigator()
     , indexedFiles_()
 {}
 
-CodeNavigator::~CodeNavigator() {}
+CodeNavigator::~CodeNavigator() {
+    // Cleanup: clear all indexed data
+    symbols_.clear();
+    references_.clear();
+    indexedFiles_.clear();
+}
 
 void CodeNavigator::IndexFile(const std::string& path) {
     ParseFileForSymbols(path);
@@ -1588,7 +1593,11 @@ void CodeNavigator::ParseFileForSymbols(const std::string& path) {
 Autopilot::Autopilot() : autonomyLevel_(1), requireApprovalFileWrite_(true), 
                          requireApprovalTerminal_(true), requireApprovalGit_(true) {}
 
-Autopilot::~Autopilot() {}
+Autopilot::~Autopilot() {
+    // Cleanup: clear all tasks and reset state
+    tasks_.clear();
+    currentTask_ = nullptr;
+}
 
 void Autopilot::AddTask(const std::string& description) {
     Task task;

@@ -17,7 +17,12 @@ PlanOrchestrator::PlanOrchestrator()
     , onStepCompleted(nullptr)
     , onPlanCompleted(nullptr)
 {}
-PlanOrchestrator::~PlanOrchestrator() {}
+PlanOrchestrator::~PlanOrchestrator() {
+    // Cleanup: clear all plan steps
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_steps.clear();
+    m_currentStepIndex = 0;
+}
 
 void PlanOrchestrator::createPlan(const std::string& goal) {
     std::lock_guard<std::mutex> lock(m_mutex);

@@ -367,6 +367,27 @@ std::string GetOmegaRoot() {
 
 } // namespace Omega1Utils
 
+// ═════════════════════════════════════════════════════════════════════════
+// Bridge Initialization Functions
+// ═════════════════════════════════════════════════════════════════════════
+
+static PowerShellExecutor* g_bridgeExecutor = nullptr;
+
+bool InitializePowerShellBridge(const char* modulePath) {
+    if (g_bridgeExecutor) {
+        return true; // Already initialized
+    }
+    g_bridgeExecutor = new PowerShellExecutor(modulePath ? modulePath : "");
+    return g_bridgeExecutor->Initialize();
+}
+
+void ShutdownPowerShellBridge() {
+    if (g_bridgeExecutor) {
+        delete g_bridgeExecutor;
+        g_bridgeExecutor = nullptr;
+    }
+}
+
 } // namespace RawrXD::Bridge
 
 // ═════════════════════════════════════════════════════════════════════════
@@ -451,6 +472,48 @@ HPSMODULE Omega1_LoadModule(void* pContext, const char* moduleName) {
 BOOL Omega1_InvokeModule(void* pContext, HPSMODULE hModule, const char* function, char* output, uint32_t outputSize) {
     if (!g_omegaEngine) return FALSE;
     return g_omegaEngine->InvokeModule(hModule, function, output, outputSize) ? TRUE : FALSE;
+}
+
+// Additional C API exports for test compatibility
+void* Omega1_CreateContext() {
+    if (!g_omegaEngine) {
+        g_omegaEngine = new RawrXD::Bridge::Omega1Engine();
+        if (!g_omegaEngine->Initialize(0)) {
+            delete g_omegaEngine;
+            g_omegaEngine = nullptr;
+            return nullptr;
+        }
+    }
+    return g_omegaEngine;
+}
+
+void Omega1_DestroyContext(void* pContext) {
+    if (g_omegaEngine) {
+        delete g_omegaEngine;
+        g_omegaEngine = nullptr;
+    }
+}
+
+uint32_t Omega1_GetVersion(char* buffer, uint32_t bufferSize) {
+    if (!buffer || bufferSize == 0) return 0;
+    strncpy_s(buffer, bufferSize, "OMEGA-1 v1.0.0", _TRUNCATE);
+    return 1;
+}
+
+uint32_t Omega1_GetStatus(void* pContext) {
+    if (!g_omegaEngine) return 0;
+    return 1; // STATUS_OK
+}
+
+uint32_t Omega1_EnumModules(void* pContext, char* buffer, uint32_t bufferSize) {
+    if (!g_omegaEngine || !buffer) return 0;
+    auto modules = g_omegaEngine->GetLoadedModules();
+    std::string result;
+    for (const auto& mod : modules) {
+        result += std::string(mod.name) + ";";
+    }
+    strncpy_s(buffer, bufferSize, result.c_str(), _TRUNCATE);
+    return (uint32_t)modules.size();
 }
 
 } // extern "C"

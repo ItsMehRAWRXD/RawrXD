@@ -220,6 +220,11 @@ public:
     // Export lineage graph
     std::string exportLineageGraph(const std::string& format = "dot");
 
+    // Register an execution for tracking
+    void registerExecution(const std::string& executionId, const AgenticTaskNode& root);
+    void updateExecution(const std::string& executionId, const AgenticTaskNode& updated);
+    void completeExecution(const std::string& executionId);
+
 private:
     ExecutionQueryAPI() = default;
     
@@ -227,6 +232,17 @@ private:
     std::map<int, ExecutionEventCallback> m_eventCallbacks;
     std::map<int, AnomalyCallback> m_anomalyCallbacks;
     int m_nextSubscriptionId = 1;
+    
+    // Execution registry storage
+    struct ExecutionEntry {
+        AgenticTaskNode root;
+        std::chrono::steady_clock::time_point startTime;
+        std::chrono::steady_clock::time_point lastUpdate;
+        bool active = true;
+        bool paused = false;
+    };
+    std::map<std::string, ExecutionEntry> m_executions;
+    std::set<std::string> m_pausedExecutions;
 };
 
 // ============================================================================

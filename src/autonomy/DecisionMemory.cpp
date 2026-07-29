@@ -395,12 +395,317 @@ bool DecisionMemory::Save(const std::string& path) const {
 }
 
 bool DecisionMemory::Load(const std::string& path) {
-    // Load decision memory from JSON file
-    // This implementation provides the foundation for persistence
-    // TODO: Implement full JSON parsing using nlohmann/json library
-    // Current implementation returns false to indicate load not yet implemented
-    (void)path;
-    return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Clear existing data
+    entries_.clear();
+    decisionIdToIndex_.clear();
+    effectiveness_.clear();
+    
+    // Read file content
+    std::ifstream file(path);
+    if (!file.is_open()) return false;
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                         std::istreambuf_iterator<char>());
+    file.close();
+    
+    if (content.empty()) return false;
+    
+    // Parse config section
+    size_t configPos = content.find("\"config\":");
+    if (configPos != std::string::npos) {
+        size_t configStart = content.find('{', configPos);
+        size_t configEnd = content.find('}', configStart);
+        if (configStart != std::string::npos && configEnd != std::string::npos) {
+            // Parse maxEntries
+            size_t maxPos = content.find("\"maxEntries\":");
+            if (maxPos != std::string::npos && maxPos > configPos && maxPos < configEnd) {
+                maxPos += 13;
+                size_t maxEnd = content.find_first_of(",}", maxPos);
+                if (maxEnd != std::string::npos) {
+                    config_.maxEntries = static_cast<size_t>(std::stoull(content.substr(maxPos, maxEnd - maxPos)));
+                }
+            }
+            // Parse similarityThreshold
+            size_t simPos = content.find("\"similarityThreshold\":");
+            if (simPos != std::string::npos && simPos > configPos && simPos < configEnd) {
+                simPos += 22;
+                size_t simEnd = content.find_first_of(",}", simPos);
+                if (simEnd != std::string::npos) {
+                    config_.similarityThreshold = std::stod(content.substr(simPos, simEnd - simPos));
+                }
+            }
+            // Parse learningRate
+            size_t lrPos = content.find("\"learningRate\":");
+            if (lrPos != std::string::npos && lrPos > configPos && lrPos < configEnd) {
+                lrPos += 15;
+                size_t lrEnd = content.find_first_of(",}", lrPos);
+                if (lrEnd != std::string::npos) {
+                    config_.learningRate = std::stod(content.substr(lrPos, lrEnd - lrPos));
+                }
+            }
+            // Parse discountFactor
+            size_t dfPos = content.find("\"discountFactor\":");
+            if (dfPos != std::string::npos && dfPos > configPos && dfPos < configEnd) {
+                dfPos += 17;
+                size_t dfEnd = content.find_first_of(",}", dfPos);
+                if (dfEnd != std::string::npos) {
+                    config_.discountFactor = std::stod(content.substr(dfPos, dfEnd - dfPos));
+                }
+            }
+            // Parse enableForgetting
+            size_t efPos = content.find("\"enableForgetting\":");
+            if (efPos != std::string::npos && efPos > configPos && efPos < configEnd) {
+                efPos += 19;
+                size_t efEnd = content.find_first_of(",}", efPos);
+                if (efEnd != std::string::npos) {
+                    std::string efStr = content.substr(efPos, efEnd - efPos);
+                    config_.enableForgetting = (efStr.find("true") != std::string::npos);
+                }
+            }
+            // Parse forgettingAgeMs
+            size_t faPos = content.find("\"forgettingAgeMs\":");
+            if (faPos != std::string::npos && faPos > configPos && faPos < configEnd) {
+                faPos += 18;
+                size_t faEnd = content.find_first_of(",}", faPos);
+                if (faEnd != std::string::npos) {
+                    config_.forgettingAgeMs = std::stoi(content.substr(faPos, faEnd - faPos));
+                }
+            }
+        }
+    }
+    
+    // Parse entries array
+    size_t entriesPos = content.find("\"entries\":");
+    if (entriesPos != std::string::npos) {
+        size_t arrayStart = content.find('[', entriesPos);
+        size_t arrayEnd = content.find(']', arrayStart);
+        if (arrayStart != std::string::npos && arrayEnd != std::string::npos) {
+            size_t pos = arrayStart + 1;
+            while (pos < arrayEnd) {
+                size_t objStart = content.find('{', pos);
+                if (objStart == std::string::npos || objStart >= arrayEnd) break;
+                
+                size_t objEnd = content.find('}', objStart);
+                if (objEnd == std::string::npos || objEnd > arrayEnd) break;
+                
+                LearningEntry entry;
+                
+                // Parse entryId
+                size_t idPos = content.find("\"entryId\":\"", objStart);
+                if (idPos != std::string::npos && idPos < objEnd) {
+                    idPos += 11;
+                    size_t idEnd = content.find('"', idPos);
+                    if (idEnd != std::string::npos && idEnd < objEnd) {
+                        entry.entryId = content.substr(idPos, idEnd - idPos);
+                    }
+                }
+                
+                // Parse decisionId
+                size_t decIdPos = content.find("\"decisionId\":\"", objStart);
+                if (decIdPos != std::string::npos && decIdPos < objEnd) {
+                    decIdPos += 14;
+                    size_t decIdEnd = content.find('"', decIdPos);
+                    if (decIdEnd != std::string::npos && decIdEnd < objEnd) {
+                        entry.decisionId = content.substr(decIdPos, decIdEnd - decIdPos);
+                    }
+                }
+                
+                // Parse decisionType
+                size_t typePos = content.find("\"decisionType\":", objStart);
+                if (typePos != std::string::npos && typePos < objEnd) {
+                    typePos += 16;
+                    size_t typeEnd = content.find_first_of(",}", typePos);
+                    if (typeEnd != std::string::npos && typeEnd <= objEnd) {
+                        int typeVal = std::stoi(content.substr(typePos, typeEnd - typePos));
+                        entry.decisionType = static_cast<DecisionType>(typeVal);
+                    }
+                }
+                
+                // Parse predictedUtility
+                size_t utilPos = content.find("\"predictedUtility\":", objStart);
+                if (utilPos != std::string::npos && utilPos < objEnd) {
+                    utilPos += 20;
+                    size_t utilEnd = content.find_first_of(",}", utilPos);
+                    if (utilEnd != std::string::npos && utilEnd <= objEnd) {
+                        entry.predictedUtility = std::stod(content.substr(utilPos, utilEnd - utilPos));
+                    }
+                }
+                
+                // Parse predictedRisk
+                size_t riskPos = content.find("\"predictedRisk\":", objStart);
+                if (riskPos != std::string::npos && riskPos < objEnd) {
+                    riskPos += 17;
+                    size_t riskEnd = content.find_first_of(",}", riskPos);
+                    if (riskEnd != std::string::npos && riskEnd <= objEnd) {
+                        entry.predictedRisk = std::stod(content.substr(riskPos, riskEnd - riskPos));
+                    }
+                }
+                
+                // Parse actualReward
+                size_t rewardPos = content.find("\"actualReward\":", objStart);
+                if (rewardPos != std::string::npos && rewardPos < objEnd) {
+                    rewardPos += 16;
+                    size_t rewardEnd = content.find_first_of(",}", rewardPos);
+                    if (rewardEnd != std::string::npos && rewardEnd <= objEnd) {
+                        entry.actualReward = std::stod(content.substr(rewardPos, rewardEnd - rewardPos));
+                    }
+                }
+                
+                // Parse decisionTimestampMs
+                size_t tsPos = content.find("\"decisionTimestampMs\":", objStart);
+                if (tsPos != std::string::npos && tsPos < objEnd) {
+                    tsPos += 23;
+                    size_t tsEnd = content.find_first_of(",}", tsPos);
+                    if (tsEnd != std::string::npos && tsEnd <= objEnd) {
+                        entry.decisionTimestampMs = std::stoll(content.substr(tsPos, tsEnd - tsPos));
+                    }
+                }
+                
+                // Parse timeToOutcomeMs
+                size_t ttoPos = content.find("\"timeToOutcomeMs\":", objStart);
+                if (ttoPos != std::string::npos && ttoPos < objEnd) {
+                    ttoPos += 19;
+                    size_t ttoEnd = content.find_first_of(",}", ttoPos);
+                    if (ttoEnd != std::string::npos && ttoEnd <= objEnd) {
+                        entry.timeToOutcomeMs = std::stoll(content.substr(ttoPos, ttoEnd - ttoPos));
+                    }
+                }
+                
+                // Parse predictionError
+                size_t errPos = content.find("\"predictionError\":", objStart);
+                if (errPos != std::string::npos && errPos < objEnd) {
+                    errPos += 19;
+                    size_t errEnd = content.find_first_of(",}", errPos);
+                    if (errEnd != std::string::npos && errEnd <= objEnd) {
+                        entry.predictionError = std::stod(content.substr(errPos, errEnd - errPos));
+                    }
+                }
+                
+                // Parse wasSurprising
+                size_t surpPos = content.find("\"wasSurprising\":", objStart);
+                if (surpPos != std::string::npos && surpPos < objEnd) {
+                    surpPos += 17;
+                    size_t surpEnd = content.find_first_of(",}", surpPos);
+                    if (surpEnd != std::string::npos && surpEnd <= objEnd) {
+                        std::string surpStr = content.substr(surpPos, surpEnd - surpPos);
+                        entry.wasSurprising = (surpStr.find("true") != std::string::npos);
+                    }
+                }
+                
+                // Add entry if valid
+                if (!entry.entryId.empty()) {
+                    entries_.push_back(entry);
+                    if (!entry.decisionId.empty()) {
+                        decisionIdToIndex_[entry.decisionId] = entries_.size() - 1;
+                    }
+                }
+                
+                pos = objEnd + 1;
+            }
+        }
+    }
+    
+    // Parse effectiveness section
+    size_t effPos = content.find("\"effectiveness\":");
+    if (effPos != std::string::npos) {
+        size_t effStart = content.find('{', effPos);
+        size_t effEnd = content.find('}', effStart);
+        if (effStart != std::string::npos && effEnd != std::string::npos) {
+            size_t pos = effStart + 1;
+            while (pos < effEnd) {
+                size_t typeStart = content.find('"', pos);
+                if (typeStart == std::string::npos || typeStart >= effEnd) break;
+                
+                size_t typeEnd = content.find('"', typeStart + 1);
+                if (typeEnd == std::string::npos || typeEnd > effEnd) break;
+                
+                std::string typeStr = content.substr(typeStart + 1, typeEnd - typeStart - 1);
+                DecisionType type = DecisionType::NONE;
+                
+                // Map string to DecisionType
+                if (typeStr == "OPTIMIZE_PATH") type = DecisionType::OPTIMIZE_PATH;
+                else if (typeStr == "SPAWN_WORKERS") type = DecisionType::SPAWN_WORKERS;
+                else if (typeStr == "MERGE_TASKS") type = DecisionType::MERGE_TASKS;
+                else if (typeStr == "REBALANCE_RESOURCES") type = DecisionType::REBALANCE_RESOURCES;
+                else if (typeStr == "RECOVER_STATE") type = DecisionType::RECOVER_STATE;
+                else if (typeStr == "EXPLORE_ALTERNATIVE") type = DecisionType::EXPLORE_ALTERNATIVE;
+                else if (typeStr == "FREEZE_UNSTABLE_COMPONENT") type = DecisionType::FREEZE_UNSTABLE_COMPONENT;
+                else if (typeStr == "ADJUST_HARMONICS") type = DecisionType::ADJUST_HARMONICS;
+                else if (typeStr == "SCALE_UP") type = DecisionType::SCALE_UP;
+                else if (typeStr == "SCALE_DOWN") type = DecisionType::SCALE_DOWN;
+                else if (typeStr == "PAUSE_EXECUTION") type = DecisionType::PAUSE_EXECUTION;
+                else if (typeStr == "RESUME_EXECUTION") type = DecisionType::RESUME_EXECUTION;
+                else if (typeStr == "TERMINATE_GRACEFULLY") type = DecisionType::TERMINATE_GRACEFULLY;
+                
+                size_t objStart = content.find('{', typeEnd);
+                if (objStart == std::string::npos || objStart > effEnd) break;
+                
+                size_t objEnd = content.find('}', objStart);
+                if (objEnd == std::string::npos || objEnd > effEnd) break;
+                
+                DecisionEffectiveness eff;
+                eff.type = type;
+                
+                // Parse totalAttempts
+                size_t taPos = content.find("\"totalAttempts\":", objStart);
+                if (taPos != std::string::npos && taPos < objEnd) {
+                    taPos += 17;
+                    size_t taEnd = content.find_first_of(",}", taPos);
+                    if (taEnd != std::string::npos && taEnd <= objEnd) {
+                        eff.totalAttempts = std::stoi(content.substr(taPos, taEnd - taPos));
+                    }
+                }
+                
+                // Parse successfulAttempts
+                size_t saPos = content.find("\"successfulAttempts\":", objStart);
+                if (saPos != std::string::npos && saPos < objEnd) {
+                    saPos += 22;
+                    size_t saEnd = content.find_first_of(",}", saPos);
+                    if (saEnd != std::string::npos && saEnd <= objEnd) {
+                        eff.successfulAttempts = std::stoi(content.substr(saPos, saEnd - saPos));
+                    }
+                }
+                
+                // Parse averageReward
+                size_t arPos = content.find("\"averageReward\":", objStart);
+                if (arPos != std::string::npos && arPos < objEnd) {
+                    arPos += 17;
+                    size_t arEnd = content.find_first_of(",}", arPos);
+                    if (arEnd != std::string::npos && arEnd <= objEnd) {
+                        eff.averageReward = std::stod(content.substr(arPos, arEnd - arPos));
+                    }
+                }
+                
+                // Parse averagePredictionError
+                size_t apePos = content.find("\"averagePredictionError\":", objStart);
+                if (apePos != std::string::npos && apePos < objEnd) {
+                    apePos += 26;
+                    size_t apeEnd = content.find_first_of(",}", apePos);
+                    if (apeEnd != std::string::npos && apeEnd <= objEnd) {
+                        eff.averagePredictionError = std::stod(content.substr(apePos, apeEnd - apePos));
+                    }
+                }
+                
+                // Parse currentConfidence
+                size_t ccPos = content.find("\"currentConfidence\":", objStart);
+                if (ccPos != std::string::npos && ccPos < objEnd) {
+                    ccPos += 21;
+                    size_t ccEnd = content.find_first_of(",}", ccPos);
+                    if (ccEnd != std::string::npos && ccEnd <= objEnd) {
+                        eff.currentConfidence = std::stod(content.substr(ccPos, ccEnd - ccPos));
+                    }
+                }
+                
+                effectiveness_[type] = eff;
+                pos = objEnd + 1;
+            }
+        }
+    }
+    
+    initialized_ = true;
+    return true;
 }
 
 void DecisionMemory::Clear() {

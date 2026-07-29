@@ -350,46 +350,30 @@ if(WIN32)
         tests/test_omega1_bridge.cpp
         src/omega1_modules/OmegaPowerShellBridge.cpp
     )
-    set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    set_target_properties(test_omega1_bridge PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
     target_include_directories(test_omega1_bridge PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/omega1_modules
     )
-    if(MSVC)
-        target_link_directories(test_omega1_bridge PRIVATE ${_RAWR_MSVC_LIBPATHS})
-        set(_TEST_LINK_FLAGS "")
-        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
-            if(EXISTS "${_rawr_lib}")
-                target_link_options(test_omega1_bridge PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
-                list(APPEND _TEST_LINK_FLAGS "/LIBPATH:\"${_rawr_lib}\"")
-            endif()
-        endforeach()
-        if(_TEST_LINK_FLAGS)
-            string(REPLACE ";" " " _TEST_LINK_FLAGS_STR "${_TEST_LINK_FLAGS}")
-            set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " ${_TEST_LINK_FLAGS_STR}")
-        endif()
+    # Add LIBPATH directly using the SDK paths defined at top of file
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_omega1_bridge APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
     endif()
     target_link_libraries(test_omega1_bridge PRIVATE
         Omega1Engine
         kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
     )
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        target_link_libraries(test_omega1_bridge PRIVATE
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/winspool.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/shell32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ole32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/oleaut32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/uuid.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/comdlg32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/advapi32.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/version.lib"
-            "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
-        )
-    endif()
     message(STATUS "OMEGA-1 Bridge Test Harness configured")
 endif()
 

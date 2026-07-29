@@ -218,6 +218,12 @@ namespace RawrXD::Bridge {
         std::string GetOmegaRoot();
     }
 
+    // ═════════════════════════════════════════════════════════════════════════
+    // Bridge Initialization
+    // ═════════════════════════════════════════════════════════════════════════
+    bool InitializePowerShellBridge(const char* modulePath);
+    void ShutdownPowerShellBridge();
+
 } // namespace RawrXD::Bridge
 
 // ═════════════════════════════════════════════════════════════════════════════

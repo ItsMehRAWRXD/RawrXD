@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <fstream>
 #include <cstdint>
+#include <zlib.h>  // For ZIP decompression
 
 #ifdef _MSC_VER
     #include <intrin.h>
@@ -933,11 +934,25 @@ static bool ReadZipEntryData(std::ifstream& file, const ZipEntry& entry, std::ve
     data.resize(entry.compressedSize);
     file.read(reinterpret_cast<char*>(data.data()), entry.compressedSize);
     
-    // For now, only support stored (uncompressed) entries
-    // TODO: Add zlib decompression for compressed entries
+    // Handle compressed entries
     if (entry.compressionMethod != 0) {
-        // Would need zlib decompression here
-        return false;
+        // Compression method 8 = DEFLATE (zlib)
+        if (entry.compressionMethod == 8) {
+            // Decompress using zlib
+            uLongf uncompressedLen = entry.uncompressedSize;
+            std::vector<uint8_t> uncompressed(uncompressedLen);
+            int ret = uncompress(uncompressed.data(), &uncompressedLen,
+                                 data.data(), entry.compressedSize);
+            if (ret != Z_OK) {
+                printf("[UniversalModelLoader] zlib decompression failed: %d\n", ret);
+                return false;
+            }
+            data = std::move(uncompressed);
+        } else {
+            printf("[UniversalModelLoader] Unsupported compression method: %d\n",
+                   entry.compressionMethod);
+            return false;
+        }
     }
     
     return file.good();
