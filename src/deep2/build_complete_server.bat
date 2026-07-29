@@ -7,7 +7,7 @@ call "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Build\
 echo Building Deep2 Complete API Server...
 echo.
 
-cl.exe /W3 /O2 /nologo /EHsc /Fe:Deep2APIServer.exe Deep2APIServer_Complete.cpp ws2_32.lib
+cl.exe /W3 /O2 /nologo /EHsc /std:c++17 /Fe:Deep2APIServer.exe Deep2APIServer_Complete.cpp ws2_32.lib
 
 if errorlevel 1 (
     echo.

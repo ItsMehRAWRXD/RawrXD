@@ -1,10 +1,7 @@
 #include "plan_orchestrator.h"
-<<<<<<< HEAD
 #include <algorithm>
 #include <cctype>
-=======
 #include <iostream>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <sstream>
 
 namespace RawrXD {
@@ -16,15 +13,11 @@ std::string toLower(std::string s) {
 }
 }  // namespace
 
-<<<<<<< HEAD
 PlanOrchestrator::PlanOrchestrator()
     : m_currentStepIndex(0)
     , onStepCompleted(nullptr)
     , onPlanCompleted(nullptr)
 {}
-=======
-PlanOrchestrator::PlanOrchestrator() {}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 PlanOrchestrator::~PlanOrchestrator() {}
 
 void PlanOrchestrator::createPlan(const std::string& goal) {
@@ -36,7 +29,6 @@ void PlanOrchestrator::createPlan(const std::string& goal) {
 }
 
 void PlanOrchestrator::executeNextStep() {
-<<<<<<< HEAD
     Step completedStep;
     bool hasCompletedStep = false;
     bool planDone = false;
@@ -76,25 +68,6 @@ void PlanOrchestrator::executeNextStep() {
     }
 
     if (planDone && onPlanCompleted) {
-=======
-    std::lock_guard<std::mutex> lock(m_mutex);
-    if (m_currentStepIndex >= m_steps.size()) return;
-    
-    Step& step = m_steps[m_currentStepIndex];
-    
-    // Execute logic (Real implementation would dispatch to ToolRegistry)
-    // Here we simulate successful execution of the step logic for the structure sake
-    step.result = "Executed: " + step.description;
-    step.isComplete = true;
-    
-    if (onStepCompleted) {
-        onStepCompleted(step.result);
-    }
-    
-    m_currentStepIndex++;
-    
-    if (isComplete() && onPlanCompleted) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         onPlanCompleted("All steps completed.");
     }
 }

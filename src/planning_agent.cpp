@@ -5,7 +5,6 @@
 #include <sstream>
 #include <chrono>
 #include <random>
-<<<<<<< HEAD
 #include <thread>
 #include <queue>
 #include <unordered_set>
@@ -13,8 +12,6 @@
 #include <algorithm>
 #include <mutex>
 #include <fstream>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 using json = nlohmann::json;
 
@@ -161,24 +158,16 @@ void PlanningAgent::generateCodePlan(const std::string& goal) {
     t1.id = generateUUID();
     t1.title = "Analyze Requirements";
     t1.status = "pending";
-<<<<<<< HEAD
     t1.associatedAction.type = ActionType::SearchFiles;
     t1.associatedAction.params["query"] = goal;
     t1.associatedAction.description = "Search codebase for context: " + goal;
     m_tasks.push_back(t1);
 
-=======
-    t1.associatedAction.type = ActionType::SearchFiles; // Search for context
-    t1.associatedAction.params["query"] = goal;
-    m_tasks.push_back(t1);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // 2. Implement
     PlanningTask t2;
     t2.id = generateUUID();
     t2.title = "Implement Code";
     t2.status = "pending";
-<<<<<<< HEAD
     t2.dependsOn.push_back(t1.id);
     t2.associatedAction.type = ActionType::FileEdit;
     t2.associatedAction.description = "Implement: " + goal;
