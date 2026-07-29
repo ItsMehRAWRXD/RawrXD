@@ -5,7 +5,11 @@
 #include <fstream>
 #include <cstdint>
 
+<<<<<<< HEAD
 // burstc (metadata JSON parser excluded for zero-dep simplicity)
+=======
+// Simplified burstc (metadata JSON parser excluded for zero-dep simplicity)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Appends rawrxd.burst.plan to GGUF
 
 int main(int argc, char** argv) {

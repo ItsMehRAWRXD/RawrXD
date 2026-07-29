@@ -3,6 +3,7 @@
 #pragma once
 
 #include "agent_kernel_main.hpp"
+<<<<<<< HEAD
 #include "ToolExecutionEngine.hpp"
 #include "LLMClient.hpp"
 #include <filesystem>
@@ -10,6 +11,12 @@
 #include <algorithm>
 #include <mutex>
 #include <condition_variable>
+=======
+#include "QtReplacements.hpp"
+#include "ToolExecutionEngine.hpp"
+#include "LLMClient.hpp"
+#include <filesystem>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -35,15 +42,23 @@ inline String agentStateToString(AgentState state) {
     return L"unknown";
 }
 
+<<<<<<< HEAD
 // Agent configuration — C++20 String (std::wstring), no Qt
 struct AgentConfig {
     String model = L"qwen2.5-coder:14b";
     String ollamaHost = L"localhost";
+=======
+// Agent configuration
+struct AgentConfig {
+    QString model = "qwen2.5-coder:14b";
+    QString ollamaHost = "localhost";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int ollamaPort = 11434;
     int maxIterations = 50;
     int maxToolCalls = 100;
     int contextWindow = 32000;
     double temperature = 0.7;
+<<<<<<< HEAD
     String workingDirectory;
     bool autoApproveTools = false;
     bool useStreaming = true;
@@ -53,12 +68,26 @@ struct AgentConfig {
         JsonObject obj;
         obj[L"model"] = model;
         obj[L"ollamaHost"] = ollamaHost;
+=======
+    QString workingDirectory;
+    bool autoApproveTools = false;
+    QStringList dangerousTools = {"run_command", "delete_file", "write_file"};
+
+    JsonObject toJson() const {
+        JsonObject obj;
+        obj[L"model"] = model.toStdWString();
+        obj[L"ollamaHost"] = ollamaHost.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         obj[L"ollamaPort"] = static_cast<int64_t>(ollamaPort);
         obj[L"maxIterations"] = static_cast<int64_t>(maxIterations);
         obj[L"maxToolCalls"] = static_cast<int64_t>(maxToolCalls);
         obj[L"contextWindow"] = static_cast<int64_t>(contextWindow);
         obj[L"temperature"] = temperature;
+<<<<<<< HEAD
         obj[L"workingDirectory"] = workingDirectory;
+=======
+        obj[L"workingDirectory"] = workingDirectory.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         obj[L"autoApproveTools"] = autoApproveTools;
         return obj;
     }
@@ -77,11 +106,19 @@ struct AgentEvent {
     };
 
     Type type;
+<<<<<<< HEAD
     String message;
     JsonObject data;
     int64_t timestamp;
 
     AgentEvent(Type t, const String& msg = String())
+=======
+    QString message;
+    JsonObject data;
+    int64_t timestamp;
+
+    AgentEvent(Type t, const QString& msg = QString())
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         : type(t), message(msg)
     {
         timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -91,16 +128,26 @@ struct AgentEvent {
 
 using AgentEventCallback = std::function<void(const AgentEvent&)>;
 
+<<<<<<< HEAD
 // Task definition — C++20 String, no Qt
 struct AgentTask {
     String id;
     String description;
     String status;
     Vector<String> subtasks;
+=======
+// Task definition
+struct AgentTask {
+    QString id;
+    QString description;
+    QString status;
+    QStringList subtasks;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int progress = 0;
 
     JsonObject toJson() const {
         JsonObject obj;
+<<<<<<< HEAD
         obj[L"id"] = id;
         obj[L"description"] = description;
         obj[L"status"] = status;
@@ -108,6 +155,15 @@ struct AgentTask {
         JsonArray subs;
         for (const auto& s : subtasks) {
             subs.push_back(s);
+=======
+        obj[L"id"] = id.toStdWString();
+        obj[L"description"] = description.toStdWString();
+        obj[L"status"] = status.toStdWString();
+        obj[L"progress"] = static_cast<int64_t>(progress);
+        JsonArray subs;
+        for (const auto& s : subtasks) {
+            subs.push_back(s.toStdWString());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         obj[L"subtasks"] = subs;
         return obj;
@@ -119,6 +175,7 @@ class AgentContext {
 public:
     AgentContext() = default;
 
+<<<<<<< HEAD
     void setWorkingDirectory(const String& dir) {
         m_workingDirectory = dir;
     }
@@ -130,17 +187,35 @@ public:
 
     void addOpenFile(const String& path) {
         if (std::find(m_openFiles.begin(), m_openFiles.end(), path) == m_openFiles.end()) {
+=======
+    void setWorkingDirectory(const QString& dir) {
+        m_workingDirectory = dir;
+    }
+
+    QString workingDirectory() const {
+        return m_workingDirectory.isEmpty() ?
+            QString(std::filesystem::current_path().wstring()) : m_workingDirectory;
+    }
+
+    void addOpenFile(const QString& path) {
+        if (!m_openFiles.contains(path)) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             m_openFiles.push_back(path);
         }
     }
 
+<<<<<<< HEAD
     void removeOpenFile(const String& path) {
+=======
+    void removeOpenFile(const QString& path) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         auto it = std::find(m_openFiles.begin(), m_openFiles.end(), path);
         if (it != m_openFiles.end()) {
             m_openFiles.erase(it);
         }
     }
 
+<<<<<<< HEAD
     const Vector<String>& openFiles() const { return m_openFiles; }
 
     void setVariable(const String& name, const std::any& value) {
@@ -150,13 +225,27 @@ public:
     std::any variable(const String& name) const {
         auto it = m_variables.find(name);
         return it != m_variables.end() ? it->second : std::any{};
+=======
+    const QStringList& openFiles() const { return m_openFiles; }
+
+    void setVariable(const QString& name, const QVariant& value) {
+        m_variables[name] = value;
+    }
+
+    QVariant variable(const QString& name) const {
+        return m_variables.value(name);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     void addTask(const AgentTask& task) {
         m_tasks[task.id] = task;
     }
 
+<<<<<<< HEAD
     AgentTask* task(const String& id) {
+=======
+    AgentTask* task(const QString& id) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         auto it = m_tasks.find(id);
         return it != m_tasks.end() ? &it->second : nullptr;
     }
@@ -171,11 +260,19 @@ public:
 
     JsonObject toJson() const {
         JsonObject obj;
+<<<<<<< HEAD
         obj[L"workingDirectory"] = workingDirectory();
 
         JsonArray files;
         for (const auto& f : m_openFiles) {
             files.push_back(f);
+=======
+        obj[L"workingDirectory"] = workingDirectory().toStdWString();
+
+        JsonArray files;
+        for (const auto& f : m_openFiles) {
+            files.push_back(f.toStdWString());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         obj[L"openFiles"] = files;
 
@@ -189,10 +286,17 @@ public:
     }
 
 private:
+<<<<<<< HEAD
     String m_workingDirectory;
     Vector<String> m_openFiles;
     Map<String, std::any> m_variables;
     Map<String, AgentTask> m_tasks;
+=======
+    QString m_workingDirectory;
+    QStringList m_openFiles;
+    QMap<QString, QVariant> m_variables;
+    QMap<QString, AgentTask> m_tasks;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // Main Agent Orchestrator
@@ -212,7 +316,11 @@ public:
         m_llmClient.setTemperature(config.temperature);
         m_llmClient.setMaxTokens(config.contextWindow / 4); // Reserve 3/4 for context
 
+<<<<<<< HEAD
         if (!config.workingDirectory.empty()) {
+=======
+        if (!config.workingDirectory.isEmpty()) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             m_context.setWorkingDirectory(config.workingDirectory);
         }
 
@@ -233,7 +341,11 @@ public:
     }
 
     // Process user message
+<<<<<<< HEAD
     void processMessage(const String& message) {
+=======
+    void processMessage(const QString& message) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (m_state == AgentState::Thinking || m_state == AgentState::ExecutingTool) {
             return; // Already processing
         }
@@ -247,7 +359,11 @@ public:
     }
 
     // Run agent loop asynchronously
+<<<<<<< HEAD
     void runAgentLoopAsync(const String& message) {
+=======
+    void runAgentLoopAsync(const QString& message) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::thread([this, message]() {
             processMessage(message);
         }).detach();
@@ -270,6 +386,7 @@ public:
 
     // Get config
     const AgentConfig& config() const { return m_config; }
+<<<<<<< HEAD
     AgentConfig& config() { return m_config; }
 
     // Update model and reinitialize LLM client
@@ -286,14 +403,21 @@ public:
             m_toolEngine->context().workingDirectory = dir;
         }
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // Check if LLM is available
     bool isLLMAvailable() {
         return m_llmClient.isAvailable();
     }
 
+<<<<<<< HEAD
     // List available models (C++20 Vector<String>)
     Vector<String> listModels() {
+=======
+    // List available models
+    QStringList listModels() {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return m_llmClient.listModels();
     }
 
@@ -308,7 +432,11 @@ private:
         emitEvent(AgentEvent::Type::StateChanged, agentStateToString(state));
     }
 
+<<<<<<< HEAD
     void emitEvent(AgentEvent::Type type, const String& message, const JsonObject& data = {}) {
+=======
+    void emitEvent(AgentEvent::Type type, const QString& message, const JsonObject& data = {}) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (m_eventCallback) {
             AgentEvent event(type, message);
             event.data = data;
@@ -317,6 +445,7 @@ private:
     }
 
     void setupSystemPrompt() {
+<<<<<<< HEAD
         String prompt = L"You are RawrXD, an autonomous AI coding assistant with access to powerful tools.\n\n"
             L"Your capabilities include:\n"
             L"- Reading and writing files\n"
@@ -331,6 +460,25 @@ private:
             L"4. Ask for clarification when requirements are unclear\n"
             L"5. Be concise but thorough in explanations\n\n"
             L"Current working directory: ";
+=======
+        QString prompt = R"(You are RawrXD, an autonomous AI coding assistant with access to powerful tools.
+
+Your capabilities include:
+- Reading and writing files
+- Running terminal commands
+- Searching code and documentation
+- Managing projects and builds
+- Analyzing code and suggesting improvements
+
+Guidelines:
+1. Always think step by step before taking action
+2. Use tools to gather information before making changes
+3. Verify your changes work correctly
+4. Ask for clarification when requirements are unclear
+5. Be concise but thorough in explanations
+
+Current working directory: )";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         prompt += m_context.workingDirectory();
 
         m_conversation.setSystemPrompt(prompt);
@@ -342,6 +490,7 @@ private:
         while (!m_shouldStop && m_iterationCount < m_config.maxIterations) {
             m_iterationCount++;
 
+<<<<<<< HEAD
             LLMResponse response;
 
             if (m_config.useStreaming) {
@@ -349,6 +498,10 @@ private:
             } else {
                 response = m_llmClient.complete(m_conversation.getMessages());
             }
+=======
+            // Get LLM response
+            auto response = m_llmClient.complete(m_conversation.getMessages());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             if (!response.success) {
                 setState(AgentState::Error);
@@ -356,13 +509,19 @@ private:
                 return;
             }
 
+<<<<<<< HEAD
             // Process response content (for non-streaming, emit full message; streaming already emitted chunks)
             if (!response.content.empty() && !m_config.useStreaming) {
+=======
+            // Process response content
+            if (!response.content.isEmpty()) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 emitEvent(AgentEvent::Type::MessageReceived, response.content);
             }
 
             // Check for tool calls
             if (response.toolCalls.empty()) {
+<<<<<<< HEAD
                 m_conversation.addAssistantMessage(response.content);
                 setState(AgentState::Completed);
                 emitEvent(AgentEvent::Type::Completed, L"Task completed");
@@ -375,12 +534,29 @@ private:
                 tcObj[L"id"] = tc.id;
                 JsonObject func;
                 func[L"name"] = tc.name;
+=======
+                // No tool calls - assistant is done
+                m_conversation.addAssistantMessage(response.content);
+                setState(AgentState::Completed);
+                emitEvent(AgentEvent::Type::Completed, "Task completed");
+                return;
+            }
+
+            // Add assistant message with tool calls
+            Vector<JsonObject> toolCallsJson;
+            for (const auto& tc : response.toolCalls) {
+                JsonObject tcObj;
+                tcObj[L"id"] = tc.id.toStdWString();
+                JsonObject func;
+                func[L"name"] = tc.name.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 func[L"arguments"] = tc.arguments;
                 tcObj[L"function"] = func;
                 toolCallsJson.push_back(tcObj);
             }
             m_conversation.addAssistantMessage(response.content, toolCallsJson);
 
+<<<<<<< HEAD
             for (const auto& toolCall : response.toolCalls) {
                 if (m_shouldStop) break;
                 if (m_toolCallCount >= m_config.maxToolCalls) {
@@ -388,17 +564,33 @@ private:
                     setState(AgentState::Error);
                     return;
                 }
+=======
+            // Execute tool calls
+            for (const auto& toolCall : response.toolCalls) {
+                if (m_shouldStop) break;
+                if (m_toolCallCount >= m_config.maxToolCalls) {
+                    emitEvent(AgentEvent::Type::Error, "Maximum tool calls reached");
+                    setState(AgentState::Error);
+                    return;
+                }
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 m_toolCallCount++;
                 executeToolCall(toolCall);
             }
         }
 
         if (m_iterationCount >= m_config.maxIterations) {
+<<<<<<< HEAD
             emitEvent(AgentEvent::Type::Error, L"Maximum iterations reached");
+=======
+            emitEvent(AgentEvent::Type::Error, "Maximum iterations reached");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             setState(AgentState::Error);
         }
     }
 
+<<<<<<< HEAD
     LLMResponse runStreamingCompletion() {
         LLMResponse result;
         std::mutex mtx;
@@ -434,18 +626,29 @@ private:
         return result;
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void executeToolCall(const ToolCall& toolCall) {
         setState(AgentState::ExecutingTool);
 
         JsonObject eventData;
+<<<<<<< HEAD
         eventData[L"tool"] = toolCall.name;
+=======
+        eventData[L"tool"] = toolCall.name.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         eventData[L"arguments"] = toolCall.arguments;
         emitEvent(AgentEvent::Type::ToolCalled, toolCall.name, eventData);
 
         // Check if tool requires approval
+<<<<<<< HEAD
         const String& toolName = toolCall.name;
         bool needsApproval = !m_config.autoApproveTools &&
             (std::find(m_config.dangerousTools.begin(), m_config.dangerousTools.end(), toolName) != m_config.dangerousTools.end());
+=======
+        bool needsApproval = !m_config.autoApproveTools &&
+            m_config.dangerousTools.contains(toolCall.name);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         if (needsApproval) {
             // In a real implementation, this would prompt the user
@@ -457,6 +660,7 @@ private:
         if (m_toolEngine) {
             result = m_toolEngine->execute(toolCall.name, toolCall.arguments);
         } else {
+<<<<<<< HEAD
             result = ToolResult::Error(L"Tool engine not configured");
         }
 
@@ -466,6 +670,17 @@ private:
 
         eventData[L"result"] = result.toJson();
         emitEvent(AgentEvent::Type::ToolResult, StringUtils::FromUtf8(resultJson), eventData);
+=======
+            result = ToolResult::Error("Tool engine not configured");
+        }
+
+        // Add result to conversation
+        QString resultStr = JsonParser::Serialize(result.toJson(), 2);
+        m_conversation.addToolResult(toolCall.id, toolCall.name, resultStr);
+
+        eventData[L"result"] = result.toJson();
+        emitEvent(AgentEvent::Type::ToolResult, resultStr, eventData);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         setState(AgentState::Thinking);
     }

@@ -7,6 +7,7 @@
  */
 
 #include "ai_completion_provider.h"
+#include "../deep2/Deep2Discovery.h"
 #include <iostream>
 #include <sstream>
 #include <thread>
@@ -78,6 +79,9 @@ AICompletionProvider::AICompletionProvider(void* parent)
     if (allowRemote != nullptr) {
         m_allowRemoteEndpoint = isTruthy(allowRemote);
     }
+    
+    // Auto-discover best backend on creation
+    discoverEndpoint();
 }
 
 AICompletionProvider::~AICompletionProvider()
@@ -98,7 +102,6 @@ void AICompletionProvider::setModelEndpoint(const std::string& endpoint) {
 void AICompletionProvider::setAllowRemoteEndpoint(bool enabled) {
     m_allowRemoteEndpoint = enabled;
 }
-
 void AICompletionProvider::setModel(const std::string& modelName) {
     m_modelName = modelName;
 }
@@ -325,6 +328,36 @@ std::string AICompletionProvider::callModel(const std::string& prompt) {
 
 std::string AICompletionProvider::generateFallbackCompletion(const std::string& prompt) {
     return "// AI Unavailable - Auto Fallback";
+}
+
+void AICompletionProvider::autoDiscoverEndpoint() {
+    discoverEndpoint();
+}
+
+void AICompletionProvider::discoverEndpoint() {
+    if (m_endpointDiscovered) return;
+    
+    // Use Deep2 Discovery to find best backend
+    auto backend = Deep2::Deep2Discovery::GetPreferredBackend();
+    
+    if (backend.native && backend.type == "deep2") {
+        fprintf(stderr, "[AICompletionProvider] Deep2 native backend detected: %s\n", backend.url.c_str());
+        m_modelEndpoint = backend.url;
+        m_modelName = "deep2-native";
+        m_usingDeep2Native = true;
+    } else if (backend.type == "ollama") {
+        fprintf(stderr, "[AICompletionProvider] Ollama fallback: %s\n", backend.url.c_str());
+        m_modelEndpoint = backend.url;
+        m_modelName = "llama2";
+        m_usingDeep2Native = false;
+    } else {
+        fprintf(stderr, "[AICompletionProvider] Defaulting to Deep2 port 11436\n");
+        m_modelEndpoint = "http://localhost:11436";
+        m_modelName = "deep2-native";
+        m_usingDeep2Native = true;
+    }
+    
+    m_endpointDiscovered = true;
 }
 
 } // namespace RawrXD

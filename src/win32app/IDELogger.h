@@ -1,17 +1,19 @@
 // SCAFFOLD_359: IDELogger and RAWRXD_LOG_*
 
 #pragma once
+<<<<<<< HEAD
 
 // Mark that full IDELogger is included
 #define IDELOGGER_FULL_INCLUDED
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <string>
-#include <fstream>
+#include <vector>
 #include <mutex>
-#include <chrono>
-#include <sstream>
-#include <iomanip>
+#include <spdlog/spdlog.h>
 
+<<<<<<< HEAD
 // Pull in canonical LogLevel + RAWRXD_LOG_* from src/logging/Logger.h.
 // Do NOT use "logging/Logger.h" alone: -Iinclude is ordered before -Isrc on MSVC, so that
 // would pick include/logging/logger.h (different API, no RAWRXD_LOG_* macros).
@@ -160,3 +162,21 @@ inline std::string formatLogMessage(const char* fmt, ...) {
 // Alias macros for backward compatibility (printf-style)
 #define LOG_WARN LOG_WARNING
 #define LOG_WARN_FMT LOG_WARNING_FMT
+=======
+enum class LogLevel {
+    DEBUG,
+    INFO,
+    WARNING,
+    ERR, // Renamed to avoid macro conflict
+    CRITICAL
+};
+
+class IDELogger {
+public:
+    static IDELogger& getInstance();
+    void log(LogLevel level, const std::string& message);
+
+private:
+    IDELogger() = default;
+};
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // MCP Integration — Model Context Protocol Server + Client for RawrXD IDE
 // Full JSON-RPC 2.0 based MCP implementation with tool/resource/prompt support
 // Generated: 2026-01-25 06:34:12 | Completed: 2026-02-08
@@ -1682,4 +1683,14 @@ void registerBuiltinTools(MCPServer& server) {
 
 } // namespace MCP
 } // namespace RawrXD
+=======
+// MCP Integration - Integrated from Cursor IDE Reverse Engineering
+// Integrates Cursor's MCP implementation
+// Generated: 2026-01-25 06:34:12
+
+// #include "mcp_integration.h"
+
+// TODO: Integrate Cursor functionality here
+// Source: d:\lazy init ide\Cursor_Source_Extracted
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 

@@ -13,7 +13,10 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
+<<<<<<< HEAD
 #include <iomanip>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // ============================================================================
 // Titan Kernel DLL Interface
@@ -56,7 +59,10 @@ Commands:
   chat                  Enter interactive chat mode
   bench <model.gguf>    Run performance benchmark
   info <model.gguf>     Show model information
+<<<<<<< HEAD
   extensions            List installed extensions
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 Options:
   -m, --model <path>    Specify model path
@@ -64,16 +70,23 @@ Options:
   -T, --temp <float>    Temperature (default: 0.8)
   -p, --top_p <float>   Top-P sampling (default: 0.95)
   -c, --context <n>     Context size (default: 4096)
+<<<<<<< HEAD
   --api-key <key>       Set user API key for extensions
   --enable-amazonq      Enable Amazon Q extension
   --enable-copilot      Enable GitHub Copilot extension
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
   -h, --help            Show this help
 
 Examples:
   rawrxd_cli load D:\Models\llama-7b.gguf
   rawrxd_cli -m llama-7b.gguf generate "Hello, world!"
+<<<<<<< HEAD
   rawrxd_cli --api-key key_xxx chat
   rawrxd_cli --enable-amazonq --enable-copilot
+=======
+  rawrxd_cli chat
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 )" << std::endl;
 }
@@ -116,11 +129,16 @@ struct ModelState {
     std::string modelPath;
     bool loaded = false;
     
+<<<<<<< HEAD
     // Model info - populated from GGUF header KV metadata
+=======
+    // Model info (would be populated from GGUF header)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int n_vocab = 32000;
     int n_ctx = 4096;
     int n_embd = 4096;
     int n_layer = 32;
+<<<<<<< HEAD
     
     // Additional metadata parsed from GGUF
     std::string architecture;
@@ -133,6 +151,11 @@ static ModelState g_model;
 static std::string g_apiKey = "key_1bbe2f4d33423a095fc03d9f873eb4a161a680df099e82410be7bb19e65c319f";
 static bool g_enableAmazonQ = false;
 static bool g_enableCopilot = false;
+=======
+};
+
+static ModelState g_model;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool LoadModel(const std::string& path) {
     std::cout << "[+] Loading model: " << path << std::endl;
@@ -187,6 +210,7 @@ bool LoadModel(const std::string& path) {
     f.read((char*)&n_kv, 8);
     
     std::cout << "[+] Tensors: " << n_tensors << ", KV pairs: " << n_kv << std::endl;
+<<<<<<< HEAD
     g_model.n_tensors = n_tensors;
     
     // Parse KV metadata to extract model configuration
@@ -370,6 +394,11 @@ bool LoadModel(const std::string& path) {
     g_model.loaded = true;
     g_model.modelPath = path;
     g_model.fileSize = fileSize;
+=======
+    
+    g_model.loaded = true;
+    g_model.modelPath = path;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -419,6 +448,7 @@ void Generate(const std::string& prompt, int maxTokens) {
     
     std::cout << "\n[Generate] Prompt: " << prompt << std::endl;
     std::cout << "[Generate] Max tokens: " << maxTokens << std::endl;
+<<<<<<< HEAD
     std::cout << "[Generate] Model: vocab=" << g_model.n_vocab 
               << " ctx=" << g_model.n_ctx 
               << " embd=" << g_model.n_embd 
@@ -516,6 +546,22 @@ void Generate(const std::string& prompt, int maxTokens) {
     std::cout << "[Generate] " << tokensGenerated << " tokens in " << genDuration.count() << " ms";
     if (tps > 0) std::cout << " (" << std::fixed << std::setprecision(1) << tps << " tok/s)";
     std::cout << std::endl;
+=======
+    std::cout << "\n--- Output ---\n" << std::endl;
+    
+    // Tokenize (simplified - would use BPE)
+    // For now, just echo the prompt as a placeholder
+    
+    if (pForwardPass && g_model.pCtx) {
+        // Real inference would happen here
+        int dummy_tokens[128] = {0};
+        pForwardPass(g_model.pCtx, dummy_tokens, 1);
+    }
+    
+    // Placeholder output
+    std::cout << "[Generated text would appear here]" << std::endl;
+    std::cout << "\n--- End ---\n" << std::endl;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -615,6 +661,7 @@ int main(int argc, char* argv[]) {
 CLI v1.0 - Autonomous Agentic Inference
 )" << std::endl;
 
+<<<<<<< HEAD
     // Parse API key and extension flags first
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
@@ -632,6 +679,8 @@ CLI v1.0 - Autonomous Agentic Inference
         }
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Load DLLs
     if (!LoadDLLs()) {
         std::cout << "[*] Running in standalone mode (no DLLs loaded)" << std::endl;
@@ -651,6 +700,7 @@ CLI v1.0 - Autonomous Agentic Inference
         return 0;
     }
     
+<<<<<<< HEAD
     if (cmd == "extensions") {
         std::cout << "\n=== Extension Status ===" << std::endl;
         std::cout << "API Key: " << (g_apiKey.empty() ? "Not set" : "****" + g_apiKey.substr(g_apiKey.length() - 8)) << std::endl;
@@ -659,6 +709,8 @@ CLI v1.0 - Autonomous Agentic Inference
         return 0;
     }
     
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (cmd == "load" && argc >= 3) {
         LoadModel(argv[2]);
         return 0;

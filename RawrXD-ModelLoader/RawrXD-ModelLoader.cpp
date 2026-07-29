@@ -94,6 +94,7 @@ public:
         return true;
     }
 
+<<<<<<< HEAD
     // --- Tensor access ---
     const uint8_t* raw_data() const { return model_data.get(); }
     size_t raw_size() const { return model_size; }
@@ -411,6 +412,38 @@ void print_usage(const char* program_name) {
     std::cout << "\nExamples:" << std::endl;
     std::cout << "  " << program_name << " --model D:\\rawrxd\\model.gguf --tensors" << std::endl;
     std::cout << "  " << program_name << " --model D:\\rawrxd\\model.gguf --prompt \"Hello\" --temp 0.8" << std::endl;
+=======
+    std::string generate(const std::string& prompt, double temperature = 0.7, int max_tokens = 100) {
+        if (!loaded) {
+            return "Error: Model not loaded";
+        }
+
+        // Simplified generation (placeholder - full implementation requires tokenizer + inference)
+        std::string response = "Generated response for: '" + prompt + "'\n";
+        response += "[This is a scaffolded response. Full GGUF inference requires:\n";
+        response += " 1. Tokenizer implementation (BPE/SentencePiece)\n";
+        response += " 2. Tensor loading and quantization handling\n";
+        response += " 3. Transformer inference (attention, MLP, etc.)\n";
+        response += " 4. Sampling (temperature, top-p, top-k)]\n";
+        
+        return response;
+    }
+
+    bool is_loaded() const { return loaded; }
+};
+
+void print_usage(const char* program_name) {
+    std::cout << "RawrXD Model Loader - GGUF Inference Engine\n" << std::endl;
+    std::cout << "Usage: " << program_name << " [OPTIONS]\n" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  --model <path>       Path to GGUF model file (required)" << std::endl;
+    std::cout << "  --prompt <text>      Input prompt for generation (required)" << std::endl;
+    std::cout << "  --temp <value>       Temperature (default: 0.7)" << std::endl;
+    std::cout << "  --n-predict <num>    Maximum tokens to generate (default: 100)" << std::endl;
+    std::cout << "  --help               Show this help message" << std::endl;
+    std::cout << "\nExample:" << std::endl;
+    std::cout << "  " << program_name << " --model model.gguf --prompt \"Hello\" --temp 0.8 --n-predict 50" << std::endl;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 int main(int argc, char* argv[]) {
@@ -418,7 +451,10 @@ int main(int argc, char* argv[]) {
     std::string prompt;
     double temperature = 0.7;
     int max_tokens = 100;
+<<<<<<< HEAD
     bool show_tensors = false;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // Parse command-line arguments
     for (int i = 1; i < argc; i++) {
@@ -431,8 +467,11 @@ int main(int argc, char* argv[]) {
             model_path = argv[++i];
         } else if (arg == "--prompt" && i + 1 < argc) {
             prompt = argv[++i];
+<<<<<<< HEAD
         } else if (arg == "--tensors") {
             show_tensors = true;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         } else if (arg == "--temp" && i + 1 < argc) {
             temperature = std::stod(argv[++i]);
         } else if (arg == "--n-predict" && i + 1 < argc) {
@@ -444,18 +483,28 @@ int main(int argc, char* argv[]) {
         }
     }
 
+<<<<<<< HEAD
     if (model_path.empty()) {
         std::cerr << "Error: --model is required" << std::endl;
+=======
+    if (model_path.empty() || prompt.empty()) {
+        std::cerr << "Error: --model and --prompt are required" << std::endl;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         print_usage(argv[0]);
         return 1;
     }
 
+<<<<<<< HEAD
     // Load model
+=======
+    // Load and run model
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     GGUFLoader loader(model_path);
     if (!loader.load()) {
         return 1;
     }
 
+<<<<<<< HEAD
     // Parse tensors (always needed for real ops)
     size_t data_off = loader.parse_tensor_info();
     std::cout << "Tensor info parsed — data starts at offset " << data_off << std::endl;
@@ -469,6 +518,10 @@ int main(int argc, char* argv[]) {
         std::string response = loader.generate(prompt, temperature, max_tokens);
         std::cout << "\nResponse:\n" << response << std::endl;
     }
+=======
+    std::string response = loader.generate(prompt, temperature, max_tokens);
+    std::cout << "\nResponse:\n" << response << std::endl;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     return 0;
 }

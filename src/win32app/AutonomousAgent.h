@@ -48,6 +48,7 @@ struct DiagnosticCheckpoint {
     DWORD timestamp;
     DWORD threadId;
     HRESULT hr;
+<<<<<<< HEAD
     int severity;  // 1=info, 2=warning, 3=error, 4=critical
     std::string message;
     std::string context;
@@ -59,6 +60,13 @@ struct DiagnosticCheckpoint {
     // Backward-compatible constructor (defaults severity to 1/info)
     DiagnosticCheckpoint(BeaconType t, HRESULT h = S_OK, const std::string& msg = "", const std::string& ctx = "")
         : type(t), timestamp(GetTickCount()), threadId(GetCurrentThreadId()), hr(h), severity(1), message(msg), context(ctx) {}
+=======
+    std::string message;
+    std::string context;
+    
+    DiagnosticCheckpoint(BeaconType t, HRESULT h = S_OK, const std::string& msg = "", const std::string& ctx = "")
+        : type(t), timestamp(GetTickCount()), threadId(GetCurrentThreadId()), hr(h), message(msg), context(ctx) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // Self-Healing Actions
@@ -82,9 +90,15 @@ struct AgentConfig {
     DWORD beaconIntervalMs = 1000;
     DWORD maxRecoveryAttempts = 3;
     DWORD recoveryTimeoutMs = 30000;
+<<<<<<< HEAD
     std::string beaconLogPath;       // default: resolved to %APPDATA%\RawrXD\Agent\beacons.log
     std::string diagnosticReportPath; // default: %APPDATA%\RawrXD\Agent\diagnostics.json
     std::string recoveryLogPath;     // default: %APPDATA%\RawrXD\Agent\recovery.log
+=======
+    std::string beaconLogPath = "C:\\RawrXD_Agent_Beacons.log";
+    std::string diagnosticReportPath = "C:\\RawrXD_Diagnostics.json";
+    std::string recoveryLogPath = "C:\\RawrXD_Recovery.log";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // Forward Declarations

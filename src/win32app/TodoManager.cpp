@@ -2,7 +2,10 @@
 // Bridges PowerShell todo system with Win32IDE
 
 #include "TodoManager.h"
+<<<<<<< HEAD
 #include <shlobj.h>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -13,6 +16,7 @@
 namespace RawrXD {
 namespace Todos {
 
+<<<<<<< HEAD
 // Resolve %APPDATA%\RawrXD (create dir); return empty on failure.
 static std::string getRawrXDAppDataDir() {
     char buf[MAX_PATH] = {};
@@ -33,6 +37,8 @@ static std::string getTodoScriptPath() {
     return dir + "\\scripts\\todo_manager.ps1";
 }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ═══════════════════════════════════════════════════════════════════════════════
 // TodoManager Implementation
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -43,10 +49,14 @@ TodoManager::TodoManager(const std::string& storagePath)
     , pipeHandle_(INVALID_HANDLE_VALUE)
     , watchThread_(NULL)
     , stopWatch_(false) {
+<<<<<<< HEAD
     if (storagePath_.empty()) {
         std::string dir = getRawrXDAppDataDir();
         storagePath_ = dir.empty() ? "todos.json" : (dir + "\\todos.json");
     }
+=======
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     stats_.totalCreated = 0;
     stats_.totalCompleted = 0;
     stats_.totalDeleted = 0;
@@ -68,8 +78,13 @@ bool TodoManager::Load() {
     }
     
     try {
+<<<<<<< HEAD
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         json data = json::parse(content);
+=======
+        json data;
+        file >> data;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         items_.clear();
         
@@ -199,6 +214,7 @@ bool TodoManager::UpdateTodo(int id, const json& updates) {
         return false;
     }
     
+<<<<<<< HEAD
     if (updates.contains("text") && updates["text"].is_string()) {
         todo->text = updates["text"].get<std::string>();
     }
@@ -211,6 +227,12 @@ bool TodoManager::UpdateTodo(int id, const json& updates) {
     if (updates.contains("category") && updates["category"].is_string()) {
         todo->category = updates["category"].get<std::string>();
     }
+=======
+    if (updates.contains("text")) todo->text = updates["text"];
+    if (updates.contains("priority")) todo->priority = updates["priority"];
+    if (updates.contains("status")) todo->status = updates["status"];
+    if (updates.contains("category")) todo->category = updates["category"];
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     auto now = std::time(nullptr);
     std::tm tm;
@@ -300,7 +322,11 @@ bool TodoManager::StartPipeServer() {
     
     std::wstring pipeName = L"\\\\.\\pipe\\RawrXD_Todos";
     
+<<<<<<< HEAD
     pipeHandle_ = CreateNamedPipeW(
+=======
+    pipeHandle_ = CreateNamedPipe(
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         pipeName.c_str(),
         PIPE_ACCESS_DUPLEX,
         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -397,11 +423,16 @@ json TodoManager::TodoToJson(const TodoItem& todo) const {
 }
 
 bool TodoManager::ExecutePowerShellCommand(const std::string& operation, const std::vector<std::string>& args) {
+<<<<<<< HEAD
     std::string scriptPath = getTodoScriptPath();
     if (scriptPath.empty() || GetFileAttributesA(scriptPath.c_str()) == INVALID_FILE_ATTRIBUTES)
         return false;
     std::ostringstream cmd;
     cmd << "powershell.exe -ExecutionPolicy Bypass -File \"" << scriptPath << "\" ";
+=======
+    std::ostringstream cmd;
+    cmd << "powershell.exe -ExecutionPolicy Bypass -File \"D:\\lazy init ide\\scripts\\todo_manager.ps1\" ";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     cmd << "-Operation " << operation;
     
     for (const auto& arg : args) {
@@ -435,11 +466,17 @@ DWORD WINAPI TodoManager::PipeServerThreadProc(LPVOID param) {
         if (connected) {
             char buffer[4096];
             DWORD bytesRead;
+<<<<<<< HEAD
             constexpr DWORD kMaxChunk = static_cast<DWORD>(sizeof(buffer) - 1);
             
             if (ReadFile(manager->pipeHandle_, buffer, kMaxChunk, &bytesRead, NULL) && bytesRead > 0) {
                 const size_t safeBytes = (bytesRead <= kMaxChunk) ? static_cast<size_t>(bytesRead) : static_cast<size_t>(kMaxChunk);
                 buffer[safeBytes] = '\0';
+=======
+            
+            if (ReadFile(manager->pipeHandle_, buffer, sizeof(buffer) - 1, &bytesRead, NULL)) {
+                buffer[bytesRead] = '\0';
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 
                 // Process command from PowerShell
                 try {
@@ -462,6 +499,7 @@ DWORD WINAPI TodoManager::PipeServerThreadProc(LPVOID param) {
 
 DWORD WINAPI TodoManager::FileWatchThreadProc(LPVOID param) {
     auto* manager = static_cast<TodoManager*>(param);
+<<<<<<< HEAD
     std::string watchDir = manager->storagePath_;
     size_t sep = watchDir.find_last_of("/\\");
     if (sep != std::string::npos)
@@ -471,6 +509,11 @@ DWORD WINAPI TodoManager::FileWatchThreadProc(LPVOID param) {
 
     HANDLE hDir = CreateFileA(
         watchDir.c_str(),
+=======
+    
+    HANDLE hDir = CreateFileA(
+        "D:\\lazy init ide\\data",
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         FILE_LIST_DIRECTORY,
         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
         NULL,

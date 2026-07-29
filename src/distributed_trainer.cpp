@@ -1,6 +1,9 @@
 #include "distributed_trainer.h"
 #include <iostream>
+<<<<<<< HEAD
 #include <fstream>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <thread>
 #include <cmath>
 #include <cstring>
@@ -204,7 +207,11 @@ bool DistributedTrainer::setupProcessGroup() {
     if (m_config.pgConfig.worldSize > 1) {
         statusChanged("Joining Process Group as Rank " + std::to_string(m_config.pgConfig.rank));
         // Verify we have network capabilities for distributed run
+<<<<<<< HEAD
         // Distributed training requires NCCL integration
+=======
+        // For now, fail if > 1 until NCCL integration
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         statusChanged("Refusing distributed setup: Network layer pending.");
         return false;
     }
@@ -215,12 +222,17 @@ bool DistributedTrainer::setupProcessGroup() {
 bool DistributedTrainer::synchronizeGradients() {
     if (m_config.pgConfig.worldSize > 1) {
         // In a real distributed run, these would use NCCL/MPI
+<<<<<<< HEAD
         statusChanged("Distributed gradient sync not supported yet (worldSize > 1).");
         return false;
+=======
+        return false; // Not implemented for multi-node
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     // Single node: Gradients are already local
     return true; 
 }
+<<<<<<< HEAD
 bool DistributedTrainer::allReduceGradients() {
     // All-Reduce: sum gradients across all ranks and distribute result
     // For single-node (worldSize == 1), this is a no-op
@@ -358,3 +370,24 @@ void DistributedTrainer::updateMetrics(float stepTimeMs) {
                       " | Throughput: " + std::to_string(throughput) + " samples/s");
     }
 }
+=======
+bool DistributedTrainer::allReduceGradients() { return true; }
+void DistributedTrainer::compressGradients() {}
+void DistributedTrainer::decompressGradients() {}
+
+// Maintenance
+void DistributedTrainer::cleanupProcessGroup() {}
+void DistributedTrainer::initializeLoadBalancer() {}
+void DistributedTrainer::initializeFaultTolerance() {}
+void DistributedTrainer::Checkpoint(const std::string& path) {
+    statusChanged("Checkpointing not fully implemented for CPU backend.");
+}
+
+// Additional Helpers
+void DistributedTrainer::cleanupBackend() {}
+void DistributedTrainer::redistributeWork() {}
+void DistributedTrainer::updateDeviceLoads() {}
+void DistributedTrainer::detectCUDADevices() {}
+void DistributedTrainer::detectRealGPUs() {}
+void DistributedTrainer::updateMetrics(float stepTimeMs) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

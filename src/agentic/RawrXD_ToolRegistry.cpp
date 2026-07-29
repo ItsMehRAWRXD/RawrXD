@@ -11,10 +11,13 @@ using RawrXD::Agent::ToolResult;
 using RawrXD::Agent::DangerLevel;
 using json = nlohmann::json;
 
+<<<<<<< HEAD
 #ifndef LOG_WARNING
 #define LOG_WARNING(msg) do { std::string _lw = (msg); OutputDebugStringA(("[WARN] " + _lw + "\n").c_str()); } while(0)
 #endif
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 namespace {
 constexpr DWORD kDefaultTimeoutMs = 300000;
 constexpr size_t kMaxOutputBytes = 4 * 1024 * 1024;
@@ -181,7 +184,11 @@ ToolResult ToolRegistry::Execute(const std::string& tool_name, const std::string
             return ToolResult::ValidationFailed;
         }
 
+<<<<<<< HEAD
         json args = json::object();
+=======
+        json args = json::object_type();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (!json_args.empty()) {
             args = json::parse(json_args);
         }
@@ -563,7 +570,11 @@ ToolResult ToolRegistry::HandleCodeEdit(const json& args, std::string& output) {
     std::wstring target = NormalizePath(ToWide(args.at("target").get<std::string>()));
     bool createBackup = args.value("create_backup", true);
 
+<<<<<<< HEAD
     std::ifstream file(target.c_str());
+=======
+    std::ifstream file(target);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (!file.is_open()) {
         output = "Failed to open target file";
         return ToolResult::ExecutionError;
@@ -613,7 +624,11 @@ ToolResult ToolRegistry::HandleCodeEdit(const json& args, std::string& output) {
         }
     }
 
+<<<<<<< HEAD
     std::ofstream out(target.c_str(), std::ios::trunc);
+=======
+    std::ofstream out(target, std::ios::trunc);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (!out.is_open()) {
         output = "Failed to open file for writing";
         return ToolResult::ExecutionError;

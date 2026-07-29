@@ -2,7 +2,10 @@
 // Replaces: mainwindow.cpp, agentic_ide.cpp, chat_interface.cpp, file_browser.cpp
 //           multi_tab_editor.cpp, terminal_pool.cpp, model_router_widget.cpp
 // Pure Win32 API + ComCtl32 + RichEdit + Shell API
+<<<<<<< HEAD
 // Status: Standalone Win32 build; file tree uses "Loading..." dummy then repopulates on expand.
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #ifndef UNICODE
 #define UNICODE
@@ -25,7 +28,10 @@
 #include <string.h>
 #include <wchar.h>
 #include <process.h>
+<<<<<<< HEAD
 #include <stdint.h>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
@@ -167,7 +173,10 @@ static HWND g_hTreeView = NULL;
 static HWND g_hTerminalTab = NULL;
 static HWND g_hChatHistory = NULL;
 static HWND g_hChatInput = NULL;
+<<<<<<< HEAD
 static HWND g_hChatSend = NULL;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 static HWND g_hModelCombo = NULL;
 static HWND g_hStatusBar = NULL;
 static HWND g_hToolbar = NULL;
@@ -305,6 +314,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     UpdateWindow(g_hMainWnd);
     
     // Message loop with accelerators
+<<<<<<< HEAD
     ACCEL accelTable[] = {
         { FCONTROL | FVIRTKEY, 'N', IDM_FILE_NEW },
         { FCONTROL | FVIRTKEY, 'O', IDM_FILE_OPEN },
@@ -327,6 +337,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         { FVIRTKEY, VK_F11, IDM_VIEW_FULLSCREEN },
     };
     HACCEL hAccel = CreateAcceleratorTableW(accelTable, sizeof(accelTable) / sizeof(accelTable[0]));
+=======
+    HACCEL hAccel = NULL;  // TODO: Create accelerator table
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     MSG msg;
     while (GetMessageW(&msg, NULL, 0, 0)) {
         if (!TranslateAcceleratorW(g_hMainWnd, hAccel, &msg)) {
@@ -428,6 +441,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             g_bChatVisible = !g_bChatVisible;
             ShowWindow(g_hChatHistory, g_bChatVisible ? SW_SHOW : SW_HIDE);
             ShowWindow(g_hChatInput, g_bChatVisible ? SW_SHOW : SW_HIDE);
+<<<<<<< HEAD
             if (g_hChatSend) ShowWindow(g_hChatSend, g_bChatVisible ? SW_SHOW : SW_HIDE);
             LayoutControls(hWnd);
             break;
@@ -451,6 +465,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             LayoutControls(hWnd);
             if (g_hChatInput) SetFocus(g_hChatInput);
             break;
+=======
+            LayoutControls(hWnd);
+            break;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             
         case IDM_BUILD_RUN:
             if (g_nActiveTerminal >= 0) {
@@ -523,6 +541,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             CreateNewTerminal();
             break;
             
+<<<<<<< HEAD
         case IDM_HELP_DOCS: {
             char exePath[MAX_PATH] = {};
             char docsPath[MAX_PATH] = {};
@@ -547,6 +566,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             break;
         }
             
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         case IDM_HELP_ABOUT:
             MessageBoxW(hWnd, 
                 L"RawrXD Agentic IDE v1.0\n\n"
@@ -630,6 +651,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             // Autosave modified files
             for (int i = 0; i < g_nTabCount; i++) {
                 if (g_Tabs[i].bModified && !g_Tabs[i].bUntitled) {
+<<<<<<< HEAD
                     // Save to backup file
                     wchar_t backupPath[MAX_PATH + 16];
                     swprintf(backupPath, MAX_PATH + 16, L"%s.bak", g_Tabs[i].szFilePath);
@@ -658,6 +680,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
                             free(buf);
                         }
                     }
+=======
+                    // Save to backup
+                    // TODO: Implement
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
             }
         }
@@ -932,7 +958,11 @@ static void OnTreeViewItemExpand(HWND hTree, NMTREEVIEW* pnm) {
         TreeView_GetItem(hTree, &tvi);
         if (tvi.lParam != 0) return;  // Already populated
         
+<<<<<<< HEAD
         // Remove expandable dummy node before repopulating with real children
+=======
+        // Remove placeholder
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         TreeView_DeleteItem(hTree, hChild);
     }
     
@@ -1449,6 +1479,7 @@ static DWORD WINAPI TerminalReaderThread(LPVOID param) {
 // ============================================================================
 // CHAT PANEL
 // ============================================================================
+<<<<<<< HEAD
 static LRESULT CALLBACK ChatInputSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR, DWORD_PTR) {
     if (uMsg == WM_KEYDOWN && wParam == VK_RETURN) {
         wchar_t msg[4096] = {0};
@@ -1461,6 +1492,8 @@ static LRESULT CALLBACK ChatInputSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
     return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 static void CreateChatPanel(HWND hWnd) {
     // Chat history (RichEdit)
     g_hChatHistory = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -1482,11 +1515,16 @@ static void CreateChatPanel(HWND hWnd) {
     AppendRichText(g_hChatHistory, L"RawrXD AI Chat\r\n", RGB(86, 156, 214));
     AppendRichText(g_hChatHistory, L"Load a model to start chatting.\r\n\r\n", RGB(128, 128, 128));
     
+<<<<<<< HEAD
     // Chat input (Enter sends via ChatInputSubclassProc)
+=======
+    // Chat input
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     g_hChatInput = CreateWindowExW(WS_EX_CLIENTEDGE,
         L"EDIT", NULL,
         WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
         0, 0, 200, 24, hWnd, (HMENU)IDC_CHAT_INPUT, g_hInstance, NULL);
+<<<<<<< HEAD
     if (g_hChatInput)
         SetWindowSubclass(g_hChatInput, ChatInputSubclassProc, 0, 0);
     
@@ -1494,6 +1532,8 @@ static void CreateChatPanel(HWND hWnd) {
     g_hChatSend = CreateWindowExW(0, L"BUTTON", L"Send",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         0, 0, 56, 24, hWnd, (HMENU)IDC_CHAT_SEND, g_hInstance, NULL);
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Model combo
     g_hModelCombo = CreateWindowExW(0, WC_COMBOBOXW, NULL,
@@ -1512,6 +1552,7 @@ static void SendChatMessage(const wchar_t* message) {
         return;
     }
     
+<<<<<<< HEAD
     // Prepare prompt with model context
     wchar_t prompt[4096];
     swprintf(prompt, 4096, L"[Model: %s]\nUser: %s\nAssistant:",
@@ -1617,6 +1658,15 @@ static void SendChatMessage(const wchar_t* message) {
     }
     
     free(utf8Prompt);
+=======
+    // TODO: Call inference DLL
+    // For now, echo back
+    wchar_t response[1024];
+    swprintf(response, 1024, L"[Model: %s] Processing: \"%s\"...\r\nThis is a placeholder response. Wire up Titan inference for real responses.",
+        g_Models[g_nActiveModel].szName, message);
+    
+    AddChatMessage(L"Assistant", response);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 static void AddChatMessage(const wchar_t* role, const wchar_t* content) {
@@ -1773,6 +1823,7 @@ static void LayoutControls(HWND hWnd) {
         }
     }
     
+<<<<<<< HEAD
     // Chat panel (right side): model combo, history, input + Send button
     if (g_bChatVisible) {
         int chatX = rc.right - chatW;
@@ -1783,5 +1834,13 @@ static void LayoutControls(HWND hWnd) {
         MoveWindow(g_hChatInput, chatX, bottom - 30, chatW - sendBtnW - 4, inputH, TRUE);
         if (g_hChatSend)
             MoveWindow(g_hChatSend, chatX + chatW - sendBtnW, bottom - 30, sendBtnW, inputH, TRUE);
+=======
+    // Chat panel (right side)
+    if (g_bChatVisible) {
+        int chatX = rc.right - chatW;
+        MoveWindow(g_hModelCombo, chatX, top, chatW, 24, TRUE);
+        MoveWindow(g_hChatHistory, chatX, top + 26, chatW, clientH - 60, TRUE);
+        MoveWindow(g_hChatInput, chatX, bottom - 30, chatW, 24, TRUE);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }

@@ -14,8 +14,12 @@
 // - Automatic remediation
 // - State persistence and resumption
 
+<<<<<<< HEAD
 // Renamed to avoid redefinition with AutonomousAgent.h's AgentState
 enum class Win32AgentState {
+=======
+enum class AgentState {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     INITIALIZING,
     IDLE,
     DIAGNOSING,
@@ -110,12 +114,20 @@ public:
     void logDiagnostic(const std::string& message);
 
     // State management
+<<<<<<< HEAD
     Win32AgentState getCurrentState() const { return m_currentState; }
+=======
+    AgentState getCurrentState() const { return m_currentState; }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     const AgentMetrics& getMetrics() const { return m_metrics; }
 
 private:
     // Core state
+<<<<<<< HEAD
     Win32AgentState m_currentState;
+=======
+    AgentState m_currentState;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     AgentMetrics m_metrics;
     BeaconCheckpoint m_currentBeacon;
     DWORD m_agentProcessId;

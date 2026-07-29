@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include "ai_integration_hub.h"
 #include <stdexcept>
 #include <chrono>
@@ -9,148 +10,115 @@
 // AI Integration Hub - Production Implementation
 // Bridges AI capabilities to IDE components
 
+=======
+#include "../include/ai_integration_hub.h"
+#include <iostream>
+#include <filesystem>
+
+// Component Headers
+#include "../include/CompletionEngine.h"
+#include "../include/CodebaseContextAnalyzer.h"
+#include "../include/SmartRewriteEngine.h"
+#include "../include/MultiModalModelRouter.h"
+#include "../include/LanguageServerIntegration.h"
+#include "../include/PerformanceOptimizer.h"
+#include "../include/AdvancedCodingAgent.h"
+
+// Namespaces
+using namespace RawrXD;
+using namespace RawrXD::IDE;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 AIIntegrationHub::AIIntegrationHub() {
-    m_logger = std::make_shared<Logger>("AIIntegrationHub");
+    m_logger = std::make_shared<Logger>("AIHub");
     m_metrics = std::make_shared<Metrics>();
     m_tracer = std::make_shared<Tracer>();
-
-    m_logger->info("AI Integration Hub created");
+    m_initialized = false;
+    m_loading = false;
 }
 
 AIIntegrationHub::~AIIntegrationHub() {
     if (m_backgroundThread && m_backgroundThread->joinable()) {
         m_backgroundThread->join();
     }
-    m_logger->info("AI Integration Hub destroyed");
 }
 
 bool AIIntegrationHub::initialize(const std::string& defaultModel) {
-    auto span = m_tracer->startSpan("ai_hub.initialize");
+    if (m_initialized) return true;
+
+    m_loading = true;
+    m_currentModel = defaultModel;
 
     try {
-        m_logger->info("Initializing AI Integration Hub with default model: {}", defaultModel);
+        // Initialize Core Infrastructure
+        m_formatRouter = std::make_unique<FormatRouter>();
+        m_modelLoader = std::make_unique<EnhancedModelLoader>();
+        // Use concrete CPU Engine
+        m_inferenceEngine = std::make_unique<CPUInferenceEngine>(); 
 
-        // Initialize core infrastructure
-        m_formatRouter = std::make_unique<FormatRouter>(m_logger, m_metrics, m_tracer);
-        m_modelLoader = std::make_unique<EnhancedModelLoader>(m_logger, m_metrics, m_tracer);
-        m_inferenceEngine = std::make_unique<InferenceEngine>(m_logger, m_metrics, m_tracer);
+        // Initialize IDE Components
+        m_completionEngine = std::make_unique<IntelligentCompletionEngine>();
+        m_contextAnalyzer = std::make_unique<CodebaseContextAnalyzer>();
+        m_rewriteEngine = std::make_unique<SmartRewriteEngine>();
+        m_modelRouter = std::make_unique<MultiModalModelRouter>();
+        m_languageServer = std::make_unique<LanguageServerIntegration>();
+        m_performanceOptimizer = std::make_unique<PerformanceOptimizer>();
+        m_codingAgent = std::make_unique<AdvancedCodingAgent>();
 
-        // Start background initialization
-        m_backgroundThread = std::make_unique<std::thread>(
-            &AIIntegrationHub::backgroundInitialization, this
-        );
-
-        // Load default model synchronously
         if (!defaultModel.empty()) {
-            return loadModel(defaultModel);
+            if (!loadModel(defaultModel)) {
+                if (m_logger) m_logger->warn("Failed to load default model: " + defaultModel);
+            }
         }
 
-        span->setStatus("ok");
-        return true;
+        initializeAIComponents();
+        startBackgroundServices();
 
+        m_initialized = true;
     } catch (const std::exception& e) {
-        m_logger->error("Failed to initialize AI Integration Hub: {}", e.what());
-        span->setStatus("error", e.what());
-        return false;
+        if (m_logger) m_logger->error(std::string("Initialization failed: ") + e.what());
+        m_initialized = false;
     }
+
+    m_loading = false;
+    return m_initialized;
 }
 
 bool AIIntegrationHub::loadModel(const std::string& modelPath) {
-    auto span = m_tracer->startSpan("ai_hub.load_model");
-    span->setAttribute("model_path", modelPath);
-
     std::lock_guard<std::mutex> lock(m_modelMutex);
+    m_loading = true;
 
-    try {
-        m_logger->info("Loading model: {}", modelPath);
-        m_loading = true;
-
-        auto startTime = std::chrono::high_resolution_clock::now();
-
-        // Route and validate model
-        auto modelSource = m_formatRouter->route(modelPath);
-        if (!modelSource) {
-            throw std::runtime_error("Failed to route model: " + modelPath);
+    bool success = false;
+    if (m_modelLoader && m_inferenceEngine) {
+        // Attempt load via inference engine directly or loader helper
+        success = m_inferenceEngine->loadModel(modelPath);
+        
+        if (success) {
+            m_currentModel = modelPath;
+            setupModelRouting();
         }
-
-        // Load model through enhanced loader
-        bool success = m_modelLoader->loadModel(modelPath);
-        if (!success) {
-            throw std::runtime_error("Model loader failed for: " + modelPath);
-        }
-
-        // Initialize inference engine with loaded model
-        success = m_inferenceEngine->initialize(modelPath);
-        if (!success) {
-            throw std::runtime_error("Inference engine failed to initialize: " + modelPath);
-        }
-
-        // Update current model state
-        m_currentModel = modelPath;
-        m_currentFormat = modelSource->format;
-
-        // Initialize AI components with loaded model
-        initializeAIComponents();
-
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-
-        m_logger->info("Model loaded successfully in {} ms", duration.count());
-        m_metrics->recordHistogram("model_load_duration_ms", duration.count());
-
-        m_loading = false;
-        m_initialized = true;
-
-        span->setAttribute("load_time_ms", duration.count());
-        span->setStatus("ok");
-        return true;
-
-    } catch (const std::exception& e) {
-        m_logger->error("Error loading model {}: {}", modelPath, e.what());
-        m_loading = false;
-        m_metrics->incrementCounter("model_load_failures");
-        span->setStatus("error", e.what());
-        return false;
     }
+
+    m_loading = false;
+    return success;
 }
 
 bool AIIntegrationHub::unloadModel() {
-    auto span = m_tracer->startSpan("ai_hub.unload_model");
-
     std::lock_guard<std::mutex> lock(m_modelMutex);
-
-    try {
-        m_logger->info("Unloading model: {}", m_currentModel);
-
-        if (m_modelLoader) {
-            m_modelLoader->unloadModel();
-        }
-
-        if (m_inferenceEngine) {
-            m_inferenceEngine->shutdown();
-        }
-
-        m_currentModel.clear();
-        m_initialized = false;
-
-        m_logger->info("Model unloaded successfully");
-        span->setStatus("ok");
-        return true;
-
-    } catch (const std::exception& e) {
-        m_logger->error("Error unloading model: {}", e.what());
-        span->setStatus("error", e.what());
-        return false;
-    }
+    m_currentModel.clear();
+    // Logic to unload if engine supports it
+    return true;
 }
 
 std::vector<CodeCompletion> AIIntegrationHub::getCompletions(
     const std::string& filePath,
     const std::string& prefix,
     const std::string& suffix,
-    int cursorPosition) {
+    int cursorPosition
+) {
+    if (!m_completionEngine || !isReady()) return {};
 
+<<<<<<< HEAD
     auto span = m_tracer->startSpan("ai_hub.get_completions");
     span->setAttribute("file_path", filePath);
 
@@ -248,11 +216,32 @@ std::vector<CodeCompletion> AIIntegrationHub::getCompletions(
         m_metrics->incrementCounter("completion_errors");
         span->setStatus("error", e.what());
         return {};
+=======
+    CompletionContext ctx;
+    ctx.filePath = filePath;
+    ctx.linePrefix = prefix;
+    ctx.lineSuffix = suffix;
+    // ctx.lineNumber = ...; // Would need fuller context
+    
+    auto suggestions = m_completionEngine->getCompletions(ctx);
+    
+    std::vector<CodeCompletion> result;
+    for (const auto& s : suggestions) {
+        CodeCompletion cc;
+        cc.text = s.text;
+        cc.detail = s.description;
+        cc.confidence = s.confidence;
+        cc.kind = s.kind;
+        result.push_back(cc);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
+    
+    return result;
 }
 
 std::vector<CodeSuggestion> AIIntegrationHub::getSuggestions(
     const std::string& code,
+<<<<<<< HEAD
     const std::string& context) {
 
     auto span = m_tracer->startSpan("ai_hub.get_suggestions");
@@ -605,10 +594,57 @@ void AIIntegrationHub::indexCodebase(const std::string& rootPath) {
     } catch (const std::exception& e) {
         m_logger->error("Error indexing codebase: {}", e.what());
         span->setStatus("error", e.what());
-    }
+=======
+    const std::string& context
+) {
+    // Coding Agent not implemented fully for suggestions yet
+    return {};
 }
 
+std::string AIIntegrationHub::generateDocumentation(const std::string& code) {
+    // Placeholder for Agent documentation generation
+    return "";
+}
+
+std::vector<GeneratedTestCase> AIIntegrationHub::generateTests(const std::string& function) {
+    if (!m_codingAgent || !isReady()) return {};
+    
+    // Assuming Agent has generateTests capability exposed or we use implementFeature
+    // For now returning empty to satisfy interface
+    return {};
+}
+
+std::vector<BugReport> AIIntegrationHub::findBugs(const std::string& code) {
+    // Analyzing code for bugs
+    return {};
+}
+
+std::vector<Optimization> AIIntegrationHub::optimizeCode(const std::string& code) {
+    if (!m_rewriteEngine || !isReady()) return {};
+    
+    // auto res = m_rewriteEngine->optimizeCode(code, "cpp");
+    // Convert TransformationResult to Optimization
+    return {};
+}
+
+void AIIntegrationHub::indexCodebase(const std::string& rootPath) {
+    if (m_backgroundThread && m_backgroundThread->joinable()) {
+        m_backgroundThread->join();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+    }
+    m_backgroundThread = std::make_unique<std::thread>([this, rootPath]() {
+        if (m_contextAnalyzer) {
+            m_contextAnalyzer->initialize(rootPath);
+            // m_contextAnalyzer->indexAll(); // If methodology exists
+        }
+    });
+}
+
+
+
+
 void AIIntegrationHub::setLatencyTarget(int milliseconds) {
+<<<<<<< HEAD
     m_logger->info("Setting latency target to {} ms", milliseconds);
     // Configure inference engine for target latency
     if (m_inferenceEngine) {
@@ -622,13 +658,20 @@ void AIIntegrationHub::setLatencyTarget(int milliseconds) {
         }
     }
     m_metrics->recordHistogram("latency_target_ms", milliseconds);
+=======
+    // Logic to adjust inference engine parameters
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<std::string> AIIntegrationHub::getAvailableModels() const {
-    return {m_currentModel};
+    if (m_modelRouter) {
+        // return m_modelRouter->GetAvailableModels();
+    }
+    return {"local-default"};
 }
 
 void AIIntegrationHub::backgroundInitialization() {
+<<<<<<< HEAD
     try {
         m_logger->info("Starting background initialization");
 
@@ -741,4 +784,27 @@ void AIIntegrationHub::startBackgroundServices() {
     
     // Model health monitoring
     m_logger->info("Model health monitor active");
+=======
+    // Warmup caches, etc.
 }
+
+bool AIIntegrationHub::validateModelCompatibility(const std::string& modelPath) {
+    return true;
+}
+
+void AIIntegrationHub::setupModelRouting() {
+    if (m_formatRouter && !m_currentModel.empty()) {
+        // m_formatRouter->Configure(m_currentModel);
+    }
+}
+
+void AIIntegrationHub::initializeAIComponents() {
+    // Link components together if needed
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+}
+
+void AIIntegrationHub::startBackgroundServices() {
+    // Start monitoring threads if needed
+}
+
+

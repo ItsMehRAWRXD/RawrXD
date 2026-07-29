@@ -3,7 +3,10 @@
 
 #include "RawrXD_Agent.hpp"
 #include <iostream>
+<<<<<<< HEAD
 #include <iomanip>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <chrono>
 #include <numeric>
 #include <algorithm>
@@ -131,11 +134,19 @@ void benchmarkStringOperations() {
     });
     printResult(r3);
 
+<<<<<<< HEAD
     String str(testStr);
     auto r4 = runBenchmark(L"String operations", [&]() {
         StringUtils::ToLower(str);
         StringUtils::ToUpper(str);
         (void)(str.find(L"test") != String::npos);
+=======
+    QString qstr(testStr);
+    auto r4 = runBenchmark(L"QString operations", [&]() {
+        qstr.toLower();
+        qstr.toUpper();
+        qstr.contains(QString(L"test"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     });
     printResult(r4);
 }
@@ -151,21 +162,35 @@ void benchmarkToolExecution() {
     params[L"path"] = String(L"C:\\Windows\\System32\\kernel32.dll");
 
     auto r1 = runBenchmark(L"Tool: file_exists", [&]() {
+<<<<<<< HEAD
         engine.execute(String(L"file_exists"), params);
+=======
+        engine.execute(QString("file_exists"), params);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }, 100);
     printResult(r1);
 
     // get_system_info
     auto r2 = runBenchmark(L"Tool: get_system_info", [&]() {
+<<<<<<< HEAD
         engine.execute(String(L"get_system_info"), JsonObject{});
+=======
+        engine.execute(QString("get_system_info"), JsonObject{});
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }, 100);
     printResult(r2);
 
     // Tool lookup
     auto r3 = runBenchmark(L"Tool lookup", [&]() {
+<<<<<<< HEAD
         engine.hasTool(String(L"read_file"));
         engine.hasTool(String(L"write_file"));
         engine.hasTool(String(L"run_command"));
+=======
+        engine.hasTool(QString("read_file"));
+        engine.hasTool(QString("write_file"));
+        engine.hasTool(QString("run_command"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }, 10000);
     printResult(r3);
 
@@ -176,6 +201,7 @@ void benchmarkToolExecution() {
     printResult(r4);
 }
 
+<<<<<<< HEAD
 void benchmarkStdReplacements() {
     std::wcout << L"\n=== C++20 String/STL Benchmarks ===\n\n";
 
@@ -209,23 +235,78 @@ void benchmarkStdReplacements() {
         (void)std::chrono::system_clock::now();
     }, 10000);
     printResult(r4);
+=======
+void benchmarkQtReplacements() {
+    std::wcout << L"\n=== Qt Replacement Benchmarks ===\n\n";
+
+    // QStringList operations
+    QStringList list;
+    for (int i = 0; i < 100; ++i) {
+        list.push_back(QString(L"item_") + QString(std::to_wstring(i)));
+    }
+
+    auto r1 = runBenchmark(L"QStringList::join", [&]() {
+        list.join(QString(L","));
+    }, 1000);
+    printResult(r1);
+
+    auto r2 = runBenchmark(L"QStringList::contains", [&]() {
+        list.contains(QString(L"item_50"));
+    }, 10000);
+    printResult(r2);
+
+    // QMap operations
+    QMap<QString, int> map;
+    for (int i = 0; i < 100; ++i) {
+        map.insert(QString(L"key_") + QString(std::to_wstring(i)), i);
+    }
+
+    auto r3 = runBenchmark(L"QMap::value", [&]() {
+        map.value(QString(L"key_50"));
+    }, 10000);
+    printResult(r3);
+
+    // QDateTime
+    auto r4 = runBenchmark(L"QDateTime::currentDateTime", [&]() {
+        QDateTime::currentDateTime();
+    }, 10000);
+    printResult(r4);
+
+    // QUuid
+    auto r5 = runBenchmark(L"QUuid::createUuid", [&]() {
+        QUuid::createUuid();
+    }, 1000);
+    printResult(r5);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void benchmarkConversationManager() {
     std::wcout << L"\n=== Conversation Manager Benchmarks ===\n\n";
 
     ConversationManager conv;
+<<<<<<< HEAD
     conv.setSystemPrompt(String(L"You are a helpful assistant."));
 
     auto r1 = runBenchmark(L"Add message", [&]() {
         conv.addUserMessage(String(L"Hello"));
+=======
+    conv.setSystemPrompt(QString("You are a helpful assistant."));
+
+    auto r1 = runBenchmark(L"Add message", [&]() {
+        conv.addUserMessage(QString("Hello"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }, 1000);
     printResult(r1);
 
     // Pre-fill conversation
     for (int i = 0; i < 50; ++i) {
+<<<<<<< HEAD
         conv.addUserMessage(String(L"Message ") + std::to_wstring(i));
         conv.addAssistantMessage(String(L"Response ") + std::to_wstring(i));
+=======
+        conv.addUserMessage(QString("Message ") + QString(std::to_wstring(i)));
+        conv.addAssistantMessage(QString("Response ") + QString(std::to_wstring(i)));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     auto r2 = runBenchmark(L"Get messages (100 messages)", [&]() {
@@ -238,16 +319,27 @@ void benchmarkAgentContext() {
     std::wcout << L"\n=== Agent Context Benchmarks ===\n\n";
 
     AgentContext ctx;
+<<<<<<< HEAD
     ctx.setWorkingDirectory(String(L"D:\\RawrXD\\Ship"));
 
     auto r1 = runBenchmark(L"Add open file", [&]() {
         ctx.addOpenFile(String(L"test.cpp"));
+=======
+    ctx.setWorkingDirectory(QString("D:\\RawrXD\\Ship"));
+
+    auto r1 = runBenchmark(L"Add open file", [&]() {
+        ctx.addOpenFile(QString("test.cpp"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }, 10000);
     printResult(r1);
 
     // Pre-fill files
     for (int i = 0; i < 100; ++i) {
+<<<<<<< HEAD
         ctx.addOpenFile(String(L"file_") + std::to_wstring(i) + L".cpp");
+=======
+        ctx.addOpenFile(QString(L"file_") + QString(std::to_wstring(i)) + QString(L".cpp"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     auto r2 = runBenchmark(L"Context to JSON (100 files)", [&]() {
@@ -274,7 +366,11 @@ int wmain() {
     benchmarkJsonParsing();
     benchmarkStringOperations();
     benchmarkToolExecution();
+<<<<<<< HEAD
     benchmarkStdReplacements();
+=======
+    benchmarkQtReplacements();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     benchmarkConversationManager();
     benchmarkAgentContext();
 

@@ -508,7 +508,12 @@ BOOL AgenticEngine_CreatePlan(AgenticEngine* engine, const wchar_t* goal) {
     wcsncpy(engine->current_plan.goal, goal, 1023);
     engine->current_plan.active = TRUE;
     
+<<<<<<< HEAD
     // Single-step plan; multi-step decomposition can use PlanOrchestrator/LLM when wired
+=======
+    // For now, create a simple single-step plan
+    // TODO: Use model to decompose into multiple steps
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     wcsncpy(engine->current_plan.steps[0].description, goal, 511);
     wcscpy(engine->current_plan.steps[0].action_type, L"generate");
     engine->current_plan.n_steps = 1;
@@ -541,7 +546,11 @@ BOOL AgenticEngine_ExecutePlan(AgenticEngine* engine) {
         } else if (wcscmp(step->action_type, L"read_file") == 0) {
             success = Tool_ReadFile(step->target_path, output, 4096);
         } else if (wcscmp(step->action_type, L"generate") == 0) {
+<<<<<<< HEAD
             // Generate step: completion recorded; model output can be wired via engine->on_generate or LLM bridge
+=======
+            // TODO: Generate using model
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             success = TRUE;
         } else {
             // Try registered tools
@@ -600,6 +609,7 @@ BOOL AgenticEngine_Chat(AgenticEngine* engine, const wchar_t* user_message,
     AgenticEngine_SetMemory(engine, L"last_user_message", user_message);
     
     if (!engine->model_loaded) {
+<<<<<<< HEAD
         wcscpy_s(response, response_len > 0 ? (size_t)response_len : 0, L"[No model loaded. Please load a GGUF model first.]");
         return FALSE;
     }
@@ -611,6 +621,22 @@ BOOL AgenticEngine_Chat(AgenticEngine* engine, const wchar_t* user_message,
         L"[Inference not wired] Model: %s. Chat requires the full inference pipeline to be connected.",
         model_name ? model_name : L"");
     return FALSE;
+=======
+        wcscpy(response, L"[No model loaded. Please load a GGUF model first.]");
+        return FALSE;
+    }
+    
+    // TODO: Implement actual model inference
+    // For now, return a placeholder
+    swprintf(response, response_len, 
+        L"[Model: %s]\n"
+        L"Processing: \"%s\"\n\n"
+        L"This is a placeholder response. Wire up the full inference pipeline for real generation.",
+        wcsrchr(engine->model_path, L'\\') ? wcsrchr(engine->model_path, L'\\') + 1 : engine->model_path,
+        user_message);
+    
+    return TRUE;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================

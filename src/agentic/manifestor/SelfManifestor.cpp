@@ -44,7 +44,11 @@ bool SelfManifestor::generateWiringDiagram(const std::filesystem::path& outputPa
     wiring["version"] = "1.0";
     wiring["timestamp"] = std::chrono::system_clock::now().time_since_epoch().count();
     
+<<<<<<< HEAD
     json capabilitiesArray = json::array();
+=======
+    json capabilitiesArray = json::array_type();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     for (const auto& cap : capabilities_) {
         json capability;
         capability["name"] = cap.name;
@@ -52,13 +56,21 @@ bool SelfManifestor::generateWiringDiagram(const std::filesystem::path& outputPa
         capability["path"] = cap.path.string();
         capability["enabled"] = cap.enabled;
         
+<<<<<<< HEAD
         json dependenciesArray = json::array();
+=======
+        json dependenciesArray = json::array_type();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         for (const auto& dep : cap.dependencies) {
             dependenciesArray.push_back(dep);
         }
         capability["dependencies"] = dependenciesArray;
         
+<<<<<<< HEAD
         json metadata = json::object();
+=======
+        json metadata = json::object_type();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         for (const auto& item : cap.metadata) {
             metadata[item.first] = item.second;
         }
@@ -245,7 +257,11 @@ std::vector<PEParser::Export> PEParser::getExports() const {
     
     if (!valid_) return exports;
     
+<<<<<<< HEAD
     // Basic export parsing - full PE export table parsing would be used in production
+=======
+    // Simplified export parsing - in production would use full PE parsing
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto dosHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(data_.data());
     auto ntHeaders = reinterpret_cast<const IMAGE_NT_HEADERS*>(data_.data() + dosHeader->e_lfanew);
     

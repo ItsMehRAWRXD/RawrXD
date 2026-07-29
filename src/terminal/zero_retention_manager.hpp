@@ -11,12 +11,16 @@
 #include <bcrypt.h>
 #pragma comment(lib, "bcrypt.lib")
 
+<<<<<<< HEAD
 #include "../json_types.hpp"  // JsonObject for logStructured/logAudit
 
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <chrono>
 #include <functional>
 #include <atomic>
@@ -38,6 +42,7 @@
  *
  * Zero Qt dependency — pure Win32/C++20.
  */
+<<<<<<< HEAD
 class ZeroRetentionManager {
 public:
     // ---------- Callbacks (replace Qt signals) ----------
@@ -46,6 +51,13 @@ public:
     using SessionCb  = std::function<void(const std::string& sessionId)>;
     using CleanupCb  = std::function<void(int itemsDeleted, int64_t bytesDeleted)>;
     using ErrorCb    = std::function<void(const std::string& error)>;
+=======
+class ZeroRetentionManager : public void {
+
+public:
+    explicit ZeroRetentionManager(void* parent = nullptr);
+    ~ZeroRetentionManager() override;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     IdSizeCb   onDataDeleted      = nullptr;
     IdCb       onDataExpired      = nullptr;
@@ -59,6 +71,7 @@ public:
 
     // ---------- Configuration ----------
     struct Config {
+<<<<<<< HEAD
         int  sessionTtlMinutes       = 60;
         int  dataRetentionDays       = 0;    // 0 = immediate deletion
         int  auditRetentionDays      = 90;
@@ -69,6 +82,18 @@ public:
         std::string auditLogPath;
         std::string dataDirectory;
         bool enableMetrics           = true;
+=======
+        int sessionTtlMinutes = 60;
+        int dataRetentionDays = 0;         // 0 = immediate deletion
+        int auditRetentionDays = 90;
+        bool enableAutoCleanup = true;
+        int cleanupIntervalMinutes = 15;
+        bool enableSecureWipe = true;      // Overwrite data before deletion
+        bool enableAuditLog = true;
+        std::string auditLogPath;
+        std::string dataDirectory;
+        bool enableMetrics = true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     };
 
     void   setConfig(const Config& config);
@@ -85,6 +110,7 @@ public:
 
     // ---------- Data entry tracking ----------
     struct DataEntry {
+<<<<<<< HEAD
         std::string   id;
         std::string   path;
         DataClass     classification = Session;
@@ -95,10 +121,32 @@ public:
     };
 
     // ---------- Core functionality ----------
+=======
+        std::string id;
+        std::string path;
+        DataClass classification;
+        std::chrono::system_clock::time_point createdAt;
+        std::chrono::system_clock::time_point expiresAt;
+        int64_t sizeBytes;
+        bool isAnonymized;
+    };
+
+    // Core functionality
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string registerData(const std::string& path, DataClass classification, int customTtlMinutes = -1);
     bool unregisterData(const std::string& id);
     bool deleteData(const std::string& id, bool immediate = false);
     bool anonymizeData(const std::string& id);
+<<<<<<< HEAD
+=======
+    
+    void cleanupExpiredData();
+    void cleanupSession(const std::string& sessionId);
+    void purgeAllData(DataClass classification = Session);
+    
+    std::vector<DataEntry> getTrackedData(DataClass classification = Session) const;
+    DataEntry getDataEntry(const std::string& id) const;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     void cleanupExpiredData();
     void cleanupSession(const std::string& sessionId);
@@ -109,6 +157,7 @@ public:
 
     // ---------- Metrics ----------
     struct Metrics {
+<<<<<<< HEAD
         int64_t dataEntriesTracked   = 0;
         int64_t dataEntriesDeleted   = 0;
         int64_t bytesDeleted         = 0;
@@ -117,11 +166,22 @@ public:
         int64_t auditEntriesCreated  = 0;
         int64_t errorCount           = 0;
         double  avgCleanupLatencyMs  = 0.0;
+=======
+        int64_t dataEntriesTracked = 0;
+        int64_t dataEntriesDeleted = 0;
+        int64_t bytesDeleted = 0;
+        int64_t sessionsCleanedUp = 0;
+        int64_t anonymizationCount = 0;
+        int64_t auditEntriesCreated = 0;
+        int64_t errorCount = 0;
+        double avgCleanupLatencyMs = 0.0;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     };
 
     Metrics getMetrics() const;
     void    resetMetrics();
 
+<<<<<<< HEAD
     ZeroRetentionManager();
     ~ZeroRetentionManager();
 
@@ -177,4 +237,42 @@ private:
     static std::string escapeJson(const std::string& s);
     static std::string nowISO8601();
     static std::string timeToISO8601(std::chrono::system_clock::time_point tp);
+=======
+    void dataDeleted(const std::string& id, int64_t sizeBytes);
+    void dataExpired(const std::string& id);
+    void sessionCleaned(const std::string& sessionId);
+    void cleanupCompleted(int itemsDeleted, int64_t bytesDeleted);
+    void errorOccurred(const std::string& error);
+    void metricsUpdated(const Metrics& metrics);
+
+private:
+    void performAutoCleanup();
+
+private:
+    // Configuration
+    Config m_config;
+    mutable std::mutex m_configMutex;
+
+    // Data tracking
+    std::map<std::string, DataEntry> m_trackedData;
+    mutable std::mutex m_dataMutex;
+
+    // Metrics
+    Metrics m_metrics;
+    mutable std::mutex m_metricsMutex;
+
+    // Auto cleanup timer
+    void** m_cleanupTimer;
+
+    // Helper methods
+    void logStructured(const std::string& level, const std::string& message, const void*& context = void*());
+    void recordLatency(const std::string& operation, const std::chrono::milliseconds& duration);
+    void logAudit(const std::string& action, const void*& details);
+    bool secureDelete(const std::string& path);
+    std::string generateDataId();
+    bool isExpired(const DataEntry& entry) const;
+    std::chrono::system_clock::time_point calculateExpiry(DataClass classification, int customTtlMinutes) const;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
+
+

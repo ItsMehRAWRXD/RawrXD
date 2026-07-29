@@ -92,6 +92,7 @@ Editor::Editor(Window* parent) : Window(parent), stack(), font(L"Consolas", 12.0
     create(parent, L"RawrXD_Editor", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL);
     renderer.initialize(hwnd);
     
+<<<<<<< HEAD
     // Measure monospace font metrics via GDI for accurate character cell dimensions
     HDC hdc = GetDC(hwnd);
     if (hdc) {
@@ -108,6 +109,17 @@ Editor::Editor(Window* parent) : Window(parent), stack(), font(L"Consolas", 12.0
         ReleaseDC(hwnd, hdc);
     } else {
         // Fallback if DC unavailable
+=======
+    // Default metrics
+    // Measure font using DirectWrite
+    SizeF mSize = renderer.measureText(L"M", font);
+    if (mSize.width > 0) {
+        charWidth = mSize.width;
+        // Add a small padding for line height
+        lineHeight = mSize.height * 1.2f; 
+    } else {
+        // Fallback
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         charWidth = 9.0f;
         lineHeight = 16.0f;
     }
@@ -332,7 +344,12 @@ void Editor::charEvent(wchar_t c) {
     // Normal char
     // Avoid control chars that slip through
     if (c >= 32) {
+<<<<<<< HEAD
         insert(String(1, c));
+=======
+        wchar_t tmp[2] = {c, 0};
+        insert(String(tmp));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -361,6 +378,7 @@ void Editor::mouseMoveEvent(int x, int y, int mods) {
     }
 }
 
+<<<<<<< HEAD
 void Editor::mouseReleaseEvent(int x, int y, int button) {
     // Handle mouse button release
     if (button == 0) { // Left button
@@ -382,6 +400,9 @@ void Editor::mouseReleaseEvent(int x, int y, int button) {
         update();
     }
 }
+=======
+void Editor::mouseReleaseEvent(int x, int y, int button) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void Editor::moveCursor(int dLine, int dCol, bool keepSelection) {
     if (!keepSelection && (dLine != 0 || dCol != 0)) {
@@ -432,6 +453,7 @@ void Editor::scrollCursorIntoView() {
 
 
 
+<<<<<<< HEAD
 void Editor::charEvent(wchar_t c) {
     if (c < 32 && c != '\t' && c != '\r' && c != '\n') return;
     
@@ -440,6 +462,10 @@ void Editor::charEvent(wchar_t c) {
     wchar_t str[2] = {c, 0};
     insert(String(str));
 }
+=======
+// Removed duplicate charEvent
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void Editor::updateScrollbars() {
     SCROLLINFO si;

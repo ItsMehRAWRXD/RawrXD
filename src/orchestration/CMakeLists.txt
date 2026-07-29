@@ -3,6 +3,10 @@ project(RawrXDOrchestration)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # Qt-free: uses STL + WinSock + Win32 audio APIs
 add_library(RawrXDOrchestration STATIC
@@ -23,9 +27,12 @@ add_library(RawrXDOrchestration STATIC
 
 target_link_libraries(RawrXDOrchestration
     PUBLIC
+<<<<<<< HEAD
         $<$<PLATFORM_ID:Windows>:ws2_32>
         $<$<PLATFORM_ID:Windows>:winmm>
         $<$<PLATFORM_ID:Windows>:winhttp>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 )
 
 target_include_directories(RawrXDOrchestration

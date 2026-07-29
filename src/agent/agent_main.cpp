@@ -8,9 +8,11 @@
 
 #include "planner.hpp"
 #include "self_patch.hpp"
+#include "self_code.hpp"
 #include "release_agent.hpp"
 #include "meta_learn.hpp"
 #include "self_test_gate.hpp"
+<<<<<<< HEAD
 #include "simple_json.hpp"
 #include "agent_self_healing_orchestrator.hpp"
 #include "agentic_hotpatch_orchestrator.hpp"
@@ -152,11 +154,48 @@ int main(int argc, char *argv[])
     }
 
     fprintf(stderr, "Agent wish: %s\n", wish.c_str());
+=======
+#include "ide_agent_bridge_hot_patching_integration.hpp"
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cstdlib>
+#include <thread>
+
+using json = nlohmann::json;
+
+// Global bridge instance to keep proxy alive
+std::unique_ptr<IDEAgentBridgeWithHotPatching> g_bridge;
+
+int main(int argc, char *argv[]) {
+    // Initialize Hot Patching Bridge
+    g_bridge = std::make_unique<IDEAgentBridgeWithHotPatching>();
+    g_bridge->initializeWithHotPatching();
+    g_bridge->startHotPatchingProxy();
+    
+    // Allow proxy to settle
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (argc < 2) {
+        
+        return 1;
+    }
+
+    std::string wish;
+    for (int i = 1; i < argc; ++i) {
+        if (i > 1) {
+            wish += " ";
+        }
+        wish += argv[i];
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // ============================================================================
     // Step 1: Plan
     // ============================================================================
     Planner planner;
+<<<<<<< HEAD
     JsonValue tasks = planner.plan(wish);
 
     if (tasks.size() == 0) {
@@ -166,12 +205,22 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "Generated %zu tasks\n", tasks.size());
 
+=======
+    json tasks = planner.plan(wish);
+
+    if (!tasks.is_array() || tasks.empty()) {
+        
+        return 1;
+    }
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // ============================================================================
     // Step 2: Execute
     // ============================================================================
     SelfPatch patch;
     ReleaseAgent rel;
     MetaLearn ml;
+<<<<<<< HEAD
 
     bool success = true;
     int taskCount = 0;
@@ -206,29 +255,103 @@ int main(int argc, char *argv[])
                 args.push_back(target);
             }
             int rc = executeProcess("cmake", args);
+=======
+    SelfCode sc; // Added SelfCode instance
+
+    bool success = true;
+    size_t taskCount = 0;
+    size_t failureCount = 0;
+
+    for (const auto& task : tasks) {
+        if (!task.is_object()) {
+            continue;
+        }
+        std::string type = task.value("type", "");
+        ++taskCount;
+
+        // Log task
+        std::cout << "Executing task: " << type << std::endl;
+
+        if (type == "add_kernel") {
+            success = patch.addKernel(task.value("target", ""), task.value("template", ""));
+        } else if (type == "add_cpp") {
+            std::string deps;
+            if (task.contains("deps") && task["deps"].is_array()) {
+                for (const auto& val : task["deps"]) {
+                    if (!deps.empty()) {
+                        deps += ",";
+                    }
+                    deps += val.get<std::string>();
+                }
+            } else {
+                deps = task.value("deps", "");
+            }
+            success = patch.addCpp(task.value("target", ""), deps);
+        } else if (type == "self_code" || type == "edit_source") {
+             success = sc.editSource(
+                task.value("file", ""),
+                task.value("old_code", ""),
+                task.value("new_code", "")
+            );
+        } else if (type == "create_file") {
+            success = sc.createFile(
+                task.value("target", ""), // Planner puts filename in 'target'
+                task.value("content", "")
+            );
+        } else if (type == "add_include") {
+            success = sc.addInclude(
+                task.value("file", ""),
+                task.value("include", "")
+            );
+        } else if (type == "rebuild_target") {
+            success = sc.rebuildTarget(
+                task.value("target", ""),
+                 task.value("config", "Release")
+            );
+        } else if (type == "build") {
+            std::string cmd = "cmake --build build --config Release";
+            std::string target = task.value("target", "");
+            if (!target.empty()) {
+                cmd += " --target " + target;
+            }
+            int rc = std::system(cmd.c_str());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             success = (rc == 0);
         } else if (type == "hot_reload") {
             success = patch.hotReload();
         } else if (type == "bump_version") {
+<<<<<<< HEAD
             success = rel.bumpVersion(task.value("part").toString());
         } else if (type == "tag") {
             success = rel.tagAndUpload();
         } else if (type == "tweet") {
             success = rel.tweet(task.value("text").toString());
+=======
+            success = rel.bumpVersion(task.value("part", ""));
+        } else if (type == "tag") {
+            success = rel.tagAndUpload();
+        } else if (type == "tweet") {
+            success = rel.tweet(task.value("text", ""));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         } else if (type == "meta_learn") {
             success = ml.record(
-                task.value("quant").toString(),
-                task.value("kernel").toString(),
-                task.value("gpu").toString(),
-                task.value("tps").toDouble(),
-                task.value("ppl").toDouble()
+                task.value("quant", ""),
+                task.value("kernel", ""),
+                task.value("gpu", ""),
+                task.value("tps", 0.0),
+                task.value("ppl", 0.0)
             );
         } else if (type == "bench" || type == "bench_all") {
+<<<<<<< HEAD
             fprintf(stderr, "Benchmark (handled by build)\n");
+=======
+            success = true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
 
         if (!success) {
             failureCount++;
+<<<<<<< HEAD
             fprintf(stderr, "Task failed: %s (%d/%d)\n", type.c_str(), failureCount, taskCount);
 
             // ============================================================================
@@ -242,6 +365,8 @@ int main(int argc, char *argv[])
             } else {
                 fprintf(stderr, "[ZeroTouch] No immediate degradation found. Rolling back.\n");
             }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return 1;
         }
     }
@@ -251,6 +376,7 @@ int main(int argc, char *argv[])
     // ============================================================================
 
     std::string suggested = ml.suggestQuant();
+<<<<<<< HEAD
     fprintf(stderr, "Meta-learn suggests quant: %s\n", suggested.c_str());
 
     double successRate = (taskCount > 0) ? (100.0 * (taskCount - failureCount) / taskCount) : 0.0;
@@ -260,6 +386,11 @@ int main(int argc, char *argv[])
     fprintf(stdout, "Tasks: %d | Failures: %d | Success rate: %.1f%%\n",
             taskCount, failureCount, successRate);
     fprintf(stdout, "===============================================\n");
+=======
+    (void)suggested;
+    (void)taskCount;
+    (void)failureCount;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     return 0;
 }

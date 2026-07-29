@@ -27,7 +27,11 @@ class AgenticExecutor;
  * - Full IDE integration with all components
  * - On-device model fine-tuning
  */
+<<<<<<< HEAD
 class AgenticCopilotBridge {
+=======
+class AgenticCopilotBridge : public void {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 public:
     explicit AgenticCopilotBridge(void* parent = nullptr);
@@ -44,7 +48,11 @@ public:
     std::string generateTestsForCode(const std::string& code);
     
     // Multi-turn conversation (like Copilot Chat)
+<<<<<<< HEAD
     std::string askAgent(const std::string& question, const void*& context = nullptr);
+=======
+    std::string askAgent(const std::string& question, const void*& context = void*());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string continuePreviousConversation(const std::string& followUp);
     
     // Puppeteering and hotpatching (Cursor IDE style)

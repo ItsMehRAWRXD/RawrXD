@@ -1,4 +1,5 @@
 ; ============================================================================
+<<<<<<< HEAD
 ; RawrXD Pure MASM Web Server - Canonical native GUI server for the IDE
 ; ============================================================================
 ; Purpose: Eliminate Python/Node as server dependencies; use pure metal for performance.
@@ -16,6 +17,12 @@
 ;
 ; Build: ml64 webserver.asm /link /subsystem:console /entry:start
 ;        /defaultlib:kernel32.lib /defaultlib:ws2_32.lib
+=======
+; RawrXD Pure MASM Web Server - Serves HTML frontend
+; ============================================================================
+; Build: ml64 webserver.asm /link /subsystem:console /entry:start 
+;        /defaultlib:kernel32.lib /defaultlib:ws2_32.lib 
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ;        /out:webserver.exe
 ; ============================================================================
 
@@ -28,6 +35,7 @@ includelib ws2_32.lib
 ; CONSTANTS
 ; ============================================================================
 PORT            equ     3000
+<<<<<<< HEAD
 BACKEND_PORT    equ     8080        ; Legacy Win32/Node backend (optional)
 OLLAMA_PORT     equ     11434       ; Ollama API
 RAWRXD_PORT     equ     11435       ; RawrXD native runtime (Sovereign)
@@ -40,6 +48,11 @@ BACKEND_OLLAMA  equ     1
 BACKEND_RAWRXD  equ     2
 BACKEND_LEGACY  equ     3
 
+=======
+BUFFER_SIZE     equ     65536
+MAX_FILE_SIZE   equ     10485760    ; 10MB max file size
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ; Socket constants
 AF_INET         equ     2
 SOCK_STREAM     equ     1
@@ -94,8 +107,11 @@ extern recv:proc
 extern closesocket:proc
 extern htons:proc
 extern setsockopt:proc
+<<<<<<< HEAD
 extern connect:proc
 extern inet_addr:proc
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; ============================================================================
 ; DATA SECTION
@@ -103,6 +119,7 @@ extern inet_addr:proc
 .data
 align 16
 
+<<<<<<< HEAD
 ; Messages (pure metal GUI server — no Python/Node dependency for API calls)
 szStartMsg      db      "RawrXD MASM Web Server (native GUI, no Python/Node required)", 13, 10
                 db      "HTTP:  http://localhost:3000/launcher.html", 13, 10
@@ -110,21 +127,30 @@ szStartMsg      db      "RawrXD MASM Web Server (native GUI, no Python/Node requ
                 db      "       /api/rawrxd/* -> RawrXD :11435", 13, 10
                 db      "       /health -> Internal", 13, 10
                 db      "HTTPS: https://localhost:3000 (use reverse proxy)", 13, 10
+=======
+; Messages
+szStartMsg      db      "RawrXD Web Server v1.0", 13, 10
+                db      "Serving: http://localhost:3000/ide_chatbot.html", 13, 10
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 db      "Press Ctrl+C to stop", 13, 10, 13, 10, 0
 szListening     db      "[Server] Listening on port 3000...", 13, 10, 0
 szRequest       db      "[Request] ", 0
 szServing       db      "[Serving] ", 0
 szError         db      "[Error] ", 0
 szNewline       db      13, 10, 0
+<<<<<<< HEAD
 szProxyOllama   db      "[Proxy] -> Ollama :11434", 13, 10, 0
 szProxyRawrXD   db      "[Proxy] -> RawrXD :11435", 13, 10, 0
 szProxyBackend  db      "[Proxy] -> Backend :8080", 13, 10, 0
 szHealthOk      db      "[Health] OK", 13, 10, 0
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; HTTP Responses
 szHttpOk        db      "HTTP/1.1 200 OK", 13, 10
                 db      "Content-Type: text/html; charset=utf-8", 13, 10
                 db      "Access-Control-Allow-Origin: *", 13, 10
+<<<<<<< HEAD
                 db      "Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE", 13, 10
                 db      "Access-Control-Allow-Headers: Content-Type, Accept, Authorization", 13, 10
                 db      "Connection: close", 13, 10
@@ -133,6 +159,8 @@ szHttpOk        db      "HTTP/1.1 200 OK", 13, 10
 szHttpJsonOk    db      "HTTP/1.1 200 OK", 13, 10
                 db      "Content-Type: application/json", 13, 10
                 db      "Access-Control-Allow-Origin: *", 13, 10
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 db      "Access-Control-Allow-Methods: GET, POST, OPTIONS", 13, 10
                 db      "Access-Control-Allow-Headers: Content-Type, Accept", 13, 10
                 db      "Connection: close", 13, 10
@@ -144,6 +172,7 @@ szHttp404       db      "HTTP/1.1 404 Not Found", 13, 10
                 db      "<html><body><h1>404 Not Found</h1></body></html>", 0
 szHttp404Len    equ     $ - szHttp404
 
+<<<<<<< HEAD
 szHttp502       db      "HTTP/1.1 502 Bad Gateway", 13, 10
                 db      "Content-Type: application/json", 13, 10
                 db      "Connection: close", 13, 10, 13, 10
@@ -177,6 +206,12 @@ szGeneratePrefix db     "api/generate", 0
 szChatPrefix    db      "api/chat", 0
 szEmbedPrefix   db      "api/embed", 0
 szPsPrefix      db      "api/ps", 0
+=======
+; File paths
+szFilePath      db      "ide_chatbot.html", 0
+szGetPrefix     db      "GET /", 0
+szGetSuffix     db      " HTTP/", 0
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; ============================================================================
 ; BSS SECTION
@@ -186,12 +221,18 @@ align 16
 
 wsaData         WSADATA <>
 serverAddr      sockaddr_in <>
+<<<<<<< HEAD
 backendAddr     sockaddr_in <>
 listenSocket    dq      ?
 clientSocket    dq      ?
 backendSocket   dq      ?
 hStdOut         dq      ?
 requestLen      dd      ?           ; bytes received from client (for proxy)
+=======
+listenSocket    dq      ?
+clientSocket    dq      ?
+hStdOut         dq      ?
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 buffer          db      BUFFER_SIZE dup(?)
 fileBuffer      db      MAX_FILE_SIZE dup(?)
 tempBuffer      db      256 dup(?)
@@ -287,7 +328,10 @@ main_loop:
     call    recv
     test    eax, eax
     jle     close_client
+<<<<<<< HEAD
     mov     requestLen, eax     ; save for proxy
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Log request
     lea     rcx, szRequest
@@ -295,11 +339,16 @@ main_loop:
     lea     rcx, buffer
     call    PrintConsole
     
+<<<<<<< HEAD
     ; --- GET: try static GUI files first, else proxy to Win32/CLI backend ---
+=======
+    ; Parse GET request
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea     rcx, buffer
     lea     rdx, szGetPrefix
     call    StrStartsWith
     test    al, al
+<<<<<<< HEAD
     jz      try_post_or_proxy
     
     ; Extract path (after "GET /")
@@ -319,10 +368,22 @@ main_loop:
     jnz     serve_launcher
     
     ; "ide_chatbot.html" -> serve ide_chatbot
+=======
+    jz      send_404
+    
+    ; Extract filename
+    lea     rcx, buffer
+    add     rcx, 5              ; Skip "GET /"
+    lea     rdx, tempBuffer
+    call    ExtractPath
+    
+    ; Check if requesting HTML file
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea     rcx, tempBuffer
     lea     rdx, szFilePath
     call    StrEqual
     test    al, al
+<<<<<<< HEAD
     jnz     serve_ide_chatbot
     
     ; "agents.html" -> serve agents
@@ -336,10 +397,16 @@ main_loop:
     jmp     do_smart_proxy
     
 serve_ide_chatbot:
+=======
+    jz      send_404
+    
+    ; Read HTML file
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea     rcx, szFilePath
     call    ReadHtmlFile
     test    rax, rax
     jz      send_404
+<<<<<<< HEAD
     call    SendHtmlResponse
     jmp     close_client
     
@@ -427,6 +494,13 @@ proxy_to_backend:
     call    ProxyToBackend
     jmp     close_client
     
+=======
+    
+    ; Send HTTP 200 + HTML
+    call    SendHtmlResponse
+    jmp     close_client
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 send_404:
     ; Send 404
     mov     rcx, clientSocket
@@ -567,6 +641,7 @@ SendHtmlResponse proc
 SendHtmlResponse endp
 
 ; ============================================================================
+<<<<<<< HEAD
 ; ProxyToBackend - Bridge request to Win32/CLI backend (Node or HeadlessIDE)
 ; Forwards full request buffer to 127.0.0.1:BACKEND_PORT and streams response to client.
 ; ============================================================================
@@ -747,6 +822,8 @@ ollama_exit:
 ProxyToOllama endp
 
 ; ============================================================================
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ; UTILITY FUNCTIONS
 ; ============================================================================
 
@@ -907,6 +984,7 @@ its_done:
     ret
 IntToStr endp
 
+<<<<<<< HEAD
 ; ============================================================================
 ; ExtractRequestPath - Extract the path from HTTP request line
 ; Input: RCX = request buffer, RDX = output buffer
@@ -1100,4 +1178,6 @@ rawrxd_exit:
     ret
 ProxyToRawrXD endp
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 end

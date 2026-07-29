@@ -17,7 +17,11 @@
  * - Configure backend-specific options (precision, memory pool, etc.)
  * - Runtime backend switching
  */
+<<<<<<< HEAD
 class HardwareBackendSelector
+=======
+class HardwareBackendSelector : public void
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 {
 
 public:
@@ -56,6 +60,10 @@ public:
      * @param parent Parent widget
      */
     explicit HardwareBackendSelector(void* parent = nullptr);
+<<<<<<< HEAD
+=======
+    ~HardwareBackendSelector() override = default;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     /**
      * Two-phase initialization - call after void is ready

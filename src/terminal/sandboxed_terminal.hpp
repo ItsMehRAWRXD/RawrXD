@@ -1,5 +1,10 @@
 #pragma once
+<<<<<<< HEAD
 // sandboxed_terminal.hpp – Qt-free sandboxed terminal (C++20 / Win32)
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -19,13 +24,22 @@ using JsonObject = std::unordered_map<std::string, JsonValue>;
  *   - Structured logging + audit trail
  *   - Win32 CreateProcess backend
  */
+<<<<<<< HEAD
 class SandboxedTerminal {
 public:
     SandboxedTerminal();
     ~SandboxedTerminal();
+=======
+class SandboxedTerminal : public void {
+
+public:
+    explicit SandboxedTerminal(void* parent = nullptr);
+    ~SandboxedTerminal() override;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // ---------- Configuration ----------
     struct Config {
+<<<<<<< HEAD
         std::vector<std::string> commandWhitelist;
         std::vector<std::string> commandBlacklist;
         bool        useWhitelistMode      = true;
@@ -40,6 +54,22 @@ public:
         int64_t     maxMemoryBytes        = 536870912; // 512 MB
         int         maxCpuPercent         = 80;
         bool        enableMetrics         = true;
+=======
+        std::vector<std::string> commandWhitelist;        // Allowed commands
+        std::vector<std::string> commandBlacklist;        // Explicitly forbidden commands
+        bool useWhitelistMode = true;        // If true, only whitelist allowed; if false, blacklist forbidden
+        int maxExecutionTimeMs = 30000;      // Command timeout
+        int maxOutputSize = 1048576;         // 1MB max output
+        bool enableOutputFiltering = true;   // Filter sensitive data from output
+        bool enableAuditLog = true;
+        std::string auditLogPath;
+        std::string workingDirectory;
+        std::vector<std::string> allowedEnvironmentVars;  // Environment variables to preserve
+        bool enableResourceLimits = true;
+        int64_t maxMemoryBytes = 536870912;   // 512MB
+        int maxCpuPercent = 80;
+        bool enableMetrics = true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     };
 
     void   setConfig(const Config& config);
@@ -49,6 +79,7 @@ public:
     struct CommandResult {
         std::string output;
         std::string error;
+<<<<<<< HEAD
         int         exitCode        = -1;
         bool        timedOut        = false;
         bool        wasBlocked      = false;
@@ -61,6 +92,19 @@ public:
     bool        isCommandAllowed(const std::string& command) const;
     std::string sanitizeOutput(const std::string& output) const;
 
+=======
+        int exitCode;
+        bool timedOut;
+        bool wasBlocked;
+        std::string blockReason;
+        int64_t executionTimeMs;
+    };
+
+    CommandResult executeCommand(const std::string& command, const std::vector<std::string>& args = std::vector<std::string>());
+    bool isCommandAllowed(const std::string& command) const;
+    std::string sanitizeOutput(const std::string& output) const;
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Process management
     bool isRunning() const;
     void terminate();
@@ -68,6 +112,7 @@ public:
 
     // ---------- Metrics ----------
     struct Metrics {
+<<<<<<< HEAD
         int64_t commandsExecuted     = 0;
         int64_t commandsBlocked      = 0;
         int64_t commandsTimedOut     = 0;
@@ -75,11 +120,21 @@ public:
         int64_t securityViolations   = 0;
         int64_t errorCount           = 0;
         double  avgExecutionTimeMs   = 0.0;
+=======
+        int64_t commandsExecuted = 0;
+        int64_t commandsBlocked = 0;
+        int64_t commandsTimedOut = 0;
+        int64_t outputBytesFiltered = 0;
+        int64_t securityViolations = 0;
+        int64_t errorCount = 0;
+        double avgExecutionTimeMs = 0.0;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     };
 
     Metrics getMetrics() const;
     void    resetMetrics();
 
+<<<<<<< HEAD
     // ---------- Callbacks (replaces Qt signals) ----------
     using CmdStringCb   = void(*)(void* ctx, const char* command);
     using CmdResultCb   = void(*)(void* ctx, const CommandResult* result);
@@ -122,4 +177,37 @@ private:
     StringCb    m_secCb    = nullptr;  void* m_secCtx    = nullptr;
     StringCb    m_errCb    = nullptr;  void* m_errCtx    = nullptr;
     MetricsCb   m_metCb    = nullptr;  void* m_metCtx    = nullptr;
+=======
+    void commandStarted(const std::string& command);
+    void commandFinished(const CommandResult& result);
+    void commandBlocked(const std::string& command, const std::string& reason);
+    void securityViolation(const std::string& violation);
+    void errorOccurred(const std::string& error);
+    void metricsUpdated(const Metrics& metrics);
+
+private:
+    // Configuration
+    Config m_config;
+    mutable std::mutex m_configMutex;
+
+    // Process
+    void** m_process;
+    mutable std::mutex m_processMutex;
+
+    // Metrics
+    Metrics m_metrics;
+    mutable std::mutex m_metricsMutex;
+
+    // Helper methods
+    void logStructured(const std::string& level, const std::string& message, const void*& context = void*());
+    void recordLatency(const std::string& operation, const std::chrono::milliseconds& duration);
+    void logAudit(const std::string& action, const void*& details);
+    bool validateCommand(const std::string& command, std::string& blockReason);
+    bool validateCommand(const std::string& command, std::string& blockReason) const;  // const overload
+    std::vector<std::string> buildSanitizedEnvironment() const;
+    bool enforceResourceLimits();
+    std::string filterSensitiveData(const std::string& data) const;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
+
+

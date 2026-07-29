@@ -5,13 +5,17 @@
 #include <winhttp.h>
 #include <thread>
 #include <mutex>
+<<<<<<< HEAD
 #include <algorithm>
 #include <cctype>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "winhttp.lib")
 
 namespace RawrXD {
 
+<<<<<<< HEAD
 // Hotpatch: trim whitespace from both ends of a string
 static std::string trimWhitespace(const std::string& s) {
     auto first = s.find_first_not_of(" \t\n\r\f\v");
@@ -40,6 +44,21 @@ CloudApiClient::~CloudApiClient() {
     std::lock_guard<std::mutex> lock(m_mutex);
     callHistory.clear();
 }
+=======
+std::wstring s2ws(const std::string& s) {
+    if (s.empty()) return L"";
+    int len;
+    int slength = (int)s.length() + 1;
+    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0); 
+    std::wstring buf;
+    buf.resize(len);
+    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, &buf[0], len);
+    return buf;
+}
+
+CloudApiClient::CloudApiClient(UniversalModelRouter* parent) {}
+CloudApiClient::~CloudApiClient() {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlohmann::json& body, const CloudModelConfig& config, std::function<void(const std::string&)> streamCallback) {
     ApiResponse response;
@@ -134,6 +153,7 @@ ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlo
             if (!streamCallback) {
                 try {
                      if (!response.raw_body.empty()) {
+<<<<<<< HEAD
                          auto j = nlohmann::json::parse(response.raw_body);
                          if (config.provider == "openai" || config.provider == "azure") {
                              if (j.contains("choices") && !j["choices"].empty()) {
@@ -162,6 +182,25 @@ ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlo
                       }
                  } catch(...) {}
              }
+=======
+                        auto j = nlohmann::json::parse(response.raw_body);
+                        if (config.provider == "openai" || config.provider == "azure") {
+                            if (j.contains("choices") && !j["choices"].empty()) {
+                                response.content = j["choices"][0]["message"]["content"];
+                            }
+                        } else if (config.provider == "ollama") {
+                            if (j.contains("response")) response.content = j["response"];
+                        } else if (config.provider == "anthropic") {
+                            if (j.contains("content")) {
+                                for (auto& item : j["content"]) {
+                                    if (item["type"] == "text") response.content += item["text"];
+                                }
+                            }
+                        }
+                     }
+                } catch(...) {}
+            }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         } else {
             response.error_message = "HTTP " + std::to_string(response.status_code);
         }
@@ -177,6 +216,7 @@ ApiResponse CloudApiClient::performRequest(const std::string& url_str, const nlo
 }
 
 std::string CloudApiClient::generate(const std::string& prompt, const CloudModelConfig& config) {
+<<<<<<< HEAD
     // Hotpatch: reject empty/whitespace-only prompts — Anthropic returns 400 otherwise
     const std::string trimmed = trimWhitespace(prompt);
     if (trimmed.empty()) {
@@ -194,6 +234,15 @@ void CloudApiClient::generateAsync(const std::string& prompt, const CloudModelCo
         if (callback) callback("Error: Request Failed: prompt must contain non-whitespace text");
         return;
     }
+=======
+    auto body = buildRequestBody(prompt, config);
+    ApiResponse resp = performRequest(config.endpoint, body, config);
+    if (resp.success) return resp.content;
+    return "Error: " + resp.error_message;
+}
+
+void CloudApiClient::generateAsync(const std::string& prompt, const CloudModelConfig& config, std::function<void(std::string)> callback) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::thread([this, prompt, config, callback]() {
         std::string result = this->generate(prompt, config);
         if (callback) callback(result);
@@ -201,6 +250,7 @@ void CloudApiClient::generateAsync(const std::string& prompt, const CloudModelCo
 }
 
 void CloudApiClient::generateStream(const std::string& prompt, const CloudModelConfig& config, std::function<void(const std::string&)> token_callback, std::function<void(const std::string&)> complete_callback) {
+<<<<<<< HEAD
     // Hotpatch: reject empty/whitespace-only prompts before streaming starts
     if (trimWhitespace(prompt).empty()) {
         if (complete_callback) complete_callback("Error: Request Failed: prompt must contain non-whitespace text");
@@ -209,6 +259,10 @@ void CloudApiClient::generateStream(const std::string& prompt, const CloudModelC
     std::thread([this, prompt, config, token_callback, complete_callback]() {
         const std::string trimmed = trimWhitespace(prompt);
         auto body = buildRequestBody(trimmed, config);
+=======
+    std::thread([this, prompt, config, token_callback, complete_callback]() {
+        auto body = buildRequestBody(prompt, config);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         body["stream"] = true;
         
         auto streamProcessor = [token_callback](const std::string& chunk) {
@@ -244,6 +298,7 @@ void CloudApiClient::listModelsAsync(const CloudModelConfig& config, std::functi
 }
 
 nlohmann::json CloudApiClient::buildRequestBody(const std::string& prompt, const CloudModelConfig& config) {
+<<<<<<< HEAD
     // Hotpatch: always use a trimmed, non-empty content value
     const std::string safePrompt = trimWhitespace(prompt);
     const std::string content = safePrompt.empty() ? " " : safePrompt;
@@ -251,15 +306,29 @@ nlohmann::json CloudApiClient::buildRequestBody(const std::string& prompt, const
     if (config.provider == "openai" || config.provider == "azure") {
         body["model"] = config.model;
         body["messages"] = nlohmann::json::array({ nlohmann::json::object({{"role", "user"}, {"content", content}}) });
+=======
+    nlohmann::json body;
+    if (config.provider == "openai" || config.provider == "azure") {
+        body["model"] = config.model;
+        body["messages"] = nlohmann::json::array({ {{"role", "user"}, {"content", prompt}} });
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         body["temperature"] = config.temperature;
         body["max_tokens"] = config.maxTokens;
     } else if (config.provider == "anthropic") {
         body["model"] = config.model;
+<<<<<<< HEAD
         body["messages"] = nlohmann::json::array({ nlohmann::json::object({{"role", "user"}, {"content", content}}) });
         body["max_tokens"] = config.maxTokens;
     } else {
         body["model"] = config.model;
         body["prompt"] = content;
+=======
+        body["messages"] = nlohmann::json::array({ {{"role", "user"}, {"content", prompt}} });
+        body["max_tokens"] = config.maxTokens;
+    } else {
+        body["model"] = config.model;
+        body["prompt"] = prompt;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         body["stream"] = false;
     }
     return body;

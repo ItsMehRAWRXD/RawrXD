@@ -2,6 +2,7 @@
 
 #include "agentic_agent_coordinator.h"
 #include "production_config_manager.h"
+<<<<<<< HEAD
 #include "win32app/IDELogger.h"
 
 #ifdef _WIN32
@@ -16,6 +17,12 @@
 #include <cstdio>
 #include <string>
 #include <unordered_map>
+=======
+
+#include <array>
+
+using RawrXD::Registry::Logger;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD::IDE {
 
@@ -24,9 +31,14 @@ constexpr int kHeartbeatIntervalMs = 15000;
 }
 
 AgenticController::AgenticController()
+<<<<<<< HEAD
 {
     // No signal connections needed — callbacks used instead
 }
+=======
+     {
+    // Object::  // Signal connection removed\n}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 AgenticController::~AgenticController() = default;
 
@@ -35,13 +47,18 @@ AgenticResult AgenticController::bootstrap() {
 
     auto coordinationResult = ensureCoordinator();
     if (!coordinationResult.success) {
+<<<<<<< HEAD
         if (onControllerError) {
             onControllerError(coordinationResult.message);
         }
+=======
+        controllerError(std::string::fromStdString(coordinationResult.message));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return coordinationResult;
     }
 
     const std::string snapshotHint = resolveSnapshotPreference();
+<<<<<<< HEAD
     if (onLayoutHydrationRequested) {
         onLayoutHydrationRequested(snapshotHint);
     }
@@ -51,6 +68,13 @@ AgenticResult AgenticController::bootstrap() {
 
     m_heartbeatTimer.start(kHeartbeatIntervalMs);
     LOG_INFO(std::string("AgenticController bootstrap completed in " + std::to_string(m_bootTimer.elapsed()) + " ms").c_str());
+=======
+    layoutHydrationRequested(snapshotHint);
+    controllerReady();
+
+    m_heartbeatTimer.start(kHeartbeatIntervalMs);
+    Logger::instance().info("AgenticController bootstrap completed in {} ms", m_bootTimer.elapsed());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return AgenticResult::Ok("Agentic system bootstrapped");
 }
 
@@ -60,16 +84,28 @@ AgenticResult AgenticController::ensureCoordinator() {
     }
 
     try {
+<<<<<<< HEAD
         m_coordinator = std::make_unique<AgenticAgentCoordinator>();
         const std::array<AgenticAgentCoordinator::AgentRole, 3> seedRoles = {
             AgenticAgentCoordinator::AgentRole::Analyzer,
             AgenticAgentCoordinator::AgentRole::Developer,
             AgenticAgentCoordinator::AgentRole::Reviewer
+=======
+        m_coordinator = std::make_unique<AgenticAgentCoordinator>(this);
+        const std::array<AgenticAgentCoordinator::AgentRole, 3> seedRoles = {
+            AgenticAgentCoordinator::AgentRole::Analyzer,
+            AgenticAgentCoordinator::AgentRole::Planner,
+            AgenticAgentCoordinator::AgentRole::Executor
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         };
 
         for (const auto role : seedRoles) {
             const std::string agentId = m_coordinator->createAgent(role);
+<<<<<<< HEAD
             LOG_DEBUG(std::string("Primed agent " + agentId + " for role " + std::to_string(static_cast<int>(role))).c_str());
+=======
+            Logger::instance().debug("Primed agent {} for role {}", agentId, static_cast<int>(role));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
 
         return AgenticResult::Ok();
@@ -86,6 +122,7 @@ std::string AgenticController::resolveSnapshotPreference() const {
     auto& config = RawrXD::ProductionConfigManager::instance();
     config.loadConfig();
 
+<<<<<<< HEAD
     const std::string configured = config.value("registry_snapshot_preference", nlohmann::json("latest")).get<std::string>();
     if (!configured.empty()) {
         return configured;
@@ -156,6 +193,42 @@ void AgenticController::handleLayoutRestored(const std::string& snapshotId) {
 
     if (m_coordinator) {
         m_coordinator->synchronizeAgentStates();
+=======
+    const std::any configured = config.value("registry_snapshot_preference", std::stringLiteral("latest"));
+    if (configured.canConvert<std::string>()) {
+        const std::string hint = configured.toString().trimmed();
+        if (!hint.empty()) {
+            return hint;
+        }
+    }
+
+    const std::string envHint = qEnvironmentVariable("RAWRXD_REGISTRY_SNAPSHOT");
+    if (!envHint.empty()) {
+        return envHint;
+    }
+
+    return std::stringLiteral("latest");
+}
+
+void AgenticController::publishHeartbeat() {
+    void* payload;
+    payload.insert(std::stringLiteral("timestamp"), // DateTime::currentDateTimeUtc().toString(ISODateWithMs));
+    payload.insert(std::stringLiteral("uptime_ms"), static_cast<int64_t>(m_bootTimer.isValid() ? m_bootTimer.elapsed() : 0));
+
+    if (m_coordinator) {
+        payload.insert(std::stringLiteral("coordination"), m_coordinator->getCoordinationMetrics());
+    }
+
+    const std::string serialized = std::string::fromUtf8(void*(payload).toJson(void*::Compact));
+    telemetryHeartbeat(serialized);
+}
+
+void AgenticController::handleLayoutRestored(const std::string& snapshotId) {
+    Logger::instance().info("Agentic controller acknowledged snapshot {}", snapshotId);
+
+    if (m_coordinator) {
+        m_coordinator->saveCheckpoint();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -164,6 +237,7 @@ void AgenticController::handleWindowActivated() {
         return;
     }
 
+<<<<<<< HEAD
     const auto statuses = m_coordinator->getAllAgentStatuses();
     int tasksCompleted = 0;
     for (const auto& status : statuses) {
@@ -175,3 +249,13 @@ void AgenticController::handleWindowActivated() {
 }
 
 } // namespace RawrXD::IDE
+=======
+    const auto metrics = m_coordinator->getCoordinationMetrics();
+    Logger::instance().debug("Window activation routed to agentic coordinator: agents={} tasks={}",
+                             metrics.value(std::stringLiteral("total_agents")),
+                             metrics.value(std::stringLiteral("total_tasks_assigned")));
+}
+
+} // namespace RawrXD::IDE
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

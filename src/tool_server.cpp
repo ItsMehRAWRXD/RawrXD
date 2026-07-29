@@ -18,6 +18,7 @@
 #include <cmath>
 #include <memory>
 #include <algorithm>
+<<<<<<< HEAD
 #include <atomic>
 #include <winsock2.h>
 #include <windows.h>
@@ -145,6 +146,23 @@ static bool g_masm_bridge_initialized = false;
 static bool g_swarm_initialized = false;
 #endif
 
+=======
+#include <winsock2.h>
+#include <windows.h>
+#include <random>
+#include <fstream>
+#include <sstream>
+
+// Real backend integration
+#include "backend/agentic_tools.h"
+#include "ai_model_caller.h"
+#include "cpu_inference_engine.h"
+
+// Replaced stub InferenceEngine with real RawrXD::CPUInferenceEngine
+static std::unique_ptr<RawrXD::CPUInferenceEngine> g_engine;
+static std::unique_ptr<RawrXD::Backend::AgenticToolExecutor> g_tool_executor;
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #pragma comment(lib, "ws2_32.lib")
 #pragma warning(disable : 4996)
 
@@ -315,7 +333,10 @@ private:
     SOCKET listen_socket_;
     std::thread server_thread_;
     std::chrono::steady_clock::time_point start_time_;
+<<<<<<< HEAD
     std::atomic<uint64_t> request_count_{0};
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     void ServerLoop() {
         while (running_) {
@@ -339,6 +360,7 @@ private:
         }
     }
     
+<<<<<<< HEAD
     // ---- CORS helper: inject cross-origin headers into every response ----
     static std::string InjectCorsHeaders(const std::string& response) {
         // Find the end of the status line to inject headers right after
@@ -377,6 +399,8 @@ private:
         return request.substr(body_start + 4);
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void HandleRequest(SOCKET client_socket, const std::string& request) {
         std::string response;
         
@@ -384,6 +408,7 @@ private:
         std::istringstream iss(request);
         std::string method, path, http_version;
         iss >> method >> path >> http_version;
+<<<<<<< HEAD
 
         // Strip query parameters for route matching
         std::string queryString;
@@ -403,6 +428,10 @@ private:
         // ---- Route to handler ----
 
         // === Existing routes ===
+=======
+        
+        // Route to handler
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (method == "GET" && path == "/api/tags") {
             response = HandleTagsRequest();
         }
@@ -412,17 +441,28 @@ private:
         else if (method == "GET" && path == "/api/status") {
             response = HandleStatusRequest();
         }
+<<<<<<< HEAD
         else if (method == "GET" && path == "/status") {
             // Alias: HTML chatbot tries /status first (without /api/ prefix)
             response = HandleStatusRequest();
         }
         else if (method == "POST" && path == "/api/generate") {
             response = HandleGenerateRequest(ExtractBody(request));
+=======
+        else if (method == "POST" && path == "/api/generate") {
+            // Extract body
+            size_t body_start = request.find("\r\n\r\n");
+            std::string body = (body_start != std::string::npos) 
+                ? request.substr(body_start + 4) 
+                : "";
+            response = HandleGenerateRequest(body);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         else if (method == "GET" && path == "/metrics") {
             response = HandleMetricsRequest();
         }
         else if (method == "POST" && path == "/api/tool") {
+<<<<<<< HEAD
             response = HandleToolRequest(ExtractBody(request));
         }
 
@@ -594,6 +634,20 @@ private:
         // Inject CORS headers into every non-streaming response
         response = InjectCorsHeaders(response);
         send(client_socket, response.c_str(), static_cast<int>(response.length()), 0);
+=======
+            // Extract body
+            size_t body_start = request.find("\r\n\r\n");
+            std::string body = (body_start != std::string::npos) 
+                ? request.substr(body_start + 4) 
+                : "";
+            response = HandleToolRequest(body);
+        }
+        else {
+            response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+        }
+        
+        send(client_socket, response.c_str(), response.length(), 0);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     std::string HandleTagsRequest() {
@@ -634,6 +688,7 @@ private:
     std::string HandleStatusRequest() {
         auto now = std::chrono::steady_clock::now();
         auto uptime = std::chrono::duration_cast<std::chrono::seconds>(now - start_time_).count();
+<<<<<<< HEAD
         int model_count = g_model_loaded ? 1 : 0;
         std::string json_body = std::string("{\"running\":true,")
             + "\"status\":\"ok\","
@@ -650,6 +705,10 @@ private:
             + "\"model_range\":\"8B-100B swarm + 800B dual engine\","
             + "\"license\":\"unlicensed-open\""
             + "}";
+=======
+        std::string json_body = std::string("{\"running\":true,\"pid\":") +
+            std::to_string(GetCurrentProcessId()) + ",\"uptime_seconds\":" + std::to_string(uptime) + "}";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         std::string response = "HTTP/1.1 200 OK\r\n";
         response += "Content-Type: application/json\r\n";
@@ -660,6 +719,7 @@ private:
         return response;
     }
     
+<<<<<<< HEAD
     // Proxy /api/generate to Ollama backend via WinHTTP
     std::string HandleGenerateRequest(const std::string& body) {
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -783,6 +843,69 @@ private:
         response += "Content-Length: " + std::to_string(json.length()) + "\r\n";
         response += "\r\n";
         response += json;
+=======
+    std::string HandleGenerateRequest(const std::string& body) {
+        // Extract prompt from JSON body (simple parsing)
+        std::string prompt = "Test prompt";
+        size_t prompt_pos = body.find("\"prompt\":");
+        if (prompt_pos != std::string::npos) {
+            size_t start = body.find('"', prompt_pos + 10);
+            size_t end = body.find('"', start + 1);
+            if (start != std::string::npos && end != std::string::npos) {
+                prompt = body.substr(start + 1, end - start - 1);
+            }
+        }
+        
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        // Use Real Engine (In-Process) instead of ModelCaller (IPC/External)
+        std::string generated_text;
+        if (g_engine && g_engine->IsModelLoaded()) {
+             generated_text = g_engine->infer(prompt);
+        } else {
+             // Fallback or error
+             generated_text = "Error: Model not loaded in Tool Server.";
+        }
+        
+        // Escape logic for JSON (basic)
+        std::string escaped_text;
+        for (char c : generated_text) {
+            if (c == '"') escaped_text += "\\\"";
+            else if (c == '\n') escaped_text += "\\n";
+            else if (c == '\r') {} 
+            else escaped_text += c;
+        }
+        generated_text = escaped_text;
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        double actual_latency = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        int tokens_generated = (int)(generated_text.length() / 4); // Approximation for stats
+        
+        // Get timestamp
+        auto now = std::time(nullptr);
+        auto tm = *std::gmtime(&now);
+        char timestamp[30];
+        strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", &tm);
+        
+        std::string json_body = R"({
+  "response": ")" + generated_text + R"(",
+  "created_at": ")" + std::string(timestamp) + R"(",
+  "done": true,
+  "total_duration": )" + std::to_string((int64_t)actual_latency * 1000000) + R"(,
+  "load_duration": 1000000,
+  "prompt_eval_duration": 5000000,
+  "eval_duration": )" + std::to_string((int64_t)(actual_latency * 1000000 - 6000000)) + R"(,
+  "context": [)" + std::to_string(tokens_generated) + R"(],
+  "eval_count": )" + std::to_string(tokens_generated) + R"(
+})";
+        
+        std::string response = "HTTP/1.1 200 OK\r\n";
+        response += "Content-Type: application/json\r\n";
+        response += "Content-Length: " + std::to_string(json_body.length()) + "\r\n";
+        response += "\r\n";
+        response += json_body;
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return response;
     }
     
@@ -848,12 +971,20 @@ private:
             }
         }
         
+<<<<<<< HEAD
         // Fallback: local tool implementation (read_file, write_file, list_directory, etc.)
+=======
+        // Fallback to native implementation if executor unavailable
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::string path = ExtractJsonValue(body, "path");
         if (path.empty()) path = ExtractJsonValue(body, "command");
 
         ToolResult result;
         if (tool == "read_file") {
+<<<<<<< HEAD
+=======
+            // ... existing code ...
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             std::ifstream file(path);
             if (!file.is_open()) result = ToolResult::Error("Failed to open: " + path);
             else {
@@ -863,6 +994,10 @@ private:
             }
         }
         else if (tool == "write_file") {
+<<<<<<< HEAD
+=======
+            // ... existing code ...
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             std::string content = ExtractJsonValue(body, "content");
             std::ofstream file(path);
             if (!file.is_open()) result = ToolResult::Error("Failed to write: " + path);
@@ -872,6 +1007,10 @@ private:
             }
         }
         else if (tool == "list_directory") {
+<<<<<<< HEAD
+=======
+            // ... existing code ...
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             try {
                 if (path.empty()) path = ".";
                 std::string out;
@@ -885,6 +1024,7 @@ private:
         }
         else if (tool == "execute_command" || tool == "git_status") {
             std::string cmd = (tool == "git_status") ? "git status" : path;
+<<<<<<< HEAD
             // Whitelist: allow common file operations + git + dir + echo
             bool allowed = false;
             const char* whitelist[] = {
@@ -932,6 +1072,55 @@ private:
                 result = ToolResult::Error(e.what());
             }
         }
+=======
+            
+            // Explicit Implementation: Use Win32 CreateProcess for real execution without artificial restrictions
+            SECURITY_ATTRIBUTES sa;
+            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+            sa.bInheritHandle = TRUE;
+            sa.lpSecurityDescriptor = NULL;
+
+            HANDLE hRead, hWrite;
+            if (!CreatePipe(&hRead, &hWrite, &sa, 0)) {
+                result = ToolResult::Error("Failed to create pipe");
+            } else {
+                STARTUPINFOA si;
+                PROCESS_INFORMATION pi;
+                ZeroMemory(&si, sizeof(si));
+                si.cb = sizeof(si);
+                si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+                si.hStdOutput = hWrite;
+                si.hStdError = hWrite; // Merge stderr
+                si.wShowWindow = SW_HIDE;
+                ZeroMemory(&pi, sizeof(pi));
+
+                // Prefix with cmd /c to handle internal commands and path resolution
+                std::string fullCmd = "cmd.exe /C " + cmd;
+                
+                if (CreateProcessA(NULL, const_cast<char*>(fullCmd.c_str()), NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
+                    CloseHandle(hWrite); // Close write end in parent
+                    
+                    char buf[4096];
+                    DWORD bytesRead;
+                    std::string out;
+                    while (ReadFile(hRead, buf, sizeof(buf), &bytesRead, NULL) && bytesRead > 0) {
+                        out.append(buf, bytesRead);
+                    }
+                    
+                    WaitForSingleObject(pi.hProcess, INFINITE);
+                    CloseHandle(pi.hProcess);
+                    CloseHandle(pi.hThread);
+                    CloseHandle(hRead);
+                    
+                    result = ToolResult::Success(out);
+                } else {
+                    CloseHandle(hRead);
+                    CloseHandle(hWrite);
+                    result = ToolResult::Error("Failed to create process: " + std::to_string(GetLastError()));
+                }
+            }
+        }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         else {
             return "HTTP/1.1 400 Bad Request\r\n\r\n{\"error\":\"Unknown tool: " + tool + "\"}";
         }
@@ -944,6 +1133,7 @@ private:
         response += json_body;
         return response;
     }
+<<<<<<< HEAD
 
     // ============================================================
     // New Handlers — Standalone HTML Chatbot Support
@@ -3834,6 +4024,8 @@ private:
         }
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // ============================================================
@@ -3841,7 +4033,11 @@ private:
 // ============================================================
 
 int main(int argc, char* argv[]) {
+<<<<<<< HEAD
     int port = 11435;
+=======
+    int port = 11434;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string model_path = ResolveDefaultModelPath();
     
     // Parse arguments
@@ -3864,7 +4060,11 @@ int main(int argc, char* argv[]) {
 
 
     try {
+<<<<<<< HEAD
         g_engine = std::make_unique<InferenceEngine>();
+=======
+        g_engine = std::make_unique<RawrXD::CPUInferenceEngine>();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (!g_engine->loadModel(model_path)) {
             
             return 1;

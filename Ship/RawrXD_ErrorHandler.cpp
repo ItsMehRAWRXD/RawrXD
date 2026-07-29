@@ -11,12 +11,15 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
+<<<<<<< HEAD
 
 #ifndef RAWRXD_WIN32_STATIC_BUILD
 #define RAWRXD_SHIP_EXPORT RAWRXD_SHIP_EXPORT
 #else
 #define RAWRXD_SHIP_EXPORT
 #endif
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -205,6 +208,7 @@ public:
 
 extern "C" {
 
+<<<<<<< HEAD
 RAWRXD_SHIP_EXPORT ErrorHandler* __stdcall CreateErrorHandler(void) {
     return new ErrorHandler();
 }
@@ -214,29 +218,53 @@ RAWRXD_SHIP_EXPORT void __stdcall DestroyErrorHandler(ErrorHandler* handler) {
 }
 
 RAWRXD_SHIP_EXPORT int __stdcall ErrorHandler_LogError(ErrorHandler* handler,
+=======
+__declspec(dllexport) ErrorHandler* __stdcall CreateErrorHandler(void) {
+    return new ErrorHandler();
+}
+
+__declspec(dllexport) void __stdcall DestroyErrorHandler(ErrorHandler* handler) {
+    if (handler) delete handler;
+}
+
+__declspec(dllexport) int __stdcall ErrorHandler_LogError(ErrorHandler* handler,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int level, const wchar_t* code, const wchar_t* message, const wchar_t* context) {
     if (!handler) return -1;
     return handler->LogError(level, code, message, context);
 }
 
+<<<<<<< HEAD
 RAWRXD_SHIP_EXPORT int __stdcall ErrorHandler_LogWarning(ErrorHandler* handler,
+=======
+__declspec(dllexport) int __stdcall ErrorHandler_LogWarning(ErrorHandler* handler,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     const wchar_t* code, const wchar_t* message) {
     if (!handler) return -1;
     return handler->LogWarning(code, message);
 }
 
+<<<<<<< HEAD
 RAWRXD_SHIP_EXPORT int __stdcall ErrorHandler_LogInfo(ErrorHandler* handler,
+=======
+__declspec(dllexport) int __stdcall ErrorHandler_LogInfo(ErrorHandler* handler,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     const wchar_t* code, const wchar_t* message) {
     if (!handler) return -1;
     return handler->LogInfo(code, message);
 }
 
+<<<<<<< HEAD
 RAWRXD_SHIP_EXPORT int __stdcall ErrorHandler_ReportWindowsError(ErrorHandler* handler,
+=======
+__declspec(dllexport) int __stdcall ErrorHandler_ReportWindowsError(ErrorHandler* handler,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     const wchar_t* operation, const wchar_t* context) {
     if (!handler) return -1;
     return handler->ReportWindowsError(operation, context);
 }
 
+<<<<<<< HEAD
 RAWRXD_SHIP_EXPORT const wchar_t* __stdcall ErrorHandler_GetLastErrorString(ErrorHandler* handler) {
     return handler ? handler->GetLastErrorString() : L"Unknown error";
 }
@@ -250,6 +278,21 @@ RAWRXD_SHIP_EXPORT int __stdcall ErrorHandler_GetErrorCount(ErrorHandler* handle
 }
 
 RAWRXD_SHIP_EXPORT void __stdcall ErrorHandler_Clear(ErrorHandler* handler) {
+=======
+__declspec(dllexport) const wchar_t* __stdcall ErrorHandler_GetLastErrorString(ErrorHandler* handler) {
+    return handler ? handler->GetLastErrorString() : L"Unknown error";
+}
+
+__declspec(dllexport) DWORD __stdcall ErrorHandler_GetLastErrorCode(ErrorHandler* handler) {
+    return handler ? handler->GetLastErrorCode() : 0;
+}
+
+__declspec(dllexport) int __stdcall ErrorHandler_GetErrorCount(ErrorHandler* handler) {
+    return handler ? handler->GetErrorCount() : 0;
+}
+
+__declspec(dllexport) void __stdcall ErrorHandler_Clear(ErrorHandler* handler) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (handler) handler->Clear();
 }
 
@@ -259,10 +302,17 @@ RAWRXD_SHIP_EXPORT void __stdcall ErrorHandler_Clear(ErrorHandler* handler) {
 // DLL ENTRY
 // ============================================================================
 
+<<<<<<< HEAD
 #ifndef RAWRXD_WIN32_STATIC_BUILD
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     (void)hinstDLL;
     (void)lpvReserved;
+=======
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    (void)hinstDLL;
+    (void)lpvReserved;
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         OutputDebugStringW(L"[RawrXD_ErrorHandler] DLL loaded\n");
@@ -273,4 +323,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     }
     return TRUE;
 }
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

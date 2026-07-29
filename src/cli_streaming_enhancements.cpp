@@ -22,11 +22,16 @@ void initializeStreamingEnhancements() {
     g_batchEngine = std::make_unique<BatchProcessingEngine>(4);
     g_cacheManager = std::make_unique<KVCacheManager>(512 * 1024 * 1024);  // 512MB
     g_enhancedEngine = std::make_unique<EnhancedCLIEngine>();
+<<<<<<< HEAD
     
     std::cout << "[INIT] Streaming enhancements initialized" << std::endl;
     std::cout << "  - Async streaming engine: Ready" << std::endl;
     std::cout << "  - Batch processing engine: Ready (4 workers)" << std::endl;
     std::cout << "  - KV-cache manager: Ready (512MB)" << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -34,30 +39,48 @@ void initializeStreamingEnhancements() {
 // ============================================================================
 
 void cmdStreamAsync(const std::string& prompt) {
+<<<<<<< HEAD
     std::cout << "[INFO] Starting async streaming (non-blocking)..." << std::endl;
     
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int tokenCount = 0;
     std::string fullResponse;
     
     g_asyncEngine->streamAsync(
         prompt,
         [&tokenCount, &fullResponse](const std::string& token) {
+<<<<<<< HEAD
             std::cout << token;
+=======
+            
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             std::cout.flush();
             fullResponse += token;
             tokenCount++;
         },
         [&tokenCount](const std::string& response, bool success) {
+<<<<<<< HEAD
             std::cout << "\n" << std::endl;
             if (success) {
                 std::cout << "[SUCCESS] Async streaming complete: " << tokenCount << " tokens" << std::endl;
             } else {
                 std::cout << "[ERROR] " << response << std::endl;
+=======
+            
+            if (success) {
+                
+            } else {
+                
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
     );
     
     // Don't block - async operation continues
+<<<<<<< HEAD
     std::cout << "[INFO] Streaming in background. CLI remains responsive." << std::endl;
 }
 
@@ -68,15 +91,33 @@ void cmdWaitStream(int timeoutMs) {
         std::cout << "[SUCCESS] Stream completed" << std::endl;
     } else {
         std::cout << "[WARNING] Stream timeout after " << timeoutMs << "ms" << std::endl;
+=======
+    
+}
+
+void cmdWaitStream(int timeoutMs) {
+
+
+    if (g_asyncEngine->waitForCompletion(timeoutMs)) {
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdCancelStream() {
     if (g_asyncEngine->isStreaming()) {
         g_asyncEngine->cancelStreaming();
+<<<<<<< HEAD
         std::cout << "[INFO] Streaming cancelled" << std::endl;
     } else {
         std::cout << "[INFO] No stream in progress" << std::endl;
+=======
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -85,8 +126,13 @@ void cmdCancelStream() {
 // ============================================================================
 
 void cmdBatchProcess(const std::vector<std::string>& prompts) {
+<<<<<<< HEAD
     std::cout << "[INFO] Submitting " << prompts.size() << " requests to batch queue..." << std::endl;
     
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<std::string> requestIds;
     
     for (size_t i = 0; i < prompts.size(); ++i) {
@@ -97,6 +143,7 @@ void cmdBatchProcess(const std::vector<std::string>& prompts) {
         
         g_batchEngine->submitBatch(req);
         requestIds.push_back(req.id);
+<<<<<<< HEAD
         
         std::cout << "[BATCH " << i + 1 << "/" << prompts.size() << "] "
                   << "Request ID: " << req.id << std::endl;
@@ -116,17 +163,35 @@ void cmdBatchProcess(const std::vector<std::string>& prompts) {
         std::cout << "  Duration: " << result.duration.count() << "ms" << std::endl;
         std::cout << "  Response: " << result.response.substr(0, 100) << "..." << std::endl;
         std::cout << std::endl;
+=======
+
+
+    }
+
+
+    // Retrieve results
+    
+    for (size_t i = 0; i < requestIds.size(); ++i) {
+        auto result = g_batchEngine->getBatchResult(requestIds[i], 30000);  // 30s timeout
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdBatchStatus() {
     auto stats = g_batchEngine->getBatchStats();
+<<<<<<< HEAD
     
     std::cout << "\n[BATCH STATUS]" << std::endl;
     std::cout << "  Queued: " << stats["queued_requests"] << std::endl;
     std::cout << "  Completed: " << stats["completed_requests"] << std::endl;
     std::cout << "  Workers: " << stats["active_workers"] << "/" 
               << stats["max_parallel_workers"] << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -134,6 +199,7 @@ void cmdBatchStatus() {
 // ============================================================================
 
 void cmdLoadBPETokenizer(const std::string& mergesFile) {
+<<<<<<< HEAD
     std::cout << "[INFO] Loading BPE tokenizer from: " << mergesFile << std::endl;
     
     auto tokenizer = TokenizerFactory::createBPETokenizer(mergesFile);
@@ -142,10 +208,21 @@ void cmdLoadBPETokenizer(const std::string& mergesFile) {
         std::cout << "[SUCCESS] BPE tokenizer loaded" << std::endl;
     } else {
         std::cout << "[ERROR] Failed to load BPE tokenizer" << std::endl;
+=======
+
+
+    auto tokenizer = TokenizerFactory::createBPETokenizer(mergesFile);
+    
+    if (tokenizer) {
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdLoadSPTokenizer(const std::string& modelPath) {
+<<<<<<< HEAD
     std::cout << "[INFO] Loading SentencePiece tokenizer from: " << modelPath << std::endl;
     
     auto tokenizer = TokenizerFactory::createSentencePieceTokenizer(modelPath);
@@ -154,10 +231,21 @@ void cmdLoadSPTokenizer(const std::string& modelPath) {
         std::cout << "[SUCCESS] SentencePiece tokenizer loaded" << std::endl;
     } else {
         std::cout << "[ERROR] Failed to load SentencePiece tokenizer" << std::endl;
+=======
+
+
+    auto tokenizer = TokenizerFactory::createSentencePieceTokenizer(modelPath);
+    
+    if (tokenizer) {
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdAutoTokenizer(const std::string& modelPath) {
+<<<<<<< HEAD
     std::cout << "[INFO] Auto-detecting tokenizer for: " << modelPath << std::endl;
     
     auto tokenizer = TokenizerFactory::createAutoTokenizer(modelPath);
@@ -169,6 +257,16 @@ void cmdAutoTokenizer(const std::string& modelPath) {
                       "Unknown") << std::endl;
     } else {
         std::cout << "[ERROR] Failed to auto-detect tokenizer" << std::endl;
+=======
+
+
+    auto tokenizer = TokenizerFactory::createAutoTokenizer(modelPath);
+    
+    if (tokenizer) {
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -177,8 +275,13 @@ void cmdAutoTokenizer(const std::string& modelPath) {
 // ============================================================================
 
 void cmdCacheContext(const std::string& prompt) {
+<<<<<<< HEAD
     std::cout << "[INFO] Caching context for prompt..." << std::endl;
     
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string promptHash = StreamingUtils::hashPrompt(prompt);
     
     CacheEntry entry;
@@ -188,6 +291,7 @@ void cmdCacheContext(const std::string& prompt) {
     entry.lastAccessed = std::chrono::system_clock::now();
     
     g_cacheManager->cacheContext(promptHash, entry);
+<<<<<<< HEAD
     
     std::cout << "[SUCCESS] Context cached with hash: " << promptHash << std::endl;
 }
@@ -195,27 +299,50 @@ void cmdCacheContext(const std::string& prompt) {
 void cmdRetrieveCache(const std::string& prompt) {
     std::cout << "[INFO] Retrieving cached context..." << std::endl;
     
+=======
+
+
+}
+
+void cmdRetrieveCache(const std::string& prompt) {
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string promptHash = StreamingUtils::hashPrompt(prompt);
     CacheEntry entry;
     
     if (g_cacheManager->retrieveContext(promptHash, entry)) {
+<<<<<<< HEAD
         std::cout << "[SUCCESS] Cache hit!" << std::endl;
         std::cout << "  Sequence length: " << entry.sequenceLength << std::endl;
         std::cout << "  Key cache size: " << entry.keyCache.size() << std::endl;
         std::cout << "  Value cache size: " << entry.valueCache.size() << std::endl;
     } else {
         std::cout << "[MISS] Context not cached" << std::endl;
+=======
+
+
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdClearCache() {
+<<<<<<< HEAD
     std::cout << "[INFO] Clearing cache..." << std::endl;
     g_cacheManager->clearAll();
     std::cout << "[SUCCESS] Cache cleared" << std::endl;
+=======
+    
+    g_cacheManager->clearAll();
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void cmdCacheStats() {
     auto stats = g_cacheManager->getCacheStats();
+<<<<<<< HEAD
     
     std::cout << "\n[CACHE STATISTICS]" << std::endl;
     std::cout << "  Entries: " << stats["cached_entries"] << std::endl;
@@ -224,16 +351,28 @@ void cmdCacheStats() {
     std::cout << "  Usage: " << std::fixed << std::setprecision(1) 
               << stats["usage_percent"].get<double>() << "%" << std::endl;
     std::cout << "  Policy: " << stats["eviction_policy"].get<std::string>() << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void cmdSetCachePolicy(const std::string& policy) {
     if (policy != "LRU" && policy != "LFU" && policy != "FIFO") {
+<<<<<<< HEAD
         std::cout << "[ERROR] Invalid policy. Use: LRU, LFU, or FIFO" << std::endl;
+=======
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return;
     }
     
     g_cacheManager->setEvictionPolicy(policy);
+<<<<<<< HEAD
     std::cout << "[SUCCESS] Cache eviction policy set to: " << policy << std::endl;
+=======
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -241,6 +380,7 @@ void cmdSetCachePolicy(const std::string& policy) {
 // ============================================================================
 
 void cmdStartWebServer(int port) {
+<<<<<<< HEAD
     std::cout << "[INFO] Starting web server on port " << port << "..." << std::endl;
     
     auto webServer = std::make_unique<StreamingWebServer>(port);
@@ -259,6 +399,19 @@ void cmdStartWebServer(int port) {
 void cmdStopWebServer() {
     std::cout << "[INFO] Stopping web server..." << std::endl;
     std::cout << "[SUCCESS] Web server stopped" << std::endl;
+=======
+
+
+    auto webServer = std::make_unique<StreamingWebServer>(port);
+    webServer->startAsync();
+
+
+}
+
+void cmdStopWebServer() {
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -268,6 +421,7 @@ void cmdStopWebServer() {
 void cmdSetOutputFormat(const std::string& format) {
     if (format == "text" || format == "plain") {
         g_currentFormat = OutputFormat::TEXT;
+<<<<<<< HEAD
         std::cout << "[SUCCESS] Output format set to: TEXT" << std::endl;
     } else if (format == "json") {
         g_currentFormat = OutputFormat::JSON;
@@ -280,10 +434,25 @@ void cmdSetOutputFormat(const std::string& format) {
         std::cout << "[SUCCESS] Output format set to: XML" << std::endl;
     } else {
         std::cout << "[ERROR] Unknown format. Use: text, json, jsonl, or xml" << std::endl;
+=======
+        
+    } else if (format == "json") {
+        g_currentFormat = OutputFormat::JSON;
+        
+    } else if (format == "jsonl") {
+        g_currentFormat = OutputFormat::JSONL;
+        
+    } else if (format == "xml") {
+        g_currentFormat = OutputFormat::XML;
+        
+    } else {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void cmdFormatSample(const std::string& text) {
+<<<<<<< HEAD
     std::cout << "\n[FORMATTED OUTPUT SAMPLES]\n" << std::endl;
     
     std::cout << "=== TEXT ===" << std::endl;
@@ -297,6 +466,10 @@ void cmdFormatSample(const std::string& text) {
     
     std::cout << "\n=== XML ===" << std::endl;
     std::cout << StructuredOutputFormatter::formatComplete(text, 42, 1500, OutputFormat::XML) << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -305,9 +478,14 @@ void cmdFormatSample(const std::string& text) {
 
 void cmdEnhancedStats() {
     auto stats = g_enhancedEngine->getCompleteStats();
+<<<<<<< HEAD
     
     std::cout << "\n[ENHANCED ENGINE STATISTICS]\n" << std::endl;
     std::cout << stats.dump(2) << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -315,6 +493,7 @@ void cmdEnhancedStats() {
 // ============================================================================
 
 void printEnhancementsHelp() {
+<<<<<<< HEAD
     std::cout << "\n=== STREAMING ENHANCEMENTS COMMANDS ===\n" << std::endl;
     
     std::cout << "ASYNC STREAMING (Non-blocking):" << std::endl;
@@ -349,4 +528,8 @@ void printEnhancementsHelp() {
     std::cout << "\nSTATUS:" << std::endl;
     std::cout << "  enhancedstats            - Show all enhancement statistics" << std::endl;
     std::cout << "\n" << std::endl;
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

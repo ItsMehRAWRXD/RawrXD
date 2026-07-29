@@ -42,7 +42,11 @@ std::expected<std::vector<int>, TokenError> TokenGenerator::bpeEncode(const std:
     std::stringstream ss(text);
     std::string word;
     while (ss >> word) {
+<<<<<<< HEAD
         // Basic word-level tokenization
+=======
+        // Simplified BPE
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (m_vocab.count(word)) {
             tokens.push_back(m_vocab[word]);
         } else {

@@ -82,14 +82,20 @@ struct IDEConfig {
     int logLevel = 2; // spdlog::level::info
 };
 
+<<<<<<< HEAD
 #ifndef RAWRXD_SWARMTASK_DEFINED
 #define RAWRXD_SWARMTASK_DEFINED
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 struct SwarmTask {
     std::string id;
     std::string description;
     int priority;
     std::vector<std::string> dependencies;
 };
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 } // namespace RawrXD

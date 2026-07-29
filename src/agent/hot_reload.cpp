@@ -3,6 +3,7 @@
  * @brief Hot-reload module rebuild via subprocess (Qt-free, Win32/POSIX)
  */
 #include "hot_reload.hpp"
+<<<<<<< HEAD
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -62,10 +63,67 @@ bool HotReload::reloadQuant(const std::string& quantType) {
 
     fprintf(stderr, "[INFO] [HotReload] Quant library rebuilt successfully\n");
     if (onQuantReloaded) onQuantReloaded(quantType);
+=======
+#include <windows.h>
+#include <string>
+#include <vector>
+#include <iostream>
+
+HotReload::HotReload() {}
+
+static bool runBuild(const std::string& target, int timeoutMs) {
+    std::string cmd = "cmake --build build --config Release --target " + target;
+    
+    STARTUPINFOA si;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+    
+    char* cmdLine = _strdup(cmd.c_str());
+    if (!CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        free(cmdLine);
+        return false;
+    }
+    free(cmdLine);
+    
+    DWORD waitResult = WaitForSingleObject(pi.hProcess, timeoutMs);
+    
+    if (waitResult == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 1);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return false;
+    }
+    
+    DWORD exitCode = 0;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    
+    return exitCode == 0;
+}
+
+bool HotReload::reloadQuant(const std::string& quantType) {
+
+
+    // Step 1: Rebuild only the quant library
+    if (!runBuild("quant_ladder_avx2", 30000)) {
+        if (onReloadFailed) onReloadFailed("Build failed or timed out for quant_ladder_avx2");
+        return false;
+    }
+
+
+    // Step 2: Signal upper layer
+    if (onQuantReloaded) onQuantReloaded(quantType);
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 bool HotReload::reloadModule(const std::string& moduleName) {
+<<<<<<< HEAD
     fprintf(stderr, "[INFO] [HotReload] Hot-reloading module: %s\n", moduleName.c_str());
 
     std::string cmd = "cmake --build build --config Release --target " + moduleName;
@@ -79,5 +137,17 @@ bool HotReload::reloadModule(const std::string& moduleName) {
 
     fprintf(stderr, "[INFO] [HotReload] Module rebuilt: %s\n", moduleName.c_str());
     if (onModuleReloaded) onModuleReloaded(moduleName);
+=======
+
+
+    // Build specific target
+    if (!runBuild(moduleName, 60000)) {
+        if (onReloadFailed) onReloadFailed("Build failed or timed out for " + moduleName);
+        return false;
+    }
+    
+    if (onModuleReloaded) onModuleReloaded(moduleName);
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }

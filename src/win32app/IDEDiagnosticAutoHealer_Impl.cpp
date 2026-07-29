@@ -6,7 +6,10 @@
 #include <algorithm>
 #include <ctime>
 #include <windows.h>
+<<<<<<< HEAD
 #include <psapi.h>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Singleton instances
 IDEDiagnosticAutoHealer& IDEDiagnosticAutoHealer::Instance() {
@@ -19,7 +22,11 @@ BeaconStorage& BeaconStorage::Instance() {
     return instance;
 }
 
+<<<<<<< HEAD
 // Auto healer implementation: diagnostic thread, IDE launch, beacon storage, healing strategies
+=======
+// Auto healer stub implementations
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 void IDEDiagnosticAutoHealer::StartFullDiagnostic() {
     if (m_running.exchange(true)) {
         return;
@@ -176,6 +183,7 @@ void IDEDiagnosticAutoHealer::ApplyHealing(HealingStrategy strategy) {
 
 void IDEDiagnosticAutoHealer::ExecuteHotkeyResend() {
     OutputDebugStringW(L"[AutoHealer-Heal] Resending hotkey\n");
+<<<<<<< HEAD
     if (!m_ideMainWindow || !IsWindow(m_ideMainWindow)) {
         m_ideMainWindow = DiagnosticUtils::FindIDEMainWindow(m_ideProcessId);
     }
@@ -187,10 +195,13 @@ void IDEDiagnosticAutoHealer::ExecuteHotkeyResend() {
     } else {
         DiagnosticUtils::LogHealing("Hotkey resend", false);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void IDEDiagnosticAutoHealer::ExecuteFileReopen() {
     OutputDebugStringW(L"[AutoHealer-Heal] Reopening file\n");
+<<<<<<< HEAD
     if (!m_ideMainWindow || !IsWindow(m_ideMainWindow)) {
         m_ideMainWindow = DiagnosticUtils::FindIDEMainWindow(m_ideProcessId);
     }
@@ -201,10 +212,13 @@ void IDEDiagnosticAutoHealer::ExecuteFileReopen() {
     } else {
         DiagnosticUtils::LogHealing("File reopen", false);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void IDEDiagnosticAutoHealer::ExecuteMessageRepost() {
     OutputDebugStringW(L"[AutoHealer-Heal] Reposting message\n");
+<<<<<<< HEAD
     if (m_ideMainWindow && IsWindow(m_ideMainWindow)) {
         // Send WM_USER-based custom message to trigger re-digest
         PostMessageW(m_ideMainWindow, WM_USER + 100, 0, 0);
@@ -212,10 +226,13 @@ void IDEDiagnosticAutoHealer::ExecuteMessageRepost() {
     } else {
         DiagnosticUtils::LogHealing("Message repost", false);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void IDEDiagnosticAutoHealer::ExecuteWindowRefocus() {
     OutputDebugStringW(L"[AutoHealer-Heal] Refocusing window\n");
+<<<<<<< HEAD
     m_ideMainWindow = DiagnosticUtils::FindIDEMainWindow(m_ideProcessId);
     if (m_ideMainWindow) {
         SetForegroundWindow(m_ideMainWindow);
@@ -225,10 +242,13 @@ void IDEDiagnosticAutoHealer::ExecuteWindowRefocus() {
     } else {
         DiagnosticUtils::LogHealing("Window refocus", false);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void IDEDiagnosticAutoHealer::ExecuteProcessRestart() {
     OutputDebugStringW(L"[AutoHealer-Heal] Restarting process\n");
+<<<<<<< HEAD
     // Terminate existing process
     if (m_ideProcessId != 0) {
         DiagnosticUtils::TerminateProcessGracefully(m_ideProcessId);
@@ -244,6 +264,8 @@ void IDEDiagnosticAutoHealer::ExecuteProcessRestart() {
     } else {
         DiagnosticUtils::LogHealing("Process restart", false);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::string IDEDiagnosticAutoHealer::GenerateDiagnosticReport() {
@@ -265,6 +287,7 @@ std::string IDEDiagnosticAutoHealer::GenerateHealingLog() {
 }
 
 void IDEDiagnosticAutoHealer::RecoverFromCheckpoint(BeaconStage stage) {
+<<<<<<< HEAD
     OutputDebugStringW(L"[AutoHealer] Recovering from checkpoint\n");
     EnterCriticalSection(&m_lock);
 
@@ -435,6 +458,17 @@ void IDEDiagnosticAutoHealer::DetectAndHealFailures() {
         ApplyHealing(HealingStrategy::FILE_REOPEN);
         ExecuteFileReopen();
     }
+=======
+}
+
+void IDEDiagnosticAutoHealer::ResumeFromLastKnownGood() {
+}
+
+void IDEDiagnosticAutoHealer::MonitorIDEProcess(DWORD processId) {
+}
+
+void IDEDiagnosticAutoHealer::DetectAndHealFailures() {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // Beacon storage implementations

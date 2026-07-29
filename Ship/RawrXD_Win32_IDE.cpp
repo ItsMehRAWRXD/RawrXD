@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <process.h>
 
+<<<<<<< HEAD
 // RawrXD Settings (API Key Manager)
 #include "RawrXD_SettingsDialog.hpp"
 
@@ -42,6 +43,8 @@ static void RunAutonomousMode() {
     AppendWindowText(g_hwndOutput, L"[Agent] Agent loop ready — use chat panel to interact.\r\n");
 }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
@@ -224,9 +227,12 @@ static COLORREF g_colorCompletionGhost = RGB(100, 100, 100);
 
 #define IDM_VIEW_TERMINAL 2501
 #define IDM_VIEW_CHAT     2502
+<<<<<<< HEAD
 
 #define IDM_SETTINGS_API_KEY     2601
 #define IDM_SETTINGS_EXTENSIONS  2602
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #define IDM_VIEW_OUTPUT   2503
 
 // C/C++ keywords for syntax highlighting
@@ -640,7 +646,11 @@ std::wstring SaveFileDialog(HWND hwnd) {
 }
 
 // ============================================================================
+<<<<<<< HEAD
 // AI Actions (Titan Kernel / GGUF / NativeBridge backends)
+=======
+// AI Actions (calls to Titan Kernel or placeholder)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ============================================================================
 void AI_GenerateCode() {
     // Get selected text or current context
@@ -662,6 +672,7 @@ void AI_GenerateCode() {
     }
 
     std::wstring summary = selection.empty() ? L"fresh context" : L"selection snippet: " + selection;
+<<<<<<< HEAD
     
     // Build the code generation prompt
     std::string prompt = "Complete the following code. Return only the code, no explanation:\n\n" + WideToUtf8(selection.empty() ? buffer : selection);
@@ -717,6 +728,11 @@ void AI_GenerateCode() {
         suggestion += L"// Based on " + summary + L"\r\n";
         suggestion += L"// Load a GGUF model for intelligent completions.\r\n";
     }
+=======
+    std::wstring suggestion = L"// AI completion placeholder\r\n";
+    suggestion += L"// Based on " + summary + L"\r\n";
+    suggestion += L"// Implement the missing logic here.\r\n";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     AICompletion completion = {};
     completion.text = suggestion;
@@ -732,6 +748,7 @@ void AI_GenerateCode() {
 
 void AI_ExplainCode() {
     AppendWindowText(g_hwndOutput, L"[AI] Explaining selected code...\r\n");
+<<<<<<< HEAD
     
     // Extract selected text from editor
     DWORD start = 0, end = 0;
@@ -805,10 +822,14 @@ void AI_ExplainCode() {
     }
     
     AppendWindowText(g_hwndOutput, L"[AI] No inference engine available. Load a model first (AI > Load GGUF Model).\r\n");
+=======
+    // Placeholder - would call Titan inference
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void AI_RefactorCode() {
     AppendWindowText(g_hwndOutput, L"[AI] Refactoring selected code...\r\n");
+<<<<<<< HEAD
     
     DWORD start = 0, end = 0;
     SendMessage(g_hwndEditor, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
@@ -875,10 +896,14 @@ void AI_RefactorCode() {
     }
     
     AppendWindowText(g_hwndOutput, L"[AI] No inference engine available. Load a model first.\r\n");
+=======
+    // Placeholder - would call Titan inference
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void AI_FixCode() {
     AppendWindowText(g_hwndOutput, L"[AI] Fixing selected code/errors...\r\n");
+<<<<<<< HEAD
     
     DWORD start = 0, end = 0;
     SendMessage(g_hwndEditor, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
@@ -950,6 +975,9 @@ void AI_FixCode() {
     }
     
     AppendWindowText(g_hwndOutput, L"[AI] No inference engine available. Load a model first.\r\n");
+=======
+    // Placeholder - would call Titan inference
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void ShowAICompletion(const AICompletion& completion) {
@@ -1035,6 +1063,7 @@ void Build_Run() {
     }
     
     AppendWindowText(g_hwndOutput, L"[Build] Running...\r\n");
+<<<<<<< HEAD
     
     // Detect file extension
     std::wstring ext;
@@ -1146,10 +1175,15 @@ void Build_Run() {
     
     std::wstring exitMsg = L"[Build] Process exited with code: " + std::to_wstring(exitCode) + L"\r\n";
     AppendWindowText(g_hwndOutput, exitMsg.c_str());
+=======
+    // Determine file type and run appropriate command
+    // For now, placeholder
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void Build_Build() {
     AppendWindowText(g_hwndOutput, L"[Build] Building project...\r\n");
+<<<<<<< HEAD
     
     // Determine project root from current file
     std::wstring projectDir;
@@ -1277,6 +1311,9 @@ void Build_Build() {
         std::wstring errMsg = L"[Build] ✗ Build failed (exit code: " + std::to_wstring(exitCode) + L").\r\n";
         AppendWindowText(g_hwndOutput, errMsg.c_str());
     }
+=======
+    // Would invoke cl.exe, gcc, or python for different file types
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -1329,11 +1366,14 @@ HMENU CreateMainMenu() {
     AppendMenuW(hAIMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hAIMenu, MF_STRING, IDM_AI_LOADMODEL, L"Load &Titan Model...");
     
+<<<<<<< HEAD
     // Settings
     HMENU hSettingsMenu = CreatePopupMenu();
     AppendMenuW(hSettingsMenu, MF_STRING, IDM_SETTINGS_API_KEY, L"&API Key Configuration...");
     AppendMenuW(hSettingsMenu, MF_STRING, IDM_SETTINGS_EXTENSIONS, L"&Manage Extensions...");
     
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Help
     AppendMenuW(hHelpMenu, MF_STRING, IDM_HELP_ABOUT, L"&About");
     
@@ -1342,7 +1382,10 @@ HMENU CreateMainMenu() {
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hViewMenu, L"&View");
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hBuildMenu, L"&Build");
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hAIMenu, L"&AI");
+<<<<<<< HEAD
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hSettingsMenu, L"&Settings");
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     AppendMenuW(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, L"&Help");
     
     return hMenu;
@@ -1379,12 +1422,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             200, 500, 800, 200, hwnd, (HMENU)IDC_OUTPUT, GetModuleHandle(nullptr), nullptr);
         SendMessageW(g_hwndOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
         
+<<<<<<< HEAD
         // Create file tree (populated from workspace directory)
+=======
+        // Create file tree (placeholder list)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         g_hwndFileTree = CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, L"",
             WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT,
             0, 0, 200, 700, hwnd, (HMENU)IDC_FILETREE, GetModuleHandle(nullptr), nullptr);
         SendMessageW(g_hwndFileTree, WM_SETFONT, (WPARAM)g_hFontUI, TRUE);
         
+<<<<<<< HEAD
         // Populate file tree with workspace directory
         {
             wchar_t exePath[MAX_PATH];
@@ -1426,6 +1474,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageW(g_hwndFileTree, TVM_EXPAND, TVE_EXPAND, (LPARAM)hRoot);
         }
         
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Create terminal panel (initially hidden)
         g_hwndTerminal = CreateWindowExW(WS_EX_CLIENTEDGE, MSFTEDIT_CLASS, L"",
             WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
@@ -1467,6 +1517,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
             0, 0, 0, 0, hwnd, (HMENU)IDC_STATUSBAR, GetModuleHandle(nullptr), nullptr);
         
+<<<<<<< HEAD
         // Configure status bar parts (3 sections: general status, model, extensions)
         int statusParts[3] = {200, 350, -1};
         SendMessageW(g_hwndStatusBar, SB_SETPARTS, 3, (LPARAM)statusParts);
@@ -1484,6 +1535,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageW(g_hwndStatusBar, SB_SETTEXTW, 2, (LPARAM)wStatus.c_str());
         }
         
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Set menu
         SetMenu(hwnd, CreateMainMenu());
         
@@ -1774,6 +1827,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
             
+<<<<<<< HEAD
         case IDM_SETTINGS_API_KEY:
             RawrXD::ShowSettingsDialog(hwnd);
             // Update status bar with extension status
@@ -1792,6 +1846,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RawrXD::ShowSettingsDialog(hwnd);
             break;
             
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         case IDM_HELP_ABOUT:
             MessageBoxW(hwnd, 
                 L"RawrXD IDE v1.0\n\n"
@@ -1801,6 +1857,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 L"(c) 2026 RawrXD Project",
                 L"About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
             break;
+<<<<<<< HEAD
 
         // ---- Agent / Autonomy WM_COMMAND handlers (4100–4162) ----
         case 4100:  // Agent: Start Loop
@@ -1828,6 +1885,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendWindowText(g_hwndOutput, L"[Autonomy] Toggle autonomous mode.\r\n");
             RunAutonomousMode();
             break;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         break;
     }

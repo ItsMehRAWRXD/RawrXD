@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 **********************************************************************
 ** Visual Studio 2026 Developer Command Prompt v18.2.1
 ** Copyright (c) 2025 Microsoft Corporation
@@ -126,3 +127,14 @@ NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Ho
 Stop.
 NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\nmake.exe -s -f CMakeFiles\Makefile2 /nologo -LS                 RawrXD-Win32IDE' : return code '0x2'
 Stop.
+=======
+[  2%] Building CXX object CMakeFiles/RawrXD.dir/src/qtapp/RawrXD_MainWindow.cpp.obj
+[  4%] Building CXX object CMakeFiles/RawrXD.dir/src/gui/RawrXD_EditorWindow.cpp.obj
+D:\rawrxd\src\gui\RawrXD_EditorWindow.cpp:5:10: fatal error: ../ai_integration_hub.h: No such file or directory
+    5 | #include "../ai_integration_hub.h"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+mingw32-make[2]: *** [CMakeFiles\RawrXD.dir\build.make:124: CMakeFiles/RawrXD.dir/src/gui/RawrXD_EditorWindow.cpp.obj] Error 1
+mingw32-make[1]: *** [CMakeFiles\Makefile2:89: CMakeFiles/RawrXD.dir/all] Error 2
+mingw32-make: *** [Makefile:90: all] Error 2
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

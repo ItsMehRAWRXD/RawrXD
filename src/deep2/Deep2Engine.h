@@ -184,6 +184,10 @@ public:
     const EngineConfig& getConfig() const { return config; }
     const ModelWeights& getModelWeights() const { return modelWeights; }
     
+    // API Server helpers
+    size_t getWeightSize() const { return weightSize; }
+    std::string getModelPath() const { return config.modelPath; }
+    
     // Performance tuning
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);

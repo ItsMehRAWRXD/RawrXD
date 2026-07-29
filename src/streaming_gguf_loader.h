@@ -7,6 +7,14 @@
 #include <cstdint>
 
 namespace RawrXD {
+<<<<<<< HEAD
+=======
+
+// ============================================================================
+// STREAMING GGUF LOADER - Memory-efficient tensor loading with zone-based
+// streaming (game engine style)
+// ============================================================================
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct TensorZoneInfo {
     std::string zone_name;              // "embedding", "layers_0", "layers_1", etc.
@@ -60,6 +68,7 @@ public:
     std::vector<TensorInfo> GetAllTensorInfo() const override;
     uint64_t GetCurrentMemoryUsage() const override;
     
+<<<<<<< HEAD
     // Internal access for debugging
     TensorZoneInfo GetZoneInfo(const std::string& zone_name) const;
     std::vector<TensorRef> GetTensorIndex() const;
@@ -69,6 +78,10 @@ public:
     bool GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data);
     // Get total file size
     uint64_t GetTotalFileSize();
+=======
+    // ---- Vocabulary ----
+    std::vector<std::string> GetVocabulary() const { return vocabulary_; }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 private:
     std::string filepath_;
@@ -113,7 +126,15 @@ private:
     bool ReadValue(T& value);
     bool ReadString(std::string& value);
     uint64_t CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const;
+
+    std::vector<std::string> vocabulary_;
+    
+    uint64_t tensor_info_offset = 0;
+    uint64_t data_base_offset = 0;
 };
 
 } // namespace RawrXD
+<<<<<<< HEAD
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

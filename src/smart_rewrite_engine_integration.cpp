@@ -15,7 +15,7 @@ SmartRewriteEngineIntegration::SmartRewriteEngineIntegration(
     std::shared_ptr<Logger> logger,
     std::shared_ptr<Metrics> metrics)
     : m_logger(logger), m_metrics(metrics) {
-    m_logger->info("SmartRewriteEngine initialized");
+
 }
 
 std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::getRewriteSuggestions(
@@ -26,7 +26,7 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::getRewriteSuggesti
     std::vector<RewriteSuggestion> suggestions;
 
     try {
-        m_logger->debug("Getting rewrite suggestions for {} chars", code.length());
+
 
         // Analyze code based on rewrite type
         if (type == RewriteType::REFACTOR) {
@@ -96,7 +96,7 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::getRewriteSuggesti
         m_metrics->recordHistogram("rewrite_suggestions_generated", suggestions.size());
 
     } catch (const std::exception& e) {
-        m_logger->error("Error generating rewrite suggestions: {}", e.what());
+
         m_metrics->incrementCounter("rewrite_errors");
     }
 
@@ -107,7 +107,6 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::refactorFunction(
     const std::string& functionCode,
     const std::string& goal) {
 
-    m_logger->info("Refactoring function");
     return getRewriteSuggestions(functionCode, RewriteType::REFACTOR, goal);
 }
 
@@ -115,7 +114,6 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::optimizePerformanc
     const std::string& code,
     const std::string& performanceGoal) {
 
-    m_logger->info("Optimizing performance");
     return getRewriteSuggestions(code, RewriteType::OPTIMIZE, performanceGoal);
 }
 
@@ -123,7 +121,6 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::generateTests(
     const std::string& functionCode,
     const std::string& testFramework) {
 
-    m_logger->info("Generating tests with framework: {}", testFramework);
     return getRewriteSuggestions(functionCode, RewriteType::TEST, testFramework);
 }
 
@@ -131,13 +128,12 @@ std::vector<RewriteSuggestion> SmartRewriteEngineIntegration::fixBugs(
     const std::string& code,
     const std::string& bugDescription) {
 
-    m_logger->info("Finding and fixing bugs");
     return getRewriteSuggestions(code, RewriteType::BUG_FIX, bugDescription);
 }
 
 bool SmartRewriteEngineIntegration::applySuggestion(const RewriteSuggestion& suggestion) {
     try {
-        m_logger->info("Applying rewrite suggestion");
+
         m_metrics->incrementCounter("rewrite_applied");
         
         if (suggestion.affectedFiles.empty()) {
@@ -199,14 +195,19 @@ bool SmartRewriteEngineIntegration::applySuggestion(const RewriteSuggestion& sug
         return anyApplied;
         
     } catch (const std::exception& e) {
+<<<<<<< HEAD
         m_logger->error("Error applying suggestion: {}", e.what());
         m_metrics->incrementCounter("rewrite_apply_error");
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 }
 
 bool SmartRewriteEngineIntegration::previewSuggestion(const RewriteSuggestion& suggestion) {
     try {
+<<<<<<< HEAD
         m_logger->info("Previewing rewrite suggestion");
         
         // Generate line-level diff and format it for display
@@ -229,15 +230,19 @@ bool SmartRewriteEngineIntegration::previewSuggestion(const RewriteSuggestion& s
         m_logger->info("=== END PREVIEW ===");
         
         m_metrics->incrementCounter("rewrite_previewed");
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
         
     } catch (const std::exception& e) {
-        m_logger->error("Error previewing suggestion: {}", e.what());
+
         return false;
     }
 }
 
 void SmartRewriteEngineIntegration::undoLastChange() {
+<<<<<<< HEAD
     m_logger->info("Undoing last change");
     
     if (s_undoStack.empty()) {
@@ -259,6 +264,9 @@ void SmartRewriteEngineIntegration::undoLastChange() {
     
     m_logger->info("Reverted {} to previous state ({} bytes)", filePath, previousContent.size());
     m_metrics->incrementCounter("rewrite_undo");
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<DiffHunk> SmartRewriteEngineIntegration::generateDiff(

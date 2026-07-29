@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Editor Widget - Enhanced Editor Interface
 // Provides editor enhancement integration for all IDE variants
 
@@ -70,3 +71,16 @@ public:
 } // namespace EditorWidget
 
 #endif // EDITORWIDGET_H_
+=======
+// Editor Widget - Integrated from Cursor IDE Reverse Engineering
+// Integrates Cursor's editor enhancements
+// Generated: 2026-01-25 06:34:12
+
+#ifndef EDITORWIDGET_H_
+#define EDITORWIDGET_H_
+
+// TODO: Define interface based on Cursor reverse engineering
+// Source: d:\lazy init ide\Cursor_Source_Extracted
+
+#endif // EDITORWIDGET_H_
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

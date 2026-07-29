@@ -1,20 +1,26 @@
 #include "real_time_completion_engine.h"
 #include <algorithm>
 #include <chrono>
+<<<<<<< HEAD
 #include <fstream>
 #include <sstream>
 #include <regex>
 #include <map>
 #include <windows.h>
 #include <winhttp.h>
+=======
+#include <regex>
+#include <fstream>
+#include <sstream>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "winhttp.lib")
 
 RealTimeCompletionEngine::RealTimeCompletionEngine(
     std::shared_ptr<Logger> logger,
     std::shared_ptr<Metrics> metrics)
-    : m_logger(logger), m_metrics(metrics) {
-    m_logger->info("RealTimeCompletionEngine initialized");
+    : m_logger(logger), m_metrics(metrics), m_inferenceEngine(nullptr) {
+
 }
 
 std::vector<CodeCompletion> RealTimeCompletionEngine::getCompletions(
@@ -40,12 +46,11 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getCompletions(
                 auto latency = std::chrono::duration_cast<std::chrono::microseconds>(
                     endTime - startTime).count();
                 m_metrics->recordHistogram("completion_latency_us", latency);
-                m_logger->debug("Cache hit for completion");
+
                 return it->second;
             }
         }
 
-        m_logger->debug("Cache miss - generating new completions");
 
         // Build completion prompt with context
         std::string prompt = buildCompletionPrompt(prefix, suffix, context);
@@ -76,7 +81,7 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getCompletions(
         return completions;
 
     } catch (const std::exception& e) {
-        m_logger->error("Error getting completions: {}", e.what());
+
         m_metrics->incrementCounter("completion_errors");
         return {};
     }
@@ -87,7 +92,6 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getInlineCompletions(
     int cursorColumn,
     const std::string& filePath) {
 
-    m_logger->debug("Getting inline completions for: {}", filePath);
 
     // Extract prefix/suffix from line
     std::string prefix = currentLine.substr(0, cursorColumn);
@@ -100,7 +104,6 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getMultiLineCompletions(
     const std::string& prefix,
     int maxLines) {
 
-    m_logger->debug("Getting multi-line completions");
 
     return getCompletions(prefix, "", "cpp", "");
 }
@@ -111,15 +114,41 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getContextualCompletions(
     int column,
     const std::string& scope) {
 
-    m_logger->debug("Getting contextual completions for: {}:{}", filePath, line);
+    // Read file context to get surrounding lines
+    std::string context;
+    std::string prefix;
+    std::string suffix;
+    
+    std::ifstream file(filePath);
+    if (file.is_open()) {
+        std::string sLine;
+        int currentLine = 0;
+        int startContextLine = std::max(0, line - 20); // 20 lines before
+        int endContextLine = line + 5; // 5 lines after
+        
+        while (std::getline(file, sLine)) {
+            currentLine++;
+            if (currentLine >= startContextLine && currentLine <= endContextLine) {
+                if (currentLine == line) {
+                    if (column < (int)sLine.length()) {
+                         prefix += sLine.substr(0, column);
+                         suffix += sLine.substr(column);
+                    } else {
+                         prefix += sLine;
+                    }
+                } else {
+                    context += sLine + "\n";
+                }
+            }
+        }
+    }
 
-    // In full implementation, would analyze file context
-    return getCompletions("", "", "cpp", scope);
+    return getCompletions(prefix, suffix, "cpp", context + "\nScope: " + scope);
 }
 
 void RealTimeCompletionEngine::prewarmCache(const std::string& filePath) {
-    m_logger->info("Pre-warming cache for: {}", filePath);
 
+<<<<<<< HEAD
     // Read file and extract common patterns for prewarming
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -170,12 +199,63 @@ void RealTimeCompletionEngine::prewarmCache(const std::string& filePath) {
     }
 
     m_logger->info("Pre-warmed {} identifiers into cache", prewarmed);
+=======
+
+    // Real pre-warming logic
+    // Analyze file content and add common tokens to cache
+    std::ifstream file(filePath);
+    if (!file.is_open()) return;
+    
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    
+    // Simple tokenization for cache warming
+    std::vector<std::string> tokens;
+    std::regex tokenRegex("[a-zA-Z_][a-zA-Z0-9_]*");
+    auto begin = std::sregex_iterator(content.begin(), content.end(), tokenRegex);
+    auto end = std::sregex_iterator();
+    
+    for (std::sregex_iterator i = begin; i != end; ++i) {
+        tokens.push_back(i->str());
+    }
+    
+    // Add unique tokens to cache as high-probability completions
+    std::sort(tokens.begin(), tokens.end());
+    tokens.erase(std::unique(tokens.begin(), tokens.end()), tokens.end());
+    
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    for (const auto& token : tokens) {
+         if (token.length() > 3) {
+             std::vector<CodeCompletion> completions;
+             completions.push_back({token, "Cached Token", 1.0f, "Prewarm"});
+             // Cache key is just the token prefix (first 3 chars)
+             std::string prefix = token.substr(0, 3);
+             m_completionCache[prefix] = completions;
+         }
+    }
+
+    // tokenize and cache N-grams?
+    // For now, simpler approach: Trigger a background completion request for the end of the file
+    // to load the model's KV cache.
+    
+    // Explicit call to load context without returning result
+    if (m_inferenceEngine) { 
+        // We limit context to last 512 chars to avoid massive delay
+        std::string contextPrompt = content.length() > 512 ? content.substr(content.length() - 512) : content;
+        
+        // Fire and forget - just to heat up the engine/cache
+        std::thread([this, contextPrompt]() {
+             try {
+                if (m_inferenceEngine) m_inferenceEngine->infer(contextPrompt);
+             } catch(...) {}
+        }).detach();
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void RealTimeCompletionEngine::clearCache() {
     std::lock_guard<std::mutex> lock(m_cacheMutex);
     m_completionCache.clear();
-    m_logger->info("Completion cache cleared");
+
 }
 
 PerformanceMetrics RealTimeCompletionEngine::getMetrics() const {
@@ -217,9 +297,9 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::generateCompletionsWithMod
     std::vector<CodeCompletion> completions;
 
     try {
-        m_logger->info("Generating completions with model (max_tokens={})", maxTokens);
         m_metrics->incrementCounter("model_calls");
 
+<<<<<<< HEAD
         // Build Ollama /api/generate JSON request
         const std::string modelName = "codellama";  // Default completion model
         const int ollamaPort = 11434;               // Default Ollama port
@@ -378,11 +458,38 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::generateCompletionsWithMod
             m_metrics->recordHistogram("completion_confidence", 
                                       completions[0].confidence * 100);
         }
+=======
+        if (!m_inferenceEngine) {
+            // No engine available - strict fail, no mocks
+            return {}; 
+        }
+
+        // Real inference call
+        std::string result = m_inferenceEngine->infer(prompt);
+        
+        if (result.empty()) {
+            return {};
+        }
+
+        // Parse result into completion object
+        CodeCompletion completion;
+        completion.text = result;
+        completion.detail = "AI Generated"; // could be refined
+        completion.confidence = calculateConfidence(result, prompt);
+        completion.kind = "ai_suggestion";
+        completion.insertTextLength = (int)result.length();
+        completion.cursorOffset = 0;
+
+        completions.push_back(completion);
+
+        m_metrics->recordHistogram("completions_per_call", completions.size());
+        m_metrics->recordHistogram("completion_confidence", 
+                                  completion.confidence * 100);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         return completions;
 
     } catch (const std::exception& e) {
-        m_logger->error("Error generating completions with model: {}", e.what());
         m_metrics->incrementCounter("model_call_errors");
         return {};
     }

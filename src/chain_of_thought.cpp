@@ -3,7 +3,10 @@
 #include <queue>
 #include <algorithm>
 #include <chrono>
+<<<<<<< HEAD
 #include <unordered_set>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -11,10 +14,14 @@ ChainOfThought::ChainOfThought() {
     m_config = Config{};
 }
 
+<<<<<<< HEAD
 ChainOfThought::~ChainOfThought() {
     // Cleanup: reset the tree root to release memory
     m_root.reset();
 }
+=======
+ChainOfThought::~ChainOfThought() {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void ChainOfThought::setConfig(const Config& config) {
     m_config = config;
@@ -71,7 +78,11 @@ std::optional<ChainResult> ChainOfThought::generateChain(
         result.overallConfidence = 0.0f;
         result.finalConclusion = "Failed to generate valid chain.";
     } else {
+<<<<<<< HEAD
         result.overallConfidence = result.steps.back().confidence;
+=======
+        result.overallConfidence = result.steps.back().confidence; // Simplified
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         result.finalConclusion = result.steps.back().thought;
     }
     
@@ -146,6 +157,7 @@ nlohmann::json ChainOfThought::getStatus() const {
 }
 
 nlohmann::json ChainOfThought::exportTree() const {
+<<<<<<< HEAD
     nlohmann::json tree;
     tree["status"]       = "complete";
     tree["config"]       = {
@@ -259,6 +271,9 @@ nlohmann::json ChainOfThought::exportTree() const {
         });
     }
     return tree;
+=======
+    return {{"status", "not_implemented"}}; 
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace RawrXD

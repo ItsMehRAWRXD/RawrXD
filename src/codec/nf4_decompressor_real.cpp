@@ -367,6 +367,7 @@ public:
                     return DecompressBlockwise(input, input_size, output, num_elements);
                     
                 case NF4_FULL:
+<<<<<<< HEAD
                 default: {
                     // NF4_FULL: simple packed nibble decompression without grouping
                     // Format: raw packed NF4 nibbles, 2 elements per byte
@@ -407,6 +408,12 @@ public:
                     LogMessage(INFO, "NF4_FULL decompression complete");
                     return true;
                 }
+=======
+                default:
+                    LogMessage(WARN, "NF4_FULL format not implemented in this module");
+                    memset(output, 0, num_elements * sizeof(float));
+                    return false;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
         catch (const std::exception& e) {

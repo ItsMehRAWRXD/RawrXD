@@ -129,6 +129,7 @@ private:
 
     std::unique_ptr<Tools::GitClient> m_git_client;
     std::unique_ptr<OllamaClient> m_ollama_client;
+<<<<<<< HEAD
 
     // Tool execution statistics
     struct ToolStats {
@@ -137,6 +138,8 @@ private:
         uint64_t failed_calls = 0;
         std::map<std::string, uint64_t> tool_usage_count;
     } m_stats;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace Backend

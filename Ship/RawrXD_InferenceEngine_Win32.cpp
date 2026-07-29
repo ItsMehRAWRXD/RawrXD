@@ -1,11 +1,19 @@
 /*
  * RawrXD_InferenceEngine_Win32.cpp
  * Pure Win32 replacement for Qt-based InferenceEngine
+<<<<<<< HEAD
  * Pure C++20/Win32: CRITICAL_SECTION, CreateThread, std::thread, STL.
  */
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+=======
+ * Replaces: QThread, QMutexLocker, QtConcurrent, QString
+ * Uses: CRITICAL_SECTION, CreateThread, STL containers
+ */
+
+#define WIN32_LEAN_AND_MEAN
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <windows.h>
 #include <thread>
 #include <mutex>
@@ -19,9 +27,12 @@
 #include <cstring>
 #include <cstdint>
 #include <functional>
+<<<<<<< HEAD
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Structures matching Qt interface
 struct ModelMetrics {
@@ -143,6 +154,7 @@ private:
         result.request_id = request.request_id;
         result.tokens_used = 0;
         
+<<<<<<< HEAD
         // ====================================================================
         // Production GGUF Inference Pipeline
         // Step 1: Tokenize prompt (byte-level BPE approximation)
@@ -288,6 +300,15 @@ private:
         EnterCriticalSection(&m_criticalSection);
         m_metrics.total_tokens_generated += result.tokens_used;
         LeaveCriticalSection(&m_criticalSection);
+=======
+        // Simulate inference (replace with actual GGUF inference)
+        // This would call llama.cpp or similar
+        result.generated_text = request.prompt + " [generated text]";
+        result.tokens_used = request.max_tokens > 50 ? 50 : request.max_tokens;
+        result.latency_ms = static_cast<double>(GetTickCount64() - startTick);
+        
+        m_metrics.total_tokens_generated += result.tokens_used;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         return result;
     }
@@ -521,6 +542,7 @@ extern "C" {
         RawrXDInferenceEngine* e = static_cast<RawrXDInferenceEngine*>(engine);
         if (e) e->SetTemperature(temp);
     }
+<<<<<<< HEAD
 
     // ------------------------------------------------------------------------
     // Compatibility exports for RawrXD_Win32_IDE (LoadModel/UnloadModel/ForwardPass/SampleNext)
@@ -580,6 +602,8 @@ extern "C" {
         if (!s_pfnSample) return -1;
         return s_pfnSample(logits, vocab_size, temperature, top_p, top_k);
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // DLL entry point

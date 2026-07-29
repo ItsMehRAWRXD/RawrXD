@@ -2,7 +2,11 @@
 #include <string>
 #include <vector>
 #include <mutex>
+<<<<<<< HEAD
 #include <nlohmann/json.hpp>
+=======
+#include "nlohmann/json.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 class OfflineCacheStore {
 public:

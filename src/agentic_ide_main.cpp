@@ -5,6 +5,7 @@
 #ifdef RAWRXD_AGENTIC_MAIN
 
 
+<<<<<<< HEAD
 #include <windows.h>
 #include "RawrXD_Application.h"
 #include "RawrXD_Editor.h"
@@ -13,6 +14,17 @@
 #include "agentic_ide.h"
 #include <iostream>
 
+=======
+
+#include <windows.h>
+#include "RawrXD_Application.h"
+#include "RawrXD_Editor.h"
+#include "RawrXD_Lexer_MASM.h"
+#include "RawrXD_StyleManager.h"
+#include "agentic_ide.h"
+#include <iostream>
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     // Optional console for debug output if we want
     // AllocConsole();
@@ -45,9 +57,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         logic.setEditor(&editor); 
         logic.start(); // Start the brain!
         
+<<<<<<< HEAD
         // The agent logic runs in the background thread, processing events
         // and responding to user interactions through the editor's event system.
         // The main loop handles UI events while the agent processes asynchronously.
+=======
+        // Start a background thread for agent logic if needed,
+        // or just let the main loop run and agent responds to events.
+        // For now, we just initialize it.
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         return app.exec();
 
@@ -59,4 +77,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 }
 
+<<<<<<< HEAD
 #endif // RAWRXD_AGENTIC_MAIN
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

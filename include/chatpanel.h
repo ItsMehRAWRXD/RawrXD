@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Chat Panel - AI Chat Interface
 // Provides chat panel UI integration for all IDE variants
 
@@ -52,3 +53,16 @@ public:
 } // namespace ChatPanel
 
 #endif // CHATPANEL_H_
+=======
+// Chat Panel - Integrated from Cursor IDE Reverse Engineering
+// Integrates Cursor's chat panel UI
+// Generated: 2026-01-25 06:34:12
+
+#ifndef CHATPANEL_H_
+#define CHATPANEL_H_
+
+// TODO: Define interface based on Cursor reverse engineering
+// Source: d:\lazy init ide\Cursor_Source_Extracted
+
+#endif // CHATPANEL_H_
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

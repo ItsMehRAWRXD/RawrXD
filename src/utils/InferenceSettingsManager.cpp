@@ -226,6 +226,7 @@ void InferenceSettingsManager::load()
 
 void InferenceSettingsManager::loadGenerationParams()
 {
+<<<<<<< HEAD
     SettingsManager settings("RawrXD", "AgenticIDE");
     m_temperature = settings.value("inference/temperature", 0.7);
     m_topP = settings.value("inference/topP", 0.9);
@@ -236,11 +237,31 @@ void InferenceSettingsManager::loadGenerationParams()
     m_useOllama = settings.value("inference/useOllama", false);
     m_currentModelPath = settings.value("inference/currentModelPath", "");
     m_currentPreset = static_cast<Preset>(settings.value("inference/preset", (int)Balanced));
+=======
+    // Load from Qt SettingsManager
+    void* settings("RawrXD", "AgenticIDE");
+    
+    m_temperature = settings.value("inference/temperature", 0.7).toDouble();
+    m_topP = settings.value("inference/topP", 0.9).toDouble();
+    m_topK = settings.value("inference/topK", 40).toInt();
+    m_maxTokens = settings.value("inference/maxTokens", 2048).toInt();
+    m_repetitionPenalty = settings.value("inference/repetitionPenalty", 1.1).toDouble();
+    m_ollamaModelTag = settings.value("inference/ollamaModelTag", "llama2").toString();
+    m_useOllama = settings.value("inference/useOllama", false).toBool();
+    m_currentModelPath = settings.value("inference/currentModelPath", "").toString();
+    m_currentPreset = static_cast<Preset>(settings.value("inference/preset", Balanced).toInt());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void InferenceSettingsManager::saveGenerationParams()
 {
+<<<<<<< HEAD
     SettingsManager settings("RawrXD", "AgenticIDE");
+=======
+    // Save to Qt SettingsManager
+    void* settings("RawrXD", "AgenticIDE");
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     settings.setValue("inference/temperature", m_temperature);
     settings.setValue("inference/topP", m_topP);
     settings.setValue("inference/topK", m_topK);
@@ -255,26 +276,101 @@ void InferenceSettingsManager::saveGenerationParams()
 
 void InferenceSettingsManager::loadRecentModels()
 {
+<<<<<<< HEAD
     SettingsManager settings("RawrXD", "AgenticIDE");
     m_recentModels = settings.value("inference/recentModels");
+=======
+    // Load from Qt SettingsManager
+    void* settings("RawrXD", "AgenticIDE");
+    m_recentModels = settings.value("inference/recentModels").toStringList();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void InferenceSettingsManager::saveRecentModels()
 {
+<<<<<<< HEAD
     SettingsManager settings("RawrXD", "AgenticIDE");
+=======
+    // Save to Qt SettingsManager
+    void* settings("RawrXD", "AgenticIDE");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     settings.setValue("inference/recentModels", m_recentModels);
     settings.sync();
 }
 
 void* InferenceSettingsManager::exportToJSON() const
 {
+<<<<<<< HEAD
     (void)this;
     return nullptr; /* TODO: use nlohmann::json when needed */
+=======
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    void* json;
+    json["preset"] = static_cast<int>(m_currentPreset);
+    json["temperature"] = m_temperature;
+    json["topP"] = m_topP;
+    json["topK"] = m_topK;
+    json["maxTokens"] = m_maxTokens;
+    json["repetitionPenalty"] = m_repetitionPenalty;
+    json["ollamaModelTag"] = m_ollamaModelTag;
+    json["useOllama"] = m_useOllama;
+    json["currentModelPath"] = m_currentModelPath;
+    
+    void* recentArray;
+    for (const std::string& model : m_recentModels) {
+        recentArray.append(model);
+    }
+    json["recentModels"] = recentArray;
+    
+    return json;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void InferenceSettingsManager::importFromJSON(const void*& json)
 {
+<<<<<<< HEAD
     (void)json;
     /* TODO: use nlohmann::json when needed */
+=======
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (json.contains("preset")) {
+        m_currentPreset = static_cast<Preset>(json["preset"].toInt());
+    }
+    if (json.contains("temperature")) {
+        m_temperature = json["temperature"].toDouble();
+    }
+    if (json.contains("topP")) {
+        m_topP = json["topP"].toDouble();
+    }
+    if (json.contains("topK")) {
+        m_topK = json["topK"].toInt();
+    }
+    if (json.contains("maxTokens")) {
+        m_maxTokens = json["maxTokens"].toInt();
+    }
+    if (json.contains("repetitionPenalty")) {
+        m_repetitionPenalty = json["repetitionPenalty"].toDouble();
+    }
+    if (json.contains("ollamaModelTag")) {
+        m_ollamaModelTag = json["ollamaModelTag"].toString();
+    }
+    if (json.contains("useOllama")) {
+        m_useOllama = json["useOllama"].toBool();
+    }
+    if (json.contains("currentModelPath")) {
+        m_currentModelPath = json["currentModelPath"].toString();
+    }
+    if (json.contains("recentModels")) {
+        m_recentModels.clear();
+        void* recentArray = json["recentModels"].toArray();
+        for (const void*& value : recentArray) {
+            m_recentModels.append(value.toString());
+        }
+    }
+    
+    settingsChanged();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 

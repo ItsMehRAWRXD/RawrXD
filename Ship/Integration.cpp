@@ -2,6 +2,7 @@
 // Pure C++20 / Win32 - Zero Qt Dependencies
 // Compile: cl /std:c++20 /EHsc /O2 Integration.cpp /link winhttp.lib ws2_32.lib comctl32.lib ole32.lib shell32.lib shlwapi.lib
 
+<<<<<<< HEAD
 #include "StdReplacements.hpp"
 #include "RawrXD_Agent.hpp"
 #include "../src/masm/RawrXD_NativeHttpServer.h"
@@ -30,6 +31,14 @@ namespace {
         auto end = s.find_last_not_of(L" \t\r\n");
         s = s.substr(start, end == RawrXD::String::npos ? RawrXD::String::npos : end - start + 1);
     }
+=======
+#include "RawrXD_Agent.hpp"
+#include "../src/masm/RawrXD_NativeHttpServer.h"
+#include <iostream>
+
+namespace {
+    RawrXD::NativeHttpServerPtr g_httpServer;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     bool InitializeHttpServer(const RawrXD::AgentConfig& config) {
         try {
@@ -39,8 +48,13 @@ namespace {
                 return false;
             }
 
+<<<<<<< HEAD
             if (!config.model.empty()) {
                 g_httpServer->LoadModel(RawrXD::StringUtils::ToUtf8(config.model));
+=======
+            if (!config.model.isEmpty()) {
+                g_httpServer->LoadModel(config.model.toStdString());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
 
             OutputDebugStringA("RawrXD HTTP server started on port 23959.\n");
@@ -49,6 +63,7 @@ namespace {
             std::string message = "RawrXD HTTP server init error: ";
             message += ex.what();
             message += "\n";
+<<<<<<< HEAD
             std::cerr << message;
             OutputDebugStringA(message.c_str());
 #ifdef _CONSOLE
@@ -56,6 +71,11 @@ namespace {
 #else
             MessageBoxA(nullptr, message.c_str(), "HTTP Server Init Error", MB_ICONERROR | MB_OK);
 #endif
+=======
+            std::cout << message; // Added for console visibility
+            OutputDebugStringA(message.c_str());
+            MessageBoxA(nullptr, message.c_str(), "HTTP Server Init Error", MB_ICONERROR | MB_OK);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return false;
         }
     }
@@ -91,9 +111,14 @@ public:
     }
 
     void run() {
+<<<<<<< HEAD
         std::wcout << L"RawrXD CLI " << AGENT_VERSION << L" - Full Chat & Agentic (101% Win32 GUI parity)\n";
         std::wcout << L"Commands: quit|exit, clear, models, /tools, /status, /smoke, /run-tool <name> [json]\n";
         std::wcout << L"Agentic: tools auto-invoked (read_file, run_command, search_files, etc.)\n";
+=======
+        std::wcout << L"RawrXD Agent " << AGENT_VERSION << L"\n";
+        std::wcout << L"Type 'quit' to exit, 'clear' to clear history\n";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::wcout << L"----------------------------------------\n\n";
 
         // Check LLM availability
@@ -113,17 +138,24 @@ public:
         std::wcout << L"\n";
 
         std::wstring input;
+<<<<<<< HEAD
         while (!g_consoleExitRequested) {
             std::wcout << L"You: ";
             if (!std::getline(std::wcin, input)) {
                 break;  // EOF (e.g. pipe closed)
             }
             TrimInput(input);
+=======
+        while (true) {
+            std::wcout << L"You: ";
+            std::getline(std::wcin, input);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             if (input == L"quit" || input == L"exit") {
                 break;
             }
 
+<<<<<<< HEAD
             if (input == L"help" || input == L"/help" || input == L"?") {
                 std::wcout << L"Commands: quit|exit, clear, models, /tools, /status, /smoke, /run-tool <name> [json]\n";
                 std::wcout << L"  /tools          List all agent tools\n";
@@ -133,12 +165,15 @@ public:
                 continue;
             }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (input == L"clear") {
                 m_agent->clearConversation();
                 std::wcout << L"[Conversation cleared]\n\n";
                 continue;
             }
 
+<<<<<<< HEAD
             if (input == L"models" || input == L"/models") {
                 if (m_agent->isLLMAvailable()) {
                     auto models = m_agent->listModels();
@@ -234,12 +269,18 @@ public:
                 continue;
             }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (input.empty()) {
                 continue;
             }
 
             m_isProcessing = true;
+<<<<<<< HEAD
             m_agent->processMessage(String(input));
+=======
+            m_agent->processMessage(QString(input));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             // Wait for completion
             while (m_isProcessing) {
@@ -297,6 +338,7 @@ int wmain(int argc, wchar_t* argv[]) {
 
     AgentConfig config;
 
+<<<<<<< HEAD
     // Parse command line arguments (C++20: String = std::wstring)
     for (int i = 1; i < argc; ++i) {
         String arg(argv[i]);
@@ -323,12 +365,32 @@ int wmain(int argc, wchar_t* argv[]) {
             std::wcout << L"  - All 44+ tools: read_file, write_file, run_command, search_files, etc.\n";
             std::wcout << L"  - In-chat: /tools, /status, /smoke, /run-tool <name> [json]\n\n";
             std::wcout << L"Usage: RawrXD_CLI [options]  (or RawrXD_Agent_Console)\n\n";
+=======
+    // Parse command line arguments
+    for (int i = 1; i < argc; ++i) {
+        QString arg(argv[i]);
+
+        if (arg == L"--model" && i + 1 < argc) {
+            config.model = QString(argv[++i]);
+        } else if (arg == L"--host" && i + 1 < argc) {
+            config.ollamaHost = QString(argv[++i]);
+        } else if (arg == L"--port" && i + 1 < argc) {
+            config.ollamaPort = std::stoi(argv[++i]);
+        } else if (arg == L"--dir" && i + 1 < argc) {
+            config.workingDirectory = QString(argv[++i]);
+        } else if (arg == L"--auto-approve") {
+            config.autoApproveTools = true;
+        } else if (arg == L"--help" || arg == L"-h") {
+            std::wcout << L"RawrXD Agent " << AGENT_VERSION << L"\n\n";
+            std::wcout << L"Usage: RawrXD_Agent [options]\n\n";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             std::wcout << L"Options:\n";
             std::wcout << L"  --model <name>    Set LLM model (default: qwen2.5-coder:14b)\n";
             std::wcout << L"  --host <host>     Ollama host (default: localhost)\n";
             std::wcout << L"  --port <port>     Ollama port (default: 11434)\n";
             std::wcout << L"  --dir <path>      Working directory\n";
             std::wcout << L"  --auto-approve    Auto-approve dangerous tools\n";
+<<<<<<< HEAD
             std::wcout << L"  --list, -l        List available models and exit\n";
             std::wcout << L"  --version, -v     Show version and exit\n";
             std::wcout << L"  --help, -h        Show this help\n";
@@ -353,6 +415,9 @@ int wmain(int argc, wchar_t* argv[]) {
             } else {
                 std::wcout << L"Ollama not available. Start Ollama (ollama serve) first.\n";
             }
+=======
+            std::wcout << L"  --help            Show this help\n";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return 0;
         }
     }
@@ -380,11 +445,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR cmdLine, int) {
     LPWSTR* argv = CommandLineToArgvW(cmdLine, &argc);
     if (argv) {
         for (int i = 0; i < argc; ++i) {
+<<<<<<< HEAD
             String arg(argv[i]);
             if (arg == L"--model" && i + 1 < argc) {
                 config.model = String(argv[++i]);
             } else if (arg == L"--dir" && i + 1 < argc) {
                 config.workingDirectory = String(argv[++i]);
+=======
+            QString arg(argv[i]);
+            if (arg == L"--model" && i + 1 < argc) {
+                config.model = QString(argv[++i]);
+            } else if (arg == L"--dir" && i + 1 < argc) {
+                config.workingDirectory = QString(argv[++i]);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
         LocalFree(argv);

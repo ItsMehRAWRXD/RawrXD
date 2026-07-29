@@ -16,6 +16,10 @@
 #include <sstream>
 
 AgenticCopilotBridge::AgenticCopilotBridge(void* parent)
+<<<<<<< HEAD
+=======
+    : void(parent)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 {
 }
 
@@ -24,7 +28,11 @@ AgenticCopilotBridge::~AgenticCopilotBridge()
     std::lock_guard<std::mutex> lock(m_mutex);
     
     // Clear sensitive data
+<<<<<<< HEAD
     m_conversationHistory = nullptr;
+=======
+    m_conversationHistory = void*();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     m_lastConversationContext.clear();
     
     // Release component pointers (not owned)
@@ -150,6 +158,7 @@ std::string AgenticCopilotBridge::generateTestsForCode(const std::string& code)
 
 // ========== MULTI-TURN CONVERSATION (COPILOT CHAT) ==========
 
+<<<<<<< HEAD
 std::string AgenticCopilotBridge::askAgent(const std::string& question, const json& context)
 {
     if (!m_agenticEngine) return "Engine not initialized";
@@ -158,17 +167,35 @@ std::string AgenticCopilotBridge::askAgent(const std::string& question, const js
     json fullContext = buildExecutionContext();
     if (!context.empty()) {
         fullContext.merge_patch(context);
+=======
+std::string AgenticCopilotBridge::askAgent(const std::string& question, const void*& context)
+{
+    if (!m_agenticEngine) return "Engine not initialized";
+
+
+    // Build full context
+    void* fullContext = context;
+    if (fullContext.empty()) {
+        fullContext = buildExecutionContext();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     // Process message with agent
     m_agenticEngine->processMessage(question);
     
+<<<<<<< HEAD
     // Generate response using the agent engine with full context
     std::string response = m_agenticEngine->generateResponse(question, fullContext);
+=======
+    // The response will be emitted via signal - we'll capture it
+    // For now, generate a response
+    std::string response = m_agenticEngine->generateResponse(question);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Apply hotpatching for safety and quality
     response = hotpatchResponse(response, fullContext);
     
+<<<<<<< HEAD
     // Store in conversation history with timestamps
     auto now = std::chrono::system_clock::now();
     auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -184,6 +211,19 @@ std::string AgenticCopilotBridge::askAgent(const std::string& question, const js
         {"role", "assistant"},
         {"content", response},
         {"timestamp", timestamp}
+=======
+    // Store in conversation history
+    m_conversationHistory.append(void* {
+        {"role", "user"},
+        {"content", question},
+        {"timestamp", std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate)}
+    });
+    
+    m_conversationHistory.append(void* {
+        {"role", "assistant"},
+        {"content", response},
+        {"timestamp", std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate)}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     });
     
     // Trim history if too long (keep last 20 messages)
@@ -194,9 +234,13 @@ std::string AgenticCopilotBridge::askAgent(const std::string& question, const js
     
     m_lastConversationContext = response;
     
+<<<<<<< HEAD
     // Emit signal for UI update
     agentResponseReady(response);
     
+=======
+    agentResponseReady(response);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return response;
 }
 
@@ -624,7 +668,11 @@ void AgenticCopilotBridge::updateModel(const std::string& newModelPath)
         }
         
         // Clear conversation history for new model
+<<<<<<< HEAD
         m_conversationHistory = nullptr;
+=======
+        m_conversationHistory = void*();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_lastConversationContext = std::string("Model updated to: %1");
         
         // Load new model via engine

@@ -335,6 +335,7 @@ void TokenGenerator::createMinimalVocabulary() {
     }
 }
 
+<<<<<<< HEAD
 void TokenGenerator::loadConfigFromJSON(const std::string& jsonStr) {
     if (jsonStr.empty()) return;
     
@@ -378,6 +379,10 @@ void TokenGenerator::loadTokenizerConfigFromJSON(const std::string& jsonStr) {
     // Same implementation as loadConfigFromJSON for tokenizer-specific config
     loadConfigFromJSON(jsonStr);
 }
+=======
+void TokenGenerator::loadConfigFromJSON(const std::string&) {}
+void TokenGenerator::loadTokenizerConfigFromJSON(const std::string&) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromMemory(
     const std::vector<std::string>& tokens,
@@ -413,6 +418,7 @@ RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromMem
     return {};
 }
 
+<<<<<<< HEAD
 RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromSentencePiece(const std::string& modelPath) {
     // SentencePiece model loading
     // SentencePiece models are typically stored as protobuf files
@@ -531,6 +537,10 @@ RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromJSO
         return RawrXD::Unexpected(TokenError::InvalidFormat);
     }
 }
+=======
+RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromSentencePiece(const std::string&) { return {}; }
+RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromJSON(const std::string&) { return {}; }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool TokenGenerator::isValidTokenId(int id) const { return m_idToToken.count(id); }
 bool TokenGenerator::isValidToken(const std::string& t) const { return m_vocab.count(t); }
@@ -542,6 +552,7 @@ size_t TokenGenerator::getCacheSize() const { return m_cacheSize; }
 RawrXD::Expected<std::vector<int>, RawrXD::TokenError> TokenGenerator::getFromCache(const std::string& k, bool) {
     return RawrXD::Unexpected(RawrXD::TokenError::TokenNotFound); 
 }
+<<<<<<< HEAD
 void TokenGenerator::addToCache(const std::string& key, const std::vector<int>& tokens, bool encoding) {
     if (!m_config.enableCache || key.empty()) return;
     
@@ -626,6 +637,14 @@ void TokenGenerator::logError(const std::string& message, RawrXD::TokenError err
     (void)message; // Suppress unused warning if spdlog not available
 #endif
 }
+=======
+void TokenGenerator::addToCache(const std::string&, const std::vector<int>&, bool) {}
+void TokenGenerator::evictCacheIfNeeded() {}
+
+std::string TokenGenerator::detectTokenType(const std::string&) const { return "word"; }
+void TokenGenerator::logTokenization(const std::string&, const std::vector<int>&) {}
+void TokenGenerator::logError(const std::string&, RawrXD::TokenError) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 RawrXD::Expected<RawrXD::TokenInfo, RawrXD::TokenError> TokenGenerator::getTokenInfo(int id) {
      if (m_tokenInfo.count(id)) return m_tokenInfo.at(id);

@@ -5,7 +5,10 @@
 #include <chrono>
 #include <filesystem>
 #include <regex>
+<<<<<<< HEAD
 #include <cstring>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -15,12 +18,18 @@ AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(AgenticID
     , m_running(false)
 {
     // Initialize real components
+<<<<<<< HEAD
     m_agenticEngine = std::make_unique<AgenticEngine>();
     m_toolRegistry = std::make_unique<ToolRegistry>(nullptr, nullptr);
+=======
+    m_agenticEngine = std::make_unique<AgenticEngine>(this);
+    m_toolRegistry = std::make_unique<ToolRegistry>();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     m_planOrchestrator = std::make_unique<PlanOrchestrator>();
     m_modelRouter = std::make_unique<UniversalModelRouter>();
     
     // Register default tools
+<<<<<<< HEAD
     ToolDefinition searchDef;
     searchDef.metadata.name = "search_code";
     searchDef.metadata.description = "Search code with a text query";
@@ -45,6 +54,23 @@ AutonomousIntelligenceOrchestrator::AutonomousIntelligenceOrchestrator(AgenticID
     };
     m_toolRegistry->registerTool(readDef);
     
+=======
+    m_toolRegistry->registerTool("search_code", [this](const std::string& query) {
+        // Implement real code search
+        return "Searching for: " + query; 
+    });
+    
+    m_toolRegistry->registerTool("read_file", [](const std::string& path) {
+        std::ifstream f(path);
+        if (f.is_open()) {
+            std::stringstream buffer;
+            buffer << f.rdbuf();
+            return buffer.str();
+        }
+        return std::string("Error: Could not read file");
+    });
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::cout << "[Orchestrator] Initialized with REAL components." << std::endl;
 }
 
@@ -143,6 +169,7 @@ QualityMetrics AutonomousIntelligenceOrchestrator::assessCodeQuality(const std::
 // ... Real implementation helper methods ...
 
 float AutonomousIntelligenceOrchestrator::calculateQualityScore(const std::string& code) {
+<<<<<<< HEAD
     if (code.empty()) return 0.0f;
 
     // Lightweight, deterministic heuristic:
@@ -185,6 +212,12 @@ float AutonomousIntelligenceOrchestrator::calculateQualityScore(const std::strin
     if (score < 0.0) score = 0.0;
     if (score > 100.0) score = 100.0;
     return (float)score;
+=======
+    // Simple heuristic for now: higher score for shorter functions, consistent indentation
+    // Real implementation would use clang-tidy or similar AST analysis
+    if (code.empty()) return 0.0f;
+    return 85.0f; // Placeholder for heuristic
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 float AutonomousIntelligenceOrchestrator::calculateMaintainabilityScore(const std::string& code) {
@@ -253,6 +286,7 @@ std::vector<std::string> AutonomousIntelligenceOrchestrator::scanForIssues(const
     return allIssues;
 }
 
+<<<<<<< HEAD
 std::vector<std::string> AutonomousIntelligenceOrchestrator::parseAST(const std::string& code) {
     std::vector<std::string> ast;
     
@@ -386,6 +420,8 @@ void AutonomousIntelligenceOrchestrator::monitorFileChanges(const std::string& p
 }
 
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 json AutonomousIntelligenceOrchestrator::getStatus() const {
     json status;
     status["running"] = m_running.load();

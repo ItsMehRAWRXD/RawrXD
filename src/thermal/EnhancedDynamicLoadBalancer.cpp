@@ -14,7 +14,11 @@
 #include <algorithm>
 #include <chrono>
 
+<<<<<<< HEAD
 #ifdef _WIN32
+=======
+#ifdef 
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <Windows.h>
 #include <comdef.h>
 #include <Wbemidl.h>
@@ -28,10 +32,17 @@ namespace rawrxd::thermal {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 EnhancedDynamicLoadBalancer::EnhancedDynamicLoadBalancer(void* parent)
+<<<<<<< HEAD
     : m_healthTimer(nullptr)
     , m_thermalTimer(nullptr)
 {
     (void)parent;
+=======
+    : void(parent)
+    , m_healthTimer(std::make_unique<void*>(this))
+    , m_thermalTimer(std::make_unique<void*>(this))
+{
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Qt connect removed
 // Qt connect removed
 }
@@ -58,8 +69,16 @@ void EnhancedDynamicLoadBalancer::setConfig(const EnhancedLoadBalancerConfig& co
         m_config.healthWeight /= total;
     }
     
+<<<<<<< HEAD
     // Timer stubs: no-op for Win32 backend (was QTimer::setInterval)
     (void)m_monitoring;
+=======
+    // Update timer intervals
+    if (m_monitoring) {
+        m_healthTimer->setInterval(m_config.healthPollIntervalMs);
+        m_thermalTimer->setInterval(m_config.thermalPollIntervalMs);
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     recalculateScores();
 }
@@ -426,7 +445,15 @@ void EnhancedDynamicLoadBalancer::startMonitoring()
     
     m_monitoring = true;
     
+<<<<<<< HEAD
     // Timer stubs: no-op for Win32 backend (was QTimer)
+=======
+    m_healthTimer->setInterval(m_config.healthPollIntervalMs);
+    m_thermalTimer->setInterval(m_config.thermalPollIntervalMs);
+    
+    m_healthTimer->start();
+    m_thermalTimer->start();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Initial refresh
     refreshHealthData();
@@ -439,7 +466,13 @@ void EnhancedDynamicLoadBalancer::stopMonitoring()
     if (!m_monitoring) return;
     
     m_monitoring = false;
+<<<<<<< HEAD
     // Timer stubs: no-op for Win32 backend
+=======
+    m_healthTimer->stop();
+    m_thermalTimer->stop();
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool EnhancedDynamicLoadBalancer::isMonitoring() const
@@ -552,6 +585,7 @@ int EnhancedDynamicLoadBalancer::getCriticalDriveCount() const
     return count;
 }
 
+<<<<<<< HEAD
 std::map<std::string, std::string> EnhancedDynamicLoadBalancer::getStatistics() const
 {
     std::map<std::string, std::string> stats;
@@ -564,15 +598,37 @@ std::map<std::string, std::string> EnhancedDynamicLoadBalancer::getStatistics() 
     stats["averageLoad"] = std::to_string(getAverageLoad());
     stats["lastSelectedDrive"] = getLastSelectedDrive();
     stats["isMonitoring"] = isMonitoring() ? "true" : "false";
+=======
+QVariantMap EnhancedDynamicLoadBalancer::getStatistics() const
+{
+    QVariantMap stats;
+    
+    stats["driveCount"] = getDriveCount();
+    stats["healthyDriveCount"] = getHealthyDriveCount();
+    stats["criticalDriveCount"] = getCriticalDriveCount();
+    stats["averageHealth"] = getAverageHealth();
+    stats["averageTemperature"] = getAverageTemperature();
+    stats["averageLoad"] = getAverageLoad();
+    stats["lastSelectedDrive"] = getLastSelectedDrive();
+    stats["isMonitoring"] = isMonitoring();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     return stats;
 }
 
+<<<<<<< HEAD
 std::map<std::string, std::string> EnhancedDynamicLoadBalancer::getDriveStatistics(const std::string& drivePath) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     std::map<std::string, std::string> stats;
+=======
+QVariantMap EnhancedDynamicLoadBalancer::getDriveStatistics(const std::string& drivePath) const
+{
+    std::lock_guard<std::mutex> lock(&m_mutex);
+    
+    QVariantMap stats;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto it = m_drives.find(drivePath);
     
     if (it != m_drives.end()) {
@@ -581,6 +637,7 @@ std::map<std::string, std::string> EnhancedDynamicLoadBalancer::getDriveStatisti
         stats["drivePath"] = profile.drivePath;
         stats["driveModel"] = profile.driveModel;
         stats["serialNumber"] = profile.serialNumber;
+<<<<<<< HEAD
         stats["temperature"] = std::to_string(profile.currentTemperature);
         stats["load"] = std::to_string(profile.currentLoad);
         stats["healthScore"] = std::to_string(profile.healthScore * 100);
@@ -605,6 +662,32 @@ std::map<std::string, std::string> EnhancedDynamicLoadBalancer::getDriveStatisti
         stats["ratedTBW"] = std::to_string(profile.tbw.ratedTBW);
         stats["wearLevel"] = std::to_string(profile.tbw.wearLevel);
         stats["estimatedDaysRemaining"] = std::to_string(profile.tbw.estimatedDaysRemaining);
+=======
+        stats["temperature"] = profile.currentTemperature;
+        stats["load"] = profile.currentLoad;
+        stats["healthScore"] = profile.healthScore * 100;
+        stats["thermalScore"] = profile.thermalScore * 100;
+        stats["loadScore"] = profile.loadScore * 100;
+        stats["compositeScore"] = profile.compositeScore * 100;
+        stats["isOnline"] = profile.isOnline;
+        stats["isThrottled"] = profile.isThrottled;
+        stats["statusMessage"] = profile.statusMessage;
+        
+        // SMART data
+        stats["smartHealth"] = profile.smart.overallHealth;
+        stats["smartHealthy"] = profile.smart.isHealthy;
+        stats["smartCritical"] = profile.smart.isCritical;
+        stats["reallocatedSectors"] = profile.smart.reallocatedSectorCount;
+        stats["pendingSectors"] = profile.smart.currentPendingSectorCount;
+        stats["availableSpare"] = profile.smart.availableSpare;
+        stats["mediaErrors"] = profile.smart.mediaErrors;
+        
+        // TBW data
+        stats["totalTBW"] = profile.tbw.totalTBW;
+        stats["ratedTBW"] = profile.tbw.ratedTBW;
+        stats["wearLevel"] = profile.tbw.wearLevel;
+        stats["estimatedDaysRemaining"] = profile.tbw.estimatedDaysRemaining;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return stats;

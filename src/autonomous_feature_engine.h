@@ -6,7 +6,10 @@
 #include <thread>
 #include <atomic>
 #include <functional>
+<<<<<<< HEAD
 #include <chrono>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Forward declarations
 class HybridCloudManager;
@@ -109,6 +112,7 @@ struct UserCodingProfile {
     nlohmann::json preferences;
 };
 
+<<<<<<< HEAD
 // Code analysis structures
 struct ParameterInfo {
     std::string name;
@@ -143,6 +147,8 @@ struct CodebaseAnalysis {
     std::vector<std::string> dependencies;
 };
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 class AutonomousFeatureEngine {
 
 public:
@@ -298,10 +304,13 @@ private:
     // Pattern matching
     bool matchesPattern(const std::string& code, const std::string& patternName);
     std::vector<std::string> detectPatterns(const std::string& code);
+<<<<<<< HEAD
     
     // File monitoring helpers
     void QueueFileForAnalysis(const std::string& filePath);
     void CheckGitStatusForModifications(const std::string& projectPath);
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Data members
     HybridCloudManager* hybridCloudManager;
@@ -334,3 +343,7 @@ private:
 
 #endif // AUTONOMOUS_FEATURE_ENGINE_H
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

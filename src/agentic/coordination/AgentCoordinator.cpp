@@ -4,6 +4,10 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+<<<<<<< HEAD
+=======
+#include <nlohmann/json.hpp>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD::Agentic::Coordination {
 
@@ -57,6 +61,19 @@ AgentState AgentCoordinator::getAgentState(uint32_t agentId) const {
     return AgentState::UNINITIALIZED;
 }
 
+<<<<<<< HEAD
+=======
+uint32_t AgentCoordinator::getAgentPriority(uint32_t agentId) const {
+    std::lock_guard<std::mutex> lock(coordinatorMutex_);
+
+    auto it = agents_.find(agentId);
+    if (it != agents_.end()) {
+        return it->second.capabilities.priority;
+    }
+    return 0;  // Default low priority for unknown agents
+}
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 void AgentCoordinator::setAgentState(uint32_t agentId, AgentState newState) {
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
@@ -197,11 +214,14 @@ LeaseToken AgentCoordinator::acquireLease(uint32_t agentId, const std::string& r
                                          std::chrono::milliseconds leaseDuration) {
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
+<<<<<<< HEAD
     auto agentIt = agents_.find(agentId);
     if (agentIt == agents_.end() || agentIt->second.state == AgentState::DEAD) {
         return LeaseToken{};
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     LeaseToken token;
     token.leaseId = nextLeaseId_++;
     token.agentId = agentId;
@@ -220,6 +240,7 @@ bool AgentCoordinator::renewLease(const LeaseToken& token,
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
     auto it = leases_.find(token.leaseId);
+<<<<<<< HEAD
     if (it != leases_.end() && it->second.agentId == token.agentId && it->second.isValid) {
         auto now = std::chrono::steady_clock::now();
         if (now > it->second.expiresAt) {
@@ -227,6 +248,10 @@ bool AgentCoordinator::renewLease(const LeaseToken& token,
             return false;
         }
         it->second.expiresAt = now + additionalDuration;
+=======
+    if (it != leases_.end() && it->second.agentId == token.agentId) {
+        it->second.expiresAt = std::chrono::steady_clock::now() + additionalDuration;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         it->second.renewalCount++;
         return true;
     }
@@ -258,11 +283,14 @@ bool AgentCoordinator::validateLease(const LeaseToken& token) const {
         return false;
     }
 
+<<<<<<< HEAD
     auto agentIt = agents_.find(token.agentId);
     if (agentIt == agents_.end() || agentIt->second.state == AgentState::DEAD) {
         return false;
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return it->second.agentId == token.agentId;
 }
 
@@ -446,6 +474,7 @@ void AgentCoordinator::prune_completed_tasks(std::chrono::hours olderThan) {
 }
 
 bool AgentCoordinator::export_state(const std::string& filepath) {
+<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
 
     std::ofstream ofs(filepath, std::ios::binary | std::ios::trunc);
@@ -513,10 +542,57 @@ bool AgentCoordinator::export_state(const std::string& filepath) {
 
     ofs << json.str();
     return ofs.good();
+=======
+    // REAL IMPLEMENTATION: JSON Serialization
+    // In a full implementation, we would include <nlohmann/json.hpp>
+    // For now, we use a robust string builder format which is lighter.
+    std::stringstream ss;
+    ss << "{\n";
+    ss << "  \"agent_count\": " << agents_.size() << ",\n";
+    ss << "  \"agents\": [\n";
+    
+    bool first = true;
+    for (const auto& pair : agents_) {
+        if (!first) ss << ",\n";
+        const auto& record = pair.second;
+        ss << "    {\n";
+        ss << "      \"id\": " << record.agentId << ",\n";
+        ss << "      \"name\": \"" << record.agentName << "\",\n";
+        ss << "      \"state\": " << static_cast<int>(record.state) << ",\n";
+        ss << "      \"priority\": " << record.capabilities.priority << "\n";
+        ss << "    }";
+        first = false;
+    }
+    ss << "\n  ]\n";
+    ss << "}";
+    
+    // Atomic write pattern: write to temp, rename
+    std::string tmpPath = filepath + ".tmp";
+    {
+        std::ofstream tmpFile(tmpPath);
+        if (!tmpFile.is_open()) return false;
+        tmpFile << ss.str();
+        tmpFile.close();
+        if (!tmpFile.good()) return false;
+    }
+    
+    // Atomic rename
+    std::filesystem::path temp(tmpPath);
+    std::filesystem::path final(filepath);
+    std::error_code ec;
+    std::filesystem::rename(temp, final, ec);
+    if (ec) {
+        std::filesystem::remove(temp); // Cleanup on failure
+        return false;
+    }
+    
+    return true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool AgentCoordinator::import_state(const std::string& filepath) {
     std::lock_guard<std::mutex> lock(coordinatorMutex_);
+<<<<<<< HEAD
 
     std::ifstream ifs(filepath, std::ios::binary);
     if (!ifs.is_open()) {
@@ -557,6 +633,57 @@ bool AgentCoordinator::import_state(const std::string& filepath) {
     if (nextCheckpointId_ == 0) nextCheckpointId_ = 1;
 
     return true;
+=======
+    try {
+        std::ifstream file(filepath);
+        if (!file.is_open()) return false;
+
+        nlohmann::json j;
+        file >> j;
+        
+        // Validate structure
+        if (!j.is_object()) return false;
+        if (j.contains("activeAgents") && !j["activeAgents"].is_array()) return false;
+        if (j.contains("tasks") && !j["tasks"].is_array()) return false;
+
+        // Deserialize activeAgents
+        if (j.contains("activeAgents")) {
+            for (const auto& agentJson : j["activeAgents"]) {
+                if (!agentJson.contains("id") || !agentJson.contains("role")) continue;
+                
+                std::string id = agentJson["id"];
+                AgentInfo info;
+                info.id = id;
+                info.role = agentJson.value("role", "unknown");
+                info.status = agentJson.value("status", "unknown");
+                info.lastHeartbeat = std::chrono::system_clock::now();
+                
+                agents_[id] = info;
+            }
+        }
+
+        // Deserialize tasks
+        if (j.contains("tasks")) {
+            for (const auto& taskJson : j["tasks"]) {
+                if (!taskJson.contains("id")) continue;
+                
+                std::string id = taskJson["id"];
+                Task task;
+                task.id = id;
+                task.description = taskJson.value("description", "");
+                task.status = taskJson.value("status", "pending");
+                task.assignedAgent = taskJson.value("assignedAgent", "");
+                task.priority = taskJson.value("priority", 0);
+                
+                tasks_[id] = task;
+            }
+        }
+        
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void AgentCoordinator::shutdown() {
@@ -573,12 +700,18 @@ void AgentCoordinator::shutdown() {
     taskDependencies_.clear();
 }
 
+<<<<<<< HEAD
 void AgentCoordinator::heartbeat_monitor() {
     heartbeatThreadRunning_ = true;
+=======
+
+void AgentCoordinator::heartbeat_monitor() {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     while (heartbeatThreadRunning_) {
         {
             std::lock_guard<std::mutex> lock(coordinatorMutex_);
             auto now = std::chrono::steady_clock::now();
+<<<<<<< HEAD
             const auto staleThreshold = std::chrono::seconds(30);
 
             for (auto& [id, agent] : agents_) {
@@ -601,10 +734,26 @@ void AgentCoordinator::heartbeat_monitor() {
         for (int i = 0; i < 50 && heartbeatThreadRunning_; ++i) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+=======
+            for (auto& pair : agents_) {
+                auto& agent = pair.second;
+                if (agent.state != AgentState::DEAD && agent.state != AgentState::UNINITIALIZED) {
+                    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - agent.lastHeartbeat).count();
+                    // 30 second timeout
+                    if (elapsed > 30) {
+                        agent.state = AgentState::SUSPENDED; // Was UNRESPONSIVE
+                        // In a real system, we might try to restart it or notify admin
+                    }
+                }
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 void AgentCoordinator::conflict_detector() {
+<<<<<<< HEAD
     conflictDetectorRunning_ = true;
     while (conflictDetectorRunning_) {
         {
@@ -654,6 +803,18 @@ void AgentCoordinator::conflict_detector() {
         for (int i = 0; i < 20 && conflictDetectorRunning_; ++i) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+=======
+    while (conflictDetectorRunning_) {
+        // Simple file collision detection
+        // In reality, this would query ConflictResolver for deep analysis
+        {
+             std::lock_guard<std::mutex> lock(coordinatorMutex_);
+             // Map formatted as: Resource -> TaskID
+             std::map<std::string, uint64_t> resource usage;
+             // ... logic to check active leases/locks ...
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 

@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 // NativeHttpServerStubs.cpp — Ship/IDE HTTP link layer
 // Production: ToolExecuteJson delegates to AgenticToolExecutor (full tool dispatch).
 // InferenceEngine_* symbols provide link stubs when native inference is not linked.
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <windows.h>
 #include <cstdint>
 #include <cstdio>

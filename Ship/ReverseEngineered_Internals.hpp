@@ -28,7 +28,10 @@
 #include <algorithm>
 #include <condition_variable>
 #include <sstream>
+<<<<<<< HEAD
 #include <deque>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "psapi.lib")
 
@@ -1251,6 +1254,7 @@ public:
 };
 
 } // namespace Internals
+<<<<<<< HEAD
 
 // QtCompat — Win32/STL replacements for Qt types (no Qt code; naming only)
 // RawrXD_Agent_Complete.hpp used QtCompat::ThreadPool; this is the C++20 impl.
@@ -1317,6 +1321,8 @@ private:
 
 } // namespace QtCompat
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 } // namespace RawrXD
 
 #endif // RAWRXD_REVERSE_ENGINEERED_INTERNALS_HPP

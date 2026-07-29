@@ -27,6 +27,7 @@ extern "C" void ShutdownAICompletion();
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
+#include "../deep2/Deep2Discovery.h"
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
@@ -1298,7 +1299,15 @@ bool Win32IDE::createWindow()
         config.applyFeatureToggles();
 
         // Apply config to IDE state
-        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
+        // Use Deep2 Discovery for backend auto-detection
+        auto deep2Backend = Deep2::Deep2Discovery::GetPreferredBackend();
+        if (deep2Backend.native && !deep2Backend.url.empty()) {
+            m_ollamaBaseUrl = deep2Backend.url;
+            fprintf(stderr, "[Win32IDE] Using Deep2 backend: %s\n", m_ollamaBaseUrl.c_str());
+        } else {
+            m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
+            fprintf(stderr, "[Win32IDE] Deep2 not available, using Ollama fallback: %s\n", m_ollamaBaseUrl.c_str());
+        }
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
         m_gpuTextEnabled = config.getBool("performance.gpuTextRendering", true);
@@ -2045,7 +2054,9 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 {
     try
     {
-        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl);
+        // Use discovered backend URL (already resolved by Deep2 Discovery)
+        std::string backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
+        ModelConnection conn(backendUrl);
 
         if (!conn.checkConnection())
         {

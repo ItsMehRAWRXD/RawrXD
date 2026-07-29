@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ; deflate_brutal_masm.asm — stored-block gzip (DEFLATE type 0) for RawrXD
 ; MSVC x64 ABI: RCX=src, RDX=len, R8=out_len*  -> returns RAX = malloc buffer or 0
 ; Mirrors RawrXD-ModelLoader/kernels/deflate_brutal_masm.asm (production path).
@@ -107,3 +108,19 @@ _exit:
     ret
 deflate_brutal_masm ENDP
 END
+=======
+; Brutal deflate compression stub (MASM x64)
+option casemap:none
+
+PUBLIC deflate_brutal_masm
+
+.code
+deflate_brutal_masm PROC
+    ; TODO: Implement actual compression
+    ; For now, return 0 (failure) to indicate not implemented
+    xor rax, rax
+    ret
+deflate_brutal_masm ENDP
+
+END
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

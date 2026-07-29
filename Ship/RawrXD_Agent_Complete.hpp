@@ -9,6 +9,10 @@
 #define RAWRXD_AGENT_COMPLETE_HPP
 
 #include "agent_kernel_main.hpp"
+<<<<<<< HEAD
+=======
+#include "QtReplacements.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include "ToolExecutionEngine.hpp"
 #include "LLMClient.hpp"
 #include "AgentOrchestrator.hpp"

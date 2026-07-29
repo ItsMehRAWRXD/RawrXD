@@ -1,5 +1,9 @@
 # Master Audit Index - RawrXD IDE
+<<<<<<< HEAD
 **Location:** E:\RawrXD\src\
+=======
+**Location:** D:\lazy init ide\src\
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 **Goal:** Full reverse engineering and MASM64 migration
 
 ## Audit Status
@@ -14,6 +18,7 @@
 ### Pending Audits (In Priority Order)
 
 #### Phase 1: Core GPU/Compute Dependencies
+<<<<<<< HEAD
 🔄 **gpu_masm/** - TO BE CREATED
    - Status: Does not exist, needs creation
    - Priority: CRITICAL
@@ -23,6 +28,19 @@
    - Files: gpu_backend.cpp, kv_cache_optimizer.cpp, speculative_decoder.cpp
    - Priority: CRITICAL
    - Dependencies: Vulkan, CUDA, ROCm (to be replaced)
+=======
+🔄 **gpu_masm/** - MASM GPU backend (exists)
+   - Status: Exists with real MASM backends (see `AUDIT.md`, `gpu_backend.asm`, `gpu_detection.asm`, `vulkan/`)
+   - Gaps: Export C bindings; finish advanced property extraction in `gpu_detection.asm`
+   - Priority: CRITICAL
+   - Dependencies: None (pure MASM)
+
+🔄 **gpu/** - GPU backend abstraction (C++ stubs)
+   - Files: gpu_backend.cpp, kv_cache_optimizer.cpp, speculative_decoder.cpp
+   - Priority: CRITICAL
+   - Findings: Backend init is stubbed (Vulkan always succeeds, CUDA always fails); cache + speculative decoder are CPU-only placeholders
+   - Action: Wire to `gpu_masm` entry points, add tests, remove placeholder logic
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 🔄 **ggml_masm/** - TO BE CREATED
    - Status: Does not exist, needs creation
@@ -105,9 +123,15 @@
 
 ## Next Steps
 1. ✅ Complete audit of `agentic/`
+<<<<<<< HEAD
 2. 🔄 Begin audit of `gpu/`
 3. 🔄 Create `gpu_masm/` directory
 4. 🔄 Start MASM64 implementation
+=======
+2. 🔄 Audit `gpu/` (stubs identified; see `gpu/GPU_FOLDER_AUDIT.md` and `gpu/GPU_BACKEND_AUDIT.md`)
+3. ✅ `gpu_masm/` exists; next: expose C bindings and finish property extraction
+4. 🔄 Start MASM64 integration (bridge `gpu/` C++ to `gpu_masm/`; add tests)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ## Notes
 - All Qt dependencies in UI folders will be kept (essential for GUI)

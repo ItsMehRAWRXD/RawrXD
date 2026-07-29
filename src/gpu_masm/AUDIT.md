@@ -1,7 +1,20 @@
+<<<<<<< HEAD
 # Audit: e:/RawrXD/src/gpu_masm/
 
 ## Files
 - gpu_detection.asm
+=======
+# Audit: d:/lazy init ide/src/gpu_masm/
+
+## Files
+- cuda_api.asm
+- deflate_brutal_masm.asm
+- gpu_backend.asm
+- gpu_detection.asm
+- gpu_kernels.asm
+- gpu_memory.asm
+- vk_instance.asm
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 - vulkan/
 
 ## gpu_detection.asm

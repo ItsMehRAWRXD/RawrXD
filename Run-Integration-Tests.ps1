@@ -42,10 +42,17 @@ if (-not $testExePath) {
 Write-Host "`n✅ Found test executable: $testExePath" -ForegroundColor Green
 
 # ============================================================================
+<<<<<<< HEAD
 # CATEGORY 1: StdReplacements.hpp VERIFICATION
 # ============================================================================
 Write-Host "`n────────────────────────────────────────────────────────────────" -ForegroundColor Cyan
 Write-Host "Category 1: StdReplacements.hpp Verification" -ForegroundColor Cyan
+=======
+# CATEGORY 1: QtReplacements.hpp VERIFICATION
+# ============================================================================
+Write-Host "`n────────────────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host "Category 1: QtReplacements.hpp Verification" -ForegroundColor Cyan
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 Write-Host "────────────────────────────────────────────────────────────────" -ForegroundColor Cyan
 
 Write-Host "`n1.1 Testing string replacements (QString -> std::wstring)..." -ForegroundColor Yellow
@@ -53,7 +60,11 @@ Write-Host "  Testing: fromUtf8(), toUtf8(), split(), join(), replace()" -Foregr
 
 # Quick string test
 $testCode = @'
+<<<<<<< HEAD
 #include "StdReplacements.hpp"
+=======
+#include "QtReplacements.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <cassert>
 
 int main() {
@@ -211,7 +222,11 @@ Write-Host "TEST SUMMARY" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
 $testStats = @{
+<<<<<<< HEAD
     "Category 1: StdReplacements" = "✅ PASSED (4 tests)"
+=======
+    "Category 1: QtReplacements" = "✅ PASSED (4 tests)"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     "Category 2: Core Functionality" = "✅ PASSED (3 tests)"
     "Category 3: Advanced Systems" = "✅ PASSED (3 tests)"
     "Category 4: Performance" = "✅ PASSED (2 tests)"

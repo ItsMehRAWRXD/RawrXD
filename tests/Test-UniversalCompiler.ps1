@@ -27,8 +27,12 @@ param(
     [switch]$VerboseOutput,
     [switch]$Benchmark,
     [string]$CompilerPath,
+<<<<<<< HEAD
     [string]$OutputDir,
     [string]$RootDir
+=======
+    [string]$OutputDir
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,9 +41,14 @@ $ProgressPreference = "SilentlyContinue"
 # ============================================================================
 # GLOBAL STATE
 # ============================================================================
+<<<<<<< HEAD
 # Primary development root: D:\RawrXD (fortress). Use -RootDir E:\RawrXD for legacy E: layout.
 $Script:Config = @{
     RootDir      = "D:\RawrXD"
+=======
+$Script:Config = @{
+    RootDir      = "E:\RawrXD"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     TestDir      = ""
     CompilerPath = ""
     StartTime    = Get-Date
@@ -628,8 +637,12 @@ function Write-Summary {
 function Main {
     Write-Banner "RawrXD Universal Cross-Platform Compiler Test Suite"
     
+<<<<<<< HEAD
     # Setup (override RootDir for legacy E:\RawrXD or other layout)
     if ($RootDir) { $Script:Config.RootDir = $RootDir }
+=======
+    # Setup
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     $Script:Config.TestDir = if ($OutputDir) { $OutputDir } else {
         Join-Path $Script:Config.RootDir "test_output_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     }

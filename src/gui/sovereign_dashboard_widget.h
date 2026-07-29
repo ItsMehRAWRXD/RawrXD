@@ -1,4 +1,5 @@
 #pragma once
+<<<<<<< HEAD
 // ============================================================================
 // sovereign_dashboard_widget.h — Pure Win32 Native Implementation
 // ============================================================================
@@ -77,3 +78,20 @@ private:
 
     UINT_PTR m_timerId = 0;
 };
+=======
+#include <windows.h>
+#include <string>
+
+class SovereignDashboardWidget {
+public:
+    SovereignDashboardWidget();
+    ~SovereignDashboardWidget();
+
+    void updateDashboard();
+
+private:
+    HANDLE m_mmfHandle;
+    void* m_mmfView;
+};
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

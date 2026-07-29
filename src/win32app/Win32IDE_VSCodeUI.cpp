@@ -7,6 +7,7 @@
 #include <richedit.h>
 #include <sstream>
 #include <iomanip>
+<<<<<<< HEAD
 #include <fstream>
 #include <map>
 
@@ -24,6 +25,8 @@
 
 // Activity bar and primary sidebar layout — Phase 33 complete
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Define GET_X_LPARAM and GET_Y_LPARAM if not available
 #ifndef GET_X_LPARAM
@@ -329,10 +332,15 @@ void Win32IDE::updateSecondarySidebarContent()
 void Win32IDE::sendCopilotMessage(const std::string& message)
 {
     if (message.empty()) return;
+<<<<<<< HEAD
     
     RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "=== SEND MESSAGE CLICKED ===";
     RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] Message: " << message;
     
+=======
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Add user message to history
     m_chatHistory.push_back({"user", message});
     
@@ -340,6 +348,7 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     std::string response;
     
     if (isModelLoaded()) {
+<<<<<<< HEAD
         RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] Model is loaded, calling generateResponse...";
         // Use the loaded GGUF model for inference
         response = generateResponse(message);
@@ -347,6 +356,12 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     } else {
         // No model loaded - prompt user to load one
         RAWRXD_LOG_WARNING("Win32IDE_VSCodeUI") << "[sendCopilotMessage] No model loaded!";
+=======
+        // Use the loaded GGUF model for inference
+        response = generateResponse(message);
+    } else {
+        // No model loaded - prompt user to load one
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         response = "⚠️ No AI model loaded.\r\n\r\n"
                    "To use AI assistance, please load a GGUF model:\r\n"
                    "1. Open the File Explorer (Activity Bar → Explorer icon)\r\n"
@@ -361,6 +376,7 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
     }
     
     m_chatHistory.push_back({"assistant", response});
+<<<<<<< HEAD
 
     // Store accumulated tool actions for this response
     if (m_currentToolActions.totalActions() > 0) {
@@ -374,6 +390,8 @@ void Win32IDE::sendCopilotMessage(const std::string& message)
 
     RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "[sendCopilotMessage] Added response to history, updating UI...";
     RAWRXD_LOG_INFO("Win32IDE_VSCodeUI") << "=== SEND MESSAGE END ===";
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Update display
     updateSecondarySidebarContent();
@@ -914,3 +932,4 @@ void Win32IDE::detectLanguageFromFile(const std::string& filePath)
         m_statusBarInfo.languageMode = "Plain Text";
     }
 }
+

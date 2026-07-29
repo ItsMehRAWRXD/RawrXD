@@ -22,7 +22,17 @@ public:
     Font(const String& family, float size);
     ~Font();
     
+<<<<<<< HEAD
     // Copy/Move ...
+=======
+    // Copy constructors
+    Font(const Font& other);
+    Font& operator=(const Font& other);
+    
+    // Move constructors
+    Font(Font&& other) noexcept;
+    Font& operator=(Font&& other) noexcept;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     void setBold(bool b);
     void setItalic(bool i);
@@ -61,7 +71,31 @@ public:
     void fillRect(const Rect& rect, const Color& color);
     void drawLine(const Point& p1, const Point& p2, const Color& color, float strokeWidth = 1.0f);
     void drawText(const Point& p, const String& text, const Font& font, const Color& color);
+<<<<<<< HEAD
     void drawStyledText(const Point& p, const String& text, const Font& font, const std::vector<TextRun>& runs);
+=======
+    void drawStyledText(const Point& p, const String& text, const Font& font, const std::vector<TextRun>& runs, const Color& defaultColor = Color::Black);
+    
+    // Measurement
+    SizeF measureText(const String& text, const Font& font);
+
+    // Additional shapes
+    void drawEllipse(const Point& center, float radiusX, float radiusY, const Color& color, float strokeWidth = 1.0f);
+    void fillEllipse(const Point& center, float radiusX, float radiusY, const Color& color);
+    void drawRoundedRect(const Rect& rect, float radiusX, float radiusY, const Color& color, float strokeWidth = 1.0f);
+    void fillRoundedRect(const Rect& rect, float radiusX, float radiusY, const Color& color);
+
+    // Transforms
+    void setTransform(const D2D1::Matrix3x2F& transform);
+    void resetTransform();
+    void rotate(float angle, const Point& center);
+    void scale(float x, float y, const Point& center);
+    void translate(float x, float y);
+
+    // Clipping
+    void pushClip(const Rect& rect);
+    void popClip();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ID2D1HwndRenderTarget* getTarget() { return target; }
     IDWriteFactory* getWriteFactory() { return writeFactory; }

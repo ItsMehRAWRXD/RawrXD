@@ -1,6 +1,10 @@
 {
   "OllamaHost": "http://localhost:11434",
+<<<<<<< HEAD
   "OllamaModel": "huihui_ai/llama3.3-abliterated:latest",
+=======
+  "OllamaModel": "llama3",
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
   "EnableThreading": true,
   "EnableStreaming": true,
   "EnableSecurity": true

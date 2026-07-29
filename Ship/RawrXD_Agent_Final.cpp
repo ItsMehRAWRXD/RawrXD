@@ -577,7 +577,11 @@ private:
         return dotProduct / (std::sqrt(normA) * std::sqrt(normB));
     }
 
+<<<<<<< HEAD
     // BM25-style text embedding via hash-based dimensionality reduction
+=======
+    // Simple BM25-style text embedding (placeholder for real embeddings)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<float> computeEmbedding(const std::string& text) const {
         std::vector<float> embedding(m_dimension, 0.0f);
 
@@ -1923,7 +1927,11 @@ public:
         int iterations = 0;
 
         while (iterations < m_config.maxIterations) {
+<<<<<<< HEAD
             // Generate response via model bridge (Titan/GGUF inference)
+=======
+            // Generate response (placeholder - integrate with actual LLM)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             response = generateResponse();
 
             // Check for tool calls
@@ -2044,6 +2052,7 @@ private:
 
         prompt << "Assistant: ";
 
+<<<<<<< HEAD
         // If model bridge is loaded, use it for real inference
         if (m_modelBridge.isLoaded()) {
             std::string promptStr = prompt.str();
@@ -2117,6 +2126,16 @@ private:
         }
         return "I'll help you with that task. Let me analyze what needs to be done.\n"
                "(Note: Connect a GGUF model via NativeModelBridge for full inference)";
+=======
+        // If model bridge is loaded, use it
+        if (m_modelBridge.isLoaded()) {
+            // TODO: Tokenize and run inference
+            // For now, return placeholder
+        }
+
+        // Placeholder response - in production, this would call the LLM
+        return "I'll help you with that task. Let me analyze what needs to be done.";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 };
 

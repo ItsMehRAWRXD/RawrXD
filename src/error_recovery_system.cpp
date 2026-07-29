@@ -1,5 +1,6 @@
 // error_recovery_system.cpp - Enterprise Error Recovery & Auto-Healing System (Qt-free)
 #include "error_recovery_system.h"
+<<<<<<< HEAD
 #include <iostream>
 #include <algorithm>
 #include <random>
@@ -18,10 +19,23 @@
 
 ErrorRecoverySystem::ErrorRecoverySystem()
     : autoRecoveryEnabled(true),
+=======
+
+
+#include <iostream>
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+
+ErrorRecoverySystem::ErrorRecoverySystem(void* parent)
+    : void(parent),
+      autoRecoveryEnabled(true),
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
       maxRetries(3),
       retryDelayMs(5000),
       healthCheckIntervalMs(30000) {
     
+<<<<<<< HEAD
     auto now = std::chrono::steady_clock::now();
     m_lastAutoRecoveryTick = now;
     m_lastHealthCheckTick = now;
@@ -29,6 +43,20 @@ ErrorRecoverySystem::ErrorRecoverySystem()
     setupDefaultStrategies();
     
     std::cout << "[ErrorRecoverySystem] Initialized with 15+ recovery strategies" << std::endl;
+=======
+    autoRecoveryTimer = new void*(this);
+    autoRecoveryTimer->setInterval(retryDelayMs);
+// Qt connect removed
+    healthCheckTimer = new void*(this);
+    healthCheckTimer->setInterval(healthCheckIntervalMs);
+// Qt connect removed
+    setupDefaultStrategies();
+    
+    autoRecoveryTimer->start();
+    healthCheckTimer->start();
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 ErrorRecoverySystem::~ErrorRecoverySystem() {
@@ -246,14 +274,19 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     killRestart.isAutomatic = false;
     killRestart.recoverySteps = { "Save state", "Kill hanging process", "Restart process", "Restore state" };
     strategies["kill_restart"] = killRestart;
-    
-    std::cout << "[ErrorRecoverySystem] Loaded " << strategies.size() << " recovery strategies" << std::endl;
+
+
 }
 
 std::string ErrorRecoverySystem::recordError(const std::string& component, ErrorSeverity severity,
                                          ErrorCategory category, const std::string& message,
+<<<<<<< HEAD
                                          const std::string& stackTrace, const nlohmann::json& context) {
     ErrorRecord_ERS error;
+=======
+                                         const std::string& stackTrace, const void*& context) {
+    ErrorRecord error;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     error.errorId = generateErrorId();
     error.component = component;
     error.severity = severity;
@@ -261,7 +294,11 @@ std::string ErrorRecoverySystem::recordError(const std::string& component, Error
     error.message = message;
     error.stackTrace = stackTrace;
     error.context = context;
+<<<<<<< HEAD
     error.timestamp = std::chrono::system_clock::now();
+=======
+    error.timestamp = std::chrono::system_clock::time_point::currentDateTime();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     error.retryCount = 0;
     error.wasRecovered = false;
     
@@ -270,6 +307,7 @@ std::string ErrorRecoverySystem::recordError(const std::string& component, Error
     
     // Log based on severity
     std::string severityStr = errorSeverityToString(severity);
+<<<<<<< HEAD
     std::cout << "[ErrorRecoverySystem] " << severityStr
               << " in " << component
               << ": " << message << std::endl;
@@ -277,23 +315,40 @@ std::string ErrorRecoverySystem::recordError(const std::string& component, Error
     if (m_errorRecordedCb) {
         m_errorRecordedCb(error, m_errorRecordedUd);
     }
+=======
+
+
+    errorRecorded(error);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Auto-recovery for critical errors — schedule deferred
     if (autoRecoveryEnabled && (severity == ErrorSeverity::Critical || severity == ErrorSeverity::Error)) {
+<<<<<<< HEAD
         std::cout << "[ErrorRecoverySystem] Scheduling auto-recovery for " << error.errorId << std::endl;
         DeferredRecovery dr;
         dr.errorId = error.errorId;
         dr.triggerTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(100);
         m_deferredRecoveries.push_back(dr);
+=======
+        
+        void*::singleShot(100, this, [this, errorId = error.errorId]() {
+            attemptRecovery(errorId);
+        });
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return error.errorId;
 }
 
 bool ErrorRecoverySystem::attemptRecovery(const std::string& errorId) {
+<<<<<<< HEAD
     auto it = activeErrors.find(errorId);
     if (it == activeErrors.end()) {
         std::cout << "[ErrorRecoverySystem] Error not found: " << errorId << std::endl;
+=======
+    if (!activeErrors.contains(errorId)) {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
@@ -301,11 +356,17 @@ bool ErrorRecoverySystem::attemptRecovery(const std::string& errorId) {
     
     // Check retry limit
     if (error.retryCount >= maxRetries) {
+<<<<<<< HEAD
         std::cout << "[ErrorRecoverySystem] Max retries exceeded for " << errorId << std::endl;
         error.wasRecovered = false;
         if (m_recoveryFailedCb) {
             m_recoveryFailedCb(error, m_recoveryFailedUd);
         }
+=======
+        
+        error.wasRecovered = false;
+        recoveryFailed(error);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
@@ -313,12 +374,20 @@ bool ErrorRecoverySystem::attemptRecovery(const std::string& errorId) {
     RecoveryStrategy strategy = selectBestStrategy(error);
     
     if (strategy.strategyId.empty()) {
+<<<<<<< HEAD
         std::cout << "[ErrorRecoverySystem] No suitable strategy found for " << errorId << std::endl;
         return false;
     }
     
     std::cout << "[ErrorRecoverySystem] Applying strategy: " << strategy.name << std::endl;
     
+=======
+        
+        return false;
+    }
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Execute recovery
     bool success = executeRecoveryStrategy(error, strategy);
     
@@ -326,6 +395,7 @@ bool ErrorRecoverySystem::attemptRecovery(const std::string& errorId) {
     
     if (success) {
         error.wasRecovered = true;
+<<<<<<< HEAD
         error.recoveredAt = std::chrono::system_clock::now();
         
         // Move to recovered errors
@@ -351,6 +421,29 @@ bool ErrorRecoverySystem::attemptRecovery(const std::string& errorId) {
             dr.errorId = errorId;
             dr.triggerTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(delay);
             m_deferredRecoveries.push_back(dr);
+=======
+        error.recoveredAt = std::chrono::system_clock::time_point::currentDateTime();
+        
+        // Move to recovered errors
+        recoveredErrors.append(error);
+        activeErrors.remove(errorId);
+
+
+        errorRecoveredRecord(error);
+        
+        return true;
+    } else {
+
+
+        // Schedule another retry if under limit
+        if (error.retryCount < maxRetries && autoRecoveryEnabled) {
+            int delay = retryDelayMs * (1 << error.retryCount); // Exponential backoff
+
+
+            void*::singleShot(delay, this, [this, errorId]() {
+                attemptRecovery(errorId);
+            });
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return false;
@@ -420,12 +513,17 @@ bool ErrorRecoverySystem::executeRecoveryStrategy(ErrorRecord_ERS& error, const 
     } else if (strategy.strategyId == "escalate_admin") {
         success = recoverEscalateAdmin(error);
     } else {
+<<<<<<< HEAD
         std::cout << "[ErrorRecoverySystem] Unknown strategy: " << strategy.strategyId << std::endl;
+=======
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return success;
 }
 
+<<<<<<< HEAD
 bool ErrorRecoverySystem::recoverWithRetry(ErrorRecord_ERS& error) {
     std::cout << "[ErrorRecoverySystem] Retry recovery for " << error.component
               << " (attempt " << (error.retryCount + 1) << "/" << maxRetries << ")" << std::endl;
@@ -846,11 +944,121 @@ bool ErrorRecoverySystem::recoverEscalateAdmin(ErrorRecord_ERS& error) {
 void ErrorRecoverySystem::resolveError(const std::string& errorId) {
     auto it = activeErrors.find(errorId);
     if (it == activeErrors.end()) {
+=======
+bool ErrorRecoverySystem::recoverWithRetry(ErrorRecord& error) {
+    // Simple retry with delay - actual retry happens in attemptRecovery
+    
+    return true; // Indicate retry should continue
+}
+
+bool ErrorRecoverySystem::recoverFallbackLocal(ErrorRecord& error) {
+
+
+    // Signal to switch to local execution
+    fallbackToLocalRequested(error.component);
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverClearCache(ErrorRecord& error) {
+    // Signal cache clear
+    cacheClearRequested(error.component);
+    
+    // Real Logic: Delete temp files/cache directory
+    try {
+        std::filesystem::path cachePath = "temp/cache"; // Standardize on this relative path for portable cache
+        if (std::filesystem::exists(cachePath)) {
+            std::filesystem::remove_all(cachePath);
+            std::filesystem::create_directories(cachePath); // Recreate clean
+        }
+        
+        // Also clear any model specific caches if component is model
+        if (error.component.find("model") != std::string::npos) {
+             std::filesystem::path modelCache = "temp/model_cache";
+             if (std::filesystem::exists(modelCache)) {
+                  std::filesystem::remove_all(modelCache);
+             }
+        }
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Cache clear failed: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool ErrorRecoverySystem::recoverRestartComponent(ErrorRecord& error) {
+
+
+    componentRestartRequested(error.component);
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverReconnectNetwork(ErrorRecord& error) {
+
+
+    networkReconnectRequested();
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverReloadData(ErrorRecord& error) {
+
+
+    dataReloadRequested(error.component);
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverReduceResources(ErrorRecord& error) {
+
+
+    resourceReductionRequested();
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverSwitchEndpoint(ErrorRecord& error) {
+
+
+    endpointSwitchRequested(error.component);
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverGracefulDegradation(ErrorRecord& error) {
+
+
+    gracefulDegradationEnabled();
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverReauthenticate(ErrorRecord& error) {
+
+
+    reauthenticationRequested(error.component);
+    
+    return true;
+}
+
+bool ErrorRecoverySystem::recoverEscalateAdmin(ErrorRecord& error) {
+
+
+    adminEscalationRequired(error);
+    
+    return true; // Notification always succeeds
+}
+
+void ErrorRecoverySystem::resolveError(const std::string& errorId) {
+    if (!activeErrors.contains(errorId)) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return;
     }
     
     ErrorRecord_ERS error = it->second;
     error.wasRecovered = true;
+<<<<<<< HEAD
     error.recoveredAt = std::chrono::system_clock::now();
     
     recoveredErrors.push_back(error);
@@ -866,6 +1074,20 @@ ErrorRecord_ERS ErrorRecoverySystem::getError(const std::string& errorId) const 
     auto it = activeErrors.find(errorId);
     if (it != activeErrors.end()) {
         return it->second;
+=======
+    error.recoveredAt = std::chrono::system_clock::time_point::currentDateTime();
+    
+    recoveredErrors.append(error);
+    activeErrors.remove(errorId);
+
+
+    errorRecoveredRecord(error);
+}
+
+ErrorRecord ErrorRecoverySystem::getError(const std::string& errorId) const {
+    if (activeErrors.contains(errorId)) {
+        return activeErrors[errorId];
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     for (const ErrorRecord_ERS& error : recoveredErrors) {
@@ -877,6 +1099,7 @@ ErrorRecord_ERS ErrorRecoverySystem::getError(const std::string& errorId) const 
     return ErrorRecord_ERS();
 }
 
+<<<<<<< HEAD
 std::vector<ErrorRecord_ERS> ErrorRecoverySystem::getActiveErrors() const {
     std::vector<ErrorRecord_ERS> result;
     result.reserve(activeErrors.size());
@@ -888,6 +1111,14 @@ std::vector<ErrorRecord_ERS> ErrorRecoverySystem::getActiveErrors() const {
 
 std::vector<ErrorRecord_ERS> ErrorRecoverySystem::getErrorsByComponent(const std::string& component) const {
     std::vector<ErrorRecord_ERS> componentErrors;
+=======
+std::vector<ErrorRecord> ErrorRecoverySystem::getActiveErrors() const {
+    return activeErrors.values().toVector();
+}
+
+std::vector<ErrorRecord> ErrorRecoverySystem::getErrorsByComponent(const std::string& component) const {
+    std::vector<ErrorRecord> componentErrors;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     for (const auto& pair : activeErrors) {
         if (pair.second.component == component) {
@@ -898,8 +1129,13 @@ std::vector<ErrorRecord_ERS> ErrorRecoverySystem::getErrorsByComponent(const std
     return componentErrors;
 }
 
+<<<<<<< HEAD
 std::vector<ErrorRecord_ERS> ErrorRecoverySystem::getErrorsBySeverity(ErrorSeverity severity) const {
     std::vector<ErrorRecord_ERS> severityErrors;
+=======
+std::vector<ErrorRecord> ErrorRecoverySystem::getErrorsBySeverity(ErrorSeverity severity) const {
+    std::vector<ErrorRecord> severityErrors;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     for (const auto& pair : activeErrors) {
         if (pair.second.severity == severity) {
@@ -941,9 +1177,13 @@ void ErrorRecoverySystem::updateSystemHealth() {
         currentSystemHealth.isHealthy = (currentSystemHealth.healthScore >= 80.0);
     }
     
+<<<<<<< HEAD
     if (m_systemHealthUpdatedCb) {
         m_systemHealthUpdatedCb(currentSystemHealth, m_systemHealthUpdatedUd);
     }
+=======
+    systemHealthUpdated(currentSystemHealth);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void ErrorRecoverySystem::processAutoRecovery() {
@@ -951,6 +1191,7 @@ void ErrorRecoverySystem::processAutoRecovery() {
         return;
     }
     
+<<<<<<< HEAD
     // Collect keys first to avoid modifying map while iterating
     std::vector<std::string> keys;
     for (const auto& pair : activeErrors) {
@@ -964,10 +1205,20 @@ void ErrorRecoverySystem::processAutoRecovery() {
         if (it == activeErrors.end()) continue;
         
         ErrorRecord_ERS& error = it->second;
+=======
+    // Process pending recoveries
+    for (const std::string& errorId : activeErrors.keys()) {
+        ErrorRecord& error = activeErrors[errorId];
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         if (error.retryCount < maxRetries) {
+<<<<<<< HEAD
             auto msSinceError = std::chrono::duration_cast<std::chrono::milliseconds>(
                 now - error.timestamp).count();
+=======
+            std::chrono::system_clock::time_point now = std::chrono::system_clock::time_point::currentDateTime();
+            int64_t msSinceError = error.timestamp.msecsTo(now);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             
             if (error.retryCount == 0 && msSinceError > retryDelayMs) {
                 attemptRecovery(errorId);
@@ -978,8 +1229,7 @@ void ErrorRecoverySystem::processAutoRecovery() {
 
 void ErrorRecoverySystem::enableAutoRecovery(bool enable) {
     autoRecoveryEnabled = enable;
-    std::cout << "[ErrorRecoverySystem] Auto-recovery " 
-              << (enable ? "enabled" : "disabled") << std::endl;
+    
 }
 
 void ErrorRecoverySystem::setMaxRetries(int retries) {
@@ -992,20 +1242,24 @@ void ErrorRecoverySystem::setRetryDelay(int milliseconds) {
 
 void ErrorRecoverySystem::clearErrorHistory() {
     errorHistory.clear();
-    std::cout << "[ErrorRecoverySystem] Error history cleared" << std::endl;
+    
 }
 
 void ErrorRecoverySystem::clearRecoveredErrors() {
     recoveredErrors.clear();
-    std::cout << "[ErrorRecoverySystem] Recovered errors cleared" << std::endl;
+    
 }
 
 std::string ErrorRecoverySystem::generateErrorId() {
+<<<<<<< HEAD
     static std::mt19937 rng(static_cast<unsigned>(
         std::chrono::steady_clock::now().time_since_epoch().count()));
     auto msEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     return "error_" + std::to_string(msEpoch) + "_" + std::to_string(rng() % 10000);
+=======
+    return std::string("error_%1_%2"))->bounded(10000));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::string ErrorRecoverySystem::errorSeverityToString(ErrorSeverity severity) const {
@@ -1035,8 +1289,13 @@ std::string ErrorRecoverySystem::errorCategoryToString(ErrorCategory category) c
     }
 }
 
+<<<<<<< HEAD
 nlohmann::json ErrorRecoverySystem::getErrorStatistics() const {
     nlohmann::json stats;
+=======
+void* ErrorRecoverySystem::getErrorStatistics() const {
+    void* stats;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     stats["active_errors"] = static_cast<int>(activeErrors.size());
     stats["recovered_errors"] = static_cast<int>(recoveredErrors.size());
@@ -1052,12 +1311,21 @@ nlohmann::json ErrorRecoverySystem::getErrorStatistics() const {
     }
     
     // Errors by category
+<<<<<<< HEAD
     nlohmann::json byCategory = nlohmann::json::object();
     for (const auto& pair : activeErrors) {
         std::string categoryStr = errorCategoryToString(pair.second.category);
         byCategory[categoryStr] = byCategory.value(categoryStr, 0) + 1;
+=======
+    void* byCategory;
+    for (const ErrorRecord& error : activeErrors.values()) {
+        std::string categoryStr = errorCategoryToString(error.category);
+        byCategory[categoryStr] = byCategory[categoryStr].toInt() + 1;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     stats["errors_by_category"] = byCategory;
     
     return stats;
 }
+
+

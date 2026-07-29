@@ -101,21 +101,29 @@ public:
         // when Vulkan is not installed.
         m_vkModule = LoadLibraryA("vulkan-1.dll");
         if (!m_vkModule) {
-            std::cerr << "VulkanRenderer: vulkan-1.dll not found; Vulkan backend disabled" << std::endl;
+             Vulkan backend disabled" << std::endl;
             m_initialized = false;
             return false;
         }
 
+<<<<<<< HEAD
         // Resolve vkGetInstanceProcAddr — the root of all Vulkan function resolution
         m_vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)GetProcAddress(m_vkModule, "vkGetInstanceProcAddr");
         if (!m_vkGetInstanceProcAddr) {
             std::cerr << "VulkanRenderer: vkGetInstanceProcAddr missing; Vulkan backend disabled" << std::endl;
+=======
+        // Basic sanity check: ensure vkGetInstanceProcAddr exists
+        FARPROC proc = GetProcAddress(m_vkModule, "vkGetInstanceProcAddr");
+        if (!proc) {
+             Vulkan backend disabled" << std::endl;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             FreeLibrary(m_vkModule);
             m_vkModule = nullptr;
             m_initialized = false;
             return false;
         }
 
+<<<<<<< HEAD
         // Resolve vkCreateInstance
         auto vkCreateInstance = (PFN_vkCreateInstance)m_vkGetInstanceProcAddr(VK_NULL_HANDLE, "vkCreateInstance");
         if (!vkCreateInstance) {
@@ -200,6 +208,9 @@ public:
         std::cout << "VulkanRenderer: Vulkan pipeline initialized ("
                   << m_width << "x" << m_height << ", "
                   << m_swapchainImages.size() << " images)" << std::endl;
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_initialized = true;
         return true;
     }

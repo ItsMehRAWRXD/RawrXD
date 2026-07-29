@@ -25,6 +25,9 @@
 #include <sstream>
 #include <regex>
 #include <algorithm>
+#include <windows.h>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
 
 #ifdef _WIN32
 #include <windows.h>
@@ -128,7 +131,7 @@ public:
  *       "llama-2-7b.gguf",
  *       "./models",
  *       [](uint64_t downloaded, uint64_t total) {
- *           std::cout << "Downloaded: " << downloaded << "/" << total << std::endl;
+ *           
  *       }
  *   );
  */
@@ -157,7 +160,7 @@ public:
      * Example:
      *   auto results = client.searchModels("llama", 10);
      *   for (const auto& model : results) {
-     *       std::cout << model.repo_id << " (" << model.downloads << " downloads)" << std::endl;
+     *       
      *   }
      */
     std::vector<ModelMetadata> searchModels(const std::string& query, 
@@ -173,12 +176,11 @@ public:
             url += "&limit=" + std::to_string(limit);
             url += "&sort=downloads&direction=-1";  // Sort by popularity
 
-            std::cout << "🔍 Searching HuggingFace Hub for: " << query << std::endl;
 
             // Make HTTP request
             std::string response = fetchJSON(url, token);
             if (response.empty()) {
-                std::cerr << "❌ No response from HuggingFace API" << std::endl;
+                
                 return results;
             }
 
@@ -188,7 +190,7 @@ public:
             size_t arrayEnd = response.rfind(']');
             
             if (arrayStart == std::string::npos || arrayEnd == std::string::npos) {
-                std::cerr << "❌ Invalid API response format" << std::endl;
+                
                 return results;
             }
 
@@ -212,11 +214,11 @@ public:
                 }
             }
 
-            std::cout << "✅ Found " << results.size() << " models" << std::endl;
+
             return results;
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Search error: " << e.what() << std::endl;
+            
             return results;
         }
     }
@@ -231,7 +233,7 @@ public:
      * Example:
      *   auto model = client.getModelInfo("meta-llama/Llama-2-7b-hf");
      *   for (const auto& file : model.files) {
-     *       std::cout << file << std::endl;
+     *       
      *   }
      */
     ModelMetadata getModelInfo(const std::string& repo_id, const std::string& token = "") {
@@ -240,12 +242,11 @@ public:
 
         try {
             std::string url = "https://huggingface.co/api/models/" + repo_id;
-            
-            std::cout << "📋 Fetching model info: " << repo_id << std::endl;
+
 
             std::string response = fetchJSON(url, token);
             if (response.empty()) {
-                std::cerr << "❌ Failed to fetch model info" << std::endl;
+                
                 return meta;
             }
 
@@ -281,13 +282,11 @@ public:
                 }
             }
 
-            std::cout << "✅ Model has " << meta.files.size() << " files, total: " 
-                     << formatBytes(meta.total_size) << std::endl;
 
             return meta;
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Error fetching model info: " << e.what() << std::endl;
+            
             return meta;
         }
     }
@@ -309,7 +308,7 @@ public:
      *       "./models",
      *       [](uint64_t cur, uint64_t total) {
      *           int pct = (cur * 100) / total;
-     *           std::cout << "\r" << pct << "%" << std::flush;
+     *           
      *       }
      *   );
      */
@@ -324,15 +323,12 @@ public:
 
             std::string outputPath = outputDir + "/" + filename;
 
-            std::cout << "⬇️  Downloading: " << filename << std::endl;
-            std::cout << "   From: " << repo_id << std::endl;
-            std::cout << "   To: " << outputPath << std::endl;
 
             // Download with resume support
             return downloadFile(url, outputPath, progressCallback, token);
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Download error: " << e.what() << std::endl;
+            
             return false;
         }
     }
@@ -497,6 +493,7 @@ public:
      * - Retries on timeout
      */
     std::string fetchJSON(const std::string& url, const std::string& token) {
+<<<<<<< HEAD
         try {
 #ifdef _WIN32
             // Use WinHTTP for native Windows HTTP requests
@@ -581,7 +578,60 @@ public:
 #endif
         } catch (...) {
             return "";
+=======
+        std::string result = "";
+        
+        // Parse URL roughly (assuming https://huggingface.co/...)
+        std::wstring hostName = L"huggingface.co";
+        std::wstring path = L"/api/models"; 
+
+        std::string urlStr = url;
+        if (urlStr.find("https://") == 0) urlStr = urlStr.substr(8);
+        size_t slashPos = urlStr.find("/");
+        if (slashPos != std::string::npos) {
+            std::string host = urlStr.substr(0, slashPos);
+            std::string p = urlStr.substr(slashPos);
+            hostName = std::wstring(host.begin(), host.end());
+            path = std::wstring(p.begin(), p.end());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
+
+        HINTERNET hSession = WinHttpOpen(L"RawrXD-Agent/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        if(hSession) {
+            HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
+            if(hConnect) {
+                HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+                if(hRequest) {
+                    std::wstring headers;
+                    if(!token.empty()) {
+                        headers = L"Authorization: Bearer " + std::wstring(token.begin(), token.end());
+                    }
+                    
+                    if(WinHttpSendRequest(hRequest, headers.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : headers.c_str(), headers.length(), WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+                        if(WinHttpReceiveResponse(hRequest, NULL)) {
+                            DWORD dwSize = 0;
+                            DWORD dwDownloaded = 0;
+                            do {
+                                dwSize = 0;
+                                if(!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
+                                if(dwSize == 0) break;
+                                
+                                std::vector<char> buffer(dwSize+1);
+                                if(WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) {
+                                    buffer[dwDownloaded] = 0;
+                                    result.append(buffer.data(), dwDownloaded);
+                                }
+                            } while(dwSize > 0);
+                        }
+                    }
+                    WinHttpCloseHandle(hRequest);
+                }
+                WinHttpCloseHandle(hConnect);
+            }
+            WinHttpCloseHandle(hSession);
+        }
+        
+        return result;
     }
 
     /**
@@ -597,6 +647,7 @@ public:
                      std::function<void(uint64_t, uint64_t)> progressCallback,
                      const std::string& token) {
         try {
+<<<<<<< HEAD
 #ifdef _WIN32
             // Use WinHTTP for download with resume support
             HINTERNET hSession = WinHttpOpen(L"RawrXD-HFClient/1.0",
@@ -690,6 +741,101 @@ public:
             WinHttpCloseHandle(hSession);
             
             std::cout << "   \xe2\x9c\x85 Downloaded successfully (" << formatBytes(downloaded) << ")" << std::endl;
+=======
+            // Real WinHttp Implementation for "No Stub" Requirement
+            
+            // 1. Parse URL
+            std::string urlStr = url;
+            if (urlStr.find("https://") == 0) urlStr = urlStr.substr(8);
+            size_t slashPos = urlStr.find("/");
+            
+            std::wstring hostName = L"huggingface.co";
+            std::wstring path = L"/";
+            
+            if (slashPos != std::string::npos) {
+                std::string host = urlStr.substr(0, slashPos);
+                std::string p = urlStr.substr(slashPos);
+                hostName = std::wstring(host.begin(), host.end());
+                path = std::wstring(p.begin(), p.end());
+            }
+
+            // 2. Check existing file for resume
+            uint64_t existingSize = 0;
+            {
+                std::ifstream f(outputPath, std::ios::binary | std::ios::ate);
+                if (f) existingSize = f.tellg();
+            }
+
+            // 3. Setup WinHttp
+            HINTERNET hSession = WinHttpOpen(L"RawrXD-Agent/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+            if (!hSession) return false;
+
+            HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
+            if (!hConnect) { WinHttpCloseHandle(hSession); return false; }
+
+            HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+            if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false; }
+
+            // 4. Headers (Auth + Range)
+            std::wstring headers;
+            if (!token.empty()) {
+                headers += L"Authorization: Bearer " + std::wstring(token.begin(), token.end()) + L"\r\n";
+            }
+            if (existingSize > 0) {
+                 headers += L"Range: bytes=" + std::to_wstring(existingSize) + L"-\r\n";
+            }
+
+            // 5. Send Request
+            if (!WinHttpSendRequest(hRequest, headers.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : headers.c_str(), headers.length(), WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+                WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false;
+            }
+
+            if (!WinHttpReceiveResponse(hRequest, NULL)) {
+                WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false;
+            }
+
+            // 6. Get Content Length for progress
+            uint64_t contentLength = 0;
+            wchar_t lenBuffer[256];
+            DWORD lenBufSize = sizeof(lenBuffer);
+            if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_CONTENT_LENGTH, WINHTTP_HEADER_NAME_BY_INDEX, lenBuffer, &lenBufSize, WINHTTP_NO_HEADER_INDEX)) {
+                 contentLength = std::stoull(std::wstring(lenBuffer));
+            }
+            uint64_t totalBytes = existingSize + contentLength;
+
+            // 7. Open Output File
+            std::ofstream outFile(outputPath, std::ios::binary | (existingSize > 0 ? std::ios::app : std::ios::out));
+            if (!outFile) {
+                WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false;
+            }
+
+            // 8. Download Loop
+            DWORD dwSize = 0;
+            DWORD dwDownloaded = 0;
+            uint64_t totalDownloaded = existingSize;
+            std::vector<char> buffer(65536);
+
+            do {
+                dwSize = 0;
+                if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
+                if (dwSize == 0) break;
+                
+                if (dwSize > buffer.size()) buffer.resize(dwSize);
+
+                if (WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) {
+                    outFile.write(buffer.data(), dwDownloaded);
+                    totalDownloaded += dwDownloaded;
+                    if (progressCallback) progressCallback(totalDownloaded, totalBytes);
+                } else {
+                    break;
+                }
+            } while (dwSize > 0);
+
+            // Cleanup
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return true;
 #else
             // POSIX: use system curl

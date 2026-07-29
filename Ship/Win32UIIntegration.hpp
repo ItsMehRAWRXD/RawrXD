@@ -3,6 +3,7 @@
 #pragma once
 
 #include "agent_kernel_main.hpp"
+<<<<<<< HEAD
 #include "AgentOrchestrator.hpp"
 #include <fstream>
 #include <functional>
@@ -15,6 +16,15 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "ole32.lib")
+=======
+#include "QtReplacements.hpp"
+#include "AgentOrchestrator.hpp"
+#include <commctrl.h>
+#include <richedit.h>
+#include <windowsx.h>
+
+#pragma comment(lib, "comctl32.lib")
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
@@ -52,6 +62,7 @@ constexpr int ID_TERMINAL_TABS = 1102;
 constexpr int ID_MAIN_SPLITTER_V = 1103;
 constexpr int ID_MAIN_SPLITTER_H = 1104;
 
+<<<<<<< HEAD
 constexpr UINT WM_AGENT_EVENT = WM_APP + 0x100;
 
 // Menu IDs
@@ -65,6 +76,8 @@ constexpr int IDM_AI_CLEAR = 1222;
 constexpr int IDM_AI_REFRESH_MODELS = 1223;
 constexpr int IDM_SETTINGS_OLLAMA = 1231;
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // File Browser
 class FileBrowser {
 public:
@@ -153,7 +166,11 @@ public:
     }
 
     void getItemPath(HTREEITEM hItem, wchar_t* buffer) {
+<<<<<<< HEAD
         Vector<String> parts;
+=======
+        Vector<QString> parts;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         HTREEITEM hCur = hItem;
         while (hCur) {
             TVITEMW tvi = {0};
@@ -163,6 +180,7 @@ public:
             tvi.pszText = text;
             tvi.cchTextMax = MAX_PATH;
             SendMessageW(m_hTree, TVM_GETITEMW, 0, (LPARAM)&tvi);
+<<<<<<< HEAD
             parts.push_back(String(text));
             hCur = (HTREEITEM)SendMessageW(m_hTree, TVM_GETNEXTITEM, TVGN_PARENT, (LPARAM)hCur);
         }
@@ -171,6 +189,16 @@ public:
         for (int i = (int)parts.size() - 1; i >= 0; i--) {
             fullPath += parts[i];
             if (i > 0 && (parts[i].empty() || parts[i].back() != L'\\')) fullPath += L"\\";
+=======
+            parts.push_back(QString(text));
+            hCur = (HTREEITEM)SendMessageW(m_hTree, TVM_GETNEXTITEM, TVGN_PARENT, (LPARAM)hCur);
+        }
+
+        QString fullPath;
+        for (int i = parts.size() - 1; i >= 0; i--) {
+            fullPath += parts[i];
+            if (i > 0 && !parts[i].endsWith(L"\\")) fullPath += L"\\";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         wcscpy(buffer, fullPath.c_str());
     }
@@ -182,10 +210,17 @@ private:
     HWND m_hTree = nullptr;
 };
 
+<<<<<<< HEAD
 // Editor Tabs — C++20 String, no Qt
 struct EditorInstance {
     HWND hEdit = nullptr;
     String filePath;
+=======
+// Editor Tabs
+struct EditorInstance {
+    HWND hEdit = nullptr;
+    QString filePath;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     bool modified = false;
 };
 
@@ -211,7 +246,11 @@ public:
         return true;
     }
 
+<<<<<<< HEAD
     void openFile(const String& path) {
+=======
+    void openFile(const QString& path) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Check if already open
         for (size_t i = 0; i < m_editors.size(); i++) {
             if (m_editors[i].filePath == path) {
@@ -221,12 +260,20 @@ public:
             }
         }
 
+<<<<<<< HEAD
         // Read file (C++20 / std::filesystem, no Qt)
         std::ifstream f(std::filesystem::path(path));
         if (!f.is_open()) return;
         std::string contentNarrow((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
         f.close();
         String content = StringUtils::FromUtf8(contentNarrow);
+=======
+        // Read file
+        QFile f(path);
+        if (!f.open(L"r")) return;
+        QString content = f.readAll();
+        f.close();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         // Create new editor
         RECT rc;
@@ -249,7 +296,11 @@ public:
         cf.dwMask = CFM_COLOR | CFM_FACE | CFM_SIZE;
         cf.crTextColor = RGB(212, 212, 212);
         wcscpy_s(cf.szFaceName, L"Consolas");
+<<<<<<< HEAD
         cf.yHeight = 200;
+=======
+        cf.yHeight = 200; 
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(hEdit, EM_SETCHARFORMAT, SCF_ALL, reinterpret_cast<LPARAM>(&cf));
 
         SetWindowTextW(hEdit, content.c_str());
@@ -257,8 +308,12 @@ public:
         // Add tab
         TCITEMW tie = {0};
         tie.mask = TCIF_TEXT;
+<<<<<<< HEAD
         size_t lastSlash = path.find_last_of(L"\\/");
         String fileName = (lastSlash != String::npos) ? path.substr(lastSlash + 1) : path;
+=======
+        QString fileName = path.mid(path.lastIndexOf(L'\\') + 1);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         tie.pszText = const_cast<LPWSTR>(fileName.c_str());
         int idx = (int)SendMessageW(m_hTab, TCM_INSERTITEMW, m_editors.size(), (LPARAM)&tie);
 
@@ -349,6 +404,7 @@ public:
         tie.pszText = (LPWSTR)L"pwsh";
         SendMessageW(m_hTab, TCM_INSERTITEMW, 0, (LPARAM)&tie);
 
+<<<<<<< HEAD
         // Start PowerShell process with piped I/O
         SECURITY_ATTRIBUTES sa = { sizeof(sa), nullptr, TRUE };
         HANDLE hStdoutWrite = nullptr, hStdinRead = nullptr;
@@ -447,6 +503,9 @@ public:
                 CloseHandle(hStdinWrite);
             }
         }
+=======
+        // TODO: Start shell process and pipe I/O
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     void resize(int x, int y, int width, int height) {
@@ -458,12 +517,15 @@ public:
 private:
     HWND m_parent = nullptr;
     HWND m_hTab = nullptr;
+<<<<<<< HEAD
     HWND m_hOutput = nullptr;
     HWND m_hInput = nullptr;
     HANDLE m_hProcess = nullptr;
     HANDLE m_hStdoutRead = nullptr;
     HANDLE m_hStdinWrite = nullptr;
     HANDLE m_hReaderThread = nullptr;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // Chat Panel
@@ -556,7 +618,11 @@ public:
         return true;
     }
 
+<<<<<<< HEAD
     void appendMessage(const String& sender, const String& message, COLORREF color) {
+=======
+    void appendMessage(const QString& sender, const QString& message, COLORREF color) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Move to end
         int length = GetWindowTextLengthW(m_chatDisplay);
         SendMessageW(m_chatDisplay, EM_SETSEL, length, length);
@@ -570,7 +636,11 @@ public:
         SendMessageW(m_chatDisplay, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cf));
 
         // Add sender
+<<<<<<< HEAD
         String senderLine = sender + L": ";
+=======
+        QString senderLine = sender + QString(": ");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(m_chatDisplay, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(senderLine.c_str()));
 
         // Set color for message (not bold)
@@ -579,13 +649,18 @@ public:
         SendMessageW(m_chatDisplay, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cf));
 
         // Add message
+<<<<<<< HEAD
         String msgLine = message + L"\n\n";
+=======
+        QString msgLine = message + QString("\n\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(m_chatDisplay, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(msgLine.c_str()));
 
         // Scroll to bottom
         SendMessageW(m_chatDisplay, WM_VSCROLL, SB_BOTTOM, 0);
     }
 
+<<<<<<< HEAD
     void appendUserMessage(const String& message) {
         appendMessage(L"You", message, m_colors.userMessage);
     }
@@ -595,6 +670,17 @@ public:
     }
 
     void appendToolCall(const String& tool, const String& args) {
+=======
+    void appendUserMessage(const QString& message) {
+        appendMessage(QString("You"), message, m_colors.userMessage);
+    }
+
+    void appendAssistantMessage(const QString& message) {
+        appendMessage(QString("Assistant"), message, m_colors.assistantMessage);
+    }
+
+    void appendToolCall(const QString& tool, const QString& args) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         int length = GetWindowTextLengthW(m_chatDisplay);
         SendMessageW(m_chatDisplay, EM_SETSEL, length, length);
 
@@ -605,16 +691,28 @@ public:
         cf.dwEffects = CFE_ITALIC;
         SendMessageW(m_chatDisplay, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cf));
 
+<<<<<<< HEAD
         String text = L"[Tool: " + tool + L"]\n" + args + L"\n\n";
+=======
+        QString text = QString("[Tool: ") + tool + QString("]\n") + args + QString("\n\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(m_chatDisplay, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(text.c_str()));
         SendMessageW(m_chatDisplay, WM_VSCROLL, SB_BOTTOM, 0);
     }
 
+<<<<<<< HEAD
     void appendError(const String& error) {
         appendMessage(L"Error", error, m_colors.error);
     }
 
     void appendStreamChunk(const String& chunk) {
+=======
+    void appendError(const QString& error) {
+        appendMessage(QString("Error"), error, m_colors.error);
+    }
+
+    void appendStreamChunk(const QString& chunk) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         int length = GetWindowTextLengthW(m_chatDisplay);
         SendMessageW(m_chatDisplay, EM_SETSEL, length, length);
 
@@ -632,14 +730,24 @@ public:
         SetWindowTextW(m_chatDisplay, L"");
     }
 
+<<<<<<< HEAD
     String getInputText() const {
         int length = GetWindowTextLengthW(m_chatInput);
         if (length == 0) return String();
+=======
+    QString getInputText() const {
+        int length = GetWindowTextLengthW(m_chatInput);
+        if (length == 0) return QString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         std::wstring buffer(length + 1, L'\0');
         GetWindowTextW(m_chatInput, buffer.data(), length + 1);
         buffer.resize(length);
+<<<<<<< HEAD
         return String(buffer);
+=======
+        return QString(buffer);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     void clearInput() {
@@ -699,6 +807,7 @@ public:
         return true;
     }
 
+<<<<<<< HEAD
     void setState(const String& state) {
         SendMessageW(m_statusBar, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(state.c_str()));
     }
@@ -709,6 +818,18 @@ public:
     }
 
     void setMessage(const String& message) {
+=======
+    void setState(const QString& state) {
+        SendMessageW(m_statusBar, SB_SETTEXTW, 0, reinterpret_cast<LPARAM>(state.c_str()));
+    }
+
+    void setModel(const QString& model) {
+        QString text = QString("Model: ") + model;
+        SendMessageW(m_statusBar, SB_SETTEXTW, 1, reinterpret_cast<LPARAM>(text.c_str()));
+    }
+
+    void setMessage(const QString& message) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(m_statusBar, SB_SETTEXTW, 2, reinterpret_cast<LPARAM>(message.c_str()));
     }
 
@@ -761,6 +882,7 @@ public:
         return true;
     }
 
+<<<<<<< HEAD
     void showDiff(const String& original, const String& modified, const String& filename) {
         SetWindowTextW(m_window, L"");
 
@@ -769,11 +891,22 @@ public:
 
         auto origLines = StringUtils::Split(original, L"\n");
         auto modLines = StringUtils::Split(modified, L"\n");
+=======
+    void showDiff(const QString& original, const QString& modified, const QString& filename) {
+        SetWindowTextW(m_window, L"");
+
+        appendLine(QString("=== ") + filename + QString(" ==="), m_colors.foreground);
+        appendLine(QString(""), m_colors.foreground);
+
+        auto origLines = original.split(QString("\n"));
+        auto modLines = modified.split(QString("\n"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         // Simple line-by-line diff
         size_t maxLines = (std::max)(origLines.size(), modLines.size());
 
         for (size_t i = 0; i < maxLines; ++i) {
+<<<<<<< HEAD
             String origLine = i < origLines.size() ? origLines[i] : String();
             String modLine = i < modLines.size() ? modLines[i] : String();
 
@@ -785,6 +918,19 @@ public:
                 }
                 if (!modLine.empty()) {
                     appendLine(L"+ " + modLine, RGB(78, 201, 176));
+=======
+            QString origLine = i < origLines.size() ? origLines[i] : QString();
+            QString modLine = i < modLines.size() ? modLines[i] : QString();
+
+            if (origLine == modLine) {
+                appendLine(QString("  ") + origLine, m_colors.foreground);
+            } else {
+                if (!origLine.isEmpty()) {
+                    appendLine(QString("- ") + origLine, RGB(244, 71, 71));
+                }
+                if (!modLine.isEmpty()) {
+                    appendLine(QString("+ ") + modLine, RGB(78, 201, 176));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
             }
         }
@@ -800,7 +946,11 @@ public:
     HWND handle() const { return m_window; }
 
 private:
+<<<<<<< HEAD
     void appendLine(const String& line, COLORREF color) {
+=======
+    void appendLine(const QString& line, COLORREF color) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         int length = GetWindowTextLengthW(m_window);
         SendMessageW(m_window, EM_SETSEL, length, length);
 
@@ -810,7 +960,11 @@ private:
         cf.crTextColor = color;
         SendMessageW(m_window, EM_SETCHARFORMAT, SCF_SELECTION, reinterpret_cast<LPARAM>(&cf));
 
+<<<<<<< HEAD
         String text = line + L"\n";
+=======
+        QString text = line + QString("\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SendMessageW(m_window, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(text.c_str()));
     }
 
@@ -823,7 +977,11 @@ class AgentWindow {
 public:
     AgentWindow() = default;
 
+<<<<<<< HEAD
     bool create(HINSTANCE hInstance, const String& title, int width = 1400, int height = 900) {
+=======
+    bool create(HINSTANCE hInstance, const QString& title, int width = 1400, int height = 900) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_hInstance = hInstance;
 
         // Register window class
@@ -858,6 +1016,7 @@ public:
         // Load fonts
         m_hFontUI = CreateFontW(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI");
 
+<<<<<<< HEAD
         // Create menu bar
         HMENU hMenuBar = CreateMenu();
         HMENU hFile = CreatePopupMenu();
@@ -884,13 +1043,20 @@ public:
 
         SetMenu(m_window, hMenuBar);
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Create UI components
         if (!m_statusBar.create(m_window)) return false;
 
         layout();
 
+<<<<<<< HEAD
         m_statusBar.setState(L"Ready");
         m_statusBar.setModel(L"Not connected");
+=======
+        m_statusBar.setState(QString("Ready"));
+        m_statusBar.setModel(QString("Not connected"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         return true;
     }
@@ -908,13 +1074,17 @@ public:
         int bottomHeight = 220;
         int centerWidth = w - leftWidth - rightWidth;
         int centerHeight = contentHeight - bottomHeight;
+<<<<<<< HEAD
         int chatTopY = 0;
         int modelComboHeight = 26;
         int chatHeight = contentHeight - modelComboHeight;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         m_fileBrowser.create(m_window, 0, 0, leftWidth, contentHeight);
         m_editorTabs.create(m_window, leftWidth, 0, centerWidth, centerHeight);
         m_terminalPanel.create(m_window, leftWidth, centerHeight, centerWidth, bottomHeight);
+<<<<<<< HEAD
         m_chatPanel.create(m_window, leftWidth + centerWidth, chatTopY + modelComboHeight, rightWidth, chatHeight);
 
         // Model selector combo
@@ -931,6 +1101,9 @@ public:
         } else {
             MoveWindow(m_modelCombo, leftWidth + centerWidth + 4, 2, rightWidth - 50, 200, TRUE);
         }
+=======
+        m_chatPanel.create(m_window, leftWidth + centerWidth, 0, rightWidth, contentHeight);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     void show() {
@@ -938,14 +1111,18 @@ public:
         UpdateWindow(m_window);
     }
 
+<<<<<<< HEAD
     void setAgentEventCallback(std::function<void(const AgentEvent&)> cb) {
         m_agentEventCallback = std::move(cb);
     }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void setAgent(AgentOrchestrator* agent) {
         m_agent = agent;
         if (agent) {
             agent->setEventCallback([this](const AgentEvent& event) {
+<<<<<<< HEAD
                 if (m_agentEventCallback) {
                     AgentEvent* copy = new AgentEvent(event);
                     PostMessageW(m_window, WM_AGENT_EVENT, 0, (LPARAM)copy);
@@ -958,6 +1135,13 @@ public:
                 m_statusBar.setModel(agent->config().model);
             } else {
                 m_statusBar.setModel(L"Connect Ollama");
+=======
+                handleAgentEvent(event);
+            });
+
+            if (agent->isLLMAvailable()) {
+                m_statusBar.setModel(agent->config().model);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
     }
@@ -1010,14 +1194,21 @@ private:
                 int bottomHeight = 220;
                 int centerWidth = w - leftWidth - rightWidth;
                 int centerHeight = contentHeight - bottomHeight;
+<<<<<<< HEAD
                 int modelComboHeight = 26;
                 int chatHeight = contentHeight - modelComboHeight;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
                 if (m_fileBrowser.getHWND()) MoveWindow(m_fileBrowser.getHWND(), 0, 0, leftWidth, contentHeight, TRUE);
                 if (m_editorTabs.getHWND()) m_editorTabs.resize(leftWidth, 0, centerWidth, centerHeight);
                 if (m_terminalPanel.getHWND()) m_terminalPanel.resize(leftWidth, centerHeight, centerWidth, bottomHeight);
+<<<<<<< HEAD
                 if (m_chatPanel.chatDisplay()) m_chatPanel.resize(leftWidth + centerWidth, modelComboHeight, rightWidth, chatHeight);
                 if (m_modelCombo) MoveWindow(m_modelCombo, leftWidth + centerWidth + 4, 2, rightWidth - 50, 200, TRUE);
+=======
+                if (m_chatPanel.chatDisplay()) m_chatPanel.resize(leftWidth + centerWidth, 0, rightWidth, contentHeight);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 
                 return 0;
             }
@@ -1031,6 +1222,7 @@ private:
                 } else if (id == ID_CLEAR_BUTTON) {
                     m_chatPanel.clear();
                     if (m_agent) m_agent->clearConversation();
+<<<<<<< HEAD
                 } else if (id == IDM_FILE_OPEN) {
                     openFile();
                 } else if (id == IDM_FILE_OPEN_FOLDER) {
@@ -1052,6 +1244,8 @@ private:
                     showOllamaSettings();
                 } else if (id == ID_MODEL_COMBO && HIWORD(wParam) == CBN_SELCHANGE) {
                     onModelSelected();
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
                 return 0;
             }
@@ -1066,12 +1260,17 @@ private:
                         TVITEMW tvi = {0};
                         tvi.hItem = ((LPNMTREEVIEWW)lParam)->itemNew.hItem;
                         m_fileBrowser.getItemPath(tvi.hItem, path);
+<<<<<<< HEAD
                         m_editorTabs.openFile(String(path));
+=======
+                        m_editorTabs.openFile(QString(path));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     }
                 }
                 return 0;
             }
 
+<<<<<<< HEAD
             case WM_AGENT_EVENT: {
                 AgentEvent* ev = reinterpret_cast<AgentEvent*>(lParam);
                 if (ev) {
@@ -1085,6 +1284,8 @@ private:
                 return 0;
             }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             case WM_DESTROY:
                 PostQuitMessage(0);
                 return 0;
@@ -1094,8 +1295,13 @@ private:
     }
 
     void sendMessage() {
+<<<<<<< HEAD
         String text = m_chatPanel.getInputText();
         if (text.empty()) return;
+=======
+        QString text = m_chatPanel.getInputText();
+        if (text.isEmpty()) return;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         m_chatPanel.clearInput();
         m_chatPanel.appendUserMessage(text);
@@ -1105,6 +1311,7 @@ private:
         }
     }
 
+<<<<<<< HEAD
     void populateModels() {
         if (!m_modelCombo || !m_agent) return;
         SendMessageW(m_modelCombo, CB_RESETCONTENT, 0, 0);
@@ -1206,6 +1413,17 @@ private:
             case AgentEvent::Type::Error: m_chatPanel.appendError(qmsg); break;
             case AgentEvent::Type::StreamChunk: m_chatPanel.appendStreamChunk(qmsg); break;
             case AgentEvent::Type::Completed: m_statusBar.setState(L"Ready"); break;
+=======
+    void handleAgentEvent(const AgentEvent& event) {
+        // Direct update for now, ideally use PostMessage for thread safety
+        switch (event.type) {
+            case AgentEvent::Type::StateChanged: m_statusBar.setState(event.message); break;
+            case AgentEvent::Type::MessageReceived: m_chatPanel.appendAssistantMessage(event.message); break;
+            case AgentEvent::Type::ToolCalled: m_chatPanel.appendToolCall(event.message, QString(JsonParser::Serialize(event.data, 2))); break;
+            case AgentEvent::Type::Error: m_chatPanel.appendError(event.message); break;
+            case AgentEvent::Type::StreamChunk: m_chatPanel.appendStreamChunk(event.message); break;
+            case AgentEvent::Type::Completed: m_statusBar.setState(QString("Ready")); break;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
@@ -1216,12 +1434,17 @@ private:
     TerminalPanel m_terminalPanel;
     ChatPanel m_chatPanel;
     StatusBar m_statusBar;
+<<<<<<< HEAD
     HWND m_modelCombo = nullptr;
     AgentOrchestrator* m_agent = nullptr;
     HFONT m_hFontUI = nullptr;
     bool m_terminalVisible = true;
     bool m_fileBrowserVisible = true;
     std::function<void(const AgentEvent&)> m_agentEventCallback;
+=======
+    AgentOrchestrator* m_agent = nullptr;
+    HFONT m_hFontUI = nullptr;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace UI

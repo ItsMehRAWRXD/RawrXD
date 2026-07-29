@@ -8,15 +8,24 @@
 #include <string>
 
 int main(int argc, char* argv[]) {
+<<<<<<< HEAD
     std::cout << "=== Minimal StreamingGGUFLoader Test (C++20) ===" << std::endl;
 
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <gguf-file>" << std::endl;
         std::cerr << "Example: " << argv[0] << " phi-3-mini.gguf" << std::endl;
+=======
+
+
+    if (argc < 2) {
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return 1;
     }
 
     std::string modelPath = argv[1];
+<<<<<<< HEAD
     std::cout << "Loading: " << modelPath << std::endl;
 
     RawrXD::StreamingGGUFLoader loader;
@@ -43,5 +52,20 @@ int main(int argc, char* argv[]) {
     std::cout << "Current memory usage: " << (memUsed / 1024) << " KB" << std::endl;
 
     loader.Close();
+=======
+
+
+    StreamingGGUFLoaderQt loader;
+    
+    if (!loader.loadModel(modelPath)) {
+        
+        return 1;
+    }
+
+
+    auto stats = loader.getMemoryStats();
+
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return 0;
 }

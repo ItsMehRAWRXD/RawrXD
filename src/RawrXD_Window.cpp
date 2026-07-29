@@ -58,6 +58,7 @@ void Window::create(Window* parent_, const String& title, DWORD style, DWORD exS
         classRegistered = true;
     }
     
+<<<<<<< HEAD
     HWND hwnd_ = CreateWindowExW(exStyle, className, title.c_str(), style,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     parentHwnd, nullptr, GetModuleHandleW(nullptr), this);
@@ -68,6 +69,15 @@ void Window::create(Window* parent_, const String& title, DWORD style, DWORD exS
     }
                     
     // hwnd is set in WndProc WM_NCCREATE or here as fallback
+=======
+    HWND parentHwnd = parent ? parent->nativeHandle() : nullptr;
+    
+    CreateWindowExW(exStyle, className, title.c_str(), style,
+                    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                    parentHwnd, nullptr, GetModuleHandleW(nullptr), this);
+                    
+    // hwnd is set in WndProc WM_NCCREATE
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 
@@ -103,6 +113,7 @@ LRESULT Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
             mouseReleaseEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), button);
             return 0;
         }
+<<<<<<< HEAD
         case WM_MOUSEMOVE: {
             // Extract modifier flags from wParam
             int modifiers = 0;
@@ -123,6 +134,26 @@ LRESULT Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
             keyPressEvent((int)wParam, modifiers);
             return 0;
         }
+=======
+        case WM_MOUSEMOVE:
+             // Explicit Logic: Extract Modifiers
+             {
+                 int modifiers = 0;
+                 if (wParam & MK_CONTROL) modifiers |= 1; // Control
+                 if (wParam & MK_SHIFT)   modifiers |= 2; // Shift
+                 mouseMoveEvent(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), modifiers);
+             }
+            return 0;
+        case WM_KEYDOWN:
+            {
+                int modifiers = 0;
+                if (GetKeyState(VK_CONTROL) & 0x8000) modifiers |= 1;
+                if (GetKeyState(VK_SHIFT) & 0x8000)   modifiers |= 2;
+                if (GetKeyState(VK_MENU) & 0x8000)    modifiers |= 4; // Alt
+                keyPressEvent((int)wParam, modifiers);
+            }
+            return 0;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         case WM_CHAR:
             charEvent((wchar_t)wParam);
             return 0;
@@ -130,9 +161,15 @@ LRESULT Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
             closeEvent();
             return 0;
         case WM_DESTROY:
+<<<<<<< HEAD
              if (!parent) {
                  PostQuitMessage(0);
              }
+=======
+             // If this is the main window, we might want to post quit message, 
+             // but 'Window' shouldn't decide that. Application should.
+             // For now, doing nothing.
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return 0;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -147,6 +184,7 @@ void Window::resizeEvent(int w, int h) {
     // Default: resize children?
 }
 
+<<<<<<< HEAD
 void Window::mousePressEvent(int x, int y, int button) {
     // Track mouse button state
     if (button >= 0 && button < 3) {
@@ -205,6 +243,13 @@ void Window::charEvent(wchar_t c) {
         m_charCallback(c);
     }
 }
+=======
+void Window::mousePressEvent(int x, int y, int button) {}
+void Window::mouseReleaseEvent(int x, int y, int button) {}
+void Window::mouseMoveEvent(int x, int y, int mods) {}
+void Window::keyPressEvent(int key, int mods) {}
+void Window::charEvent(wchar_t c) {}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void Window::closeEvent() {
     DestroyWindow(hwnd);

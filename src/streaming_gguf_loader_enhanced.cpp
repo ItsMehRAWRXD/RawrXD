@@ -349,6 +349,7 @@ void EnhancedStreamingGGUFLoader::InitializeNVMeIfAvailable()
 
 bool EnhancedStreamingGGUFLoader::LoadWithNVMe(uint32_t zone_id, std::vector<uint8_t>& data)
 {
+<<<<<<< HEAD
     if (!nvme_context_.enabled || !nvme_context_.hDevice) {
         return false;
     }
@@ -406,6 +407,17 @@ bool EnhancedStreamingGGUFLoader::LoadWithNVMe(uint32_t zone_id, std::vector<uin
     
     VirtualFree(alignedBuf, 0, MEM_RELEASE);
     return false;
+=======
+    if (!nvme_context_.enabled) {
+        return false;
+    }
+    
+    // Direct NVMe I/O (kernel-bypass SQ/CQ submission)
+    // This is a placeholder - actual implementation requires driver interaction
+
+
+    return true;  // Delegate to base class for now
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -443,11 +455,16 @@ void EnhancedStreamingGGUFLoader::InitializeIORingIfAvailable()
 
 bool EnhancedStreamingGGUFLoader::LoadWithIOring(uint32_t zone_id, std::vector<uint8_t>& data)
 {
+<<<<<<< HEAD
     if (!ioring_context_.enabled || !ioring_context_.hRing) {
+=======
+    if (!ioring_context_.enabled) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
     // Batch I/O via IORING (Windows 11 22H2+)
+<<<<<<< HEAD
     // Uses pre-registered buffers and handles for zero-copy reads
     
     auto it = zone_offsets_.find(zone_id);
@@ -509,6 +526,12 @@ bool EnhancedStreamingGGUFLoader::LoadWithIOring(uint32_t zone_id, std::vector<u
     CloseHandle(hFile);
     
     return bytesRead >= size;
+=======
+    // This is a placeholder - actual implementation requires IORING API
+
+
+    return true;  // Delegate to base class for now
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -782,6 +805,7 @@ bool IsIORingAvailable()
 
 void* CreateIORing(uint32_t queue_depth)
 {
+<<<<<<< HEAD
     // Dynamically load CreateIoRing from KernelBase.dll (Windows 11 22H2+)
     typedef HRESULT (WINAPI *PFN_CreateIoRing)(
         /*IORING_VERSION*/ unsigned int, /*IORING_CREATE_FLAGS*/ void*,
@@ -797,6 +821,10 @@ void* CreateIORing(uint32_t queue_depth)
     uint64_t flags[2] = {0, 0};
     HRESULT hr = pCreate(version, &flags, queue_depth, queue_depth, &ring);
     return SUCCEEDED(hr) ? ring : nullptr;
+=======
+    // Placeholder - real implementation requires IORING API
+    return nullptr;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool IsHugePagesAvailable()
@@ -819,6 +847,7 @@ void* AllocateHugePage(uint64_t size)
 
 int DetectGPUDevices()
 {
+<<<<<<< HEAD
     // Query GPU count via DXGI adapter enumeration (works for all GPU vendors)
     int gpuCount = 0;
 
@@ -856,6 +885,10 @@ int DetectGPUDevices()
     }
 
     return (gpuCount > 0) ? gpuCount : 1; // Default: at least 1 (CPU fallback)
+=======
+    // Placeholder - real implementation would query CUDA/HIP
+    return 1;  // Default: assume 1 GPU
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 int DetectComputeDevices()
@@ -863,6 +896,7 @@ int DetectComputeDevices()
     return DetectGPUDevices();
 }
 
+<<<<<<< HEAD
 // ============================================================================
 // DECOMPRESSION — Uses Windows Compression API (cabinet.dll) for MSZIP/LZMS
 // and manual implementations for LZ4/ZSTD when native libs aren't available.
@@ -937,12 +971,20 @@ bool DecompressDeflate(const std::vector<uint8_t>& compressed,
 
     std::cerr << "[Decompress] Deflate decompression failed" << std::endl;
     output = compressed;
+=======
+// Compression Stubs - Explicitly unsupported without external libs to avoid silent corruption
+bool DecompressDeflate(const std::vector<uint8_t>& compressed,
+                      std::vector<uint8_t>& output)
+{
+    // Real logic: fail if not supported
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return false;
 }
 
 bool DecompressLZ4(const std::vector<uint8_t>& compressed,
                   std::vector<uint8_t>& output)
 {
+<<<<<<< HEAD
     // LZ4 frame format: first 4 bytes after magic are original size (for LZ4 block format)
     // Minimal LZ4 block decompressor for GGUF tensor data
     if (compressed.size() < 4) {
@@ -1022,11 +1064,16 @@ bool DecompressLZ4(const std::vector<uint8_t>& compressed,
 
     output.resize(static_cast<size_t>(dst - output.data()));
     return true;
+=======
+    // Real logic: fail if not supported
+    return false;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool DecompressZSTD(const std::vector<uint8_t>& compressed,
                    std::vector<uint8_t>& output)
 {
+<<<<<<< HEAD
     // Try Windows Compression API with LZMS (closest to Zstd behavior)
     // Note: True Zstd requires linking libzstd. For GGUF files, most models
     // use uncompressed or Q4/Q8 quantized data, not Zstd-compressed tensors.
@@ -1100,5 +1147,16 @@ bool DecompressZSTD(const std::vector<uint8_t>& compressed,
     output = compressed;
     return false;
 }
+=======
+    // Real logic: fail if not supported
+    return false;
+}
+                   std::vector<uint8_t>& output)
+{
+    // Placeholder
+    output = compressed;
+    return true;
+}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 }  // namespace EnhancedLoaderUtils

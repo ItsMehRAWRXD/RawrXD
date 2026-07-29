@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+<<<<<<< HEAD
 #include <cstring>
 
 #ifndef RAWRXD_WIN32_STATIC_BUILD
@@ -17,6 +18,8 @@
 #else
 #define RAWRXD_SHIP_EXPORT
 #endif
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct FileInfo {
     wchar_t fileName[MAX_PATH];
@@ -190,6 +193,7 @@ public:
 
 static RawrXDFileManager* g_fileManager = nullptr;
 
+<<<<<<< HEAD
 static RawrXDFileManager* GetFileManagerSingleton() {
     if (!g_fileManager)
         g_fileManager = new RawrXDFileManager();
@@ -288,41 +292,69 @@ RAWRXD_SHIP_EXPORT bool __stdcall RawrXD_CreateDirectory(const char* path) {
 
 extern "C" {
     RAWRXD_SHIP_EXPORT void* __stdcall CreateFileManager() {
+=======
+extern "C" {
+    __declspec(dllexport) void* __stdcall CreateFileManager() {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (!g_fileManager) {
             g_fileManager = new RawrXDFileManager();
         }
         return g_fileManager;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT void __stdcall DestroyFileManager(void* mgr) {
+=======
+    __declspec(dllexport) void __stdcall DestroyFileManager(void* mgr) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (mgr && mgr == g_fileManager) {
             delete g_fileManager;
             g_fileManager = nullptr;
         }
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall FileManager_ChangeDirectory(void* mgr, const wchar_t* path) {
+=======
+    __declspec(dllexport) bool __stdcall FileManager_ChangeDirectory(void* mgr, const wchar_t* path) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         return m ? m->ChangeDirectory(path) : false;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall FileManager_ListFiles(void* mgr, const wchar_t* path) {
+=======
+    __declspec(dllexport) bool __stdcall FileManager_ListFiles(void* mgr, const wchar_t* path) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         return m ? m->ListFiles(path) : false;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT size_t __stdcall FileManager_GetFileCount(void* mgr) {
+=======
+    __declspec(dllexport) size_t __stdcall FileManager_GetFileCount(void* mgr) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         return m ? m->GetFileCount() : 0;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall FileManager_GetFileInfo(void* mgr, size_t index,
+=======
+    __declspec(dllexport) bool __stdcall FileManager_GetFileInfo(void* mgr, size_t index,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         wchar_t* nameBuffer, size_t nameSize, uint64_t* fileSize, bool* isDir) {
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         return m ? m->GetFileInfo(index, nameBuffer, nameSize, fileSize, isDir) : false;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall FileManager_ReadFile(void* mgr, const wchar_t* filePath,
+=======
+    __declspec(dllexport) bool __stdcall FileManager_ReadFile(void* mgr, const wchar_t* filePath,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         char* buffer, size_t bufSize, size_t* bytesRead) {
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         size_t read = 0;
@@ -331,21 +363,34 @@ extern "C" {
         return result;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall FileManager_WriteFile(void* mgr, const wchar_t* filePath,
+=======
+    __declspec(dllexport) bool __stdcall FileManager_WriteFile(void* mgr, const wchar_t* filePath,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         const char* buffer, size_t bufSize) {
         RawrXDFileManager* m = static_cast<RawrXDFileManager*>(mgr);
         return m ? m->WriteFileContent(filePath, buffer, bufSize) : false;
     }
 }
 
+<<<<<<< HEAD
 #ifndef RAWRXD_WIN32_STATIC_BUILD
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
     if (fdwReason == DLL_PROCESS_ATTACH) {
         OutputDebugStringW(L"RawrXD_FileManager_Win32 loaded\n");
     } else if (fdwReason == DLL_PROCESS_DETACH && g_fileManager) {
         delete g_fileManager;
+<<<<<<< HEAD
         g_fileManager = nullptr;
     }
     return TRUE;
 }
 #endif
+=======
+    }
+    return TRUE;
+}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

@@ -1,8 +1,11 @@
 #include "agentic_failure_detector.hpp"
+<<<<<<< HEAD
 #include <chrono>
 #include <mutex>
 #include <string>
 #include <vector>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <algorithm>
 #include <iostream>
 
@@ -145,6 +148,7 @@ bool AgenticFailureDetector::isResourceExhausted(const std::string& output) {
 }
 
 double AgenticFailureDetector::calculateConfidence(AgentFailureType type, const std::string& output) {
+<<<<<<< HEAD
     if (output.empty()) return 0.0;
 
     // Base confidence varies by failure type severity
@@ -199,4 +203,8 @@ double AgenticFailureDetector::calculateConfidence(AgentFailureType type, const 
     }
 
     return std::min(0.99, base + bonus);
+=======
+    // Simplified placeholder
+    return 0.9;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

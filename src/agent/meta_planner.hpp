@@ -1,4 +1,5 @@
 #pragma once
+<<<<<<< HEAD
 // ============================================================================
 // meta_planner.hpp — Meta-Level Plan Decomposer
 // ============================================================================
@@ -13,11 +14,17 @@
 #include <vector>
 #include <cstdint>
 #include <nlohmann/json.hpp>
+=======
+
+#include <string>
+#include "nlohmann/json.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 using json = nlohmann::json;
 
 class MetaPlanner {
 public:
+<<<<<<< HEAD
     // -----------------------------------------------------------------------
     // Primary entry point: natural language → structured task graph JSON
     // -----------------------------------------------------------------------
@@ -61,12 +68,22 @@ public:
 
 private:
     // Domain-specific plan generators (multi-phase, with real decomposition)
+=======
+    // natural language -> JSON task list
+    json plan(const std::string& humanWish);
+
+    // decompose high-level goal into sub-tasks (simple wrapper for now)
+    json decomposeGoal(const std::string& goal) { return plan(goal); }
+
+private:
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     json quantPlan(const std::string& wish);
     json kernelPlan(const std::string& wish);
     json releasePlan(const std::string& wish);
     json fixPlan(const std::string& wish);
     json perfPlan(const std::string& wish);
     json testPlan(const std::string& wish);
+<<<<<<< HEAD
     json refactorPlan(const std::string& wish);
     json migrationPlan(const std::string& wish);
     json securityPlan(const std::string& wish);
@@ -109,4 +126,14 @@ private:
     uint32_t nextTaskId_ = 1;
     uint32_t allocTaskId() { return nextTaskId_++; }
     void resetTaskIds() { nextTaskId_ = 1; }
+=======
+    json genericPlan(const std::string& wish);
+    json task(const std::string& type, const std::string& target, const json& params);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
+
+    void* task(const std::string& type,
+                     const std::string& target,
+                     const void*& params = {});
+};
+

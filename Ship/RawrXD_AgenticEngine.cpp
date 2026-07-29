@@ -640,6 +640,7 @@ private:
         if (!IsModelLoaded()) {
             response.error = L"No model loaded";
         } else {
+<<<<<<< HEAD
             // ── GGUF-based inference via memory-mapped model data ──────────
             const uint8_t* base = static_cast<const uint8_t*>(m_model->pData);
             const uint64_t fileSize = m_model->fileSize;
@@ -787,6 +788,14 @@ private:
             response.text = generatedText;
             response.success = true;
             response.tokens_generated = tokensGenerated;
+=======
+            // TODO: Implement actual inference
+            // For now, generate a placeholder response
+            response.text = L"[RawrXD Response] I understand you want to: " + request.prompt + 
+                           L"\n\nThis is a placeholder response. Implement actual GGUF inference here.";
+            response.success = true;
+            response.tokens_generated = 20;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             m_successfulRequests++;
             m_totalTokens += response.tokens_generated;
         }

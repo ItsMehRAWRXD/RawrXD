@@ -100,6 +100,7 @@ extern "C" void DirectIO_Shutdown(DirectIOContext* ctx) {
     if (g_pDirectIOCtx == ctx) g_pDirectIOCtx = nullptr;
 }
 
+<<<<<<< HEAD
 // GGUF Metadata: parse tensor table from opened GGUF file
 // The global context tracks tensor offsets/sizes parsed from the GGUF header.
 struct TensorMeta {
@@ -183,6 +184,15 @@ extern "C" uint64_t GetTensorSize(uint32_t tensor_id) {
     std::lock_guard<std::mutex> lock(s_tensorMetaMutex);
     if (tensor_id < s_tensorMeta.size()) return s_tensorMeta[tensor_id].size;
     return 4096; // Fallback
+=======
+// Stubs for Metadata (Real implementation would parse GGUF)
+extern "C" uint64_t GetTensorOffset(uint32_t tensor_id) {
+    return (uint64_t)tensor_id * 4096;
+}
+
+extern "C" uint64_t GetTensorSize(uint32_t tensor_id) {
+    return 4096;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 extern "C" void* ResolveZonePointer(uint32_t zone_index) {
@@ -200,6 +210,7 @@ extern "C" uint32_t* GetBurstPlan() {
     return s_BurstPlan.data();
 }
 
+<<<<<<< HEAD
 // VulkanDMA tensor registration — tracks tensors for GPU-side DMA access
 struct VulkanTensorEntry {
     uint32_t tensorId;
@@ -227,4 +238,9 @@ extern "C" void VulkanDMA_RegisterTensor(uint32_t tensor_id, void* ptr, size_t s
     VirtualLock(ptr, size);
 
     s_vulkanTensors.push_back({tensor_id, ptr, size});
+=======
+extern "C" void VulkanDMA_RegisterTensor(uint32_t tensor_id, void* ptr, size_t size) {
+    // Placeholder for Vulkan Bridge
+    (void)tensor_id; (void)ptr; (void)size;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

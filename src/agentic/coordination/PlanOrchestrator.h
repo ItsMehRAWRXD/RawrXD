@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+<<<<<<< HEAD
 
 #if __cplusplus >= 202302L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202302L)
 #include <expected>
@@ -39,6 +40,9 @@ namespace std {
     };
 }
 #endif
+=======
+#include <expected> // Helper or standard if available
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 

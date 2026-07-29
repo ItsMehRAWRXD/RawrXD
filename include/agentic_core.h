@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Agentic Core - Integration Layer
 // Provides a unified agentic automation interface
 // Delegates to AgenticEngine for actual execution
@@ -73,3 +74,16 @@ std::unique_ptr<IAgenticCore> createAgenticCore();
 } // namespace AgenticCore
 
 #endif // AGENTIC_CORE_H_
+=======
+// Agentic Core - Integrated from Cursor IDE Reverse Engineering
+// Integrates Cursor's agentic automation system
+// Generated: 2026-01-25 06:34:12
+
+#ifndef AGENTIC_CORE_H_
+#define AGENTIC_CORE_H_
+
+// TODO: Define interface based on Cursor reverse engineering
+// Source: d:\lazy init ide\Cursor_Source_Extracted
+
+#endif // AGENTIC_CORE_H_
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

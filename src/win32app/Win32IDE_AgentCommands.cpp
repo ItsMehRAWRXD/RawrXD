@@ -16,6 +16,7 @@
 #include <fstream>
 #include <sstream>
 
+<<<<<<< HEAD
 // Local IDM constants used in switch-case dispatch (defined via #define in Commands.cpp/Win32IDE.cpp)
 // IDM_AGENT_AUTONOMOUS_COMMUNICATOR: free slot in 4163–4199 range
 #ifndef IDM_AGENT_AUTONOMOUS_COMMUNICATOR
@@ -40,6 +41,43 @@ void HandleUnifiedTelemetry(void* idePtr);
 // - Bounded agent loop UI: Win32IDE_AgentPanel.cpp
 void Win32IDE::onSubAgentChain() {
     LOG_INFO("onSubAgentChain called");
+=======
+// Initialize the Agentic Bridge
+void Win32IDE::initializeAgenticBridge() {
+
+    if (!m_agenticBridge) {
+        m_agenticBridge = std::make_unique<AgenticBridge>(this);
+        
+        // Set output callback to send agent responses to Copilot Chat
+        m_agenticBridge->SetOutputCallback([this](const std::string& title, const std::string& content) {
+            appendToOutput(title + ":\n" + content + "\n", "Output", OutputSeverity::Info);
+            
+            // Also send to Copilot Chat if available
+            if (m_hwndCopilotChatOutput) {
+                std::string formatted = "🤖 " + title + "\n" + content + "\n\n";
+                SendMessageA(m_hwndCopilotChatOutput, EM_SETSEL, -1, -1);
+                SendMessageA(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)formatted.c_str());
+            }
+        });
+        
+        // Initialize with default framework path
+        if (m_agenticBridge->Initialize("", "bigdaddyg-personalized-agentic:latest")) {
+
+            appendToOutput("✅ Agentic Framework initialized\n", "Output", OutputSeverity::Info);
+        } else {
+
+            appendToOutput("❌ Failed to initialize Agentic Framework\n", "Errors", OutputSeverity::Error);
+            MessageBoxA(m_hwndMain, 
+                "Failed to initialize Agentic Framework.\nMake sure Agentic-Framework.ps1 is in the Powershield folder.", 
+                "Agent Error", MB_OK | MB_ICONERROR);
+        }
+    }
+}
+
+// Start Agent Loop - multi-turn agentic conversation
+void Win32IDE::onAgentStartLoop() {
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (!m_agenticBridge) {
         initializeAgenticBridge();
     }
@@ -78,6 +116,7 @@ void Win32IDE::onSubAgentChain() {
     
     appendToOutput("🔗 SubAgent Chain initiated: " + std::string(taskDesc) + "\n", "Output", OutputSeverity::Info);
     
+<<<<<<< HEAD
     // Execute chain in background
     std::thread([this, taskStr = std::string(taskDesc)]() {
         DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
@@ -88,6 +127,23 @@ void Win32IDE::onSubAgentChain() {
 
 void Win32IDE::onSubAgentSwarm() {
     LOG_INFO("onSubAgentSwarm called");
+=======
+    // Start agent loop in background thread
+    appendToOutput("🚀 Starting Agent Loop: " + promptStr + "\n", "Output", OutputSeverity::Info);
+    
+    std::thread([this, promptStr]() {
+        if (m_agenticBridge->StartAgentLoop(promptStr, 10)) {
+
+        } else {
+
+        }
+    }).detach();
+}
+
+// Execute single agent command
+void Win32IDE::onAgentExecuteCommand() {
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (!m_agenticBridge) {
         initializeAgenticBridge();
     }
@@ -1048,6 +1104,7 @@ void Win32IDE::onAgentExecuteCommand()
 }
 
 // Configure AI model
+<<<<<<< HEAD
 void Win32IDE::onAgentConfigureModel()
 {
     LOG_INFO("onAgentConfigureModel called");
@@ -1055,6 +1112,11 @@ void Win32IDE::onAgentConfigureModel()
     // Initialize agentic bridge if needed
     if (!m_agenticBridge)
     {
+=======
+void Win32IDE::onAgentConfigureModel() {
+
+    if (!m_agenticBridge) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         initializeAgenticBridge();
     }
 
@@ -1335,12 +1397,18 @@ void Win32IDE::onAgentConfigureModel()
 }
 
 // View available agent tools
+<<<<<<< HEAD
 void Win32IDE::onAgentViewTools()
 {
     LOG_INFO("onAgentViewTools called");
 
     if (!m_agenticBridge)
     {
+=======
+void Win32IDE::onAgentViewTools() {
+
+    if (!m_agenticBridge) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         initializeAgenticBridge();
     }
 
@@ -1370,6 +1438,7 @@ void Win32IDE::onAgentViewTools()
 }
 
 // View agent status
+<<<<<<< HEAD
 void Win32IDE::onAgentViewStatus()
 {
     LOG_INFO("onAgentViewStatus called");
@@ -1382,6 +1451,13 @@ void Win32IDE::onAgentViewStatus()
                        OutputSeverity::Warning);
         MessageBoxA(m_hwndMain, "Agentic Framework not initialized.\nLoad a GGUF model (File > Load Model) then retry.",
                     "Agent Status", MB_OK | MB_ICONINFORMATION);
+=======
+void Win32IDE::onAgentViewStatus() {
+
+    if (!m_agenticBridge) {
+        appendToOutput("Agentic Bridge not initialized\n", "Output", OutputSeverity::Warning);
+        MessageBoxA(m_hwndMain, "Agentic Framework not initialized.\nUse Agent > Start Loop to initialize.", "Agent Status", MB_OK | MB_ICONINFORMATION);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return;
     }
 
@@ -1391,12 +1467,18 @@ void Win32IDE::onAgentViewStatus()
 }
 
 // Stop agent loop
+<<<<<<< HEAD
 void Win32IDE::onAgentStop()
 {
     LOG_INFO("onAgentStop called");
 
     if (!m_agenticBridge)
     {
+=======
+void Win32IDE::onAgentStop() {
+
+    if (!m_agenticBridge) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return;
     }
 

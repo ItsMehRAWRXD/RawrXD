@@ -195,7 +195,11 @@ Path Path::rotated(float angle, const Point& center) const {
 Path Path::stroked(const StrokeStyle& style) const {
     // Implement stroke expansion
     Path result;
+<<<<<<< HEAD
     // Basic implementation returns original path
+=======
+    // Simplified: just return the original path
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Full implementation would offset path by stroke width
     return result;
 }
@@ -474,7 +478,13 @@ Rect DrawingContext::measureText(const std::string& text, const std::string& fon
 }
 
 Point DrawingContext::transformPoint(const Point& p) const {
+<<<<<<< HEAD
     return m_currentTransform.transformPoint(p);
+=======
+    QVector4D v(p.x, p.y, 0, 1);
+    v = m_currentTransform * v;
+    return Point(v.x(), v.y());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool DrawingContext::isPointInClipRegion(const Point& p) const {

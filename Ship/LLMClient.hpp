@@ -3,6 +3,10 @@
 #pragma once
 
 #include "agent_kernel_main.hpp"
+<<<<<<< HEAD
+=======
+#include "QtReplacements.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include "ToolExecutionEngine.hpp"
 #include <winhttp.h>
 #include <thread>
@@ -41,20 +45,35 @@ inline MessageRole stringToRole(const String& str) {
 // Chat message
 struct ChatMessage {
     MessageRole role = MessageRole::User;
+<<<<<<< HEAD
     String content;
     String name;                      // For tool calls
     String toolCallId;                // For tool responses
+=======
+    QString content;
+    QString name;                     // For tool calls
+    QString toolCallId;               // For tool responses
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     Vector<JsonObject> toolCalls;     // Tool calls in assistant messages
 
     JsonObject toJson() const {
         JsonObject obj;
         obj[L"role"] = roleToString(role);
+<<<<<<< HEAD
         obj[L"content"] = content;
         if (!name.empty()) {
             obj[L"name"] = name;
         }
         if (!toolCallId.empty()) {
             obj[L"tool_call_id"] = toolCallId;
+=======
+        obj[L"content"] = content.toStdWString();
+        if (!name.isEmpty()) {
+            obj[L"name"] = name.toStdWString();
+        }
+        if (!toolCallId.isEmpty()) {
+            obj[L"tool_call_id"] = toolCallId.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (!toolCalls.empty()) {
             JsonArray calls;
@@ -72,6 +91,7 @@ struct ChatMessage {
             msg.role = stringToRole(std::get<String>(it->second));
         }
         if (auto it = obj.find(L"content"); it != obj.end()) {
+<<<<<<< HEAD
             msg.content = std::get<String>(it->second);
         }
         if (auto it = obj.find(L"name"); it != obj.end()) {
@@ -79,6 +99,15 @@ struct ChatMessage {
         }
         if (auto it = obj.find(L"tool_call_id"); it != obj.end()) {
             msg.toolCallId = std::get<String>(it->second);
+=======
+            msg.content = QString(std::get<String>(it->second));
+        }
+        if (auto it = obj.find(L"name"); it != obj.end()) {
+            msg.name = QString(std::get<String>(it->second));
+        }
+        if (auto it = obj.find(L"tool_call_id"); it != obj.end()) {
+            msg.toolCallId = QString(std::get<String>(it->second));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (auto it = obj.find(L"tool_calls"); it != obj.end()) {
             if (std::holds_alternative<JsonArray>(it->second)) {
@@ -95,25 +124,42 @@ struct ChatMessage {
 
 // Tool call extracted from LLM response
 struct ToolCall {
+<<<<<<< HEAD
     String id;
     String name;
+=======
+    QString id;
+    QString name;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     JsonObject arguments;
 };
 
 // LLM completion options
 struct CompletionOptions {
+<<<<<<< HEAD
     String model = L"qwen2.5-coder:14b";
+=======
+    QString model = "qwen2.5-coder:14b";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     double temperature = 0.7;
     int maxTokens = 4096;
     double topP = 0.9;
     int topK = 40;
+<<<<<<< HEAD
     Vector<String> stop;
+=======
+    Vector<QString> stop;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     bool stream = true;
     JsonArray tools;
 
     JsonObject toJson() const {
         JsonObject obj;
+<<<<<<< HEAD
         obj[L"model"] = model;
+=======
+        obj[L"model"] = model.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         obj[L"temperature"] = temperature;
         obj[L"max_tokens"] = static_cast<int64_t>(maxTokens);
         obj[L"top_p"] = topP;
@@ -125,7 +171,11 @@ struct CompletionOptions {
         if (!stop.empty()) {
             JsonArray stopArr;
             for (const auto& s : stop) {
+<<<<<<< HEAD
                 stopArr.push_back(s);
+=======
+                stopArr.push_back(s.toStdWString());
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             obj[L"stop"] = stopArr;
         }
@@ -134,16 +184,28 @@ struct CompletionOptions {
 };
 
 // Streaming callback types
+<<<<<<< HEAD
 using StreamCallback = std::function<void(const String& chunk)>;
 using CompletionCallback = std::function<void(const String& fullResponse, const Vector<ToolCall>& toolCalls)>;
 using ErrorCallback = std::function<void(const String& error)>;
+=======
+using StreamCallback = std::function<void(const QString& chunk)>;
+using CompletionCallback = std::function<void(const QString& fullResponse, const Vector<ToolCall>& toolCalls)>;
+using ErrorCallback = std::function<void(const QString& error)>;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // LLM response
 struct LLMResponse {
     bool success = false;
+<<<<<<< HEAD
     String content;
     Vector<ToolCall> toolCalls;
     String error;
+=======
+    QString content;
+    Vector<ToolCall> toolCalls;
+    QString error;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int promptTokens = 0;
     int completionTokens = 0;
     int64_t responseTimeMs = 0;
@@ -152,7 +214,11 @@ struct LLMResponse {
 // HTTP client wrapper using WinHTTP
 class WinHttpClient {
 public:
+<<<<<<< HEAD
     WinHttpClient(const String& host, int port, bool https = false)
+=======
+    WinHttpClient(const QString& host, int port, bool https = false)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         : m_host(host), m_port(port), m_https(https)
     {
         m_session = WinHttpOpen(L"RawrXD/1.0",
@@ -168,31 +234,54 @@ public:
     struct Response {
         int statusCode = 0;
         std::string body;
+<<<<<<< HEAD
         String error;
     };
 
     Response post(const String& path, const std::string& body, bool stream = false,
+=======
+        QString error;
+    };
+
+    Response post(const QString& path, const std::string& body, bool stream = false,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                   std::function<void(const std::string&)> onChunk = nullptr)
     {
         Response resp;
 
         if (!m_session) {
+<<<<<<< HEAD
             resp.error = L"Failed to open WinHTTP session";
+=======
+            resp.error = "Failed to open WinHTTP session";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return resp;
         }
 
         HINTERNET connect = WinHttpConnect(m_session,
+<<<<<<< HEAD
             m_host.c_str(),
             static_cast<INTERNET_PORT>(m_port), 0);
 
         if (!connect) {
             resp.error = L"Failed to connect to host";
+=======
+            m_host.toStdWString().c_str(),
+            static_cast<INTERNET_PORT>(m_port), 0);
+
+        if (!connect) {
+            resp.error = "Failed to connect to host";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return resp;
         }
 
         HINTERNET request = WinHttpOpenRequest(connect,
             L"POST",
+<<<<<<< HEAD
             path.c_str(),
+=======
+            path.toStdWString().c_str(),
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             nullptr,
             WINHTTP_NO_REFERER,
             WINHTTP_DEFAULT_ACCEPT_TYPES,
@@ -200,7 +289,11 @@ public:
 
         if (!request) {
             WinHttpCloseHandle(connect);
+<<<<<<< HEAD
             resp.error = L"Failed to open request";
+=======
+            resp.error = "Failed to open request";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return resp;
         }
 
@@ -222,7 +315,11 @@ public:
             static_cast<DWORD>(body.size()),
             static_cast<DWORD>(body.size()), 0))
         {
+<<<<<<< HEAD
             resp.error = L"Failed to send request";
+=======
+            resp.error = "Failed to send request";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             WinHttpCloseHandle(request);
             WinHttpCloseHandle(connect);
             return resp;
@@ -267,7 +364,11 @@ public:
     }
 
 private:
+<<<<<<< HEAD
     String m_host;
+=======
+    QString m_host;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int m_port;
     bool m_https;
     HINTERNET m_session = nullptr;
@@ -276,13 +377,21 @@ private:
 // Main LLM Client
 class LLMClient {
 public:
+<<<<<<< HEAD
     LLMClient(const String& host = L"localhost", int port = 11434)
+=======
+    LLMClient(const QString& host = "localhost", int port = 11434)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         : m_client(host, port, false)
     {
     }
 
     // Set model
+<<<<<<< HEAD
     void setModel(const String& model) {
+=======
+    void setModel(const QString& model) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_options.model = model;
     }
 
@@ -308,7 +417,11 @@ public:
 
         // Build request
         JsonObject request;
+<<<<<<< HEAD
         request[L"model"] = m_options.model;
+=======
+        request[L"model"] = m_options.model.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         request[L"stream"] = false;
 
         JsonArray msgArray;
@@ -331,22 +444,36 @@ public:
         std::string body = JsonParser::Serialize(request, 0);
 
         // Send request
+<<<<<<< HEAD
         auto httpResp = m_client.post(L"/api/chat", body, false);
 
         if (!httpResp.error.empty()) {
+=======
+        auto httpResp = m_client.post("/api/chat", body, false);
+
+        if (!httpResp.error.isEmpty()) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             resp.error = httpResp.error;
             return resp;
         }
 
         if (httpResp.statusCode != 200) {
+<<<<<<< HEAD
             resp.error = L"HTTP error: " + std::to_wstring(httpResp.statusCode);
+=======
+            resp.error = QString("HTTP error: %1").arg(httpResp.statusCode);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return resp;
         }
 
         // Parse response
         auto jsonOpt = JsonParser::Parse(httpResp.body);
         if (!jsonOpt || !std::holds_alternative<JsonObject>(*jsonOpt)) {
+<<<<<<< HEAD
             resp.error = L"Failed to parse response";
+=======
+            resp.error = "Failed to parse response";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return resp;
         }
 
@@ -358,7 +485,11 @@ public:
                 const auto& msgObj = std::get<JsonObject>(msgIt->second);
 
                 if (auto contentIt = msgObj.find(L"content"); contentIt != msgObj.end()) {
+<<<<<<< HEAD
                     resp.content = std::get<String>(contentIt->second);
+=======
+                    resp.content = QString(std::get<String>(contentIt->second));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
 
                 // Extract tool calls
@@ -390,7 +521,11 @@ public:
         std::thread([this, messages, onChunk, onComplete, onError]() {
             // Build request
             JsonObject request;
+<<<<<<< HEAD
             request[L"model"] = m_options.model;
+=======
+            request[L"model"] = m_options.model.toStdWString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             request[L"stream"] = true;
 
             JsonArray msgArray;
@@ -410,11 +545,19 @@ public:
 
             std::string body = JsonParser::Serialize(request, 0);
 
+<<<<<<< HEAD
             String fullResponse;
             Vector<ToolCall> toolCalls;
             std::string buffer;
 
             auto httpResp = m_client.post(L"/api/chat", body, true,
+=======
+            QString fullResponse;
+            Vector<ToolCall> toolCalls;
+            std::string buffer;
+
+            auto httpResp = m_client.post("/api/chat", body, true,
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 [&](const std::string& chunk) {
                     buffer += chunk;
 
@@ -459,7 +602,11 @@ public:
                                 const auto& msgObj = std::get<JsonObject>(msgIt->second);
                                 if (auto contentIt = msgObj.find(L"content"); contentIt != msgObj.end()) {
                                     if (std::holds_alternative<String>(contentIt->second)) {
+<<<<<<< HEAD
                                         String content(std::get<String>(contentIt->second));
+=======
+                                        QString content(std::get<String>(contentIt->second));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                                         fullResponse += content;
                                         if (onChunk) onChunk(content);
                                     }
@@ -469,7 +616,11 @@ public:
                     }
                 });
 
+<<<<<<< HEAD
             if (!httpResp.error.empty()) {
+=======
+            if (!httpResp.error.isEmpty()) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 if (onError) onError(httpResp.error);
                 return;
             }
@@ -479,7 +630,11 @@ public:
     }
 
     // Simple prompt completion
+<<<<<<< HEAD
     String prompt(const String& userMessage) {
+=======
+    QString prompt(const QString& userMessage) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         Vector<ChatMessage> messages;
         ChatMessage msg;
         msg.role = MessageRole::User;
@@ -487,19 +642,33 @@ public:
         messages.push_back(msg);
 
         auto resp = complete(messages);
+<<<<<<< HEAD
         return resp.success ? resp.content : String();
+=======
+        return resp.success ? resp.content : QString();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     // Check if server is available
     bool isAvailable() {
+<<<<<<< HEAD
         auto resp = m_client.post(L"/api/tags", "{}", false);
+=======
+        auto resp = m_client.post("/api/tags", "{}", false);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return resp.statusCode == 200;
     }
 
     // List available models
+<<<<<<< HEAD
     Vector<String> listModels() {
         Vector<String> models;
         auto resp = m_client.post(L"/api/tags", "{}", false);
+=======
+    QStringList listModels() {
+        QStringList models;
+        auto resp = m_client.post("/api/tags", "{}", false);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (resp.statusCode != 200) return models;
 
         auto jsonOpt = JsonParser::Parse(resp.body);
@@ -513,7 +682,11 @@ public:
                         const auto& modelObj = std::get<JsonObject>(m);
                         if (auto nameIt = modelObj.find(L"name"); nameIt != modelObj.end()) {
                             if (std::holds_alternative<String>(nameIt->second)) {
+<<<<<<< HEAD
                                 models.push_back(std::get<String>(nameIt->second));
+=======
+                                models.push_back(QString(std::get<String>(nameIt->second)));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                             }
                         }
                     }
@@ -530,13 +703,21 @@ private:
     ToolCall parseToolCall(const JsonObject& obj) {
         ToolCall tc;
         if (auto it = obj.find(L"id"); it != obj.end()) {
+<<<<<<< HEAD
             tc.id = std::get<String>(it->second);
+=======
+            tc.id = QString(std::get<String>(it->second));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (auto it = obj.find(L"function"); it != obj.end()) {
             if (std::holds_alternative<JsonObject>(it->second)) {
                 const auto& func = std::get<JsonObject>(it->second);
                 if (auto nameIt = func.find(L"name"); nameIt != func.end()) {
+<<<<<<< HEAD
                     tc.name = std::get<String>(nameIt->second);
+=======
+                    tc.name = QString(std::get<String>(nameIt->second));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
                 if (auto argsIt = func.find(L"arguments"); argsIt != func.end()) {
                     if (std::holds_alternative<String>(argsIt->second)) {
@@ -562,7 +743,11 @@ class ConversationManager {
 public:
     ConversationManager() = default;
 
+<<<<<<< HEAD
     void setSystemPrompt(const String& prompt) {
+=======
+    void setSystemPrompt(const QString& prompt) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_systemPrompt = prompt;
     }
 
@@ -571,14 +756,22 @@ public:
         trimHistory();
     }
 
+<<<<<<< HEAD
     void addUserMessage(const String& content) {
+=======
+    void addUserMessage(const QString& content) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         ChatMessage msg;
         msg.role = MessageRole::User;
         msg.content = content;
         addMessage(msg);
     }
 
+<<<<<<< HEAD
     void addAssistantMessage(const String& content, const Vector<JsonObject>& toolCalls = {}) {
+=======
+    void addAssistantMessage(const QString& content, const Vector<JsonObject>& toolCalls = {}) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         ChatMessage msg;
         msg.role = MessageRole::Assistant;
         msg.content = content;
@@ -586,7 +779,11 @@ public:
         addMessage(msg);
     }
 
+<<<<<<< HEAD
     void addToolResult(const String& toolCallId, const String& name, const String& result) {
+=======
+    void addToolResult(const QString& toolCallId, const QString& name, const QString& result) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         ChatMessage msg;
         msg.role = MessageRole::Tool;
         msg.toolCallId = toolCallId;
@@ -597,7 +794,11 @@ public:
 
     Vector<ChatMessage> getMessages() const {
         Vector<ChatMessage> result;
+<<<<<<< HEAD
         if (!m_systemPrompt.empty()) {
+=======
+        if (!m_systemPrompt.isEmpty()) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             ChatMessage sys;
             sys.role = MessageRole::System;
             sys.content = m_systemPrompt;
@@ -628,7 +829,11 @@ private:
         }
     }
 
+<<<<<<< HEAD
     String m_systemPrompt;
+=======
+    QString m_systemPrompt;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     Vector<ChatMessage> m_messages;
     int m_maxHistory = 50;
 };

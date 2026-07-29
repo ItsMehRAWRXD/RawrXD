@@ -18,8 +18,14 @@ static void LogMessage(LogLevel level, const char* fmt, ...) {
     va_start(args, fmt);
     
     const char* level_str[] = { "[DEBUG]", "[INFO]", "[WARN]", "[ERROR]" };
+<<<<<<< HEAD
 
     v
+=======
+    printf("%s ", level_str[level]);
+    vprintf(fmt, args);
+    printf("\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     va_end(args);
 }

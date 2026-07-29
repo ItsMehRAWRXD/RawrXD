@@ -4,9 +4,15 @@
 #include <stdlib.h>
 #include <wchar.h>
 
+<<<<<<< HEAD
 // RawrXD MASM CLI - both ways (MASM + NASM), x86 + x64
 // Assembles both MASM and NASM sources; auto-detects format and bitness.
 // Integrates with Win32 IDE's split-pane terminal.
+=======
+// RawrXD MASM x64 CLI
+// Pure command-line interface for assembling MASM x64 code
+// Integrates with Win32 IDE's split-pane terminal
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
@@ -23,7 +29,12 @@ typedef struct {
 } MasmCommand;
 
 void print_banner() {
+<<<<<<< HEAD
     wprintf(L"RawrXD MASM CLI v1.1 (both ways: MASM + NASM, x86 + x64)\n");
+=======
+    wprintf(L"RawrXD MASM x64 CLI v1.0\n");
+    wprintf(L"Pure x64 Assembly Command Interface\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     wprintf(L"Type 'help' for available commands\n\n");
 }
 
@@ -36,6 +47,7 @@ void print_help() {
     wprintf(L"\nAvailable Commands:\n");
     wprintf(L"  help              - Show this help message\n");
     wprintf(L"  version           - Display version information\n");
+<<<<<<< HEAD
     wprintf(L"  asm FILE          - Assemble FILE.asm (MASM or NASM, x86 or x64)\n");
     wprintf(L"  check FILE        - Syntax check (auto-detects format & bitness)\n");
     wprintf(L"  info FILE         - Show file information\n");
@@ -53,6 +65,26 @@ void print_version() {
     wprintf(L"RawrXD MASM CLI v1.1\n");
     wprintf(L"Both ways: MASM (ml + ml64) and NASM. Targets: x86 and x64.\n");
     wprintf(L"  MASM x64: ml64.exe  |  MASM x86: ml.exe  |  NASM: nasm.exe (-f win32/win64)\n\n");
+=======
+    wprintf(L"  asm FILE          - Assemble FILE.asm (auto-detects NASM vs MASM)\n");
+    wprintf(L"  check FILE        - Syntax check (auto-detects format)\n");
+    wprintf(L"  info FILE         - Show file information\n");
+    wprintf(L"  path              - Display assembler search paths\n");
+    wprintf(L"  exit              - Exit CLI\n");
+    wprintf(L"\nFormat detection: asm/check peek at the file and use NASM for\n");
+    wprintf(L"  section .text/data, bits 64, default rel, %%include; MASM for\n");
+    wprintf(L"  .model, option casemap, invoke, includelib, .code/.data.\n");
+    wprintf(L"\nExamples:\n");
+    wprintf(L"  asm Titan_Kernel.asm\n");
+    wprintf(L"  asm file_nasm_style.asm   (uses nasm -f win64 if NASM format detected)\n\n");
+}
+
+void print_version() {
+    wprintf(L"RawrXD MASM CLI v1.0 (Windows x64)\n");
+    wprintf(L"MASM Assembler Integration\n");
+    wprintf(L"Microsoft Macro Assembler (ML64) support\n");
+    wprintf(L"NASM fallback support\n\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // Detect assembly format by peeking at file content. Returns 1=MASM, 2=NASM, 0=unknown.
@@ -95,6 +127,7 @@ int detect_asm_format(const wchar_t* filename) {
     return 0;
 }
 
+<<<<<<< HEAD
 // Detect target bitness by peeking at file. Returns 32 or 64. Default 64 if unclear.
 int detect_asm_bits(const wchar_t* filename) {
     HANDLE h = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -122,18 +155,28 @@ int detect_asm_bits(const wchar_t* filename) {
 }
 
 // Find assembler: type 1 = ML64 (MASM x64), type 2 = NASM, type 3 = ML (MASM x86). Fills path, returns 1 if found.
+=======
+// Find a specific assembler: type 1 = ML64, type 2 = NASM. Fills path, returns 1 if found else 0. No printf.
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 int find_assembler_ex(int type, wchar_t* path, size_t pathlen) {
     if (type == 1) {
         if (SearchPathW(NULL, L"ml64.exe", NULL, (DWORD)pathlen, path, NULL) > 0) return 1;
     } else if (type == 2) {
         if (SearchPathW(NULL, L"nasm.exe", NULL, (DWORD)pathlen, path, NULL) > 0) return 1;
+<<<<<<< HEAD
     } else if (type == 3) {
         if (SearchPathW(NULL, L"ml.exe", NULL, (DWORD)pathlen, path, NULL) > 0) return 1;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     return 0;
 }
 
 int find_assembler(wchar_t* path, size_t pathlen) {
+<<<<<<< HEAD
+=======
+    // Prefer ML64 then NASM (legacy behavior when no format detection)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (find_assembler_ex(1, path, pathlen)) {
         wprintf(L"Found: ml64.exe at %s\n", path);
         return 1;
@@ -142,10 +185,13 @@ int find_assembler(wchar_t* path, size_t pathlen) {
         wprintf(L"Found: nasm.exe at %s\n", path);
         return 2;
     }
+<<<<<<< HEAD
     if (find_assembler_ex(3, path, pathlen)) {
         wprintf(L"Found: ml.exe at %s\n", path);
         return 3;
     }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return 0;
 }
 
@@ -153,6 +199,7 @@ int cmd_build(wchar_t* filename) {
     wchar_t asmPath[MAX_PATH_STR];
     int asmType = 0;
     int format = detect_asm_format(filename);
+<<<<<<< HEAD
     int bits = detect_asm_bits(filename);
     if (format == 2) {
         if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) asmType = 2;
@@ -175,6 +222,21 @@ int cmd_build(wchar_t* filename) {
     }
     const wchar_t* asmName = (asmType == 1) ? L"ml64" : (asmType == 3) ? L"ml" : L"nasm";
     if (format != 0 || bits != 64) wprintf(L"Detected: %s, %s-bit -> using %s\n", format == 2 ? L"NASM" : format == 1 ? L"MASM" : L"auto", bits == 32 ? L"32" : L"64", asmName);
+=======
+    if (format == 2) {
+        if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) asmType = 2;
+        else if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) { asmType = 1; wprintf(L"[WARN] NASM format detected but only ML64 found. Using ML64 (may fail).\n"); }
+    } else if (format == 1) {
+        if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) asmType = 1;
+        else if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) { asmType = 2; wprintf(L"[WARN] MASM format detected but only NASM found. Using NASM (may fail).\n"); }
+    }
+    if (asmType == 0) asmType = find_assembler(asmPath, MAX_PATH_STR);
+    if (asmType == 0) {
+        wprintf(L"[ERROR] No assembler found. Install ML64 or NASM.\n");
+        return 1;
+    }
+    if (format != 0) wprintf(L"Detected format: %s -> using %s\n", format == 2 ? L"NASM" : L"MASM", asmType == 2 ? L"nasm" : L"ml64");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     wchar_t cmd[1024];
     wchar_t objfile[MAX_PATH_STR];
     wcscpy_s(objfile, MAX_PATH_STR, filename);
@@ -185,6 +247,7 @@ int cmd_build(wchar_t* filename) {
     if (asmType == 1) {
         swprintf_s(cmd, 1024, L"\"%s\" /c /Zs /Fo\"%s\" \"%s\"",
                    asmPath, objfile, filename);
+<<<<<<< HEAD
     } else if (asmType == 3) {
         swprintf_s(cmd, 1024, L"\"%s\" /c /Zs /Fo\"%s\" \"%s\"",
                    asmPath, objfile, filename);
@@ -192,6 +255,11 @@ int cmd_build(wchar_t* filename) {
         const wchar_t* nfmt = (bits == 32) ? L"win32" : L"win64";
         swprintf_s(cmd, 1024, L"\"%s\" -f %s -o \"%s\" \"%s\"",
                    asmPath, nfmt, objfile, filename);
+=======
+    } else {
+        swprintf_s(cmd, 1024, L"\"%s\" -f win64 -o \"%s\" \"%s\"",
+                   asmPath, objfile, filename);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     wprintf(L"Building: %s -> %s\n", filename, objfile);
     wprintf(L"Command: %s\n", cmd);
@@ -228,6 +296,7 @@ int cmd_check(wchar_t* filename) {
     wchar_t asmPath[MAX_PATH_STR];
     int asmType = 0;
     int format = detect_asm_format(filename);
+<<<<<<< HEAD
     int bits = detect_asm_bits(filename);
     if (format == 2) {
         if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) asmType = 2;
@@ -236,6 +305,13 @@ int cmd_check(wchar_t* filename) {
     } else if (format == 1) {
         if (bits == 32 && find_assembler_ex(3, asmPath, MAX_PATH_STR)) asmType = 3;
         else if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) asmType = 1;
+=======
+    if (format == 2) {
+        if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) asmType = 2;
+        else if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) asmType = 1;
+    } else if (format == 1) {
+        if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) asmType = 1;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         else if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) asmType = 2;
     }
     if (asmType == 0) asmType = find_assembler(asmPath, MAX_PATH_STR);
@@ -247,20 +323,33 @@ int cmd_check(wchar_t* filename) {
     wchar_t tmpObj[MAX_PATH_STR] = { 0 };
     if (asmType == 1) {
         swprintf_s(cmd, 1024, L"\"%s\" /c /Zs \"%s\"", asmPath, filename);
+<<<<<<< HEAD
     } else if (asmType == 3) {
         swprintf_s(cmd, 1024, L"\"%s\" /c /Zs \"%s\"", asmPath, filename);
     } else {
         const wchar_t* nfmt = (bits == 32) ? L"win32" : L"win64";
+=======
+    } else {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         wchar_t tmpDir[MAX_PATH_STR];
         if (GetTempPathW(MAX_PATH_STR, tmpDir)) {
             wcscpy_s(tmpObj, MAX_PATH_STR, tmpDir);
             wcscat_s(tmpObj, MAX_PATH_STR, L"rawrxd_nasm_check.obj");
+<<<<<<< HEAD
             swprintf_s(cmd, 1024, L"\"%s\" -f %s -o \"%s\" \"%s\"", asmPath, nfmt, tmpObj, filename);
         } else {
             swprintf_s(cmd, 1024, L"\"%s\" -f %s -o \"%s\" \"%s\"", asmPath, nfmt, L"nasm_check.obj", filename);
         }
     }
     wprintf(L"Checking: %s (%s, %s-bit)\n", filename, format == 2 ? L"NASM" : format == 1 ? L"MASM" : L"auto", bits == 32 ? L"32" : L"64");
+=======
+            swprintf_s(cmd, 1024, L"\"%s\" -f win64 -o \"%s\" \"%s\"", asmPath, tmpObj, filename);
+        } else {
+            swprintf_s(cmd, 1024, L"\"%s\" -f win64 -o \"%s\" \"%s\"", asmPath, L"nasm_check.obj", filename);
+        }
+    }
+    wprintf(L"Checking: %s (%s)\n", filename, format == 2 ? L"NASM" : format == 1 ? L"MASM" : L"auto");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi = {};
@@ -369,12 +458,19 @@ int main() {
         }
         else if (wcscmp(cmd, L"path") == 0) {
             wchar_t asmPath[MAX_PATH_STR];
+<<<<<<< HEAD
             int any = 0;
             if (find_assembler_ex(1, asmPath, MAX_PATH_STR)) { wprintf(L"ml64.exe (MASM x64): %s\n", asmPath); any = 1; }
             if (find_assembler_ex(3, asmPath, MAX_PATH_STR)) { wprintf(L"ml.exe   (MASM x86): %s\n", asmPath); any = 1; }
             if (find_assembler_ex(2, asmPath, MAX_PATH_STR)) { wprintf(L"nasm.exe (NASM):     %s\n", asmPath); any = 1; }
             if (!any) {
                 wprintf(L"No assembler found in PATH. Install ml.exe, ml64.exe (MSVC), or nasm.exe.\n");
+=======
+            int type = find_assembler(asmPath, MAX_PATH_STR);
+            if (type == 0) {
+                wprintf(L"No assembler found in PATH\n");
+                wprintf(L"Install ML64 (MSVC) or NASM\n");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
         else {

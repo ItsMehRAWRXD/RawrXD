@@ -7,7 +7,10 @@
 #include <windows.h>
 #include <memory>
 #include <cstdint>
+<<<<<<< HEAD
 #include <mutex>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD::Agentic::Hotpatch {
 
@@ -26,10 +29,15 @@ struct HookConfig {
     void* target;
     void* replacement;
     void* trampoline;
+<<<<<<< HEAD
     void* runtimeHandle;
     size_t patchSize;
     bool enabled;
     std::vector<uint8_t> patchData;
+=======
+    size_t patchSize;
+    bool enabled;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<uint8_t> originalCode;
 };
 
@@ -103,6 +111,7 @@ public:
     bool removeHook(const std::string& name);
     bool enableHook(const std::string& name);
     bool disableHook(const std::string& name);
+<<<<<<< HEAD
 
     // Global hotpatch toggle.
     bool setHotpatchingEnabled(bool enabled);
@@ -116,6 +125,8 @@ public:
     // Unrestrictive dial: 0.0 = strict checks, 1.0 = unrestricted behavior.
     bool setUnrestrictiveDial(double dial01);
     double getUnrestrictiveDial() const;
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Hotkey integration
     bool registerHotkey(UINT vkCode, std::function<void()> callback);
@@ -137,6 +148,7 @@ public:
     
 private:
     Engine() = default;
+<<<<<<< HEAD
     void applyTemperaturePolicyLocked();
 
     mutable std::mutex mutex_;
@@ -144,6 +156,9 @@ private:
     double modelTemperature_ = 0.5;
     double hotness_ = 0.5;
     double unrestrictiveDial_ = 1.0;
+=======
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::map<std::string, HookConfig> hooks_;
     std::map<UINT, std::function<void()>> hotkeys_;
     

@@ -256,6 +256,7 @@ public:
 
 // File system watcher (no QFileSystemWatcher)
 class FileWatcher {
+<<<<<<< HEAD
     HANDLE hDir = INVALID_HANDLE_VALUE;
     HANDLE hEvent = nullptr;
     OVERLAPPED overlapped;
@@ -280,6 +281,35 @@ public:
     Signal<const String&, int>& onFileChanged() { return fileChanged; }
 };
 
+=======
+public:
+    enum Action { Added = 1, Removed = 2, Modified = 3, RenamedOld = 4, RenamedNew = 5 };
+
+    FileWatcher();
+    ~FileWatcher();
+
+    // Non-copyable/movable to keep simple
+    FileWatcher(const FileWatcher&) = delete;
+    FileWatcher& operator=(const FileWatcher&) = delete;
+
+    void start(const String& path);
+    void stop();
+
+    // Signals
+    Signal<const String&, int> fileChanged; // path, action
+    Signal<String> directoryChanged;
+
+private:
+    void watchLoop();
+
+    std::atomic<bool> m_running;
+    HANDLE m_hDir;
+    String watchPath;
+    OVERLAPPED m_overlapped;
+    std::vector<uint8_t> buffer;
+    std::thread watcherThread;
+};
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 } // namespace RawrXD
 
 // Convenience macros

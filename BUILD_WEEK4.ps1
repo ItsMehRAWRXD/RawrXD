@@ -24,6 +24,7 @@ $ASM_FILE = "$WEEK4_DIR\WEEK4_DELIVERABLE.asm"
 $OBJ_FILE = "$BUILD_DIR\WEEK4_DELIVERABLE.obj"
 $EXE_FILE = "$OUTPUT_DIR\Week4_TestSuite.exe"
 
+<<<<<<< HEAD
 # Assembler configuration — auto-detect
 function _FindMSVC_Week4 {
     $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -49,6 +50,11 @@ function _FindMSVC_Week4 {
 $_msvc = _FindMSVC_Week4
 $ML64 = Join-Path $_msvc "bin\Hostx64\x64\ml64.exe"
 $LINK = Join-Path $_msvc "bin\Hostx64\x64\link.exe"
+=======
+# Assembler configuration
+$ML64 = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.42.34433\bin\Hostx64\x64\ml64.exe"
+$LINK = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.42.34433\bin\Hostx64\x64\link.exe"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 $ASM_FLAGS = @(
     "/c"                              # Compile only

@@ -84,7 +84,7 @@ bool LLMHttpClient::initialize(
 
     // Validate base URL
     if (!isValidURL(config.baseUrl)) {
-        std::cerr << "[LLMHttpClient] Invalid base URL: " << config.baseUrl << std::endl;
+        
         return false;
     }
 
@@ -92,6 +92,7 @@ bool LLMHttpClient::initialize(
     {
         std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
         for (int i = 0; i < config.connectionPoolSize; ++i) {
+<<<<<<< HEAD
             // Create WinHTTP session handles for the connection pool
 #ifdef _WIN32
             HINTERNET hSession = WinHttpOpen(
@@ -110,13 +111,16 @@ bool LLMHttpClient::initialize(
             // POSIX: pool index marker for curl multi handle
             m_connectionPool.push(reinterpret_cast<void*>(static_cast<uintptr_t>(i + 1)));
 #endif
+=======
+            // Real connection objects
+            CURL* curl = curl_easy_init();
+            if (curl) {
+                 m_connectionPool.push(curl);
+            }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
-    std::cout << "[LLMHttpClient] Initialized for backend: " << (int)backend
-              << " | Endpoint: " << config.baseUrl
-              << " | Timeout: " << config.timeoutMs << "ms"
-              << " | Max retries: " << config.maxRetries << std::endl;
 
     return testConnectivity();
 }
@@ -144,7 +148,19 @@ APIResponse LLMHttpClient::makeStreamingRequest(
 
     int64_t startTime = getCurrentTimestampMs();
 
-    CURL* curl = curl_easy_init();
+    CURL* curl = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_poolMutex);
+        if (!m_connectionPool.empty()) {
+            curl = static_cast<CURL*>(m_connectionPool.front());
+            m_connectionPool.pop();
+        }
+    }
+
+    if (!curl) {
+        curl = curl_easy_init();
+    }
+
     if (!curl) {
         APIResponse resp;
         resp.statusCode = 0;
@@ -152,6 +168,9 @@ APIResponse LLMHttpClient::makeStreamingRequest(
         resp.error = "Failed to initialize CURL";
         return resp;
     }
+
+    // Reset handle for reuse
+    curl_easy_reset(curl);
 
     try {
         std::string fullUrl = m_config.baseUrl + request.endpoint;
@@ -232,7 +251,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing Ollama chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -247,7 +266,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing OpenAI chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -262,7 +281,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing Anthropic chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -287,12 +306,19 @@ APIResponse LLMHttpClient::makeStreamingRequest(
 
         // Cleanup
         curl_slist_free_all(headerList);
-        curl_easy_cleanup(curl);
+        
+        {
+            std::lock_guard<std::mutex> lock(m_poolMutex);
+            m_connectionPool.push(curl);
+        }
 
         return response;
 
     } catch (const std::exception& e) {
-        curl_easy_cleanup(curl);
+        {
+            std::lock_guard<std::mutex> lock(m_poolMutex);
+            m_connectionPool.push(curl);
+        }
         APIResponse resp;
         resp.statusCode = 0;
         resp.success = false;
@@ -473,7 +499,7 @@ StreamChunk LLMHttpClient::parseOllamaStreamChunk(const std::string& chunk) {
         parsed.metadata = jsonChunk;
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse Ollama chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -525,7 +551,7 @@ StreamChunk LLMHttpClient::parseOpenAIStreamChunk(const std::string& line) {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse OpenAI chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -567,7 +593,7 @@ StreamChunk LLMHttpClient::parseAnthropicStreamChunk(const std::string& line) {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse Anthropic chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -619,13 +645,12 @@ bool LLMHttpClient::testConnectivity() {
         curl_easy_cleanup(curl);
 
         bool connected = (res == CURLE_OK && responseCode >= 200 && responseCode < 300);
-        std::cout << "[LLMHttpClient] Connectivity test: " << (connected ? "SUCCESS" : "FAILED")
-                  << " (response code: " << responseCode << ")" << std::endl;
+        
         return connected;
 
     } catch (const std::exception& e) {
         curl_easy_cleanup(curl);
-        std::cerr << "[LLMHttpClient] Connectivity test exception: " << e.what() << std::endl;
+        
         return false;
     }
 }
@@ -755,7 +780,16 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
     while (retryCount <= m_config.maxRetries) {
         int64_t startTime = getCurrentTimestampMs();
 
-        CURL* curl = curl_easy_init();
+        CURL* curl = nullptr;
+        {
+             std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+             if (!m_connectionPool.empty()) {
+                 curl = static_cast<CURL*>(m_connectionPool.front());
+                 m_connectionPool.pop();
+             }
+        }
+        if (!curl) curl = curl_easy_init();
+
         if (!curl) {
             APIResponse resp;
             resp.statusCode = 0;
@@ -847,13 +881,17 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
 
             // Cleanup
             curl_slist_free_all(headerList);
-            curl_easy_cleanup(curl);
+            // Return to pool
+            curl_easy_reset(curl);
+            {
+                 std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+                 m_connectionPool.push(curl);
+            }
 
             // Check if we should retry
             if (!response.success && retry && shouldRetry(static_cast<int>(responseCode), retryCount)) {
                 int delayMs = calculateBackoffDelay(retryCount);
-                std::cout << "[LLMHttpClient] Retry " << (retryCount + 1) << "/" << m_config.maxRetries
-                          << " after " << delayMs << "ms..." << std::endl;
+                
                 std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
                 retryCount++;
                 continue;
@@ -862,7 +900,13 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
             return response;
 
         } catch (const std::exception& e) {
-            curl_easy_cleanup(curl);
+            // Return to pool on exception too, unless handle is corrupted? Reset should handle it.
+            if (curl) {
+                curl_easy_reset(curl);
+                std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+                m_connectionPool.push(curl);
+            }
+            
             APIResponse resp;
             resp.statusCode = 0;
             resp.success = false;
@@ -998,6 +1042,7 @@ bool LLMHttpClient::isTokenExpired() const {
 }
 
 bool LLMHttpClient::refreshOAuth2Token() {
+<<<<<<< HEAD
     // OAuth2 token refresh via HTTP POST to the token endpoint
     std::string tokenUrl = m_config.baseUrl;
     // Derive token endpoint from base URL (strip /v1 or /api, append /oauth/token)
@@ -1113,6 +1158,47 @@ bool LLMHttpClient::refreshOAuth2Token() {
         m_credentials.tokenExpiresAt = getCurrentTimestampMs() + 3600 * 1000; // default 1hr
         return true;
     }
+=======
+    if (m_credentials.refreshToken.empty() || m_credentials.tokenEndpoint.empty()) {
+        return false;
+    }
+
+    // Real OAuth2 Token Refresh
+    APIRequest req;
+    req.endpoint = m_credentials.tokenEndpoint; // Usually absolute URL, need handling
+    // If endpoint is relative, prepend baseUrl? Assuming absolute or config handles it.
+    // For safety, generic implementation:
+    
+    // Construct generic OAuth2 refresh body
+    json body;
+    body["grant_type"] = "refresh_token";
+    body["refresh_token"] = m_credentials.refreshToken;
+    if (!m_credentials.clientId.empty()) body["client_id"] = m_credentials.clientId;
+    if (!m_credentials.clientSecret.empty()) body["client_secret"] = m_credentials.clientSecret;
+    
+    req.body = body;
+    req.method = "POST";
+    
+    // Bypass token check to avoid recursion
+    APIResponse resp = sendHTTPRequest(req, false); 
+    
+    if (resp.success) {
+        try {
+            auto j = json::parse(resp.responseBody);
+            if (j.contains("access_token")) {
+                m_credentials.apiKey = j["access_token"]; // Update token (apiKey holds bearer)
+                if (j.contains("expires_in")) {
+                    m_credentials.tokenExpiresAt = getCurrentTimestampMs() + (j["expires_in"].get<int>() * 1000);
+                }
+                if (j.contains("refresh_token")) {
+                    m_credentials.refreshToken = j["refresh_token"];
+                }
+                return true;
+            }
+        } catch (...) {}
+    }
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return false;
 #endif
 }

@@ -2,19 +2,86 @@
 #include <algorithm>
 #include <chrono>
 #include <sstream>
+<<<<<<< HEAD
 #include <map>
 
 namespace RawrXD::Agentic::Planning {
 
+=======
+#include "../../cpu_inference_engine.h"
+#include "../../utils/InferenceSettingsManager.h"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
+namespace RawrXD::Agentic::Planning {
+
+// Shared engine instance for the planner to avoid reloading models
+static std::unique_ptr<RawrXD::CPUInferenceEngine> g_plannerEngine;
+static std::mutex g_plannerEngineMutex;
+
+// Helper to get or initialize the engine
+static RawrXD::CPUInferenceEngine* GetPlannerEngine() {
+    std::lock_guard<std::mutex> lock(g_plannerEngineMutex);
+    if (!g_plannerEngine) {
+        g_plannerEngine = std::make_unique<RawrXD::CPUInferenceEngine>();
+    }
+    
+    // Check if loaded, see note in implementation about optimization
+    auto& settings = RawrXD::InferenceSettingsManager::getInstance();
+    std::string modelPath = settings.getCurrentModelPath();
+    
+    if (modelPath.empty()) return nullptr;
+
+    static std::string loadedPath;
+    if (loadedPath != modelPath) {
+        if (g_plannerEngine->LoadModel(modelPath)) {
+            loadedPath = modelPath;
+        } else {
+            return nullptr;
+        }
+    }
+    
+    return g_plannerEngine.get();
+}
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ModelGuidedPlanner& ModelGuidedPlanner::instance() {
     static ModelGuidedPlanner instance;
     return instance;
 }
 
+<<<<<<< HEAD
 ModelGuidedPlanner::ModelGuidedPlanner() = default;
 
 ModelGuidedPlanner::~ModelGuidedPlanner() = default;
 
+=======
+ModelGuidedPlanner::ModelGuidedPlanner() {
+    inferenceEngine_ = std::make_unique<RawrXD::CPUInferenceEngine>();
+}
+
+ModelGuidedPlanner::~ModelGuidedPlanner() = default;
+
+void ModelGuidedPlanner::ensureModelLoaded() {
+    auto& settings = RawrXD::InferenceSettingsManager::getInstance();
+    std::string modelPath = settings.getCurrentModelPath();
+
+    if (modelPath != currentLoadedModelPath_) {
+        if (!modelPath.empty()) {
+            if (inferenceEngine_->LoadModel(modelPath)) {
+                currentLoadedModelPath_ = modelPath;
+            } else {
+                // Failed to load, clear path so we retry or stay in invalid state
+                currentLoadedModelPath_.clear();
+            }
+        } else {
+             currentLoadedModelPath_.clear();
+        }
+    }
+}
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 uint64_t ModelGuidedPlanner::generatePlan(uint64_t taskId, const std::string& taskDescription,
                                           const std::vector<std::string>& contextFiles,
                                           uint32_t maxPlanSteps) {
@@ -64,6 +131,7 @@ StreamingDecoderState ModelGuidedPlanner::initializeStreamingDecoder(
     state.totalTokensGenerated = 0;
     state.isComplete = false;
 
+<<<<<<< HEAD
     // Store the prompt for progressive token generation
     // The decoder will produce tokens from the model's planning vocabulary
     state.prompt = prompt;
@@ -84,6 +152,20 @@ StreamingDecoderState ModelGuidedPlanner::initializeStreamingDecoder(
     state.estimatedTokenBudget = static_cast<uint32_t>(wordCount * 4); // 4x input as output budget
     if (state.estimatedTokenBudget < 256) state.estimatedTokenBudget = 256;
     if (state.estimatedTokenBudget > 8192) state.estimatedTokenBudget = 8192;
+=======
+    // Ensure model is ready
+    ensureModelLoaded();
+    
+    if (currentLoadedModelPath_.empty()) {
+        state.isComplete = true;
+        state.partialOutput = "Error: No model loaded or model load failed.";
+    } else {
+        // Model is ready for streaming
+        state.isComplete = false;
+        // Optionally seed the context with the prompt
+        state.partialOutput = prompt; 
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     activeDecoders_[state.decoderInstanceId] = state;
 
@@ -97,6 +179,7 @@ bool ModelGuidedPlanner::getNextToken(StreamingDecoderState& state, std::string&
         return false;
     }
 
+<<<<<<< HEAD
     auto it = activeDecoders_.find(state.decoderInstanceId);
     if (it == activeDecoders_.end()) {
         return false;
@@ -144,6 +227,50 @@ bool ModelGuidedPlanner::getNextToken(StreamingDecoderState& state, std::string&
     state.totalTokensGenerated = decoder.totalTokensGenerated;
 
     return true;
+=======
+    // Fetch next token from model using Real CPU Engine
+    try {
+        RawrXD::CPUInferenceEngine* engine = GetPlannerEngine();
+
+        if (engine) {
+            // Use the last 500 chars of context to save compute
+            std::string context = state.partialOutput;
+            if (context.length() > 500) context = context.substr(context.length() - 500);
+            if (context.empty()) context = "Plan:";
+
+            // Generate a small chunk (approx 1 token)
+            std::string generated = engine->infer(context, 3);
+            
+            if (!generated.empty()) {
+                token = generated;
+                state.currentTokenIndex++;
+                state.partialOutput += token;
+                state.totalTokensGenerated++;
+                
+                // Stop condition
+                if (state.totalTokensGenerated > 1000 || generated.find("}]") != std::string::npos) {
+                    state.isComplete = true;
+                }
+                return true;
+            }
+            // If empty, we might be done
+            state.isComplete = true;
+            return false;
+        }
+    } catch (...) {
+        // Fallback allowed
+    }
+
+    auto it = activeDecoders_.find(state.decoderInstanceId);
+    if (it != activeDecoders_.end()) {
+        it->second.currentTokenIndex++;
+        it->second.totalTokensGenerated++;
+        // token would be set by model
+        return true;
+    }
+
+    return false;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool ModelGuidedPlanner::isDecodingComplete(const StreamingDecoderState& state) const {
@@ -320,13 +447,17 @@ ModelGuidedPlanner::PlanningStats ModelGuidedPlanner::getStatistics() const {
         } else {
             failureCount++;
         }
+<<<<<<< HEAD
 
         totalConfidence += plan.overallConfidence;
         totalSteps += plan.steps.size();
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     stats.successfulPlans = successCount;
     stats.failedPlans = failureCount;
+<<<<<<< HEAD
 
     if (!plans_.empty()) {
         stats.averageConfidenceScore = totalConfidence / plans_.size();
@@ -340,11 +471,17 @@ ModelGuidedPlanner::PlanningStats ModelGuidedPlanner::getStatistics() const {
     }
     stats.totalTokensGenerated = totalTokens;
 
+=======
+    stats.averageConfidenceScore = (stats.totalPlansGenerated > 0) ? (totalConfidence / stats.totalPlansGenerated) : 0.0f;
+    stats.averagePlanSteps = (stats.totalPlansGenerated > 0) ? (totalSteps / stats.totalPlansGenerated) : 0;
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return stats;
 }
 
 void ModelGuidedPlanner::invoke_model_for_planning(uint64_t taskId, const std::string& prompt,
                                                    ExecutionPlan& outPlan) {
+<<<<<<< HEAD
     // Phase-5 Swarm Orchestrator model-guided planning pipeline:
     // 1. Initialize streaming decoder for plan generation
     // 2. Collect all tokens into a plan document
@@ -431,10 +568,41 @@ void ModelGuidedPlanner::invoke_model_for_planning(uint64_t taskId, const std::s
 
     outPlan.estimatedTotalSeconds = totalSeconds;
     outPlan.overallConfidence = totalConfidence / outPlan.steps.size();
+=======
+    auto& settings = RawrXD::InferenceSettingsManager::getInstance();
+    std::string modelPath = settings.getCurrentModelPath();
+    std::string response;
+
+    outPlan.modelUsed = modelPath.empty() ? "Fallback-Internal" : modelPath;
+
+    if (!modelPath.empty()) {
+        try {
+            RawrXD::CPUInferenceEngine* engine = GetPlannerEngine();
+            if (engine) {
+                 response = engine->infer(prompt + "\nResponse format: JSON array of steps.");
+            } else {
+                 response = "[{\"stepId\":0,\"action\":0,\"actionDescription\":\"Model load failed\",\"confidenceScore\":0.0}]";
+            }
+        } catch (...) {
+             response = "[{\"stepId\":0,\"action\":0,\"actionDescription\":\"Inference exception\",\"confidenceScore\":0.0}]";
+        }
+    } else {
+        response = "[{\"stepId\":0,\"action\":0,\"actionDescription\":\"Analyze codebase structure (Default)\",\"confidenceScore\":1.0}]";
+    }
+
+    parse_plan_from_model_output(response, outPlan);
+    
+    if (!outPlan.steps.empty()) {
+        float sum = 0;
+        for(auto& s : outPlan.steps) sum += s.confidenceScore;
+        outPlan.overallConfidence = sum / outPlan.steps.size();
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void ModelGuidedPlanner::parse_plan_from_model_output(const std::string& modelOutput,
                                                       ExecutionPlan& outPlan) {
+<<<<<<< HEAD
     // Parse structured plan from model output
     // Expected format: lines starting with ACTION: description
     // Dependencies: DEPENDS: step_id, step_id
@@ -539,6 +707,42 @@ void ModelGuidedPlanner::parse_plan_from_model_output(const std::string& modelOu
     outPlan.estimatedTotalSeconds = totalDuration;
     outPlan.overallConfidence = outPlan.steps.empty() ? 0.0f :
                                 totalConf / outPlan.steps.size();
+=======
+    try {
+        std::string jsonStr = modelOutput;
+        size_t start = jsonStr.find("[");
+        size_t end = jsonStr.rfind("]");
+        if (start != std::string::npos && end != std::string::npos) {
+            jsonStr = jsonStr.substr(start, end - start + 1);
+        }
+
+        auto j = json::parse(jsonStr);
+        if (j.is_array()) {
+            for (const auto& item : j) {
+                PlanStep step;
+                step.stepId = item.value("stepId", 0);
+                step.action = static_cast<PlanAction>(int(item.value("action", 0)));
+                step.actionDescription = item.value("actionDescription", "Unknown Action");
+                step.targetResource = item.value("targetResource", "");
+                
+                if (item.contains("args") && item["args"].is_array()) {
+                    for(const auto& arg : item["args"]) {
+                        if(arg.is_string()) step.args.push_back(arg.get<std::string>());
+                    }
+                }
+                
+                step.confidenceScore = item.value("confidenceScore", 0.5f);
+                step.rationale = item.value("rationale", "");
+                
+                outPlan.steps.push_back(step);
+            }
+        }
+    } catch (const std::exception& e) {
+        PlanStep errorStep;
+        errorStep.actionDescription = std::string("Parse Error: ") + e.what();
+        outPlan.steps.push_back(errorStep);
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 }  // namespace RawrXD::Agentic::Planning

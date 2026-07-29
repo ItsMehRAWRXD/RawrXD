@@ -12,7 +12,11 @@ extern "C" {
 // ========================================
 
 // Initialize GPU backend with preferred backend type
+<<<<<<< HEAD
 // backend: 0=CPU, 1=Vulkan, 2=CUDA, 3=ROCm, 4=LevelZero(Intel), 5=Adreno(ARM64), 6=Cerebras(WSE)
+=======
+// backend: 0=CPU, 1=Vulkan, 2=CUDA, 3=ROCm
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Returns: 0 on success, -1 on failure
 int64_t InitializeGPUBackend(int64_t backend);
 
@@ -20,7 +24,11 @@ int64_t InitializeGPUBackend(int64_t backend);
 void ShutdownGPUBackend();
 
 // Get current backend type
+<<<<<<< HEAD
 // Returns: 0=CPU, 1=Vulkan, 2=CUDA, 3=ROCm, 4=LevelZero, 5=Adreno, 6=Cerebras
+=======
+// Returns: 0=CPU, 1=Vulkan, 2=CUDA, 3=ROCm
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 int64_t GetCurrentBackend();
 
 // Check if backend is initialized
@@ -181,6 +189,7 @@ int64_t CUDA_SetDevice(int32_t deviceId);
 // Returns: Pointer to device properties structure
 void* CUDA_GetDeviceProperties(int32_t deviceId);
 
+<<<<<<< HEAD
 // ========================================
 // Phase 30: Accelerator Router Fast-Path (RawrXD_RouterBridge.asm)
 // ========================================
@@ -219,6 +228,8 @@ int32_t Router_FastIsAvailable(int32_t backendType);
 // Returns: 64-bit dispatch count
 int64_t Router_FastGetDispatchCount();
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #ifdef __cplusplus
 }
 #endif

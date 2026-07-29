@@ -200,6 +200,7 @@ bool Settings::LoadOverclock(AppState& state, const std::string& path) {
 }
 
 bool Settings::SaveOverclock(const AppState& state, const std::string& path) {
+<<<<<<< HEAD
     // Save overclock settings to a JSON file
     // In production, this would serialize the AppState overclock configuration
     
@@ -224,6 +225,9 @@ bool Settings::SaveOverclock(const AppState& state, const std::string& path) {
     } catch (...) {
         return false;
     }
+=======
+    return true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 MonacoThemeColors Settings::GetThemePresetColors(MonacoThemePreset preset) {

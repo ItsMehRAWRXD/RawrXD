@@ -2,7 +2,10 @@
 // Hot-patches Cursor-style MCP transport layer for raw buffer visibility
 
 #include "Win32IDE_MCPHooks.h"
+<<<<<<< HEAD
 #include "IDELogger.h"
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #include <chrono>
 #include <cstring>
@@ -580,6 +583,7 @@ void __fastcall MCP_WebSocketFrameHook(const uint8_t* frame, size_t length, uint
 
 } // extern "C"
 
+<<<<<<< HEAD
 // Handler for MCP Hooks feature
 extern "C" void HandleMCPHooks(void* idePtr) {
     if (!idePtr) return;
@@ -604,3 +608,5 @@ extern "C" void HandleMCPHooks(void* idePtr) {
 
     MessageBoxA(NULL, status.c_str(), "MCP Hooks", MB_ICONINFORMATION | MB_OK);
 }
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

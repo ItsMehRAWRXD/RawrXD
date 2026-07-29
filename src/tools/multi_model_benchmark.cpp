@@ -40,15 +40,24 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
         
         // Measure load time
         auto load_start = std::chrono::high_resolution_clock::now();
+<<<<<<< HEAD
         if (!engine.LoadModel(model_path)) {
             std::cerr << "Failed to load model: " << model_path << std::endl;
+=======
+        if (!engine.loadModel(std::string::fromStdString(model_path))) {
+            
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return result;
         }
         auto load_end = std::chrono::high_resolution_clock::now();
         result.load_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(load_end - load_start).count();
 
         // Simple prompt
+<<<<<<< HEAD
         std::vector<int32_t> prompt = engine.Tokenize(std::string("The meaning of life is"));
+=======
+        std::vector<int32_t> prompt = engine.tokenize(std::string("The meaning of life is"));
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         // Measure inference time
         auto inference_start = std::chrono::high_resolution_clock::now();
@@ -67,7 +76,7 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
         result.success = true;
         
     } catch (const std::exception& e) {
-        std::cerr << "Exception benchmarking model: " << e.what() << std::endl;
+        
     }
     
     return result;
@@ -75,7 +84,7 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: multi_model_benchmark <model_path> [num_tokens]" << std::endl;
+        
         return 1;
     }
 
@@ -96,7 +105,12 @@ int main(int argc, char* argv[]) {
     output["tokens_per_sec"] = static_cast<double>(result.tokens_per_sec);
     output["avg_latency_ms"] = static_cast<double>(result.avg_latency_ms);
 
+<<<<<<< HEAD
     std::cout << output.dump();
+=======
+    Json::StreamWriterBuilder writer;
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     return result.success ? 0 : 1;
 }

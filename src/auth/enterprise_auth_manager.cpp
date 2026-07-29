@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Enterprise Authentication Manager - Production Implementation
 // Provides JWT-based enterprise authentication with JWKS support
 
@@ -69,11 +70,18 @@ private:
 
 EnterpriseAuthManager::EnterpriseAuthManager()
     : m_authenticated(false)
+=======
+#include "enterprise_auth_manager.h"
+EnterpriseAuthManager::EnterpriseAuthManager()
+    
+    , m_authenticated(false)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 {
 }
 
 EnterpriseAuthManager::~EnterpriseAuthManager()
 {
+<<<<<<< HEAD
     logout();
 }
 
@@ -116,6 +124,31 @@ bool EnterpriseAuthManager::loadConfig(const std::string& configPath)
     file.close();
 
     // Fetch public keys from JWKS endpoint if configured
+=======
+}
+
+bool EnterpriseAuthManager::loadConfig(const std::string &configPath)
+{
+    // File operation removed;
+    if (!configFile.open(std::iostream::ReadOnly)) {
+        return false;
+    }
+
+    void* doc = void*::fromJson(configFile.readAll());
+    configFile.close();
+
+    if (!doc.isObject()) {
+        return false;
+    }
+
+    void* obj = doc.object();
+    m_provider = obj.value("provider").toString();
+    m_clientId = obj.value("client_id").toString();
+    m_jwksUrl = obj.value("jwks_url").toString();
+
+
+    // Fetch public keys from JWKS endpoint
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (!m_jwksUrl.empty()) {
         return fetchPublicKeys();
     }
@@ -123,10 +156,15 @@ bool EnterpriseAuthManager::loadConfig(const std::string& configPath)
     return true;
 }
 
+<<<<<<< HEAD
 bool EnterpriseAuthManager::authenticateWithToken(const std::string& bearerToken)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     
+=======
+bool EnterpriseAuthManager::authenticateWithToken(const std::string &bearerToken)
+{
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Validate the JWT token
     if (!validateToken(bearerToken)) {
         authenticationFailed("Invalid token");
@@ -147,12 +185,16 @@ bool EnterpriseAuthManager::authenticateWithToken(const std::string& bearerToken
 
 std::string EnterpriseAuthManager::getUserUPN() const
 {
+<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_mutex);
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return m_userUPN;
 }
 
 std::string EnterpriseAuthManager::getSettingsFolderPath() const
 {
+<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_mutex);
     
     // Use standard Windows AppData path
@@ -175,10 +217,18 @@ std::string EnterpriseAuthManager::getSettingsFolderPath() const
     
     // Fallback to current directory
     return ".";
+=======
+    std::string basePath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (!m_userUPN.empty()) {
+        basePath = basePath + "/" + m_userUPN;
+    }
+    return basePath;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool EnterpriseAuthManager::isAuthenticated() const
 {
+<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_authenticated;
 }
@@ -496,3 +546,43 @@ void EnterpriseAuthManager_Logout(void* manager) {
 
 } // extern "C"
 
+=======
+    return m_authenticated;
+}
+
+bool EnterpriseAuthManager::fetchPublicKeys()
+{
+    // In a real implementation, this would:
+    // 1. Make an HTTP GET request to m_jwksUrl
+    // 2. Parse the JWKS response
+    // 3. Cache the public keys for token validation
+    
+    // Simplified for this example
+    return true;
+}
+
+bool EnterpriseAuthManager::validateToken(const std::string &token)
+{
+    // In a real implementation, this would:
+    // 1. Decode the JWT header and payload
+    // 2. Verify the signature using the public key from JWKS
+    // 3. Check token expiration
+    // 4. Validate token claims
+    
+    // Simplified for this example
+    return !token.empty();
+}
+
+std::string EnterpriseAuthManager::extractUPN(const std::string &token)
+{
+    // In a real implementation, this would:
+    // 1. Decode the JWT payload (second part)
+    // 2. Base64 decode it
+    // 3. Parse as JSON
+    // 4. Extract the "upn" or "preferred_username" claim
+    
+    // Simplified for this example
+    return "user@example.com";
+}
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

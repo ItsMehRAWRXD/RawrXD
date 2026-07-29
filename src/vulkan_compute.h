@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // vulkan_compute.h — Production-Ready Vulkan Compute Engine for RawrXD-Shell
 // GPU-accelerated inference: MatMul, Attention, RoPE, RMSNorm, SiLU, Softmax
 // Supports: SPIR-V shader loading, async command buffer pools, KV cache,
@@ -144,11 +145,22 @@ struct VulkanKernelStats {
 // =============================================================================
 // VulkanCompute — Full GPU compute engine
 // =============================================================================
+=======
+#pragma once
+
+#include <vector>
+#include <cstdint>
+#include <string>
+
+namespace RawrXD {
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 class VulkanCompute {
 public:
     VulkanCompute();
     ~VulkanCompute();
 
+<<<<<<< HEAD
     // ---- Lifecycle ----
     bool Initialize();
     void Cleanup();
@@ -443,3 +455,26 @@ extern "C" {
 }
 
 #undef RAWRXD_VK_API
+=======
+    bool Initialize();
+    void Cleanup();
+    
+    // Compute operations
+    bool LoadShader(const std::vector<uint32_t>& spirv);
+    bool ExecuteCompute(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
+    bool Wait();
+
+    struct DeviceInfo {
+        std::string deviceName = "Unknown Device";
+        uint32_t vendorID = 0;
+        uint32_t deviceID = 0;
+    };
+    DeviceInfo GetDeviceInfo() const;
+
+private:
+    struct Impl;
+    Impl* m_impl; // Pimpl to hide vulkan headers
+};
+
+} // namespace RawrXD
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

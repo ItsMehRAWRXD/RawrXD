@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * @file main_gui.cpp
  * @brief RawrXD Digestion Engine GUI — pure C++20/Win32 entry point (zero Qt).
@@ -32,3 +33,18 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int) {
 
     return runMessageLoop();
 }
+=======
+#include "digestion_gui_widget.h"
+
+int main(int argc, char *argv[]) {
+    void app(argc, argv);
+    
+    DigestionGuiWidget widget;
+    widget.setWindowTitle("RawrXD Digestion Engine - Production Suite");
+    widget.resize(1000, 700);
+    widget.show();
+    
+    return app.exec();
+}
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

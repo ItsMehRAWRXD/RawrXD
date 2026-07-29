@@ -3,6 +3,20 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
+#include <windows.h>
+#include <winhttp.h>
+
+#pragma comment(lib, "winhttp.lib")
+
+// Helper for string conversion
+static std::wstring s2ws(const std::string& s) {
+    if (s.empty()) return L"";
+    int len = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, NULL, 0);
+    if (len == 0) return L"";
+    std::wstring buf(len, 0);
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &buf[0], len);
+    return buf;
+}
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -17,7 +31,7 @@ StreamingEngine::StreamingEngine(
     std::shared_ptr<ResponseParser> parser
 ) : m_logger(logger), m_metrics(metrics), m_parser(parser) {
     if (m_logger) {
-        m_logger->info("StreamingEngine", "Initialized");
+        m_logger->info("StreamingEngine initialized");
     }
 }
 
@@ -47,7 +61,7 @@ void StreamingEngine::startStream(
     m_totalTokensReceived = 0;
     
     if (m_logger) {
-        m_logger->info("StreamingEngine", "Stream started");
+         m_logger->info("Stream started");
     }
 }
 
@@ -75,7 +89,7 @@ void StreamingEngine::feedChunk(const std::string& chunk) {
     while (getBufferDepth() >= m_maxBufferSize) {
         if (!waitForBufferSpace(100)) {
             if (m_logger) {
-                m_logger->warn("StreamingEngine", "Buffer backpressure timeout");
+                m_logger->warn("Buffer full, dropping chunk");
             }
             break;
         }
@@ -142,7 +156,7 @@ void StreamingEngine::endStream() {
     }
 
     if (m_logger) {
-        m_logger->info("StreamingEngine", 
+
             "Stream ended: " + std::to_string(totalStreamMs) + "ms, " +
             std::to_string(m_totalTokensReceived) + " tokens, " +
             std::to_string(m_sequenceCounter) + " chunks");
@@ -222,7 +236,7 @@ void StreamingEngine::processChunk(const StreamChunk& chunk) {
 
 void StreamingEngine::handleStreamError(const std::string& error) {
     if (m_logger) {
-        m_logger->error("StreamingEngine", "Stream error: " + error);
+        m_logger->error("Stream error: " + error);
     }
 
     if (m_onError) {
@@ -241,7 +255,7 @@ HTTPStreamingClient::HTTPStreamingClient(
     std::shared_ptr<StreamingEngine> streamingEngine
 ) : m_logger(logger), m_metrics(metrics), m_streamingEngine(streamingEngine) {
     if (m_logger) {
-        m_logger->info("HTTPStreamingClient", "Initialized");
+        m_logger->info("HTTPStreamingClient created");
     }
 }
 
@@ -257,6 +271,7 @@ bool HTTPStreamingClient::openStream(
     }
     
     if (m_logger) {
+<<<<<<< HEAD
         m_logger->info("HTTPStreamingClient", "Opening stream to: " + url);
     }
 
@@ -267,20 +282,109 @@ bool HTTPStreamingClient::openStream(
     if (!setupConnection(url)) {
         m_lastError = "Failed to setup connection";
         return false;
+=======
+        m_logger->info("Opening HTTP stream to: " + url);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
+    // We implement the FULL WinHttp stack here to avoid "simulated" logic
+    // and to bypass the previous stubbed methods.
+    
     m_isConnected = true;
 
     // Start reading chunks in background thread
-    std::thread([this]() {
+    std::thread([this, url, headers, body]() {
+        HINTERNET hSession = NULL;
+        HINTERNET hConnect = NULL;
+        HINTERNET hRequest = NULL;
+        bool success = false;
+
         try {
-            if (!readChunkedResponse()) {
-                m_streamingEngine->endStream();
+            // 1. Crack URL
+            URL_COMPONENTS urlComp;
+            ZeroMemory(&urlComp, sizeof(urlComp));
+            urlComp.dwStructSize = sizeof(urlComp);
+            urlComp.dwSchemeLength    = (DWORD)-1;
+            urlComp.dwHostNameLength  = (DWORD)-1;
+            urlComp.dwUrlPathLength   = (DWORD)-1;
+            urlComp.dwExtraInfoLength = (DWORD)-1;
+
+            std::wstring wUrl = s2ws(url);
+            if (!WinHttpCrackUrl(wUrl.c_str(), (DWORD)wUrl.length(), 0, &urlComp)) {
+                throw std::runtime_error("Invalid URL");
             }
+
+            // 2. Open Session
+            hSession = WinHttpOpen(L"RawrXD-AgenticIDE/1.0",  
+                                   WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                   WINHTTP_NO_PROXY_NAME, 
+                                   WINHTTP_NO_PROXY_BYPASS, 0);
+            if (!hSession) throw std::runtime_error("WinHttpOpen failed");
+
+            // 3. Connect
+            std::wstring hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
+            hConnect = WinHttpConnect(hSession, hostName.c_str(), urlComp.nPort, 0);
+            if (!hConnect) throw std::runtime_error("WinHttpConnect failed");
+
+            // 4. Open Request
+            std::wstring urlPath(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+            hRequest = WinHttpOpenRequest(hConnect, L"POST", urlPath.c_str(),
+                                          NULL, WINHTTP_NO_REFERER, 
+                                          WINHTTP_DEFAULT_ACCEPT_TYPES, 
+                                          (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0);
+            if (!hRequest) throw std::runtime_error("WinHttpOpenRequest failed");
+
+            // 5. Add Headers
+            std::wstring headersStr = L"Content-Type: application/json\r\n";
+            for(const auto& h : headers) {
+                headersStr += s2ws(h.first) + L": " + s2ws(h.second) + L"\r\n";
+            }
+            WinHttpAddRequestHeaders(hRequest, headersStr.c_str(), (DWORD)-1L, WINHTTP_ADDREQ_FLAG_ADD);
+
+            // 6. Send Request
+            if (!WinHttpSendRequest(hRequest, 
+                                    WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                    (LPVOID)body.c_str(), (DWORD)body.length(), 
+                                    (DWORD)body.length(), 0)) {
+                throw std::runtime_error("WinHttpSendRequest failed");
+            }
+
+            if (!WinHttpReceiveResponse(hRequest, NULL)) {
+                throw std::runtime_error("WinHttpReceiveResponse failed");
+            }
+
+            // 7. Read Data Stream
+            DWORD dwSize = 0;
+            DWORD dwDownloaded = 0;
+            do {
+                dwSize = 0;
+                if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
+                    break; 
+                }
+                if (dwSize == 0) break; // End of stream
+
+                std::vector<char> buffer(dwSize + 1);
+                if (WinHttpReadData(hRequest, (LPVOID)buffer.data(), dwSize, &dwDownloaded)) {
+                    buffer[dwDownloaded] = '\0';
+                    std::string chunk(buffer.data(), dwDownloaded);
+                    m_streamingEngine->feedChunk(chunk);
+                } else {
+                    break;
+                }
+            } while (dwSize > 0 && m_isConnected);
+
+            m_streamingEngine->endStream();
+            success = true;
+
         } catch (const std::exception& e) {
-            m_streamingEngine->handleStreamError(std::string("Read exception: ") + e.what());
+            m_streamingEngine->handleStreamError(std::string("Stream exception: ") + e.what());
             m_streamingEngine->endStream();
         }
+
+        if (hRequest) WinHttpCloseHandle(hRequest);
+        if (hConnect) WinHttpCloseHandle(hConnect);
+        if (hSession) WinHttpCloseHandle(hSession);
+        
         m_isConnected = false;
     }).detach();
 
@@ -294,7 +398,7 @@ void HTTPStreamingClient::closeStream() {
     }
     
     if (m_logger) {
-        m_logger->info("HTTPStreamingClient", "Closing stream");
+        m_logger->info("Closing stream connection");
     }
     m_isConnected = false;
 
@@ -308,11 +412,12 @@ void HTTPStreamingClient::closeStream() {
 
 void HTTPStreamingClient::setConnectionTimeout(int timeoutMs) {
     if (m_logger) {
-        m_logger->debug("HTTPStreamingClient", "Set timeout to " + std::to_string(timeoutMs) + "ms");
+        m_logger->info("Setting connection timeout to " + std::to_string(timeoutMs) + "ms");
     }
 }
 
 bool HTTPStreamingClient::setupConnection(const std::string& url) {
+<<<<<<< HEAD
     if (m_logger) {
         m_logger->debug("HTTPStreamingClient", "Setting up WinHTTP connection");
     }
@@ -402,6 +507,9 @@ bool HTTPStreamingClient::setupConnection(const std::string& url) {
         return false;
     }
 
+=======
+    // Deprecated: implemented directly in openStream thread
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 #else
     // POSIX: use raw TCP socket for HTTP streaming
@@ -452,6 +560,7 @@ bool HTTPStreamingClient::setupConnection(const std::string& url) {
 }
 
 bool HTTPStreamingClient::readChunkedResponse() {
+<<<<<<< HEAD
     if (m_logger) {
         m_logger->debug("HTTPStreamingClient", "Reading chunked response via WinHTTP");
     }
@@ -531,6 +640,10 @@ std::string HTTPStreamingClient::parseChunkSize(const std::string& line) {
         return line.substr(0, pos);
     }
     return line;
+=======
+    // Deprecated / Unused in favor of WinHttp async thread in openStream
+    return false;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // StreamingResponseBuilder Implementation

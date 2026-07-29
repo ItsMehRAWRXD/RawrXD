@@ -216,10 +216,17 @@ private:
     std::map<std::wstring, std::wstring> m_layoutHints;
     
 public:
+<<<<<<< HEAD
     // Events (C++20, no Qt)
     Event<std::wstring> ControllerError;           // emit controllerError(std::wstring)
     Event<> ControllerReady;                        // emit controllerReady()
     Event<std::wstring> LayoutHydrationRequested;  // emit layoutHydrationRequested(std::wstring)
+=======
+    // Events (replace Qt signals)
+    Event<std::wstring> ControllerError;           // emit controllerError(QString)
+    Event<> ControllerReady;                       // emit controllerReady()
+    Event<std::wstring> LayoutHydrationRequested;  // emit layoutHydrationRequested(QString)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     Event<std::wstring> HeartbeatPublished;        // emit heartbeatPublished()
     
     AgenticController() 
@@ -327,6 +334,7 @@ public:
     // ========================================================================
     
     AgenticResult EnsureCoordinator() {
+<<<<<<< HEAD
         LogInfo(L"Initializing agentic coordinator...");
 
         // Load coordinator configuration from disk
@@ -400,6 +408,16 @@ public:
             return AgenticResult::Error(L"Coordinator failed to initialize");
         }
 
+=======
+        // TODO: Initialize actual coordinator when available
+        // For now, simulate successful coordinator setup
+        
+        LogInfo(L"Initializing agentic coordinator...");
+        
+        // Simulate coordinator initialization
+        Sleep(10); // Small delay to simulate work
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         LogInfo(L"Agentic coordinator initialized successfully");
         return AgenticResult::Ok(L"Coordinator ready");
     }

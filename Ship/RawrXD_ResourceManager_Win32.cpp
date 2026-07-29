@@ -6,12 +6,15 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+<<<<<<< HEAD
 
 #ifndef RAWRXD_WIN32_STATIC_BUILD
 #define RAWRXD_SHIP_EXPORT __declspec(dllexport)
 #else
 #define RAWRXD_SHIP_EXPORT
 #endif
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <map>
 #include <string>
 #include <vector>
@@ -123,54 +126,91 @@ public:
 static RawrXDResourceManager* g_resourceManager = nullptr;
 
 extern "C" {
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT void* __stdcall CreateResourceManager(void* hModule) {
+=======
+    __declspec(dllexport) void* __stdcall CreateResourceManager(void* hModule) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (!g_resourceManager) {
             g_resourceManager = new RawrXDResourceManager((HMODULE)hModule);
         }
         return g_resourceManager;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT void __stdcall DestroyResourceManager(void* mgr) {
+=======
+    __declspec(dllexport) void __stdcall DestroyResourceManager(void* mgr) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (mgr && mgr == g_resourceManager) {
             delete g_resourceManager;
             g_resourceManager = nullptr;
         }
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT void __stdcall ResourceManager_LoadFile(void* mgr, const wchar_t* filePath, const char* resourceId) {
+=======
+    __declspec(dllexport) void __stdcall ResourceManager_LoadFile(void* mgr, const wchar_t* filePath, const char* resourceId) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDResourceManager* m = static_cast<RawrXDResourceManager*>(mgr);
         if (m) m->LoadResourceFromFile(filePath, resourceId);
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT void __stdcall ResourceManager_RegisterResource(void* mgr, const char* resourceId, const char* data, size_t size) {
+=======
+    __declspec(dllexport) void __stdcall ResourceManager_RegisterResource(void* mgr, const char* resourceId, const char* data, size_t size) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDResourceManager* m = static_cast<RawrXDResourceManager*>(mgr);
         if (m) m->RegisterResource(resourceId, data, size);
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall ResourceManager_GetResource(void* mgr, const char* resourceId, char** outData, size_t* outSize) {
+=======
+    __declspec(dllexport) bool __stdcall ResourceManager_GetResource(void* mgr, const char* resourceId, char** outData, size_t* outSize) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDResourceManager* m = static_cast<RawrXDResourceManager*>(mgr);
         return m ? m->GetResource(resourceId, outData, outSize) : false;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT bool __stdcall ResourceManager_ResourceExists(void* mgr, const char* resourceId) {
+=======
+    __declspec(dllexport) bool __stdcall ResourceManager_ResourceExists(void* mgr, const char* resourceId) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDResourceManager* m = static_cast<RawrXDResourceManager*>(mgr);
         return m ? m->ResourceExists(resourceId) : false;
     }
     
+<<<<<<< HEAD
     RAWRXD_SHIP_EXPORT size_t __stdcall ResourceManager_GetResourceCount(void* mgr) {
+=======
+    __declspec(dllexport) size_t __stdcall ResourceManager_GetResourceCount(void* mgr) {
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         RawrXDResourceManager* m = static_cast<RawrXDResourceManager*>(mgr);
         return m ? m->GetResourceCount() : 0;
     }
 }
 
+<<<<<<< HEAD
 #ifndef RAWRXD_WIN32_STATIC_BUILD
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved) {
     if (fdwReason == DLL_PROCESS_ATTACH) {
         OutputDebugStringW(L"RawrXD_ResourceManager_Win32 loaded\n");
     } else if (fdwReason == DLL_PROCESS_DETACH && g_resourceManager) {
         delete g_resourceManager;
+<<<<<<< HEAD
         g_resourceManager = nullptr;
     }
     return TRUE;
 }
 #endif
+=======
+    }
+    return TRUE;
+}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

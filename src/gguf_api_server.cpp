@@ -22,13 +22,20 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <random>
+<<<<<<< HEAD
 #include <nlohmann/json.hpp>
+=======
+#include "ai_model_caller.h"
+#include "cpu_inference_engine.h"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")
 #pragma warning(disable : 4996)
 
 namespace fs = std::filesystem;
+
+static std::unique_ptr<RawrXD::CPUInferenceEngine> g_engine;
 
 // ============================================================
 // Simple In-Memory Metrics Tracking
@@ -70,13 +77,13 @@ public:
     bool Start() {
         WSADATA wsa_data;
         if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
-            std::cerr << "WSAStartup failed\n";
+            
             return false;
         }
         
         listen_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (listen_socket_ == INVALID_SOCKET) {
-            std::cerr << "socket failed\n";
+            
             WSACleanup();
             return false;
         }
@@ -87,14 +94,14 @@ public:
         server_addr.sin_port = htons(port_);
         
         if (bind(listen_socket_, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-            std::cerr << "bind failed\n";
+            
             closesocket(listen_socket_);
             WSACleanup();
             return false;
         }
         
         if (listen(listen_socket_, SOMAXCONN) == SOCKET_ERROR) {
-            std::cerr << "listen failed\n";
+            
             closesocket(listen_socket_);
             WSACleanup();
             return false;
@@ -102,8 +109,8 @@ public:
         
         running_ = true;
         server_thread_ = std::thread(&SimpleHTTPServer::ServerLoop, this);
-        
-        std::cout << "HTTP Server listening on port " << port_ << std::endl;
+
+
         return true;
     }
     
@@ -208,6 +215,7 @@ private:
     // Proxy /api/generate to Ollama backend via WinHTTP
     std::string HandleGenerateRequest(const std::string& body) {
         auto start_time = std::chrono::high_resolution_clock::now();
+<<<<<<< HEAD
 
         // Resolve Ollama backend from environment or defaults
         std::string ollamaHost = "localhost";
@@ -292,6 +300,20 @@ private:
 
         auto end_time = std::chrono::high_resolution_clock::now();
         double latencyMs = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+=======
+        
+        // Execute Real Inference using local engine (loaded in main)
+        std::string generated_text;
+        if (g_engine && g_engine->IsModelLoaded()) {
+             generated_text = g_engine->infer(prompt);
+        } else {
+             generated_text = "Error: Model not loaded in server.";
+        }
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        double actual_latency = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        int tokens_generated = (int)generated_text.size() / 4;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         // Record metrics
         RequestMetrics metric;
@@ -307,12 +329,32 @@ private:
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", &tm);
         metric.timestamp = timestamp;
         RecordMetric(metric);
+<<<<<<< HEAD
 
         std::printf("[Generate] Ollama HTTP %lu in %.0f ms (%zu bytes)\n",
                     statusCode, latencyMs, responseBody.size());
 
         // Forward response
         std::string response = "HTTP/1.1 " + std::to_string(statusCode) + " OK\r\n";
+=======
+        
+        // Generate response (JSON)
+        // Note: generated_text is now real
+        
+        std::string json_body = R"({
+  "response": ")" + generated_text + R"(",
+  "created_at": ")" + std::string(timestamp) + R"(",
+  "done": true,
+  "total_duration": )" + std::to_string((int64_t)actual_latency * 1000000) + R"(,
+  "load_duration": 1000000,
+  "prompt_eval_duration": 5000000,
+  "eval_duration": )" + std::to_string((int64_t)(actual_latency * 1000000 - 6000000)) + R"(,
+  "context": [)" + std::to_string(tokens_generated) + R"(],
+  "eval_count": )" + std::to_string(tokens_generated) + R"(
+})";
+        
+        std::string response = "HTTP/1.1 200 OK\r\n";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         response += "Content-Type: application/json\r\n";
         response += "Access-Control-Allow-Origin: *\r\n";
         response += "Content-Length: " + std::to_string(responseBody.length()) + "\r\n";
@@ -404,19 +446,14 @@ int main(int argc, char* argv[]) {
             model_path = argv[++i];
         }
     }
-    
-    std::cout << "\n";
-    std::cout << "╔════════════════════════════════════════════════════════╗\n";
-    std::cout << "║      GGUF API Server - Real Model Inference            ║\n";
-    std::cout << "║  HTTP Server for Ollama-compatible Model Serving       ║\n";
-    std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
-    
-    std::cout << "[1/4] Verifying model file...\n";
+
+
     if (!fs::exists(model_path)) {
-        std::cerr << "ERROR: Model not found at " << model_path << std::endl;
+        
         return 1;
     }
     auto file_size = fs::file_size(model_path) / (1024.0 * 1024 * 1024);
+<<<<<<< HEAD
     std::cout << "  ✓ Found: " << fs::path(model_path).filename().string() 
               << " (" << file_size << "GB)\n\n";
     
@@ -438,32 +475,31 @@ int main(int argc, char* argv[]) {
         std::cout << "  ✓ Ready for inference requests\n\n";
     } catch (const std::exception& e) {
         std::cerr << "  ✗ Error preparing endpoint: " << e.what() << "\n";
+=======
+
+
+    try {
+        g_engine = std::make_unique<RawrXD::CPUInferenceEngine>();
+        if (!g_engine->LoadModel(model_path)) {
+            std::cerr << "Failed to load model: " << model_path << std::endl;
+            return 1;
+        }
+
+
+    } catch (const std::exception& e) {
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return 1;
     }
-    
-    std::cout << "[4/4] Starting HTTP API Server...\n";
+
+
     SimpleHTTPServer server(port);
     if (!server.Start()) {
-        std::cerr << "Failed to start server\n";
+        
         return 1;
     }
-    
-    std::cout << "\n";
-    std::cout << "╔════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         Server Ready for Inference Requests            ║\n";
-    std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
-    
-    std::cout << "API Endpoints:\n";
-    std::cout << "  GET  http://localhost:" << port << "/api/tags\n";
-    std::cout << "  POST http://localhost:" << port << "/api/generate\n";
-    std::cout << "  GET  http://localhost:" << port << "/metrics\n\n";
-    
-    std::cout << "Example usage:\n";
-    std::cout << "  curl -X GET http://localhost:" << port << "/api/tags\n";
-    std::cout << "  curl -X POST -d '{\"prompt\":\"Hello\"}' http://localhost:" << port << "/api/generate\n\n";
-    
-    std::cout << "Running... Press Ctrl+C to exit.\n\n";
-    
+
+
     // Keep running
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

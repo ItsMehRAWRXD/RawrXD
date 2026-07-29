@@ -4,7 +4,10 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+<<<<<<< HEAD
 #include <fstream>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Forward declare Vulkan types to avoid pulling in vulkan.h
 typedef struct VkInstance_T* VkInstance;
@@ -93,6 +96,7 @@ public:
     /// Check Vulkan availability
     static bool isVulkanAvailable();
     
+<<<<<<< HEAD
     /// Enumerate available Vulkan devices
     static std::vector<std::string> enumerateDevices(VulkanContext& context);
     
@@ -115,17 +119,23 @@ public:
     /// Wait for GPU completion with timeout
     static bool waitForCompletion(VulkanContext& context, uint64_t timeoutNs);
     
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 private:
     static bool createDevice(VulkanContext& context);
     static bool createCommandPool(VulkanContext& context);
     static bool createDescriptorPool(VulkanContext& context);
     static bool createPipeline(VulkanContext& context);
+<<<<<<< HEAD
     static bool createPipeline(VulkanContext& context, const char* shaderPath);
     static bool updateDescriptorSet(VulkanContext& context, VkBuffer_T* buffer0, VkBuffer_T* buffer1, VkBuffer_T* buffer2);
     static uint32_t findMemoryType(const VulkanContext& context, uint32_t typeFilter, uint32_t properties);
     
     // Helper: Read SPIR-V binary file
     static std::vector<char> readFile(const std::string& filename);
+=======
+    static uint32_t findMemoryType(const VulkanContext& context, uint32_t typeFilter, uint32_t properties);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace RawrXD::Agentic::Vulkan

@@ -6,10 +6,15 @@
 #include <mutex>
 #include <thread>
 #include <queue>
+<<<<<<< HEAD
+=======
+#include <expected>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <unordered_map>
 #include <chrono>
 #include <functional>
 #include <future>
+<<<<<<< HEAD
 
 // std::expected polyfill for C++20 (C++23 feature)
 #if __cplusplus >= 202302L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202302L)
@@ -66,6 +71,10 @@ namespace spdlog {
 #else
 namespace nlohmann { class json {}; }
 #endif
+=======
+#include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Forward declarations to avoid circular dependencies
 namespace RawrXD {
@@ -111,8 +120,11 @@ enum class AgentSpecialization {
     Architecture
 };
 
+<<<<<<< HEAD
 #ifndef RAWRXD_SWARMTASK_DEFINED
 #define RAWRXD_SWARMTASK_DEFINED
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 struct SwarmTask {
     std::string id;
     std::string description;
@@ -126,9 +138,13 @@ struct SwarmTask {
     float requiredConfidence{0.7f};
     std::vector<std::string> constraints;
     std::vector<std::string> dependencies;
+<<<<<<< HEAD
     int priority = 0; // compatibility with CommonTypes.h version
 };
 #endif
+=======
+};
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct SwarmAgent {
     std::string id;

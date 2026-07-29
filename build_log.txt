@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 **********************************************************************
 ** Visual Studio 2026 Developer Command Prompt v18.2.1
 ** Copyright (c) 2025 Microsoft Corporation
@@ -115,3 +116,14 @@ Stop.
 NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\nmake.exe -s -f CMakeFiles\Makefile2 /nologo -LS                 RawrXD-Win32IDE' : return code '0x2'
 Stop.
 
+=======
+Microsoft (R) Macro Assembler Version 6.14.8444
+Copyright (C) Microsoft Corp 1981-1997.  All rights reserved.
+
+ Assembling: OmegaPro_v3_fixed.asm
+
+***********
+ASCII build
+***********
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

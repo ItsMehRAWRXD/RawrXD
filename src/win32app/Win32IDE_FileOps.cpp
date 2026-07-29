@@ -3,12 +3,17 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
+<<<<<<< HEAD
 #include "IDEConfig.h"
+=======
+#include "../gui/ModelConversionDialog.h"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <fstream>
 #include <sstream>
 #include <commdlg.h>
 #include <commctrl.h>
 #include <algorithm>
+#include <filesystem>
 
 // File operations and model load from explorer — Phase 33 complete
 
@@ -18,9 +23,13 @@
 // ============================================================================
 
 void Win32IDE::openFileDialog() {
+<<<<<<< HEAD
     SCOPED_METRIC("file.open_dialog_fileops");
     METRICS.increment("file.dialog_opens");
     LOG_INFO("openFileDialog() called");
+=======
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     OPENFILENAMEA ofn = {};
     char szFile[MAX_PATH] = {0};
     
@@ -28,20 +37,20 @@ void Win32IDE::openFileDialog() {
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
-                      "All Files (*.*)\0*.*\0"
-                      "PowerShell Scripts (*.ps1)\0*.ps1\0"
-                      "C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
-                      "GGUF Models (*.gguf)\0*.gguf\0";
+    ofn.lpstrFilter = "All Support Files\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json;*.gguf;*.bin;*.pth\0"
+                      "GGUF Models (*.gguf)\0*.gguf\0"
+                      "ML Models (*.bin;*.pth)\0*.bin;*.pth\0"
+                      "Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
+                      "All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
-    
-    LOG_DEBUG("Opening file dialog");
+
     if (GetOpenFileNameA(&ofn)) {
         std::string filePath = szFile;
+<<<<<<< HEAD
         LOG_INFO("File selected: " + filePath);
         
         // Check if it's a model file (GGUF or other) - load as model and into agentic bridge for chat/agentic
@@ -55,12 +64,44 @@ void Win32IDE::openFileDialog() {
         };
         if (isModelFile(filePath)) {
             LOG_INFO("Detected model file, loading as model and into agentic bridge");
+=======
+        std::filesystem::path fsPath(filePath);
+        std::string ext = fsPath.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        // Check for conversion need
+        if (ext == ".bin" || ext == ".pth") {
+             // Trigger Conversion Dialog
+             ModelConversionDialog dialog({"PyTorch .pth", "GGML .bin"}, "GGUF", fsPath, m_hwndMain);
+             auto result = dialog.exec();
+             
+             if (result == ModelConversionDialog::Converted) {
+                 // Update filePath to the new GGUF file
+                 auto conversionRes = dialog.getConversionResult();
+                 filePath = conversionRes.convertedModelPath.string();
+                 ext = ".gguf"; // Force extension update for next check
+                 
+                 std::string msg = "Model Converted Successfully!\nNew Path: " + filePath;
+                 MessageBoxA(m_hwndMain, msg.c_str(), "Conversion Complete", MB_OK | MB_ICONINFORMATION);
+             } else {
+                 // User cancelled or failed
+                 return;
+             }
+        }
+
+        // Check if it's a GGUF model file FIRST - DON'T load as text, bypass size limits!
+        if (ext == ".gguf") {
+
+            // GGUF files can be multi-GB, they use streaming loader
+            // Add safety check to prevent crashes on corrupted/invalid files
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             try {
                 bool ggufOk = loadGGUFModel(filePath);
                 bool bridgeOk = loadModelForInference(filePath);
                 if (ggufOk || bridgeOk) {
                     std::string message = "✅ Model loaded: " + filePath + "\n\n" + (ggufOk ? getModelInfo() : "Ready for chat and agentic.");
                     appendToOutput(message, "Output", OutputSeverity::Info);
+<<<<<<< HEAD
                     MessageBoxA(m_hwndMain, "Model loaded. Chat and agentic features use this model.", "Model Loaded", MB_OK | MB_ICONINFORMATION);
                     LOG_INFO("Model loaded successfully");
                 } else {
@@ -76,6 +117,23 @@ void Win32IDE::openFileDialog() {
                 LOG_ERROR("Unknown exception while loading model file");
                 appendToOutput("Unknown exception while loading model file", "Errors", OutputSeverity::Error);
                 MessageBoxA(m_hwndMain, "Unknown error loading model file.", "Model Load Error", MB_OK | MB_ICONERROR);
+=======
+                    MessageBoxA(m_hwndMain, "Model loaded successfully! Check Output panel and Copilot Chat for agentic features.", "Model Loaded", MB_OK | MB_ICONINFORMATION);
+
+                } else {
+
+                    MessageBoxA(m_hwndMain, "Failed to load GGUF model. Check Output/Errors panel for details.", "Model Load Failed", MB_OK | MB_ICONERROR);
+                }
+            } catch (const std::exception& e) {
+                std::string error = "Exception while loading GGUF: " + std::string(e.what());
+
+                appendToOutput(error, "Errors", OutputSeverity::Error);
+                MessageBoxA(m_hwndMain, error.c_str(), "Model Load Error", MB_OK | MB_ICONERROR);
+            } catch (...) {
+
+                appendToOutput("Unknown exception while loading GGUF file", "Errors", OutputSeverity::Error);
+                MessageBoxA(m_hwndMain, "Unknown error loading GGUF file.", "Model Load Error", MB_OK | MB_ICONERROR);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             return;  // Exit early - model files never load into editor
         }
@@ -207,6 +265,68 @@ std::string Win32IDE::getFileDialogPath(bool isSave) {
     }
     
     return "";
+}
+
+// Explicit Model Loading Dialog
+void Win32IDE::openModelDialog() {
+    OPENFILENAMEA ofn = {};
+    char szFile[MAX_PATH] = {0};
+    
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hwndMain;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0"
+                      "ML Models (*.bin;*.pth)\0*.bin;*.pth\0"
+                      "All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1; // Default to GGUF
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
+
+    if (GetOpenFileNameA(&ofn)) {
+        std::string filePath = szFile;
+        std::filesystem::path fsPath(filePath);
+        std::string ext = fsPath.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        // Check for conversion need
+        if (ext == ".bin" || ext == ".pth") {
+             // Reuse the conversion logic via the dialog class
+             // (We can assume ModelConversionDialog is included as I added it to the top of this file)
+             ModelConversionDialog dialog({"PyTorch .pth", "GGML .bin"}, "GGUF", fsPath, m_hwndMain);
+             auto result = dialog.exec();
+             
+             if (result == ModelConversionDialog::Converted) {
+                 auto conversionRes = dialog.getConversionResult();
+                 filePath = conversionRes.convertedModelPath.string();
+                 ext = ".gguf";
+                 
+                 std::string msg = "Model Converted Successfully!\nNew Path: " + filePath;
+                 MessageBoxA(m_hwndMain, msg.c_str(), "Conversion Complete", MB_OK | MB_ICONINFORMATION);
+             } else {
+                 return;
+             }
+        }
+
+        if (ext == ".gguf") {
+             try {
+                if (loadGGUFModel(filePath)) {
+                    std::string message = "✅ Model loaded: " + filePath + "\n\n" + getModelInfo();
+                    appendToOutput(message, "Output", OutputSeverity::Info);
+                    MessageBoxA(m_hwndMain, "Model loaded successfully!", "Model Loaded", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    MessageBoxA(m_hwndMain, "Failed to load GGUF model.", "Model Load Failed", MB_OK | MB_ICONERROR);
+                }
+            } catch (const std::exception& e) {
+                std::string error = "Exception while loading GGUF: " + std::string(e.what());
+                appendToOutput(error, "Errors", OutputSeverity::Error);
+            }
+        } else {
+            MessageBoxA(m_hwndMain, "Selected file is not a supported model format.", "Invalid File", MB_OK | MB_ICONWARNING);
+        }
+    }
 }
 
 void Win32IDE::saveAll() {

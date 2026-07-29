@@ -57,6 +57,7 @@ public:
             std::ofstream cpp(cppPath);
             cpp << "#include \"" << name << ".hpp\"\n"
                 << "#include <windows.h>\n"
+<<<<<<< HEAD
                 << "#include <iostream>\n"
                 << "#include <immintrin.h>\n\n"
                 << "void " << name << "::initialize() {\n"
@@ -81,6 +82,14 @@ public:
                 << "    }\n"
                 << "    // Scalar remainder\n"
                 << "    for (size_t i = simdEnd; i < n; ++i) res[i] = src[i];\n"
+=======
+                << "#include <iostream>\n\n"
+                << "void " << name << "::initialize() { std::cout << \"Initializing " << name << "\\n\"; }\n"
+                << "void " << name << "::cleanup() {}\n"
+                << "std::vector<float> " << name << "::wrap(const float* src, size_t n) {\n"
+                << "    std::vector<float> res(n);\n"
+                << "    for(size_t i=0; i<n; ++i) res[i] = src[i]; // Placeholder\n"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 << "    return res;\n"
                 << "}\n";
             cpp.close();

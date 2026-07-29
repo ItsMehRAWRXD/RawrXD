@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // agentic_failure_detector.cpp - Implementation of failure detection with MASM acceleration
 #include "agentic_failure_detector.hpp"
 #include "license_enforcement.h"
@@ -38,6 +39,15 @@ extern "C" {
             fprintf(stderr, "[MASM-CORRECTION] Applied %zu bytes of correction\n", data_size);
         }
     }
+=======
+#include "agentic_failure_detector.hpp"
+#include <algorithm>
+#include <iostream>
+
+AgenticFailureDetector::AgenticFailureDetector()
+{
+    initializePatterns();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +135,7 @@ void AgenticFailureDetector::initializeMasmAcceleration() {
 
 void AgenticFailureDetector::initializePatterns()
 {
+<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_mutex);
     
     // Refusal patterns
@@ -156,10 +167,44 @@ void AgenticFailureDetector::initializePatterns()
     m_resourceExhaustionIndicators = {"out of memory", "OOM", "[OOM]",
                                       "resource exhausted", "no GPU memory",
                                       "device out of memory"};
+=======
+    std::lock_guard<std::mutex> locker(m_mutex);
+    
+    // Refusal patterns
+    m_refusalPatterns = {"I can't", "I cannot", "I'm not able to",
+                     "I can't assist", "I'm unable", "I don't feel comfortable",
+                     "I decline", "I won't", "I must refuse",
+                     "I'm not permitted", "against my values",
+                     "not allowed to", "I apologize, but I cannot"};
+    
+    // Hallucination patterns
+    m_hallucinationPatterns = {"I think", "probably", "likely",
+                           "I might have", "I'm not sure but",
+                           "As far as I know", "To my knowledge",
+                           "might be", "could be", "seems like"};
+    
+    // Infinite loop patterns
+    m_loopPatterns = {"same", "repeated", "over and over",
+                  "again and again", "same thing"};
+    
+    // Safety patterns
+    m_safetyPatterns = {"[SENSITIVE]", "[REDACTED]", "[FILTERED]",
+                    "[BLOCKED]", "[SAFETY]", "[WARNING]"};
+    
+    // Timeout indicators
+    m_timeoutIndicators = {"[Timeout]", "[TIMEOUT]", "timed out",
+                       "inference timeout", "deadline exceeded"};
+    
+    // Resource exhaustion indicators
+    m_resourceExhaustionIndicators = {"out of memory", "OOM", "[OOM]",
+                                  "resource exhausted", "no GPU memory",
+                                  "device out of memory"};
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 FailureInfo AgenticFailureDetector::detectFailure(const std::string& modelOutput, const std::string& context)
 {
+<<<<<<< HEAD
     if (!RawrXD::Enforce::LicenseEnforcer::Instance().allow(
             RawrXD::License::FeatureID::AgenticFailureDetect, __FUNCTION__)) {
         return FailureInfo{AgentFailureType::None,
@@ -173,12 +218,21 @@ FailureInfo AgenticFailureDetector::detectFailure(const std::string& modelOutput
         return FailureInfo{AgentFailureType::None, "Detector disabled", 0.0, "", std::chrono::system_clock::now(), m_sequenceNumber};
     }
     
+=======
+    std::lock_guard<std::mutex> locker(m_mutex);
+    
+    if (!m_enabled) {
+        return FailureInfo{AgentFailureType::None, "Detector disabled", 0.0, "", std::chrono::system_clock::now(), m_sequenceNumber};
+    }
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (modelOutput.empty()) {
         return FailureInfo{AgentFailureType::Refusal, "Empty output", 0.5, "No response generated", std::chrono::system_clock::now(), m_sequenceNumber};
     }
     
     m_stats.totalOutputsAnalyzed++;
     
+<<<<<<< HEAD
     // MASM-Accelerated Detection Path
     if (g_masmInitialized.load(std::memory_order_acquire) && g_masmBridge) {
         constexpr size_t MAX_FAILURE_EVENTS = 8;
@@ -227,6 +281,31 @@ FailureInfo AgenticFailureDetector::detectFailure(const std::string& modelOutput
 
 FailureInfo AgenticFailureDetector::detectFailureFallback(const std::string& modelOutput, const std::string& context)
 {
+=======
+    // Check each failure type in priority order
+    if (isRefusal(modelOutput)) {
+        FailureInfo info{AgentFailureType::Refusal, "Model refusal detected", 
+                        calculateConfidence(AgentFailureType::Refusal, modelOutput),
+                        "Contains refusal keywords", std::chrono::system_clock::now(), m_sequenceNumber++};
+        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::Refusal)]++;
+        return info;
+    }
+    
+    if (isSafetyViolation(modelOutput)) {
+        FailureInfo info{AgentFailureType::SafetyViolation, "Safety filter triggered",
+                        calculateConfidence(AgentFailureType::SafetyViolation, modelOutput),
+                        "Contains safety markers", std::chrono::system_clock::now(), m_sequenceNumber++};
+        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::SafetyViolation)]++;
+        return info;
+    }
+    
+    if (isTokenLimitExceeded(modelOutput)) {
+        FailureInfo info{AgentFailureType::TokenLimitExceeded, "Token limit exceeded",
+                        0.9, "Response truncated or incomplete", std::chrono::system_clock::now(), m_sequenceNumber++};
+        m_stats.failureTypeCounts[static_cast<int>(AgentFailureType::TokenLimitExceeded)]++;
+        return info;
+    }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     if (isTimeout(modelOutput)) {
         FailureInfo info{AgentFailureType::Timeout, "Inference timeout",
@@ -242,6 +321,7 @@ FailureInfo AgenticFailureDetector::detectFailureFallback(const std::string& mod
         return info;
     }
     
+<<<<<<< HEAD
     if (isInfiniteLoop(modelOutput)) {
         FailureInfo info{AgentFailureType::InfiniteLoop, "Infinite loop detected",
                         calculateConfidence(AgentFailureType::InfiniteLoop, modelOutput),
@@ -389,11 +469,44 @@ bool AgenticFailureDetector::isResourceExhausted(const std::string& output) cons
         if (str_contains(lower, str_to_lower(indicator))) {
             return true;
         }
+=======
+    return FailureInfo{AgentFailureType::None, "No failure detected", 0.0, "", std::chrono::system_clock::now(), m_sequenceNumber};
+}
+
+bool AgenticFailureDetector::isRefusal(const std::string& output) {
+    for (const auto& pattern : m_refusalPatterns) {
+        if (output.find(pattern) != std::string::npos) return true;
     }
-    
     return false;
 }
 
+bool AgenticFailureDetector::isSafetyViolation(const std::string& output) {
+    for (const auto& pattern : m_safetyPatterns) {
+        if (output.find(pattern) != std::string::npos) return true;
+    }
+    return false;
+}
+
+bool AgenticFailureDetector::isTokenLimitExceeded(const std::string& output) {
+    // Heuristic: ends abruptly without punctuation
+    if (output.empty()) return false;
+    char last = output.back();
+    if (last != '.' && last != '!' && last != '?' && last != '}' && last != '"') {
+        // Very weak heuristic, maybe check if it cuts off mid word?
+        return true; 
+    }
+    return false;
+}
+
+bool AgenticFailureDetector::isTimeout(const std::string& output) {
+    for (const auto& pattern : m_timeoutIndicators) {
+        if (output.find(pattern) != std::string::npos) return true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+    }
+    return false;
+}
+
+<<<<<<< HEAD
 bool AgenticFailureDetector::isTimeout(const std::string& output) const
 {
     std::string lower = str_to_lower(output);
@@ -402,11 +515,16 @@ bool AgenticFailureDetector::isTimeout(const std::string& output) const
         if (str_contains(lower, str_to_lower(indicator))) {
             return true;
         }
+=======
+bool AgenticFailureDetector::isResourceExhausted(const std::string& output) {
+    for (const auto& pattern : m_resourceExhaustionIndicators) {
+        if (output.find(pattern) != std::string::npos) return true;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
-    
     return false;
 }
 
+<<<<<<< HEAD
 bool AgenticFailureDetector::isSafetyViolation(const std::string& output) const
 {
     for (const std::string& pattern : m_safetyPatterns) {
@@ -620,4 +738,9 @@ double AgenticFailureDetector::calculateConfidence(AgentFailureType type, const 
     }
     
     return confidence;
+=======
+double AgenticFailureDetector::calculateConfidence(AgentFailureType type, const std::string& output) {
+    // Simplified placeholder
+    return 0.9;
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

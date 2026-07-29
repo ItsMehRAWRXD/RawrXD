@@ -261,6 +261,7 @@ void GGUFVocabResolver::setupVocabMappings() {
 // ---------------------------------------------------------------------------
 VocabSizeDetection GGUFVocabResolver::detectVocabSize(
     const std::map<std::string, std::string>& metadata,
+<<<<<<< HEAD
     const std::string& modelPath)
 {
     // Strategy 1: If modelPath provided, read GGUF directly for authoritative data
@@ -272,6 +273,35 @@ VocabSizeDetection GGUFVocabResolver::detectVocabSize(
             for (const auto& kv : fileMeta) {
                 merged[kv.first] = kv.second;
             }
+=======
+    const std::string& modelPath) {
+    
+    // Strategy 1: TinyLlama special case (fixes 7M bug)
+    VocabSizeDetection tinyLlamaResult = detectForTinyLlama(metadata);
+    if (tinyLlamaResult.isConfident) {
+        
+        return tinyLlamaResult;
+    }
+    
+    // Strategy 2: Direct metadata lookup
+    VocabSizeDetection metadataResult = detectFromMetadata(metadata);
+    if (metadataResult.isConfident) {
+        return metadataResult;
+    }
+    
+    // Strategy 3: Model family heuristics
+    std::string modelFamily = determineModelFamily(metadata, modelPath);
+    if (!modelFamily.empty() && expectedVocabSizes.count(modelFamily)) {
+        uint32_t expectedSize = expectedVocabSizes[modelFamily];
+        std::vector<std::string> evidence = {"model_family:" + modelFamily};
+        return createDetection("family_heuristic", expectedSize, true, evidence, modelFamily);
+    }
+    
+    // Strategy 4: Fallback to common sizes
+    
+    return createDetection("fallback", 32000, false, {}, "unknown");
+}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             // Try detecting from the merged metadata
             VocabSizeDetection result = detectFromMetadata(merged);

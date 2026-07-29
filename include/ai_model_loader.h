@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // AI Model Loader - GGUF Model Loading Interface
 // Provides unified model loading across all IDE variants
 
@@ -50,3 +51,16 @@ std::unique_ptr<IModelLoader> createModelLoader();
 } // namespace AIModelLoader
 
 #endif // AI_MODEL_LOADER_H_
+=======
+// AI Model Loader - Integrated from Cursor IDE Reverse Engineering
+// Integrates Cursor's AI model loading system
+// Generated: 2026-01-25 06:34:12
+
+#ifndef AI_MODEL_LOADER_H_
+#define AI_MODEL_LOADER_H_
+
+// TODO: Define interface based on Cursor reverse engineering
+// Source: d:\lazy init ide\Cursor_Source_Extracted
+
+#endif // AI_MODEL_LOADER_H_
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

@@ -4,12 +4,16 @@
 #include <iomanip>
 #include <algorithm>
 #include <shlobj.h>
+<<<<<<< HEAD
 #include <shellapi.h>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Static members
 std::unique_ptr<AutonomousAgent> AutonomousAgent::s_instance;
 std::atomic<bool> AutonomousAgent::s_initialized{false};
 
+<<<<<<< HEAD
 // Resolve agent log/report paths to %APPDATA%\RawrXD\Agent (create dir)
 static std::string GetAgentDataDir() {
     char buf[MAX_PATH] = {};
@@ -21,6 +25,8 @@ static std::string GetAgentDataDir() {
     return dir;
 }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Constructor
 AutonomousAgent::AutonomousAgent()
     : m_state(AgentState::IDLE)
@@ -63,6 +69,7 @@ void AutonomousAgent::Initialize(const AgentConfig& config)
     
     auto* agent = Instance();
     agent->m_config = config;
+<<<<<<< HEAD
     std::string agentDir = GetAgentDataDir();
     if (!agentDir.empty()) {
         if (agent->m_config.beaconLogPath.empty() || agent->m_config.beaconLogPath.find("C:\\RawrXD") == 0)
@@ -83,6 +90,14 @@ void AutonomousAgent::Initialize(const AgentConfig& config)
     agent->m_diagnosticEngine = std::make_unique<DiagnosticEngine>();
     agent->m_selfHealingEngine = std::make_unique<SelfHealingEngine>(config.maxRecoveryAttempts);
     agent->m_reporter = std::make_unique<DiagnosticReporter>(agent->m_config.diagnosticReportPath);
+=======
+    
+    // Create subsystems
+    agent->m_beaconManager = std::make_unique<BeaconManager>(config.beaconLogPath);
+    agent->m_diagnosticEngine = std::make_unique<DiagnosticEngine>();
+    agent->m_selfHealingEngine = std::make_unique<SelfHealingEngine>(config.maxRecoveryAttempts);
+    agent->m_reporter = std::make_unique<DiagnosticReporter>(config.diagnosticReportPath);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Register default diagnostic tests
     agent->m_diagnosticEngine->AddTest("Engine Load", DiagnosticEngine::TestEngineLoad);
@@ -104,7 +119,11 @@ void AutonomousAgent::Initialize(const AgentConfig& config)
     agent->m_selfHealingEngine->RegisterAction(HealingAction::FULL_RESTART, SelfHealingEngine::PerformFullRestart);
     
     // Ensure log directory exists
+<<<<<<< HEAD
     AgentUtils::EnsureDirectoryExists(agent->m_config.beaconLogPath);
+=======
+    AgentUtils::EnsureDirectoryExists(config.beaconLogPath);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // startup beacon
     agent->EmitBeacon(BeaconType::STARTUP, S_OK, "Agent initialized");
@@ -1147,15 +1166,24 @@ void SelfHealingEngine::SetMaxAttempts(DWORD attempts)
 // Pre-defined Healing Actions
 bool SelfHealingEngine::RestartMessageLoop()
 {
+<<<<<<< HEAD
+=======
+    // This would typically involve restarting the message pump
+    // For now, we'll just log the action
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     OutputDebugStringA("[AGENT-HEALING] Restarting message loop\n");
     
     HWND hwnd = AutonomousAgent::Instance()->GetIDEWindow();
     if (hwnd) {
+<<<<<<< HEAD
         // Wake up the message loop by posting a null message
         // and invalidate the window to force a paint cycle
         PostMessageA(hwnd, WM_NULL, 0, 0);
         InvalidateRect(hwnd, nullptr, FALSE);
         UpdateWindow(hwnd);
+=======
+        PostMessageA(hwnd, WM_NULL, 0, 0); // Wake up the message loop
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
     }
     
@@ -1166,6 +1194,7 @@ bool SelfHealingEngine::ReloadEngine()
 {
     OutputDebugStringA("[AGENT-HEALING] Reloading engine\n");
     
+<<<<<<< HEAD
     // Validate engine accessibility by testing load/unload cycle
     bool loadable = DiagnosticEngine::TestEngineLoad();
     if (!loadable) {
@@ -1187,6 +1216,11 @@ bool SelfHealingEngine::ReloadEngine()
     
     OutputDebugStringA("[AGENT-HEALING] Engine reload validation passed\n");
     return true;
+=======
+    // This would typically reload the digestion engine DLL
+    // For now, we'll just validate that the engine is accessible
+    return DiagnosticEngine::TestEngineLoad();
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool SelfHealingEngine::ReinitHotkeys()
@@ -1228,6 +1262,7 @@ bool SelfHealingEngine::RecreateWindows()
 {
     OutputDebugStringA("[AGENT-HEALING] Recreating windows\n");
     
+<<<<<<< HEAD
     HWND hwnd = AutonomousAgent::Instance()->GetIDEWindow();
     if (!hwnd || !IsWindow(hwnd)) {
         OutputDebugStringA("[AGENT-HEALING] Main window not found or invalid\n");
@@ -1247,12 +1282,19 @@ bool SelfHealingEngine::RecreateWindows()
     
     OutputDebugStringA("[AGENT-HEALING] Windows recreated successfully\n");
     return true;
+=======
+    // This would typically recreate any corrupted windows
+    // For now, we'll just validate the main window
+    HWND hwnd = AutonomousAgent::Instance()->GetIDEWindow();
+    return hwnd && IsWindow(hwnd);
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool SelfHealingEngine::PerformFullRestart()
 {
     OutputDebugStringA("[AGENT-HEALING] Performing full restart\n");
     
+<<<<<<< HEAD
     // Attempt graceful shutdown sequence
     HWND hwnd = AutonomousAgent::Instance()->GetIDEWindow();
     if (hwnd && IsWindow(hwnd)) {
@@ -1278,6 +1320,10 @@ bool SelfHealingEngine::PerformFullRestart()
         ShellExecuteA(nullptr, "open", exePath, nullptr, nullptr, SW_SHOW);
     }
     
+=======
+    // This would typically restart the entire IDE
+    // For now, we'll just return true to indicate the action was attempted
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -1347,6 +1393,7 @@ bool DiagnosticReporter::GenerateJSONReport() const
 
 bool DiagnosticReporter::GenerateHTMLReport() const
 {
+<<<<<<< HEAD
     std::ofstream file(m_reportPath);
     if (!file.is_open()) {
         return false;
@@ -1416,6 +1463,10 @@ bool DiagnosticReporter::GenerateHTMLReport() const
     
     file << "</div>\n</body>\n</html>\n";
     file.close();
+=======
+    // Similar to JSON but in HTML format
+    // Implementation omitted for brevity
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -1571,10 +1622,14 @@ namespace AgentUtils {
         OutputDebugStringA(logEntry.c_str());
         
         // Also write to file if path is set
+<<<<<<< HEAD
         static std::string logPath = []() {
             std::string dir = GetAgentDataDir();
             return dir.empty() ? "RawrXD_Agent.log" : (dir + "\\agent.log");
         }();
+=======
+        static std::string logPath = "C:\\RawrXD_Agent.log";
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         WriteLogEntry(logPath, logEntry);
     }
 }

@@ -52,6 +52,7 @@ private:
     }
 
     std::string RunLocalInference(const std::string& prompt) {
+<<<<<<< HEAD
         // Load and call RawrXD_InferenceEngine.dll for local GGUF inference
         HMODULE hEngine = GetModuleHandleA("RawrXD_InferenceEngine.dll");
         if (!hEngine) {
@@ -99,6 +100,10 @@ private:
         
         std::cout << "[HybridCloud] Local inference complete: " << output.size() << " chars" << std::endl;
         return output;
+=======
+        // Placeholder for calling RawrXD_InferenceEngine.dll
+        return "Local Titan: " + prompt; // Mock
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 };
 
