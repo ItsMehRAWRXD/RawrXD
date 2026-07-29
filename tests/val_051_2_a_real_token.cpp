@@ -100,9 +100,135 @@ std::string computeModelHash(const char* modelPath) {
     return std::string(hash);
 }
 
+// GPU Detection Helper
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+struct GPUInfo {
+    int count;
+    std::vector<std::string> names;
+    std::vector<uint64_t> memory;
+    std::vector<bool> isDiscrete;
+};
+
+GPUInfo DetectGPUs() {
+    GPUInfo info;
+    info.count = 0;
+    
+#ifdef _WIN32
+    // Use WMI to detect GPUs
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    
+    IWbemLocator* pLoc = nullptr;
+    IWbemServices* pSvc = nullptr;
+    
+    HRESULT hr = CoCreateInstance(
+        CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
+        IID_IWbemLocator, (LPVOID*)&pLoc
+    );
+    
+    if (SUCCEEDED(hr) && pLoc) {
+        hr = pLoc->ConnectServer(
+            _bstr_t(L"ROOT\\CIMV2"), nullptr, nullptr, 0,
+            NULL, 0, 0, &pSvc
+        );
+        
+        if (SUCCEEDED(hr) && pSvc) {
+            hr = CoSetProxyBlanket(
+                pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, nullptr,
+                RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, nullptr, EOAC_NONE
+            );
+            
+            if (SUCCEEDED(hr)) {
+                IEnumWbemClassObject* pEnumerator = nullptr;
+                hr = pSvc->ExecQuery(
+                    bstr_t("WQL"),
+                    bstr_t("SELECT * FROM Win32_VideoController"),
+                    WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                    nullptr, &pEnumerator
+                );
+                
+                if (SUCCEEDED(hr) && pEnumerator) {
+                    IWbemClassObject* pclsObj = nullptr;
+                    ULONG uReturn = 0;
+                    
+                    while (pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn) == S_OK) {
+                        VARIANT vtProp;
+                        
+                        // Get GPU name
+                        hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
+                        if (SUCCEEDED(hr)) {
+                            char name[256];
+                            WideCharToMultiByte(CP_UTF8, 0, vtProp.bstrVal, -1, name, 256, nullptr, nullptr);
+                            info.names.push_back(name);
+                            VariantClear(&vtProp);
+                        }
+                        
+                        // Get adapter RAM
+                        hr = pclsObj->Get(L"AdapterRAM", 0, &vtProp, 0, 0);
+                        if (SUCCEEDED(hr)) {
+                            info.memory.push_back(vtProp.ulVal);
+                            VariantClear(&vtProp);
+                        } else {
+                            info.memory.push_back(0);
+                        }
+                        
+                        // Check if discrete (simplified heuristic)
+                        bool discrete = false;
+                        hr = pclsObj->Get(L"Name", 0, &vtProp, 0, 0);
+                        if (SUCCEEDED(hr)) {
+                            char name[256];
+                            WideCharToMultiByte(CP_UTF8, 0, vtProp.bstrVal, -1, name, 256, nullptr, nullptr);
+                            std::string nameStr(name);
+                            // Check for integrated graphics keywords
+                            if (nameStr.find("Intel") != std::string::npos && 
+                                nameStr.find("UHD") != std::string::npos) {
+                                discrete = false;
+                            } else if (nameStr.find("AMD") != std::string::npos && 
+                                       nameStr.find("Radeon(TM)") != std::string::npos) {
+                                discrete = false;
+                            } else {
+                                discrete = true;
+                            }
+                            VariantClear(&vtProp);
+                        }
+                        info.isDiscrete.push_back(discrete);
+                        
+                        info.count++;
+                        pclsObj->Release();
+                    }
+                    pEnumerator->Release();
+                }
+            }
+            pSvc->Release();
+        }
+        pLoc->Release();
+    }
+    
+    CoUninitialize();
+#endif
+    
+    return info;
+}
+
 int main(int argc, char* argv[]) {
     printf("=== VAL-051.2.A: Real Token Proof Harness ===\n");
     printf("Component chain: RawrXDInference -> GGUF -> Tokenizer -> Transformer -> Sampler\n\n");
+    
+    // Detect GPUs
+    GPUInfo gpuInfo = DetectGPUs();
+    printf("GPU Configuration:\n");
+    printf("  GPUs detected: %d\n", gpuInfo.count);
+    for (int i = 0; i < gpuInfo.count; i++) {
+        printf("  [GPU %d] %s\n", i, gpuInfo.names[i].c_str());
+        printf("    Memory: %.2f GB\n", gpuInfo.memory[i] / (1024.0 * 1024.0 * 1024.0));
+        printf("    Type: %s\n", gpuInfo.isDiscrete[i] ? "Discrete" : "Integrated");
+    }
+    if (gpuInfo.count >= 2) {
+        printf("  [STATUS] Dual GPU configuration detected!\n");
+    }
+    printf("\n");
     
     // Default model path
     const char* modelPath = "D:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
@@ -346,6 +472,19 @@ int main(int argc, char* argv[]) {
         bundle.addDouble("detokenize_ms", detokMs);
         bundle.addDouble("total_ms", totalMs);
         bundle.addBool("success", true);
+        
+        // GPU Information
+        bundle.addInt("gpu_count", gpuInfo.count);
+        bundle.beginArray("gpus");
+        for (int i = 0; i < gpuInfo.count; i++) {
+            bundle.beginObject();
+            bundle.addString("name", gpuInfo.names[i].c_str());
+            bundle.addInt("memory_bytes", static_cast<int64_t>(gpuInfo.memory[i]));
+            bundle.addBool("is_discrete", gpuInfo.isDiscrete[i]);
+            bundle.endObject();
+        }
+        bundle.endArray();
+        
         bundle.endObject();
         
         std::string bundlePath = "evidence/VAL-051-2-C-EVIDENCE.json";
