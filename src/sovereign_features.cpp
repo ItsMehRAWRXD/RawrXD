@@ -756,11 +756,58 @@ SovereignResult SecureBootVerifier::checkFirmwareSecureBoot() {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (!m_initialized) return SovereignResult::error("Not initialized");
 
+    // Check firmware Secure Boot state via UEFI variables
+    // In production with elevated privileges, this would:
+    // 1. Query SecureBoot UEFI variable
+    // 2. Query SetupMode UEFI variable (User/Setup mode)
+    // 3. Check PK (Platform Key) existence
+    // 4. Verify KEK (Key Exchange Key) database
+    // 5. Return detailed firmware security status
+
 #ifdef _WIN32
-    // Stub: GetFirmwareEnvironmentVariable("SecureBoot", ...)
-    return SovereignResult::error("Firmware secure boot check stub — requires elevated access");
+    // Try to read SecureBoot variable
+    // Note: This requires admin privileges on Windows
+    uint8_t secureBootState = 0;
+    uint8_t setupMode = 0;
+
+    DWORD ret = GetFirmwareEnvironmentVariableA(
+        "SecureBoot",
+        "{8BE4DF61-93CA-11d2-AA0D-00E098032B8C}", // EFI_GLOBAL_VARIABLE_GUID
+        &secureBootState,
+        sizeof(secureBootState)
+    );
+
+    if (ret == 0) {
+        DWORD error = GetLastError();
+        if (error == ERROR_INVALID_FUNCTION) {
+            return SovereignResult::error("UEFI firmware not present - Secure Boot not supported");
+        }
+        if (error == ERROR_NO_SUCH_PRIVILEGE || error == ERROR_PRIVILEGE_NOT_HELD) {
+            return SovereignResult::error("Insufficient privileges - run as administrator to check Secure Boot");
+        }
+        return SovereignResult::error("Failed to read SecureBoot variable (error: " + std::to_string(error) + ")");
+    }
+
+    // Also check SetupMode
+    ret = GetFirmwareEnvironmentVariableA(
+        "SetupMode",
+        "{8BE4DF61-93CA-11d2-AA0D-00E098032B8C}",
+        &setupMode,
+        sizeof(setupMode)
+    );
+
+    std::string status = "Secure Boot: " + std::string(secureBootState ? "ENABLED" : "DISABLED");
+    if (ret > 0) {
+        status += ", Setup Mode: " + std::string(setupMode ? "SETUP" : "USER");
+    }
+
+    return secureBootState ?
+        SovereignResult::ok("Firmware Secure Boot enabled - " + status) :
+        SovereignResult::warning("Firmware Secure Boot disabled - " + status);
 #else
-    return SovereignResult::error("Firmware secure boot check — POSIX not implemented");
+    // Linux: Check /sys/firmware/efi/efivars/SecureBoot-*
+    // SetupMode can also be read from efivars
+    return SovereignResult::error("Firmware Secure Boot check - Linux implementation requires efivarfs access");
 #endif
 }
 
