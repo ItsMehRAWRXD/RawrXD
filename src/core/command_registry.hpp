@@ -742,7 +742,7 @@ enum CmdFlags : uint32_t
     X(306, VIEW_ZOOM_OUT, "view.zoomOut", "!zoom_out", BOTH, "View", handleViewZoomOut, CMD_NONE)                      \
     X(307, VIEW_ZOOM_RESET, "view.zoomReset", "!zoom_reset", BOTH, "View", handleViewZoomReset, CMD_NONE)              \
                                                                                                                        \
-    /* ═══════════════════ IDE AI FEATURES (ide_constants.h 401-409) ═══════════════════ */                            \
+    /* ═══════════════════ IDE AI FEATURES (ide_constants.h 401-410) ═══════════════════ */                            \
     X(401, AI_INLINE_COMPLETE, "ai.inlineComplete", "!ai_complete", BOTH, "AIMode", handleAIInlineComplete,            \
       CMD_REQUIRES_FILE | CMD_REQUIRES_CARET)                                                                          \
     X(402, AI_CHAT_MODE, "ai.chatMode", "!ai_chat", BOTH, "AIMode", handleAIChatMode, CMD_NONE)                        \
@@ -757,6 +757,7 @@ enum CmdFlags : uint32_t
     X(408, AI_OPTIMIZE_CODE, "ai.optimizeCode", "!ai_optimize", BOTH, "AIMode", handleAIOptimizeCode,                  \
       CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                                 \
     X(409, AI_MODEL_SELECT, "ai.modelSelect", "!ai_model", BOTH, "AIMode", handleAIModelSelect, CMD_NONE)              \
+    X(410, AI_STOP_GENERATION, "ai.stopGeneration", "!ai_stop", BOTH, "AIMode", handleAIStopGeneration, CMD_NONE)      \
                                                                                                                        \
     /* ═══════════════════ IDE TOOLS (ide_constants.h 501-506) ═══════════════════ */                                  \
     X(501, TOOLS_CMD_PALETTE, "tools.commandPalette", "!palette", BOTH, "Tools", handleToolsCommandPalette, CMD_NONE)  \
