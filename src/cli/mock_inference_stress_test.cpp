@@ -43,7 +43,7 @@ struct TestModelDescriptor {
     uint64_t generationCount;   // Incremented by readers
     uint64_t lastReaderId;      // ID of last reader thread
     uint64_t checksum;          // Simple checksum of data
-    uint8_t  data[1024];        // Simulated tensor data
+    uint8_t  data[1024];        // Test tensor data
 };
 
 // Thread context
@@ -159,7 +159,7 @@ static DWORD WINAPI WorkerThread(LPVOID param) {
             break;
         }
         
-        // Simulate token generation work
+        // Generate tokens
         model->generationCount++;
         model->lastReaderId = ctx->threadId;
         

@@ -96,9 +96,10 @@ public:
     void compressModelData(uint8_t* data, size_t size);
     void authenticateSiliconIntegrity();
 
-private:
-    // Theme and styling
+    // Theme and styling (public for deferred application post-WM_CREATE)
     void applySovereignTheme();
+
+private:
 
     // UI updates
     void rebuildTabControl();

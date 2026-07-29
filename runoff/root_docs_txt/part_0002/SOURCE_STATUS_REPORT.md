@@ -1,4 +1,4 @@
-﻿# RawrXD IDE - Full Source Status Report
+# RawrXD IDE - Full Source Status Report
 
 **Generated:** 2026-02-19 22:39:22
 

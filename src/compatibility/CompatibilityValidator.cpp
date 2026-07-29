@@ -237,7 +237,7 @@ ValidationResult CompatibilityValidator::TestALiBiInitialization(const std::stri
 ValidationResult CompatibilityValidator::TestInference(const std::string& ggufPath) {
     return RunTest("Inference", [&]() -> bool {
         // This test would require a full model load and inference run
-        // For now, we just verify the model can be loaded
+        // Verify the model can be loaded
         GGUFCompatibilityLoader loader;
         if (!loader.Load(ggufPath)) {
             return false;

@@ -11,6 +11,7 @@
 #include <chrono>
 #include <random>
 #include <cmath>
+#include <cstring>
 #include "../validation/kernels/TreeAttentionFusedVAL038.hpp"
 
 using namespace RawrXD;
@@ -115,10 +116,25 @@ bool TestCorrectness() {
     InitializeMatrix(V.data(), NUM_K, HEAD_DIM, 44);
     InitializeTreeMask(treeMask.data(), NUM_Q, NUM_K);
     
+    // DEBUG: Print before kernel call
+    printf("  DEBUG: About to call kernel...\n");
+    fflush(stdout);
+    
     // Run AVX-512 kernel
     TreeAttentionFusedVAL038 kernel;
     kernel.Compute(output_avx.data(), Q.data(), K.data(), V.data(),
                    NUM_Q, NUM_K, treeMask.data());
+    
+    // DEBUG: Print after kernel call
+    printf("  DEBUG: Kernel returned!\n");
+    fflush(stdout);
+    
+    // DEBUG: Print first few output values to see if kernel wrote markers
+    printf("  DEBUG: output[0] = 0x%08X (float: %f)\n", 
+           *(uint32_t*)&output_avx[0], output_avx[0]);
+    printf("  DEBUG: output[1] = 0x%08X (float: %f)\n", 
+           *(uint32_t*)&output_avx[1], output_avx[1]);
+    fflush(stdout);
     
     // Run reference
     ReferenceAttention(output_ref.data(), Q.data(), K.data(), V.data(),

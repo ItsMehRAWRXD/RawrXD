@@ -195,7 +195,7 @@ void BreakpointGutter::SyncWithBackend(DebugSession* session) {
     m_bpCount = 0;
     for (const auto& bp : bps) {
         // Convert address to line (requires symbol info)
-        // For now, just store the address as a pseudo-line
+        // Current implementation stores the address as a pseudo-line
         if (m_bpCount >= m_bpCapacity) GrowBreakpointArray();
         m_breakLines[m_bpCount++] = (int)(bp.address & 0xFFFFFFFF);
     }

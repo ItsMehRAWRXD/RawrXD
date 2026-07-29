@@ -466,8 +466,53 @@ bool LLMTLSBridge::load_client_certificate(const std::string& cert_path, const s
     return cert.is_open() && key.is_open();
 }
 
-bool LLMTLSBridge::pin_certificate(const std::string& fingerprint) { return true; }
-bool LLMTLSBridge::verify_certificate(const CertificateInfo& cert) { return true; }
+bool LLMTLSBridge::pin_certificate(const std::string& fingerprint) {
+    // Store the pinned certificate fingerprint (SHA-256)
+    pinned_fingerprint_ = fingerprint;
+    
+    // Remove colons if present for consistent comparison
+    pinned_fingerprint_.erase(
+        std::remove(pinned_fingerprint_.begin(), pinned_fingerprint_.end(), ':'),
+        pinned_fingerprint_.end()
+    );
+    
+    // Convert to lowercase for case-insensitive comparison
+    std::transform(pinned_fingerprint_.begin(), pinned_fingerprint_.end(), 
+                   pinned_fingerprint_.begin(), ::tolower);
+    
+    return !pinned_fingerprint_.empty();
+}
+
+bool LLMTLSBridge::verify_certificate(const CertificateInfo& cert) {
+    // Check if certificate has expired
+    auto now = std::chrono::system_clock::now();
+    if (now < cert.not_before || now > cert.not_after) {
+        return false; // Certificate not yet valid or expired
+    }
+    
+    // Check certificate pinning if a fingerprint is pinned
+    if (!pinned_fingerprint_.empty()) {
+        std::string cert_fp = cert.fingerprint_sha256;
+        // Remove colons and convert to lowercase for comparison
+        cert_fp.erase(std::remove(cert_fp.begin(), cert_fp.end(), ':'), cert_fp.end());
+        std::transform(cert_fp.begin(), cert_fp.end(), cert_fp.begin(), ::tolower);
+        
+        if (cert_fp != pinned_fingerprint_) {
+            return false; // Certificate fingerprint doesn't match pinned value
+        }
+    }
+    
+    // Check if certificate is self-signed (potential security risk)
+    if (cert.is_self_signed && pinned_fingerprint_.empty()) {
+        // Self-signed certificates are only allowed if explicitly pinned
+        return false;
+    }
+    
+    // Verify certificate chain would go here in a full implementation
+    // This would involve checking the issuer chain up to a trusted root
+    
+    return true;
+}
 void LLMTLSBridge::set_progress_callback(std::function<void(float)> callback) { progress_callback_ = callback; }
 
 std::map<std::string, std::string> LLMTLSBridge::analyze_openai_protocol() {

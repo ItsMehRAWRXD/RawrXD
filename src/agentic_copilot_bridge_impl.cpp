@@ -309,8 +309,8 @@ json AgenticCopilotBridge::trainModel(const std::string& datasetPath, const std:
 bool AgenticCopilotBridge::isTrainingModel() const
 {
     if (!m_executor) return false;
-    // Check training status via executor
-    return false;
+    // Delegate to executor to check training status
+    return m_executor->isTrainingModel();
 }
 
 // ========== PRODUCTION FEATURES: UI DISPLAY ==========

@@ -202,7 +202,7 @@ These widgets were built and tested standalone *before* IDE integration. They de
 2. Which are partially implemented (some UI but missing functionality)
 3. Which are stubs (QLabel placeholders with "Coming Soon")
 
-**Expected Outcome**: Clear roadmap showing what's real code vs. fictional code, with estimated effort to complete each placeholder.
+**Expected Outcome**: Clear roadmap showing what's real code vs. unteleprompted code, with estimated effort to complete each placeholder.
 
 ---
 

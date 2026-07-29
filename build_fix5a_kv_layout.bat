@@ -79,12 +79,31 @@ if errorlevel 1 (
 echo     OK: RawrXD_Fix5A.lib
 
 echo.
+echo [4/4] Compiling test executable...
+cl ^
+    /O2 ^
+    /std:c++20 ^
+    /EHsc ^
+    /arch:AVX512 ^
+    /I src ^
+    tests\test_fix5a_kv_cache.cpp ^
+    bin\RawrXD_Fix5A.lib ^
+    /Fe:bin\test_fix5a_kv_cache.exe
+
+if errorlevel 1 (
+    echo ERROR: Test compilation failed
+    exit /b 1
+)
+echo     OK: test_fix5a_kv_cache.exe
+
+echo.
 echo ============================================================================
 echo Fix 5A Build Complete
 echo ============================================================================
 echo.
 echo Artifacts:
 echo   bin\RawrXD_Fix5A.lib
+echo   bin\test_fix5a_kv_cache.exe
 echo.
 echo Next steps:
 echo   1. Run validation: bin\test_fix5a_kv_cache.exe --verify-alignment

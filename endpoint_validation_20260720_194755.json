@@ -1,0 +1,402 @@
+[
+  {
+    "Path": "/api/status",
+    "Duration": 2040.41,
+    "Method": "GET",
+    "Category": "Status",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/tags",
+    "Duration": 2022.58,
+    "Method": "GET",
+    "Category": "Models",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/full-state",
+    "Duration": 2029.49,
+    "Method": "GET",
+    "Category": "State",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/memory/stats",
+    "Duration": 2269.54,
+    "Method": "GET",
+    "Category": "Memory",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/memory/status",
+    "Duration": 2110.12,
+    "Method": "GET",
+    "Category": "Memory",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/ws-stats",
+    "Duration": 2066.3,
+    "Method": "GET",
+    "Category": "WebSocket",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/cot/health",
+    "Duration": 2075.15,
+    "Method": "GET",
+    "Category": "CoT",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/cot/metrics",
+    "Duration": 2016.13,
+    "Method": "GET",
+    "Category": "CoT",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agents",
+    "Duration": 2058.65,
+    "Method": "GET",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agents/status",
+    "Duration": 2016.28,
+    "Method": "GET",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agents/history",
+    "Duration": 2038.95,
+    "Method": "GET",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies",
+    "Duration": 2032.04,
+    "Method": "GET",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/suggestions",
+    "Duration": 2030.53,
+    "Method": "GET",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/stats",
+    "Duration": 2040.66,
+    "Method": "GET",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/heuristics",
+    "Duration": 2039.81,
+    "Method": "GET",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/backends",
+    "Duration": 2034.11,
+    "Method": "GET",
+    "Category": "Backends",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/backends/status",
+    "Duration": 2157.47,
+    "Method": "GET",
+    "Category": "Backends",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agentic/config",
+    "Duration": 2043.98,
+    "Method": "GET",
+    "Category": "Config",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/gpu/status",
+    "Duration": 2020.48,
+    "Method": "GET",
+    "Category": "GPU",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/tuner/status",
+    "Duration": 2019.25,
+    "Method": "GET",
+    "Category": "Tuner",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/generate",
+    "Duration": 2013.72,
+    "Method": "POST",
+    "Category": "Generation",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/v1/chat/completions",
+    "Duration": 2029.99,
+    "Method": "POST",
+    "Category": "Chat",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/chat",
+    "Duration": 2031.37,
+    "Method": "POST",
+    "Category": "Chat",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/complete",
+    "Duration": 2037.53,
+    "Method": "POST",
+    "Category": "Completion",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/complete/stream",
+    "Duration": 2035.83,
+    "Method": "POST",
+    "Category": "Streaming",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/pull",
+    "Duration": 2020.85,
+    "Method": "POST",
+    "Category": "Models",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/command",
+    "Duration": 2031.5,
+    "Method": "POST",
+    "Category": "Command",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/cot",
+    "Duration": 2026.64,
+    "Method": "POST",
+    "Category": "CoT",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/read-file",
+    "Duration": 2031.93,
+    "Method": "POST",
+    "Category": "Files",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/reasoning/depth",
+    "Duration": 2027.84,
+    "Method": "POST",
+    "Category": "Reasoning",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/reasoning/preset",
+    "Duration": 2051.26,
+    "Method": "POST",
+    "Category": "Reasoning",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agent/bulkfix",
+    "Duration": 2159.54,
+    "Method": "POST",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agent/plan",
+    "Duration": 2044.26,
+    "Method": "POST",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agents/replay",
+    "Duration": 2082.74,
+    "Method": "POST",
+    "Category": "Agents",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/apply",
+    "Duration": 2100.22,
+    "Method": "POST",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/reject",
+    "Duration": 2062.11,
+    "Method": "POST",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/policies/import",
+    "Duration": 2044.52,
+    "Method": "POST",
+    "Category": "Policies",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/backends/use",
+    "Duration": 2040.33,
+    "Method": "POST",
+    "Category": "Backends",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/agentic/config",
+    "Duration": 2253.12,
+    "Method": "POST",
+    "Category": "Config",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  },
+  {
+    "Path": "/api/gpu/toggle",
+    "Duration": 2078.97,
+    "Method": "POST",
+    "Category": "GPU",
+    "Error": null,
+    "HttpStatus": 200,
+    "Status": "PASS",
+    "ExpectedStatus": 200
+  }
+]

@@ -43,10 +43,16 @@ InferenceResponse InferenceGateway::execute(const InferenceRequest& request) {
     profile.allowRemote = request.allowRemote.value_or(
         mode == RuntimeMode::FullyDistributed);
 
-    // Step 3: Policy decision
+    // Step 3: Policy decision with actual availability detection
     auto& policyRouter = GetGlobalPolicyRouter();
+    
+    // Check actual backend availability
+    bool localGGUFAvailable = checkLocalGGUFAvailability(request.model);
+    bool localOllamaAvailable = checkLocalOllamaAvailability();
+    bool remoteCloudAvailable = profile.allowRemote && checkRemoteCloudAvailability();
+    
     ExecutionPath path = policyRouter.decideExecutionPath(
-        request.model, profile, true, false); // TODO: detect actual availability
+        request.model, profile, localGGUFAvailable, localOllamaAvailable, remoteCloudAvailable);
 
     response.executionPath = path;
     response.routingLog = policyRouter.getLastDecisionLog();
@@ -106,22 +112,29 @@ void InferenceGateway::executeStream(const InferenceRequest& request,
                                       StreamCallback callback) {
     if (!callback) return;
 
-    // For now, execute synchronously and simulate streaming
-    // TODO: Implement true streaming through policy router
-    auto response = execute(request);
+    // True streaming through policy router
+    auto& policyRouter = GetGlobalPolicyRouter();
     
-    if (response.success) {
-        // Simulate chunking
-        const std::string& text = response.text;
-        size_t pos = 0;
-        while (pos < text.size()) {
-            size_t chunkSize = std::min(size_t(10), text.size() - pos);
-            callback(text.substr(pos, chunkSize), false);
-            pos += chunkSize;
-        }
-        callback("", true);
-    } else {
-        callback("Error: " + response.error, true);
+    ModelExecutionProfile profile;
+    profile.runtimeMode = RuntimeMode::LocalOnly;
+    profile.allowLocal = true;
+    profile.allowRemote = false;
+    
+    bool localGGUFAvailable = checkLocalGGUFAvailability(request.model);
+    bool localOllamaAvailable = checkLocalOllamaAvailability();
+    
+    ExecutionPath path = policyRouter.decideExecutionPath(
+        request.model, profile, localGGUFAvailable, localOllamaAvailable, false);
+    
+    switch (path) {
+        case ExecutionPath::LOCAL_GGUF:
+            executeLocalGGUFStreaming(request, callback);
+            break;
+        case ExecutionPath::LOCAL_OLLAMA:
+            executeLocalOllamaStreaming(request, callback);
+            break;
+        default:
+            callback("Error: No streaming backend available", true);
     }
 }
 
@@ -162,10 +175,29 @@ bool InferenceGateway::validateRequest(const InferenceRequest& request,
 InferenceResponse InferenceGateway::executeLocalGGUF(const InferenceRequest& request) {
     InferenceResponse response;
     
-    // TODO: Integrate with actual GGUF loader
-    // For now, fall through to Ollama
-    fprintf(stderr, "[InferenceGateway] LOCAL_GGUF not yet wired, falling back to Ollama\n");
-    return executeLocalOllama(request);
+    // Integrate with actual GGUF loader
+    GGUFLoader loader;
+    if (!loader.Open(request.model)) {
+        response.success = false;
+        response.error = "Failed to load GGUF model: " + request.model;
+        return response;
+    }
+    
+    // Load weights and run inference
+    if (!loader.LoadWeights()) {
+        response.success = false;
+        response.error = "Failed to load weights from: " + request.model;
+        return response;
+    }
+    
+    // Run inference through the loaded model
+    std::string result = loader.Generate(request.prompt, request.maxTokens, request.temperature);
+    
+    response.success = true;
+    response.text = result;
+    response.executionPath = ExecutionPath::LOCAL_GGUF;
+    
+    return response;
 }
 
 InferenceResponse InferenceGateway::executeLocalOllama(const InferenceRequest& request) {

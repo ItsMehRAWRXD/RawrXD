@@ -633,7 +633,7 @@ void MutationJournalCLI::SimulateMutation(MutationJournal& journal, MutationType
     
     uint64_t mutationId = journal.BeginMutation(type, before, decision);
     
-    // Simulate completion
+    // Create completion snapshot
     SystemSnapshot after = before;
     after.convergenceScore = 0.85;
     

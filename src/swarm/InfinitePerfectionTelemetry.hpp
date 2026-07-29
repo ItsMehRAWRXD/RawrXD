@@ -17,9 +17,6 @@
 #include <sqlite3.h>
 #include <iostream>
 
-namespace Sovereign {
-
-// Forward declaration
 namespace InfinitePerfection { class InfinitePerfectionEngine; }
 
 /**

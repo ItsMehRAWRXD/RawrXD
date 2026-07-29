@@ -1,4 +1,4 @@
-﻿# GPU Kernel Variant Benchmark — Real Inference
+# GPU Kernel Variant Benchmark — Real Inference
 
 **Date**: 2026-05-05 05:53:15  
 **Model**: phi3mini.gguf (3.8B, Q2_K)  

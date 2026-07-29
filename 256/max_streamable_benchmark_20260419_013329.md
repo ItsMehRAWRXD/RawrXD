@@ -1,4 +1,4 @@
-﻿# Max Streamable Benchmark
+# Max Streamable Benchmark
 
 - Generated UTC: 2026-04-19T05:33:29.7045681Z
 - Scanned models: 1

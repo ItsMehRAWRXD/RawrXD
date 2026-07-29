@@ -188,8 +188,43 @@ void TraceValidator::ExportTrace(const char* filename) const {
 }
 
 bool TraceValidator::ImportTrace(const char* filename) {
-    // TODO: Implement JSON import
-    return false;
+    if (!filename) return false;
+    
+    std::ifstream file(filename);
+    if (!file) {
+        fprintf(stderr, "Failed to open trace file: %s\n", filename);
+        return false;
+    }
+    
+    // Read JSON content
+    std::string jsonStr((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    
+    // Parse trace entries from JSON
+    trace_.clear();
+    
+    // Simple JSON parsing - look for entry objects
+    size_t pos = 0;
+    while ((pos = jsonStr.find("{", pos)) != std::string::npos) {
+        TraceEntry entry{};
+        
+        // Extract PC
+        size_t pcPos = jsonStr.find("\"pc\":");
+        if (pcPos != std::string::npos) {
+            entry.pc = std::stoull(jsonStr.substr(pcPos + 5));
+        }
+        
+        // Extract opcode
+        size_t opPos = jsonStr.find("\"opcode\":");
+        if (opPos != std::string::npos) {
+            entry.opcode = static_cast<uint8_t>(std::stoul(jsonStr.substr(opPos + 9)));
+        }
+        
+        trace_.push_back(entry);
+        pos++;
+    }
+    
+    return !trace_.empty();
 }
 
 bool TraceValidator::CompareTraces(const TraceValidator& other) const {

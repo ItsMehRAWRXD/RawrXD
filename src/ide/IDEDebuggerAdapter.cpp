@@ -164,7 +164,8 @@ bool IDEDebuggerAdapter::ToggleBreakpoint(const std::wstring& filePath, uint32_t
     }
     
     // Add new
-    return debugSession_->SetBreakpoint(filePath, lineNumber);
+    auto bp = debugSession_->SetBreakpoint(filePath, lineNumber);
+    return bp.has_value();
 }
 
 bool IDEDebuggerAdapter::RemoveBreakpoint(uint64_t breakpointId) {
@@ -186,24 +187,17 @@ void IDEDebuggerAdapter::ClearAllBreakpoints() {
 
 std::vector<Debugger::StackFrame> IDEDebuggerAdapter::GetCallStack() {
     if (!debugSession_) return {};
-    debugSession_->RefreshStackFrames();
-    // Return empty for now - would populate from DebugSession
-    return {};
+    return debugSession_->GetCallStack();
 }
 
 std::vector<Debugger::RegisterValue> IDEDebuggerAdapter::GetRegisters() {
     if (!debugSession_) return {};
-    debugSession_->RefreshRegisters();
-    // Return empty for now - would populate from DebugSession
-    return {};
+    return debugSession_->GetRegisters();
 }
 
 std::vector<Debugger::LocalVariable> IDEDebuggerAdapter::GetLocalVariables(uint32_t frameNumber) {
     if (!debugSession_) return {};
-    debugSession_->RefreshLocalVariables();
-    (void)frameNumber;
-    // Return empty for now - would populate from DebugSession
-    return {};
+    return debugSession_->GetLocalVariables(frameNumber);
 }
 
 /*===========================================================================

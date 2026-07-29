@@ -373,13 +373,118 @@ bool OllamaClient::makeStreamingPostRequest(const std::string& endpoint,
                                            ErrorCallback on_error,
                                            CompletionCallback on_complete) {
     // Streaming implementation using WinHTTP
-    // For now, fall back to sync mode
-    OllamaResponse resp;
-    resp.response = makePostRequest(endpoint, json_body);
-    resp.done = true;
+    HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0",
+                                     WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                     WINHTTP_NO_PROXY_NAME,
+                                     WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        if (on_error) on_error("Failed to create HTTP session");
+        return false;
+    }
     
-    if (on_chunk) on_chunk(resp.response);
-    if (on_complete) on_complete(resp);
+    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 11434, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        if (on_error) on_error("Failed to connect to Ollama server");
+        return false;
+    }
+    
+    std::wstring wendpoint(endpoint.begin(), endpoint.end());
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", wendpoint.c_str(),
+                                           NULL, WINHTTP_NO_REFERER,
+                                           WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        if (on_error) on_error("Failed to create HTTP request");
+        return false;
+    }
+    
+    std::wstring headers = L"Content-Type: application/json\r\n";
+    
+    BOOL bResults = WinHttpSendRequest(hRequest,
+                                       headers.c_str(), -1,
+                                       (LPVOID)json_body.c_str(), json_body.length(),
+                                       json_body.length(), 0);
+    
+    if (!bResults) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        if (on_error) on_error("Failed to send HTTP request");
+        return false;
+    }
+    
+    bResults = WinHttpReceiveResponse(hRequest, NULL);
+    
+    if (!bResults) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        if (on_error) on_error("Failed to receive HTTP response");
+        return false;
+    }
+    
+    // Stream the response
+    DWORD dwSize = 0;
+    DWORD dwDownloaded = 0;
+    std::string accumulated;
+    
+    do {
+        dwSize = 0;
+        if (WinHttpQueryDataAvailable(hRequest, &dwSize)) {
+            if (dwSize == 0) break;
+            
+            char* pszOutBuffer = new char[dwSize + 1];
+            ZeroMemory(pszOutBuffer, dwSize + 1);
+            
+            if (WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded)) {
+                accumulated.append(pszOutBuffer, dwDownloaded);
+                
+                // Process streaming JSON lines (Ollama sends NDJSON)
+                size_t pos = 0;
+                while ((pos = accumulated.find('\n')) != std::string::npos) {
+                    std::string line = accumulated.substr(0, pos);
+                    accumulated.erase(0, pos + 1);
+                    
+                    if (!line.empty() && on_chunk) {
+                        try {
+                            json j = json::parse(line);
+                            if (j.contains("response")) {
+                                on_chunk(j["response"].get<std::string>());
+                            }
+                        } catch (...) {
+                            // Skip malformed JSON lines
+                        }
+                    }
+                }
+            }
+            
+            delete[] pszOutBuffer;
+        }
+    } while (dwSize > 0);
+    
+    // Process any remaining data
+    if (!accumulated.empty() && on_chunk) {
+        try {
+            json j = json::parse(accumulated);
+            if (j.contains("response")) {
+                on_chunk(j["response"].get<std::string>());
+            }
+        } catch (...) {
+            // Skip malformed JSON
+        }
+    }
+    
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    
+    if (on_complete) {
+        OllamaResponse resp;
+        resp.done = true;
+        on_complete(resp);
+    }
     
     return true;
 }

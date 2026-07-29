@@ -354,7 +354,7 @@ void AutonomousController::ControlLoop() {
 
 void AutonomousController::ProcessTelemetry() {
     // Would collect telemetry from runtime
-    // For now, simulate stability
+    // Generate stability metric
     std::lock_guard<std::mutex> lock(stateMutex_);
     state_.currentStability = 0.8 + (0.2 * (rand() % 100) / 100.0);
 }

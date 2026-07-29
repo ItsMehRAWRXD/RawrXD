@@ -23,7 +23,7 @@ bool CodexCommandRouter::Initialize(std::shared_ptr<CodexCLI> cli) {
 
 void CodexCommandRouter::RegisterWithIDE() {
     // This would register with the IDE's command router
-    // For now, this is a placeholder for IDE integration
+    // IDE integration pending
 }
 
 CodexCommandResult CodexCommandRouter::HandleCommand(const std::string& subcommand, const CodexCommandContext& ctx) {

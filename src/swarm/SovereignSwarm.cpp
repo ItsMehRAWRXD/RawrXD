@@ -2325,16 +2325,28 @@ void SelfModelRegistry::ResetStatistics() {
 namespace SwarmUtils {
 
 std::vector<std::string> GetAvailableModels(const ModelRegistry& registry) {
-    // Stub - would query actual registry
-    return {
-        "nemotron-super:latest",
-        "qwen3.5:40b",
-        "codestral:22b",
-        "deepseek-r1:8b",
-        "gemma3:27b",
-        "bigdaddyg:38gb",
-        "llama3.2:3b"
-    };
+    std::vector<std::string> models;
+    
+    // Query actual registry if available
+    if (registry.IsInitialized()) {
+        auto registeredModels = registry.GetAllModelNames();
+        models.insert(models.end(), registeredModels.begin(), registeredModels.end());
+    }
+    
+    // Fallback to defaults if registry is empty
+    if (models.empty()) {
+        models = {
+            "nemotron-super:latest",
+            "qwen3.5:40b",
+            "codestral:22b",
+            "deepseek-r1:8b",
+            "gemma3:27b",
+            "bigdaddyg:38gb",
+            "llama3.2:3b"
+        };
+    }
+    
+    return models;
 }
 
 std::string RecommendModelForRole(ModelRole role, const std::vector<std::string>& availableModels) {
@@ -2364,8 +2376,21 @@ bool ValidateRoleModelConfig(const RoleModelConfig& config) {
 
 } // namespace Sovereign
 
-// C-compatible stub for kernel table initialization
+// C-compatible implementation for kernel table initialization
 extern "C" int Sovereign_InitKernelTable() {
-    // Stub implementation - kernel table initialization
+    // Initialize the kernel dispatch table
+    static bool initialized = false;
+    if (initialized) {
+        return 0; // Already initialized
+    }
+    
+    // Register core kernel operations
+    KernelTable& table = KernelTable::Instance();
+    table.RegisterOperation("matmul", &Kernel_MatMul);
+    table.RegisterOperation("attention", &Kernel_Attention);
+    table.RegisterOperation("layernorm", &Kernel_LayerNorm);
+    table.RegisterOperation("activation", &Kernel_Activation);
+    
+    initialized = true;
     return 0; // Success
 }

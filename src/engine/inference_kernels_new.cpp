@@ -103,7 +103,7 @@ void InferenceKernels::rope_avx512(float* q, float* k, int head_dim, int pos, fl
 }
 
 void InferenceKernels::matmul_f16_avx512(const uint16_t* A, const uint16_t* B, float* C, int M, int N, int K) {
-    // Simplified F16 matmul - in production would use vectorized instructions
+    // Basic F16 matmul - production would use vectorized instructions
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             float sum = 0.0f;

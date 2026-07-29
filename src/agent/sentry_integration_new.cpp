@@ -60,7 +60,7 @@ bool SentryIntegration::initialize() {
     if (m_dsn.empty()) return false;
 
     // Parse DSN: https://public@sentry.example.com/1
-    // Simplified parsing
+    // Extract components from DSN URL
     size_t atPos = m_dsn.find('@');
     size_t slashPos = m_dsn.rfind('/');
     if (atPos == std::string::npos || slashPos == std::string::npos) return false;

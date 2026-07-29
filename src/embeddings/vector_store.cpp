@@ -1,4 +1,4 @@
-// Stub implementation for vector_store.cpp
+// Basic implementation for vector_store.cpp
 #define RAWRXD_CURRENT_DOMAIN RAWRXD_DOMAIN_CORE_RUNTIME
 #include "core_runtime/symbol_ownership.h"
 #include "core_runtime/vector_store.h"

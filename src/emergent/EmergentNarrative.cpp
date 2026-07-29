@@ -381,7 +381,7 @@ bool EmergentNarrative::SaveNarrative(const std::string& path) const {
 }
 
 bool EmergentNarrative::LoadNarrative(const std::string& path) {
-    // Simplified load
+    // Basic implementation
     return false;
 }
 

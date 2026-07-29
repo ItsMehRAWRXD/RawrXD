@@ -486,7 +486,37 @@ LRESULT CALLBACK ModelPanel_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             int width = LOWORD(lParam);
             int height = HIWORD(lParam);
             
-            // TODO: Implement proper resizing
+            // Resize model list
+            HWND hList = GetDlgItem(hWnd, IDC_MODEL_LIST);
+            if (hList) {
+                SetWindowPos(hList, nullptr, 10, 10, width - 20, height - 100, 
+                            SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+            
+            // Position buttons at bottom
+            int btnY = height - 80;
+            int btnWidth = 120;
+            int btnHeight = 30;
+            int spacing = 10;
+            
+            HWND hBtnRefresh = GetDlgItem(hWnd, IDC_BTN_REFRESH);
+            if (hBtnRefresh) {
+                SetWindowPos(hBtnRefresh, nullptr, 10, btnY, btnWidth, btnHeight,
+                            SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+            
+            HWND hBtnSetDefault = GetDlgItem(hWnd, IDC_BTN_SET_DEFAULT);
+            if (hBtnSetDefault) {
+                SetWindowPos(hBtnSetDefault, nullptr, 10 + btnWidth + spacing, btnY, 
+                            btnWidth, btnHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+            
+            HWND hBtnSwitch = GetDlgItem(hWnd, IDC_BTN_SWITCH);
+            if (hBtnSwitch) {
+                SetWindowPos(hBtnSwitch, nullptr, 10 + 2*(btnWidth + spacing), btnY,
+                            btnWidth, btnHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+            
             return 0;
         }
         

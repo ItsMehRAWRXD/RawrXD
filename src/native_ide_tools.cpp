@@ -219,9 +219,18 @@ ToolRegistry& ToolRegistry::Instance() {
     return instance;
 }
 
-ToolRegistry::ToolRegistry() {}
+ToolRegistry::ToolRegistry()
+    : auditEnabled_(false)
+{}
 
-ToolRegistry::~ToolRegistry() {}
+ToolRegistry::~ToolRegistry() {
+    // Cleanup: clear all tool data and audit logs
+    std::lock_guard<std::mutex> lock(mutex_);
+    tools_.clear();
+    callCounts_.clear();
+    lastCallTimes_.clear();
+    auditLog_.clear();
+}
 
 void ToolRegistry::RegisterTool(const ToolDefinition& tool) {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1396,7 +1405,10 @@ FileExplorer::FileExplorer(const std::string& rootPath) : rootPath_(rootPath), s
     LoadDirectory(currentPath_);
 }
 
-FileExplorer::~FileExplorer() {}
+FileExplorer::~FileExplorer() {
+    // Cleanup: clear directory entries to release memory
+    entries_.clear();
+}
 
 void FileExplorer::NavigateTo(const std::string& path) {
     currentPath_ = path;
@@ -1476,9 +1488,18 @@ void FileExplorer::LoadDirectory(const std::string& path) {
 // ============================================================================
 // Code Navigator Implementation
 // ============================================================================
-CodeNavigator::CodeNavigator() {}
+CodeNavigator::CodeNavigator()
+    : symbols_()
+    , references_()
+    , indexedFiles_()
+{}
 
-CodeNavigator::~CodeNavigator() {}
+CodeNavigator::~CodeNavigator() {
+    // Cleanup: clear all indexed data
+    symbols_.clear();
+    references_.clear();
+    indexedFiles_.clear();
+}
 
 void CodeNavigator::IndexFile(const std::string& path) {
     ParseFileForSymbols(path);
@@ -1572,7 +1593,11 @@ void CodeNavigator::ParseFileForSymbols(const std::string& path) {
 Autopilot::Autopilot() : autonomyLevel_(1), requireApprovalFileWrite_(true), 
                          requireApprovalTerminal_(true), requireApprovalGit_(true) {}
 
-Autopilot::~Autopilot() {}
+Autopilot::~Autopilot() {
+    // Cleanup: clear all tasks and reset state
+    tasks_.clear();
+    currentTask_ = nullptr;
+}
 
 void Autopilot::AddTask(const std::string& description) {
     Task task;

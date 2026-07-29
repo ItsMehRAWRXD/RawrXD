@@ -642,8 +642,7 @@ SourceLocation AutonomousRecoveryOrchestrator::symbolizeAddress(uintptr_t addr) 
     // we can do a direct name-based lookup instead of address-based.
 
     // Address-based symbolization requires DIA SDK or CV line info parsing.
-    // For now, provide the RVA so higher-level code can correlate with
-    // the PE section map.
+    // Provide the RVA so higher-level code can correlate with the PE section map.
     loc.rva = static_cast<uint32_t>(addr);
 
     // If the GSI table is valid, attempt lookup

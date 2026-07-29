@@ -1,0 +1,24 @@
+# ninja log v6
+5	1053	8064798690744100	CMakeFiles/ValidationRunner.dir/ValidationGate_Master.cpp.obj	b3810e1bb2c24ada
+45	1037	8064798691141591	CMakeFiles/ValidationRunner.dir/gates/VAL004_KVCacheGate.cpp.obj	76106fc0b31c1207
+87	1024	8064798691567402	CMakeFiles/ValidationRunner.dir/gates/VAL010_Through_VAL023.cpp.obj	171aab78a7cb070
+21	1023	8064798690898737	CMakeFiles/ValidationRunner.dir/gates/VAL001_CoreInferenceGate.cpp.obj	230f23ed54d0eef1
+3	192	8064814819953933	build.ninja	542ba1aacd23cb61
+3	192	8064814819928692	D:/rawrxd/src/validation/build-validation/kernels/cmake_install.cmake	542ba1aacd23cb61
+29	981	8064798690984966	CMakeFiles/ValidationRunner.dir/gates/VAL002_ModelLoadingGate.cpp.obj	d5f1626a50c8a7ed
+3	658	8064811932772796	ValidationRunner.exe	92e9bf881481814b
+67	1327	8064798691354388	CMakeFiles/ValidationRunner.dir/gates/VAL007_MemoryManagementGate.cpp.obj	aadfee48b1466210
+3	192	8064814819883279	D:/rawrxd/src/validation/build-validation/cmake_install.cmake	542ba1aacd23cb61
+37	973	8064798691070970	CMakeFiles/ValidationRunner.dir/gates/VAL003_TokenizerGate.cpp.obj	c86a6b91218abae3
+95	1329	8064798691643172	CMakeFiles/ValidationRunner.dir/gates/VAL039_Plus_Gates.cpp.obj	c83b3ae1d8fdc655
+3	516	8064811736744087	CMakeFiles/ValidationRunner.dir/ValidationRunner.cpp.obj	be69f8f15e878eab
+52	980	8064798691206624	CMakeFiles/ValidationRunner.dir/gates/VAL005_SamplingGate.cpp.obj	722ec446cf14b3a
+19	1689	8064811736908757	CMakeFiles/ValidationRunner.dir/gates/VAL051_Through_VAL060_Win32IDE.cpp.obj	1ca7a71b9be2977d
+81	980	8064798691491122	CMakeFiles/ValidationRunner.dir/gates/VAL009_ErrorHandlingGate.cpp.obj	300f76751ca2ce37
+11	530	8064811736832842	CMakeFiles/ValidationRunner.dir/gates/VAL006_QuantizationGate.cpp.obj	14321fa61a29b142
+74	1491	8064798691430569	CMakeFiles/ValidationRunner.dir/gates/VAL008_ThreadingGate.cpp.obj	23d329e07d812447
+3	176	8064814819953933	build.ninja	542ba1aacd23cb61
+3	176	8064814819953933	D:/rawrxd/src/validation/build-validation/cmake_install.cmake	542ba1aacd23cb61
+3	176	8064814819953933	D:/rawrxd/src/validation/build-validation/kernels/cmake_install.cmake	542ba1aacd23cb61
+3	518	8064814820225423	CMakeFiles/ValidationRunner.dir/ValidationRunner.cpp.obj	be69f8f15e878eab
+10	1842	8064814820304689	CMakeFiles/ValidationRunner.dir/gates/VAL051_Through_VAL060_Win32IDE.cpp.obj	1ca7a71b9be2977d

@@ -19,6 +19,14 @@
 #  define RAWRXD_RESTORE_INFO_MACRO
 #endif
 
+// Undefine again — standard headers (<mutex> on MSVC) may re-define them
+#ifdef ERROR
+#  undef ERROR
+#endif
+#ifdef INFO
+#  undef INFO
+#endif
+
 namespace RawrXD::Logging {
 
 enum class LogLevel {

@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "description": "RawrXD Dual GPU Configuration",
+  "gpu_settings": {
+    "primary_device": 0,
+    "secondary_device": 1,
+    "memory_split_ratio": 50,
+    "enable_p2p": true,
+    "enable_nccl": false,
+    "sync_mode": "automatic",
+    "failover_enabled": true
+  },
+  "performance_targets": {
+    "min_throughput_tokens_per_sec": 100.0,
+    "max_latency_ms": 100.0,
+    "min_scaling_efficiency_percent": 75.0,
+    "max_memory_utilization_percent": 90.0,
+    "max_temperature_celsius": 85.0
+  },
+  "validation_tests": {
+    "enumerate_gpus": true,
+    "test_p2p_access": true,
+    "test_memory_split": true,
+    "test_load_balancing": true,
+    "test_synchronization": true,
+    "test_failover": true,
+    "measure_throughput": true,
+    "measure_latency": true
+  },
+  "supported_gpus": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4080",
+    "NVIDIA GeForce RTX 3090",
+    "NVIDIA GeForce RTX 3080",
+    "NVIDIA A100",
+    "NVIDIA A6000",
+    "NVIDIA H100"
+  ],
+  "cuda_settings": {
+    "min_version": "11.8",
+    "preferred_version": "12.1",
+    "enable_tf32": true,
+    "enable_fp16": true,
+    "enable_bf16": true
+  }
+}

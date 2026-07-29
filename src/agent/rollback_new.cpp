@@ -6,9 +6,8 @@
 #include <string>
 #include <nlohmann/json.hpp>
 
-// Assuming WinHTTP helper is available (e.g. from a shared utility or copied)
-// For now I'll use a mocked/simplified http post or system call if needed, 
-// or reimplement minimal WinHTTP POST here.
+// WinHTTP helper for rollback operations
+// Uses system calls or WinHTTP for POST requests to rollback service
 
 // Reusing helper function pattern
 static bool runProcess(const std::string& cmd, const std::vector<std::string>& args, int timeoutMs = 60000) {

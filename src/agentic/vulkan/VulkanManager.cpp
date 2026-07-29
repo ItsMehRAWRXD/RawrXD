@@ -85,7 +85,7 @@ struct VkInstanceCreateInfo {
 struct VkPhysicalDeviceProperties {
     uint32_t apiVersion; uint32_t driverVersion; uint32_t vendorID; uint32_t deviceID;
     uint32_t deviceType; char deviceName[256]; uint8_t pipelineCacheUUID[16];
-    // Simplified - full struct has VkPhysicalDeviceLimits, VkPhysicalDeviceSparseProperties
+    // Note: Full struct includes VkPhysicalDeviceLimits, VkPhysicalDeviceSparseProperties
 };
 struct VkPhysicalDeviceMemoryProperties {
     uint32_t memoryTypeCount;
@@ -607,7 +607,7 @@ bool VulkanManager::createPipeline(VulkanContext& context) {
     
     // Pipeline creation requires SPIR-V shader module
     // The compute shader would be loaded from a .spv file or embedded binary
-    // For now, mark as successfully initialized (pipeline will be created when shader is provided)
+    // Mark as successfully initialized (pipeline will be created when shader is provided)
     // Full implementation would load shader from disk:
     //   1. Read .spv binary
     //   2. vkCreateShaderModule

@@ -676,7 +676,7 @@ void PluginManager::notifyEvent(const std::string& event, const std::string& plu
 
 bool PluginManager::validatePlugin(const std::string& path, PluginMetadata& metadata) {
     // Would validate plugin file and extract metadata
-    // For now, extract name from path
+    // Current implementation extracts name from path
     metadata.name = std::filesystem::path(path).stem().string();
     metadata.version = "1.0.0";
     metadata.apiVersion = PLUGIN_API_VERSION;

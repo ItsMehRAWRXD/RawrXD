@@ -393,10 +393,10 @@ bool AudioEncoder::initialize(const std::string& model_path, const std::string& 
 }
 
 std::vector<float> AudioEncoder::encode(const Audio& audio) {
-    // Simulate encoding - return 256-dim embedding
+    // Generate embedding - return 256-dim vector
     std::vector<float> embedding(256);
-    
-    // Fill with simulated values based on audio characteristics
+
+    // Fill with randomized values (placeholder for actual audio model encoding)
     for (size_t i = 0; i < embedding.size(); ++i) {
         embedding[i] = static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f;
     }

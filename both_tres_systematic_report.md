@@ -1,4 +1,4 @@
-﻿# Both + TRES Systematic Integration Report
+# Both + TRES Systematic Integration Report
 
 **Generated:** 2026-05-02 06:57:19
 **Duration:** 0.12 seconds

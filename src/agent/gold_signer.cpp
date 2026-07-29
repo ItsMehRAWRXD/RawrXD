@@ -260,27 +260,40 @@ std::string GoldSigner::detectEVCertificate() {
 
         bool isEV = false;
         if (pExt) {
+            // Properly decode CERT_POLICIES_INFO structure
             DWORD cbDecoded = 0;
             if (CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_CERT_POLICIES,
                                      pExt->Value.pbData, pExt->Value.cbData,
                                      CRYPT_DECODE_ALLOC_FLAG, nullptr,
-                                     &cbDecoded, &cbDecoded)) {
-                // Simplified: search raw extension data for EV OID string
-                std::string extData(reinterpret_cast<const char*>(pExt->Value.pbData),
-                                    pExt->Value.cbData);
-                if (extData.find("2.23.140.1.3") != std::string::npos)
-                    isEV = true;
-            }
-            // Alternative: check for well-known CA EV OIDs
-            // DigiCert EV:    2.16.840.1.114412.3.1
-            // Sectigo EV:     1.3.6.1.4.1.6449.1.2.1.5.1
-            // GlobalSign EV:  1.3.6.1.4.1.4146.1.1
-            std::string rawExt(reinterpret_cast<const char*>(pExt->Value.pbData),
-                               pExt->Value.cbData);
-            if (rawExt.find("2.16.840.1.114412.3.1") != std::string::npos ||
-                rawExt.find("1.3.6.1.4.1.6449.1.2.1.5.1") != std::string::npos ||
-                rawExt.find("1.3.6.1.4.1.4146.1.1") != std::string::npos) {
-                isEV = true;
+                                     nullptr, &cbDecoded)) {
+                
+                CERT_POLICIES_INFO* pPolicies = nullptr;
+                if (CryptDecodeObjectEx(X509_ASN_ENCODING, szOID_CERT_POLICIES,
+                                         pExt->Value.pbData, pExt->Value.cbData,
+                                         CRYPT_DECODE_ALLOC_FLAG, nullptr,
+                                         &pPolicies, &cbDecoded)) {
+                    
+                    // Check each policy for EV OID
+                    for (DWORD i = 0; i < pPolicies->cPolicyInfo; i++) {
+                        const char* pszPolicyOID = pPolicies->rgPolicyInfo[i].pszPolicyIdentifier;
+                        
+                        // CAB Forum EV OID
+                        if (strcmp(pszPolicyOID, "2.23.140.1.3") == 0) {
+                            isEV = true;
+                            break;
+                        }
+                        
+                        // Well-known CA EV OIDs
+                        if (strcmp(pszPolicyOID, "2.16.840.1.114412.3.1") == 0 ||    // DigiCert EV
+                            strcmp(pszPolicyOID, "1.3.6.1.4.1.6449.1.2.1.5.1") == 0 || // Sectigo EV
+                            strcmp(pszPolicyOID, "1.3.6.1.4.1.4146.1.1") == 0) {       // GlobalSign EV
+                            isEV = true;
+                            break;
+                        }
+                    }
+                    
+                    LocalFree(pPolicies);
+                }
             }
         }
 
@@ -326,17 +339,37 @@ std::string GoldSigner::detectEVCertificate() {
 
 bool GoldSigner::isAlreadySigned(const std::string& filePath) {
 #ifdef _WIN32
-    // Use WinVerifyTrust for Authenticode check
-    // Simplified: just call signtool verify
-    std::vector<std::string> args = {"verify", "/pa", "/q", filePath};
-    // execProcess sets error on failure, but we don't want that here
-    std::string savedError = m_lastError;
+    // Use WinVerifyTrust for proper Authenticode verification
+    WINTRUST_FILE_INFO fileInfo{};
+    fileInfo.cbStruct = sizeof(fileInfo);
+    std::wstring wFilePath(filePath.begin(), filePath.end());
+    fileInfo.pcwszFilePath = wFilePath.c_str();
+    fileInfo.hFile = nullptr;
+    fileInfo.pgKnownSubject = nullptr;
 
-    std::vector<std::string> verifyArgs = {"verify", "/pa", "/q", filePath};
-    bool verified = execProcess(m_signtoolPath, verifyArgs);
-    m_lastError = savedError; // Restore
+    GUID actionGuid = WINTRUST_ACTION_GENERIC_VERIFY_V2;
 
-    return verified;
+    WINTRUST_DATA trustData{};
+    trustData.cbStruct = sizeof(trustData);
+    trustData.pPolicyCallbackData = nullptr;
+    trustData.pSIPClientData = nullptr;
+    trustData.dwUIChoice = WTD_UI_NONE;
+    trustData.fdwRevocationChecks = WTD_REVOKE_WHOLECHAIN;
+    trustData.dwUnionChoice = WTD_CHOICE_FILE;
+    trustData.pFile = &fileInfo;
+    trustData.dwStateAction = WTD_STATEACTION_VERIFY;
+    trustData.hWVTStateData = nullptr;
+    trustData.pwszURLReference = nullptr;
+    trustData.dwProvFlags = WTD_SAFER_FLAG;
+    trustData.dwUIContext = WTD_UICONTEXT_EXECUTE;
+
+    LONG result = WinVerifyTrust(NULL, &actionGuid, &trustData);
+
+    // Clean up
+    trustData.dwStateAction = WTD_STATEACTION_CLOSE;
+    WinVerifyTrust(NULL, &actionGuid, &trustData);
+
+    return result == ERROR_SUCCESS;
 #else
     (void)filePath;
     return false;

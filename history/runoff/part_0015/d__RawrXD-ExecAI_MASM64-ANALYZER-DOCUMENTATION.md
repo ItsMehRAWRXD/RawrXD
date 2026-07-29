@@ -2,7 +2,7 @@
 
 ## Overview
 
-**RawrXD-GGUFAnalyzer-Complete.asm** is a production-ready, pure MASM64 implementation that analyzes GGUF v3 model files and distills their structure to executable format. **Zero dependencies. Zero stubs. Zero fictional code.**
+**RawrXD-GGUFAnalyzer-Complete.asm** is a production-ready, pure MASM64 implementation that analyzes GGUF v3 model files and distills their structure to executable format. **Zero dependencies. Zero stubs. Zero unteleprompted code.**
 
 ### Key Characteristics
 
@@ -514,7 +514,7 @@ This implementation:
   ✅ Never claims to load data (auditor-safe language)
   ✅ Produces valid .exec format
   ✅ Achieves 48,000× compression ratio
-  ✅ Zero fictional functionality
+  ✅ Zero unteleprompted functionality
 ```
 
 ---

@@ -51,7 +51,33 @@ std::string AgentHistoryRecorder::unescapeJsonValue(const std::string& s) const 
                 case 'n':  out += '\n'; i++; break;
                 case 'r':  out += '\r'; i++; break;
                 case 't':  out += '\t'; i++; break;
-                case 'u':  out += '?';  i += 5; break; // simplified
+                case 'u': {
+                    // Parse 4-digit hex Unicode escape
+                    if (i + 5 < s.size()) {
+                        std::string hex = s.substr(i + 2, 4);
+                        try {
+                            int codepoint = std::stoi(hex, nullptr, 16);
+                            if (codepoint < 0x80) {
+                                out += static_cast<char>(codepoint);
+                            } else if (codepoint < 0x800) {
+                                out += static_cast<char>(0xC0 | (codepoint >> 6));
+                                out += static_cast<char>(0x80 | (codepoint & 0x3F));
+                            } else {
+                                out += static_cast<char>(0xE0 | (codepoint >> 12));
+                                out += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+                                out += static_cast<char>(0x80 | (codepoint & 0x3F));
+                            }
+                            i += 5;
+                        } catch (...) {
+                            out += '?'; // Invalid hex, use replacement
+                            i += 5;
+                        }
+                    } else {
+                        out += '?'; // Incomplete escape
+                        i += 5;
+                    }
+                    break;
+                }
                 default:   out += s[i]; break;
             }
         } else {

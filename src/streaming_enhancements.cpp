@@ -300,7 +300,11 @@ void BatchProcessingEngine::batchWorker() {
 // 3. ADVANCED TOKENIZERS IMPLEMENTATION
 // ============================================================================
 
-BPETokenizer::BPETokenizer() {}
+BPETokenizer::BPETokenizer()
+    : m_mergeRanks()
+    , m_vocab()
+    , m_inverseVocab()
+{}
 
 bool BPETokenizer::loadMerges(const std::string& mergesFile) {
     std::ifstream file(mergesFile);
@@ -405,7 +409,11 @@ std::string BPETokenizer::detokenize(const std::vector<int32_t>& tokens) {
     return result;
 }
 
-SentencePieceTokenizer::SentencePieceTokenizer() {}
+SentencePieceTokenizer::SentencePieceTokenizer()
+    : m_pieceToId()
+    , m_idToPiece()
+    , m_unknownId(-1)
+{}
 
 bool SentencePieceTokenizer::loadModel(const std::string& modelPath) {
     std::ifstream file(modelPath);

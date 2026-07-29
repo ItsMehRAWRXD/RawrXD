@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <mutex>
 
 // Forward declaration
 struct CDB_DebugEvent;

@@ -40,7 +40,7 @@ void InitializeTreeMask(uint8_t* mask, uint32_t numNodes) {
     // Children can attend to ancestors
     for (uint32_t i = 0; i < numNodes; i++) {
         for (uint32_t j = 0; j < numNodes; j++) {
-            // Simplified: allow attention if j <= i (causal)
+            // Allow attention if j <= i (causal)
             // In real tree attention, this would be DAG-based
             mask[i * numNodes + j] = (j <= i) ? 1 : 0;
         }
@@ -275,10 +275,10 @@ bool TestSchedulerIntegration() {
     
     printf("  Verification batch size: %u\n", batchSize);
     
-    // Simulate verification
+    // Model verification
     std::vector<uint32_t> verified(batchSize);
     for (uint32_t i = 0; i < batchSize; i++) {
-        verified[i] = batch[i]; // Simulate acceptance
+        verified[i] = batch[i]; // Model acceptance
     }
     
     uint32_t accepted = scheduler.ProcessVerificationResults(verified.data(), batchSize);

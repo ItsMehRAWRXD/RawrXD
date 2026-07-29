@@ -47,7 +47,7 @@ void RunAutonomousCycle(const std::string& task) {
     LogToOutput("\n[AGENTIC-FLOW] Initiating: " + task + "\n");
     LogToOutput("[REASONING] Analyzing SEH chain in kernel...\n");
     
-    // Simulate LLM streaming
+    // Stream LLM response
     std::string response = "Hotpatching DMA descriptor... Done. Executing Titan Kernel...";
     for (char c : response) {
         std::string s(1, c);

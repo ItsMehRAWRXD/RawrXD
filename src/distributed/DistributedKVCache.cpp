@@ -242,7 +242,7 @@ CacheResult DistributedKVCache::getDistributed(const KVCacheKey& key, std::vecto
     for (const auto& nodeId : replicaNodes) {
         if (nodeId != localNodeId_) {
             // Would send RPC to remote node
-            // For now, simulate failure
+            // Current implementation returns failure (RPC pending)
             result.isReplica = true;
             result.nodeId = nodeId;
         }
@@ -867,7 +867,7 @@ void DistributedKVCache::updateHitRate() {
 
 std::vector<uint8_t> DistributedKVCache::compressData(const std::vector<uint8_t>& data) {
     // Would implement actual compression (e.g., LZ4, Zstd)
-    // For now, return uncompressed
+    // Current implementation returns uncompressed (compression pending)
     return data;
 }
 

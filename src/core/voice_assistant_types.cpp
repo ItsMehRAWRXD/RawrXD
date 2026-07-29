@@ -22,14 +22,80 @@ ScopeInfo CodebaseContextAnalyzer::analyzeCurrentScope(const std::string& file, 
 }
 
 std::vector<Symbol> CodebaseContextAnalyzer::getRelevantSymbols(const std::string& query, const ScopeInfo& scope) {
-    // Stub: Return empty results
-    // In production, this would query the semantic index
-    return {};
+    std::vector<Symbol> results;
+    
+    if (!m_initialized || query.empty()) {
+        return results;
+    }
+    
+    // Simple keyword matching for now
+    std::string lowerQuery = query;
+    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+    
+    // Search in symbol cache
+    for (const auto& [name, symbol] : m_symbolCache) {
+        std::string lowerName = name;
+        std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+        
+        if (lowerName.find(lowerQuery) != std::string::npos) {
+            // Check if symbol is in scope
+            if (symbol.file == scope.file || scope.file.empty()) {
+                results.push_back(symbol);
+            }
+        }
+    }
+    
+    // Sort by relevance (exact match first)
+    std::sort(results.begin(), results.end(), 
+        [&query](const Symbol& a, const Symbol& b) {
+            bool aExact = (a.name == query);
+            bool bExact = (b.name == query);
+            return aExact > bExact;
+        });
+    
+    // Limit results
+    if (results.size() > 10) {
+        results.resize(10);
+    }
+    
+    return results;
 }
 
 std::vector<std::string> CodebaseContextAnalyzer::getDependencies(const std::string& file) {
-    // Stub: Return empty dependencies
-    return {};
+    std::vector<std::string> deps;
+    
+    if (!m_initialized || file.empty()) {
+        return deps;
+    }
+    
+    // Read file and extract #include directives
+    std::ifstream f(file);
+    if (!f) return deps;
+    
+    std::string line;
+    while (std::getline(f, line)) {
+        // Look for #include statements
+        size_t includePos = line.find("#include");
+        if (includePos != std::string::npos) {
+            size_t start = line.find('"', includePos);
+            size_t end = std::string::npos;
+            if (start != std::string::npos) {
+                end = line.find('"', start + 1);
+            } else {
+                start = line.find('<', includePos);
+                if (start != std::string::npos) {
+                    end = line.find('>', start + 1);
+                }
+            }
+            
+            if (start != std::string::npos && end != std::string::npos) {
+                std::string header = line.substr(start + 1, end - start - 1);
+                deps.push_back(header);
+            }
+        }
+    }
+    
+    return deps;
 }
 
 bool CodebaseContextAnalyzer::initialize(const std::string& codebasePath) {
@@ -124,8 +190,47 @@ nlohmann::json SiriStyleAssistant::parse_intent(const std::string& text) {
 }
 
 std::unordered_map<std::string, std::string> SiriStyleAssistant::extract_entities(const std::string& text, const std::string& intent) {
-    // Stub entity extraction
-    return {};
+    std::unordered_map<std::string, std::string> entities;
+    std::string lowerText = text;
+    std::transform(lowerText.begin(), lowerText.end(), lowerText.begin(), ::tolower);
+    
+    // Extract file names (look for patterns like "file.txt" or "path/to/file.cpp")
+    std::regex filePattern(R"((\w+[\\/])*(\w+\.(cpp|h|hpp|c|py|js|ts|java|cs|txt|md|json|xml)))");
+    std::smatch fileMatch;
+    if (std::regex_search(text, fileMatch, filePattern)) {
+        entities["file"] = fileMatch[0];
+    }
+    
+    // Extract line numbers (look for "line 123" or ":123")
+    std::regex linePattern(R"((?:line\s*)?(\d+))");
+    std::smatch lineMatch;
+    if (std::regex_search(text, lineMatch, linePattern)) {
+        entities["line"] = lineMatch[1];
+    }
+    
+    // Extract function/class names (camelCase or PascalCase)
+    std::regex symbolPattern(R"(\b([A-Z][a-zA-Z0-9]*|[a-z][a-z0-9]*[A-Z][a-zA-Z0-9]*)\b)");
+    std::sregex_iterator symbolIt(text.begin(), text.end(), symbolPattern);
+    std::sregex_iterator symbolEnd;
+    if (symbolIt != symbolEnd) {
+        entities["symbol"] = (*symbolIt)[0];
+    }
+    
+    // Intent-specific entity extraction
+    if (intent == "search") {
+        // Everything after "search for" or "find" is the query
+        size_t searchPos = lowerText.find("search for");
+        if (searchPos != std::string::npos) {
+            entities["query"] = text.substr(searchPos + 11);
+        } else {
+            size_t findPos = lowerText.find("find");
+            if (findPos != std::string::npos) {
+                entities["query"] = text.substr(findPos + 5);
+            }
+        }
+    }
+    
+    return entities;
 }
 
 nlohmann::json SiriStyleAssistant::generate_response(const std::string& text, const nlohmann::json& intent_result, const nlohmann::json& context) {

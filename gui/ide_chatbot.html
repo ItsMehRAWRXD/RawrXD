@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10782,10 +10781,12 @@
       backend: {
         online: false,
         url: 'http://127.0.0.1:11435',
+        rawrxdNativeUrl: 'http://127.0.0.1:8080',    // RawrXD native backend (Node.js or C++ server)
         ollamaDirectUrl: 'http://127.0.0.1:11434',  // Fallback: talk to Ollama directly
         directMode: false,                           // true = bypassing serve.py, talking to Ollama
+        nativeMode: false,                           // true = using RawrXD-native endpoints (no Ollama)
         lastPing: 0,
-        serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct'
+        serverType: null,         // 'rawrxd-win32ide' or 'RawrXD-serve.py' or 'ollama-direct' or 'rawrxd-native'
         fileProtocol: _isFileProtocol,               // true when opened via file:///
         hasCliEndpoint: false,    // Beacon: true if backend has /api/cli (Win32IDE or tool_server)
       },
@@ -12009,7 +12010,12 @@
 
       if (State.backend.online) {
         tbDot.classList.add('online');
-        if (State.backend.directMode) {
+        if (State.backend.nativeMode) {
+          tbStatusText.textContent = 'RAWRXD NATIVE';
+          tbMode.textContent = 'NATIVE';
+          tbMode.style.background = 'rgba(255,136,0,0.15)';
+          tbMode.style.color = '#ff8800';
+        } else if (State.backend.directMode) {
           tbStatusText.textContent = 'OLLAMA DIRECT';
           tbMode.textContent = 'DIRECT';
           tbMode.style.background = 'rgba(0,217,255,0.15)';
@@ -12235,25 +12241,28 @@
         (_win32IdeDetected ? '\n\u{1F5A5} **Win32 IDE detected** — use the `OPEN IDE` button in the titlebar to switch.' : '')
         : '';
       addMessage('system',
-        '**RawrXD Agentic Interface v3.4** — Standalone + Win32IDE Bridge\n\n' +
-        'This interface connects to the RawrXD backend on `localhost:11435`. ' +
-        'If the Python server isn\u2019t running, it will automatically fall back to Ollama directly on `localhost:11434`.' + modeNote + '\n\n' +
-        '**What\'s new in v3.4:**\n' +
+        '**RawrXD Agentic Interface v3.5** — Native + Ollama Dual-Mode\n\n' +
+        'This interface connects to the RawrXD backend. It auto-detects the best available server:\n' +
+        '\u2022 **RawrXD Native** (`:8080`) — Direct C++/Node backend, no Ollama dependency\n' +
+        '\u2022 **Win32 IDE** (`:11435`) — Full IDE with embedded GUI and file bridge\n' +
+        '\u2022 **Ollama Direct** (`:11434`) — Fallback to Ollama for model serving\n' + modeNote + '\n\n' +
+        '**What\'s new in v3.5:**\n' +
+        '\u2022 **RawrXD-Native Mode** — Direct backend on `:8080` with zero Ollama dependency\n' +
+        '\u2022 **Dual-Mode Architecture** — Auto-fallback: Native \u2192 IDE \u2192 Ollama\n' +
+        '\u2022 **Native Model Loading** — Load/unload GGUF models via `/api/model/load`\n' +
+        '\u2022 **Engine Capabilities** — Query Deep2/Sovereign features at `/api/engine/capabilities`\n' +
+        '\u2022 **DualAgent Pipeline** — Architect\u2192Coder orchestration via native endpoints\n' +
         '\u2022 **Standalone Mode** — Works fully from `file:///` with no server needed for UI\n' +
-        '\u2022 **Win32 IDE Bridge** — Auto-detects running IDE, syncs state, hotpatch control\n' +
-        '\u2022 **Native Titlebar** — Window chrome with status, mode badge, and IDE launcher\n' +
-        '\u2022 **IDE File Bridge** — Read local files via IDE\'s `/api/read-file` endpoint\n' +
-        '\u2022 **Fullscreen Mode** — F11 key or titlebar button for distraction-free chat\n' +
-        '\u2022 **Security Dashboard** — CSP audit, input validation, rate limit meter\n' +
-        '\u2022 **Hotpatch Control** — Toggle/apply/revert hotpatches from the browser\n\n' +
+        '\u2022 **Win32 IDE Bridge** — Auto-detects running IDE, syncs state, hotpatch control\n\n' +
         '**Quick start:**\n' +
-        '1. Run `launch_rawrxd.bat` or click **\u26A1** to connect\n' +
-        '2. Select a model from the sidebar dropdown\n' +
-        '3. Type your message and press Enter\n\n' +
+        '1. Run `node server.js` (native backend) or `RawrXD-Win32IDE.exe` (full IDE)\n' +
+        '2. Click **\u26A1** to auto-connect to the best available backend\n' +
+        '3. Select a model from the sidebar dropdown\n' +
+        '4. Type your message and press Enter\n\n' +
         '**Usage modes:**\n' +
-        '\u2022 **File mode** — Double-click `gui/ide_chatbot.html` (standalone, no server required for UI)\n' +
-        '\u2022 **Served mode** — Navigate to `http://localhost:11435/gui` (served by Win32 IDE)\n' +
-        '\u2022 **Both** — Same HTML works in either context, auto-detects environment');
+        '\u2022 **Native mode** — `node server.js` then open `gui/ide_chatbot.html`\n' +
+        '\u2022 **IDE mode** — Run `RawrXD-Win32IDE.exe`, navigate to `http://localhost:11435/gui`\n' +
+        '\u2022 **File mode** — Double-click `gui/ide_chatbot.html` (auto-detects any running backend)');
     }
 
     // ======================================================================
@@ -13074,50 +13083,58 @@
       lastPlan: null,
       abortController: null,
 
-      // Initialize the MASM swarm backend
+      // Initialize — RawrXD-native /api/agent/dual/init or Ollama client-side
       init: async function (archProfile, coderProfile) {
         if (this.initialized) return { success: true, message: 'Already initialized' };
         try {
-          var body = {
-            architect_profile: archProfile || this.architectProfile,
-            coder_profile: coderProfile || this.coderProfile
-          };
-          var res = await fetch(getActiveUrl() + '/api/agent/dual/init', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-            signal: AbortSignal.timeout(30000)
-          });
-          var data = await res.json();
-          this.initialized = !!data.success;
-          return data;
+          if (archProfile !== undefined) this.architectProfile = archProfile;
+          if (coderProfile !== undefined) this.coderProfile = coderProfile;
+
+          // Phase 35: RawrXD-native mode uses backend endpoint
+          if (State.backend.nativeMode) {
+            var nativeUrl = State.backend.rawrxdNativeUrl || 'http://127.0.0.1:8080';
+            var res = await fetch(nativeUrl + '/api/agent/dual/init', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model: State.model.current || 'default' }),
+              signal: AbortSignal.timeout(5000)
+            });
+            if (!res.ok) throw new Error('Native /api/agent/dual/init returned HTTP ' + res.status);
+            var data = await res.json();
+            this.agentId = data.agentId;
+            this.initialized = true;
+            return { success: true, message: 'DualAgent ready (RawrXD-native, agentId=' + data.agentId + ')' };
+          }
+
+          // Ollama client-side mode
+          var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+          var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(5000) });
+          if (!res.ok) throw new Error('Ollama /api/tags returned HTTP ' + res.status);
+
+          this.initialized = true;
+          return { success: true, message: 'DualAgent ready (Ollama native, client-side)' };
         } catch (e) {
           console.error('[DualAgent] init failed:', e);
           return { success: false, message: e.message };
         }
       },
 
-      // Shut down the swarm
+      // Shut down — client-side state only
       shutdown: async function () {
-        try {
-          var res = await fetch(getActiveUrl() + '/api/agent/dual/shutdown', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: '{}', signal: AbortSignal.timeout(10000)
-          });
-          this.initialized = false;
-          this.running = false;
-          return await res.json();
-        } catch (e) { return { success: false, message: e.message }; }
+        this.initialized = false;
+        this.running = false;
+        return { success: true, message: 'DualAgent stopped' };
       },
 
-      // Get swarm status
+      // Status — client-side state only
       status: async function () {
-        try {
-          var res = await fetch(getActiveUrl() + '/api/agent/dual/status', {
-            signal: AbortSignal.timeout(5000)
-          });
-          return await res.json();
-        } catch (e) { return { initialized: false, error: e.message }; }
+        return {
+          initialized: this.initialized,
+          running: this.running,
+          architect: this.architectProfile,
+          coder: this.coderProfile,
+          backend: 'ollama-native'
+        };
       },
 
       // === Core Pipeline: User → Architect → Coder → Output ===
@@ -13136,6 +13153,46 @@
               this.running = false;
               return;
             }
+          }
+
+          // Phase 35: RawrXD-native mode uses backend /api/agent/dual/execute
+          if (State.backend.nativeMode && this.agentId) {
+            addMessage('system', '\uD83D\uDD0D **DualAgent** (RawrXD-native) executing via backend...');
+            try {
+              var nativeUrl = State.backend.rawrxdNativeUrl || 'http://127.0.0.1:8080';
+              var res = await fetch(nativeUrl + '/api/agent/dual/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId: this.agentId, prompt: userQuery }),
+                signal: signal
+              });
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              var data = await res.json();
+
+              if (data.phases && data.phases.architect && data.phases.architect.plan) {
+                var plan = data.phases.architect.plan;
+                var planDisplay = '\uD83D\uDCCB **Execution Plan** (' + plan.length + ' steps):\n\n';
+                for (var i = 0; i < plan.length; i++) {
+                  var step = plan[i];
+                  planDisplay += (i + 1) + '. **' + (step.action || 'unknown').toUpperCase() + '** `' + (step.target || '') + '`\n';
+                  planDisplay += '   ' + (step.description || '') + '\n';
+                }
+                addMessage('system', planDisplay);
+              }
+
+              if (data.output) {
+                addMessage('assistant', data.output);
+              }
+
+              addMessage('system', '\u2705 **DualAgent pipeline complete** (RawrXD-native)');
+              logDebug('[DualAgent] Native pipeline complete for agent ' + this.agentId, 'info');
+            } catch (e) {
+              addMessage('system', '⚠️ DualAgent native error: ' + e.message);
+            } finally {
+              this.running = false;
+              this.abortController = null;
+            }
+            return;
           }
 
           // ==== PHASE 1: Architect — Generate Execution Plan ====
@@ -13157,21 +13214,22 @@
 
           var planText = '';
           try {
-            var archRes = await fetch(getActiveUrl() + '/v1/chat/completions', {
+            // Use Ollama native /api/chat (not /v1/chat/completions which may not exist)
+            var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+            var archRes = await fetch(ollamaUrl + '/api/chat', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                model: State.model.current || 'rawrxd',
+                model: State.model.current || 'mistral:latest',
                 messages: architectPrompt,
                 stream: false,
-                temperature: 0.3,
-                max_tokens: 2048
+                options: { temperature: 0.3, num_predict: 2048 }
               }),
               signal: signal
             });
             var archData = await archRes.json();
-            planText = (archData.choices && archData.choices[0] && archData.choices[0].message)
-              ? archData.choices[0].message.content : '';
+            planText = (archData && archData.message && archData.message.content)
+              ? archData.message.content : ((archData && archData.response) ? archData.response : '');
           } catch (e) {
             if (e.name === 'AbortError') { this.running = false; return; }
             addMessage('system', '⚠️ Architect inference failed: ' + e.message);
@@ -13205,15 +13263,9 @@
           }
           addMessage('system', planDisplay);
 
-          // Handoff context to MASM ring buffer
-          try {
-            await fetch(getActiveUrl() + '/api/agent/dual/handoff', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ context: planText }),
-              signal: AbortSignal.timeout(5000)
-            });
-          } catch (e) { /* Non-fatal — ring handoff is advisory */ }
+          // Handoff context — client-side only (no MASM ring buffer endpoint)
+          // The plan is already in this.lastPlan and displayed to the user.
+          // Coder reads directly from the plan variable.
 
           // ==== PHASE 2: Coder — Execute Each Step ====
           addMessage('system', '⚡ **Coder** executing plan...');
@@ -13246,21 +13298,22 @@
             ];
 
             try {
-              var coderRes = await fetch(getActiveUrl() + '/v1/chat/completions', {
+              // Use Ollama native /api/chat for Coder as well
+              var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+              var coderRes = await fetch(ollamaUrl + '/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  model: State.model.current || 'rawrxd',
+                  model: State.model.current || 'mistral:latest',
                   messages: coderPrompt,
                   stream: false,
-                  temperature: 0.1,
-                  max_tokens: 4096
+                  options: { temperature: 0.1, num_predict: 4096 }
                 }),
                 signal: signal
               });
               var coderData = await coderRes.json();
-              var coderOutput = (coderData.choices && coderData.choices[0] && coderData.choices[0].message)
-                ? coderData.choices[0].message.content : '(no output)';
+              var coderOutput = (coderData && coderData.message && coderData.message.content)
+                ? coderData.message.content : ((coderData && coderData.response) ? coderData.response : '(no output)');
 
               coderFullText += stepLabel + coderOutput + '\n\n';
 
@@ -13333,9 +13386,23 @@
     // ======================================================================
     // BACKEND CONNECTION
     // ======================================================================
-    // Helper: returns the URL to send requests to (proxy or direct Ollama)
+    // Helper: returns the URL to send requests to (proxy, direct Ollama, or RawrXD native)
     function getActiveUrl() {
+      if (State.backend.nativeMode) return State.backend.rawrxdNativeUrl;
       return State.backend.directMode ? State.backend.ollamaDirectUrl : State.backend.url;
+    }
+
+    // Safe JSON parse — guards against non-JSON responses (HTML 404 pages, etc.)
+    // Prevents "Unexpected non-whitespace character after JSON" errors when the
+    // backend returns text/html instead of application/json.
+    async function safeJson(response) {
+      var text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        var snippet = text.slice(0, 80).replace(/\n/g, ' ');
+        throw new Error('Non-JSON response (HTTP ' + response.status + '): ' + snippet);
+      }
     }
 
     // Beacon: probe whether backend (or alternate) exposes /api/cli
@@ -13530,6 +13597,8 @@
             var altLatency = Math.round(performance.now() - t0b);
             State.backend.online = true;
             State.backend.directMode = false;
+            State.backend.nativeMode = true;  // RawrXD-native mode (no Ollama)
+            State.backend.rawrxdNativeUrl = altUrl;
             State.backend.url = altUrl;
             State.backend.lastPing = Date.now();
             State.backend.serverType = altStatusData.backend || altStatusData.server || 'rawrxd-ide-server';
@@ -13540,12 +13609,12 @@
             }
 
             status.className = 'status-pill online';
-            text.textContent = 'ONLINE';
+            text.textContent = 'NATIVE';
 
             updateBackendInfo(altStatusData, altLatency);
             updateModeBadge(true);
             syncTitlebarStatus();
-            logDebug('Connected to ' + State.backend.serverType + ' via ' + altDetectedVia + ' on :8080 (' + altLatency + 'ms)', 'info');
+            logDebug('Connected to ' + State.backend.serverType + ' via ' + altDetectedVia + ' on :8080 (' + altLatency + 'ms) [RawrXD-NATIVE]', 'info');
 
             await fetchModels();
             await beaconProbeCliEndpoint();
@@ -13685,8 +13754,26 @@
 
       var activeUrl = getActiveUrl();
 
-      // Try proxy /models endpoint first (serve.py enriches with GGUF info)
-      if (!State.backend.directMode) {
+      // Phase 35: Try RawrXD-native /api/models first (no Ollama dependency)
+      if (State.backend.nativeMode || activeUrl.indexOf(':8080') !== -1) {
+        try {
+          var res = await fetch(activeUrl + '/api/models', { signal: AbortSignal.timeout(5000) });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var data = await res.json();
+          if (data.models && Array.isArray(data.models)) {
+            State.model.list = data.models;
+            populateModelSelect(data.models);
+            if (typeof updateBridgeModelNames === 'function') updateBridgeModelNames();
+            logDebug('Loaded ' + data.models.length + ' models from RawrXD-native /api/models', 'info');
+            return;
+          }
+        } catch (e) {
+          logDebug('RawrXD-native /api/models failed: ' + e.message, 'warn');
+        }
+      }
+
+      // Try proxy /models endpoint (serve.py enriches with GGUF info)
+      if (!State.backend.directMode && !State.backend.nativeMode) {
         try {
           var res = await fetch(activeUrl + '/models', { signal: AbortSignal.timeout(5000) });
           if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -14024,25 +14111,80 @@
       badge.style.color = '#ffcc00';
 
       try {
-        var activeUrl = getActiveUrl();
-        var res = await fetch(activeUrl + '/api/model/profiles', { signal: AbortSignal.timeout(8000) });
+        // Ollama native: GET /api/tags returns all installed models.
+        // Derive bridge profiles from this list — no /api/model/profiles needed.
+        var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+        var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         var data = await res.json();
 
-        BridgeState.profiles = data.profiles || [];
-        BridgeState.hardware = data.hardware || null;
-        BridgeState.bridge = data.bridge || 'unknown';
+        var models = data.models || [];
+        var profiles = [];
+        var idCounter = 0;
+
+        // Build BRIDGE_MODEL_NAMES map dynamically from Ollama models
+        BRIDGE_MODEL_NAMES = {};
+
+        models.forEach(function (m) {
+          var name = m.name || m.model || ('model-' + idCounter);
+          var sizeBytes = m.size || 0;
+          var sizeGB = sizeBytes / (1024 * 1024 * 1024);
+
+          // Tier classification by size
+          var tier = 'small';
+          if (sizeGB >= 60) tier = '800b-dual';
+          else if (sizeGB >= 25) tier = 'ultra';
+          else if (sizeGB >= 12) tier = 'large';
+          else if (sizeGB >= 5) tier = 'medium';
+
+          // Quantization detection from name/details
+          var quant = 'Q4_K_M';
+          if (m.details && m.details.quantization_level) {
+            quant = m.details.quantization_level;
+          } else if (/-q8_0/i.test(name)) quant = 'Q8_0';
+          else if (/-q6_k/i.test(name)) quant = 'Q6_K';
+          else if (/-q5_k/i.test(name)) quant = 'Q5_K_M';
+          else if (/-q4_k/i.test(name)) quant = 'Q4_K_M';
+          else if (/-q3_k/i.test(name)) quant = 'Q3_K_M';
+          else if (/-q2_k/i.test(name)) quant = 'Q2_K';
+          else if (/-f16/i.test(name)) quant = 'F16';
+          else if (/-f32/i.test(name)) quant = 'F32';
+
+          var paramsB = '?';
+          if (m.details && m.details.parameter_size) {
+            var ps = m.details.parameter_size.replace(/B$/, '');
+            paramsB = ps;
+          }
+
+          var ramMb = sizeBytes ? Math.round(sizeGB * 1024) : 0;
+
+          profiles.push({
+            id: idCounter,
+            name: name,
+            tier: tier,
+            params_b: paramsB,
+            quant: quant,
+            ram_mb: ramMb,
+            requires_swarm: false,
+            requires_avx512: false
+          });
+
+          BRIDGE_MODEL_NAMES[idCounter] = name;
+          idCounter++;
+        });
+
+        BridgeState.profiles = profiles;
+        BridgeState.bridge = 'ollama-native';
         BridgeState.fetched = true;
 
-        badge.textContent = data.bridge || 'connected';
+        badge.textContent = 'ollama (' + profiles.length + ')';
         badge.style.background = 'rgba(0,255,136,0.15)';
         badge.style.color = '#00ff88';
 
         renderBridgeProfiles();
         updateBridgeStatusBar();
-        logDebug('[ModelBridge] Loaded ' + BridgeState.profiles.length + ' profiles via ' + BridgeState.bridge, 'info');
+        logDebug('[ModelBridge] Loaded ' + profiles.length + ' profiles via Ollama /api/tags', 'info');
 
-        // Also merge bridge profiles into model select dropdown
         mergeBridgeIntoModelSelect();
       } catch (e) {
         badge.textContent = 'error';
@@ -14050,7 +14192,6 @@
         badge.style.color = '#ff4466';
         logDebug('[ModelBridge] Fetch failed: ' + e.message, 'error');
 
-        // Render fallback with static names
         renderBridgeProfilesFallback();
       }
     }
@@ -14169,7 +14310,9 @@
       logDebug('[ModelBridge] Selected: ' + nameStr + ' (ID ' + profileId + ')', 'info');
     }
 
-    // Load model via MASM bridge POST /api/model/load
+    // Load model — RawrXD-native or Ollama lazy-load
+    // RawrXD-native: POST /api/model/load with modelPath
+    // Ollama: POST /api/generate with empty prompt warms the model
     async function bridgeLoadModel() {
       if (BridgeState.selectedProfileId < 0) {
         addMessage('system', '\u26A0\uFE0F Select a model profile from the bridge list first.');
@@ -14178,61 +14321,74 @@
 
       var profileId = BridgeState.selectedProfileId;
       var nameStr = BRIDGE_MODEL_NAMES[profileId] || ('profile-' + profileId);
-      addMessage('system', '\u26A1 Loading model via MASM x64 bridge: **' + nameStr + '** (ID ' + profileId + ')...');
 
+      // Phase 35: RawrXD-native mode uses /api/model/load endpoint
+      if (State.backend.nativeMode) {
+        addMessage('system', '\u26A1 Loading model (RawrXD-native): **' + nameStr + '**...');
+        try {
+          var nativeUrl = State.backend.rawrxdNativeUrl || 'http://127.0.0.1:8080';
+          var res = await fetch(nativeUrl + '/api/model/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: nameStr, modelPath: nameStr }),
+            signal: AbortSignal.timeout(60000)
+          });
+
+          if (!res.ok) {
+            var errText = await res.text().catch(function () { return ''; });
+            addMessage('system', '\u274C Model load failed: HTTP ' + res.status + ' ' + errText.slice(0, 120));
+            logDebug('[ModelBridge] Native load failed: HTTP ' + res.status, 'error');
+            return;
+          }
+
+          var data = await res.json();
+          if (!data.success) {
+            addMessage('system', '\u274C Model load failed: ' + (data.message || 'unknown error'));
+            logDebug('[ModelBridge] Native load failed: ' + (data.message || 'unknown'), 'error');
+            return;
+          }
+
+          BridgeState.activeProfileId = profileId;
+          BridgeState.loaded = true;
+          State.model.current = nameStr;
+
+          addMessage('system', '\u2705 Model loaded (RawrXD-native): **' + nameStr + '**');
+          logDebug('[ModelBridge] Loaded: ' + nameStr + ' via RawrXD-native /api/model/load', 'info');
+          updateBridgeStatusBar();
+          return;
+        } catch (e) {
+          addMessage('system', '\u274C Native load error: ' + e.message);
+          logDebug('[ModelBridge] Native load exception: ' + e.message, 'error');
+          return;
+        }
+      }
+
+      // Ollama native: POST /api/generate with empty prompt warms the model
+      addMessage('system', '\u26A1 Activating model (Ollama lazy-load): **' + nameStr + '**...');
       try {
-        var activeUrl = getActiveUrl();
-        var payload = JSON.stringify({ index: profileId, name: nameStr });
-        var res = await fetch(activeUrl + '/api/model/load', {
+        var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+        var res = await fetch(ollamaUrl + '/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: payload,
-          signal: AbortSignal.timeout(30000)
+          body: JSON.stringify({ model: nameStr, prompt: '', keep_alive: '5m' }),
+          signal: AbortSignal.timeout(60000)
         });
 
-        var data = await res.json();
         if (!res.ok) {
-          addMessage('system', '\u274C Model load failed: ' + (data.error || data.message || 'Unknown error'));
-          logDebug('[ModelBridge] Load failed: ' + JSON.stringify(data), 'error');
+          var errText = await res.text().catch(function () { return ''; });
+          addMessage('system', '\u274C Model load failed: HTTP ' + res.status + ' ' + errText.slice(0, 120));
+          logDebug('[ModelBridge] Load failed: HTTP ' + res.status, 'error');
           return;
         }
 
+        await res.text().catch(function () {});
+
         BridgeState.activeProfileId = profileId;
         BridgeState.loaded = true;
-
-        // Also set in main model state
         State.model.current = nameStr;
-        var sel = document.getElementById('modelSelect');
-        if (sel) {
-          // Try to select matching option, or add one
-          var found = false;
-          for (var i = 0; i < sel.options.length; i++) {
-            if (sel.options[i].value === nameStr) {
-              sel.selectedIndex = i;
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            var opt = document.createElement('option');
-            opt.value = nameStr;
-            opt.textContent = '\uD83E\uDDE9 ' + nameStr + ' (MASM)';
-            sel.appendChild(opt);
-            sel.value = nameStr;
-          }
-        }
-        changeModel();
 
-        // Update card highlights
-        var cards = document.querySelectorAll('.bridge-model-card');
-        cards.forEach(function (card) {
-          var cardId = parseInt(card.getAttribute('data-profile-id'), 10);
-          card.classList.toggle('active', cardId === profileId);
-        });
-
-        addMessage('system', '\u2705 Model loaded via ' + (data.bridge || 'MASM') + ': **' + nameStr + '** | Tier: ' + (data.tier || '?') + ' | RAM: ' + (data.ram_mb || '?') + 'MB | Engine: ' + (data.engine_mode || '?'));
-        logDebug('[ModelBridge] Loaded: ' + nameStr + ' via ' + (data.bridge || '?'), 'info');
-
+        addMessage('system', '\u2705 Model ready: **' + nameStr + '** (Ollama lazy-load, keep_alive=5m)');
+        logDebug('[ModelBridge] Loaded: ' + nameStr + ' via Ollama native /api/generate warmup', 'info');
         updateBridgeStatusBar();
       } catch (e) {
         addMessage('system', '\u274C Bridge load error: ' + e.message);
@@ -14240,33 +14396,69 @@
       }
     }
 
-    // Unload model via MASM bridge POST /api/model/unload
+    // Unload model — RawrXD-native /api/model/unload or Ollama keep_alive: 0
     async function bridgeUnloadModel() {
       try {
-        var activeUrl = getActiveUrl();
-        var res = await fetch(activeUrl + '/api/model/unload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}',
-          signal: AbortSignal.timeout(10000)
-        });
-
-        var data = await res.json();
-        if (!res.ok) {
-          addMessage('system', '\u26A0\uFE0F Unload: ' + (data.error || data.message || 'no model loaded'));
+        if (BridgeState.activeProfileId < 0) {
+          addMessage('system', '\u26A0\uFE0F No model currently loaded.');
+          return;
+        }
+        var nameStr = BRIDGE_MODEL_NAMES[BridgeState.activeProfileId] || '';
+        if (!nameStr) {
+          addMessage('system', '\u26A0\uFE0F No model currently loaded.');
           return;
         }
 
+        // Phase 35: RawrXD-native mode
+        if (State.backend.nativeMode) {
+          var nativeUrl = State.backend.rawrxdNativeUrl || 'http://127.0.0.1:8080';
+          var res = await fetch(nativeUrl + '/api/model/unload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ modelId: nameStr }),
+            signal: AbortSignal.timeout(10000)
+          });
+
+          if (!res.ok) {
+            var errText = await res.text().catch(function () { return ''; });
+            addMessage('system', '\u26A0\uFE0F Unload: HTTP ' + res.status + ' ' + errText.slice(0, 120));
+            return;
+          }
+
+          BridgeState.activeProfileId = -1;
+          BridgeState.loaded = false;
+          var cards = document.querySelectorAll('.bridge-model-card');
+          cards.forEach(function (card) { card.classList.remove('active'); });
+
+          addMessage('system', '\u23F9\uFE0F Model unloaded (RawrXD-native): **' + nameStr + '**');
+          logDebug('[ModelBridge] Model unloaded via RawrXD-native /api/model/unload', 'info');
+          updateBridgeStatusBar();
+          return;
+        }
+
+        // Ollama native: POST /api/generate with keep_alive: 0
+        var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+        var res = await fetch(ollamaUrl + '/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: nameStr, prompt: '', keep_alive: 0 }),
+          signal: AbortSignal.timeout(10000)
+        });
+
+        if (!res.ok) {
+          var errText = await res.text().catch(function () { return ''; });
+          addMessage('system', '\u26A0\uFE0F Unload: HTTP ' + res.status + ' ' + errText.slice(0, 120));
+          return;
+        }
+        await res.text().catch(function () {});
+
         BridgeState.activeProfileId = -1;
         BridgeState.loaded = false;
-
-        // Clear card highlights
         var cards = document.querySelectorAll('.bridge-model-card');
         cards.forEach(function (card) { card.classList.remove('active'); });
 
-        addMessage('system', '\u23F9\uFE0F Model unloaded from MASM bridge.');
-        logDebug('[ModelBridge] Model unloaded', 'info');
-
+        addMessage('system', '\u23F9\uFE0F Model unloaded (Ollama keep_alive=0): **' + nameStr + '**');
+        logDebug('[ModelBridge] Model unloaded via Ollama native', 'info');
         updateBridgeStatusBar();
       } catch (e) {
         addMessage('system', '\u274C Bridge unload error: ' + e.message);
@@ -14274,43 +14466,82 @@
       }
     }
 
-    // Fetch engine capabilities GET /api/engine/capabilities
+    // Fetch capabilities — RawrXD-native /api/engine/capabilities or Ollama /api/tags
     async function fetchBridgeCapabilities() {
       try {
-        var activeUrl = getActiveUrl();
-        var res = await fetch(activeUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        var caps = await res.json();
-
-        BridgeState.hardware = caps;
-
+        var modelCount = 0;
+        var caps = {};
         var lines = [];
-        lines.push('**\uD83D\uDD0D Engine Capabilities (' + (caps.bridge || '?') + ')**');
-        if (caps.cpu) {
-          lines.push('CPU: AVX2=' + (caps.cpu.avx2 ? '\u2705' : '\u274C') +
-            ' FMA3=' + (caps.cpu.fma3 ? '\u2705' : '\u274C') +
-            ' AVX-512F=' + (caps.cpu.avx512f ? '\u2705' : '\u274C') +
-            ' AVX-512BW=' + (caps.cpu.avx512bw ? '\u2705' : '\u274C'));
+
+        // Phase 35: RawrXD-native mode
+        if (State.backend.nativeMode) {
+          var nativeUrl = State.backend.rawrxdNativeUrl || 'http://127.0.0.1:8080';
+          try {
+            var res = await fetch(nativeUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(8000) });
+            if (res.ok) {
+              var data = await res.json();
+              caps = data;
+              modelCount = data.models ? data.models.length : 0;
+
+              lines.push('**\uD83D\uDD0D Engine Capabilities (RawrXD-native)**');
+              lines.push('Backend: ' + (data.server || 'RawrXD-Native') + ' v' + (data.version || '?'));
+              lines.push('Phase: ' + (data.phase || '?'));
+              lines.push('Backends: ' + (data.backends ? data.backends.join(', ') : 'N/A'));
+              lines.push('Features: ' + (data.features ? data.features.join(', ') : 'N/A'));
+              lines.push('Max Context: ' + (data.maxContextLength || '?'));
+              lines.push('Max Batch: ' + (data.maxBatchSize || '?'));
+              lines.push('Model Loaded: ' + (data.modelLoaded ? 'Yes' : 'No'));
+              if (data.loadedModel) lines.push('Loaded Model: ' + data.loadedModel);
+            }
+          } catch (e) {
+            logDebug('[ModelBridge] Native capabilities fetch failed: ' + e.message, 'warn');
+          }
         }
-        if (caps.memory) {
-          lines.push('RAM: ' + (caps.memory.total_ram_gb || '?') + 'GB total, ' + (caps.memory.free_ram_gb || '?') + 'GB free');
+
+        // Fallback: Ollama native
+        if (!caps.backends) {
+          var ollamaUrl = State.backend.ollamaDirectUrl || 'http://127.0.0.1:11434';
+          var res = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(8000) });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var data = await res.json();
+
+          modelCount = (data.models && data.models.length) || 0;
+          caps = {
+            bridge: 'ollama-native',
+            backend: 'ollama',
+            models: modelCount,
+            streaming: true,
+            model_range: modelCount + ' models available',
+            supported_tiers: ['small', 'medium', 'large', 'ultra', '800b'],
+            profile_count: BridgeState.profiles ? BridgeState.profiles.length : modelCount
+          };
+
+          lines.push('**\uD83D\uDD0D Engine Capabilities (ollama-native)**');
+          lines.push('Backend: Ollama direct at ' + ollamaUrl);
+          lines.push('Models: ' + modelCount + ' available');
+          lines.push('Streaming: \u2705 (SSE via /api/chat)');
         }
-        if (caps.engine) {
-          lines.push('Engine: swarm=' + (caps.engine.swarm ? '\u2705' : '\u274C') +
-            ' dual=' + (caps.engine.dual_engine ? '\u2705' : '\u274C') +
-            ' 5drive=' + (caps.engine.five_drive ? '\u2705' : '\u274C') +
-            ' tensorhop=' + (caps.engine.tensor_hop ? '\u2705' : '\u274C') +
-            ' flashattn=' + (caps.engine.flash_attention ? '\u2705' : '\u274C') +
-            ' safedecode=' + (caps.engine.safe_decode ? '\u2705' : '\u274C'));
+
+        // Best-effort hardware detection via navigator + performance.memory
+        if (navigator.hardwareConcurrency) {
+          caps.cpu = { cores: navigator.hardwareConcurrency };
         }
-        if (caps.model_range) lines.push('Range: ' + caps.model_range);
-        if (caps.raw_caps) lines.push('Raw: `' + caps.raw_caps + '`');
+        if (performance && performance.memory) {
+          caps.memory = {
+            total_ram_mb: Math.round(performance.memory.jsHeapSizeLimit / (1024 * 1024)),
+            free_ram_mb: Math.round((performance.memory.jsHeapSizeLimit - performance.memory.usedJSHeapSize) / (1024 * 1024))
+          };
+        }
+
+        if (caps.cpu) lines.push('CPU cores: ' + caps.cpu.cores);
+        if (caps.memory) lines.push('Heap: ' + caps.memory.free_ram_mb + '/' + caps.memory.total_ram_mb + 'MB');
         if (caps.supported_tiers) lines.push('Tiers: ' + caps.supported_tiers.join(', '));
         if (caps.profile_count) lines.push('Profiles: ' + caps.profile_count);
 
-        addMessage('system', lines.join('\n'));
-        logDebug('[ModelBridge] Capabilities fetched: ' + (caps.bridge || '?'), 'info');
+        BridgeState.hardware = caps;
 
+        addMessage('system', lines.join('\n'));
+        logDebug('[ModelBridge] Capabilities fetched: ' + modelCount + ' models', 'info');
         updateBridgeStatusBar();
       } catch (e) {
         addMessage('system', '\u274C Capabilities fetch failed: ' + e.message);

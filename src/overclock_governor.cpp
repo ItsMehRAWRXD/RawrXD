@@ -21,7 +21,10 @@
 #include "AppState.h"
 #include <algorithm>
 
-OverclockGovernor::OverclockGovernor() {}
+OverclockGovernor::OverclockGovernor()
+    : running_(false)
+    , worker_{}
+{}
 OverclockGovernor::~OverclockGovernor() { Stop(); }
 
 int OverclockGovernor::ComputePidDelta(float pidOutput, uint32_t boostStepMhz) {

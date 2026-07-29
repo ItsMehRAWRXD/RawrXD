@@ -617,7 +617,41 @@ bool ActionExecutor::handleRunBuild(Action& action)
 {
     json res = executeCommand("cmake", {"--build", "build"}, m_context.timeoutMs);
     action.result = res.dump();
-    return !res.contains("error");  // Simplified success check
+    
+    // Comprehensive success check: verify exit code and output
+    if (res.contains("error")) {
+        return false;
+    }
+    
+    // Check for build errors in output
+    if (res.contains("output")) {
+        std::string output = res["output"];
+        // Look for common error indicators
+        if (output.find("error:") != std::string::npos ||
+            output.find("Error:") != std::string::npos ||
+            output.find("ERROR:") != std::string::npos ||
+            output.find("undefined reference") != std::string::npos ||
+            output.find("cannot find") != std::string::npos ||
+            output.find("fatal error") != std::string::npos) {
+            action.error = "Build failed with errors. Check output for details.";
+            return false;
+        }
+        
+        // Check for successful build indicators
+        if (output.find("Built target") != std::string::npos ||
+            output.find("Linking") != std::string::npos ||
+            output.find("[100%]") != std::string::npos) {
+            return true;
+        }
+    }
+    
+    // Check exit code
+    if (res.contains("exitCode") && res["exitCode"] != 0) {
+        action.error = "Build process exited with code " + std::to_string(res["exitCode"].get<int>());
+        return false;
+    }
+    
+    return true;
 }
 
 bool ActionExecutor::handleExecuteTests(Action& action)
@@ -683,8 +717,13 @@ bool ActionExecutor::handleQueryUser(Action& action)
         std::string prompt = action.params.value("prompt", "Confirm?");
         std::vector<std::string> options = action.params.value("options", std::vector<std::string>{"Yes", "No"});
 
-        onUserInputNeeded(prompt, options);
+        std::string userInput = onUserInputNeeded(prompt, options);
+        action.result = json({{"user_input", userInput}}).dump();
     }
-    action.result = json({{"user_input", "simulated_ack"}}).dump();
+    else
+    {
+        // No callback registered - use default response
+        action.result = json({{"user_input", "default"}}).dump();
+    }
     return true;
 }

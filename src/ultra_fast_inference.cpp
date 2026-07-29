@@ -200,8 +200,41 @@ void StreamingTensorReducer::reduceModelStreaming(
     const std::string& input_path,
     const std::string& output_path
 ) {
-    // TODO: Implement streaming file-based reduction
-    // Read chunks, prune, write chunks
+    // Streaming file-based reduction: read chunks, prune, write chunks
+    std::ifstream input(input_path, std::ios::binary);
+    if (!input.is_open()) {
+        std::cerr << "Failed to open input model: " << input_path << std::endl;
+        return;
+    }
+    
+    std::ofstream output(output_path, std::ios::binary);
+    if (!output.is_open()) {
+        std::cerr << "Failed to create output model: " << output_path << std::endl;
+        return;
+    }
+    
+    // Process in chunks to handle large models
+    const size_t CHUNK_SIZE = 1024 * 1024;  // 1MB chunks
+    std::vector<float> buffer(CHUNK_SIZE);
+    
+    while (input.good()) {
+        input.read(reinterpret_cast<char*>(buffer.data()), CHUNK_SIZE * sizeof(float));
+        size_t read_count = input.gcount() / sizeof(float);
+        
+        if (read_count == 0) break;
+        
+        // Apply magnitude-based pruning to this chunk
+        for (size_t i = 0; i < read_count; ++i) {
+            if (std::abs(buffer[i]) < config_.prune_threshold) {
+                buffer[i] = 0.0f;  // Zero out small weights
+            }
+        }
+        
+        // Write processed chunk
+        output.write(reinterpret_cast<const char*>(buffer.data()), read_count * sizeof(float));
+    }
+    
+    std::cout << "Streaming reduction complete: " << output_path << std::endl;
 }
 
 //=============================================================================

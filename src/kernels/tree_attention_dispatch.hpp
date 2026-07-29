@@ -14,9 +14,51 @@
 #include <cstddef>
 #include <memory>
 #include <functional>
+#include <cstdlib>
+#include <vector>
+#include <string>
+
+#ifdef _MSC_VER
+#include <intrin.h>  // For _mm_lfence, __rdtsc on MSVC
+#endif
+
+// Platform export macros
+#if defined(_MSC_VER)
+    #define RAWRXD_EXPORT __declspec(dllexport)
+#else
+    #define RAWRXD_EXPORT __attribute__((visibility("default")))
+#endif
 
 namespace RawrXD {
 namespace Kernels {
+
+// Custom deleter for aligned memory (must be before class that uses it)
+struct AlignedDeleter {
+    void operator()(void* ptr) const {
+#ifdef _MSC_VER
+        _aligned_free(ptr);
+#else
+        free(ptr);
+#endif
+    }
+};
+
+//============================================================================
+// CPU Capability Detection
+//============================================================================
+struct CPUCapabilities {
+    bool hasAVX512F = false;      // Foundation
+    bool hasAVX512VL = false;     // Vector Length extensions
+    bool hasAVX512DQ = false;     // Double/Quadword
+    bool hasAVX512BW = false;     // Byte/Word
+    bool osSupportsZMM = false;   // XCR0 ZMM state
+    
+    bool IsFullySupported() const {
+        return hasAVX512F && osSupportsZMM;
+    }
+};
+
+CPUCapabilities DetectCPUCapabilities();
 
 //============================================================================
 // Forward Declarations
@@ -76,13 +118,16 @@ struct VerificationResult {
 //============================================================================
 // Kernel Function Pointers (ABI)
 //============================================================================
+// ABI: Windows x64 calling convention
+// RCX = candidate_logits, RDX = draft_logits, R8 = tree_mask, R9 = output_probs
+// Stack: [rsp+40] = num_candidates, [rsp+48] = acceptance_threshold
 using VerifyFunc = uint32_t (*)(  // Returns acceptance mask
-    const float* candidate_logits,  // rcx: 16 x 64 floats
-    const float* draft_logits,      // rdx: 16 x 64 floats
-    const float* tree_mask,         // r8:  validity + draft probs
-    float* output_probs,            // r9:  output buffer
-    uint32_t num_candidates,        // [rsp+40]: must be 16
-    float acceptance_threshold      // xmm3: threshold
+    const float* candidate_logits,
+    const float* draft_logits,
+    const float* tree_mask,
+    float* output_probs,
+    uint32_t num_candidates,
+    float acceptance_threshold
 );
 
 using InvalidateKVFunc = void (*)( // No return
@@ -96,12 +141,19 @@ using HasAVX512Func = int (*)();   // Returns 1 if supported
 //============================================================================
 // Kernel Dispatch Table
 //============================================================================
+enum class ISA : uint32_t {
+    Scalar = 0,
+    AVX2 = 1,
+    AVX512 = 2
+};
+
 struct TreeAttentionKernel {
     VerifyFunc verify;                    // Main verification
     InvalidateKVFunc invalidate_kv;       // KV cache cleanup
     HasAVX512Func has_avx512;             // Feature detection
     const char* name;                     // "AVX-512", "AVX2", "Scalar"
     uint32_t version;                     // Kernel version
+    ISA isa_level;                        // ISA classification
 };
 
 //============================================================================
@@ -114,10 +166,13 @@ public:
     
     // Force specific kernel (for testing)
     static TreeAttentionKernel GetAVX512Kernel();
+    static TreeAttentionKernel GetAVX2Kernel();
     static TreeAttentionKernel GetScalarKernel();
     
-private:
+    // Runtime feature detection (public for testing)
     static bool DetectAVX512();
+    static bool DetectAVX2();
+    static bool DetectSSE42();
 };
 
 //============================================================================
@@ -176,19 +231,29 @@ private:
     std::unique_ptr<float, AlignedDeleter> aligned_mask_;
     std::unique_ptr<float, AlignedDeleter> aligned_output_;
     
-    // Cycle timing
-    uint64_t ReadTSC();
+    // Cycle timing with serialization
+    uint64_t ReadTSC() {
+#ifdef _MSC_VER
+        _mm_lfence();
+        uint64_t tsc = __rdtsc();
+        _mm_lfence();
+        return tsc;
+#else
+        uint32_t eax, edx;
+        __asm__ __volatile__ (
+            "lfence\n"
+            "rdtsc\n"
+            "lfence\n"
+            : "=a"(eax), "=d"(edx)
+            :: "memory"
+        );
+        return ((uint64_t)edx << 32) | eax;
+#endif
+    }
     
     // Aligned allocation helper
     static void* aligned_alloc(size_t size, size_t alignment = 64);
     static void aligned_free(void* ptr);
-    
-    // Custom deleter for unique_ptr
-    struct AlignedDeleter {
-        void operator()(void* ptr) const {
-            aligned_free(ptr);
-        }
-    };
 };
 
 //============================================================================
@@ -196,7 +261,7 @@ private:
 //============================================================================
 extern "C" {
     // Kernel exports (from intrinsics or ASM)
-    __declspec(dllexport) uint32_t TreeAttentionVerify_AVX512_Export(
+    RAWRXD_EXPORT uint32_t TreeAttentionVerify_AVX512_Export(
         const float* candidate_logits,
         const float* draft_logits,
         const float* tree_mask,
@@ -205,14 +270,14 @@ extern "C" {
         float acceptance_threshold
     );
     
-    __declspec(dllexport) void KVCacheInvalidate_AVX512_Export(
+    RAWRXD_EXPORT void KVCacheInvalidate_AVX512_Export(
         uint8_t* kv_cache_base,
         uint32_t rejection_mask,
         uint32_t entry_size
     );
     
-    __declspec(dllexport) int HasAVX512F_Export();
-    __declspec(dllexport) uint64_t ReadTSC_Export();
+    RAWRXD_EXPORT int HasAVX512F_Export();
+    RAWRXD_EXPORT uint64_t ReadTSC_Export();
 }
 
 } // namespace Kernels

@@ -38,7 +38,8 @@ extern "C" bool BeaconClient_SendHeartbeat(const char* clientId, const char* sta
         return false;
     }
     
-    // For now, just log the heartbeat
+    // Log heartbeat to debug output
+    // Production implementation would send to telemetry endpoint
     char buf[512];
     snprintf(buf, sizeof(buf), "[Beacon] Heartbeat from %s: %s\n", clientId, status);
     OutputDebugStringA(buf);

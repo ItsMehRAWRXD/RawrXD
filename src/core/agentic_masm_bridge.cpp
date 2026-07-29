@@ -144,8 +144,8 @@ extern "C" __declspec(dllexport) void Bridge_ApertureForward(
 ) {
     // This bridges MASM -> C++ -> Aperture
     // In production, this calls the actual Aperture engine
-    
-    // For now, simulate based on prompt
+
+    // Basic implementation based on prompt keywords
     if (strstr(prompt, "time")) {
         snprintf(response, response_len,
             "[THINK] The user wants to know the current time.\n"

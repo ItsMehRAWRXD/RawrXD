@@ -298,7 +298,11 @@ void EditorTab::updateModifiedState() {
 // MultiTabEditor Implementation
 // ============================================================================
 
-MultiTabEditor::MultiTabEditor(void* /*parent*/) {}
+MultiTabEditor::MultiTabEditor(void* /*parent*/)
+    : m_tabs()
+    , m_activeTabIndex(0)
+    , m_lspClient(nullptr)
+{}
 
 MultiTabEditor::~MultiTabEditor() = default;
 

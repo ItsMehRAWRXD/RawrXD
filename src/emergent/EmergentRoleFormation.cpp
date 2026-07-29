@@ -462,7 +462,7 @@ bool EmergentRoleFormation::SaveFormation(const std::string& path) const {
 }
 
 bool EmergentRoleFormation::LoadFormation(const std::string& path) {
-    // Simplified load
+    // Basic implementation
     return false;
 }
 

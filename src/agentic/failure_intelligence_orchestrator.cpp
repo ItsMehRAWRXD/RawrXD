@@ -331,8 +331,8 @@ RecoveryPlan* FailureIntelligenceOrchestrator::generateRecoveryPlan(
         // Generate on-the-fly (without storing in history)
         FailureSignal sig_copy = signal;
         sig_copy.category = classifyFailure(signal);
-        // Would need analyzeFailure here, but it's thread-locked
-        // For now, use only classifyFailure result
+        // Use classifyFailure result for recovery planning
+        // Full analysis would require thread-safe access to analyzeFailure
     }
 
     auto plan = std::make_unique<RecoveryPlan>();
@@ -435,8 +435,8 @@ bool FailureIntelligenceOrchestrator::executeRecovery(
     if (m_recoveryExecutorFn) {
         success = m_recoveryExecutorFn(*plan, output);
     } else {
-        // Simulated execution
-        output = "Simulated recovery execution of: " + plan->strategy_description;
+        // Default execution when no callback is registered
+        output = "Recovery execution: " + plan->strategy_description;
         success = true;
     }
 

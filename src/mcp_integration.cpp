@@ -165,7 +165,12 @@ static std::string jsonExtractToolName(const std::string& paramsJson) {
 // MCPServer Implementation
 // ============================================================================
 
-MCPServer::MCPServer() {}
+MCPServer::MCPServer()
+    : m_running(false)
+    , m_totalRequests(0)
+    , m_totalErrors(0)
+    , m_nextId(1)
+{}
 
 MCPServer::~MCPServer() {
     if (m_running) shutdown();
@@ -588,7 +593,13 @@ void MCPServer::stopTransport() {
 // MCPClient Implementation
 // ============================================================================
 
-MCPClient::MCPClient() {}
+MCPClient::MCPClient()
+    : m_connected(false)
+    , m_processHandle(nullptr)
+    , m_stdinWrite(nullptr)
+    , m_stdoutRead(nullptr)
+    , m_nextId(1)
+{}
 
 MCPClient::~MCPClient() {
     disconnect();

@@ -1,4 +1,4 @@
-﻿# 🤖 Headless Agentic Test Results - Custom Models
+# 🤖 Headless Agentic Test Results - Custom Models
 **Test Date**: 2025-11-24 19:47:42  
 **Test Duration**: 52.66 seconds  
 **Test Level**: COMPREHENSIVE  

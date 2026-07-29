@@ -721,3 +721,220 @@ add_custom_command(TARGET model_stack_validation POST_BUILD
 # Install
 install(TARGETS model_stack_validation DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/test_model.gguf DESTINATION bin)
+
+# ============================================================================
+# VALIDATION GATE RUNNER - Complete validation gate framework
+# ============================================================================
+
+# ============================================================================
+# TOKEN ESTIMATOR SWARM LIBRARY
+# ============================================================================
+
+# Token Estimator Swarm library
+add_library(TokenEstimatorSwarm STATIC
+    ../Executive/TokenEstimatorSwarm.cpp
+)
+
+target_include_directories(TokenEstimatorSwarm PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Executive
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+# System includes
+target_include_directories(TokenEstimatorSwarm SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+# Library directories
+target_link_directories(TokenEstimatorSwarm PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+# Link libraries
+target_link_libraries(TokenEstimatorSwarm PRIVATE
+    kernel32
+    user32
+)
+
+# C++17 standard
+set_property(TARGET TokenEstimatorSwarm PROPERTY CXX_STANDARD 17)
+set_property(TARGET TokenEstimatorSwarm PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# Static runtime
+if(MSVC)
+    set_property(TARGET TokenEstimatorSwarm PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+message(STATUS "Token Estimator Swarm library: TokenEstimatorSwarm")
+
+# Token Estimator Swarm Demo executable
+add_executable(TokenEstimatorDemo
+    ../Executive/TokenEstimatorDemo.cpp
+)
+
+target_include_directories(TokenEstimatorDemo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Executive
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+target_link_libraries(TokenEstimatorDemo PRIVATE
+    TokenEstimatorSwarm
+)
+
+# System includes
+target_include_directories(TokenEstimatorDemo SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+# Library directories
+target_link_directories(TokenEstimatorDemo PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+# C++17 standard
+set_property(TARGET TokenEstimatorDemo PROPERTY CXX_STANDARD 17)
+set_property(TARGET TokenEstimatorDemo PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# Static runtime
+if(MSVC)
+    set_property(TARGET TokenEstimatorDemo PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+endif()
+
+message(STATUS "Token Estimator Swarm demo: TokenEstimatorDemo")
+
+# ============================================================================
+# VALIDATION GATE RUNNER - Complete validation gate framework
+# ============================================================================
+
+# Validation Gate Runner executable
+add_executable(ValidationRunner
+    ValidationGate_Master.cpp
+    ValidationRunner.cpp
+    gates/VAL001_CoreInferenceGate.cpp
+    gates/VAL002_ModelLoadingGate.cpp
+    gates/VAL003_TokenizerGate.cpp
+    gates/VAL004_KVCacheGate.cpp
+    gates/VAL005_SamplingGate.cpp
+    gates/VAL006_QuantizationGate.cpp
+    gates/VAL007_MemoryManagementGate.cpp
+    gates/VAL008_ThreadingGate.cpp
+    gates/VAL009_ErrorHandlingGate.cpp
+    gates/VAL010_Through_VAL023.cpp
+    gates/VAL039_Plus_Gates.cpp
+    gates/VAL051_Through_VAL060_Win32IDE.cpp
+    gates/TokenEfficiencySwarm.cpp
+    gates/VAL061_TokenEstimatorSwarmGate.cpp
+    gates/VAL062_SwarmIntegrationGate.cpp
+    ../executive/SwarmIntegration.cpp
+    ../executive/TokenEfficiencySwarm.cpp
+)
+
+# Include directories for ValidationRunner
+target_include_directories(ValidationRunner PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/gates
+)
+
+# System includes
+target_include_directories(ValidationRunner SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+# Library directories
+target_link_directories(ValidationRunner PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+# Link libraries
+target_link_libraries(ValidationRunner PRIVATE
+    kernel32
+    user32
+    version
+    TokenEstimatorSwarm
+)
+
+# C++17 standard
+set_property(TARGET ValidationRunner PROPERTY CXX_STANDARD 17)
+set_property(TARGET ValidationRunner PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# Static runtime
+if(MSVC)
+    set_property(TARGET ValidationRunner PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(ValidationRunner PRIVATE /W4 /EHsc)
+endif()
+
+message(STATUS "Validation Gate Runner: ValidationRunner")
+
+# ============================================================================
+# SWARM INTEGRATION TEST
+# ============================================================================
+
+# Swarm Integration Test executable
+add_executable(test_swarm_integration
+    ../Executive/test_swarm_integration.cpp
+    ../Executive/SwarmIntegration.cpp
+    ../Executive/TokenEfficiencySwarm.cpp
+    ../Executive/TokenEstimatorSwarm.cpp
+)
+
+# Include directories
+target_include_directories(test_swarm_integration PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../Executive
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+# System includes
+target_include_directories(test_swarm_integration SYSTEM PRIVATE
+    "${_MSVC_ROOT}/include"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared"
+    "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um"
+)
+
+# Library directories
+target_link_directories(test_swarm_integration PRIVATE
+    "${_MSVC_ROOT}/lib/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64"
+    "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64"
+)
+
+# Link libraries
+target_link_libraries(test_swarm_integration PRIVATE
+    kernel32
+    user32
+)
+
+# C++17 standard
+set_property(TARGET test_swarm_integration PROPERTY CXX_STANDARD 17)
+set_property(TARGET test_swarm_integration PROPERTY CXX_STANDARD_REQUIRED ON)
+
+# Static runtime
+if(MSVC)
+    set_property(TARGET test_swarm_integration PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_compile_options(test_swarm_integration PRIVATE /W4 /EHsc)
+endif()
+
+message(STATUS "Swarm Integration Test: test_swarm_integration")

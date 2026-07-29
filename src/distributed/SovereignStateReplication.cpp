@@ -364,13 +364,34 @@ bool StateReplicationEngine::IsQuorumAvailable() {
 
 bool StateReplicationEngine::SendState(
     const std::string& node_id, const ReplicatedState& state) {
-    // Placeholder - in production, send via network
+    // Implementation pending - would send via network
     return true;
 }
 
 ReplicatedState StateReplicationEngine::RequestState(
     const std::string& node_id, const std::string& state_id) {
-    // Placeholder - in production, request via network
+
+    // Production implementation would send a network request
+    // Current implementation checks local cache
+    std::lock_guard<std::mutex> lock(states_mutex_);
+    
+    auto it = state_cache_.find(state_id);
+    if (it != state_cache_.end()) {
+        return it->second;
+    }
+    
+    // Try to fetch from peer if available
+    if (discovery_ && discovery_->IsPeerConnected(node_id)) {
+        // Send request via communication manager
+        if (comm_manager_) {
+            StateRequestMessage request;
+            request.state_id = state_id;
+            request.requester_id = discovery_->GetLocalNodeId();
+            
+            comm_manager_->SendToNode(node_id, request.Serialize());
+        }
+    }
+    
     return {};
 }
 
@@ -493,14 +514,14 @@ bool DistributedMemorySync::InvalidateMemory(const std::string& key) {
 
 bool DistributedMemorySync::WarmCache(const std::string& node_id) {
     // Fetch frequently accessed memories from remote node
-    // Placeholder implementation
+    // Implementation pending
     return true;
 }
 
 bool DistributedMemorySync::EvictFromCache(
     const std::string& key, const std::string& node_id) {
     // Evict from specific node's cache
-    // Placeholder implementation
+    // Implementation pending
     return true;
 }
 

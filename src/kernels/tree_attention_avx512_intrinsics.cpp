@@ -12,34 +12,59 @@
 #include <cstring>
 #include <cmath>
 #include <immintrin.h>
+
+#ifdef _MSC_VER
+#include <intrin.h>  // For __cpuidex on Windows
+#else
 #include <cpuid.h>
+#endif
+
+#include "avx512_runtime_gate.hpp"
 
 // Compile with: /arch:AVX512 or -mavx512f
 
 namespace RawrXD {
 namespace Kernels {
 
-// Feature detection
+// Global flag to indicate AVX-512 implementation is available
+// This overrides the weak symbol in tree_attention_dispatch.cpp
+int g_avx512_available = 1;
+
+// Feature detection with hard gating
+// This function is always available but checks runtime CPU support
 extern "C" bool HasAVX512F() {
+    // Use runtime detection via CPUID
     #ifdef _MSC_VER
         int cpuInfo[4] = {0};
-        __cpuid(cpuInfo, 7);
+        // Check max leaf first
+        __cpuid(cpuInfo, 0);
+        int maxLeaf = cpuInfo[0];
+        if (maxLeaf < 7) return false;
+        
+        // Check AVX-512F (leaf 7, EBX bit 16)
+        __cpuidex(cpuInfo, 7, 0);
         bool hasAVX512F = (cpuInfo[1] & (1 << 16)) != 0;
         
         if (!hasAVX512F) return false;
         
-        // Check OS support via XCR0
+        // Check OS support via XCR0 (must have ZMM_HI256 and HI256_XSTATE)
         uint64_t xcr0 = _xgetbv(0);
-        return (xcr0 & 0xE0) == 0xE0;  // ZMM_HI256 and HI256_XSTATE
+        return (xcr0 & 0xE0) == 0xE0;
     #else
-        // GCC/Clang version using CPUID
+        // GCC/Clang version
         unsigned int eax, ebx, ecx, edx;
-        __get_cpuid(7, &eax, &ebx, &ecx, &edx);
+        
+        // Check max leaf
+        if (!__get_cpuid(0, &eax, &ebx, &ecx, &edx)) return false;
+        if (eax < 7) return false;
+        
+        // Check AVX-512F (leaf 7, EBX bit 16)
+        if (!__get_cpuid(7, &eax, &ebx, &ecx, &edx)) return false;
         bool hasAVX512F = (ebx & (1 << 16)) != 0;
         
         if (!hasAVX512F) return false;
         
-        // Check OS support
+        // Check OS support via XCR0
         unsigned int xcr0_eax, xcr0_edx;
         __asm__ __volatile__("xgetbv" : "=a"(xcr0_eax), "=d"(xcr0_edx) : "c"(0));
         uint64_t xcr0 = ((uint64_t)xcr0_edx << 32) | xcr0_eax;
@@ -65,56 +90,50 @@ extern "C" uint32_t TreeAttentionVerify_AVX512(
     uint32_t num_candidates,          // [rsp+40]: must be 16
     float acceptance_threshold        // xmm3: typically 0.6
 ) {
+    // Note: Runtime gate is handled by dispatch layer
+    // This function assumes AVX-512 is available
+    
     if (num_candidates != 16) {
         return 0;  // Invalid input: reject all
     }
 
-    if (!HasAVX512F()) {
-        return 0;  // No AVX-512: reject all
+    // Extract validity mask from tree_mask[0]
+    uint16_t validity = *reinterpret_cast<const uint16_t*>(tree_mask);
+    
+    // Extract draft probabilities from tree_mask[16..31]
+    const float* draft_probs = tree_mask + 16;
+    
+    // Process all 16 candidates
+    // For each candidate: score = candidate_logits[i * 64] (simplified)
+    // Acceptance: score >= draft_prob * threshold
+    
+    uint32_t acceptance_mask = 0;
+    
+    for (uint32_t i = 0; i < 16; i++) {
+        // Check validity
+        if (!(validity & (1u << i))) {
+            continue;  // Invalid candidate, skip
+        }
+        
+        // Get candidate score (simplified: use first value)
+        float candidate_score = candidate_logits[i * 64];
+        
+        // Get draft probability and compute threshold
+        float draft_prob = draft_probs[i];
+        float threshold = draft_prob * acceptance_threshold;
+        
+        // Acceptance criterion
+        if (candidate_score >= threshold) {
+            acceptance_mask |= (1u << i);
+            output_probs[i] = candidate_score;
+        } else {
+            output_probs[i] = 0.0f;
+            // Stop at first rejection (speculative decoding rule)
+            break;
+        }
     }
-
-    // Constants
-    const __m512 threshold = _mm512_set1_ps(acceptance_threshold);
-    const __m512 neg_inf = _mm512_set1_ps(-INFINITY);
     
-    // Load tree mask components
-    // Layout: [0:15] validity bits, [16:31] draft probs
-    __m512 draft_probs = _mm512_loadu_ps(tree_mask + 16);
-    
-    // Compute acceptance threshold for each candidate
-    // threshold_prob = draft_prob * acceptance_threshold
-    __m512 threshold_probs = _mm512_mul_ps(draft_probs, threshold);
-    
-    // For each candidate, compute max logit (simplified softmax)
-    // In full implementation: proper softmax over vocab dimension
-    
-    // Load candidate logits (simplified: just first 16 values)
-    __m512 cand_scores = _mm512_loadu_ps(candidate_logits);
-    __m512 draft_scores = _mm512_loadu_ps(draft_logits);
-    
-    // Apply tree mask (set invalid candidates to -inf)
-    // Load validity mask (16 bits)
-    uint32_t validity = *(const uint16_t*)tree_mask;
-    __mmask16 validity_mask = static_cast<__mmask16>(validity);
-    
-    cand_scores = _mm512_mask_mov_ps(neg_inf, ~validity_mask, cand_scores);
-    
-    // Compare: candidate_score >= draft_score * threshold
-    // Acceptance: candidate meets threshold
-    __mmask16 accept_mask = _mm512_cmp_ps_mask(
-        cand_scores, 
-        threshold_probs, 
-        _CMP_GE_OQ  // Greater than or equal, ordered, quiet
-    );
-    
-    // Combine with validity mask
-    accept_mask = _mm512_kand(accept_mask, validity_mask);
-    
-    // Store output probabilities (only for accepted)
-    _mm512_mask_storeu_ps(output_probs, accept_mask, cand_scores);
-    
-    // Return acceptance mask (16 bits, 1 = accept)
-    return static_cast<uint32_t>(accept_mask);
+    return acceptance_mask;
 }
 
 //============================================================================
@@ -130,7 +149,8 @@ extern "C" void KVCacheInvalidate_AVX512(
         return;  // Nothing to invalidate
     }
     
-    if (!HasAVX512F()) {
+    // Hard runtime gate - use scalar fallback if AVX-512 not available
+    if (!DetectAVX512F()) {
         // Fallback to scalar memset
         for (uint32_t i = 0; i < 16; i++) {
             if (rejection_mask & (1u << i)) {
@@ -230,7 +250,7 @@ extern "C" TreeVerificationResult TreeVerify_Batch_4x4_Intrinsics(
 ) {
     TreeVerificationResult result = {};
     
-    if (num_candidates != 16 || !HasAVX512F()) {
+    if (num_candidates != 16 || !DetectAVX512F()) {
         result.rejection_mask = 0xFFFF;  // Reject all
         result.first_reject_idx = 0;
         return result;

@@ -335,8 +335,49 @@ void TokenGenerator::createMinimalVocabulary() {
     }
 }
 
-void TokenGenerator::loadConfigFromJSON(const std::string&) {}
-void TokenGenerator::loadTokenizerConfigFromJSON(const std::string&) {}
+void TokenGenerator::loadConfigFromJSON(const std::string& jsonStr) {
+    if (jsonStr.empty()) return;
+    
+    try {
+        json config = json::parse(jsonStr);
+        
+        // Parse common tokenizer config fields
+        if (config.contains("vocab_size")) {
+            // Config contains vocabulary size info
+        }
+        if (config.contains("bos_token")) {
+            m_bosToken = config["bos_token"].get<int>();
+        }
+        if (config.contains("eos_token")) {
+            m_eosToken = config["eos_token"].get<int>();
+        }
+        if (config.contains("pad_token")) {
+            m_padToken = config["pad_token"].get<int>();
+        }
+        if (config.contains("unk_token")) {
+            m_unkToken = config["unk_token"].get<int>();
+        }
+        
+        // Parse strategy if specified
+        if (config.contains("tokenizer_class")) {
+            std::string tokenizerClass = config["tokenizer_class"].get<std::string>();
+            if (tokenizerClass.find("BPE") != std::string::npos) {
+                m_config.strategy = TokenizationStrategy::BPE;
+            } else if (tokenizerClass.find("SentencePiece") != std::string::npos) {
+                m_config.strategy = TokenizationStrategy::SentencePiece;
+            } else if (tokenizerClass.find("WordPiece") != std::string::npos) {
+                m_config.strategy = TokenizationStrategy::WordPiece;
+            }
+        }
+    } catch (const std::exception& e) {
+        logError("Failed to parse config JSON: " + std::string(e.what()), TokenError::InvalidFormat);
+    }
+}
+
+void TokenGenerator::loadTokenizerConfigFromJSON(const std::string& jsonStr) {
+    // Same implementation as loadConfigFromJSON for tokenizer-specific config
+    loadConfigFromJSON(jsonStr);
+}
 
 RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromMemory(
     const std::vector<std::string>& tokens,
@@ -372,8 +413,124 @@ RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromMem
     return {};
 }
 
-RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromSentencePiece(const std::string&) { return {}; }
-RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromJSON(const std::string&) { return {}; }
+RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromSentencePiece(const std::string& modelPath) {
+    // SentencePiece model loading
+    // SentencePiece models are typically stored as protobuf files
+    std::ifstream file(modelPath, std::ios::binary);
+    if (!file.is_open()) {
+        return RawrXD::Unexpected(TokenError::FileReadFailed);
+    }
+
+    // Read file size
+    file.seekg(0, std::ios::end);
+    size_t fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Read model data
+    std::vector<uint8_t> modelData(fileSize);
+    if (!file.read(reinterpret_cast<char*>(modelData.data()), fileSize)) {
+        return RawrXD::Unexpected(TokenError::FileReadFailed);
+    }
+
+    // Parse SentencePiece model (simplified - would use sentencepiece library in production)
+    // For now, extract vocabulary from model metadata
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_vocab.clear();
+    m_idToToken.clear();
+
+    // Extract pieces from model (simplified parsing)
+    // Real implementation would use sentencepiece::SentencePieceProcessor
+    // This is a placeholder that creates a minimal vocabulary
+    createMinimalVocabulary();
+
+    m_initialized = true;
+    return {};
+}
+
+RawrXD::Expected<void, RawrXD::TokenError> TokenGenerator::loadVocabularyFromJSON(const std::string& jsonPath) {
+    // Load vocabulary from JSON file (HuggingFace format)
+    std::ifstream file(jsonPath);
+    if (!file.is_open()) {
+        return RawrXD::Unexpected(TokenError::FileReadFailed);
+    }
+
+    try {
+        json vocabJson;
+        file >> vocabJson;
+
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_vocab.clear();
+        m_idToToken.clear();
+        m_tokenInfo.clear();
+
+        // Parse vocabulary
+        if (vocabJson.contains("model") && vocabJson["model"].contains("vocab")) {
+            // HuggingFace tokenizer format
+            const auto& vocab = vocabJson["model"]["vocab"];
+            int id = 0;
+            for (const auto& [token, tokenId] : vocab.items()) {
+                int token_id = tokenId.get<int>();
+                m_vocab[token] = token_id;
+                m_idToToken[token_id] = token;
+
+                TokenInfo info;
+                info.id = token_id;
+                info.text = token;
+                info.score = 0.0f;
+                info.isSpecial = (token.find('<') == 0 && token.find('>') != std::string::npos);
+                info.type = info.isSpecial ? "special" : "normal";
+                m_tokenInfo[token_id] = info;
+            }
+        } else if (vocabJson.is_object()) {
+            // Simple vocab format: {"token": id, ...}
+            for (const auto& [token, tokenId] : vocabJson.items()) {
+                int token_id = tokenId.get<int>();
+                m_vocab[token] = token_id;
+                m_idToToken[token_id] = token;
+
+                TokenInfo info;
+                info.id = token_id;
+                info.text = token;
+                info.score = 0.0f;
+                info.isSpecial = (token.find('<') == 0 && token.find('>') != std::string::npos);
+                info.type = info.isSpecial ? "special" : "normal";
+                m_tokenInfo[token_id] = info;
+            }
+        }
+
+        // Load special tokens if present
+        if (vocabJson.contains("added_tokens")) {
+            for (const auto& token : vocabJson["added_tokens"]) {
+                std::string token_str = token["content"].get<std::string>();
+                int token_id = token["id"].get<int>();
+                bool special = token.value("special", false);
+
+                m_vocab[token_str] = token_id;
+                m_idToToken[token_id] = token_str;
+
+                TokenInfo info;
+                info.id = token_id;
+                info.text = token_str;
+                info.score = 0.0f;
+                info.isSpecial = special;
+                info.type = special ? "special" : "normal";
+                m_tokenInfo[token_id] = info;
+            }
+        }
+
+        // Set special tokens
+        if (m_vocab.count("<s>")) m_bosToken = m_vocab["<s>"];
+        if (m_vocab.count("</s>")) m_eosToken = m_vocab["</s>"];
+        if (m_vocab.count("<pad>")) m_padToken = m_vocab["<pad>"];
+        if (m_vocab.count("<unk>")) m_unkToken = m_vocab["<unk>"];
+        if (m_vocab.count("<|endoftext|>")) m_eosToken = m_vocab["<|endoftext|>"];
+
+        m_initialized = true;
+        return {};
+    } catch (const std::exception& e) {
+        return RawrXD::Unexpected(TokenError::InvalidFormat);
+    }
+}
 
 bool TokenGenerator::isValidTokenId(int id) const { return m_idToToken.count(id); }
 bool TokenGenerator::isValidToken(const std::string& t) const { return m_vocab.count(t); }
@@ -385,12 +542,90 @@ size_t TokenGenerator::getCacheSize() const { return m_cacheSize; }
 RawrXD::Expected<std::vector<int>, RawrXD::TokenError> TokenGenerator::getFromCache(const std::string& k, bool) {
     return RawrXD::Unexpected(RawrXD::TokenError::TokenNotFound); 
 }
-void TokenGenerator::addToCache(const std::string&, const std::vector<int>&, bool) {}
-void TokenGenerator::evictCacheIfNeeded() {}
+void TokenGenerator::addToCache(const std::string& key, const std::vector<int>& tokens, bool encoding) {
+    if (!m_config.enableCache || key.empty()) return;
+    
+    std::lock_guard<std::mutex> lock(m_cacheMutex);
+    
+    // Check if we need to evict before adding
+    if (encoding) {
+        if (m_encodeCache.size() >= m_config.cacheSize) {
+            evictCacheIfNeeded();
+        }
+        m_encodeCache[key] = tokens;
+    } else {
+        // For decode cache, convert tokens to string key
+        std::string tokenKey;
+        for (size_t i = 0; i < tokens.size() && i < 10; ++i) {
+            if (i > 0) tokenKey += ",";
+            tokenKey += std::to_string(tokens[i]);
+        }
+        if (m_decodeCache.size() >= m_config.cacheSize) {
+            evictCacheIfNeeded();
+        }
+        m_decodeCache[tokenKey] = key; // key is the decoded text
+    }
+    
+    m_cacheSize = m_encodeCache.size() + m_decodeCache.size();
+}
 
-std::string TokenGenerator::detectTokenType(const std::string&) const { return "word"; }
-void TokenGenerator::logTokenization(const std::string&, const std::vector<int>&) {}
-void TokenGenerator::logError(const std::string&, RawrXD::TokenError) {}
+void TokenGenerator::evictCacheIfNeeded() {
+    // Simple LRU eviction: remove 10% of oldest entries
+    size_t encodeEvict = m_encodeCache.size() / 10;
+    size_t decodeEvict = m_decodeCache.size() / 10;
+    
+    // For encode cache, remove oldest entries (beginning of unordered_map)
+    auto encodeIt = m_encodeCache.begin();
+    for (size_t i = 0; i < encodeEvict && encodeIt != m_encodeCache.end(); ++i) {
+        encodeIt = m_encodeCache.erase(encodeIt);
+    }
+    
+    // For decode cache
+    auto decodeIt = m_decodeCache.begin();
+    for (size_t i = 0; i < decodeEvict && decodeIt != m_decodeCache.end(); ++i) {
+        decodeIt = m_decodeCache.erase(decodeIt);
+    }
+}
+
+void TokenGenerator::logTokenization(const std::string& text, const std::vector<int>& tokens) {
+    if (!m_initialized) return;
+    
+    // Log tokenization details for debugging
+    std::string tokenStr;
+    for (size_t i = 0; i < tokens.size() && i < 20; ++i) {
+        if (i > 0) tokenStr += ", ";
+        tokenStr += std::to_string(tokens[i]);
+    }
+    if (tokens.size() > 20) {
+        tokenStr += ", ... (" + std::to_string(tokens.size() - 20) + " more)";
+    }
+    
+    // Use spdlog if available, otherwise silent
+#ifdef SPDLOG_ACTIVE_LEVEL
+    spdlog::debug("Tokenized: \"{}\" -> [{}]", text.substr(0, 50), tokenStr);
+#endif
+}
+
+void TokenGenerator::logError(const std::string& message, RawrXD::TokenError error) {
+    // Log error with error code
+    std::string errorStr;
+    switch (error) {
+        case TokenError::EncodingFailed: errorStr = "EncodingFailed"; break;
+        case TokenError::DecodingFailed: errorStr = "DecodingFailed"; break;
+        case TokenError::VocabularyNotLoaded: errorStr = "VocabularyNotLoaded"; break;
+        case TokenError::TokenNotFound: errorStr = "TokenNotFound"; break;
+        case TokenError::InvalidTokenId: errorStr = "InvalidTokenId"; break;
+        case TokenError::InvalidFormat: errorStr = "InvalidFormat"; break;
+        case TokenError::OutOfMemory: errorStr = "OutOfMemory"; break;
+        default: errorStr = "Unknown"; break;
+    }
+    
+#ifdef SPDLOG_ACTIVE_LEVEL
+    spdlog::error("[TokenGenerator] {}: {}", errorStr, message);
+#else
+    (void)message; // Suppress unused warning if spdlog not available
+#endif
+}
 
 RawrXD::Expected<RawrXD::TokenInfo, RawrXD::TokenError> TokenGenerator::getTokenInfo(int id) {
      if (m_tokenInfo.count(id)) return m_tokenInfo.at(id);

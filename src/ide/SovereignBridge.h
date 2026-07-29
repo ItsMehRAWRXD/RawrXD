@@ -56,4 +56,10 @@ BOOL    SovereignBridge_GenerateProjectSummary(const WCHAR* folder, const WCHAR*
 void    SovereignBridge_OnValidateCommand(RawrXD_IDE* ide);
 void    SovereignBridge_OnAutonomousCommand(RawrXD_IDE* ide);
 
+/* C-compatible exports for IDE integration */
+extern "C" {
+    void SovereignBridge_OutputBenchmarkSummary(void);
+    BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen);
+}
+
 #endif /* SOVEREIGN_BRIDGE_H */

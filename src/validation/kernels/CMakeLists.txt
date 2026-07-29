@@ -98,6 +98,7 @@ add_masm_source(telemetry_masm_kernels masm/abi_integrity_simple.asm)
 add_masm_source(telemetry_masm_kernels masm/q4_0_dequant.asm)
 add_masm_source(telemetry_masm_kernels masm/q4_0_dequant_optimized.asm)
 add_masm_source(telemetry_masm_kernels masm/RawrXD_TreeAttention_Kernel.asm)
+add_masm_source(telemetry_masm_kernels masm/tree_attention_masm_val038.asm)  # VAL-038.1 MASM mechanical translation
 
 # Add C++ wrapper files (if any)
 # target_sources(telemetry_masm_kernels PRIVATE kernels/masm_kernels_wrapper.cpp)

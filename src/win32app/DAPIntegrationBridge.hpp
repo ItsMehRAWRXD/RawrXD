@@ -8,6 +8,8 @@
 #include "Win32IDE_DAPServer.h"
 #include <windows.h>
 #include <functional>
+#include <mutex>
+#include <unordered_map>
 
 namespace RawrXD {
 namespace Win32 {
@@ -74,6 +76,14 @@ private:
     Win32IDE* m_ide;
     Win32IDE_DAPServer* m_server;
     Debug::DapService* m_service;
+    
+    // Cached data from callbacks
+    mutable std::vector<Debug::StackFrame> m_cachedStackTrace;
+    mutable std::vector<Debug::Variable> m_cachedVariables;
+    mutable std::mutex m_cacheMutex;
+    
+    // Breakpoint tracking
+    std::unordered_map<std::string, bool> m_breakpointStates;
     
     // Callback handlers
     void OnStateChanged(Debug::DapState oldState, Debug::DapState newState);

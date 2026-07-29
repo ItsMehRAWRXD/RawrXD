@@ -167,7 +167,7 @@ MutationResult SEGMutationEngine::ApplyMutation(const SEGMutation& mutation) {
     // Create backup if required
     if (config_.requireBackupBeforeMutation && mutation.isReversible) {
         // Would backup graph state
-        backups_[mutation.mutationId] = SEG::ExecutionGraph{}; // Placeholder
+        backups_[mutation.mutationId] = SEG::ExecutionGraph{}; // Empty backup (full implementation pending)
     }
     
     // Apply mutation based on type
@@ -256,7 +256,7 @@ bool SEGMutationEngine::RollbackMutation(const std::string& mutationId) {
 }
 
 MutationResult SEGMutationEngine::PreviewMutation(const SEGMutation& mutation) {
-    // Simulate without applying
+    // Preview without applying
     MutationResult result;
     result.mutationId = mutation.mutationId;
     result.beforeCriticalPathMs = CalculateCriticalPathLength();
@@ -439,8 +439,64 @@ SEGMutation SEGMutationEngine::CreateIsolationMutation(const std::string& node) 
 // ============================================================================
 
 double SEGMutationEngine::CalculateCriticalPathLength() const {
-    // Would calculate actual critical path
-    return 100.0; // Placeholder
+    if (segments_.empty()) return 0.0;
+    
+    // Build dependency graph
+    std::unordered_map<int, std::vector<int>> dependencies;
+    std::unordered_map<int, double> executionTimes;
+    
+    for (const auto& seg : segments_) {
+        dependencies[seg.id] = seg.dependencies;
+        executionTimes[seg.id] = seg.estimatedExecutionTime;
+    }
+    
+    // Calculate critical path using topological sort
+    std::unordered_map<int, double> earliestStart;
+    std::unordered_map<int, double> earliestFinish;
+    
+    // Initialize
+    for (const auto& seg : segments_) {
+        earliestStart[seg.id] = 0.0;
+        earliestFinish[seg.id] = executionTimes[seg.id];
+    }
+    
+    // Forward pass - calculate earliest start/finish times
+    bool changed = true;
+    int iterations = 0;
+    while (changed && iterations < static_cast<int>(segments_.size())) {
+        changed = false;
+        iterations++;
+        
+        for (const auto& seg : segments_) {
+            double maxDepFinish = 0.0;
+            for (int depId : seg.dependencies) {
+                auto it = earliestFinish.find(depId);
+                if (it != earliestFinish.end()) {
+                    maxDepFinish = std::max(maxDepFinish, it->second);
+                }
+            }
+            
+            double newStart = maxDepFinish;
+            double newFinish = newStart + executionTimes[seg.id];
+            
+            if (newStart > earliestStart[seg.id] || newFinish > earliestFinish[seg.id]) {
+                earliestStart[seg.id] = newStart;
+                earliestFinish[seg.id] = newFinish;
+                changed = true;
+            }
+        }
+    }
+    
+    // Find the maximum finish time (critical path length)
+    double criticalPathLength = 0.0;
+    for (const auto& [id, finishTime] : earliestFinish) {
+        criticalPathLength = std::max(criticalPathLength, finishTime);
+    }
+    
+    printf("[SEGMutationEngine] Critical path length: %.2f ms (%zu segments)\n",
+           criticalPathLength, segments_.size());
+    
+    return criticalPathLength;
 }
 
 double SEGMutationEngine::EstimateSpeedup(const SEGMutation& mutation) const {

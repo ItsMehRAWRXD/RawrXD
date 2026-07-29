@@ -567,7 +567,7 @@ bool ToolchainBridge::assembleCustom(const std::string& src,
 #ifdef RAWRXD_FROM_SCRATCH_TOOLCHAIN
     emit("  [ASM/CUSTOM] " + src);
     // TODO: Wire to x64_encoder API when parser is complete
-    // For now, fall back to ml64
+    // Fall back to ml64 (custom parser integration pending)
     if (!msvc_ml64_.empty()) {
         emit("  [FALLBACK] Using ml64 (custom parser incomplete)");
         return compileAsm(src, tgt);

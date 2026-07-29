@@ -71,6 +71,6 @@ namespace RawrXD::Extensions {
 
     void ExtensionSystemHost::broadcastEvent(const std::string& eventType, const std::string& payload) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        // Placeholder for event broadcasting to extensions
+        // Implementation pending for event broadcasting to extensions
     }
 }

@@ -188,6 +188,22 @@ std::vector<float> AdvancedSampler::softmax(const std::vector<float>& logits) {
     return probs;
 }
 
+// ISampler static method definition
+std::vector<float> ISampler::softmax(const std::vector<float>& logits) {
+    // Static implementation to avoid needing an object
+    std::vector<float> probs = logits;
+    float max_logit = *std::max_element(probs.begin(), probs.end());
+    float sum = 0.0f;
+    for (auto& logit : probs) {
+        logit = std::exp(logit - max_logit);
+        sum += logit;
+    }
+    for (auto& prob : probs) {
+        prob /= sum;
+    }
+    return probs;
+}
+
 std::string AdvancedSampler::methodToString(SamplingMethod method) {
     switch (method) {
         case SamplingMethod::GREEDY: return "Greedy";

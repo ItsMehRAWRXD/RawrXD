@@ -353,7 +353,7 @@ void LiveShare::applyOperation(const TextOperation& operation) {
 
 void LiveShare::sendOperation(const TextOperation& operation) {
     // Would send to server via WebSocket
-    // For now, just store locally
+    // Store locally (WebSocket integration pending)
     m_pendingOperations.push_back(operation);
 }
 
@@ -364,8 +364,9 @@ void LiveShare::receiveOperation(const TextOperation& operation) {
 }
 
 TextOperation LiveShare::transformOperation(const TextOperation& operation) {
-    // Simplified operational transform
-    // In a real implementation, this would handle concurrent edits
+    // Basic operational transform
+    // Full concurrent edit handling would be implemented here
+    (void)operation;
     return operation;
 }
 

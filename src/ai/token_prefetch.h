@@ -44,6 +44,7 @@ struct PrefetchRequest {
 struct PrefetchResult {
     std::string completion;         // Generated completion
     std::string context;            // Context it was generated from
+    std::string file_path;          // File this result belongs to
     float confidence;                // Model confidence
     int kernel_used;                // Which kernel was used
     std::chrono::microseconds latency;

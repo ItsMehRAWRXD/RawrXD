@@ -48,6 +48,9 @@ public:
     
 private:
     static std::vector<std::string> ExtractTypeSignatures(const std::string& code);
+    static bool TypesCompatible(const std::string& type1, const std::string& type2);
+    static bool ValidateTypeSemantics(const std::string& original, const std::string& transformed);
+    static bool IsNarrowingConversion(const std::string& from, const std::string& to);
 };
 
 // ============================================================================
@@ -119,6 +122,12 @@ private:
     bool ValidateSyntax(const std::string& code, const std::string& languageId);
     bool ValidateTypeSafety(const std::string& original, const std::string& transformed);
     bool ValidateBehaviorPreservation(const std::string& original, const std::string& transformed);
+    
+    // Detailed validation methods
+    bool ValidateControlFlowPreservation(const std::string& original, const std::string& transformed);
+    bool ValidateSideEffectPreservation(const std::string& original, const std::string& transformed);
+    bool ValidateMemoryAccessPreservation(const std::string& original, const std::string& transformed);
+    bool RunBehavioralAnalysis(const std::string& original, const std::string& transformed);
     
     // Parsing
     std::vector<TransformationSuggestion> ParseSuggestions(const std::string& response);

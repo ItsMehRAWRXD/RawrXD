@@ -369,7 +369,7 @@ BackupResult BackupManager::verifyBackup(const std::string& backupId)
         if (b.id == backupId) {
             // Verify CRC32 of all files in backup
             uint32_t checksum = 0;
-            // Simplified: mark as verified
+            // Mark as verified (full CRC verification pending)
             b.verified = true;
             emitEvent("backup_verified", &b);
             return BackupResult::ok("Backup verified");

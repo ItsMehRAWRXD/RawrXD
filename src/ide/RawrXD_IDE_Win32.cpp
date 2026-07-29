@@ -22,6 +22,7 @@
 #include "SovereignInferenceBridge.h"
 #include "IDE_DebuggerIntegration.h"
 #include "../debug/DebugBridge.hpp"
+#include "SovereignBridge.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -958,7 +959,6 @@ LRESULT CALLBACK RawrXD_IDE_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
         
         /* Ctrl+B - Output Benchmark Summary */
         if (wParam == 'B' && ctrl) {
-            extern "C" void SovereignBridge_OutputBenchmarkSummary(void);
             SovereignBridge_OutputBenchmarkSummary();
             RawrXD_IDE_OutputAppend(ide, L"[Benchmark] Summary output to debug log\r\n");
             return 0;
@@ -1566,7 +1566,7 @@ void RawrXD_IDE_OnTimer(RawrXD_IDE* ide, UINT_PTR timerId) {
 
     case IDT_TELEMETRY_HEARTBEAT:
         /* VAL-025: DebugBridge telemetry heartbeat - emit summary every 1s */
-        DebugBridge::LogTelemetrySummary();
+        RawrXD::DebugUI::DebugBridge::Instance().LogTelemetrySummary();
         break;
 
     default:
@@ -3496,7 +3496,6 @@ void RawrXD_IDE_GhostText_RequestInference(RawrXD_IDE* ide, const InferenceConte
     DWORD extractStart = GetTickCount();
     
     /* Call Deep2 bridge with versioned context */
-    extern "C" BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen);
     SovereignBridge_RequestCompletion(ctx->version, ctx->buffer, ctx->length);
     
     DWORD extractEnd = GetTickCount();
@@ -3507,7 +3506,6 @@ void RawrXD_IDE_GhostText_RequestInference(RawrXD_IDE* ide, const InferenceConte
     RawrXD_IDE_OutputAppend(ide, msg);
     
     /* Call Deep2 bridge with versioned context */
-    extern "C" BOOL SovereignBridge_RequestCompletion(uint32_t version, const char* context, size_t contextLen);
     if (!SovereignBridge_RequestCompletion(ctx->version, ctx->buffer, ctx->length)) {
         WCHAR err[256];
         StringCchPrintfW(err, 256, L"[Sovereign] Request failed: Bridge not initialized\r\n");

@@ -15,6 +15,9 @@ namespace CPUInference {
 }
 class AgenticIterativeReasoning;
 class AgenticLoopState;
+class AgenticExecutor;
+
+#include "sovereign_autonomy/SovereignAgentRuntime.hpp"
 
 // Simple replacement for QJsonObject
 struct AgentStatus {
@@ -142,6 +145,15 @@ public:
     void setTaskAssignedCallback(TaskAssignedCallback cb) { m_taskAssignedCallback = cb; }
     void setTaskCompletedCallback(TaskCompletedCallback cb) { m_taskCompletedCallback = cb; }
 
+    // ── Sovereign Autonomy Runtime Integration ──
+    void initializeSovereignRuntime();
+    std::shared_ptr<RawrXD::Autonomy::SovereignAgentRuntime> getSovereignRuntime() const;
+    std::string launchSovereignMission(const std::string& name, const std::string& goal);
+    bool cancelSovereignMission(const std::string& missionId);
+    RawrXD::Autonomy::MissionState getSovereignMissionState(const std::string& missionId) const;
+    float getSovereignMissionProgress(const std::string& missionId) const;
+    std::vector<std::string> getActiveSovereignMissions() const;
+
 private:
     std::string getAgentOpinion(const std::string& agentId, const std::string& question);
     std::string reconcileConflictingStates(const std::map<std::string, std::string>& state1, const std::map<std::string, std::string>& state2);
@@ -171,4 +183,6 @@ private:
     
     TaskAssignedCallback m_taskAssignedCallback;
     TaskCompletedCallback m_taskCompletedCallback;
+
+    std::shared_ptr<RawrXD::Autonomy::SovereignAgentRuntime> m_sovereignRuntime;
 };

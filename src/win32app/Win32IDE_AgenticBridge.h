@@ -154,6 +154,9 @@ class AgenticBridge
     void EnableMultiAgent(bool enabled) { m_multiAgentEnabled = enabled; }
     void WarmUpModel();
 
+    // Engine access for context window configuration
+    std::shared_ptr<RawrXD::CPUInferenceEngine> GetEngine() const { return m_nativeEngine; }
+
   private:
     // Native Integration
     std::shared_ptr<RawrXD::CPUInferenceEngine> m_nativeEngine;

@@ -290,7 +290,7 @@ private:
 
     std::string EncryptSecret(const std::string& secret) {
         // Encrypt using secure method
-        return "encrypted:" + secret; // Simplified
+        return "encrypted:" + secret; // Basic implementation - full encryption pending
     }
 
     std::string DecryptSecret(const std::string& encrypted) {

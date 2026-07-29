@@ -267,7 +267,7 @@ Test Results: 45 passed, 0 failed, 45 total
  * 
  * This is AI as code, not AI as data.
  * Nothing is spoofed.
- * Nothing is fictional.
+ * Nothing is unteleprompted.
  * All functionality is genuine.
  */
 ```

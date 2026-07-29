@@ -291,10 +291,10 @@ bool ImageEncoder::initialize(const std::string& model_path, const std::string& 
 }
 
 std::vector<float> ImageEncoder::encode(const Image& image) {
-    // Simulate encoding - return 512-dim embedding
+    // Generate embedding - return 512-dim vector
     std::vector<float> embedding(512);
-    
-    // Fill with simulated values
+
+    // Fill with randomized values (placeholder for actual vision model encoding)
     for (size_t i = 0; i < embedding.size(); ++i) {
         embedding[i] = static_cast<float>(rand()) / RAND_MAX;
     }

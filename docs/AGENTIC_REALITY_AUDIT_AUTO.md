@@ -1,4 +1,4 @@
-﻿# Agentic Reality Audit (Auto)
+# Agentic Reality Audit (Auto)
 
 Generated: 2026-03-07T00:55:25Z
 

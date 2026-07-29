@@ -405,6 +405,28 @@ bool BinaryPatcher::InsertCall32(uint64_t fromRva, uint64_t toRva)
     return PatchBytes(fromRva, callCode);
 }
 
+bool BinaryPatcher::InsertCall64(uint64_t fromRva, uint64_t toRva)
+{
+    // For 64-bit absolute call, we need to use indirect call via register
+    // mov rax, imm64 (48 B8 xx xx xx xx xx xx xx xx)
+    // call rax (FF D0)
+    // This is 12 bytes total
+    
+    uint8_t code[12];
+    code[0] = 0x48; // REX.W
+    code[1] = 0xB8; // MOV RAX, imm64
+    
+    // Write target address (little endian)
+    for (int i = 0; i < 8; i++) {
+        code[2 + i] = static_cast<uint8_t>((toRva >> (i * 8)) & 0xFF);
+    }
+    
+    code[10] = 0xFF; // CALL
+    code[11] = 0xD0; // RAX
+    
+    return PatchBytes(fromRva, code, 12);
+}
+
 bool BinaryPatcher::InsertRet(uint64_t rva, uint16_t stackBytes)
 {
     if (stackBytes == 0) {

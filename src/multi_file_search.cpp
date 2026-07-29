@@ -125,7 +125,22 @@ void MultiFileSearchWidget::onResultItemDoubleClicked(void*, int) {
     }
     m_resultClickedCb(m_resultClickedCtx, selected);
 }
-void MultiFileSearchWidget::onSearchResultsReady() {}
+void MultiFileSearchWidget::onSearchResultsReady() {
+    // Process pending results and add them to the tree
+    std::vector<MultiFileSearchResult> results;
+    {
+        std::lock_guard<std::mutex> lock(m_resultsMutex);
+        results = std::move(m_pendingResults);
+        m_pendingResults.clear();
+    }
+    
+    for (const auto& result : results) {
+        addResultToTree(result);
+    }
+    
+    // Update status with current result count
+    updateStatus("Found " + std::to_string(m_totalResultCount) + " results");
+}
 
 void MultiFileSearchWidget::onSearchFinished() {
     m_isSearching = false;
@@ -309,7 +324,31 @@ bool MultiFileSearchWidget::isIgnored(const std::string& path, const std::vector
     return false;
 }
 
-void MultiFileSearchWidget::addResultToTree(const MultiFileSearchResult&) {}
+void MultiFileSearchWidget::addResultToTree(const MultiFileSearchResult& result) {
+    // Add result to the results tree/list
+    if (!m_resultsTree) return;
+    
+#ifdef _WIN32
+    // Add to tree view
+    TVINSERTSTRUCT tvis = {};
+    tvis.hParent = TVI_ROOT;
+    tvis.hInsertAfter = TVI_LAST;
+    
+    // Format: "filename (line): preview"
+    std::string display = result.file + " (" + std::to_string(result.line) + "): " + result.lineText;
+    if (display.length() > 200) {
+        display = display.substr(0, 197) + "...";
+    }
+    
+    tvis.item.mask = TVIF_TEXT | TVIF_PARAM;
+    tvis.item.pszText = const_cast<LPSTR>(display.c_str());
+    tvis.item.lParam = reinterpret_cast<LPARAM>(&result);
+    
+    TreeView_InsertItem(m_resultsTree, &tvis);
+#else
+    (void)result;
+#endif
+}
 
 void MultiFileSearchWidget::updateStatus(const std::string& message) {
 #ifdef _WIN32

@@ -208,79 +208,67 @@ BenchmarkResult RunBenchmark(const std::string& name,
             end_to_end_samples.clear();
         }
         
-        // Simulate request
+        // Execute real inference request
         auto req_start = std::chrono::steady_clock::now();
         
-        // Generate synthetic latency based on system state
-        float base_latency = 25.0f;  // Base Q4_K latency
+        // Get actual model inference from the engine
+        InferenceRequest request;
+        request.prompt = "Benchmark test prompt for performance measurement";
+        request.max_tokens = 5 + rand() % 15;
+        request.temperature = 0.7f;
         
-        // Add jitter based on test type
-        if (name == "stress") {
-            base_latency += static_cast<float>(rand() % 30);
-        } else if (name == "quick") {
-            base_latency += static_cast<float>(rand() % 10);
-        } else {
-            base_latency += static_cast<float>(rand() % 20);
+        // Call actual inference engine
+        InferenceResult result;
+        bool inference_success = RunInference(request, result);
+        
+        if (!inference_success) {
+            std::cerr << "[Benchmark] Inference failed\n";
+            continue;
         }
         
-        // Simulate token generation
-        int tokens = 5 + rand() % 15;
-        for (int i = 0; i < tokens; i++) {
-            float token_latency = base_latency + static_cast<float>(rand() % 10);
+        // Collect actual metrics from the result
+        int tokens = result.tokens_generated;
+        float first_token_ms = result.first_token_latency_ms;
+        float avg_token_ms = result.avg_token_latency_ms;
+        float e2e_ms = result.total_latency_ms;
+        
+        if (warmup_done) {
+            first_token_samples.push_back(first_token_ms);
             
-            if (warmup_done) {
-                if (i == 0) {
-                    first_token_samples.push_back(token_latency);
-                }
+            // Add per-token latencies
+            for (int i = 0; i < tokens; i++) {
+                // Calculate per-token latency (first token is separate)
+                float token_latency = (i == 0) ? first_token_ms : avg_token_ms;
                 per_token_samples.push_back(token_latency);
             }
             
-            total_tokens++;
-            
-            // Simulate prediction
-            total_predictions++;
-            if (rand() % 100 < 78) {  // 78% accuracy
-                correct_predictions++;
-            }
-            
-            // Simulate KV access
-            kv_accesses++;
-            if (rand() % 100 < 92) {  // 92% hit rate
-                kv_hits++;
-            }
-            
-            // Simulate speculative decode
-            total_speculative++;
-            if (rand() % 100 < 72) {  // 72% acceptance
-                accepted_speculative++;
-            }
-            
-            // Simulate early exit
-            if (rand() % 100 < 35) {  // 35% early exit
-                early_exits++;
-            }
-            
-            std::this_thread::sleep_for(std::chrono::microseconds(
-                static_cast<int>(token_latency * 1000)));
-        }
-        
-        auto req_end = std::chrono::steady_clock::now();
-        float e2e_ms = std::chrono::duration_cast<std::chrono::microseconds>(
-            req_end - req_start).count() / 1000.0f;
-        
-        if (warmup_done) {
             end_to_end_samples.push_back(e2e_ms);
         }
         
-        // Simulate GPU metrics
-        float gpu_util = 0.75f + static_cast<float>(rand() % 20) / 100.0f;
-        float memory = 8.0f + static_cast<float>(rand() % 40) / 10.0f;
-        float temp = 65.0f + static_cast<float>(rand() % 15);
+        total_tokens += tokens;
+        
+        // Get actual prediction metrics from engine
+        total_predictions += result.total_predictions;
+        correct_predictions += result.correct_predictions;
+        
+        // Get actual KV cache metrics
+        kv_accesses += result.kv_cache_accesses;
+        kv_hits += result.kv_cache_hits;
+        
+        // Get speculative decode metrics
+        total_speculative += result.speculative_attempts;
+        accepted_speculative += result.speculative_accepted;
+        
+        // Get early exit metrics
+        early_exits += result.early_exits;
+        
+        // Get actual GPU metrics from system
+        GpuMetrics gpu_metrics = GetGpuMetrics();
         
         if (warmup_done) {
-            gpu_util_samples.push_back(gpu_util);
-            memory_samples.push_back(memory);
-            temperature_samples.push_back(temp);
+            gpu_util_samples.push_back(gpu_metrics.utilization);
+            memory_samples.push_back(gpu_metrics.memory_used_gb);
+            temperature_samples.push_back(gpu_metrics.temperature);
         }
         
         request_count++;
@@ -339,11 +327,44 @@ BenchmarkResult RunBenchmark(const std::string& name,
         static_cast<float>(accepted_speculative) / total_speculative : 0.0f;
     result.early_exit_rate = total_tokens > 0 ? 
         static_cast<float>(early_exits) / total_tokens : 0.0f;
-    result.arbitration_fairness = 0.88f;  // Simulated
+    // Real arbitration fairness: compute from request timing variance
+    if (!end_to_end_samples.empty()) {
+        float mean = 0.0f;
+        for (float s : end_to_end_samples) mean += s;
+        mean /= end_to_end_samples.size();
+        float variance = 0.0f;
+        for (float s : end_to_end_samples) variance += (s - mean) * (s - mean);
+        variance /= end_to_end_samples.size();
+        float stddev = std::sqrt(variance);
+        // Fairness = 1 - coefficient of variation (lower variance = higher fairness)
+        result.arbitration_fairness = mean > 0 ? std::max(0.0f, 1.0f - stddev / mean) : 0.0f;
+    } else {
+        result.arbitration_fairness = 0.0f;
+    }
     
-    // Stability
-    result.latency_drift_percent = 2.5f;  // Simulated
-    result.loop_stability_score = 0.92f;  // Simulated
+    // Real latency drift: compute from first vs last samples
+    if (per_token_samples.size() > 10) {
+        float earlyAvg = 0.0f, lateAvg = 0.0f;
+        size_t halfSize = per_token_samples.size() / 2;
+        for (size_t i = 0; i < halfSize; i++) earlyAvg += per_token_samples[i];
+        for (size_t i = halfSize; i < per_token_samples.size(); i++) lateAvg += per_token_samples[i];
+        earlyAvg /= halfSize;
+        lateAvg /= (per_token_samples.size() - halfSize);
+        result.latency_drift_percent = earlyAvg > 0 ? 
+            std::abs(lateAvg - earlyAvg) / earlyAvg * 100.0f : 0.0f;
+    } else {
+        result.latency_drift_percent = 0.0f;
+    }
+    
+    // Real loop stability: based on consistency of token generation rate
+    if (end_to_end_samples.size() > 5) {
+        float minVal = *std::min_element(end_to_end_samples.begin(), end_to_end_samples.end());
+        float maxVal = *std::max_element(end_to_end_samples.begin(), end_to_end_samples.end());
+        float range = maxVal - minVal;
+        result.loop_stability_score = maxVal > 0 ? std::max(0.0f, 1.0f - range / maxVal) : 1.0f;
+    } else {
+        result.loop_stability_score = 1.0f;
+    }
     result.loop_resets = 0;
     
     // Health score

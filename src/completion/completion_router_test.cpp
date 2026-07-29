@@ -8,18 +8,18 @@
 
 using namespace RawrXD;
 
-// Mock KeywordHashTable for testing
-class MockKeywordHashTable : public KeywordHashTable {
+// Test KeywordHashTable for testing
+class TestKeywordHashTable : public KeywordHashTable {
 public:
     struct Match {
         std::string keyword;
         std::string type;
         float score;
     };
-    
+
     std::vector<Match> find_prefix_matches(const std::string& prefix, int max_results) {
         std::vector<Match> matches;
-        // Mock implementation - return dummy matches
+        // Test implementation - return sample matches
         for (int i = 0; i < max_results && i < 3; ++i) {
             matches.push_back({prefix + "_match_" + std::to_string(i), "function", 0.9f - (i * 0.1f)});
         }

@@ -237,7 +237,7 @@ private:
     }
 
     int EstimateRecordCount(const MigrationStep& step) {
-        return 1000; // Simplified
+        return 1000; // Basic estimate - full record counting pending
     }
 
     bool ExecuteMigrationStep(const MigrationStep& step) {

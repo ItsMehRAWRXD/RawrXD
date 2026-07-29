@@ -270,9 +270,16 @@ void AIChatAssistant::generateStreamingResponse(const std::string& message) {
             m_streamCallback(std::string(1, response[i]));
         }
         
-        // Simulate streaming delay
-        if (i % 10 == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // Realistic streaming delay based on token type
+        // Punctuation and whitespace stream faster, words stream slower
+        char c = response[i];
+        if (c == ' ' || c == '\n' || c == '\t') {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        } else if (i % 8 == 0) {
+            // Word boundary: slightly longer delay
+            std::this_thread::sleep_for(std::chrono::milliseconds(15));
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(8));
         }
     }
     

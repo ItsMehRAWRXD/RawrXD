@@ -251,8 +251,7 @@ ModelDescriptor* HotpatchModelManager::LoadGGUF(const char* path) {
     // and copy each one's data to the appropriate offset in the heap buffer.
     const void* mappedBase = loader.GetBaseAddress();
     if (mappedBase && totalTensorBytes > 0) {
-        // For now, copy the entire mapped region (or as much as we calculated)
-        // In production, this should be tensor-by-tensor with proper alignment
+        // Copy the mapped region (tensor-by-tensor copy with alignment pending)
         memcpy(heapBuffer, mappedBase, totalTensorBytes);
         printf("[HotpatchModelManager] Copied %zu bytes to heap buffer\n", totalTensorBytes);
     }
@@ -298,7 +297,7 @@ void HotpatchModelManager::FreeModelResources(ModelDescriptor* desc) {
         // When Vulkan is enabled, this would be:
         // VkFence fence = (VkFence)desc->gpuFence;
         // vkDestroyFence(device, fence, nullptr);
-        // For now, just clear the handle
+        // Clear fence handle (Vulkan fence cleanup pending)
         printf("[HotpatchModelManager] Clearing fence handle: %p\n", desc->gpuFence);
         desc->gpuFence = 0;
     }

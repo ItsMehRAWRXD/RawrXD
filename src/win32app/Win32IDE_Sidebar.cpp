@@ -133,11 +133,17 @@ void Win32IDE::createActivityBar(HWND hwndParent)
                    {IDC_ACTIVITY_EXTENSIONS, "Exts"}, {IDC_ACTIVITY_RECOVERY, "Recov"},
                    {IDC_ACTIVITY_CHAT, "Chat"}};
 
+    HFONT hBtnFont = CreateFontA(-9, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+
     for (const auto& btn : buttons)
     {
         HWND hwndBtn = CreateWindowExA(0, "BUTTON", btn.text, WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | BS_OWNERDRAW, 4,
-                                       y, 40, 40, m_hwndActivityBar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
-        y += 48;
+                                       y, 40, 44, m_hwndActivityBar, (HMENU)(INT_PTR)btn.id, m_hInstance, nullptr);
+        if (hwndBtn && hBtnFont)
+            SendMessage(hwndBtn, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+        y += 50;
     }
 
     appendToOutput("Activity Bar created with 7 views (Files, Search, Source, Debug, Exts, Recov, Chat)\n", "Output",
@@ -345,6 +351,16 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
     switch (uMsg)
     {
+        case WM_ERASEBKGND:
+        {
+            HDC hdc = (HDC)wParam;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            HBRUSH brush = CreateSolidBrush(RGB(37, 37, 38));
+            FillRect(hdc, &rc, brush);
+            DeleteObject(brush);
+            return 1;
+        }
         case WM_CTLCOLORSTATIC:
         {
             // Make sidebar title bar readable: dark background, light text
@@ -358,7 +374,12 @@ LRESULT CALLBACK Win32IDE::SidebarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
                     s_titleBrush = CreateSolidBrush(RGB(45, 45, 48));
                 return (LRESULT)s_titleBrush;
             }
-            break;
+            // Dark background for all other STATIC child controls
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
         }
         case WM_PAINT:
         {
@@ -415,6 +436,24 @@ LRESULT CALLBACK Win32IDE::SidebarContentProc(HWND hwnd, UINT uMsg, WPARAM wPara
 
     switch (uMsg)
     {
+        case WM_ERASEBKGND:
+        {
+            HDC hdc = (HDC)wParam;
+            RECT rc = {};
+            GetClientRect(hwnd, &rc);
+            HBRUSH brush = CreateSolidBrush(RGB(37, 37, 38));
+            FillRect(hdc, &rc, brush);
+            DeleteObject(brush);
+            return 1;
+        }
+        case WM_CTLCOLORSTATIC:
+        {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(37, 37, 38));
+            SetTextColor(hdc, RGB(204, 204, 204));
+            static HBRUSH hDarkBrush = CreateSolidBrush(RGB(37, 37, 38));
+            return (LRESULT)hDarkBrush;
+        }
         case WM_COMMAND:
         {
             int id = LOWORD(wParam);

@@ -305,7 +305,7 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
 }
 
 // ============================================================================
-// Simplified Interface
+// Public Interface
 // ============================================================================
 
 bool AgenticInferenceBridge::SubmitInference(

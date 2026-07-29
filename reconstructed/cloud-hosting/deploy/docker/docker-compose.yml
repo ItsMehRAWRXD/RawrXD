@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  llama-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rawrxd-llama
+    ports:
+      - "${LLAMA_PORT:-8080}:8080"
+    volumes:
+      - ${LLAMA_MODEL_DIR:-./models}:/models:ro
+    environment:
+      - LLAMA_ARG_MODEL=/models/${LLAMA_MODEL_FILE:-model.gguf}
+      - LLAMA_ARG_N_GPU_LAYERS=${LLAMA_GPU_LAYERS:-99}
+      - LLAMA_ARG_CTX_SIZE=${LLAMA_CONTEXT_SIZE:-4096}
+      - LLAMA_ARG_THREADS=${LLAMA_THREADS:-4}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 32G

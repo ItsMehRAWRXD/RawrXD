@@ -436,7 +436,7 @@ void StabilityEnvelope::ExportConfiguration(const std::string& path) const {
 }
 
 void StabilityEnvelope::ImportConfiguration(const std::string& path) {
-    // Simplified import - would use proper parser in production
+    // Basic import - full parser implementation would be used in production
     (void)path;
 }
 

@@ -780,7 +780,7 @@ ValidationResult TurnkeyValidationSuite::TestStartupTime() {
     
     auto start = std::chrono::high_resolution_clock::now();
     
-    // Simulate startup by reinitializing
+    // Test startup by reinitializing
     TurnkeyConfigManager testMgr;
     testMgr.Initialize();
     

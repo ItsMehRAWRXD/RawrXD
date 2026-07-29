@@ -300,7 +300,7 @@ PB_Status PB_CompleteSync(
         // Build execution request for inference
         execution::ExecutionRequest execReq;
         execReq.command = execution::CommandType::RUN_INFERENCE;
-        execReq.model_path = WideToUtf8(g_Bridge.modelPath);
+        execReq.model_path = WideToUtf8(g_Bridge.modelPath.c_str());
         execReq.prompt = utf8Context;
         execReq.max_tokens = request->maxTokens > 0 ? request->maxTokens : 128;
         execReq.temperature = request->temperature;

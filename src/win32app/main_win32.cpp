@@ -1712,6 +1712,84 @@ static int runFeatureProbeCLI(HINSTANCE hInstance, LPSTR lpCmdLine)
 }
 
 // ============================================================================
+// Minimal Crash Artifact Writer — prevents black-box failures
+// Writes: exception_code.txt, stacktrace.txt, timestamp.txt, build_hash.txt
+// ============================================================================
+static void WriteCrashArtifacts(DWORD exceptionCode, EXCEPTION_POINTERS* pExceptionInfo)
+{
+    // Create crash directory
+    CreateDirectoryA("crash", nullptr);
+
+    // 1. exception_code.txt
+    {
+        HANDLE hFile = CreateFileA("crash\\exception_code.txt", GENERIC_WRITE, 0, nullptr,
+                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            char buf[64];
+            int len = snprintf(buf, sizeof(buf), "0x%08X\n", exceptionCode);
+            DWORD written;
+            WriteFile(hFile, buf, (DWORD)len, &written, nullptr);
+            CloseHandle(hFile);
+        }
+    }
+
+    // 2. stacktrace.txt (capture via DbgHelp)
+    {
+        HANDLE hFile = CreateFileA("crash\\stacktrace.txt", GENERIC_WRITE, 0, nullptr,
+                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            void* stack[64];
+            USHORT frames = CaptureStackBackTrace(0, 64, stack, nullptr);
+
+            char header[] = "=== RawrXD Crash Stacktrace ===\n";
+            DWORD written;
+            WriteFile(hFile, header, (DWORD)strlen(header), &written, nullptr);
+
+            for (USHORT i = 0; i < frames; i++)
+            {
+                char frame[256];
+                int len = snprintf(frame, sizeof(frame), "[%2u] 0x%p\n", i, stack[i]);
+                WriteFile(hFile, frame, (DWORD)len, &written, nullptr);
+            }
+            CloseHandle(hFile);
+        }
+    }
+
+    // 3. timestamp.txt
+    {
+        HANDLE hFile = CreateFileA("crash\\timestamp.txt", GENERIC_WRITE, 0, nullptr,
+                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            SYSTEMTIME st;
+            GetLocalTime(&st);
+            char buf[128];
+            int len = snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d\n",
+                              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+            DWORD written;
+            WriteFile(hFile, buf, (DWORD)len, &written, nullptr);
+            CloseHandle(hFile);
+        }
+    }
+
+    // 4. build_hash.txt (use version + timestamp)
+    {
+        HANDLE hFile = CreateFileA("crash\\build_hash.txt", GENERIC_WRITE, 0, nullptr,
+                                   CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            const char* hash = RAWRXD_VERSION_STRING "_" __DATE__ "_" __TIME__;
+            DWORD written;
+            WriteFile(hFile, hash, (DWORD)strlen(hash), &written, nullptr);
+            WriteFile(hFile, "\n", 1, &written, nullptr);
+            CloseHandle(hFile);
+        }
+    }
+}
+
+// ============================================================================
 // SEH Exception Filter for C++ Exceptions (0xE06D7363)
 // ============================================================================
 static LONG WINAPI SehExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
@@ -1754,6 +1832,10 @@ static LONG WINAPI SehExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
             OutputDebugStringA("[SEH] C++ exception parameters available\n");
         }
     }
+    
+    // Write minimal crash artifacts (prevents black-box failures)
+    WriteCrashArtifacts(code, pExceptionInfo);
+    OutputDebugStringA("[SEH] Crash artifacts written to crash/\n");
     
     // Generate mini dump
     CreateDirectoryA("crash_dumps", nullptr);

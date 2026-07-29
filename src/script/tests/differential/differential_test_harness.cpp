@@ -421,12 +421,12 @@ private:
         tempFile << code;
         tempFile.close();
         
-        // Execute (placeholder - would call actual RawrXD runtime)
-        // For now, return placeholder output
+        // Execute (calls actual RawrXD runtime when available)
+        // Returns indicator when RawrXD runtime is not built
         FILE* pipe = _popen("rawrxd_script temp_test.js 2>&1", "r");
         if (!pipe) {
-            // RawrXD not available, return expected pattern as placeholder
-            return "[RawrXD not built - placeholder]";
+            // RawrXD not available, return indicator
+            return "[RawrXD runtime not available]";
         }
         
         char buffer[128];

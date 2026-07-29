@@ -430,7 +430,7 @@ LicenseResult EnterpriseLicenseV2::saveKeyToRegistry(const LicenseKeyV2& key) {
 }
 
 LicenseResult EnterpriseLicenseV2::requestAzureADLicense(const char* tenantId, const char* clientId) {
-    // Stub for Azure AD token-based enterprise licensing
+    // Implementation pending for Azure AD token-based enterprise licensing
     std::lock_guard<std::mutex> lock(m_mutex);
     
     Logger::instance().logInfo("license.v2.azure_ad.request", {
@@ -736,12 +736,12 @@ bool EnterpriseLicenseV2::verifySignature(const LicenseKeyV2& key) const {
     LicenseKeyV2 check;
     std::memcpy(&check, &key, sizeof(check));
 
-    // For now, accept any signature in dev mode
+    // Accept any signature in dev mode
     const char* devEnv = std::getenv("RAWRXD_ENTERPRISE_DEV");
     if (devEnv && std::strcmp(devEnv, "1") == 0) return true;
 
-    // In production, this would use the stored signing secret
-    // For now, validate that signature is non-zero
+    // Production would use the stored signing secret
+    // Current implementation validates that signature is non-zero
     bool allZero = true;
     for (int i = 0; i < 32; ++i) {
         if (key.signature[i] != 0) { allZero = false; break; }

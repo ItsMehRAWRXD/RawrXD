@@ -399,8 +399,48 @@ uint8_t Compiler::CompileMemberExpr(CompilerContext& ctx, MemberExpr* expr) {
 }
 
 uint8_t Compiler::CompileConditionalExpr(CompilerContext& ctx, ConditionalExpr* expr) {
-    // Placeholder: just evaluate consequent
-    return CompileExpression(ctx, expr->consequent.get());
+    // Compile condition
+    uint8_t cond_reg = CompileExpression(ctx, expr->condition.get());
+    
+    // Emit conditional jump
+    ctx.module->code.push_back(static_cast<uint8_t>(Opcode::OP_JUMP_IF_FALSE));
+    ctx.module->code.push_back(cond_reg);
+    size_t jumpAddr = ctx.module->code.size();
+    ctx.module->code.push_back(0); // Placeholder for jump offset
+    ctx.module->code.push_back(0);
+    
+    // Compile consequent (true branch)
+    uint8_t result_reg = CompileExpression(ctx, expr->consequent.get());
+    
+    // Emit jump over alternative
+    ctx.module->code.push_back(static_cast<uint8_t>(Opcode::OP_JUMP));
+    size_t elseJumpAddr = ctx.module->code.size();
+    ctx.module->code.push_back(0); // Placeholder
+    ctx.module->code.push_back(0);
+    
+    // Patch jump to else branch
+    size_t elseAddr = ctx.module->code.size();
+    uint16_t elseOffset = static_cast<uint16_t>(elseAddr - jumpAddr - 2);
+    ctx.module->code[jumpAddr] = elseOffset & 0xFF;
+    ctx.module->code[jumpAddr + 1] = (elseOffset >> 8) & 0xFF;
+    
+    // Compile alternative (false branch)
+    uint8_t alt_reg = CompileExpression(ctx, expr->alternative.get());
+    
+    // Move alternative result to result register
+    ctx.module->code.push_back(static_cast<uint8_t>(Opcode::OP_MOVE));
+    ctx.module->code.push_back(result_reg);
+    ctx.module->code.push_back(alt_reg);
+    ctx.registers->Free(alt_reg);
+    
+    // Patch jump over else
+    size_t endAddr = ctx.module->code.size();
+    uint16_t endOffset = static_cast<uint16_t>(endAddr - elseJumpAddr - 2);
+    ctx.module->code[elseJumpAddr] = endOffset & 0xFF;
+    ctx.module->code[elseJumpAddr + 1] = (endOffset >> 8) & 0xFF;
+    
+    ctx.registers->Free(cond_reg);
+    return result_reg;
 }
 
 uint8_t Compiler::CompileArrayExpr(CompilerContext& ctx, ArrayExpr* expr) {

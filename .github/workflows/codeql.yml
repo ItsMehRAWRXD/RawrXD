@@ -27,7 +27,7 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || (matrix.language == 'c-cpp' && 'windows-latest') || 'ubuntu-latest' }}
     permissions:
       # required for all workflows
       security-events: write
@@ -46,7 +46,7 @@ jobs:
         - language: actions
           build-mode: none
         - language: c-cpp
-          build-mode: autobuild
+          build-mode: manual
         - language: csharp
           build-mode: none
         - language: go
@@ -98,15 +98,23 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - name: Run manual build steps
-      if: matrix.build-mode == 'manual'
+    - name: Configure CMake (Windows)
+      if: matrix.language == 'c-cpp' && matrix.build-mode == 'manual'
+      shell: powershell
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_SYSTEM_VERSION=10.0
+
+    - name: Build (Windows)
+      if: matrix.language == 'c-cpp' && matrix.build-mode == 'manual'
+      shell: powershell
+      run: |
+        cmake --build build --config Release --parallel
+
+    - name: Run manual build steps (Other platforms)
+      if: matrix.build-mode == 'manual' && matrix.language != 'c-cpp'
       shell: bash
       run: |
-        echo 'If you are using a "manual" build mode for one or more of the' \
-          'languages you are analyzing, replace this with the commands to build' \
-          'your code, for example:'
-        echo '  make bootstrap'
-        echo '  make release'
+        echo 'Manual build for non-C++ languages not configured'
         exit 1
 
     - name: Perform CodeQL Analysis

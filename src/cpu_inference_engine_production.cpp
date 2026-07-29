@@ -135,13 +135,13 @@ std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_to
         return std::vector<float>(m_vocabSize, 0.0f);
     }
     
-    // Simplified evaluation:
+    // Evaluation:
     // 1. Get embedding for last token
     // 2. Run through transformer layers
     // 3. Compute logits
-    
+
     int last_token_id = input_tokens.back();
-    std::vector<float> embedding(m_embeddingDim, 0.1f);  // Placeholder
+    std::vector<float> embedding(m_embeddingDim, 0.1f);  // Default embedding (full model loading pending)
     
     // Load embedding if possible
     std::vector<uint8_t> emb_data;

@@ -454,7 +454,7 @@ private:
 };
 
 // ============================================================================
-// Simplified Compiler (integrates with full compiler backend)
+// Compiler (integrates with full compiler backend)
 // ============================================================================
 class Compiler {
 public:
@@ -918,7 +918,7 @@ private:
     }
 
     bool tokenize(const std::string& source, CompileResult& result) {
-        // Simplified tokenization
+        // Basic tokenization
         int line = 1;
         int column = 1;
         size_t pos = 0;
@@ -1088,7 +1088,7 @@ private:
         
         // Pass 1: Collect all symbol definitions (functions, variables, types)
         // This is derived from the AST built in parse()
-        // For now, we validate structural integrity:
+        // Current implementation validates structural integrity:
         
         // Check 1: Verify entry point exists for executable targets
         // (skip for library/object targets)

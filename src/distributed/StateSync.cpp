@@ -517,7 +517,7 @@ std::vector<uint8_t> DeltaSync::EncodeChanges(
     for (size_t i = 0; i < changes.size(); i++) {
         if (i > 0) json += ",";
         // Add change encoding
-        json += "{}";  // Placeholder
+        json += "{}";  // Change encoding implementation pending
     }
     json += "]";
     
@@ -525,8 +525,49 @@ std::vector<uint8_t> DeltaSync::EncodeChanges(
 }
 
 std::vector<StateChange> DeltaSync::DecodeChanges(const std::vector<uint8_t>& data) {
-    // Placeholder implementation
-    return {};
+    std::vector<StateChange> changes;
+    
+    if (data.size() < sizeof(uint32_t)) {
+        return changes; // Invalid data
+    }
+    
+    // Read number of changes
+    uint32_t numChanges = *reinterpret_cast<const uint32_t*>(data.data());
+    size_t offset = sizeof(uint32_t);
+    
+    for (uint32_t i = 0; i < numChanges && offset < data.size(); ++i) {
+        // Read change type
+        if (offset + sizeof(uint8_t) > data.size()) break;
+        uint8_t type = data[offset++];
+        
+        // Read key length
+        if (offset + sizeof(uint16_t) > data.size()) break;
+        uint16_t keyLen = *reinterpret_cast<const uint16_t*>(data.data() + offset);
+        offset += sizeof(uint16_t);
+        
+        // Read key
+        if (offset + keyLen > data.size()) break;
+        std::string key(reinterpret_cast<const char*>(data.data() + offset), keyLen);
+        offset += keyLen;
+        
+        // Read value length
+        if (offset + sizeof(uint32_t) > data.size()) break;
+        uint32_t valueLen = *reinterpret_cast<const uint32_t*>(data.data() + offset);
+        offset += sizeof(uint32_t);
+        
+        // Read value
+        if (offset + valueLen > data.size()) break;
+        std::vector<uint8_t> value(data.begin() + offset, data.begin() + offset + valueLen);
+        offset += valueLen;
+        
+        StateChange change;
+        change.type = static_cast<ChangeType>(type);
+        change.key = key;
+        change.value = value;
+        changes.push_back(change);
+    }
+    
+    return changes;
 }
 
 // ============================================================================
@@ -824,7 +865,7 @@ StateEntry StateReplicator::ResolveConflict(
     // CRDT-based resolution
     if (local.version.IsConcurrentWith(remote.version)) {
         // Concurrent updates - merge using CRDT semantics
-        // For now, use LWW as fallback
+        // Current implementation uses LWW as fallback
         return local.timestamp > remote.timestamp ? local : remote;
     }
     

@@ -85,7 +85,7 @@ endif()
 # LLM Connectivity Test
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
     add_executable(test_llm_connectivity test_llm_connectivity.cpp)
-    target_include_directories(test_llm_connectivity PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_include_directories(test_llm_connectivity PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/llm_adapter)
     set_target_properties(test_llm_connectivity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     if(WIN32)
         target_link_libraries(test_llm_connectivity PRIVATE ws2_32 winhttp)
@@ -343,10 +343,80 @@ if(NOT TARGET test_instructions_provider AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}
     message(STATUS "  ✓ Added test_instructions_provider")
 endif()
 
+# =============================================================================
+# MEASUREMENT FRAMEWORK - CTest Registration
+# These targets are defined in parent CMakeLists.txt, we just register them
+# =============================================================================
+message(STATUS "========================================")
+message(STATUS "Registering Measurement Framework Tests")
+message(STATUS "========================================")
+
+# Dispatch Overhead Benchmark
+if(TARGET benchmark_dispatch_overhead)
+    add_test(NAME benchmark_dispatch_overhead COMMAND benchmark_dispatch_overhead)
+    set_tests_properties(benchmark_dispatch_overhead PROPERTIES
+        TIMEOUT 60
+        LABELS "measurement;performance;dispatch"
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency")
+endif()
+
+# Planner Amortization Benchmark
+if(TARGET benchmark_planner_amortization)
+    add_test(NAME benchmark_planner_amortization COMMAND benchmark_planner_amortization)
+    set_tests_properties(benchmark_planner_amortization PROPERTIES
+        TIMEOUT 60
+        LABELS "measurement;performance;planner"
+    )
+    message(STATUS "  [MEASURE] benchmark_planner_amortization - Break-even analysis")
+endif()
+
+# End-to-End Validation (Four Gates)
+if(TARGET validate_end_to_end)
+    add_test(NAME validate_end_to_end COMMAND validate_end_to_end)
+    set_tests_properties(validate_end_to_end PROPERTIES
+        TIMEOUT 120
+        LABELS "measurement;validation;gates"
+    )
+    message(STATUS "  [MEASURE] validate_end_to_end - Four independent gates")
+endif()
+
+# NEVM Determinism Validation
+if(TARGET nevm_determinism_validation)
+    add_test(NAME nevm_determinism_validation COMMAND nevm_determinism_validation)
+    set_tests_properties(nevm_determinism_validation PROPERTIES
+        TIMEOUT 300
+        LABELS "measurement;determinism;stress"
+    )
+    message(STATUS "  [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a")
+endif()
+
+# NEVM Stress Test
+if(TARGET nevm_stress_test)
+    add_test(NAME nevm_stress_test COMMAND nevm_stress_test)
+    set_tests_properties(nevm_stress_test PROPERTIES
+        TIMEOUT 600
+        LABELS "measurement;stress;memory"
+    )
+    message(STATUS "  [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring")
+endif()
+
+# PMC Dispatch Benchmark
+if(TARGET benchmark_dispatch_pmc)
+    add_test(NAME benchmark_dispatch_pmc COMMAND benchmark_dispatch_pmc)
+    set_tests_properties(benchmark_dispatch_pmc PROPERTIES
+        TIMEOUT 120
+        LABELS "measurement;performance;pmc;profiling"
+    )
+    message(STATUS "  [MEASURE] benchmark_dispatch_pmc - PMC profiling")
+endif()
+
 message(STATUS "========================================")
 message(STATUS "Test Suite Registration Complete")
-message(STATUS "Run tests: ctest --output-on-failure -C Release")
-message(STATUS "Run specific: ctest -R <name> -V -C Release")
+message(STATUS "========================================")
+message(STATUS "Run all tests:      ctest --output-on-failure -C Release")
+message(STATUS "Run measurement:    ctest -L measurement -V -C Release")
+message(STATUS "Run specific:       ctest -R <name> -V -C Release")
 message(STATUS "========================================")
 
 # Model loader/streamer smoke test (no external model required)
@@ -424,3 +494,147 @@ if(NOT TARGET test_softmax_avx2 AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/kernels/
     add_test(NAME test_softmax_avx2 COMMAND test_softmax_avx2)
     message(STATUS "  ✓ Added test_softmax_avx2 (AVX2 kernel validation)")
 endif()
+
+# Sovereign Integrated Burn-in Test
+if(NOT TARGET sovereign_integrated_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/sovereign_integrated_test.cpp")
+    add_executable(sovereign_integrated_test
+        sovereign_integrated_test.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignVCS.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignCheckpoint.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/IDE_Lifecycle_Hook.cpp
+    )
+    target_include_directories(sovereign_integrated_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/sovereign
+    )
+    set_target_properties(sovereign_integrated_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    # Link zlib for checkpoint compression (optional)
+    find_package(ZLIB)
+    if(ZLIB_FOUND)
+        target_link_libraries(sovereign_integrated_test PRIVATE ZLIB::ZLIB)
+        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_ZLIB=1)
+    else()
+        message(WARNING "  ZLIB not found - checkpoint compression disabled")
+    endif()
+    add_test(NAME sovereign_integrated_test COMMAND sovereign_integrated_test)
+    message(STATUS "  ✓ Added sovereign_integrated_test (Sovereign Burn-in)")
+endif()
+
+# Agentic Supervisor Test
+if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_agentic_supervisor.cpp")
+    add_executable(test_agentic_supervisor
+        test_agentic_supervisor.cpp
+        ${CMAKE_SOURCE_DIR}/src/agentic/AgenticSupervisor.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/IDE_Lifecycle_Hook.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignVCS.cpp
+        ${CMAKE_SOURCE_DIR}/src/sovereign/SovereignCheckpoint.cpp
+    )
+    target_include_directories(test_agentic_supervisor PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/sovereign
+    )
+    set_target_properties(test_agentic_supervisor PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_agentic_supervisor COMMAND test_agentic_supervisor)
+    message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
+endif()
+
+# ============================================================================
+# DUAL GPU SMOKE TEST - CTest Registration
+# ============================================================================
+if(NOT TARGET dual_gpu_smoke_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/core/dual_gpu_smoke_test.cpp")
+    add_executable(dual_gpu_smoke_test
+        core/dual_gpu_smoke_test.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/dual_gpu_orchestrator.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/dual_gpu_orchestrator.hpp
+    )
+    target_include_directories(dual_gpu_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/core
+    )
+    set_target_properties(dual_gpu_smoke_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(dual_gpu_smoke_test PRIVATE kernel32 user32)
+    endif()
+    add_test(NAME dual_gpu_smoke_test COMMAND dual_gpu_smoke_test)
+    set_tests_properties(dual_gpu_smoke_test PROPERTIES
+        TIMEOUT 60
+        LABELS "gpu;dual_gpu;smoke"
+    )
+    message(STATUS "  ✓ Added dual_gpu_smoke_test (Single & Dual GPU validation)")
+endif()
+
+# ============================================================================
+# CERTIFICATION FRAMEWORK TESTS - CTest Registration
+# ============================================================================
+# Certification Runner (VAL-050 to VAL-082)
+if(NOT TARGET CertificationRunner AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CertificationRunner.cpp")
+    add_executable(CertificationRunner
+        CertificationRunner.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_050_Ed25519_Signature.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_051_Supply_Chain_Provenance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_052_SHA256_Integrity.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_053_Cross_Platform_Verification.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_054_Reproducible_Builds.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_055_Fault_Injection.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_056_CI_CD_Integration.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_057_Lifecycle_Management.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_058_Performance_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_059_Security_Compliance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_060_Dependency_Scanning.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_061_Runtime_Integrity.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_062_Configuration_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_063_API_Compatibility.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_064_Documentation_Completeness.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_065_Deployment_Readiness.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_066_Monitoring_Alerting.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_067_Backup_Recovery.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_068_Scaling_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_069_Disaster_Recovery.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_070_Cost_Optimization.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_071_User_Acceptance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_072_Compliance_Framework.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_073_Operational_Excellence.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_074_075_Final_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_076_077_Production_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_078_079_Security_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_080_081_Compliance_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_082_Release_Readiness.cpp
+    )
+    target_include_directories(CertificationRunner PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/certification
+    )
+    set_target_properties(CertificationRunner PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(CertificationRunner PRIVATE crypt32 advapi32)
+    endif()
+    add_test(NAME CertificationRunner COMMAND CertificationRunner)
+    set_tests_properties(CertificationRunner PROPERTIES
+        TIMEOUT 300
+        LABELS "certification;validation;gates;production"
+    )
+    message(STATUS "  ✓ Added CertificationRunner (VAL-050 to VAL-082)")
+endif()
+
+message(STATUS "========================================")
+message(STATUS "Dual GPU & Certification Tests Registered")
+message(STATUS "========================================")
+message(STATUS "Run dual GPU tests:     ctest -R dual_gpu -V")
+message(STATUS "Run certification:      ctest -R Certification -V")
+message(STATUS "Run all production:     ctest -L production -V")
+message(STATUS "========================================")

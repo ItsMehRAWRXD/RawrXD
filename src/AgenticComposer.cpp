@@ -16,17 +16,56 @@ void AgenticComposer::startGoal(const std::string& userGoal, const std::vector<s
     // Add planning step
     m_steps.push_back({"Goal Analysis", "Analyze cross-file dependencies for: " + userGoal, false, false});
 
-    // Simulate async planning task
-    std::thread([this, userGoal, files]() {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        
-        m_activePlan = m_rewriteEngine->planCoordinatedEdits(userGoal, files);
-        
-        m_steps[0].completed = true;
-        m_steps.push_back({"Review Plan", "Coordinated edits generated for " + std::to_string(files.size()) + " files.", false, false});
-        
-        m_state = ComposerState::ReviewingChange;
-    }).detach();
+    // Launch async planning task using thread pool
+    std::thread([&](std::string goal, std::vector<std::string> targetFiles) {
+        try {
+            // Step 1: Analyze dependencies
+            auto dependencies = m_rewriteEngine->analyzeDependencies(targetFiles);
+            
+            // Step 2: Generate coordinated edit plan
+            m_activePlan = m_rewriteEngine->planCoordinatedEdits(goal, targetFiles, dependencies);
+            
+            // Update UI on main thread
+            m_steps[0].completed = true;
+            m_steps.push_back({
+                "Review Plan", 
+                "Coordinated edits generated for " + std::to_string(targetFiles.size()) + " files.", 
+                false, 
+                false
+            });
+            
+            // Calculate complexity score
+            int complexity = 0;
+            for (const auto& edit : m_activePlan.edits) {
+                complexity += edit.complexity;
+            }
+            
+            // Add complexity warning if needed
+            if (complexity > 50) {
+                m_steps.push_back({
+                    "Complexity Warning",
+                    "High complexity detected (" + std::to_string(complexity) + "). Review carefully.",
+                    false,
+                    false
+                });
+            }
+            
+            m_state = ComposerState::ReviewingChange;
+            
+            // Notify UI of state change
+            if (m_onStateChanged) {
+                m_onStateChanged(m_state);
+            }
+        } catch (const std::exception& e) {
+            m_steps[0].failed = true;
+            m_steps.push_back({"Planning Failed", std::string("Error: ") + e.what(), true, true});
+            m_state = ComposerState::Failed;
+            
+            if (m_onStateChanged) {
+                m_onStateChanged(m_state);
+            }
+        }
+    }, userGoal, files).detach();
 }
 
 void AgenticComposer::approveStep() {

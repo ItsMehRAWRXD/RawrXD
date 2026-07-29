@@ -775,8 +775,71 @@ void AnnotationOverlay::RenderSquiggle(HDC hdc, const RECT& rect, DiagnosticSeve
 
 void AnnotationOverlay::RenderTooltip(HDC hdc, const AnnotationItem& item)
 {
-    // Phase III: Implement tooltip rendering
-    // For now, placeholder
+    if (!hdc || item.message.empty()) return;
+    
+    // Create tooltip text from annotation message
+    std::string tooltipText = item.message;
+    if (tooltipText.length() > 200) {
+        tooltipText = tooltipText.substr(0, 197) + "...";
+    }
+    
+    // Set up tooltip font and colors
+    HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                              DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    
+    // Calculate tooltip dimensions
+    RECT textRect = {0, 0, 400, 0};
+    DrawTextA(hdc, tooltipText.c_str(), -1, &textRect,
+               DT_LEFT | DT_WORDBREAK | DT_CALCRECT);
+    
+    // Add padding
+    int padding = 8;
+    textRect.right += padding * 2;
+    textRect.bottom += padding * 2;
+    
+    // Position tooltip near annotation
+    int tooltipX = item.rect.left + 10;
+    int tooltipY = item.rect.bottom + 5;
+    
+    // Ensure tooltip stays on screen
+    RECT screenRect;
+    SystemParametersInfoA(SPI_GETWORKAREA, 0, &screenRect, 0);
+    if (tooltipX + textRect.right > screenRect.right) {
+        tooltipX = screenRect.right - textRect.right - 5;
+    }
+    if (tooltipY + textRect.bottom > screenRect.bottom) {
+        tooltipY = item.rect.top - textRect.bottom - 5;
+    }
+    
+    OffsetRect(&textRect, tooltipX, tooltipY);
+    
+    // Draw tooltip background
+    HBRUSH bgBrush = CreateSolidBrush(RGB(255, 255, 225)); // Light yellow
+    FillRect(hdc, &textRect, bgBrush);
+    DeleteObject(bgBrush);
+    
+    // Draw border
+    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(192, 192, 192));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, borderPen);
+    HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, textRect.left, textRect.top, textRect.right, textRect.bottom);
+    SelectObject(hdc, hOldPen);
+    SelectObject(hdc, hOldBrush);
+    DeleteObject(borderPen);
+    
+    // Draw tooltip text
+    RECT textDrawRect = textRect;
+    InflateRect(&textDrawRect, -padding, -padding);
+    SetTextColor(hdc, RGB(0, 0, 0));
+    SetBkMode(hdc, TRANSPARENT);
+    DrawTextA(hdc, tooltipText.c_str(), -1, &textDrawRect,
+               DT_LEFT | DT_WORDBREAK);
+    
+    // Cleanup
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
 }
 
 // ============================================================================

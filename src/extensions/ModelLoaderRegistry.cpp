@@ -407,7 +407,7 @@ ModelLoadResult GGMLModelLoader::load(const std::string& path, const ModelLoadOp
     // Would actually load the model using llama.cpp
     
     std::lock_guard<std::mutex> lock(mutex_);
-    models_[result.modelId] = nullptr;  // Placeholder
+    models_[result.modelId] = nullptr;  // Model loading pending
     
     return result;
 }

@@ -400,7 +400,7 @@ bool MarketplaceClient::downloadFile(const std::string& url, const std::string& 
 bool MarketplaceClient::extractArchive(const std::string& archivePath,
                                     const std::string& extractPath) {
     // In production, this would use a proper archive library
-    // For now, we assume the extension is a simple directory structure
+    // Current implementation assumes the extension is a simple directory structure
     std::filesystem::create_directories(extractPath);
     
     // TODO: Implement proper archive extraction
