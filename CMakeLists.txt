@@ -434,6 +434,57 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# Comprehensive Dual GPU Test
+# Full validation of multi-GPU inference pipeline
+# =============================================================================
+if(WIN32)
+    add_executable(comprehensive_dual_gpu_test
+        tests/comprehensive_dual_gpu_test.cpp
+    )
+    set_target_properties(comprehensive_dual_gpu_test PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(comprehensive_dual_gpu_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    # Vulkan SDK support for comprehensive_dual_gpu_test
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_directories(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    else()
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE dxgi)
+    endif()
+    target_link_libraries(comprehensive_dual_gpu_test PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Comprehensive Dual GPU Test configured")
+endif()
+
+# =============================================================================
 # OMEGA-1 Bridge Test Harness
 # Validates IAT slots 64-75 for self-mutating engine integration
 # =============================================================================
@@ -4733,8 +4784,29 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Batch 6: BackendOrchestrator — dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
         src/InferenceProfiler.cpp
         src/BackendOrchestrator.cpp
+    )
+
+    # Deep2Engine Integration Test
+    add_executable(Deep2Engine_IntegrationTest
+        src/tests/Deep2Engine_IntegrationTest.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
+    )
+    target_include_directories(Deep2Engine_IntegrationTest PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels
     )
 
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
