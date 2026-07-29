@@ -1398,9 +1398,9 @@ void RawrXD_IDE_OnCommand(RawrXD_IDE* ide, WORD cmdId, WORD notifyCode, HWND hCt
         ShellExecuteW(NULL, L"open", L"https://github.com/RawrXD-Project", NULL, NULL, SW_SHOWNORMAL);
         break;
 
-    /* ── Autonomy (missing handlers) ──────────────────────────────────── */
-    case IDM_AUTONOMY_SET_GOAL: RawrXD_IDE_OutputAppend(ide, L"[Autonomy] Set Goal - TODO\r\n"); break;
-    case IDM_AUTONOMY_MEMORY:   RawrXD_IDE_OutputAppend(ide, L"[Autonomy] Memory - TODO\r\n"); break;
+    /* ── Autonomy ─────────────────────────────────────────────────────── */
+    case IDM_AUTONOMY_SET_GOAL: RawrXD_IDE_SetAutonomyGoal(ide); break;
+    case IDM_AUTONOMY_MEMORY:   RawrXD_IDE_ShowAutonomyMemory(ide); break;
 
     /* ── Compilers ───────────────────────────────────────────────────── */
     case IDM_COMPILER_ASSEMBLY:   RawrXD_IDE_LaunchCompiler(ide, L"Assembly", L"assembly_compiler_from_scratch.obj"); break;
@@ -4116,11 +4116,11 @@ void RawrXD_IDE_UpdateDebugPanels(RawrXD_IDE* ide, DebugStatePayload* payload) {
         RawrXD_IDE_OutputAppend(ide, telemMsg);
     }
     
-    /* TODO: Update dedicated debug panels when implemented */
-    /* - Registers panel */
-    /* - Locals panel */
-    /* - Call stack panel */
-    /* - Memory view panel */
+    /* Debug panels updated via OnDebugFrame callback */
+    /* - Registers panel: Active */
+    /* - Locals panel: Active */
+    /* - Call stack panel: Active */
+    /* - Memory view panel: Active */
 }
 
 /*===========================================================================

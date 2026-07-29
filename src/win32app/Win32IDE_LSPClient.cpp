@@ -29,6 +29,7 @@
 
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include "core/problems_aggregator.hpp"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -1255,6 +1256,22 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
         }
         updatePanelContent();
         updateEnhancedStatusBar();
+    }
+
+    // Push to ProblemsAggregator for unified panel integration
+    {
+        auto& agg = RawrXD::ProblemsAggregator::instance();
+        agg.clear("LSP", filePath);  // Clear previous LSP diagnostics for this file
+        for (const auto& d : diagnostics)
+        {
+            int sev = (d.severity == 1) ? 1 : (d.severity == 2) ? 2 : 3;  // LSP: 1=Error, 2=Warning, 3=Info, 4=Hint
+            std::string code = d.code.empty() ? "LSP" : d.code;
+            std::string source = d.source.empty() ? "lsp" : d.source;
+            agg.add("LSP", filePath, d.range.start.line + 1, d.range.start.character + 1,
+                    sev, code, d.message, source);
+        }
+        // Trigger refresh of unified Problems panel
+        refreshProblemsView();
     }
 
     // Map diagnostics to the existing annotation system for visual display

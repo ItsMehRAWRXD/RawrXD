@@ -837,6 +837,17 @@ void    RawrXD_IDE_LaunchMASMLexer(RawrXD_IDE* ide);
 void    RawrXD_IDE_LaunchASTBridge(RawrXD_IDE* ide);
 void    RawrXD_IDE_LaunchRealTimeCompletion(RawrXD_IDE* ide);
 
+/* Options Dialog */
+void    RawrXD_IDE_ShowOptionsDialog(RawrXD_IDE* ide);
+BOOL    RawrXD_IDE_InputDialog(RawrXD_IDE* ide, const WCHAR* title, const WCHAR* prompt, WCHAR* outBuffer, int bufferSize);
+
+/* Autonomy */
+void    RawrXD_IDE_SetAutonomyGoal(RawrXD_IDE* ide);
+void    RawrXD_IDE_ShowAutonomyMemory(RawrXD_IDE* ide);
+
+/* Prometheus MoE */
+void    RawrXD_IDE_MoERouteTest(RawrXD_IDE* ide);
+
 #ifdef __cplusplus
 }
 #endif
