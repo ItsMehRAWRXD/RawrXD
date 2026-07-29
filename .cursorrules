@@ -55,7 +55,6 @@ if (error) {
 
 ### **Logging**
 - **ALWAYS** use `Logger::info()`, `Logger::warn()`, `Logger::error()`
-<<<<<<< HEAD
 - **NEVER** use `std::cout`, `printf()`, or vendor debug logging macros
 - Use structured logging with format strings
 
