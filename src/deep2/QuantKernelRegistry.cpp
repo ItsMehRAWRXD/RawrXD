@@ -777,19 +777,12 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
-<<<<<<< HEAD
     // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1): scalar fallback ---
     // These formats are deprecated in favor of K-quants but kept for compatibility
     // AVX-512 optimized kernels can be added here when needed
     for (int t = (int)GGMLType::GGML_TYPE_Q4_0; t <= (int)GGMLType::GGML_TYPE_Q5_1; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
         // Use Q8_0 scalar as fallback; type-specific kernels registered on-demand
-=======
-    // --- Remaining K-quants: scalar fallback for now, AVX-512 added later ---
-    for (int t = (int)GGMLType::GGML_TYPE_Q4_0; t <= (int)GGMLType::GGML_TYPE_Q5_1; ++t) {
-        RegisterGeometry(t, GetBlockGeometryForType(t));
-        // Use Q8_0 scalar as a placeholder; specific kernels added per-type
->>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
         RegisterGEMV(t, gemv_q8_0_scalar);
     }
     for (int t = (int)GGMLType::GGML_TYPE_Q2_K; t <= (int)GGMLType::GGML_TYPE_Q5_K; ++t) {
