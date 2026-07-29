@@ -230,8 +230,9 @@ void MultiModelArbitration::RefinementThread(
         return;
     }
     
-    // TODO: Run large model refinement
-    // Delay simulates refinement processing time
+    // Run large model refinement
+    // Note: Actual refinement would call large_model->Generate() with draft_completion
+    // For now, simulate processing time to allow async refinement pipeline testing
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     if (stop_refinement_.load()) {

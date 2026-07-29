@@ -424,17 +424,10 @@ static void gemv_q4_k_avx512(
             // FMA: acc += (w * d) * x
             acc = _mm512_fmadd_ps(_mm512_mul_ps(w0, dVec), x0, acc);
 
-<<<<<<< HEAD
             // Process remaining nibble groups (groups 1-15, 16 values each)
             // Uses scalar fallback for non-vectorized path - production uses permute
             for (int g = 1; g < 16; ++g) {
                 // Extract 16 quantized values from the block
-=======
-            // Process remaining nibble groups (simplified: process 16 at a time)
-            for (int g = 1; g < 16; ++g) {
-                // Extract 16 bytes starting at offset g*16 from the low/high nibble vectors
-                // This is a simplified path; production uses permute for zero-copy extraction
->>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
                 float blockAcc = 0.0f;
                 for (int i = 0; i < 16; ++i) {
                     int idx = g * 16 + i;
@@ -442,11 +435,7 @@ static void gemv_q4_k_avx512(
                     float q = (idx % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
                     blockAcc += q * x[b * 256 + idx];
                 }
-<<<<<<< HEAD
                 // Apply scale and accumulate
-=======
-                // Accumulate (simplified scale application)
->>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
                 __m512 partial = _mm512_set1_ps(blockAcc * d);
                 acc = _mm512_add_ps(acc, partial);
             }

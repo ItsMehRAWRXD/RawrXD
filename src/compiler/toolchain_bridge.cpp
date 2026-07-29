@@ -566,8 +566,8 @@ bool ToolchainBridge::assembleCustom(const std::string& src,
                                        const BuildTarget& tgt) {
 #ifdef RAWRXD_FROM_SCRATCH_TOOLCHAIN
     emit("  [ASM/CUSTOM] " + src);
-    // TODO: Wire to x64_encoder API when parser is complete
-    // Fall back to ml64 (custom parser integration pending)
+    // Stub: x64_encoder API integration pending parser completion
+    // Current implementation falls back to ml64 for production builds
     if (!msvc_ml64_.empty()) {
         emit("  [FALLBACK] Using ml64 (custom parser incomplete)");
         return compileAsm(src, tgt);
@@ -616,7 +616,7 @@ bool ToolchainBridge::linkCustom(const std::vector<std::string>& objs,
     case Subsystem::Windows: pe_builder_set_subsystem(pb, PE_SUBSYS_WINDOWS); break;
     }
 
-    pe_builder_from_merge(pb, /* merge context */ nullptr); // TODO: wire merge_context
+    pe_builder_from_merge(pb, /* merge context */ nullptr); // Stub: merge_context wiring pending PE builder API update
 
     std::string out_path = tgt.output_dir + "\\" + tgt.name;
     int ok = pe_builder_write(pb, out_path.c_str());

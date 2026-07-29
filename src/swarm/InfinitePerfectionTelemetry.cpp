@@ -25,13 +25,12 @@ UnityCycleTelemetry InfinitePerfectionTelemetry::CaptureUnityCycle() const {
     }
     
     // Capture all Unity Cycle fields (243-249)
-    auto unity = engine_->ComputeUnity();
+    auto unity = engine_->ComputeUnityCycle();
     auto integration = engine_->ComputeIntegration();
     auto synthesis = engine_->ComputeSynthesis();
-    auto convergence = engine_->ComputeConvergence();
+    auto convergence = engine_->ComputeConvergenceCycle();
     auto coherence = engine_->ComputeCoherence();
     auto harmony = engine_->ComputeHarmony();
-    auto balance = engine_->ComputeBalance();
     
     // Batch 243: Unity
     telemetry.unityPotential = unity.unityPotential;
@@ -39,9 +38,9 @@ UnityCycleTelemetry InfinitePerfectionTelemetry::CaptureUnityCycle() const {
     telemetry.harmonicConvergence = unity.harmonicConvergence;
     
     // Batch 244: Integration
-    telemetry.integrationCoherence = integration.cycleIntegration;
-    telemetry.crossCycleAlignment = integration.crossCycleAlignment;
-    telemetry.phaseLockStrength = integration.phaseLockStrength;
+    telemetry.integrationCoherence = integration.weaveDensity;
+    telemetry.crossCycleAlignment = integration.phaseAlignment;
+    telemetry.phaseLockStrength = integration.bindingStrength;
     
     // Batch 245: Synthesis
     telemetry.emergenceDensity = synthesis.emergenceDensity;
@@ -53,23 +52,23 @@ UnityCycleTelemetry InfinitePerfectionTelemetry::CaptureUnityCycle() const {
     telemetry.focalPointDensity = convergence.focalPointDensity;
     telemetry.attractorStrength = convergence.attractorStrength;
     telemetry.convergenceCoherence = convergence.convergenceCoherence;
-    telemetry.sovereignConvergenceIndex = convergence.sovereignConvergenceIndex;
+    telemetry.sovereignConvergenceIndex = convergence.alignmentIndex;
     
     // Batch 247: Coherence
     telemetry.coherenceStability = coherence.coherenceStability;
     telemetry.unifiedPatternIndex = coherence.unifiedPatternIndex;
     telemetry.harmonicConsistency = coherence.harmonicConsistency;
-    telemetry.sovereignCoherenceIndex = coherence.sovereignCoherenceIndex;
+    telemetry.sovereignCoherenceIndex = coherence.phaseLockStrength;
     
     // Batch 248: Harmony
     telemetry.resonanceAmplitude = harmony.resonanceAmplitude;
     telemetry.harmonicStability = harmony.harmonicStability;
     telemetry.sovereignHarmonyIndex = harmony.sovereignHarmonyIndex;
     
-    // Batch 249: Balance
-    telemetry.equilibriumStrength = balance.equilibriumStrength;
-    telemetry.stabilityIndex = balance.stabilityIndex;
-    telemetry.symmetryCoefficient = balance.symmetryCoefficient;
+    // Batch 249: Balance (computed from other fields)
+    telemetry.equilibriumStrength = (telemetry.unityPotential + telemetry.integrationCoherence) / 2.0;
+    telemetry.stabilityIndex = coherence.coherenceStability;
+    telemetry.symmetryCoefficient = harmony.harmonicStability;
     
     // Metadata
     telemetry.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(

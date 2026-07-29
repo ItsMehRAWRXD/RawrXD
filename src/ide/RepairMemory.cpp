@@ -51,15 +51,93 @@ bool RepairMemory::Initialize(const std::string& databasePath) {
     m_impl->dbPath = databasePath;
     m_impl->initialized = true;
     
-    // TODO: Load existing database from disk
+    // Load existing database from disk if present
+    if (std::filesystem::exists(databasePath)) {
+        try {
+            std::ifstream file(databasePath);
+            if (file.is_open()) {
+                json db;
+                file >> db;
+                
+                // Parse crash database
+                if (db.contains("crashes")) {
+                    for (const auto& [sig, hist] : db["crashes"].items()) {
+                        CrashRepairHistory history;
+                        history.crashSignature = sig;
+                        // Parse attempts array
+                        if (hist.contains("attempts")) {
+                            for (const auto& att : hist["attempts"]) {
+                                RepairAttempt attempt;
+                                attempt.attemptId = att.value("attemptId", 0ULL);
+                                attempt.timestamp = att.value("timestamp", 0ULL);
+                                attempt.crashSignature = att.value("crashSignature", "");
+                                attempt.outcome = static_cast<RepairOutcome>(att.value("outcome", 0));
+                                history.attempts.push_back(attempt);
+                            }
+                        }
+                        m_impl->crashDatabase[sig] = history;
+                    }
+                }
+                
+                // Parse global stats
+                if (db.contains("stats")) {
+                    m_impl->globalStats.totalRepairs = db["stats"].value("totalRepairs", 0);
+                    m_impl->globalStats.successfulRepairs = db["stats"].value("successfulRepairs", 0);
+                    m_impl->globalStats.overallSuccessRate = db["stats"].value("successRate", 0.0f);
+                }
+            }
+        } catch (const std::exception& e) {
+            // Log error but continue with empty database
+            OutputDebugStringA(("Failed to load repair database: " + std::string(e.what()) + "\n").c_str());
+        }
+    }
+    
     RecomputeStatistics();
     return true;
 }
 
 void RepairMemory::Shutdown() {
     if (m_impl->initialized) {
-        // TODO: Save database to disk
+        // Persist database to disk before shutdown
+        SaveDatabase();
         m_impl->initialized = false;
+    }
+}
+
+void RepairMemory::SaveDatabase() {
+    if (m_impl->dbPath.empty()) return;
+    
+    try {
+        json db;
+        db["crashes"] = json::object();
+        
+        // Serialize crash database
+        for (const auto& [sig, history] : m_impl->crashDatabase) {
+            json histJson;
+            histJson["attempts"] = json::array();
+            for (const auto& attempt : history.attempts) {
+                json attJson;
+                attJson["attemptId"] = attempt.attemptId;
+                attJson["timestamp"] = attempt.timestamp;
+                attJson["crashSignature"] = attempt.crashSignature;
+                attJson["outcome"] = static_cast<int>(attempt.outcome);
+                attJson["timeToFix"] = attempt.timeToFix;
+                histJson["attempts"].push_back(attJson);
+            }
+            db["crashes"][sig] = histJson;
+        }
+        
+        // Serialize stats
+        db["stats"]["totalRepairs"] = m_impl->globalStats.totalRepairs;
+        db["stats"]["successfulRepairs"] = m_impl->globalStats.successfulRepairs;
+        db["stats"]["successRate"] = m_impl->globalStats.overallSuccessRate;
+        
+        std::ofstream file(m_impl->dbPath);
+        if (file.is_open()) {
+            file << db.dump(2);
+        }
+    } catch (const std::exception& e) {
+        OutputDebugStringA(("[RepairMemory] Failed to save database: " + std::string(e.what()) + "\n").c_str());
     }
 }
 
@@ -172,21 +250,62 @@ std::vector<RepairAttempt> RepairMemory::FindSimilarRepairs(const std::string& c
     std::vector<RepairAttempt> similar;
     
     for (const auto& pair : m_impl->attemptDatabase) {
-        // Simple context similarity check
-        float similarity = 0.0f;
-        if (pair.second.surroundingContext == context) {
-            similarity = 1.0f;
-        } else {
-            // TODO: Implement proper similarity calculation
-            similarity = 0.0f;
-        }
+        // Calculate context similarity using Jaccard similarity on word sets
+        float similarity = CalculateContextSimilarity(context, pair.second.surroundingContext);
         
         if (similarity >= similarityThreshold) {
             similar.push_back(pair.second);
         }
     }
     
+    // Sort by similarity (highest first)
+    std::sort(similar.begin(), similar.end(), 
+        [&context, this](const RepairAttempt& a, const RepairAttempt& b) {
+            float simA = CalculateContextSimilarity(context, a.surroundingContext);
+            float simB = CalculateContextSimilarity(context, b.surroundingContext);
+            return simA > simB;
+        });
+    
     return similar;
+}
+
+float RepairMemory::CalculateContextSimilarity(const std::string& contextA, const std::string& contextB) {
+    // Tokenize both contexts into word sets
+    auto tokenize = [](const std::string& text) -> std::unordered_set<std::string> {
+        std::unordered_set<std::string> tokens;
+        std::istringstream stream(text);
+        std::string word;
+        while (stream >> word) {
+            // Normalize: lowercase and remove punctuation
+            std::transform(word.begin(), word.end(), word.begin(), ::tolower);
+            word.erase(std::remove_if(word.begin(), word.end(), 
+                [](char c) { return !std::isalnum(c); }), word.end());
+            if (!word.empty() && word.length() > 2) {  // Filter short words
+                tokens.insert(word);
+            }
+        }
+        return tokens;
+    };
+    
+    auto tokensA = tokenize(contextA);
+    auto tokensB = tokenize(contextB);
+    
+    if (tokensA.empty() || tokensB.empty()) {
+        return tokensA.empty() && tokensB.empty() ? 1.0f : 0.0f;
+    }
+    
+    // Calculate Jaccard similarity: |A ∩ B| / |A ∪ B|
+    std::unordered_set<std::string> intersection;
+    std::unordered_set<std::string> unionSet = tokensA;
+    
+    for (const auto& token : tokensB) {
+        if (tokensA.find(token) != tokensA.end()) {
+            intersection.insert(token);
+        }
+        unionSet.insert(token);
+    }
+    
+    return static_cast<float>(intersection.size()) / static_cast<float>(unionSet.size());
 }
 
 std::vector<RepairAttempt> RepairMemory::GetRepairsForPattern(const std::string& pattern) {
@@ -305,23 +424,111 @@ void RepairMemory::ExportToJson(const std::string& path) {
 }
 
 void RepairMemory::ImportFromJson(const std::string& path) {
-    // TODO: Implement JSON import
-    (void)path;
+    std::ifstream file(path);
+    if (!file) return;
+    
+    json j;
+    try {
+        file >> j;
+    } catch (...) {
+        return;
+    }
+    
+    // Import repair attempts
+    if (j.contains("attempts") && j["attempts"].is_array()) {
+        for (const auto& item : j["attempts"]) {
+            RepairAttempt attempt;
+            attempt.timestamp = item.value("timestamp", 0ULL);
+            attempt.success = item.value("success", false);
+            attempt.errorType = item.value("errorType", "");
+            attempt.repairStrategy = item.value("repairStrategy", "");
+            m_impl->attemptDatabase[attempt.timestamp] = attempt;
+        }
+    }
+    
+    RecomputeStatistics();
 }
 
 void RepairMemory::MergeDatabase(const std::string& otherDatabasePath) {
-    // TODO: Implement database merge
-    (void)otherDatabasePath;
+    // Load other database and merge unique entries
+    std::ifstream file(otherDatabasePath);
+    if (!file) return;
+    
+    json j;
+    try {
+        file >> j;
+    } catch (...) {
+        return;
+    }
+    
+    // Merge attempts from other database
+    if (j.contains("attempts") && j["attempts"].is_array()) {
+        for (const auto& item : j["attempts"]) {
+            RepairAttempt attempt;
+            attempt.timestamp = item.value("timestamp", 0ULL);
+            // Skip if already exists
+            if (m_impl->attemptDatabase.find(attempt.timestamp) != m_impl->attemptDatabase.end()) {
+                continue;
+            }
+            attempt.success = item.value("success", false);
+            attempt.errorType = item.value("errorType", "");
+            attempt.repairStrategy = item.value("repairStrategy", "");
+            m_impl->attemptDatabase[attempt.timestamp] = attempt;
+        }
+    }
+    
+    RecomputeStatistics();
 }
 
 void RepairMemory::CompactDatabase() {
-    // Remove obsolete records
-    // TODO: Implement compaction
+    // Remove obsolete records older than retention period
+    const uint64_t maxAgeDays = 90;
+    const uint64_t cutoffTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count() - (maxAgeDays * 24 * 60 * 60 * 1000);
+    
+    auto it = m_impl->attemptDatabase.begin();
+    while (it != m_impl->attemptDatabase.end()) {
+        if (it->second.timestamp < cutoffTime) {
+            it = m_impl->attemptDatabase.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
+    RecomputeStatistics();
 }
 
 void RepairMemory::ArchiveOldRepairs(uint64_t olderThanDays) {
-    // TODO: Implement archiving
-    (void)olderThanDays;
+    // Archive repairs older than specified days
+    const uint64_t cutoffTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count() - (olderThanDays * 24 * 60 * 60 * 1000);
+    
+    json archive;
+    archive["archivedRepairs"] = json::array();
+    
+    auto it = m_impl->attemptDatabase.begin();
+    while (it != m_impl->attemptDatabase.end()) {
+        if (it->second.timestamp < cutoffTime) {
+            json entry;
+            entry["timestamp"] = it->second.timestamp;
+            entry["success"] = it->second.success;
+            entry["errorType"] = it->second.errorType;
+            entry["repairStrategy"] = it->second.repairStrategy;
+            archive["archivedRepairs"].push_back(entry);
+            it = m_impl->attemptDatabase.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
+    // Write archive to file
+    std::string archivePath = m_impl->databasePath + ".archive." + std::to_string(cutoffTime);
+    std::ofstream file(archivePath);
+    if (file) {
+        file << archive.dump(2);
+    }
+    
+    RecomputeStatistics();
 }
 
 void RepairMemory::RecomputeStatistics() {

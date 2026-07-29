@@ -102,8 +102,8 @@ std::string InferenceWitness::ToJson() const {
     // Stage results
     json << "  \"stages\": {\n";
     const char* stageNames[] = {
-        "modelLoad", "tokenizer", "embedding", "forwardPass",
-        "kvCache", "sampler", "tokenOutput"
+        "tokenization", "embedding", "prefill", "generation",
+        "detokenization", "postprocessing"
     };
     bool first = true;
     for (size_t i = 0; i < static_cast<size_t>(InferenceStage::COUNT); ++i) {
@@ -164,7 +164,138 @@ bool InferenceWitness::SaveToFile(const std::string& path) const {
 
 InferenceWitness InferenceWitness::LoadFromFile(const std::string& path) {
     InferenceWitness witness;
-    // TODO: Implement JSON parsing if needed
+    
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        return witness; // Return empty witness on failure
+    }
+    
+    std::string json((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Simple JSON parsing for key fields
+    auto extractString = [&json](const std::string& key) -> std::string {
+        size_t pos = json.find("\"" + key + "\"");
+        if (pos == std::string::npos) return "";
+        
+        pos = json.find(":", pos);
+        if (pos == std::string::npos) return "";
+        
+        // Skip whitespace and quotes
+        pos++;
+        while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t' || json[pos] == '"')) pos++;
+        
+        size_t end = pos;
+        while (end < json.size() && json[end] != '"' && json[end] != ',' && json[end] != '}') end++;
+        
+        return json.substr(pos, end - pos);
+    };
+    
+    auto extractUint32 = [&json](const std::string& key) -> uint32_t {
+        size_t pos = json.find("\"" + key + "\"");
+        if (pos == std::string::npos) return 0;
+        
+        pos = json.find(":", pos);
+        if (pos == std::string::npos) return 0;
+        
+        pos++;
+        while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+        
+        return static_cast<uint32_t>(std::stoul(json.substr(pos)));
+    };
+    
+    auto extractFloat = [&json](const std::string& key) -> float {
+        size_t pos = json.find("\"" + key + "\"");
+        if (pos == std::string::npos) return 0.0f;
+        
+        pos = json.find(":", pos);
+        if (pos == std::string::npos) return 0.0f;
+        
+        pos++;
+        while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) pos++;
+        
+        return std::stof(json.substr(pos));
+    };
+    
+    // Extract fields
+    witness.modelPath = extractString("modelPath");
+    witness.modelSha256 = extractString("modelSha256");
+    witness.binarySha256 = extractString("binarySha256");
+    witness.promptSha256 = extractString("promptSha256");
+    witness.gitCommit = extractString("gitCommit");
+    witness.buildTimestamp = extractString("buildTimestamp");
+    witness.outputSha256 = extractString("outputSha256");
+    witness.errorMessage = extractString("errorMessage");
+    
+    witness.seed = extractUint32("seed");
+    witness.maxTokens = extractUint32("maxTokens");
+    witness.topK = extractUint32("topK");
+    witness.modelSizeBytes = extractUint32("modelSizeBytes");
+    
+    witness.temperature = extractFloat("temperature");
+    witness.topP = extractFloat("topP");
+    
+    // Parse stages object
+    size_t stagesPos = json.find("\"stages\"");
+    if (stagesPos != std::string::npos) {
+        size_t braceOpen = json.find("{", stagesPos);
+        size_t braceClose = json.find("}", braceOpen);
+        
+        if (braceOpen != std::string::npos && braceClose != std::string::npos) {
+            std::string stagesJson = json.substr(braceOpen + 1, braceClose - braceOpen - 1);
+            
+            // Parse each stage
+            size_t stagePos = 0;
+            while ((stagePos = stagesJson.find("\"", stagePos)) != std::string::npos) {
+                size_t stageEnd = stagesJson.find("\"", stagePos + 1);
+                if (stageEnd == std::string::npos) break;
+                
+                std::string stageName = stagesJson.substr(stagePos + 1, stageEnd - stagePos - 1);
+                
+                // Find stage object
+                size_t objOpen = stagesJson.find("{", stageEnd);
+                size_t objClose = stagesJson.find("}", objOpen);
+                if (objOpen == std::string::npos || objClose == std::string::npos) break;
+                
+                std::string stageObj = stagesJson.substr(objOpen, objClose - objOpen + 1);
+                
+                StageResult result;
+                result.completed = (stageObj.find("\"completed\": true") != std::string::npos);
+                result.success = (stageObj.find("\"success\": true") != std::string::npos);
+                
+                // Extract checksum
+                size_t checksumPos = stageObj.find("\"checksum\"");
+                if (checksumPos != std::string::npos) {
+                    checksumPos = stageObj.find(":", checksumPos);
+                    if (checksumPos != std::string::npos) {
+                        checksumPos++;
+                        while (checksumPos < stageObj.size() && 
+                               (stageObj[checksumPos] == ' ' || stageObj[checksumPos] == '\t' || stageObj[checksumPos] == '"')) checksumPos++;
+                        
+                        size_t checksumEnd = checksumPos;
+                        while (checksumEnd < stageObj.size() && 
+                               stageObj[checksumEnd] != '"' && stageObj[checksumEnd] != ',' && stageObj[checksumEnd] != '}') checksumEnd++;
+                        
+                        result.checksum = stageObj.substr(checksumPos, checksumEnd - checksumPos);
+                    }
+                }
+                
+                // Map stage name to enum
+                InferenceStage stage = InferenceStage::TOKENIZATION;
+                if (stageName == "tokenization") stage = InferenceStage::TOKENIZATION;
+                else if (stageName == "embedding") stage = InferenceStage::EMBEDDING;
+                else if (stageName == "prefill") stage = InferenceStage::PREFILL;
+                else if (stageName == "generation") stage = InferenceStage::GENERATION;
+                else if (stageName == "detokenization") stage = InferenceStage::DETOKENIZATION;
+                else if (stageName == "postprocessing") stage = InferenceStage::POSTPROCESSING;
+                
+                witness.stages[stage] = result;
+                stagePos = objClose + 1;
+            }
+        }
+    }
+    
     return witness;
 }
 
@@ -178,8 +309,29 @@ WitnessRecorder::WitnessRecorder(const std::string& modelPath, const std::string
     m_witness.gitCommit = GetGitCommitHash();
     m_witness.buildTimestamp = GetCurrentTimestampIso8601();
     
-    // TODO: Compute binary SHA256
-    // TODO: Compute model SHA256 and size
+    // Compute binary SHA256 (current executable)
+    char exePath[MAX_PATH];
+    if (GetModuleFileNameA(NULL, exePath, MAX_PATH) > 0) {
+        m_witness.binarySha256 = ComputeFileSha256(exePath);
+    } else {
+        m_witness.binarySha256 = "sha256:unknown";
+    }
+    
+    // Compute model SHA256 and size
+    if (!modelPath.empty()) {
+        m_witness.modelSha256 = ComputeFileSha256(modelPath);
+        
+        // Get model file size
+        HANDLE hFile = CreateFileA(modelPath.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                                   NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            LARGE_INTEGER fileSize;
+            if (GetFileSizeEx(hFile, &fileSize)) {
+                m_witness.modelSizeBytes = static_cast<uint32_t>(fileSize.QuadPart);
+            }
+            CloseHandle(hFile);
+        }
+    }
 }
 
 WitnessRecorder::~WitnessRecorder() {
@@ -242,26 +394,132 @@ std::string WitnessRecorder::SaveToDefaultLocation() const {
 // ============================================================================
 
 std::string ComputeSha256(const std::string& data) {
-    // Placeholder - implement actual SHA256
-    std::ostringstream oss;
-    oss << "sha256:" << std::hex << std::hash<std::string>{}(data);
-    return oss.str();
+    // Windows CryptoAPI SHA256 implementation
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    BYTE rgbHash[32];  // SHA256 produces 32 bytes
+    DWORD cbHash = 32;
+    std::string result = "sha256:";
+    
+    if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+        if (CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
+            if (CryptHashData(hHash, (BYTE*)data.c_str(), (DWORD)data.length(), 0)) {
+                if (CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &cbHash, 0)) {
+                    // Convert to hex string
+                    char hexBuffer[65];
+                    for (DWORD i = 0; i < cbHash; i++) {
+                        sprintf(hexBuffer + (i * 2), "%02x", rgbHash[i]);
+                    }
+                    hexBuffer[64] = '\0';
+                    result += hexBuffer;
+                }
+            }
+            CryptDestroyHash(hHash);
+        }
+        CryptReleaseContext(hProv, 0);
+    }
+    
+    // Fallback if CryptoAPI fails
+    if (result == "sha256:") {
+        std::ostringstream oss;
+        oss << std::hex << std::hash<std::string>{}(data);
+        result += oss.str();
+    }
+    
+    return result;
 }
 
 std::string ComputeSha256(const std::vector<uint8_t>& data) {
-    // Placeholder - implement actual SHA256
-    std::ostringstream oss;
-    size_t hash = 0;
-    for (auto b : data) {
-        hash = hash * 31 + b;
+    // Windows CryptoAPI SHA256 implementation
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    BYTE rgbHash[32];
+    DWORD cbHash = 32;
+    std::string result = "sha256:";
+    
+    if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+        if (CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
+            if (CryptHashData(hHash, data.data(), (DWORD)data.size(), 0)) {
+                if (CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &cbHash, 0)) {
+                    char hexBuffer[65];
+                    for (DWORD i = 0; i < cbHash; i++) {
+                        sprintf(hexBuffer + (i * 2), "%02x", rgbHash[i]);
+                    }
+                    hexBuffer[64] = '\0';
+                    result += hexBuffer;
+                }
+            }
+            CryptDestroyHash(hHash);
+        }
+        CryptReleaseContext(hProv, 0);
     }
-    oss << "sha256:" << std::hex << hash;
-    return oss.str();
+    
+    // Fallback
+    if (result == "sha256:") {
+        std::ostringstream oss;
+        size_t hash = 0;
+        for (auto b : data) {
+            hash = hash * 31 + b;
+        }
+        oss << std::hex << hash;
+        result += oss.str();
+    }
+    
+    return result;
 }
 
 std::string ComputeFileSha256(const std::string& path) {
-    // Placeholder - implement actual file SHA256
-    return "sha256:file_placeholder";
+    // Windows CryptoAPI SHA256 for file
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    BYTE rgbHash[32];
+    DWORD cbHash = 32;
+    std::string result = "sha256:";
+    
+    // Open file
+    HANDLE hFile = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ, 
+                                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return result + "file_not_found";
+    }
+    
+    if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+        if (CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
+            // Read file in chunks and hash
+            const DWORD CHUNK_SIZE = 65536;
+            std::vector<BYTE> buffer(CHUNK_SIZE);
+            DWORD bytesRead;
+            BOOL hashSuccess = TRUE;
+            
+            while (ReadFile(hFile, buffer.data(), CHUNK_SIZE, &bytesRead, NULL) && bytesRead > 0) {
+                if (!CryptHashData(hHash, buffer.data(), bytesRead, 0)) {
+                    hashSuccess = FALSE;
+                    break;
+                }
+            }
+            
+            if (hashSuccess && CryptGetHashParam(hHash, HP_HASHVAL, rgbHash, &cbHash, 0)) {
+                char hexBuffer[65];
+                for (DWORD i = 0; i < cbHash; i++) {
+                    sprintf(hexBuffer + (i * 2), "%02x", rgbHash[i]);
+                }
+                hexBuffer[64] = '\0';
+                result += hexBuffer;
+            }
+            
+            CryptDestroyHash(hHash);
+        }
+        CryptReleaseContext(hProv, 0);
+    }
+    
+    CloseHandle(hFile);
+    
+    // Fallback
+    if (result == "sha256:") {
+        result += "hash_failed";
+    }
+    
+    return result;
 }
 
 std::string GetCurrentTimestampIso8601() {
@@ -283,13 +541,12 @@ std::string GetGitCommitHash() {
 
 std::string StageToString(InferenceStage stage) {
     switch (stage) {
-        case InferenceStage::ModelLoad: return "modelLoad";
-        case InferenceStage::Tokenizer: return "tokenizer";
-        case InferenceStage::Embedding: return "embedding";
-        case InferenceStage::ForwardPass: return "forwardPass";
-        case InferenceStage::KVCache: return "kvCache";
-        case InferenceStage::Sampler: return "sampler";
-        case InferenceStage::TokenOutput: return "tokenOutput";
+        case InferenceStage::TOKENIZATION: return "tokenization";
+        case InferenceStage::EMBEDDING: return "embedding";
+        case InferenceStage::PREFILL: return "prefill";
+        case InferenceStage::GENERATION: return "generation";
+        case InferenceStage::DETOKENIZATION: return "detokenization";
+        case InferenceStage::POSTPROCESSING: return "postprocessing";
         default: return "unknown";
     }
 }

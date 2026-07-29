@@ -287,7 +287,7 @@ bool DebuggerService::IsPaused() const {
 
 uint32_t DebuggerService::GetProcessId() const {
     // Get from CDB engine
-    return 0; // TODO: Expose from CDB
+    return CDB_GetProcessId();
 }
 
 std::string DebuggerService::GetLastError() const {

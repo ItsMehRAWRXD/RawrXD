@@ -111,6 +111,16 @@ typedef struct _SOVEREIGNK_LOCK_RESPONSE {
     HANDLE              Handle;              // Lock handle for unlock
 } SOVEREIGNK_LOCK_RESPONSE, *PSOVEREIGNK_LOCK_RESPONSE;
 
+typedef struct _SOVEREIGNK_UNLOCK_REQUEST {
+    HANDLE              Handle;              // Lock handle from LOCK_RESPONSE
+    ULONG               Flags;               // Unlock flags (e.g., async)
+} SOVEREIGNK_UNLOCK_REQUEST, *PSOVEREIGNK_UNLOCK_REQUEST;
+
+typedef struct _SOVEREIGNK_UNLOCK_RESPONSE {
+    BOOLEAN             Success;             // TRUE if unlock succeeded
+    NTSTATUS            Status;              // Detailed status code
+} SOVEREIGNK_UNLOCK_RESPONSE, *PSOVEREIGNK_UNLOCK_RESPONSE;
+
 typedef struct _SOVEREIGNK_DMA_REQUEST {
     PHYSICAL_ADDRESS    HostPhysicalAddress; // Source (locked host memory)
     PHYSICAL_ADDRESS    GpuPhysicalAddress; // Destination (VRAM BAR offset)

@@ -21,9 +21,20 @@
 #include <chrono>
 #include <thread>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if !RAWR_VULKAN_AVAILABLE
 // Minimal stubs for CPU-only build
 #define VK_NULL_HANDLE nullptr
 #endif
@@ -45,7 +56,7 @@ class DualGPUManager {
 public:
     std::vector<GPUDeviceInfo> devices;
     
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_VULKAN_AVAILABLE
     VkInstance instance = VK_NULL_HANDLE;
     std::vector<VkPhysicalDevice> physicalDevices;
     std::vector<VkDevice> logicalDevices;
@@ -55,7 +66,7 @@ public:
     bool Initialize() {
         printf("=== Dual GPU Manager Initialization ===\n");
         
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_VULKAN_AVAILABLE
         // Create Vulkan instance
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -183,7 +194,7 @@ public:
     bool RunSmokeTest() {
         printf("\n=== Dual GPU Smoke Test ===\n");
         
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_VULKAN_AVAILABLE
         if (devices.size() < 2) {
             printf("[WARNING] Only %zu GPU(s) detected. Dual GPU test requires 2+ GPUs.\n", devices.size());
             printf("[INFO] This is expected on single-GPU systems.\n");
@@ -213,7 +224,7 @@ public:
     void Shutdown() {
         printf("\n=== Dual GPU Manager Shutdown ===\n");
         
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_VULKAN_AVAILABLE
         for (auto device : logicalDevices) {
             if (device != VK_NULL_HANDLE) {
                 vkDeviceWaitIdle(device);

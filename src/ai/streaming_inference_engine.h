@@ -207,6 +207,12 @@ private:
     };
     SampleResult SampleToken(const float* logits, size_t vocab_size);
     
+    // Logits computation for token generation
+    void ComputeLogits(const std::vector<uint32_t>& tokens, float* logits, size_t vocab_size);
+    
+    // Detokenize token IDs to text
+    std::string Detokenize(const std::vector<uint32_t>& tokens);
+    
     // Members
     VulkanCompute* vulkan_;
     KernelArbiter arbiter_;

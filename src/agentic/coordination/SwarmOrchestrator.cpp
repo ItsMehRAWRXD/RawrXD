@@ -132,24 +132,161 @@ std::expected<SwarmResult, SwarmError> SwarmOrchestrator::executeSubtask(
     // Execute subtask through inference engine or heuristic logic
     // This connects to the CPU Inference Engine for actual processing
     try {
-        // TODO: Integrate with m_inferenceEngine->generateResponse(subtask, context)
-        // Current implementation uses heuristic-based work simulation:
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 + (rand() % 400)));
-        
-        // "Real" work based on specialization
-        if (agent->specialization == AgentSpecialization::Coding) {
-            result.result = "// Generated code for: " + subtask + "\nvoid impl() { /* ... */ }";
-            result.confidence = 0.85f + ((rand() % 15) / 100.0f);
-        } else if (agent->specialization == AgentSpecialization::Testing) {
-            result.result = "Test passed for: " + subtask;
-            result.confidence = 0.90f + ((rand() % 10) / 100.0f);
-        } else {
-            result.result = "Analysis complete: " + subtask;
-            result.confidence = 0.75f + ((rand() % 20) / 100.0f);
+        // Build prompt from subtask and context
+        std::string prompt = subtask;
+        if (!context.empty()) {
+            prompt += "\n\nContext:\n";
+            for (const auto& [key, value] : context) {
+                prompt += key + ": " + value + "\n";
+            }
         }
         
-        result.success = true;
+        // Add specialization-specific instructions
+        switch (agent->specialization) {
+            case AgentSpecialization::Coding:
+                prompt = "[CODING TASK] " + prompt + "\n\nProvide working code implementation:";
+                break;
+            case AgentSpecialization::Testing:
+                prompt = "[TESTING TASK] " + prompt + "\n\nProvide test cases and validation:";
+                break;
+            case AgentSpecialization::Analysis:
+                prompt = "[ANALYSIS TASK] " + prompt + "\n\nProvide detailed analysis:";
+                break;
+            case AgentSpecialization::Documentation:
+                prompt = "[DOCUMENTATION TASK] " + prompt + "\n\nProvide clear documentation:";
+                break;
+            default:
+                break;
+        }
+        
+        // Check if inference engine is available
+        if (m_inferenceEngine && m_inferenceEngine->IsModelLoaded()) {
+            // Use actual inference engine for generation
+            std::string generatedOutput;
+            std::atomic<bool> generationComplete{false};
+            std::atomic<bool> generationSuccess{true};
+            
+            // Tokenize the prompt
+            auto tokens = m_inferenceEngine->Tokenize(prompt);
+            if (tokens.empty()) {
+                tokens.push_back(1); // BOS token fallback
+            }
+            
+            // Determine max tokens based on task complexity
+            int maxTokens = 256;
+            if (agent->specialization == AgentSpecialization::Coding) {
+                maxTokens = 512; // Code needs more tokens
+            } else if (agent->specialization == AgentSpecialization::Documentation) {
+                maxTokens = 384; // Documentation can be verbose
+            }
+            
+            // Generate with timeout handling
+            auto future = std::async(std::launch::async, [&]() {
+                try {
+                    m_inferenceEngine->GenerateStreaming(
+                        tokens,
+                        maxTokens,
+                        [&](const std::string& token) {
+                            generatedOutput += token;
+                        },
+                        [&]() {
+                            generationComplete = true;
+                        },
+                        nullptr // token_id_callback
+                    );
+                } catch (const std::exception& e) {
+                    generationSuccess = false;
+                    generationComplete = true;
+                }
+            });
+            
+            // Wait for completion or timeout
+            auto status = future.wait_for(timeout);
+            if (status == std::future_status::timeout) {
+                result.success = false;
+                result.errors.push_back("Generation timeout");
+                result.confidence = 0.0f;
+                    result.duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - start
+                    );
+                return result;
+            }
+            
+            if (generationSuccess && generationComplete) {
+                result.result = generatedOutput;
+                
+                // Calculate confidence based on output quality metrics
+                float baseConfidence = 0.75f;
+                
+                // Boost confidence for well-formed outputs
+                if (!generatedOutput.empty()) {
+                    // Check for code blocks in coding tasks
+                    if (agent->specialization == AgentSpecialization::Coding) {
+                        if (generatedOutput.find("```") != std::string::npos ||
+                            generatedOutput.find("void ") != std::string::npos ||
+                            generatedOutput.find("class ") != std::string::npos ||
+                            generatedOutput.find("function") != std::string::npos) {
+                            baseConfidence += 0.15f;
+                        }
+                    }
+                    
+                    // Check for test assertions in testing tasks
+                    if (agent->specialization == AgentSpecialization::Testing) {
+                        if (generatedOutput.find("assert") != std::string::npos ||
+                            generatedOutput.find("EXPECT") != std::string::npos ||
+                            generatedOutput.find("test") != std::string::npos) {
+                            baseConfidence += 0.15f;
+                        }
+                    }
+                    
+                    // Penalize very short outputs
+                    if (generatedOutput.length() < 20) {
+                        baseConfidence -= 0.2f;
+                    }
+                }
+                
+                // Add agent-specific confidence adjustment
+                baseConfidence += (agent->confidence - 0.5f) * 0.1f;
+                
+                result.confidence = std::clamp(baseConfidence, 0.0f, 1.0f);
+                result.success = true;
+            } else {
+                result.result = "Generation failed";
+                result.confidence = 0.0f;
+                result.success = false;
+                result.errors.push_back("Inference engine generation failed");
+            }
+        } else {
+            // Fallback: heuristic-based work simulation when no model is loaded
+            spdlog::warn("No inference model loaded, using heuristic fallback for agent {}", agent->id);
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(100 + (rand() % 400)));
+            
+            // Generate plausible-looking output based on specialization
+            if (agent->specialization == AgentSpecialization::Coding) {
+                result.result = "// Generated code for: " + subtask + "\n" +
+                              "// [FALLBACK MODE - No model loaded]\n" +
+                              "void impl() {\n" +
+                              "    // Implementation would go here\n" +
+                              "    // Load a model for actual code generation\n" +
+                              "}\n";
+                result.confidence = 0.45f; // Lower confidence for fallback
+            } else if (agent->specialization == AgentSpecialization::Testing) {
+                result.result = "// Test analysis for: " + subtask + "\n" +
+                              "// [FALLBACK MODE - No model loaded]\n" +
+                              "TEST_F(ExampleTest, BasicTest) {\n" +
+                              "    // Test would be generated here\n" +
+                              "}\n";
+                result.confidence = 0.50f;
+            } else {
+                result.result = "Analysis for: " + subtask + "\n" +
+                              "[FALLBACK MODE - No model loaded]\n" +
+                              "Load a model for actual AI-powered analysis.";
+                result.confidence = 0.40f;
+            }
+            
+            result.success = true; // Mark as success but with low confidence
+        }
         
     } catch (const std::exception& e) {
         result.success = false;

@@ -17,6 +17,19 @@
 #pragma comment(lib, "dxgi.lib")
 #endif
 
+// Compression library support
+#ifdef HAS_ZLIB
+#include <zlib.h>
+#endif
+
+#ifdef HAS_ZSTD
+#include <zstd.h>
+#endif
+
+#ifdef HAS_LZ4
+#include <lz4.h>
+#endif
+
 namespace {
 
 class GGUFServer {
@@ -464,8 +477,8 @@ bool EnhancedModelLoader::loadOllamaModel(const std::string& modelName) {
               << " flags=0x" << std::hex << metaBuf.flags << std::dec
               << " agent=" << (int)metaBuf.agent_flag << "\n";
 
-    // TODO: store as m_lastMetadata member once enhanced_model_loader.h is updated
-    (void)metaBuf;
+    // Store metadata for later retrieval
+    m_lastMetadata = metaBuf;
 
     if (m_onLoadingProgress) m_onLoadingProgress(100);
     if (m_onModelLoaded) m_onModelLoaded(m_modelPath);
@@ -522,9 +535,169 @@ bool EnhancedModelLoader::decompressAndLoad(const std::string& compressedPath, C
     if (compression == CompressionType::NONE) {
         return loadGGUFLocal(compressedPath);
     }
-    m_lastError = "Compressed model loading not implemented for compression=" + FormatRouter::compressionToString(compression);
+    
+    // Generate decompressed path in temp directory
+    std::string decompressedPath = m_tempDirectory + "/" + 
+        std::filesystem::path(compressedPath).stem().string() + ".gguf";
+    
+    bool decompressed = false;
+    
+    switch (compression) {
+        case CompressionType::GZIP:
+            decompressed = decompressGzip(compressedPath, decompressedPath);
+            break;
+        case CompressionType::ZSTD:
+            decompressed = decompressZstd(compressedPath, decompressedPath);
+            break;
+        case CompressionType::LZ4:
+            decompressed = decompressLz4(compressedPath, decompressedPath);
+            break;
+        default:
+            m_lastError = "Unknown compression type: " + FormatRouter::compressionToString(compression);
+            if (m_onError) m_onError(m_lastError);
+            return false;
+    }
+    
+    if (!decompressed) {
+        return false;
+    }
+    
+    // Load the decompressed file
+    bool loaded = loadGGUFLocal(decompressedPath);
+    
+    // Clean up temp file after loading
+    if (std::filesystem::exists(decompressedPath)) {
+        std::filesystem::remove(decompressedPath);
+    }
+    
+    return loaded;
+}
+
+bool EnhancedModelLoader::decompressGzip(const std::string& inputPath, const std::string& outputPath) {
+#ifdef HAS_ZLIB
+    gzFile gz = gzopen(inputPath.c_str(), "rb");
+    if (!gz) {
+        m_lastError = "Failed to open gzip file: " + inputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    std::ofstream out(outputPath, std::ios::binary);
+    if (!out) {
+        gzclose(gz);
+        m_lastError = "Failed to create output file: " + outputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    char buffer[8192];
+    int bytesRead;
+    while ((bytesRead = gzread(gz, buffer, sizeof(buffer))) > 0) {
+        out.write(buffer, bytesRead);
+    }
+    
+    gzclose(gz);
+    return out.good();
+#else
+    m_lastError = "GZIP decompression not available - compile with zlib support";
     if (m_onError) m_onError(m_lastError);
     return false;
+#endif
+}
+
+bool EnhancedModelLoader::decompressZstd(const std::string& inputPath, const std::string& outputPath) {
+#ifdef HAS_ZSTD
+    std::ifstream in(inputPath, std::ios::binary | std::ios::ate);
+    if (!in) {
+        m_lastError = "Failed to open zstd file: " + inputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    size_t compressedSize = in.tellg();
+    in.seekg(0, std::ios::beg);
+    std::vector<char> compressed(compressedSize);
+    in.read(compressed.data(), compressedSize);
+    in.close();
+    
+    size_t const decompressedSize = ZSTD_getFrameContentSize(compressed.data(), compressedSize);
+    if (decompressedSize == ZSTD_CONTENTSIZE_ERROR || decompressedSize == ZSTD_CONTENTSIZE_UNKNOWN) {
+        m_lastError = "Invalid zstd frame in: " + inputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    std::vector<char> decompressed(decompressedSize);
+    size_t const result = ZSTD_decompress(decompressed.data(), decompressedSize, 
+                                          compressed.data(), compressedSize);
+    
+    if (ZSTD_isError(result)) {
+        m_lastError = "ZSTD decompression failed: " + std::string(ZSTD_getErrorName(result));
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    std::ofstream out(outputPath, std::ios::binary);
+    if (!out) {
+        m_lastError = "Failed to create output file: " + outputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    out.write(decompressed.data(), result);
+    return out.good();
+#else
+    m_lastError = "ZSTD decompression not available - compile with zstd support";
+    if (m_onError) m_onError(m_lastError);
+    return false;
+#endif
+}
+
+bool EnhancedModelLoader::decompressLz4(const std::string& inputPath, const std::string& outputPath) {
+#ifdef HAS_LZ4
+    std::ifstream in(inputPath, std::ios::binary | std::ios::ate);
+    if (!in) {
+        m_lastError = "Failed to open lz4 file: " + inputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    size_t compressedSize = in.tellg();
+    in.seekg(0, std::ios::beg);
+    
+    // Read uncompressed size from first 8 bytes (little-endian)
+    uint64_t uncompressedSize = 0;
+    in.read(reinterpret_cast<char*>(&uncompressedSize), sizeof(uncompressedSize));
+    
+    std::vector<char> compressed(compressedSize - sizeof(uncompressedSize));
+    in.read(compressed.data(), compressed.size());
+    in.close();
+    
+    std::vector<char> decompressed(uncompressedSize);
+    int const result = LZ4_decompress_safe(compressed.data(), decompressed.data(), 
+                                           static_cast<int>(compressed.size()), 
+                                           static_cast<int>(uncompressedSize));
+    
+    if (result < 0) {
+        m_lastError = "LZ4 decompression failed with error code: " + std::to_string(result);
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    std::ofstream out(outputPath, std::ios::binary);
+    if (!out) {
+        m_lastError = "Failed to create output file: " + outputPath;
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+    
+    out.write(decompressed.data(), result);
+    return out.good();
+#else
+    m_lastError = "LZ4 decompression not available - compile with lz4 support";
+    if (m_onError) m_onError(m_lastError);
+    return false;
+#endif
 }
 
 void EnhancedModelLoader::logLoadStart(const std::string& input, ModelFormat format) {

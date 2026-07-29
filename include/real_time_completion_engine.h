@@ -12,6 +12,8 @@
 #include "metrics/metrics.h"
 #include "inference_engine.h"
 
+namespace RawrXD {
+
 struct CodeCompletion {
     std::string text;
     std::string detail;
@@ -124,3 +126,5 @@ private:
     void updateCache(const std::string& key, const std::vector<CodeCompletion>& completions);
     std::string generateCacheKey(const std::string& prefix, const std::string& suffix);
 };
+
+} // namespace RawrXD

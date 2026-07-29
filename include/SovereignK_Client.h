@@ -77,6 +77,16 @@ typedef struct _SOVEREIGNK_LOCK_RESPONSE {
     HANDLE      Handle;
 } SOVEREIGNK_LOCK_RESPONSE, *PSOVEREIGNK_LOCK_RESPONSE;
 
+typedef struct _SOVEREIGNK_UNLOCK_REQUEST {
+    HANDLE      Handle;
+    uint32_t    Flags;
+} SOVEREIGNK_UNLOCK_REQUEST, *PSOVEREIGNK_UNLOCK_REQUEST;
+
+typedef struct _SOVEREIGNK_UNLOCK_RESPONSE {
+    bool        Success;
+    int32_t     Status;
+} SOVEREIGNK_UNLOCK_RESPONSE, *PSOVEREIGNK_UNLOCK_RESPONSE;
+
 typedef struct _SOVEREIGNK_DMA_REQUEST {
     uint64_t    HostPhysicalAddress;
     uint64_t    GpuPhysicalAddress;

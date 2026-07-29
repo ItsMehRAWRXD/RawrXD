@@ -16,17 +16,9 @@
 #endif
 #include <windows.h>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
-#else
-// Fake Vulkan types for interface compatibility
-typedef void* VkDevice;
-typedef void* VkPhysicalDevice;
-typedef void* VkQueue;
-typedef void* VkCommandPool;
-typedef void* VkCommandBuffer;
-#define VK_QUEUE_TRANSFER_BIT 0x01
-#endif
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+// Include vulkan_compute.h from include directory for consistent Vulkan type definitions
+#include "../include/vulkan_compute.h"
 
 // Basic types for GGUF (defined in RawrXD_Interfaces.h)
 using RawrXD::GGMLType;

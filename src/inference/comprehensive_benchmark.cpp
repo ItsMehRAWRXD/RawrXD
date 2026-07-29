@@ -100,24 +100,81 @@ bool BenchmarkMemoryBandwidth(VulkanExecutor& executor) {
     
     // Test different buffer sizes
     std::vector<size_t> sizes = {1, 4, 16, 64, 256}; // MB
+    bool allPassed = true;
     
     for (size_t size_mb : sizes) {
         size_t size_bytes = size_mb * 1024 * 1024;
-        std::vector<float> data(size_bytes / sizeof(float), 1.0f);
+        std::vector<float> hostData(size_bytes / sizeof(float), 1.0f);
+        std::vector<float> resultData(size_bytes / sizeof(float), 0.0f);
         
-        // Create buffer
+        // Create GPU buffer
         VulkanBuffer buffer;
-        // Note: Would need public access to CreateBuffer
+        if (!executor.CreateBuffer(size_bytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, buffer)) {
+            std::cout << std::left << std::setw(30) << ("Buffer " + std::to_string(size_mb) + " MB")
+                      << std::right << std::setw(12) << "N/A"
+                      << std::setw(12) << "N/A"
+                      << std::setw(10) << "FAIL" << "\n";
+            allPassed = false;
+            continue;
+        }
         
-        // Simulate bandwidth test
-        double bandwidth_gbps = size_mb * 2.0; // Placeholder
-        std::cout << std::left << std::setw(30) << ("Buffer " + std::to_string(size_mb) + " MB")
-                  << std::right << std::setw(12) << "N/A"
-                  << std::setw(12) << "N/A"
-                  << std::setw(10) << "SKIP" << "\n";
+        // Warmup
+        executor.UploadBuffer(buffer, hostData.data(), size_bytes);
+        
+        // Benchmark upload (Host to Device)
+        const int iterations = 10;
+        double uploadTimeMs = 0.0;
+        double downloadTimeMs = 0.0;
+        
+        for (int i = 0; i < iterations; i++) {
+            auto start = std::chrono::high_resolution_clock::now();
+            executor.UploadBuffer(buffer, hostData.data(), size_bytes);
+            auto end = std::chrono::high_resolution_clock::now();
+            uploadTimeMs += std::chrono::duration<double, std::milli>(end - start).count();
+        }
+        uploadTimeMs /= iterations;
+        
+        // Benchmark download (Device to Host)
+        for (int i = 0; i < iterations; i++) {
+            auto start = std::chrono::high_resolution_clock::now();
+            executor.DownloadBuffer(buffer, resultData.data(), size_bytes);
+            auto end = std::chrono::high_resolution_clock::now();
+            downloadTimeMs += std::chrono::duration<double, std::milli>(end - start).count();
+        }
+        downloadTimeMs /= iterations;
+        
+        // Calculate bandwidth (GB/s)
+        // Bandwidth = size_bytes / time_seconds / 1e9
+        double uploadBandwidth = (size_bytes / (uploadTimeMs / 1000.0)) / 1e9;
+        double downloadBandwidth = (size_bytes / (downloadTimeMs / 1000.0)) / 1e9;
+        double avgBandwidth = (uploadBandwidth + downloadBandwidth) / 2.0;
+        
+        // Verify data integrity
+        bool dataCorrect = true;
+        for (size_t i = 0; i < resultData.size() && dataCorrect; i++) {
+            if (resultData[i] != hostData[i]) {
+                dataCorrect = false;
+            }
+        }
+        
+        std::string name = "Buffer " + std::to_string(size_mb) + " MB";
+        std::cout << std::left << std::setw(30) << name
+                  << std::right << std::setw(10) << std::fixed << std::setprecision(2) << uploadBandwidth << " GB/s"
+                  << std::setw(10) << std::fixed << std::setprecision(2) << downloadBandwidth << " GB/s"
+                  << std::setw(10) << (dataCorrect ? "PASS" : "FAIL") << "\n";
+        
+        g_results.push_back({name + " Upload", uploadTimeMs, 0.0, uploadBandwidth, dataCorrect});
+        g_results.push_back({name + " Download", downloadTimeMs, 0.0, downloadBandwidth, dataCorrect});
+        
+        if (!dataCorrect) {
+            allPassed = false;
+        }
+        
+        // Cleanup
+        executor.DestroyBuffer(buffer);
     }
     
-    return true;
+    return allPassed;
 }
 
 // ============================================================================

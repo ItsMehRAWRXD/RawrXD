@@ -702,7 +702,30 @@ int SovereignVM_GetResourceUsage(const char* vm_id,
     }
     
     if (out_disk_used) {
-        *out_disk_used = 0; // TODO: Implement
+        // Calculate disk usage for VM working directory
+        char vm_path[MAX_PATH];
+        snprintf(vm_path, sizeof(vm_path), "C:\\SovereignVMs\\%s", vm_id);
+        
+        uint64_t total_size = 0;
+        WIN32_FIND_DATAA findData;
+        HANDLE hFind;
+        char search_path[MAX_PATH];
+        snprintf(search_path, sizeof(search_path), "%s\\*", vm_path);
+        
+        hFind = FindFirstFileA(search_path, &findData);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                    LARGE_INTEGER fileSize;
+                    fileSize.LowPart = findData.nFileSizeLow;
+                    fileSize.HighPart = findData.nFileSizeHigh;
+                    total_size += fileSize.QuadPart;
+                }
+            } while (FindNextFileA(hFind, &findData));
+            FindClose(hFind);
+        }
+        
+        *out_disk_used = (uint32_t)(total_size / (1024 * 1024));  // Convert to MB
     }
     
     LeaveCriticalSection(&g_hypervisor.lock);

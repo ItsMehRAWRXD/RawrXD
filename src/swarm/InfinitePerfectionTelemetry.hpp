@@ -19,6 +19,8 @@
 
 namespace InfinitePerfection { class InfinitePerfectionEngine; }
 
+namespace Sovereign {
+
 /**
  * Telemetry snapshot for a single Unity Cycle field
  */

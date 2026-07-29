@@ -845,28 +845,107 @@ void LogReplicator::Shutdown() {
 }
 
 bool LogReplicator::ReplicateTo(const std::string& peerNodeId, uint64_t index) {
-    // TODO: Implement single entry replication
-    return true;
+    // Single entry replication to a specific peer
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get the log entry at the specified index
+    auto entry = logStore_->GetEntry(index);
+    if (!entry) {
+        return false;
+    }
+    
+    // Serialize the entry
+    std::vector<uint8_t> data = SerializeLogEntry(*entry);
+    
+    // Send AppendEntries RPC to peer
+    AppendEntriesRequest request;
+    request.term = currentTerm_;
+    request.leaderId = nodeId_;
+    request.prevLogIndex = index - 1;
+    request.prevLogTerm = logStore_->GetTerm(index - 1);
+    request.entries = {*entry};
+    request.leaderCommit = commitIndex_;
+    
+    // Send via network layer
+    return network_->SendAppendEntries(peerNodeId, request);
 }
 
 bool LogReplicator::ReplicateToAll(uint64_t index) {
-    // TODO: Implement replication to all peers
-    return true;
+    // Replicate entry to all peers
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    bool allSuccess = true;
+    for (const auto& peer : peers_) {
+        if (peer.id != nodeId_) {
+            if (!ReplicateTo(peer.id, index)) {
+                allSuccess = false;
+            }
+        }
+    }
+    
+    return allSuccess;
 }
 
 bool LogReplicator::ReplicateBatch(const std::string& peerNodeId, uint64_t startIndex) {
-    // TODO: Implement batch replication
-    return true;
+    // Batch replication for efficiency
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get next index for this peer
+    uint64_t nextIdx = GetNextIndex(peerNodeId);
+    if (nextIdx < startIndex) {
+        nextIdx = startIndex;
+    }
+    
+    // Collect entries to replicate (batch size limit)
+    const size_t maxBatchSize = 100;
+    std::vector<LogEntry> entries;
+    
+    for (uint64_t i = nextIdx; i < logStore_->GetLastIndex() && entries.size() < maxBatchSize; ++i) {
+        auto entry = logStore_->GetEntry(i);
+        if (entry) {
+            entries.push_back(*entry);
+        }
+    }
+    
+    if (entries.empty()) {
+        return true;  // Nothing to replicate
+    }
+    
+    // Send batch AppendEntries RPC
+    AppendEntriesRequest request;
+    request.term = currentTerm_;
+    request.leaderId = nodeId_;
+    request.prevLogIndex = nextIdx - 1;
+    request.prevLogTerm = logStore_->GetTerm(nextIdx - 1);
+    request.entries = entries;
+    request.leaderCommit = commitIndex_;
+    
+    return network_->SendAppendEntries(peerNodeId, request);
 }
 
 void LogReplicator::HandleAppendSuccess(const std::string& peerNodeId, uint64_t index) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Update match index
+    
+    // Update match index for this peer
+    matchIndex_[peerNodeId] = std::max(matchIndex_[peerNodeId], index);
+    
+    // Update next index
+    nextIndex_[peerNodeId] = matchIndex_[peerNodeId] + 1;
+    
+    // Check if we can advance commit index
+    AdvanceCommitIndex();
 }
 
 void LogReplicator::HandleAppendFailure(const std::string& peerNodeId, uint64_t index) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Decrement next index and retry
+    
+    // Decrement next index and retry
+    if (nextIndex_[peerNodeId] > 1) {
+        nextIndex_[peerNodeId]--;
+    }
+    
+    // Trigger retry
+    ReplicateBatch(peerNodeId, nextIndex_[peerNodeId]);
 }
 
 uint64_t LogReplicator::GetNextIndex(const std::string& peerNodeId) {

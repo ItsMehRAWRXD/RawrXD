@@ -9,41 +9,28 @@
 #include <string>
 #include <vector>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+// Include vulkan_compute.h from include directory for consistent Vulkan type definitions
+#include "../include/vulkan_compute.h"
+
+// Define RAWR_VULKAN_AVAILABLE based on whether real Vulkan is available
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
-// Vulkan stubs for CPU mode
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+// Vulkan types are now provided by vulkan_compute.h
+// Only define additional Vulkan constants here if not already defined
 #ifndef VK_NULL_HANDLE
 #define VK_NULL_HANDLE 0
 #endif
-typedef void* VkInstance;
-typedef void* VkPhysicalDevice;
-typedef void* VkDevice;
-typedef void* VkQueue;
-typedef struct
-{
-    int dummy;
-} VkApplicationInfo;
-typedef struct
-{
-    int dummy;
-} VkInstanceCreateInfo;
-typedef struct
-{
-    int dummy;
-} VkDeviceQueueCreateInfo;
-typedef struct
-{
-    int dummy;
-} VkDeviceCreateInfo;
-typedef struct
-{
-    int dummy;
-} VkPhysicalDeviceProperties;
-typedef struct
-{
-    uint32_t queueFlags;
-} VkQueueFamilyProperties;
+#ifndef VK_STRUCTURE_TYPE_APPLICATION_INFO
 #define VK_STRUCTURE_TYPE_APPLICATION_INFO 0
 #define VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO 0
 #define VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO 0
@@ -96,11 +83,11 @@ class RawrXDInference
     // Helpers
     VkInstance CreateVulkanInstance()
     {
-#ifndef RAWR_ENABLE_VULKAN
+#if !RAWR_VULKAN_AVAILABLE
         return VK_NULL_HANDLE;
 #else
         VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_APPLICATION_INFO);
         appInfo.pApplicationName = "RawrXD Inference";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "RawrXD Engine";
@@ -108,7 +95,7 @@ class RawrXDInference
         appInfo.apiVersion = VK_API_VERSION_1_2;
 
         VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
         createInfo.pApplicationInfo = &appInfo;
         createInfo.enabledLayerCount = 0;
         createInfo.enabledExtensionCount = 0;
@@ -125,7 +112,7 @@ class RawrXDInference
 
     VkPhysicalDevice SelectPhysicalDevice(VkInstance instance)
     {
-#ifndef RAWR_ENABLE_VULKAN
+#if !RAWR_VULKAN_AVAILABLE
         (void)instance;
         return VK_NULL_HANDLE;
 #else
@@ -153,7 +140,7 @@ class RawrXDInference
 
     VkDevice CreateLogicalDevice(VkPhysicalDevice physDevice)
     {
-#ifndef RAWR_ENABLE_VULKAN
+#if !RAWR_VULKAN_AVAILABLE
         (void)physDevice;
         return VK_NULL_HANDLE;
 #else
@@ -174,13 +161,13 @@ class RawrXDInference
 
         float queuePriority = 1.0f;
         VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
         queueCreateInfo.queueFamilyIndex = computeFamily;
         queueCreateInfo.queueCount = 1;
         queueCreateInfo.pQueuePriorities = &queuePriority;
 
         VkDeviceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        createInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
         createInfo.pQueueCreateInfos = &queueCreateInfo;
         createInfo.queueCreateInfoCount = 1;
         VkPhysicalDeviceFeatures deviceFeatures{};
@@ -204,7 +191,7 @@ class RawrXDInference
         m_lastLoadErrorMessage.clear();
         loader.SetLoadErrorCallback([this](const std::string& stage, const std::string& message)
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
-#ifdef RAWR_ENABLE_VULKAN
+#if RAWR_VULKAN_AVAILABLE
         VkInstance instance = CreateVulkanInstance();
         if (!instance)
             return false;

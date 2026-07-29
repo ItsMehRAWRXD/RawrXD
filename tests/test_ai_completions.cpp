@@ -16,6 +16,7 @@
 #include <string>
 #include "real_time_completion_engine.h"
 #include "inference_engine.h"
+#include "cpu_inference_engine.h"
 #include "logging/logger.h"
 #include "metrics/metrics.h"
 
@@ -26,17 +27,17 @@ int main() {
         // 1. Initialize logging and metrics
         auto logger = std::make_shared<Logger>();
         auto metrics = std::make_shared<Metrics>();
-        logger->setLevel(LogLevel::DEBUG);
+        logger->setMinLevel(LogLevel::DEBUG);
         logger->info("Test initialized");
 
         // 2. Create InferenceEngine
         std::cout << "[1/5] Creating InferenceEngine...\n";
-        InferenceEngine engine(nullptr);
+        RawrXD::CPUInferenceEngine engine;
 
         // 3. Load a GGUF model
         std::cout << "[2/5] Loading GGUF model...\n";
         std::string modelPath = "models/ministral-3b-instruct-v0.3-Q4_K_M.gguf";
-        bool loaded = engine.Initialize(modelPath);
+        bool loaded = engine.LoadModel(modelPath);
 
         if (!loaded) {
             std::cerr << "✗ Failed to load model: " << modelPath << "\n";
@@ -50,7 +51,7 @@ int main() {
 
         // 4. Create RealTimeCompletionEngine
         std::cout << "[3/5] Initializing CompletionEngine...\n";
-        RealTimeCompletionEngine completionEngine(logger, metrics);
+        RawrXD::RealTimeCompletionEngine completionEngine(logger, metrics);
         completionEngine.setInferenceEngine(&engine);
         std::cout << "✓ CompletionEngine initialized\n\n";
 

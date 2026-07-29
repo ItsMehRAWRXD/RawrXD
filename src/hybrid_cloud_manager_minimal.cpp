@@ -743,8 +743,18 @@ ExecutionResult HybridCloudManager::sendCloudRequest(const std::string& provider
     return executeCloud(request, providerId, modelId);
 }
 
-void* HybridCloudManager::createRequestPayload(const ExecutionRequest& /*request*/,
-                                                const std::string& /*providerId*/) {
+void* HybridCloudManager::createRequestPayload(const ExecutionRequest& request,
+                                                const std::string& providerId) {
+    // Create a JSON payload for cloud API requests
+    // In production, this would format the request according to provider-specific APIs
+    // (OpenAI, Anthropic, Google, etc.)
+    
+    (void)request;
+    (void)providerId;
+    
+    // For now, return nullptr as the actual payload creation
+    // would require provider-specific formatting
+    // In production, this would return a structured request object
     return nullptr;
 }
 

@@ -348,12 +348,99 @@ bool DAPDebugger::step() {
 }
 
 bool DAPDebugger::stepOver() {
-    // TODO: Implement step-over logic
+    // Step-over: Execute the current line and stop at the next line in the same function
+    // If the current instruction is a call, we need to set a breakpoint after it
+    
+    if (!m_impl->m_debugging) return false;
+    
+    CONTEXT ctx = {};
+    ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    
+    if (!GetThreadContext(m_impl->m_hThread, &ctx)) {
+        return false;
+    }
+    
+    // Read current instruction to check if it's a call
+    BYTE instrBytes[16] = {};
+    SIZE_T bytesRead = 0;
+    uint64_t nextInstrAddr = ctx.Rip;
+    
+    if (ReadProcessMemory(m_impl->m_hProcess, (LPCVOID)ctx.Rip, instrBytes, 16, &bytesRead)) {
+        // Check for call instruction (E8 xx xx xx xx = near relative call, 5 bytes)
+        if (instrBytes[0] == 0xE8) {
+            // Near relative call - next instruction is at Rip + 5
+            nextInstrAddr = ctx.Rip + 5;
+        } else if (instrBytes[0] == 0xFF && (instrBytes[1] & 0x38) == 0x10) {
+            // Indirect call - estimate next instruction
+            // ModR/M byte determines length
+            int mod = (instrBytes[1] >> 6) & 0x3;
+            int rm = instrBytes[1] & 0x7;
+            if (mod == 0x3) {
+                nextInstrAddr = ctx.Rip + 2;  // Register indirect
+            } else if (mod == 0x0 && rm == 0x5) {
+                nextInstrAddr = ctx.Rip + 6;  // [disp32]
+            } else if (mod == 0x0 || mod == 0x1 || mod == 0x2) {
+                nextInstrAddr = ctx.Rip + 2 + (mod == 0x1 ? 1 : (mod == 0x2 ? 4 : 0)) + (rm == 0x4 ? 1 : 0);
+            }
+        } else if (instrBytes[0] == 0x9A) {
+            // Far call (rare) - 7 bytes
+            nextInstrAddr = ctx.Rip + 7;
+        }
+    }
+    
+    // Set temporary breakpoint at next instruction
+    BYTE originalByte = 0;
+    if (ReadProcessMemory(m_impl->m_hProcess, (LPCVOID)nextInstrAddr, &originalByte, 1, &bytesRead)) {
+        BYTE int3 = 0xCC;
+        if (WriteProcessMemory(m_impl->m_hProcess, (LPVOID)nextInstrAddr, &int3, 1, &bytesRead)) {
+            // Store original opcode for restoration
+            m_impl->m_breakpointOpcodes[nextInstrAddr] = originalByte;
+            
+            // Continue execution
+            FlushInstructionCache(m_impl->m_hProcess, (LPCVOID)nextInstrAddr, 1);
+            return ContinueDebugEvent(m_impl->m_processId, m_impl->m_threadId, DBG_CONTINUE);
+        }
+    }
+    
+    // Fallback to single step
     return step();
 }
 
 bool DAPDebugger::stepOut() {
-    // TODO: Implement step-out logic
+    // Step-out: Continue execution until the current function returns
+    // We set a breakpoint at the return address
+    
+    if (!m_impl->m_debugging) return false;
+    
+    CONTEXT ctx = {};
+    ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    
+    if (!GetThreadContext(m_impl->m_hThread, &ctx)) {
+        return false;
+    }
+    
+    // Get return address from stack (at RSP)
+    uint64_t returnAddr = 0;
+    SIZE_T bytesRead = 0;
+    if (!ReadProcessMemory(m_impl->m_hProcess, (LPCVOID)ctx.Rsp, &returnAddr, sizeof(returnAddr), &bytesRead)) {
+        return false;
+    }
+    
+    // Set temporary breakpoint at return address
+    BYTE originalByte = 0;
+    if (ReadProcessMemory(m_impl->m_hProcess, (LPCVOID)returnAddr, &originalByte, 1, &bytesRead)) {
+        BYTE int3 = 0xCC;
+        if (WriteProcessMemory(m_impl->m_hProcess, (LPVOID)returnAddr, &int3, 1, &bytesRead)) {
+            // Store original opcode
+            m_impl->m_breakpointOpcodes[returnAddr] = originalByte;
+            
+            // Continue execution
+            FlushInstructionCache(m_impl->m_hProcess, (LPCVOID)returnAddr, 1);
+            return ContinueDebugEvent(m_impl->m_processId, m_impl->m_threadId, DBG_CONTINUE);
+        }
+    }
+    
+    // Fallback
     return step();
 }
 

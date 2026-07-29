@@ -160,7 +160,7 @@ UnifiedResponse OpenClawBridge::complete(const std::string& provider, const Unif
 }
 
 std::string OpenClawBridge::formatOpenAIRequest(const UnifiedRequest& req) {
-    Json::Value root;
+    nlohmann::json root;
     root["model"] = req.model;
     root["messages"] = convertMessagesToOpenAI(req.messages);
     root["temperature"] = req.temperature;
@@ -171,9 +171,9 @@ std::string OpenClawBridge::formatOpenAIRequest(const UnifiedRequest& req) {
     root["stream"] = req.stream;
     
     if (!req.stopSequences.empty()) {
-        Json::Value stops(Json::arrayValue);
+        nlohmann::json stops = nlohmann::json::array();
         for (const auto& s : req.stopSequences) {
-            stops.append(s);
+            stops.push_back(s);
         }
         root["stop"] = stops;
     }
@@ -183,12 +183,11 @@ std::string OpenClawBridge::formatOpenAIRequest(const UnifiedRequest& req) {
         root["tool_choice"] = req.toolChoice;
     }
     
-    Json::StreamWriterBuilder writer;
-    return Json::writeString(writer, root);
+    return root.dump();
 }
 
 std::string OpenClawBridge::formatAnthropicRequest(const UnifiedRequest& req) {
-    Json::Value root;
+    nlohmann::json root;
     root["model"] = req.model;
     root["messages"] = convertMessagesToAnthropic(req.messages);
     root["max_tokens"] = req.maxTokens > 0 ? req.maxTokens : 4096;
@@ -200,12 +199,11 @@ std::string OpenClawBridge::formatAnthropicRequest(const UnifiedRequest& req) {
         root["tools"] = convertToolsToAnthropic(req.tools);
     }
     
-    Json::StreamWriterBuilder writer;
-    return Json::writeString(writer, root);
+    return root.dump();
 }
 
 std::string OpenClawBridge::formatOllamaRequest(const UnifiedRequest& req) {
-    Json::Value root;
+    nlohmann::json root;
     root["model"] = req.model;
     
     // Build prompt from messages
@@ -220,7 +218,7 @@ std::string OpenClawBridge::formatOllamaRequest(const UnifiedRequest& req) {
     root["prompt"] = prompt;
     root["stream"] = req.stream;
     
-    Json::Value options;
+    nlohmann::json options;
     options["temperature"] = req.temperature;
     options["top_p"] = req.topP;
     if (req.maxTokens > 0) {
@@ -228,8 +226,7 @@ std::string OpenClawBridge::formatOllamaRequest(const UnifiedRequest& req) {
     }
     root["options"] = options;
     
-    Json::StreamWriterBuilder writer;
-    return Json::writeString(writer, root);
+    return root.dump();
 }
 
 std::string OpenClawBridge::formatLlamaCppRequest(const UnifiedRequest& req) {
@@ -237,140 +234,141 @@ std::string OpenClawBridge::formatLlamaCppRequest(const UnifiedRequest& req) {
     return formatOpenAIRequest(req);
 }
 
-Json::Value OpenClawBridge::convertMessagesToOpenAI(const std::vector<std::map<std::string, std::string>>& messages) {
-    Json::Value result(Json::arrayValue);
+nlohmann::json OpenClawBridge::convertMessagesToOpenAI(const std::vector<std::map<std::string, std::string>>& messages) {
+    nlohmann::json result = nlohmann::json::array();
     for (const auto& msg : messages) {
-        Json::Value obj;
+        nlohmann::json obj;
         auto roleIt = msg.find("role");
         auto contentIt = msg.find("content");
         if (roleIt != msg.end()) obj["role"] = roleIt->second;
         if (contentIt != msg.end()) obj["content"] = contentIt->second;
-        result.append(obj);
+        result.push_back(obj);
     }
     return result;
 }
 
-Json::Value OpenClawBridge::convertMessagesToAnthropic(const std::vector<std::map<std::string, std::string>>& messages) {
+nlohmann::json OpenClawBridge::convertMessagesToAnthropic(const std::vector<std::map<std::string, std::string>>& messages) {
     // Anthropic uses similar format but with some differences
     return convertMessagesToOpenAI(messages);
 }
 
-Json::Value OpenClawBridge::convertToolsToOpenAI(const std::vector<std::map<std::string, Json::Value>>& tools) {
-    Json::Value result(Json::arrayValue);
+nlohmann::json OpenClawBridge::convertToolsToOpenAI(const std::vector<std::map<std::string, nlohmann::json>>& tools) {
+    nlohmann::json result = nlohmann::json::array();
     for (const auto& tool : tools) {
-        Json::Value obj;
+        nlohmann::json obj;
         auto typeIt = tool.find("type");
         auto funcIt = tool.find("function");
-        if (typeIt != tool.end()) obj["type"] = typeIt->second.asString();
+        if (typeIt != tool.end()) obj["type"] = typeIt->second.get<std::string>();
         if (funcIt != tool.end()) obj["function"] = funcIt->second;
-        result.append(obj);
+        result.push_back(obj);
     }
     return result;
 }
 
-Json::Value OpenClawBridge::convertToolsToAnthropic(const std::vector<std::map<std::string, Json::Value>>& tools) {
-    Json::Value result(Json::arrayValue);
+nlohmann::json OpenClawBridge::convertToolsToAnthropic(const std::vector<std::map<std::string, nlohmann::json>>& tools) {
+    nlohmann::json result = nlohmann::json::array();
     for (const auto& tool : tools) {
-        Json::Value obj;
+        nlohmann::json obj;
         auto nameIt = tool.find("name");
         auto descIt = tool.find("description");
         auto paramsIt = tool.find("parameters");
-        if (nameIt != tool.end()) obj["name"] = nameIt->second.asString();
-        if (descIt != tool.end()) obj["description"] = descIt->second.asString();
+        if (nameIt != tool.end()) obj["name"] = nameIt->second.get<std::string>();
+        if (descIt != tool.end()) obj["description"] = descIt->second.get<std::string>();
         if (paramsIt != tool.end()) obj["input_schema"] = paramsIt->second;
-        result.append(obj);
+        result.push_back(obj);
     }
     return result;
 }
 
-UnifiedResponse OpenClawBridge::parseOpenAIResponse(const Json::Value& json) {
+UnifiedResponse OpenClawBridge::parseOpenAIResponse(const nlohmann::json& json) {
     UnifiedResponse resp;
     
-    if (json.isMember("error")) {
+    if (json.contains("error")) {
         resp.success = false;
-        resp.errorMessage = json["error"]["message"].asString();
-        resp.errorCode = json["error"]["code"].isInt() ? json["error"]["code"].asInt() : -1;
+        resp.errorMessage = json["error"]["message"].get<std::string>();
+        resp.errorCode = json["error"].contains("code") && json["error"]["code"].is_number_integer() 
+                         ? json["error"]["code"].get<int>() : -1;
         return resp;
     }
     
-    resp.id = json["id"].asString();
+    resp.id = json.value("id", "");
     
-    if (json.isMember("choices") && json["choices"].isArray() && !json["choices"].empty()) {
+    if (json.contains("choices") && json["choices"].is_array() && !json["choices"].empty()) {
         const auto& choice = json["choices"][0];
-        if (choice.isMember("message")) {
-            resp.content = choice["message"]["content"].asString();
-            resp.role = choice["message"]["role"].asString();
+        if (choice.contains("message")) {
+            resp.content = choice["message"].value("content", "");
+            resp.role = choice["message"].value("role", "");
         }
-        resp.finishReason = choice["finish_reason"].asString();
+        resp.finishReason = choice.value("finish_reason", "");
     }
     
-    if (json.isMember("usage")) {
-        resp.promptTokens = json["usage"]["prompt_tokens"].asInt();
-        resp.completionTokens = json["usage"]["completion_tokens"].asInt();
-        resp.totalTokens = json["usage"]["total_tokens"].asInt();
+    if (json.contains("usage")) {
+        resp.promptTokens = json["usage"].value("prompt_tokens", 0);
+        resp.completionTokens = json["usage"].value("completion_tokens", 0);
+        resp.totalTokens = json["usage"].value("total_tokens", 0);
     }
     
     return resp;
 }
 
-UnifiedResponse OpenClawBridge::parseAnthropicResponse(const Json::Value& json) {
+UnifiedResponse OpenClawBridge::parseAnthropicResponse(const nlohmann::json& json) {
     UnifiedResponse resp;
     
-    if (json.isMember("error")) {
+    if (json.contains("error")) {
         resp.success = false;
-        resp.errorMessage = json["error"]["message"].asString();
+        resp.errorMessage = json["error"].value("message", "");
         return resp;
     }
     
-    resp.id = json["id"].asString();
+    resp.id = json.value("id", "");
     
-    if (json.isMember("content") && json["content"].isArray() && !json["content"].empty()) {
+    if (json.contains("content") && json["content"].is_array() && !json["content"].empty()) {
         // Concatenate all content blocks
         std::string content;
         for (const auto& block : json["content"]) {
-            if (block["type"].asString() == "text") {
-                content += block["text"].asString();
+            if (block.value("type", "") == "text") {
+                content += block.value("text", "");
             }
         }
         resp.content = content;
     }
     
-    resp.role = json["role"].asString();
-    resp.finishReason = json["stop_reason"].asString();
+    resp.role = json.value("role", "");
+    resp.finishReason = json.value("stop_reason", "");
     
-    if (json.isMember("usage")) {
-        resp.promptTokens = json["usage"]["input_tokens"].asInt();
-        resp.completionTokens = json["usage"]["output_tokens"].asInt();
+    if (json.contains("usage")) {
+        resp.promptTokens = json["usage"].value("input_tokens", 0);
+        resp.completionTokens = json["usage"].value("output_tokens", 0);
         resp.totalTokens = resp.promptTokens + resp.completionTokens;
     }
     
     return resp;
 }
 
-UnifiedResponse OpenClawBridge::parseOllamaResponse(const Json::Value& json) {
+UnifiedResponse OpenClawBridge::parseOllamaResponse(const nlohmann::json& json) {
     UnifiedResponse resp;
     
-    if (json.isMember("error")) {
+    if (json.contains("error")) {
         resp.success = false;
-        resp.errorMessage = json["error"].asString();
+        resp.errorMessage = json["error"].get<std::string>();
         return resp;
     }
     
-    resp.content = json["response"].asString();
-    resp.finishReason = json["done"].asBool() ? "stop" : "";
+    resp.content = json.value("response", "");
+    resp.finishReason = json.value("done", false) ? "stop" : "";
     
-    if (json.isMember("prompt_eval_count")) {
-        resp.promptTokens = json["prompt_eval_count"].asInt();
+    if (json.contains("prompt_eval_count")) {
+        resp.promptTokens = json["prompt_eval_count"].get<int>();
     }
-    if (json.isMember("eval_count")) {
-        resp.completionTokens = json["eval_count"].asInt();
+    if (json.contains("eval_count")) {
+        resp.completionTokens = json["eval_count"].get<int>();
     }
     resp.totalTokens = resp.promptTokens + resp.completionTokens;
     
     return resp;
 }
 
-UnifiedResponse OpenClawBridge::parseLlamaCppResponse(const Json::Value& json) {
+UnifiedResponse OpenClawBridge::parseLlamaCppResponse(const nlohmann::json& json) {
     // Similar to OpenAI
     return parseOpenAIResponse(json);
 }

@@ -13,6 +13,7 @@
 #include <string>
 #include <thread>
 #include <windows.h>
+#include <dxgi.h>
 
 #include <memoryapi.h>
 
@@ -277,6 +278,23 @@ static void DequantQ3K_Block(const uint8_t* src, float* dst)
     }
 }
 
+// Q4_0: d(2) + qs(16) = 18 bytes per 32 elements
+// Simple 4-bit quantization: 32 elements per block, scale in fp16
+static void DequantQ4_0_Block(const uint8_t* src, float* dst)
+{
+    float d = f16_to_f32(*(const uint16_t*)(src + 0));
+    const uint8_t* q = src + 2;  // qs starts at offset 2
+    
+    for (int i = 0; i < 16; i++)
+    {
+        uint8_t byte = q[i];
+        int x0 = (byte & 0x0F) - 8;  // Low nibble, subtract 8 bias
+        int x1 = (byte >> 4) - 8;     // High nibble, subtract 8 bias
+        dst[i] = x0 * d;
+        dst[i + 16] = x1 * d;
+    }
+}
+
 // Q6_K: ql(128) + qh(64) + scales(16) + d(2) = 210 bytes per 256 elements
 static void DequantQ6K_Block(const uint8_t* src, float* dst)
 {
@@ -392,7 +410,20 @@ RawrXDModelLoader::~RawrXDModelLoader()
     }
 }
 
-#ifdef RAWR_ENABLE_VULKAN
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
+#else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if RAWR_VULKAN_AVAILABLE
 bool RawrXDModelLoader::InitTransferResources()
 {
     // Select a dedicated transfer queue family if the device exposes one,
@@ -448,7 +479,13 @@ bool RawrXDModelLoader::InitTransferResources()
            (dedicated != UINT32_MAX) ? "yes" : "no (graphics fallback)");
     return true;
 }
-#endif  // RAWR_ENABLE_VULKAN
+#else
+bool RawrXDModelLoader::InitTransferResources() {
+    // CPU fallback - no Vulkan transfer resources needed
+    printf("[RawrXD] Transfer resources: CPU fallback mode (no Vulkan)\n");
+    return true;
+}
+#endif  // RAWR_VULKAN_AVAILABLE
 
 // ============================================================================
 // Sliding Window Memory Mapping Implementation
@@ -2605,22 +2642,32 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     }
 
     size_t blockStride = 0;
+    size_t blockElements = 0;  // Number of elements per block
     switch (t.type)
     {
+        case 2:
+            blockStride = 18;
+            blockElements = 32;
+            break;  // Q4_0: 2 bytes scale + 16 bytes weights = 18 bytes, 32 elements
         case 10:
             blockStride = 84;
+            blockElements = 256;
             break;  // Q2_K
         case 11:
             blockStride = 110;
+            blockElements = 256;
             break;  // Q3_K
         case 12:
             blockStride = 144;
+            blockElements = 256;
             break;  // Q4_K
         case 13:
             blockStride = 176;
+            blockElements = 256;
             break;  // Q5_K
         case 14:
             blockStride = 210;
+            blockElements = 256;
             break;  // Q6_K
         default:
             break;
@@ -2631,7 +2678,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         return false;
     }
 
-    const size_t blocksPerRow = K / 256;
+    const size_t blocksPerRow = K / blockElements;
     const size_t rowBytes = blocksPerRow * blockStride;
 
     // Cap tile_buf at 16 MB to limit peak heap pressure during FFN projections
@@ -2652,10 +2699,13 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     if (pinRows == 0)
         pinRows = 1;
 
-    const auto dequantBlock = [t](const uint8_t* src, float* dst)
+    const auto dequantBlock = [t, blockElements](const uint8_t* src, float* dst)
     {
         switch (t.type)
         {
+            case 2:
+                DequantQ4_0_Block(src, dst);
+                break;  // Q4_0: 32 elements per block
             case 10:
                 DequantQ2K_Block(src, dst);
                 break;
@@ -2676,7 +2726,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                 DequantQ6K_Block(src, dst);
                 break;
             default:
-                std::memset(dst, 0, 256 * sizeof(float));
+                std::memset(dst, 0, blockElements * sizeof(float));
                 break;
         }
     };

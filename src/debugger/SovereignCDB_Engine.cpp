@@ -456,6 +456,10 @@ const char* CDB_GetLastError(void) {
     return g_CDB.lastError[0] ? g_CDB.lastError : "No error";
 }
 
+uint32_t CDB_GetProcessId(void) {
+    return g_CDB.processId;
+}
+
 /*===========================================================================
  * EXECUTION CONTROL
  *===========================================================================*/
@@ -489,12 +493,106 @@ void CDB_StepInto(uint32_t threadId) {
 }
 
 void CDB_StepOver(uint32_t threadId) {
-    // TODO: Implement step-over (set breakpoint on next instruction, run)
-    CDB_StepInto(threadId);
+    // Step-over implementation: Find next instruction after current call
+    // and set a temporary breakpoint there, then continue execution
+    if (!g_CDB.hProcess) {
+        return;
+    }
+    
+    // Get current thread context to find next instruction
+    HANDLE hThread = OpenThread(THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, FALSE, threadId);
+    if (!hThread) {
+        return;
+    }
+    
+    CONTEXT ctx = {};
+    ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    if (!GetThreadContext(hThread, &ctx)) {
+        CloseHandle(hThread);
+        return;
+    }
+    
+    // For x64, RIP points to current instruction
+    // We need to decode the current instruction to find the next one
+    // For simplicity, we assume average instruction length of 4-15 bytes
+    // and set breakpoint at RIP + estimated offset
+    uint64_t currentRip = ctx.Rip;
+    uint64_t nextInstrAddr = currentRip + 4;  // Conservative estimate
+    
+    // Check if we're at a call instruction (E8 xx xx xx xx or FF /2)
+    uint8_t instrBytes[16] = {};
+    SIZE_T bytesRead = 0;
+    if (ReadProcessMemory(g_CDB.hProcess, (LPCVOID)currentRip, instrBytes, 16, &bytesRead)) {
+        if (instrBytes[0] == 0xE8) {
+            // Near relative call: E8 xx xx xx xx (5 bytes)
+            // Next instruction is after the call
+            nextInstrAddr = currentRip + 5;
+        } else if (instrBytes[0] == 0xFF && (instrBytes[1] & 0x38) == 0x10) {
+            // Indirect call: FF /2
+            // Length varies, use 2-6 bytes
+            nextInstrAddr = currentRip + 2 + ((instrBytes[1] & 0xC0) == 0xC0 ? 0 : 1);
+        }
+    }
+    
+    // Set temporary breakpoint at next instruction
+    uint32_t bpId = CDB_SetBreakpoint(nextInstrAddr, "__step_over_temp");
+    if (bpId != 0) {
+        // Mark as temporary
+        std::lock_guard<std::mutex> lock(g_CDB.breakpointMutex);
+        for (auto& bp : g_CDB.breakpoints) {
+            if (bp.id == bpId) {
+                bp.temporary = true;
+                break;
+            }
+        }
+    }
+    
+    CloseHandle(hThread);
+    
+    // Continue execution
+    CDB_Continue(threadId, false);
 }
 
 void CDB_StepOut(uint32_t threadId) {
-    // TODO: Implement step-out (set breakpoint on return address, run)
+    // Step-out implementation: Set breakpoint at return address
+    // and continue execution until we hit it
+    if (!g_CDB.hProcess) {
+        return;
+    }
+    
+    // Get current thread context
+    HANDLE hThread = OpenThread(THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, FALSE, threadId);
+    if (!hThread) {
+        return;
+    }
+    
+    CONTEXT ctx = {};
+    ctx.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+    if (!GetThreadContext(hThread, &ctx)) {
+        CloseHandle(hThread);
+        return;
+    }
+    
+    // For x64, return address is at [RSP]
+    uint64_t returnAddr = 0;
+    SIZE_T bytesRead = 0;
+    if (ReadProcessMemory(g_CDB.hProcess, (LPCVOID)ctx.Rsp, &returnAddr, sizeof(returnAddr), &bytesRead)) {
+        // Set temporary breakpoint at return address
+        uint32_t bpId = CDB_SetBreakpoint(returnAddr, "__step_out_temp");
+        if (bpId != 0) {
+            std::lock_guard<std::mutex> lock(g_CDB.breakpointMutex);
+            for (auto& bp : g_CDB.breakpoints) {
+                if (bp.id == bpId) {
+                    bp.temporary = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    CloseHandle(hThread);
+    
+    // Continue execution
     CDB_Continue(threadId, false);
 }
 
@@ -558,10 +656,37 @@ uint32_t CDB_SetBreakpoint(uint64_t address, const char* symbolName) {
 }
 
 uint32_t CDB_SetBreakpointByName(const char* symbolName) {
-    // TODO: Resolve symbol to address using DbgHelp
-    // Implementation pending - returns 0
-    (void)symbolName;
-    return 0;
+    if (!symbolName || !g_CDB.hProcess) {
+        CDB_SetLastError("Invalid symbol name or no active process");
+        return 0;
+    }
+    
+    // Use DbgHelp to resolve symbol to address
+    SYMBOL_INFO* symInfo = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256);
+    if (!symInfo) {
+        CDB_SetLastError("Failed to allocate symbol info buffer");
+        return 0;
+    }
+    
+    symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symInfo->MaxNameLen = 256;
+    
+    DWORD64 displacement = 0;
+    BOOL result = SymFromName(g_CDB.hProcess, symbolName, symInfo);
+    
+    if (!result) {
+        free(symInfo);
+        char errorMsg[256];
+        snprintf(errorMsg, sizeof(errorMsg), "Symbol not found: %s", symbolName);
+        CDB_SetLastError(errorMsg);
+        return 0;
+    }
+    
+    uint64_t address = symInfo->Address;
+    free(symInfo);
+    
+    // Set breakpoint at resolved address
+    return CDB_SetBreakpoint(address, symbolName);
 }
 
 void CDB_RemoveBreakpoint(uint32_t bpId) {

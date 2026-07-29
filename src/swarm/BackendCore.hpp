@@ -101,6 +101,9 @@ public:
     std::string generateLoadTest(const APIEndpoint& endpoint);
     std::string generateContractTests(const std::vector<ServiceSpec>& services);
     
+    // Main entry point
+    std::string generateMainEntry(const BackendRequest& request);
+    
     // Framework-specific generators
     std::string generateExpressService(const ServiceSpec& spec);
     std::string generateFastAPIService(const ServiceSpec& spec);
@@ -114,6 +117,7 @@ public:
     std::string generateK8sService(const ServiceSpec& spec);
     std::string generateHealthCheck();
     std::string generateMetricsEndpoint();
+    std::string generateDockerfile(const TechStack& stack);
 };
 
 } // namespace swarm

@@ -10,8 +10,63 @@
 #include <iomanip>
 #include <unordered_map>
 #include <unordered_set>
+#include <fstream>
 
 namespace RawrXD {
+
+/*===========================================================================
+ * JSON PARSING HELPERS (Manual - no external deps)
+ *===========================================================================*/
+
+static std::string ExtractJsonString(const std::string& json, const std::string& key) {
+    size_t keyPos = json.find("\"" + key + "\"");
+    if (keyPos == std::string::npos) return "";
+    
+    size_t colonPos = json.find(':', keyPos);
+    if (colonPos == std::string::npos) return "";
+    
+    // Skip whitespace
+    size_t valueStart = colonPos + 1;
+    while (valueStart < json.size() && (json[valueStart] == ' ' || json[valueStart] == '\t')) {
+        valueStart++;
+    }
+    
+    if (valueStart >= json.size()) return "";
+    
+    if (json[valueStart] == '"') {
+        // String value
+        valueStart++;
+        size_t valueEnd = json.find('"', valueStart);
+        if (valueEnd == std::string::npos) return "";
+        return json.substr(valueStart, valueEnd - valueStart);
+    }
+    
+    // Number or other value - find end
+    size_t valueEnd = json.find_first_of(",}\n", valueStart);
+    if (valueEnd == std::string::npos) valueEnd = json.size();
+    return json.substr(valueStart, valueEnd - valueStart);
+}
+
+static uint64_t ExtractJsonUint64(const std::string& json, const std::string& key) {
+    std::string value = ExtractJsonString(json, key);
+    if (value.empty()) return 0;
+    
+    // Handle hex string
+    if (value.size() > 2 && value.substr(0, 2) == "0x") {
+        return std::stoull(value, nullptr, 16);
+    }
+    
+    // Handle decimal
+    try {
+        return std::stoull(value);
+    } catch (...) {
+        return 0;
+    }
+}
+
+static uint32_t ExtractJsonUint32(const std::string& json, const std::string& key) {
+    return static_cast<uint32_t>(ExtractJsonUint64(json, key));
+}
 
 /*===========================================================================
  * PATCH FINGERPRINT IMPLEMENTATION
@@ -98,8 +153,19 @@ std::string PatchFingerprint::ToJson() const {
 
 PatchFingerprint PatchFingerprint::FromJson(const std::string& json) {
     PatchFingerprint fp;
-    // TODO: Implement JSON parsing
-    (void)json;
+    
+    // Parse using manual JSON extraction helpers
+    fp.fingerprintId = ExtractJsonUint64(json, "fingerprintId");
+    fp.patchUuid = ExtractJsonString(json, "patchUuid");
+    fp.sourceBeforeHash = ExtractJsonUint64(json, "sourceBeforeHash");
+    fp.sourceAfterHash = ExtractJsonUint64(json, "sourceAfterHash");
+    fp.diffHash = ExtractJsonUint64(json, "diffHash");
+    fp.filePath = ExtractJsonString(json, "filePath");
+    fp.lineNumber = ExtractJsonUint32(json, "lineNumber");
+    fp.patchType = ExtractJsonString(json, "patchType");
+    fp.affectedSymbols = ExtractJsonString(json, "affectedSymbols");
+    fp.timestamp = ExtractJsonUint64(json, "timestamp");
+    
     return fp;
 }
 

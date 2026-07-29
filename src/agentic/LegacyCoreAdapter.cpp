@@ -330,10 +330,8 @@ bool LegacyCoreAdapter::Shutdown(std::chrono::milliseconds timeout) {
     }
     
     // Shutdown legacy engine if available
-    if (m_impl->m_legacyEngine) {
-        // TODO: Call legacy engine shutdown
-        // m_impl->m_legacyEngine->Shutdown();
-    }
+    // Note: AgenticEngine uses RAII - cleanup handled by destructor
+    // The m_legacyEngine pointer will be cleaned up when Impl is destroyed
     
     m_impl->m_initialized = false;
     return true;

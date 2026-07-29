@@ -133,6 +133,9 @@ public:
     std::vector<RepairAttempt> FindSimilarRepairs(const std::string& context, float similarityThreshold = 0.80f);
     std::vector<RepairAttempt> GetRepairsForPattern(const std::string& pattern);
     
+    // Similarity calculation
+    float CalculateContextSimilarity(const std::string& contextA, const std::string& contextB);
+    
     // Learning
     std::string SuggestFixStrategy(const std::string& crashSignature);
     float PredictSuccessProbability(const PatchFingerprint& patch, const std::string& crashSignature);

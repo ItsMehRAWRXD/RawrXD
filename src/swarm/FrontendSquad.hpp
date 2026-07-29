@@ -89,7 +89,7 @@ public:
         const PageRequest& request,
         const DesignSystem& designSystem
     );
-    std::string generateSharedComponents(
+    std::map<std::string, std::string> generateSharedComponents(
         const DesignSystem& designSystem
     );
     std::string generateThemeFile(

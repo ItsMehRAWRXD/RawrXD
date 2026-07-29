@@ -7,9 +7,20 @@
 #include <string>
 #include <vector>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if !RAWR_VULKAN_AVAILABLE
 // Standard Win32/CPU build - Vulkan handles not needed
 #ifndef VK_NULL_HANDLE
 #define VK_NULL_HANDLE 0

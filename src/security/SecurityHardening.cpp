@@ -68,7 +68,7 @@ std::string AuditEvent::ToJson() const {
 
 std::string AuditEvent::ComputeHash() const {
     std::stringstream ss;
-    ss << eventId << type << timestamp << agentId << intentId
+    ss << eventId << static_cast<int>(type) << timestamp << agentId << intentId
        << action << target << details << previousEventId;
     return ComputeSHA256(ss.str());
 }

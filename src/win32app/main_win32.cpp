@@ -1780,7 +1780,7 @@ static void WriteCrashArtifacts(DWORD exceptionCode, EXCEPTION_POINTERS* pExcept
                                    CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile != INVALID_HANDLE_VALUE)
         {
-            const char* hash = RAWRXD_VERSION_STRING "_" __DATE__ "_" __TIME__;
+            const char* hash = RAWRXD_VERSION_STR "_" __DATE__ "_" __TIME__;
             DWORD written;
             WriteFile(hFile, hash, (DWORD)strlen(hash), &written, nullptr);
             WriteFile(hFile, "\n", 1, &written, nullptr);

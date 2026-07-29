@@ -244,9 +244,50 @@ static int Ollama_UnloadModel(void) {
 }
 
 static int Ollama_IsModelLoaded(void) {
-    // Check if Ollama is reachable
-    // TODO: Implement health check
-    return g_ollama_state.is_initialized;
+    // Check if Ollama is reachable via HTTP health check
+    if (!g_ollama_state.is_initialized) {
+        return 0;
+    }
+    
+    // Try to connect to Ollama API
+    HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                      WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        return 0;
+    }
+    
+    HINTERNET hConnect = WinHttpConnect(hSession, L"localhost", 11434, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return 0;
+    }
+    
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", L"/api/tags",
+                                             nullptr, WINHTTP_NO_REFERER,
+                                             WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return 0;
+    }
+    
+    // Set timeout
+    WinHttpSetTimeouts(hRequest, 5000, 5000, 5000, 5000);
+    
+    // Send request
+    BOOL result = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                       WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+    
+    if (result) {
+        result = WinHttpReceiveResponse(hRequest, nullptr);
+    }
+    
+    // Cleanup
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    
+    return result ? 1 : 0;
 }
 
 static int Ollama_Generate(const InferenceRequest* request, InferenceResult* result) {

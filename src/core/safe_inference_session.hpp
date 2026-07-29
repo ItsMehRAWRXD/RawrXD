@@ -221,7 +221,13 @@ private:
     std::thread monitor_thread_;
     std::atomic<bool> monitoring_{false};
     mutable std::mutex mutex_;
-};
+    
+    // Windows-specific handles for resource monitoring
+    HANDLE process_handle_{nullptr};
+    size_t initial_memory_mb_{0};
+    uint64_t initial_cpu_time_{0};
+    
+    void update_metrics();  // Internal method to update CPU/memory metrics
 
 // Token validator for streaming validation
 class TokenValidator {

@@ -155,9 +155,21 @@ void FinalProductionPipeline::ApplyPhase2Optimizations(
     
     // Apply KV paging
     if (kv_paging_) {
-        // Allocate pages for sequence
-        int num_tokens = 100;  // TODO: Calculate from request
-        std::vector<PageId> pages = kv_paging_->AllocatePages(num_tokens);
+        // Calculate number of tokens from request
+        // Estimate: 1 token per ~4 characters for code, or use max_tokens if specified
+        int num_tokens = request.max_tokens > 0 ? request.max_tokens : 256;
+        
+        // Add context tokens estimation (prefix + suffix)
+        size_t context_chars = request.prefix.length() + request.suffix.length();
+        int context_tokens = static_cast<int>(context_chars / 4) + 16; // +16 for safety margin
+        
+        // Total tokens needed
+        int total_tokens = num_tokens + context_tokens;
+        
+        // Clamp to reasonable limits
+        total_tokens = std::clamp(total_tokens, 32, 8192);
+        
+        std::vector<PageId> pages = kv_paging_->AllocatePages(total_tokens);
         
         // Prefetch pages
         kv_paging_->PrefetchPages(pages);

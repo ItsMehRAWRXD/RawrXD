@@ -236,7 +236,7 @@ size_t MedusaDecoder::verifyCandidates(
 
             // Check if this is a depth-2 child of the accepted depth-1 node
             if (node.depth != 2) continue;
-            if (node.parentIdx != acceptedPath[0]) continue;
+            if (node.parentId != acceptedPath[0]) continue;
 
             // Verify depth-2 candidate
             // Full implementation would run forward pass from depth-1 state

@@ -75,8 +75,8 @@ function Invoke-ProcessWithOutput {
     $ErrorActionPreference = $prevEAP
     return @{
         ExitCode = $proc.ExitCode
-        Stdout = $(if (Test-Path $StdoutPath) { Get-Content $StdoutPath -Raw } else { '' }
-        Stderr = $(if (Test-Path $StderrPath) { Get-Content $StderrPath -Raw } else { '' }
+        Stdout = $(if (Test-Path $StdoutPath) { Get-Content $StdoutPath -Raw } else { '' })
+        Stderr = $(if (Test-Path $StderrPath) { Get-Content $StderrPath -Raw } else { '' })
     }
 }
 

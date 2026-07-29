@@ -1,12 +1,17 @@
-#Requires -Version 7.4
-#Requires -PSEdition Core
 # RawrXD OMEGA-1 Manifest Generator
 # Creates and validates the deployment manifest
+# Compatible with PowerShell 5.1+
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$RootPath = $env:RAWRXD_OMEGA_ROOT ?? "D:\lazy init ide\auto_generated_methods",
+    [string]$RootPath = $(if ($env:RAWRXD_OMEGA_ROOT) { $env:RAWRXD_OMEGA_ROOT } else { "D:\lazy init ide\auto_generated_methods" }),
+    
+    [Parameter(Mandatory=$false)]
+    [string]$BinaryPath = "",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$OutputPath = "",
     
     [Parameter(Mandatory=$false)]
     [switch]$ValidateOnly

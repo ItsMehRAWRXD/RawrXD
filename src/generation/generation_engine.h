@@ -206,6 +206,7 @@ private:
 
     std::vector<std::string> ByteEncode(const std::string& text);
     std::string ByteDecode(const std::string& token);
+    bool CreateFallbackVocab();
 };
 
 // ============================================================================

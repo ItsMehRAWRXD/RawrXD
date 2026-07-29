@@ -94,6 +94,14 @@ public:
     bool ExecuteMatMulFP16(const std::vector<float>& A, const std::vector<float>& B, 
                            std::vector<float>& C, uint32_t M, uint32_t N, uint32_t K);
     
+    // Execute RMSNorm: output = input / sqrt(mean(input^2) + eps)
+    bool ExecuteRMSNormFP16(const std::vector<float>& input, std::vector<float>& output,
+                            uint32_t size, float eps);
+    
+    // Execute Softmax: output = softmax(input) per row
+    bool ExecuteSoftmaxFP16(const std::vector<float>& input, std::vector<float>& output,
+                            uint32_t rows, uint32_t cols);
+    
     bool IsInitialized() const { return initialized_; }
     std::string GetDeviceName() const { return deviceName_; }
     

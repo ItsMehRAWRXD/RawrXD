@@ -565,9 +565,299 @@ InferenceResponse InferenceEngine::ExecuteLocal(const InferenceRequest& request)
 InferenceResponse InferenceEngine::ExecuteRemote(const InferenceRequest& request) {
     InferenceResponse response;
     response.execution_path = "remote";
-    response.error = "Remote execution not implemented";
-    response.success = false;
+    
+    // Get remote endpoint from config or environment
+    std::string remoteEndpoint = config_.remote_endpoint;
+    if (remoteEndpoint.empty()) {
+        remoteEndpoint = std::getenv("RAWRXD_REMOTE_ENDPOINT") ? 
+            std::getenv("RAWRXD_REMOTE_ENDPOINT") : "http://localhost:11434";
+    }
+    
+    // Build the API request URL
+    std::string url = remoteEndpoint + "/api/generate";
+    
+    // Construct JSON payload
+    std::string jsonPayload = "{";
+    jsonPayload += "\"model\":\"" + EscapeJsonString(config_.model_name.empty() ? "llama2" : config_.model_name) + "\",";
+    jsonPayload += "\"prompt\":\"" + EscapeJsonString(request.prompt) + "\",";
+    jsonPayload += "\"stream\":false,";
+    jsonPayload += "\"options\":{";
+    jsonPayload += "\"temperature\":" + std::to_string(request.temperature) + ",";
+    jsonPayload += "\"top_p\":" + std::to_string(request.top_p) + ",";
+    jsonPayload += "\"top_k\":" + std::to_string(request.top_k) + ",";
+    jsonPayload += "\"max_tokens\":" + std::to_string(request.max_tokens);
+    jsonPayload += "}}";
+    
+    // Perform HTTP POST request
+    std::string httpResponse;
+    bool httpSuccess = HttpPost(url, jsonPayload, httpResponse, 30000); // 30 second timeout
+    
+    if (!httpSuccess) {
+        response.error = "Remote HTTP request failed: " + httpResponse;
+        response.success = false;
+        return response;
+    }
+    
+    // Parse the JSON response
+    try {
+        // Simple JSON parsing for response text
+        size_t responsePos = httpResponse.find("\"response\":\"");
+        if (responsePos != std::string::npos) {
+            responsePos += 12; // Length of "\"response\":\""
+            size_t endPos = httpResponse.find("\"", responsePos);
+            if (endPos != std::string::npos) {
+                response.text = UnescapeJsonString(httpResponse.substr(responsePos, endPos - responsePos));
+            }
+        }
+        
+        // Parse token count if available
+        size_t evalCountPos = httpResponse.find("\"eval_count\":");
+        if (evalCountPos != std::string::npos) {
+            evalCountPos += 13;
+            size_t endPos = httpResponse.find(",", evalCountPos);
+            if (endPos == std::string::npos) {
+                endPos = httpResponse.find("}", evalCountPos);
+            }
+            if (endPos != std::string::npos) {
+                response.tokens_generated = static_cast<uint32_t>(
+                    std::stoul(httpResponse.substr(evalCountPos, endPos - evalCountPos)));
+            }
+        }
+        
+        // Check for errors in response
+        size_t errorPos = httpResponse.find("\"error\":\"");
+        if (errorPos != std::string::npos) {
+            errorPos += 9;
+            size_t endPos = httpResponse.find("\"", errorPos);
+            if (endPos != std::string::npos) {
+                response.error = UnescapeJsonString(httpResponse.substr(errorPos, endPos - errorPos));
+                response.success = false;
+                return response;
+            }
+        }
+        
+        response.success = !response.text.empty();
+        if (!response.success) {
+            response.error = "Empty response from remote server";
+        }
+        
+    } catch (const std::exception& e) {
+        response.error = "Failed to parse remote response: " + std::string(e.what());
+        response.success = false;
+    }
+    
     return response;
+}
+
+// Helper function for HTTP POST
+bool InferenceEngine::HttpPost(const std::string& url, const std::string& payload, 
+                               std::string& response, int timeoutMs) {
+#ifdef _WIN32
+    // Parse URL to get host, port, and path
+    std::string protocol, host, path;
+    int port = 80;
+    
+    size_t protocolEnd = url.find("://");
+    if (protocolEnd != std::string::npos) {
+        protocol = url.substr(0, protocolEnd);
+        protocolEnd += 3;
+    } else {
+        protocolEnd = 0;
+    }
+    
+    size_t hostEnd = url.find(':', protocolEnd);
+    size_t pathStart = url.find('/', protocolEnd);
+    
+    if (hostEnd != std::string::npos && (pathStart == std::string::npos || hostEnd < pathStart)) {
+        host = url.substr(protocolEnd, hostEnd - protocolEnd);
+        port = std::stoi(url.substr(hostEnd + 1, pathStart - hostEnd - 1));
+    } else if (pathStart != std::string::npos) {
+        host = url.substr(protocolEnd, pathStart - protocolEnd);
+    } else {
+        host = url.substr(protocolEnd);
+    }
+    
+    if (pathStart != std::string::npos) {
+        path = url.substr(pathStart);
+    } else {
+        path = "/";
+    }
+    
+    if (protocol == "https") {
+        port = 443;
+    }
+    
+    // Initialize WinHTTP
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-InferenceEngine/1.0", 
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+        WINHTTP_NO_PROXY_NAME, 
+        WINHTTP_NO_PROXY_BYPASS, 0);
+    
+    if (!hSession) {
+        response = "Failed to initialize WinHTTP";
+        return false;
+    }
+    
+    // Set timeouts
+    WinHttpSetTimeouts(hSession, timeoutMs, timeoutMs, timeoutMs, timeoutMs);
+    
+    // Connect to server
+    std::wstring wHost(host.begin(), host.end());
+    HINTERNET hConnect = WinHttpConnect(hSession, wHost.c_str(), port, 0);
+    
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        response = "Failed to connect to " + host;
+        return false;
+    }
+    
+    // Create request
+    std::wstring wPath(path.begin(), path.end());
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", wPath.c_str(),
+        NULL, WINHTTP_NO_REFERER, 
+        WINHTTP_DEFAULT_ACCEPT_TYPES,
+        protocol == "https" ? WINHTTP_FLAG_SECURE : 0);
+    
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        response = "Failed to create HTTP request";
+        return false;
+    }
+    
+    // Add headers
+    std::wstring headers = L"Content-Type: application/json\r\n";
+    headers += L"Accept: application/json\r\n";
+    
+    // Send request
+    BOOL result = WinHttpSendRequest(hRequest, headers.c_str(), (DWORD)headers.length(),
+        (LPVOID)payload.c_str(), (DWORD)payload.length(), (DWORD)payload.length(), 0);
+    
+    if (!result) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        response = "Failed to send HTTP request";
+        return false;
+    }
+    
+    // Receive response
+    result = WinHttpReceiveResponse(hRequest, NULL);
+    if (!result) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        response = "Failed to receive HTTP response";
+        return false;
+    }
+    
+    // Read response data
+    DWORD bytesRead = 0;
+    char buffer[4096];
+    response.clear();
+    
+    do {
+        bytesRead = 0;
+        if (WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+            response.append(buffer, bytesRead);
+        }
+    } while (bytesRead > 0);
+    
+    // Cleanup
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    
+    return true;
+#else
+    // POSIX implementation using libcurl or raw sockets would go here
+    (void)url;
+    (void)payload;
+    (void)timeoutMs;
+    response = "HTTP client not implemented for this platform";
+    return false;
+#endif
+}
+
+// Helper function to escape JSON strings
+std::string InferenceEngine::EscapeJsonString(const std::string& input) {
+    std::string output;
+    output.reserve(input.size() * 2);
+    
+    for (char c : input) {
+        switch (c) {
+            case '"': output += "\\\""; break;
+            case '\\': output += "\\\\"; break;
+            case '\b': output += "\\b"; break;
+            case '\f': output += "\\f"; break;
+            case '\n': output += "\\n"; break;
+            case '\r': output += "\\r"; break;
+            case '\t': output += "\\t"; break;
+            default:
+                if (c >= 0x20) {
+                    output += c;
+                } else {
+                    char buf[7];
+                    snprintf(buf, sizeof(buf), "\\u%04x", (unsigned char)c);
+                    output += buf;
+                }
+        }
+    }
+    
+    return output;
+}
+
+// Helper function to unescape JSON strings
+std::string InferenceEngine::UnescapeJsonString(const std::string& input) {
+    std::string output;
+    output.reserve(input.size());
+    
+    for (size_t i = 0; i < input.size(); ++i) {
+        if (input[i] == '\\' && i + 1 < input.size()) {
+            switch (input[i + 1]) {
+                case '"': output += '"'; ++i; break;
+                case '\\': output += '\\'; ++i; break;
+                case '/': output += '/'; ++i; break;
+                case 'b': output += '\b'; ++i; break;
+                case 'f': output += '\f'; ++i; break;
+                case 'n': output += '\n'; ++i; break;
+                case 'r': output += '\r'; ++i; break;
+                case 't': output += '\t'; ++i; break;
+                case 'u': {
+                    // Unicode escape \uXXXX
+                    if (i + 5 < input.size()) {
+                        std::string hex = input.substr(i + 2, 4);
+                        try {
+                            int code = std::stoi(hex, nullptr, 16);
+                            // Simple handling for BMP characters
+                            if (code < 0x80) {
+                                output += static_cast<char>(code);
+                            } else if (code < 0x800) {
+                                output += static_cast<char>(0xC0 | (code >> 6));
+                                output += static_cast<char>(0x80 | (code & 0x3F));
+                            } else {
+                                output += static_cast<char>(0xE0 | (code >> 12));
+                                output += static_cast<char>(0x80 | ((code >> 6) & 0x3F));
+                                output += static_cast<char>(0x80 | (code & 0x3F));
+                            }
+                        } catch (...) {
+                            output += "\\u" + hex;
+                        }
+                        i += 5;
+                    } else {
+                        output += input[i];
+                    }
+                    break;
+                }
+                default:
+                    output += input[i];
+            }
+        } else {
+            output += input[i];
+        }
+    }
+    
+    return output;
 }
 
 std::vector<int32_t> InferenceEngine::Tokenize(const std::string& text) {

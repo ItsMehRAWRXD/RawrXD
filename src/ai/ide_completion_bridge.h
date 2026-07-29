@@ -149,6 +149,7 @@ private:
     // Ghost text
     GhostText ghost_text_;
     std::string current_completion_;
+    float current_confidence_ = 0.0f;  // Tracked from engine during generation
     std::function<void(const CompletionResult&)> current_callback_;
     
     // Debounce
@@ -275,7 +276,7 @@ inline void IDECompletionBridge::AcceptGhostText() {
         result.text = current_completion_;
         result.display_text = current_completion_;
         result.accepted = true;
-        result.confidence = 0.9f; // TODO: Get from engine
+        result.confidence = current_confidence_;
         
         current_callback_(result);
         

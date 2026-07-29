@@ -386,11 +386,75 @@ LRESULT CALLBACK MoEPanel_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 //==============================================================================
 
 void MoEPanel_UpdateSwarm(HWND hWndPanel, const MoEActivation* swarm_members, int count) {
-    // TODO: Visualize swarm composition
+    if (!hWndPanel || !swarm_members || count <= 0) return;
+    
+    // Get the trace view window handle
+    if (!g_moePanel.hWndTraceView) return;
+    
+    // Build visualization string
+    std::string swarm_text = "=== Swarm Composition ===\r\n";
+    
+    float total_activation = 0.0f;
+    for (int i = 0; i < count; i++) {
+        total_activation += swarm_members[i].activation_level;
+    }
+    
+    for (int i = 0; i < count; i++) {
+        const MoEActivation& member = swarm_members[i];
+        float percentage = (total_activation > 0.0f) ? 
+            (member.activation_level / total_activation * 100.0f) : 0.0f;
+        
+        char line[256];
+        snprintf(line, sizeof(line), "[%s] %.1f%% (%.3f)\r\n", 
+                 member.expert_tag, percentage, member.activation_level);
+        swarm_text += line;
+        
+        // Update activation counts
+        g_moePanel.activationCounts[member.expert_tag] = member.activation_level;
+    }
+    
+    // Append to trace view
+    SetWindowTextA(g_moePanel.hWndTraceView, swarm_text.c_str());
+    
+    // Force redraw
+    InvalidateRect(g_moePanel.hWndTraceView, NULL, TRUE);
 }
 
 void MoEPanel_UpdateGhostBranches(HWND hWndPanel, const MoEActivation* branches, int count) {
-    // TODO: Visualize ghost text branches
+    if (!hWndPanel || !branches || count <= 0) return;
+    if (!g_moePanel.hWndTraceView) return;
+    
+    // Build ghost branch visualization
+    std::string branch_text = "=== Ghost Text Branches ===\r\n";
+    
+    // Sort branches by activation level (descending)
+    std::vector<MoEActivation> sorted_branches(branches, branches + count);
+    std::sort(sorted_branches.begin(), sorted_branches.end(),
+              [](const MoEActivation& a, const MoEActivation& b) {
+                  return a.activation_level > b.activation_level;
+              });
+    
+    for (int i = 0; i < count && i < 10; i++) {  // Show top 10
+        const MoEActivation& branch = sorted_branches[i];
+        char line[256];
+        
+        // Create visual bar
+        int bar_length = static_cast<int>(branch.activation_level * 50.0f);
+        std::string bar(bar_length, '|');
+        
+        snprintf(line, sizeof(line), "%2d. [%s] %s %.3f\r\n", 
+                 i + 1, branch.expert_tag, bar.c_str(), branch.activation_level);
+        branch_text += line;
+    }
+    
+    // Append to existing text
+    char existing_text[4096];
+    GetWindowTextA(g_moePanel.hWndTraceView, existing_text, sizeof(existing_text));
+    
+    std::string combined = std::string(existing_text) + "\r\n" + branch_text;
+    SetWindowTextA(g_moePanel.hWndTraceView, combined.c_str());
+    
+    InvalidateRect(g_moePanel.hWndTraceView, NULL, TRUE);
 }
 
 void MoEPanel_TargetExpert(HWND hWndPanel, const char* expert_tag) {
@@ -408,7 +472,33 @@ void MoEPanel_TargetExpert(HWND hWndPanel, const char* expert_tag) {
 }
 
 void MoEPanel_EnableSwarmMode(HWND hWndPanel, const char** expert_tags, int count) {
-    // TODO: Enable multi-select for swarm
+    if (!hWndPanel || !expert_tags || count <= 0) return;
+    if (!g_moePanel.hWndExpertCombo) return;
+    
+    // Enable multi-select mode in the expert combo box
+    // Change style to support multiple selection
+    LONG style = GetWindowLong(g_moePanel.hWndExpertCombo, GWL_STYLE);
+    SetWindowLong(g_moePanel.hWndExpertCombo, GWL_STYLE, style | CBS_MULTISELECT);
+    
+    // Select all specified experts
+    for (int i = 0; i < count; i++) {
+        int combo_count = (int)SendMessage(g_moePanel.hWndExpertCombo, CB_GETCOUNT, 0, 0);
+        for (int j = 0; j < combo_count; j++) {
+            char buf[128];
+            SendMessage(g_moePanel.hWndExpertCombo, CB_GETLBTEXT, j, (LPARAM)buf);
+            if (strcmp(buf, expert_tags[i]) == 0) {
+                // Set selection for this item
+                SendMessage(g_moePanel.hWndExpertCombo, CB_SETSEL, TRUE, j);
+                break;
+            }
+        }
+    }
+    
+    // Update panel title to indicate swarm mode
+    SetWindowTextA(hWndPanel, "MoE Panel [Swarm Mode]");
+    
+    // Force refresh
+    MoEPanel_Refresh(hWndPanel);
 }
 
 void MoEPanel_ResetStats(HWND hWndPanel) {
@@ -419,5 +509,29 @@ void MoEPanel_ResetStats(HWND hWndPanel) {
 }
 
 void MoEPanel_SetTraceCallback(HWND hWndPanel, MoEPanelTraceCallback callback, void* user_data) {
-    // TODO: Store callback
+    if (!hWndPanel) return;
+    
+    // Store the callback and user data in the panel's user data
+    // We'll use a simple structure to hold both
+    struct CallbackData {
+        MoEPanelTraceCallback callback;
+        void* user_data;
+    };
+    
+    static CallbackData cb_data;  // Static to persist across calls
+    cb_data.callback = callback;
+    cb_data.user_data = user_data;
+    
+    // Store pointer to callback data in window user data
+    SetWindowLongPtr(hWndPanel, GWLP_USERDATA, (LONG_PTR)&cb_data);
+    
+    // If callback is set, trigger it immediately with current state
+    if (callback) {
+        // Build current trace summary
+        std::string trace_summary = "MoE Panel Initialized\r\n";
+        trace_summary += "Active Experts: " + std::to_string(g_moePanel.activationCounts.size()) + "\r\n";
+        trace_summary += "Recent Traces: " + std::to_string(g_moePanel.recentTraces.size()) + "\r\n";
+        
+        callback(trace_summary.c_str(), user_data);
+    }
 }

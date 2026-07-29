@@ -618,7 +618,45 @@ void ProductionAgenticIDE::PushRedoState() {
 
 // Message handlers
 LRESULT ProductionAgenticIDE::OnCreate() {
-    return 0;
+    // Initialize the IDE window and components
+    // This is called when the window is being created (WM_CREATE message)
+    
+    // Initialize common controls
+    INITCOMMONCONTROLSEX iccex;
+    iccex.dwSize = sizeof(iccex);
+    iccex.dwICC = ICC_BAR_CLASSES | ICC_LISTVIEW_CLASSES;
+    InitCommonControlsEx(&iccex);
+    
+    // Create status bar
+    m_hStatusBar = CreateWindowEx(
+        0, STATUSCLASSNAME, nullptr,
+        WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
+        0, 0, 0, 0,
+        m_hWnd, (HMENU)100, GetModuleHandle(nullptr), nullptr
+    );
+    
+    if (m_hStatusBar) {
+        // Set status bar parts
+        int parts[] = {200, 400, -1};
+        SendMessage(m_hStatusBar, SB_SETPARTS, 3, (LPARAM)parts);
+        SendMessage(m_hStatusBar, SB_SETTEXT, 0, (LPARAM)L"Ready");
+    }
+    
+    // Create menu bar
+    HMENU hMenu = CreateMenu();
+    HMENU hFileMenu = CreatePopupMenu();
+    AppendMenu(hFileMenu, MF_STRING, 1001, L"&New Paint\tCtrl+N");
+    AppendMenu(hFileMenu, MF_STRING, 1002, L"&New Code\tCtrl+Shift+N");
+    AppendMenu(hFileMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenu(hFileMenu, MF_STRING, 1003, L"E&xit\tAlt+F4");
+    AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hFileMenu, L"&File");
+    
+    SetMenu(m_hWnd, hMenu);
+    
+    // Initialize layout
+    UpdateLayout();
+    
+    return 0;  // Return 0 to continue window creation
 }
 
 LRESULT ProductionAgenticIDE::OnSize(int width, int height) {

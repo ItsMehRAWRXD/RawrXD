@@ -1,53 +1,203 @@
-# RawrXD New Age IDE - Quick Start Guide
+# RawrXD OMEGA-1 Quick Start Guide
 
-**Status**: ✅ Production Ready | **Version**: 7.0.0 | **Date**: Feb 4, 2026
-
----
-
-## 5-Minute Setup
-
-### 1. Build
-
-```bash
-cd d:\rawrxd\build
-cmake .. -G "Visual Studio 17 2022"
-cmake --build . --config Release --target RawrEngine
-```
-
-**Expected output**:
-```
-[100%] Built target RawrEngine
-RawrEngine.exe: 1.49 MB
-```
-
-### 2. Get a Model
-
-Download one of these (quantized, ~3-4 GB):
-- **Llama 2 7B**: `llama-2-7b-q4_0.gguf`
-- **Mistral 7B**: `mistral-7b-q4_0.gguf`
-- **Phi-2**: `phi-2-q4_0.gguf` (smaller, faster)
-
-Put in: `d:\models\`
-
-### 3. Run
-
-```bash
-./RawrEngine --model d:\models\llama-2-7b-q4_0.gguf
-
-# Or use the coordinator API from code
-```
+**Status**: ✅ Production Ready | **Version**: 1.0.0 | **Date**: 2026-07-29
 
 ---
 
-## Quick Code Example
+## 🚀 Get Started in 5 Minutes
 
-```cpp
-#include "unified_engine_coordinator.h"
-#include <iostream>
+### Prerequisites
+- **OS:** Windows 10/11 (64-bit)
+- **CPU:** AMD Ryzen 7 7800X3D or equivalent
+- **RAM:** 64GB DDR5
+- **GPU:** Dual AMD GPU setup (Radeon AI PRO R9700 + RX 7800 XT)
+- **Storage:** 10GB free space
 
-int main() {
-    // Get coordinator
-    auto coord = GetGlobalCoordinator();
+---
+
+## 📦 Installation
+
+### Option 1: Automated Deployment (Recommended)
+
+```powershell
+# Run as Administrator
+powershell -ExecutionPolicy Bypass -File scripts\deploy_omega1.ps1
+```
+
+This will:
+- ✅ Install to `%LOCALAPPDATA%\RawrXD\OMEGA1`
+- ✅ Create desktop and Start Menu shortcuts
+- ✅ Configure firewall rules
+- ✅ Add to PATH
+- ✅ Create configuration files
+
+### Option 2: Manual Installation
+
+1. Extract the release package to your desired location
+2. Run `bin\RawrXD-Win32IDE.exe`
+
+---
+
+## 🎯 First Run
+
+### Step 1: Start the IDE
+
+**Option A:** Double-click the desktop shortcut  
+**Option B:** Run from command line:
+```powershell
+%LOCALAPPDATA%\RawrXD\OMEGA1\bin\RawrXD-Win32IDE.exe
+```
+
+### Step 2: Verify Dual GPU Detection
+
+The IDE will automatically detect and configure dual GPUs. Check the status bar for:
+- ✅ Primary GPU: AMD Radeon AI PRO R9700 (48GB)
+- ✅ Secondary GPU: AMD Radeon RX 7800 XT (16GB)
+
+### Step 3: Load a Model
+
+1. Download a GGUF model (e.g., from HuggingFace)
+2. Place it in `%LOCALAPPDATA%\RawrXD\OMEGA1\models\`
+3. Use File → Open Model in the IDE
+
+---
+
+## 🧪 Validation
+
+### Run All Tests
+
+```powershell
+# Dual GPU test
+powershell -ExecutionPolicy Bypass -File scripts\test_dual_gpu.ps1
+
+# IPC communication test
+powershell -ExecutionPolicy Bypass -File scripts\test_ipc.ps1
+
+# End-to-end integration test
+powershell -ExecutionPolicy Bypass -File scripts\e2e_integration_test.ps1
+
+# Performance benchmark (requires model)
+powershell -ExecutionPolicy Bypass -File scripts\performance_benchmark.ps1 -ModelPath "path\to\model.gguf"
+```
+
+---
+
+## ⚡ Performance Targets
+
+| Metric | Target | Your System |
+|--------|--------|-------------|
+| Prompt Processing | 557 t/s | Run benchmark |
+| Token Generation | 344 t/s | Run benchmark |
+| Dual GPU Load | 70/30 split | Auto-configured |
+
+---
+
+## 🔧 Configuration
+
+### Edit Configuration
+
+Configuration file: `%LOCALAPPDATA%\RawrXD\OMEGA1\config\omega1.json`
+
+```json
+{
+  "dualGpu": {
+    "enabled": true,
+    "layerSplit": {
+      "primary": 22,
+      "secondary": 10
+    }
+  },
+  "ipc": {
+    "pipeName": "\\\\.\\pipe\\RawrXD_Omega1_v2"
+  },
+  "paths": {
+    "models": "C:\\Users\\...\\RawrXD\\OMEGA1\\models"
+  }
+}
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Issue: GPUs Not Detected
+
+**Solution:**
+1. Check Device Manager for GPU status
+2. Update AMD drivers to latest version
+3. Verify GPUs are not disabled in BIOS
+
+### Issue: IPC Connection Failed
+
+**Solution:**
+1. Check if named pipe exists
+2. Restart InferenceEngine: `RawrXD-InferenceEngine.exe --daemon`
+3. Check firewall rules
+
+### Issue: Out of Memory
+
+**Solution:**
+1. Reduce model size or quantization level
+2. Adjust layer split in config
+3. Close other GPU-intensive applications
+
+---
+
+## 📚 Documentation
+
+| Document | Location |
+|----------|----------|
+| Build Summary | `docs\BUILD_SUMMARY.md` |
+| Final Report | `OMEGA1_FINAL_REPORT.md` |
+| This Guide | `QUICKSTART.md` |
+
+---
+
+## 🎓 Advanced Usage
+
+### Command Line Options
+
+**InferenceEngine:**
+```powershell
+RawrXD-InferenceEngine.exe --model model.gguf --prompt "Hello" --max-tokens 256
+RawrXD-InferenceEngine.exe --model model.gguf --bench  # Benchmark mode
+RawrXD-InferenceEngine.exe --interactive              # REPL mode
+```
+
+**Win32IDE:**
+```powershell
+RawrXD-Win32IDE.exe --selftest    # Run self-test
+RawrXD-Win32IDE.exe --headless    # Headless mode
+```
+
+---
+
+## 🗑️ Uninstallation
+
+### Automated Uninstall
+
+```powershell
+# Run from Start Menu or:
+powershell -ExecutionPolicy Bypass -File "%LOCALAPPDATA%\RawrXD\OMEGA1\scripts\uninstall.ps1"
+```
+
+---
+
+## ✅ Quick Checklist
+
+- [ ] Downloaded release package
+- [ ] Ran deploy_omega1.ps1
+- [ ] Verified dual GPU detection
+- [ ] Downloaded GGUF model
+- [ ] Tested IDE launch
+- [ ] Ran validation tests
+
+**You're ready to use RawrXD OMEGA-1!** 🎉
+
+---
+
+*Quick Start Guide v1.0.0*  
+*RawrXD OMEGA-1*
     
     // Load model (3.5 GB model loads in 2-3 seconds)
     if (!coord->LoadModel("d:\\models\\llama-2-7b-q4_0.gguf")) {

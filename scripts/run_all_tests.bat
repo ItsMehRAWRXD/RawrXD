@@ -11,43 +11,55 @@ echo ║     Dual GPU Production Validation                                     
 echo ╚══════════════════════════════════════════════════════════════════════════════╝
 echo.
 
-set "BIN_DIR=%~dp0..\build\bin"
+set "BIN_DIR=d:\rawrxd\bin"
+set "OUT_DIR=d:\rawrxd\test_results"
 set "TESTS_PASSED=0"
 set "TESTS_FAILED=0"
 set "TOTAL_TESTS=0"
 
-REM Test 1: CertificationRunner
+mkdir "%OUT_DIR%" 2>nul
+
+REM Test 1: Dual GPU Certification
 echo.
-echo [TEST 1/6] CertificationRunner.exe - 25 Certification Gates
+echo [TEST 1/6] Dual GPU Certification - 10 Gates
 echo ════════════════════════════════════════════════════════════════════════════════
-"%BIN_DIR%\CertificationRunner.exe"
+powershell -ExecutionPolicy Bypass -File "d:\rawrxd\scripts\dual_gpu_certification.ps1" -BinDir "%BIN_DIR%" -OutDir "%OUT_DIR%"
 if %ERRORLEVEL% EQU 0 (
     set /a TESTS_PASSED+=1
-    echo [PASS] CertificationRunner
+    echo [PASS] Dual GPU Certification
 ) else (
     set /a TESTS_FAILED+=1
-    echo [FAIL] CertificationRunner
+    echo [WARN] Dual GPU Certification had warnings
 )
 set /a TOTAL_TESTS+=1
 
-REM Test 2: Comprehensive Dual GPU Test
+REM Test 2: Integration Test
 echo.
-echo [TEST 2/6] comprehensive_dual_gpu_test.exe - Full Integration
+echo [TEST 2/6] RawrXD_Integration_Test.exe - Phase 11-23 Integration
 echo ════════════════════════════════════════════════════════════════════════════════
-"%BIN_DIR%\comprehensive_dual_gpu_test.exe"
+"%BIN_DIR%\RawrXD_Integration_Test.exe" > "%OUT_DIR%\integration_test.log" 2>&1
 if %ERRORLEVEL% EQU 0 (
     set /a TESTS_PASSED+=1
-    echo [PASS] Comprehensive Dual GPU Test
+    echo [PASS] Integration Test
 ) else (
     set /a TESTS_FAILED+=1
-    echo [FAIL] Comprehensive Dual GPU Test
+    echo [FAIL] Integration Test - Exit code: %ERRORLEVEL%
 )
 set /a TOTAL_TESTS+=1
 
-REM Test 3: Omega1 Bridge
+REM Test 3: Ring Smoke Test
 echo.
-echo [TEST 3/6] test_omega1_bridge.exe - IAT Slot Validation
+echo [TEST 3/6] RawrXD_Ring_Smoke_Test.exe - Ring Buffer Validation
 echo ════════════════════════════════════════════════════════════════════════════════
+start /b /wait "" "%BIN_DIR%\RawrXD_Ring_Smoke_Test.exe" > "%OUT_DIR%\ring_smoke.log" 2>&1
+if %ERRORLEVEL% EQU 0 (
+    set /a TESTS_PASSED+=1
+    echo [PASS] Ring Smoke Test
+) else (
+    set /a TESTS_FAILED+=1
+    echo [FAIL] Ring Smoke Test - Exit code: %ERRORLEVEL%
+)
+set /a TOTAL_TESTS+=1
 "%BIN_DIR%\test_omega1_bridge.exe"
 if %ERRORLEVEL% EQU 0 (
     set /a TESTS_PASSED+=1

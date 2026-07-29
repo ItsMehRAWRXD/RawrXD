@@ -19,50 +19,66 @@
 
 // =============================================================================
 // Vulkan Type Stubs (when vulkan.h is not on include path)
+// Only define stubs if real Vulkan headers haven't been included
 // =============================================================================
-#ifndef VK_DEFINE_HANDLE
-typedef struct VkInstance_T*        VkInstance;
-typedef struct VkPhysicalDevice_T*  VkPhysicalDevice;
-typedef struct VkDevice_T*          VkDevice;
-typedef struct VkCommandPool_T*     VkCommandPool;
-typedef struct VkQueue_T*           VkQueue;
-typedef struct VkCommandBuffer_T*   VkCommandBuffer;
-typedef struct VkFence_T*           VkFence;
-typedef struct VkBuffer_T*          VkBuffer;
-typedef struct VkDeviceMemory_T*    VkDeviceMemory;
-typedef struct VkShaderModule_T*    VkShaderModule;
-typedef struct VkPipeline_T*        VkPipeline;
-typedef struct VkPipelineLayout_T*  VkPipelineLayout;
-typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
-typedef struct VkDescriptorPool_T*  VkDescriptorPool;
-typedef struct VkDescriptorSet_T*   VkDescriptorSet;
-typedef uint32_t VkMemoryPropertyFlags;
 
-// Minimal struct stubs for compilation without Vulkan SDK
-struct VkPhysicalDeviceProperties {
-    uint32_t apiVersion;
-    uint32_t driverVersion;
-    uint32_t vendorID;
-    uint32_t deviceID;
-    uint32_t deviceType;
-    char     deviceName[256];
-    uint8_t  pipelineCacheUUID[16];
-    // Truncated — full struct in vulkan.h
-};
+// First, try to include real Vulkan headers if available
+#if __has_include(<vulkan/vulkan.h>)
+    #include <vulkan/vulkan.h>
+    // Real Vulkan headers loaded - stubs not needed
+#elif __has_include(<vulkan/vulkan_core.h>)
+    #include <vulkan/vulkan_core.h>
+    // Real Vulkan headers loaded - stubs not needed
+#else
+    // No Vulkan SDK - define minimal stubs for compilation
+    // Only define if not already defined
+    #ifndef VK_DEFINE_HANDLE
+    typedef struct VkInstance_T*        VkInstance;
+    typedef struct VkPhysicalDevice_T*  VkPhysicalDevice;
+    typedef struct VkDevice_T*          VkDevice;
+    typedef struct VkCommandPool_T*     VkCommandPool;
+    typedef struct VkQueue_T*           VkQueue;
+    typedef struct VkCommandBuffer_T*   VkCommandBuffer;
+    typedef struct VkFence_T*           VkFence;
+    typedef struct VkBuffer_T*          VkBuffer;
+    typedef struct VkDeviceMemory_T*    VkDeviceMemory;
+    typedef struct VkShaderModule_T*    VkShaderModule;
+    typedef struct VkPipeline_T*        VkPipeline;
+    typedef struct VkPipelineLayout_T*  VkPipelineLayout;
+    typedef struct VkDescriptorSetLayout_T* VkDescriptorSetLayout;
+    typedef struct VkDescriptorPool_T*  VkDescriptorPool;
+    typedef struct VkDescriptorSet_T*   VkDescriptorSet;
+    typedef uint32_t VkMemoryPropertyFlags;
+    #endif // VK_DEFINE_HANDLE
 
-struct VkPhysicalDeviceMemoryProperties {
-    uint32_t memoryTypeCount;
-    struct {
-        uint32_t propertyFlags;
-        uint32_t heapIndex;
-    } memoryTypes[32];
-    uint32_t memoryHeapCount;
-    struct {
-        uint64_t size;
-        uint32_t flags;
-    } memoryHeaps[16];
-};
-#endif
+    // Minimal struct stubs for compilation without Vulkan SDK
+    #ifndef VK_PHYSICAL_DEVICE_PROPERTIES_ALREADY_DEFINED
+    struct VkPhysicalDeviceProperties {
+        uint32_t apiVersion;
+        uint32_t driverVersion;
+        uint32_t vendorID;
+        uint32_t deviceID;
+        uint32_t deviceType;
+        char     deviceName[256];
+        uint8_t  pipelineCacheUUID[16];
+    };
+    #endif
+
+    #ifndef VK_PHYSICAL_DEVICE_MEMORY_PROPERTIES_ALREADY_DEFINED
+    struct VkPhysicalDeviceMemoryProperties {
+        uint32_t memoryTypeCount;
+        struct {
+            uint32_t propertyFlags;
+            uint32_t heapIndex;
+        } memoryTypes[32];
+        uint32_t memoryHeapCount;
+        struct {
+            uint64_t size;
+            uint32_t flags;
+        } memoryHeaps[16];
+    };
+    #endif
+#endif // __has_include(vulkan/vulkan.h)
 
 // =============================================================================
 // VulkanTensor — GPU-resident tensor descriptor

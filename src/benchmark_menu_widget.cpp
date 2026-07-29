@@ -401,8 +401,17 @@ std::string BenchmarkLogOutput::levelToString(LogLevel level) {
     }
 }
 
-uint32_t BenchmarkLogOutput::levelToColor(LogLevel) {
-    return 0;
+uint32_t BenchmarkLogOutput::levelToColor(LogLevel level) {
+    // Return RGB color values for different log levels
+    // Format: 0x00BBGGRR (Windows COLORREF format)
+    switch (level) {
+        case DEBUG:   return 0x00808080;  // Gray
+        case INFO:    return 0x00FFFFFF;  // White
+        case SUCCESS: return 0x0000FF00;  // Green
+        case WARNING: return 0x0000FFFF;  // Yellow
+        case LOG_ERROR: return 0x000000FF;  // Red
+        default:      return 0x00FFFFFF;  // White (default)
+    }
 }
 
 // ============================================================================

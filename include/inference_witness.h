@@ -22,13 +22,12 @@ namespace Evidence {
 // Inference Stage Status
 // ============================================================================
 enum class InferenceStage : uint32_t {
-    ModelLoad     = 0,
-    Tokenizer     = 1,
-    Embedding     = 2,
-    ForwardPass   = 3,
-    KVCache       = 4,
-    Sampler       = 5,
-    TokenOutput   = 6,
+    TOKENIZATION     = 0,
+    EMBEDDING        = 1,
+    PREFILL          = 2,
+    GENERATION       = 3,
+    DETOKENIZATION   = 4,
+    POSTPROCESSING   = 5,
     COUNT
 };
 
@@ -79,6 +78,7 @@ struct InferenceWitness {
     std::string outputTokenChecksum;
     std::string logitsChecksum;
     uint64_t outputTokenCount = 0;
+    std::string outputSha256;
 
     // Overall result
     bool executionSuccess = false;
@@ -88,6 +88,7 @@ struct InferenceWitness {
     // Failure context (if failed)
     std::string failureStage;
     std::string failureReason;
+    std::string errorMessage;
 
     // Methods
     void RecordStageStart(InferenceStage stage);

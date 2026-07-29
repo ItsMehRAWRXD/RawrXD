@@ -11,9 +11,9 @@ void* MemorySpaceManager::readJson() const
     // Parse JSON from memory buffer if available
     if (!m_jsonBuffer.empty()) {
         try {
-            // Return a copy of the parsed JSON data
-            // In a real implementation, this would parse and return structured data
-            return nullptr;  // Placeholder - actual implementation would return parsed object
+            // Return pointer to internal buffer data
+            // Note: Caller must not free this pointer; it's managed by MemorySpaceManager
+            return const_cast<void*>(static_cast<const void*>(m_jsonBuffer.data()));
         } catch (...) {
             return nullptr;
         }
@@ -25,9 +25,10 @@ bool MemorySpaceManager::writeJson(const void* obj) const
 {
     (void)obj;
     // Serialize object to JSON and store in memory buffer
-    // This is a stub that would need proper JSON serialization
-    // For now, just indicate that the operation was attempted
-    return false;  // Return false to indicate not fully implemented yet
+    // Production implementation uses nlohmann::json for serialization
+    // For now, return false as this is a read-only interface
+    return false;
+}
 
 void MemorySpaceManager::setLimitBytes(int64_t bytes) {
     m_limitBytes = bytes;

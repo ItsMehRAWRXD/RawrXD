@@ -169,7 +169,7 @@ int main() {
     printf("\n");
     printf("╔════════════════════════════════════════════════════════════════╗\n");
     printf("║     Token Estimator Swarm - Slack Analysis Demo               ║\n");
-    printf("║     "Unreversing" spent tokens to find where slack occurs      ║\n");
+    printf("║     'Unreversing' spent tokens to find where slack occurs      ║\n");
     printf("╚════════════════════════════════════════════════════════════════╝\n");
     
     // Run all demos

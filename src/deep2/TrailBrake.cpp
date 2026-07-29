@@ -211,11 +211,7 @@ public:
         anchor.timeFromLastMs = anchors.empty() ? 0 : now - anchors.back().timestamp;
         anchor.verified = false;
         
-<<<<<<< HEAD
         // Compute state hash for rollback verification
-=======
-        // Compute state hash (simplified)
->>>>>>> 23355fea2b0ee1997bf565eb381234bb6364d743
         anchor.stateHash = ComputeStateHash();
         
         anchors.push_back(anchor);

@@ -229,7 +229,7 @@ private:
     // Thread pool
     std::vector<std::thread> workers_;
     std::queue<std::function<void()>> workQueue_;
-    std::mutex queueMutex_;
+    mutable std::mutex queueMutex_;
     std::condition_variable queueCV_;
     std::atomic<size_t> activeWorkers_{0};
     

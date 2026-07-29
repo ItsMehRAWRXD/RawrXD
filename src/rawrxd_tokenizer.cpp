@@ -16,7 +16,7 @@ bool RawrXDTokenizer::Load(const std::string& vocabPath) {
     }
     
     // 2. Load file if exists (e.g. tokenizer.model or vocab.json)
-    // Stub: Try to read basic lines
+    // Read vocabulary file line by line
     std::ifstream f(vocabPath);
     if (!f.is_open()) {
         // Fallback to ASCII byte encoding only

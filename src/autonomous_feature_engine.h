@@ -299,6 +299,10 @@ private:
     bool matchesPattern(const std::string& code, const std::string& patternName);
     std::vector<std::string> detectPatterns(const std::string& code);
     
+    // File monitoring helpers
+    void QueueFileForAnalysis(const std::string& filePath);
+    void CheckGitStatusForModifications(const std::string& projectPath);
+    
     // Data members
     HybridCloudManager* hybridCloudManager;
     IntelligentCodebaseEngine* codebaseEngine;

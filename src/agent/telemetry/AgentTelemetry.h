@@ -74,9 +74,21 @@ inline void Telemetry_SnapshotMemory() {
             peak, heap, std::memory_order_relaxed)) {}
     }
     
-    // VRAM (if GPU available - stub for now)
-    // TODO: Query DXGI adapter for dedicated video memory
-    // g_telemetry.vramUsed.store(vram, std::memory_order_relaxed);
+    // VRAM (if GPU available)
+    // Note: Requires DXGI. In production builds with DXGI linked, query adapter:
+    //   IDXGIFactory1* factory = nullptr;
+    //   if (SUCCEEDED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory))) {
+    //       IDXGIAdapter1* adapter = nullptr;
+    //       if (SUCCEEDED(factory->EnumAdapters1(0, &adapter))) {
+    //           DXGI_ADAPTER_DESC1 desc = {};
+    //           if (SUCCEEDED(adapter->GetDesc1(&desc))) {
+    //               g_telemetry.vramUsed.store(desc.DedicatedVideoMemory, std::memory_order_relaxed);
+    //           }
+    //           adapter->Release();
+    //       }
+    //       factory->Release();
+    //   }
+    // Stub: VRAM tracking disabled (requires DXGI linkage)
 }
 
 // Swarm latency measurement (TSC-based)

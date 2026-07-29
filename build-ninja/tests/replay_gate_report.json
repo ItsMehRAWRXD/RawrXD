@@ -1,0 +1,10 @@
+{
+  "gateName": "RawrXD_IDE_DeterministicReplay_Gate",
+  "gateVersion": "1.1.0",
+  "timestamp": 1785327319,
+  "durationMs": 1266,
+  "totalScenarios": 6,
+  "passed": 4,
+  "failed": 2,
+  "success": false
+}

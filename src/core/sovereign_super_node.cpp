@@ -129,6 +129,7 @@ private:
     // Statistics
     std::atomic<uint64_t> total_tokens_{0};
     std::atomic<uint64_t> total_latency_us_{0};
+    std::chrono::steady_clock::time_point start_time_;
     
     // Token history for repetition penalty
     std::vector<uint32_t> generated_token_history_;
@@ -318,6 +319,10 @@ bool SuperNodeEngine::Initialize() {
     }
     
     printf("[SuperNode] Initialized with %zu workers\n", workers_.size());
+    
+    // Record initialization time for metrics calculation
+    start_time_ = std::chrono::steady_clock::now();
+    
     return true;
 }
 
@@ -1105,9 +1110,15 @@ void SuperNodeEngine::GetMetrics(SuperNodeMetrics* metrics) {
     metrics->tokens_processed = total_tokens_.load();
     metrics->active_workers = config_.logical_workers;
     
-    // Calculate throughput
-    // TODO: Implement actual calculation
-    metrics->tokens_per_second = config_.target_throughput;
+    // Calculate actual throughput based on elapsed time
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start_time_).count();
+    
+    if (elapsed > 0 && total_tokens_.load() > 0) {
+        metrics->tokens_per_second = static_cast<float>(total_tokens_.load()) / elapsed;
+    } else {
+        metrics->tokens_per_second = 0.0f;
+    }
     
     // Memory usage
     metrics->memory_usage_bytes = memory_pool_size_;

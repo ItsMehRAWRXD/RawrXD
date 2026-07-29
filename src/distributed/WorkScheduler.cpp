@@ -538,12 +538,80 @@ std::optional<std::string> LoadBalancer::SelectByLocality(const TaskSpec& task) 
 }
 
 std::optional<std::string> LoadBalancer::SelectByFairShare(const TaskSpec& task) {
-    // TODO: Implement fair share scheduling
+    // Fair share scheduling: ensure each user/workload gets proportional resources
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (nodes_.empty()) {
+        return std::nullopt;
+    }
+    
+    // Calculate fair share for each node based on historical usage
+    std::string bestNode;
+    float bestScore = std::numeric_limits<float>::max();
+    
+    for (const auto& [nodeId, node] : nodes_) {
+        if (!node.CanAccept(task)) {
+            continue;
+        }
+        
+        // Calculate fair share score
+        // Lower score = more fair allocation
+        float utilization = node.GetUtilizationScore();
+        float historicalUsage = node.GetHistoricalUsage();
+        
+        // Score combines current load and historical fairness
+        float score = utilization * 0.7f + historicalUsage * 0.3f;
+        
+        if (score < bestScore) {
+            bestScore = score;
+            bestNode = nodeId;
+        }
+    }
+    
+    if (!bestNode.empty()) {
+        return bestNode;
+    }
+    
     return SelectLeastLoaded(task);
 }
 
 std::optional<std::string> LoadBalancer::SelectByBinPacking(const TaskSpec& task) {
-    // TODO: Implement bin packing
+    // Bin packing: fit tasks into nodes to maximize utilization
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    if (nodes_.empty()) {
+        return std::nullopt;
+    }
+    
+    // Find the node that would have the least wasted space after placing this task
+    std::string bestNode;
+    float bestFitScore = std::numeric_limits<float>::max();
+    
+    for (const auto& [nodeId, node] : nodes_) {
+        if (!node.CanAccept(task)) {
+            continue;
+        }
+        
+        auto available = node.GetAvailable();
+        
+        // Calculate wasted space after placing task
+        float wastedCpu = available.cpuCores - task.resources.cpuCores;
+        float wastedMem = static_cast<float>(available.memoryBytes - task.resources.memoryBytes) / 
+                         (1024.0f * 1024.0f * 1024.0f);  // Convert to GB
+        
+        // Prefer nodes that would be more fully utilized (less waste)
+        float fitScore = wastedCpu + wastedMem;
+        
+        if (fitScore < bestFitScore) {
+            bestFitScore = fitScore;
+            bestNode = nodeId;
+        }
+    }
+    
+    if (!bestNode.empty()) {
+        return bestNode;
+    }
+    
     return SelectLeastLoaded(task);
 }
 
@@ -1228,7 +1296,29 @@ void WorkScheduler::RebalanceIfNeeded() {
     }
     
     auto recommendations = loadBalancer_->GetRebalanceRecommendations();
-    // TODO: Implement task migration based on recommendations
+    
+    // Implement task migration based on recommendations
+    for (const auto& rec : recommendations) {
+        if (rec.type == RebalanceRecommendation::Type::MIGRATE_TASK) {
+            // Find the task
+            std::shared_ptr<Task> task = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(tasksMutex_);
+                auto it = activeTasks_.find(rec.taskId);
+                if (it != activeTasks_.end()) {
+                    task = it->second;
+                }
+            }
+            
+            if (task && task->nodeId != rec.targetNodeId) {
+                // Initiate task migration
+                MigrateTask(task, rec.targetNodeId);
+            }
+        } else if (rec.type == RebalanceRecommendation::Type::REDISTRIBUTE) {
+            // Redistribute queued tasks
+            RedistributeQueuedTasks();
+        }
+    }
 }
 
 std::string WorkScheduler::GenerateTaskId() {
@@ -1319,9 +1409,68 @@ std::future<std::string> DistributedExecutor::MapReduce(
     const std::string& mapFunction,
     const std::string& reduceFunction
 ) {
-    // TODO: Implement map-reduce
+    // Map-Reduce implementation
     std::promise<std::string> promise;
-    promise.set_value("");
+    
+    // Phase 1: Map - distribute inputs across nodes
+    std::vector<std::string> mapResults;
+    std::mutex resultsMutex;
+    std::condition_variable cv;
+    std::atomic<size_t> completed{0};
+    
+    for (size_t i = 0; i < inputs.size(); ++i) {
+        TaskSpec task;
+        task.type = TaskType::MAP;
+        task.priority = TaskPriority::NORMAL;
+        task.payload = mapFunction + "|" + inputs[i];
+        task.maxRetries = 3;
+        
+        std::string taskId = scheduler_->SubmitTask(task);
+        
+        scheduler_->OnTaskComplete(
+            [&mapResults, &resultsMutex, &cv, &completed, &inputs
+            ](const std::string& id, const std::string& result) {
+                {
+                    std::lock_guard<std::mutex> lock(resultsMutex);
+                    mapResults.push_back(result);
+                }
+                completed++;
+                cv.notify_one();
+            }
+        );
+    }
+    
+    // Wait for all map tasks to complete
+    std::unique_lock<std::mutex> lock(resultsMutex);
+    cv.wait(lock, [&completed, &inputs]() { return completed.load() >= inputs.size(); });
+    lock.unlock();
+    
+    // Phase 2: Reduce - aggregate results
+    // Combine all map outputs into a single reduce task
+    std::string combinedInput;
+    for (size_t i = 0; i < mapResults.size(); ++i) {
+        if (i > 0) combinedInput += "\n";
+        combinedInput += mapResults[i];
+    }
+    
+    TaskSpec reduceTask;
+    reduceTask.type = TaskType::REDUCE;
+    reduceTask.priority = TaskPriority::HIGH;
+    reduceTask.payload = reduceFunction + "|" + combinedInput;
+    reduceTask.maxRetries = 3;
+    
+    std::string reduceTaskId = scheduler_->SubmitTask(reduceTask);
+    
+    // Set up callback to fulfill promise
+    scheduler_->OnTaskComplete(
+        [promise = std::move(promise), reduceTaskId](const std::string& id, 
+                                                      const std::string& result) mutable {
+            if (id == reduceTaskId) {
+                promise.set_value(result);
+            }
+        }
+    );
+    
     return promise.get_future();
 }
 

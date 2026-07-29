@@ -15,6 +15,32 @@
 // Window Management Implementation for Win32IDE
 // Completes the GUI IDE loop by providing the missing Window Procedure and creation logic.
 
+// Recursion detection instrumentation
+static thread_local int g_onCreateDepth = 0;
+static thread_local int g_onSizeDepth = 0;
+static thread_local int g_handleMessageDepth = 0;
+
+struct DepthScope {
+    int* depth;
+    const char* name;
+    DepthScope(int* d, const char* n) : depth(d), name(n) {
+        ++(*depth);
+        char buf[256];
+        snprintf(buf, sizeof(buf), "[DEPTH] %s entered: depth=%d\n", name, *depth);
+        OutputDebugStringA(buf);
+        if (*depth > 5) {
+            OutputDebugStringA("[DEPTH] WARNING: Recursion detected! Breaking...\n");
+            __debugbreak();
+        }
+    }
+    ~DepthScope() {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "[DEPTH] %s exiting: depth=%d\n", name, *depth);
+        OutputDebugStringA(buf);
+        --(*depth);
+    }
+};
+
 bool Win32IDE::createWindow()
 {
     WNDCLASSEXA wc = {0};
@@ -120,6 +146,7 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    DepthScope scope(&g_handleMessageDepth, "Win32IDE::handleMessage");
     switch (uMsg)
     {
         case WM_CREATE:
@@ -379,6 +406,7 @@ static bool CreatePanelWithSEH(const char* panelName, std::function<void()> crea
 
 void Win32IDE::onCreate(HWND hwnd)
 {
+    DepthScope scope(&g_onCreateDepth, "Win32IDE::onCreate");
     LOG_INFO("Main Window Created: Initializing UI Components");
     
     // Clear previous panel error log on fresh startup
@@ -461,6 +489,7 @@ void Win32IDE::onDestroy()
 
 void Win32IDE::onSize(int width, int height)
 {
+    DepthScope scope(&g_onSizeDepth, "Win32IDE::onSize");
     // ── Parity-audit: dimension guards ──────────────────────────────────────
     // Clamp to safe minimums so layout arithmetic never produces negatives.
     // The assert fires in Debug builds; the clamp protects Release builds.

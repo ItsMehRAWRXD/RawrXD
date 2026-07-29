@@ -239,8 +239,8 @@ std::vector<SwarmExecutionTelemetry> InfinitePerfectionTelemetrySQLite::QuerySwa
     std::vector<SwarmExecutionTelemetry> results;
     if (!IsOpen()) return results;
     
-    const char* sql = "SELECT id, timestamp, swarm_id, execution_time_ms, "
-                     "tokens_generated, convergence_score, status "
+    const char* sql = "SELECT timestamp, agent_id, task_kind, engine_cycle, "
+                     "confidence, execution_time_ms, success "
                      "FROM swarm_executions WHERE timestamp >= ? AND timestamp <= ? "
                      "ORDER BY timestamp DESC LIMIT ?";
     
@@ -252,13 +252,13 @@ std::vector<SwarmExecutionTelemetry> InfinitePerfectionTelemetrySQLite::QuerySwa
         
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             SwarmExecutionTelemetry exec;
-            exec.id = sqlite3_column_int64(stmt, 0);
-            exec.timestamp = sqlite3_column_int64(stmt, 1);
-            exec.swarmId = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-            exec.executionTimeMs = sqlite3_column_int64(stmt, 3);
-            exec.tokensGenerated = sqlite3_column_int(stmt, 4);
-            exec.convergenceScore = sqlite3_column_double(stmt, 5);
-            exec.status = static_cast<ExecutionStatus>(sqlite3_column_int(stmt, 6));
+            exec.timestamp = sqlite3_column_int64(stmt, 0);
+            exec.agentId = static_cast<uint32_t>(sqlite3_column_int(stmt, 1));
+            exec.taskKind = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            exec.engineCycle = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            exec.confidence = static_cast<float>(sqlite3_column_double(stmt, 4));
+            exec.executionTimeMs = sqlite3_column_int64(stmt, 5);
+            exec.success = sqlite3_column_int(stmt, 6) != 0;
             results.push_back(exec);
         }
         sqlite3_finalize(stmt);
@@ -299,7 +299,7 @@ InfinitePerfectionTelemetrySQLite::GetStatistics(int64_t startTime, int64_t endT
     if (!IsOpen()) return stats;
     
     // Query total executions
-    const char* countSql = "SELECT COUNT(*), AVG(execution_time_ms), AVG(convergence_score) "
+    const char* countSql = "SELECT COUNT(*), AVG(execution_time_ms) "
                           "FROM swarm_executions WHERE timestamp >= ? AND timestamp <= ?";
     
     sqlite3_stmt* stmt = nullptr;
@@ -309,26 +309,26 @@ InfinitePerfectionTelemetrySQLite::GetStatistics(int64_t startTime, int64_t endT
         
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             stats.totalExecutions = sqlite3_column_int64(stmt, 0);
-            stats.avgExecutionTimeMs = sqlite3_column_double(stmt, 1);
-            stats.avgConvergenceScore = sqlite3_column_double(stmt, 2);
+            stats.averageExecutionTimeMs = sqlite3_column_double(stmt, 1);
         }
         sqlite3_finalize(stmt);
     }
     
     // Query success count
     const char* successSql = "SELECT COUNT(*) FROM swarm_executions "
-                              "WHERE timestamp >= ? AND timestamp <= ? AND status = ?";
+                              "WHERE timestamp >= ? AND timestamp <= ? AND success = 1";
     
     if (sqlite3_prepare_v2(db_, successSql, -1, &stmt, nullptr) == SQLITE_OK) {
         sqlite3_bind_int64(stmt, 1, startTime);
         sqlite3_bind_int64(stmt, 2, endTime);
-        sqlite3_bind_int(stmt, 3, static_cast<int>(ExecutionStatus::Success));
         
         if (sqlite3_step(stmt) == SQLITE_ROW) {
-            stats.successCount = sqlite3_column_int64(stmt, 0);
+            stats.successfulExecutions = sqlite3_column_int64(stmt, 0);
         }
         sqlite3_finalize(stmt);
     }
+    
+    stats.failedExecutions = stats.totalExecutions - stats.successfulExecutions;
     
     return stats;
 }

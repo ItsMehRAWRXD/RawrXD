@@ -593,10 +593,133 @@ AISuggestion SovereignCursor::ParseResponse(const std::string& response,
 bool SovereignCursor::ApplySuggestion(const AISuggestion& suggestion) {
     if (!buffer_ || !suggestion.isDiff) return false;
 
-    // TODO: Parse unified diff and apply to gap buffer
-    // This would use DiffEngine::ComputeDiff + ApplyHunk
-    (void)suggestion;
-    return false;
+    // Parse unified diff format and apply to gap buffer
+    // Format: @@ -oldStart,oldCount +newStart,newCount @@
+    //         --- oldFile
+    //         +++ newFile
+    //         -removed line
+    //         +added line
+    //          context line
+    
+    const std::string& diff = suggestion.text;
+    size_t pos = 0;
+    
+    while (pos < diff.size()) {
+        // Find next hunk header
+        size_t hunkPos = diff.find("@@ -", pos);
+        if (hunkPos == std::string::npos) break;
+        
+        // Parse hunk header: @@ -oldStart,oldCount +newStart,newCount @@
+        size_t oldStartEnd = diff.find(',', hunkPos + 4);
+        if (oldStartEnd == std::string::npos) break;
+        
+        int oldStart = std::stoi(diff.substr(hunkPos + 4, oldStartEnd - hunkPos - 4));
+        
+        size_t oldCountEnd = diff.find(' ', oldStartEnd);
+        if (oldCountEnd == std::string::npos) break;
+        
+        int oldCount = std::stoi(diff.substr(oldStartEnd + 1, oldCountEnd - oldStartEnd - 1));
+        
+        size_t newStartPos = oldCountEnd + 1;
+        if (diff[newStartPos] != '+') break;
+        
+        size_t newStartEnd = diff.find(',', newStartPos);
+        if (newStartEnd == std::string::npos) break;
+        
+        int newStart = std::stoi(diff.substr(newStartPos + 1, newStartEnd - newStartPos - 1));
+        
+        size_t newCountEnd = diff.find(" @@", newStartEnd);
+        if (newCountEnd == std::string::npos) break;
+        
+        int newCount = std::stoi(diff.substr(newStartEnd + 1, newCountEnd - newStartEnd - 1));
+        
+        // Move to start of hunk content
+        pos = newCountEnd + 3;
+        while (pos < diff.size() && diff[pos] == '\n') ++pos;
+        
+        // Collect lines to remove and add
+        std::vector<std::string> linesToRemove;
+        std::vector<std::string> linesToAdd;
+        
+        int oldLinesSeen = 0;
+        int newLinesSeen = 0;
+        
+        while (pos < diff.size() && (oldLinesSeen < oldCount || newLinesSeen < newCount)) {
+            if (diff[pos] == '\n') {
+                ++pos;
+                continue;
+            }
+            
+            if (pos >= diff.size()) break;
+            
+            // Find end of line
+            size_t lineEnd = diff.find('\n', pos);
+            if (lineEnd == std::string::npos) lineEnd = diff.size();
+            
+            std::string line = diff.substr(pos, lineEnd - pos);
+            
+            if (!line.empty() && line[0] == '-') {
+                // Removed line
+                linesToRemove.push_back(line.substr(1));
+                ++oldLinesSeen;
+            } else if (!line.empty() && line[0] == '+') {
+                // Added line
+                linesToAdd.push_back(line.substr(1));
+                ++newLinesSeen;
+            } else if (!line.empty() && line[0] == ' ') {
+                // Context line (unchanged)
+                ++oldLinesSeen;
+                ++newLinesSeen;
+            } else if (line.find("@@ -") != std::string::npos) {
+                // Next hunk
+                break;
+            } else {
+                // Other line (skip)
+                ++oldLinesSeen;
+                ++newLinesSeen;
+            }
+            
+            pos = lineEnd + 1;
+        }
+        
+        // Apply the changes to the buffer
+        // For simplicity, we replace the entire affected region
+        if (!linesToRemove.empty() || !linesToAdd.empty()) {
+            // Navigate to the start position in the buffer
+            // Convert 1-based line number to buffer offset
+            size_t offset = buffer_->OffsetFromLine(oldStart > 0 ? oldStart - 1 : 0);
+            buffer_->SetCursor(offset);
+            
+            // Select the content to replace
+            size_t endOffset = offset;
+            for (int i = 0; i < oldCount && endOffset < buffer_->GetLength(); ++i) {
+                size_t lineEnd = buffer_->GetText().find('\n', endOffset);
+                if (lineEnd == std::string::npos) {
+                    endOffset = buffer_->GetLength();
+                    break;
+                }
+                endOffset = lineEnd + 1;
+            }
+            
+            // Delete old content
+            if (endOffset > offset) {
+                buffer_->Delete(offset, endOffset - offset);
+            }
+            
+            // Insert new content
+            std::string newContent;
+            for (size_t i = 0; i < linesToAdd.size(); ++i) {
+                if (i > 0) newContent += '\n';
+                newContent += linesToAdd[i];
+            }
+            
+            if (!newContent.empty()) {
+                buffer_->Insert(offset, newContent.c_str(), newContent.length());
+            }
+        }
+    }
+    
+    return true;
 }
 
 // ============================================================================

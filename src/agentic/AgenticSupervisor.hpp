@@ -114,6 +114,25 @@ private:
 };
 
 //=============================================================================
+// Performance Metrics
+//=============================================================================
+struct PerformanceMetrics {
+    double tasksPerSecond = 0.0;
+    double averageLatencyMs = 0.0;
+    double successRate = 1.0;
+    size_t activeTasks = 0;
+    size_t queuedTasks = 0;
+    size_t completedTasks = 0;
+    size_t failedTasks = 0;
+    double cpuUtilization = 0.0;
+    double memoryUtilization = 0.0;
+    size_t pageFaults = 0;
+    int checkpointsCreated = 0;
+    int sessionBranches = 0;
+    double lastBurnInLatency = 0.0;
+};
+
+//=============================================================================
 // Autonomous Context Injection (4. Context Injection)
 //=============================================================================
 struct AgentContext {
@@ -219,25 +238,6 @@ public:
 };
 
 //=============================================================================
-// Performance Metrics (Lock-Free Atomic Design)
-//=============================================================================
-struct PerformanceMetrics {
-    std::atomic<double> tasksPerSecond{0.0};
-    std::atomic<double> averageLatencyMs{0.0};
-    std::atomic<double> successRate{1.0};
-    std::atomic<size_t> activeTasks{0};
-    std::atomic<size_t> queuedTasks{0};
-    std::atomic<size_t> completedTasks{0};
-    std::atomic<size_t> failedTasks{0};
-    std::atomic<double> cpuUtilization{0.0};
-    std::atomic<double> memoryUtilization{0.0};
-    std::atomic<size_t> pageFaults{0};
-    std::atomic<int> checkpointsCreated{0};
-    std::atomic<int> sessionBranches{0};
-    std::atomic<double> lastBurnInLatency{0.0};
-};
-
-//=============================================================================
 // Agentic Supervisor - The "Brain" of the System
 //=============================================================================
 class AgenticSupervisor {
@@ -297,6 +297,7 @@ private:
     void FailTask(const std::string& taskId, const std::string& error);
     void RetryTask(const std::string& taskId);
     
+public:
     uint64_t GenerateTaskId();
     
     // IDE Event Hooks

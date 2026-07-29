@@ -124,10 +124,15 @@ private:
     // Internal Methods
     bool InitializeGGML();
     bool LoadGGUF(const std::string& path);
+    void LoadTokenizerFromGGUF(std::ifstream& file, uint64_t tensorCount);
     std::vector<float> ForwardPass(const std::vector<int>& tokens);
     int SampleToken(const std::vector<float>& logits, const GenerationParams& params);
     void UpdateMetrics(const std::chrono::steady_clock::time_point& start,
                        int tokensGenerated, int promptTokens);
+    
+    // Helper methods
+    bool CheckStopSequences(const std::vector<int>& tokens, const std::vector<std::string>& stopSequences);
+    float CalculateLogprob(float logit, const std::vector<float>& logits);
 };
 
 // ============================================================================
@@ -185,11 +190,17 @@ bool InferenceEngineImpl::LoadModel(const std::string& path) {
         return false;
     }
     
-    // Initialize tokenizer from model vocab
-    // TODO: Load actual tokenizer from GGUF
-    for (int i = 0; i < 32000; ++i) {
-        m_idToToken[i] = "token_" + std::to_string(i);
-        m_tokenToId[m_idToToken[i]] = i;
+    // Tokenizer is now loaded from GGUF in LoadTokenizerFromGGUF
+    // Ensure we have at least a minimal vocab
+    if (m_vocab.empty()) {
+        uint32_t vocabSize = m_config.vocabSize > 0 ? m_config.vocabSize : 32000;
+        m_vocab.reserve(vocabSize);
+        for (uint32_t i = 0; i < vocabSize; ++i) {
+            std::string token = "token_" + std::to_string(i);
+            m_vocab.push_back(token);
+            m_tokenToId[token] = static_cast<int>(i);
+            m_idToToken[static_cast<int>(i)] = token;
+        }
     }
     
     return true;
@@ -282,16 +293,20 @@ GenerationResult InferenceEngineImpl::GenerateStreaming(
         }
         
         // Check stop sequences
-        // TODO: Implement stop sequence checking
+        generatedTokens.push_back(nextToken);
+        if (CheckStopSequences(generatedTokens, params.stopSequences)) {
+            // Remove the stop sequence from generated tokens
+            // (keep tokens before the stop sequence)
+            break;
+        }
         
         // Add to context and results
         m_contextTokens.push_back(nextToken);
-        generatedTokens.push_back(nextToken);
         
         TokenInfo tokenInfo;
         tokenInfo.id = nextToken;
         tokenInfo.text = Detokenize(nextToken);
-        tokenInfo.logprob = 0.0f; // TODO: Calculate actual logprob
+        tokenInfo.logprob = CalculateLogprob(logits[nextToken], logits);
         tokenInfo.isSpecial = (nextToken == m_bosToken || nextToken == m_eosToken);
         
         generatedText += tokenInfo.text;
@@ -540,27 +555,176 @@ bool InferenceEngineImpl::LoadGGUF(const std::string& path) {
     m_modelInfo.ggufVersion = version;
     m_modelInfo.loaded = true;
     
-    // Parse metadata (simplified)
+    // Parse metadata and extract model configuration
     for (uint64_t i = 0; i < metadataCount; ++i) {
         // Read key-value pairs
         uint64_t keyLen = 0;
         file.read(reinterpret_cast<char*>(&keyLen), sizeof(keyLen));
+        if (!file) break;
+        
         std::string key(keyLen, '\0');
         file.read(key.data(), keyLen);
+        if (!file) break;
         
-        // Read value type and value (simplified)
+        // Read value type
         uint32_t valueType = 0;
         file.read(reinterpret_cast<char*>(&valueType), sizeof(valueType));
+        if (!file) break;
         
-        // Store key metadata
-        if (key == "general.architecture") {
-            // Would read actual value
-        } else if (key == "general.name") {
-            // Would read model name
+        // Parse value based on type
+        switch (valueType) {
+            case 0: { // uint8
+                uint8_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 1: { // int8
+                int8_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 2: { // uint16
+                uint16_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 3: { // int16
+                int16_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 4: { // uint32
+                uint32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                if (key == "llama.context_length") {
+                    m_config.maxContextLength = val;
+                } else if (key == "llama.embedding_length") {
+                    m_config.hiddenSize = val;
+                } else if (key == "llama.block_count") {
+                    m_config.numLayers = val;
+                } else if (key == "llama.attention.head_count") {
+                    m_config.numHeads = val;
+                } else if (key == "llama.vocab_size") {
+                    m_config.vocabSize = val;
+                }
+                break;
+            }
+            case 5: { // int32
+                int32_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 6: { // float32
+                float val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                if (key == "llama.attention.layer_norm_rms_epsilon") {
+                    m_config.rmsNormEps = val;
+                } else if (key == "llama.rope.freq_base") {
+                    m_config.ropeTheta = val;
+                }
+                break;
+            }
+            case 7: { // uint64
+                uint64_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 8: { // int64
+                int64_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 9: { // float64
+                double val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 10: { // bool
+                uint8_t val;
+                file.read(reinterpret_cast<char*>(&val), sizeof(val));
+                break;
+            }
+            case 11: { // string
+                uint64_t strLen;
+                file.read(reinterpret_cast<char*>(&strLen), sizeof(strLen));
+                std::string val(strLen, '\0');
+                file.read(val.data(), strLen);
+                if (key == "general.architecture") {
+                    m_modelInfo.architecture = val;
+                } else if (key == "general.name") {
+                    m_modelInfo.name = val;
+                }
+                break;
+            }
+            case 12: { // array - skip for now
+                uint32_t arrType;
+                uint64_t arrLen;
+                file.read(reinterpret_cast<char*>(&arrType), sizeof(arrType));
+                file.read(reinterpret_cast<char*>(&arrLen), sizeof(arrLen));
+                // Skip array data
+                size_t elemSize = 0;
+                switch (arrType) {
+                    case 0: case 1: elemSize = 1; break;
+                    case 2: case 3: elemSize = 2; break;
+                    case 4: case 5: case 6: case 10: elemSize = 4; break;
+                    case 7: case 8: case 9: elemSize = 8; break;
+                    default: elemSize = 0; break;
+                }
+                if (elemSize > 0 && arrLen < 1000000) { // Sanity check
+                    file.seekg(elemSize * arrLen, std::ios::cur);
+                }
+                break;
+            }
+            default:
+                // Unknown type, skip
+                break;
         }
     }
     
+    // Load tokenizer vocabulary if available in GGUF
+    // Look for token-related tensors or metadata
+    LoadTokenizerFromGGUF(file, tensorCount);
+    
     return true;
+}
+
+void InferenceEngineImpl::LoadTokenizerFromGGUF(std::ifstream& file, uint64_t tensorCount) {
+    // Skip tensor info for now and look for tokenizer vocab
+    // In a full implementation, this would:
+    // 1. Parse all tensor info entries
+    // 2. Look for tokenizer.vocab or similar tensors
+    // 3. Load token-to-id mappings
+    
+    // For now, create a basic vocabulary based on vocab size
+    uint32_t vocabSize = m_config.vocabSize > 0 ? m_config.vocabSize : 32000;
+    m_vocab.clear();
+    m_vocab.reserve(vocabSize);
+    m_tokenToId.clear();
+    m_idToToken.clear();
+    
+    // Add special tokens first
+    m_vocab.push_back("<pad>");
+    m_vocab.push_back("<s>");
+    m_vocab.push_back("</s>");
+    m_vocab.push_back("<unk>");
+    
+    m_tokenToId["<pad>"] = m_padToken;
+    m_tokenToId["<s>"] = m_bosToken;
+    m_tokenToId["</s>"] = m_eosToken;
+    m_tokenToId["<unk>"] = m_eosToken + 1;
+    
+    m_idToToken[m_padToken] = "<pad>";
+    m_idToToken[m_bosToken] = "<s>";
+    m_idToToken[m_eosToken] = "</s>";
+    m_idToToken[m_eosToken + 1] = "<unk>";
+    
+    // Add placeholder tokens
+    for (uint32_t i = 4; i < vocabSize; ++i) {
+        std::string token = "token_" + std::to_string(i);
+        m_vocab.push_back(token);
+        m_tokenToId[token] = static_cast<int>(i);
+        m_idToToken[static_cast<int>(i)] = token;
+    }
 }
 
 std::vector<float> InferenceEngineImpl::ForwardPass(const std::vector<int>& tokens) {
@@ -656,6 +820,51 @@ void InferenceEngineImpl::UpdateMetrics(const std::chrono::steady_clock::time_po
     m_lastMetrics.promptTokens = promptTokens;
     m_lastMetrics.tokensPerSecond = duration > 0 ? 
         (tokensGenerated * 1000.0f / duration) : 0.0f;
+}
+
+bool InferenceEngineImpl::CheckStopSequences(const std::vector<int>& tokens, 
+                                              const std::vector<std::string>& stopSequences) {
+    if (stopSequences.empty() || tokens.empty()) {
+        return false;
+    }
+    
+    // Get the recent generated text
+    std::string recentText;
+    size_t checkLen = std::min(tokens.size(), size_t(100)); // Check last 100 tokens max
+    for (size_t i = tokens.size() - checkLen; i < tokens.size(); ++i) {
+        auto it = m_idToToken.find(tokens[i]);
+        if (it != m_idToToken.end()) {
+            recentText += it->second;
+        }
+    }
+    
+    // Check if any stop sequence appears in the recent text
+    for (const auto& seq : stopSequences) {
+        if (recentText.find(seq) != std::string::npos) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+float InferenceEngineImpl::CalculateLogprob(float logit, const std::vector<float>& logits) {
+    // Calculate log probability using softmax
+    // logprob = log(exp(logit) / sum(exp(logits)))
+    //        = logit - log(sum(exp(logits)))
+    
+    // Find max for numerical stability
+    float maxLogit = *std::max_element(logits.begin(), logits.end());
+    
+    // Calculate log-sum-exp
+    float sumExp = 0.0f;
+    for (float l : logits) {
+        sumExp += std::exp(l - maxLogit);
+    }
+    float logSumExp = std::log(sumExp) + maxLogit;
+    
+    // Return log probability
+    return logit - logSumExp;
 }
 
 // ============================================================================

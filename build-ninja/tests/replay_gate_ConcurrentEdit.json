@@ -1,0 +1,27 @@
+{
+  "gateVersion": "1.1.0",
+  "timestamp": 28621844863,
+  "events": [
+    {
+      "sequenceId": 1,
+      "timestampUs": 28621803278,
+      "type": "CompletionRequested",
+      "version": 14,
+      "data": "concurrent_test"
+    },
+    {
+      "sequenceId": 2,
+      "timestampUs": 28621844680,
+      "type": "Keystroke",
+      "version": 15,
+      "data": "concurrent_edit"
+    },
+    {
+      "sequenceId": 3,
+      "timestampUs": 28621844681,
+      "type": "EditorSnapshot",
+      "version": 15,
+      "editorState": "retval"
+    }
+  ]
+}

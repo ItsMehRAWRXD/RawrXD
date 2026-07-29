@@ -10,13 +10,24 @@
 #include <atomic>
 #include <windows.h>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if !RAWR_VULKAN_AVAILABLE
 // Define these as empty macros to bypass calls when Vulkan is disabled
 #define vkCreateCommandPool(a,b,c,d) 0
 #define vkAllocateCommandBuffers(a,b,c) 0
-#define vkGetDeviceQueue(a,b,c,d) 
+#define vkGetDeviceQueue(a,b,c,d)
 #endif
 
 // Define MEM_RESERVE_PLACEHOLDER if not available
@@ -909,7 +920,7 @@ bool GGUFLoader::Load(VkDevice vkDevice, VkPhysicalDevice vkPhysDevice) {
         return false;
     }
     
-    tensors.clear();
+    tensors_.clear();
     for(auto& t : tensors_) {
         // ... Load tensors logic ...
     }

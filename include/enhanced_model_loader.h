@@ -10,6 +10,7 @@
 #include "format_router.h"
 #include "hf_downloader.h"
 #include "ollama_proxy.h"
+#include "model_metadata_hotpatch.h"
 
 class GGUFServer;
 class InferenceEngine;
@@ -77,6 +78,9 @@ private:
     bool endpointAllowed(const std::string& endpoint) const;
 
     bool decompressAndLoad(const std::string& compressedPath, CompressionType compression);
+    bool decompressGzip(const std::string& inputPath, const std::string& outputPath);
+    bool decompressZstd(const std::string& inputPath, const std::string& outputPath);
+    bool decompressLz4(const std::string& inputPath, const std::string& outputPath);
     void logLoadStart(const std::string& input, ModelFormat format);
     void logLoadSuccess(const std::string& input, ModelFormat format, int64_t durationMs);
     void logLoadError(const std::string& input, ModelFormat format, const std::string& error);
@@ -114,4 +118,6 @@ private:
     ServerStartedFn  m_onServerStarted;
     ServerStoppedFn  m_onServerStopped;
     ErrorFn          m_onError;
+
+    RawrXD::ModelMetadataBuffer m_lastMetadata{};
 };

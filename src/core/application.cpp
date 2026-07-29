@@ -466,8 +466,133 @@ std::string Application::GetCurrentWorkspace() const {
 }
 
 void Application::ShowCommandPalette() {
-    // TODO: Implement command palette UI
-    // This would show a searchable list of all available commands
+    // Create command palette dialog
+    // This is a searchable list of all available commands
+    
+    HWND hwndParent = GetForegroundWindow();
+    
+    // Create dialog window
+    HWND hwndDlg = CreateWindowExW(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        L"EDIT", L"Command Palette",
+        WS_VISIBLE | WS_POPUP | WS_BORDER | ES_AUTOHSCROLL,
+        CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
+        hwndParent, NULL, GetModuleHandle(NULL), NULL
+    );
+    
+    if (!hwndDlg) {
+        return;
+    }
+    
+    // Center on screen
+    RECT rc;
+    GetWindowRect(hwndDlg, &rc);
+    int width = rc.right - rc.left;
+    int height = rc.bottom - rc.top;
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    SetWindowPos(hwndDlg, NULL, 
+                 (screenWidth - width) / 2, (screenHeight - height) / 2,
+                 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    
+    // Build command list
+    std::vector<std::string> commands = {
+        "File: New",
+        "File: Open",
+        "File: Save",
+        "File: Save As",
+        "File: Exit",
+        "Edit: Undo",
+        "Edit: Redo",
+        "Edit: Cut",
+        "Edit: Copy",
+        "Edit: Paste",
+        "View: Toggle Sidebar",
+        "View: Toggle Bottom Panel",
+        "View: Toggle Dark Mode",
+        "Debug: Start Debugging",
+        "Debug: Stop Debugging",
+        "Debug: Step Over",
+        "Debug: Step Into",
+        "AI: Trigger Completion",
+        "AI: Open Chat",
+        "LSP: Restart Server",
+        "Git: Commit",
+        "Git: Push",
+        "Git: Pull",
+        "Terminal: New Terminal",
+        "Window: Close Editor",
+        "Window: Next Editor",
+        "Window: Previous Editor",
+        "Help: About",
+        "Help: Documentation"
+    };
+    
+    // Add extension commands
+    if (extensionHost_) {
+        auto extCommands = extensionHost_->GetAvailableCommands();
+        for (const auto& cmd : extCommands) {
+            commands.push_back("Ext: " + cmd);
+        }
+    }
+    
+    // Create list box for commands
+    HWND hwndList = CreateWindowExW(
+        0, L"LISTBOX", NULL,
+        WS_VISIBLE | WS_CHILD | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS,
+        10, 40, 580, 300,
+        hwndDlg, (HMENU)1001, GetModuleHandle(NULL), NULL
+    );
+    
+    // Populate list
+    for (const auto& cmd : commands) {
+        SendMessageA(hwndList, LB_ADDSTRING, 0, (LPARAM)cmd.c_str());
+    }
+    
+    // Create search box
+    HWND hwndSearch = CreateWindowExW(
+        0, L"EDIT", L"",
+        WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
+        10, 10, 580, 25,
+        hwndDlg, (HMENU)1002, GetModuleHandle(NULL), NULL
+    );
+    
+    SetFocus(hwndSearch);
+    
+    // Simple message loop for the dialog
+    MSG msg;
+    BOOL running = TRUE;
+    while (running && GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == VK_ESCAPE) {
+                running = FALSE;
+            } else if (msg.wParam == VK_RETURN) {
+                // Execute selected command
+                int sel = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    char buffer[256];
+                    SendMessageA(hwndList, LB_GETTEXT, sel, (LPARAM)buffer);
+                    ExecuteCommand(buffer);
+                }
+                running = FALSE;
+            } else if (msg.wParam == VK_DOWN) {
+                int sel = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+                if (sel < (int)commands.size() - 1) {
+                    SendMessage(hwndList, LB_SETCURSEL, sel + 1, 0);
+                }
+            } else if (msg.wParam == VK_UP) {
+                int sel = (int)SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+                if (sel > 0) {
+                    SendMessage(hwndList, LB_SETCURSEL, sel - 1, 0);
+                }
+            }
+        }
+        
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+    
+    DestroyWindow(hwndDlg);
 }
 
 void Application::ExecuteCommand(const std::string& command) {

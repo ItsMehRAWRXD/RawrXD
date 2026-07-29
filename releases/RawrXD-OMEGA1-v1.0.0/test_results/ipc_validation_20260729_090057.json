@@ -1,0 +1,15 @@
+{
+  "Timestamp": "2026-07-29 09:00:57",
+  "TotalTests": 10,
+  "Passed": 10,
+  "Failed": 0,
+  "Binaries": {
+    "Win32IDE": true,
+    "InferenceEngine": true
+  },
+  "Protocol": {
+    "MagicNumber": "0x4F314F4D",
+    "HeaderSize": 32,
+    "PipeName": "\\\\.\\pipe\\RawrXD_Omega1_v2"
+  }
+}

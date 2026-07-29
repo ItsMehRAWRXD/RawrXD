@@ -8,6 +8,10 @@
 #include <fstream>
 #include <filesystem>
 #include <chrono>
+#include <windows.h>
+#include <winhttp.h>
+
+#pragma comment(lib, "winhttp.lib")
 
 // Forward declarations for JWT validation
 struct JWTPayload {
@@ -53,6 +57,7 @@ private:
     std::string m_clientId;
     std::string m_jwksUrl;
     std::map<std::string, std::string> m_publicKeys; // kid -> key
+    std::chrono::steady_clock::time_point lastKeyFetchTime_;
     
     AuthSuccessCallback m_successCallback = nullptr;
     AuthFailureCallback m_failureCallback = nullptr;
@@ -188,29 +193,137 @@ void EnterpriseAuthManager::logout()
 
 bool EnterpriseAuthManager::fetchPublicKeys()
 {
-    // JWKS public key fetching implementation
-    // This implementation provides the foundation for JWT signature validation
-    // 
-    // To enable full JWKS support:
-    // 1. Link against WinHTTP or libcurl for HTTPS requests
-    // 2. Implement HTTP GET to m_jwksUrl
-    // 3. Parse JWKS JSON response (nlohmann/json recommended)
-    // 4. Cache public keys by kid (key ID)
-    // 5. Verify JWT signatures using cached keys
-    //
-    // Current implementation: returns true to allow token validation flow
-    // Signature verification is skipped pending HTTP client integration
+    // JWKS public key fetching implementation using WinHTTP
+    // Fetches JSON Web Key Set from the configured URL for JWT signature validation
     
     std::lock_guard<std::mutex> lock(m_mutex);
+    
+    if (m_jwksUrl.empty()) {
+        return false;
+    }
     
     // Clear existing keys before fetching
     m_publicKeys.clear();
     
-    // TODO: Implement HTTP GET request to m_jwksUrl
-    // TODO: Parse JWKS JSON and populate m_publicKeys
-    // TODO: Add key caching with expiration
+    // HTTP GET request to m_jwksUrl using WinHTTP
+    HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                      WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        return false;
+    }
     
-    return true;
+    // Parse URL
+    URL_COMPONENTS urlComp = {};
+    urlComp.dwStructSize = sizeof(urlComp);
+    urlComp.dwSchemeLength = (DWORD)-1;
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    
+    std::wstring wUrl(m_jwksUrl.begin(), m_jwksUrl.end());
+    WinHttpCrackUrl(wUrl.c_str(), (DWORD)wUrl.length(), 0, &urlComp);
+    
+    std::wstring hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
+    std::wstring urlPath(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    
+    HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), urlComp.nPort, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlPath.c_str(), 
+                                             nullptr, WINHTTP_NO_REFERER, 
+                                             WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                             urlComp.nScheme == INTERNET_SCHEME_HTTPS ? 
+                                             WINHTTP_FLAG_SECURE : 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    
+    // Send request
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, 
+                            WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    
+    if (!WinHttpReceiveResponse(hRequest, nullptr)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+    
+    // Read response
+    std::string response;
+    DWORD bytesRead = 0;
+    char buffer[4096];
+    do {
+        bytesRead = 0;
+        if (WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead)) {
+            response.append(buffer, bytesRead);
+        }
+    } while (bytesRead > 0);
+    
+    // Cleanup
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    
+    // Parse JWKS JSON and populate m_publicKeys
+    // JWKS format: {"keys": [{"kty": "RSA", "kid": "...", "n": "...", "e": "..."}, ...]}
+    size_t keysPos = response.find("\"keys\"");
+    if (keysPos == std::string::npos) {
+        return false;
+    }
+    
+    size_t arrStart = response.find('[', keysPos);
+    size_t arrEnd = response.find(']', arrStart);
+    if (arrStart == std::string::npos || arrEnd == std::string::npos) {
+        return false;
+    }
+    
+    // Parse each key in the array
+    size_t pos = arrStart + 1;
+    while (pos < arrEnd) {
+        size_t objStart = response.find('{', pos);
+        if (objStart == std::string::npos || objStart >= arrEnd) break;
+        
+        size_t objEnd = response.find('}', objStart);
+        if (objEnd == std::string::npos || objEnd >= arrEnd) break;
+        
+        // Extract kid
+        size_t kidPos = response.find("\"kid\":\"", objStart);
+        if (kidPos != std::string::npos && kidPos < objEnd) {
+            kidPos += 7;
+            size_t kidEnd = response.find('"', kidPos);
+            if (kidEnd != std::string::npos && kidEnd <= objEnd) {
+                std::string kid = response.substr(kidPos, kidEnd - kidPos);
+                
+                // Extract n (modulus) for RSA key
+                size_t nPos = response.find("\"n\":\"", objStart);
+                if (nPos != std::string::npos && nPos < objEnd) {
+                    nPos += 5;
+                    size_t nEnd = response.find('"', nPos);
+                    if (nEnd != std::string::npos && nEnd <= objEnd) {
+                        std::string n = response.substr(nPos, nEnd - nPos);
+                        m_publicKeys[kid] = n;
+                    }
+                }
+            }
+        }
+        
+        pos = objEnd + 1;
+    }
+    
+    // Add key caching with expiration - store fetch timestamp
+    lastKeyFetchTime_ = std::chrono::steady_clock::now();
+    
+    return !m_publicKeys.empty();
 }
 
 bool EnterpriseAuthManager::validateToken(const std::string& token)

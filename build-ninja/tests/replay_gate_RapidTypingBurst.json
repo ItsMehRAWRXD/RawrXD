@@ -1,0 +1,104 @@
+{
+  "gateVersion": "1.1.0",
+  "timestamp": 28621692156,
+  "events": [
+    {
+      "sequenceId": 1,
+      "timestampUs": 28621324220,
+      "type": "Keystroke",
+      "version": 2,
+      "data": "a"
+    },
+    {
+      "sequenceId": 2,
+      "timestampUs": 28621324257,
+      "type": "CompletionRequested",
+      "version": 2,
+      "data": "burst"
+    },
+    {
+      "sequenceId": 3,
+      "timestampUs": 28621338709,
+      "type": "Keystroke",
+      "version": 3,
+      "data": "a"
+    },
+    {
+      "sequenceId": 4,
+      "timestampUs": 28621354119,
+      "type": "Keystroke",
+      "version": 4,
+      "data": "a"
+    },
+    {
+      "sequenceId": 5,
+      "timestampUs": 28621365549,
+      "type": "Keystroke",
+      "version": 5,
+      "data": "a"
+    },
+    {
+      "sequenceId": 6,
+      "timestampUs": 28621365589,
+      "type": "CompletionRequested",
+      "version": 5,
+      "data": "burst"
+    },
+    {
+      "sequenceId": 7,
+      "timestampUs": 28621388853,
+      "type": "Keystroke",
+      "version": 6,
+      "data": "a"
+    },
+    {
+      "sequenceId": 8,
+      "timestampUs": 28621400198,
+      "type": "Keystroke",
+      "version": 7,
+      "data": "a"
+    },
+    {
+      "sequenceId": 9,
+      "timestampUs": 28621421074,
+      "type": "Keystroke",
+      "version": 8,
+      "data": "a"
+    },
+    {
+      "sequenceId": 10,
+      "timestampUs": 28621421127,
+      "type": "CompletionRequested",
+      "version": 8,
+      "data": "burst"
+    },
+    {
+      "sequenceId": 11,
+      "timestampUs": 28621443380,
+      "type": "Keystroke",
+      "version": 9,
+      "data": "a"
+    },
+    {
+      "sequenceId": 12,
+      "timestampUs": 28621455725,
+      "type": "Keystroke",
+      "version": 10,
+      "data": "a"
+    },
+    {
+      "sequenceId": 13,
+      "timestampUs": 28621472166,
+      "type": "Keystroke",
+      "version": 11,
+      "data": "a"
+    },
+    {
+      "sequenceId": 14,
+      "timestampUs": 28621472216,
+      "type": "CompletionRequested",
+      "version": 11,
+      "data": "burst"
+    }
+  ]
+}

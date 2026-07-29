@@ -182,7 +182,10 @@ bool LLMIntegrationTests::testOpenAIHTTPClient() {
         // Test: Chat completion
         std::cout << "  [*] Testing chat completion..." << std::endl;
         std::vector<json> messages;
-        messages.push_back(json{{"role", "user"}, {"content", "Say 'Connected!' in one word."}});
+        json msg;
+        msg["role"] = "user";
+        msg["content"] = "Say 'Connected!' in one word.";
+        messages.push_back(msg);
 
         json genConfig;
         genConfig["temperature"] = 0.7;
@@ -245,7 +248,10 @@ bool LLMIntegrationTests::testAnthropicHTTPClient() {
         // Test: Message creation
         std::cout << "  [*] Testing message creation..." << std::endl;
         std::vector<json> messages;
-        messages.push_back(json{{"role", "user"}, {"content", "Say 'Connected!' in one word."}});
+        json msg;
+        msg["role"] = "user";
+        msg["content"] = "Say 'Connected!' in one word.";
+        messages.push_back(msg);
 
         json genConfig;
         genConfig["system"] = "You are a helpful assistant.";
@@ -306,7 +312,10 @@ bool LLMIntegrationTests::testRequestBuilding() {
         // Test Ollama chat request
         std::cout << "  [*] Testing Ollama chat request..." << std::endl;
         std::vector<json> messages;
-        messages.push_back(json{{"role", "user"}, {"content", "Hi"}});
+        json msg;
+        msg["role"] = "user";
+        msg["content"] = "Hi";
+        messages.push_back(msg);
 
         auto chatReq = client.buildOllamaChatRequest(messages, cfg);
         assert(chatReq.endpoint == "/api/chat");
@@ -410,7 +419,9 @@ bool LLMIntegrationTests::testErrorHandling() {
         APIRequest req;
         req.backend = LLMBackend::OLLAMA;
         req.endpoint = "/api/generate";
-        req.body = json{{"model", "test"}, {"prompt", "test"}};
+        req.body = json::object();
+        req.body["model"] = "test";
+        req.body["prompt"] = "test";
 
         auto response = client.makeRequest(req);
         assert(!response.success);

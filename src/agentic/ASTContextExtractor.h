@@ -153,6 +153,26 @@ ASTContextExtractor& GetASTContextExtractor();
 std::vector<Symbol> QuickExtractCppSymbols(const std::string& code);
 
 // ============================================================================
+// Utility: Quick symbol extraction for Python
+// ============================================================================
+std::vector<Symbol> QuickExtractPythonSymbols(const std::string& code);
+
+// ============================================================================
+// Utility: Quick symbol extraction for JavaScript/TypeScript
+// ============================================================================
+std::vector<Symbol> QuickExtractJavaScriptSymbols(const std::string& code);
+
+// ============================================================================
+// Utility: Quick symbol extraction for Rust
+// ============================================================================
+std::vector<Symbol> QuickExtractRustSymbols(const std::string& code);
+
+// ============================================================================
+// Utility: Quick symbol extraction for Go
+// ============================================================================
+std::vector<Symbol> QuickExtractGoSymbols(const std::string& code);
+
+// ============================================================================
 // Utility: Token estimation (model-aware)
 // ============================================================================
 uint64_t EstimateTokenCount(const std::string& text, uint64_t modelParameterCount = 0);

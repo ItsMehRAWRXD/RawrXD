@@ -7,10 +7,23 @@
 #include <functional>
 #include <queue>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if !RAWR_VULKAN_AVAILABLE
 // Dummy types to allow compilation without Vulkan SDK
+// Only define if not already defined by real Vulkan headers
+#ifndef VK_VERSION_1_0
 typedef void* VkDevice;
 typedef void* VkInstance;
 typedef void* VkPhysicalDevice;
@@ -34,8 +47,42 @@ typedef struct {
     uint32_t deviceID; 
     char deviceName[256];
 } VkPhysicalDeviceProperties;
-typedef struct { uint32_t memoryTypeCount; } VkPhysicalDeviceMemoryProperties;
-#endif
+
+// Define VkMemoryType and VkMemoryHeap first (needed for VkPhysicalDeviceMemoryProperties)
+typedef struct VkMemoryType {
+    uint32_t propertyFlags;
+    uint32_t heapIndex;
+} VkMemoryType;
+
+typedef struct VkMemoryHeap {
+    uint64_t size;
+    uint64_t flags;
+} VkMemoryHeap;
+
+// Now define VkPhysicalDeviceMemoryProperties using the proper types
+typedef struct VkPhysicalDeviceMemoryProperties {
+    uint32_t memoryTypeCount;
+    VkMemoryType memoryTypes[32];
+    uint32_t memoryHeapCount;
+    VkMemoryHeap memoryHeaps[16];
+} VkPhysicalDeviceMemoryProperties;
+
+// VkQueueFamilyProperties for queue family queries
+typedef struct VkQueueFamilyProperties {
+    uint32_t queueFlags;
+    uint32_t queueCount;
+    uint32_t timestampValidBits;
+    uint32_t minImageTransferGranularity[3];
+} VkQueueFamilyProperties;
+
+// Stub function declarations for CPU fallback
+inline void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice, uint32_t* count, VkQueueFamilyProperties*) {
+    if (count) *count = 0;
+}
+inline void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice, VkPhysicalDeviceMemoryProperties*) {}
+
+#endif // VK_VERSION_1_0
+#endif // !RAWR_VULKAN_AVAILABLE
 
 namespace CPUInference {
 

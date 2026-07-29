@@ -75,7 +75,7 @@ endif()
 
 # AI Completions Test
 if(NOT TARGET test_ai_completions AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_ai_completions.cpp")
-    add_executable(test_ai_completions test_ai_completions.cpp)
+    add_executable(test_ai_completions test_ai_completions.cpp ${CMAKE_SOURCE_DIR}/src/cpu_inference_engine.cpp ${CMAKE_SOURCE_DIR}/src/real_time_completion_engine.cpp)
     target_include_directories(test_ai_completions PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_ai_completions PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_ai_completions COMMAND test_ai_completions)
@@ -84,7 +84,7 @@ endif()
 
 # LLM Connectivity Test
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
-    add_executable(test_llm_connectivity test_llm_connectivity.cpp)
+    add_executable(test_llm_connectivity test_llm_connectivity.cpp ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client.cpp)
     target_include_directories(test_llm_connectivity PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/llm_adapter)
     set_target_properties(test_llm_connectivity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     if(WIN32)
@@ -96,7 +96,7 @@ endif()
 
 # Tool Registry Test
 if(NOT TARGET test_tool_registry AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_tool_registry.cpp")
-    add_executable(test_tool_registry test_tool_registry.cpp)
+    add_executable(test_tool_registry test_tool_registry.cpp tool_registry_full_impl.cpp)
     target_include_directories(test_tool_registry PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_tool_registry PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_tool_registry COMMAND test_tool_registry)
@@ -105,7 +105,7 @@ endif()
 
 # Voice Processor Test
 if(NOT TARGET test_voice_processor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_voice_processor.cpp")
-    add_executable(test_voice_processor test_voice_processor.cpp)
+    add_executable(test_voice_processor test_voice_processor.cpp ${CMAKE_SOURCE_DIR}/src/test_main.cpp)
     target_include_directories(test_voice_processor PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_voice_processor PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_voice_processor COMMAND test_voice_processor)
