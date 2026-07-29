@@ -2163,8 +2163,8 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
         {
             printf("[RawrXD] Failed to map tensor chunk for %s at offset %llu, size %zu\n", t.name.c_str(),
                    currentOffset, chunkSize);
-            printf("[RawrXD]   m_fileSize=%llu, m_hFile=%p, m_hMapping=%p\n", 
-                   m_fileSize, (void*)m_hFile, (void*)m_hMapping);
+            printf("[RawrXD]   m_fileSize=%llu, m_file=%p, m_mapping=%p\n", 
+                   m_fileSize, (void*)m_file, (void*)m_mapping);
             return;
         }
 
