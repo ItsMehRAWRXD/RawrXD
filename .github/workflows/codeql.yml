@@ -67,6 +67,8 @@ jobs:
         shell: pwsh
         run: |
           cd build-codeql
+          # Clean build to ensure CodeQL sees compiler invocations
+          ninja -t clean 2>$null
           ninja -j2 RawrXD_Compression RawrEngine 2>&1 | Select-Object -Last 50
 
       - name: Perform CodeQL Analysis

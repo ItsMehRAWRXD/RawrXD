@@ -35,6 +35,10 @@ jobs:
       - name: Configure CMake
         shell: pwsh
         run: |
+          # Clean build directory to avoid CMake cache path mismatches
+          if (Test-Path build) {
+            Remove-Item build -Recurse -Force
+          }
           mkdir build -Force
           cd build
           cmake -G Ninja `
@@ -91,6 +95,13 @@ jobs:
         shell: pwsh
         run: |
           powershell -ExecutionPolicy Bypass -File tools/generate_version_manifest.ps1 -OutputDir . -Version "1.0.0"
+
+      - name: Cleanup
+        if: always()
+        shell: pwsh
+        run: |
+          taskkill /F /IM python.exe 2>$null
+          exit 0
 
       - name: Upload Build Artifacts
         if: github.ref == 'refs/heads/main'
