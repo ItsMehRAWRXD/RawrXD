@@ -12,6 +12,7 @@
 #include "RawrXD_IDE_Integration.hpp"
 #include "GhostTextWndProc.hpp"
 #include "AIInferenceBridge.hpp"
+#include "AIConfigDialog.hpp"
 #include "resource.h"
 #include <Windows.h>
 #include <commctrl.h>
@@ -171,9 +172,13 @@ LRESULT CALLBACK RawrXD_IDESubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
                 
                 case IDM_AI_PREFERENCES: {
                     // Show AI preferences dialog
-                    // DialogBoxParam(GetModuleHandle(nullptr), 
-                    //     MAKEINTRESOURCE(IDD_PREFERENCES), hwnd, 
-                    //     PreferencesDlgProc, 0);
+                    RawrXD::IDE::AIConfigDialog dlg;
+                    RawrXD::IDE::AIConfig config = RawrXD::IDE::GetGlobalAIConfig();
+                    if (dlg.ShowDialog(hwnd, config)) {
+                        RawrXD::IDE::GetGlobalAIConfig() = config;
+                        // Apply new settings to inference bridge
+                        // TODO: Update bridge with new config
+                    }
                     return 0;
                 }
             }

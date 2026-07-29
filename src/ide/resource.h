@@ -86,15 +86,42 @@
 #define IDD_ABOUTBOX                    300
 #define IDD_PREFERENCES                 301
 #define IDD_GOTO_LINE                   302
+#define IDD_AI_PREFERENCES              303
 
 // ============================================================================
-// Control IDs
+// AI Config Dialog Controls
+// ============================================================================
+#define IDC_TEMP_SLIDER                 1001
+#define IDC_TEMP_LABEL                  1002
+#define IDC_TOPP_SLIDER                 1003
+#define IDC_TOPP_LABEL                  1004
+#define IDC_MAXTOKENS                   1005
+#define IDC_TOPK                        1006
+#define IDC_REPEAT_PENALTY              1007
+#define IDC_AUTO_TRIGGER                1008
+#define IDC_TRIGGER_DELAY               1009
+#define IDC_SHOW_INLINE                 1010
+#define IDC_GRAY_OUT_COMPLETED          1011
+#define IDC_MODEL_PATH                  1012
+#define IDC_BROWSE_MODEL                1013
+#define IDC_USE_GPU                     1014
+#define IDC_GPU_LAYERS                  1015
+#define IDC_CONTEXT_LENGTH              1016
+#define IDC_FLASH_ATTENTION             1017
+#define IDC_ENABLE_TELEMETRY            1018
+#define IDC_SHARE_ANONYMOUS             1019
+#define IDC_ADVANCED_GROUP              1020
+#define IDC_RESET_DEFAULTS            1021
+#define ID_ADVANCED_TOGGLE              1022
+
+// ============================================================================
+// Control IDs (Legacy)
 // ============================================================================
 #define IDC_STATIC                      -1
-#define IDC_EDIT_LINE                   1000
-#define IDC_CHECK_ENABLE_AI             1001
-#define IDC_EDIT_MAX_TOKENS             1002
-#define IDC_COMBO_MODEL                 1003
+#define IDC_EDIT_LINE                   2000
+#define IDC_CHECK_ENABLE_AI             2001
+#define IDC_EDIT_MAX_TOKENS_LEGACY      2002
+#define IDC_COMBO_MODEL                 2003
 
 // ============================================================================
 // Status Bar Parts

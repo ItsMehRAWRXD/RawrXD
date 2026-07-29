@@ -11,6 +11,9 @@
 #include "../git/GitIntegration.h"
 #include "../terminal/ANSITerminalRenderer.h"
 #include "../model/GGUFLoader_Fixed.h"
+#include "GitDiffViewer.hpp"
+#include "FindReplaceDialog.hpp"
+#include "GitCommitDialog.hpp"
 #include <commctrl.h>
 #include <shlobj.h>
 #include <sstream>
@@ -781,17 +784,19 @@ bool IDECore::InitializeGit(const std::string& repoPath) {
 
 void IDECore::ShowGitDiff(const std::string& filePath) {
     if (!gitIntegration_) return;
-    // TODO: Show diff dialog
+    
+    // Show the Git diff dialog
+    GitDiffDialog::ShowForFile(hMainWindow_, filePath);
 }
 
 void IDECore::ShowGitBlame(const std::string& filePath) {
     if (!gitIntegration_) return;
-    // TODO: Show blame view
+    // TODO: Show blame view - requires blame parser implementation
 }
 
 void IDECore::ShowGitLog() {
     if (!gitIntegration_) return;
-    // TODO: Show log view
+    // TODO: Show log view - requires log viewer implementation
 }
 
 // ============================================================================

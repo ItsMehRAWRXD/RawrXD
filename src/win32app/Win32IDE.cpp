@@ -22,6 +22,7 @@
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
 #include "resource.h"
+#include "../ANSIParser.h"
 
 // AI Completion System Integration (VAL-063)
 // Forward declarations from ai_completion_real.cpp
@@ -29,6 +30,18 @@ extern "C" {
     void InitAICompletion();
     void SetCompletionBackendNative(void* engine_ptr);
     void ShutdownAICompletion();
+    // Ghost text integration API
+    const char* RequestGhostTextCompletion(
+        const char* context,
+        const char* language,
+        const char* suffix,
+        const char* file_path,
+        int cursor_line,
+        int cursor_col
+    );
+    void FreeCompletionString(const char* str);
+    bool IsCompletionEngineReady();
+    void GetCompletionEngineStatus(char* out_buffer, int buffer_size);
 }
 #include <commdlg.h>
 #include <nlohmann/json.hpp>
@@ -2870,19 +2883,25 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
         timestampedText = std::string(timestamp) + text;
     }
 
-    // Apply color formatting based on tab type
-    if (target == "Errors")
-    {
-        formatOutput(timestampedText, RGB(220, 50, 50), "Errors");  // Red
-    }
-    else if (target == "Debug")
-    {
-        formatOutput(timestampedText, RGB(200, 180, 50), "Debug");  // Yellow
-    }
-    else
-    {
-        HWND hwnd = m_outputWindows[target];
-        appendText(hwnd, timestampedText);
+    // Check for ANSI escape sequences
+    HWND hwnd = m_outputWindows[target];
+    if (RawrXD::ANSIParser().ContainsANSI(timestampedText)) {
+        // Use ANSI parser for colored output
+        RawrXD::AppendANSIToRichEdit(hwnd, timestampedText);
+    } else {
+        // Apply color formatting based on tab type (legacy path)
+        if (target == "Errors")
+        {
+            formatOutput(timestampedText, RGB(220, 50, 50), "Errors");  // Red
+        }
+        else if (target == "Debug")
+        {
+            formatOutput(timestampedText, RGB(200, 180, 50), "Debug");  // Yellow
+        }
+        else
+        {
+            appendText(hwnd, timestampedText);
+        }
     }
 }
 

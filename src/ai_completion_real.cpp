@@ -1466,4 +1466,68 @@ extern "C" {
         }
         return nullptr;
     }
+
+    // ============================================================================
+    // GHOST TEXT INTEGRATION API (VAL-063)
+    // C-compatible interface for Win32IDE_GhostText.cpp integration
+    // ============================================================================
+
+    // Request a completion for ghost text display
+    // Returns a newly allocated string that caller must free with FreeCompletionString()
+    const char* RequestGhostTextCompletion(
+        const char* context,
+        const char* language,
+        const char* suffix,
+        const char* file_path,
+        int cursor_line,
+        int cursor_col
+    ) {
+        if (!g_completion_engine || !context) return nullptr;
+
+        AICompletionEngine::CompletionContext ctx;
+        ctx.file_path = file_path ? file_path : "";
+        ctx.file_content = context;
+        ctx.cursor_position = (int)strlen(context);
+        ctx.language = language ? language : "";
+
+        std::string completion = g_completion_engine->GenerateCompletion(ctx);
+        if (completion.empty()) return nullptr;
+
+        // Allocate and copy result (caller must free)
+        char* result = (char*)malloc(completion.length() + 1);
+        if (result) {
+            strcpy(result, completion.c_str());
+        }
+        return result;
+    }
+
+    // Free a completion string returned by RequestGhostTextCompletion
+    void FreeCompletionString(const char* str) {
+        if (str) free((void*)str);
+    }
+
+    // Check if the completion engine is ready to serve requests
+    bool IsCompletionEngineReady() {
+        return g_completion_engine != nullptr;
+    }
+
+    // Get completion engine status info
+    void GetCompletionEngineStatus(char* out_buffer, int buffer_size) {
+        if (!out_buffer || buffer_size <= 0) return;
+
+        std::string status = "[AI COMPLETION] Engine: ";
+        status += (g_completion_engine ? "READY" : "NOT INITIALIZED");
+        status += "\n";
+
+        if (g_completion_engine) {
+            int langCount = 0;
+            for (int i = 0; AICompletionEngine::s_languageTables[i].language != nullptr; ++i) {
+                langCount++;
+            }
+            status += "Fallback languages: " + std::to_string(langCount) + "\n";
+        }
+
+        strncpy(out_buffer, status.c_str(), buffer_size - 1);
+        out_buffer[buffer_size - 1] = '\0';
+    }
 }
