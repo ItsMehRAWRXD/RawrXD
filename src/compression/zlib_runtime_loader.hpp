@@ -7,9 +7,19 @@
 
 #pragma once
 
-#include <windows.h>
 #include <cstddef>
 #include <cstdint>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    // Linux/macOS: Use dlopen for runtime loading
+    #include <dlfcn.h>
+    typedef void* HMODULE;
+    #define LoadLibraryA(name) dlopen(name, RTLD_LAZY)
+    #define GetProcAddress(handle, name) dlsym(handle, name)
+    #define FreeLibrary(handle) dlclose(handle)
+#endif
 
 namespace RawrXD {
 namespace Compression {

@@ -1346,3 +1346,10 @@
 103	7745	8070616294140104	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Themes.cpp.obj	907362437ad3ee27
 122	10053	8070616294327592	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Sidebar.cpp.obj	f005bf025e28eb75
 86	10829	8070616293963423	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_SyntaxHighlight.cpp.obj	a8874be46a7651f8
+104	6743	8070618379928295	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_CoreRuntimeSpine.cpp.obj	be0e8ddbc0a69ffa
+136	7461	8070618380251696	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Window.cpp.obj	32be6a124d33fe3
+125	7522	8070618380135772	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_VSCodeUI.cpp.obj	58bbcd99777974e5
+69	9502	8070618379571681	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/main_win32.cpp.obj	49dcfb2583a8ccd9
+93	11436	8070618379826963	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Core.cpp.obj	ceee00cfd7d42d16
+81	14095	8070618379688163	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE.cpp.obj	535d2936b808f45c
+114	18227	8070618380034933	CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Commands.cpp.obj	52e57dd5d94ebdef

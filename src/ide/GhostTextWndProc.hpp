@@ -3,7 +3,13 @@
 // ============================================================================
 
 #pragma once
-#include <Windows.h>
+
+#ifdef _WIN32
+    #include <Windows.h>
+    typedef HWND NativeWindowHandle;
+#else
+    typedef void* NativeWindowHandle;
+#endif
 
 // Custom window messages for ghost text
 #define UWM_SHOW_GHOST_TEXT    (WM_USER + 0x1000)
@@ -20,11 +26,11 @@ extern "C" {
 
 // Install ghost text handling into IDE windows
 // Call this once during IDE initialization
-bool GhostText_Install(HWND hMainWindow, HWND hEditor);
+bool GhostText_Install(NativeWindowHandle hMainWindow, NativeWindowHandle hEditor);
 
 // Remove ghost text subclassing
 // Call this during IDE shutdown
-void GhostText_Uninstall(HWND hMainWindow, HWND hEditor);
+void GhostText_Uninstall(NativeWindowHandle hMainWindow, NativeWindowHandle hEditor);
 
 // ============================================================================
 // Ghost Text Control

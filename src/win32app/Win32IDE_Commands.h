@@ -406,6 +406,30 @@
 #define IDM_SECURITY_DASHBOARD          9553
 #define IDM_SECURITY_EXPORT_SBOM        9554
 
+// ---- Editor commands (10200–10220) ----------------------------------------
+#define IDM_EDITOR_TOGGLE_COMMENT   10200
+#define IDM_EDITOR_DELETE_LINE      10201
+#define IDM_EDITOR_DUPLICATE_LINE   10202
+#define IDM_EDITOR_MOVE_LINE_UP     10203
+#define IDM_EDITOR_MOVE_LINE_DOWN   10204
+#define IDM_EDITOR_GOTO_LINE          10205
+#define IDM_EDITOR_GOTO_SYMBOL        10206
+#define IDM_EDITOR_GOTO_WORKSPACE_SYMBOL 10207
+#define IDM_EDITOR_PEEK_DEFINITION    10208
+#define IDM_EDITOR_PEEK_REFERENCES  10209
+
+// ---- Debug commands (10300–10315) -------------------------------------------
+#define IDM_DBG_GO                  10300
+#define IDM_DBG_BREAK               10301
+#define IDM_DBG_KILL                10302
+#define IDM_DBG_STEP_OVER           10303
+#define IDM_DBG_STEP_INTO           10304
+#define IDM_DBG_STEP_OUT            10305
+
+// ---- View commands (10250–10260) -------------------------------------------
+#define IDM_VIEW_TOGGLE_BOTTOM_PANEL 10250
+#define IDM_FILE_QUICK_OPEN         10251
+
 // ---- Build commands (10400–10402) ------------------------------------------
 // routed via handleBuildCommand() for the 10400–10499 range
 #define IDM_BUILD_SOLUTION          10400

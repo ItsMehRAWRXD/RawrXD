@@ -7,9 +7,24 @@
 
 #pragma once
 
-#include <windows.h>
 #include <cstdint>
 #include <cstddef>
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define VKAPI_CALL __stdcall
+    #define VKAPI_PTR VKAPI_CALL
+#else
+    // Linux/macOS
+    #include <dlfcn.h>
+    #include <string.h>
+    typedef void* HMODULE;
+    #define LoadLibraryA(name) dlopen(name, RTLD_LAZY)
+    #define GetProcAddress(handle, name) dlsym(handle, name)
+    #define FreeLibrary(handle) dlclose(handle)
+    #define VKAPI_CALL
+    #define VKAPI_PTR VKAPI_CALL
+#endif
 
 // Minimal Vulkan types (ABI-compatible)
 typedef uint32_t VkFlags;

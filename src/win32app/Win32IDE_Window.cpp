@@ -422,7 +422,6 @@ static bool CreatePanelWithSEH(const char* panelName, std::function<void()> crea
                  panelName);
         MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
     }
-#endif
     
     return success;
 }
