@@ -544,3 +544,97 @@ if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/te
     add_test(NAME test_agentic_supervisor COMMAND test_agentic_supervisor)
     message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
 endif()
+
+# ============================================================================
+# DUAL GPU SMOKE TEST - CTest Registration
+# ============================================================================
+if(NOT TARGET dual_gpu_smoke_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/core/dual_gpu_smoke_test.cpp")
+    add_executable(dual_gpu_smoke_test
+        core/dual_gpu_smoke_test.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/dual_gpu_orchestrator.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/dual_gpu_orchestrator.hpp
+    )
+    target_include_directories(dual_gpu_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/core
+    )
+    set_target_properties(dual_gpu_smoke_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(dual_gpu_smoke_test PRIVATE kernel32 user32)
+    endif()
+    add_test(NAME dual_gpu_smoke_test COMMAND dual_gpu_smoke_test)
+    set_tests_properties(dual_gpu_smoke_test PROPERTIES
+        TIMEOUT 60
+        LABELS "gpu;dual_gpu;smoke"
+    )
+    message(STATUS "  ✓ Added dual_gpu_smoke_test (Single & Dual GPU validation)")
+endif()
+
+# ============================================================================
+# CERTIFICATION FRAMEWORK TESTS - CTest Registration
+# ============================================================================
+# Certification Runner (VAL-050 to VAL-082)
+if(NOT TARGET CertificationRunner AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CertificationRunner.cpp")
+    add_executable(CertificationRunner
+        CertificationRunner.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_050_Ed25519_Signature.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_051_Supply_Chain_Provenance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_052_SHA256_Integrity.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_053_Cross_Platform_Verification.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_054_Reproducible_Builds.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_055_Fault_Injection.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_056_CI_CD_Integration.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_057_Lifecycle_Management.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_058_Performance_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_059_Security_Compliance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_060_Dependency_Scanning.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_061_Runtime_Integrity.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_062_Configuration_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_063_API_Compatibility.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_064_Documentation_Completeness.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_065_Deployment_Readiness.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_066_Monitoring_Alerting.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_067_Backup_Recovery.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_068_Scaling_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_069_Disaster_Recovery.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_070_Cost_Optimization.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_071_User_Acceptance.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_072_Compliance_Framework.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_073_Operational_Excellence.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_074_075_Final_Validation.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_076_077_Production_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_078_079_Security_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_080_081_Compliance_Gates.cpp
+        ${CMAKE_SOURCE_DIR}/src/certification/VAL_082_Release_Readiness.cpp
+    )
+    target_include_directories(CertificationRunner PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/certification
+    )
+    set_target_properties(CertificationRunner PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(CertificationRunner PRIVATE crypt32 advapi32)
+    endif()
+    add_test(NAME CertificationRunner COMMAND CertificationRunner)
+    set_tests_properties(CertificationRunner PROPERTIES
+        TIMEOUT 300
+        LABELS "certification;validation;gates;production"
+    )
+    message(STATUS "  ✓ Added CertificationRunner (VAL-050 to VAL-082)")
+endif()
+
+message(STATUS "========================================")
+message(STATUS "Dual GPU & Certification Tests Registered")
+message(STATUS "========================================")
+message(STATUS "Run dual GPU tests:     ctest -R dual_gpu -V")
+message(STATUS "Run certification:      ctest -R Certification -V")
+message(STATUS "Run all production:     ctest -L production -V")
+message(STATUS "========================================")
