@@ -1,79 +1,162 @@
+# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
-project(RawrXD LANGUAGES CXX C)
+project(RawrXD-Native VERSION 14.2.0 LANGUAGES CXX ASM_MASM)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(Threads REQUIRED)
-
-add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS)
-
-# Vulkan SDK Setup
-if(EXISTS "C:/VulkanSDK/1.4.328.1")
-    include_directories("C:/VulkanSDK/1.4.328.1/Include")
-    link_directories("C:/VulkanSDK/1.4.328.1/Lib")
+# Force Release to avoid Debug /Od /RTC1 conflicts with our /O2
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Common sources
-set(COMMON_SOURCES
-    src/cpu_inference_engine.cpp
-    src/rawrxd_inference.cpp
-    src/rawrxd_tokenizer.cpp 
-    src/rawrxd_transformer.cpp
-    src/rawrxd_sampler.cpp
-    src/rawrxd_model_loader.cpp
-    src/rawrxd_kernels.cpp
-    src/token_generator.cpp
-    src/vulkan_compute.cpp
-)
+# Strip any residual debug runtime checks that conflict with /O2
+string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+string(REPLACE "/Od" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+string(REPLACE "-MDd" "-MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
-set(MAIN_SOURCES
-    src/main.cpp
-    src/ide_orchestrator.cpp
-    src/agentic_ide.cpp
-    src/agentic_executor.cpp
-    src/agentic_memory_system.cpp
-    src/agentic_observability.cpp
-    src/universal_model_router.cpp
-    src/agentic_engine.cpp
-    src/action_executor.cpp
-    src/cloud_api_client.cpp
-    src/RawrXD_PipeClient.cpp
-    src/RawrXD_Renderer_D2D.cpp
-    src/utils/Diagnostics.cpp
-    src/utils/ErrorReporter.cpp
-    src/utils/InferenceSettingsManager.cpp
-    ${COMMON_SOURCES}
-)
+# No find_package calls - pure native only
+# No Qt, no Vulkan, no ggml, no external deps
+add_definitions(-DRAWRXD_NO_VULKAN)
 
-# Main Executable
-add_executable(RawrXD ${MAIN_SOURCES})
-target_include_directories(RawrXD PRIVATE src include)
+# Compiler flags for native performance
+if(MSVC)
+    # C/C++ compile flags only (excludes ASM_MASM)
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX,C>:/O2>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/Ob2>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/Oi>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/Ot>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/GL>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/arch:AVX2>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/fp:fast>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/W4>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/WX->
+        $<$<COMPILE_LANGUAGE:CXX,C>:/Zc:__cplusplus>
+        $<$<COMPILE_LANGUAGE:CXX,C>:/permissive->
+        $<$<COMPILE_LANGUAGE:CXX,C>:/Zc:inline>
+    )
 
-# Self Audit Executable
-add_executable(RawrXD_SelfAudit 
-    src/test_self_audit.cpp 
-    src/ide_auditor.cpp
-    src/swarm_orchestrator.cpp 
-    src/chain_of_thought.cpp 
-    src/net/net_impl_win32.cpp
-    ${COMMON_SOURCES}
-)
-target_include_directories(RawrXD_SelfAudit PRIVATE src include)
+    # Windows SDK include paths for cl.exe (UCRT, UM, Shared)
+    set(WIN_SDK_VERSION "10.0.22621.0")
+    set(WIN_SDK_BASE "C:/Program Files (x86)/Windows Kits/10")
+    set(SDK_SHARED_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/shared")
+    set(SDK_UM_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/um")
+    set(SDK_UCRT_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/ucrt")
+    set(SDK_UM_LIB "${WIN_SDK_BASE}/Lib/${WIN_SDK_VERSION}/um/x64")
+    set(SDK_UCRT_LIB "${WIN_SDK_BASE}/Lib/${WIN_SDK_VERSION}/ucrt/x64")
 
-# Linking
-if(MINGW)
-    target_link_libraries(RawrXD PRIVATE Threads::Threads ws2_32 d2d1 dwrite windowscodecs uuid ole32 shlwapi version vulkan-1 z)
-    target_link_libraries(RawrXD_SelfAudit PRIVATE Threads::Threads ws2_32 uuid ole32 shlwapi version vulkan-1 z)
-    
-    target_compile_options(RawrXD PRIVATE -O2 -mavx512f -Wa,-mbig-obj)
-    target_compile_options(RawrXD_SelfAudit PRIVATE -O2 -mavx512f -Wa,-mbig-obj)
-else()
-    target_link_libraries(RawrXD PRIVATE Threads::Threads ws2_32 d2d1 dwrite windowscodecs)
-    target_link_libraries(RawrXD_SelfAudit PRIVATE Threads::Threads ws2_32)
-    
-    target_compile_options(RawrXD PRIVATE /arch:AVX512 /O2 /std:c++20 /EHsc /bigobj)
-    target_link_options(RawrXD PRIVATE /LARGEADDRESSAWARE)
+    # MSVC toolchain include (stdint.h, cstdint, etc.)
+    file(GLOB MSVC_VERSIONS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/*")
+    list(SORT MSVC_VERSIONS ORDER DESCENDING)
+    list(GET MSVC_VERSIONS 0 MSVC_LATEST)
+    set(MSVC_INC "${MSVC_LATEST}/include")
+    set(MSVC_LIB "${MSVC_LATEST}/lib/x64")
+
+    include_directories(SYSTEM "${MSVC_INC}" "${SDK_UCRT_INC}" "${SDK_UM_INC}" "${SDK_SHARED_INC}")
+    link_directories("${MSVC_LIB}" "${SDK_UM_LIB}" "${SDK_UCRT_LIB}")
+
+    # MASM-specific flags (ml64 only understands /c, /Fo, /nologo, /W, /Zi)
+    # Use portable discovery for ml64.exe
+    find_program(ML64_EXECUTABLE ml64.exe
+        PATHS
+            "$ENV{VCToolsInstallDir}/bin/Hostx64/x64"
+            "$ENV{VCINSTALLDIR}/Tools/MSVC"
+            "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC"
+            "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC"
+            "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC"
+        PATH_SUFFIXES
+            "bin/Hostx64/x64"
+    )
+    if(NOT ML64_EXECUTABLE)
+        message(FATAL_ERROR "ml64.exe not found. Install Visual Studio 2022 C++ workload with MASM support.")
+    endif()
+    set(CMAKE_ASM_MASM_COMPILER "${ML64_EXECUTABLE}" CACHE FILEPATH "MASM64" FORCE)
+    message(STATUS "Found MASM assembler: ${ML64_EXECUTABLE}")
+    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /nologo /Zi /I\"${SDK_SHARED_INC}\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/src\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/include\"")
+
+    add_link_options(
+        /LTCG                          # Link-time code generation
+        /OPT:REF /OPT:ICF              # Remove dead code, fold identical
+        /SUBSYSTEM:CONSOLE             # Console app for debugging
+    )
 endif()
 
-set_target_properties(RawrXD_SelfAudit PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# Native source files only
+set(NATIVE_SOURCES
+    # Core native loader
+    native/gguf_native_loader.cpp
+
+    # Observability
+    telemetry/async_logger.cpp
+    telemetry/metrics_server.cpp
+
+    # Toolchain integration (MASM64 assembler + linker → IDE)
+    src/compiler/toolchain_bridge.cpp
+    src/compiler/toolchain_bridge_session.cpp
+    src/diagnostics_provider.cpp
+    src/build_task_provider.cpp
+    src/toolchain_integration.cpp
+
+    # Win32IDE Network components
+    ../Win32IDE_NetworkPanel.cpp
+    # Bridge.cpp is #included by NetworkPanel.cpp, not compiled separately
+
+    # Utils - no .cpp files, just headers
+    # config/production_config.hpp - header only
+)
+
+# Include MASM components
+add_subdirectory(src/masm)
+
+# MASM assembly kernels (syntax fixed for ml64)
+set(ASM_SOURCES
+    native_inference/native_q4_kernels.asm
+    RawrXD_NetworkRelay.asm
+    RawrXD_NetworkSniper.asm
+    RawrXD_P2PRelay.asm
+)
+
+set_source_files_properties(${ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+
+# Create library for native components
+add_library(RawrXD_Native STATIC ${NATIVE_SOURCES} ${ASM_SOURCES})
+
+target_include_directories(RawrXD_Native PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/native
+    ${CMAKE_CURRENT_SOURCE_DIR}/telemetry
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/toolchain
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/win32app
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
+    ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/src/win32app
+    ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/include
+)
+
+# Windows native libs only (kernel32, user32, etc. - part of OS)
+target_link_libraries(RawrXD_Native PUBLIC
+    kernel32
+    user32
+    gdi32
+    advapi32
+    shell32
+    ole32
+    ws2_32          # Winsock for HTTP server
+    crypt32         # Cryptography for secure port tokens
+    shlwapi         # Toolchain bridge path utilities
+    masm_components  # MASM tensor engine
+)
+
+# Main executable
+add_executable(RawrXD-Native main_native.cpp)
+target_link_libraries(RawrXD-Native PRIVATE RawrXD_Native)
+
+# Tests - temporarily disabled
+# enable_testing()
+# add_subdirectory(tests/native)
