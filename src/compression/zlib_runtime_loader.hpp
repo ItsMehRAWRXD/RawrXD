@@ -28,7 +28,7 @@ namespace Compression {
 // ZLIB Function Pointer Types
 // ============================================================================
 
-typedef uint32_t (*pfn_zlibVersion)(void);
+typedef const char* (*pfn_zlibVersion)(void);
 typedef int (*pfn_deflateInit2_)(void* strm, int level, int method, int windowBits,
                                   int memLevel, int strategy, const char* version,
                                   int stream_size);
