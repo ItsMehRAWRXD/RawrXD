@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Agent System and Tool Registry Implementation - Complete Summary
 
 ## Executive Summary

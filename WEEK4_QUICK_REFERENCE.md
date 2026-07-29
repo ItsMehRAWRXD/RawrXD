@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 4 QUICK REFERENCE
 
 **115-Test Suite** | **Production-Ready Test Framework**

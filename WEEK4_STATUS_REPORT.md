@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 4 STATUS REPORT
 
 **Comprehensive Test Suite - Production Ready**

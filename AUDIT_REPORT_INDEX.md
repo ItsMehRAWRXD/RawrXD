@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RawrXD IDE - Complete Audit Report Index
 **Generated:** January 28, 2026
 

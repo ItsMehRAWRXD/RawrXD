@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 5: PRODUCTION-READY FINAL INTEGRATION
 
 **The "Boring Enterprise Stuff" That Makes Software Shippable**

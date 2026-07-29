@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RawrXD IDE - Detailed Implementation Gap Analysis
 **File:Line Reference Guide**
 

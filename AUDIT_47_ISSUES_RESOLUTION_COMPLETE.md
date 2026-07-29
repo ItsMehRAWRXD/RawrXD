@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RawrXD AI IDE - 47 Critical Issues Resolution Complete
 
 ## Resolution Summary

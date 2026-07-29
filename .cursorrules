@@ -241,7 +241,6 @@ VS Code Extension → HTTP server (Win32/native) → Business Logic → CreatePr
 1. **Check for `std::cout`**: Replace with `Logger::info()`
 2. **Check for exceptions**: Replace with `std::expected`
 3. **Check for raw pointers**: Replace with smart pointers
-<<<<<<< HEAD
 4. **Check for disallowed UI framework headers**: use StdReplacements / RawrCompatIo and Win32 only
 5. **Check for sync I/O**: Make it async with callbacks
 
