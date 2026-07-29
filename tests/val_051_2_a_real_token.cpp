@@ -103,6 +103,11 @@ std::string computeModelHash(const char* modelPath) {
 // GPU Detection Helper
 #ifdef _WIN32
 #include <windows.h>
+#include <comdef.h>
+#include <Wbemidl.h>
+#pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
 #endif
 
 struct GPUInfo {
