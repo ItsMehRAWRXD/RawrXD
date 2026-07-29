@@ -81,6 +81,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <string>
@@ -1555,6 +1556,8 @@ class Win32IDE
 
     // GGUF Model loader (initialized in constructor) - supports both streaming and standard implementations
     std::unique_ptr<RawrXD::IGGUFLoader> m_ggufLoader;
+    // Thread-safe model path - protects against race between download completion and UI reads
+    mutable std::shared_mutex m_loadedModelPathMutex;
     std::string m_loadedModelPath;
     RawrXD::GGUFMetadata m_currentModelMetadata;
     std::vector<RawrXD::TensorInfo> m_modelTensors;
@@ -2464,6 +2467,12 @@ class Win32IDE
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;
+    
+    // Thread-safe model path accessors
+    void setLoadedModelPath(const std::string& path);
+    void setLoadedModelPath(std::string&& path);
+    std::string getLoadedModelPath() const;
+    void clearLoadedModelPath();
 
     // Agentic mode (Plan/Agent/Ask) — agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);

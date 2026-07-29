@@ -3400,6 +3400,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
+        src/win32app/Win32IDE_Window.cpp
+        src/win32app/IV280Bridge.cpp
+        src/win32app/IMultiFileSearchWidget.cpp
             src/win32app/WindowManager.cpp
             src/win32app/EditorOperations.cpp
             src/win32app/RouterOperations.cpp

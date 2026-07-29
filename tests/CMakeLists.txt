@@ -23,6 +23,44 @@ cmake_minimum_required(VERSION 3.20)
 # Enable testing
 enable_testing()
 
+# ============================================================================
+# Google Test Setup - Use prebuilt from build-master
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/build-master/lib/gtest.lib")
+    # Use prebuilt gtest from build-master
+    add_library(gtest STATIC IMPORTED)
+    set_target_properties(gtest PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/build-master/lib/gtest.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/build-master/_deps/googletest-src/googletest/include"
+    )
+    message(STATUS "  ✓ Using prebuilt gtest from build-master")
+else()
+    find_package(GTest QUIET)
+    if(NOT GTest_FOUND)
+        # Fetch Google Test if not found
+        include(FetchContent)
+        FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG v1.14.0
+        )
+        # For Windows: Prevent overriding the parent project's compiler/linker settings
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(googletest)
+    endif()
+endif()
+
+# ============================================================================
+# Common Test Link Libraries
+# ============================================================================
+set(RAWRXD_TEST_COMMON_LIBS gtest)
+if(WIN32)
+    list(APPEND RAWRXD_TEST_COMMON_LIBS 
+        wintrust    # For WinVerifyTrust
+        crypt32     # For ImageEnumerateCertificates
+    )
+endif()
+
 message(STATUS "========================================")
 message(STATUS "Registering Tests with CTest")
 message(STATUS "========================================")
@@ -75,8 +113,13 @@ endif()
 
 # AI Completions Test
 if(NOT TARGET test_ai_completions AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_ai_completions.cpp")
-    add_executable(test_ai_completions test_ai_completions.cpp ${CMAKE_SOURCE_DIR}/src/cpu_inference_engine.cpp ${CMAKE_SOURCE_DIR}/src/real_time_completion_engine.cpp)
+    add_executable(test_ai_completions test_ai_completions.cpp)
     target_include_directories(test_ai_completions PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_ai_completions PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    # Link against InferenceEngine library if available
+    if(TARGET InferenceEngine)
+        target_link_libraries(test_ai_completions PRIVATE InferenceEngine)
+    endif()
     set_target_properties(test_ai_completions PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_ai_completions COMMAND test_ai_completions)
     message(STATUS "  ✓ Added test_ai_completions")
@@ -105,8 +148,9 @@ endif()
 
 # Voice Processor Test
 if(NOT TARGET test_voice_processor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_voice_processor.cpp")
-    add_executable(test_voice_processor test_voice_processor.cpp ${CMAKE_SOURCE_DIR}/src/test_main.cpp)
+    add_executable(test_voice_processor test_voice_processor.cpp)
     target_include_directories(test_voice_processor PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_voice_processor PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
     set_target_properties(test_voice_processor PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_voice_processor COMMAND test_voice_processor)
     message(STATUS "  ✓ Added test_voice_processor")
@@ -114,8 +158,9 @@ endif()
 
 # Zero Retention Manager Test
 if(NOT TARGET test_zero_retention_manager AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_zero_retention_manager.cpp")
-    add_executable(test_zero_retention_manager test_zero_retention_manager.cpp)
+    add_executable(test_zero_retention_manager test_zero_retention_manager.cpp ${CMAKE_SOURCE_DIR}/src/terminal/zero_retention_manager.cpp)
     target_include_directories(test_zero_retention_manager PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_zero_retention_manager PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
     set_target_properties(test_zero_retention_manager PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_zero_retention_manager COMMAND test_zero_retention_manager)
     message(STATUS "  ✓ Added test_zero_retention_manager")
@@ -182,6 +227,11 @@ endif()
 if(NOT TARGET test_gguf_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_gguf_integration.cpp")
     add_executable(test_gguf_integration test_gguf_integration.cpp)
     target_include_directories(test_gguf_integration PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_gguf_integration PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    # Link against InferenceEngine library if available
+    if(TARGET InferenceEngine)
+        target_link_libraries(test_gguf_integration PRIVATE InferenceEngine)
+    endif()
     set_target_properties(test_gguf_integration PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_gguf_integration COMMAND test_gguf_integration)
     message(STATUS "  ✓ Added test_gguf_integration")

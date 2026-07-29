@@ -62,6 +62,10 @@ class AgenticChatSession
     void SetChatModel(std::string ollamaModelTag);
     const std::string& GetChatModel() const { return m_model; }
 
+    // Tool call limit management
+    int GetMaxToolIterations() const { return m_maxToolIterations; }
+    void SetMaxToolIterations(int maxIterations) { m_maxToolIterations = maxIterations; }
+
     // Main entry: Process user message, potentially through multiple tool turns
     // Callbacks are invoked on the calling thread (assumed to be UI thread)
     // For long-running tools, use the async variant below

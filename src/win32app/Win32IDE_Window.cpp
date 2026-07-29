@@ -19,6 +19,8 @@
 static thread_local int g_onCreateDepth = 0;
 static thread_local int g_onSizeDepth = 0;
 static thread_local int g_handleMessageDepth = 0;
+static thread_local int g_sendMessageDepth = 0;
+static thread_local int g_createWindowDepth = 0;
 
 struct DepthScope {
     int* depth;
@@ -40,6 +42,35 @@ struct DepthScope {
         --(*depth);
     }
 };
+
+// Wrapper to track SendMessage recursion
+static LRESULT TrackSendMessageA(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, const char* context) {
+    ++g_sendMessageDepth;
+    char buf[256];
+    snprintf(buf, sizeof(buf), "[SENDMSG] %s: msg=0x%04X depth=%d\n", context, msg, g_sendMessageDepth);
+    OutputDebugStringA(buf);
+    if (g_sendMessageDepth > 10) {
+        OutputDebugStringA("[SENDMSG] WARNING: Deep SendMessage recursion!\n");
+        __debugbreak();
+    }
+    LRESULT result = SendMessageA(hwnd, msg, wParam, lParam);
+    --g_sendMessageDepth;
+    return result;
+}
+
+static LRESULT TrackSendMessageW(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, const char* context) {
+    ++g_sendMessageDepth;
+    char buf[256];
+    snprintf(buf, sizeof(buf), "[SENDMSG] %s: msg=0x%04X depth=%d\n", context, msg, g_sendMessageDepth);
+    OutputDebugStringA(buf);
+    if (g_sendMessageDepth > 10) {
+        OutputDebugStringA("[SENDMSG] WARNING: Deep SendMessage recursion!\n");
+        __debugbreak();
+    }
+    LRESULT result = SendMessageW(hwnd, msg, wParam, lParam);
+    --g_sendMessageDepth;
+    return result;
+}
 
 bool Win32IDE::createWindow()
 {
@@ -146,6 +177,39 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    // Guard against re-entrancy at the message handler level
+    static thread_local bool s_inHandleMessage = false;
+    static thread_local UINT s_lastMsg = 0;
+    static thread_local int s_msgRecursionCount = 0;
+    
+    if (s_inHandleMessage) {
+        if (uMsg == s_lastMsg) {
+            s_msgRecursionCount++;
+            char buf[256];
+            snprintf(buf, sizeof(buf), "[handleMessage] WARNING: Same message (0x%04X) recursion count=%d\n", 
+                     uMsg, s_msgRecursionCount);
+            OutputDebugStringA(buf);
+            if (s_msgRecursionCount > 5) {
+                OutputDebugStringA("[handleMessage] ERROR: Breaking recursion!\n");
+                return DefWindowProc(hwnd, uMsg, wParam, lParam);
+            }
+        }
+    }
+    
+    s_inHandleMessage = true;
+    s_lastMsg = uMsg;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        int* count;
+        GuardReset(bool* g, int* c) : guard(g), count(c) {}
+        ~GuardReset() { 
+            *guard = false; 
+            if (!*guard) *count = 0;
+        }
+    } guardReset(&s_inHandleMessage, &s_msgRecursionCount);
+    
     DepthScope scope(&g_handleMessageDepth, "Win32IDE::handleMessage");
     switch (uMsg)
     {
@@ -406,6 +470,21 @@ static bool CreatePanelWithSEH(const char* panelName, std::function<void()> crea
 
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Guard against re-entrancy
+    static thread_local bool s_inOnCreate = false;
+    if (s_inOnCreate) {
+        OutputDebugStringA("[onCreate] BLOCKED: Re-entrancy detected!\n");
+        return;
+    }
+    s_inOnCreate = true;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        GuardReset(bool* g) : guard(g) {}
+        ~GuardReset() { *guard = false; }
+    } guardReset(&s_inOnCreate);
+    
     DepthScope scope(&g_onCreateDepth, "Win32IDE::onCreate");
     LOG_INFO("Main Window Created: Initializing UI Components");
     
@@ -489,6 +568,21 @@ void Win32IDE::onDestroy()
 
 void Win32IDE::onSize(int width, int height)
 {
+    // Guard against re-entrancy
+    static thread_local bool s_inOnSize = false;
+    if (s_inOnSize) {
+        OutputDebugStringA("[onSize] BLOCKED: Re-entrancy detected!\n");
+        return;
+    }
+    s_inOnSize = true;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        GuardReset(bool* g) : guard(g) {}
+        ~GuardReset() { *guard = false; }
+    } guardReset(&s_inOnSize);
+    
     DepthScope scope(&g_onSizeDepth, "Win32IDE::onSize");
     // ── Parity-audit: dimension guards ──────────────────────────────────────
     // Clamp to safe minimums so layout arithmetic never produces negatives.

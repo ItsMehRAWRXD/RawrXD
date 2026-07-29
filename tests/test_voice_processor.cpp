@@ -12,3 +12,8 @@ TEST(VoiceProcessorStub, Placeholder) {
     std::cout << "VoiceProcessor unit tests: orchestration/voice_processor not in tree.\n";
     SUCCEED();
 }
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

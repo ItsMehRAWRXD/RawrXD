@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <fstream>
 
 // Forward declare Vulkan types to avoid pulling in vulkan.h
 typedef struct VkInstance_T* VkInstance;
@@ -122,6 +123,9 @@ private:
     static bool createPipeline(VulkanContext& context, const char* shaderPath);
     static bool updateDescriptorSet(VulkanContext& context, VkBuffer_T* buffer0, VkBuffer_T* buffer1, VkBuffer_T* buffer2);
     static uint32_t findMemoryType(const VulkanContext& context, uint32_t typeFilter, uint32_t properties);
+    
+    // Helper: Read SPIR-V binary file
+    static std::vector<char> readFile(const std::string& filename);
 };
 
 } // namespace RawrXD::Agentic::Vulkan

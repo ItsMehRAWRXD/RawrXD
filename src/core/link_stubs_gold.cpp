@@ -341,24 +341,17 @@ extern "C" {
     void asm_hwsynth_shutdown() {}
 }
 
-// AgentSelfHealingOrchestrator stub (global namespace)
-struct SelfHealReport {
-    uint64_t cycleId = 0;
-    uint64_t startTime = 0;
-    uint64_t endTime = 0;
-    size_t bugsDetected = 0;
-    size_t bugsFixed = 0;
-    size_t bugsFailed = 0;
-    size_t patchesVerified = 0;
-    size_t patchesCorrupted = 0;
-    bool rollbackTriggered = false;
-};
+// AgentSelfHealingOrchestrator stub - use actual header
+#include "../agent/agent_self_healing_orchestrator.hpp"
 
-class AgentSelfHealingOrchestrator {
-public:
-    static AgentSelfHealingOrchestrator& instance() {
-        static AgentSelfHealingOrchestrator inst;
-        return inst;
-    }
-    SelfHealReport runHealingCycle() { return {}; }
-};
+AgentSelfHealingOrchestrator::AgentSelfHealingOrchestrator() {}
+AgentSelfHealingOrchestrator::~AgentSelfHealingOrchestrator() {}
+
+AgentSelfHealingOrchestrator& AgentSelfHealingOrchestrator::instance() {
+    static AgentSelfHealingOrchestrator inst;
+    return inst;
+}
+
+SelfHealReport AgentSelfHealingOrchestrator::runHealingCycle() {
+    return SelfHealReport::begin(0);
+}

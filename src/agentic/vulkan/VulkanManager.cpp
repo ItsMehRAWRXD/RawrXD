@@ -605,17 +605,201 @@ bool VulkanManager::createDescriptorPool(VulkanContext& context) {
 bool VulkanManager::createPipeline(VulkanContext& context) {
     if (!context.device) return false;
     
-    // Pipeline creation requires SPIR-V shader module
-    // The compute shader would be loaded from a .spv file or embedded binary
-    // Mark as successfully initialized (pipeline will be created when shader is provided)
-    // Full implementation would load shader from disk:
-    //   1. Read .spv binary
-    //   2. vkCreateShaderModule
-    //   3. vkCreateDescriptorSetLayout
-    //   4. vkCreatePipelineLayout
-    //   5. vkCreateComputePipelines
+    // Load SPIR-V compute shader from disk
+    std::vector<char> shaderCode = readFile("shaders/compute.spv");
+    if (shaderCode.empty()) {
+        // Fallback: try embedded shader path
+        shaderCode = readFile("assets/shaders/default_compute.spv");
+        if (shaderCode.empty()) {
+            printf("[VulkanManager] ERROR: Failed to load compute shader\n");
+            return false;
+        }
+    }
+    
+    // Create shader module
+    VkShaderModuleCreateInfo shaderModuleInfo{};
+    shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    shaderModuleInfo.codeSize = shaderCode.size();
+    shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
+    
+    VkShaderModule computeShaderModule;
+    if (vkCreateShaderModule(context.device, &shaderModuleInfo, nullptr, &computeShaderModule) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create shader module\n");
+        return false;
+    }
+    
+    // Create descriptor set layout for compute bindings
+    // Binding 0: Input buffer (read-only)
+    // Binding 1: Output buffer (write-only)
+    // Binding 2: Uniform buffer (parameters)
+    VkDescriptorSetLayoutBinding bindings[3] = {};
+    
+    bindings[0].binding = 0;
+    bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindings[0].descriptorCount = 1;
+    bindings[0].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    bindings[0].pImmutableSamplers = nullptr;
+    
+    bindings[1].binding = 1;
+    bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    bindings[1].descriptorCount = 1;
+    bindings[1].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    bindings[1].pImmutableSamplers = nullptr;
+    
+    bindings[2].binding = 2;
+    bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    bindings[2].descriptorCount = 1;
+    bindings[2].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    bindings[2].pImmutableSamplers = nullptr;
+    
+    VkDescriptorSetLayoutCreateInfo descriptorLayoutInfo{};
+    descriptorLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    descriptorLayoutInfo.bindingCount = 3;
+    descriptorLayoutInfo.pBindings = bindings;
+    
+    if (vkCreateDescriptorSetLayout(context.device, &descriptorLayoutInfo, nullptr, &context.descriptorSetLayout) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create descriptor set layout\n");
+        vkDestroyShaderModule(context.device, computeShaderModule, nullptr);
+        return false;
+    }
+    
+    // Create pipeline layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.setLayoutCount = 1;
+    pipelineLayoutInfo.pSetLayouts = &context.descriptorSetLayout;
+    pipelineLayoutInfo.pushConstantRangeCount = 0;
+    pipelineLayoutInfo.pPushConstantRanges = nullptr;
+    
+    if (vkCreatePipelineLayout(context.device, &pipelineLayoutInfo, nullptr, &context.pipelineLayout) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create pipeline layout\n");
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        vkDestroyShaderModule(context.device, computeShaderModule, nullptr);
+        return false;
+    }
+    
+    // Create compute pipeline
+    VkPipelineShaderStageCreateInfo shaderStageInfo{};
+    shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    shaderStageInfo.module = computeShaderModule;
+    shaderStageInfo.pName = "main";  // Entry point
+    
+    VkComputePipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.stage = shaderStageInfo;
+    pipelineInfo.layout = context.pipelineLayout;
+    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    pipelineInfo.basePipelineIndex = -1;
+    
+    if (vkCreateComputePipelines(context.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &context.computePipeline) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create compute pipeline\n");
+        vkDestroyPipelineLayout(context.device, context.pipelineLayout, nullptr);
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        vkDestroyShaderModule(context.device, computeShaderModule, nullptr);
+        return false;
+    }
+    
+    // Shader module can be destroyed after pipeline creation
+    vkDestroyShaderModule(context.device, computeShaderModule, nullptr);
+    
+    // Create descriptor pool for allocating descriptor sets
+    VkDescriptorPoolSize poolSizes[3] = {};
+    poolSizes[0].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    poolSizes[0].descriptorCount = 10;
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    poolSizes[1].descriptorCount = 10;
+    poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    poolSizes[2].descriptorCount = 10;
+    
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.maxSets = 10;
+    poolInfo.poolSizeCount = 3;
+    poolInfo.pPoolSizes = poolSizes;
+    
+    if (vkCreateDescriptorPool(context.device, &poolInfo, nullptr, &context.descriptorPool) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create descriptor pool\n");
+        vkDestroyPipeline(context.device, context.computePipeline, nullptr);
+        vkDestroyPipelineLayout(context.device, context.pipelineLayout, nullptr);
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        return false;
+    }
+    
+    // Create command pool for compute operations
+    VkCommandPoolCreateInfo cmdPoolInfo{};
+    cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    cmdPoolInfo.queueFamilyIndex = context.computeQueueFamily;
+    cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    
+    if (vkCreateCommandPool(context.device, &cmdPoolInfo, nullptr, &context.commandPool) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create command pool\n");
+        vkDestroyDescriptorPool(context.device, context.descriptorPool, nullptr);
+        vkDestroyPipeline(context.device, context.computePipeline, nullptr);
+        vkDestroyPipelineLayout(context.device, context.pipelineLayout, nullptr);
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        return false;
+    }
+    
+    // Allocate command buffer
+    VkCommandBufferAllocateInfo cmdAllocInfo{};
+    cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cmdAllocInfo.commandPool = context.commandPool;
+    cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cmdAllocInfo.commandBufferCount = 1;
+    
+    if (vkAllocateCommandBuffers(context.device, &cmdAllocInfo, &context.commandBuffer) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to allocate command buffer\n");
+        vkDestroyCommandPool(context.device, context.commandPool, nullptr);
+        vkDestroyDescriptorPool(context.device, context.descriptorPool, nullptr);
+        vkDestroyPipeline(context.device, context.computePipeline, nullptr);
+        vkDestroyPipelineLayout(context.device, context.pipelineLayout, nullptr);
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        return false;
+    }
+    
+    // Create synchronization primitives
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;  // Start signaled
+    
+    if (vkCreateFence(context.device, &fenceInfo, nullptr, &context.computeFence) != VK_SUCCESS) {
+        printf("[VulkanManager] ERROR: Failed to create fence\n");
+        vkDestroyCommandPool(context.device, context.commandPool, nullptr);
+        vkDestroyDescriptorPool(context.device, context.descriptorPool, nullptr);
+        vkDestroyPipeline(context.device, context.computePipeline, nullptr);
+        vkDestroyPipelineLayout(context.device, context.pipelineLayout, nullptr);
+        vkDestroyDescriptorSetLayout(context.device, context.descriptorSetLayout, nullptr);
+        return false;
+    }
+    
+    printf("[VulkanManager] Compute pipeline created successfully\n");
+    printf("  - Shader module: loaded %zu bytes SPIR-V\n", shaderCode.size());
+    printf("  - Descriptor set layout: 3 bindings\n");
+    printf("  - Pipeline layout: created\n");
+    printf("  - Compute pipeline: ready\n");
+    printf("  - Command pool/buffer: allocated\n");
+    printf("  - Synchronization: fence created\n");
     
     return true;
+}
+
+// Helper function to read SPIR-V binary file
+std::vector<char> VulkanManager::readFile(const std::string& filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+    
+    if (!file.is_open()) {
+        return {};
+    }
+    
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+    
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+    
+    return buffer;
 }
 
 uint32_t VulkanManager::findMemoryType(const VulkanContext& context, uint32_t typeFilter, uint32_t properties) {

@@ -211,6 +211,14 @@ public:
     bool rollbackKernelPatch(const std::string& patchId);
     void emergencyRollbackAllPatches();
     
+    // Tool Call Limit Extension via Hotpatching
+    // Dynamically extends the maximum tool iterations limit at runtime
+    // Returns patch ID on success, empty string on failure
+    std::string extendToolCallLimit(int newMaxIterations);
+    
+    // Get current tool call limit (returns -1 if not patched)
+    int getExtendedToolCallLimit() const;
+    
     // Get feature stats
     const MedusaStats& getMedusaStats() const;
     const WarmupStats& getWarmupStats() const;

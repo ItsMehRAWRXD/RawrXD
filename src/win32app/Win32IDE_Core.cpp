@@ -79,8 +79,9 @@
 // ============================================================================
 static const char* kWindowClassName = "RawrXD_IDE_MainWindow";
 
-// Implemented in src/multi_file_search.cpp (Win32 dialog invoked by MultiFileSearchWidget::show()).
-extern void MultiFileSearchWidget_ShowDialog(void* ctx);
+// Interface includes for proper abstraction
+#include "IV280Bridge.h"
+#include "IMultiFileSearchWidget.h"
 
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
@@ -513,10 +514,13 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     //   - Install/kill poll timer (WM_CREATE/WM_DESTROY)
     //   - Drive token polling (WM_TIMER with IDT_V280_POLL)
     //   - Trigger repaint on WM_V280_GHOST_TEXT
-    int64_t v280_result = V280_UI_WndProc_Hook((void*)hwnd, (uint32_t)uMsg, (uint64_t)wParam, (int64_t)lParam);
-    if (v280_result != 0)
-    {
-        return 0;  // Message consumed by v280 bridge
+    IV280Bridge* v280Bridge = GetV280Bridge();
+    if (v280Bridge) {
+        int64_t v280_result = v280Bridge->WndProcHook((void*)hwnd, (uint32_t)uMsg, (uint64_t)wParam, (int64_t)lParam);
+        if (v280_result != 0)
+        {
+            return 0;  // Message consumed by v280 bridge
+        }
     }
 
     switch (uMsg)
@@ -630,35 +634,53 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             FillRect(hdc, &ps.rcPaint, m_backgroundBrush);
 
             // ── v280 Ghost Text Overlay ──
-            // Render inline completion suggestion (dimmed, italic)
-            if (V280_UI_IsGhostActive())
+            // Render inline completion suggestion (dimmed, italic) at actual caret position
+            IV280Bridge* v280BridgePaint = GetV280Bridge();
+            if (v280BridgePaint && v280BridgePaint->IsGhostActive())
             {
                 char ghost_buf[4096];
-                int ghost_len = V280_UI_GetGhostText(ghost_buf, sizeof(ghost_buf));
-                if (ghost_len > 0)
+                int ghost_len = v280BridgePaint->GetGhostText(ghost_buf, sizeof(ghost_buf));
+                if (ghost_len > 0 && m_hwndEditor && IsWindow(m_hwndEditor))
                 {
-                    // Create ghost text font (italic, same face as editor)
-                    HFONT ghostFont =
-                        CreateFontA(-14, 0, 0, 0, FW_NORMAL,
-                                    TRUE,  // italic
-                                    FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                    CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-                    HFONT oldFont = (HFONT)SelectObject(hdc, ghostFont);
+                    // Get actual caret position from RichEdit
+                    CHARRANGE sel;
+                    SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+                    
+                    // Get the position (in client coordinates) of the cursor
+                    POINTL pt;
+                    LRESULT posResult = SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&pt, sel.cpMin);
+                    
+                    if (posResult == 0)  // Success
+                    {
+                        // Convert client coordinates to window coordinates for painting
+                        POINT screenPt = { pt.x, pt.y };
+                        ClientToScreen(m_hwndEditor, &screenPt);
+                        ScreenToClient(hwnd, &screenPt);
+                        
+                        // Create ghost text font (italic, same face as editor)
+                        HFONT ghostFont =
+                            CreateFontA(-14, 0, 0, 0, FW_NORMAL,
+                                        TRUE,  // italic
+                                        FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+                        HFONT oldFont = (HFONT)SelectObject(hdc, ghostFont);
 
-                    // Ghost text color: dimmed gray (VS Code style)
-                    SetTextColor(hdc, RGB(128, 128, 128));
-                    SetBkMode(hdc, TRANSPARENT);
+                        // Ghost text color: dimmed gray (VS Code style)
+                        SetTextColor(hdc, RGB(128, 128, 128));
+                        SetBkMode(hdc, TRANSPARENT);
 
-                    // Position: after cursor (approximate — real impl uses
-                    // editor caret position from Scintilla/TextBuffer)
-                    RECT ghostRect = ps.rcPaint;
-                    ghostRect.left += 80;  // indent from editor margin
-                    ghostRect.top += 40;   // below toolbar area
+                        // Position at actual cursor location
+                        RECT ghostRect;
+                        ghostRect.left = screenPt.x;
+                        ghostRect.top = screenPt.y;
+                        ghostRect.right = ps.rcPaint.right;
+                        ghostRect.bottom = ps.rcPaint.bottom;
 
-                    DrawTextA(hdc, ghost_buf, ghost_len, &ghostRect, DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
+                        DrawTextA(hdc, ghost_buf, ghost_len, &ghostRect, DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
 
-                    SelectObject(hdc, oldFont);
-                    DeleteObject(ghostFont);
+                        SelectObject(hdc, oldFont);
+                        DeleteObject(ghostFont);
+                    }
                 }
             }
 
@@ -712,28 +734,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     NMMOUSE* pNMMouse = reinterpret_cast<NMMOUSE*>(lParam);
                     handleStatusBarClick(static_cast<int>(pNMMouse->dwItemSpec));
                 }
-                // Output panel tab switch (Output / Errors / Debug / Find Results)
-                if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
-                {
-                    int idx = (int)TabCtrl_GetCurSel(m_hwndOutputTabs);
-                    static const char* outputTabKeys[] = {"Output", "Errors", "Debug", "Find Results"};
-                    if (idx >= 0 && idx < 4)
-                    {
-                        m_activeOutputTab = outputTabKeys[idx];
-                        m_selectedOutputTab = idx;
-                        for (auto& kv : m_outputWindows)
-                        {
-                            ShowWindow(kv.second,
-                                       (kv.first == m_activeOutputTab && m_outputPanelVisible) ? SW_SHOW : SW_HIDE);
-                        }
-                    }
-                }
                 // Output panel tab switch (Output / Errors / Debug / Find Results / Problems)
+                // Combined handler for all 5 tabs - fixes duplicate TCN_SELCHANGE blocks
                 if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
                 {
                     int idx = (int)TabCtrl_GetCurSel(m_hwndOutputTabs);
                     static const char* outputTabKeys[] = {"Output", "Errors", "Debug", "Find Results", "Problems"};
-                    if (idx >= 0 && idx < 5)
+                    constexpr int numTabs = sizeof(outputTabKeys) / sizeof(outputTabKeys[0]);
+                    if (idx >= 0 && idx < numTabs)
                     {
                         m_activeOutputTab = outputTabKeys[idx];
                         m_selectedOutputTab = idx;
@@ -1070,7 +1078,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return 0;
             }
             // Handle Ollama model list update from background thread
-            if (uMsg == WM_APP + 300)
+            // NOTE: Using WM_APP + 310 to avoid collision with WM_MODEL_PROGRESS_UPDATE (WM_APP + 300)
+            if (uMsg == WM_APP + 310)
             {
                 std::vector<std::string>* models = reinterpret_cast<std::vector<std::string>*>(wParam);
                 onOllamaModelsUpdated(models);
@@ -1101,9 +1110,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // (HuggingFace / URL downloads complete, m_loadedModelPath already set)
             if (uMsg == WM_APP + 201)
             {
-                if (!m_loadedModelPath.empty())
+                std::string pathToLoad = getLoadedModelPath();
+                if (!pathToLoad.empty())
                 {
-                    std::string pathToLoad = m_loadedModelPath;
                     appendToOutput("Loading downloaded model: " + pathToLoad + "\n", "Output", OutputSeverity::Info);
                     if (loadGGUFModel(pathToLoad))
                     {
@@ -1952,14 +1961,20 @@ void Win32IDE::initializeEditorSurface()
 
 // ============================================================================
 // getResolvedOllamaModel - Returns Ollama model tag (override, loaded path, or default)
+// Thread-safe: acquires shared lock on m_loadedModelPathMutex
 // ============================================================================
 std::string Win32IDE::getResolvedOllamaModel() const
 {
     if (!m_ollamaModelOverride.empty())
         return m_ollamaModelOverride;
+    
+    // Thread-safe read of m_loadedModelPath
+    std::shared_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
     if (!m_loadedModelPath.empty())
     {
         std::string filename = m_loadedModelPath;
+        lock.unlock();  // Release lock before string manipulation
+        
         size_t pos = filename.find_last_of("/\\");
         if (pos != std::string::npos)
             filename = filename.substr(pos + 1);
@@ -2191,7 +2206,14 @@ void Win32IDE::onCreate(HWND hwnd)
         // Default root: project root if set; else current working directory.
         const std::string root = m_projectRoot.empty() ? std::filesystem::current_path().string() : m_projectRoot;
         m_multiFileSearch->setProjectRoot(root);
-        m_multiFileSearch->setShowCallback(&MultiFileSearchWidget_ShowDialog, m_multiFileSearch);
+        // Use interface abstraction instead of direct extern function
+        IMultiFileSearchWidget* searchWidget = GetMultiFileSearchWidget();
+        if (searchWidget) {
+            m_multiFileSearch->setShowCallback([](void* ctx) {
+                IMultiFileSearchWidget* widget = GetMultiFileSearchWidget();
+                if (widget) widget->ShowDialog();
+            }, m_multiFileSearch);
+        }
     }
     fileTrace("[onCreate] MultiFileSearch done");
     

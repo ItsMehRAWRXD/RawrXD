@@ -4951,7 +4951,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
 
     // Store model info
-    m_loadedModelPath = filepath;
+    setLoadedModelPath(filepath);
     m_currentModelMetadata = m_ggufLoader->GetMetadata();
     m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility
 
@@ -6127,7 +6127,7 @@ bool Win32IDE::ensureAgenticBridgeHasModel(const std::string& path)
         return false;
     if (m_agenticBridge->LoadModel(path))
     {
-        m_loadedModelPath = path;
+        setLoadedModelPath(path);
         return true;
     }
     return false;
@@ -6148,7 +6148,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
     {
         if (m_agenticBridge->LoadModel(filepath))
         {
-            m_loadedModelPath = filepath;
+            setLoadedModelPath(filepath);
             METRICS.gauge("model.loaded", 1.0);
             METRICS.increment("model.load_success");
             appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
@@ -6301,6 +6301,33 @@ void Win32IDE::shutdownInference()
     m_currentInferenceResponse.clear();
 
     appendToOutput("Inference shutdown complete", "Output", OutputSeverity::Info);
+}
+
+// ============================================================================
+// Thread-safe model path accessors
+// ============================================================================
+void Win32IDE::setLoadedModelPath(const std::string& path)
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath = path;
+}
+
+void Win32IDE::setLoadedModelPath(std::string&& path)
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath = std::move(path);
+}
+
+std::string Win32IDE::getLoadedModelPath() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    return m_loadedModelPath;
+}
+
+void Win32IDE::clearLoadedModelPath()
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath.clear();
 }
 
 std::string Win32IDE::generateResponse(const std::string& prompt)
@@ -8364,8 +8391,8 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
         {
             m_agenticBridge->SetModel(resolved.ollama_model_name);
             m_ollamaModelOverride = resolved.ollama_model_name;
-            if (m_loadedModelPath.empty())
-                m_loadedModelPath = resolved.ollama_model_name;
+            if (getLoadedModelPath().empty())
+                setLoadedModelPath(resolved.ollama_model_name);
             appendToOutput("Ollama model set in Agentic Bridge: " + resolved.ollama_model_name + "\n", "Output",
                            OutputSeverity::Info);
             METRICS.increment("model.resolve_success");
@@ -8686,7 +8713,7 @@ void Win32IDE::openModelFromHuggingFace()
                     {
                         // Load on main thread via PostMessage
                         // Store the path and signal the main thread
-                        m_loadedModelPath = localPath;
+                        setLoadedModelPath(localPath);
                         PostMessage(m_hwndMain, WM_APP + 201, 0, 0);  // Signal: load downloaded model
                     }
                     else
@@ -9052,7 +9079,7 @@ void Win32IDE::openModelFromURL()
 
                     if (!localPath.empty())
                     {
-                        m_loadedModelPath = localPath;
+                        setLoadedModelPath(localPath);
                         // Signal main thread to load the model
                         PostMessage(m_hwndMain, WM_APP + 201, 0, 0);
                     }

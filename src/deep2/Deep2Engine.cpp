@@ -1930,6 +1930,96 @@ void Deep2Engine::emergencyRollbackAllPatches() {
 }
 
 // ============================================================================
+// Tool Call Limit Extension via Hotpatching
+// ============================================================================
+
+// Static storage for the extended tool call limit (hotpatched value)
+static int g_extendedToolCallLimit = -1;  // -1 means not patched
+
+// Original limit reference (captured at patch time)
+static int* g_originalToolCallLimitPtr = nullptr;
+
+// The new limit value to apply
+static int g_newToolCallLimitValue = 10;  // Default fallback
+
+// Patch trampoline function - intercepts limit checks
+static int GetToolCallLimit_Patched() {
+    // Return the hotpatched limit if set, otherwise use extended value
+    if (g_extendedToolCallLimit > 0) {
+        return g_extendedToolCallLimit;
+    }
+    return g_newToolCallLimitValue;
+}
+
+std::string Deep2Engine::extendToolCallLimit(int newMaxIterations) {
+    if (newMaxIterations <= 0) {
+        printf("[Deep2Engine] ERROR: Invalid tool call limit: %d (must be > 0)\n", newMaxIterations);
+        return "";
+    }
+    
+    // Store the new limit in our static variable
+    int previousLimit = g_extendedToolCallLimit;
+    g_extendedToolCallLimit = newMaxIterations;
+    g_newToolCallLimitValue = newMaxIterations;
+    
+    // Register a config override patch with the HotPatcher
+    PatchMetadata meta;
+    meta.name = "ToolCallLimitExtension";
+    meta.description = "Extends maximum tool iterations from " + 
+                       std::to_string(previousLimit > 0 ? previousLimit : 10) + 
+                       " to " + std::to_string(newMaxIterations);
+    meta.author = "Deep2Engine::extendToolCallLimit";
+    meta.version = "1.0.0";
+    meta.targetVersion = "1.0.0";
+    meta.type = PatchType::CONFIG_OVERRIDE;
+    meta.createdAt = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    meta.canRollback = true;
+    meta.expectedSpeedup = 0.0f;  // No performance change
+    meta.maxMemoryOverhead = 0;    // No memory overhead
+    
+    // Register as a config override patch
+    std::string patchId = GetHotPatcher().registerConfigOverride(
+        "agentic.max_tool_iterations",
+        std::to_string(newMaxIterations),
+        meta
+    );
+    
+    if (patchId.empty()) {
+        printf("[Deep2Engine] ERROR: Failed to register tool call limit patch\n");
+        g_extendedToolCallLimit = previousLimit;  // Restore previous
+        return "";
+    }
+    
+    // Validate the patch
+    ValidationResult validation = GetHotPatcher().validate(patchId);
+    if (!validation.passed) {
+        printf("[Deep2Engine] ERROR: Tool call limit patch validation failed:\n");
+        for (const auto& err : validation.errors) {
+            printf("  - %s\n", err.c_str());
+        }
+        g_extendedToolCallLimit = previousLimit;  // Restore previous
+        return "";
+    }
+    
+    // Apply the patch
+    if (!GetHotPatcher().apply(patchId)) {
+        printf("[Deep2Engine] ERROR: Failed to apply tool call limit patch\n");
+        g_extendedToolCallLimit = previousLimit;  // Restore previous
+        return "";
+    }
+    
+    printf("[Deep2Engine] Tool call limit extended: %d -> %d (patch: %s)\n",
+           previousLimit > 0 ? previousLimit : 10, newMaxIterations, patchId.c_str());
+    
+    return patchId;
+}
+
+int Deep2Engine::getExtendedToolCallLimit() const {
+    return g_extendedToolCallLimit;
+}
+
+// ============================================================================
 // BigDaddyG Reverse Engine Integration
 // ============================================================================
 

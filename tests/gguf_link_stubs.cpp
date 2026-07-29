@@ -3,6 +3,26 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <vector>
+
+// codec namespace stubs for compression/decompression
+namespace codec {
+    std::vector<uint8_t> deflate(const std::vector<uint8_t>& input, bool* success) {
+        if (success) *success = false;
+        return input;
+    }
+    std::vector<uint8_t> inflate(const std::vector<uint8_t>& input, bool* success) {
+        if (success) *success = false;
+        return input;
+    }
+}
+
+// brutal namespace stub for compression
+namespace brutal {
+    std::vector<uint8_t> compress(const std::vector<uint8_t>& input) {
+        return input;
+    }
+}
 
 // Stub for GGUF loader initialization
 extern "C" int GGUFLoader_Initialize() {

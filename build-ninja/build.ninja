@@ -13552,37 +13552,15 @@ build src\reverse_engineering\reverser_parser.obj | ${cmake_ninja_workdir}src\re
 #############################################
 # Order-only phony target for test_ai_completions
 
-build cmake_object_order_depends_target_test_ai_completions: phony || .
+build cmake_object_order_depends_target_test_ai_completions: phony || cmake_object_order_depends_target_InferenceEngine
 
 build tests\CMakeFiles\test_ai_completions.dir\test_ai_completions.cpp.obj: CXX_COMPILER__test_ai_completions_unscanned_Release D$:\rawrxd\tests\test_ai_completions.cpp || cmake_object_order_depends_target_test_ai_completions
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:ID:\rawrxd\build-master\_deps\googletest-src\googletest\include -external:W0
   OBJECT_DIR = tests\CMakeFiles\test_ai_completions.dir
   OBJECT_FILE_DIR = tests\CMakeFiles\test_ai_completions.dir
-  TARGET_COMPILE_PDB = tests\CMakeFiles\test_ai_completions.dir\
-  TARGET_PDB = tests\test_ai_completions.pdb
-  TARGET_SUPPORT_DIR = tests\CMakeFiles\test_ai_completions.dir
-
-build tests\CMakeFiles\test_ai_completions.dir\__\src\cpu_inference_engine.cpp.obj: CXX_COMPILER__test_ai_completions_unscanned_Release D$:\rawrxd\src\cpu_inference_engine.cpp || cmake_object_order_depends_target_test_ai_completions
-  CONFIG = Release
-  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
-  OBJECT_DIR = tests\CMakeFiles\test_ai_completions.dir
-  OBJECT_FILE_DIR = tests\CMakeFiles\test_ai_completions.dir\__\src
-  TARGET_COMPILE_PDB = tests\CMakeFiles\test_ai_completions.dir\
-  TARGET_PDB = tests\test_ai_completions.pdb
-  TARGET_SUPPORT_DIR = tests\CMakeFiles\test_ai_completions.dir
-
-build tests\CMakeFiles\test_ai_completions.dir\__\src\real_time_completion_engine.cpp.obj: CXX_COMPILER__test_ai_completions_unscanned_Release D$:\rawrxd\src\real_time_completion_engine.cpp || cmake_object_order_depends_target_test_ai_completions
-  CONFIG = Release
-  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
-  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
-  OBJECT_DIR = tests\CMakeFiles\test_ai_completions.dir
-  OBJECT_FILE_DIR = tests\CMakeFiles\test_ai_completions.dir\__\src
   TARGET_COMPILE_PDB = tests\CMakeFiles\test_ai_completions.dir\
   TARGET_PDB = tests\test_ai_completions.pdb
   TARGET_SUPPORT_DIR = tests\CMakeFiles\test_ai_completions.dir
@@ -13595,11 +13573,11 @@ build tests\CMakeFiles\test_ai_completions.dir\__\src\real_time_completion_engin
 #############################################
 # Link the executable tests\test_ai_completions.exe
 
-build tests\test_ai_completions.exe: CXX_EXECUTABLE_LINKER__test_ai_completions_Release tests\CMakeFiles\test_ai_completions.dir\test_ai_completions.cpp.obj tests\CMakeFiles\test_ai_completions.dir\__\src\cpu_inference_engine.cpp.obj tests\CMakeFiles\test_ai_completions.dir\__\src\real_time_completion_engine.cpp.obj
+build tests\test_ai_completions.exe: CXX_EXECUTABLE_LINKER__test_ai_completions_Release tests\CMakeFiles\test_ai_completions.dir\test_ai_completions.cpp.obj | deflate_brutal_masm.obj D$:\rawrxd\build-master\lib\gtest.lib InferenceEngine.lib || InferenceEngine.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = deflate_brutal_masm.obj  D:\rawrxd\build-master\lib\gtest.lib  wintrust.lib  crypt32.lib  InferenceEngine.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = tests\CMakeFiles\test_ai_completions.dir
   POST_BUILD = cd .
@@ -13731,7 +13709,7 @@ build tests\CMakeFiles\test_voice_processor.dir\test_voice_processor.cpp.obj: CX
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:ID:\rawrxd\build-master\_deps\googletest-src\googletest\include -external:W0
   OBJECT_DIR = tests\CMakeFiles\test_voice_processor.dir
   OBJECT_FILE_DIR = tests\CMakeFiles\test_voice_processor.dir
   TARGET_COMPILE_PDB = tests\CMakeFiles\test_voice_processor.dir\
@@ -13746,11 +13724,11 @@ build tests\CMakeFiles\test_voice_processor.dir\test_voice_processor.cpp.obj: CX
 #############################################
 # Link the executable tests\test_voice_processor.exe
 
-build tests\test_voice_processor.exe: CXX_EXECUTABLE_LINKER__test_voice_processor_Release tests\CMakeFiles\test_voice_processor.dir\test_voice_processor.cpp.obj
+build tests\test_voice_processor.exe: CXX_EXECUTABLE_LINKER__test_voice_processor_Release tests\CMakeFiles\test_voice_processor.dir\test_voice_processor.cpp.obj | D$:\rawrxd\build-master\lib\gtest.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = D:\rawrxd\build-master\lib\gtest.lib  wintrust.lib  crypt32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = tests\CMakeFiles\test_voice_processor.dir
   POST_BUILD = cd .
@@ -13774,9 +13752,20 @@ build tests\CMakeFiles\test_zero_retention_manager.dir\test_zero_retention_manag
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:ID:\rawrxd\build-master\_deps\googletest-src\googletest\include -external:W0
   OBJECT_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
   OBJECT_FILE_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
+  TARGET_COMPILE_PDB = tests\CMakeFiles\test_zero_retention_manager.dir\
+  TARGET_PDB = tests\test_zero_retention_manager.pdb
+  TARGET_SUPPORT_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
+
+build tests\CMakeFiles\test_zero_retention_manager.dir\__\src\terminal\zero_retention_manager.cpp.obj: CXX_COMPILER__test_zero_retention_manager_unscanned_Release D$:\rawrxd\src\terminal\zero_retention_manager.cpp || cmake_object_order_depends_target_test_zero_retention_manager
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:ID:\rawrxd\build-master\_deps\googletest-src\googletest\include -external:W0
+  OBJECT_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
+  OBJECT_FILE_DIR = tests\CMakeFiles\test_zero_retention_manager.dir\__\src\terminal
   TARGET_COMPILE_PDB = tests\CMakeFiles\test_zero_retention_manager.dir\
   TARGET_PDB = tests\test_zero_retention_manager.pdb
   TARGET_SUPPORT_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
@@ -13789,11 +13778,11 @@ build tests\CMakeFiles\test_zero_retention_manager.dir\test_zero_retention_manag
 #############################################
 # Link the executable tests\test_zero_retention_manager.exe
 
-build tests\test_zero_retention_manager.exe: CXX_EXECUTABLE_LINKER__test_zero_retention_manager_Release tests\CMakeFiles\test_zero_retention_manager.dir\test_zero_retention_manager.cpp.obj
+build tests\test_zero_retention_manager.exe: CXX_EXECUTABLE_LINKER__test_zero_retention_manager_Release tests\CMakeFiles\test_zero_retention_manager.dir\test_zero_retention_manager.cpp.obj tests\CMakeFiles\test_zero_retention_manager.dir\__\src\terminal\zero_retention_manager.cpp.obj | D$:\rawrxd\build-master\lib\gtest.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = D:\rawrxd\build-master\lib\gtest.lib  wintrust.lib  crypt32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = tests\CMakeFiles\test_zero_retention_manager.dir
   POST_BUILD = cd .
@@ -14069,13 +14058,13 @@ build tests\model_registry_test.exe: CXX_EXECUTABLE_LINKER__model_registry_test_
 #############################################
 # Order-only phony target for test_gguf_integration
 
-build cmake_object_order_depends_target_test_gguf_integration: phony || .
+build cmake_object_order_depends_target_test_gguf_integration: phony || cmake_object_order_depends_target_InferenceEngine
 
 build tests\CMakeFiles\test_gguf_integration.dir\test_gguf_integration.cpp.obj: CXX_COMPILER__test_gguf_integration_unscanned_Release D$:\rawrxd\tests\test_gguf_integration.cpp || cmake_object_order_depends_target_test_gguf_integration
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:ID:\rawrxd\build-master\_deps\googletest-src\googletest\include -external:W0
   OBJECT_DIR = tests\CMakeFiles\test_gguf_integration.dir
   OBJECT_FILE_DIR = tests\CMakeFiles\test_gguf_integration.dir
   TARGET_COMPILE_PDB = tests\CMakeFiles\test_gguf_integration.dir\
@@ -14090,11 +14079,11 @@ build tests\CMakeFiles\test_gguf_integration.dir\test_gguf_integration.cpp.obj: 
 #############################################
 # Link the executable tests\test_gguf_integration.exe
 
-build tests\test_gguf_integration.exe: CXX_EXECUTABLE_LINKER__test_gguf_integration_Release tests\CMakeFiles\test_gguf_integration.dir\test_gguf_integration.cpp.obj
+build tests\test_gguf_integration.exe: CXX_EXECUTABLE_LINKER__test_gguf_integration_Release tests\CMakeFiles\test_gguf_integration.dir\test_gguf_integration.cpp.obj | deflate_brutal_masm.obj D$:\rawrxd\build-master\lib\gtest.lib InferenceEngine.lib || InferenceEngine.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = deflate_brutal_masm.obj  D:\rawrxd\build-master\lib\gtest.lib  wintrust.lib  crypt32.lib  InferenceEngine.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = tests\CMakeFiles\test_gguf_integration.dir
   POST_BUILD = cd .
