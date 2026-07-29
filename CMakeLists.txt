@@ -309,6 +309,39 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# Dual GPU Smoke Test
+# Validates both GPUs are detected and usable
+# =============================================================================
+if(WIN32)
+    add_executable(dual_gpu_smoke_test
+        tests/dual_gpu_smoke_test.cpp
+    )
+    set_target_properties(dual_gpu_smoke_test PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(dual_gpu_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(dual_gpu_smoke_test PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Dual GPU Smoke Test configured")
+endif()
+
+# =============================================================================
 # OMEGA-1 Bridge Test Harness
 # Validates IAT slots 64-75 for self-mutating engine integration
 # =============================================================================
