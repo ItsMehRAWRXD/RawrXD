@@ -9311,6 +9311,12 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 {
                     return 0;  // Ghost text consumed the key
                 }
+                // Ctrl+Space → code completion popup
+                if (wParam == VK_SPACE && (GetKeyState(VK_CONTROL) & 0x8000))
+                {
+                    pThis->triggerCodeCompletion();
+                    return 0;
+                }
                 // Ctrl+Shift+P → command palette
                 if (wParam == 'P' && (GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))
                 {
@@ -9355,6 +9361,14 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->onEditorContentChanged();
+                    
+                    // Trigger completion on trigger characters: . -> ::
+                    wchar_t ch = (wchar_t)wParam;
+                    if (ch == L'.' || ch == L'>' || ch == L':')
+                    {
+                        // Small delay to let the character be inserted
+                        SetTimer(pThis->m_hwndMain, 9999, 50, nullptr);
+                    }
                     return result;
                 }
                 break;

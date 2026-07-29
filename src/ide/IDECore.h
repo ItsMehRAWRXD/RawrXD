@@ -232,6 +232,8 @@ private:
     std::unique_ptr<RawrXD::Agentic::AgenticToolIntegration> toolIntegration_;
     std::unique_ptr<RawrXD::Git::GitIntegration> gitIntegration_;
     std::unique_ptr<RawrXD::Terminal::ANSITerminalRenderer> terminal_;
+    std::unique_ptr<FindReplaceDialog> findDialog_;
+    std::unique_ptr<GitCommitDialog> commitDialog_;
 
     // State
     IDEConfig config_;

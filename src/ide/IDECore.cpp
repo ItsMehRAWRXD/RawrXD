@@ -911,11 +911,71 @@ void IDECore::OnEditPaste() {
 }
 
 void IDECore::OnEditFind() {
-    // TODO: Show find dialog
+    if (!findDialog_) {
+        findDialog_ = std::make_unique<FindReplaceDialog>();
+        findDialog_->Create(hMainWindow_, false);
+        
+        // Set callback
+        findDialog_->SetFindCallback([this](const std::string& text, const FindOptions& opts) {
+            if (editor_) {
+                // Use editor's find functionality
+                bool found = editor_->FindNext(text, opts.caseSensitive, 
+                    opts.direction == FindDirection::Forward);
+                return found;
+            }
+            return false;
+        });
+    } else {
+        findDialog_->Create(hMainWindow_, false);
+    }
+    
+    // Pre-populate with selected text
+    if (editor_) {
+        std::string sel = editor_->GetSelectedText();
+        if (!sel.empty() && sel.find('\n') == std::string::npos) {
+            findDialog_->SetFindText(sel);
+        }
+    }
 }
 
 void IDECore::OnEditReplace() {
-    // TODO: Show replace dialog
+    if (!findDialog_) {
+        findDialog_ = std::make_unique<FindReplaceDialog>();
+    }
+    findDialog_->Create(hMainWindow_, true);
+    
+    // Set callbacks
+    findDialog_->SetFindCallback([this](const std::string& text, const FindOptions& opts) {
+        if (editor_) {
+            return editor_->FindNext(text, opts.caseSensitive, 
+                opts.direction == FindDirection::Forward);
+        }
+        return false;
+    });
+    
+    findDialog_->SetReplaceCallback([this](const std::string& find, const std::string& replace, 
+                                            const FindOptions& opts) {
+        if (editor_) {
+            return editor_->ReplaceAndFindNext(find, replace, opts.caseSensitive);
+        }
+        return false;
+    });
+    
+    findDialog_->SetReplaceAllCallback([this](const std::string& find, const std::string& replace,
+                                                const FindOptions& opts) {
+        if (editor_) {
+            return editor_->ReplaceAll(find, replace, opts.caseSensitive);
+        }
+        return 0;
+    });
+    
+    // Pre-populate with selected text
+    if (editor_) {
+        std::string sel = editor_->GetSelectedText();
+        if (!sel.empty() && sel.find('\n') == std::string::npos) {
+            findDialog_->SetFindText(sel);
+        }
+    }
 }
 
 void IDECore::OnViewToggleLineNumbers() {
@@ -942,11 +1002,14 @@ void IDECore::OnBuildBuild() {
 }
 
 void IDECore::OnBuildRun() {
-    // TODO: Execute run command
+    // Execute the built executable
+    std::string runCmd = config_.lastProjectPath.empty() ? 
+        ".\\build\\RawrXD_IDE.exe" : 
+        config_.lastProjectPath + "\\build\\RawrXD_IDE.exe";
+    ExecuteCommand(runCmd, config_.lastProjectPath);
 }
 
 void IDECore::OnBuildClean() {
-    // TODO: Execute clean command
     ExecuteCommand("cmake --build build --target clean", config_.lastProjectPath);
 }
 
@@ -955,11 +1018,43 @@ void IDECore::OnAIComplete() {
 }
 
 void IDECore::OnAIExplain() {
-    // TODO: Explain selected code
+    if (!editor_) return;
+    
+    std::string selected = editor_->GetSelectedText();
+    if (selected.empty()) {
+        MessageBoxA(hMainWindow_, "Please select code to explain.", "AI Explain",
+                    MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    
+    // Build prompt
+    std::string prompt = "Explain this code:\n\n```\n" + selected + "\n```\n\n";
+    prompt += "Provide a clear explanation of what this code does, including:\n";
+    prompt += "- The purpose of each function/statement\n";
+    prompt += "- Any important algorithms or patterns used\n";
+    prompt += "- Potential edge cases or issues\n";
+    
+    StartGeneration(prompt);
 }
 
 void IDECore::OnAIFix() {
-    // TODO: Fix selected code
+    if (!editor_) return;
+    
+    std::string selected = editor_->GetSelectedText();
+    if (selected.empty()) {
+        MessageBoxA(hMainWindow_, "Please select code to fix.", "AI Fix",
+                    MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    
+    // Build prompt
+    std::string prompt = "Fix any issues in this code:\n\n```\n" + selected + "\n```\n\n";
+    prompt += "Please:\n";
+    prompt += "1. Identify any bugs, security issues, or code smells\n";
+    prompt += "2. Provide the corrected version\n";
+    prompt += "3. Explain what was fixed and why\n";
+    
+    StartGeneration(prompt);
 }
 
 void IDECore::OnAIStop() {
@@ -967,7 +1062,55 @@ void IDECore::OnAIStop() {
 }
 
 void IDECore::OnGitCommit() {
-    // TODO: Show commit dialog
+    if (!gitIntegration_) return;
+    
+    // Get repository status
+    auto files = gitIntegration_->GetStatus();
+    if (files.empty()) {
+        MessageBoxA(hMainWindow_, "No changes to commit.", "Git Commit", 
+                      MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    
+    // Create and show commit dialog
+    commitDialog_ = std::make_unique<GitCommitDialog>();
+    commitDialog_->Create(hMainWindow_);
+    commitDialog_->SetBranchName(gitIntegration_->GetCurrentBranch());
+    
+    // Convert to dialog format
+    std::vector<GitFileStatus> dialogFiles;
+    for (const auto& f : files) {
+        GitFileStatus gfs;
+        gfs.path = f.path;
+        gfs.status = f.status;
+        gfs.staged = f.staged;
+        dialogFiles.push_back(gfs);
+    }
+    commitDialog_->SetFiles(dialogFiles);
+    
+    // Set callbacks
+    commitDialog_->SetStageFileCallback([this](const std::string& path, bool stage) {
+        if (stage) {
+            gitIntegration_->StageFile(path);
+        } else {
+            gitIntegration_->UnstageFile(path);
+        }
+    });
+    
+    commitDialog_->SetGetDiffCallback([this](const std::string& path) {
+        return gitIntegration_->GetDiff(path);
+    });
+    
+    commitDialog_->SetCommitCallback([this](const CommitResult& result) {
+        if (result.amend) {
+            return gitIntegration_->CommitAmend(result.message);
+        } else {
+            return gitIntegration_->Commit(result.message, result.signOff);
+        }
+    });
+    
+    // Show modal
+    commitDialog_->ShowModal();
 }
 
 void IDECore::OnGitPush() {

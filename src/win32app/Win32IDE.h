@@ -1705,6 +1705,13 @@ class Win32IDE
     HACCEL m_hAccel = nullptr;
     void createAcceleratorTable();
 
+    // Window state for settings persistence
+    int m_windowX = CW_USEDEFAULT;
+    int m_windowY = CW_USEDEFAULT;
+    int m_windowWidth = 1280;
+    int m_windowHeight = 720;
+    bool m_windowMaximized = false;
+
     // ── Parity-audit: Visibility Watchdog members ──────────────────────────
     HANDLE m_watchdogThread = nullptr;
     volatile LONG m_watchdogRunning = 0;  // 1 = active, 0 = stop requested
