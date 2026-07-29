@@ -1446,3 +1446,5 @@
 12843	18433	8070582009337803	CMakeFiles/RawrEngine.dir/src/agentic/AgenticNavigator.cpp.obj	c944717839adbe2e
 18480	18621	8070582065685081	CMakeFiles/RawrEngine.dir/src/core/ssot_beacon.cpp.obj	ac34b330289bad9d
 18623	24295	8070582067090709	CMakeFiles/RawrEngine.dir/src/core/native_debugger_engine.cpp.obj	ab6c2b01b35243e1
+55	359	8070582127940598	bin/RawrXD_MultiWindow_Kernel.dll	fae8f3579699e86b
+55	359	8070582127940598	RawrXD_MultiWindow_Kernel.lib	fae8f3579699e86b
