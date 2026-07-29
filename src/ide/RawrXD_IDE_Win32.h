@@ -557,6 +557,9 @@ typedef struct RawrXD_IDE {
 
     /* Debugger Adapter (opaque pointer to C++ object) */
     void*           debuggerAdapter;
+    
+    /* LSP Diagnostics Display (opaque pointer to C++ object) */
+    void*           lspDiagnosticsDisplay;
 
 } RawrXD_IDE;
 

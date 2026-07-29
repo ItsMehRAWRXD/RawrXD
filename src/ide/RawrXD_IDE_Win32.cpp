@@ -24,6 +24,7 @@
 #include "../debug/DebugBridge.hpp"
 #include "SovereignBridge.h"
 #include "SettingsManager.hpp"
+#include "../lsp/LSPDiagnosticsDisplay.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

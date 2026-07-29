@@ -27,6 +27,7 @@
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "../SettingsManager.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
 #include "Win32IDE_IELabels.h"
@@ -1305,6 +1306,32 @@ bool Win32IDE::createWindow()
         OutputDebugStringA("RawrXD: Configuration loading complete\n");
         LOG_INFO("[createWindow] Configuration loading complete");
         fileTrace("[Win32IDE_Core] Configuration loading complete");
+    }
+
+    // ====================================================================
+    // Initialize Settings Manager for persistent preferences
+    // ====================================================================
+    {
+        OutputDebugStringA("RawrXD: Initializing SettingsManager...\n");
+        fileTrace("[Win32IDE_Core] Initializing SettingsManager");
+        if (RawrXD::GetSettings().Initialize()) {
+            OutputDebugStringA("RawrXD: SettingsManager initialized\n");
+            LOG_INFO("[createWindow] SettingsManager initialized");
+            
+            // Apply window state from settings
+            auto windowState = RawrXD::GetSettings().GetWindowState();
+            if (windowState.IsValid()) {
+                // Store for use in window creation
+                m_windowX = windowState.x;
+                m_windowY = windowState.y;
+                m_windowWidth = windowState.width;
+                m_windowHeight = windowState.height;
+                m_windowMaximized = windowState.maximized;
+            }
+        } else {
+            OutputDebugStringA("RawrXD: SettingsManager initialization failed\n");
+            LOG_WARNING("[createWindow] SettingsManager initialization failed");
+        }
     }
 
     // Load RichEdit libraries — need both for RICHEDIT_CLASSA and MSFTEDIT_CLASS
