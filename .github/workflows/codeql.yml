@@ -1,0 +1,75 @@
+# ============================================================================
+# CodeQL Analysis for RawrXD
+# C++ project security scanning
+# ============================================================================
+
+name: "CodeQL Advanced"
+
+on:
+  push:
+    branches: [main, "feature/**", "copilot/**"]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 1 * * 0"  # Weekly on Sunday
+
+jobs:
+  analyze:
+    name: Analyze C/C++
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [cpp]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Ninja
+        shell: pwsh
+        run: |
+          choco install ninja -y --no-progress
+          ninja --version
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: manual
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          mkdir build-codeql -Force
+          cd build-codeql
+          cmake -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DRAWRXD_BUILD_WIN32IDE=OFF `
+            -DRAWRXD_ENABLE_MASM=OFF `
+            ..
+
+      - name: Build for CodeQL
+        shell: pwsh
+        run: |
+          cd build-codeql
+          ninja -j2 RawrXD_Compression RawrEngine 2>&1 | Select-Object -Last 50
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
