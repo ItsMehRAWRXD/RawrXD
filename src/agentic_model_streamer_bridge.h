@@ -312,5 +312,22 @@ private:
 AgenticModelStreamerBridge* GetGlobalAgenticModelStreamer();
 void SetGlobalAgenticModelStreamer(AgenticModelStreamerBridge* bridge);
 
+// ============================================================================
+// Interrupt Flag - Global atomic for stopping generation
+// ============================================================================
+// Usage: Set g_interrupt_flag = true from UI thread to stop generation
+// Check: In token generation loops, check flag and break if set
+extern std::atomic<bool> g_interrupt_flag;
+
+// Convenience function to interrupt ongoing generation
+inline void InterruptGeneration() {
+    g_interrupt_flag.store(true, std::memory_order_release);
+}
+
+// Reset interrupt flag before starting new generation
+inline void ResetInterruptFlag() {
+    g_interrupt_flag.store(false, std::memory_order_release);
+}
+
 } // namespace Agentic
 } // namespace RawrXD

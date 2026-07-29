@@ -1697,6 +1697,10 @@ class Win32IDE
     StartupPhase m_startupPhase = StartupPhase::PreCreate;
     bool allowHeavyInitialization() const { return m_startupPhase >= StartupPhase::ChildrenDeferred; }
 
+    // Accelerator table for keyboard shortcuts
+    HACCEL m_hAccel = nullptr;
+    void createAcceleratorTable();
+
     // ── Parity-audit: Visibility Watchdog members ──────────────────────────
     HANDLE m_watchdogThread = nullptr;
     volatile LONG m_watchdogRunning = 0;  // 1 = active, 0 = stop requested

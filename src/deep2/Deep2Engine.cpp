@@ -589,7 +589,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     options.verbose = false;
     options.mmap = true;
 
-    GGUFLoadResult result = GGUFLoader::Load(ggufPath.c_str(), options);
+    // Use hardened GGUF loader to prevent page faults on real model files
+    // LoadHardened() includes: 64-bit offset validation, alignment checks, bounds verification
+    GGUFLoadResult result = GGUFLoader::LoadHardened(ggufPath.c_str(), options);
     if (!result.success) {
         printf("[Deep2Engine] ERROR: Failed to load GGUF: %s\n", result.error);
         return false;

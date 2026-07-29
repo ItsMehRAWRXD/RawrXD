@@ -167,6 +167,7 @@
 #define IDM_AGENT_VIEW_TOOLS        1904
 #define IDM_AGENT_VIEW_STATUS       1905
 #define IDM_AGENT_STOP              1906
+#define IDM_AI_STOP_GENERATION      1907  /* Stop AI generation (Esc) */
 
 /* Security: 2000-2099 */
 #define IDM_SECURITY_SCAN           2001

@@ -125,10 +125,14 @@ if(NOT TARGET test_ai_completions AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_a
     message(STATUS "  ✓ Added test_ai_completions")
 endif()
 
-# LLM Connectivity Test
+# LLM Connectivity Test - Uses WinHTTP-based client (no curl dependency)
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
-    add_executable(test_llm_connectivity test_llm_connectivity.cpp ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client.cpp)
-    target_include_directories(test_llm_connectivity PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/llm_adapter)
+    add_executable(test_llm_connectivity test_llm_connectivity.cpp 
+        ${CMAKE_SOURCE_DIR}/src/agent/llm_http_client.cpp)
+    target_include_directories(test_llm_connectivity PRIVATE 
+        ${CMAKE_SOURCE_DIR}/include 
+        ${CMAKE_SOURCE_DIR}/src 
+        ${CMAKE_SOURCE_DIR}/src/agent)
     set_target_properties(test_llm_connectivity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     if(WIN32)
         target_link_libraries(test_llm_connectivity PRIVATE ws2_32 winhttp)

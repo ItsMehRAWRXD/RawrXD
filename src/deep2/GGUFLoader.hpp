@@ -21,6 +21,7 @@ namespace Deep2 {
 // GGUF Magic number: "GGUF" in little-endian
 constexpr uint32_t GGUF_MAGIC = 0x46554747;
 constexpr uint32_t GGUF_VERSION = 3;
+constexpr int GGUF_MAX_DIMS = 4;  // Maximum tensor dimensions supported
 
 // GGUF Value types
 enum class GGUFValueType : uint32_t {
@@ -248,6 +249,9 @@ public:
     static const char* GetTypeName(GGMLType type);
     static size_t CalculateTensorSize(const TensorInfo& tensor);
     static bool ValidateFile(const char* filepath, char* error = nullptr);
+    
+    // Hardened version with page fault fixes
+    static GGUFLoadResult LoadHardened(const char* filepath, const GGUFLoadOptions& options);
 
 private:
     static bool ParseHeader(FILE* fp, uint64_t& tensorCount, uint64_t& kvCount);
@@ -257,7 +261,13 @@ private:
                              std::vector<TensorInfo>& tensors,
                              uint64_t& dataOffset, bool verbose);
     static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
-                               uint64_t dataOffset);
+                               uint64_t dataOffset, uint64_t fileSize);
+
+    // Validation
+    static bool ValidateFile(const char* filepath, uint64_t& outFileSize, uint64_t& outDataOffset);
+
+    // Memory management
+    static void FreeTensorData(void* data);
 
     static std::string ReadString(FILE* fp);
     static uint64_t ReadUint64(FILE* fp);

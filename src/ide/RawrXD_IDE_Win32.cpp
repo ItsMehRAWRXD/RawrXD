@@ -23,6 +23,7 @@
 #include "IDE_DebuggerIntegration.h"
 #include "../debug/DebugBridge.hpp"
 #include "SovereignBridge.h"
+#include "SettingsManager.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -308,6 +309,9 @@ BOOL RawrXD_IDE_Init(RawrXD_IDE* ide, HINSTANCE hInst) {
 
     /* Default dark theme */
     RawrXD_IDE_SetDarkTheme(ide);
+
+    /* Load saved settings (overrides defaults) */
+    RawrXD::IDE::LoadSettings(ide);
 
     /* Common controls v6 */
     INITCOMMONCONTROLSEX icc;
@@ -661,6 +665,8 @@ HMENU RawrXD_IDE_CreateMenuBar(RawrXD_IDE* ide) {
     AppendMenuW(hMoE, MF_STRING, IDM_MOE_PROBE,       L"&Probe Metadata");
     AppendMenuW(hMoE, MF_STRING, IDM_MOE_STATUS,       L"&Show Status");
     AppendMenuW(hMoE, MF_SEPARATOR, 0, NULL);
+    AppendMenuW(hMoE, MF_STRING, IDM_AI_STOP_GENERATION, L"&Stop Generation\tEsc");
+    AppendMenuW(hMoE, MF_SEPARATOR, 0, NULL);
     AppendMenuW(hMoE, MF_STRING, IDM_MOE_DEEPSEEK_V3, L"Load &DeepSeek-V3.1 671B");
     AppendMenuW(hMoE, MF_STRING, IDM_MOE_ROUTE_TEST,  L"&Test Expert Routing");
 
@@ -718,6 +724,7 @@ HACCEL RawrXD_IDE_CreateAccelerators(RawrXD_IDE* ide) {
         { FCONTROL | FVIRTKEY,            'E',      IDM_VIEW_FILEBROWSER },
         { FCONTROL | FVIRTKEY,            VK_OEM_3, IDM_VIEW_OUTPUT   },
         { FVIRTKEY,                       VK_F11,   IDM_VIEW_FULLSCREEN },
+        { FVIRTKEY,                       VK_ESCAPE, IDM_AI_STOP_GENERATION }, /* Escape stops AI generation */
     };
     int count = sizeof(accelTable) / sizeof(accelTable[0]);
     return CreateAcceleratorTableW(accelTable, count);
@@ -1335,6 +1342,19 @@ void RawrXD_IDE_OnCommand(RawrXD_IDE* ide, WORD cmdId, WORD notifyCode, HWND hCt
     case IDM_MOE_ROUTE_TEST:
         RawrXD_IDE_OutputAppend(ide, L"[PrometheusMoE] Route test - TODO\r\n");
         break;
+    case IDM_AI_STOP_GENERATION: {
+        /* Stop AI generation - triggers g_interrupt_flag in inference loops */
+        if (ide->pRuntimeBridge) {
+            ide->pRuntimeBridge->CancelGeneration();
+            RawrXD_IDE_OutputAppend(ide, L"[AI] Generation stop requested\r\n");
+        } else if (ide->ghostEngine && ide->ghostEngine->IsGenerating()) {
+            ide->ghostEngine->StopGeneration();
+            RawrXD_IDE_OutputAppend(ide, L"[GhostText] Generation stopped\r\n");
+        } else {
+            RawrXD_IDE_OutputAppend(ide, L"[AI] No active generation to stop\r\n");
+        }
+        break;
+    }
 
     /* ── Build ────────────────────────────────────────────────────────── */
     case IDM_BUILD_BUILD:   RawrXD_IDE_BuildProject(ide);   break;
@@ -3649,6 +3669,9 @@ void RawrXD_IDE_ShowAbout(RawrXD_IDE* ide) {
  * SHUTDOWN
  *=========================================================================*/
 void RawrXD_IDE_Shutdown(RawrXD_IDE* ide) {
+    /* Save settings before shutdown */
+    RawrXD::IDE::SaveSettings(ide);
+
     /* Disconnect IPC */
     RawrXD_IDE_IPCDisconnect(ide);
 

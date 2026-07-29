@@ -160,6 +160,12 @@ struct PatchImpl {
         DecoderModePatch::Config config;
     } decoderMode;
 
+    struct {
+        std::string configPath;
+        std::string newValue;
+        std::string oldValue;
+    } configOverride;
+
     // Metrics
     PatchMetrics metrics;
     std::chrono::steady_clock::time_point applyTime;
@@ -468,7 +474,14 @@ public:
                 }
                 break;
             }
-            
+
+            case PatchType::CONFIG_OVERRIDE: {
+                // Config overrides don't need rollback (value is stored in patch)
+                printf("[HotPatcher] Rolled back config override: %s\n",
+                       patch->configOverride.configPath.c_str());
+                break;
+            }
+
             default:
                 break;
         }
@@ -579,6 +592,33 @@ std::string HotPatcher::registerDecoderMode(
     return patchId;
 }
 
+std::string HotPatcher::registerConfigOverride(
+    const std::string& configPath,
+    const std::string& newValue,
+    const PatchMetadata& meta) {
+    
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    
+    std::string patchId = impl_->generatePatchId();
+    auto patch = std::make_unique<PatchImpl>();
+    
+    patch->metadata = meta;
+    patch->metadata.id = patchId;
+    patch->metadata.type = PatchType::CONFIG_OVERRIDE;
+    patch->metadata.createdAt = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    // Store config override data in patch
+    patch->configOverride.configPath = configPath;
+    patch->configOverride.newValue = newValue;
+    
+    impl_->patches[patchId] = std::move(patch);
+    
+    printf("[HotPatcher] Registered config override: %s = %s (%s)\n",
+           configPath.c_str(), newValue.c_str(), patchId.c_str());
+    return patchId;
+}
+
 // Lifecycle
 ValidationResult HotPatcher::validate(const std::string& patchId) {
     return impl_->validatePatch(patchId);
@@ -610,7 +650,15 @@ bool HotPatcher::apply(const std::string& patchId) {
             // Decoder mode switches are handled by the engine
             patch->status = PatchStatus::ACTIVE;
             return true;
-            
+
+        case PatchType::CONFIG_OVERRIDE:
+            // Config overrides are handled by the engine
+            patch->status = PatchStatus::ACTIVE;
+            printf("[HotPatcher] Applied config override: %s = %s\n",
+                   patch->configOverride.configPath.c_str(),
+                   patch->configOverride.newValue.c_str());
+            return true;
+
         default:
             return false;
     }

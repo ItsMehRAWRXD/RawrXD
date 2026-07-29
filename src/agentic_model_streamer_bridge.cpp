@@ -19,6 +19,9 @@ namespace Agentic {
 // Global singleton instance
 static AgenticModelStreamerBridge* g_globalBridge = nullptr;
 
+// Global interrupt flag for stopping generation
+std::atomic<bool> g_interrupt_flag{false};
+
 AgenticModelStreamerBridge* GetGlobalAgenticModelStreamer() {
     return g_globalBridge;
 }
@@ -524,6 +527,12 @@ std::vector<int32_t> StreamingModelInferenceEngine::Generate(const std::vector<i
     std::vector<int32_t> context = input_tokens;
     
     for (int i = 0; i < max_tokens; ++i) {
+        // Check for interrupt signal (UI Stop button / Ctrl+C)
+        if (g_interrupt_flag.load(std::memory_order_acquire)) {
+            g_interrupt_flag.store(false, std::memory_order_release);
+            break; // Clean exit on interrupt
+        }
+
         // Get logits from model forward pass
         auto logits = Eval(context);
         if (logits.empty()) break;

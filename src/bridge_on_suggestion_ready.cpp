@@ -2,17 +2,13 @@
 // Replaces: bridge_on_suggestion_ready_stub.cpp
 //
 // Provides the Bridge_OnSuggestionReady callback that receives ghost text
-// suggestions from the inference engine. This is the ONLY symbol defined here;
-// Bridge_ClearSuggestion, Bridge_GetSuggestionText, and Bridge_OnSuggestionComplete
-// are provided by bridge_layer.cpp.
+// suggestions from the inference engine. Now delegates to ghost_text_engine.h
+// for thread-safe buffer management.
+//
+// DAY 1: This file now includes ghost_text_engine.h and uses the production
+// implementation instead of being a stub.
 
-#include <windows.h>
-#include <string>
+#include "ghost_text_engine.h"
 
-extern "C" void Bridge_OnSuggestionReady(const wchar_t* text, int len) {
-    (void)text;
-    (void)len;
-    // Production implementation: ghost text suggestion received from inference engine.
-    // The actual UI update is handled by the caller (bridge_layer.cpp) which forwards
-    // decoded text to the editor ghost text renderer.
-}
+// Bridge functions are now implemented in ghost_text_engine.cpp
+// This file exists for backward compatibility with existing build systems
