@@ -22,6 +22,14 @@
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
 #include "resource.h"
+
+// AI Completion System Integration (VAL-063)
+// Forward declarations from ai_completion_real.cpp
+extern "C" {
+    void InitAICompletion();
+    void SetCompletionBackendNative(void* engine_ptr);
+    void ShutdownAICompletion();
+}
 #include <commdlg.h>
 #include <nlohmann/json.hpp>
 #include <psapi.h>
@@ -6243,6 +6251,12 @@ bool Win32IDE::initializeInference()
                 m_nativeEngineLoaded = true;
                 appendToOutput("[AUDIT] ✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
                 OutputDebugStringA("[AUDIT] m_nativeEngineLoaded = TRUE\n");
+                
+                // Wire completion system to native engine (VAL-063)
+                InitAICompletion();
+                SetCompletionBackendNative(static_cast<void*>(engine));
+                appendToOutput("[AUDIT] ✅ AI Completion system wired to native engine.", "Output", OutputSeverity::Info);
+                OutputDebugStringA("[AUDIT] AI Completion system initialized\n");
             }
             else
             {

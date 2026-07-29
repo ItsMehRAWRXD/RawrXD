@@ -6,6 +6,9 @@
 // IDE Output tab)
 // ============================================================================
 
+// AI Completion System forward declaration (VAL-063)
+extern "C" void ShutdownAICompletion();
+
 #include "../../include/agentic_autonomous_config.h"
 #include "../../include/benchmark_menu_widget.hpp"
 #include "../../include/checkpoint_manager.h"
@@ -112,6 +115,10 @@ Win32IDE::~Win32IDE()
     // m_agenticBridge is non-owning; do not call reset() on raw pointers.
     m_agenticBridge = nullptr;
     m_agent.reset();
+    
+    // Shutdown AI Completion system (VAL-063)
+    ShutdownAICompletion();
+    
     m_nativeEngine.reset();
     m_modelResolver.reset();
     m_ggufLoader.reset();
@@ -982,6 +989,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             if (!m_fileModified || promptSaveChanges())
             {
+                // Save window state before closing
+                SaveWindowState();
+                
+                // Shutdown settings manager (saves dirty settings)
+                RawrXD::GetSettings().Shutdown();
+                
                 DestroyWindow(hwnd);
             }
             return 0;

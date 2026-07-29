@@ -385,6 +385,17 @@ BOOL RawrXD_IDE_Init(RawrXD_IDE* ide, HINSTANCE hInst) {
         OutputDebugStringA("[RawrXD] GhostTextEngine initialization failed (runtime may not be available)\n");
     }
 
+    /* Initialize LSP Diagnostics Display */
+    ide->lspDiagnosticsDisplay = new RawrXD::IDE::RichEditDiagnosticsDisplay();
+    if (ide->lspDiagnosticsDisplay) {
+        auto* display = static_cast<RawrXD::IDE::RichEditDiagnosticsDisplay*>(ide->lspDiagnosticsDisplay);
+        if (display->Initialize(ide->hWndEditor)) {
+            OutputDebugStringA("[RawrXD] LSP Diagnostics Display initialized\n");
+        } else {
+            OutputDebugStringA("[RawrXD] LSP Diagnostics Display initialization failed\n");
+        }
+    }
+
     /* Initialize SovereignInferenceBridge */
     SIB_Status sibStatus = SIB_Initialize();
     if (sibStatus == SIB_OK) {
@@ -1541,6 +1552,15 @@ void RawrXD_IDE_OnDestroy(RawrXD_IDE* ide) {
         delete ide->ghostEngine;
         ide->ghostEngine = nullptr;
         OutputDebugStringA("[RawrXD] GhostTextEngine shutdown complete\n");
+    }
+
+    /* Shutdown LSP Diagnostics Display */
+    if (ide->lspDiagnosticsDisplay) {
+        auto* display = static_cast<RawrXD::IDE::RichEditDiagnosticsDisplay*>(ide->lspDiagnosticsDisplay);
+        display->Shutdown();
+        delete display;
+        ide->lspDiagnosticsDisplay = nullptr;
+        OutputDebugStringA("[RawrXD] LSP Diagnostics Display shutdown complete\n");
     }
 
     /* Shutdown Debugger Subsystem */

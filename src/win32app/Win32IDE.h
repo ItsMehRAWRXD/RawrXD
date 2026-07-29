@@ -1179,6 +1179,10 @@ class Win32IDE
     void saveSessionEditorState(nlohmann::json& session);
     void restoreSessionEditorState(const nlohmann::json& session);
     std::string getSessionFilePath() const;
+    
+    // Window State Persistence (SettingsManager)
+    void SaveWindowState();
+    void LoadWindowState();
     /** Writes `performance.vulkanRenderer` to rawrxd.config.json (cwd, else exe dir). */
     void persistPerformanceVulkanRendererToConfig();
 

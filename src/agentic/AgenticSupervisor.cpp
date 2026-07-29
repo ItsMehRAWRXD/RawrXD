@@ -880,13 +880,12 @@ bool ScopedAgenticTask::Execute() {
     return AgenticSupervisor::Instance().GetTaskStatus(taskId_).status == TaskStatus::COMPLETED;
 }
 
-} // namespace Agentic
-
-// TaskComparator implementation - must be in RawrXD::Agentic namespace
+// TaskComparator implementation
 bool AgenticSupervisor::TaskComparator::operator()(const std::string& a, const std::string& b) const {
     // Compare task IDs based on priority (higher priority = lower value in priority_queue)
     // This is a simplified comparison - in production, you'd look up actual task priorities
     return a > b; // Simple string comparison for now (lexicographic)
 }
 
+} // namespace Agentic
 } // namespace RawrXD

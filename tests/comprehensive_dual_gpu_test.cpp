@@ -238,8 +238,9 @@ bool Test_Omega1Engine_DualGPU() {
     
     auto gpus = DetectGPUs();
     
-    // Check if Omega1Engine exists
-    bool omega1Exists = (GetFileAttributesA("d:/rawrxd/build/Omega1Engine.lib") != INVALID_FILE_ATTRIBUTES);
+    // Check if Omega1Engine exists (try both build paths)
+    bool omega1Exists = (GetFileAttributesA("d:/rawrxd/build/Omega1Engine.lib") != INVALID_FILE_ATTRIBUTES) ||
+                        (GetFileAttributesA("d:/rawrxd/build-ninja/Omega1Engine.lib") != INVALID_FILE_ATTRIBUTES);
     TEST_ASSERT("Omega1Engine.lib exists", omega1Exists, "Static library should be built");
     
     if (gpus.size() >= 2) {
@@ -256,8 +257,9 @@ bool Test_CertificationRunner_DualGPU() {
     
     auto gpus = DetectGPUs();
     
-    // Check if CertificationRunner exists
-    bool certExists = (GetFileAttributesA("d:/rawrxd/build/bin/CertificationRunner.exe") != INVALID_FILE_ATTRIBUTES);
+    // Check if CertificationRunner exists (try both build paths)
+    bool certExists = (GetFileAttributesA("d:/rawrxd/build/bin/CertificationRunner.exe") != INVALID_FILE_ATTRIBUTES) ||
+                      (GetFileAttributesA("d:/rawrxd/build-ninja/bin/CertificationRunner.exe") != INVALID_FILE_ATTRIBUTES);
     TEST_ASSERT("CertificationRunner.exe exists", certExists, "Certification runner should be built");
     
     if (gpus.size() >= 2) {
@@ -272,9 +274,12 @@ bool Test_CertificationRunner_DualGPU() {
 bool Test_TestHarnesses_DualGPU() {
     printf("\n[TEST SUITE] Test Harnesses Dual GPU\n");
     
-    bool bridgeExists = (GetFileAttributesA("d:/rawrxd/build/bin/test_omega1_bridge.exe") != INVALID_FILE_ATTRIBUTES);
-    bool psExists = (GetFileAttributesA("d:/rawrxd/build/bin/test_omega1_powershell_runspace.exe") != INVALID_FILE_ATTRIBUTES);
-    bool smokeExists = (GetFileAttributesA("d:/rawrxd/build/bin/dual_gpu_smoke_test.exe") != INVALID_FILE_ATTRIBUTES);
+    bool bridgeExists = (GetFileAttributesA("d:/rawrxd/build/bin/test_omega1_bridge.exe") != INVALID_FILE_ATTRIBUTES) ||
+                        (GetFileAttributesA("d:/rawrxd/build-ninja/bin/test_omega1_bridge.exe") != INVALID_FILE_ATTRIBUTES);
+    bool psExists = (GetFileAttributesA("d:/rawrxd/build/bin/test_omega1_powershell_runspace.exe") != INVALID_FILE_ATTRIBUTES) ||
+                    (GetFileAttributesA("d:/rawrxd/build-ninja/bin/test_omega1_powershell_runspace.exe") != INVALID_FILE_ATTRIBUTES);
+    bool smokeExists = (GetFileAttributesA("d:/rawrxd/build/bin/dual_gpu_smoke_test.exe") != INVALID_FILE_ATTRIBUTES) ||
+                     (GetFileAttributesA("d:/rawrxd/build-ninja/bin/dual_gpu_smoke_test.exe") != INVALID_FILE_ATTRIBUTES);
     
     TEST_ASSERT("test_omega1_bridge.exe exists", bridgeExists, "IAT test harness built");
     TEST_ASSERT("test_omega1_powershell_runspace.exe exists", psExists, "PowerShell test harness built");
@@ -286,7 +291,8 @@ bool Test_TestHarnesses_DualGPU() {
 bool Test_Win32IDE_DualGPU() {
     printf("\n[TEST SUITE] Win32IDE Dual GPU Support\n");
     
-    bool win32ideExists = (GetFileAttributesA("d:/rawrxd/build/bin/RawrXD-Win32IDE.exe") != INVALID_FILE_ATTRIBUTES);
+    bool win32ideExists = (GetFileAttributesA("d:/rawrxd/build/bin/RawrXD-Win32IDE.exe") != INVALID_FILE_ATTRIBUTES) ||
+                          (GetFileAttributesA("d:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.exe") != INVALID_FILE_ATTRIBUTES);
     TEST_ASSERT("RawrXD-Win32IDE.exe exists", win32ideExists, "Win32IDE should be built");
     
     auto gpus = DetectGPUs();

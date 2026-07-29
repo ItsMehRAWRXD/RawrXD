@@ -14,6 +14,7 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
+#include "../SettingsManager.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <shlobj.h>
@@ -423,4 +424,54 @@ void Win32IDE::restoreSessionTheme(const nlohmann::json& session) {
 
     LOG_INFO("Session: restored theme \"" + m_currentTheme.name +
              "\" alpha=" + std::to_string(alpha));
+}
+
+// ============================================================================
+// WINDOW STATE PERSISTENCE (SettingsManager)
+// ============================================================================
+
+void Win32IDE::SaveWindowState() {
+    if (!m_hwndMain || !IsWindow(m_hwndMain)) {
+        return;
+    }
+    
+    // Get window placement
+    WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
+    if (!GetWindowPlacement(m_hwndMain, &wp)) {
+        return;
+    }
+    
+    RawrXD::WindowState state;
+    state.x = wp.rcNormalPosition.left;
+    state.y = wp.rcNormalPosition.top;
+    state.width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+    state.height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+    state.maximized = (wp.showCmd == SW_SHOWMAXIMIZED);
+    state.fullscreen = false;  // Not currently supported
+    
+    RawrXD::GetSettings().SetWindowState(state);
+    LOG_INFO("Window state saved: " + std::to_string(state.width) + "x" + 
+             std::to_string(state.height) + " at (" + std::to_string(state.x) + 
+             "," + std::to_string(state.y) + ")");
+}
+
+void Win32IDE::LoadWindowState() {
+    auto state = RawrXD::GetSettings().GetWindowState();
+    
+    if (!state.IsValid()) {
+        LOG_INFO("No saved window state, using defaults");
+        return;
+    }
+    
+    // Store for use during window creation
+    m_windowX = state.x;
+    m_windowY = state.y;
+    m_windowWidth = state.width;
+    m_windowHeight = state.height;
+    m_windowMaximized = state.maximized;
+    
+    LOG_INFO("Window state loaded: " + std::to_string(state.width) + "x" + 
+             std::to_string(state.height) + " at (" + std::to_string(state.x) + 
+             "," + std::to_string(state.y) + ")" + 
+             (state.maximized ? " [maximized]" : ""));
 }
