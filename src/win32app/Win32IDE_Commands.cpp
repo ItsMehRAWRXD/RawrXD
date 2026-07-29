@@ -1185,6 +1185,11 @@ void Win32IDE::handleViewCommand(int commandId)
             if (m_hwndStatusBar)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "Analyze Script");
             break;
+        case 3014:  // IDM_TOOLS_GGUF_INSPECTOR
+            ShowGGUFInspectorPanel();
+            if (m_hwndStatusBar)
+                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "GGUF Model Inspector");
+            break;
 
         case 3015:  // IDM_TOOLS_LICENSE_CREATOR — full License Creator dialog (Win32IDE_LicenseCreator.cpp)
             showLicenseCreatorDialog();
@@ -14825,4 +14830,11 @@ bool Win32IDE::handleChangeImpactCommand(int commandId)
     }
 
     return true;
+}
+
+// Trigger code completion (Ctrl+Space)
+void Win32IDE::triggerCodeCompletion()
+{
+    // Show command palette as a simple implementation
+    showCommandPalette();
 }

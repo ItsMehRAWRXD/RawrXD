@@ -713,6 +713,7 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_TOOLS_PROFILE_STOP 3011
 #define IDM_TOOLS_PROFILE_RESULTS 3012
 #define IDM_TOOLS_ANALYZE_SCRIPT 3013
+#define IDM_TOOLS_GGUF_INSPECTOR 3014
 
 #define IDM_GIT_STATUS 3020
 #define IDM_GIT_COMMIT 3021
@@ -970,6 +971,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_RESULTS, L"Profile &Results...");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_ANALYZE_SCRIPT, L"&Analyze Script");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_GGUF_INSPECTOR, L"GGUF Model &Inspector");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
 
     // Voice Chat submenu (Unicode — Qt removal / pure Win32)
@@ -1077,6 +1079,25 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_EXPORT_REPORT, L"&Export Report...");
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_QUICK_STATS, L"&Quick Stats");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAuditMenu, L"&Audit");
+
+    // Debug menu (NEW - integrated with NativeDebuggerEngine)
+    HMENU hDebugMenu = CreatePopupMenu();
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_START, L"&Start Debugging\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STOP, L"S&top Debugging\tShift+F5");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_CONTINUE, L"&Continue\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_OVER, L"Step &Over\tF10");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_INTO, L"Step &Into\tF11");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_OUT, L"Step O&ut\tShift+F11");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_TOGGLE_BREAKPOINT, L"Toggle &Breakpoint\tF9");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_CALLSTACK, L"Show &Call Stack");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_VARIABLES, L"Show &Variables");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_WATCH, L"Show &Watch");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_ATTACH, L"&Attach to Process...");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_DETACH, L"&Detach");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hDebugMenu, L"&Debug");
 
     // Git menu
     HMENU hGitMenu = CreatePopupMenu();
@@ -1693,6 +1714,14 @@ void Win32IDE::createEditor(HWND hwnd)
         SetPropW(m_hwndEditor, kEditorWndProp, (HANDLE)this);
         WNDPROC oldEditorProc = (WNDPROC)SetWindowLongPtrW(m_hwndEditor, GWLP_WNDPROC, (LONG_PTR)EditorSubclassProc);
         SetPropW(m_hwndEditor, kEditorProcProp, (HANDLE)oldEditorProc);
+    }
+
+    // Initialize LSP diagnostic overlay (squiggles + hover tooltips)
+    m_lspDiagnosticOverlay = std::make_unique<RawrXD::UI::AnnotationOverlay>(this);
+    if (m_lspDiagnosticOverlay->Initialize(m_hwndEditor)) {
+        LOG_INFO("LSP diagnostic overlay initialized");
+    } else {
+        LOG_ERROR("Failed to initialize LSP diagnostic overlay");
     }
 }
 
@@ -9294,13 +9323,18 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
         {
             case WM_VSCROLL:
             case WM_MOUSEWHEEL:
-                // After scroll, sync line numbers and minimap
+                // After scroll, sync line numbers, minimap, and diagnostic overlay
                 if (oldProc)
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->updateLineNumbers();
                     if (pThis->m_minimapVisible)
                         pThis->updateMinimap();
+                    // Sync LSP diagnostic overlay
+                    if (pThis->m_lspDiagnosticOverlay && pThis->m_lspDiagnosticOverlay->IsInitialized()) {
+                        int scrollPos = (int)SendMessage(hwnd, EM_GETFIRSTVISIBLELINE, 0, 0);
+                        pThis->m_lspDiagnosticOverlay->OnEditorScroll(scrollPos);
+                    }
                     return result;
                 }
                 break;

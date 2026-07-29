@@ -218,6 +218,12 @@ private:
     
     // Internal methods
     void WorkerLoop();
+    
+    // Layer size calculations
+    size_t CalculateLayerWeightSize(uint32_t layer_id) const;
+    size_t CalculateLayerKVCacheSize(uint32_t layer_id) const;
+    uint32_t CalculateGpu0LayerCount() const;
+    uint32_t CalculateGpu1LayerCount() const;
     void PrefetchLoop();
     void EvictionLoop();
     

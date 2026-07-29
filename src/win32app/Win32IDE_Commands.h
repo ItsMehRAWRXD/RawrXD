@@ -412,6 +412,21 @@
 #define IDM_BUILD_CLEAN             10401
 #define IDM_BUILD_REBUILD           10402
 
+// ---- Debug commands (10500–10515) ------------------------------------------
+// routed via handleDebuggerCommand() for the 10500–10599 range
+#define IDM_DEBUG_START             10500
+#define IDM_DEBUG_STOP              10501
+#define IDM_DEBUG_CONTINUE          10502
+#define IDM_DEBUG_STEP_OVER         10503
+#define IDM_DEBUG_STEP_INTO         10504
+#define IDM_DEBUG_STEP_OUT          10505
+#define IDM_DEBUG_TOGGLE_BREAKPOINT 10506
+#define IDM_DEBUG_SHOW_CALLSTACK    10507
+#define IDM_DEBUG_SHOW_VARIABLES    10508
+#define IDM_DEBUG_SHOW_WATCH        10509
+#define IDM_DEBUG_ATTACH            10510
+#define IDM_DEBUG_DETACH            10511
+
 // ---- Custom WM_APP window messages -----------------------------------------
 #define WM_FILE_CHANGED_EXTERNAL        (WM_APP + 200)
 #define WM_GHOST_TEXT_READY             (WM_APP + 400)

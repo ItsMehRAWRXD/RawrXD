@@ -120,6 +120,7 @@ void fileTrace(const char* msg);
 
 #include "Win32IDE_Commands.h"
 #include "Win32IDE_Types.h"
+#include "AnnotationOverlay.h"
 
 // Forward declarations for peek overlay (definition in Win32IDE_PeekOverlay.cpp)
 class PeekOverlayWindow;
@@ -1303,6 +1304,7 @@ class Win32IDE
     void filterCommandPalette(const std::string& query);
     void executeCommandFromPalette(int index);
     void buildCommandRegistry();
+    void triggerCodeCompletion();
     static LRESULT CALLBACK CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK CommandPaletteInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     // Command palette UI handles and data
@@ -1863,6 +1865,9 @@ class Win32IDE
     std::map<std::string, std::vector<InlineAnnotation>>
         m_annotationCache;  // Per-file annotation stash for tab switching
 
+    // LSP Diagnostic Overlay (squiggles + hover tooltips)
+    std::unique_ptr<RawrXD::UI::AnnotationOverlay> m_lspDiagnosticOverlay;
+
     // Clipboard history
     std::vector<std::string> m_clipboardHistory;
     static const size_t MAX_CLIPBOARD_HISTORY = 50;
@@ -2292,6 +2297,34 @@ class Win32IDE
     void scrollPowerShellOutputToBottom();
     static LRESULT CALLBACK PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // ========================================================================
+    // GGUF INSPECTOR PANEL - Deep Model Architecture Analysis
+    // ========================================================================
+    HWND m_hwndGGUFInspectorPanel = nullptr;
+    HWND m_hwndGGUFInspectorTree = nullptr;
+    HWND m_hwndGGUFInspectorDetails = nullptr;
+    HWND m_hwndGGUFInspectorStatus = nullptr;
+    HWND m_hwndGGUFInspectorLoadBtn = nullptr;
+    HWND m_hwndGGUFInspectorExportBtn = nullptr;
+    HWND m_hwndGGUFInspectorAnalyzeBtn = nullptr;
+    HWND m_hwndGGUFInspectorPath = nullptr;
+    std::string m_ggufInspectorCurrentFile;
+    
+    void RegisterGGUFInspectorClass();
+    void ShowGGUFInspectorPanel();
+    void CreateGGUFInspectorPanel();
+    void CreateGGUFInspectorToolbar();
+    void CreateGGUFInspectorTreeView();
+    void CreateGGUFInspectorDetailsView();
+    void HandleGGUFInspectorCommand(int commandId);
+    void OnGGUFInspectorLoad();
+    void OnGGUFInspectorExport();
+    void OnGGUFInspectorAnalyze();
+    void LoadGGUFInspectorFile(const std::string& path);
+    void PopulateGGUFInspectorTree(const std::string& jsonPath);
+    
+    friend LRESULT CALLBACK GGUFInspectorPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    
     // ========================================================================
     // DEBUGGER IMPLEMENTATION
     // ========================================================================

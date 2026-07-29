@@ -1310,23 +1310,33 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
     // Clear old LSP annotations
     clearAllAnnotations("lsp");
 
+    // Clear LSP diagnostic overlay (squiggles)
+    if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized()) {
+        m_lspDiagnosticOverlay->ClearAnnotations();
+    }
+
     auto diags = getDiagnosticsForFile(uri);
     for (const auto& d : diags)
     {
         AnnotationSeverity sev = AnnotationSeverity::Info;
+        RawrXD::UI::DiagnosticSeverity overlaySev = RawrXD::UI::DiagnosticSeverity::Info;
         switch (d.severity)
         {
             case 1:
                 sev = AnnotationSeverity::Error;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Error;
                 break;
             case 2:
                 sev = AnnotationSeverity::Warning;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Warning;
                 break;
             case 3:
                 sev = AnnotationSeverity::Info;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Information;
                 break;
             case 4:
                 sev = AnnotationSeverity::Info;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Hint;
                 break;  // Hint → Info
         }
 
@@ -1337,7 +1347,28 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
         if (!d.source.empty())
             msg += " (" + d.source + ")";
 
+        // Add inline annotation (text after line)
         addAnnotation(d.range.start.line + 1, sev, msg, "lsp");
+
+        // Add to overlay (squiggles + hover tooltip)
+        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized()) {
+            RawrXD::UI::AnnotationItem item;
+            item.line = d.range.start.line;           // 0-based
+            item.startColumn = d.range.start.character;
+            item.endColumn = d.range.end.character;
+            item.severity = overlaySev;
+            item.message = msg;
+            item.code = d.code;
+            item.source = d.source.empty() ? "lsp" : d.source;
+            item.isActive = true;
+            m_lspDiagnosticOverlay->AddAnnotation(item);
+        }
+    }
+
+    // Show the overlay if we have diagnostics
+    if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized() && !diags.empty()) {
+        m_lspDiagnosticOverlay->SetVisible(true);
+        m_lspDiagnosticOverlay->Invalidate();
     }
 }
 

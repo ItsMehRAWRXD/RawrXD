@@ -434,6 +434,23 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# GGUF Inspector Tool
+# Deep model architecture analysis for IDE integration
+# =============================================================================
+if(WIN32)
+    add_executable(gguf_inspector
+        tools/gguf_inspector.cpp
+    )
+    set_target_properties(gguf_inspector PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_compile_features(gguf_inspector PRIVATE cxx_std_20)
+    message(STATUS "GGUF Inspector tool configured")
+endif()
+
+# =============================================================================
 # Comprehensive Dual GPU Test
 # Full validation of multi-GPU inference pipeline
 # =============================================================================
@@ -1824,6 +1841,54 @@ target_compile_definitions(Omega1Engine PRIVATE
 )
 
 set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# =============================================================================
+# RawrXD Compression Library (Zero-Dependency Runtime ZLIB Loader)
+# Replaces ZLIB for checkpoint compression - no build dependencies
+# =============================================================================
+set(RAWRXD_COMPRESSION_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/compression")
+
+# Runtime ZLIB loader sources (zero build dependencies)
+set(RAWRXD_COMPRESSION_SOURCES
+    ${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.cpp
+)
+
+set(RAWRXD_COMPRESSION_HEADERS
+    ${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.hpp
+)
+
+# Create compression library
+add_library(RawrXD_Compression STATIC ${RAWRXD_COMPRESSION_SOURCES})
+target_include_directories(RawrXD_Compression PUBLIC ${RAWRXD_COMPRESSION_DIR})
+
+# Link Windows libraries only (no ZLIB dependency)
+target_link_libraries(RawrXD_Compression PUBLIC
+    kernel32
+    user32
+)
+
+# Also create the MASM compression if available
+set(RAWRXD_COMPRESSION_ASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
+if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
+    # Build MASM compression as additional option
+    set(RAWRXD_COMPRESSION_ASM ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
+    set(RAWRXD_COMPRESSION_OBJ ${CMAKE_BINARY_DIR}/RawrXD_Compression_MASM.obj)
+    
+    add_custom_command(
+        OUTPUT ${RAWRXD_COMPRESSION_OBJ}
+        COMMAND ${CMAKE_ASM_MASM_COMPILER} /c /W3 /nologo /Fo${RAWRXD_COMPRESSION_OBJ} ${RAWRXD_COMPRESSION_ASM}
+        DEPENDS ${RAWRXD_COMPRESSION_ASM}
+        COMMENT "Assembling RawrXD_Compression.asm (MASM)"
+        VERBATIM
+    )
+    
+    add_custom_target(RawrXD_Compression_MASM DEPENDS ${RAWRXD_COMPRESSION_OBJ})
+    add_dependencies(RawrXD_Compression RawrXD_Compression_MASM)
+    
+    target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
+endif()
+
+message(STATUS "✓ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
 
 # =============================================================================
 # Reverse Engineering Suite (sub-module)
@@ -3484,6 +3549,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_Session.cpp
+        src/win32app/Win32IDE_GGUFInspector.cpp
         src/win32app/Win32IDE_FileOps.cpp
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
@@ -3494,6 +3560,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
         src/ide/SovereignSharedMemoryBridge.cpp
+        src/ide/ANSIColorParser.cpp
+        src/ide/FindReplaceDialog.cpp
+        src/ide/GitCommitDialog.cpp
+        src/ide/GitDiffViewer.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_RenamePreview.cpp
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
@@ -4796,7 +4866,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Deep2Engine Integration Test
     add_executable(Deep2Engine_IntegrationTest
-        src/tests/Deep2Engine_IntegrationTest.cpp
+        src/tests/Deep2Engine_IntegrationTest_Minimal.cpp
         src/memory/SequentialBlowoffValve.cpp
         src/inference/OutOfCoreScheduler.cpp
         src/inference/DualGpuPipeline.cpp
@@ -4808,7 +4878,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
         ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
         ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Include)
+        target_link_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Lib)
+        target_link_libraries(Deep2Engine_IntegrationTest PRIVATE vulkan-1)
+    endif()
 
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
     # Replaced broken MASM syntax with portable C++ implementations

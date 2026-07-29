@@ -14,7 +14,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fstream>
-#include <math>
+#include <cmath>
 #include <random>
 
 namespace RawrXD {

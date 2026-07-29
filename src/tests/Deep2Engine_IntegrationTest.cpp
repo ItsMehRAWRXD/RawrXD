@@ -4,18 +4,43 @@
 // Verifies end-to-end inference pipeline for 671B models on dual GPU
 //=============================================================================
 
-#include "../inference/Deep2Engine.hpp"
-#include "../inference/OutOfCoreScheduler.hpp"
-#include "../inference/DualGpuPipeline.hpp"
-#include "../memory/SequentialBlowoffValve.hpp"
-#include "../kernels/VulkanComputeKernels.hpp"
+// Windows headers first with strict controls
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 
+// Standard C++ headers BEFORE any Windows/Vulkan headers
 #include <iostream>
 #include <cassert>
 #include <thread>
 #include <chrono>
 #include <vector>
 #include <random>
+#include <cstdint>
+#include <cstddef>
+#include <string>
+#include <memory>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
+#include <deque>
+#include <queue>
+
+// Now safe to include Windows/Vulkan
+#include <Windows.h>
+
+#include "../inference/Deep2Engine.hpp"
+#include "../inference/OutOfCoreScheduler.hpp"
+#include "../inference/DualGpuPipeline.hpp"
+#include "../memory/SequentialBlowoffValve.hpp"
+
+// Only include Vulkan if available
+#ifdef RAWR_ENABLE_VULKAN
+#include "../kernels/VulkanComputeKernels.hpp"
+#endif
 
 using namespace RawrXD;
 using namespace RawrXD::Inference;
@@ -305,7 +330,7 @@ void TestMemoryPressure() {
     TEST_ASSERT(valve.ShouldBlowOff(Tier::GPU0_R9700), "Should trigger blow-off");
     
     // Trigger emergency eviction
-    valve.TriggerEmergencyEviction(Tier::GPU0_R9700, 50 * 1024 * 1024);
+    valve.EmergencyBlowOff(50 * 1024 * 1024, Tier::GPU0_R9700);
     
     // Cleanup
     for (auto block_id : blocks) {

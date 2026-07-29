@@ -386,52 +386,11 @@ static void LogPanelException(const char* panelName, DWORD exceptionCode, const 
     }
 }
 
-// SEH wrapper for individual panel creation
+// Exception wrapper for individual panel creation (using C++ exceptions only)
 static bool CreatePanelWithSEH(const char* panelName, std::function<void()> createFn, HWND hwnd)
 {
     bool success = false;
-    DWORD exceptionCode = 0;
     
-#if defined(_MSC_VER)
-    __try
-    {
-        createFn();
-        success = true;
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        exceptionCode = GetExceptionCode();
-        
-        // Get exception description
-        const char* exceptionDesc = "Unknown exception";
-        switch (exceptionCode)
-        {
-            case 0xE06D7363: exceptionDesc = "C++ exception (0xE06D7363)"; break;
-            case EXCEPTION_ACCESS_VIOLATION: exceptionDesc = "Access violation"; break;
-            case EXCEPTION_INT_DIVIDE_BY_ZERO: exceptionDesc = "Divide by zero"; break;
-            case EXCEPTION_STACK_OVERFLOW: exceptionDesc = "Stack overflow"; break;
-            case EXCEPTION_ILLEGAL_INSTRUCTION: exceptionDesc = "Illegal instruction"; break;
-            case EXCEPTION_PRIV_INSTRUCTION: exceptionDesc = "Privileged instruction"; break;
-            case EXCEPTION_IN_PAGE_ERROR: exceptionDesc = "In-page error"; break;
-            case EXCEPTION_NONCONTINUABLE_EXCEPTION: exceptionDesc = "Non-continuable exception"; break;
-            case EXCEPTION_INVALID_DISPOSITION: exceptionDesc = "Invalid disposition"; break;
-            case EXCEPTION_GUARD_PAGE: exceptionDesc = "Guard page violation"; break;
-            case EXCEPTION_INVALID_HANDLE: exceptionDesc = "Invalid handle"; break;
-        }
-        
-        LogPanelException(panelName, exceptionCode, exceptionDesc);
-        
-        // Show warning dialog with panel name
-        char msg[512];
-        snprintf(msg, sizeof(msg), 
-                 "Panel '%s' failed to initialize.\n\n"
-                 "Exception: 0x%08lX (%s)\n\n"
-                 "The IDE will continue but this panel may be missing or non-functional.\n\n"
-                 "Error logged to: rawrxd_panel_errors.log",
-                 panelName, exceptionCode, exceptionDesc);
-        MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
-    }
-#else
     try
     {
         createFn();

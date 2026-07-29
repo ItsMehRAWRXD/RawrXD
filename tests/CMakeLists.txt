@@ -273,6 +273,25 @@ if(NOT TARGET deterministic_replay_gate AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
     message(STATUS "  ✓ Added deterministic_replay_gate")
 endif()
 
+# VAL-063: Inference Gateway Certification Harness
+if(NOT TARGET VAL063_InferenceGatewayHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VAL063_InferenceGatewayHarness.cpp")
+    add_executable(VAL063_InferenceGatewayHarness VAL063_InferenceGatewayHarness.cpp)
+    target_include_directories(VAL063_InferenceGatewayHarness PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(VAL063_InferenceGatewayHarness PROPERTIES 
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" 
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE kernel32 user32 psapi)
+    endif()
+    add_test(NAME VAL063_InferenceGatewayHarness COMMAND VAL063_InferenceGatewayHarness)
+    set_tests_properties(VAL063_InferenceGatewayHarness PROPERTIES
+        TIMEOUT 300
+        LABELS "certification;val-063;inference;gateway"
+    )
+    message(STATUS "  ✓ Added VAL063_InferenceGatewayHarness")
+endif()
+
 if(NOT TARGET test_swarm_expert_heatmap_stress AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_swarm_expert_heatmap_stress.cpp")
     add_executable(test_swarm_expert_heatmap_stress
         test_swarm_expert_heatmap_stress.cpp
@@ -565,13 +584,13 @@ if(NOT TARGET sovereign_integrated_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         CXX_STANDARD 20
     )
-    # Link zlib for checkpoint compression (optional)
-    find_package(ZLIB)
-    if(ZLIB_FOUND)
-        target_link_libraries(sovereign_integrated_test PRIVATE ZLIB::ZLIB)
-        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_ZLIB=1)
+    # Link RawrXD compression (zero-dependency x64 MASM)
+    if(TARGET RawrXD_Compression)
+        target_link_libraries(sovereign_integrated_test PRIVATE RawrXD_Compression)
+        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_RAWRXD_COMPRESSION=1)
+        message(STATUS "  ✓ Using RawrXD_Compression for checkpoint compression")
     else()
-        message(WARNING "  ZLIB not found - checkpoint compression disabled")
+        message(WARNING "  RawrXD_Compression not available - checkpoint compression disabled")
     endif()
     add_test(NAME sovereign_integrated_test COMMAND sovereign_integrated_test)
     message(STATUS "  ✓ Added sovereign_integrated_test (Sovereign Burn-in)")

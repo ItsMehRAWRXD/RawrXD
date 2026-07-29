@@ -882,6 +882,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onGhostTextTimer();
                 return 0;
             }
+            if (wParam == 9999)
+            {  // COMPLETION_TRIGGER_TIMER_ID - trigger character completion
+                KillTimer(hwnd, 9999);
+                triggerCodeCompletion();
+                return 0;
+            }
             if (wParam == MODEL_PROGRESS_TIMER_ID)
             {
                 // Poll model progress and update the progress bar UI
@@ -1876,6 +1882,12 @@ void Win32IDE::onSize(int width, int height)
         {
             SetWindowPos(m_hwndAnnotationOverlay, HWND_TOP, editorX, breadcrumbBottom, editorW, editorContentHeight,
                          SWP_NOACTIVATE);
+        }
+
+        // LSP Diagnostic overlay (squiggles + hover tooltips)
+        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized())
+        {
+            m_lspDiagnosticOverlay->OnEditorResize();
         }
 
         // Minimap
@@ -3280,6 +3292,13 @@ void Win32IDE::onDestroy()
     // Save full session state for next launch
     saveSession();
 
+    // Shutdown LSP diagnostic overlay
+    if (m_lspDiagnosticOverlay)
+    {
+        m_lspDiagnosticOverlay->Shutdown();
+        m_lspDiagnosticOverlay.reset();
+    }
+
     // Clean up resources
     if (m_renderer)
     {
@@ -3873,6 +3892,43 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             return;
         case IDM_BUILD_CLEAN:
             runBuildInBackground(m_gitRepoPath, "--target clean");
+            return;
+        // ---- Debug commands (10500-10515) --------------------------------
+        case IDM_DEBUG_START:
+            startDebugging();
+            return;
+        case IDM_DEBUG_STOP:
+            stopDebugging();
+            return;
+        case IDM_DEBUG_CONTINUE:
+            continueExecution();
+            return;
+        case IDM_DEBUG_STEP_OVER:
+            stepOver();
+            return;
+        case IDM_DEBUG_STEP_INTO:
+            stepInto();
+            return;
+        case IDM_DEBUG_STEP_OUT:
+            stepOut();
+            return;
+        case IDM_DEBUG_TOGGLE_BREAKPOINT:
+            // Stub: toggleBreakpointAtCurrentLine();
+            return;
+        case IDM_DEBUG_SHOW_CALLSTACK:
+            // Stub: showCallStack();
+            return;
+        case IDM_DEBUG_SHOW_VARIABLES:
+            // Stub: showVariables();
+            return;
+        case IDM_DEBUG_SHOW_WATCH:
+            // Stub: showWatch();
+            return;
+        case IDM_DEBUG_ATTACH:
+            attachDebugger();
+            return;
+        case IDM_DEBUG_DETACH:
+            detachDebugger();
             return;
         default:
             break;

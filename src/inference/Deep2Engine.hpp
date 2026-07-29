@@ -1,14 +1,45 @@
 #pragma once
+
+// Windows macro pollution prevention
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+// Standard C++ headers FIRST
 #include <cstdint>
 #include <cstddef>
 #include <string>
 #include <memory>
 #include <vector>
 #include <functional>
+#include <chrono>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+#include <deque>
+#include <queue>
 
-// Forward declarations
-struct VkDevice_T; typedef VkDevice_T* VkDevice;
-struct VkQueue_T; typedef VkQueue_T* VkQueue;
+// Vulkan forward declarations (works with or without Vulkan SDK)
+#ifdef RAWR_ENABLE_VULKAN
+    #ifdef _WIN32
+        // Try multiple Vulkan SDK locations
+        #if __has_include(<vulkan/vulkan.h>)
+            #include <vulkan/vulkan.h>
+        #elif __has_include(<C:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>)
+            #include <C:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>
+        #elif __has_include(<D:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>)
+            #include <D:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>
+        #else
+            // Vulkan SDK not found - disable Vulkan support
+            #undef RAWR_ENABLE_VULKAN
+            #define RAWR_ENABLE_VULKAN 0
+        #endif
+    #endif
+#else
+    // Minimal forward declarations when Vulkan is not available
+    typedef struct VkDevice_T* VkDevice;
+    typedef struct VkQueue_T* VkQueue;
+#endif
 
 namespace RawrXD {
 namespace Memory {

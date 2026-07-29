@@ -4,8 +4,45 @@
 #include <vector>
 #include <string>
 
-#ifdef _WIN32
-#include <vulkan/vulkan.h>
+// Vulkan support is optional - define RAWR_ENABLE_VULKAN to enable
+#ifdef RAWR_ENABLE_VULKAN
+    #ifdef _WIN32
+        // Try multiple Vulkan SDK locations
+        #if __has_include(<vulkan/vulkan.h>)
+            #include <vulkan/vulkan.h>
+        #elif __has_include(<C:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>)
+            #include <C:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>
+        #elif __has_include(<D:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>)
+            #include <D:/VulkanSDK/1.4.328.1/Include/vulkan/vulkan.h>
+        #else
+            // Vulkan SDK not found - disable Vulkan support
+            #undef RAWR_ENABLE_VULKAN
+            #define RAWR_ENABLE_VULKAN 0
+        #endif
+    #endif
+#else
+    // Forward declarations for when Vulkan is not available
+    typedef struct VkDevice_T* VkDevice;
+    typedef struct VkQueue_T* VkQueue;
+    typedef struct VkCommandPool_T* VkCommandPool;
+    typedef struct VkCommandBuffer_T* VkCommandBuffer;
+    typedef struct VkBuffer_T* VkBuffer;
+    typedef struct VkDescriptorPool_T* VkDescriptorPool;
+    typedef struct VkDescriptorSet_T* VkDescriptorSet;
+    typedef struct VkPipeline_T* VkPipeline;
+    typedef struct VkPipelineLayout_T* VkPipelineLayout;
+    typedef struct VkShaderModule_T* VkShaderModule;
+    typedef struct VkFence_T* VkFence;
+    typedef struct VkSemaphore_T* VkSemaphore;
+    typedef uint64_t VkDeviceSize;
+    typedef uint32_t VkFlags;
+    typedef VkFlags VkMemoryPropertyFlags;
+    typedef VkFlags VkBufferUsageFlags;
+    typedef VkFlags VkShaderStageFlags;
+    typedef int32_t VkResult;
+    #define VK_SUCCESS 0
+    #define VK_INCOMPLETE 5
+    #define VK_NULL_HANDLE nullptr
 #endif
 
 namespace RawrXD {
