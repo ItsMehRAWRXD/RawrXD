@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #requires -Version 7.0
 <#
 .SYNOPSIS

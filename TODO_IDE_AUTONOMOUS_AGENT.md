@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RawrXD Autonomous IDE Agent - TODO Roadmap
 
 ## 🚀 PHASE 1: CORE INFRASTRUCTURE (HOUR 1)
@@ -43,11 +42,6 @@
 - Infrastructure: 100% (Skeleton & Integration Files Created)
 - Wiring: 25% (Basic glue in place)
 - Self-Healing: 0% (Planned)
-=======
-# RawrXD Autonomous IDE Agent - TODO Roadmap
-
-## 🚀 PHASE 1: CORE INFRASTRUCTURE (HOUR 1)
-- [x] Create `RawrXD_AutonomousCore.hpp` (Task Orchestration Engine)
 - [x] Create `RawrXD_TerminalIntegration.hpp` (Real Win32 Pipes)
 - [x] Create `RawrXD_MultiFileEditor.hpp` (Diff/Edit Engine)
 - [x] Create `RawrXD_MainIntegration.cpp` (The Glue)

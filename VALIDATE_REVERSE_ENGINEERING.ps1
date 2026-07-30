@@ -1,13 +1,13 @@
 #requires -Version 7.0
 <#
 .SYNOPSIS
-<<<<<<< HEAD
     CI-style validation for RawrXD production lane.
 .DESCRIPTION
     - Auto-detects repo root (fallback D:\rawrxd)
     - Builds RawrXD-Win32IDE self_test_gate target
     - Fails if stub sources are linked into RawrXD-Win32IDE
     - Runs RawrXD-Win32IDE --selftest and fails on non-zero exit
+#>
 #>
 
 $ErrorActionPreference = "Stop"

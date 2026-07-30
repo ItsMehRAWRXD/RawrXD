@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #requires -Version 7.0
 <#
 .SYNOPSIS
@@ -12,7 +11,8 @@ param(
     [switch]$RunFullTest
 )
 
-$ProjectRoot = 'd:\lazy init ide'
+$ProjectRoot = 'd:\rawrxd'
+$ErrorActionPreference = 'Stop'
 $ErrorActionPreference = 'Stop'
 
 function Test-BuildScript {

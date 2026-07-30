@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Verify-Build.ps1
 # Comprehensive build verification and validation
 # Checks for Qt dependencies, DLL loading, functionality, and integrity.
