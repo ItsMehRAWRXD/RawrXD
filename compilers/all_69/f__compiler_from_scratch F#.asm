@@ -9,13 +9,13 @@ STD_OUTPUT_HANDLE equ -11
     hStdOut dq 0 
     bytes_written dq 0 
  
-    msg_banner db "Compiler" "1.0"" v", 13, 10 
+    msg_banner db "F# Compiler v1.0", 13, 10 
     msg_banner_len equ $ - msg_banner 
  
-    msg_ready db "[READY] Compiler" "1.0"" initialized", 13, 10 
+    msg_ready db "[READY] F# Compiler v1.0 initialized", 13, 10 
     msg_ready_len equ $ - msg_ready 
  
-    msg_test db "[TEST] PASS - Compiler" "1.0"" operational", 13, 10 
+    msg_test db "[TEST] PASS - F# Compiler v1.0 operational", 13, 10 
     msg_test_len equ $ - msg_test 
  
     msg_exit db "[EXIT] Code 0", 13, 10 
