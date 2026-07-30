@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 4 FINAL HANDOFF
 
 **Comprehensive Test Suite | 115 Tests | Production Ready**

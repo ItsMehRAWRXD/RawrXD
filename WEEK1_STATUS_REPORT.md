@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 1 DELIVERABLE - FINAL STATUS REPORT
 ## Background Thread Infrastructure Implementation Complete
 

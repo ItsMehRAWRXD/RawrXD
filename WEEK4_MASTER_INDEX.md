@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 4 DELIVERABLE - MASTER INDEX
 
 **Comprehensive Test Suite | 115 Tests | Production Ready**

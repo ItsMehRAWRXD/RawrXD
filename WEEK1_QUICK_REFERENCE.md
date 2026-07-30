@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 1 QUICK REFERENCE
 ## Background Thread Infrastructure - API Cheat Sheet
 

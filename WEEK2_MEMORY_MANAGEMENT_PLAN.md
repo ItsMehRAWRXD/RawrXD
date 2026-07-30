@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Week 2: Memory Management Overhaul - Audit & Implementation Plan
 
 ## Executive Summary

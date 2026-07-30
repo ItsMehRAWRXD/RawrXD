@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 1 DELIVERABLE - MASTER INDEX
 ## Background Thread Infrastructure - Complete Project Index
 

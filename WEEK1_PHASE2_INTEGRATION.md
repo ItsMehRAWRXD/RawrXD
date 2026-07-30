@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 1 → PHASE 2-3 INTEGRATION SPECIFICATION
 ## Background Thread Infrastructure Integration Points
 

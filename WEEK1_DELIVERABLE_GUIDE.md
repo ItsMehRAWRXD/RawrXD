@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WEEK 1 DELIVERABLE - Background Thread Infrastructure
 ## Complete Implementation Guide
 
