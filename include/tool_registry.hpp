@@ -1,39 +1,11 @@
-<<<<<<< HEAD
-/**
- * @file tool_registry.hpp
- * @brief Complete tool registry system with full utility, production-ready observability and error handling
- *
- * This module provides:
- * - Centralized tool registration and execution
- * - Comprehensive structured logging with DEBUG/INFO/WARN/ERROR levels
- * - Metrics collection (counters, histograms, gauges)
- * - Distributed tracing hooks for observability
- * - Resource guards and cleanup
- * - Input validation and safety checks
- * - Error recovery strategies
- * - Tool-specific configuration and feature toggles
- * - Timeout and resource limits enforcement
- * - Execution statistics and profiling
- *
- * @author RawrXD Agent Team
- * @version 2.0.0
- * @date 2025-12-12
- */
-
 #pragma once
 
 #include <string>
-#include <memory>
-#include <map>
 #include <vector>
+#include <map>
 #include <functional>
-#include <chrono>
-#include <optional>
 #include <cstdint>
 #include <nlohmann/json.hpp>
-
-#include "logging/logger.h"
-#include "metrics/metrics.h"
 
 using json = nlohmann::json;
 
@@ -1637,4 +1609,4 @@ private:
         std::function<ToolResult()> executeFunc
     );
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

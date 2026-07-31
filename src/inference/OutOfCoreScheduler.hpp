@@ -234,9 +234,6 @@ private:
     void UpdateLayerState(uint32_t layer_id, LayerState new_state);
     LayerState GetLayerState(uint32_t layer_id) const;
     
-    uint32_t CalculateGpu0LayerCount() const;
-    uint32_t CalculateGpu1LayerCount() const;
-    
     bool CanFitInGpu0(size_t bytes) const;
     bool CanFitInGpu1(size_t bytes) const;
     bool CanFitInRam(size_t bytes) const;

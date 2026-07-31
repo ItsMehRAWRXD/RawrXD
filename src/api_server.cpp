@@ -1,21 +1,12 @@
 #include "api_server.h"
-<<<<<<< HEAD
 #include "interactive_shell.h"
 #include "reverse_engineering/RawrDumpBin.hpp"
 #include "reverse_engineering/RawrCompiler.hpp"
 #include "core/rawrxd_state_mmf.hpp"
 #include "diagnostics/self_diagnose.hpp"
 #include "cpu_inference_engine.h"
-#include "cot_response_schema.hpp"
+#include "../include/cot_response_schema.hpp"
 #include "async_logger.hpp"
-=======
-#include "cpu_inference_engine.h"
-#include "agentic_configuration.h"
-#include "autonomous_model_manager.h"
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "Ws2_32.lib")
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -479,7 +470,6 @@ void APIServer::HandlePullRequest(const std::string& request, std::string& respo
 std::string APIServer::GenerateCompletion(const std::string& prompt) {
     try {
         LogApiOperation("DEBUG", "INFERENCE", "Generating completion for prompt (" + std::to_string(prompt.length()) + " chars)");
-<<<<<<< HEAD
         
         if (!app_state_.loaded_model || !app_state_.gpu_context) {
             LogApiOperation("WARN", "INFERENCE", "No model loaded or GPU context unavailable");
@@ -545,22 +535,10 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
             completion = cpuEngine->Detokenize(outputTokens);
         } else {
             completion = "Inference engine not wired - model loaded but no generate() path";
-=======
-
-        auto start = std::chrono::steady_clock::now();
-
-        std::string completion;
-        
-        if (app_state_.inference_engine) {
-             completion = app_state_.inference_engine->infer(prompt);
-        } else {
-             completion = "Error: Inference Engine not available.";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
 
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - start);
-<<<<<<< HEAD
         LogApiOperation("INFO", "INFERENCE", 
             "Completion generated in " + std::to_string(duration.count()) + "ms"
             + " (" + std::to_string(outputTokenCount) + " tokens, "
@@ -579,11 +557,6 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
             mmf.publishModelState(modelState);
         }
         
-=======
-        LogApiOperation("DEBUG", "INFERENCE",
-            "Completion generated in " + std::to_string(duration.count()) + "ms");
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return completion;
 
     } catch (const std::exception& e) {
@@ -594,7 +567,6 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
     try {
         LogApiOperation("DEBUG", "CHAT_INFERENCE", "Generating chat completion for " + std::to_string(messages.size()) + " messages");
         
-<<<<<<< HEAD
         if (!app_state_.loaded_model || !app_state_.gpu_context) {
             LogApiOperation("WARN", "CHAT_INFERENCE", "No model loaded or GPU context unavailable");
 
@@ -657,36 +629,6 @@ std::string APIServer::GenerateCompletion(const std::string& prompt) {
         }
         
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-=======
-        if (!g_TitanCtx) {
-             std::lock_guard<std::mutex> lock(g_TitanMutex);
-             if (!g_TitanCtx) Titan_Initialize(&g_TitanCtx);
-        }
-        
-        if (g_TitanCtx && g_TitanCtx->status == 0) {
-             std::lock_guard<std::mutex> lock(g_TitanMutex);
-             if (app_state_.model_path.empty()) app_state_.model_path = "models/model.gguf";
-             Titan_LoadModel(g_TitanCtx, app_state_.model_path.c_str());
-             app_state_.loaded_model = true;
-        }
-        
-          // Build prompt
-          std::stringstream prompt_ss;
-          for (const auto& msg : messages) {
-               prompt_ss << "<|im_start|>" << msg.role << "\n" << msg.content << "<|im_end|>\n";
-          }
-          prompt_ss << "<|im_start|>assistant\n";
-          
-          auto start = std::chrono::steady_clock::now();
-
-          // Real Inference Call
-          std::string completion = "";
-          if (app_state_.inference_engine) {
-               completion = app_state_.inference_engine->infer(prompt_ss.str());
-          } else {
-               completion = "Error: Inference engine not initialized";
-          }        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             std::chrono::steady_clock::now() - start);
         LogApiOperation("INFO", "CHAT_INFERENCE", 
             "Chat completion generated in " + std::to_string(duration.count()) + "ms"

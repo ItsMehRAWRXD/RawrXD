@@ -7,7 +7,7 @@
 #include <functional>
 #include <nlohmann/json.hpp>
 #include <mutex>
-
+#include <queue>
 #include <chrono>
 
 using json = nlohmann::json;
