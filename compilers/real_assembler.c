@@ -31,6 +31,8 @@ typedef enum {
     OP_JMP,         // jmp addr
     OP_SYSCALL,     // syscall (not on Windows but good to have)
     OP_INT3,        // int3 (breakpoint)
+    OP_INC_R,       // inc reg
+    OP_INC_R32,     // inc r32
     OP_UNKNOWN
 } OpcodeType;
 
@@ -39,7 +41,7 @@ typedef enum {
     REG_RSP, REG_RBP, REG_RSI, REG_RDI,
     REG_R8, REG_R9, REG_R10, REG_R11,
     REG_R12, REG_R13, REG_R14, REG_R15,
-    REG_NONE
+    REG_INVALID
 } Register;
 
 typedef struct {
@@ -154,6 +156,16 @@ Register parse_register(const char* str) {
     if (_stricmp(str, "r13") == 0) return REG_R13;
     if (_stricmp(str, "r14") == 0) return REG_R14;
     if (_stricmp(str, "r15") == 0) return REG_R15;
+    
+    // 32-bit registers (map to same encoding as 64-bit)
+    if (_stricmp(str, "eax") == 0) return REG_RAX;
+    if (_stricmp(str, "ecx") == 0) return REG_RCX;
+    if (_stricmp(str, "edx") == 0) return REG_RDX;
+    if (_stricmp(str, "ebx") == 0) return REG_RBX;
+    if (_stricmp(str, "esp") == 0) return REG_RSP;
+    if (_stricmp(str, "ebp") == 0) return REG_RBP;
+    if (_stricmp(str, "esi") == 0) return REG_RSI;
+    if (_stricmp(str, "edi") == 0) return REG_RDI;
     
     return REG_NONE;
 }
@@ -356,6 +368,17 @@ int parse_instruction(Parser* p, Instruction* instr) {
         instr->dst = parse_register(dst);
         instr->src = parse_register(src);
         instr->type = OP_XOR_RR;
+    } else if (_stricmp(token, "inc") == 0) {
+        char reg[64];
+        if (!get_token(p, reg, sizeof(reg))) return 0;
+        instr->dst = parse_register(reg);
+        // Check if it's a 32-bit register (ends with 'x' for eax, ebx, etc.)
+        size_t reg_len = strlen(reg);
+        if (reg_len == 3 && reg[2] == 'x') {
+            instr->type = OP_INC_R32;
+        } else {
+            instr->type = OP_INC_R;
+        }
     } else if (_stricmp(token, "call") == 0) {
         char target[64];
         if (!get_token(p, target, sizeof(target))) return 0;
@@ -530,6 +553,30 @@ void encode_instruction(CodeBuffer* buf, Instruction* instr, uint32_t current_rv
         case OP_INT3: {
             // int3: CC
             encoding[len++] = 0xCC;
+            break;
+        }
+        
+        case OP_INC_R: {
+            // inc r64: FF /0 (ModR/M: mod=11, reg=0, r/m=reg)
+            // For 64-bit registers, we need REX.W prefix
+            int dst_enc = reg_encoding[instr->dst];
+            
+            // REX.W prefix (0x48) + opcode + ModR/M
+            encoding[len++] = 0x48;
+            encoding[len++] = 0xFF;
+            // ModR/M: mod=11 (register), reg=0 (inc), r/m=dst
+            encoding[len++] = 0xC0 | dst_enc;
+            break;
+        }
+        
+        case OP_INC_R32: {
+            // inc r32: FF /0 (ModR/M: mod=11, reg=0, r/m=reg)
+            // NO REX.W prefix for 32-bit registers
+            int dst_enc = reg_encoding[instr->dst];
+            
+            encoding[len++] = 0xFF;
+            // ModR/M: mod=11 (register), reg=0 (inc), r/m=dst
+            encoding[len++] = 0xC0 | dst_enc;
             break;
         }
         
@@ -758,3 +805,4 @@ int main(int argc, char* argv[]) {
     
     return assemble_file(argv[1], argv[2]);
 }
+

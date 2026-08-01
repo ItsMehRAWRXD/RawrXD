@@ -27,8 +27,6 @@ namespace RawrXD {
 
 namespace CPUInference {
 
-class StreamingGGUFLoader; 
-
 enum class TensorType {
     F32,
     F16,
@@ -99,7 +97,8 @@ public:
     std::map<std::string, std::vector<uint8_t>> m_weight_store;
     float* m_tok_embeddings = nullptr;
     float* m_output_norm = nullptr;
-    uint8_t* m_output_weight = nullptr; 
+    uint8_t* m_output_weight = nullptr;
+    uint8_t* m_output_weight_ptr = nullptr; 
     
     std::unordered_map<std::string, Tensor> m_weights;
 
@@ -128,7 +127,7 @@ public:
     void FeedForward(const float* input, float* output, int layer_idx);
 
 private:
-    std::unique_ptr<StreamingGGUFLoader> m_loader;
+    std::unique_ptr<RawrXD::StreamingGGUFLoader> m_loader;
     std::unique_ptr<::BPETokenizer> m_tokenizer;
     std::shared_ptr<RawrXD::IMemoryPlugin> m_memoryPlugin;
     std::vector<std::shared_ptr<RawrXD::IMemoryPlugin>> m_memoryPlugins;

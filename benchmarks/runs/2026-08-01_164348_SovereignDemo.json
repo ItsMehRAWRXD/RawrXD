@@ -1,0 +1,30 @@
+{
+  "benchmarkRun": {
+    "label": "SovereignDemo",
+    "timestamp": 1785617028918,
+    "date": "2026-08-01T16:43:48",
+    "totalDurationMs": 371.434,
+    "phasesPassed": 7,
+    "phasesTotal": 8,
+    "phases": [
+      {"name":"RawrXD IDE — Create Project","durationMs":59.501,"success":true},
+      {"name":"AI Agent — Generate Game Logic","durationMs":34.628,"success":true},
+      {"name":"Eon-ASM Compiler — Build Native Code","durationMs":42.49,"success":false},
+      {"name":"Sunshine Engine — Load Scene","durationMs":40.718,"success":true},
+      {"name":"MASM Runtime — Execute","durationMs":72.644,"success":true},
+      {"name":"GPU — Render Frame","durationMs":31.863,"success":true},
+      {"name":"Live Metrics — CPU/GPU/Frame Data","durationMs":21.223,"success":true},
+      {"name":"AI Agent — Modify Live Simulation","durationMs":68.333,"success":true}
+    ]
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor",
+    "cores": 16,
+    "logicalProcessors": 16,
+    "totalPhysGB": 63,
+    "availPhysGB": 40,
+    "os": "Windows 6.2",
+    "build": "9200"
+  },
+  "signature": "SOVEREIGN_ENGINE_DEMO_v1"
+}

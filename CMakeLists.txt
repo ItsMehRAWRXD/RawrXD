@@ -359,6 +359,43 @@ else()
     set(RAWR_HAS_MASM FALSE)
     message(STATUS "MASM64 not available (non-MSVC): using C++ fallbacks")
 endif()
+
+# =============================================================================
+# Eon-ASM Compiler System Integration
+# =============================================================================
+# Eon-ASM is a powerful assembly language compiler system for the Eon programming
+# language. It includes a template generator, template engine, and self-contained IDE.
+# Located at: C:/Users/HiH8e/Eon-ASM
+set(EON_ASM_ROOT "C:/Users/HiH8e/Eon-ASM")
+if(EXISTS "${EON_ASM_ROOT}")
+    # Add Eon-ASM include paths for the transpiler/builder/compiler
+    include_directories("${EON_ASM_ROOT}")
+    include_directories("${EON_ASM_ROOT}/compilers")
+    include_directories("${EON_ASM_ROOT}/src")
+    include_directories("${EON_ASM_ROOT}/src/renderer")
+    
+    # Add Eon-ASM compiler sources to the ASM kernel list (if MASM is available)
+    if(MSVC AND EXISTS "${EON_ASM_ROOT}/compilers/eon_lexer.asm")
+        set(EON_ASM_SOURCES
+            "${EON_ASM_ROOT}/compilers/eon_lexer.asm"
+            "${EON_ASM_ROOT}/compilers/eon_template_engine.asm"
+            "${EON_ASM_ROOT}/compilers/eon_template_generator.asm"
+            "${EON_ASM_ROOT}/compilers/test_stubs.asm"
+            "${EON_ASM_ROOT}/compilers/self_contained_compiler_gui.asm"
+        )
+        set_source_files_properties(${EON_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+        list(APPEND ASM_KERNEL_SOURCES ${EON_ASM_SOURCES})
+        message(STATUS "Eon-ASM compiler system integrated: ${EON_ASM_ROOT}")
+    endif()
+    
+    # Define preprocessor macro for Eon-ASM availability
+    add_compile_definitions(RAWRXD_HAS_EON_ASM=1)
+    add_compile_definitions(EON_ASM_ROOT="${EON_ASM_ROOT}")
+    message(STATUS "✓ Eon-ASM compiler system configured: ${EON_ASM_ROOT}")
+else()
+    add_compile_definitions(RAWRXD_HAS_EON_ASM=0)
+    message(STATUS "Eon-ASM not found at ${EON_ASM_ROOT}, skipping integration")
+endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     if(NOT WIN32)
         message(FATAL_ERROR "[ProductionLane] RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON requires WIN32 toolchain/targets.")
@@ -401,8 +438,8 @@ if(RAWR_HAS_MASM)
         src/asm/RawrXD_DualAgent_Orchestrator.asm
         src/asm/RawrXD_DiskRecoveryAgent.asm
         src/asm/disk_recovery_scsi.asm
-        # src/asm/RawrXD-AnalyzerDistiller.asm      # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
-        # src/asm/RawrXD-StreamingOrchestrator.asm  # excluded: ml64 include errors (rawrxd_win64.inc segment nesting)
+        src/asm/RawrXD-AnalyzerDistiller.asm      # FIXED: Added segment initialization before include
+        src/asm/RawrXD-StreamingOrchestrator.asm  # FIXED: Added segment initialization before include
         src/asm/RawrXD_Telemetry_Kernel.asm
         src/asm/RawrXD_Prometheus_Exporter.asm
         src/asm/RawrXD_SelfPatch_Agent.asm
@@ -410,16 +447,16 @@ if(RAWR_HAS_MASM)
         src/asm/feature_dispatch_bridge.asm
         src/asm/gui_dispatch_bridge.asm
         src/asm/VulkanKernel_DispatchRaw.asm
-        # src/asm/RawrXD_CopilotGapCloser.asm   # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/native_speed_kernels.asm      # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/DirectML_Bridge.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Hotpatch_Kernel.asm    # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Snapshot.asm           # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/RawrXD_Pyre_Compute.asm       # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
-        # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
-        # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
-        # src/asm/RawrXD_DualEngine_Pure.asm    # excluded: ml64 errors (operand size mismatch)
+        src/asm/RawrXD_CopilotGapCloser.asm   # FIXED: Already valid, no __real@ issues found
+        src/asm/native_speed_kernels.asm      # FIXED: Already has proper FRAME prologs
+        src/asm/DirectML_Bridge.asm           # FIXED: Added FRAME prolog
+        src/asm/RawrXD_Hotpatch_Kernel.asm    # FIXED: Added FRAME prolog
+        src/asm/RawrXD_Snapshot.asm           # FIXED: Added FRAME prolog
+        src/asm/RawrXD_Pyre_Compute.asm       # FIXED: Added FRAME prolog
+        src/asm/vision_projection_kernel.asm  # FIXED: Replaced __real@ with hex float constants
+        src/asm/quantum_beaconism_backend.asm        # FIXED: Added proper FRAME prologs
+        src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # FIXED: Added FRAME prolog
+        src/asm/RawrXD_DualEngine_Pure.asm    # FIXED: Added explicit operand sizes and FRAME prologs
         src/asm/RawrXD_OverclockGov_Pure.asm
         src/asm/RawrXD_Emitter_v1.asm
         src/asm/RawrXD_IPC_Dispatcher.asm
@@ -427,8 +464,10 @@ if(RAWR_HAS_MASM)
         src/asm/Advanced_Code_Deobfuscator.asm
         src/asm/Code_Pattern_Reconstructor.asm
         src/asm/agentic_deep_thinking_kernels.asm
-        # src/asm/byte_search.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
-        # src/asm/memory_patch.asm  # excluded: duplicate symbols in rawr_engine_link_shims.cpp
+        src/asm/byte_search.asm  # FIXED: Already has RawrXD_ prefix on symbols
+        src/asm/memory_patch.asm  # FIXED: Already has RawrXD_ prefix on symbols
+        src/BareMetal_PE_Writer.asm  # Bare-metal PE writer for compiler bootstrap
+        src/emitter/RawrXD_Emitter_Core.asm  # Core x64 machine code emitter
         # src/x64/rawrxd_quantum_beaconism.asm  # excluded: MASM syntax errors (scaffold file)
         # src/ai/digestion_scanner.asm  # excluded: MASM syntax errors (scaffold file)
         # Previously broken MASM64 syntax now portable C++20 with extern "C" ABI compatibility.
@@ -511,6 +550,7 @@ set(SOURCES
     src/memory_core.cpp
     src/hot_patcher.cpp
     src/cpu_inference_engine.cpp
+    src/cpu_inference_engine_real.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_tokenizer.cpp
@@ -528,6 +568,8 @@ set(SOURCES
     src/compression_interface.cpp
     
     src/engine/gguf_core.cpp
+    src/engine/AIRuntime/AIRuntime.cpp
+    src/engine/AIRuntime/RealGGUFInference.cpp
     src/engine/inference_kernels.cpp
     src/engine/transformer.cpp
     src/engine/bpe_tokenizer.cpp
@@ -536,6 +578,27 @@ set(SOURCES
     src/engine/core_generator.cpp
     src/engine/pyre_compute.cpp
     src/engine/sovereign_engines.cpp
+    
+    # Compiler Infrastructure (RawrIR → x64 → PE)
+    src/RawrXD_Lexer.cpp
+    src/RawrXD_PE_Writer.cpp
+    # src/bootstrap_emitter.c  # Excluded: has its own main()
+    src/compiler/compiler_asm_real.cpp
+    src/compiler/compiler_cpp_real.cpp
+    src/compiler/CompilerRegistry.cpp
+    # src/compiler/TitanJIT_PE.cpp  # Excluded: has its own main()
+    src/compiler/toolchain_bridge.cpp
+    src/compiler/toolchain_bridge_session.cpp
+    src/agentic/SovereignAssembler.cpp
+    
+    # From-Scratch Toolchain (No external deps)
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/asm_lexer.c
+    toolchain/from_scratch/phase1_assembler/asm_parser.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    
+    # AST Parser Infrastructure
+    src/ast_parser/ASTContextProvider.cpp
     
     src/core/execution_scheduler.cpp
     
@@ -1470,6 +1533,8 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reverse_engineering
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_CURRENT_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
 
@@ -1488,6 +1553,10 @@ target_compile_definitions(RawrEngine PRIVATE
     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     # Enable the console entry point in src/main.cpp for RawrEngine.exe.
     RAWRXD_STANDALONE_MAIN=1
+    # Disable main() in PE writer - used as library, not standalone tool
+    RAWRXD_PE_WRITER_NO_MAIN=1
+    # Enable from-scratch toolchain (no external deps)
+    RAWRXD_FROM_SCRATCH_TOOLCHAIN=1
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
     $<$<BOOL:${_RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}>:RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=1>
 )
@@ -4331,6 +4400,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         "${CMAKE_CURRENT_SOURCE_DIR}/Ship"
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
     )
+    # Eon-ASM Compiler System include paths
+    if(EXISTS "C:/Users/HiH8e/Eon-ASM")
+        target_include_directories(RawrXD-Win32IDE PRIVATE
+            "C:/Users/HiH8e/Eon-ASM"
+            "C:/Users/HiH8e/Eon-ASM/compilers"
+            "C:/Users/HiH8e/Eon-ASM/src"
+            "C:/Users/HiH8e/Eon-ASM/src/renderer"
+        )
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_EON_ASM=1)
+        message(STATUS "[Eon-ASM] Win32IDE wired to C:/Users/HiH8e/Eon-ASM")
+    endif()
     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
         target_include_directories(RawrXD-Win32IDE PRIVATE
             "${RAWRXD_INFRA_ROOT}/Headers"
@@ -4898,6 +4978,285 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
 )
+
+# ============================================================================
+# From-Scratch Toolchain Validation Harness
+# Tests: x64_encoder, asm_lexer, asm_parser, coff_writer
+# Build: cmake --build . --target validate-from-scratch
+# Run:   .\bin\validate-from-scratch.exe
+# ============================================================================
+add_executable(validate-from-scratch
+    tests/validate_toolchain_simple.cpp
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+)
+
+set_target_properties(validate-from-scratch PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME validate-from-scratch
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+)
+
+target_include_directories(validate-from-scratch PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_definitions(validate-from-scratch PRIVATE
+    RAWRXD_FROM_SCRATCH_TOOLCHAIN=1
+)
+
+if(MSVC)
+    target_compile_options(validate-from-scratch PRIVATE /W3)
+endif()
+
+# ============================================================================
+# From-Scratch Toolchain COMPREHENSIVE Validation Harness
+# Tests: x64_encoder against MASM reference implementation
+# Build: cmake --build . --target validate-comprehensive
+# Run:   .\bin\validate-comprehensive.exe
+# ============================================================================
+add_executable(validate-comprehensive
+    tests/validate_comprehensive.cpp
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+)
+
+set_target_properties(validate-comprehensive PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME validate-comprehensive
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+)
+
+target_include_directories(validate-comprehensive PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_definitions(validate-comprehensive PRIVATE
+    RAWRXD_FROM_SCRATCH_TOOLCHAIN=1
+)
+
+if(MSVC)
+    target_compile_options(validate-comprehensive PRIVATE /W3)
+endif()
+
+# ============================================================================
+# From-Scratch Toolchain Validation v2 (Categorized Results)
+# ============================================================================
+add_executable(validate-v2
+    tests/validate_v2.cpp
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+)
+set_target_properties(validate-v2 PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(validate-v2 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(validate-v2 PRIVATE /W3)
+endif()
+
+# ============================================================================
+# JIT Execution Tests - Phase 1: Runtime Execution Pipeline
+# Validates that encoded instructions actually execute correctly
+# ============================================================================
+add_executable(test-jit-execution
+    tests/test_jit_execution.cpp
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    toolchain/from_scratch/phase1_assembler/jit_harness.c
+)
+set_target_properties(test-jit-execution PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test-jit-execution PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(test-jit-execution PRIVATE /W3)
+endif()
+
+# ============================================================================
+# Negative Validation Tests - Phase 2: API Hardening
+# Validates that assembler rejects invalid inputs safely
+# ============================================================================
+add_executable(test-negative-validation
+    tests/test_negative_validation.cpp
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    toolchain/from_scratch/phase1_assembler/x64_validate.c
+)
+set_target_properties(test-negative-validation PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(test-negative-validation PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(test-negative-validation PRIVATE /W3)
+endif()
+
+# ============================================================================
+# PE Integration Test - Phase 2B: Encoder → PE Writer Pipeline
+# Generates standalone .exe files from encoded instructions
+# ============================================================================
+add_executable(test-pe-integration
+    tests/test_pe_integration.c
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    toolchain/from_scratch/phase1_assembler/x64_validate.c
+    toolchain/from_scratch/phase2_linker/pe_writer.c
+)
+set_target_properties(test-pe-integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
+)
+target_include_directories(test-pe-integration PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(test-pe-integration PRIVATE /W3)
+endif()
+
+# ============================================================================
+# ABI Integration Test - Phase 3: Win64 Calling Convention
+# Tests Win64 ABI compliance for calling Windows APIs
+# ============================================================================
+add_executable(test-abi-integration
+    tests/test_abi_integration.c
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    toolchain/from_scratch/phase1_assembler/x64_validate.c
+    toolchain/from_scratch/phase1_assembler/x64_abi.c
+    toolchain/from_scratch/phase2_linker/pe_writer.c
+)
+set_target_properties(test-abi-integration PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
+)
+target_include_directories(test-abi-integration PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(test-abi-integration PRIVATE /W3)
+endif()
+
+# ============================================================================
+# MessageBoxA Test - Final Implementation
+# Complete Win64 ABI test with working MessageBoxA
+# ============================================================================
+add_executable(test-messagebox-final
+    tests/test_messagebox_final.c
+    toolchain/from_scratch/phase1_assembler/x64_encoder.c
+    toolchain/from_scratch/phase1_assembler/coff_writer.c
+    toolchain/from_scratch/phase1_assembler/x64_validate.c
+    toolchain/from_scratch/phase2_linker/pe_writer.c
+)
+set_target_properties(test-messagebox-final PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    C_STANDARD 11
+    C_STANDARD_REQUIRED ON
+)
+target_include_directories(test-messagebox-final PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase1_assembler
+    ${CMAKE_SOURCE_DIR}/toolchain/from_scratch/phase2_linker
+    ${CMAKE_SOURCE_DIR}/include
+)
+if(MSVC)
+    target_compile_options(test-messagebox-final PRIVATE /W3)
+endif()
+
+# ============================================================================
+# RawrXD Sovereign Runtime v1.0-ALPHA — INTEGRATED BUILD
+# Maximum Compression: All subsystems wired to real implementations
+# ============================================================================
+# Pipeline: GGUF → Tokenizer → Tensor Runtime → Kernel Registry → Transformer → KV Cache → Sampler → Agent → Recovery → Certification
+# Build: cmake --build . --target RawrXD-Sovereign-Integrated
+# Run:   .\bin\RawrXD-Sovereign-Integrated.exe --model <path> --prompt "text" --validate
+set(SOVEREIGN_INTEGRATED_SOURCES
+    src/sovereign/sovereign_runtime_integrated.cpp
+    src/streaming_gguf_loader.cpp
+    src/gguf/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/kernels/optimized_transformer.cpp
+    src/kernels/KernelDispatcher.cpp
+    src/transformer_block_scalar.cpp
+    src/engine/sampler.cpp
+)
+
+add_executable(RawrXD-Sovereign-Integrated ${SOVEREIGN_INTEGRATED_SOURCES})
+
+set_target_properties(RawrXD-Sovereign-Integrated PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY bin
+    OUTPUT_NAME RawrXD-Sovereign-Integrated
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
+
+target_include_directories(RawrXD-Sovereign-Integrated PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/sovereign
+    ${CMAKE_SOURCE_DIR}/src/kernels
+    ${CMAKE_SOURCE_DIR}/src/gguf
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_compile_definitions(RawrXD-Sovereign-Integrated PRIVATE
+    RAWRXD_SOVEREIGN_INTEGRATED=1
+    RAWRXD_STRICT_PRODUCTION_PROFILE=1
+)
+
+if(MSVC)
+    target_compile_options(RawrXD-Sovereign-Integrated PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W3 /arch:AVX2>
+        $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
+    )
+    target_link_options(RawrXD-Sovereign-Integrated PRIVATE /LARGEADDRESSAWARE:NO)
+else()
+    target_compile_options(RawrXD-Sovereign-Integrated PRIVATE -O3 -mavx2 -mfma)
+endif()
+
+target_link_libraries(RawrXD-Sovereign-Integrated PRIVATE
+    Threads::Threads
+)
+
+if(WIN32)
+    target_link_libraries(RawrXD-Sovereign-Integrated PRIVATE
+        kernel32 user32 advapi32
+    )
+endif()
+
+message(STATUS "[Sovereign] RawrXD-Sovereign-Integrated target configured")
+message(STATUS "[Sovereign] Pipeline: GGUF → Tokenizer → Tensor Runtime → Kernel Registry → Transformer → KV Cache → Sampler → Agent → Recovery → Certification")
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
 
 # Deep Thinking Engine Integration Test (Priority 2: Mission 2)
@@ -5772,4 +6131,87 @@ endif()
 # Validation Harness
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/validation/CMakeLists.txt")
     add_subdirectory(src/validation)
+endif()
+
+# ═══════════════════════════════════════════════════════════════════
+# RawrXD Sovereign Runtime v1.0-ALPHA (War Room: One Binary, One Command, One Evidence Bundle)
+# ═══════════════════════════════════════════════════════════════════
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/sovereign/sovereign_runtime_minimal.cpp")
+    add_executable(rawrxd
+        src/sovereign/sovereign_runtime_minimal.cpp
+        src/sovereign/kernel_bridge.cpp
+        src/streaming_gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/utils/Diagnostics.cpp
+        src/kernels/avx512_kernels.cpp
+        src/kernels/avx2_kernels.cpp
+    )
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/kernels
+        ${CMAKE_SOURCE_DIR}/src/gguf
+        ${CMAKE_SOURCE_DIR}/src/sampler
+    )
+    if(MSVC)
+        target_compile_options(rawrxd PRIVATE /EHsc /W3 /O2 /arch:AVX2)
+    endif()
+    target_link_libraries(rawrxd PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(rawrxd PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME rawrxd
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+    )
+    message(STATUS "[Sovereign] RawrXD Runtime target added: rawrxd")
+endif()
+
+# =============================================================================
+# Eon-ASM Compiler System - Custom Build Target
+# =============================================================================
+# Eon-ASM is a powerful assembly language compiler system for the Eon programming
+# language. It includes a template generator, template engine, and self-contained IDE.
+# Located at: C:/Users/HiH8e/Eon-ASM
+set(EON_ASM_ROOT "C:/Users/HiH8e/Eon-ASM")
+if(EXISTS "${EON_ASM_ROOT}")
+    # Custom target to build Eon-ASM compilers using NASM
+    add_custom_target(eon-asm-compilers
+        COMMAND ${CMAKE_COMMAND} -E echo "Building Eon-ASM compiler system..."
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${EON_ASM_ROOT}/compilers/bin"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_lexer.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_lexer.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_template_engine.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_template_engine.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_template_generator.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_template_generator.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/self_contained_compiler_gui.asm" -o "${EON_ASM_ROOT}/compilers/bin/self_contained_compiler_gui.obj"
+        COMMAND ${CMAKE_COMMAND} -E echo "Eon-ASM compilers built successfully"
+        COMMENT "Building Eon-ASM compiler system (NASM)"
+        VERBATIM
+    )
+    
+    # Custom target to build Eon-ASM IDE using MSBuild
+    add_custom_target(eon-asm-ide
+        COMMAND ${CMAKE_COMMAND} -E echo "Building Eon-ASM IDE..."
+        COMMAND msbuild "${EON_ASM_ROOT}/Eon-ASM.vcxproj" /p:Configuration=Release /p:Platform=x64
+        COMMAND ${CMAKE_COMMAND} -E echo "Eon-ASM IDE built successfully"
+        COMMENT "Building Eon-ASM IDE (MSBuild)"
+        VERBATIM
+    )
+    
+    # Custom target to build all Eon-ASM components
+    add_custom_target(eon-asm-all
+        COMMAND ${CMAKE_COMMAND} -E echo "Building all Eon-ASM components..."
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${EON_ASM_ROOT}/compilers/bin"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_lexer.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_lexer.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_template_engine.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_template_engine.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/eon_template_generator.asm" -o "${EON_ASM_ROOT}/compilers/bin/eon_template_generator.obj"
+        COMMAND nasm -f win64 "${EON_ASM_ROOT}/compilers/self_contained_compiler_gui.asm" -o "${EON_ASM_ROOT}/compilers/bin/self_contained_compiler_gui.obj"
+        COMMAND msbuild "${EON_ASM_ROOT}/Eon-ASM.vcxproj" /p:Configuration=Release /p:Platform=x64
+        COMMAND ${CMAKE_COMMAND} -E echo "All Eon-ASM components built successfully"
+        COMMENT "Building all Eon-ASM components"
+        VERBATIM
+    )
+    
+    message(STATUS "✓ Eon-ASM custom build targets added: eon-asm-compilers, eon-asm-ide, eon-asm-all")
 endif()

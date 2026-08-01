@@ -298,7 +298,7 @@ bool TransformerBlockScalar::loadWeights(const float *weights, uint32_t layerIdx
     size_t offset = layerIdx * m_hiddenDim * m_hiddenDim;
     
     switch (type) {
-        case WeightType:::
+        case WeightType::Q_WEIGHTS:
             std::memcpy(m_qWeights.data() + offset, weights, 
                        m_hiddenDim * m_hiddenDim * sizeof(float));
             break;

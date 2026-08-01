@@ -1,0 +1,3 @@
+main:
+    inc ebx
+    ret

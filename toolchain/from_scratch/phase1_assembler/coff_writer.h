@@ -40,6 +40,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ---- COFF Machine types ---- */
 #define COFF_MACHINE_AMD64 0x8664
 
@@ -155,5 +159,9 @@ int coff_obj_find_symbol(coff_obj_builder_t *obj, const char *name);
 /* Write COFF .obj to file/buffer */
 int coff_obj_write(coff_obj_builder_t *obj, const char *filename);
 int coff_obj_write_fp(coff_obj_builder_t *obj, FILE *fp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

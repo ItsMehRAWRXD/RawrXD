@@ -11,6 +11,7 @@
 #include "ai_model_caller_real.h"
 #include "ai_model_caller_integrated.h"
 #include "../tokenizer/tokenizer.hpp"
+#include "../cpu_inference_engine_Clean.h"
 #include <unordered_map>
 #include <mutex>
 #include <chrono>
@@ -19,27 +20,48 @@
 #include <cstring>
 
 // Simple logging helpers
-enum LogLevel { DEBUG, INFO, WARN, ERROR };
+enum LogLevel { LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR };
 inline void LogMessage(LogLevel level, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    const char* prefix = (level == DEBUG) ? "[DEBUG]" :
-                         (level == INFO) ? "[INFO]" :
-                         (level == WARN) ? "[WARN]" : "[ERROR]";
+    const char* prefix = (level == LOG_DEBUG) ? "[DEBUG]" :
+                         (level == LOG_INFO) ? "[INFO]" :
+                         (level == LOG_WARN) ? "[WARN]" : "[ERROR]";
     printf("%s ", prefix);
     vprintf(fmt, args);
     printf("\n");
     va_end(args);
 }
 
-// Stub for SafeRunInference - will be replaced with real implementation
+// SafeRunInference — delegates to real CPUInferenceEngine
+// Uses a static local engine instance (lazy init, thread-safe in C++11)
 InferenceResult SafeRunInference(const std::vector<int>& input_tokens, int max_new_tokens) {
     InferenceResult result;
     result.error_code = 0;
-    // Simulate token generation
-    for (int i = 0; i < max_new_tokens && i < 10; i++) {
-        result.tokens.push_back(100 + i);  // Dummy tokens
+    
+    static CPUInference::CPUInferenceEngine s_engine;
+    static bool s_initialized = false;
+    if (!s_initialized) {
+        // Engine must be loaded externally before calling this
+        if (!s_engine.IsModelLoaded()) {
+            result.error_code = 1;
+            result.error_message = "No model loaded — call LoadModel first";
+            return result;
+        }
+        s_initialized = true;
     }
+    
+    // Convert std::vector<int> to std::vector<int32_t>
+    std::vector<int32_t> tokens32(input_tokens.begin(), input_tokens.end());
+    
+    // Run real generation
+    std::vector<int32_t> outputTokens = s_engine.Generate(tokens32, max_new_tokens);
+    
+    // Copy output tokens
+    for (auto t : outputTokens) {
+        result.tokens.push_back(static_cast<int>(t));
+    }
+    
     return result;
 }
 
@@ -114,13 +136,13 @@ InferenceResult GenerateCompletion(
     
     if (input_tokens.empty()) {
         // Cache miss - tokenize using real tokenizer
-        LogMessage(INFO, "Tokenizing prompt (cache miss): \"%s...\"", 
+        LogMessage(LOG_INFO, "Tokenizing prompt (cache miss): \"%s...\"", 
                    prompt.substr(0, 50).c_str());
         
         // Get tokenizer from global instance
         rawrxd::tokenizer::Tokenizer* tokenizer = rawrxd::tokenizer::GetGlobalTokenizer();
         if (!tokenizer || !tokenizer->IsLoaded()) {
-            LogMessage(ERROR, "Tokenizer not initialized. Call LoadTokenizer() first.");
+            LogMessage(LOG_ERROR, "Tokenizer not initialized. Call LoadTokenizer() first.");
             result.error_code = -1;
             result.error_message = "Tokenizer not initialized";
             return result;
@@ -130,7 +152,7 @@ InferenceResult GenerateCompletion(
         input_tokens = tokenizer->Encode(prompt);
         
         if (input_tokens.empty()) {
-            LogMessage(ERROR, "Tokenization failed for prompt: \"%s...\"", 
+            LogMessage(LOG_ERROR, "Tokenization failed for prompt: \"%s...\"", 
                       prompt.substr(0, 50).c_str());
             result.error_code = -2;
             result.error_message = "Tokenization failed";
@@ -140,32 +162,32 @@ InferenceResult GenerateCompletion(
         // Cache the tokenization
         g_token_cache.Put(prompt, input_tokens);
         
-        LogMessage(INFO, "Tokenized %zu chars -> %zu tokens", 
+        LogMessage(LOG_INFO, "Tokenized %zu chars -> %zu tokens", 
                    prompt.length(), input_tokens.size());
     } else {
         // Cache hit
-        LogMessage(INFO, "Token cache hit: %zu tokens", input_tokens.size());
+        LogMessage(LOG_INFO, "Token cache hit: %zu tokens", input_tokens.size());
     }
     
     // Step 2: Run real inference (not stub)
-    LogMessage(INFO, "Running inference: %zu input tokens, max_new=%d", 
+    LogMessage(LOG_INFO, "Running inference: %zu input tokens, max_new=%d", 
                input_tokens.size(), max_new_tokens);
     
     InferenceResult inference_result = SafeRunInference(input_tokens, max_new_tokens);
     
     if (inference_result.error_code != 0) {
-        LogMessage(ERROR, "Inference failed with code %d: %s", 
+        LogMessage(LOG_ERROR, "Inference failed with code %d: %s", 
                    inference_result.error_code,
                    inference_result.error_message.c_str());
         return inference_result;
     }
     
     // Step 3: Detokenize output (not synthetic)
-    LogMessage(INFO, "Detokenizing %zu output tokens", inference_result.tokens.size());
+    LogMessage(LOG_INFO, "Detokenizing %zu output tokens", inference_result.tokens.size());
     
     rawrxd::tokenizer::Tokenizer* tokenizer2 = rawrxd::tokenizer::GetGlobalTokenizer();
     if (!tokenizer2 || !tokenizer2->IsLoaded()) {
-        LogMessage(ERROR, "Tokenizer not available for detokenization");
+        LogMessage(LOG_ERROR, "Tokenizer not available for detokenization");
         result.error_code = -3;
         result.error_message = "Detokenization failed - no tokenizer";
         return result;
@@ -175,7 +197,7 @@ InferenceResult GenerateCompletion(
     std::string output_text = tokenizer2->Decode(inference_result.tokens);
     
     if (output_text.empty() && !inference_result.tokens.empty()) {
-        LogMessage(WARN, "Detokenization produced empty text from %zu tokens",
+        LogMessage(LOG_WARN, "Detokenization produced empty text from %zu tokens",
                    inference_result.tokens.size());
     }
     
@@ -188,7 +210,7 @@ InferenceResult GenerateCompletion(
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     
-    LogMessage(INFO, "Completion generated: %zu tokens in %lld ms (%.2f TPS)",
+    LogMessage(LOG_INFO, "Completion generated: %zu tokens in %lld ms (%.2f TPS)",
                result.tokens.size(),
                duration.count(),
                result.tokens.size() * 1000.0f / duration.count());
@@ -259,7 +281,7 @@ void GenerateCompletionStreaming(
  */
 void ClearTokenCache() {
     g_token_cache.Clear();
-    LogMessage(INFO, "Tokenization cache cleared");
+    LogMessage(LOG_INFO, "Tokenization cache cleared");
 }
 
 /**
@@ -288,40 +310,40 @@ CacheStats GetTokenCacheStats() {
  * 5. Verify output is sensible
  */
 bool TestEndToEndGeneration() {
-    LogMessage(INFO, "=== End-to-End Generation Test ===");
+    LogMessage(LOG_INFO, "=== End-to-End Generation Test ===");
     
     // Test prompt
     const char* test_prompt = "Hello, my name is";
     
-    LogMessage(INFO, "Prompt: \"%s\"", test_prompt);
+    LogMessage(LOG_INFO, "Prompt: \"%s\"", test_prompt);
     
     // Generate completion
     InferenceResult result = GenerateCompletion(test_prompt, 20, 0.8f, 40, 0.95f);
     
     if (result.error_code != 0) {
-        LogMessage(ERROR, "Test FAILED: Generation error %d: %s",
+        LogMessage(LOG_ERROR, "Test FAILED: Generation error %d: %s",
                    result.error_code, result.error_message.c_str());
         return false;
     }
     
     if (result.text.empty()) {
-        LogMessage(ERROR, "Test FAILED: Empty output text");
+        LogMessage(LOG_ERROR, "Test FAILED: Empty output text");
         return false;
     }
     
     if (result.tokens.empty()) {
-        LogMessage(ERROR, "Test FAILED: No tokens generated");
+        LogMessage(LOG_ERROR, "Test FAILED: No tokens generated");
         return false;
     }
     
     // Verify output contains prompt (basic sanity check)
     if (result.text.find(test_prompt) == std::string::npos) {
-        LogMessage(WARN, "Output doesn't contain prompt (may be OK depending on model)");
+        LogMessage(LOG_WARN, "Output doesn't contain prompt (may be OK depending on model)");
     }
     
-    LogMessage(INFO, "Generated text: \"%s...\"", result.text.substr(0, 100).c_str());
-    LogMessage(INFO, "Generated %zu tokens", result.tokens.size());
-    LogMessage(INFO, "=== Test PASSED ===");
+    LogMessage(LOG_INFO, "Generated text: \"%s...\"", result.text.substr(0, 100).c_str());
+    LogMessage(LOG_INFO, "Generated %zu tokens", result.tokens.size());
+    LogMessage(LOG_INFO, "=== Test PASSED ===");
     
     return true;
 }

@@ -2,7 +2,7 @@
 // RawrXD KernelDispatcher Implementation
 // Phase 21 - Runtime CPU Detection + Zero-Overhead Dispatch
 //=============================================================================
-#include "RawrXD_Kernels.hpp"
+#include "avx2_kernels.hpp"
 #include <intrin.h>
 #include <windows.h>
 #include <cmath>

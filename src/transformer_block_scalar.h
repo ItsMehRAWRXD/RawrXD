@@ -10,6 +10,7 @@ class TransformerBlockScalar
 public:
     enum class WeightType {
         UNKNOWN,
+        Q_WEIGHTS,
         K_WEIGHTS,
         V_WEIGHTS,
         O_WEIGHTS,

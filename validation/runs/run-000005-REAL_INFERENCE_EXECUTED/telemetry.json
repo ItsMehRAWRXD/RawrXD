@@ -1,8 +1,0 @@
-{
-
-  "schema_version": "VAL-021.1",
-  "vocab_size": 32064,
-  "embed_dim": 3072,
-  "block_count": 32,
-  "max_tokens": 128
-}

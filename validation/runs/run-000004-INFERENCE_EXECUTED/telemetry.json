@@ -1,9 +1,0 @@
-{
-
-  "schema_version": "VAL-020.1",
-  "execution_time_ms": 529,
-  "token_count": 3,
-  "vocab_size": 32064,
-  "embed_dim": 3072,
-  "deterministic": true
-}

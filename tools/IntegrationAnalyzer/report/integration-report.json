@@ -1,0 +1,267 @@
+{
+  "results": [
+    {
+      "findings": [
+        {
+          "category": "orphaned_source",
+          "count": 5385,
+          "severity": "warning",
+          "items": [
+            "D:\\rawrxd-ci-bootstrap\\src\\action_executor.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\advanced_coding_agent.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\advanced_features.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\AdvancedCodingAgent.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agent_explainability.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agent_history.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agent_memory.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agent_policy.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agent_router.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_agent_coordinator.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_bridge.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_configuration_qt_free.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_configuration.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_controller.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_copilot_bridge_impl.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_copilot_bridge_migrated.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_copilot_bridge.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_core.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_engine.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_error_handler.cpp",
+            "D:\\rawrxd-ci-bootstrap\\src\\agentic_executor.cpp"
+          ]
+        },
+        {
+          "category": "empty_target",
+          "count": 55,
+          "severity": "error",
+          "items": [
+            "quickjs_static",
+            "val016_2_compile_repair_demo",
+            "RawrXD-ModelAnalysis",
+            "test-jit-execution",
+            "RawrXD-TpsSmoke",
+            "RawrXD_NanoQuant",
+            "val019_isolated_execution",
+            "val020_failure_recovery_demo",
+            "test_gguf_minimal",
+            "test-messagebox-final",
+            "RawrXDScriptDAPAdapter",
+            "val014_real_toolchain_demo",
+            "rawrxd",
+            "val012_closed_loop_demo",
+            "RawrXD-ModelAnalysisLib",
+            "test_autonomous_pipeline",
+            "val016_regression_suite",
+            "RawrXD-Crypto",
+            "validate-from-scratch",
+            "RawrXD-Win32IDE",
+            "RawrXD-InferenceRoutingTest",
+            "test-negative-validation",
+            "validate-v2",
+            "ssot_stub_lane_objs",
+            "address_resolver_native",
+            "test_gpu_memory_allocator",
+            "InferenceEngine",
+            "val016_autonomous_repair_v1",
+            "test_deep_thinking_engine",
+            "BackendOrchestratorShardSmoke",
+            "val016_source_repair_v2",
+            "test-pe-integration",
+            "RawrXD_LSPServer",
+            "val016_4_test_failure_repair_test",
+            "test_hip_rdna3_kernels",
+            "val016_3_link_repair_test",
+            "RawrXD-FusedBenchmark",
+            "RawrXD_DynamicPromptEngine",
+            "val019_autonomous_execution_test",
+            "RawrXD-KVBenchmark",
+            "rawrxd-monaco-gen",
+            "SwarmSmokeTest",
+            "val_019_1_gguf_artifact",
+            "val016_2_compile_repair_test",
+            "validate-comprehensive",
+            "RawrXD-Benchmark",
+            "RawrXD-AutoFixCLI",
+            "test_multi_gpu_scheduler",
+            "RawrXD-Sovereign-Integrated",
+            "RawrXD-InferenceEngine",
+            "RawrXD_MultiWindow_Kernel",
+            "test_gate_d_intrinsics",
+            "test-abi-integration",
+            "agentic_orchestrator_smoke_test",
+            "val019_real_execution_bridge_test"
+          ]
+        }
+      ],
+      "status": "error",
+      "name": "CMakeGraph",
+      "warnings": 5385,
+      "errors": 55,
+      "metrics": {
+        "compiled": 38,
+        "orphaned": 5385,
+        "targets": 57,
+        "total_sources": 5419,
+        "empty_targets": 55
+      }
+    },
+    {
+      "findings": [],
+      "status": "pass",
+      "name": "Registration",
+      "warnings": 0,
+      "errors": 0,
+      "metrics": {
+        "registrations": 0.0,
+        "implementations": {
+          "Command": 2,
+          "Provider": 62,
+          "Menu": 11,
+          "Panel": 35,
+          "Theme": 4,
+          "Keybinding": 1,
+          "Debugger": 9,
+          "Tool": 24,
+          "Dock": 26,
+          "Extension": 16
+        }
+      }
+    },
+    {
+      "findings": [
+        {
+          "category": "stub_patterns",
+          "count": 1032,
+          "message": "1032 stub/TODO patterns found across 1077 files",
+          "severity": "warning"
+        }
+      ],
+      "status": "warning",
+      "name": "SymbolGraph",
+      "warnings": 1032,
+      "errors": 0,
+      "metrics": {
+        "classes": 2297,
+        "functions": 9791,
+        "total_lines": 417273,
+        "files_scanned": 1077,
+        "stub_patterns": 1032
+      }
+    },
+    {
+      "findings": [
+        {
+          "service": "WorkspaceService",
+          "category": "missing_service",
+          "message": "No implementation found for WorkspaceService",
+          "severity": "warning"
+        },
+        {
+          "service": "ProjectService",
+          "category": "missing_service",
+          "message": "No implementation found for ProjectService",
+          "severity": "warning"
+        },
+        {
+          "service": "Terminal",
+          "category": "missing_service",
+          "message": "No implementation found for Terminal",
+          "severity": "warning"
+        },
+        {
+          "service": "Git",
+          "category": "missing_service",
+          "message": "No implementation found for Git",
+          "severity": "warning"
+        }
+      ],
+      "status": "warning",
+      "name": "RuntimeInit",
+      "warnings": 4,
+      "errors": 0,
+      "metrics": {
+        "total_expected": 14,
+        "services_found": 10,
+        "services_missing": 4
+      }
+    },
+    {
+      "findings": [
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\agentic",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\copilot",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\js",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\lsp",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\phase_p1_marketplace",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\phase_p2_plugin_system",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\extensions\\phase_p3_integrations",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        },
+        {
+          "path": "D:\\rawrxd-ci-bootstrap\\vsix\\src",
+          "category": "unloadable_extension",
+          "message": "Extension folder missing package.json or manifest.json",
+          "severity": "warning"
+        }
+      ],
+      "status": "warning",
+      "name": "Extension",
+      "warnings": 8,
+      "errors": 0,
+      "metrics": {
+        "extension_host_files": 19,
+        "extensions_loadable": 2,
+        "extensions_found": 10,
+        "extension_dirs": 3
+      }
+    }
+  ],
+  "metadata": {
+    "total_warnings": 6429,
+    "duration_seconds": 10.0,
+    "root_path": "D:\\rawrxd-ci-bootstrap",
+    "timestamp": "2026-07-19T09:21:35Z",
+    "total_errors": 55,
+    "total_analyzers": 5
+  },
+  "summary": {
+    "warnings": 6429,
+    "analyzers_passed": 8,
+    "analyzers_with_warnings": 3,
+    "overall_status": "error",
+    "errors": 55,
+    "analyzers_with_errors": 8
+  }
+}

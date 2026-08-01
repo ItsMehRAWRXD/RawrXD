@@ -83,17 +83,17 @@ static void encode_mem(x64_encoded_t *e, mem_operand_t *m, uint8_t reg_field,
     *rex_x = 0;
 
     /* RIP-relative: mod=00, rm=101, no SIB */
-    if (m->base == REG_NONE && m->index == REG_NONE) {
+    if (m->base == X64_REG_NONE && m->index == X64_REG_NONE) {
         emit_modrm(e, 0x00, reg_field, 0x05);
         emit32(e, (uint32_t)m->disp);
         return;
     }
 
-    int need_sib = (m->index != REG_NONE) ||
+    int need_sib = (m->index != X64_REG_NONE) ||
                    (m->base == REG_RSP) || (m->base == REG_R12);
 
-    if (m->base != REG_NONE && reg_needs_rex(m->base)) *rex_b = 1;
-    if (m->index != REG_NONE && reg_needs_rex(m->index)) *rex_x = 1;
+    if (m->base != X64_REG_NONE && reg_needs_rex(m->base)) *rex_b = 1;
+    if (m->index != X64_REG_NONE && reg_needs_rex(m->index)) *rex_x = 1;
 
     uint8_t mod;
     if (!m->has_disp && m->disp == 0 &&
@@ -106,7 +106,7 @@ static void encode_mem(x64_encoded_t *e, mem_operand_t *m, uint8_t reg_field,
     }
 
     /* Special: [disp32] with SIB (no base) */
-    if (m->base == REG_NONE && m->index != REG_NONE) {
+    if (m->base == X64_REG_NONE && m->index != X64_REG_NONE) {
         emit_modrm(e, 0x00, reg_field, 0x04);
         emit_sib(e, m->scale, reg_lo3(m->index), 0x05);
         emit32(e, (uint32_t)m->disp);
@@ -115,8 +115,8 @@ static void encode_mem(x64_encoded_t *e, mem_operand_t *m, uint8_t reg_field,
 
     if (need_sib) {
         emit_modrm(e, mod, reg_field, 0x04);
-        uint8_t idx = (m->index != REG_NONE) ? reg_lo3(m->index) : 0x04; /* 0x04=no index */
-        emit_sib(e, (m->index != REG_NONE) ? m->scale : 1,
+        uint8_t idx = (m->index != X64_REG_NONE) ? reg_lo3(m->index) : 0x04; /* 0x04=no index */
+        emit_sib(e, (m->index != X64_REG_NONE) ? m->scale : 1,
                  idx, reg_lo3(m->base));
     } else {
         emit_modrm(e, mod, reg_field, reg_lo3(m->base));
@@ -266,8 +266,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
             int r_ext = reg_needs_rex(op1->reg);
             /* pre-calculate rex_b, rex_x */
             int rex_b = 0, rex_x = 0;
-            if (op2->mem.base != REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
-            if (op2->mem.index != REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
+            if (op2->mem.base != X64_REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
+            if (op2->mem.index != X64_REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
             if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
                 emit_rex(&enc, w, r_ext, rex_x, rex_b);
             emit8(&enc, (sz == SZ_BYTE) ? 0x8A : 0x8B);
@@ -283,8 +283,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
             int w = (sz == SZ_QWORD) ? 1 : 0;
             int r_ext = reg_needs_rex(op2->reg);
             int rex_b = 0, rex_x = 0;
-            if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-            if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
             if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
                 emit_rex(&enc, w, r_ext, rex_x, rex_b);
             emit8(&enc, (sz == SZ_BYTE) ? 0x88 : 0x89);
@@ -299,8 +299,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
             if (sz == SZ_WORD) emit8(&enc, 0x66);
             int w = (sz == SZ_QWORD) ? 1 : 0;
             int rex_b = 0, rex_x = 0;
-            if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-            if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
             if (w || rex_x || rex_b)
                 emit_rex(&enc, w, 0, rex_x, rex_b);
             emit8(&enc, (sz == SZ_BYTE) ? 0xC6 : 0xC7);
@@ -330,22 +330,40 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
     }
 
     /* ============================================================
-     * LEA reg, [mem]
+     * LEA reg, [mem]  OR  LEA reg, label (RIP-relative)
      * ============================================================ */
-    if (mnem == MNEM_LEA && has1 && has2 && op1->type == OP_REG && op2->type == OP_MEM) {
+    if (mnem == MNEM_LEA && has1 && has2 && op1->type == OP_REG) {
         operand_size_t sz = op1->size;
         if (sz == SZ_WORD) emit8(&enc, 0x66);
         int w = (sz == SZ_QWORD) ? 1 : 0;
         int r_ext = reg_needs_rex(op1->reg);
-        int rex_b = 0, rex_x = 0;
-        if (op2->mem.base != REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
-        if (op2->mem.index != REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
-        if (w || r_ext || rex_x || rex_b)
-            emit_rex(&enc, w, r_ext, rex_x, rex_b);
-        emit8(&enc, 0x8D);
-        int dummy_b, dummy_x;
-        encode_mem(&enc, &op2->mem, reg_lo3(op1->reg), &dummy_b, &dummy_x);
-        return enc;
+        
+        if (op2->type == OP_MEM) {
+            int rex_b = 0, rex_x = 0;
+            if (op2->mem.base != X64_REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
+            if (op2->mem.index != X64_REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b)
+                emit_rex(&enc, w, r_ext, rex_x, rex_b);
+            emit8(&enc, 0x8D);
+            int dummy_b, dummy_x;
+            encode_mem(&enc, &op2->mem, reg_lo3(op1->reg), &dummy_b, &dummy_x);
+            return enc;
+        }
+        
+        /* LEA reg, label - treat as RIP-relative */
+        if (op2->type == OP_LABEL) {
+            /* REX.W + 8D /r (LEA r64, m) with ModR/M = 00-xxx-101 (RIP-relative) */
+            emit_rex(&enc, 1, r_ext, 0, 0);
+            emit8(&enc, 0x8D);
+            /* ModR/M: mod=00, reg=dest, r/m=101 (RIP-relative) */
+            emit8(&enc, (uint8_t)(0x05 | (reg_lo3(op1->reg) << 3)));
+            /* 32-bit displacement placeholder */
+            enc.reloc_offset = (uint32_t)enc.len;
+            enc.reloc_type = 4; /* REL32 */
+            strncpy(enc.reloc_symbol, op2->label, 127);
+            emit32(&enc, 0);
+            return enc;
+        }
     }
 
     /* ============================================================
@@ -429,8 +447,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
                 int w = (sz == SZ_QWORD) ? 1 : 0;
                 int r_ext = reg_needs_rex(op1->reg);
                 int rex_b = 0, rex_x = 0;
-                if (op2->mem.base != REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
-                if (op2->mem.index != REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
+                if (op2->mem.base != X64_REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
+                if (op2->mem.index != X64_REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
                 if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
                     emit_rex(&enc, w, r_ext, rex_x, rex_b);
                 uint8_t base_op = (sz == SZ_BYTE)
@@ -449,8 +467,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
                 int w = (sz == SZ_QWORD) ? 1 : 0;
                 int r_ext = reg_needs_rex(op2->reg);
                 int rex_b = 0, rex_x = 0;
-                if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-                if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
                 if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
                     emit_rex(&enc, w, r_ext, rex_x, rex_b);
                 uint8_t base_op = (sz == SZ_BYTE)
@@ -468,8 +486,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
                 if (sz == SZ_WORD) emit8(&enc, 0x66);
                 int w = (sz == SZ_QWORD) ? 1 : 0;
                 int rex_b = 0, rex_x = 0;
-                if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-                if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
                 if (w || rex_x || rex_b)
                     emit_rex(&enc, w, 0, rex_x, rex_b);
                 if (sz != SZ_BYTE && op2->imm >= -128 && op2->imm <= 127) {
@@ -559,8 +577,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
             if (sz == SZ_WORD) emit8(&enc, 0x66);
             int w = (sz == SZ_QWORD) ? 1 : 0;
             int rex_b = 0, rex_x = 0;
-            if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-            if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
             if (w || rex_x || rex_b)
                 emit_rex(&enc, w, 0, rex_x, rex_b);
             emit8(&enc, (sz == SZ_BYTE) ? 0xF6 : 0xF7);
@@ -703,32 +721,54 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
     }
 
     /* ============================================================
-     * MOVZX / MOVSX — zero/sign extend
+     * MOVZX / MOVSX — zero/sign extend (reg,reg) and (reg,mem)
      * ============================================================ */
     if ((mnem == MNEM_MOVZX || mnem == MNEM_MOVSX) && has1 && has2 &&
-         op1->type == OP_REG && op2->type == OP_REG) {
+         op1->type == OP_REG) {
         operand_size_t dst_sz = op1->size;
-        operand_size_t src_sz = op2->size;
         int w = (dst_sz == SZ_QWORD) ? 1 : 0;
         int r_ext = reg_needs_rex(op1->reg);
-        int b_ext = reg_needs_rex(op2->reg);
 
-        if (mnem == MNEM_MOVSX && src_sz == SZ_DWORD) {
-            /* MOVSXD r64, r32 — opcode 63 */
-            emit_rex(&enc, 1, r_ext, 0, b_ext);
-            emit8(&enc, 0x63);
-            emit_modrm(&enc, 0x03, reg_lo3(op1->reg), reg_lo3(op2->reg));
-        } else {
-            if (w || r_ext || b_ext) emit_rex(&enc, w, r_ext, 0, b_ext);
+        if (op2->type == OP_REG) {
+            operand_size_t src_sz = op2->size;
+            int b_ext = reg_needs_rex(op2->reg);
+
+            if (mnem == MNEM_MOVSX && src_sz == SZ_DWORD) {
+                /* MOVSXD r64, r32 — opcode 63 */
+                emit_rex(&enc, 1, r_ext, 0, b_ext);
+                emit8(&enc, 0x63);
+                emit_modrm(&enc, 0x03, reg_lo3(op1->reg), reg_lo3(op2->reg));
+            } else {
+                if (w || r_ext || b_ext) emit_rex(&enc, w, r_ext, 0, b_ext);
+                emit8(&enc, 0x0F);
+                if (mnem == MNEM_MOVZX) {
+                    emit8(&enc, (src_sz == SZ_BYTE) ? 0xB6 : 0xB7);
+                } else {
+                    emit8(&enc, (src_sz == SZ_BYTE) ? 0xBE : 0xBF);
+                }
+                emit_modrm(&enc, 0x03, reg_lo3(op1->reg), reg_lo3(op2->reg));
+            }
+            return enc;
+        }
+        
+        /* MOVZX/MOVSX reg, [mem] */
+        if (op2->type == OP_MEM) {
+            int rex_b = 0, rex_x = 0;
+            if (op2->mem.base != X64_REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
+            if (op2->mem.index != X64_REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b) emit_rex(&enc, w, r_ext, rex_x, rex_b);
             emit8(&enc, 0x0F);
+            /* Determine source size from memory operand size hint */
+            operand_size_t src_sz = op2->size;
             if (mnem == MNEM_MOVZX) {
                 emit8(&enc, (src_sz == SZ_BYTE) ? 0xB6 : 0xB7);
             } else {
                 emit8(&enc, (src_sz == SZ_BYTE) ? 0xBE : 0xBF);
             }
-            emit_modrm(&enc, 0x03, reg_lo3(op1->reg), reg_lo3(op2->reg));
+            int dummy_b, dummy_x;
+            encode_mem(&enc, &op2->mem, reg_lo3(op1->reg), &dummy_b, &dummy_x);
+            return enc;
         }
-        return enc;
     }
 
     /* ============================================================
@@ -761,8 +801,8 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
         /* JMP/CALL [mem] */
         if (has1 && op1->type == OP_MEM) {
             int rex_b = 0, rex_x = 0;
-            if (op1->mem.base != REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
-            if (op1->mem.index != REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
             if (rex_b || rex_x) emit_rex(&enc, 0, 0, rex_x, rex_b);
             emit8(&enc, 0xFF);
             int db, dx;
@@ -819,6 +859,531 @@ x64_encoded_t x64_encode(x64_mnemonic_t mnem, x64_operand_t *op1, x64_operand_t 
         }
     }
 
+    /* ============================================================
+     * SETcc - Set Byte on Condition
+     * ============================================================ */
+    {
+        int cc = -1;
+        switch (mnem) {
+            case MNEM_SETO:  cc = 0x0; break;
+            case MNEM_SETNO: cc = 0x1; break;
+            case MNEM_SETB: case MNEM_SETC: case MNEM_SETNAE: cc = 0x2; break;
+            case MNEM_SETAE: case MNEM_SETNB: case MNEM_SETNC: cc = 0x3; break;
+            case MNEM_SETE: case MNEM_SETZ:  cc = 0x4; break;
+            case MNEM_SETNE: case MNEM_SETNZ: cc = 0x5; break;
+            case MNEM_SETBE: case MNEM_SETNA: cc = 0x6; break;
+            case MNEM_SETA: case MNEM_SETNBE: cc = 0x7; break;
+            case MNEM_SETS:  cc = 0x8; break;
+            case MNEM_SETNS: cc = 0x9; break;
+            case MNEM_SETP: case MNEM_SETPE: cc = 0xA; break;
+            case MNEM_SETNP: case MNEM_SETPO: cc = 0xB; break;
+            case MNEM_SETL: case MNEM_SETNGE: cc = 0xC; break;
+            case MNEM_SETGE: case MNEM_SETNL: cc = 0xD; break;
+            case MNEM_SETLE: case MNEM_SETNG: cc = 0xE; break;
+            case MNEM_SETG: case MNEM_SETNLE: cc = 0xF; break;
+            default: break;
+        }
+        if (cc >= 0 && has1) {
+            if (op1->type == OP_REG) {
+                int b_ext = reg_needs_rex(op1->reg);
+                if (b_ext) emit_rex(&enc, 0, 0, 0, b_ext);
+                emit8(&enc, 0x0F);
+                emit8(&enc, (uint8_t)(0x90 + cc));
+                emit_modrm(&enc, 0x03, 0, reg_lo3(op1->reg));
+                return enc;
+            }
+            if (op1->type == OP_MEM) {
+                int rex_b = 0, rex_x = 0;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (rex_b || rex_x) emit_rex(&enc, 0, 0, rex_x, rex_b);
+                emit8(&enc, 0x0F);
+                emit8(&enc, (uint8_t)(0x90 + cc));
+                int db, dx;
+                encode_mem(&enc, &op1->mem, 0, &db, &dx);
+                return enc;
+            }
+        }
+    }
+
+    /* ============================================================
+     * CMOVcc - Conditional Move
+     * ============================================================ */
+    {
+        int cc = -1;
+        switch (mnem) {
+            case MNEM_CMOVO:  cc = 0x0; break;
+            case MNEM_CMOVNO: cc = 0x1; break;
+            case MNEM_CMOVB: case MNEM_CMOVC: case MNEM_CMOVNAE: cc = 0x2; break;
+            case MNEM_CMOVAE: case MNEM_CMOVNB: case MNEM_CMOVNC: cc = 0x3; break;
+            case MNEM_CMOVE: case MNEM_CMOVZ:  cc = 0x4; break;
+            case MNEM_CMOVNE: case MNEM_CMOVNZ: cc = 0x5; break;
+            case MNEM_CMOVBE: case MNEM_CMOVNA: cc = 0x6; break;
+            case MNEM_CMOVA: case MNEM_CMOVNBE: cc = 0x7; break;
+            case MNEM_CMOVS:  cc = 0x8; break;
+            case MNEM_CMOVNS: cc = 0x9; break;
+            case MNEM_CMOVP: case MNEM_CMOVPE: cc = 0xA; break;
+            case MNEM_CMOVNP: case MNEM_CMOVPO: cc = 0xB; break;
+            case MNEM_CMOVL: case MNEM_CMOVNGE: cc = 0xC; break;
+            case MNEM_CMOVGE: case MNEM_CMOVNL: cc = 0xD; break;
+            case MNEM_CMOVLE: case MNEM_CMOVNG: cc = 0xE; break;
+            case MNEM_CMOVG: case MNEM_CMOVNLE: cc = 0xF; break;
+            default: break;
+        }
+        if (cc >= 0 && has1 && has2 && op1->type == OP_REG && op2->type == OP_REG) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op1->reg);
+            int b_ext = reg_needs_rex(op2->reg);
+            if (w || r_ext || b_ext) emit_rex(&enc, w, r_ext, 0, b_ext);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (uint8_t)(0x40 + cc));
+            emit_modrm(&enc, 0x03, reg_lo3(op1->reg), reg_lo3(op2->reg));
+            return enc;
+        }
+        if (cc >= 0 && has1 && has2 && op1->type == OP_REG && op2->type == OP_MEM) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op1->reg);
+            int rex_b = 0, rex_x = 0;
+            if (op2->mem.base != X64_REG_NONE && reg_needs_rex(op2->mem.base)) rex_b = 1;
+            if (op2->mem.index != X64_REG_NONE && reg_needs_rex(op2->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b) emit_rex(&enc, w, r_ext, rex_x, rex_b);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (uint8_t)(0x40 + cc));
+            int db, dx;
+            encode_mem(&enc, &op2->mem, reg_lo3(op1->reg), &db, &dx);
+            return enc;
+        }
+    }
+
+    /* ============================================================
+     * XADD - Exchange and Add (atomic)
+     * ============================================================ */
+    if (mnem == MNEM_XADD && has1 && has2) {
+        /* XADD r/m, reg - 0F C0 (byte) or 0F C1 (word/dword/qword) */
+        if (op1->type == OP_MEM && op2->type == OP_REG) {
+            operand_size_t sz = op2->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int rex_b = 0, rex_x = 0;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
+                emit_rex(&enc, w, r_ext, rex_x, rex_b);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (sz == SZ_BYTE) ? 0xC0 : 0xC1);
+            int db, dx;
+            encode_mem(&enc, &op1->mem, reg_lo3(op2->reg), &db, &dx);
+            return enc;
+        }
+        if (op1->type == OP_REG && op2->type == OP_REG) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int b_ext = reg_needs_rex(op1->reg);
+            if (w || r_ext || b_ext || sz == SZ_BYTE)
+                emit_rex(&enc, w, r_ext, 0, b_ext);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (sz == SZ_BYTE) ? 0xC0 : 0xC1);
+            emit_modrm(&enc, 0x03, reg_lo3(op2->reg), reg_lo3(op1->reg));
+            return enc;
+        }
+    }
+
+    /* ============================================================
+     * CMPXCHG - Compare and Exchange (atomic)
+     * ============================================================ */
+    if (mnem == MNEM_CMPXCHG && has1 && has2) {
+        /* CMPXCHG r/m, reg - 0F B0 (byte) or 0F B1 (word/dword/qword) */
+        if (op1->type == OP_MEM && op2->type == OP_REG) {
+            operand_size_t sz = op2->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int rex_b = 0, rex_x = 0;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b || sz == SZ_BYTE)
+                emit_rex(&enc, w, r_ext, rex_x, rex_b);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (sz == SZ_BYTE) ? 0xB0 : 0xB1);
+            int db, dx;
+            encode_mem(&enc, &op1->mem, reg_lo3(op2->reg), &db, &dx);
+            return enc;
+        }
+        if (op1->type == OP_REG && op2->type == OP_REG) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int b_ext = reg_needs_rex(op1->reg);
+            if (w || r_ext || b_ext || sz == SZ_BYTE)
+                emit_rex(&enc, w, r_ext, 0, b_ext);
+            emit8(&enc, 0x0F);
+            emit8(&enc, (sz == SZ_BYTE) ? 0xB0 : 0xB1);
+            emit_modrm(&enc, 0x03, reg_lo3(op2->reg), reg_lo3(op1->reg));
+            return enc;
+        }
+    }
+
+    /* ============================================================
+     * BT/BTS/BTR/BTC - Bit Test and Modify
+     * ============================================================ */
+    if ((mnem == MNEM_BT || mnem == MNEM_BTS || mnem == MNEM_BTR || mnem == MNEM_BTC) && has1 && has2) {
+        uint8_t digit;
+        uint8_t opcode_ext;
+        switch (mnem) {
+            case MNEM_BT:  digit = 4; opcode_ext = 0xA3; break;
+            case MNEM_BTS: digit = 5; opcode_ext = 0xAB; break;
+            case MNEM_BTR: digit = 6; opcode_ext = 0xB3; break;
+            case MNEM_BTC: digit = 7; opcode_ext = 0xBB; break;
+            default: digit = 4; opcode_ext = 0xA3;
+        }
+        
+        /* BT r/m, reg - 0F A3/AB/B3/BB */
+        if (op1->type == OP_MEM && op2->type == OP_REG) {
+            operand_size_t sz = op2->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int rex_b = 0, rex_x = 0;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (w || r_ext || rex_x || rex_b)
+                emit_rex(&enc, w, r_ext, rex_x, rex_b);
+            emit8(&enc, 0x0F);
+            emit8(&enc, opcode_ext);
+            int db, dx;
+            encode_mem(&enc, &op1->mem, reg_lo3(op2->reg), &db, &dx);
+            return enc;
+        }
+        if (op1->type == OP_REG && op2->type == OP_REG) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int r_ext = reg_needs_rex(op2->reg);
+            int b_ext = reg_needs_rex(op1->reg);
+            if (w || r_ext || b_ext)
+                emit_rex(&enc, w, r_ext, 0, b_ext);
+            emit8(&enc, 0x0F);
+            emit8(&enc, opcode_ext);
+            emit_modrm(&enc, 0x03, reg_lo3(op2->reg), reg_lo3(op1->reg));
+            return enc;
+        }
+        /* BT r/m, imm8 - 0F BA /digit */
+        if ((op1->type == OP_MEM || op1->type == OP_REG) && op2->type == OP_IMM) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int rex_b = 0, rex_x = 0;
+            if (op1->type == OP_MEM) {
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            } else {
+                if (reg_needs_rex(op1->reg)) rex_b = 1;
+            }
+            if (w || rex_x || rex_b)
+                emit_rex(&enc, w, 0, rex_x, rex_b);
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0xBA);
+            if (op1->type == OP_MEM) {
+                int db, dx;
+                encode_mem(&enc, &op1->mem, digit, &db, &dx);
+            } else {
+                emit_modrm(&enc, 0x03, digit, reg_lo3(op1->reg));
+            }
+            emit8(&enc, (uint8_t)op2->imm);
+            return enc;
+        }
+    }
+
+    /* ============================================================
+     * RCL/RCR - Rotate through Carry
+     * ============================================================ */
+    if ((mnem == MNEM_RCL || mnem == MNEM_RCR) && has1) {
+        uint8_t digit = (mnem == MNEM_RCL) ? 2 : 3;
+        int is_one = has2 && op2->type == OP_IMM && op2->imm == 1;
+        int is_cl = has2 && op2->type == OP_REG && op2->reg == REG_RCX && op2->size == SZ_BYTE;
+        
+        if (op1->type == OP_REG) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int b_ext = reg_needs_rex(op1->reg);
+            if (w || b_ext || sz == SZ_BYTE)
+                emit_rex(&enc, w, 0, 0, b_ext);
+            if (is_one) {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xD0 : 0xD1);
+                emit_modrm(&enc, 0x03, digit, reg_lo3(op1->reg));
+            } else if (is_cl) {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xD2 : 0xD3);
+                emit_modrm(&enc, 0x03, digit, reg_lo3(op1->reg));
+            } else if (has2 && op2->type == OP_IMM) {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xC0 : 0xC1);
+                emit_modrm(&enc, 0x03, digit, reg_lo3(op1->reg));
+                emit8(&enc, (uint8_t)op2->imm);
+            }
+            return enc;
+        }
+        if (op1->type == OP_MEM) {
+            operand_size_t sz = op1->size;
+            if (sz == SZ_WORD) emit8(&enc, 0x66);
+            int w = (sz == SZ_QWORD) ? 1 : 0;
+            int rex_b = 0, rex_x = 0;
+            if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+            if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+            if (w || rex_x || rex_b)
+                emit_rex(&enc, w, 0, rex_x, rex_b);
+            if (is_one) {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xD0 : 0xD1);
+            } else if (is_cl) {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xD2 : 0xD3);
+            } else {
+                emit8(&enc, (sz == SZ_BYTE) ? 0xC0 : 0xC1);
+            }
+            int db, dx;
+            encode_mem(&enc, &op1->mem, digit, &db, &dx);
+            if (!is_one && !is_cl) {
+                emit8(&enc, (uint8_t)op2->imm);
+            }
+            return enc;
+        }
+    }
+
+    /* ============================================================
+     * String operations with prefixes (REP, REPE, REPNE)
+     * ============================================================ */
+    if ((mnem == MNEM_MOVSB || mnem == MNEM_MOVSW || mnem == MNEM_MOVSD || mnem == MNEM_MOVSQ ||
+         mnem == MNEM_STOSB || mnem == MNEM_STOSW || mnem == MNEM_STOSD || mnem == MNEM_STOSQ ||
+         mnem == MNEM_LODSB || mnem == MNEM_LODSW || mnem == MNEM_LODSD || mnem == MNEM_LODSQ ||
+         mnem == MNEM_SCASB || mnem == MNEM_SCASW || mnem == MNEM_SCASD || mnem == MNEM_SCASQ ||
+         mnem == MNEM_CMPSB || mnem == MNEM_CMPSW || mnem == MNEM_CMPSD || mnem == MNEM_CMPSQ ||
+         mnem == MNEM_INSB || mnem == MNEM_INSW || mnem == MNEM_INSD ||
+         mnem == MNEM_OUTSB || mnem == MNEM_OUTSW || mnem == MNEM_OUTSD) && has1) {
+        
+        /* Check for prefix operand */
+        int has_rep = 0, has_repe = 0, has_repne = 0;
+        if (op1->type == OP_REP) has_rep = 1;
+        else if (op1->type == OP_REPE) has_repe = 1;
+        else if (op1->type == OP_REPNE) has_repne = 1;
+        
+        /* Emit prefix */
+        if (has_rep) emit8(&enc, 0xF3);
+        else if (has_repe) emit8(&enc, 0xF3);
+        else if (has_repne) emit8(&enc, 0xF2);
+        
+        /* Emit size prefix for word operations */
+        if (mnem == MNEM_MOVSW || mnem == MNEM_STOSW || mnem == MNEM_LODSW || 
+            mnem == MNEM_SCASW || mnem == MNEM_CMPSW || mnem == MNEM_INSW || mnem == MNEM_OUTSW) {
+            emit8(&enc, 0x66);
+        }
+        
+        /* Emit opcode */
+        switch (mnem) {
+            case MNEM_MOVSB: case MNEM_MOVSW: case MNEM_MOVSD: case MNEM_MOVSQ: emit8(&enc, 0xA4); break;
+            case MNEM_STOSB: case MNEM_STOSW: case MNEM_STOSD: case MNEM_STOSQ: emit8(&enc, 0xAA); break;
+            case MNEM_LODSB: case MNEM_LODSW: case MNEM_LODSD: case MNEM_LODSQ: emit8(&enc, 0xAC); break;
+            case MNEM_SCASB: case MNEM_SCASW: case MNEM_SCASD: case MNEM_SCASQ: emit8(&enc, 0xAE); break;
+            case MNEM_CMPSB: case MNEM_CMPSW: case MNEM_CMPSD: case MNEM_CMPSQ: emit8(&enc, 0xA6); break;
+            case MNEM_INSB: case MNEM_INSW: case MNEM_INSD: emit8(&enc, 0x6C); break;
+            case MNEM_OUTSB: case MNEM_OUTSW: case MNEM_OUTSD: emit8(&enc, 0x6E); break;
+            default: break;
+        }
+        return enc;
+    }
+
+    /* ============================================================
+     * System instructions
+     * ============================================================ */
+    switch (mnem) {
+        case MNEM_RDTSCP:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x01);
+            emit8(&enc, 0xF9);
+            return enc;
+        case MNEM_RDMSR:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x32);
+            return enc;
+        case MNEM_WRMSR:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x30);
+            return enc;
+        case MNEM_RDPID:
+            if (has1 && op1->type == OP_REG) {
+                emit8(&enc, 0xF3);
+                emit8(&enc, 0x0F);
+                emit8(&enc, 0x38);
+                emit8(&enc, 0xF9);
+                int b_ext = reg_needs_rex(op1->reg);
+                if (b_ext) emit_rex(&enc, 0, 0, 0, b_ext);
+                emit_modrm(&enc, 0x03, 0, reg_lo3(op1->reg));
+            }
+            return enc;
+        case MNEM_INVD:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x08);
+            return enc;
+        case MNEM_WBINVD:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x09);
+            return enc;
+        case MNEM_CLFLUSH:
+            if (has1 && op1->type == OP_MEM) {
+                int rex_b = 0, rex_x = 0;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (rex_x || rex_b) emit_rex(&enc, 0, 0, rex_x, rex_b);
+                emit8(&enc, 0x0F);
+                emit8(&enc, 0xAE);
+                int db, dx;
+                encode_mem(&enc, &op1->mem, 7, &db, &dx);
+            }
+            return enc;
+        case MNEM_CLFLUSHOPT:
+            if (has1 && op1->type == OP_MEM) {
+                int rex_b = 0, rex_x = 0;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (rex_x || rex_b) emit_rex(&enc, 0, 0, rex_x, rex_b);
+                emit8(&enc, 0x66);
+                emit8(&enc, 0x0F);
+                emit8(&enc, 0xAE);
+                int db, dx;
+                encode_mem(&enc, &op1->mem, 7, &db, &dx);
+            }
+            return enc;
+        case MNEM_CLWB:
+            if (has1 && op1->type == OP_MEM) {
+                int rex_b = 0, rex_x = 0;
+                if (op1->mem.base != X64_REG_NONE && reg_needs_rex(op1->mem.base)) rex_b = 1;
+                if (op1->mem.index != X64_REG_NONE && reg_needs_rex(op1->mem.index)) rex_x = 1;
+                if (rex_x || rex_b) emit_rex(&enc, 0, 0, rex_x, rex_b);
+                emit8(&enc, 0x66);
+                emit8(&enc, 0x0F);
+                emit8(&enc, 0xAE);
+                int db, dx;
+                encode_mem(&enc, &op1->mem, 6, &db, &dx);
+            }
+            return enc;
+        case MNEM_ENTER:
+            if (has1 && op1->type == OP_IMM && has2 && op2->type == OP_IMM) {
+                emit8(&enc, 0xC8);
+                emit16(&enc, (uint16_t)op1->imm);
+                emit8(&enc, (uint8_t)op2->imm);
+            }
+            return enc;
+        case MNEM_LEAVE:
+            emit8(&enc, 0xC9);
+            return enc;
+        case MNEM_BSWAP:
+            if (has1 && op1->type == OP_REG) {
+                int b_ext = reg_needs_rex(op1->reg);
+                if (b_ext) emit_rex(&enc, 1, 0, 0, b_ext);
+                emit8(&enc, 0x0F);
+                emit8(&enc, (uint8_t)(0xC8 + reg_lo3(op1->reg)));
+            }
+            return enc;
+        case MNEM_PAUSE:
+            emit8(&enc, 0xF3);
+            emit8(&enc, 0x90);
+            return enc;
+        case MNEM_LFENCE:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0xAE);
+            emit8(&enc, 0xE8);
+            return enc;
+        case MNEM_SFENCE:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0xAE);
+            emit8(&enc, 0xF8);
+            return enc;
+        case MNEM_MFENCE:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0xAE);
+            emit8(&enc, 0xF0);
+            return enc;
+        case MNEM_UD2:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x0B);
+            return enc;
+        case MNEM_PUSHF:
+            emit8(&enc, 0x9C);
+            return enc;
+        case MNEM_POPF:
+            emit8(&enc, 0x9D);
+            return enc;
+        case MNEM_SYSENTER:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x34);
+            return enc;
+        case MNEM_SYSEXIT:
+            emit8(&enc, 0x0F);
+            emit8(&enc, 0x35);
+            return enc;
+        case MNEM_CWD:
+            emit8(&enc, 0x66);
+            emit8(&enc, 0x99);
+            return enc;
+        case MNEM_CDQE:
+            emit8(&enc, 0x48);
+            emit8(&enc, 0x98);
+            return enc;
+        case MNEM_CQO:
+            emit8(&enc, 0x48);
+            emit8(&enc, 0x99);
+            return enc;
+        case MNEM_CLI:
+            emit8(&enc, 0xFA);
+            return enc;
+        case MNEM_STI:
+            emit8(&enc, 0xFB);
+            return enc;
+        case MNEM_HLT:
+            emit8(&enc, 0xF4);
+            return enc;
+        case MNEM_IN:
+            if (has1 && op1->type == OP_REG && op1->reg == REG_RAX && op1->size == SZ_BYTE) {
+                if (has2 && op2->type == OP_IMM) {
+                    emit8(&enc, 0xE4);
+                    emit8(&enc, (uint8_t)op2->imm);
+                } else if (has2 && op2->type == OP_REG && op2->reg == REG_RDX && op2->size == SZ_WORD) {
+                    emit8(&enc, 0xEC);
+                }
+            } else if (has1 && op1->type == OP_REG && op1->reg == REG_RAX && op1->size == SZ_DWORD) {
+                if (has2 && op2->type == OP_IMM) {
+                    emit8(&enc, 0xE5);
+                    emit8(&enc, (uint8_t)op2->imm);
+                } else if (has2 && op2->type == OP_REG && op2->reg == REG_RDX && op2->size == SZ_WORD) {
+                    emit8(&enc, 0xED);
+                }
+            }
+            return enc;
+        case MNEM_OUT:
+            if (has2 && op2->type == OP_REG && op2->reg == REG_RAX && op2->size == SZ_BYTE) {
+                if (has1 && op1->type == OP_IMM) {
+                    emit8(&enc, 0xE6);
+                    emit8(&enc, (uint8_t)op1->imm);
+                } else if (has1 && op1->type == OP_REG && op1->reg == REG_RDX && op1->size == SZ_WORD) {
+                    emit8(&enc, 0xEE);
+                }
+            } else if (has2 && op2->type == OP_REG && op2->reg == REG_RAX && op2->size == SZ_DWORD) {
+                if (has1 && op1->type == OP_IMM) {
+                    emit8(&enc, 0xE7);
+                    emit8(&enc, (uint8_t)op1->imm);
+                } else if (has1 && op1->type == OP_REG && op1->reg == REG_RDX && op1->size == SZ_WORD) {
+                    emit8(&enc, 0xEF);
+                }
+            }
+            return enc;
+        default: break;
+    }
+
     /* Unhandled instruction */
     return enc;
 }
@@ -844,10 +1409,67 @@ static const mnem_entry_t mnem_table[] = {
     {"ja", MNEM_JA}, {"jae", MNEM_JAE}, {"jb", MNEM_JB}, {"jbe", MNEM_JBE},
     {"jg", MNEM_JG}, {"jge", MNEM_JGE}, {"jl", MNEM_JL}, {"jle", MNEM_JLE},
     {"js", MNEM_JS}, {"jns", MNEM_JNS}, {"jo", MNEM_JO}, {"jno", MNEM_JNO},
+    /* SETcc instructions */
+    {"seta", MNEM_SETA}, {"setae", MNEM_SETAE}, {"setb", MNEM_SETB}, {"setbe", MNEM_SETBE},
+    {"setc", MNEM_SETC}, {"sete", MNEM_SETE}, {"setg", MNEM_SETG}, {"setge", MNEM_SETGE},
+    {"setl", MNEM_SETL}, {"setle", MNEM_SETLE}, {"setna", MNEM_SETNA}, {"setnae", MNEM_SETNAE},
+    {"setnb", MNEM_SETNB}, {"setnbe", MNEM_SETNBE}, {"setnc", MNEM_SETNC}, {"setne", MNEM_SETNE},
+    {"setng", MNEM_SETNG}, {"setnge", MNEM_SETNGE}, {"setnl", MNEM_SETNL}, {"setnle", MNEM_SETNLE},
+    {"setno", MNEM_SETNO}, {"setnp", MNEM_SETNP}, {"setns", MNEM_SETNS}, {"setnz", MNEM_SETNZ},
+    {"seto", MNEM_SETO}, {"setp", MNEM_SETP}, {"setpe", MNEM_SETPE}, {"setpo", MNEM_SETPO},
+    {"sets", MNEM_SETS}, {"setz", MNEM_SETZ},
+    /* CMOVcc instructions */
+    {"cmova", MNEM_CMOVA}, {"cmovae", MNEM_CMOVAE}, {"cmovb", MNEM_CMOVB}, {"cmovbe", MNEM_CMOVBE},
+    {"cmovc", MNEM_CMOVC}, {"cmove", MNEM_CMOVE}, {"cmovg", MNEM_CMOVG}, {"cmovge", MNEM_CMOVGE},
+    {"cmovl", MNEM_CMOVL}, {"cmovle", MNEM_CMOVLE}, {"cmovna", MNEM_CMOVNA}, {"cmovnae", MNEM_CMOVNAE},
+    {"cmovnb", MNEM_CMOVNB}, {"cmovnbe", MNEM_CMOVNBE}, {"cmovnc", MNEM_CMOVNC}, {"cmovne", MNEM_CMOVNE},
+    {"cmovng", MNEM_CMOVNG}, {"cmovnge", MNEM_CMOVNGE}, {"cmovnl", MNEM_CMOVNL}, {"cmovnle", MNEM_CMOVNLE},
+    {"cmovno", MNEM_CMOVNO}, {"cmovnp", MNEM_CMOVNP}, {"cmovns", MNEM_CMOVNS}, {"cmovnz", MNEM_CMOVNZ},
+    {"cmovo", MNEM_CMOVO}, {"cmovp", MNEM_CMOVP}, {"cmovpe", MNEM_CMOVPE}, {"cmovpo", MNEM_CMOVPO},
+    {"cmovs", MNEM_CMOVS}, {"cmovz", MNEM_CMOVZ},
     {"nop", MNEM_NOP}, {"clc", MNEM_CLC}, {"stc", MNEM_STC},
     {"cld", MNEM_CLD}, {"std", MNEM_STD},
     {"syscall", MNEM_SYSCALL}, {"cpuid", MNEM_CPUID}, {"rdtsc", MNEM_RDTSC},
     {"cdq", MNEM_CDQ}, {"cqo", MNEM_CQO},
+    /* Atomic operations */
+    {"xadd", MNEM_XADD}, {"cmpxchg", MNEM_CMPXCHG},
+    /* Bit manipulation */
+    {"bt", MNEM_BT}, {"bts", MNEM_BTS}, {"btr", MNEM_BTR}, {"btc", MNEM_BTC},
+    /* Rotate with carry */
+    {"rcl", MNEM_RCL}, {"rcr", MNEM_RCR},
+    /* String operations (explicit) */
+    {"movsb", MNEM_MOVSB}, {"movsw", MNEM_MOVSW}, {"movsd", MNEM_MOVSD}, {"movsq", MNEM_MOVSQ},
+    {"stosb", MNEM_STOSB}, {"stosw", MNEM_STOSW}, {"stosd", MNEM_STOSD}, {"stosq", MNEM_STOSQ},
+    {"lodsb", MNEM_LODSB}, {"lodsw", MNEM_LODSW}, {"lodsd", MNEM_LODSD}, {"lodsq", MNEM_LODSQ},
+    {"scasb", MNEM_SCASB}, {"scasw", MNEM_SCASW}, {"scasd", MNEM_SCASD}, {"scasq", MNEM_SCASQ},
+    {"cmpsb", MNEM_CMPSB}, {"cmpsw", MNEM_CMPSW}, {"cmpsd", MNEM_CMPSD}, {"cmpsq", MNEM_CMPSQ},
+    {"insb", MNEM_INSB}, {"insw", MNEM_INSW}, {"insd", MNEM_INSD},
+    {"outsb", MNEM_OUTSB}, {"outsw", MNEM_OUTSW}, {"outsd", MNEM_OUTSD},
+    /* Generic string operations (map to byte versions for parser) */
+    {"movs", MNEM_MOVSB}, {"stos", MNEM_STOSB}, {"lods", MNEM_LODSB},
+    {"scas", MNEM_SCASB}, {"cmps", MNEM_CMPSB},
+    /* Stack frame */
+    {"enter", MNEM_ENTER}, {"leave", MNEM_LEAVE},
+    /* Byte swap */
+    {"bswap", MNEM_BSWAP},
+    /* Memory fences */
+    {"pause", MNEM_PAUSE}, {"lfence", MNEM_LFENCE}, {"sfence", MNEM_SFENCE}, {"mfence", MNEM_MFENCE},
+    /* Undefined instruction */
+    {"ud2", MNEM_UD2},
+    /* Push/Pop flags */
+    {"pushf", MNEM_PUSHF}, {"popf", MNEM_POPF},
+    /* Fast system calls */
+    {"sysenter", MNEM_SYSENTER}, {"sysexit", MNEM_SYSEXIT},
+    /* Convert instructions */
+    {"cwd", MNEM_CWD}, {"cdqe", MNEM_CDQE},
+    /* MOVSXD */
+    {"movsxd", MNEM_MOVSXD},
+    /* Interrupt/IO */
+    {"cli", MNEM_CLI}, {"sti", MNEM_STI}, {"hlt", MNEM_HLT},
+    {"in", MNEM_IN}, {"out", MNEM_OUT},
+    /* System instructions */
+    {"rdtscp", MNEM_RDTSCP}, {"rdmsr", MNEM_RDMSR}, {"wrmsr", MNEM_WRMSR}, {"rdpid", MNEM_RDPID},
+    {"invd", MNEM_INVD}, {"wbinvd", MNEM_WBINVD}, {"clflush", MNEM_CLFLUSH}, {"clflushopt", MNEM_CLFLUSHOPT}, {"clwb", MNEM_CLWB},
     {NULL, MNEM_UNKNOWN}
 };
 
@@ -914,7 +1536,7 @@ static const reg_entry_t reg_table[] = {
     /* Legacy 8-bit (no REX) */
     {"ah", REG_RSP, SZ_BYTE}, {"ch", REG_RBP, SZ_BYTE},
     {"dh", REG_RSI, SZ_BYTE}, {"bh", REG_RDI, SZ_BYTE},
-    {NULL, REG_NONE, SZ_BYTE}
+    {NULL, X64_REG_NONE, SZ_BYTE}
 };
 
 x64_reg_t x64_parse_register(const char *s, operand_size_t *out_size) {
@@ -929,5 +1551,31 @@ x64_reg_t x64_parse_register(const char *s, operand_size_t *out_size) {
         }
     }
     if (out_size) *out_size = SZ_QWORD;
-    return REG_NONE;
+    return X64_REG_NONE;
+}
+
+/* ============================================================
+ * Encode with prefix (LOCK, REP, etc.)
+ * ============================================================ */
+x64_encoded_t x64_encode_with_prefix(x64_mnemonic_t mnem, uint8_t prefix, x64_operand_t *op1, x64_operand_t *op2) {
+    x64_encoded_t enc;
+    memset(&enc, 0, sizeof(enc));
+    
+    /* Emit prefix first */
+    if (enc.len < 15) enc.bytes[enc.len++] = prefix;
+    
+    /* Then encode the instruction */
+    x64_encoded_t inner = x64_encode(mnem, op1, op2);
+    
+    /* Copy the inner encoding bytes */
+    for (int i = 0; i < inner.len && enc.len < 15; i++) {
+        enc.bytes[enc.len++] = inner.bytes[i];
+    }
+    
+    /* Copy relocation info */
+    enc.reloc_offset = inner.reloc_offset;
+    enc.reloc_type = inner.reloc_type;
+    strncpy(enc.reloc_symbol, inner.reloc_symbol, 127);
+    
+    return enc;
 }

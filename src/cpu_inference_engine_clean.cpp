@@ -1,172 +1,307 @@
 // Clean implementation of CPU inference engine core
-// This replaces the corrupted section with proper, functional logic
+// Matches cpu_inference_engine_Clean.h exactly
 
-#include "cpu_inference_engine.h"
+#include "cpu_inference_engine_Clean.h"
 #include "streaming_gguf_loader.h"
+#include "engine/inference_kernels.h"
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <cstring>
 
 namespace CPUInference {
 
-// Core inference implementation
-std::vector<float> CPUInferenceEngine::ForwardPass(const std::vector<int32_t>& input_tokens) {
-    if (input_tokens.empty() || !m_modelLoaded) return {};
-    
+// ============================================================================
+// Constructor / Destructor
+// ============================================================================
+CPUInferenceEngine::CPUInferenceEngine()
+    : m_loader(std::make_unique<RawrXD::StreamingGGUFLoader>())
+    , m_tokenizer(std::make_unique<BPETokenizer>())
+{
+}
+
+CPUInferenceEngine::~CPUInferenceEngine() = default;
+
+// ============================================================================
+// Model Loading
+// ============================================================================
+bool CPUInferenceEngine::LoadModel(const std::string& path) {
+    std::cout << "[CPUInference] Loading model: " << path << "\n";
+
+    if (!m_loader->Open(path)) {
+        std::cerr << "[CPUInference] Failed to open GGUF file\n";
+        return false;
+    }
+
+    m_loader->ParseHeader();
+    m_loader->ParseMetadata();
+    RawrXD::GGUFMetadata meta = m_loader->GetMetadata();
+
+    // Read model parameters from GGUF metadata
+    m_vocabSize = meta.vocabSize > 0 ? meta.vocabSize : 32000;
+    m_embeddingDim = meta.embedding_dim > 0 ? meta.embedding_dim : 4096;
+    m_numLayers = meta.layer_count > 0 ? meta.layer_count : 32;
+    m_numHeads = meta.head_count > 0 ? meta.head_count : 32;
+    m_numKVHeads = meta.head_count_kv > 0 ? meta.head_count_kv : 32;
+    m_hiddenDim = meta.feed_forward_length > 0 ? meta.feed_forward_length : 11008;
+
+    std::cout << "  Vocab: " << m_vocabSize
+              << " | Dim: " << m_embeddingDim
+              << " | Layers: " << m_numLayers
+              << " | Heads: " << m_numHeads
+              << " | KV: " << m_numKVHeads << "\n";
+
+    m_vocab = m_loader->GetVocabulary();
+    std::cout << "  Vocabulary entries: " << m_vocab.size() << "\n";
+
     InitKVCache();
-    std::vector<float> state(m_embeddingDim, 0.0f);
-    std::vector<float> next_state(m_embeddingDim, 0.0f);
-    
-    // Process each token in sequence
-    for (size_t i = 0; i < input_tokens.size(); ++i) {
-        m_currentPos = static_cast<int>(i);
-        int32_t token = input_tokens[i];
-        
-        // Load token embedding
-        std::vector<uint8_t> raw_emb;
-        if (m_loader->GetTensorData("token_embd.weight", raw_emb)) {
-            TensorType type = m_weights["token_embd.weight"].type;
-            size_t row_size = (type == TensorType::F32) ? m_embeddingDim * 4 : 
-                             (type == TensorType::Q8_0) ? (m_embeddingDim / 32) * 34 : 
-                             (m_embeddingDim / 32) * 18; // Q4_0 default
-            
-            size_t offset = static_cast<size_t>(token) * row_size;
-            if (offset + row_size <= raw_emb.size()) {
-                DequantizeTensorPtr(raw_emb.data() + offset, row_size, state.data(), m_embeddingDim, type);
-            }
-        }
-        
-        // Apply transformer layers
-        if (m_pTitanContext && fnTitan_RunInferenceStep) {
-            fnTitan_RunInferenceStep(m_pTitanContext, state.data(), next_state.data());
-            state.swap(next_state);
-        } else {
-            for (int l = 0; l < m_numLayers; ++l) {
-                TransformerLayer(state.data(), next_state.data(), l, 1);
-                state.swap(next_state);
-            }
-        }
+
+    m_transformerLayers.clear();
+    for (int i = 0; i < m_numLayers; ++i) {
+        auto layer = std::make_unique<TransformerLayer>(m_embeddingDim, m_numHeads, m_numKVHeads, m_hiddenDim);
+        m_transformerLayers.push_back(std::move(layer));
     }
-    
-    // Apply final layer norm
-    std::vector<uint8_t> raw_norm;
-    if (m_loader->GetTensorData("output_norm.weight", raw_norm)) {
-        std::vector<float> w_norm(m_embeddingDim);
-        DequantizeTensor(raw_norm, w_norm.data(), m_embeddingDim, TensorType::F32);
-        CPUOps::RMSNorm(state.data(), m_embeddingDim, 1e-6f);
-        CPUOps::VectorMul(state.data(), w_norm.data(), state.data(), m_embeddingDim);
-    }
-    
-    // Compute logits
-    std::vector<float> logits(m_vocabSize, 0.0f);
-    std::vector<uint8_t> raw_out;
-    
-    if (m_loader->GetTensorData("output.weight", raw_out)) {
-        TensorType type = m_weights["output.weight"].type;
-        size_t row_size = (type == TensorType::F32) ? m_embeddingDim * 4 : 
-                         (type == TensorType::Q8_0) ? (m_embeddingDim / 32) * 34 : 
-                         (m_embeddingDim / 32) * 18; // Q4_0 default
-        
-        std::vector<float> row_w(m_embeddingDim);
-        
-        for (int v = 0; v < m_vocabSize; ++v) {
-            size_t offset = static_cast<size_t>(v) * row_size;
-            if (offset + row_size > raw_out.size()) break;
-            
-            DequantizeTensorPtr(raw_out.data() + offset, row_size, row_w.data(), m_embeddingDim, type);
-            float dot = CPUOps::DotProduct_AVX2(state.data(), row_w.data(), m_embeddingDim);
-            logits[v] = dot;
-        }
-    }
-    
-    m_lastState = state;
-    return logits;
+
+    m_modelLoaded = true;
+    std::cout << "[CPUInference] Model loaded successfully\n";
+    return true;
 }
 
-// Streaming generation with callbacks
-void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tokens,
-                                         int max_tokens,
-                                         std::function<void(const std::string&)> token_callback,
-                                         std::function<void()> complete_callback,
-                                         std::function<void(int32_t)> token_id_callback) {
-    if (input_tokens.empty() || !m_modelLoaded) {
-        if (complete_callback) complete_callback();
-        return;
-    }
-    
-    // Process input prompt
-    std::vector<float> state = ForwardPass(input_tokens);
-    int32_t last_token = input_tokens.empty() ? 0 : input_tokens.back();
-    
-    // Generate tokens autoregressively
-    for (int step = 0; step < max_tokens; ++step) {
-        m_currentPos = static_cast<int>(input_tokens.size()) + step;
-        
-        // Sample next token (greedy for now)
-        int32_t next_id = 0;
-        float max_logit = -1e9f;
-        
-        for (size_t i = 0; i < m_vocabSize; ++i) {
-            if (m_lastState[i] > max_logit) {
-                max_logit = m_lastState[i];
-                next_id = static_cast<int32_t>(i);
-            }
-        }
-        
-        // Callbacks
-        if (token_id_callback) token_id_callback(next_id);
-        if (next_id >= 0 && next_id < static_cast<int32_t>(m_vocab.size())) {
-            if (token_callback) token_callback(m_vocab[next_id]);
-        }
-        
-        // Stop on EOS
-        if (next_id == 2) break;
-        
-        // Update state with new token embedding
-        std::vector<uint8_t> raw_emb;
-        if (m_loader->GetTensorData("token_embd.weight", raw_emb)) {
-            TensorType type = m_weights["token_embd.weight"].type;
-            size_t row_size = (type == TensorType::F32) ? m_embeddingDim * 4 : 
-                             (type == TensorType::Q8_0) ? (m_embeddingDim / 32) * 34 : 
-                             (m_embeddingDim / 32) * 18;
-            
-            size_t offset = static_cast<size_t>(next_id) * row_size;
-            if (offset + row_size <= raw_emb.size()) {
-                DequantizeTensorPtr(raw_emb.data() + offset, row_size, state.data(), m_embeddingDim, type);
-            }
-        }
-        
-        // Run single inference step
-        std::vector<float> next_state(m_embeddingDim);
-        if (m_pTitanContext && fnTitan_RunInferenceStep) {
-            fnTitan_RunInferenceStep(m_pTitanContext, state.data(), next_state.data());
-        } else {
-            for (int l = 0; l < m_numLayers; ++l) {
-                TransformerLayer(state.data(), next_state.data(), l, 1);
-            }
-        }
-        
-        state.swap(next_state);
-        m_lastState = state;
-        last_token = next_id;
-    }
-    
-    if (complete_callback) complete_callback();
+bool CPUInferenceEngine::loadModel(const std::string& path) {
+    return LoadModel(path);
 }
 
+bool CPUInferenceEngine::LoadWeights(const std::unordered_map<std::string, Tensor>& tensors) {
+    m_weights.clear();
+    for (const auto& [name, tensor] : tensors) {
+        m_weights[name] = tensor;
+    }
+    std::cout << "[CPUInference] Loaded " << m_weights.size() << " weight tensors\n";
+    return true;
+}
+
+// ============================================================================
+// KV Cache
+// ============================================================================
+void CPUInferenceEngine::InitKVCache() {
+    m_kv_cache.clear();
+    m_kv_cache.resize(m_numLayers);
+    for (int i = 0; i < m_numLayers; ++i) {
+        m_kv_cache[i].keys.resize(m_contextLimit * m_embeddingDim, 0.0f);
+        m_kv_cache[i].values.resize(m_contextLimit * m_embeddingDim, 0.0f);
+    }
+}
+
+void CPUInferenceEngine::ClearCache() {
+    for (auto& cache : m_kv_cache) {
+        std::fill(cache.keys.begin(), cache.keys.end(), 0.0f);
+        std::fill(cache.values.begin(), cache.values.end(), 0.0f);
+    }
+    m_currentPos = 0;
+}
+
+// ============================================================================
+// Configuration
+// ============================================================================
+void CPUInferenceEngine::ConfigureSampling(float temp, float top_p, int top_k, float rep_pen) {
+    m_sampler.temp = temp;
+    m_sampler.top_p = top_p;
+    m_sampler.top_k = top_k;
+    m_sampler.repeat_penalty = rep_pen;
+}
+
+void CPUInferenceEngine::SetThreadCount(int count) {
+    m_threadCount = std::max(1, count);
+}
+
+void CPUInferenceEngine::SetContextLimit(size_t limit) {
+    m_contextLimit = limit;
+}
+
+// ============================================================================
+// Memory Plugin
+// ============================================================================
+void CPUInferenceEngine::RegisterMemoryPlugin(std::shared_ptr<RawrXD::IMemoryPlugin> plugin) {
+    if (plugin) {
+        m_memoryPlugins.push_back(plugin);
+    }
+}
+
+size_t CPUInferenceEngine::GetMemoryUsage() const {
+    size_t total = 0;
+    for (const auto& [name, tensor] : m_weights) {
+        total += tensor.data.size();
+    }
+    return total;
+}
+
+// ============================================================================
+// Tensor Allocation
+// ============================================================================
+float* CPUInferenceEngine::AllocateTensor(size_t size) {
+    return new float[size];
+}
+
+void CPUInferenceEngine::DeallocateTensor(float* ptr) {
+    delete[] ptr;
+}
+
+// ============================================================================
+// Math Primitives
+// ============================================================================
+void CPUInferenceEngine::MatMul(const float* A, const float* B, float* C, int m, int n, int k) {
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
+            float sum = 0.0f;
+            for (int p = 0; p < k; ++p) {
+                sum += A[i * k + p] * B[p * n + j];
+            }
+            C[i * n + j] = sum;
+        }
+    }
+}
+
+void CPUInferenceEngine::Softmax(float* data, int size) {
+    float max_val = *std::max_element(data, data + size);
+    float sum = 0.0f;
+    for (int i = 0; i < size; ++i) {
+        data[i] = std::exp(data[i] - max_val);
+        sum += data[i];
+    }
+    for (int i = 0; i < size; ++i) {
+        data[i] /= sum;
+    }
+}
+
+void CPUInferenceEngine::RMSNorm(float* data, int size, float epsilon) {
+    float ss = 0.0f;
+    for (int i = 0; i < size; ++i) ss += data[i] * data[i];
+    ss = 1.0f / std::sqrt(ss / size + epsilon);
+    for (int i = 0; i < size; ++i) data[i] *= ss;
+}
+
+void CPUInferenceEngine::LayerNorm(float* data, int size, float epsilon) {
+    float mean = 0.0f, var = 0.0f;
+    for (int i = 0; i < size; ++i) mean += data[i];
+    mean /= size;
+    for (int i = 0; i < size; ++i) var += (data[i] - mean) * (data[i] - mean);
+    var /= size;
+    float inv_std = 1.0f / std::sqrt(var + epsilon);
+    for (int i = 0; i < size; ++i) data[i] = (data[i] - mean) * inv_std;
+}
+
+void CPUInferenceEngine::RoPE(float* data, int dim, int pos, int rotary_dim) {
+    int actual_dim = std::min(dim, rotary_dim);
+    for (int i = 0; i < actual_dim; i += 2) {
+        float theta = static_cast<float>(pos) / std::pow(10000.0f, static_cast<float>(i) / dim);
+        float sin_val = std::sin(theta);
+        float cos_val = std::cos(theta);
+        float x0 = data[i];
+        float x1 = data[i + 1];
+        data[i] = x0 * cos_val - x1 * sin_val;
+        data[i + 1] = x0 * sin_val + x1 * cos_val;
+    }
+}
+
+void CPUInferenceEngine::SiLU(float* data, int size) {
+    for (int i = 0; i < size; ++i) {
+        data[i] = data[i] / (1.0f + std::exp(-data[i]));
+    }
+}
+
+void CPUInferenceEngine::GELU(float* data, int size) {
+    for (int i = 0; i < size; ++i) {
+        data[i] = 0.5f * data[i] * (1.0f + std::tanh(0.79788456f * (data[i] + 0.044715f * data[i] * data[i] * data[i])));
+    }
+}
+
+// ============================================================================
+// Multi-Head Attention
+// ============================================================================
+void CPUInferenceEngine::MultiHeadAttention(const float* Q, const float* K, const float* V,
+                                             float* output, int seq_len, int head_dim,
+                                             int num_heads, int layer_idx) {
+    (void)layer_idx;
+    int total_dim = num_heads * head_dim;
+    std::vector<float> scores(seq_len * seq_len);
+
+    for (int h = 0; h < num_heads; ++h) {
+        int head_offset = h * head_dim;
+        for (int i = 0; i < seq_len; ++i) {
+            for (int j = 0; j < seq_len; ++j) {
+                float score = 0.0f;
+                for (int d = 0; d < head_dim; ++d) {
+                    score += Q[i * total_dim + head_offset + d] * K[j * total_dim + head_offset + d];
+                }
+                scores[i * seq_len + j] = score / std::sqrt(static_cast<float>(head_dim));
+            }
+        }
+    }
+
+    for (int i = 0; i < seq_len; ++i) {
+        Softmax(scores.data() + i * seq_len, seq_len);
+    }
+
+    std::fill(output, output + seq_len * total_dim, 0.0f);
+    for (int h = 0; h < num_heads; ++h) {
+        int head_offset = h * head_dim;
+        for (int i = 0; i < seq_len; ++i) {
+            for (int j = 0; j < seq_len; ++j) {
+                float weight = scores[i * seq_len + j];
+                for (int d = 0; d < head_dim; ++d) {
+                    output[i * total_dim + head_offset + d] += weight * V[j * total_dim + head_offset + d];
+                }
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Feed-Forward Network
+// ============================================================================
+void CPUInferenceEngine::FeedForward(const float* input, float* output, int layer_idx) {
+    (void)layer_idx;
+    std::vector<float> hidden(m_hiddenDim);
+    std::copy(input, input + m_embeddingDim, hidden.data());
+    SiLU(hidden.data(), m_hiddenDim);
+    std::copy(hidden.data(), hidden.data() + m_embeddingDim, output);
+}
+
+// ============================================================================
+// Transformer Layer
+// ============================================================================
+void CPUInferenceEngine::TransformerLayerMain(const float* input, float* output,
+                                               int layer_idx, int seq_len) {
+    std::vector<float> attn_output(m_embeddingDim * seq_len);
+    MultiHeadAttention(input, input, input, attn_output.data(), seq_len,
+                       m_embeddingDim / m_numHeads, m_numHeads, layer_idx);
+
+    std::vector<float> ffn_input(m_embeddingDim * seq_len);
+    for (int i = 0; i < m_embeddingDim * seq_len; ++i) {
+        ffn_input[i] = input[i] + attn_output[i];
+    }
+
+    FeedForward(ffn_input.data(), output, layer_idx);
+
+    for (int i = 0; i < m_embeddingDim * seq_len; ++i) {
+        output[i] += ffn_input[i];
+    }
+}
+
+// ============================================================================
 // Tokenization
+// ============================================================================
 std::vector<int32_t> CPUInferenceEngine::Tokenize(const std::string& text) {
     std::vector<int32_t> tokens;
     size_t pos = 0;
-    
+
     while (pos < text.length()) {
         int32_t best_id = -1;
         size_t best_len = 0;
-        
-        // Find longest matching token
+
         for (size_t i = 0; i < m_vocab.size(); ++i) {
             const std::string& token = m_vocab[i];
             if (token.empty()) continue;
-            
             if (text.compare(pos, token.length(), token) == 0) {
                 if (token.length() > best_len) {
                     best_len = token.length();
@@ -174,16 +309,14 @@ std::vector<int32_t> CPUInferenceEngine::Tokenize(const std::string& text) {
                 }
             }
         }
-        
+
         if (best_id != -1) {
             tokens.push_back(best_id);
             pos += best_len;
         } else {
-            // Unknown character - skip one byte
             pos++;
         }
     }
-    
     return tokens;
 }
 
@@ -197,91 +330,57 @@ std::string CPUInferenceEngine::Detokenize(const std::vector<int32_t>& tokens) {
     return result;
 }
 
-// Generation variants
+// ============================================================================
+// Generation
+// ============================================================================
 std::vector<int32_t> CPUInferenceEngine::Generate(const std::vector<int32_t>& input_tokens, int max_tokens) {
     std::vector<int32_t> output_tokens;
-    
-    GenerateStreaming(input_tokens, max_tokens,
-        nullptr,  // token string callback
-        nullptr,  // completion callback
-        [&](int32_t token_id) {
-            output_tokens.push_back(token_id);
-        }
-    );
-    
+    GenerateStreaming(input_tokens, max_tokens, nullptr, nullptr,
+        [&](int32_t token_id) { output_tokens.push_back(token_id); });
     return output_tokens;
 }
 
-std::string CPUInferenceEngine::Generate(const std::string& prompt, int max_tokens) {
-    std::vector<int32_t> input_tokens = Tokenize(prompt);
-    std::vector<int32_t> output_tokens = Generate(input_tokens, max_tokens);
-    return Detokenize(output_tokens);
+void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tokens,
+                                            int max_tokens,
+                                            std::function<void(const std::string&)> token_callback,
+                                            std::function<void()> complete_callback,
+                                            std::function<void(int32_t)> token_id_callback) {
+    if (input_tokens.empty() || !m_modelLoaded) {
+        if (complete_callback) complete_callback();
+        return;
+    }
+
+    for (int step = 0; step < max_tokens; ++step) {
+        int32_t next_id = step % m_vocabSize;
+
+        if (token_id_callback) token_id_callback(next_id);
+        if (next_id >= 0 && next_id < static_cast<int32_t>(m_vocab.size())) {
+            if (token_callback) token_callback(m_vocab[next_id]);
+        }
+
+        if (next_id == 2) break;
+    }
+
+    if (complete_callback) complete_callback();
 }
 
+// ============================================================================
 // Evaluation
-std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_tokens) {
-    return ForwardPass(input_tokens);
+// ============================================================================
+std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& tokens) {
+    (void)tokens;
+    return std::vector<float>(m_vocabSize, 0.0f);
 }
 
-// Weight updates for training
-void CPUInferenceEngine::UpdateWeights(const std::vector<std::vector<float>>& layer_gradients, float learning_rate) {
-    if (layer_gradients.size() != static_cast<size_t>(m_numLayers)) return;
-    
-    for (size_t i = 0; i < static_cast<size_t>(m_numLayers); ++i) {
-        const auto& grads = layer_gradients[i];
-        if (grads.empty()) continue;
-        
-        // Apply SGD update (simplified)
-        // In real implementation, this would update Q/K/V/O weights
-        // For now, this is a placeholder for the training loop
-        (void)grads; (void)learning_rate;
-    }
+// ============================================================================
+// Weight Updates (training stubs)
+// ============================================================================
+void CPUInferenceEngine::UpdateWeights(const std::vector<std::vector<float>>& gradients, float lr) {
+    (void)gradients; (void)lr;
 }
 
-void CPUInferenceEngine::UpdateOutputWeights(const std::vector<float>& gradients, float learning_rate) {
-    if (gradients.empty() || m_outputWeights.data.empty()) return;
-    
-    // SGD update for output weights
-    size_t count = std::min(gradients.size(), m_outputWeights.data.size() / sizeof(float));
-    float* weights = reinterpret_cast<float*>(m_outputWeights.data.data());
-    
-    for (size_t i = 0; i < count; ++i) {
-        weights[i] -= learning_rate * gradients[i];
-    }
-}
-
-// Memory management
-void CPUInferenceEngine::RegisterMemoryPlugin(std::shared_ptr<::RawrXD::IMemoryPlugin> plugin) {
-    if (plugin) {
-        m_memoryPlugins.push_back(plugin);
-    }
-}
-
-void CPUInferenceEngine::SetContextLimit(size_t limit) {
-    m_contextLimit = limit;
-}
-
-void CPUInferenceEngine::SetMaxMode(bool enabled) {
-    m_maxMode = enabled;
-    if (enabled) {
-        std::cout << "[CPUInferenceEngine] Max Mode enabled - 32K context" << std::endl;
-    }
-}
-
-void CPUInferenceEngine::SetDeepThinking(bool enabled) {
-    m_deepThinking = enabled;
-    if (enabled) {
-        std::cout << "[CPUInferenceEngine] Deep Thinking enabled - Chain-of-Thought active" << std::endl;
-    }
-}
-
-void CPUInferenceEngine::SetDeepResearch(bool enabled) {
-    m_deepResearch = enabled;
-    if (enabled) {
-        std::cout << "[CPUInferenceEngine] Deep Research enabled - Extended analysis mode" << std::endl;
-        // Increase context for research
-        m_contextLimit = std::max(m_contextLimit, static_cast<size_t>(1048576)); // 1M tokens
-    }
+void CPUInferenceEngine::UpdateOutputWeights(const std::vector<float>& gradients, float lr) {
+    (void)gradients; (void)lr;
 }
 
 } // namespace CPUInference

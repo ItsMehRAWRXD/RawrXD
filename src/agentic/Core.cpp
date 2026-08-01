@@ -289,8 +289,16 @@ bool CoreImpl::Initialize() {
         return true;
     }
     
-    // Initialize subsystems
-    // TODO: Initialize actual subsystem implementations
+    // Initialize subsystems — real implementations
+    if (!m_taskGraph) m_taskGraph = std::make_shared<AgenticTaskGraph>();
+    if (!m_orchestrator) m_orchestrator = std::make_shared<AgentOrchestrator>();
+    if (!m_toolRegistry) m_toolRegistry = std::make_shared<ToolRegistry>();
+    
+    // Initialize the orchestrator with the inference engine
+    auto inference = RawrXD::CPUInferenceEngine::GetSharedInstance();
+    if (inference && inference->IsModelLoaded()) {
+        m_orchestrator->SetInferenceEngine(inference.get());
+    }
     
     // Start worker threads
     size_t numWorkers = m_config.maxConcurrentTasks;

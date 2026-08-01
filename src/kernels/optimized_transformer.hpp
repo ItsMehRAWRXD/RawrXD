@@ -6,7 +6,7 @@
 #pragma once
 
 #include "avx2_gemm.hpp"
-#include "../quantization/quantized_tensor.hpp"
+#include "../inference/quantized_tensor.hpp"
 #include <vector>
 #include <memory>
 

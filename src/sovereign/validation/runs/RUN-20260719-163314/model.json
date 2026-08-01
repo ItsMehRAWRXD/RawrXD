@@ -1,0 +1,10 @@
+{
+
+  "architecture": "phi3",
+  "vocab_size": 32064,
+  "num_layers": 32,
+  "hidden_size": 3072,
+  "num_heads": 32,
+  "context_length": 4096,
+  "hash": "d574e8c8445f6b1621ab54aec5411fa6"
+}

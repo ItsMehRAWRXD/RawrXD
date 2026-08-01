@@ -1,4 +1,0 @@
-Input: Hello
-Max tokens: 128
-Seed: 42
-Status: PASS

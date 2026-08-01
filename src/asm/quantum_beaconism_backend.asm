@@ -53,8 +53,11 @@ g_QPCFrequency          QWORD 0
 ; Returns EAX = result code
 ; ============================================================
 Titan_ExecuteComputeKernel PROC FRAME
-    .ENDPROLOG
+    push rbx
+    .pushreg rbx
+    .endprolog
     mov eax, TITAN_SUCCESS
+    pop rbx
     ret
 Titan_ExecuteComputeKernel ENDP
 
@@ -64,8 +67,11 @@ Titan_ExecuteComputeKernel ENDP
 ; Returns RAX = bytes copied
 ; ============================================================
 Titan_PerformCopy PROC FRAME
-    .ENDPROLOG
+    push rbx
+    .pushreg rbx
+    .endprolog
     mov rax, r8          ; Return size
+    pop rbx
     ret
 Titan_PerformCopy ENDP
 
@@ -75,8 +81,11 @@ Titan_PerformCopy ENDP
 ; Returns EAX = result code
 ; ============================================================
 Titan_PerformDMA PROC FRAME
-    .ENDPROLOG
+    push rbx
+    .pushreg rbx
+    .endprolog
     mov eax, TITAN_SUCCESS
+    pop rbx
     ret
 Titan_PerformDMA ENDP
 
@@ -85,8 +94,11 @@ Titan_PerformDMA ENDP
 ; Returns EAX = result code
 ; ============================================================
 Titan_InitializeDMA PROC FRAME
-    .ENDPROLOG
+    push rbx
+    .pushreg rbx
+    .endprolog
     mov eax, TITAN_SUCCESS
+    pop rbx
     ret
 Titan_InitializeDMA ENDP
 
@@ -95,8 +107,11 @@ Titan_InitializeDMA ENDP
 ; Returns EAX = result code
 ; ============================================================
 Titan_ShutdownDMA PROC FRAME
-    .ENDPROLOG
+    push rbx
+    .pushreg rbx
+    .endprolog
     mov eax, TITAN_SUCCESS
+    pop rbx
     ret
 Titan_ShutdownDMA ENDP
 

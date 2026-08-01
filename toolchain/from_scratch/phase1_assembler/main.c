@@ -462,7 +462,7 @@ static int assemble(asm_stmt_list_t *stmts, coff_obj_builder_t *obj, int verbose
                     op_mem.type = OP_MEM;
                     op_mem.size = SZ_QWORD;
                     op_mem.mem.base = REG_RSP;
-                    op_mem.mem.index = REG_NONE;
+                    op_mem.mem.index = X64_REG_NONE;
                     op_mem.mem.scale = 1;
                     op_mem.mem.disp = disp;
                     op_mem.mem.has_disp = 1;

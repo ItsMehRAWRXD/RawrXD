@@ -32,7 +32,6 @@ typedef void* VkCommandBuffer;
 using RawrXD::GGMLType;
 using RawrXD::GGUFHeader;
 using RawrXD::GGUFMetadata;
-using RawrXD::TensorInfo;
 
 
 /*

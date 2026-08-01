@@ -1,0 +1,26 @@
+# ninja log v6
+163	2460	8062025382608866	CMakeFiles/rawrxd.dir/src/sovereign/kernel_bridge.cpp.obj	8d31f59b13f58f38
+29	1078	8062453800862887	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/reverse_engineering/cmake_install.cmake	70dddc3065e60868
+29	1078	8062453806931568	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/validation/kernels/CTestTestfile.cmake	70dddc3065e60868
+29	1078	8062453808647367	build.ninja	70dddc3065e60868
+29	1078	8062453804886814	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/tools/cmake_install.cmake	70dddc3065e60868
+26	1828	8060914450759684	CMakeFiles/rawrxd.dir/src/streaming_gguf_loader.cpp.obj	486d6937dd7f5118
+29	1078	8062453804162728	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/tests/cmake_install.cmake	70dddc3065e60868
+29	1078	8062453806587494	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/validation/cmake_install.cmake	70dddc3065e60868
+31	827	8060917571367612	CMakeFiles/rawrxd.dir/src/utils/diagnostics_impl.cpp.obj	8cf3d45aa82de4c4
+2199	2465	8060918911119283	bin/rawrxd.exe	fa8510559970968d
+211	1840	8062025383045135	CMakeFiles/rawrxd.dir/src/kernels/avx2_kernels.cpp.obj	fa87494429844202
+29	1078	8062453804988250	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/tools/CTestTestfile.cmake	70dddc3065e60868
+191	2141	8062025382893081	CMakeFiles/rawrxd.dir/src/kernels/avx512_kernels.cpp.obj	8f31033cbc46b79c
+29	1078	8062453799664545	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/CTestTestfile.cmake	70dddc3065e60868
+45	1252	8060914450957047	CMakeFiles/rawrxd.dir/src/gguf_vocab_resolver.cpp.obj	bbda700d86c48321
+29	1078	8062453804188337	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/tests/CTestTestfile.cmake	70dddc3065e60868
+29	1078	8062453799987921	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/distributed/CTestTestfile.cmake	70dddc3065e60868
+51	979	8060914451002464	CMakeFiles/rawrxd.dir/src/engine/sampler.cpp.obj	730cb3c4efca1932
+29	1078	8062453799649395	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/cmake_install.cmake	70dddc3065e60868
+29	1078	8062453806916394	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/validation/kernels/cmake_install.cmake	70dddc3065e60868
+25	876	8060917571307130	CMakeFiles/rawrxd.dir/src/utils/Diagnostics.cpp.obj	f032ccfd3206ce2e
+25	2199	8060918889381179	CMakeFiles/rawrxd.dir/src/sovereign/sovereign_runtime_minimal.cpp.obj	a5fdc59c01104a0d
+29	1078	8062453806602618	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/validation/CTestTestfile.cmake	70dddc3065e60868
+29	1078	8062453799886767	D:/rawrxd-ci-bootstrap/build-ninja-sovereign/src/distributed/cmake_install.cmake	70dddc3065e60868
+23	1454	8062455101649555	CMakeFiles/rawrxd.dir/src/sovereign/sovereign_runtime_minimal.cpp.obj	a5fdc59c01104a0d

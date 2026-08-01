@@ -1,0 +1,49 @@
+{
+
+  "certificate_id": "RXD-SOVEREIGN-RUN-20260719-163314",
+  "timestamp": "20260719-163314",
+  "all_gates_passed": false,
+  "gates": [
+{
+
+      "name": "G1_ModelIntegrity",
+      "passed": true,
+      "details": "GGUF loaded"
+    },{
+
+      "name": "G2_TensorManifest",
+      "passed": true,
+      "details": "32 layers"
+    },{
+
+      "name": "G3_VocabularyLoad",
+      "passed": true,
+      "details": "32064 tokens"
+    },{
+
+      "name": "G4_TransformerPipeline",
+      "passed": true,
+      "details": "3 ms"
+    },{
+
+      "name": "G5_KernelRegistry",
+      "passed": true,
+      "details": "Active"
+    },{
+
+      "name": "G6_KVCache",
+      "passed": false,
+      "details": "0 MB"
+    },{
+
+      "name": "G7_CPUBackend",
+      "passed": true,
+      "details": "Available"
+    },{
+
+      "name": "G8_GPUBackend",
+      "passed": true,
+      "details": "Vulkan available"
+    }
+  ]
+}

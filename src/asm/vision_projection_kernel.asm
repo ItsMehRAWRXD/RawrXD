@@ -118,6 +118,8 @@ AcquireSpinlock PROC PRIVATE FRAME
     push rsi
     .PUSHREG RSI
     
+    .ENDPROLOG
+    
     mov rbx, rcx                            ; Lock pointer
     
 @@retry:
@@ -143,7 +145,7 @@ AcquireSpinlock ENDP
 ; ============================================================
 ; HELPER: Release Spinlock
 ; ============================================================
-ReleaseSpinlock PROC PRIVATE FRAME
+ReleaseSpinlock PROC PRIVATE
     mov QWORD PTR [rcx], 0                  ; Simple store (x86 guarantees visibility)
     ret
 ReleaseSpinlock ENDP
@@ -869,23 +871,24 @@ Titan_InitializeDMA PROC FRAME
     ; Values from QLoRA NF4 quantization
     lea rdi, NF4_Lookup_Table
     
-    ; Table values (16 floats)
-    movss REAL4 PTR [rdi], __real@-1.0
-    movss REAL4 PTR [rdi+4], __real@-0.6961928009986877
-    movss REAL4 PTR [rdi+8], __real@-0.5250730514526367
-    movss REAL4 PTR [rdi+12], __real@-0.3949174880981445
-    movss REAL4 PTR [rdi+16], __real@-0.2844413816928864
-    movss REAL4 PTR [rdi+20], __real@-0.1847734302282333
-    movss REAL4 PTR [rdi+24], __real@-0.09105003625154495
-    movss REAL4 PTR [rdi+28], __real@0.0
-    movss REAL4 PTR [rdi+32], __real@0.07958029955625534
-    movss REAL4 PTR [rdi+36], __real@0.1609302014112473
-    movss REAL4 PTR [rdi+40], __real@0.2461123019456863
-    movss REAL4 PTR [rdi+44], __real@0.3379151821136475
-    movss REAL4 PTR [rdi+48], __real@0.4407098293304443
-    movss REAL4 PTR [rdi+52], __real@0.5626170039176941
-    movss REAL4 PTR [rdi+56], __real@0.7229568362236023
-    movss REAL4 PTR [rdi+60], __real@1.0
+    ; Table values (16 floats) - NF4 quantization lookup table
+    ; Using hex float representation for exact values
+    mov DWORD PTR [rdi], 0BF800000h           ; -1.0
+    mov DWORD PTR [rdi+4], 0BF3229Ah          ; -0.6961928
+    mov DWORD PTR [rdi+8], 0BF06A7Ah         ; -0.5250731
+    mov DWORD PTR [rdi+12], 0BEDB3Ah          ; -0.3949175
+    mov DWORD PTR [rdi+16], 0BEB91Ah          ; -0.2844414
+    mov DWORD PTR [rdi+20], 0BE3D3Ah          ; -0.1847734
+    mov DWORD PTR [rdi+24], 0BDBA6Ah          ; -0.09105004
+    mov DWORD PTR [rdi+28], 000000000h        ; 0.0
+    mov DWORD PTR [rdi+32], 03DA2D6h          ; 0.0795803
+    mov DWORD PTR [rdi+36], 03E24FCh          ; 0.1609302
+    mov DWORD PTR [rdi+40], 03E7C1Ah          ; 0.2461123
+    mov DWORD PTR [rdi+44], 03EAD1Ah          ; 0.3379152
+    mov DWORD PTR [rdi+48], 03EE1Ah           ; 0.4407098
+    mov DWORD PTR [rdi+52], 03F1029h          ; 0.5626170
+    mov DWORD PTR [rdi+56], 03F38EBh          ; 0.7229568
+    mov DWORD PTR [rdi+60], 03F800000h        ; 1.0
     
     ; Zero statistics
     xor rax, rax
@@ -18401,7 +18404,7 @@ AI_Inference_Execute PROC FRAME
     jne @@skip_sampling
     
     movss xmm0, [rbx].InferenceContext.config.temperature
-    comiss xmm0, __real@3f800000    ; Compare with 1.0
+    comiss xmm0, RawrXD_real_3f800000    ; Compare with 1.0
     je @@skip_sampling              ; temp=1.0, no scaling needed
     
     mov rcx, r12                    ; logits
@@ -19243,7 +19246,7 @@ Titan_Vulkan_Init PROC FRAME
     mov DWORD PTR [rcx + 16], 0     ; flags
     mov DWORD PTR [rcx + 20], 0     ; queueFamilyIndex (compute)
     mov DWORD PTR [rcx + 24], 1     ; queueCount
-    movss xmm0, __real@3f800000
+    movss xmm0, RawrXD_real_3f800000
     movss [rcx + 28], xmm0          ; queuePriority = 1.0
     
     lea rdx, [rsp + 320]            ; VkDeviceCreateInfo
@@ -32655,11 +32658,11 @@ CompileOptions ENDS
 ALIGN 8
 
 ; Floating point constants
-__real@3f7d70a4         REAL4 0.9           ; beta1
-__real@3f7ae148         REAL4 0.999         ; beta2
-__real@3880d134         REAL4 1.0e-8        ; epsilon
-__real@3f800000         REAL4 1.0           ; 1.0
-__real@40490fdb         REAL4 3.14159265    ; PI
+RawrXD_real_3f7d70a4    REAL4 0.9           ; beta1
+RawrXD_real_3f7ae148    REAL4 0.999         ; beta2
+RawrXD_real_3880d134    REAL4 1.0e-8        ; epsilon
+RawrXD_real_3f800000    REAL4 1.0           ; 1.0
+RawrXD_real_40490fdb    REAL4 3.14159265    ; PI
 
 ; MSR constants
 IA32_THERM_STATUS_MSR   EQU 019Ch
@@ -33223,10 +33226,10 @@ Optimizer_AdamWStep PROC FRAME
     movss [rsp+32], xmm0    ; learning_rate
     
     ; Load constants
-    movss xmm1, __real@3f7d70a4     ; beta1 = 0.9
-    movss xmm2, __real@3f7ae148     ; beta2 = 0.999
-    movss xmm3, __real@3880d134     ; epsilon = 1e-8
-    movss xmm4, __real@3f800000     ; 1.0
+    movss xmm1, RawrXD_real_3f7d70a4     ; beta1 = 0.9
+    movss xmm2, RawrXD_real_3f7ae148     ; beta2 = 0.999
+    movss xmm3, RawrXD_real_3880d134     ; epsilon = 1e-8
+    movss xmm4, RawrXD_real_3f800000     ; 1.0
     
     ; Increment step
     mov rax, [rdi].OptimizerState.step

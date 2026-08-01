@@ -40,13 +40,13 @@ void asm_token_list_free(asm_token_list_t *list) {
 }
 
 /* ---- Classification helpers ---- */
-static int is_ident_start(char c) { return isalpha((unsigned char)c) || c == '_' || c == '.'; }
-static int is_ident_char(char c) { return isalnum((unsigned char)c) || c == '_' || c == '.' || c == '$'; }
+static int is_ident_start(char c) { return isalpha((unsigned char)c) || c == '_' || c == '.' || c == '@'; }
+static int is_ident_char(char c) { return isalnum((unsigned char)c) || c == '_' || c == '.' || c == '$' || c == '@' || c == '?'; }
 
 /* Check if identifier is a register name */
 static int is_register(const char *s) {
     operand_size_t sz;
-    return x64_parse_register(s, &sz) != REG_NONE;
+    return x64_parse_register(s, &sz) != X64_REG_NONE;
 }
 
 /* Check if identifier is a size hint */

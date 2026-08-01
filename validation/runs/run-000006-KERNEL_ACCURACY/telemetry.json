@@ -1,8 +1,0 @@
-{
-
-  "schema_version": "VAL-022.1",
-  "test_count": 3,
-  "hardware": "AMD Ryzen 7 7800X3D",
-  "backend": "CPU",
-  "compiler": "GCC 15.2.0"
-}

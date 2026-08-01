@@ -11,11 +11,22 @@
 ; 6. Zero C dependencies, zero stubs, zero fictional code
 ; =============================================================================
 
-option casemap:none
-option proc:private
-include rawrxd_win64.inc
-includelib kernel32.lib
-includelib ntdll.lib
+; 64-bit MASM - NO 32-bit directives
+OPTION CASEMAP:NONE
+
+; Define c_str macro BEFORE including to avoid segment issues
+c_str MACRO text:VARARG
+    LOCAL str_name
+    str_name CATSTR <_cstr_>, %@Line
+    .const
+    str_name DB text, 0
+    .code
+    EXITM <OFFSET str_name>
+ENDM
+
+INCLUDE rawrxd_win64.inc
+
+; c_str macro already defined above
 
 ; Additional constants for library build
 FILE_FLAG_SEQUENTIAL_SCAN EQU 08000000h

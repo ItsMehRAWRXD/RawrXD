@@ -1,0 +1,1030 @@
+==========================================================================
+RawrXD Assembler - Comprehensive Validation
+==========================================================================
+MASM: Available
+
+
+=== MOV Reg,Reg (56 combinations) ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_0.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_1.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_2.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_3.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_4.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_5.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_6.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_7.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_8.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_9.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_10.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_11.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_12.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_13.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_14.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_15.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_16.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_17.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_18.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_19.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_20.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_21.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_22.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_23.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_24.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_25.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_26.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_27.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_28.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_29.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_30.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_31.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_32.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_33.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_34.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_35.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_36.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_37.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_38.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_39.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_40.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_41.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_42.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_43.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_44.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_45.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_46.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_47.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_48.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_49.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_50.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_51.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_52.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_53.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_54.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_55.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  Results: 56 tests
+
+=== Memory Addressing ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_56.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_57.asm
+  mov rax, [rbx]: 48 8b 03
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_58.asm
+  mov rbx, [rax]: 48 8b 18
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_59.asm
+  mov rcx, [r8]: 49 8b 08
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_60.asm
+  mov rax, [rbx+8]: 48 8b 43 08
+    Section: .text$mn raw_ptr=140 raw_size=7
+    Found .text at offset 140 size 7
+    Read 7 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_61.asm
+  mov rbx, [rax+128]: 48 8b 98 80 00 00 00
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_62.asm
+  mov rax, [rbp+8]: 48 8b 45 08
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_63.asm
+  mov rax, [rbx+rcx]: 48 8b 04 0b
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_64.asm
+  mov rax, [rbx+rcx*2]: 48 8b 04 4b
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_65.asm
+  mov rax, [rbx+rcx*4]: 48 8b 04 8b
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_66.asm
+  mov rax, [rbx+rcx*8]: 48 8b 04 cb
+    Section: .text$mn raw_ptr=140 raw_size=5
+    Found .text at offset 140 size 5
+    Read 5 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_67.asm
+  mov rax, [rbx+rcx*4+16]: 48 8b 44 8b 10
+    Section: .text$mn raw_ptr=140 raw_size=5
+    Found .text at offset 140 size 5
+    Read 5 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_68.asm
+  mov rbx, [rax+rdx*8+32]: 48 8b 5c d0 20
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_69.asm
+  mov rax, [r8+r9*4]: 4b 8b 04 88
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  mov rbx, [r12+r13*2]: 4b 8b 1c 6c
+
+=== Memory Store Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_70.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_71.asm
+  mov [rbx], rax: 48 89 03
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_72.asm
+  mov [rbx+8], rax: 48 89 43 08
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_73.asm
+  mov [rbx+rcx*4], rax: 48 89 04 8b
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  mov [r8], r9: 4d 89 08
+
+=== PUSH/POP Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_74.asm
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_75.asm
+  push rax: 50
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_76.asm
+  push rbx: 53
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_77.asm
+  push r8: 41 50
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_78.asm
+  push r15: 41 57
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_79.asm
+  pop rax: 58
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_80.asm
+  pop rbx: 5b
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_81.asm
+  pop r8: 41 58
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+  pop r15: 41 5f
+
+=== XCHG Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_82.asm
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_83.asm
+  xchg rax, rbx: 48 93
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_84.asm
+  xchg rax, r8: 49 90
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  xchg rcx, rdx: 48 87 ca
+
+=== CALL/RET/JMP Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_85.asm
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_86.asm
+  ret: c3
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_87.asm
+  jmp rax: ff e0
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_88.asm
+  call rbx: ff d3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  ret 16: c2 10 00
+
+=== Conditional Jumps ===
+  je label: 0f 84 00 00 00 00
+  jne label: 0f 85 00 00 00 00
+  jz label: 0f 84 00 00 00 00
+  jnz label: 0f 85 00 00 00 00
+  ja label: 0f 87 00 00 00 00
+  jae label: 0f 83 00 00 00 00
+  jb label: 0f 82 00 00 00 00
+  jbe label: 0f 86 00 00 00 00
+  jg label: 0f 8f 00 00 00 00
+  jge label: 0f 8d 00 00 00 00
+  jl label: 0f 8c 00 00 00 00
+  jle label: 0f 8e 00 00 00 00
+  js label: 0f 88 00 00 00 00
+  jns label: 0f 89 00 00 00 00
+  jo label: 0f 80 00 00 00 00
+  jno label: 0f 81 00 00 00 00
+
+=== LEA Instruction ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_89.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_90.asm
+  lea rax, [rbx]: 48 8d 03
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_91.asm
+  lea rcx, [rax]: 48 8d 08
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_92.asm
+  lea rax, [rbx+8]: 48 8d 43 08
+    Section: .text$mn raw_ptr=140 raw_size=7
+    Found .text at offset 140 size 7
+    Read 7 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_93.asm
+  lea rdx, [rax+128]: 48 8d 90 80 00 00 00
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_94.asm
+  lea rcx, [rax+rcx*4]: 48 8d 0c 88
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_95.asm
+  lea rbx, [rdx+rsi*8]: 48 8d 1c f2
+    Section: .text$mn raw_ptr=140 raw_size=5
+    Found .text at offset 140 size 5
+    Read 5 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_96.asm
+  lea r8, [r9+r10*2+64]: 4f 8d 44 51 40
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_97.asm
+  lea rax, [rbp+8]: 48 8d 45 08
+    Section: .text$mn raw_ptr=140 raw_size=5
+    Found .text at offset 140 size 5
+    Read 5 bytes
+  lea rbx, [rbp+rcx*4]: 48 8d 5c 8d 00
+
+=== MOVZX/MOVSX Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_98.asm
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_99.asm
+  movzx rax, al: 48 0f b6 c0
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_100.asm
+  movzx rbx, cl: 48 0f b6 d9
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_101.asm
+  movsx rax, bl: 48 0f be c3
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  movsx rcx, dl: 48 0f be ca
+
+=== Byte/Word Operand Sizes ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_102.asm
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_103.asm
+  mov al, bl: 8a c3
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_104.asm
+  add al, cl: 02 c1
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_105.asm
+  xor al, al: 32 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_106.asm
+  mov ax, bx: 66 8b c3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  add ax, cx: 66 03 c1
+
+=== Arithmetic Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_107.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_108.asm
+  add rax, rcx: 48 03 c1
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_109.asm
+  sub rax, rbx: 48 2b c3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_110.asm
+  xor rax, rax: 48 33 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_111.asm
+  and rax, rdx: 48 23 c2
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_112.asm
+  or rax, r8: 49 0b c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  cmp rax, rbx: 48 3b c3
+
+=== TEST Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_113.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_114.asm
+  test rax, rax: 48 85 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  test rbx, rcx: 48 85 d9
+
+=== Immediate Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_115.asm
+    Section: .text$mn raw_ptr=140 raw_size=7
+    Found .text at offset 140 size 7
+    Read 7 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_116.asm
+  mov rax, 12345678h: 48 c7 c0 78 56 34 12
+    Section: .text$mn raw_ptr=140 raw_size=10
+    Found .text at offset 140 size 10
+    Read 10 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_117.asm
+  mov rbx, 0ABCDEF00h: 48 bb 00 ef cd ab 00 00 00 00
+    Section: .text$mn raw_ptr=140 raw_size=6
+    Found .text at offset 140 size 6
+    Read 6 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_118.asm
+  add rax, 100h: 48 05 00 01 00 00
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  sub rcx, 20h: 48 83 e9 20
+
+=== Shift Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_119.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_120.asm
+  shl rax, cl: 48 d3 e0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_121.asm
+  sar rdx, cl: 48 d3 fa
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_122.asm
+  shl rax, 1: 48 d1 e0
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_123.asm
+  shr rbx, 4: 48 c1 eb 04
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_124.asm
+  rol rax, 1: 48 d1 c0
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  ror rbx, 8: 48 c1 cb 08
+
+=== INC/DEC/NEG/NOT Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_125.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_126.asm
+  inc rax: 48 ff c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_127.asm
+  inc r8: 49 ff c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_128.asm
+  dec rbx: 48 ff cb
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_129.asm
+  dec r15: 49 ff cf
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_130.asm
+  neg rax: 48 f7 d8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  not rbx: 48 f7 d3
+
+=== MUL/IMUL Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_131.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_132.asm
+  mul rax: 48 f7 e0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_133.asm
+  mul rbx: 48 f7 e3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_134.asm
+  imul rax: 48 f7 e8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  imul r8: 49 f7 e8
+
+=== DIV/IDIV Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_135.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_136.asm
+  div rax: 48 f7 f0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_137.asm
+  div rbx: 48 f7 f3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_138.asm
+  idiv rax: 48 f7 f8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  idiv r8: 49 f7 f8
+
+=== SSE Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_139.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_140.asm
+  movaps xmm0, xmm1: 0f 28 c1
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  movups xmm0, xmm1: 0f 10 c1
+
+=== SSE Memory Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_141.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_142.asm
+  movaps xmm0, [rbx]: 
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  movups xmm0, [rdx]: 
+
+=== Bitwise Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_143.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_144.asm
+  and rax, rbx: 48 23 c3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_145.asm
+  or rax, rbx: 48 0b c3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_146.asm
+  xor rax, rbx: 48 33 c3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_147.asm
+  not rax: 48 f7 d0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  neg rax: 48 f7 d8
+
+=== Logical Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_148.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_149.asm
+  cmp rax, rbx: 48 3b c3
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_150.asm
+  cmp rax, 42h: 48 83 f8 42
+    Section: .text$mn raw_ptr=140 raw_size=7
+    Found .text at offset 140 size 7
+    Read 7 bytes
+  cmp rbx, 12345678h: 48 81 fb 78 56 34 12
+
+=== SETcc Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_151.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_152.asm
+  sete al: 0f 94 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_153.asm
+  setne al: 0f 95 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_154.asm
+  setg al: 0f 9f c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_155.asm
+  setl al: 0f 9c c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_156.asm
+  setge al: 0f 9d c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_157.asm
+  setle al: 0f 9e c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_158.asm
+  seta al: 0f 97 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  setb al: 0f 92 c0
+
+=== CMOVcc Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_159.asm
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_160.asm
+  cmove rax, rbx: 48 0f 44 c3
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_161.asm
+  cmovne rax, rbx: 48 0f 45 c3
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_162.asm
+  cmovg rax, rbx: 48 0f 4f c3
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  cmovl rax, rbx: 48 0f 4c c3
+
+=== String Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_163.asm
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_164.asm
+  movsb: a4
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_165.asm
+  stosb: aa
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_166.asm
+  lodsb: ac
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_167.asm
+  scasb: ae
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+  cmpsb: a6
+
+=== Extended Registers (r8-r15) ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_168.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_169.asm
+  mov r8, r9: 4d 8b c1
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_170.asm
+  mov r10, r11: 4d 8b d3
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_171.asm
+  mov r12, r13: 4d 8b e5
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_172.asm
+  mov r14, r15: 4d 8b f7
+    Section: .text$mn raw_ptr=140 raw_size=7
+    Found .text at offset 140 size 7
+    Read 7 bytes
+  add r8, 12345678h: 49 81 c0 78 56 34 12
+
+=== Stack Operations ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_173.asm
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_174.asm
+  push 42h: 6a 42
+    Section: .text$mn raw_ptr=140 raw_size=5
+    Found .text at offset 140 size 5
+    Read 5 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_175.asm
+  push 12345678h: 68 78 56 34 12
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_176.asm
+  enter 100h, 0: c8 00 01 00
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+  leave: c9
+
+=== Rotate Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_177.asm
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_178.asm
+  rol rax, 1: 48 d1 c0
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_179.asm
+  rol rax, 5: 48 c1 c0 05
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_180.asm
+  rol rax, cl: 48 d3 c0
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_181.asm
+  ror rbx, 1: 48 d1 cb
+    Section: .text$mn raw_ptr=140 raw_size=4
+    Found .text at offset 140 size 4
+    Read 4 bytes
+  ror rbx, 7: 48 c1 cb 07
+
+=== BSWAP Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_182.asm
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_183.asm
+  bswap eax: 0f c8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_184.asm
+  bswap rbx: 48 0f cb
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+  bswap r8: 49 0f c8
+
+=== Misc Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_185.asm
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_186.asm
+  pause: f3 90
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_187.asm
+  lfence: 0f ae e8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_188.asm
+  sfence: 0f ae f8
+    Section: .text$mn raw_ptr=140 raw_size=3
+    Found .text at offset 140 size 3
+    Read 3 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_189.asm
+  mfence: 0f ae f0
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+  ud2: 0f 0b
+
+=== NOP and Misc Instructions ===
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_190.asm
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_191.asm
+  nop: 90
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_192.asm
+  cpuid: 0f a2
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_193.asm
+  rdtsc: 0f 31
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_194.asm
+  cqo: 48 99
+    Section: .text$mn raw_ptr=140 raw_size=2
+    Found .text at offset 140 size 2
+    Read 2 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_195.asm
+  syscall: 0f 05
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+ Assembling: C:\Users\HiH8e\AppData\Local\Temp\rawrxd_val_12440_0\test_196.asm
+  clc: f8
+    Section: .text$mn raw_ptr=140 raw_size=1
+    Found .text at offset 140 size 1
+    Read 1 bytes
+  stc: f9
+
+=== COFF → Link → Execute ===
+  Object: "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\test_coff.obj" ✓
+  Binary: "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\test_coff.exe" ✓
+  Status: Toolchain produces working executables
+
+Report: "D:\\rawrxd-ci-bootstrap\\build-ninja\\validate_report.html"
+
+==========================================================================
+SUMMARY
+==========================================================================
+Total: 214
+  Exact Match: 212
+  Equivalent:  2
+  Harness:     0
+  Not Impl:    0
+  Bugs:        0
+Encoder Quality: 100.0%
+==========================================================================

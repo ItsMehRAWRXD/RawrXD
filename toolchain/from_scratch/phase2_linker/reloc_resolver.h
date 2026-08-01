@@ -15,6 +15,17 @@ extern "C" {
    offset = offset within section where reloc applies, type = IMAGE_REL_AMD64_*, target_rva = resolved symbol RVA. */
 void reloc_apply(uint8_t* section_data, uint32_t section_rva, uint32_t offset, uint16_t type, uint32_t target_rva);
 
+/* Import entry for external symbol resolution */
+typedef struct {
+    const char* name;
+    uint32_t iat_rva;
+} import_entry_t;
+
+/* Apply all relocations from objs into merged .text with import support. */
+int reloc_resolver_apply_with_imports(uint8_t* text_data, uint32_t text_rva,
+    const uint32_t* obj_text_offsets, CoffFile** objs, int num_objs, uint32_t main_rva, uint32_t __main_rva,
+    const import_entry_t* imports, int num_imports);
+
 /* Apply all relocations from objs into merged .text. obj_text_offsets[i] = offset in text_data where obj i's .text starts.
    main_rva = resolved RVA for external symbol "main". __main_rva = RVA of stub ret (GCC __main shim); do not resolve __main to main.
    Returns 0 on success, -1 on undefined symbol (with diagnostic to stderr). */

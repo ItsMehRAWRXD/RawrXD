@@ -7,6 +7,9 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <cmath>
+#include <chrono>
+#include <algorithm>
 
 // MSVC AVX2 intrinsics
 #include <immintrin.h>
@@ -78,17 +81,18 @@ inline void AVX2_Gemm_F32_F32(
                             __m256 a_vec = _mm256_loadu_ps(&A[m * K + k]);
                             
                             // Load B column (8 floats) - handle transpose
-                            __m256 b_vec;
+                            float b_vals[8];
                             if (B_transpose) {
                                 // B is row-major, need to gather
-                                float b_vals[8];
                                 for (size_t i = 0; i < 8 && (n + i) < n_max; i++) {
                                     b_vals[i] = B[(n + i) * K + k];
                                 }
-                                b_vec = _mm256_loadu_ps(b_vals);
                             } else {
-                                b_vec = _mm256_loadu_ps(&B[k * N + n]);
+                                for (size_t i = 0; i < 8 && (n + i) < n_max; i++) {
+                                    b_vals[i] = B[k * N + n + i];
+                                }
                             }
+                            __m256 b_vec = _mm256_loadu_ps(b_vals);
                             
                             // FMA: acc += a * b
                             acc0 = _mm256_fmadd_ps(a_vec, b_vec, acc0);
@@ -96,9 +100,7 @@ inline void AVX2_Gemm_F32_F32(
                         
                         // Store results
                         for (size_t i = 0; i < 8 && (m + i) < m_max; i++) {
-                            for (size_t j = 0; j < 8 && (n + j) < n_max; j++) {
-                                C[(m + i) * N + (n + j)] += ((float*)&acc0)[i] * ((float*)&b_vec)[j];
-                            }
+                            C[(m + i) * N + n] += ((float*)&acc0)[i];
                         }
                     }
                 }
@@ -129,7 +131,7 @@ inline void AVX2_Gemm_Q4_0_F32(
                 // Process 32 quantized values
                 for (size_t i = 0; i < 32; i += 8) {
                     // Dequantize 8 values using AVX2
-                    __m256i qs = _mm256_loadu_si256((__m256i_u*)&block.qs[i]);
+                    __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(&block.qs[i]));
                     
                     // Extract nibbles and convert to floats
                     float deq[8];

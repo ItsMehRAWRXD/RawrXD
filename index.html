@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawrXD — Enterprise Management Interface & Inference Engine</title>
+    <meta name="description" content="Pure MASM x64 inference engine with native SIMD acceleration">
+    <meta name="author" content="RawrXD Engineering">
+
+    <!-- ============================================================ -->
+    <!-- CORE RUNTIME LAYER (loaded first, no dependencies)           -->
+    <!-- ============================================================ -->
+    <script src="/src/engine/runtime-core.js"></script>
+    <script src="/src/engine/ipc-synchronizer.js"></script>
+    <script src="/src/engine/state-manager.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- SYSTEM SERVICES LAYER                                         -->
+    <!-- ============================================================ -->
+    <script src="/src/engine/dependency-resolver.js"></script>
+    <script src="/src/engine/feature-flag-engine.js"></script>
+    <script src="/src/engine/migration-engine.js"></script>
+    <script src="/src/engine/ledger-committer.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- HARDWARE ABSTRACTION LAYER                                    -->
+    <!-- ============================================================ -->
+    <script src="/src/engine/simd-detector.js"></script>
+    <script src="/src/engine/kernel-bridge.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- GUARDIAN & RECOVERY LAYER                                     -->
+    <!-- ============================================================ -->
+    <script src="/src/engine/rollback-watchdog.js"></script>
+    <script src="/src/engine/session-keys.js"></script>
+    <script src="/src/engine/crash-recovery.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- APPLICATION LAYER (depends on all above)                      -->
+    <!-- ============================================================ -->
+    <script src="/src/core/panel-bootloader.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- STYLES                                                        -->
+    <!-- ============================================================ -->
+    <style>
+        /* === Reset & Base === */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8888aa;
+            --accent: #00ff88;
+            --accent-dim: #00cc66;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+            --border: #2a2a3e;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        html, body { height: 100%; font-family: var(--font-sans); background: var(--bg-primary); color: var(--text-primary); }
+
+        /* === Layout === */
+        .app-shell { display: flex; height: 100vh; overflow: hidden; }
+        .sidebar {
+            width: 280px; min-width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sidebar-header h1 {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+        .sidebar-header small {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .sidebar-nav { flex: 1; padding: 12px 0; }
+        .menu-item-link {
+            display: block; width: 100%;
+            padding: 10px 20px;
+            background: none; border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+        }
+        .menu-item-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent-dim);
+        }
+        .menu-item-link.active {
+            color: var(--accent);
+            background: var(--bg-tertiary);
+            border-left-color: var(--accent);
+        }
+
+        /* === Main Content === */
+        .main-content {
+            flex: 1;
+            display: flex; flex-direction: column;
+            overflow-y: auto;
+        }
+        .main-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .main-header .status-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+        .main-stage {
+            flex: 1;
+            padding: 24px;
+        }
+
+        /* === Panel Styles === */
+        .panel-loading {
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            padding: 40px;
+            text-align: center;
+        }
+        .panel-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .panel-header h2 {
+            font-family: var(--font-mono);
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+        .panel-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--accent);
+            border: 1px solid var(--accent-dim);
+        }
+        .panel-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .panel-content strong { color: var(--text-primary); }
+        .panel-footer {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        /* === Fallback UI === */
+        .fallback-ui {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .fallback-ui h2 { color: var(--danger); margin-bottom: 16px; }
+        .fallback-ui .error-detail {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            color: var(--warning);
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto; margin-right: auto;
+        }
+        .fallback-ui button {
+            padding: 10px 24px;
+            background: var(--accent);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .fallback-ui button:hover { background: var(--accent-dim); }
+
+        /* === Scrollbar === */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- ============================================================ -->
+        <!-- SIDEBAR NAVIGATION                                            -->
+        <!-- ============================================================ -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>⚡ RAWR INF ENGINE</h1>
+                <small>x64 Assembly Mode</small>
+            </div>
+            <nav class="sidebar-nav" id="dynamic-menu-container">
+                <!-- Populated dynamically by panel-bootloader.js -->
+            </nav>
+        </aside>
+
+        <!-- ============================================================ -->
+        <!-- MAIN CONTENT AREA                                             -->
+        <!-- ============================================================ -->
+        <main class="main-content">
+            <header class="main-header">
+                <span>RawrXD Inference Engine</span>
+                <span class="status-badge">● SYSTEM ONLINE</span>
+            </header>
+            <section class="main-stage" id="active-panel-mount">
+                <div class="panel-loading">
+                    Starting up framework core subsystems...<br>
+                    <small style="color: var(--text-secondary);">Initializing MASM kernel bridge</small>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

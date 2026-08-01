@@ -1,0 +1,7 @@
+{
+  "name": "SovereignEngineDemo",
+  "type": "game",
+  "backend": "BareMetal",
+  "target": "win32_x64",
+  "assets": ["models", "textures", "audio"]
+}

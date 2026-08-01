@@ -34,8 +34,19 @@ void pe_writer_set_entry(PeWriter* pw, uint32_t entry_rva);
 /* Add .text section (code). data copied; can be NULL if size 0. */
 void pe_writer_add_text(PeWriter* pw, const uint8_t* data, uint32_t size);
 
+/* Add .rdata section (read-only data). data copied; can be NULL if size 0.
+ * Returns the RVA of the start of this data section (for referencing strings).
+ */
+uint32_t pe_writer_add_rdata(PeWriter* pw, const uint8_t* data, uint32_t size);
+
 /* Set import: one DLL, one function. Builds IDT/IAT in .idata. */
 void pe_writer_set_import(PeWriter* pw, const char* dll_name, const char* func_name);
+
+/* Add an import to the import table (supports multiple imports).
+ * Returns the import index (0-based) which corresponds to the IAT slot.
+ * Use this index to calculate the call target: IAT RVA + index * 8
+ */
+int pe_writer_add_import(PeWriter* pw, const char* dll_name, const char* func_name);
 
 /* Emit PE to buffer. Caller frees *out. Returns size or 0. */
 uint32_t pe_writer_emit(PeWriter* pw, uint8_t** out);

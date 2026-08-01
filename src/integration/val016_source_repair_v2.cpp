@@ -12,7 +12,8 @@
 #include <array>
 #include <memory>
 #include <thread>
-#include <regex>
+#include <regex>#include <iomanip>
+#include <sstream>#include <iomanip>
 #include "nlohmann/json.hpp"
 
 namespace RawrXD {
@@ -545,6 +546,7 @@ public:
         std::filesystem::create_directories(basePath_ + "/repair");
         nlohmann::json j;
         j["classification"] = classification.description;
+        // Serialize confidence as number with explicit precision
         j["confidence"] = classification.confidence;
         j["reason"] = classification.reason;
         j["patch"] = patch.toJson();

@@ -18,9 +18,9 @@ INCLUDE RawrXD_Common.inc
 ; =============================================================================
 ;                             EXPORTS
 ; =============================================================================
-PUBLIC asm_apply_memory_patch
-PUBLIC asm_revert_memory_patch
-PUBLIC asm_safe_memread
+PUBLIC RawrXD_asm_apply_memory_patch
+PUBLIC RawrXD_asm_revert_memory_patch
+PUBLIC RawrXD_asm_safe_memread
 
 ; =============================================================================
 ;                          EXTERNAL IMPORTS
@@ -49,7 +49,7 @@ PAGE_EXECUTE_READWRITE  EQU     040h
 ;
 ; Returns: EAX = 0 on success, -1 on failure
 ; =============================================================================
-asm_apply_memory_patch PROC FRAME
+RawrXD_asm_apply_memory_patch PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -110,7 +110,7 @@ asm_apply_memory_patch PROC FRAME
     pop     rsi
     pop     rbx
     ret
-asm_apply_memory_patch ENDP
+RawrXD_asm_apply_memory_patch ENDP
 
 ; =============================================================================
 ; asm_revert_memory_patch
@@ -123,7 +123,7 @@ asm_apply_memory_patch ENDP
 ; Returns: EAX = 0 on success, -1 on failure
 ; Identical logic to apply — just different semantics for the caller.
 ; =============================================================================
-asm_revert_memory_patch PROC FRAME
+RawrXD_asm_revert_memory_patch PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -180,7 +180,7 @@ asm_revert_memory_patch PROC FRAME
     pop     rsi
     pop     rbx
     ret
-asm_revert_memory_patch ENDP
+RawrXD_asm_revert_memory_patch ENDP
 
 ; =============================================================================
 ; asm_safe_memread
@@ -194,7 +194,7 @@ asm_revert_memory_patch ENDP
 ;
 ; Returns: RAX = bytes read (same as R8 on success, 0 on invalid params)
 ; =============================================================================
-asm_safe_memread PROC FRAME
+RawrXD_asm_safe_memread PROC FRAME
     push    rsi
     .pushreg rsi
     push    rdi
@@ -224,6 +224,6 @@ asm_safe_memread PROC FRAME
     pop     rdi
     pop     rsi
     ret
-asm_safe_memread ENDP
+RawrXD_asm_safe_memread ENDP
 
 END

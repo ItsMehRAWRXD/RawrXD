@@ -19,9 +19,9 @@ INCLUDE RawrXD_Common.inc
 ; =============================================================================
 ;                             EXPORTS
 ; =============================================================================
-PUBLIC find_pattern_asm
-PUBLIC asm_byte_search
-PUBLIC asm_boyer_moore_search
+PUBLIC RawrXD_find_pattern_asm
+PUBLIC RawrXD_asm_byte_search
+PUBLIC RawrXD_asm_boyer_moore_search
 
 ; =============================================================================
 ;                            CODE
@@ -39,7 +39,7 @@ PUBLIC asm_boyer_moore_search
 ;
 ; Returns: RAX = pointer to match, or 0 (NULL) if not found
 ; =============================================================================
-find_pattern_asm PROC FRAME
+RawrXD_find_pattern_asm PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -115,7 +115,7 @@ find_pattern_asm PROC FRAME
     pop     rsi
     pop     rbx
     ret
-find_pattern_asm ENDP
+RawrXD_find_pattern_asm ENDP
 
 ; =============================================================================
 ; asm_byte_search
@@ -129,7 +129,7 @@ find_pattern_asm ENDP
 ;
 ; Returns: RAX = pointer to match, or 0 (NULL) if not found
 ; =============================================================================
-asm_byte_search PROC FRAME
+RawrXD_asm_byte_search PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -273,7 +273,7 @@ asm_byte_search PROC FRAME
     pop     rsi
     pop     rbx
     ret
-asm_byte_search ENDP
+RawrXD_asm_byte_search ENDP
 
 ; =============================================================================
 ; asm_boyer_moore_search
@@ -287,7 +287,7 @@ asm_byte_search ENDP
 ;
 ; Returns: RAX = pointer to match, or 0 (NULL) if not found
 ; =============================================================================
-asm_boyer_moore_search PROC FRAME
+RawrXD_asm_boyer_moore_search PROC FRAME
     push    rbx
     .pushreg rbx
     push    rsi
@@ -385,6 +385,6 @@ asm_boyer_moore_search PROC FRAME
     pop     rsi
     pop     rbx
     ret
-asm_boyer_moore_search ENDP
+RawrXD_asm_boyer_moore_search ENDP
 
 END

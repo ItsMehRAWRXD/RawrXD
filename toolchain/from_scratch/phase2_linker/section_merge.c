@@ -13,7 +13,8 @@
 #define SYMBOLS_INIT_CAP  256
 
 static int is_text_section(const char* name) {
-    return strcmp(name, ".text") == 0 || strncmp(name, ".text$", 6) == 0;
+    return strcmp(name, ".text") == 0 || strncmp(name, ".text$", 6) == 0 ||
+           strcmp(name, ".CODE") == 0 || strcmp(name, ".code") == 0;
 }
 
 merged_image_t* section_merge_create(CoffFile** objs, int num_objs, uint64_t image_base) {

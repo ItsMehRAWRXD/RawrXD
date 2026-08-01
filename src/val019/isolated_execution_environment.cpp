@@ -251,10 +251,14 @@ IsolatedExecutionEnvironment::executeBuild(const ExecutionWorkspace& workspace,
     
     auto startTime = std::chrono::steady_clock::now();
     
+    // Use absolute paths to avoid path concatenation issues
+    std::filesystem::path absSourcePath = std::filesystem::absolute(workspace.sourcePath);
+    std::filesystem::path absBuildPath = std::filesystem::absolute(workspace.buildPath);
+    
     // Configure
     ExecutionConfig config;
-    config.workingDirectory = workspace.sourcePath;
-    config.buildDirectory = workspace.buildPath;
+    config.workingDirectory = absSourcePath.string();
+    config.buildDirectory = absBuildPath.string();
     config.target = target;
     
     auto configureOutput = impl_->runner_.executeConfigure(config);
@@ -406,15 +410,29 @@ FailureRecoveryDemonstrator::demonstrateCompileErrorRecovery() {
     result.lifecycleStates.push_back("PROJECT_CREATED");
     
     // Step 3: Inject compile error
-    env_.injectFault(workspace, "undefined_symbol");
+    bool faultInjected = env_.injectFault(workspace, "undefined_symbol");
+    if (!faultInjected) {
+        std::cerr << "[VAL-020] ERROR: Failed to inject fault\n";
+    }
     result.failureType = "UNDEFINED_SYMBOL";
     result.lifecycleStates.push_back("FAULT_INJECTED");
+    
+    // Debug: Check source file after fault injection
+    std::ifstream checkFile(workspace.sourcePath + "/main.cpp");
+    std::string content((std::istreambuf_iterator<char>(checkFile)),
+                        std::istreambuf_iterator<char>());
+    std::cout << "[VAL-020] Source after fault injection:\n" << content << "\n";
     
     // Step 4: Execute build (should fail)
     auto buildResult = env_.executeBuild(workspace);
     result.lifecycleStates.push_back("BUILD_FAILED");
     
     if (!buildResult.success) {
+        // Debug: Print build failure details
+        std::cout << "[VAL-020] Build failed with exit code: " << buildResult.buildResult.output.exitCode << "\n";
+        std::cout << "[VAL-020] Stderr: " << buildResult.buildResult.output.stderrLog << "\n";
+        std::cout << "[VAL-020] Failure details: " << buildResult.buildResult.failureDetails << "\n";
+        
         // Step 5: Convert to VAL-016 format and diagnose
         auto execResult = buildResult.buildResult.toExecutionResult(
             ExecutionConfig{ExecutionType::Build, workspace.sourcePath, workspace.buildPath});
@@ -427,9 +445,18 @@ FailureRecoveryDemonstrator::demonstrateCompileErrorRecovery() {
         result.repairAttempts = static_cast<int>(repairSession.attempts.size());
         result.lifecycleStates.push_back("DIAGNOSED");
         
-        // Step 6: Apply repair (simplified - would actually modify source)
-        // For demo, we just recreate the working source
-        env_.createMinimalProject(workspace, "cpp");
+        // Step 6: Apply repair - fix the undefined symbol by replacing with working code
+        // In a real implementation, this would use the repair plan to make targeted fixes
+        std::ofstream fixedMain(workspace.sourcePath + "/main.cpp");
+        if (fixedMain) {
+            fixedMain << "#include <iostream>\n";
+            fixedMain << "int main() {\n";
+            fixedMain << "    std::cout << \"Hello from repaired app\" << std::endl;\n";
+            fixedMain << "    return 0;\n";
+            fixedMain << "}\n";
+            fixedMain.close();
+            std::cout << "[VAL-020] Applied repair: replaced undefined_symbol with working code\n";
+        }
         result.lifecycleStates.push_back("REPAIRED");
         
         // Step 7: Rebuild

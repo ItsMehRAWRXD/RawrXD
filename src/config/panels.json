@@ -1,0 +1,16 @@
+{
+  "panels": [
+    {
+      "id": "telemetry-dashboard",
+      "name": "Hardware Telemetry",
+      "enabled": true,
+      "position": "right"
+    },
+    {
+      "id": "agentic-auditor",
+      "name": "Security Audit Panel",
+      "enabled": true,
+      "position": "bottom"
+    }
+  ]
+}

@@ -94,11 +94,11 @@ szFeature_Quantum2     DB "--quantum-entangle", 0
 ; ============================================================================
 ; DualEngine_InitAll() -> __int64
 ; ============================================================================
-DualEngine_InitAll PROC
+DualEngine_InitAll PROC FRAME
+    .endprolog
     ; Initialize all 10 engines
-    mov rax, RESULT_SUCCESS
-    mov g_InitializedFlag, 1
-    mov g_AllEnginesReady, 1
+    mov DWORD PTR [g_InitializedFlag], 1
+    mov DWORD PTR [g_AllEnginesReady], 1
     
     xor r8, r8
     xor r9, r9
@@ -109,7 +109,7 @@ DualEngine_InitAll PROC
     
     ; Set each engine to ready state
     mov rax, 1h
-    mov g_EngineStates[r8 * 8], rax
+    mov QWORD PTR [g_EngineStates + r8 * 8], rax
     
     inc r8
     jmp @INIT_LOOP
@@ -122,9 +122,10 @@ DualEngine_InitAll ENDP
 ; ============================================================================
 ; DualEngine_ShutdownAll() -> __int64
 ; ============================================================================
-DualEngine_ShutdownAll PROC
-    mov g_InitializedFlag, 0
-    mov g_AllEnginesReady, 0
+DualEngine_ShutdownAll PROC FRAME
+    .endprolog
+    mov DWORD PTR [g_InitializedFlag], 0
+    mov DWORD PTR [g_AllEnginesReady], 0
     
     xor r8, r8
 
@@ -133,8 +134,8 @@ DualEngine_ShutdownAll PROC
     jge @SHUTDOWN_DONE
     
     ; Clear each engine state
-    mov rax, 0
-    mov g_EngineStates[r8 * 8], rax
+    xor rax, rax
+    mov QWORD PTR [g_EngineStates + r8 * 8], rax
     
     inc r8
     jmp @SHUTDOWN_LOOP
@@ -147,16 +148,17 @@ DualEngine_ShutdownAll ENDP
 ; ============================================================================
 ; DualEngine_ExecuteOnAll(uint32_t featureA, const char* args) -> __int64
 ; ============================================================================
-DualEngine_ExecuteOnAll PROC
+DualEngine_ExecuteOnAll PROC FRAME
+    .endprolog
     ; RCX = featureA ID, RDX = args ptr
     ; Execute feature on ALL 10 engines
-    cmp g_InitializedFlag, 1
+    cmp DWORD PTR [g_InitializedFlag], 1
     jne @EXEC_NOT_READY
     
     ; Increment execution counter
-    mov r8, g_ExecutionCounter
+    mov r8, QWORD PTR [g_ExecutionCounter]
     inc r8
-    mov g_ExecutionCounter, r8
+    mov QWORD PTR [g_ExecutionCounter], r8
     
     mov rax, RESULT_SUCCESS
     ret
@@ -169,17 +171,19 @@ DualEngine_ExecuteOnAll ENDP
 ; ============================================================================
 ; DualEngine_AllHealthy() -> __int64
 ; ============================================================================
-DualEngine_AllHealthy PROC
-    mov rax, g_AllEnginesReady
+DualEngine_AllHealthy PROC FRAME
+    .endprolog
+    mov eax, DWORD PTR [g_AllEnginesReady]
     ret
 DualEngine_AllHealthy ENDP
 
 ; ============================================================================
 ; DualEngine_SelfDiagnoseAll() -> __int64
 ; ============================================================================
-DualEngine_SelfDiagnoseAll PROC
+DualEngine_SelfDiagnoseAll PROC FRAME
+    .endprolog
     ; Run self-diagnostics on all engines
-    cmp g_InitializedFlag, 1
+    cmp DWORD PTR [g_InitializedFlag], 1
     jne @DIAG_FAIL
     
     xor r8, r8
@@ -191,7 +195,7 @@ DualEngine_SelfDiagnoseAll PROC
     
     ; Check engine health (stub: assume all healthy)
     mov rax, 1
-    mov g_EngineHealthy[r8 * 8], rax
+    mov QWORD PTR [g_EngineHealthy + r8 * 8], rax
     
     inc r8
     jmp @DIAG_LOOP
@@ -212,12 +216,13 @@ DualEngine_SelfDiagnoseAll ENDP
 ; ============================================================================
 ; DualEngine_DispatchCLI(const char* flag, const char* args) -> __int64
 ; ============================================================================
-DualEngine_DispatchCLI PROC
+DualEngine_DispatchCLI PROC FRAME
+    .endprolog
     ; RCX = flag ptr, RDX = args ptr
     ; Dispatch CLI command to appropriate engine
     cmp rcx, 0
     je @CLI_INVALID
-    cmp g_InitializedFlag, 1
+    cmp DWORD PTR [g_InitializedFlag], 1
     jne @CLI_NOT_READY
     
     ; Simple dispatch: match flag string (production uses jump table)

@@ -96,12 +96,41 @@ static void buildDumpPath(char* out, size_t outLen, const char* dir, const char*
 // MiniDump Writer (dynamic DbgHelp.dll)
 // ============================================================================
 
+static HMODULE loadDbgHelpLibrary() {
+#ifdef LOAD_LIBRARY_SEARCH_SYSTEM32
+    HMODULE hDbgHelp = LoadLibraryExA("dbghelp.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (hDbgHelp) return hDbgHelp;
+#endif
+
+    char systemDir[MAX_PATH] = {0};
+    if (GetSystemDirectoryA(systemDir, ARRAYSIZE(systemDir)) > 0) {
+        if (strcat_s(systemDir, sizeof(systemDir), "\\dbghelp.dll") == 0) {
+            HMODULE hDbgHelp = LoadLibraryA(systemDir);
+            if (hDbgHelp) return hDbgHelp;
+        }
+    }
+
+    return LoadLibraryA("dbghelp.dll");
+}
+
+static void logMiniDumpError(const char* path, const char* stage) {
+    DWORD err = GetLastError();
+    char errorMsg[256];
+    snprintf(errorMsg, sizeof(errorMsg), "[RawrXD] writeMiniDump %s failed for '%s' (GetLastError=0x%08X)\n",
+             stage, path, err);
+    OutputDebugStringA(errorMsg);
+}
+
 static bool writeMiniDump(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpType) {
-    HMODULE hDbgHelp = LoadLibraryA("dbghelp.dll");
-    if (!hDbgHelp) return false;
+    HMODULE hDbgHelp = loadDbgHelpLibrary();
+    if (!hDbgHelp) {
+        logMiniDumpError(path, "LoadLibrary");
+        return false;
+    }
 
     auto pWriteDump = (MiniDumpWriteDump_t)GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
     if (!pWriteDump) {
+        logMiniDumpError(path, "GetProcAddress");
         FreeLibrary(hDbgHelp);
         return false;
     }
@@ -109,6 +138,7 @@ static bool writeMiniDump(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpTy
     HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, nullptr,
                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE) {
+        logMiniDumpError(path, "CreateFile");
         FreeLibrary(hDbgHelp);
         return false;
     }
@@ -121,7 +151,20 @@ static bool writeMiniDump(const char* path, EXCEPTION_POINTERS* ep, DWORD dumpTy
     BOOL ok = pWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
                          hFile, dumpType, &mei, nullptr, nullptr);
 
+    DWORD lastErr = 0;
+    if (!ok) {
+        lastErr = GetLastError();
+        char errMsg[256];
+        snprintf(errMsg, sizeof(errMsg), "[RawrXD] MiniDumpWriteDump failed for '%s' (GetLastError=0x%08X)\n",
+                 path, lastErr);
+        OutputDebugStringA(errMsg);
+    }
+
     CloseHandle(hFile);
+    if (!ok) {
+        DeleteFileA(path);
+    }
+
     FreeLibrary(hDbgHelp);
     return ok != FALSE;
 }
@@ -347,6 +390,9 @@ static LONG WINAPI CathedralCrashFilter(EXCEPTION_POINTERS* ep) {
 
 void Install(const CrashConfig& config) {
     g_config = config;
+    if (g_config.dumpDirectory && g_config.dumpDirectory[0]) {
+        CreateDirectoryA(g_config.dumpDirectory, nullptr);
+    }
     g_previousFilter = SetUnhandledExceptionFilter(CathedralCrashFilter);
     g_installed.store(true, std::memory_order_release);
     OutputDebugStringA("[RawrXD] Crash containment boundary installed\n");
@@ -369,20 +415,44 @@ bool WriteDiagnosticDump(const char* reason) {
     buildDumpPath(path, sizeof(path), g_config.dumpDirectory, "diag.dmp");
 
     // No exception pointers for diagnostic dump
-    HMODULE hDbgHelp = LoadLibraryA("dbghelp.dll");
-    if (!hDbgHelp) return false;
+    HMODULE hDbgHelp = loadDbgHelpLibrary();
+    if (!hDbgHelp) {
+        logMiniDumpError(path, "LoadLibrary");
+        return false;
+    }
 
     auto pWriteDump = (MiniDumpWriteDump_t)GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
-    if (!pWriteDump) { FreeLibrary(hDbgHelp); return false; }
+    if (!pWriteDump) {
+        logMiniDumpError(path, "GetProcAddress");
+        FreeLibrary(hDbgHelp);
+        return false;
+    }
 
     HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, nullptr,
                                CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (hFile == INVALID_HANDLE_VALUE) { FreeLibrary(hDbgHelp); return false; }
+    if (hFile == INVALID_HANDLE_VALUE) {
+        logMiniDumpError(path, "CreateFile");
+        FreeLibrary(hDbgHelp);
+        return false;
+    }
 
     BOOL ok = pWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
                          hFile, MINIDUMP_NORMAL, nullptr, nullptr, nullptr);
 
+    DWORD lastErr = 0;
+    if (!ok) {
+        lastErr = GetLastError();
+        char errMsg[256];
+        snprintf(errMsg, sizeof(errMsg), "[RawrXD] MiniDumpWriteDump failed for '%s' (GetLastError=0x%08X)\n",
+                 path, lastErr);
+        OutputDebugStringA(errMsg);
+    }
+
     CloseHandle(hFile);
+    if (!ok) {
+        DeleteFileA(path);
+    }
+
     FreeLibrary(hDbgHelp);
 
     if (ok) {

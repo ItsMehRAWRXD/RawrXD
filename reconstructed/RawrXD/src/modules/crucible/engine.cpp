@@ -463,7 +463,16 @@ CrucibleStageResult CrucibleEngine::stage_SP_AcquireTarget() {
 
 #ifdef _WIN32
         // Try DbgHelp SymFromName first (if PDB loaded)
-        HMODULE dbgHelp = LoadLibraryA("dbghelp.dll");
+        char dbgHelpPath[MAX_PATH] = {0};
+        HMODULE dbgHelp = nullptr;
+        if (GetSystemDirectoryA(dbgHelpPath, ARRAYSIZE(dbgHelpPath)) > 0) {
+            if (strcat_s(dbgHelpPath, sizeof(dbgHelpPath), "\\dbghelp.dll") == 0) {
+                dbgHelp = LoadLibraryA(dbgHelpPath);
+            }
+        }
+        if (!dbgHelp) {
+            dbgHelp = LoadLibraryA("dbghelp.dll");
+        }
         if (dbgHelp) {
             typedef BOOL (WINAPI *PFN_SymInitialize)(HANDLE, PCSTR, BOOL);
             typedef BOOL (WINAPI *PFN_SymFromName)(HANDLE, PCSTR, void*);

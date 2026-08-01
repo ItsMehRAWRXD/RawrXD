@@ -16,6 +16,11 @@
 #include <ctype.h>
 #include <stdio.h>
 
+/* ---- String utilities ---- */
+static int starts_with(const char *s, const char *prefix) {
+    return strncmp(s, prefix, strlen(prefix)) == 0;
+}
+
 /* ---- Statement list management ---- */
 static asm_stmt_list_t *stmt_list_new(void) {
     asm_stmt_list_t *l = (asm_stmt_list_t *)calloc(1, sizeof(asm_stmt_list_t));
@@ -78,8 +83,8 @@ static int parse_memory_operand(parser_t *p, x64_operand_t *op, operand_size_t s
     /* We expect '[' has already been consumed */
     op->type = OP_MEM;
     op->size = size_hint ? size_hint : SZ_QWORD;
-    op->mem.base = REG_NONE;
-    op->mem.index = REG_NONE;
+    op->mem.base = X64_REG_NONE;
+    op->mem.index = X64_REG_NONE;
     op->mem.scale = 1;
     op->mem.disp = 0;
     op->mem.has_disp = 0;
@@ -112,7 +117,7 @@ static int parse_memory_operand(parser_t *p, x64_operand_t *op, operand_size_t s
                 }
             } else {
                 /* Check if next is a number with * before it (index*scale) */
-                if (op->mem.base == REG_NONE) {
+                if (op->mem.base == X64_REG_NONE) {
                     op->mem.base = reg;
                 } else {
                     op->mem.index = reg;
@@ -241,11 +246,16 @@ static int parse_operand(parser_t *p, x64_operand_t *op) {
         return 0;
     }
 
-    /* Label/symbol reference */
+    /* Label/symbol reference - handles @@local labels */
     if (tok->type == TOK_IDENT) {
         op->type = OP_LABEL;
         op->size = size_hint;
-        strncpy(op->label, tok->text, 127);
+        /* Strip @@ prefix for local labels */
+        if (starts_with(tok->text, "@@")) {
+            strncpy(op->label, tok->text + 2, 125);
+        } else {
+            strncpy(op->label, tok->text, 127);
+        }
         advance(p);
         return 1;
     }
@@ -520,13 +530,18 @@ asm_stmt_list_t *asm_parse(asm_token_list_t *tokens) {
                 continue;
             }
 
-            /* Look ahead for colon */
+            /* Look ahead for colon - handles both regular labels and @@local labels */
             if (p->pos + 1 < p->tokens->count &&
                 p->tokens->tokens[p->pos + 1].type == TOK_COLON) {
                 asm_stmt_t stmt = {0};
                 stmt.type = STMT_LABEL;
                 stmt.line = line;
-                strncpy(stmt.label, tok->text, 127);
+                /* Handle @@local labels by stripping the @@ prefix for now */
+                if (starts_with(tok->text, "@@")) {
+                    strncpy(stmt.label, tok->text + 2, 125);
+                } else {
+                    strncpy(stmt.label, tok->text, 127);
+                }
                 stmt_list_add(list, &stmt);
                 advance(p); /* ident */
                 advance(p); /* colon */

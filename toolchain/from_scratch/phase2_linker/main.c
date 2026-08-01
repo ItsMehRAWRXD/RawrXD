@@ -14,7 +14,7 @@
 
 #define MAX_OBJS  32
 #define IDATA_RVA 0x2000u
-#define IAT_EXITPROCESS_RVA (IDATA_RVA + 56u)
+#define IAT_EXITPROCESS_RVA (IDATA_RVA + 0x48u)  /* ExitProcess is first import at offset 0x48 in .idata */
 
 static int debug_dump = 0;
 
@@ -89,8 +89,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    /* Define imports with their IAT RVAs (each slot is 8 bytes) */
+    /* IAT layout: ExitProcess @ 0x2048, GetStdHandle @ 0x2050, WriteFile @ 0x2058 */
+    import_entry_t imports[] = {
+        {"ExitProcess",   0x2048},
+        {"GetStdHandle",  0x2050},
+        {"WriteFile",     0x2058}
+    };
+    int num_imports = sizeof(imports) / sizeof(imports[0]);
+
     uint32_t __main_rva = img->entry_point_rva + ENTRY_STUB_RET_OFFSET;
-    if (reloc_resolver_apply(img->text.data, img->text.rva, img->obj_text_offsets, objs, num_objs, main_rva, __main_rva) != 0) {
+    if (reloc_resolver_apply_with_imports(img->text.data, img->text.rva, img->obj_text_offsets, objs, num_objs, main_rva, __main_rva, imports, num_imports) != 0) {
         fprintf(stderr, "Relocation resolution failed (undefined symbol)\n");
         section_merge_destroy(img);
         for (int i = 0; i < num_objs; i++) coff_free(objs[i]);
@@ -107,7 +116,10 @@ int main(int argc, char** argv) {
     }
     pe_writer_set_entry(pw, 0);
     pe_writer_add_text(pw, img->text.data, (uint32_t)img->text.size);
-    pe_writer_set_import(pw, "kernel32.dll", "ExitProcess");
+    /* Add all imports used by the assembly code */
+    pe_writer_add_import(pw, "kernel32.dll", "ExitProcess");
+    pe_writer_add_import(pw, "kernel32.dll", "GetStdHandle");
+    pe_writer_add_import(pw, "kernel32.dll", "WriteFile");
 
     uint8_t* pe_buf = NULL;
     uint32_t pe_size = pe_writer_emit(pw, &pe_buf);
