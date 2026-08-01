@@ -1,0 +1,177 @@
+{
+  "documents": [
+    {
+      "name": "background.js",
+      "path": "C:\\Users\\Garre\\Documents\\background.js",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "content.js",
+      "path": "C:\\Users\\Garre\\Documents\\content.js",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "Diablo IV",
+      "path": "C:\\Users\\Garre\\Documents\\Diablo IV",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "IISExpress",
+      "path": "C:\\Users\\Garre\\Documents\\IISExpress",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "manifest,json.txt",
+      "path": "C:\\Users\\Garre\\Documents\\manifest,json.txt",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "manifest.json",
+      "path": "C:\\Users\\Garre\\Documents\\manifest.json",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "My Games",
+      "path": "C:\\Users\\Garre\\Documents\\My Games",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "My Music",
+      "path": "C:\\Users\\Garre\\Documents\\My Music",
+      "isFile": false,
+      "isDirectory": false
+    },
+    {
+      "name": "My Pictures",
+      "path": "C:\\Users\\Garre\\Documents\\My Pictures",
+      "isFile": false,
+      "isDirectory": false
+    },
+    {
+      "name": "My Videos",
+      "path": "C:\\Users\\Garre\\Documents\\My Videos",
+      "isFile": false,
+      "isDirectory": false
+    },
+    {
+      "name": "My Web Sites",
+      "path": "C:\\Users\\Garre\\Documents\\My Web Sites",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "popup.html",
+      "path": "C:\\Users\\Garre\\Documents\\popup.html",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "popup.js",
+      "path": "C:\\Users\\Garre\\Documents\\popup.js",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "Rockstar Games",
+      "path": "C:\\Users\\Garre\\Documents\\Rockstar Games",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "StarCraft II",
+      "path": "C:\\Users\\Garre\\Documents\\StarCraft II",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "WindowsPowerShell",
+      "path": "C:\\Users\\Garre\\Documents\\WindowsPowerShell",
+      "isFile": false,
+      "isDirectory": true
+    }
+  ],
+  "desktop": [
+    {
+      "name": "APK-Builder",
+      "path": "C:\\Users\\Garre\\Desktop\\APK-Builder",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "calc.exe",
+      "path": "C:\\Users\\Garre\\Desktop\\calc.exe",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "Final-main.zip",
+      "path": "C:\\Users\\Garre\\Desktop\\Final-main.zip",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "RawrZ IRC Client.bat",
+      "path": "C:\\Users\\Garre\\Desktop\\RawrZ IRC Client.bat",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "RawrZ-Clean",
+      "path": "C:\\Users\\Garre\\Desktop\\RawrZ-Clean",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "RawrZ-Security-Platform-v2.0.0-FINAL.zip",
+      "path": "C:\\Users\\Garre\\Desktop\\RawrZ-Security-Platform-v2.0.0-FINAL.zip",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "RawrZApp",
+      "path": "C:\\Users\\Garre\\Desktop\\RawrZApp",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "Read.txt",
+      "path": "C:\\Users\\Garre\\Desktop\\Read.txt",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "Source",
+      "path": "C:\\Users\\Garre\\Desktop\\Source",
+      "isFile": false,
+      "isDirectory": true
+    },
+    {
+      "name": "Ts.txt",
+      "path": "C:\\Users\\Garre\\Desktop\\Ts.txt",
+      "isFile": true,
+      "isDirectory": false
+    },
+    {
+      "name": "Visual Studio Code.lnk",
+      "path": "C:\\Users\\Garre\\Desktop\\Visual Studio Code.lnk",
+      "isFile": true,
+      "isDirectory": false
+    }
+  ],
+  "downloads": [
+    {
+      "name": "calc.exe",
+      "path": "C:\\Users\\Garre\\Downloads\\calc.exe",
+      "isFile": true,
+      "isDirectory": false
+    }
+  ],
+  "recentFiles": []
+}

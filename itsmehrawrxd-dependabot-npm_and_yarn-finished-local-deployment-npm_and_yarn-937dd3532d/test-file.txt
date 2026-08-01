@@ -1,0 +1,6 @@
+This is a test file for encryption testing.
+RawrZ Security Platform - Testing encryption functionality.
+Line 3: Testing multiple lines of content.
+Line 4: Special characters: !@#$%^&*()
+Line 5: Numbers: 1234567890
+Line 6: End of test file.

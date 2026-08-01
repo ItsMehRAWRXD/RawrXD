@@ -1,0 +1,52 @@
+{
+  "name": "rawrz-security-platform",
+  "version": "2.0.0",
+  "description": "Complete Standalone Security Platform - 110+ Security Features with Enterprise-Level Capabilities",
+  "main": "rawrz-standalone.js",
+  "scripts": {
+    "start": "node api-server.js",
+    "help": "node rawrz-standalone.js help",
+    "test": "node rawrz-standalone.js sysinfo",
+    "start:web": "node api-server.js",
+    "start:standalone": "node rawrz-standalone.js"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "crc32": "^0.2.2",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "helmet": "^8.1.0",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2"
+  },
+  "keywords": [
+    "security",
+    "encryption",
+    "cryptography",
+    "forensics",
+    "network-tools",
+    "file-analysis",
+    "standalone",
+    "cli",
+    "aes",
+    "camellia",
+    "aria",
+    "chacha20",
+    "anti-analysis",
+    "stealth",
+    "polymorphic",
+    "malware-analysis",
+    "digital-forensics",
+    "reverse-engineering",
+    "hot-patching",
+    "memory-management",
+    "enterprise-security"
+  ],
+  "author": "RawrZ",
+  "license": "MIT",
+  "bin": {
+    "rawrz": "./rawrz-standalone.js"
+  }
+}

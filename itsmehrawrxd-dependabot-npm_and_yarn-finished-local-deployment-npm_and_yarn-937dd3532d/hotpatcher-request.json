@@ -1,0 +1,1 @@
+{"fileName":"test-executable.exe","fileSize":1024,"injectionPoints":["entry-point","import-table"],"stealthFeatures":["mutex","upx","obfuscation"],"antiAnalysisFeatures":["anti-debug","anti-vm","anti-sandbox"],"filelessOptions":["memory-only","registry-persistence"],"encryption":"aes-256-gcm"}

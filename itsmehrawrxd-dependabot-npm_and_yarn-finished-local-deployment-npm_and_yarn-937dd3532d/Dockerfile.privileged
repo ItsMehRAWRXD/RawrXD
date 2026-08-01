@@ -1,0 +1,61 @@
+# RawrZ Security Platform - Privileged Docker Container
+# This Dockerfile creates a container with elevated privileges for full functionality
+
+FROM node:20-alpine3.19
+
+# Security: Update packages and install system dependencies
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache \
+    bash \
+    curl \
+    wget \
+    git \
+    python3 \
+    make \
+    g++ \
+    linux-headers \
+    libc6-compat \
+    dumb-init \
+    && rm -rf /var/cache/apk/* /tmp/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Security: Install dependencies with security audit
+RUN npm ci --only=production --audit-level=high && \
+    npm audit fix --force || true && \
+    npm cache clean --force && \
+    rm -rf ~/.npm
+
+# Copy application code
+COPY . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p logs models data temp uploads scans scan-results loot backups plugins public src
+
+# Set proper permissions for all directories
+RUN chmod -R 755 /app
+
+# Create non-root user but allow privilege escalation
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S rawrz -u 1001 -G nodejs
+
+# For privileged containers, run as root to enable system-level operations
+# The --privileged flag and capabilities will provide the necessary permissions
+# USER rawrz
+
+# Expose port
+EXPOSE 3000
+
+# Security: Health check with proper error handling
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Security: Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "api-server.js"]

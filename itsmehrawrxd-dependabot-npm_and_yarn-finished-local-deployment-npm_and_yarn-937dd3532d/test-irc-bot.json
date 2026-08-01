@@ -1,0 +1,9 @@
+{
+    "config": {
+        "server": "irc.rizon.net",
+        "port": 6667,
+        "name": "RawrZBot"
+    },
+    "features": ["fileManager", "systemInfo"],
+    "extensions": ["cpp"]
+}

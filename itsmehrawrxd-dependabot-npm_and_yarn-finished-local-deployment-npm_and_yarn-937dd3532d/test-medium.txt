@@ -1,0 +1,1 @@
+Medium test file for encryption with more content to test proper file handling and generation

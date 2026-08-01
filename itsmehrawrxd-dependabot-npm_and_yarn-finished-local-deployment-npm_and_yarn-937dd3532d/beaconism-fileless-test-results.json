@@ -1,0 +1,218 @@
+{
+  "timestamp": "2025-09-19T17:36:57.547Z",
+  "originalFile": {
+    "name": "calc.exe",
+    "size": 49152,
+    "hash": "81bd48985fa1753e9e2158a7cf969141edddbd050e976801bb477e24a2a06b2a"
+  },
+  "filelessEncryption": {
+    "keySource": "system-entropy-memory-only",
+    "key": "ced04e4a44b1002323fc3966232185be4972fd007d64e153bf07eba5b8c5d7cc",
+    "algorithms": {
+      "aes-256-gcm": {
+        "iv": "97fb032498bcd46b8205048f",
+        "authTag": "166ee19830ef00dfc422e79a28469f92",
+        "encryptedSize": 49152
+      },
+      "aes-256-cbc": {
+        "iv": "1b7335af913568847dcd90e814ed44ee",
+        "encryptedSize": 49168
+      },
+      "chacha20-poly1305": {
+        "iv": "dc0164bb21a58edfe037344c",
+        "authTag": "d990d0b2ac3387494b3b1964a20ca949",
+        "encryptedSize": 49152
+      },
+      "camellia-256-cbc": {
+        "iv": "dccd572214a6a8e0b6ca8c5e2932510f",
+        "encryptedSize": 49168
+      },
+      "aes-256-ctr": {
+        "iv": "413da140fb3308b1beeb4c52f0893dca",
+        "encryptedSize": 49152,
+        "note": "Stream cipher alternative to RC4"
+      },
+      "aes-256-ofb": {
+        "iv": "c86fb6768230fc1fa6da82bae5a76e92",
+        "encryptedSize": 49152,
+        "note": "Output Feedback Mode alternative to Blowfish"
+      }
+    },
+    "advancedEncryption": {
+      "double-layer": {
+        "layer1": {
+          "algorithm": "aes-256-gcm",
+          "key": "2b90a42e061312b687842c9d0dbd70026ed4bfcd5a359c6eddbcd8d62a40f2eb",
+          "iv": "c31f6d0f940158d41d9c6154",
+          "authTag": "cfd47a29bfe44edd32dd3ec7552de857",
+          "encryptedSize": 49152
+        },
+        "layer2": {
+          "algorithm": "chacha20-poly1305",
+          "key": "aa2bf9e3d9e302e8c3de719a871c090157d970169c953e545035b301714fae6a",
+          "iv": "854f1ae49c7610666362d859",
+          "authTag": "93a60bd8f1d4f43316298011618bfc02",
+          "encryptedSize": 49152
+        }
+      },
+      "triple-layer": {
+        "layer1": {
+          "algorithm": "aes-256-gcm",
+          "key": "eaed33a1d3f47f2a9f7c3f2519e6a91704e97bbd6ddddef97004dfc88e14b301",
+          "iv": "8b6c403dcf07bb28520fc86b",
+          "authTag": "1bc522d62d0ef72eef03621b285efcb6",
+          "encryptedSize": 49152
+        },
+        "layer2": {
+          "algorithm": "camellia-256-cbc",
+          "key": "11f00e560ec70d92619082aff92546170a00762e191082258538b1141d971f39",
+          "iv": "71845aae7e8b6d44e7b5d90e54e4ccda",
+          "encryptedSize": 49168
+        },
+        "layer3": {
+          "algorithm": "chacha20-poly1305",
+          "key": "f3820d01889eec93a8de36dae4e0ddab816a7f4e170cf04a001ec923d77e3928",
+          "iv": "1eea055565eb16caf5b0bc48",
+          "authTag": "5a8ee4d99d2462022226f26d94e89188",
+          "encryptedSize": 49168
+        }
+      }
+    }
+  },
+  "ircBotStub": {
+    "size": 69876,
+    "features": [
+      "real-irc-protocol",
+      "real-encryption",
+      "real-payload-integration"
+    ]
+  },
+  "httpBotStub": {
+    "size": 70013,
+    "features": [
+      "real-http-protocol",
+      "real-encryption",
+      "real-file-attachment"
+    ]
+  },
+  "advancedStub": {
+    "size": 298323,
+    "features": [
+      "real-encryption",
+      "real-stealth",
+      "real-anti-analysis"
+    ]
+  },
+  "memoryOperations": {
+    "memoryOnlyKey": "cleaned",
+    "cleanupTimestamp": "2025-09-19T17:36:57.547Z"
+  },
+  "encryptionSummary": {
+    "totalAlgorithms": 9,
+    "algorithms": [
+      "aes-256-gcm",
+      "aes-256-cbc",
+      "chacha20-poly1305",
+      "camellia-256-cbc",
+      "aes-256-ctr",
+      "aes-256-ofb",
+      "double-layer",
+      "triple-layer",
+      "hotpatcher"
+    ],
+    "advancedFeatures": [
+      "double-layer",
+      "triple-layer",
+      "hotpatcher"
+    ],
+    "allWorking": true
+  },
+  "hotpatcherSystem": {
+    "payloadTypes": [
+      "irc-bot",
+      "http-bot",
+      "keylogger",
+      "persistence"
+    ],
+    "injectionPoints": [
+      "beginning",
+      "middle",
+      "end"
+    ],
+    "features": [
+      "payload-injection-between-layers",
+      "multi-payload-support",
+      "payload-extraction",
+      "layered-payload-injection",
+      "signature-verification",
+      "timestamp-tracking"
+    ],
+    "results": {
+      "irc-beginning": {
+        "originalSize": 49152,
+        "payloadSize": 682,
+        "injectedSize": 50071,
+        "injectionPoint": "beginning",
+        "payloadType": "irc-bot"
+      },
+      "http-middle": {
+        "originalSize": 49152,
+        "payloadSize": 941,
+        "injectedSize": 50327,
+        "injectionPoint": "middle",
+        "payloadType": "http-bot"
+      },
+      "keylogger-end": {
+        "originalSize": 49152,
+        "payloadSize": 599,
+        "injectedSize": 49982,
+        "injectionPoint": "end",
+        "payloadType": "keylogger"
+      },
+      "multi-payload-triple-layer": {
+        "originalSize": 49152,
+        "payloads": [
+          {
+            "type": "irc-bot",
+            "size": 682,
+            "position": "beginning"
+          },
+          {
+            "type": "http-bot",
+            "size": 941,
+            "position": "middle"
+          },
+          {
+            "type": "keylogger",
+            "size": 599,
+            "position": "end"
+          },
+          {
+            "type": "persistence",
+            "size": 644,
+            "position": "middle"
+          }
+        ],
+        "finalSize": 52954,
+        "totalPayloadSize": 2866
+      },
+      "layered-payloads": {
+        "layer1": {
+          "originalSize": 49152,
+          "payloadSize": 682,
+          "injectedSize": 50068
+        },
+        "layer2": {
+          "originalSize": 49168,
+          "payloadSize": 941,
+          "injectedSize": 50343
+        },
+        "layer3": {
+          "originalSize": 49168,
+          "payloadSize": 599,
+          "injectedSize": 50001
+        }
+      }
+    }
+  }
+}

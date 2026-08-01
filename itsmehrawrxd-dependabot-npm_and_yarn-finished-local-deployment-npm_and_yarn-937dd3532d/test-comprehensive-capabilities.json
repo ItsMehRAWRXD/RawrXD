@@ -1,0 +1,44 @@
+{
+  "operations": [
+    {
+      "engineId": "native-compiler",
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "full-assembly", 
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "advanced-crypto",
+      "action": "getStatus", 
+      "params": {}
+    },
+    {
+      "engineId": "jotti-scanner",
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "ev-cert-encryptor",
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "hot-patchers",
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "dual-crypto-engine",
+      "action": "getStatus",
+      "params": {}
+    },
+    {
+      "engineId": "camellia-assembly",
+      "action": "getStatus",
+      "params": {}
+    }
+  ]
+}

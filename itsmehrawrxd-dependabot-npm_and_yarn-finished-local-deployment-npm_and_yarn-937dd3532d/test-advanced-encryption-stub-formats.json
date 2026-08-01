@@ -1,0 +1,13 @@
+{
+  "target": "test payload data",
+  "stubType": "advanced",
+  "encryptionMethod": "aes-256-gcm",
+  "stealthFeatures": ["polymorphic", "encryption"],
+  "antiAnalysisFeatures": ["anti-debug", "anti-vm"],
+  "evCertFeatures": ["ev-cert-signing"],
+  "hotpatchFeatures": ["hot-patching"],
+  "payload": "test payload integration",
+  "outputFormat": "assembly",
+  "extension": ".asm",
+  "customOptions": {}
+}

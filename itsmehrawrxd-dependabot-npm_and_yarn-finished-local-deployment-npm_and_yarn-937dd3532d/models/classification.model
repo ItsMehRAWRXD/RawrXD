@@ -1,0 +1,372 @@
+{
+  "algorithm": "random_forest",
+  "nEstimators": 100,
+  "threatPatterns": {
+    "benign": {
+      "count": 197,
+      "featureSums": {
+        "fileSize": 978740846.581815,
+        "entropy": 63.56553525641434,
+        "strings": 103282,
+        "imports": 6361,
+        "exports": 5227,
+        "sections": 2088,
+        "resources": 4882,
+        "certificates": 390
+      },
+      "featureCounts": {
+        "fileSize": 197,
+        "entropy": 197,
+        "strings": 197,
+        "imports": 197,
+        "exports": 197,
+        "sections": 197,
+        "resources": 197,
+        "certificates": 197
+      },
+      "averages": {
+        "fileSize": 4968227.647623426,
+        "entropy": 0.3226676916569256,
+        "strings": 524.274111675127,
+        "imports": 32.28934010152284,
+        "exports": 26.532994923857867,
+        "sections": 10.598984771573605,
+        "resources": 24.781725888324875,
+        "certificates": 1.9796954314720812
+      }
+    },
+    "keylogger": {
+      "count": 177,
+      "featureSums": {
+        "fileSize": 911481412.9289442,
+        "entropy": 88.44563853574275,
+        "strings": 88983,
+        "imports": 8925,
+        "exports": 4546,
+        "sections": 1925,
+        "resources": 4493,
+        "certificates": 347
+      },
+      "featureCounts": {
+        "fileSize": 177,
+        "entropy": 177,
+        "strings": 177,
+        "imports": 177,
+        "exports": 177,
+        "sections": 177,
+        "resources": 177,
+        "certificates": 177
+      },
+      "averages": {
+        "fileSize": 5149612.502423414,
+        "entropy": 0.49969287308329235,
+        "strings": 502.728813559322,
+        "imports": 50.42372881355932,
+        "exports": 25.683615819209038,
+        "sections": 10.875706214689265,
+        "resources": 25.384180790960453,
+        "certificates": 1.96045197740113
+      }
+    },
+    "botnet": {
+      "count": 179,
+      "featureSums": {
+        "fileSize": 941318832.884259,
+        "entropy": 93.93191730170633,
+        "strings": 88407,
+        "imports": 9573,
+        "exports": 4414,
+        "sections": 1956,
+        "resources": 4295,
+        "certificates": 379
+      },
+      "featureCounts": {
+        "fileSize": 179,
+        "entropy": 179,
+        "strings": 179,
+        "imports": 179,
+        "exports": 179,
+        "sections": 179,
+        "resources": 179,
+        "certificates": 179
+      },
+      "averages": {
+        "fileSize": 5258764.429521,
+        "entropy": 0.5247593145346723,
+        "strings": 493.89385474860336,
+        "imports": 53.4804469273743,
+        "exports": 24.65921787709497,
+        "sections": 10.927374301675977,
+        "resources": 23.99441340782123,
+        "certificates": 2.11731843575419
+      }
+    },
+    "ransomware": {
+      "count": 177,
+      "featureSums": {
+        "fileSize": 1764586220.4167848,
+        "entropy": 162.2651407087195,
+        "strings": 90496,
+        "imports": 8671,
+        "exports": 4774,
+        "sections": 1909,
+        "resources": 4404,
+        "certificates": 323
+      },
+      "featureCounts": {
+        "fileSize": 177,
+        "entropy": 177,
+        "strings": 177,
+        "imports": 177,
+        "exports": 177,
+        "sections": 177,
+        "resources": 177,
+        "certificates": 177
+      },
+      "averages": {
+        "fileSize": 9969413.6746711,
+        "entropy": 0.9167522073938955,
+        "strings": 511.2768361581921,
+        "imports": 48.98870056497175,
+        "exports": 26.971751412429377,
+        "sections": 10.785310734463277,
+        "resources": 24.88135593220339,
+        "certificates": 1.8248587570621468
+      }
+    },
+    "backdoor": {
+      "count": 180,
+      "featureSums": {
+        "fileSize": 904479394.9276505,
+        "entropy": 87.56765149503875,
+        "strings": 86205,
+        "imports": 9022,
+        "exports": 4345,
+        "sections": 1797,
+        "resources": 4892,
+        "certificates": 329
+      },
+      "featureCounts": {
+        "fileSize": 180,
+        "entropy": 180,
+        "strings": 180,
+        "imports": 180,
+        "exports": 180,
+        "sections": 180,
+        "resources": 180,
+        "certificates": 180
+      },
+      "averages": {
+        "fileSize": 5024885.527375836,
+        "entropy": 0.48648695275021525,
+        "strings": 478.9166666666667,
+        "imports": 50.12222222222222,
+        "exports": 24.13888888888889,
+        "sections": 9.983333333333333,
+        "resources": 27.177777777777777,
+        "certificates": 1.8277777777777777
+      }
+    },
+    "adware": {
+      "count": 178,
+      "featureSums": {
+        "fileSize": 852172391.1253457,
+        "entropy": 96.35446203006033,
+        "strings": 87626,
+        "imports": 9512,
+        "exports": 4348,
+        "sections": 1861,
+        "resources": 4419,
+        "certificates": 366
+      },
+      "featureCounts": {
+        "fileSize": 178,
+        "entropy": 178,
+        "strings": 178,
+        "imports": 178,
+        "exports": 178,
+        "sections": 178,
+        "resources": 178,
+        "certificates": 178
+      },
+      "averages": {
+        "fileSize": 4787485.343400818,
+        "entropy": 0.5413172024160693,
+        "strings": 492.2808988764045,
+        "imports": 53.438202247191015,
+        "exports": 24.426966292134832,
+        "sections": 10.455056179775282,
+        "resources": 24.825842696629213,
+        "certificates": 2.056179775280899
+      }
+    },
+    "malware": {
+      "count": 176,
+      "featureSums": {
+        "fileSize": 885985559.7440801,
+        "entropy": 144.49322076371908,
+        "strings": 87814,
+        "imports": 16986,
+        "exports": 4477,
+        "sections": 1856,
+        "resources": 4235,
+        "certificates": 319
+      },
+      "featureCounts": {
+        "fileSize": 176,
+        "entropy": 176,
+        "strings": 176,
+        "imports": 176,
+        "exports": 176,
+        "sections": 176,
+        "resources": 176,
+        "certificates": 176
+      },
+      "averages": {
+        "fileSize": 5034008.8621822735,
+        "entropy": 0.8209842088847675,
+        "strings": 498.9431818181818,
+        "imports": 96.51136363636364,
+        "exports": 25.4375,
+        "sections": 10.545454545454545,
+        "resources": 24.0625,
+        "certificates": 1.8125
+      }
+    },
+    "phishing": {
+      "count": 198,
+      "featureSums": {
+        "fileSize": 1038279964.5294231,
+        "entropy": 98.57231692533327,
+        "strings": 94841,
+        "imports": 9870,
+        "exports": 4589,
+        "sections": 1939,
+        "resources": 5180,
+        "certificates": 401
+      },
+      "featureCounts": {
+        "fileSize": 198,
+        "entropy": 198,
+        "strings": 198,
+        "imports": 198,
+        "exports": 198,
+        "sections": 198,
+        "resources": 198,
+        "certificates": 198
+      },
+      "averages": {
+        "fileSize": 5243838.204694056,
+        "entropy": 0.49783998447138017,
+        "strings": 478.9949494949495,
+        "imports": 49.84848484848485,
+        "exports": 23.17676767676768,
+        "sections": 9.792929292929292,
+        "resources": 26.161616161616163,
+        "certificates": 2.025252525252525
+      }
+    },
+    "spyware": {
+      "count": 194,
+      "featureSums": {
+        "fileSize": 951341992.6815224,
+        "entropy": 103.16974547461798,
+        "strings": 96431,
+        "imports": 9655,
+        "exports": 4898,
+        "sections": 2012,
+        "resources": 4640,
+        "certificates": 382
+      },
+      "featureCounts": {
+        "fileSize": 194,
+        "entropy": 194,
+        "strings": 194,
+        "imports": 194,
+        "exports": 194,
+        "sections": 194,
+        "resources": 194,
+        "certificates": 194
+      },
+      "averages": {
+        "fileSize": 4903824.70454393,
+        "entropy": 0.531802811724835,
+        "strings": 497.0670103092784,
+        "imports": 49.7680412371134,
+        "exports": 25.24742268041237,
+        "sections": 10.371134020618557,
+        "resources": 23.917525773195877,
+        "certificates": 1.9690721649484537
+      }
+    },
+    "rootkit": {
+      "count": 172,
+      "featureSums": {
+        "fileSize": 933584186.385097,
+        "entropy": 88.03823989640415,
+        "strings": 89428,
+        "imports": 8528,
+        "exports": 3999,
+        "sections": 1578,
+        "resources": 4210,
+        "certificates": 360
+      },
+      "featureCounts": {
+        "fileSize": 172,
+        "entropy": 172,
+        "strings": 172,
+        "imports": 172,
+        "exports": 172,
+        "sections": 172,
+        "resources": 172,
+        "certificates": 172
+      },
+      "averages": {
+        "fileSize": 5427815.0371226575,
+        "entropy": 0.5118502319558381,
+        "strings": 519.9302325581396,
+        "imports": 49.58139534883721,
+        "exports": 23.25,
+        "sections": 9.174418604651162,
+        "resources": 24.476744186046513,
+        "certificates": 2.0930232558139537
+      }
+    },
+    "trojan": {
+      "count": 172,
+      "featureSums": {
+        "fileSize": 817814130.5462763,
+        "entropy": 90.17830099429843,
+        "strings": 82483,
+        "imports": 13984,
+        "exports": 4227,
+        "sections": 2719,
+        "resources": 4042,
+        "certificates": 341
+      },
+      "featureCounts": {
+        "fileSize": 172,
+        "entropy": 172,
+        "strings": 172,
+        "imports": 172,
+        "exports": 172,
+        "sections": 172,
+        "resources": 172,
+        "certificates": 172
+      },
+      "averages": {
+        "fileSize": 4754733.317129513,
+        "entropy": 0.5242924476412699,
+        "strings": 479.55232558139534,
+        "imports": 81.30232558139535,
+        "exports": 24.575581395348838,
+        "sections": 15.80813953488372,
+        "resources": 23.5,
+        "certificates": 1.9825581395348837
+      }
+    }
+  },
+  "trained": true,
+  "trainingDataSize": 2000,
+  "savedAt": "2025-09-20T01:16:22.164Z"
+}

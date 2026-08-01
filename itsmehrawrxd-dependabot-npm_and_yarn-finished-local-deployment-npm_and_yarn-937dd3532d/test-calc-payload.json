@@ -1,0 +1,10 @@
+{
+    "file": {
+        "name": "calc.exe",
+        "size": 49152
+    },
+    "payloads": ["basic-payload", "advanced-payload"],
+    "injectionPoints": ["beginning", "middle"],
+    "stealthFeatures": ["polymorphic", "metamorphic"],
+    "antiAnalysisFeatures": ["anti-debug", "anti-vm"]
+}

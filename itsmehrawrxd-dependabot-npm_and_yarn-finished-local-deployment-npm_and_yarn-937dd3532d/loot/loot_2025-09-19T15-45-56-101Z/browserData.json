@@ -1,0 +1,840 @@
+[
+  {
+    "browser": "Chrome",
+    "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data",
+    "accessible": true,
+    "data": {
+      "bookmarks": [],
+      "history": [],
+      "passwords": [],
+      "cookies": [],
+      "downloads": [],
+      "files": [
+        {
+          "name": "AmountExtractionHeuristicRegexes",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\AmountExtractionHeuristicRegexes",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "AutofillStates",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\AutofillStates",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "BrowserMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\BrowserMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "BrowserMetrics-spare.pma",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\BrowserMetrics-spare.pma",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "CertificateRevocation",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\CertificateRevocation",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "CommerceHeuristics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\CommerceHeuristics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "component_crx_cache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\component_crx_cache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "CookieReadinessList",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\CookieReadinessList",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Crashpad",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Crashpad",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "CrashpadMetrics-active.pma",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\CrashpadMetrics-active.pma",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Crowd Deny",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Crowd Deny",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Default",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Default",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Default MDL",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Default MDL",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "DeferredBrowserMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\DeferredBrowserMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "extensions_crx_cache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\extensions_crx_cache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "FileTypePolicies",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\FileTypePolicies",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "First Run",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\First Run",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "FirstPartySetsPreloaded",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\FirstPartySetsPreloaded",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "first_party_sets.db",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\first_party_sets.db",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "first_party_sets.db-journal",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\first_party_sets.db-journal",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "GraphiteDawnCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\GraphiteDawnCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "GrShaderCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\GrShaderCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Guest Profile",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Guest Profile",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "HistorySearch",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\HistorySearch",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "hyphen-data",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\hyphen-data",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Last Browser",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Last Browser",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Last Version",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Last Version",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Local State",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Local State",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Local Traces",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Local Traces",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "lockfile",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\lockfile",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "MaskedDomainListPreloaded",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\MaskedDomainListPreloaded",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "MediaFoundationWidevineCdm",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\MediaFoundationWidevineCdm",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "MEIPreload",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\MEIPreload",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Notification Resources",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Notification Resources",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OnDeviceHeadSuggestModel",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\OnDeviceHeadSuggestModel",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OpenCookieDatabase",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\OpenCookieDatabase",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OptimizationHints",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\OptimizationHints",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "optimization_guide_model_store",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\optimization_guide_model_store",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OriginTrials",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\OriginTrials",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "PKIMetadata",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\PKIMetadata",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "PrivacySandboxAttestationsPreloaded",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\PrivacySandboxAttestationsPreloaded",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ProbabilisticRevealTokenRegistry",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\ProbabilisticRevealTokenRegistry",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Profile 1",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Profile 1",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Profile 2",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Profile 2",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "RecoveryImproved",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\RecoveryImproved",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Regular Browsing MDL",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Regular Browsing MDL",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Safe Browsing",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Safe Browsing",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SafetyTips",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\SafetyTips",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "screen_ai",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\screen_ai",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "segmentation_platform",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\segmentation_platform",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ShaderCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\ShaderCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SODA",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\SODA",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SODALanguagePacks",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\SODALanguagePacks",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SSLErrorAssistant",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\SSLErrorAssistant",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Subresource Filter",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Subresource Filter",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "System Profile",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\System Profile",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "TpcdMetadata",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\TpcdMetadata",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "TrustTokenKeyCommitments",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\TrustTokenKeyCommitments",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Variations",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Variations",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "WasmTtsEngine",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\WasmTtsEngine",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Webstore Downloads",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\Webstore Downloads",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "WidevineCdm",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\WidevineCdm",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ZxcvbnData",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Google\\Chrome\\User Data\\ZxcvbnData",
+          "isFile": false,
+          "isDirectory": true
+        }
+      ]
+    }
+  },
+  {
+    "browser": "Edge",
+    "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data",
+    "accessible": true,
+    "data": {
+      "bookmarks": [],
+      "history": [],
+      "passwords": [],
+      "cookies": [],
+      "downloads": [],
+      "files": [
+        {
+          "name": "Ad Blocking",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Ad Blocking",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "AdSelectionAttestationsPreloaded",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\AdSelectionAttestationsPreloaded",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "AmountExtractionHeuristicRegexes",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\AmountExtractionHeuristicRegexes",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Autofill",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Autofill",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "AutoLaunchProtocolsComponent",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\AutoLaunchProtocolsComponent",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "BrowserMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\BrowserMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "CertificateRevocation",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\CertificateRevocation",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "component_crx_cache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\component_crx_cache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "CookieReadinessList",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\CookieReadinessList",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Crashpad",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Crashpad",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "DeferredBrowserMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\DeferredBrowserMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Diagnostic No UTC Data",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Diagnostic No UTC Data",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Diagnostic No UTC Data-wal",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Diagnostic No UTC Data-wal",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Domain Actions",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Domain Actions",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "EADPData Component",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\EADPData Component",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "EBWebViewMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\EBWebViewMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Cloud Config",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Cloud Config",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Data Protection Lists",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Data Protection Lists",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Notifications",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Notifications",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Shopping",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Shopping",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Theme",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Theme",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Tipping",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Tipping",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Travel",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Travel",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Edge Wallet",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Edge Wallet",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "EdgeOnnxRuntimeDirectML",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\EdgeOnnxRuntimeDirectML",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "edge_task_manager_close.txt",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\edge_task_manager_close.txt",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "extensions_crx_cache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\extensions_crx_cache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "First Run",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\First Run",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "FirstPartySetsPreloaded",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\FirstPartySetsPreloaded",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "first_party_sets.db",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\first_party_sets.db",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Functional Data",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Functional Data",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Functional SAN Data",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Functional SAN Data",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Functional SAN Data-wal",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Functional SAN Data-wal",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "GraphiteDawnCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\GraphiteDawnCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "GrShaderCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\GrShaderCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "hyphen-data",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\hyphen-data",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Last Browser",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Last Browser",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Last Version",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Last Version",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Local State",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Local State",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Local Traces",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Local Traces",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Notification Resources",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Notification Resources",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "NotificationHelperMetrics",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\NotificationHelperMetrics",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Nurturing",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Nurturing",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OpenCookieDatabase",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\OpenCookieDatabase",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "optimization_guide_model_store",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\optimization_guide_model_store",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "OriginTrials",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\OriginTrials",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "PKIMetadata",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\PKIMetadata",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ProbabilisticRevealTokenRegistry",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\ProbabilisticRevealTokenRegistry",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Profile 7",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Profile 7",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Profile 8",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Profile 8",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Profile 9",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Profile 9",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ProvenanceData",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\ProvenanceData",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ProvenanceDataTensors",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\ProvenanceDataTensors",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "RecoveryImproved",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\RecoveryImproved",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "RevisitationBloomfilter",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\RevisitationBloomfilter",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "Safe Browsing",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Safe Browsing",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SafetyTips",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\SafetyTips",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ShaderCache",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\ShaderCache",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "SmartScreen",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\SmartScreen",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Speech Recognition",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Speech Recognition",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Subresource Filter",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Subresource Filter",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Trust Protection Lists",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Trust Protection Lists",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "TrustTokenKeyCommitments",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\TrustTokenKeyCommitments",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Typosquatting",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Typosquatting",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Variations",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Variations",
+          "isFile": true,
+          "isDirectory": false
+        },
+        {
+          "name": "VisualCompanion",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\VisualCompanion",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Web Notifications Deny List",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Web Notifications Deny List",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Webstore Downloads",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Webstore Downloads",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "Well Known Domains",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\Well Known Domains",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "WidevineCdm",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\WidevineCdm",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "WorkspacesNavigationComponent",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\WorkspacesNavigationComponent",
+          "isFile": false,
+          "isDirectory": true
+        },
+        {
+          "name": "ZxcvbnData",
+          "path": "C:\\Users\\Garre\\AppData\\Local\\Microsoft\\Edge\\User Data\\ZxcvbnData",
+          "isFile": false,
+          "isDirectory": true
+        }
+      ]
+    }
+  }
+]
