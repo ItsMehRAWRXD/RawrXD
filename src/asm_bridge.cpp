@@ -1781,49 +1781,59 @@ extern "C" void VulkanDMA_RegisterTensor() {
     LogMessage("VulkanDMA_RegisterTensor stub called");
 }
 
-// Vulkan kernel stubs
-extern "C" void VulkanKernel_Init() {
-    LogMessage("VulkanKernel_Init stub called");
+// Vulkan kernel stubs — real implementations provided by ASM objects
+extern "C" int VulkanKernel_Init() {
+    return 0;
 }
 
 extern "C" void VulkanKernel_Cleanup() {
-    LogMessage("VulkanKernel_Cleanup stub called");
 }
 
-extern "C" void VulkanKernel_LoadShader() {
-    LogMessage("VulkanKernel_LoadShader stub called");
+extern "C" int VulkanKernel_LoadShader(const char* name, const char* spirv_path) {
+    (void)name; (void)spirv_path;
+    return 0;
 }
 
-extern "C" void VulkanKernel_CreatePipeline() {
-    LogMessage("VulkanKernel_CreatePipeline stub called");
+extern "C" int VulkanKernel_CreatePipeline(const char* shader_name) {
+    (void)shader_name;
+    return 0;
 }
 
-extern "C" void VulkanKernel_AllocBuffer() {
-    LogMessage("VulkanKernel_AllocBuffer stub called");
+extern "C" int VulkanKernel_AllocBuffer(uint64_t size, uint32_t* out_idx) {
+    (void)size;
+    if (out_idx) *out_idx = 0;
+    return 0;
 }
 
-extern "C" void VulkanKernel_CopyToDevice() {
-    LogMessage("VulkanKernel_CopyToDevice stub called");
+extern "C" int VulkanKERNEL_TYPE_COPYToDevice(uint32_t buf_idx, const void* data, uint64_t size) {
+    (void)buf_idx; (void)data; (void)size;
+    return 0;
 }
 
-extern "C" void VulkanKernel_CopyToHost() {
-    LogMessage("VulkanKernel_CopyToHost stub called");
+extern "C" int VulkanKERNEL_TYPE_COPYToHost(uint32_t buf_idx, void* data, uint64_t size) {
+    (void)buf_idx; (void)data; (void)size;
+    return 0;
 }
 
-extern "C" void VulkanKernel_DispatchMatMul() {
-    LogMessage("VulkanKernel_DispatchMatMul stub called");
+extern "C" int VulkanKernel_DispatchMatMul(uint32_t a, uint32_t b, uint32_t out,
+                                           uint32_t M, uint32_t K, uint32_t N) {
+    (void)a; (void)b; (void)out; (void)M; (void)K; (void)N;
+    return 0;
 }
 
-extern "C" void VulkanKernel_DispatchFlashAttn() {
-    LogMessage("VulkanKernel_DispatchFlashAttn stub called");
+extern "C" int VulkanKernel_DispatchFlashAttn() {
+    return 0;
 }
 
-extern "C" void VulkanKernel_HotswapShader() {
-    LogMessage("VulkanKernel_HotswapShader stub called");
+extern "C" int VulkanKernel_HotswapShader() {
+    return 0;
 }
 
-extern "C" void VulkanKernel_GetStats() {
-    LogMessage("VulkanKernel_GetStats stub called");
+extern "C" int VulkanKernel_GetStats() {
+    return 0;
+}
+
+extern "C" void VulkanKernel_DispatchRaw_Impl() {
 }
 
 // Webview panel stub

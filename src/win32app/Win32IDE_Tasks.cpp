@@ -32,6 +32,10 @@
 #include <functional>
 #include <nlohmann/json.hpp>
 
+// Explicit ANSI entry points — UNICODE macro remaps GetEnvironmentStrings
+extern "C" char* __stdcall GetEnvironmentStringsA(void);
+extern "C" int   __stdcall FreeEnvironmentStringsA(char*);
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 

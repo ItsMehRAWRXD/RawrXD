@@ -17,6 +17,7 @@
 #include <memory>
 #include <thread>
 #include <future>
+#include "gguf_loader.h"
 
 #pragma comment(lib, "shell32.lib")
 
@@ -546,3 +547,4 @@ void Win32IDE_RunCIPipeline_Impl(Win32IDE* ide) {
     if (!ide) return;
     ide->RunCIPipeline();
 }
+

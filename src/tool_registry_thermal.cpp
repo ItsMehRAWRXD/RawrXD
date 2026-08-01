@@ -222,21 +222,13 @@ int registerThermalTools(ToolRegistry* registry) {
         toolDef.config.enableCaching = true;
         toolDef.config.cacheValidityMs = 500;  // 500ms cache for thermal data
         
-<<<<<<< HEAD
         toolDef.inputSchema = json{
-=======
-        toolDef.inputSchema = json::object({
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             {"type", "object"},
             {"properties", {
                 {"maxTempC", {{"type", "integer"}, {"default", 70}, {"description", "Blacklist threshold temperature"}}},
                 {"maxWearPct", {{"type", "integer"}, {"default", 95}, {"description", "Blacklist threshold wear level"}}}
             }}
-<<<<<<< HEAD
         };
-=======
-        });
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         toolDef.handler = [](const json& params) -> json {
             int32_t maxTempC = params.value("maxTempC", 70);
@@ -244,19 +236,11 @@ int registerThermalTools(ToolRegistry* registry) {
             
             std::vector<ThermalDataReader::DriveData> drives;
             if (!g_thermalReader.readAllDrives(drives, maxTempC, maxWearPct)) {
-<<<<<<< HEAD
                 return json{
                     {"success", false},
                     {"error", g_thermalReader.getLastError()},
                     {"serviceRunning", false}
                 };
-=======
-                return json::object({
-                    {"success", false},
-                    {"error", g_thermalReader.getLastError()},
-                    {"serviceRunning", false}
-                });
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             
             json drivesJson = json::array_type();
@@ -290,11 +274,7 @@ int registerThermalTools(ToolRegistry* registry) {
                 drivesJson.push_back(driveJson);
             }
             
-<<<<<<< HEAD
             return json{
-=======
-            return json::object({
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 {"success", true},
                 {"serviceRunning", true},
                 {"namespace", g_thermalReader.isUsingLocalNamespace() ? "Local" : "Global"},
@@ -306,11 +286,7 @@ int registerThermalTools(ToolRegistry* registry) {
                 {"coolestTempC", coolestTemp < 999 ? coolestTemp : -1},
                 {"coolestDrive", coolestDrive},
                 {"drives", drivesJson}
-<<<<<<< HEAD
             };
-=======
-            });
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         };
 
         if (registry->registerTool(toolDef)) count++;

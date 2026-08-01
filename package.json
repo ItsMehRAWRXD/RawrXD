@@ -1,7 +1,7 @@
 {
-<<<<<<< HEAD
   "name": "rawrxd-backend",
   "version": "2.0.0",
+  "type": "commonjs",
   "description": "RawrXD Backend Server - Bridges HTTP API to Deep2/Sovereign runtime",
   "main": "server.js",
   "workspaces": [
@@ -40,25 +40,4 @@
     "node": ">=16.0.0"
   }
 }
-=======
-  "name": "rawrxd-ide-chatbot",
-  "version": "1.0.0",
-  "description": "RawrXD IDE Chatbot with 120B Model Support",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "build": "build_phase3.bat",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "ffi-napi": "^4.0.3",
-    "ref-napi": "^3.0.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "keywords": ["ai", "chatbot", "masm", "120b", "model"],
-  "author": "RawrXD",
-  "license": "MIT"
-}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

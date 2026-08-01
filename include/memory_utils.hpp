@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-/**
- * memory_utils.hpp
- * ================
+=========
  * Utilities and helpers for smart pointer migration and RAII patterns
  * Used throughout Phase 2 (Memory Management Overhaul)
  * 
@@ -490,4 +487,4 @@ concept HasMemorySemantics = requires(T t) {
 } // namespace RawrXD
 
 #endif // RAWRXD_MEMORY_UTILS_HPP
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

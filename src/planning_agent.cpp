@@ -841,7 +841,6 @@ void PlanningAgent::createRollbackPoint(PlanningTask& task) {
         task.rollbackFilePath = path;
         task.canRollback = true;
     }
-=======
     t2.associatedAction.type = ActionType::FileEdit; // Placeholder for edit
     t2.associatedAction.description = "Implement: " + goal;
     m_tasks.push_back(t2);
@@ -884,5 +883,4 @@ std::string PlanningAgent::generateSummary() const {
         ss << " - " << task.title << ": " << task.status << "\n";
     }
     return ss.str();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

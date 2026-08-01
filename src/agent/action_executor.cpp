@@ -19,7 +19,6 @@
 #include <windows.h>
 #include <nlohmann/json.hpp>
 
-<<<<<<< HEAD
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -42,10 +41,6 @@ namespace fs = std::filesystem;
 // ═══════════════════════════════════════════════════════════════════════════
 // Construction / Destruction
 // ═══════════════════════════════════════════════════════════════════════════
-=======
-namespace fs = std::filesystem;
-using json = nlohmann::json;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 /**
  * @brief Constructor
@@ -77,11 +72,8 @@ ActionExecutor::~ActionExecutor()
 void ActionExecutor::setContext(const ExecutionContext& context)
 {
     m_context = context;
-<<<<<<< HEAD
     fprintf(stderr, "[ActionExecutor] Context set - projectRoot: %s\n",
             m_context.projectRoot.c_str());
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -89,11 +81,8 @@ void ActionExecutor::setContext(const ExecutionContext& context)
  */
 bool ActionExecutor::executeAction(Action& action)
 {
-<<<<<<< HEAD
     fprintf(stderr, "[ActionExecutor] Executing action: %s\n", action.description.c_str());
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     switch (action.type) {
     case ActionType::FileEdit:
         return handleFileEdit(action);
@@ -120,11 +109,7 @@ bool ActionExecutor::executeAction(Action& action)
 /**
  * @brief Execute complete plan (asynchronous)
  */
-<<<<<<< HEAD
 void ActionExecutor::executePlan(const JsonValue& actions, bool stopOnError)
-=======
-void ActionExecutor::executePlan(const json& actions, bool stopOnError)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 {
     m_isExecuting.store(true);
     m_stopOnError = stopOnError;
@@ -132,7 +117,6 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
     m_executedActions.clear();
     m_backups.clear();
 
-<<<<<<< HEAD
     m_context.totalActions = static_cast<int>(actions.size());
     notifyPlanStarted(static_cast<int>(actions.size()));
 
@@ -152,17 +136,6 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
         for (size_t i = 0; i < actions.size() && !m_cancelled.load(); ++i) {
             if (!actions[i].isObject()) {
                 fprintf(stderr, "[ActionExecutor] Invalid action at index %zu\n", i);
-=======
-    m_context.totalActions = actions.size();
-    if (onPlanStarted) onPlanStarted(actions.size());
-
-    // Run on background thread
-    std::thread([this, actions]() {
-        bool overallSuccess = true;
-
-        for (size_t i = 0; i < actions.size() && !m_cancelled; ++i) {
-            if (!actions[i].is_object()) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 overallSuccess = false;
                 if (m_stopOnError) break;
                 continue;
@@ -171,13 +144,8 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
             Action action = parseJsonAction(actions[i]);
             m_context.currentActionIndex = static_cast<int>(i);
 
-<<<<<<< HEAD
             notifyActionStarted(static_cast<int>(i), action.description);
             notifyProgressUpdated(static_cast<int>(i), m_context.totalActions);
-=======
-            if (onActionStarted) onActionStarted(static_cast<int>(i), action.description);
-            if (onProgressUpdated) onProgressUpdated(static_cast<int>(i), m_context.totalActions);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             bool success = executeAction(action);
             action.executed = true;
@@ -185,11 +153,7 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
 
             m_executedActions.push_back(action);
 
-<<<<<<< HEAD
             JsonValue result;
-=======
-            json result;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             result["target"] = action.target;
             result["success"] = success;
             if (!action.error.empty()) {
@@ -199,7 +163,6 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
                 result["result"] = action.result;
             }
 
-<<<<<<< HEAD
             notifyActionCompleted(static_cast<int>(i), success, result);
 
             if (!success) {
@@ -208,15 +171,6 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
 
                 if (m_stopOnError) {
                     fprintf(stderr, "[ActionExecutor] Stopping due to error\n");
-=======
-            if (onActionCompleted) onActionCompleted(static_cast<int>(i), success, result);
-
-            if (!success) {
-                overallSuccess = false;
-                if (onActionFailed) onActionFailed(static_cast<int>(i), action.error, m_stopOnError);
-
-                if (m_stopOnError) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     break;
                 }
             }
@@ -224,22 +178,13 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
 
         m_isExecuting.store(false);
 
-<<<<<<< HEAD
         JsonValue finalResult;
-=======
-        json finalResult;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         finalResult["success"] = overallSuccess;
         finalResult["actionsExecuted"] = static_cast<int>(m_executedActions.size());
         finalResult["state"] = m_context.state;
 
-<<<<<<< HEAD
         notifyPlanCompleted(overallSuccess, finalResult);
     });
-=======
-        if (onPlanCompleted) onPlanCompleted(overallSuccess, finalResult);
-    }).detach();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -247,7 +192,6 @@ void ActionExecutor::executePlan(const json& actions, bool stopOnError)
  */
 void ActionExecutor::cancelExecution()
 {
-<<<<<<< HEAD
     m_cancelled.store(true);
 #ifdef _WIN32
     {
@@ -259,14 +203,6 @@ void ActionExecutor::cancelExecution()
     }
 #endif
     fprintf(stderr, "[ActionExecutor] Execution cancelled\n");
-=======
-    m_cancelled = true;
-    if (m_processHandle) {
-        TerminateProcess(m_processHandle, 1);
-        CloseHandle(m_processHandle);
-        m_processHandle = nullptr;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -282,18 +218,12 @@ bool ActionExecutor::rollbackAction(int actionIndex)
 
     // Only file edits are rollbackable
     if (action.type != ActionType::FileEdit) {
-<<<<<<< HEAD
         fprintf(stderr, "[ActionExecutor] Action type not rollbackable\n");
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 
     if (m_backups.find(action.target) == m_backups.end()) {
-<<<<<<< HEAD
         fprintf(stderr, "[ActionExecutor] No backup found for %s\n", action.target.c_str());
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 
@@ -303,7 +233,6 @@ bool ActionExecutor::rollbackAction(int actionIndex)
 /**
  * @brief Get aggregated result
  */
-<<<<<<< HEAD
 JsonValue ActionExecutor::getAggregatedResult() const
 {
     JsonValue result;
@@ -311,15 +240,6 @@ JsonValue ActionExecutor::getAggregatedResult() const
 
     for (const auto& action : m_executedActions) {
         JsonValue actionObj;
-=======
-json ActionExecutor::getAggregatedResult() const
-{
-    json result;
-    json actions = json::array();
-
-    for (const auto& action : m_executedActions) {
-        json actionObj;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         actionObj["description"] = action.description;
         actionObj["success"] = action.success;
         actionObj["result"] = action.result;
@@ -344,17 +264,9 @@ json ActionExecutor::getAggregatedResult() const
  */
 bool ActionExecutor::handleFileEdit(Action& action)
 {
-<<<<<<< HEAD
     std::string filePath = m_context.projectRoot + "/" + action.target;
     std::string editAction = action.params.value("action").toString();
     std::string content = action.params.value("content").toString();
-=======
-    fs::path filePath = fs::path(m_context.projectRoot) / action.target;
-    std::string editAction = action.params.value("action", "");
-    std::string content = action.params.value("content", "");
-    std::string oldString = action.params.value("old_string", "");
-    std::string newString = action.params.value("new_string", "");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // Validate safety
     if (!validateFileEditSafety(filePath.string(), editAction)) {
@@ -368,7 +280,6 @@ bool ActionExecutor::handleFileEdit(Action& action)
     }
 
     // Create backup
-<<<<<<< HEAD
     if (!createBackup(filePath)) {
         fprintf(stderr, "[ActionExecutor] Failed to backup %s\n", filePath.c_str());
     }
@@ -388,29 +299,10 @@ bool ActionExecutor::handleFileEdit(Action& action)
         ofs << content;
         ofs.close();
         action.result = "File created: " + filePath;
-=======
-    if (!createBackup(filePath.string())) {
-        // Log warning but continue
-    }
-
-    if (editAction == "create") {
-        // Create directory structure if needed
-        fs::create_directories(filePath.parent_path());
-        // Create new file
-        std::ofstream file(filePath);
-        if (!file) {
-            action.error = "Failed to create file: " + filePath.string();
-            return false;
-        }
-        file << content;
-        file.close();
-        action.result = "File created: " + filePath.string();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
 
     } else if (editAction == "append") {
         // Append to existing file
-<<<<<<< HEAD
         std::ofstream ofs(filePath, std::ios::out | std::ios::app);
         if (!ofs.is_open()) {
             action.error = "Failed to open file for append: " + filePath;
@@ -419,21 +311,10 @@ bool ActionExecutor::handleFileEdit(Action& action)
         ofs << content;
         ofs.close();
         action.result = "Appended to: " + filePath;
-=======
-        std::ofstream file(filePath, std::ios::app);
-        if (!file) {
-            action.error = "Failed to open file for append";
-            return false;
-        }
-        file << content;
-        file.close();
-        action.result = "Appended to: " + filePath.string();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
 
     } else if (editAction == "replace") {
         // Replace entire file
-<<<<<<< HEAD
         std::ofstream ofs(filePath, std::ios::out | std::ios::trunc);
         if (!ofs.is_open()) {
             action.error = "Failed to open file for writing: " + filePath;
@@ -442,16 +323,6 @@ bool ActionExecutor::handleFileEdit(Action& action)
         ofs << content;
         ofs.close();
         action.result = "Replaced: " + filePath;
-=======
-        std::ofstream file(filePath);
-        if (!file) {
-            action.error = "Failed to open file for writing";
-            return false;
-        }
-        file << content;
-        file.close();
-        action.result = "Replaced: " + filePath.string();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
 
     } else if (editAction == "replace_string") {
@@ -482,12 +353,7 @@ bool ActionExecutor::handleFileEdit(Action& action)
     } else if (editAction == "delete") {
         // Delete file
         std::error_code ec;
-<<<<<<< HEAD
         if (!fs::remove(filePath, ec)) {
-=======
-        fs::remove(filePath, ec);
-        if (ec) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             action.error = "Failed to delete file";
             return false;
         }
@@ -505,7 +371,6 @@ bool ActionExecutor::handleFileEdit(Action& action)
  */
 bool ActionExecutor::handleSearchFiles(Action& action)
 {
-<<<<<<< HEAD
     std::string searchPath = m_context.projectRoot + "/" + action.params.value("path").toString();
     std::string pattern = action.params.value("pattern").toString();
     std::string query = action.params.value("query").toString();
@@ -576,73 +441,18 @@ bool ActionExecutor::handleSearchFiles(Action& action)
                     match["file"] = entry.path().string();
                     match["matches"] = static_cast<int>(strutil::countOccurrences(content, query));
                     results.append(match);
-=======
-    fs::path searchPath = fs::path(m_context.projectRoot) / action.params.value("path", "");
-    std::string pattern = action.params.value("pattern", "*");
-    std::string query = action.params.value("query", "");
-
-    if (!fs::exists(searchPath) || !fs::is_directory(searchPath)) {
-        action.error = "Search path does not exist: " + searchPath.string();
-        return false;
-    }
-
-    json results = json::array();
-    int matchCount = 0;
-    int filesSearched = 0;
-
-    for (const auto& entry : fs::directory_iterator(searchPath)) {
-        if (!entry.is_regular_file()) continue;
-        filesSearched++;
-
-        if (query.empty()) {
-            // Just list files
-            json fileObj;
-            fileObj["path"] = entry.path().string();
-            fileObj["size"] = entry.file_size();
-            results.push_back(fileObj);
-        } else {
-            // Search content
-            std::ifstream file(entry.path());
-            if (file) {
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                std::string content = buffer.str();
-                file.close();
-
-                size_t pos = 0;
-                int count = 0;
-                while ((pos = content.find(query, pos)) != std::string::npos) {
-                    count++;
-                    pos += query.length();
-                }
-
-                if (count > 0) {
-                    json match;
-                    match["file"] = entry.path().string();
-                    match["matches"] = count;
-                    results.push_back(match);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     matchCount++;
                 }
             }
         }
     }
 
-<<<<<<< HEAD
     JsonValue resultObj;
     resultObj["files_searched"] = filesSearched;
     resultObj["matches"] = matchCount;
     resultObj["results"] = results;
 
     action.result = resultObj.toJsonString();
-=======
-    json result;
-    result["files_searched"] = filesSearched;
-    result["matches"] = matchCount;
-    result["results"] = results;
-
-    action.result = result.dump(2);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -651,13 +461,8 @@ bool ActionExecutor::handleSearchFiles(Action& action)
  */
 bool ActionExecutor::handleRunBuild(Action& action)
 {
-<<<<<<< HEAD
     std::string target = action.params.value("target").toString("all");
     std::string config = action.params.value("config").toString("Release");
-=======
-    std::string target = action.params.value("target", "all");
-    std::string config = action.params.value("config", "Release");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     std::vector<std::string> args = {"--build", "build", "--config", config};
     if (target != "all") {
@@ -665,17 +470,10 @@ bool ActionExecutor::handleRunBuild(Action& action)
         args.push_back(target);
     }
 
-<<<<<<< HEAD
     JsonValue result = executeCommand("cmake", args, m_context.timeoutMs);
 
     action.result = result.toJsonString();
     return result.value("exitCode").toInt() == 0;
-=======
-    json result = executeCommand("cmake", args, m_context.timeoutMs);
-
-    action.result = result.dump(2);
-    return result.value("exitCode", -1) == 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -683,28 +481,17 @@ bool ActionExecutor::handleRunBuild(Action& action)
  */
 bool ActionExecutor::handleExecuteTests(Action& action)
 {
-<<<<<<< HEAD
     std::string testTarget = action.params.value("target").toString("all_tests");
-=======
-    std::string testTarget = action.params.value("target", "all_tests");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     std::vector<std::string> args;
     if (testTarget != "all_tests") {
         args.push_back(testTarget);
     }
 
-<<<<<<< HEAD
     JsonValue result = executeCommand("ctest", args, m_context.timeoutMs);
 
     action.result = result.toJsonString();
     return result.value("exitCode").toInt() == 0;
-=======
-    json result = executeCommand("ctest", args, m_context.timeoutMs);
-
-    action.result = result.dump(2);
-    return result.value("exitCode", -1) == 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -712,46 +499,27 @@ bool ActionExecutor::handleExecuteTests(Action& action)
  */
 bool ActionExecutor::handleCommitGit(Action& action)
 {
-<<<<<<< HEAD
     std::string gitAction = action.params.value("action").toString();
     std::string message = action.params.value("message").toString();
     std::string branch = action.params.value("branch").toString();
-=======
-    std::string gitAction = action.params.value("action", "");
-    std::string message = action.params.value("message", "");
-    std::string branch = action.params.value("branch", "");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     std::vector<std::string> args;
 
     if (gitAction == "commit") {
         args = {"commit", "-m", message};
     } else if (gitAction == "push") {
-<<<<<<< HEAD
         args = {"push", branch.empty() ? std::string("origin") : "origin " + branch};
     } else if (gitAction == "add") {
         args = {"add", action.params.value("files").toString()};
-=======
-        args = {"push", branch.empty() ? "origin" : ("origin " + branch)};
-    } else if (gitAction == "add") {
-        args = {"add", action.params.value("files", "")};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     } else {
         action.error = "Unknown git action: " + gitAction;
         return false;
     }
 
-<<<<<<< HEAD
     JsonValue result = executeCommand("git", args, m_context.timeoutMs);
 
     action.result = result.toJsonString();
     return result.value("exitCode").toInt() == 0;
-=======
-    json result = executeCommand("git", args, m_context.timeoutMs);
-
-    action.result = result.dump(2);
-    return result.value("exitCode", -1) == 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -759,7 +527,6 @@ bool ActionExecutor::handleCommitGit(Action& action)
  */
 bool ActionExecutor::handleInvokeCommand(Action& action)
 {
-<<<<<<< HEAD
     std::string command = action.params.value("command").toString();
     std::vector<std::string> args;
 
@@ -777,25 +544,6 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
 
     action.result = result.toJsonString();
     return result.value("exitCode").toInt() == 0;
-=======
-    std::string command = action.params.value("command", "");
-    std::vector<std::string> args;
-
-    if (action.params.contains("args")) {
-        if (action.params["args"].is_array()) {
-            for (const auto& arg : action.params["args"]) {
-                args.push_back(arg.get<std::string>());
-            }
-        } else {
-            args.push_back(action.params.value("args", ""));
-        }
-    }
-
-    json result = executeCommand(command, args, m_context.timeoutMs);
-
-    action.result = result.dump(2);
-    return result.value("exitCode", -1) == 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -803,7 +551,6 @@ bool ActionExecutor::handleInvokeCommand(Action& action)
  */
 bool ActionExecutor::handleRecursiveAgent(Action& action)
 {
-<<<<<<< HEAD
     // Recursive agent invocation: spawn a sub-agent with a new wish/goal
     std::string subWish = action.params.value("wish").toString();
     if (subWish.empty()) {
@@ -839,29 +586,6 @@ bool ActionExecutor::handleRecursiveAgent(Action& action)
 
     action.result = "ModelInvoker not available for recursive agent call";
     return false;
-=======
-    std::string goal = action.params.value("goal", "");
-    std::string context = action.params.value("context", "");
-
-    // Explicit missing logic: Recursive Agent Call
-    // If we have an engine pointer, use it directly (preferred)
-    if (m_agenticEngine) {
-        // Since we don't know the exact interface of the engine here due to circular deps,
-        // we use the callback as the primary mechanism for now.
-        // But for "reverse engineer logic", let's pretend we might cast it if we had the header.
-    }
-
-    // Use callback to notify Bridge/UI
-    if (onRecursiveTaskNeeded) {
-        onRecursiveTaskNeeded(goal, context);
-        action.result = "Recursive task delegated to main agent loop";
-        return true;
-    }
-
-    // Fallback: Just log it as a success with a note if no handler
-    action.result = "Recursive task identified but no handler attached: " + goal;
-    return true;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
@@ -869,7 +593,6 @@ bool ActionExecutor::handleRecursiveAgent(Action& action)
  */
 bool ActionExecutor::handleQueryUser(Action& action)
 {
-<<<<<<< HEAD
     std::string query = action.params.value("query").toString();
     std::vector<std::string> options;
 
@@ -880,18 +603,6 @@ bool ActionExecutor::handleQueryUser(Action& action)
     }
 
     notifyUserInputNeeded(query, options);
-=======
-    std::string query = action.params.value("query", "");
-    std::vector<std::string> options;
-
-    if (action.params.contains("options") && action.params["options"].is_array()) {
-        for (const auto& opt : action.params["options"]) {
-            options.push_back(opt.get<std::string>());
-        }
-    }
-
-    if (onUserInputNeeded) onUserInputNeeded(query, options);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     action.result = "User query: " + query;
     return true;
@@ -904,7 +615,6 @@ bool ActionExecutor::handleQueryUser(Action& action)
 /**
  * @brief Parse JSON action
  */
-<<<<<<< HEAD
 Action ActionExecutor::parseJsonAction(const JsonValue& jsonAction)
 {
     Action action;
@@ -940,29 +650,6 @@ bool ActionExecutor::createBackup(const std::string& filePath)
     }
 
     return success;
-=======
-Action ActionExecutor::parseJsonAction(const json& actionJson)
-{
-    Action action;
-    if (actionJson.contains("type")) {
-        std::string typeStr = actionJson["type"].get<std::string>();
-        if (typeStr == "file_edit") action.type = ActionType::FileEdit;
-        else if (typeStr == "run_command" || typeStr == "exec") action.type = ActionType::InvokeCommand;
-        else if (typeStr == "recursive_agent") action.type = ActionType::RecursiveAgent;
-        // add more mapping
-    }
-    // ... complete parsing ...
-    return action; 
-}
-
-bool ActionExecutor::restoreFromBackup(const std::string& filePath)
-{
-    // ...
-    // fix broken logic from previous snippet cut
-    if (m_backups.find(filePath) == m_backups.end()) return false;
-    // ...
-    return true; 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 
@@ -971,7 +658,6 @@ bool ActionExecutor::restoreFromBackup(const std::string& filePath)
  */
 bool ActionExecutor::restoreFromBackup(const std::string& filePath)
 {
-<<<<<<< HEAD
     auto it = m_backups.find(filePath);
     if (it == m_backups.end()) {
         return false;
@@ -986,24 +672,11 @@ bool ActionExecutor::restoreFromBackup(const std::string& filePath)
 
     fprintf(stderr, "[ActionExecutor] Restored from backup: %s\n", backupPath.c_str());
     return true;
-=======
-    if (m_backups.find(filePath) == m_backups.end()) {
-        return false;
-    }
-
-    std::string backupPath = m_backups[filePath];
-
-    std::error_code ec;
-    fs::copy_file(backupPath, filePath, fs::copy_options::overwrite_existing, ec);
-
-    return !ec;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 /**
  * @brief Execute command and wrap result as JsonValue
  */
-<<<<<<< HEAD
 JsonValue ActionExecutor::executeCommand(const std::string& command,
                                           const std::vector<std::string>& args,
                                           int timeoutMs)
@@ -1011,27 +684,10 @@ JsonValue ActionExecutor::executeCommand(const std::string& command,
     JsonValue result;
     result["command"] = command;
     result["args"] = JsonValue::fromStringList(args);
-=======
-json ActionExecutor::executeCommand(const std::string& command,nst json& jsonAction)
-                                    const std::vector<std::string>& args,
-                                    int timeoutMs)
-{ringToActionType(jsonAction.value("type", ""));
-    json result;sonAction.value("target", "");
-    result["command"] = command;ction.params = jsonAction.value("params", json::object());
-    result["args"] = args;   action.description = jsonAction.value("description", "");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     if (m_context.dryRun) { return action;
         result["exitCode"] = 0;
-<<<<<<< HEAD
         result["stdout"] = "DRY RUN: Would execute " + command + " " + strutil::join(args, " ");
-=======
-        std::string cmdStr = command;
-        for (const auto& arg : args) {
-            cmdStr += " " + arg;* @brief Create backup
-        }
-        result["stdout"] = "DRY RUN: Would execute " + cmdStr;createBackup(const std::string& filePath)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return result;
     }    if (!fs::exists(filePath)) {
 stent file
@@ -1047,20 +703,11 @@ stent file
     sa.bInheritHandle = TRUE; try {
     sa.lpSecurityDescriptor = NULL;verwrite_existing);
 
-<<<<<<< HEAD
     ProcessResult pr = runProcess(command, args, m_context.projectRoot, timeoutMs);
 
     if (pr.timedOut) {
         result["exitCode"] = -1;
         result["error"] = "Command timed out after " + std::to_string(timeoutMs) + "ms";
-=======
-    HANDLE hStdoutRead, hStdoutWrite;
-    HANDLE hStderrRead, hStderrWrite;   } catch (const std::exception& e) {
-    rror
-    if (!CreatePipe(&hStdoutRead, &hStdoutWrite, &sa, 0)) {
-        result["exitCode"] = -1;
-        result["error"] = "Failed to create stdout pipe";}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return result;
     }
     
@@ -1082,28 +729,9 @@ h = m_backups[filePath];
     si.hStdOutput = hStdoutWrite;
     si.dwFlags |= STARTF_USESTDHANDLES;
 
-<<<<<<< HEAD
     result["exitCode"] = pr.exitCode;
     result["stdout"] = pr.stdoutStr;
     result["stderr"] = pr.stderrStr;
-=======
-    PROCESS_INFORMATION pi;json ActionExecutor::executeCommand(const std::string& command,
-    ZeroMemory(&pi, sizeof(pi));onst std::vector<std::string>& args,
-nt timeoutMs)
-    char* cmdLinePtr = _strdup(cmdLine.c_str());
-    
-    if (!CreateProcessA(NULL, cmdLinePtr, NULL, NULL, TRUE, 0, NULL, 
-                        m_context.projectRoot.c_str(), &si, &pi)) {
-        free(cmdLinePtr);
-        CloseHandle(hStdoutWrite);f (m_context.dryRun) {
-        CloseHandle(hStdoutRead);    result["exitCode"] = 0;
-        CloseHandle(hStderrWrite);
-        CloseHandle(hStderrRead);gs) {
-        result["exitCode"] = -1;
-        result["error"] = "Failed to create process";
-        return result;dStr;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     free(cmdLinePtr);
     m_processHandle = pi.hProcess;
@@ -1156,7 +784,6 @@ rrRead, HANDLE_FLAG_INHERIT, 0);
 }(hStdoutWrite);
 
 /**
-<<<<<<< HEAD
  * @brief Validate file edit safety
  */
 bool ActionExecutor::validateFileEditSafety(const std::string& filePath, const std::string& action)
@@ -1168,59 +795,15 @@ bool ActionExecutor::validateFileEditSafety(const std::string& filePath, const s
         fprintf(stderr, "[ActionExecutor] Blocked system file modification: %s\n", filePath.c_str());
         return false;
     }
-=======
- * @brief Validate file edit safety        CloseHandle(hStderrRead);
- */itCode"] = -1;
-bool ActionExecutor::validateFileEditSafety(const std::string& filePath, const std::string& action)Failed to create process";
-{
-    // Prevent modifications to system files
-    if (filePath.find("C:\\Windows") != std::string::npos || 
-        filePath.find("/etc/") != std::string::npos || 
-        filePath.find("/System/") != std::string::npos) {_processHandle = pi.hProcess;
-        return false;    
-    }tdoutWrite);
-e);
-    // For delete operations, require explicit confirmation
-    // Explicit missing logic: delete whitelist.hProcess, timeoutMs);
-    // For now, only fail if it's very dangerous.
-    // The previous code returned false unconditionally for delete.    if (waitResult == WAIT_TIMEOUT) {
-    if (action == "delete") {ss, 1);
-        return false; 
-    }        result["error"] = "Command timed out after " + std::to_string(timeoutMs) + "ms";
-ss);
-    return true;ad);
-}ad);
-ad);
-/**ptr;
- * @brief String to ActionType conversion        return result;
- */
-ActionType ActionExecutor::stringToActionType(const std::string& typeStr) const
-{    DWORD exitCode;
-    if (typeStr == "file_edit") return ActionType::FileEdit; GetExitCodeProcess(pi.hProcess, &exitCode);
-    if (typeStr == "search_files") return ActionType::SearchFiles;t<int>(exitCode);
-    if (typeStr == "run_build") return ActionType::RunBuild;
-    if (typeStr == "execute_tests") return ActionType::ExecuteTests;
-    if (typeStr == "commit_git") return ActionType::CommitGit;   std::string stdout_str;
-    if (typeStr == "invoke_command") return ActionType::InvokeCommand;
-    if (typeStr == "recursive_agent") return ActionType::RecursiveAgent;
-    if (typeStr == "query_user") return ActionType::QueryUser;, &bytesRead, NULL) && bytesRead > 0) {
-
-    return ActionType::Unknown;
-}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // For delete operations, require explicit confirmation
     // Explicit missing logic: delete whitelist
     // For now, only fail if it's very dangerous.
     // The previous code returned false unconditionally for delete.
     if (action == "delete") {
-<<<<<<< HEAD
         fprintf(stderr, "[ActionExecutor] File deletion requires explicit approval: %s\n", filePath.c_str());
         // In real implementation, would query user
         return false;
-=======
-        return false; 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     return true;
@@ -1242,7 +825,6 @@ ActionType ActionExecutor::stringToActionType(const std::string& typeStr) const
 
     return ActionType::Unknown;
 }
-<<<<<<< HEAD
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Process Execution
@@ -1538,5 +1120,3 @@ void ActionExecutor::onProcessFinished(int exitCode, int exitStatus)
             exitCode, exitStatus);
     // Process completion of external process execution
 }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

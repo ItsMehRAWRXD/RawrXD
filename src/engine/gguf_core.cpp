@@ -1,6 +1,7 @@
 #include "gguf_core.h"
 #include <iostream>
 #include <algorithm>
+#include "gguf_loader.h"
 
 EngineGGUFLoader::~EngineGGUFLoader() {
     unload();
@@ -159,3 +160,4 @@ size_t EngineGGUFLoader::ggml_nbytes(ggml_type type, size_t n) {
         default: return 0;
     }
 }
+

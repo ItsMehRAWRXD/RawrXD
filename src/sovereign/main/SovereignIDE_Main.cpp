@@ -110,6 +110,7 @@
 #include "../../deep2/Parallelism.hpp"
 #include "../../deep2/DraftModel.hpp"
 #include "../../deep2/PrefixCache.hpp"
+#include "vulkan_compute.h"
 
 using namespace Sovereign;
 using namespace Deep2;
@@ -687,3 +688,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+

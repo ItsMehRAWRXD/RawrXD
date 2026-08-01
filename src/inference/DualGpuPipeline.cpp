@@ -37,6 +37,9 @@ DualGpuPipeline::DualGpuPipeline(const DualGpuConfig& config)
     
     // Initialize sync points
     sync_points_.resize(config.num_pipeline_stages);
+    for (auto& sp : sync_points_) {
+        sp = std::make_unique<GpuSyncPoint>();
+    }
 }
 
 DualGpuPipeline::~DualGpuPipeline() {
@@ -448,7 +451,7 @@ void DualGpuPipeline::Synchronize() {
     
     // Reset sync points
     for (auto& sync : sync_points_) {
-        sync.Reset();
+        if (sync) sync->Reset();
     }
 }
 
@@ -634,10 +637,9 @@ void DualGpuPipeline::UpdateMetrics(const PipelineStage& stage,
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     
     metrics_.ops_completed++;
-    
+    double alpha = 0.1;
     if (stage.output.gpu_device == 0) {
         metrics_.gpu0_ops++;
-        double alpha = 0.1;
         metrics_.avg_gpu0_latency_us = (1.0 - alpha) * metrics_.avg_gpu0_latency_us +
                                         alpha * duration.count();
     } else {

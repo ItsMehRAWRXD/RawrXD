@@ -1,18 +1,12 @@
 #include "real_time_completion_engine.h"
 #include <algorithm>
 #include <chrono>
-<<<<<<< HEAD
 #include <fstream>
 #include <sstream>
 #include <regex>
 #include <map>
 #include <windows.h>
 #include <winhttp.h>
-=======
-#include <regex>
-#include <fstream>
-#include <sstream>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -148,7 +142,6 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::getContextualCompletions(
 
 void RealTimeCompletionEngine::prewarmCache(const std::string& filePath) {
 
-<<<<<<< HEAD
     // Read file and extract common patterns for prewarming
     std::ifstream file(filePath);
     if (!file.is_open()) {
@@ -199,57 +192,6 @@ void RealTimeCompletionEngine::prewarmCache(const std::string& filePath) {
     }
 
     m_logger->info("Pre-warmed {} identifiers into cache", prewarmed);
-=======
-
-    // Real pre-warming logic
-    // Analyze file content and add common tokens to cache
-    std::ifstream file(filePath);
-    if (!file.is_open()) return;
-    
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    
-    // Simple tokenization for cache warming
-    std::vector<std::string> tokens;
-    std::regex tokenRegex("[a-zA-Z_][a-zA-Z0-9_]*");
-    auto begin = std::sregex_iterator(content.begin(), content.end(), tokenRegex);
-    auto end = std::sregex_iterator();
-    
-    for (std::sregex_iterator i = begin; i != end; ++i) {
-        tokens.push_back(i->str());
-    }
-    
-    // Add unique tokens to cache as high-probability completions
-    std::sort(tokens.begin(), tokens.end());
-    tokens.erase(std::unique(tokens.begin(), tokens.end()), tokens.end());
-    
-    std::lock_guard<std::mutex> lock(m_cacheMutex);
-    for (const auto& token : tokens) {
-         if (token.length() > 3) {
-             std::vector<CodeCompletion> completions;
-             completions.push_back({token, "Cached Token", 1.0f, "Prewarm"});
-             // Cache key is just the token prefix (first 3 chars)
-             std::string prefix = token.substr(0, 3);
-             m_completionCache[prefix] = completions;
-         }
-    }
-
-    // tokenize and cache N-grams?
-    // For now, simpler approach: Trigger a background completion request for the end of the file
-    // to load the model's KV cache.
-    
-    // Explicit call to load context without returning result
-    if (m_inferenceEngine) { 
-        // We limit context to last 512 chars to avoid massive delay
-        std::string contextPrompt = content.length() > 512 ? content.substr(content.length() - 512) : content;
-        
-        // Fire and forget - just to heat up the engine/cache
-        std::thread([this, contextPrompt]() {
-             try {
-                if (m_inferenceEngine) m_inferenceEngine->infer(contextPrompt);
-             } catch(...) {}
-        }).detach();
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void RealTimeCompletionEngine::clearCache() {
@@ -299,7 +241,6 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::generateCompletionsWithMod
     try {
         m_metrics->incrementCounter("model_calls");
 
-<<<<<<< HEAD
         // Build Ollama /api/generate JSON request
         const std::string modelName = "codellama";  // Default completion model
         const int ollamaPort = 11434;               // Default Ollama port
@@ -458,34 +399,6 @@ std::vector<CodeCompletion> RealTimeCompletionEngine::generateCompletionsWithMod
             m_metrics->recordHistogram("completion_confidence", 
                                       completions[0].confidence * 100);
         }
-=======
-        if (!m_inferenceEngine) {
-            // No engine available - strict fail, no mocks
-            return {}; 
-        }
-
-        // Real inference call
-        std::string result = m_inferenceEngine->infer(prompt);
-        
-        if (result.empty()) {
-            return {};
-        }
-
-        // Parse result into completion object
-        CodeCompletion completion;
-        completion.text = result;
-        completion.detail = "AI Generated"; // could be refined
-        completion.confidence = calculateConfidence(result, prompt);
-        completion.kind = "ai_suggestion";
-        completion.insertTextLength = (int)result.length();
-        completion.cursorOffset = 0;
-
-        completions.push_back(completion);
-
-        m_metrics->recordHistogram("completions_per_call", completions.size());
-        m_metrics->recordHistogram("completion_confidence", 
-                                  completion.confidence * 100);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         return completions;
 

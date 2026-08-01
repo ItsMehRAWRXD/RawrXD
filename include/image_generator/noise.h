@@ -1,15 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-#include <cmath>
-#include <array>
-#include <vector>
-#include <numeric>
-#include <random>
-#include "colors.h"
-
-namespace ig {
-
-// ======================== 2D Perlin Noise ========================
+================= 2D Perlin Noise ========================
 
 class Perlin2D {
 private:
@@ -304,4 +293,4 @@ public:
 };
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

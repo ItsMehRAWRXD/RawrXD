@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // digestion_gui_widget.h — Pure C++20/Win32 (zero Qt)
 #pragma once
 
@@ -82,31 +81,3 @@ private:
     };
 };
 
-=======
-// digestion_gui_widget.h
-#pragma once
-#include "digestion_reverse_engineering.h"
-
-class DigestionGuiWidget {public:
-    explicit DigestionGuiWidget(void* parent = nullptr);
-    void setRootDirectory(const std::string &path);
-\nprivate:\n    void startDigestion();
-    void stopDigestion();
-    void onProgress(int done, int total, int stubs, int percent);
-    void onFileScanned(const std::string &path, const std::string &lang, int stubs);
-    void onFinished(const void* &report, int64_t elapsed);
-    void browseDirectory();
-
-private:
-    DigestionReverseEngineeringSystem *m_digester;
-    voidEdit *m_pathEdit;
-    void *m_progressBar;
-    QTableWidget *m_resultsTable;
-    void *m_startBtn;
-    void *m_stopBtn;
-    void *m_applyFixesCheck;
-    void *m_gitModeCheck;
-    void *m_incrementalCheck;
-};
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

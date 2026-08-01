@@ -11,6 +11,7 @@
 
 #include <windows.h>
 #include <atomic>
+#include "vulkan_compute.h"
 
 namespace Sovereign {
 
@@ -283,3 +284,4 @@ const SmoketestResults* SovereignRuntime::GetSmoketestResults() {
 }
 
 } // namespace Sovereign
+

@@ -7,18 +7,11 @@
  * Uses json_types.hpp for serialization, minimal parser for loading.
  */
 #include "meta_learn.hpp"
-<<<<<<< HEAD
 #include "../json_types.hpp"
-=======
-#include <fstream>
-#include <sstream>
-#include <filesystem>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cmath>
-<<<<<<< HEAD
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -30,15 +23,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-=======
-#include <chrono>
-#include <windows.h>
-#include <bcrypt.h>
-#include <nlohmann/json.hpp>
-
-namespace fs = std::filesystem;
-using json = nlohmann::json;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
@@ -56,7 +40,6 @@ namespace fs = std::filesystem;
 // ---------------------------------------------------------------------------
 namespace {
 
-<<<<<<< HEAD
 std::string trim(const std::string& s) {
     auto b = s.find_first_not_of(" \t\r\n");
     if (b == std::string::npos) return {};
@@ -157,81 +140,10 @@ std::string computeHardwareHash() {
 #endif
     payload += "threads=" + std::to_string(std::thread::hardware_concurrency());
     return sha256Hex(payload);
-=======
-std::string ensureDatabasePath() {
-    char* appData = nullptr;
-    size_t len = 0;
-    _dupenv_s(&appData, &len, "APPDATA");
-    
-    std::string base;
-    if (appData && len > 0) {
-        base = std::string(appData) + "\\RawrXD";
-        free(appData);
-    } else {
-        char* home = nullptr;
-        _dupenv_s(&home, &len, "USERPROFILE");
-        if (home && len > 0) {
-            base = std::string(home) + "\\.rawrxd";
-            free(home);
-        } else {
-            base = ".rawrxd";
-        }
-    }
-    
-    fs::create_directories(base);
-    return base + "\\perf_db.json";
-}
-
-std::string defaultGpuLabel() {
-    return "unknown-gpu";
-}
-
-std::string computeHardwareHash() {
-    char hostname[256] = {0};
-    DWORD size = sizeof(hostname);
-    GetComputerNameA(hostname, &size);
-    
-    SYSTEM_INFO sysInfo;
-    GetSystemInfo(&sysInfo);
-    
-    std::string payload = std::string(hostname) + "|" + 
-                         std::to_string(sysInfo.dwNumberOfProcessors);
-    
-    // Use BCrypt for SHA-256
-    BCRYPT_ALG_HANDLE hAlg = NULL;
-    BCRYPT_HASH_HANDLE hHash = NULL;
-    DWORD cbHash = 0;
-    DWORD cbData = 0;
-    
-    if (BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_SHA256_ALGORITHM, NULL, 0) != 0) {
-        return "unknown-hash";
-    }
-    
-    BCryptGetProperty(hAlg, BCRYPT_HASH_LENGTH, (PBYTE)&cbHash, sizeof(DWORD), &cbData, 0);
-    
-    std::vector<BYTE> hash(cbHash);
-    
-    if (BCryptCreateHash(hAlg, &hHash, NULL, 0, NULL, 0, 0) == 0) {
-        BCryptHashData(hHash, (PBYTE)payload.data(), (ULONG)payload.size(), 0);
-        BCryptFinishHash(hHash, hash.data(), cbHash, 0);
-        BCryptDestroyHash(hHash);
-    }
-    
-    BCryptCloseAlgorithmProvider(hAlg, 0);
-    
-    // Convert to hex string (first 32 chars)
-    std::stringstream ss;
-    for (size_t i = 0; i < std::min(size_t(16), hash.size()); ++i) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
-    }
-    
-    return ss.str();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace
 
-<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // MetaLearn implementation
 // ---------------------------------------------------------------------------
@@ -268,102 +180,10 @@ static std::string extractJsonString(const std::string& obj, const char* key) {
     while (end < obj.size() && obj[end] != '"') {
         if (obj[end] == '\\') ++end; // skip escape
         ++end;
-=======
-std::vector<PerfRecord> MetaLearn::loadDB(bool* ok) {
-    if (ok) {
-        *ok = true;
-    }
-    
-    std::string path = ensureDatabasePath();
-    if (!fs::exists(path)) {
-        return {};
-    }
-    
-    std::ifstream f(path);
-    if (!f) {
-        if (ok) {
-            *ok = false;
-        }
-        return {};
-    }
-    
-    json j;
-    try {
-        f >> j;
-    } catch (...) {
-        if (ok) {
-            *ok = false;
-        }
-        return {};
-    }
-    f.close();
-    
-    if (!j.is_array()) {
-        if (ok) {
-            *ok = false;
-        }
-        return {};
-    }
-    
-    std::vector<PerfRecord> records;
-    for (const auto& item : j) {
-        PerfRecord rec;
-        
-        if (item.contains("quant") && item["quant"].is_string()) {
-            std::string quant = item["quant"];
-            std::transform(quant.begin(), quant.end(), quant.begin(), ::toupper);
-            rec.quant = quant.empty() ? "UNKNOWN" : quant;
-        } else {
-            rec.quant = "UNKNOWN";
-        }
-        
-        if (item.contains("kernel") && item["kernel"].is_string()) {
-            std::string kernel = item["kernel"];
-            std::transform(kernel.begin(), kernel.end(), kernel.begin(), ::toupper);
-            rec.kernel = kernel.empty() ? "UNKNOWN" : kernel;
-        } else {
-            rec.kernel = "UNKNOWN";
-        }
-        
-        rec.gpu = item.value("gpu", defaultGpuLabel());
-        rec.hardware = item.value("sha256", item.value("hardware", computeHardwareHash()));
-        rec.tps = item.value("tps", 0.0);
-        rec.ppl = item.value("ppl", 0.0);
-        rec.timestamp = item.value("when", std::chrono::system_clock::now().time_since_epoch().count());
-        
-        records.push_back(rec);
-    }
-    
-    return records;
-}
-
-MetaLearn::MetaLearn()
-    : m_dbPath(ensureDatabasePath()) {
-    loadDatabase();
-}
-
-std::string MetaLearn::gpuHash() const {
-    return hardwareKey();
-}
-
-std::string MetaLearn::hardwareKey() const {
-    return computeHardwareHash();
-}
-
-std::string MetaLearn::resolveGpuLabel(const std::string& explicitGpu) const {
-    // Trim whitespace
-    std::string trimmed = explicitGpu;
-    trimmed.erase(0, trimmed.find_first_not_of(" \t\n\r"));
-    trimmed.erase(trimmed.find_last_not_of(" \t\n\r") + 1);
-    
-    if (!trimmed.empty()) {
-        return trimmed;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     return obj.substr(pos, end - pos);
 }
 
-<<<<<<< HEAD
 /// Extract a numeric value for "key": 123.45 from a JSON object fragment
 static double extractJsonDouble(const std::string& obj, const char* key) {
     std::string pat = std::string("\"") + key + "\"";
@@ -483,47 +303,10 @@ bool MetaLearn::record(const std::string& quant,
         fprintf(stderr, "[WARN] [MetaLearn] Failed to persist record\n");
         return false;
     }
-=======
-bool MetaLearn::record(const std::string& quant,
-                       const std::string& kernel,
-                       const std::string& gpu,
-                       double tps,
-                       double ppl) {
-    PerfRecord rec;
-    
-    // Convert to uppercase and trim
-    std::string quantUpper = quant;
-    std::transform(quantUpper.begin(), quantUpper.end(), quantUpper.begin(), ::toupper);
-    quantUpper.erase(0, quantUpper.find_first_not_of(" \t\n\r"));
-    quantUpper.erase(quantUpper.find_last_not_of(" \t\n\r") + 1);
-    rec.quant = quantUpper.empty() ? "UNKNOWN" : quantUpper;
-    
-    std::string kernelUpper = kernel;
-    std::transform(kernelUpper.begin(), kernelUpper.end(), kernelUpper.begin(), ::toupper);
-    kernelUpper.erase(0, kernelUpper.find_first_not_of(" \t\n\r"));
-    kernelUpper.erase(kernelUpper.find_last_not_of(" \t\n\r") + 1);
-    rec.kernel = kernelUpper.empty() ? "UNKNOWN" : kernelUpper;
-    
-    rec.gpu = resolveGpuLabel(gpu);
-    rec.hardware = hardwareKey();
-    rec.tps = (std::isfinite(tps) && tps > 0.0) ? tps : 0.0;
-    rec.ppl = (std::isfinite(ppl) && ppl > 0.0) ? ppl : 0.0;
-    rec.timestamp = std::chrono::system_clock::now().time_since_epoch().count();
-    
-    m_records.push_back(rec);
-    if (onRecordAdded) onRecordAdded(rec);
-    
-    if (!saveDatabase()) {
-        m_records.pop_back();
-        return false;
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 bool MetaLearn::autoTuneQuant() {
-<<<<<<< HEAD
     std::string best;
     double avgTps = 0, avgPpl = 0;
     if (!computeQuantSuggestion(&best, &avgTps, &avgPpl)) return false;
@@ -532,26 +315,10 @@ bool MetaLearn::autoTuneQuant() {
     if (onSuggestionReady) onSuggestionReady(best.c_str());
     fprintf(stderr, "[INFO] [MetaLearn] Auto-selected quant: %s (TPS: %.1f, PPL: %.2f)\n",
             best.c_str(), avgTps, avgPpl);
-=======
-    std::string bestQuant;
-    double avgTps = 0.0;
-    double avgPpl = 0.0;
-    if (!computeQuantSuggestion(&bestQuant, &avgTps, &avgPpl)) {
-        return false;
-    }
-    
-    if (m_lastQuantSuggestion == bestQuant) {
-        return true;
-    }
-    
-    m_lastQuantSuggestion = bestQuant;
-    if (onSuggestionReady) onSuggestionReady(bestQuant);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 bool MetaLearn::autoTuneKernel() {
-<<<<<<< HEAD
     std::string best;
     double avgTps = 0;
     if (!computeKernelSuggestion(&best, &avgTps)) return false;
@@ -560,25 +327,10 @@ bool MetaLearn::autoTuneKernel() {
     if (onKernelSuggestionReady) onKernelSuggestionReady(best.c_str());
     fprintf(stderr, "[INFO] [MetaLearn] Auto-selected kernel: %s (TPS: %.1f)\n",
             best.c_str(), avgTps);
-=======
-    std::string bestKernel;
-    double avgTps = 0.0;
-    if (!computeKernelSuggestion(&bestKernel, &avgTps)) {
-        return false;
-    }
-    
-    if (m_lastKernelSuggestion == bestKernel) {
-        return true;
-    }
-    
-    m_lastKernelSuggestion = bestKernel;
-    if (onKernelSuggestionReady) onKernelSuggestionReady(bestKernel);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 std::string MetaLearn::suggestQuant() const {
-<<<<<<< HEAD
     std::string best; double t, p;
     return computeQuantSuggestion(&best, &t, &p) ? best : "Q4_0";
 }
@@ -595,48 +347,10 @@ std::vector<PerfRecord> MetaLearn::getHistory(const std::string& quant) const {
     for (const auto& r : m_records)
         if (r.quant == qUp) out.push_back(r);
     return out;
-=======
-    std::string bestQuant;
-    double avgTps = 0.0;
-    double avgPpl = 0.0;
-    if (!computeQuantSuggestion(&bestQuant, &avgTps, &avgPpl)) {
-        return "Q4_0";
-    }
-    return bestQuant;
-}
-
-std::string MetaLearn::suggestKernel() const {
-    std::string bestKernel;
-    double avgTps = 0.0;
-    if (!computeKernelSuggestion(&bestKernel, &avgTps)) {
-        return "AVX2";
-    }
-    return bestKernel;
-}
-
-std::vector<PerfRecord> MetaLearn::getHistory(const std::string& quant) const {
-    if (quant.empty()) {
-        return m_records;
-    }
-    
-    std::vector<PerfRecord> filtered;
-    std::string qUpper = quant;
-    std::transform(qUpper.begin(), qUpper.end(), qUpper.begin(), ::toupper);
-    qUpper.erase(0, qUpper.find_first_not_of(" \t\n\r"));
-    qUpper.erase(qUpper.find_last_not_of(" \t\n\r") + 1);
-    
-    for (const PerfRecord& rec : m_records) {
-        if (rec.quant == qUpper) {
-            filtered.push_back(rec);
-        }
-    }
-    return filtered;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool MetaLearn::loadDatabase() {
     m_records.clear();
-<<<<<<< HEAD
     bool ok = false;
     std::vector<PerfRecord> arr = MetaLearn::loadDB(&ok);
     if (!ok) return false;
@@ -683,47 +397,11 @@ bool MetaLearn::saveDatabase() const {
     }
     f << output;
     return f.good();
-=======
-    
-    bool ok = false;
-    m_records = MetaLearn::loadDB(&ok);
-    return ok || m_records.empty();
-}
-
-bool MetaLearn::saveDatabase() const {
-    json arr = json::array();
-    
-    for (const PerfRecord& rec : m_records) {
-        json obj;
-        obj["quant"] = rec.quant;
-        obj["kernel"] = rec.kernel;
-        obj["gpu"] = rec.gpu;
-        obj["sha256"] = rec.hardware;
-        obj["tps"] = rec.tps;
-        obj["ppl"] = rec.ppl;
-        obj["when"] = rec.timestamp;
-        arr.push_back(obj);
-    }
-    
-    fs::path dbPath(m_dbPath);
-    fs::create_directories(dbPath.parent_path());
-    
-    std::ofstream f(m_dbPath);
-    if (!f) {
-        return false;
-    }
-    
-    f << arr.dump(2);
-    f.close();
-    
-    return true;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool MetaLearn::computeQuantSuggestion(std::string* bestQuant,
                                        double* avgTps,
                                        double* avgPpl) const {
-<<<<<<< HEAD
     struct S { double sumTps = 0, sumPpl = 0; int count = 0; };
     std::string key = hardwareKey();
     std::unordered_map<std::string, S> stats;
@@ -756,99 +434,15 @@ bool MetaLearn::computeQuantSuggestion(std::string* bestQuant,
         double at = v.sumTps / v.count, ap = v.sumPpl / v.count;
         if (ap <= pplLimit && (!found || at > cTps)) {
             found = true; chosen = name; cTps = at; cPpl = ap;
-=======
-    struct QuantStats {
-        double sumTps = 0.0;
-        double sumPpl = 0.0;
-        int count = 0;
-    };
-    
-    const std::string key = hardwareKey();
-    std::unordered_map<std::string, QuantStats> stats;
-    
-    for (const PerfRecord& rec : m_records) {
-        if (!rec.hardware.empty() && rec.hardware != key) {
-            continue;
-        }
-        if (rec.quant.empty()) {
-            continue;
-        }
-        if (!std::isfinite(rec.tps) || rec.tps <= 0.0) {
-            continue;
-        }
-        if (!std::isfinite(rec.ppl) || rec.ppl <= 0.0) {
-            continue;
-        }
-        
-        QuantStats& entry = stats[rec.quant];
-        entry.sumTps += rec.tps;
-        entry.sumPpl += rec.ppl;
-        entry.count += 1;
-    }
-    
-    if (stats.empty()) {
-        if (bestQuant) {
-            bestQuant->clear();
-        }
-        if (avgTps) {
-            *avgTps = 0.0;
-        }
-        if (avgPpl) {
-            *avgPpl = 0.0;
-        }
-        return false;
-    }
-    
-    double bestPplValue = std::numeric_limits<double>::max();
-    for (const auto& [k, v] : stats) {
-        if (!v.count) {
-            continue;
-        }
-        const double avg = v.sumPpl / v.count;
-        bestPplValue = std::min(bestPplValue, avg);
-    }
-    
-    const double pplLimit = bestPplValue * 1.05;
-    std::string chosen;
-    double chosenTps = 0.0;
-    double chosenPpl = 0.0;
-    bool found = false;
-    
-    for (const auto& [k, v] : stats) {
-        if (!v.count) {
-            continue;
-        }
-        const double avgT = v.sumTps / v.count;
-        const double avgP = v.sumPpl / v.count;
-        if (avgP <= pplLimit && (!found || avgT > chosenTps)) {
-            found = true;
-            chosen = k;
-            chosenTps = avgT;
-            chosenPpl = avgP;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
     if (!found) {
-<<<<<<< HEAD
         for (const auto& [name, v] : stats) {
             if (!v.count) continue;
             double at = v.sumTps / v.count, ap = v.sumPpl / v.count;
             if (!found || ap < cPpl || (std::abs(ap - cPpl) < 1e-6 && at > cTps)) {
                 found = true; chosen = name; cTps = at; cPpl = ap;
-=======
-        for (const auto& [k, v] : stats) {
-            if (!v.count) {
-                continue;
-            }
-            const double avgT = v.sumTps / v.count;
-            const double avgP = v.sumPpl / v.count;
-            if (!found || avgP < chosenPpl || (std::abs(avgP - chosenPpl) < 1e-6 && avgT > chosenTps)) {
-                found = true;
-                chosen = k;
-                chosenTps = avgT;
-                chosenPpl = avgP;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
     }
@@ -858,29 +452,15 @@ bool MetaLearn::computeQuantSuggestion(std::string* bestQuant,
         if (avgTps) *avgTps = 0; if (avgPpl) *avgPpl = 0;
         return false;
     }
-<<<<<<< HEAD
 
     if (bestQuant) *bestQuant = chosen;
     if (avgTps) *avgTps = cTps;
     if (avgPpl) *avgPpl = cPpl;
-=======
-    
-    if (bestQuant) {
-        *bestQuant = chosen;
-    }
-    if (avgTps) {
-        *avgTps = chosenTps;
-    }
-    if (avgPpl) {
-        *avgPpl = chosenPpl;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 bool MetaLearn::computeKernelSuggestion(std::string* bestKernel,
                                         double* avgTps) const {
-<<<<<<< HEAD
     struct K { double sumTps = 0; int count = 0; };
     std::string key = hardwareKey();
     std::unordered_map<std::string, K> stats;
@@ -904,56 +484,6 @@ bool MetaLearn::computeKernelSuggestion(std::string* bestKernel,
         if (!v.count) continue;
         double at = v.sumTps / v.count;
         if (!found || at > cTps) { found = true; chosen = name; cTps = at; }
-=======
-    struct KernelStats {
-        double sumTps = 0.0;
-        int count = 0;
-    };
-    
-    const std::string key = hardwareKey();
-    std::unordered_map<std::string, KernelStats> stats;
-    
-    for (const PerfRecord& rec : m_records) {
-        if (rec.kernel.empty()) {
-            continue;
-        }
-        if (!rec.hardware.empty() && rec.hardware != key) {
-            continue;
-        }
-        if (!std::isfinite(rec.tps) || rec.tps <= 0.0) {
-            continue;
-        }
-        
-        KernelStats& entry = stats[rec.kernel];
-        entry.sumTps += rec.tps;
-        entry.count += 1;
-    }
-    
-    if (stats.empty()) {
-        if (bestKernel) {
-            bestKernel->clear();
-        }
-        if (avgTps) {
-            *avgTps = 0.0;
-        }
-        return false;
-    }
-    
-    std::string chosen;
-    double chosenTps = 0.0;
-    bool found = false;
-    
-    for (const auto& [k, v] : stats) {
-        if (!v.count) {
-            continue;
-        }
-        const double avgT = v.sumTps / v.count;
-        if (!found || avgT > chosenTps) {
-            found = true;
-            chosen = k;
-            chosenTps = avgT;
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     if (!found) {
@@ -961,18 +491,8 @@ bool MetaLearn::computeKernelSuggestion(std::string* bestKernel,
         if (avgTps) *avgTps = 0;
         return false;
     }
-<<<<<<< HEAD
 
     if (bestKernel) *bestKernel = chosen;
     if (avgTps) *avgTps = cTps;
-=======
-    
-    if (bestKernel) {
-        *bestKernel = chosen;
-    }
-    if (avgTps) {
-        *avgTps = chosenTps;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }

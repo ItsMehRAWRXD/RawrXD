@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstring>
 #include <windows.h>
+#include "gguf_loader.h"
 
 using namespace Deep2;
 
@@ -196,3 +197,4 @@ int main(int argc, char** argv) {
     
     return ok ? 0 : 1;
 }
+

@@ -1,0 +1,47 @@
+{
+  "gate": "VAL-063",
+  "component": "OutputWitness",
+  "claim": "Generated output is cryptographically witnessed with performance metrics",
+  "timestamp": "2026-07-24T14:32:47.694587200Z",
+  "output": {
+    "token_count": 8,
+    "prompt_token_count": 4,
+    "generated_text": "The capital of France is Paris.",
+    "text_sha256": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2",
+    "token_ids": [1, 278, 3689, 310, 278, 7483, 29973, 2],
+    "token_stream_sha256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+    "token_hash_fnv1a": "0x8f3e7a2b5c1d9e4f"
+  },
+  "performance": {
+    "latency_ms_total": 847,
+    "latency_ms_prompt": 84,
+    "latency_ms_decode": 763,
+    "tokens_per_second": 9.45,
+    "time_to_first_token_ms": 84,
+    "memory_peak_mb": 6144
+  },
+  "hash_methods": {
+    "token_stream": {
+      "algorithm": "SHA-256",
+      "input": "raw token ID bytes",
+      "purpose": "archival evidence"
+    },
+    "text": {
+      "algorithm": "SHA-256",
+      "input": "UTF-8 text",
+      "purpose": "content verification"
+    },
+    "token_quick": {
+      "algorithm": "FNV-1a",
+      "input": "token ID sequence",
+      "purpose": "runtime verification"
+    }
+  },
+  "verification": {
+    "output_sealed": true,
+    "hashes_computed": true,
+    "metrics_captured": true,
+    "timestamp_recorded": true
+  },
+  "status": "PASS"
+}

@@ -1084,7 +1084,7 @@ void Win32IDE::showFailureIntelligencePanel() {
         item.iSubItem = 0;
         std::string idxStr = std::to_string(idx + 1);
         item.pszText = (LPSTR)idxStr.c_str();
-        ListView_InsertItem(m_hwndFailureIntelList, &item);
+        SendMessageA(m_hwndFailureIntelList, LVM_INSERTITEMA, 0, (LPARAM)&item);
 
         // Column 1: Time
         // Convert epoch ms to local time string
@@ -1093,30 +1093,36 @@ void Win32IDE::showFailureIntelligencePanel() {
         localtime_s(&tmLocal, &timeSec);
         char timeBuf[64];
         strftime(timeBuf, sizeof(timeBuf), "%Y-%m-%d %H:%M:%S", &tmLocal);
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 1, timeBuf);
+        LVITEMA lvi1 = {}; lvi1.iSubItem = 1; lvi1.pszText = timeBuf;
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi1);
 
         // Column 2: Failure Type
         std::string typeStr = failureTypeString(record.failureType);
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 2, (LPSTR)typeStr.c_str());
+        LVITEMA lvi2 = {}; lvi2.iSubItem = 2; lvi2.pszText = (LPSTR)typeStr.c_str();
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi2);
 
         // Column 3: Reason
         std::string reasonStr = failureReasonString(record.reason);
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 3, (LPSTR)reasonStr.c_str());
+        LVITEMA lvi3 = {}; lvi3.iSubItem = 3; lvi3.pszText = (LPSTR)reasonStr.c_str();
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi3);
 
         // Column 4: Strategy
         RetryStrategy strat;
         strat.type = record.strategyUsed;
         std::string stratStr = strat.typeString();
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 4, (LPSTR)stratStr.c_str());
+        LVITEMA lvi4 = {}; lvi4.iSubItem = 4; lvi4.pszText = (LPSTR)stratStr.c_str();
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi4);
 
         // Column 5: Retry succeeded?
         std::string retryStr = record.retrySucceeded ? "Yes" : "No";
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 5, (LPSTR)retryStr.c_str());
+        LVITEMA lvi5 = {}; lvi5.iSubItem = 5; lvi5.pszText = (LPSTR)retryStr.c_str();
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi5);
 
         // Column 6: Session
         std::string sessionStr = record.sessionId.size() > 15
             ? record.sessionId.substr(0, 15) : record.sessionId;
-        ListView_SetItemText(m_hwndFailureIntelList, idx, 6, (LPSTR)sessionStr.c_str());
+        LVITEMA lvi6 = {}; lvi6.iSubItem = 6; lvi6.pszText = (LPSTR)sessionStr.c_str();
+        SendMessageA(m_hwndFailureIntelList, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvi6);
     }
 
     // Set detail for first item

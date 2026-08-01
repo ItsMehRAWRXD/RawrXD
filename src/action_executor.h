@@ -4,18 +4,12 @@
 #include <functional>
 #include <map>
 #include <atomic>
-<<<<<<< HEAD
 #include <nlohmann/json.hpp>
 #include "agentic_engine.h"
 
 /** Set the engine used by AgenticController::HandleIDEUserCommand when IDE invokes agentic from palette/menu. Call from bridge Initialize. */
 void SetIDEAgenticEngineForCommands(AgenticEngine* engine);
 
-=======
-#include "nlohmann/json.hpp"
-#include "agentic_engine.h"
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Action Types definition
 enum class ActionType {
     Unknown,
@@ -46,11 +40,7 @@ struct ExecutionContext {
     int currentActionIndex = 0;
 };
 
-<<<<<<< HEAD
 class ActionExecutor : public std::enable_shared_from_this<ActionExecutor> {
-=======
-class ActionExecutor {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 public:
     ActionExecutor();
     ~ActionExecutor();

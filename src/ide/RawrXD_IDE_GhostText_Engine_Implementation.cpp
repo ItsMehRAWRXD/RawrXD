@@ -315,8 +315,8 @@ bool GhostTextEngine::HandleKey(WPARAM key) {
             std::string accepted;
             if (AcceptSuggestion(accepted)) {
                 // Insert accepted text at cursor
-                // TODO: Send EM_REPLACESEL message to editor
-                SendMessageA(m_hwnd, EM_REPLACESEL, TRUE, (LPARAM)accepted.c_str());
+                std::wstring waccepted(accepted.begin(), accepted.end());
+                SendMessageW(m_hwnd, EM_REPLACESEL, TRUE, (LPARAM)waccepted.c_str());
                 return true; // Handled
             }
             break;
@@ -333,7 +333,8 @@ bool GhostTextEngine::HandleKey(WPARAM key) {
             if (GetAsyncKeyState(VK_CONTROL) < 0) { // Ctrl+Right
                 std::string accepted;
                 if (AcceptPartial(accepted)) {
-                    SendMessageA(m_hwnd, EM_REPLACESEL, TRUE, (LPARAM)accepted.c_str());
+                    std::wstring waccepted(accepted.begin(), accepted.end());
+                    SendMessageW(m_hwnd, EM_REPLACESEL, TRUE, (LPARAM)waccepted.c_str());
                     return true;
                 }
             }

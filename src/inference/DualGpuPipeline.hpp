@@ -262,7 +262,7 @@ private:
     std::condition_variable pipeline_cv_;
     
     // Cross-GPU sync
-    std::vector<GpuSyncPoint> sync_points_;
+    std::vector<std::unique_ptr<GpuSyncPoint>> sync_points_;
     
     // Worker threads
     std::thread gpu0_worker_;

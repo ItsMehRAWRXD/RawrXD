@@ -5,10 +5,28 @@
 
 #include "GitDiffViewer.hpp"
 #include <richedit.h>
+#include <commctrl.h>
 #include <sstream>
 #include <iomanip>
 #include <regex>
 #include <algorithm>
+
+// Toolbar and status bar constants
+#ifndef TOOLBARCLASSNAMEW
+#define TOOLBARCLASSNAMEW L"ToolbarWindow32"
+#endif
+#ifndef STATUSCLASSNAMEW
+#define STATUSCLASSNAMEW L"msctls_statusbar32"
+#endif
+
+// Command IDs
+#define ID_VIEW_SIDEBYSIDE 1001
+#define ID_VIEW_UNIFIED    1002
+#define ID_NAV_PREV        1003
+#define ID_NAV_NEXT        1004
+#define ID_EDIT_FIND       1005
+#define ID_EDIT_COPY       1006
+#define ID_FILE_EXPORT     1007
 
 namespace RawrXD::IDE {
 
@@ -243,9 +261,9 @@ void GitDiffViewer::SetDiff(const FileDiff& diff) {
 }
 
 void GitDiffViewer::Clear() {
-    SetWindowText(m_hwndOldView, L"");
-    SetWindowText(m_hwndNewView, L"");
-    SetWindowText(m_hwndUnifiedView, L"");
+    SetWindowTextW(m_hwndOldView, L"");
+    SetWindowTextW(m_hwndNewView, L"");
+    SetWindowTextW(m_hwndUnifiedView, L"");
     m_currentDiff = FileDiff();
     m_currentHunk = 0;
     UpdateStatusBar();
@@ -271,8 +289,8 @@ void GitDiffViewer::ToggleViewMode() {
 void GitDiffViewer::RenderSideBySide() {
     if (!m_hwndOldView || !m_hwndNewView) return;
     
-    SetWindowText(m_hwndOldView, L"");
-    SetWindowText(m_hwndNewView, L"");
+    SetWindowTextW(m_hwndOldView, L"");
+    SetWindowTextW(m_hwndNewView, L"");
     
     // Build old and new versions
     std::wstring oldText, newText;
@@ -307,8 +325,8 @@ void GitDiffViewer::RenderSideBySide() {
         }
     }
     
-    SetWindowText(m_hwndOldView, oldText.c_str());
-    SetWindowText(m_hwndNewView, newText.c_str());
+    SetWindowTextW(m_hwndOldView, oldText.c_str());
+    SetWindowTextW(m_hwndNewView, newText.c_str());
     
     // Apply colors
     ApplyRichEditColors(m_hwndOldView);
@@ -348,7 +366,7 @@ void GitDiffViewer::RenderUnified() {
         }
     }
     
-    SetWindowText(m_hwndUnifiedView, text.c_str());
+    SetWindowTextW(m_hwndUnifiedView, text.c_str());
     ApplyRichEditColors(m_hwndUnifiedView);
 }
 
@@ -566,17 +584,6 @@ INT_PTR GitDiffViewer::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
     return FALSE;
 }
 
-// Command IDs
-enum {
-    ID_VIEW_SIDEBYSIDE = 100,
-    ID_VIEW_UNIFIED,
-    ID_NAV_NEXT,
-    ID_NAV_PREV,
-    ID_EDIT_FIND,
-    ID_EDIT_COPY,
-    ID_FILE_EXPORT
-};
-
 // ============================================================================
 // GitDiffDialog Implementation
 // ============================================================================
@@ -597,7 +604,7 @@ bool GitDiffDialog::Show(HWND hwndParent, const std::string& diffText,
     // Modal loop
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (!IsDialogMessage(viewer.IsCreated() ? viewer.m_hwnd : nullptr, &msg)) {
+        if (!IsDialogMessage(viewer.IsCreated() ? viewer.GetHwnd() : nullptr, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

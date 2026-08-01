@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -903,3 +904,4 @@ void InferenceEngine::ResetStats() {
 }
 
 } // namespace RawrXD
+

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <windows.h>
+#include <richedit.h>
 #include <string>
 #include <vector>
 #include <cstdint>

@@ -1,5 +1,4 @@
 #include "sandboxed_terminal.hpp"
-<<<<<<< HEAD
 #include "json_types.hpp"
 #include <chrono>
 #include <cstdint>
@@ -54,21 +53,10 @@ SandboxedTerminal::SandboxedTerminal()
 {
     logStructured("INFO", "SandboxedTerminal initializing", JsonObject{{"component", "SandboxedTerminal"}});
     logStructured("INFO", "SandboxedTerminal initialized successfully", JsonObject{{"component", "SandboxedTerminal"}});
-=======
-
-
-SandboxedTerminal::SandboxedTerminal(void* parent)
-    : void(parent),
-      m_process(nullptr)
-{
-    logStructured("INFO", "SandboxedTerminal initializing", void*{{"component", "SandboxedTerminal"}});
-    logStructured("INFO", "SandboxedTerminal initialized successfully", void*{{"component", "SandboxedTerminal"}});
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 SandboxedTerminal::~SandboxedTerminal()
 {
-<<<<<<< HEAD
     logStructured("INFO", "SandboxedTerminal shutting down", JsonObject{{"component", "SandboxedTerminal"}});
 
 #ifdef _WIN32
@@ -78,43 +66,22 @@ SandboxedTerminal::~SandboxedTerminal()
         if (GetExitCodeProcess(h, &exitCode) && exitCode == STILL_ACTIVE) {
             TerminateProcess(h, 1);
             WaitForSingleObject(h, 5000);
-=======
-    logStructured("INFO", "SandboxedTerminal shutting down", void*{{"component", "SandboxedTerminal"}});
-    
-    if (m_process) {
-        if (m_process->state() != void*::NotRunning) {
-            m_process->terminate();
-            if (!m_process->waitForFinished(5000)) {
-                m_process->kill();
-            }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         CloseHandle(h);
         m_processHandle = nullptr;
     }
-<<<<<<< HEAD
 #endif
 
     logStructured("INFO", "SandboxedTerminal shutdown complete", JsonObject{{"component", "SandboxedTerminal"}});
-=======
-    
-    logStructured("INFO", "SandboxedTerminal shutdown complete", void*{{"component", "SandboxedTerminal"}});
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // --- Configuration ---
 
 void SandboxedTerminal::setConfig(const Config& config)
 {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_configMutex);
     m_config = config;
     logStructured("INFO", "Configuration updated", JsonObject{
-=======
-    std::lock_guard<std::mutex> locker(&m_configMutex);
-    m_config = config;
-    logStructured("INFO", "Configuration updated", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         {"useWhitelistMode", config.useWhitelistMode},
         {"maxExecutionTimeMs", config.maxExecutionTimeMs},
         {"maxOutputSize", config.maxOutputSize},
@@ -124,7 +91,6 @@ void SandboxedTerminal::setConfig(const Config& config)
 
 SandboxedTerminal::Config SandboxedTerminal::getConfig() const
 {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_configMutex);
     return m_config;
 }
@@ -133,13 +99,6 @@ SandboxedTerminal::Config SandboxedTerminal::getConfig() const
 
 SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(
     const std::string& command, const std::vector<std::string>& args)
-=======
-    std::lock_guard<std::mutex> locker(&m_configMutex);
-    return m_config;
-}
-
-SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::string& command, const std::vector<std::string>& args)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 {
     auto startTime = std::chrono::steady_clock::now();
     CommandResult result;
@@ -150,11 +109,7 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
     try {
         Config config;
         {
-<<<<<<< HEAD
             std::lock_guard<std::mutex> lock(m_configMutex);
-=======
-            std::lock_guard<std::mutex> configLocker(&m_configMutex);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             config = m_config;
         }
 
@@ -165,27 +120,17 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
             result.blockReason = blockReason;
 
             {
-<<<<<<< HEAD
                 std::lock_guard<std::mutex> lock(m_metricsMutex);
                 m_metrics.commandsBlocked++;
                 m_metrics.securityViolations++;
             }
 
             logStructured("WARN", "Command blocked", JsonObject{
-=======
-                std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-                m_metrics.commandsBlocked++;
-                m_metrics.securityViolations++;
-            }
-            
-            logStructured("WARN", "Command blocked", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 {"command", command},
                 {"reason", blockReason}
             });
 
             if (config.enableAuditLog) {
-<<<<<<< HEAD
                 logAudit("command_blocked", JsonObject{
                     {"command", command},
                     {"reason", blockReason}
@@ -194,23 +139,11 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
 
             if (m_blockCb) m_blockCb(m_blockCtx, command.c_str(), blockReason.c_str());
             if (m_secCb) m_secCb(m_secCtx, (std::string("Blocked command: ") + command + " - " + blockReason).c_str());
-=======
-                logAudit("command_blocked", void*{
-                    {"command", command},
-                    {"args", void*::fromStringList(args)},
-                    {"reason", blockReason}
-                });
-            }
-            
-            commandBlocked(command, blockReason);
-            securityViolation(std::string("Blocked command: %1 - %2"));
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return result;
         }
 
 #ifdef _WIN32
         {
-<<<<<<< HEAD
             std::lock_guard<std::mutex> lock(m_processMutex);
 
             // Check if a process is already running
@@ -224,44 +157,10 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
                     m_metrics.errorCount++;
                     if (m_errCb) m_errCb(m_errCtx, result.error.c_str());
                     return result;
-=======
-            std::lock_guard<std::mutex> processLocker(&m_processMutex);
-            
-            if (m_process && m_process->state() != void*::NotRunning) {
-                logStructured("ERROR", "Process already running", void*{});
-                result.error = "Another command is already executing";
-                std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-                m_metrics.errorCount++;
-                errorOccurred(result.error);
-                return result;
-            }
-            
-            if (m_process) {
-                delete m_process;
-            }
-            
-            m_process = new void*(this);
-            
-            // Set working directory
-            if (!config.workingDirectory.empty()) {
-                m_process->setWorkingDirectory(config.workingDirectory);
-            }
-            
-            // Set sanitized environment
-            m_process->setProcessEnvironment(QProcessEnvironment::systemEnvironment());
-            if (!config.allowedEnvironmentVars.empty()) {
-                QProcessEnvironment env;
-                QProcessEnvironment sysEnv = QProcessEnvironment::systemEnvironment();
-                for (const std::string& var : config.allowedEnvironmentVars) {
-                    if (sysEnv.contains(var)) {
-                        env.insert(var, sysEnv.value(var));
-                    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
                 CloseHandle(h);
                 m_processHandle = nullptr;
             }
-<<<<<<< HEAD
 
             // Build command line
             std::string cmdLine = command;
@@ -322,37 +221,15 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
             if (!created) {
                 DWORD err = GetLastError();
                 logStructured("ERROR", "Failed to start process", JsonObject{
-=======
-            
-            // Start process
-            logStructured("INFO", "Starting command", void*{
-                {"command", command},
-                {"args", void*::fromStringList(args)}
-            });
-            
-            commandStarted(command);
-            
-            m_process->start(command, args);
-            
-            if (!m_process->waitForStarted(5000)) {
-                logStructured("ERROR", "Failed to start process", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     {"command", command},
                     {"error", std::to_string(err)}
                 });
-<<<<<<< HEAD
                 result.error = "CreateProcess failed with error " + std::to_string(err);
                 CloseHandle(hStdOutRead);
                 CloseHandle(hStdErrRead);
                 std::lock_guard<std::mutex> mLock(m_metricsMutex);
                 m_metrics.errorCount++;
                 if (m_errCb) m_errCb(m_errCtx, result.error.c_str());
-=======
-                result.error = m_process->errorString();
-                std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-                m_metrics.errorCount++;
-                errorOccurred(result.error);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 return result;
             }
 
@@ -367,37 +244,22 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
                 result.timedOut = true;
 
                 {
-<<<<<<< HEAD
                     std::lock_guard<std::mutex> mLock(m_metricsMutex);
                     m_metrics.commandsTimedOut++;
                 }
 
                 logStructured("WARN", "Command timed out", JsonObject{
-=======
-                    std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-                    m_metrics.commandsTimedOut++;
-                }
-                
-                logStructured("WARN", "Command timed out", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     {"command", command},
                     {"timeoutMs", config.maxExecutionTimeMs}
                 });
 
                 if (config.enableAuditLog) {
-<<<<<<< HEAD
                     logAudit("command_timeout", JsonObject{
                         {"command", command},
-=======
-                    logAudit("command_timeout", void*{
-                        {"command", command},
-                        {"args", void*::fromStringList(args)},
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                         {"timeoutMs", config.maxExecutionTimeMs}
                     });
                 }
             }
-<<<<<<< HEAD
 
             // Read output from pipes
             auto readPipe = [](HANDLE pipe, int maxSize) -> std::string {
@@ -421,43 +283,16 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
             CloseHandle(hStdOutRead);
             CloseHandle(hStdErrRead);
 
-=======
-            
-            // Read output
-            std::vector<uint8_t> stdoutData = m_process->readAllStandardOutput();
-            std::vector<uint8_t> stderrData = m_process->readAllStandardError();
-            
-            std::string rawOutput = std::string::fromUtf8(stdoutData);
-            std::string rawError = std::string::fromUtf8(stderrData);
-            
-            // Limit output size
-            if (rawOutput.length() > config.maxOutputSize) {
-                rawOutput = rawOutput.left(config.maxOutputSize) + "\n[OUTPUT TRUNCATED]";
-            }
-            if (rawError.length() > config.maxOutputSize) {
-                rawError = rawError.left(config.maxOutputSize) + "\n[ERROR OUTPUT TRUNCATED]";
-            }
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             // Sanitize output
             if (config.enableOutputFiltering) {
                 result.output = sanitizeOutput(rawOutput);
                 result.error = sanitizeOutput(rawError);
-<<<<<<< HEAD
 
                 int64_t filteredBytes = static_cast<int64_t>(rawOutput.size() - result.output.size())
                                       + static_cast<int64_t>(rawError.size() - result.error.size());
 
                 {
                     std::lock_guard<std::mutex> mLock(m_metricsMutex);
-=======
-                
-                int64_t filteredBytes = (rawOutput.length() - result.output.length()) + 
-                                       (rawError.length() - result.error.length());
-                
-                {
-                    std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     m_metrics.outputBytesFiltered += filteredBytes;
                 }
             } else {
@@ -561,19 +396,11 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
         recordLatency("command_execution", duration);
 
         {
-<<<<<<< HEAD
             std::lock_guard<std::mutex> lock(m_metricsMutex);
             m_metrics.commandsExecuted++;
         }
 
         logStructured("INFO", "Command completed", JsonObject{
-=======
-            std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-            m_metrics.commandsExecuted++;
-        }
-        
-        logStructured("INFO", "Command completed", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             {"command", command},
             {"exitCode", static_cast<int64_t>(result.exitCode)},
             {"executionTimeMs", result.executionTimeMs},
@@ -582,21 +409,13 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
         });
 
         if (config.enableAuditLog) {
-<<<<<<< HEAD
             logAudit("command_executed", JsonObject{
                 {"command", command},
                 {"exitCode", static_cast<int64_t>(result.exitCode)},
-=======
-            logAudit("command_executed", void*{
-                {"command", command},
-                {"args", void*::fromStringList(args)},
-                {"exitCode", result.exitCode},
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 {"executionTimeMs", result.executionTimeMs},
                 {"timedOut", result.timedOut}
             });
         }
-<<<<<<< HEAD
 
         if (m_finishCb) m_finishCb(m_finishCtx, &result);
 
@@ -605,16 +424,6 @@ SandboxedTerminal::CommandResult SandboxedTerminal::executeCommand(const std::st
         m_metrics.errorCount++;
         logStructured("ERROR", "Command execution failed", JsonObject{{"error", e.what()}});
         if (m_errCb) m_errCb(m_errCtx, (std::string("Execution failed: ") + e.what()).c_str());
-=======
-        
-        commandFinished(result);
-        
-    } catch (const std::exception& e) {
-        std::lock_guard<std::mutex> metricsLocker(&m_metricsMutex);
-        m_metrics.errorCount++;
-        logStructured("ERROR", "Command execution failed", void*{{"error", e.what()}});
-        errorOccurred(std::string("Execution failed: %1")));
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         result.error = e.what();
     }
 
@@ -634,7 +443,6 @@ std::string SandboxedTerminal::sanitizeOutput(const std::string& output) const
 
 bool SandboxedTerminal::isRunning() const
 {
-<<<<<<< HEAD
 #ifdef _WIN32
     std::lock_guard<std::mutex> lock(m_processMutex);
     if (!m_processHandle) return false;
@@ -644,61 +452,38 @@ bool SandboxedTerminal::isRunning() const
 #else
     return false;
 #endif
-=======
-    std::lock_guard<std::mutex> locker(&m_processMutex);
-    return m_process && m_process->state() != void*::NotRunning;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void SandboxedTerminal::terminate()
 {
-<<<<<<< HEAD
 #ifdef _WIN32
     std::lock_guard<std::mutex> lock(m_processMutex);
     if (m_processHandle) {
         TerminateProcess(static_cast<HANDLE>(m_processHandle), 1);
         logStructured("INFO", "Process terminated", JsonObject{});
-=======
-    std::lock_guard<std::mutex> locker(&m_processMutex);
-    if (m_process && m_process->state() != void*::NotRunning) {
-        m_process->terminate();
-        logStructured("INFO", "Process terminated", void*{});
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 #endif
 }
 
 void SandboxedTerminal::kill()
 {
-<<<<<<< HEAD
 #ifdef _WIN32
     std::lock_guard<std::mutex> lock(m_processMutex);
     if (m_processHandle) {
         TerminateProcess(static_cast<HANDLE>(m_processHandle), 9);
         logStructured("INFO", "Process killed", JsonObject{});
-=======
-    std::lock_guard<std::mutex> locker(&m_processMutex);
-    if (m_process && m_process->state() != void*::NotRunning) {
-        m_process->kill();
-        logStructured("INFO", "Process killed", void*{});
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 #endif
 }
 
 SandboxedTerminal::Metrics SandboxedTerminal::getMetrics() const
 {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_metricsMutex);
-=======
-    std::lock_guard<std::mutex> locker(&m_metricsMutex);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return m_metrics;
 }
 
 void SandboxedTerminal::resetMetrics()
 {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_metricsMutex);
     m_metrics = Metrics();
     logStructured("INFO", "Metrics reset", JsonObject{});
@@ -727,38 +512,11 @@ void SandboxedTerminal::recordLatency(const std::string& operation, std::chrono:
     if (operation == "command_execution" && m_metrics.commandsExecuted > 0) {
         m_metrics.avgExecutionTimeMs =
             (m_metrics.avgExecutionTimeMs * (m_metrics.commandsExecuted - 1) + static_cast<double>(duration.count()))
-=======
-    std::lock_guard<std::mutex> locker(&m_metricsMutex);
-    m_metrics = Metrics();
-    logStructured("INFO", "Metrics reset", void*{});
-}
-
-void SandboxedTerminal::logStructured(const std::string& level, const std::string& message, const void*& context)
-{
-    void* logEntry;
-    logEntry["timestamp"] = std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate);
-    logEntry["level"] = level;
-    logEntry["component"] = "SandboxedTerminal";
-    logEntry["message"] = message;
-    logEntry["context"] = context;
-    
-    void* doc(logEntry);
-}
-
-void SandboxedTerminal::recordLatency(const std::string& operation, const std::chrono::milliseconds& duration)
-{
-    std::lock_guard<std::mutex> locker(&m_metricsMutex);
-    
-    if (operation == "command_execution") {
-        m_metrics.avgExecutionTimeMs = 
-            (m_metrics.avgExecutionTimeMs * (m_metrics.commandsExecuted - 1) + duration.count()) 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             / m_metrics.commandsExecuted;
     }
 
     Config config;
     {
-<<<<<<< HEAD
         std::lock_guard<std::mutex> cLock(m_configMutex);
         config = m_config;
     }
@@ -793,44 +551,6 @@ void SandboxedTerminal::logAudit(const std::string& action, const JsonObject& de
     } else {
         logStructured("ERROR", "Failed to write audit log", JsonObject{
             {"path", config.auditLogPath}
-=======
-        std::lock_guard<std::mutex> configLocker(&m_configMutex);
-        config = m_config;
-    }
-    
-    if (config.enableMetrics) {
-        metricsUpdated(m_metrics);
-    }
-}
-
-void SandboxedTerminal::logAudit(const std::string& action, const void*& details)
-{
-    Config config;
-    {
-        std::lock_guard<std::mutex> configLocker(&m_configMutex);
-        config = m_config;
-    }
-    
-    if (!config.enableAuditLog || config.auditLogPath.empty()) {
-        return;
-    }
-    
-    void* auditEntry;
-    auditEntry["timestamp"] = std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate);
-    auditEntry["action"] = action;
-    auditEntry["details"] = details;
-    
-    std::fstream auditFile(config.auditLogPath);
-    if (auditFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        QTextStream out(&auditFile);
-        void* doc(auditEntry);
-        out << doc.toJson(void*::Compact) << "\n";
-        auditFile.close();
-    } else {
-        logStructured("ERROR", "Failed to write audit log", void*{
-            {"path", config.auditLogPath},
-            {"error", auditFile.errorString()}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 }
@@ -839,7 +559,6 @@ bool SandboxedTerminal::validateCommand(const std::string& command, std::string&
 {
     Config config;
     {
-<<<<<<< HEAD
         std::lock_guard<std::mutex> lock(m_configMutex);
         config = m_config;
     }
@@ -854,16 +573,6 @@ bool SandboxedTerminal::validateCommand(const std::string& command, std::string&
     std::filesystem::path cmdPath(baseCommand);
     std::string cmdName = cmdPath.filename().string();
 
-=======
-        std::lock_guard<std::mutex> locker(&m_configMutex);  // Fixed: take address of mutable member
-        config = m_config;
-    }
-    
-    std::string baseCommand = command.split(' ').first();
-    std::filesystem::path cmdInfo(baseCommand);
-    std::string cmdName = cmdInfo.fileName();
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Check blacklist first
     auto contains = [](const std::vector<std::string>& vec, const std::string& val) {
         for (const auto& v : vec) {
@@ -885,17 +594,10 @@ bool SandboxedTerminal::validateCommand(const std::string& command, std::string&
         "mkfs",
         "format"
     };
-<<<<<<< HEAD
 
     for (const std::string& pattern : dangerousPatterns) {
         if (command.find(pattern) != std::string::npos) {
             blockReason = "Dangerous pattern detected: " + pattern;
-=======
-    
-    for (const std::string& pattern : dangerousPatterns) {
-        if (command.contains(pattern, //CaseInsensitive)) {
-            blockReason = std::string("Dangerous pattern detected: %1");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return false;
         }
     }
@@ -917,7 +619,6 @@ std::vector<std::string> SandboxedTerminal::buildSanitizedEnvironment() const
 {
     Config config;
     {
-<<<<<<< HEAD
         std::lock_guard<std::mutex> lock(m_configMutex);
         config = m_config;
     }
@@ -939,28 +640,6 @@ std::vector<std::string> SandboxedTerminal::buildSanitizedEnvironment() const
         std::string val = getEnv(var);
         if (!val.empty()) {
             env.push_back(var + "=" + val);
-=======
-        std::lock_guard<std::mutex> configLocker(&m_configMutex);
-        config = m_config;
-    }
-    
-    std::vector<std::string> env;
-    QProcessEnvironment sysEnv = QProcessEnvironment::systemEnvironment();
-    
-    if (config.allowedEnvironmentVars.empty()) {
-        // Default safe environment variables
-        std::vector<std::string> safeVars = {"PATH", "HOME", "USER", "TEMP", "TMP"};
-        for (const std::string& var : safeVars) {
-            if (sysEnv.contains(var)) {
-                env.append(std::string("%1=%2")));
-            }
-        }
-    } else {
-        for (const std::string& var : config.allowedEnvironmentVars) {
-            if (sysEnv.contains(var)) {
-                env.append(std::string("%1=%2")));
-            }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
@@ -971,11 +650,7 @@ bool SandboxedTerminal::enforceResourceLimits()
 {
     Config config;
     {
-<<<<<<< HEAD
         std::lock_guard<std::mutex> lock(m_configMutex);
-=======
-        std::lock_guard<std::mutex> configLocker(&m_configMutex);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         config = m_config;
     }
 
@@ -986,13 +661,7 @@ bool SandboxedTerminal::enforceResourceLimits()
     // Resource limits are platform-specific
     // On Windows, this would require job objects
     // On Linux/Unix, use setrlimit()
-<<<<<<< HEAD
     logStructured("DEBUG", "Resource limits enforcement", JsonObject{
-=======
-    // This is a simplified implementation
-    
-    logStructured("DEBUG", "Resource limits enforcement", void*{
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         {"maxMemoryBytes", config.maxMemoryBytes},
         {"maxCpuPercent", config.maxCpuPercent}
     });
@@ -1003,7 +672,6 @@ bool SandboxedTerminal::enforceResourceLimits()
 std::string SandboxedTerminal::filterSensitiveData(const std::string& data) const
 {
     std::string filtered = data;
-<<<<<<< HEAD
 
     // Filter common sensitive patterns
     std::regex apiKeyPattern(R"(api[_-]?key[\s=:]+['\"]?([a-zA-Z0-9_-]{20,})['\"]?)", std::regex::icase);
@@ -1018,22 +686,6 @@ std::string SandboxedTerminal::filterSensitiveData(const std::string& data) cons
     filtered = std::regex_replace(filtered, emailPattern, "[EMAIL_REDACTED]");
     filtered = std::regex_replace(filtered, ipPattern, "[IP_REDACTED]");
 
-=======
-    
-    // Filter common sensitive patterns
-    std::regex apiKeyPattern(R"(api[_-]?key[\s=:]+['\"]?([a-zA-Z0-9_-]{20,})['\"]?)", std::regex::CaseInsensitiveOption);
-    std::regex passwordPattern(R"(password[\s=:]+['\"]?([^'\"\s]+)['\"]?)", std::regex::CaseInsensitiveOption);
-    std::regex tokenPattern(R"(token[\s=:]+['\"]?([a-zA-Z0-9_-]{20,})['\"]?)", std::regex::CaseInsensitiveOption);
-    std::regex emailPattern(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
-    std::regex ipPattern(R"(\b(?:\d{1,3}\.){3}\d{1,3}\b)");
-    
-    filtered.replace(apiKeyPattern, "api_key=[REDACTED]");
-    filtered.replace(passwordPattern, "password=[REDACTED]");
-    filtered.replace(tokenPattern, "token=[REDACTED]");
-    filtered.replace(emailPattern, "[EMAIL_REDACTED]");
-    filtered.replace(ipPattern, "[IP_REDACTED]");
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return filtered;
 }
 

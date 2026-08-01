@@ -90,10 +90,7 @@ std::future<SwarmResult> SwarmOrchestrator::submitTaskAsync(const std::string& t
     return future;
 }
 
-<<<<<<< HEAD
 #if defined(__cpp_lib_expected) || (defined(_MSVC_LANG) && _MSVC_LANG >= 202302L)
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 std::expected<SwarmResult, int> SwarmOrchestrator::executeTask(const std::string& task, const std::string& context) {
     auto fut = submitTaskAsync(task, context);
     if (fut.wait_for(std::chrono::seconds(5)) == std::future_status::timeout) {
@@ -101,7 +98,6 @@ std::expected<SwarmResult, int> SwarmOrchestrator::executeTask(const std::string
     }
     return fut.get();
 }
-<<<<<<< HEAD
 #else
 RawrXD::Expected<SwarmResult, int> SwarmOrchestrator::executeTask(const std::string& task, const std::string& context) {
     auto fut = submitTaskAsync(task, context);
@@ -111,8 +107,6 @@ RawrXD::Expected<SwarmResult, int> SwarmOrchestrator::executeTask(const std::str
     return fut.get();
 }
 #endif
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool SwarmOrchestrator::stealWork(int thiefId, OrchestratorTask& stolenTask) {
     // randomized stealing
@@ -140,14 +134,10 @@ SwarmResult SwarmOrchestrator::synthesizeConsensus(const std::vector<std::string
 }
 
 nlohmann::json SwarmOrchestrator::getStatus() const {
-<<<<<<< HEAD
     nlohmann::json j;
     j["active"] = true;
     j["tasks_executed"] = m_totalTasksExecuted.load();
     return j;
-=======
-    return {{"active", true}, {"tasks_executed", m_totalTasksExecuted.load()}};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 }

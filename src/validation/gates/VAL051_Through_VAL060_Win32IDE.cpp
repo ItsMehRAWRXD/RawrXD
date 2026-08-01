@@ -16,6 +16,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -695,3 +696,4 @@ ValidationResult VAL060_ContinuousBuildHealthGate::Execute() {
 
 } // namespace Validation
 } // namespace RawrXD
+

@@ -119,7 +119,7 @@ szCors200Len    equ $ - szCors200
 sz404           db "HTTP/1.1 404 Not Found", 13, 10
                 db "Content-Type: application/json", 13, 10
                 db "Connection: close", 13, 10, 13, 10
-                db "{\"error\":\"Not found\"}", 0
+                db '{"error":"Not found"}', 0
 sz404Len        equ $ - sz404
 
 ; Paths (no leading slash — we strip "GET /" or "POST /")
@@ -147,7 +147,7 @@ szBackendHost   db "127.0.0.1", 0
 sz502           db "HTTP/1.1 502 Bad Gateway", 13, 10
                 db "Content-Type: application/json", 13, 10
                 db "Connection: close", 13, 10, 13, 10
-                db "{\"error\":\"Backend unreachable. Start tool_server or Win32 IDE on port 11435.\"}", 0
+                db '{"error":"Backend unreachable. Start tool_server or Win32 IDE on port 11435."}', 0
 sz502Len        equ $ - sz502
 
 ; HTTP for static files
@@ -503,23 +503,31 @@ ReadHtmlFile endp
 ; ============================================================================
 SendHtmlResponse proc
     sub     rsp, 38h
-    mov     rcx, clientSocket
-    lea     rdx, szHttpOk
-    lea     r8, szHttpOk
+
+    ; Send HTTP header prefix
+    lea     rcx, szHttpOk
     call    lstrlenA
     mov     r8d, eax
+    mov     rcx, clientSocket
+    lea     rdx, szHttpOk
     xor     r9d, r9d
     call    send
+
+    ; Convert fileSize to string
     mov     ecx, dword ptr fileSize
     lea     rdx, tempBuffer
     call    IntToStr
+
+    ; Send Content-Length value
     lea     rcx, tempBuffer
     call    lstrlenA
+    mov     r8d, eax
     mov     rcx, clientSocket
     lea     rdx, tempBuffer
-    mov     r8d, eax
     xor     r9d, r9d
     call    send
+
+    ; Send CRLF + CRLF
     mov     rcx, clientSocket
     lea     rdx, szNewline
     mov     r8d, 2
@@ -530,11 +538,14 @@ SendHtmlResponse proc
     mov     r8d, 2
     xor     r9d, r9d
     call    send
+
+    ; Send file content
     mov     rcx, clientSocket
     lea     rdx, fileBuffer
     mov     r8d, dword ptr fileSize
     xor     r9d, r9d
     call    send
+
     add     rsp, 38h
     ret
 SendHtmlResponse endp

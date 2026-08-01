@@ -340,7 +340,6 @@ std::string ModelTester::makeOllamaRequest(
     const std::string& endpoint,
     const std::string& payload) {
 
-<<<<<<< HEAD
     if (m_logger) m_logger->debug("Making Ollama request to {} with {} chars payload", 
                     endpoint, payload.length());
 
@@ -422,18 +421,6 @@ std::string ModelTester::makeOllamaRequest(
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
-=======
-    // Real logic: HTTP Request via WinHTTP
-    // Assume default Ollama port 11434 for tests if not specified in endpoint string (endpoint is usually just path)
-    // The previous code assumed endpoint was path.
-
-    // Basic domain/port parsing
-    std::wstring domain = L"localhost";
-    int port = 11434;
-    
-    // Quick conversion of endpoint to wstring
-    std::wstring wpath(endpoint.begin(), endpoint.end());
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     std::string response = TesterHttpPost(domain, port, wpath, payload);
     if (response.empty()) {

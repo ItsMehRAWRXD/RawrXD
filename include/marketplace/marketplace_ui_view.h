@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // MarketplaceUIView — C++20, Win32. No Qt. Extension marketplace UI.
 // ============================================================================
 
@@ -216,4 +213,4 @@ private:
     QWidget* createExtensionItemWidget(const QJsonObject& extension);
     void clearDetailsView();
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

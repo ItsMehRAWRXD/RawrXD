@@ -420,9 +420,9 @@ void MemoryViewerPanel::SetAddress(uint64_t address) {
     Refresh();
     
     // Update edit box
-    char addrStr[32];
-    snprintf(addrStr, sizeof(addrStr), "%016llX", address);
-    SetWindowTextA(m_editAddress, addrStr);
+    wchar_t addrStr[32];
+    _snwprintf(addrStr, sizeof(addrStr)/sizeof(addrStr[0]), L"%016llX", address);
+    SetWindowTextW(m_editAddress, addrStr);
 }
 
 void MemoryViewerPanel::Refresh() {
@@ -443,7 +443,7 @@ void MemoryViewerPanel::Refresh() {
 void MemoryViewerPanel::Clear() {
     m_memoryData.clear();
     m_baseAddress = 0;
-    SetWindowTextA(m_editAddress, "");
+    SetWindowTextW(m_editAddress, L"");
     InvalidateRect(m_hwnd, nullptr, TRUE);
 }
 

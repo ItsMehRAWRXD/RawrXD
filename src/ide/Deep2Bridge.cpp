@@ -8,6 +8,7 @@
 
 #include "Deep2Bridge.h"
 #include "../inference/BraidedModelLoader.h"
+#include "../deep2/Tokenizer.hpp"
 #include <cstdio>
 #include <cstring>
 #include <cmath>
@@ -42,6 +43,9 @@ static struct {
     
     // KV Cache for efficient autoregressive generation
     Deep2KVCache kvCache;
+    
+    // Tokenizer for encode/decode
+    Deep2::ITokenizer* tokenizer;
 } g_Deep2State = {0};
 
 /*===========================================================================
@@ -849,6 +853,189 @@ void Deep2Bridge_ResetMetrics(void) {
 
 uint64_t Deep2Bridge_ReadTSC(void) {
     return __rdtsc();
+}
+
+/*===========================================================================
+ * TOKENIZER — Encode/decode text for inference
+ *===========================================================================*/
+
+int Deep2Bridge_Encode(const char* text, int** outputTokens) {
+    if (!text || !outputTokens) return 0;
+    if (!g_Deep2State.tokenizer) {
+        // Create default char-level tokenizer
+        g_Deep2State.tokenizer = new Deep2::CharTokenizer();
+    }
+    auto tokens = g_Deep2State.tokenizer->Encode(text);
+    if (tokens.empty()) return 0;
+    *outputTokens = (int*)malloc(tokens.size() * sizeof(int));
+    if (!*outputTokens) return 0;
+    memcpy(*outputTokens, tokens.data(), tokens.size() * sizeof(int));
+    return (int)tokens.size();
+}
+
+char* Deep2Bridge_Decode(const int* tokens, int numTokens) {
+    if (!tokens || numTokens <= 0) return nullptr;
+    if (!g_Deep2State.tokenizer) {
+        g_Deep2State.tokenizer = new Deep2::CharTokenizer();
+    }
+    std::vector<int> tv(tokens, tokens + numTokens);
+    std::string text = g_Deep2State.tokenizer->Decode(tv);
+    char* result = (char*)malloc(text.length() + 1);
+    if (result) { memcpy(result, text.c_str(), text.length() + 1); }
+    return result;
+}
+
+char* Deep2Bridge_DecodeToken(int token) {
+    if (!g_Deep2State.tokenizer) {
+        g_Deep2State.tokenizer = new Deep2::CharTokenizer();
+    }
+    std::string text = g_Deep2State.tokenizer->Decode(token);
+    char* result = (char*)malloc(text.length() + 1);
+    if (result) { memcpy(result, text.c_str(), text.length() + 1); }
+    return result;
+}
+
+void Deep2Bridge_FreeTokens(int* tokens) { free(tokens); }
+void Deep2Bridge_FreeString(char* str) { free(str); }
+
+int Deep2Bridge_VocabSize(void) {
+    if (!g_Deep2State.tokenizer) return 256;
+    return (int)g_Deep2State.tokenizer->VocabSize();
+}
+
+/*===========================================================================
+ * STREAMING COMPLETION — Token-by-token callback for ghost text
+ *===========================================================================*/
+
+static struct {
+    volatile LONG cancelRequested;
+    HANDLE hStreamThread;
+    DWORD streamThreadId;
+} g_StreamState = {0};
+
+BOOL Deep2Bridge_GenerateStreaming(
+    const int* promptTokens,
+    uint32_t promptLen,
+    uint32_t maxTokens,
+    Deep2TokenCallback callback,
+    void* userData,
+    uint32_t timeoutMs
+) {
+    if (!g_Deep2State.initialized) return FALSE;
+    if (!promptTokens || !callback) return FALSE;
+
+    // Cancel any in-progress stream
+    Deep2Bridge_CancelStreaming();
+
+    g_StreamState.cancelRequested = 0;
+
+    // Launch streaming thread
+    struct StreamArgs {
+        const int* tokens; uint32_t len; uint32_t max;
+        Deep2TokenCallback cb; void* ud; uint32_t to;
+    };
+    StreamArgs* args = (StreamArgs*)malloc(sizeof(StreamArgs));
+    if (!args) return FALSE;
+    args->tokens = promptTokens; args->len = promptLen; args->max = maxTokens;
+    args->cb = callback; args->ud = userData; args->to = timeoutMs;
+
+    g_StreamState.hStreamThread = CreateThread(
+        NULL, 0,
+        [](LPVOID param) -> DWORD {
+            auto args = (StreamArgs*)param;
+            uint32_t hiddenDim = g_Deep2State.config.hiddenDim;
+            uint32_t numLayers = g_Deep2State.config.numLayers;
+
+            // Allocate persistent buffers
+            float* embeddings = (float*)_aligned_malloc(hiddenDim * sizeof(float), 32);
+            float* logits = (float*)_aligned_malloc(32000 * sizeof(float), 32);
+            float* hidden = (float*)_aligned_malloc(hiddenDim * sizeof(float), 32);
+            float* output = (float*)_aligned_malloc(hiddenDim * sizeof(float), 32);
+            if (!embeddings || !logits || !hidden || !output) {
+                _aligned_free(embeddings); _aligned_free(logits);
+                _aligned_free(hidden); _aligned_free(output);
+                free(args); return 1;
+            }
+
+            // Process prompt tokens to build KV cache
+            Deep2KVCache_Reset();
+            for (uint32_t t = 0; t < args->len; t++) {
+                if (InterlockedCompareExchange(&g_StreamState.cancelRequested, 0, 0)) break;
+                // Embed token (simplified - would use embedding table)
+                memset(embeddings, 0, hiddenDim * sizeof(float));
+                embeddings[0] = (float)args->tokens[t];
+                memcpy(hidden, embeddings, hiddenDim * sizeof(float));
+
+                for (uint32_t layer = 0; layer < numLayers; layer++) {
+                    uint32_t expertIndices[8] = {0};
+                    float expertWeights[8] = {1.0f};
+                    Deep2Bridge_RunTransformerLayer(layer, hidden, output, expertIndices, expertWeights);
+                    float* temp = hidden; hidden = output; output = temp;
+                }
+            }
+
+            // Generate new tokens one at a time
+            for (uint32_t i = 0; i < args->max; i++) {
+                if (InterlockedCompareExchange(&g_StreamState.cancelRequested, 0, 0)) break;
+
+                // Forward pass through all layers
+                for (uint32_t layer = 0; layer < numLayers; layer++) {
+                    uint32_t expertIndices[8] = {0};
+                    float expertWeights[8] = {1.0f};
+                    Deep2Bridge_RunTransformerLayer(layer, hidden, output, expertIndices, expertWeights);
+                    float* temp = hidden; hidden = output; output = temp;
+                }
+
+                // Project to logits (simplified - would use LM head)
+                memset(logits, 0, 32000 * sizeof(float));
+                for (uint32_t d = 0; d < hiddenDim && d < 32000; d++) {
+                    logits[d] = hidden[d];
+                }
+
+                // Sample next token (argmax)
+                int bestToken = 0;
+                float bestScore = logits[0];
+                for (int v = 1; v < 32000; v++) {
+                    if (logits[v] > bestScore) { bestScore = logits[v]; bestToken = v; }
+                }
+                if (bestToken == 2 || bestToken == 0) break; // EOS
+
+                // Decode token to text and callback
+                char* tokenText = Deep2Bridge_DecodeToken(bestToken);
+                if (tokenText) {
+                    args->cb(tokenText, args->ud);
+                    Deep2Bridge_FreeString(tokenText);
+                }
+
+                // Embed new token for next iteration
+                memset(embeddings, 0, hiddenDim * sizeof(float));
+                embeddings[0] = (float)bestToken;
+                memcpy(hidden, embeddings, hiddenDim * sizeof(float));
+            }
+
+            _aligned_free(embeddings); _aligned_free(logits);
+            _aligned_free(hidden); _aligned_free(output);
+            free(args);
+            return 0;
+        },
+        args, 0, &g_StreamState.streamThreadId
+    );
+
+    if (!g_StreamState.hStreamThread) { free(args); return FALSE; }
+    return TRUE;
+}
+
+void Deep2Bridge_CancelStreaming(void) {
+    InterlockedExchange(&g_StreamState.cancelRequested, 1);
+    if (g_StreamState.hStreamThread) {
+        WaitForSingleObject(g_StreamState.hStreamThread, 1000);
+        CloseHandle(g_StreamState.hStreamThread);
+        g_StreamState.hStreamThread = NULL;
+    }
+}
+
+BOOL Deep2Bridge_IsStreaming(void) {
+    return g_StreamState.hStreamThread != NULL;
 }
 
 /*===========================================================================

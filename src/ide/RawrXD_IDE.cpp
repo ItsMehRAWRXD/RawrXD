@@ -1072,45 +1072,48 @@ class IDEWindow {
     }
 
     void SetStatus(const std::string& msg) {
-        SetWindowTextA(hStatusBar, msg.c_str());
+        std::wstring wmsg(msg.begin(), msg.end());
+        SetWindowTextW(hStatusBar, wmsg.c_str());
     }
 
     void UpdateTitle() {
-        std::string title = "RawrXD IDE";
+        std::wstring title = L"RawrXD IDE";
         if (!currentFile.empty()) {
-            title += " - " + currentFile;
-            if (modified) title += " *";
+            std::wstring wfile(currentFile.begin(), currentFile.end());
+            title += L" - " + wfile;
+            if (modified) title += L" *";
         }
-        SetWindowTextA(hWnd, title.c_str());
+        SetWindowTextW(hWnd, title.c_str());
     }
 
     void NewFile() {
-        if (modified && MessageBoxA(hWnd, "Save changes?", "RawrXD IDE", MB_YESNO) == IDYES) {
+        if (modified && MessageBoxW(hWnd, L"Save changes?", L"RawrXD IDE", MB_YESNO) == IDYES) {
             SaveFile();
         }
-        SetWindowTextA(hEditor, "");
+        SetWindowTextW(hEditor, L"");
         currentFile.clear();
         modified = false;
         UpdateTitle();
     }
 
     void OpenFile() {
-        char filename[MAX_PATH] = {};
-        OPENFILENAMEA ofn = {};
+        wchar_t filename[MAX_PATH] = {};
+        OPENFILENAMEW ofn = {};
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = hWnd;
-        ofn.lpstrFilter = "C++ Files\0*.cpp;*.h;*.hpp\0All Files\0*.*\0";
+        ofn.lpstrFilter = L"C++ Files\0*.cpp;*.h;*.hpp\0All Files\0*.*\0";
         ofn.lpstrFile = filename;
         ofn.nMaxFile = MAX_PATH;
         ofn.Flags = OFN_FILEMUSTEXIST;
 
-        if (GetOpenFileNameA(&ofn)) {
+        if (GetOpenFileNameW(&ofn)) {
             std::ifstream file(filename);
             if (file) {
                 std::string content((std::istreambuf_iterator<char>(file)),
                                    std::istreambuf_iterator<char>());
-                SetWindowTextA(hEditor, content.c_str());
-                currentFile = filename;
+                std::wstring wcontent(content.begin(), content.end());
+                SetWindowTextW(hEditor, wcontent.c_str());
+                currentFile.assign(filename, filename + wcslen(filename));
                 modified = false;
                 UpdateTitle();
 
@@ -1122,32 +1125,35 @@ class IDEWindow {
 
     void SaveFile() {
         if (currentFile.empty()) {
-            char filename[MAX_PATH] = {};
-            OPENFILENAMEA ofn = {};
+            wchar_t filename[MAX_PATH] = {};
+            OPENFILENAMEW ofn = {};
             ofn.lStructSize = sizeof(ofn);
             ofn.hwndOwner = hWnd;
-            ofn.lpstrFilter = "C++ Files\0*.cpp\0";
+            ofn.lpstrFilter = L"C++ Files\0*.cpp\0";
             ofn.lpstrFile = filename;
             ofn.nMaxFile = MAX_PATH;
             ofn.Flags = OFN_OVERWRITEPROMPT;
 
-            if (!GetSaveFileNameA(&ofn)) return;
-            currentFile = filename;
+            if (!GetSaveFileNameW(&ofn)) return;
+            currentFile.assign(filename, filename + wcslen(filename));
         }
 
-        char* buffer = nullptr;
-        int len = GetWindowTextLengthA(hEditor);
-        buffer = new char[len + 1];
-        GetWindowTextA(hEditor, buffer, len + 1);
+        wchar_t* buffer = nullptr;
+        int len = GetWindowTextLengthW(hEditor);
+        buffer = new wchar_t[len + 1];
+        GetWindowTextW(hEditor, buffer, len + 1);
 
+        std::string narrow(buffer, buffer + wcslen(buffer));
         std::ofstream file(currentFile);
         if (file) {
-            file.write(buffer, len);
+            file.write(narrow.c_str(), narrow.length());
             modified = false;
             UpdateTitle();
 
             // Notify LSP
-            lsp.DidChange("file://" + currentFile, 1, std::string(buffer, len));
+            lsp.DidChange("file://" + currentFile, 1, narrow);
+        }
+        delete[] buffer;
         }
         delete[] buffer;
     }

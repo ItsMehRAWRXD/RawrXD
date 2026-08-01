@@ -1,6 +1,5 @@
 # CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
-<<<<<<< HEAD
 
 # Phase 46: Enable Vulkan for dual GPU testing
 option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)" ON)
@@ -157,9 +156,11 @@ endif()
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
-# MSVC: std::expected (<expected>) is only available at C++23 (STL4038 at C++20).
+# MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
+# Pin to C++20 for build stability. std::expected is available via
+# <expected> polyfill or 3rdparty if needed.
 if(MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(CMAKE_CXX_STANDARD 20)
 else()
     set(CMAKE_CXX_STANDARD 20)
 endif()
@@ -974,6 +975,23 @@ set(SOURCES
 
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
     src/agent/DiskRecoveryAgent.cpp
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # IDE Subsystems — Repository Intelligence, Build, Diagnostics, etc.
+    # ═══════════════════════════════════════════════════════════════════
+    src/repo/FileIndex.cpp
+    src/repo/SymbolTable.cpp
+    src/repo/ASTCache.cpp
+    src/repo/TypeDatabase.cpp
+    src/repo/CallGraph.cpp
+    src/repo/IncludeGraph.cpp
+    src/repo/SearchIndex.cpp
+    src/repo/EmbeddingIndex.cpp
+    src/build/BuildIntelligence.cpp
+    src/diagnostics/DiagnosticsEngine.cpp
+    src/refactoring/RefactoringEngine.cpp
+    src/validation/PatchValidator.cpp
+    src/ide/IDEShell.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -1897,6 +1915,16 @@ message(STATUS "✓ RawrXD_Compression configured (runtime ZLIB loader, zero bui
 # =============================================================================
 add_subdirectory(src/reverse_engineering)
 
+# =============================================================================
+# CEO Agent Module — Autonomous Software Engineering Layer
+# =============================================================================
+add_subdirectory(src/ceo)
+
+# =============================================================================
+# Repository Intelligence Module — Deep Code Understanding
+# =============================================================================
+add_subdirectory(src/repository)
+
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
@@ -1941,6 +1969,12 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer
     ${CMAKE_CURRENT_SOURCE_DIR}/src/intent
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/repo
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/build
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/diagnostics
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/refactoring
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ide
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/validation
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
@@ -3522,6 +3556,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Accelerators.cpp
         src/win32app/IV280Bridge.cpp
         src/win32app/IMultiFileSearchWidget.cpp
+        src/win32app/CICDSettings.cpp
+        src/win32app/BenchmarkMenu.cpp
             src/win32app/WindowManager.cpp
             src/win32app/EditorOperations.cpp
             src/win32app/RouterOperations.cpp
@@ -3561,6 +3597,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
+        # Deep2 completion provider and bridge — real local inference for ghost text
+        src/ai_completion_real.cpp
+        src/ide/Deep2Bridge.cpp
         src/ide/SovereignSharedMemoryBridge.cpp
         src/ide/ANSIColorParser.cpp
         src/ide/FindReplaceDialog.cpp
@@ -3663,6 +3702,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_018.cpp  # ADDED: Provides asm_gguf_loader_close, asm_lsp_bridge_shutdown, asm_spengine_cpu_optimize
         src/core/unlinked_symbols_batch_019.cpp
         src/core/unlinked_symbols_batch_020.cpp
+        src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
+        src/core/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
 
         # ASM link stubs for missing symbols
         # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)
@@ -4274,7 +4315,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
         src/core/license_manager_panel.cpp
-        src/telemetry/logger.cpp
+        # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
+        # src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
         src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
@@ -5034,6 +5076,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Runtime feature gates for this target's source graph.
     target_compile_definitions(RawrXD-Win32IDE PRIVATE
+        UNICODE
+        _UNICODE
         RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
         RAWR_HAS_SOVEREIGN_ENGINES=0
         RAWR_HAS_RAWR_INFERENCE=0
@@ -7260,190 +7304,87 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
 endif()
 
 message(STATUS "========================================")
-=======
-project(RawrXD-Native VERSION 14.2.0 LANGUAGES CXX ASM_MASM)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# Force Release to avoid Debug /Od /RTC1 conflicts with our /O2
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+# =============================================================================
+# Native Toolchain Build (separate project)
+# =============================================================================
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_native.txt")
+    # Native build is configured separately via CMakeLists_native.txt
+    message(STATUS "[Native] Separate native toolchain build available")
 endif()
 
-# Strip any residual debug runtime checks that conflict with /O2
-string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/Od" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-string(REPLACE "-MDd" "-MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+# =============================================================================
+# MASM Components
+# =============================================================================
 
-# No find_package calls - pure native only
-# No Qt, no Vulkan, no ggml, no external deps
-add_definitions(-DRAWRXD_NO_VULKAN)
+# =============================================================================
+# SoloIDE — Sovereign Agentic Desktop Environment
+# =============================================================================
+set(SOLOIDE_SOURCES
+    src/soloide/main.cpp
+    src/soloide/Core/Bus.cpp
+    src/soloide/UI/SoloIDE.cpp
+    src/soloide/UI/Panels/EditorPanel.cpp
+    src/soloide/UI/Panels/ChatPanel.cpp
+    src/soloide/UI/Panels/DebugPanel.cpp
+    src/soloide/UI/Panels/TerminalPanel.cpp
+    src/soloide/UI/Panels/ProjectPanel.cpp
+    src/soloide/UI/Panels/StatusPanel.cpp
+    src/soloide/AI/CompletionEngine.cpp
+    src/soloide/AI/AdvancedCodingAgent.cpp
+    src/soloide/AI/MultiModalModelRouter.cpp
+    src/soloide/Debug/DAPClient.cpp
+    src/soloide/LSP/LSPClient.cpp
+)
 
-# Compiler flags for native performance
-if(MSVC)
-    # C/C++ compile flags only (excludes ASM_MASM)
-    add_compile_options(
-        $<$<COMPILE_LANGUAGE:CXX,C>:/O2>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/Ob2>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/Oi>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/Ot>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/GL>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/arch:AVX2>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/fp:fast>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/W4>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/WX->
-        $<$<COMPILE_LANGUAGE:CXX,C>:/Zc:__cplusplus>
-        $<$<COMPILE_LANGUAGE:CXX,C>:/permissive->
-        $<$<COMPILE_LANGUAGE:CXX,C>:/Zc:inline>
-    )
+set(SOLOIDE_HEADERS
+    src/soloide/Core/Bus.hpp
+    src/soloide/UI/SoloIDE.hpp
+    src/soloide/UI/Panels/EditorPanel.hpp
+    src/soloide/UI/Panels/ChatPanel.hpp
+    src/soloide/UI/Panels/DebugPanel.hpp
+    src/soloide/UI/Panels/TerminalPanel.hpp
+    src/soloide/UI/Panels/ProjectPanel.hpp
+    src/soloide/UI/Panels/StatusPanel.hpp
+    src/soloide/AI/CompletionEngine.hpp
+    src/soloide/AI/AdvancedCodingAgent.hpp
+    src/soloide/AI/MultiModalModelRouter.hpp
+    src/soloide/Debug/DAPClient.hpp
+    src/soloide/LSP/LSPClient.hpp
+)
 
-    # Windows SDK include paths for cl.exe (UCRT, UM, Shared)
-    set(WIN_SDK_VERSION "10.0.22621.0")
-    set(WIN_SDK_BASE "C:/Program Files (x86)/Windows Kits/10")
-    set(SDK_SHARED_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/shared")
-    set(SDK_UM_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/um")
-    set(SDK_UCRT_INC "${WIN_SDK_BASE}/Include/${WIN_SDK_VERSION}/ucrt")
-    set(SDK_UM_LIB "${WIN_SDK_BASE}/Lib/${WIN_SDK_VERSION}/um/x64")
-    set(SDK_UCRT_LIB "${WIN_SDK_BASE}/Lib/${WIN_SDK_VERSION}/ucrt/x64")
-
-    # MSVC toolchain include (stdint.h, cstdint, etc.)
-    file(GLOB MSVC_VERSIONS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/*")
-    list(SORT MSVC_VERSIONS ORDER DESCENDING)
-    list(GET MSVC_VERSIONS 0 MSVC_LATEST)
-    set(MSVC_INC "${MSVC_LATEST}/include")
-    set(MSVC_LIB "${MSVC_LATEST}/lib/x64")
-
-    include_directories(SYSTEM "${MSVC_INC}" "${SDK_UCRT_INC}" "${SDK_UM_INC}" "${SDK_SHARED_INC}")
-    link_directories("${MSVC_LIB}" "${SDK_UM_LIB}" "${SDK_UCRT_LIB}")
-
-    # MASM-specific flags (ml64 only understands /c, /Fo, /nologo, /W, /Zi)
-    # Robust MASM assembler detection - integrates with CI and local builds
-    if(NOT DEFINED CMAKE_ASM_MASM_COMPILER OR NOT EXISTS "${CMAKE_ASM_MASM_COMPILER}")
-        set(_ML64_CANDIDATES)
-
-        # GitHub Actions / Developer Command Prompt environment
-        if(DEFINED ENV{VCToolsInstallDir})
-            list(APPEND _ML64_CANDIDATES
-                "$ENV{VCToolsInstallDir}/bin/Hostx64/x64/ml64.exe"
-                "$ENV{VCToolsInstallDir}/bin/Hostx86/x64/ml64.exe"
-            )
-        endif()
-
-        # Existing local MSVC root detection
-        if(DEFINED _MSVC_ROOT)
-            list(APPEND _ML64_CANDIDATES
-                "${_MSVC_ROOT}/bin/Hostx64/x64/ml64.exe"
-                "${_MSVC_ROOT}/bin/Hostx86/x64/ml64.exe"
-            )
-        endif()
-
-        # Search PATH as final fallback
-        find_program(ML64_EXECUTABLE ml64.exe)
-        if(ML64_EXECUTABLE)
-            list(APPEND _ML64_CANDIDATES "${ML64_EXECUTABLE}")
-        endif()
-
-        foreach(_ML64 ${_ML64_CANDIDATES})
-            if(EXISTS "${_ML64}")
-                set(CMAKE_ASM_MASM_COMPILER "${_ML64}"
-                    CACHE FILEPATH "MASM64 assembler" FORCE)
-                break()
-            endif()
-        endforeach()
-
-        if(NOT CMAKE_ASM_MASM_COMPILER)
-            message(FATAL_ERROR
-                "MASM ml64.exe not found. Install MSVC C++ build tools with MASM support.")
-        endif()
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
+    # Find Qt6 — try qmake-based detection first, then manual paths
+    find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
+    if(NOT Qt6_FOUND)
+        find_package(Qt6 COMPONENTS Widgets Network Core
+            PATHS
+                "C:/Qt/6.7.3/msvc2022_64"
+                "C:/Qt/6.8.0/msvc2022_64"
+                "C:/Qt/6.7.0/msvc2022_64"
+                "C:/Qt/6.6.0/msvc2022_64"
+                "C:/Qt/6.5.0/msvc2022_64"
+                "D:/Qt/6.8.0/msvc2022_64"
+                "D:/Qt/6.7.0/msvc2022_64"
+            NO_DEFAULT_PATH
+        )
     endif()
 
-    message(STATUS "MASM assembler: ${CMAKE_ASM_MASM_COMPILER}")
-    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /nologo /Zi /I\"${SDK_SHARED_INC}\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/src\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/include\"")
-
-    add_link_options(
-        /LTCG                          # Link-time code generation
-        /OPT:REF /OPT:ICF              # Remove dead code, fold identical
-        /SUBSYSTEM:CONSOLE             # Console app for debugging
-    )
+    if(Qt6_FOUND)
+        add_executable(RawrXD-SoloIDE WIN32 ${SOLOIDE_SOURCES} ${SOLOIDE_HEADERS})
+        target_link_libraries(RawrXD-SoloIDE PRIVATE
+            Qt6::Widgets Qt6::Network Qt6::Core
+        )
+        target_include_directories(RawrXD-SoloIDE PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/soloide
+        )
+        target_compile_features(RawrXD-SoloIDE PRIVATE cxx_std_20)
+        set_target_properties(RawrXD-SoloIDE PROPERTIES
+            OUTPUT_NAME "RawrXD-SoloIDE"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
+    else()
+        message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+    endif()
 endif()
-
-# Native source files only
-set(NATIVE_SOURCES
-    # Core native loader
-    native/gguf_native_loader.cpp
-
-    # Observability
-    telemetry/async_logger.cpp
-    telemetry/metrics_server.cpp
-
-    # Toolchain integration (MASM64 assembler + linker → IDE)
-    src/compiler/toolchain_bridge.cpp
-    src/compiler/toolchain_bridge_session.cpp
-    src/diagnostics_provider.cpp
-    src/build_task_provider.cpp
-    src/toolchain_integration.cpp
-
-    # Win32IDE Network components
-    ../Win32IDE_NetworkPanel.cpp
-    # Bridge.cpp is #included by NetworkPanel.cpp, not compiled separately
-
-    # Utils - no .cpp files, just headers
-    # config/production_config.hpp - header only
-)
-
-# Include MASM components
-add_subdirectory(src/masm)
-
-# MASM assembly kernels (syntax fixed for ml64)
-set(ASM_SOURCES
-    native_inference/native_q4_kernels.asm
-    RawrXD_NetworkRelay.asm
-    RawrXD_NetworkSniper.asm
-    RawrXD_P2PRelay.asm
-)
-
-set_source_files_properties(${ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
-
-# Create library for native components
-add_library(RawrXD_Native STATIC ${NATIVE_SOURCES} ${ASM_SOURCES})
-
-target_include_directories(RawrXD_Native PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/native
-    ${CMAKE_CURRENT_SOURCE_DIR}/telemetry
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/toolchain
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/win32app
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
-    ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/src/win32app
-    ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/include
-)
-
-# Windows native libs only (kernel32, user32, etc. - part of OS)
-target_link_libraries(RawrXD_Native PUBLIC
-    kernel32
-    user32
-    gdi32
-    advapi32
-    shell32
-    ole32
-    ws2_32          # Winsock for HTTP server
-    crypt32         # Cryptography for secure port tokens
-    shlwapi         # Toolchain bridge path utilities
-    masm_components  # MASM tensor engine
-)
-
-# Main executable
-add_executable(RawrXD-Native main_native.cpp)
-target_link_libraries(RawrXD-Native PRIVATE RawrXD_Native)
-
-# Tests - temporarily disabled
-# enable_testing()
-# add_subdirectory(tests/native)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

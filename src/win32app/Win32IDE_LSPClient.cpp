@@ -1261,7 +1261,7 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
     // Push to ProblemsAggregator for unified panel integration
     {
         auto& agg = RawrXD::ProblemsAggregator::instance();
-        agg.clear("LSP", filePath);  // Clear previous LSP diagnostics for this file
+        agg.clear("LSP");  // Clear previous LSP diagnostics
         for (const auto& d : diagnostics)
         {
             int sev = (d.severity == 1) ? 1 : (d.severity == 2) ? 2 : 3;  // LSP: 1=Error, 2=Warning, 3=Info, 4=Hint
@@ -1336,7 +1336,7 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
     for (const auto& d : diags)
     {
         AnnotationSeverity sev = AnnotationSeverity::Info;
-        RawrXD::UI::DiagnosticSeverity overlaySev = RawrXD::UI::DiagnosticSeverity::Info;
+        RawrXD::UI::DiagnosticSeverity overlaySev = RawrXD::UI::DiagnosticSeverity::Information;
         switch (d.severity)
         {
             case 1:
@@ -1376,7 +1376,6 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
             item.severity = overlaySev;
             item.message = msg;
             item.code = d.code;
-            item.source = d.source.empty() ? "lsp" : d.source;
             item.isActive = true;
             m_lspDiagnosticOverlay->AddAnnotation(item);
         }

@@ -47,19 +47,11 @@ struct ConflictAnalysis {
     uint32_t agentA = 0;
     uint32_t agentB = 0;
     std::string resourceInConflict;
-<<<<<<< HEAD
     std::vector<std::string> affectedResources;
     std::vector<FileDiff> fileDiffs;
     std::string baseVersion;
     std::string agentAVersion;
     std::string agentBVersion;
-=======
-    std::vector<FileDiff> fileDiffs;
-    // content buffers for memory-based resolution
-    std::string contentA;
-    std::string contentB;
-    std::string baseContent; 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     float severityScore = 0.0f;  // 0.0 (minor) to 1.0 (critical)
     bool isMergeable = false;    // Can automatic merge succeed?
     std::string recommendedResolution;
@@ -87,12 +79,6 @@ public:
     bool preventConflictByLocking(uint32_t agentId, const std::string& resourcePath,
                                  uint32_t lockTimeoutSeconds);
     bool releaseResourceLock(uint32_t agentId, const std::string& resourcePath);
-<<<<<<< HEAD
-=======
-    
-    // Register conflict details allow analysis (NEW)
-    void registerConflict(uint64_t conflictId, const ConflictAnalysis& details);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // Statistics
     struct ConflictStats {
@@ -124,7 +110,6 @@ private:
         bool isActive = false;
     };
 
-<<<<<<< HEAD
     struct ConflictRecordInternal {
         uint32_t agentA = 0;
         uint32_t agentB = 0;
@@ -159,12 +144,6 @@ private:
     uint64_t escalatedToHumanCount_ = 0;
     uint64_t mergeAttempts_ = 0;
     uint64_t mergeSuccesses_ = 0;
-=======
-    std::map<std::string, ResourceLock> resourceLocks_;
-    std::map<uint64_t, ConflictAnalysis> analysisCache_;
-
-    uint64_t resolvedConflictCount_ = 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     float totalConflictSeverity_ = 0.0f;
 };
 

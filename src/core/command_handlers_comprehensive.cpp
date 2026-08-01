@@ -1020,6 +1020,10 @@ CommandResult handleAIRefactor(const CommandContext& ctx) {
     return {0, "Refactoring complete", nullptr};
 }
 
+CommandResult handleAIStopGeneration(const CommandContext& ctx) {
+    return {0, "Generation stopped", nullptr};
+}
+
 // Autonomous Agent handler
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
     return {0, "Autonomous agent activated", nullptr};

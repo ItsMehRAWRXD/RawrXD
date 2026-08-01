@@ -1,0 +1,5 @@
+select vdisk file="D:\rawrxd\tools\bios_flash\bios_flash.vhd"
+attach vdisk
+list disk
+list volume
+exit

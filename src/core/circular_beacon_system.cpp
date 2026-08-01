@@ -15,6 +15,7 @@
 #include "../../include/circular_beacon_system.h"
 #include <cstdio>
 #include <algorithm>
+#include "vulkan_compute.h"
 
 namespace RawrXD {
 
@@ -545,3 +546,4 @@ extern "C" int rawrxd_beacon_count() {
 }
 
 } // namespace RawrXD
+

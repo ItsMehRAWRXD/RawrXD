@@ -7,6 +7,7 @@
 #include <richedit.h>
 #include <sstream>
 #include <regex>
+#include <algorithm>
 
 namespace RawrXD::IDE {
 
@@ -334,9 +335,9 @@ COLORREF ANSIColorParser::Get256Color(int index) const {
 
 COLORREF ANSIColorParser::GetTrueColor(int r, int g, int b) const {
     return RGB(
-        static_cast<BYTE>(max(0, min(255, r))),
-        static_cast<BYTE>(max(0, min(255, g))),
-        static_cast<BYTE>(max(0, min(255, b)))
+        static_cast<BYTE>(std::max(0, std::min(255, r))),
+        static_cast<BYTE>(std::max(0, std::min(255, g))),
+        static_cast<BYTE>(std::max(0, std::min(255, b)))
     );
 }
 

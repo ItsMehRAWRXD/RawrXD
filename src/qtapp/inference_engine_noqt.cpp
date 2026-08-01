@@ -9,6 +9,7 @@
 #include <numeric>
 #include <iostream>
 #include <sstream>
+#include "gguf_loader.h"
 
 InferenceEngine::InferenceEngine(const std::string& ggufPath)
     : m_loader(nullptr) {
@@ -311,3 +312,4 @@ const InferenceEngine::VulkanContext* InferenceEngine::getGPUContext() const {
     // Return GPU context from transformer if available
     return nullptr;
 }
+

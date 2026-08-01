@@ -1,0 +1,12 @@
+# CMake generated Testfile for 
+# Source directory: D:/rawrxd
+# Build directory: D:/rawrxd/build2
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+subdirs("src/reverse_engineering")
+subdirs("src/ceo")
+subdirs("src/repository")
+subdirs("tests")
+subdirs("src/tools")
+subdirs("src/validation")

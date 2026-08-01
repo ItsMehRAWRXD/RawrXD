@@ -29,7 +29,6 @@ bool EnhancedLoaderV1_1::InitializeIORing(const std::string& filepath) {
     }
 
     // Register active zones for DMA bypass
-<<<<<<< HEAD
     // Allocate a large contiguous ring buffer for pre-registered I/O
     // This enables zero-copy DMA transfers directly into our address space
     constexpr size_t RING_SIZE = 64 * 1024 * 1024; // 64 MB ring buffer
@@ -46,13 +45,6 @@ bool EnhancedLoaderV1_1::InitializeIORing(const std::string& filepath) {
             VirtualFree(ring_ptr, 0, MEM_RELEASE);
         }
     }
-=======
-    // For now, we'll register the internal zone data buffers if they are already allocated
-    // In a final v1.1.0, we would use a dedicated large ring buffer
-    
-    // Placeholder for actual buffer registration logic
-    // io_backend_->RegisterBuffers(ring_ptr, ring_size, count);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     use_ioring_ = true;
     

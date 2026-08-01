@@ -40,24 +40,15 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
         
         // Measure load time
         auto load_start = std::chrono::high_resolution_clock::now();
-<<<<<<< HEAD
         if (!engine.LoadModel(model_path)) {
             std::cerr << "Failed to load model: " << model_path << std::endl;
-=======
-        if (!engine.loadModel(std::string::fromStdString(model_path))) {
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return result;
         }
         auto load_end = std::chrono::high_resolution_clock::now();
         result.load_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(load_end - load_start).count();
 
         // Simple prompt
-<<<<<<< HEAD
         std::vector<int32_t> prompt = engine.Tokenize(std::string("The meaning of life is"));
-=======
-        std::vector<int32_t> prompt = engine.tokenize(std::string("The meaning of life is"));
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         // Measure inference time
         auto inference_start = std::chrono::high_resolution_clock::now();
@@ -105,12 +96,7 @@ int main(int argc, char* argv[]) {
     output["tokens_per_sec"] = static_cast<double>(result.tokens_per_sec);
     output["avg_latency_ms"] = static_cast<double>(result.avg_latency_ms);
 
-<<<<<<< HEAD
     std::cout << output.dump();
-=======
-    Json::StreamWriterBuilder writer;
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     return result.success ? 0 : 1;
 }

@@ -154,7 +154,6 @@ public:
 class ActivationPruner {
 public:
     struct PruneConfig {
-<<<<<<< HEAD
         float magnitude_threshold;            // Prune values < threshold
         float sparsity_target;               // Target sparsity ratio
         bool use_entropy;                    // Use entropy weighting
@@ -168,12 +167,6 @@ public:
               sparsity_target(sparsityTarget),
               use_entropy(useEntropy),
               use_gradient(useGradient) {}
-=======
-        float magnitude_threshold = 0.01f;   // Prune values < threshold
-        float sparsity_target = 0.9f;        // Target 90% sparsity
-        bool use_entropy = true;             // Use entropy weighting
-        bool use_gradient = false;           // Use gradient importance (requires backprop)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     };
 
     struct SparseActivation {
@@ -192,11 +185,7 @@ public:
      * 4. Store only values + indices
      */
     static SparseActivation prune(const float* activation, uint32_t numel, 
-<<<<<<< HEAD
                                   PruneConfig cfg = PruneConfig{}) {
-=======
-                                  const PruneConfig& cfg = {}) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         SparseActivation result;
         result.total_size = numel;
 
@@ -357,17 +346,10 @@ public:
             }
 
             // Quantize
-<<<<<<< HEAD
             auto [q_keys, k_params] = QuantizationCodec::quantizeChannelWise(
                 head_keys.data(), head_numel, 1
             );
             auto [q_values, v_params] = QuantizationCodec::quantizeChannelWise(
-=======
-            auto [, k_params] = QuantizationCodec::quantizeChannelWise(
-                head_keys.data(), head_numel, 1
-            );
-            auto [, v_params] = QuantizationCodec::quantizeChannelWise(
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 head_values.data(), head_numel, 1
             );
 
@@ -376,17 +358,10 @@ public:
 
             // Store quantized data
             std::memcpy(&cache.key_data[h * head_numel],
-<<<<<<< HEAD
                        q_keys.data(),
                        head_numel);
             std::memcpy(&cache.value_data[h * head_numel],
                        q_values.data(),
-=======
-                       .data(),
-                       head_numel);
-            std::memcpy(&cache.value_data[h * head_numel],
-                       .data(),
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                        head_numel);
         }
 
@@ -411,7 +386,6 @@ public:
             uint32_t head_numel = window_size * head_dim;
 
             // Extract quantized data for this head
-<<<<<<< HEAD
             std::vector<int8_t> q_keys(head_numel);
             std::vector<int8_t> q_values(head_numel);
 
@@ -419,15 +393,6 @@ public:
                        &compressed.key_data[h * head_numel],
                        head_numel);
             std::memcpy(q_values.data(),
-=======
-            std::vector<int8_t> (head_numel);
-            std::vector<int8_t> (head_numel);
-
-            std::memcpy(.data(),
-                       &compressed.key_data[h * head_numel],
-                       head_numel);
-            std::memcpy(.data(),
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                        &compressed.value_data[h * head_numel],
                        head_numel);
 
@@ -438,13 +403,8 @@ public:
             k_params.num_channels = 1;
             k_params.num_elements_per_channel = head_numel;
 
-<<<<<<< HEAD
             auto deq_keys = QuantizationCodec::dequantizeChannelWise(q_keys.data(), k_params);
             auto deq_values = QuantizationCodec::dequantizeChannelWise(q_values.data(), k_params);
-=======
-            auto deq_keys = QuantizationCodec::dequantizeChannelWise(.data(), k_params);
-            auto deq_values = QuantizationCodec::dequantizeChannelWise(.data(), k_params);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
             // Write back to output buffer
             for (uint32_t i = 0; i < window_size; ++i) {
@@ -494,7 +454,6 @@ enum class CompressionTier {
 inline ActivationPruner::PruneConfig getCompressionConfig(CompressionTier tier) {
     switch (tier) {
         case CompressionTier::TIER_AGGRESSIVE:
-<<<<<<< HEAD
             return ActivationPruner::PruneConfig{
                 0.001f,  // Keep 99.5%
                 0.70f,   // 70% sparse
@@ -524,37 +483,6 @@ inline ActivationPruner::PruneConfig getCompressionConfig(CompressionTier tier) 
             };
     }
     return ActivationPruner::PruneConfig{};
-=======
-            return {
-                .magnitude_threshold = 0.001f,  // Keep 99.5%
-                .sparsity_target = 0.70f,       // 70% sparse
-                .use_entropy = true,
-                .use_gradient = false
-            };
-        case CompressionTier::TIER_BALANCED:
-            return {
-                .magnitude_threshold = 0.005f,  // Keep 98%
-                .sparsity_target = 0.55f,       // 55% sparse
-                .use_entropy = true,
-                .use_gradient = false
-            };
-        case CompressionTier::TIER_FAST:
-            return {
-                .magnitude_threshold = 0.01f,   // Keep 95%
-                .sparsity_target = 0.35f,       // 35% sparse
-                .use_entropy = false,
-                .use_gradient = false
-            };
-        case CompressionTier::TIER_ULTRA_FAST:
-            return {
-                .magnitude_threshold = 0.05f,   // Keep 80%
-                .sparsity_target = 0.20f,       // 20% sparse
-                .use_entropy = false,
-                .use_gradient = false
-            };
-    }
-    return {};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace inference

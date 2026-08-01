@@ -43,6 +43,32 @@ if !errorlevel! neq 0 exit /b 1
 ml64 /c /Zi /W3 /nologo /Fo"%BUILD_DIR%\syntax_highlight.obj" "%ASM_DIR%\syntax_highlight.asm"
 if !errorlevel! neq 0 exit /b 1
 
+echo [BUILD] Assembling Eon-ASM compiler modules...
+if exist "C:\Users\HiH8e\Eon-ASM\compilers\eon_lexer.asm" (
+    ml64 /c /Zi /W3 /nologo /I"C:\Users\HiH8e\Eon-ASM" /I"C:\Users\HiH8e\Eon-ASM\compilers" /Fo"%BUILD_DIR%\eon_lexer.obj" "C:\Users\HiH8e\Eon-ASM\compilers\eon_lexer.asm"
+    if !errorlevel! equ 0 (
+        echo   [OK] eon_lexer.obj
+    ) else (
+        echo   [SKIP] eon_lexer.asm (MASM syntax may differ from NASM)
+    )
+    
+    ml64 /c /Zi /W3 /nologo /I"C:\Users\HiH8e\Eon-ASM" /I"C:\Users\HiH8e\Eon-ASM\compilers" /Fo"%BUILD_DIR%\eon_template_engine.obj" "C:\Users\HiH8e\Eon-ASM\compilers\eon_template_engine.asm"
+    if !errorlevel! equ 0 (
+        echo   [OK] eon_template_engine.obj
+    ) else (
+        echo   [SKIP] eon_template_engine.asm (MASM syntax may differ from NASM)
+    )
+    
+    ml64 /c /Zi /W3 /nologo /I"C:\Users\HiH8e\Eon-ASM" /I"C:\Users\HiH8e\Eon-ASM\compilers" /Fo"%BUILD_DIR%\eon_template_generator.obj" "C:\Users\HiH8e\Eon-ASM\compilers\eon_template_generator.asm"
+    if !errorlevel! equ 0 (
+        echo   [OK] eon_template_generator.obj
+    ) else (
+        echo   [SKIP] eon_template_generator.asm (MASM syntax may differ from NASM)
+    )
+) else (
+    echo   [SKIP] Eon-ASM not found at C:\Users\HiH8e\Eon-ASM
+)
+
 echo [BUILD] Linking unified DLL...
 
 :: 4. Link (Unified) with /MT for static CRT

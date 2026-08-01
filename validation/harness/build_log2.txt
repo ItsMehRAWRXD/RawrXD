@@ -1,0 +1,13 @@
+HardwareValidator.cpp: In member function 'bool HardwareValidator::Initialize()':
+HardwareValidator.cpp:97:13: warning: passing NULL to non-pointer argument 5 of 'virtual HRESULT IWbemLocator::ConnectServer(BSTR, BSTR, BSTR, BSTR, LONG, BSTR, IWbemContext*, IWbemServices**)' [-Wconversion-null]
+   97 |             NULL,
+      |             ^~~~
+In file included from C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/wbemidl.h:13,
+                 from HardwareValidator.cpp:7:
+C:/ProgramData/mingw64/mingw64/x86_64-w64-mingw32/include/wbemcli.h:1538:14: note: declared here
+ 1538 |         LONG lSecurityFlags,
+      |         ~~~~~^~~~~~~~~~~~~~
+HardwareValidator.cpp: In member function 'HardwareValidator::ValidationResult HardwareValidator::ValidateHardware()':
+HardwareValidator.cpp:156:13: error: 'bstr_t' was not declared in this scope
+  156 |             bstr_t("WQL"),
+      |             ^~~~~~

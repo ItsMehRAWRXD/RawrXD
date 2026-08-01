@@ -13,17 +13,10 @@
 #include <string>
 #include <thread>
 #include <vector>
-<<<<<<< HEAD
 #include <nlohmann/json.hpp>
 
 class GGUFLoader;
 namespace RawrXD { class InferenceEngine; class CPUInferenceEngine; }
-=======
-#include "nlohmann/json.hpp"
-
-class GGUFLoader;
-namespace RawrXD { class CPUInferenceEngine; using InferenceEngine = CPUInferenceEngine; }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 /**
  * @class ModelTrainer

@@ -16,6 +16,7 @@
 #include <iostream>
 #include <locale>
 #include <codecvt>
+#include "gguf_loader.h"
 
 // SentencePiece tokenizer — Phase 31 implementation complete
 
@@ -491,3 +492,4 @@ std::string SentencePieceTokenizer::decode(
     if (start == std::string::npos) return "";
     return result.substr(start, end - start + 1);
 }
+

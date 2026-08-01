@@ -14,6 +14,7 @@
 #include <vulkan/vulkan.h>
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
+#include "vulkan_compute.h"
 #endif
 
 namespace RawrXD {
@@ -689,3 +690,4 @@ VulkanComputeKernels& GetVulkanComputeKernels() {
 
 } // namespace Kernels
 } // namespace RawrXD
+

@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-//================================================================================
+=========================================================================
 // PHASE5_FOUNDATION.H - Orchestrator Public C++ API
 // Distributed consensus, self-healing, autotuning, metrics, gRPC
 //================================================================================
@@ -868,4 +867,4 @@ extern "C" {
 } // namespace Phase5
 
 #endif // PHASE5_FOUNDATION_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

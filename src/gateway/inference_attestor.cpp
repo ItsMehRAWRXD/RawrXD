@@ -326,9 +326,9 @@ std::optional<GatewayRequestAttestation> InferenceAttestor::BeginRequest(
         return std::nullopt;
     }
     
-    impl_>current_request_id_ = attestation.request_id;
-    impl_>current_request_ = attestation;
-    impl_>has_active_request_ = true;
+    impl_->current_request_id_ = attestation.request_id;
+    impl_->current_request_ = attestation;
+    impl_->has_active_request_ = true;
     
     return attestation;
 }
@@ -507,17 +507,17 @@ std::string InferenceAttestor::GenerateEvidenceJSON(
 }
 
 std::string InferenceAttestor::GetAttestationChainSummary() const {
-    if (!impl_>has_active_request_) {
+    if (!impl_->has_active_request_) {
         return "No active attestation";
     }
     
     std::stringstream ss;
     ss << "VAL-063 Attestation Chain:\n";
-    ss << "  Request ID: " << impl_>current_request_.request_id << "\n";
-    ss << "  Input Hash: " << impl_>current_request_.input_sha256.substr(0, 16) << "...\n";
-    ss << "  Model Hash: " << impl_>current_request_.model_manifest_sha256.substr(0, 16) << "...\n";
-    ss << "  Seed: " << impl_>current_request_.seed << "\n";
-    ss << "  Received: " << NanosecondsToISO8601(impl_>current_request_.timestamp_received) << "\n";
+    ss << "  Request ID: " << impl_->current_request_.request_id << "\n";
+    ss << "  Input Hash: " << impl_->current_request_.input_sha256.substr(0, 16) << "...\n";
+    ss << "  Model Hash: " << impl_->current_request_.model_manifest_sha256.substr(0, 16) << "...\n";
+    ss << "  Seed: " << impl_->current_request_.seed << "\n";
+    ss << "  Received: " << NanosecondsToISO8601(impl_->current_request_.timestamp_received) << "\n";
     return ss.str();
 }
 

@@ -2257,6 +2257,7 @@ CommandResult handleRECFGAnalysis(const CommandContext& ctx) {
 // ============================================================================
 
 #include <mmsystem.h>
+#include "gguf_loader.h"
 #pragma comment(lib, "winmm.lib")
 
 static struct VoiceState {
@@ -3528,3 +3529,4 @@ CommandResult handleGenerateIDE(const CommandContext& ctx) {
     ctx.output(oss.str().c_str());
     return CommandResult::ok("cli.generateIDE");
 }
+

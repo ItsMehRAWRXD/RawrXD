@@ -102,7 +102,6 @@ int main(int argc, char* argv[]) {
             resultFile << "Passed: " << passed << "\n";
             resultFile << "Failed: " << failed << "\n";
             resultFile.close();
-<<<<<<< HEAD
             
             std::cout << "\nDetailed results written to: " << resultPath << "\n";
             LOG_INFO("Test results written to file");
@@ -112,13 +111,6 @@ int main(int argc, char* argv[]) {
         
         LOG_INFO("Test runner completed");
         
-=======
-
-
-        }
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // If not headless, keep window open for manual inspection
         if (!headless) {
             

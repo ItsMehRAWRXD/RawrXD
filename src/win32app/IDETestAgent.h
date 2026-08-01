@@ -112,15 +112,9 @@ private:
     int m_testsPassed;
     int m_testsFailed;
 
-<<<<<<< HEAD
     // Test helper - no exceptions, uses PatchResult pattern
     void runTest(const std::string& name, std::function<PatchResult()> testFunc) {
         LOG_INFO("Running test: " + name);
-=======
-    // Test helper
-    void runTest(const std::string& name, std::function<void()> testFunc) {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         auto start = std::chrono::high_resolution_clock::now();
         
         PatchResult result = testFunc();
@@ -130,31 +124,12 @@ private:
         if (result.success) {
             m_results.push_back({name, true, "", durationMs, 0});
             m_testsPassed++;
-<<<<<<< HEAD
             LOG_INFO("✓ PASSED: " + name + " (" + std::to_string(durationMs) + "ms)");
         } else {
             std::string error = std::string(result.detail ? result.detail : "Unknown error");
             m_results.push_back({name, false, error, durationMs, result.errorCode});
             m_testsFailed++;
             LOG_ERROR("✗ FAILED: " + name + " - " + error);
-=======
-
-        } catch (const std::exception& e) {
-            auto end = std::chrono::high_resolution_clock::now();
-            double durationMs = std::chrono::duration<double, std::milli>(end - start).count();
-            
-            std::string error = std::string(e.what());
-            m_results.push_back({name, false, error, durationMs});
-            m_testsFailed++;
-
-        } catch (...) {
-            auto end = std::chrono::high_resolution_clock::now();
-            double durationMs = std::chrono::duration<double, std::milli>(end - start).count();
-            
-            m_results.push_back({name, false, "Unknown exception", durationMs});
-            m_testsFailed++;
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         m_testsRun++;
     }
@@ -165,12 +140,8 @@ private:
             if (!m_ide->getMainWindow()) {
                 return PatchResult::error("Main window handle is null");
             }
-<<<<<<< HEAD
             LOG_DEBUG("Main window handle validated");
             return PatchResult::ok("Main window validated");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
@@ -231,12 +202,8 @@ private:
             if (!statusBar) {
                 return PatchResult::error("Status bar not found");
             }
-<<<<<<< HEAD
             LOG_DEBUG("Status bar validated");
             return PatchResult::ok("Status bar found");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
@@ -250,26 +217,16 @@ private:
     }
 
     void testActivityBar() {
-<<<<<<< HEAD
         runTest("Activity Bar", [this]() -> PatchResult {
             LOG_DEBUG("Testing activity bar (VS Code style icon bar)");
             return PatchResult::ok("Activity bar checked");
-=======
-        runTest("Activity Bar", [this]() {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
     void testSecondarySidebar() {
-<<<<<<< HEAD
         runTest("Secondary Sidebar (Copilot)", [this]() -> PatchResult {
             LOG_DEBUG("Testing secondary sidebar for AI/Copilot");
             return PatchResult::ok("Secondary sidebar checked");
-=======
-        runTest("Secondary Sidebar (Copilot)", [this]() {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
@@ -281,12 +238,8 @@ private:
             if (!editor) {
                 return PatchResult::error("Editor control not found");
             }
-<<<<<<< HEAD
             LOG_DEBUG("Editor control validated");
             return PatchResult::ok("Editor control found");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
@@ -322,24 +275,15 @@ private:
             
             CHARRANGE checkRange{};
             SendMessage(editor, EM_EXGETSEL, 0, (LPARAM)&checkRange);
-<<<<<<< HEAD
             
             LOG_DEBUG("Selection set: " + std::to_string(checkRange.cpMin) + " to " + std::to_string(checkRange.cpMax));
             return PatchResult::ok("Editor selection test completed");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         });
     }
 
     void testSyntaxHighlighting() {
-<<<<<<< HEAD
         runTest("Syntax Highlighting", [this]() -> PatchResult {
             LOG_DEBUG("Testing syntax highlighting system");
-=======
-        runTest("Syntax Highlighting", [this]() {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             // Syntax highlighting is visual - log that system exists
             return PatchResult::ok("Syntax highlighting checked");
         });
@@ -347,13 +291,8 @@ private:
 
     // File operation tests
     void testFileOperations() {
-<<<<<<< HEAD
         runTest("File Operations", [this]() -> PatchResult {
             LOG_DEBUG("Testing file operation system");
-=======
-        runTest("File Operations", [this]() {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             // File ops tested through actual file loading later
             return PatchResult::ok("File operations checked");
         });

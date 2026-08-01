@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-
-namespace ig {
-
-// ======================== Color Space & Utils ========================
+================= Color Space & Utils ========================
 
 static inline float clamp01(float x) { 
     return std::max(0.0f, std::min(1.0f, x)); 
@@ -196,4 +188,4 @@ static inline Color blend_screen(const Color& src, const Color& dst) {
 }
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

@@ -85,13 +85,13 @@ std::span<const std::size_t> SwarmPlanSliceIndex::indicesFor(std::uint32_t model
     return std::span<const std::size_t>(v.data(), v.size());
 }
 
-std::expected<void, SchedulerError> ISwarmMemoryBackend::prefetchPinRange(std::uint32_t modelIndex,
+bool ISwarmMemoryBackend::prefetchPinRange(std::uint32_t modelIndex,
                                                                           std::uint64_t offset, std::uint64_t size)
 {
     (void)modelIndex;
     (void)offset;
     (void)size;
-    return {};
+    return true;
 }
 
 void ISwarmMemoryBackend::prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size)
@@ -184,13 +184,13 @@ static void appendJsonEscaped(std::string& o, const std::string& s)
 }
 
 /// Validates indices, then stable dedupe: first occurrence order, one entry per distinct plan row.
-[[nodiscard]] std::expected<std::vector<std::size_t>, SchedulerError> dedupeValidatedPlanRowIndices(
+[[nodiscard]] RawrXD::Swarm::expected<std::vector<std::size_t>, SchedulerError> dedupeValidatedPlanRowIndices(
     const std::vector<ModelSlice>& plan, const std::span<const std::size_t> rows)
 {
     for (const std::size_t row : rows)
     {
         if (row >= plan.size())
-            return std::unexpected(SchedulerError::InvalidArgument);
+            return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
     }
     std::vector<std::size_t> out;
     out.reserve(rows.size());
@@ -324,18 +324,18 @@ bool LayerProximityPrefetchQueue::containsSliceId(const ModelSliceId& id) const
 // ---------------------------------------------------------------------------
 RawrXDModelLoaderMemoryBackend::RawrXDModelLoaderMemoryBackend(RawrXDModelLoader* loader) : m_loader(loader) {}
 
-std::expected<void, SchedulerError> RawrXDModelLoaderMemoryBackend::pinRange(std::uint32_t modelIndex,
+RawrXD::Swarm::expected<void, SchedulerError> RawrXDModelLoaderMemoryBackend::pinRange(std::uint32_t modelIndex,
                                                                              std::uint64_t offset, std::uint64_t size)
 {
     if (!m_loader)
-        return std::unexpected(SchedulerError::BackendUnavailable);
+        return RawrXD::Swarm::unexpected(SchedulerError::BackendUnavailable);
     if (modelIndex != 0)
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
     if (size == 0)
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
 #if SIZE_MAX < UINT64_MAX
     if (size > static_cast<std::uint64_t>(SIZE_MAX))
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
 #endif
     const std::size_t sz = static_cast<std::size_t>(size);
 
@@ -370,7 +370,7 @@ std::expected<void, SchedulerError> RawrXDModelLoaderMemoryBackend::pinRange(std
     {
         RawrXD::Logging::Logger::instance().error(std::string("[Swarm] MapWindow failed offset=") +
                                                   std::to_string(offset) + " size=" + std::to_string(size));
-        return std::unexpected(SchedulerError::PinFailed);
+        return RawrXD::Swarm::unexpected(SchedulerError::PinFailed);
     }
     m_loader->markComputeRangeInUse(offset, size);
     if (m_prefetchPinned && !m_loader->HasActivePrefetchMapping())
@@ -393,29 +393,29 @@ void RawrXDModelLoaderMemoryBackend::unpinRange(std::uint32_t modelIndex, std::u
     m_pinned = false;
 }
 
-std::expected<void, SchedulerError> RawrXDModelLoaderMemoryBackend::prefetchPinRange(std::uint32_t modelIndex,
+bool RawrXDModelLoaderMemoryBackend::prefetchPinRange(std::uint32_t modelIndex,
                                                                                      std::uint64_t offset,
                                                                                      std::uint64_t size)
 {
     if (!m_loader)
-        return std::unexpected(SchedulerError::BackendUnavailable);
+        return false;
     if (modelIndex != 0)
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return false;
     if (size == 0)
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return false;
 #if SIZE_MAX < UINT64_MAX
     if (size > static_cast<std::uint64_t>(SIZE_MAX))
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return false;
 #endif
     const std::size_t sz = static_cast<std::size_t>(size);
 
     if (m_loader->ComputeMappingCovers(offset, size))
-        return {};
+        return true;
 
     if (m_prefetchPinned && m_prefetchModel == modelIndex && m_prefetchOffset == offset && m_prefetchSize == size)
     {
         if (m_loader->HasActivePrefetchMapping())
-            return {};
+            return true;
         m_prefetchPinned = false;
     }
 
@@ -424,13 +424,13 @@ std::expected<void, SchedulerError> RawrXDModelLoaderMemoryBackend::prefetchPinR
     {
         RawrXD::Logging::Logger::instance().error(std::string("[Swarm] MapPrefetchWindow failed offset=") +
                                                   std::to_string(offset) + " size=" + std::to_string(size));
-        return std::unexpected(SchedulerError::PinFailed);
+        return false;
     }
     m_prefetchPinned = true;
     m_prefetchModel = modelIndex;
     m_prefetchOffset = offset;
     m_prefetchSize = size;
-    return {};
+    return true;
 }
 
 void RawrXDModelLoaderMemoryBackend::prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset,
@@ -520,7 +520,7 @@ void SwarmScheduler::notifyPrefetchIoThread_()
     m_prefetchIoCv.notify_one();
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::configure(const SchedulerConfig& cfg)
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::configure(const SchedulerConfig& cfg)
 {
     std::lock_guard<std::mutex> lock(m_schedMutex);
     m_cfg = cfg;
@@ -528,13 +528,13 @@ std::expected<void, SchedulerError> SwarmScheduler::configure(const SchedulerCon
     return {};
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::submitPlan(std::vector<ModelSlice> plan)
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::submitPlan(std::vector<ModelSlice> plan)
 {
     std::lock_guard<std::mutex> lock(m_schedMutex);
     for (const auto& r : m_workingSet.residents())
     {
         if (r.holdCount != 0)
-            return std::unexpected(SchedulerError::PlanRowsHeld);
+            return RawrXD::Swarm::unexpected(SchedulerError::PlanRowsHeld);
     }
     m_plan = std::move(plan);
     m_planSliceIndex.rebuildFrom(m_plan);
@@ -748,7 +748,7 @@ std::string expertHeatmapSnapshotToJson(const ExpertHeatmapSnapshot& snap)
     return o;
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::pinPlanRow(const std::size_t planRowIndex)
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pinPlanRow(const std::size_t planRowIndex)
 {
     const std::array<std::size_t, 1> one = {planRowIndex};
     return pinPlanRows(std::span<const std::size_t>(one.data(), one.size()));
@@ -784,7 +784,7 @@ void SwarmScheduler::rollbackNewAdmits_(const std::vector<ModelSliceId>& ids)
     }
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUniqueLocked_(
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUniqueLocked_(
     const std::vector<std::size_t>& uniqueRows)
 {
     for (const std::size_t row : uniqueRows)
@@ -802,7 +802,7 @@ std::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUniqueLocked
         const ModelSlice& s = m_plan[row];
         if (isSliceResident(m_workingSet, s.id))
             continue;
-        const std::expected<void, SchedulerError> st = admitOrEvictAndPin_(s);
+        const RawrXD::Swarm::expected<void, SchedulerError> st = admitOrEvictAndPin_(s);
         if (!st)
         {
             rollbackNewAdmits_(newlyAdmitted);
@@ -826,7 +826,7 @@ std::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUniqueLocked
         if (!ok)
         {
             rollbackNewAdmits_(newlyAdmitted);
-            return std::unexpected(SchedulerError::SliceNotFound);
+            return RawrXD::Swarm::unexpected(SchedulerError::SliceNotFound);
         }
     }
 
@@ -848,13 +848,13 @@ std::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUniqueLocked
     return {};
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::pinPlanRows(const std::span<const std::size_t> planRowIndices)
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pinPlanRows(const std::span<const std::size_t> planRowIndices)
 {
     {
         std::lock_guard<std::mutex> lock(m_schedMutex);
         const auto uniqueRows = dedupeValidatedPlanRowIndices(m_plan, planRowIndices);
         if (!uniqueRows)
-            return std::unexpected(uniqueRows.error());
+            return RawrXD::Swarm::unexpected(uniqueRows.error());
         for (const std::size_t row : *uniqueRows)
             enqueueUrgentPrefetchUnlocked_(m_plan[row]);
         const auto st = pinPlanRowsBatchUniqueLocked_(*uniqueRows);
@@ -961,10 +961,10 @@ void SwarmScheduler::unpinAllResidents_()
     m_workingSet.clear();
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin_(const ModelSlice& slice)
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin_(const ModelSlice& slice)
 {
     if (slice.byteSize == 0 || !slice.id.valid())
-        return std::unexpected(SchedulerError::InvalidArgument);
+        return RawrXD::Swarm::unexpected(SchedulerError::InvalidArgument);
 
     if (isSliceResident(m_workingSet, slice.id))
         return {};
@@ -973,7 +973,7 @@ std::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin_(const Mo
     while (!admit)
     {
         if (!m_eviction)
-            return std::unexpected(SchedulerError::NotImplemented);
+            return RawrXD::Swarm::unexpected(SchedulerError::NotImplemented);
         auto vic = m_eviction->chooseVictim(m_workingSet.residents(), m_currentComputeLayer, slice.byteSize);
         if (!vic)
         {
@@ -991,7 +991,7 @@ std::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin_(const Mo
             }
             if (anyHeldFinished && !anyEvictableUnheld)
                 m_statEvictionRejectedInUse.fetch_add(1, std::memory_order_relaxed);
-            return std::unexpected(SchedulerError::WorkingSetFull);
+            return RawrXD::Swarm::unexpected(SchedulerError::WorkingSetFull);
         }
 
         const ResidentSlice* row = nullptr;
@@ -1004,13 +1004,13 @@ std::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin_(const Mo
             }
         }
         if (!row)
-            return std::unexpected(SchedulerError::SliceNotFound);
+            return RawrXD::Swarm::unexpected(SchedulerError::SliceNotFound);
 
         if (row->holdCount != 0)
         {
             m_statEvictStarvation.fetch_add(1, std::memory_order_relaxed);
             m_statEvictionRejectedInUse.fetch_add(1, std::memory_order_relaxed);
-            return std::unexpected(SchedulerError::WorkingSetFull);
+            return RawrXD::Swarm::unexpected(SchedulerError::WorkingSetFull);
         }
 
         if (m_backend)
@@ -1181,7 +1181,7 @@ void SwarmScheduler::enqueuePrefetchAroundHead_(std::uint32_t modelIndex, std::u
     }
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::executePlan()
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::executePlan()
 {
     stopPrefetchIoThread_();
 
@@ -1190,7 +1190,7 @@ std::expected<void, SchedulerError> SwarmScheduler::executePlan()
         for (const auto& r : m_workingSet.residents())
         {
             if (r.holdCount != 0)
-                return std::unexpected(SchedulerError::PlanRowsHeld);
+                return RawrXD::Swarm::unexpected(SchedulerError::PlanRowsHeld);
         }
         unpinAllResidents_();
         if (m_prefetch)
@@ -1231,7 +1231,7 @@ std::expected<void, SchedulerError> SwarmScheduler::executePlan()
     return {};
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::onLayerComputeStarted(std::uint32_t modelIndex,
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::onLayerComputeStarted(std::uint32_t modelIndex,
                                                                           std::uint32_t layerIndex)
 {
     {
@@ -1257,7 +1257,7 @@ void SwarmScheduler::onForwardTokenStepBegin()
     m_prefetchInFlightIds.clear();
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::onLayerComputeFinished(std::uint32_t modelIndex,
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::onLayerComputeFinished(std::uint32_t modelIndex,
                                                                            std::uint32_t layerIndex)
 {
     std::lock_guard<std::mutex> lock(m_schedMutex);
@@ -1265,7 +1265,7 @@ std::expected<void, SchedulerError> SwarmScheduler::onLayerComputeFinished(std::
     return pruneWorkingSetUnlocked_();
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::prefetchPump()
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::prefetchPump()
 {
     for (;;)
     {
@@ -1311,7 +1311,7 @@ std::expected<void, SchedulerError> SwarmScheduler::prefetchPump()
             continue;
         }
 
-        auto pf =
+        bool pf =
             m_backend->prefetchPinRange(item->slice.id.modelIndex, item->slice.fileOffsetBytes, item->slice.byteSize);
 
         {
@@ -1336,7 +1336,7 @@ std::expected<void, SchedulerError> SwarmScheduler::prefetchPump()
         if (pf)
             continue;
 
-        if (pf.error() == SchedulerError::NotImplemented)
+        // Prefetch failed - try admitting via regular path
         {
             std::lock_guard<std::mutex> lock(m_schedMutex);
             auto st = admitOrEvictAndPin_(item->slice);
@@ -1344,11 +1344,10 @@ std::expected<void, SchedulerError> SwarmScheduler::prefetchPump()
                 return st;
             continue;
         }
-        return pf;
     }
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSetUnlocked_()
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSetUnlocked_()
 {
     const std::size_t cap = m_workingSet.capacityBytes();
     if (cap == 0)
@@ -1357,7 +1356,7 @@ std::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSetUnlocked_()
         return {};
 
     if (!m_eviction)
-        return std::unexpected(SchedulerError::NotImplemented);
+        return RawrXD::Swarm::unexpected(SchedulerError::NotImplemented);
 
     auto vic = m_eviction->chooseVictim(m_workingSet.residents(), m_currentComputeLayer, 0);
     if (!vic)
@@ -1373,7 +1372,7 @@ std::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSetUnlocked_()
         }
     }
     if (!row)
-        return std::unexpected(SchedulerError::SliceNotFound);
+        return RawrXD::Swarm::unexpected(SchedulerError::SliceNotFound);
 
     if (!row->computeFinished)
         return {};
@@ -1416,7 +1415,7 @@ SwarmRuntimeStats SwarmScheduler::runtimeStats() const
             inUse};
 }
 
-std::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSet()
+RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pruneWorkingSet()
 {
     std::lock_guard<std::mutex> lock(m_schedMutex);
     return pruneWorkingSetUnlocked_();

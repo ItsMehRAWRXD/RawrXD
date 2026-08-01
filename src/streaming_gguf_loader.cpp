@@ -6,12 +6,9 @@
 #include <stdexcept>
 #include <iostream>
 
-<<<<<<< HEAD
 // Streaming GGUF loader — Phase 31 implementation complete
 
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 namespace RawrXD {
 
 StreamingGGUFLoader::StreamingGGUFLoader()
@@ -127,7 +124,6 @@ bool StreamingGGUFLoader::ParseMetadata() {
             return false;
         }
         
-<<<<<<< HEAD
         // ================================================================
         // GGUF v3 complete value type handling (all 13 types)
         // Ported from Qt streaming_gguf_loader_qt for full format support
@@ -321,74 +317,6 @@ bool StreamingGGUFLoader::ParseMetadata() {
                           << " for key: " << key << " at index " << i << std::endl;
                 return false;
             }
-=======
-        // Value type 1 = UTF-8 string
-        if (value_type == GGUFConstants::GGUF_VALUE_TYPE_STRING) {
-            if (!ReadString(value)) {
-                
-                return false;
-            }
-            metadata_.kv_pairs[key] = value;
-            
-            // Parse important metadata
-            if (key == GGUFConstants::META_GENERAL_ARCHITECTURE) {
-                if (value == "llama") metadata_.architecture_type = 1;
-            } else if (key == GGUFConstants::META_LLAMA_BLOCK_COUNT) {
-                metadata_.layer_count = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_CONTEXT_LENGTH) {
-                metadata_.context_length = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_EMBEDDING_LENGTH) {
-                metadata_.embedding_dim = std::stoul(value);
-            } else if (key == GGUFConstants::META_LLAMA_VOCAB_SIZE) {
-                metadata_.vocab_size = std::stoul(value);
-            }
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_UINT32) {  // uint32
-            uint32_t uint_val;
-            if (!ReadValue(uint_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(uint_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_INT32) {  // int32
-            int32_t int_val;
-            if (!ReadValue(int_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(int_val);
-        } else if (value_type == GGUFConstants::GGUF_VALUE_TYPE_FLOAT32) {  // float32
-            float float_val;
-            if (!ReadValue(float_val)) return false;
-            metadata_.kv_pairs[key] = std::to_string(float_val);
-        } else if (value_type == 7) { // Bool
-            bool bval;
-            if (!ReadValue(bval)) return false;
-            metadata_.kv_pairs[key] = bval ? "true" : "false";
-        } else if (value_type == 9) { // Array
-            // Read array type and length
-            uint32_t array_type;
-            uint64_t array_len;
-            if (!ReadValue(array_type) || !ReadValue(array_len)) return false;
-            
-            // Handle tokenizer vocabulary (array of strings)
-            if (key == "tokenizer.ggml.tokens" && array_type == 1) { // 1 = STRING
-               vocabulary_.clear();
-               vocabulary_.reserve(array_len);
-               for (uint64_t k=0; k < array_len; ++k) {
-                   std::string tokenStr;
-                   if (!ReadString(tokenStr)) return false;
-                   vocabulary_.push_back(tokenStr);
-               }
-               // Also store simplistic representation in metadata for debugging
-               metadata_.kv_pairs[key] = "<vocabulary array>";
-            } else {
-               // Skip other arrays for now to advance file pointer
-               for (uint64_t k=0; k < array_len; ++k) {
-                   if (array_type == 1) { std::string s; ReadString(s); }
-                   else if (array_type == 4) { uint32_t v; ReadValue(v); }
-                   else if (array_type == 5) { int32_t v; ReadValue(v); }
-                   else if (array_type == 6) { float v; ReadValue(v); }
-                   else if (array_type == 7) { bool v; ReadValue(v); }
-                   else if (array_type == 9) { /* Nested array? Not supported in logic yet */ }
-                   else { /* unknown, can't skip reliably if dynamic size */ }
-               }
-               metadata_.kv_pairs[key] = "<array>";
-            }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
@@ -407,7 +335,6 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         return false;
     }
     
-<<<<<<< HEAD
     // Skip metadata to get to tensor info
     file_.seekg(header_.metadata_offset);
     
@@ -467,11 +394,6 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
             }
         }
     }
-=======
-    // Jump straight to tensor info (calculated by ParseMetadata)
-    if (tensor_info_offset == 0) return false;
-    file_.seekg(tensor_info_offset);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Now read tensor info (no data!)
     for (uint64_t i = 0; i < header_.tensor_count; ++i) {
@@ -951,7 +873,6 @@ uint64_t StreamingGGUFLoader::GetFileSize() const {
     return const_cast<StreamingGGUFLoader*>(this)->GetTotalFileSize();
 }
 
-<<<<<<< HEAD
 bool StreamingGGUFLoader::StreamZoneFromDisk(const std::string& zone_name) {
     auto zone_it = zones_.find(zone_name);
     if (zone_it == zones_.end()) {
@@ -1010,7 +931,4 @@ bool StreamingGGUFLoader::StreamZoneFromDisk(const std::string& zone_name) {
 }
 
 // GetVocabulary is defined inline in header
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 } // namespace RawrXD

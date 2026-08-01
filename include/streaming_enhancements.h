@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-// streaming_enhancements.h
-// Comprehensive async streaming, batch processing, advanced tokenizers, and web server support
-// ============================================================================
+=====================================================================
 
 #pragma once
 
@@ -744,4 +741,4 @@ namespace StreamingUtils {
 }
 
 #endif // STREAMING_ENHANCEMENTS_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

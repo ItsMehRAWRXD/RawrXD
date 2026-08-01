@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace NativeGGUF {
@@ -131,3 +132,4 @@ void NativeGGUFLoaderLinkStub() {
 
 } // namespace NativeGGUF
 } // namespace RawrXD
+

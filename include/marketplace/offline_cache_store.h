@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // OfflineCacheStore — C++20, no Qt. Offline caching of extension marketplace data.
 // ============================================================================
 
@@ -146,4 +143,4 @@ private:
     bool decompressFile(const QString& inputPath, const QString& outputPath);
     QString hashKey(const QString& key);
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

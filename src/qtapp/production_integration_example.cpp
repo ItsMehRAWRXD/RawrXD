@@ -14,6 +14,7 @@
 #include <QJsonObject>
 #include <QDateTime>
 #include <QDebug>
+#include "gguf_loader.h"
 
 /**
  * Example: Starting Health Check Server in Production Mode
@@ -265,3 +266,4 @@ int main(int argc, char* argv[]) {
     
     return app.exec();
 }
+

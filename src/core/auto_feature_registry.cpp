@@ -4903,8 +4903,8 @@ CommandResult handleTerminalStop(const CommandContext& ctx) {
         if (Process32First(hSnap, &pe)) {
             do {
                 if (pe.th32ParentProcessID == myPid &&
-                    (_stricmp(pe.szExeFile, "cmd.exe") == 0 ||
-                     _stricmp(pe.szExeFile, "powershell.exe") == 0)) {
+                    (_wcsicmp(pe.szExeFile, L"cmd.exe") == 0 ||
+                     _wcsicmp(pe.szExeFile, L"powershell.exe") == 0)) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) { TerminateProcess(hProc, 0); CloseHandle(hProc); }
                 }
@@ -5635,7 +5635,7 @@ CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
     ; pe.dwSize = sizeof(pe);
         if (Process32First(hSnap, &pe)) {
             do {
-                if (_stricmp(pe.szExeFile, "mshta.exe") == 0) {
+                if (_wcsicmp(pe.szExeFile, L"mshta.exe") == 0) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) {
                         TerminateProcess(hProc, 0);

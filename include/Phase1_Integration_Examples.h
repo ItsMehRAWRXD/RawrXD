@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-/*
-================================================================================
+=========================================================================
  PHASE1_INTEGRATION_EXAMPLES.H
  
  This file demonstrates how Phases 2-5 integrate with Phase 1 Foundation.
@@ -886,4 +882,4 @@ private:
 };
 
 }  // namespace Phase5_Orchestrator
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

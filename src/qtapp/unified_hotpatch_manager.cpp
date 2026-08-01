@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QFile>
+#include "gguf_loader.h"
 
 UnifiedHotpatchManager::UnifiedHotpatchManager(QObject* parent)
     : QObject(parent), m_sessionStart(QDateTime::currentDateTime())
@@ -667,3 +668,4 @@ QList<UnifiedResult> UnifiedHotpatchManager::logCoordinatedResults(const QString
     
     return results;
 }
+

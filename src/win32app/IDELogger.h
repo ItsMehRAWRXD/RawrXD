@@ -1,25 +1,41 @@
 // SCAFFOLD_359: IDELogger and RAWRXD_LOG_*
 
 #pragma once
-<<<<<<< HEAD
 
 // Mark that full IDELogger is included
 #define IDELOGGER_FULL_INCLUDED
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <string>
 #include <vector>
 #include <mutex>
-#include <spdlog/spdlog.h>
+#include <fstream>
+#include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
-<<<<<<< HEAD
-// Pull in canonical LogLevel + RAWRXD_LOG_* from src/logging/Logger.h.
-// Do NOT use "logging/Logger.h" alone: -Iinclude is ordered before -Isrc on MSVC, so that
-// would pick include/logging/logger.h (different API, no RAWRXD_LOG_* macros).
-#include "../logging/Logger.h"
-namespace RawrXD { namespace Logging { enum class LogLevel; } }
-using IDELogLevel = RawrXD::Logging::LogLevel;
+// Logging macros (undefine any constants that conflict)
+#ifdef RAWRXD_LOG_TRACE
+#undef RAWRXD_LOG_TRACE
+#endif
+#ifdef RAWRXD_LOG_DEBUG
+#undef RAWRXD_LOG_DEBUG
+#endif
+#ifdef RAWRXD_LOG_INFO
+#undef RAWRXD_LOG_INFO
+#endif
+#ifdef RAWRXD_LOG_WARNING
+#undef RAWRXD_LOG_WARNING
+#endif
+#ifdef RAWRXD_LOG_ERROR
+#undef RAWRXD_LOG_ERROR
+#endif
+#ifdef RAWRXD_LOG_CRITICAL
+#undef RAWRXD_LOG_CRITICAL
+#endif
+
+// Forward declaration
+class IDELogger;
 
 // Comprehensive logging system for RawrXD IDE
 class IDELogger {
@@ -162,21 +178,66 @@ inline std::string formatLogMessage(const char* fmt, ...) {
 // Alias macros for backward compatibility (printf-style)
 #define LOG_WARN LOG_WARNING
 #define LOG_WARN_FMT LOG_WARNING_FMT
-=======
-enum class LogLevel {
-    DEBUG,
-    INFO,
-    WARNING,
-    ERR, // Renamed to avoid macro conflict
-    CRITICAL
-};
 
-class IDELogger {
+// Stream-based logging helpers (must be after IDELogger class definition)
+class LogStream {
+    std::string m_tag;
+    std::ostringstream m_stream;
 public:
-    static IDELogger& getInstance();
-    void log(LogLevel level, const std::string& message);
-
-private:
-    IDELogger() = default;
+    explicit LogStream(const std::string& tag) : m_tag(tag) {}
+    ~LogStream() { IDELogger::getInstance().info(m_tag, m_stream.str()); }
+    template<typename T> LogStream& operator<<(const T& value) { m_stream << value; return *this; }
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+
+class LogStreamDebug {
+    std::string m_tag;
+    std::ostringstream m_stream;
+public:
+    explicit LogStreamDebug(const std::string& tag) : m_tag(tag) {}
+    ~LogStreamDebug() { IDELogger::getInstance().debug(m_tag, m_stream.str()); }
+    template<typename T> LogStreamDebug& operator<<(const T& value) { m_stream << value; return *this; }
+};
+
+class LogStreamWarning {
+    std::string m_tag;
+    std::ostringstream m_stream;
+public:
+    explicit LogStreamWarning(const std::string& tag) : m_tag(tag) {}
+    ~LogStreamWarning() { IDELogger::getInstance().warning(m_tag, m_stream.str()); }
+    template<typename T> LogStreamWarning& operator<<(const T& value) { m_stream << value; return *this; }
+};
+
+class LogStreamError {
+    std::string m_tag;
+    std::ostringstream m_stream;
+public:
+    explicit LogStreamError(const std::string& tag) : m_tag(tag) {}
+    ~LogStreamError() { IDELogger::getInstance().error(m_tag, m_stream.str()); }
+    template<typename T> LogStreamError& operator<<(const T& value) { m_stream << value; return *this; }
+};
+
+class LogStreamTrace {
+    std::string m_tag;
+    std::ostringstream m_stream;
+public:
+    explicit LogStreamTrace(const std::string& tag) : m_tag(tag) {}
+    ~LogStreamTrace() { IDELogger::getInstance().trace(m_tag, m_stream.str()); }
+    template<typename T> LogStreamTrace& operator<<(const T& value) { m_stream << value; return *this; }
+};
+
+class LogStreamCritical {
+    std::string m_tag;
+    std::ostringstream m_stream;
+public:
+    explicit LogStreamCritical(const std::string& tag) : m_tag(tag) {}
+    ~LogStreamCritical() { IDELogger::getInstance().critical(m_tag, m_stream.str()); }
+    template<typename T> LogStreamCritical& operator<<(const T& value) { m_stream << value; return *this; }
+};
+
+// Stream-based logging macros: RAWRXD_LOG_INFO("tag") << "msg"
+#define RAWRXD_LOG_TRACE(tag)   LogStreamTrace(tag)
+#define RAWRXD_LOG_DEBUG(tag)   LogStreamDebug(tag)
+#define RAWRXD_LOG_INFO(tag)    LogStream(tag)
+#define RAWRXD_LOG_WARNING(tag) LogStreamWarning(tag)
+#define RAWRXD_LOG_ERROR(tag)   LogStreamError(tag)
+#define RAWRXD_LOG_CRITICAL(tag) LogStreamCritical(tag)

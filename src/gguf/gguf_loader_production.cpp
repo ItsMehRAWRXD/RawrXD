@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include ?cntl.h>
 #include <unistd.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -507,3 +508,4 @@ void GGUFLoader::ReportProgress(int percent) {
 }
 
 } // namespace RawrXD
+

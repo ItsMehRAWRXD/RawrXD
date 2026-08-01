@@ -130,7 +130,7 @@ static void onCollabMessage(const std::string& messageJson, void* /*client*/) {
         s_participants[userId] = participant;
 
         // Update cursor widget for this participant
-        CursorInfo ci;
+        CursorWidget::CursorInfo ci;
         ci.position = 0;
         ci.userName = participant.userName;
         ci.color = participant.color;
@@ -185,7 +185,7 @@ static void onCollabMessage(const std::string& messageJson, void* /*client*/) {
         if (it != s_participants.end()) {
             it->second.cursorPosition = position;
 
-            CursorInfo ci;
+            CursorWidget::CursorInfo ci;
             ci.position = position;
             ci.userName = it->second.userName;
             ci.color = it->second.color;
@@ -260,16 +260,16 @@ static LRESULT CALLBACK CollabPanelWndProc(HWND hwnd, UINT msg, WPARAM wParam, L
         if (LOWORD(wParam) == 1) {
             if (s_collabHub.startServer(COLLAB_DEFAULT_PORT)) {
                 // Wire CRDT buffer: when local edits generate ops, broadcast them
-                s_crdtBuffer.setOnOperationGenerated([](const std::string& op) {
+                s_crdtBuffer.m_onOperationGenerated = [](const std::string& op) {
                     std::string msg = "{\"type\":\"op\",\"operation\":\"" + op + "\"}";
                     s_collabHub.broadcastMessage(msg);
-                });
+                };
 
                 // Wire CRDT buffer: when text changes, update local editor state
-                s_crdtBuffer.setOnTextChanged([](const std::string& newText) {
+                s_crdtBuffer.m_onTextChanged = [](const std::string& newText) {
                     OutputDebugStringA(("[Collab] CRDT text updated (" +
                                        std::to_string(newText.size()) + " bytes)\n").c_str());
-                });
+                };
 
                 // Clear participant state for fresh session
                 {

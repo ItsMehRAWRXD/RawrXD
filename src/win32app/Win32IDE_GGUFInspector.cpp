@@ -2,10 +2,12 @@
 // Integrated into RawrXD IDE for deep model architecture analysis
 
 #include "Win32IDE.h"
+#include "resource.h"
 #include <commctrl.h>
 #include <richedit.h>
 #include <fstream>
 #include <sstream>
+#include <windows.h>
 
 // External GGUF inspector functions
 extern "C" {
@@ -52,8 +54,8 @@ void Win32IDE::CreateGGUFInspectorPanel()
     // Create panel window
     m_hwndGGUFInspectorPanel = CreateWindowEx(
         WS_EX_CLIENTEDGE,
-        L"RawrXD_GGUFInspector",
-        L"GGUF Model Inspector",
+        "RawrXD_GGUFInspector",
+        "GGUF Model Inspector",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
         1200, 800,
@@ -78,7 +80,7 @@ void Win32IDE::CreateGGUFInspectorPanel()
     
     // Create status bar
     m_hwndGGUFInspectorStatus = CreateWindow(
-        L"STATIC", L"Ready",
+        "STATIC", "Ready",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         10, 760, 1180, 20,
         m_hwndGGUFInspectorPanel,
@@ -92,7 +94,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
 {
     // Load button
     m_hwndGGUFInspectorLoadBtn = CreateWindow(
-        L"BUTTON", L"Load GGUF",
+        "BUTTON", "Load GGUF",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         10, 10, 100, 30,
         m_hwndGGUFInspectorPanel,
@@ -103,7 +105,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     
     // Export JSON button
     m_hwndGGUFInspectorExportBtn = CreateWindow(
-        L"BUTTON", L"Export JSON",
+        "BUTTON", "Export JSON",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         120, 10, 100, 30,
         m_hwndGGUFInspectorPanel,
@@ -114,7 +116,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     
     // Full analysis button
     m_hwndGGUFInspectorAnalyzeBtn = CreateWindow(
-        L"BUTTON", L"Full Analysis",
+        "BUTTON", "Full Analysis",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         230, 10, 100, 30,
         m_hwndGGUFInspectorPanel,
@@ -125,7 +127,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     
     // File path display
     m_hwndGGUFInspectorPath = CreateWindow(
-        L"EDIT", L"",
+        "EDIT", "",
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_READONLY,
         340, 12, 600, 26,
         m_hwndGGUFInspectorPanel,
@@ -141,7 +143,7 @@ void Win32IDE::CreateGGUFInspectorTreeView()
     m_hwndGGUFInspectorTree = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         WC_TREEVIEW,
-        L"",
+        "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
         TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS,
         10, 50, 400, 700,
@@ -158,12 +160,12 @@ void Win32IDE::CreateGGUFInspectorTreeView()
 void Win32IDE::CreateGGUFInspectorDetailsView()
 {
     // Create rich edit for details
-    LoadLibrary(L"Msftedit.dll");
+    LoadLibraryA("Msftedit.dll");
     
     m_hwndGGUFInspectorDetails = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         MSFTEDIT_CLASS,
-        L"",
+        "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
         ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
         420, 50, 770, 700,
@@ -198,39 +200,35 @@ void Win32IDE::HandleGGUFInspectorCommand(int commandId)
 void Win32IDE::OnGGUFInspectorLoad()
 {
     // Open file dialog
-    OPENFILENAME ofn;
-    wchar_t szFile[MAX_PATH] = {0};
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = {0};
     
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = m_hwndGGUFInspectorPanel;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile) / sizeof(szFile[0]);
-    ofn.lpstrFilter = L"GGUF Models (*.gguf)\0*.gguf\0All Files (*.*)\0*.*\0";
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = L"F:\\OllamaModels";
+    ofn.lpstrInitialDir = "F:\\OllamaModels";
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     
-    if (GetOpenFileName(&ofn)) {
-        // Convert to string
-        char path[MAX_PATH];
-        WideCharToMultiByte(CP_UTF8, 0, szFile, -1, path, MAX_PATH, NULL, NULL);
-        
-        m_ggufInspectorCurrentFile = path;
+    if (GetOpenFileNameA(&ofn)) {
+        m_ggufInspectorCurrentFile = szFile;
         
         // Update path display
-        SetWindowTextA(m_hwndGGUFInspectorPath, path);
+        SetWindowTextA(m_hwndGGUFInspectorPath, szFile);
         
         // Load and analyze
-        LoadGGUFInspectorFile(path);
+        LoadGGUFInspectorFile(szFile);
     }
 }
 
 void Win32IDE::LoadGGUFInspectorFile(const std::string& path)
 {
-    SetWindowText(m_hwndGGUFInspectorStatus, L"Loading GGUF file...");
+    SetWindowTextA(m_hwndGGUFInspectorStatus, "Loading GGUF file...");
     
     // Run gguf_inspector tool
     std::string cmd = "gguf_inspector.exe \"" + path + "\" --json \"" + 
@@ -245,7 +243,7 @@ void Win32IDE::LoadGGUFInspectorFile(const std::string& path)
     HANDLE hRead, hWrite;
     CreatePipe(&hRead, &hWrite, &sa, 0);
     
-    STARTUPINFO si;
+    STARTUPINFOA si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -258,10 +256,7 @@ void Win32IDE::LoadGGUFInspectorFile(const std::string& path)
     std::string fullCmd = "cmd.exe /c cd \"" + std::string("D:\\rawrxd\\build-ninja\\bin") + 
                           "\" && " + cmd;
     
-    wchar_t wCmd[4096];
-    MultiByteToWideChar(CP_UTF8, 0, fullCmd.c_str(), -1, wCmd, 4096);
-    
-    if (CreateProcess(NULL, wCmd, NULL, NULL, TRUE, CREATE_NO_WINDOW, 
+    if (CreateProcessA(NULL, (LPSTR)fullCmd.c_str(), NULL, NULL, TRUE, CREATE_NO_WINDOW, 
                       NULL, NULL, &si, &pi)) {
         WaitForSingleObject(pi.hProcess, 30000); // 30 second timeout
         
@@ -290,9 +285,9 @@ void Win32IDE::LoadGGUFInspectorFile(const std::string& path)
         EnableWindow(m_hwndGGUFInspectorExportBtn, TRUE);
         EnableWindow(m_hwndGGUFInspectorAnalyzeBtn, TRUE);
         
-        SetWindowText(m_hwndGGUFInspectorStatus, L"GGUF file loaded successfully");
+        SetWindowTextA(m_hwndGGUFInspectorStatus, "GGUF file loaded successfully");
     } else {
-        SetWindowText(m_hwndGGUFInspectorStatus, L"Failed to load GGUF file");
+        SetWindowTextA(m_hwndGGUFInspectorStatus, "Failed to load GGUF file");
     }
 }
 

@@ -50,38 +50,24 @@ bool FindReplaceDialog::Create(HWND hwndParent, bool replaceMode) {
     m_hwndParent = hwndParent;
     m_replaceMode = replaceMode;
     
-    // Create as modeless dialog
-    m_hwnd = CreateDialogParam(
-        GetModuleHandle(nullptr),
-        replaceMode ? MAKEINTRESOURCE(IDD_REPLACE_DIALOG) : MAKEINTRESOURCE(IDD_FIND_DIALOG),
+    // Create simple dialog manually (no resource template dependency)
+    m_hwnd = CreateWindowExW(
+        WS_EX_DLGMODALFRAME,
+        L"#32770",  // Dialog class
+        replaceMode ? L"Replace" : L"Find",
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        replaceMode ? 400 : 350,
+        replaceMode ? 250 : 200,
         hwndParent,
-        DialogProc,
-        reinterpret_cast<LPARAM>(this)
+        nullptr,
+        GetModuleHandle(nullptr),
+        this
     );
-    
-    if (!m_hwnd) {
-        // Fallback: Create simple dialog manually
-        m_hwnd = CreateWindowExW(
-            WS_EX_DLGMODALFRAME,
-            L"#32770",  // Dialog class
-            replaceMode ? L"Replace" : L"Find",
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            replaceMode ? 400 : 350,
-            replaceMode ? 250 : 200,
-            hwndParent,
-            nullptr,
-            GetModuleHandle(nullptr),
-            this
-        );
-        
-        if (m_hwnd) {
-            CreateControls();
-        }
-    }
     
     if (m_hwnd) {
         SetWindowLongPtr(m_hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+        CreateControls();
         CenterOnParent();
         ShowWindow(m_hwnd, SW_SHOW);
         SetFocus(m_hwndFindEdit);
@@ -184,14 +170,16 @@ bool FindReplaceDialog::IsVisible() const {
 void FindReplaceDialog::SetFindText(const std::string& text) {
     m_findText = text;
     if (m_hwndFindEdit) {
-        SetWindowTextA(m_hwndFindEdit, text.c_str());
+        std::wstring wtext(text.begin(), text.end());
+        SetWindowTextW(m_hwndFindEdit, wtext.c_str());
     }
 }
 
 void FindReplaceDialog::SetReplaceText(const std::string& text) {
     m_replaceText = text;
     if (m_hwndReplaceEdit) {
-        SetWindowTextA(m_hwndReplaceEdit, text.c_str());
+        std::wstring wtext(text.begin(), text.end());
+        SetWindowTextW(m_hwndReplaceEdit, wtext.c_str());
     }
 }
 
@@ -216,12 +204,12 @@ void FindReplaceDialog::UpdateOptionsFromUI() {
         ? FindDirection::Backward : FindDirection::Forward;
     
     // Get text
-    char buffer[1024];
-    if (GetWindowTextA(m_hwndFindEdit, buffer, sizeof(buffer))) {
-        m_findText = buffer;
+    wchar_t buffer[1024];
+    if (GetWindowTextW(m_hwndFindEdit, buffer, sizeof(buffer)/sizeof(buffer[0]))) {
+        m_findText = std::string(buffer, buffer + wcslen(buffer));
     }
-    if (m_replaceMode && GetWindowTextA(m_hwndReplaceEdit, buffer, sizeof(buffer))) {
-        m_replaceText = buffer;
+    if (m_replaceMode && GetWindowTextW(m_hwndReplaceEdit, buffer, sizeof(buffer)/sizeof(buffer[0]))) {
+        m_replaceText = std::string(buffer, buffer + wcslen(buffer));
     }
 }
 
@@ -413,18 +401,19 @@ bool QuickFindBar::IsVisible() const {
 
 void QuickFindBar::SetFindText(const std::string& text) {
     if (m_hwndEdit) {
-        SetWindowTextA(m_hwndEdit, text.c_str());
+        std::wstring wtext(text.begin(), text.end());
+        SetWindowTextW(m_hwndEdit, wtext.c_str());
     }
 }
 
 void QuickFindBar::SetResultCount(int current, int total) {
     if (m_hwndResultLabel) {
         if (total > 0) {
-            char buf[64];
-            snprintf(buf, sizeof(buf), "%d/%d", current, total);
-            SetWindowTextA(m_hwndResultLabel, buf);
+            wchar_t buf[64];
+            _snwprintf(buf, sizeof(buf)/sizeof(buf[0]), L"%d/%d", current, total);
+            SetWindowTextW(m_hwndResultLabel, buf);
         } else {
-            SetWindowTextA(m_hwndResultLabel, "No results");
+            SetWindowTextW(m_hwndResultLabel, L"No results");
         }
     }
 }
@@ -453,17 +442,19 @@ LRESULT QuickFindBar::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
             switch (LOWORD(wParam)) {
                 case 1001: // Previous
                     if (m_findCallback) {
-                        char text[256];
-                        GetWindowTextA(m_hwndEdit, text, sizeof(text));
-                        m_findCallback(text, false);
+                        wchar_t text[256];
+                        GetWindowTextW(m_hwndEdit, text, sizeof(text)/sizeof(text[0]));
+                        std::string str(text, text + wcslen(text));
+                        m_findCallback(str, false);
                     }
                     return 0;
                     
                 case 1002: // Next
                     if (m_findCallback) {
-                        char text[256];
-                        GetWindowTextA(m_hwndEdit, text, sizeof(text));
-                        m_findCallback(text, true);
+                        wchar_t text[256];
+                        GetWindowTextW(m_hwndEdit, text, sizeof(text)/sizeof(text[0]));
+                        std::string str(text, text + wcslen(text));
+                        m_findCallback(str, true);
                     }
                     return 0;
                     
@@ -473,9 +464,10 @@ LRESULT QuickFindBar::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if (HIWORD(wParam) == EN_CHANGE && m_findCallback) {
-                char text[256];
-                GetWindowTextA(m_hwndEdit, text, sizeof(text));
-                m_findCallback(text, true);
+                wchar_t text[256];
+                GetWindowTextW(m_hwndEdit, text, sizeof(text)/sizeof(text[0]));
+                std::string str(text, text + wcslen(text));
+                m_findCallback(str, true);
             }
             break;
             

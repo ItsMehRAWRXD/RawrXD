@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include "gguf_loader.h"
 
 namespace rawrxd {
 namespace compatibility {
@@ -359,3 +360,4 @@ std::string ModelMetadataExtractor::ToMarkdown(const ModelMetadata& metadata) {
 
 } // namespace compatibility
 } // namespace rawrxd
+

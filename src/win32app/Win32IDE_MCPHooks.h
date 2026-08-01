@@ -2,15 +2,10 @@
 // MCP Transport Hook Infrastructure
 // Intercepts message framing for raw buffer visibility before JS parsing
 
-<<<<<<< HEAD
 #include <winsock2.h>
 #include <windows.h>
 #include <cstdint>
 #include <cstddef>
-=======
-#include <windows.h>
-#include <cstdint>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <string>
 #include <functional>
 #include <vector>
@@ -31,17 +26,10 @@ namespace MCPHookRVA {
 }
 
 // Hook callback types for each transport layer
-<<<<<<< HEAD
 using ReadMessageCallback = std::function<void(const uint8_t* buffer, std::size_t length, const char* source)>;
 using WriteMessageCallback = std::function<void(const uint8_t* buffer, std::size_t length, const char* destination)>;
 using SocketDataCallback = std::function<void(const uint8_t* rawData, std::size_t length, SOCKET sock)>;
 using WebSocketFrameCallback = std::function<void(const uint8_t* frame, std::size_t frameLen, uint8_t opcode)>;
-=======
-using ReadMessageCallback = std::function<void(const uint8_t* buffer, size_t length, const char* source)>;
-using WriteMessageCallback = std::function<void(const uint8_t* buffer, size_t length, const char* destination)>;
-using SocketDataCallback = std::function<void(const uint8_t* rawData, size_t length, SOCKET sock)>;
-using WebSocketFrameCallback = std::function<void(const uint8_t* frame, size_t frameLen, uint8_t opcode)>;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // MCP Message structure for parsed intercepts
 struct MCPMessage {
@@ -92,11 +80,7 @@ public:
     void SetWebSocketFrameCallback(WebSocketFrameCallback cb) { m_wsCallback = cb; }
     
     // Get intercepted messages (ring buffer of last N)
-<<<<<<< HEAD
     std::vector<MCPMessage> GetRecentMessages(std::size_t count = 100) const;
-=======
-    std::vector<MCPMessage> GetRecentMessages(size_t count = 100) const;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void ClearMessageBuffer();
     
     // Statistics
@@ -105,17 +89,10 @@ public:
     uint64_t GetBytesWritten() const { return m_bytesWritten; }
     
     // Called by assembly hooks (do not call directly)
-<<<<<<< HEAD
     void OnReadMessage(const uint8_t* buffer, std::size_t length);
     void OnWriteMessage(const uint8_t* buffer, std::size_t length);
     void OnSocketData(const uint8_t* data, std::size_t length, SOCKET sock);
     void OnWebSocketFrame(const uint8_t* frame, std::size_t length, uint8_t opcode);
-=======
-    void OnReadMessage(const uint8_t* buffer, size_t length);
-    void OnWriteMessage(const uint8_t* buffer, size_t length);
-    void OnSocketData(const uint8_t* data, size_t length, SOCKET sock);
-    void OnWebSocketFrame(const uint8_t* frame, size_t length, uint8_t opcode);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 private:
     MCPHookManager();
@@ -124,21 +101,12 @@ private:
     MCPHookManager& operator=(const MCPHookManager&) = delete;
     
     // Hot-patcher implementation
-<<<<<<< HEAD
     bool WriteJumpHook(uintptr_t targetAddr, uintptr_t hookAddr, uint8_t* savedBytes, std::size_t* savedLen);
     bool RestoreOriginalBytes(uintptr_t targetAddr, const uint8_t* savedBytes, std::size_t savedLen);
     uintptr_t AllocateTrampoline(std::size_t size);
     
     // Parse MCP message from raw buffer
     MCPMessage ParseMCPBuffer(const uint8_t* buffer, std::size_t length, uintptr_t hookRVA);
-=======
-    bool WriteJumpHook(uintptr_t targetAddr, uintptr_t hookAddr, uint8_t* savedBytes, size_t* savedLen);
-    bool RestoreOriginalBytes(uintptr_t targetAddr, const uint8_t* savedBytes, size_t savedLen);
-    uintptr_t AllocateTrampoline(size_t size);
-    
-    // Parse MCP message from raw buffer
-    MCPMessage ParseMCPBuffer(const uint8_t* buffer, size_t length, uintptr_t hookRVA);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     bool m_initialized;
     HMODULE m_targetModule;
@@ -149,11 +117,7 @@ private:
         uintptr_t rva;
         uintptr_t absoluteAddr;
         uint8_t originalBytes[16];  // Enough for worst-case patching
-<<<<<<< HEAD
         std::size_t patchedLen;
-=======
-        size_t patchedLen;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         uintptr_t trampolineAddr;
         bool installed;
     };
@@ -166,15 +130,9 @@ private:
     WebSocketFrameCallback m_wsCallback;
     
     // Message ring buffer
-<<<<<<< HEAD
     static constexpr std::size_t MESSAGE_BUFFER_SIZE = 1024;
     std::vector<MCPMessage> m_messageBuffer;
     std::size_t m_messageHead;
-=======
-    static constexpr size_t MESSAGE_BUFFER_SIZE = 1024;
-    std::vector<MCPMessage> m_messageBuffer;
-    size_t m_messageHead;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Statistics
     uint64_t m_totalIntercepted;
@@ -191,15 +149,8 @@ void UninstallMCPHooks();
 
 // Assembly hook entry points (implemented in mcp_hooks.asm)
 extern "C" {
-<<<<<<< HEAD
     void __fastcall MCP_ReadMessageHook(const uint8_t* buffer, std::size_t length);
     void __fastcall MCP_WriteMessageHook(const uint8_t* buffer, std::size_t length);
     void __fastcall MCP_OnSocketDataHook(const uint8_t* data, std::size_t length, SOCKET sock);
     void __fastcall MCP_WebSocketFrameHook(const uint8_t* frame, std::size_t length, uint8_t opcode);
-=======
-    void __fastcall MCP_ReadMessageHook(const uint8_t* buffer, size_t length);
-    void __fastcall MCP_WriteMessageHook(const uint8_t* buffer, size_t length);
-    void __fastcall MCP_OnSocketDataHook(const uint8_t* data, size_t length, SOCKET sock);
-    void __fastcall MCP_WebSocketFrameHook(const uint8_t* frame, size_t length, uint8_t opcode);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

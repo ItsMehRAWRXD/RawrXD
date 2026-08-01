@@ -373,11 +373,14 @@ void Win32IDE::searchDirectory(const std::string& dir, const char* query, int de
                     item.mask = LVIF_TEXT;
                     item.iItem = ListView_GetItemCount(m_hwndSearchResults);
                     item.pszText = (LPSTR)display.c_str();
-                    int idx = ListView_InsertItem(m_hwndSearchResults, &item);
+                    int idx = SendMessageA(m_hwndSearchResults, LVM_INSERTITEMA, 0, (LPARAM)&item);
 
                     char lineStr[16];
                     sprintf_s(lineStr, "%d", lineNum);
-                    ListView_SetItemText(m_hwndSearchResults, idx, 1, lineStr);
+                    LVITEMA lvItemA1 = {};
+                    lvItemA1.iSubItem = 1;
+                    lvItemA1.pszText = lineStr;
+                    SendMessageA(m_hwndSearchResults, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvItemA1);
 
                     // Trim line for display
                     std::string trimmed = line;
@@ -387,7 +390,10 @@ void Win32IDE::searchDirectory(const std::string& dir, const char* query, int de
                         trimmed = trimmed.substr(firstNonSpace);
                     if (trimmed.length() > 120)
                         trimmed = trimmed.substr(0, 117) + "...";
-                    ListView_SetItemText(m_hwndSearchResults, idx, 2, (LPSTR)trimmed.c_str());
+                    LVITEMA lvItemA2 = {};
+                    lvItemA2.iSubItem = 2;
+                    lvItemA2.pszText = (LPSTR)trimmed.c_str();
+                    SendMessageA(m_hwndSearchResults, LVM_SETITEMTEXTA, (WPARAM)idx, (LPARAM)&lvItemA2);
 
                     // Cap results for responsiveness
                     if (s_searchResultCount >= 5000) {
@@ -435,7 +441,12 @@ void Win32IDE::performSearchReplace(bool replaceAll) {
     std::vector<std::string> files;
     for (int i = 0; i < count; ++i) {
         char fileBuf[MAX_PATH] = {};
-        ListView_GetItemText(m_hwndSearchResults, i, 0, fileBuf, sizeof(fileBuf));
+        LVITEMA lvItemA = {};
+        lvItemA.iItem = i;
+        lvItemA.iSubItem = 0;
+        lvItemA.pszText = fileBuf;
+        lvItemA.cchTextMax = sizeof(fileBuf);
+        SendMessageA(m_hwndSearchResults, LVM_GETITEMA, 0, (LPARAM)&lvItemA);
         std::string path(fileBuf);
         // Convert / back to backslash
         for (char& c : path) { if (c == '/') c = '\\'; }

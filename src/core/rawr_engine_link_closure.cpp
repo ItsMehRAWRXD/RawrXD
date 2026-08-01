@@ -3444,6 +3444,7 @@ void Win32IDE::onPlanOrchestratorViewPlan()
 #include "rawrxd_moe_sparse_bridge.hpp"
 #include <iomanip>
 #include <iostream>
+#include "gguf_loader.h"
 
 
 extern "C" void dequant_q6k_avx512(const uint8_t* src, float* dst, int n);
@@ -3893,3 +3894,4 @@ unsigned int Phase17Profiler::GetEpochCount()
     return static_cast<unsigned int>(g_agenticEpochCount.load(std::memory_order_relaxed));
 }
 #endif
+

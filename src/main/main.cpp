@@ -21,6 +21,7 @@
 
 #include "../ide/IDECore.h"
 #include "../ide/SettingsManager.hpp"
+#include "gguf_loader.h"
 
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "user32.lib")
@@ -672,3 +673,4 @@ void ShowFirstRunDialog() {
         }
     }
 }
+

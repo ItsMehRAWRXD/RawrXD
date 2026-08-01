@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // ExtensionMarketplaceManager — C++20, no Qt. VS Code extension marketplace.
 // ============================================================================
 
@@ -217,4 +214,4 @@ private:
     void loadInstalledExtensions();
     void checkForUpdates();
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

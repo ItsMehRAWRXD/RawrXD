@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // MainWindow — Qt-free stub (replaces QMainWindow-based MainWindow)
 // ============================================================================
 // Original Qt: QMainWindow, QWidget, QString, signals. This header provides
@@ -75,4 +72,4 @@ private:
 };
 
 } // namespace RawrXD::IDE
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

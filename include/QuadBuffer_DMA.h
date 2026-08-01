@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-// =============================================================================
+======================================================================
 // QuadBuffer_DMA.h
 // Public API Header for RawrXD Quad-Buffer DMA Orchestrator
 // Interfaces with Phase 2 (Model Loading), Phase 3 (Inference Kernel),
@@ -1038,4 +1037,4 @@ uint64_t QuadBuffer_HandleTrap(
 #endif
 
 #endif // QUADBUFFER_DMA_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

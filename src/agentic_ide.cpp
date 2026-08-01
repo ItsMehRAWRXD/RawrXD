@@ -1,10 +1,7 @@
 #include <thread>
 #include <atomic>
-<<<<<<< HEAD
 #include <shared_mutex>
 #include <filesystem>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <compare>
@@ -117,7 +114,6 @@ Result<void> AgenticIDE::initializeComponents() {
         m_terminalPool = std::make_shared<RawrXD::TerminalPool>();
         m_orchestrator = std::make_shared<RawrXD::AutonomousIntelligenceOrchestrator>(this);
         
-<<<<<<< HEAD
         // Detect workspace root and initialize LSP
         std::string workspaceRoot = detectWorkspaceRoot();
         RawrXD::LSPConfig lspConfig{};
@@ -130,10 +126,6 @@ Result<void> AgenticIDE::initializeComponents() {
         
         m_lspClient = std::make_shared<RawrXD::LSPClient>(lspConfig);
         m_workspaceRoot = workspaceRoot;
-=======
-        // Use LSPConfig instead of LSPServerConfig
-        m_lspClient = std::make_shared<RawrXD::LSPClient>(RawrXD::LSPConfig{});
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         return Result<void>();
     } catch (...) {
@@ -407,7 +399,6 @@ void AgenticIDE::submitTask(std::function<void()> task) {
     }
     m_queueCv.notify_one();
 }
-<<<<<<< HEAD
 std::string AgenticIDE::detectWorkspaceRoot() {
     // Try to detect workspace root by searching for marker files/directories
     // Starting from current working directory and moving up
@@ -466,5 +457,3 @@ std::string AgenticIDE::detectWorkspaceRoot() {
         spdlog::level::warn);
     return cwd;
 }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

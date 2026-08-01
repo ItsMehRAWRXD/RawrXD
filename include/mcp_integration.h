@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // MCP Integration — Model Context Protocol for RawrXD IDE
 // Full implementation of MCP server/client for tool-based agent interactions
 // Generated: 2026-01-25 06:34:12 | Completed: 2026-02-08
@@ -296,16 +295,3 @@ void registerBuiltinTools(MCPServer& server);
 } // namespace RawrXD
 
 #endif // MCP_INTEGRATION_H_
-=======
-// MCP Integration - Integrated from Cursor IDE Reverse Engineering
-// Integrates Cursor's MCP implementation
-// Generated: 2026-01-25 06:34:12
-
-#ifndef MCP_INTEGRATION_H_
-#define MCP_INTEGRATION_H_
-
-// TODO: Define interface based on Cursor reverse engineering
-// Source: d:\lazy init ide\Cursor_Source_Extracted
-
-#endif // MCP_INTEGRATION_H_
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

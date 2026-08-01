@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <intrin.h>  // __rdtsc, _mm256_*
+#include "gguf_loader.h"
 
 // Pyre compute and wiring — Phase 31 implementation complete
 
@@ -1096,3 +1097,4 @@ size_t PyreGraph::dumpDiagnostics(char* buffer, size_t bufferSize) const {
     );
     return (written > 0) ? static_cast<size_t>(written) : 0;
 }
+

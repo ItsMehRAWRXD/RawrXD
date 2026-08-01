@@ -19,14 +19,10 @@ AutonomyManager::AutonomyManager(AgenticBridge* bridge)
     // been called yet.  Win32IDE replaces this via setOutputCallback([this]{appendToOutput}).
     m_onOutput = [](const std::string& /*msg*/) {};
     m_windowStart = std::chrono::steady_clock::now();
-<<<<<<< HEAD
     
     // Initialize the Deep Thinking Engine
     RawrXD::Agent::AgenticDeepThinkingEngine::instance().initialize();
     LOG_INFO("AutonomyManager constructed with Deep Thinking Engine");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 AutonomyManager::~AutonomyManager()
@@ -66,7 +62,6 @@ void AutonomyManager::enableAutoLoop(bool enable)
         if (!m_running.load())
             start();
         m_autoLoop.store(true);
-<<<<<<< HEAD
         m_loopThread = std::thread([this] { loop(); });
         
         // Start Deep Thinking Engine monitoring
@@ -80,13 +75,6 @@ void AutonomyManager::enableAutoLoop(bool enable)
         // Stop Deep Thinking Engine monitoring
         deepEngine.stopMonitoring();
         LOG_INFO("Autonomy auto loop disabled");
-=======
-        m_loopThread = std::thread([this]{ loop(); });
-
-    } else if (!enable && m_autoLoop.load()) {
-        m_autoLoop.store(false);
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -154,24 +142,17 @@ std::string AutonomyManager::getStatus() const
     return oss.str();
 }
 
-<<<<<<< HEAD
 void AutonomyManager::loop()
 {
     LOG_INFO("Autonomy loop thread started");
     while (m_autoLoop.load())
     {
-=======
-void AutonomyManager::loop() {
-
-    while (m_autoLoop.load()) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         tick();
         std::this_thread::sleep_for(std::chrono::milliseconds(800));
     }
 
 }
 
-<<<<<<< HEAD
 std::string AutonomyManager::planNextAction()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -253,54 +234,6 @@ void AutonomyManager::executeAction(const std::string& action)
     if (action == "NOOP")
     {
         LOG_DEBUG("Planner produced NOOP");
-=======
-std::string AutonomyManager::planNextAction() {
-    std::string currentGoal;
-    std::vector<std::string> currentMemory;
-
-    // Snapshot state (Critical Section)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if (m_goal.empty()) {
-            return "NOOP";
-        }
-        currentGoal = m_goal;
-        currentMemory = m_memory;
-    }
-    
-    // Real Intelligence: Query the Agentic Bridge (LLM)
-    // This removes the simulated heuristic logic.
-    if (m_bridge && m_bridge->IsInitialized()) {
-        std::stringstream prompt;
-        prompt << "SYSTEM: You are an autonomous coding agent.\n";
-        prompt << "GOAL: " << currentGoal << "\n";
-        prompt << "MEMORY:\n";
-        size_t memStart = currentMemory.size() > 10 ? currentMemory.size() - 10 : 0;
-        for (size_t i = memStart; i < currentMemory.size(); ++i) {
-            prompt << "> " << currentMemory[i] << "\n";
-        }
-        prompt << "\nINSTRUCTION: Decide the next single action to make progress.\n";
-        prompt << "FORMAT: 'tool:<name> <args>' or 'prompt:<thought_or_query>'.\n";
-        prompt << "RESPONSE:";
-        
-        AgentResponse resp = m_bridge->ExecuteAgentCommand(prompt.str());
-        std::string action = resp.content;
-        
-        // Basic sanitization
-        if (action.find("tool:") == 0 || action.find("prompt:") == 0) {
-            return action;
-        }
-        // Fallback if LLM creates unstructured output
-        return "prompt: " + action;
-    }
-
-    return "NOOP";
-}
-
-void AutonomyManager::executeAction(const std::string& action) {
-    if (action == "NOOP") {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return;
     }
     METRICS.increment("autonomy.actions_executed");

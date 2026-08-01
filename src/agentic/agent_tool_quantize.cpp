@@ -25,6 +25,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include "gguf_loader.h"
 
 // =============================================================================
 //  Quantization Configuration
@@ -307,3 +308,4 @@ NanoQuantInfo AgentTool_GetNanoQuantInfo() {
     
     return info;
 }
+

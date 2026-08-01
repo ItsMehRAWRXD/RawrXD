@@ -10,6 +10,27 @@
     - Git version control
     - Agent task automation
 #>
+
+# ============================================
+# EMERGENCY LOGGING & PATH INITIALIZATION
+# ============================================
+$script:EmergencyLogPath = Join-Path $env:TEMP "RawrXD_Logs"
+if (-not (Test-Path $script:EmergencyLogPath)) {
+    New-Item -ItemType Directory -Path $script:EmergencyLogPath -Force | Out-Null
+}
+$script:StartupLogFile = Join-Path $script:EmergencyLogPath "startup_$(Get-Date -Format 'yyyyMMdd').log"
+
+function Write-EmergencyLog {
+    param([string]$Message, [string]$Level = "INFO")
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+    $color = switch ($Level) { "ERROR" { "Red" } "WARNING" { "Yellow" } "SUCCESS" { "Green" } default { "White" } }
+    $entry = "[$timestamp] [$Level] $Message"
+    Write-Host $entry -ForegroundColor $color
+    if ($script:StartupLogFile) {
+        try { Add-Content -Path $script:StartupLogFile -Value $entry -Encoding UTF8 -ErrorAction SilentlyContinue } catch {}
+    }
+}
+
 Write-EmergencyLog "Working Directory: $(Get-Location)" "INFO"
 Write-EmergencyLog "Log File: $script:StartupLogFile" "INFO"
 Write-EmergencyLog "═══════════════════════════════════════════════════════" "INFO"
@@ -3148,6 +3169,394 @@ if (Test-Path $configPath) {
     catch {
         Write-SecurityLog "Failed to load security configuration" "ERROR" $_.Exception.Message
     }
+}
+
+# ============================================
+# MISSING CRITICAL FUNCTION IMPLEMENTATIONS
+# ============================================
+
+function Test-NetworkConnectivity {
+    try {
+        $result = Test-NetConnection -ComputerName "localhost" -Port 11434 -WarningAction SilentlyContinue
+        Write-StartupLog "Network connectivity test: $($result.TcpTestSucceeded)" "INFO"
+    }
+    catch {
+        Write-StartupLog "Network connectivity test failed: $_" "WARNING"
+    }
+}
+
+function Write-ErrorReport {
+    param([string]$ErrorMessage, [string]$ErrorCategory, [string]$Severity, [string]$SourceFunction, [hashtable]$AdditionalData, [bool]$ShowToUser)
+    Register-ErrorHandler -ErrorMessage $ErrorMessage -ErrorCategory $ErrorCategory -Severity $Severity -SourceFunction $SourceFunction -AdditionalData $AdditionalData -ShowToUser $ShowToUser
+}
+
+function Initialize-Multithreading {
+    try {
+        $script:sessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+        $script:sessionState.ImportPSModule(@('Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Management'))
+        $script:threadSafeContext.RunspacePool = [runspacefactory]::CreateRunspacePool(1, $script:threadSafeContext.MaxConcurrentTasks, $script:sessionState, $Host)
+        $script:threadSafeContext.RunspacePool.Open()
+        Write-StartupLog "✅ Multithreading initialized ($($script:threadSafeContext.WorkerCount) workers)" "SUCCESS"
+    }
+    catch {
+        Write-StartupLog "❌ Failed to initialize multithreading: $_" "ERROR"
+    }
+}
+
+function Get-ThreadingStatus {
+    $activeJobs = if ($script:threadSafeContext.ActiveJobs) { @($script:threadSafeContext.ActiveJobs).Count } else { 0 }
+    return @{
+        IsInitialized      = ($null -ne $script:threadSafeContext.RunspacePool)
+        ActiveJobs         = $activeJobs
+        QueuedTasks        = if ($script:threadSafeContext.TaskQueue) { $script:threadSafeContext.TaskQueue.Count } else { 0 }
+        WorkerCount        = $script:threadSafeContext.WorkerCount
+        MaxConcurrentTasks = $script:threadSafeContext.MaxConcurrentTasks
+        WorkerStates       = $script:agentWorkers
+    }
+}
+
+function Start-ParallelChatProcessing {
+    param([array]$ChatRequests)
+    if (-not $script:threadSafeContext.RunspacePool) { Initialize-Multithreading }
+    foreach ($request in $ChatRequests) {
+        if (-not $script:chatTabs.ContainsKey($request.TabId)) { continue }
+        $chatSession = $script:chatTabs[$request.TabId]
+        $chatSession.ChatBox.AppendText("AI (processing...): ")
+        $processingStart = $chatSession.ChatBox.TextLength
+        $powershell = [powershell]::Create()
+        $powershell.RunspacePool = $script:threadSafeContext.RunspacePool
+        $null = $powershell.AddScript({
+            param($tabId, $message, $model, $chatHistory, $procStart)
+            try {
+                $historyText = ($chatHistory | ForEach-Object { "$($_.Role): $($_.Content)" } -join "`n")
+                $body = @{ model = $model; prompt = $historyText + "`nuser: $message`n"; stream = $false } | ConvertTo-Json -Depth 3
+                $response = Invoke-RestMethod -Uri "http://localhost:11434/api/generate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 60
+                return @{ TabId = $tabId; Response = $response.response; Success = $true; ProcessingStart = $procStart }
+            }
+            catch {
+                return @{ TabId = $tabId; Response = "Error: $($_.Exception.Message)"; Success = $false; ProcessingStart = $procStart }
+            }
+        }).AddParameter("tabId", $request.TabId).AddParameter("message", $request.Message).AddParameter("model", $request.Model).AddParameter("chatHistory", $request.ChatHistory).AddParameter("procStart", $processingStart)
+        $job = $powershell.BeginInvoke()
+        $script:threadSafeContext.ActiveJobs[$request.TabId] = @{ Job = $job; PowerShell = $powershell; TabId = $request.TabId; StartTime = Get-Date; ProcessingStart = $processingStart }
+    }
+    if (-not $script:chatJobMonitorTimer) {
+        $script:chatJobMonitorTimer = New-Object System.Windows.Forms.Timer
+        $script:chatJobMonitorTimer.Interval = 200
+        $script:chatJobMonitorTimer.Add_Tick({
+            $completed = @()
+            foreach ($tabId in @($script:threadSafeContext.ActiveJobs.Keys)) {
+                $jobInfo = $script:threadSafeContext.ActiveJobs[$tabId]
+                if ($jobInfo.Job.IsCompleted) {
+                    try {
+                        $result = $jobInfo.PowerShell.EndInvoke($jobInfo.Job)
+                        if ($script:chatTabs.ContainsKey($result.TabId)) {
+                            $chatSession = $script:chatTabs[$result.TabId]
+                            $chatSession.ChatBox.Select($result.ProcessingStart, $chatSession.ChatBox.TextLength - $result.ProcessingStart)
+                            $chatSession.ChatBox.SelectedText = "AI: $($result.Response)`r`n`r`n"
+                            $chatSession.ChatBox.ScrollToCaret()
+                            $chatSession.Messages += @{ Role = "assistant"; Content = $result.Response; Timestamp = Get-Date }
+                        }
+                    }
+                    catch { Write-DevConsole "Parallel chat error for $tabId : $_" "ERROR" }
+                    finally { $jobInfo.PowerShell.Dispose() }
+                    $completed += $tabId
+                }
+            }
+            foreach ($tabId in $completed) { $script:threadSafeContext.ActiveJobs.Remove($tabId) }
+            if ($script:threadSafeContext.ActiveJobs.Count -eq 0) { $script:chatJobMonitorTimer.Stop() }
+            Update-ThreadingStatusLabel
+        })
+    }
+    $script:chatJobMonitorTimer.Start()
+}
+
+function Invoke-CodeGeneration {
+    param([string]$Prompt, [string]$Context)
+    $fullPrompt = "Generate code based on this request: $Prompt`n`nContext: $Context`n`nProvide ONLY the code, no explanations."
+    return Send-OllamaRequest -Prompt $fullPrompt -Model $OllamaModel
+}
+
+function Invoke-CodeReview {
+    param([string]$Code)
+    $prompt = "Review this code for bugs, security issues, and improvements:`n`n```$Code```n`nProvide a structured review."
+    return Send-OllamaRequest -Prompt $prompt -Model $OllamaModel
+}
+
+function Invoke-CodeRefactor {
+    param([string]$Code, [string]$Instructions)
+    $prompt = "Refactor this code according to these instructions: $Instructions`n`n```$Code```n`nProvide ONLY the refactored code."
+    return Send-OllamaRequest -Prompt $prompt -Model $OllamaModel
+}
+
+function Invoke-AgenticWorkflow {
+    param([string]$Goal, [string]$Context)
+    $taskId = [guid]::NewGuid().ToString()
+    $task = @{ Id = $taskId; Name = $Goal; Status = "Running"; Steps = @(@{Description = "Analyze goal: $Goal"; Completed = $false}; @{Description = "Execute workflow steps"; Completed = $false}); Context = $Context }
+    if (-not $global:agentContext.Tasks) { $global:agentContext.Tasks = @() }
+    $global:agentContext.Tasks += $task
+    return $task
+}
+
+function New-AgentTask {
+    param([string]$Name, [string]$Description)
+    $taskId = [guid]::NewGuid().ToString()
+    $task = @{ Id = $taskId; Name = $Name; Description = $Description; Status = "Pending"; Steps = @(); CreatedAt = Get-Date; Priority = "Normal" }
+    if (-not $global:agentContext.Tasks) { $global:agentContext.Tasks = @() }
+    $global:agentContext.Tasks += $task
+    return $taskId
+}
+
+function Start-AgentTaskAsync {
+    param([string]$TaskId, [string]$Priority = "Normal")
+    $task = $global:agentContext.Tasks | Where-Object { $_.Id -eq $TaskId } | Select-Object -First 1
+    if ($task) {
+        $task.Status = "Running"; $task.Priority = $Priority; $task.StartedAt = Get-Date
+        Write-DevConsole "Started agent task: $($task.Name) [Priority: $Priority]" "INFO"
+    }
+}
+
+function Get-EnvironmentInfo {
+    return @{
+        OS = [System.Environment]::OSVersion.VersionString
+        PowerShell = $PSVersionTable.PSVersion.ToString()
+        User = [Environment]::UserName
+        Machine = [Environment]::MachineName
+        CurrentDirectory = $global:currentWorkingDir
+        ProcessorCount = [Environment]::ProcessorCount
+        DotNetVersion = [System.Environment]::Version.ToString()
+    }
+}
+
+function Get-ProjectDependencies {
+    param([string]$Path = ".")
+    $detected = Detect-ProjectDependencies -ProjectPath $Path
+    $buildSystem = "Unknown"
+    if (Test-Path (Join-Path $Path "package.json")) { $buildSystem = "npm" }
+    elseif (Test-Path (Join-Path $Path "requirements.txt")) { $buildSystem = "pip" }
+    elseif (Test-Path (Join-Path $Path "Cargo.toml")) { $buildSystem = "cargo" }
+    elseif (Get-ChildItem -Path $Path -Filter "*.csproj" -ErrorAction SilentlyContinue) { $buildSystem = "dotnet" }
+    return @{ Type = if ($detected.Count -gt 0) { "Detected" } else { "None" }; BuildSystem = $buildSystem; Dependencies = $detected }
+}
+
+function Set-StructuredEdit {
+    param([string]$File, [array]$Edits)
+    try {
+        $content = [System.IO.File]::ReadAllText($File)
+        foreach ($edit in $Edits) {
+            if ($edit.old_text) { $content = $content -replace [regex]::Escape($edit.old_text), $edit.new_text }
+        }
+        [System.IO.File]::WriteAllText($File, $content)
+        return @{ success = $true; path = $File; edits_applied = $Edits.Count }
+    }
+    catch { return @{ success = $false; error = $_.Exception.Message } }
+}
+
+function Get-AgentToolsList {
+    $categories = @{}
+    foreach ($tool in $script:agentTools.Values) {
+        $cat = if ($tool.Category) { $tool.Category } else { "General" }
+        if (-not $categories.ContainsKey($cat)) { $categories[$cat] = @() }
+        $categories[$cat] += @{ name = $tool.Name; description = $tool.Description; version = if ($tool.Version) { $tool.Version } else { "1.0" }; parameters = ($tool.Parameters.Keys -join ", ") }
+    }
+    return $categories
+}
+
+function Apply-Theme {
+    param([string]$ThemeName)
+    $script:CurrentTheme = $ThemeName
+    switch ($ThemeName) {
+        "Stealth-Cheetah" {
+            $form.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+            if ($script:editor) { $script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30); $script:editor.ForeColor = [System.Drawing.Color]::FromArgb(255, 165, 0) }
+        }
+        "Dark" {
+            $form.BackColor = [System.Drawing.Color]::FromArgb(45, 45, 45)
+            if ($script:editor) { $script:editor.BackColor = [System.Drawing.Color]::FromArgb(30, 30, 30); $script:editor.ForeColor = [System.Drawing.Color]::White }
+        }
+        "Light" {
+            $form.BackColor = [System.Drawing.Color]::FromArgb(240, 240, 240)
+            if ($script:editor) { $script:editor.BackColor = [System.Drawing.Color]::White; $script:editor.ForeColor = [System.Drawing.Color]::Black }
+        }
+    }
+    Write-DevConsole "Theme applied: $ThemeName" "SUCCESS"
+}
+
+function Show-CustomThemeBuilder {
+    $themeForm = New-Object System.Windows.Forms.Form
+    $themeForm.Text = "Custom Theme Builder"
+    $themeForm.Size = New-Object System.Drawing.Size(400, 300)
+    $themeForm.StartPosition = "CenterScreen"
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Text = "Custom theme builder. Use /theme dark, /theme light, or /theme stealth-cheetah"
+    $lbl.Dock = "Fill"
+    $lbl.TextAlign = "MiddleCenter"
+    $themeForm.Controls.Add($lbl)
+    $themeForm.ShowDialog() | Out-Null
+}
+
+function Save-CustomizationSettings {
+    $settingsFile = Join-Path $env:APPDATA "RawrXD\customization.json"
+    $settingsDir = Split-Path $settingsFile
+    if (-not (Test-Path $settingsDir)) { New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null }
+    @{ Theme = $script:CurrentTheme; Security = $script:SecurityConfig } | ConvertTo-Json -Depth 5 | Set-Content $settingsFile -Encoding UTF8
+}
+
+function Get-AIErrorDashboard {
+    $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
+    if (Test-Path $statsFile) {
+        $stats = Get-Content $statsFile | ConvertFrom-Json
+        return @"
+AI Error Statistics:
+Total Errors: $($stats.TotalErrors)
+By Category: $($stats.ErrorsByCategory | ConvertTo-Json -Compress)
+By Severity: $($stats.ErrorsBySeverity | ConvertTo-Json -Compress)
+By Model: $($stats.ErrorsByModel | ConvertTo-Json -Compress)
+Last Updated: $($stats.LastUpdated)
+"@
+    }
+    return "No AI error statistics available."
+}
+
+function Clear-AIErrorStatistics {
+    $statsFile = Join-Path $script:EmergencyLogPath "ai_error_stats.json"
+    if (Test-Path $statsFile) { Remove-Item $statsFile -Force; return "✅ AI error statistics cleared." }
+    return "No statistics file to clear."
+}
+
+function Show-PerformanceMonitor {
+    $perfForm = New-Object System.Windows.Forms.Form
+    $perfForm.Text = "Performance Monitor"
+    $perfForm.Size = New-Object System.Drawing.Size(600, 400)
+    $perfForm.StartPosition = "CenterScreen"
+    $textBox = New-Object System.Windows.Forms.TextBox
+    $textBox.Multiline = $true
+    $textBox.Dock = "Fill"
+    $textBox.ScrollBars = "Vertical"
+    $textBox.Font = New-Object System.Drawing.Font("Consolas", 10)
+    $process = Get-Process -Id $PID
+    $textBox.Text = @"
+RawrXD Performance Monitor
+═══════════════════════════════════
+Process ID: $PID
+Working Set: $([math]::Round($process.WorkingSet64 / 1MB, 2)) MB
+Peak Working Set: $([math]::Round($process.PeakWorkingSet64 / 1MB, 2)) MB
+Private Memory: $([math]::Round($process.PrivateMemorySize64 / 1MB, 2)) MB
+Threads: $($process.Threads.Count)
+Handles: $($process.HandleCount)
+Start Time: $($process.StartTime)
+CPU Time: $($process.TotalProcessorTime)
+"@
+    $perfForm.Controls.Add($textBox)
+    $perfForm.ShowDialog() | Out-Null
+}
+
+function Start-PerformanceOptimization {
+    Write-DevConsole "🚀 Starting performance optimization..." "INFO"
+    [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers(); [System.GC]::Collect()
+    $process = Get-Process -Id $PID
+    Write-DevConsole "Memory optimized. Working set: $([math]::Round($process.WorkingSet64 / 1MB, 2)) MB" "SUCCESS"
+}
+
+function Start-PerformanceProfiler {
+    param([int]$DurationSeconds = 60)
+    Write-DevConsole "📊 Profiling for $DurationSeconds seconds..." "INFO"
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $samples = @()
+    while ($sw.Elapsed.TotalSeconds -lt $DurationSeconds) {
+        $process = Get-Process -Id $PID
+        $samples += @{ Time = Get-Date -Format "HH:mm:ss"; MemoryMB = [math]::Round($process.WorkingSet64 / 1MB, 2); CPU = $process.TotalProcessorTime.TotalSeconds }
+        Start-Sleep -Seconds 1
+    }
+    $sw.Stop()
+    $avgMem = ($samples | Measure-Object -Property MemoryMB -Average).Average
+    Write-DevConsole "Profiling complete. Avg Memory: $([math]::Round($avgMem, 2)) MB over $($samples.Count) samples" "SUCCESS"
+}
+
+function Show-RealTimeMonitor {
+    $rtForm = New-Object System.Windows.Forms.Form
+    $rtForm.Text = "Real-Time Monitor"
+    $rtForm.Size = New-Object System.Drawing.Size(500, 300)
+    $rtForm.StartPosition = "CenterScreen"
+    $rtBox = New-Object System.Windows.Forms.TextBox
+    $rtBox.Multiline = $true
+    $rtBox.Dock = "Fill"
+    $rtBox.Font = New-Object System.Drawing.Font("Consolas", 10)
+    $timer = New-Object System.Windows.Forms.Timer
+    $timer.Interval = 1000
+    $timer.Add_Tick({ $p = Get-Process -Id $PID; $rtBox.Text = "Memory: $([math]::Round($p.WorkingSet64 / 1MB, 2)) MB`r`nThreads: $($p.Threads.Count)`r`nHandles: $($p.HandleCount)`r`nTime: $(Get-Date -Format 'HH:mm:ss')" })
+    $timer.Start()
+    $rtForm.Controls.Add($rtBox)
+    $rtForm.Add_FormClosing({ $timer.Stop() })
+    $rtForm.ShowDialog() | Out-Null
+}
+
+function Show-SessionInfo {
+    $infoForm = New-Object System.Windows.Forms.Form
+    $infoForm.Text = "Session Information"
+    $infoForm.Size = New-Object System.Drawing.Size(400, 300)
+    $infoForm.StartPosition = "CenterScreen"
+    $infoBox = New-Object System.Windows.Forms.TextBox
+    $infoBox.Multiline = $true
+    $infoBox.Dock = "Fill"
+    $infoBox.ReadOnly = $true
+    $infoBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+    $infoBox.Text = @"
+Session ID: $($script:CurrentSession.SessionId)
+User: $($script:CurrentSession.UserContext)
+Machine: $($script:CurrentSession.MachineName)
+Started: $($script:CurrentSession.StartTime)
+Last Activity: $($script:CurrentSession.LastActivity)
+Authenticated: $($script:CurrentSession.IsAuthenticated)
+Security Level: $($script:CurrentSession.SecurityLevel)
+Encryption: $($script:SecurityConfig.EncryptSensitiveData)
+Stealth Mode: $($script:SecurityConfig.StealthMode)
+"@
+    $infoForm.Controls.Add($infoBox)
+    $infoForm.ShowDialog() | Out-Null
+}
+
+function Show-SecurityLog {
+    $logForm = New-Object System.Windows.Forms.Form
+    $logForm.Text = "Security Log"
+    $logForm.Size = New-Object System.Drawing.Size(700, 500)
+    $logForm.StartPosition = "CenterScreen"
+    $logBox = New-Object System.Windows.Forms.RichTextBox
+    $logBox.Dock = "Fill"
+    $logBox.ReadOnly = $true
+    $logBox.Font = New-Object System.Drawing.Font("Consolas", 9)
+    foreach ($entry in $script:SecurityLog) {
+        $logBox.AppendText("[$($entry.Timestamp)] [$($entry.Level)] $($entry.Event) - $($entry.Details)`r`n")
+    }
+    $logForm.Controls.Add($logBox)
+    $logForm.ShowDialog() | Out-Null
+}
+
+function Show-EncryptionTest {
+    $testForm = New-Object System.Windows.Forms.Form
+    $testForm.Text = "Encryption Test"
+    $testForm.Size = New-Object System.Drawing.Size(400, 200)
+    $testForm.StartPosition = "CenterScreen"
+    $inputBox = New-Object System.Windows.Forms.TextBox
+    $inputBox.Location = New-Object System.Drawing.Point(20, 20)
+    $inputBox.Size = New-Object System.Drawing.Size(350, 25)
+    $testForm.Controls.Add($inputBox)
+    $resultBox = New-Object System.Windows.Forms.TextBox
+    $resultBox.Location = New-Object System.Drawing.Point(20, 60)
+    $resultBox.Size = New-Object System.Drawing.Size(350, 25)
+    $resultBox.ReadOnly = $true
+    $testForm.Controls.Add($resultBox)
+    $testBtn = New-Object System.Windows.Forms.Button
+    $testBtn.Text = "Test Encrypt/Decrypt"
+    $testBtn.Location = New-Object System.Drawing.Point(20, 100)
+    $testBtn.Size = New-Object System.Drawing.Size(150, 30)
+    $testBtn.Add_Click({
+        $encrypted = [StealthCrypto]::Encrypt($inputBox.Text, $script:CurrentSession.EncryptionKey)
+        $decrypted = [StealthCrypto]::Decrypt($encrypted, $script:CurrentSession.EncryptionKey)
+        $resultBox.Text = if ($decrypted -eq $inputBox.Text) { "✅ Encryption working correctly" } else { "❌ Encryption mismatch" }
+    })
+    $testForm.Controls.Add($testBtn)
+    $testForm.ShowDialog() | Out-Null
 }
 
 # GUI Setup

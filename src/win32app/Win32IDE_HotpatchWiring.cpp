@@ -48,6 +48,7 @@
 #include <vector>
 #include <windows.h>
 #include <utility>
+#include "gguf_loader.h"
 
 // ============================================================================
 // Global shutdown flag for SIGINT/SIGTERM handler
@@ -2093,4 +2094,5 @@ void HeadlessIDE::shutdownAll() {
 
     m_outputSink->flush();
 }
+
 

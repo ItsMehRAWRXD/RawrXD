@@ -157,19 +157,21 @@ void Win32IDE::showRenamePreview(const std::string& oldName, const std::string& 
         lvi.lParam = (LPARAM)i;
         ListView_InsertItem(m_renamePreview.hwndList, &lvi);
 
-        // Line number
-        char lineStr[16];
-        snprintf(lineStr, sizeof(lineStr), "%d", change.line + 1);
+        // Line number - use wide string for Unicode build
+        wchar_t lineStr[16];
+        swprintf(lineStr, 16, L"%d", change.line + 1);
         ListView_SetItemText(m_renamePreview.hwndList, i, 1, lineStr);
 
         // Context with highlighted old → new
-        std::string context = change.contextLine;
-        size_t pos = context.find(change.oldText);
-        if (pos != std::string::npos) {
-            context = context.substr(0, pos) + "[" + change.oldText + " → " +
-                      change.newText + "]" + context.substr(pos + change.oldText.size());
+        std::wstring context(change.contextLine.begin(), change.contextLine.end());
+        std::wstring oldTextW(change.oldText.begin(), change.oldText.end());
+        std::wstring newTextW(change.newText.begin(), change.newText.end());
+        size_t pos = context.find(oldTextW);
+        if (pos != std::wstring::npos) {
+            context = context.substr(0, pos) + L"[" + oldTextW + L" → " +
+                      newTextW + L"]" + context.substr(pos + oldTextW.size());
         }
-        ListView_SetItemText(m_renamePreview.hwndList, i, 2, (char*)context.c_str());
+        ListView_SetItemText(m_renamePreview.hwndList, i, 2, (wchar_t*)context.c_str());
 
         // Check by default
         if (change.selected)

@@ -1,20 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-/**
- * @file common_types.h
- * Centralized definition of common structures used across RawrXD
- * This prevents duplicate definitions and ensures consistency
- */
-
-#ifndef COMMON_TYPES_H
-#define COMMON_TYPES_H
-
-#include <string>
-#include <vector>
-#include <cstdint>
-
-// ============================================================================
+=====================================================================
 // SHARED DATA STRUCTURES
 // ============================================================================
 
@@ -86,4 +70,4 @@ struct DownloadProgress {
 };
 
 #endif // COMMON_TYPES_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

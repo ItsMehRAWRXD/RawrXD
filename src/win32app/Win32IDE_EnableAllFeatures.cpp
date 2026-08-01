@@ -6,6 +6,7 @@
 
 #include "Win32IDE.h"
 #include <cassert>
+#include "gguf_loader.h"
 
 // ============================================================================
 // 5-Tier Enabled Subsystems Architecture
@@ -123,3 +124,4 @@ void Win32IDE::wireAllSystems()
 }
 
 } // namespace Win32IDE
+

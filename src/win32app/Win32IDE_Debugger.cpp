@@ -923,7 +923,6 @@ void Win32IDE::updateWatchList()
 
 void Win32IDE::evaluateWatch(WatchItem& item)
 {
-<<<<<<< HEAD
     auto& engine = NativeDebuggerEngine::Instance();
     EvalResult evalRes;
     DebugResult r = engine.evaluate(item.expression, evalRes);
@@ -936,30 +935,6 @@ void Win32IDE::evaluateWatch(WatchItem& item)
         item.value += ">";
         item.type  = "error";
     }
-=======
-    // Try to evaluate as PowerShell variable
-    if (!item.expression.empty()) {
-        std::string val = getPowerShellVariable(item.expression);
-        if (!val.empty()) {
-            item.value = val;
-            item.type = "PowerShell Var";
-            return;
-        }
-
-        // Try to evaluate as immediate command
-        std::string cmdVal = executePowerShellCommand(item.expression, false);
-        if (!cmdVal.empty()) {
-             // Basic newline trim
-             while(!cmdVal.empty() && (cmdVal.back() == '\r' || cmdVal.back() == '\n')) cmdVal.pop_back();
-             item.value = cmdVal;
-             item.type = "PowerShell Expr";
-             return;
-        }
-    }
-
-    item.value = "undefined";
-    item.type = "unknown";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -1422,7 +1397,6 @@ void Win32IDE::debuggerInspectMemory(uint64_t address, size_t bytes)
 
 void Win32IDE::debuggerEvaluateExpression(const std::string& expression)
 {
-<<<<<<< HEAD
     auto& engine = NativeDebuggerEngine::Instance();
     EvalResult evalRes;
     DebugResult r = engine.evaluate(expression, evalRes);
@@ -1443,24 +1417,6 @@ void Win32IDE::debuggerEvaluateExpression(const std::string& expression)
         msg += r.detail;
         msg += ">";
     }
-=======
-    // Real evaluation via PowerShell backend
-    // Since debugger state is often inspected via Get-Variable or similar
-    std::string result = executePowerShellCommand(expression, false); // Block for result
-
-    // Trim output
-    if (!result.empty()) {
-        size_t last = result.find_last_not_of(" \n\r\t");
-        if (last != std::string::npos) result = result.substr(0, last + 1);
-    }
-    
-    // If output is too long, truncate
-    if (result.length() > 512) {
-        result = result.substr(0, 512) + "... (truncated)";
-    }
-    
-    std::string msg = "📐 Evaluate: " + expression + " = " + result;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     appendToOutput(msg, "Output", OutputSeverity::Debug);
 }
 

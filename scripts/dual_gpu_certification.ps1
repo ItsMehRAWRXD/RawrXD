@@ -60,10 +60,40 @@ if ($cliExists -and $uiExists -and $integrationExists) {
     Write-GateResult 1 "Binary Availability" "FAIL" "Missing: $($missing -join ', ')"
 }
 
-# Gate 2: GPU Detection via PowerShell
+# Gate 2: GPU Detection via PowerShell (with VS Code terminal fallback)
 Write-Host "`nDetecting GPUs..."
 try {
-    $gpus = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -match "AMD|NVIDIA|Intel" }
+    $gpus = @()
+    # Method 1: WMI (always available)
+    $wmiGpus = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "AMD|NVIDIA|Intel" }
+    if ($wmiGpus) { $gpus += $wmiGpus }
+    # Method 2: PnP (may not be available in VS Code terminal)
+    try {
+        $pnpGpus = Get-PnpDevice -Class Display -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "AMD|NVIDIA|Intel" }
+        if ($pnpGpus) {
+            foreach ($gpu in $pnpGpus) {
+                if (-not ($gpus | Where-Object { $_.PNPDeviceID -eq $gpu.InstanceId -or $_.Name -eq $gpu.Name })) {
+                    $gpus += $gpu
+                }
+            }
+        }
+    } catch {
+        Write-Host "  [INFO] PnP unavailable (expected in VS Code terminal)" -ForegroundColor Gray
+    }
+    # Method 3: Registry fallback
+    if (-not $gpus) {
+        try {
+            $regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Video"
+            $regKeys = Get-ChildItem $regPath -ErrorAction SilentlyContinue
+            foreach ($key in $regKeys) {
+                $desc = (Get-ItemProperty -Path "$($key.PSPath)\0000" -Name "DeviceDescription" -ErrorAction SilentlyContinue).DeviceDescription
+                if ($desc -match "AMD|Radeon|NVIDIA") {
+                    $gpus += [PSCustomObject]@{ Name = $desc; PNPDeviceID = $key.PSChildName }
+                }
+            }
+        } catch {}
+    }
+    
     $amdGpus = $gpus | Where-Object { $_.Name -match "AMD|Radeon" }
     
     if ($amdGpus.Count -ge 2) {
@@ -129,23 +159,51 @@ if (Test-Path $vulkanDll) {
     Write-GateResult 6 "Vulkan Runtime" "WARN" "Vulkan loader not found"
 }
 
-# Gate 7: GPU VRAM Detection
+# Gate 7: GPU VRAM Detection (with VS Code terminal fallback, single-GPU aware)
 Write-Host "`nChecking GPU VRAM..."
 try {
-    $adapters = Get-CimInstance Win32_VideoController | Where-Object { $_.Name -match "AMD|Radeon" }
+    $adapters = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "AMD|Radeon" }
     $totalVram = 0
     $gpuDetails = @()
+    $knownGpus = @()
+    
+    # Track known GPUs by PNPDeviceID to avoid duplicates
     foreach ($adapter in $adapters) {
         $vram = [math]::Round($adapter.AdapterRAM / 1GB, 1)
         $totalVram += $vram
         $gpuDetails += "$($adapter.Name): ${vram}GB"
+        $knownGpus += $adapter.PNPDeviceID
     }
-    if ($totalVram -ge 40) {
-        Write-GateResult 7 "GPU VRAM" "PASS" "${totalVram}GB total - $($gpuDetails -join '; ')"
-    } elseif ($totalVram -ge 16) {
-        Write-GateResult 7 "GPU VRAM" "PASS" "${totalVram}GB total - $($gpuDetails -join '; ')"
+    
+    # If only 1 GPU reported via WMI, check registry for the second
+    if ($adapters.Count -lt 2) {
+        try {
+            $regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Video"
+            $regKeys = Get-ChildItem $regPath -ErrorAction SilentlyContinue
+            foreach ($key in $regKeys) {
+                $desc = (Get-ItemProperty -Path "$($key.PSPath)\0000" -Name "DeviceDescription" -ErrorAction SilentlyContinue).DeviceDescription
+                if ($desc -match "AMD|Radeon|7800|7900" -and -not ($knownGpus | Where-Object { $_ -match $key.PSChildName })) {
+                    $vram = if ($desc -match "7800|7900") { 16 } elseif ($desc -match "9700|AI PRO") { 48 } else { 0 }
+                    $totalVram += $vram
+                    $gpuDetails += "$desc: ${vram}GB (registry)"
+                    $knownGpus += $key.PSChildName
+                }
+            }
+        } catch {}
+    }
+    
+    # Single-GPU aware threshold
+    $gpuCount = $adapters.Count
+    if ($gpuCount -ge 2) {
+        $threshold = 40
     } else {
-        Write-GateResult 7 "GPU VRAM" "WARN" "${totalVram}GB total VRAM"
+        $threshold = 32  # Single R9700 with 48GB is fine
+    }
+    
+    if ($totalVram -ge $threshold) {
+        Write-GateResult 7 "GPU VRAM" "PASS" "${totalVram}GB total ($gpuCount GPU(s)) - $($gpuDetails -join '; ')"
+    } else {
+        Write-GateResult 7 "GPU VRAM" "WARN" "${totalVram}GB total VRAM ($gpuCount GPU(s))"
     }
 } catch {
     Write-GateResult 7 "GPU VRAM" "WARN" "Could not detect VRAM: $_"

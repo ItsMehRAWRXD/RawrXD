@@ -6,10 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <sstream>
-<<<<<<< HEAD
 #include <cctype>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -94,13 +91,8 @@ std::expected<std::vector<std::string>, SwarmError> SwarmOrchestrator::decompose
     const std::string& task,
     const std::unordered_map<std::string, std::string>& context
 ) {
-<<<<<<< HEAD
     // Decompose task into subtasks using heuristic rules
     // Production implementation would use LLM for intelligent decomposition
-=======
-    // In a real implementation, this would use an LLM or predefined heuristics
-    // For now, we'll split by common delimiters or return single task if simple
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<std::string> subtasks;
     
     // Heuristic decomposition based on keywords
@@ -137,7 +129,6 @@ std::expected<SwarmResult, SwarmError> SwarmOrchestrator::executeSubtask(
     result.taskId = generateTaskId(); // Subtask ID
     result.agentId = agent->id;
     
-<<<<<<< HEAD
     // Execute subtask through inference engine or heuristic logic
     // This connects to the CPU Inference Engine for actual processing
     try {
@@ -297,31 +288,6 @@ std::expected<SwarmResult, SwarmError> SwarmOrchestrator::executeSubtask(
             result.success = true; // Mark as success but with low confidence
         }
         
-=======
-    // Simulate real work through inference engine or logic
-    // This connects to the actual CPU Inference Engine
-    try {
-        // If we had the engine pointer:
-        // auto inferenceResult = m_inferenceEngine->generateResponse(subtask, context);
-        // For now, perform heuristic work:
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(100 + (rand() % 400)));
-        
-        // "Real" work based on specialization
-        if (agent->specialization == AgentSpecialization::Coding) {
-            result.result = "// Generated code for: " + subtask + "\nvoid impl() { /* ... */ }";
-            result.confidence = 0.85f + ((rand() % 15) / 100.0f);
-        } else if (agent->specialization == AgentSpecialization::Testing) {
-            result.result = "Test passed for: " + subtask;
-            result.confidence = 0.90f + ((rand() % 10) / 100.0f);
-        } else {
-            result.result = "Analysis complete: " + subtask;
-            result.confidence = 0.75f + ((rand() % 20) / 100.0f);
-        }
-        
-        result.success = true;
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     } catch (const std::exception& e) {
         result.success = false;
         result.errors.push_back(e.what());
@@ -538,7 +504,6 @@ void SwarmOrchestrator::updateAgentStats(SwarmAgent* agent, const SwarmResult& r
     }
 }
 
-<<<<<<< HEAD
 // Production implementation for remaining interface methods
 std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<SwarmTask> task) {
     if (!task) {
@@ -578,16 +543,10 @@ std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<Sw
     }
 
     m_taskCondition.notify_one();
-=======
-// Stub for remaining interface methods required effectively
-std::expected<void, SwarmError> SwarmOrchestrator::submitTask(std::unique_ptr<SwarmTask> task) {
-    // Add to queue
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return {};
 }
 
 std::expected<void, SwarmError> SwarmOrchestrator::removeAgent(const std::string& agentId) {
-<<<<<<< HEAD
     if (agentId.empty()) {
         return std::unexpected(SwarmError::InvalidAgent);
     }
@@ -838,9 +797,4 @@ void SwarmOrchestrator::logSwarmOperation(const std::string& operation, const st
     spdlog::info("[SwarmOrchestrator] {} {}", operation, details);
 }
 
-=======
-    return {};
-}
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 } // namespace RawrXD

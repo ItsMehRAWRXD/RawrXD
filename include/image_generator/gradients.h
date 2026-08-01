@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-#include <vector>
-#include <algorithm>
-#include "colors.h"
-
-namespace ig {
-
-// ======================== Gradient Stops ========================
+================= Gradient Stops ========================
 
 struct GradientStop {
     float t;
@@ -276,4 +268,4 @@ public:
 };
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

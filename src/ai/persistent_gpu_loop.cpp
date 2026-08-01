@@ -4,6 +4,7 @@
 #include "persistent_gpu_loop.h"
 #include <algorithm>
 #include <cmath>
+#include "vulkan_compute.h"
 
 namespace RawrXD {
 
@@ -572,3 +573,4 @@ uint32_t PersistentGPULoop::SampleToken(const float* logits, int vocab_size, flo
 }
 
 } // namespace RawrXD
+

@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-#ifndef PHASE2_FOUNDATION_H
-#define PHASE2_FOUNDATION_H
-
-#include <cstdint>
-#include <cstring>
-#include <windows.h>
-
-//================================================================================
+=========================================================================
 // PHASE 2: MODEL LOADER & FORMAT ROUTER
 // Universal loading for GGUF/Safetensors/PyTorch/ONNX with streaming
 //================================================================================
@@ -858,4 +850,4 @@ inline void* Phase2::ModelLoader::GetTensorData(const char* name)
 }
 
 #endif // PHASE2_FOUNDATION_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

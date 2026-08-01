@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+#include "gguf_loader.h"
 
 // GGUF magic number (little-endian: "GGUF")
 const uint32_t GGUF_MAGIC = 0x46554747;
@@ -397,4 +398,5 @@ void BlobToGGUFConverter::updateProgress(int processedTensors, int64_t bytesProc
 
     progressUpdated(m_progress);
 }
+
 

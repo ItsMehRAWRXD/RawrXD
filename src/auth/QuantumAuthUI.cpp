@@ -21,25 +21,19 @@
 #include <intrin.h>
 #include <bcrypt.h>
 #include <wincrypt.h>
-<<<<<<< HEAD
 
 // QuantumAuthUI - Production Implementation
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #pragma comment(lib, "Bcrypt.lib")
 #pragma comment(lib, "crypt32.lib")
 #endif
 
 namespace rawrxd::auth {
 
-<<<<<<< HEAD
 // Forward declarations for static helpers defined at end of file
 static std::vector<uint8_t> dpapiCrypt(const std::vector<uint8_t>& in, bool encrypt);
 static std::string getMachineGuid();
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ═══════════════════════════════════════════════════════════════════════════════
 // KeyMetadata Implementation
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -63,15 +57,11 @@ json KeyMetadata::toJson() const
     obj["isRevoked"] = isRevoked;
     obj["revocationReason"] = revocationReason;
     obj["revocationDate"] = revocationDate;
-<<<<<<< HEAD
     json metaObj = json::object();
     for (const auto& [key, value] : customMetadata) {
         metaObj[key] = value;
     }
     obj["customMetadata"] = metaObj;
-=======
-    obj["customMetadata"] = customMetadata;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return obj;
 }
 
@@ -173,11 +163,7 @@ KeyGenerationResult QuantumAuthManager::generateKey(const std::string& name, Key
     
     if (status != 0) { // Non-zero status indicates error
         result.success = false;
-<<<<<<< HEAD
         result.errorMessage = "Failed to generate random bytes: " + std::to_string(status);
-=======
-        result.error = "Failed to generate random bytes: " + std::to_string(status);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return result;
     }
     
@@ -335,14 +321,9 @@ void KeyStorage::loadFromDisk()
     if(std::filesystem::exists(path)) {
         try {
             std::ifstream f(path);
-<<<<<<< HEAD
             std::string content((std::istreambuf_iterator<char>(f)),
                                  std::istreambuf_iterator<char>());
             json doc = json::parse(content);
-=======
-            json doc;
-            f >> doc;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             
             if(doc.contains("keys")) {
                  for(auto& el : doc["keys"]) {

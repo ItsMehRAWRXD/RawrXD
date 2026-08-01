@@ -9,6 +9,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -120,7 +121,6 @@ std::expected<GGUFModelData, GGUFError> GGUFParser::parse(const std::string& fil
         memcpy(&metadata.type, data + offset, sizeof(uint32_t));
         offset += sizeof(uint32_t);
         
-<<<<<<< HEAD
         // Read metadata value based on type
         switch (metadata.type) {
             case 0: { // uint8
@@ -184,10 +184,6 @@ std::expected<GGUFModelData, GGUFError> GGUFParser::parse(const std::string& fil
                 metadata.value.push_back(val);
                 break;
             }
-=======
-        // Simplified value reading
-        switch (metadata.type) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             case 8: { // string
                 uint64_t strLen;
                 memcpy(&strLen, data + offset, sizeof(uint64_t));
@@ -197,7 +193,6 @@ std::expected<GGUFModelData, GGUFError> GGUFParser::parse(const std::string& fil
                 offset += strLen;
                 break;
             }
-<<<<<<< HEAD
             case 9: { // array - skip for now (complex)
                 uint32_t elemType;
                 uint64_t elemCount;
@@ -243,14 +238,6 @@ std::expected<GGUFModelData, GGUFError> GGUFParser::parse(const std::string& fil
             default:
                 // Unknown type, skip 4 bytes
                 offset += 4;
-=======
-            default:
-                // Skip basic types for briefness in this impl, assuming offset increment provided by user code logic is correct
-                // Just stepping forward for now if simple type
-                // Actually need to check type size. Assuming 4 bytes for simplicity or string
-                // User code had full switch, copying it:
-                 // ... other cases ...
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 break;
         }
         
@@ -361,3 +348,4 @@ std::expected<std::vector<float>, GGUFError> GGUFParser::loadWeights(
 }
 
 } // namespace RawrXD
+

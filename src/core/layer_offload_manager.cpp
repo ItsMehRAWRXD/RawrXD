@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <chrono>
 #include <intrin.h>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -1220,3 +1221,4 @@ size_t LayerOffloadManager::dumpDiagnostics(char* buffer, size_t bufferSize) con
 }
 
 } // namespace RawrXD
+

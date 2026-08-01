@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include "gguf_loader.h"
 
 namespace Prometheus {
 
@@ -777,3 +778,4 @@ void RealModelLoader::printModelInfo(const LoadResult& result) {
 }
 
 } // namespace Prometheus
+

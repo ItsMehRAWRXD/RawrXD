@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "gguf_loader.h"
 
 namespace fs = std::filesystem;
 
@@ -326,3 +327,4 @@ void AgentHotPatcher::notifyStatisticsUpdated(const JsonValue& s) {
         if (cb.fn) cb.fn(s, cb.userData);
     }
 }
+

@@ -1,30 +1,4 @@
-<<<<<<< HEAD
-/**
- * @file agent_task_parser.hpp
- * @brief Natural language task parser for autonomous agent operations
- *
- * Converts user requests into executable tool chains with:
- * - Intent classification
- * - Parameter extraction
- * - Tool chain construction
- * - Thermal-aware scheduling
- */
-
-#pragma once
-
-#include <string>
-#include <vector>
-#include <map>
-#include <functional>
-#include <memory>
-#include <regex>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
-
-namespace RawrXD {
-
-// ============================================================================
+=====================================================================
 // Intent Types
 // ============================================================================
 
@@ -916,4 +890,4 @@ inline std::string AgentTaskParser::intentToString(IntentType intent) {
 }
 
 } // namespace RawrXD
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

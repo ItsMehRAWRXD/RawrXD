@@ -1,20 +1,15 @@
 #include "MultiModalModelRouter.h"
 #include <algorithm>
 #include <numeric>
-<<<<<<< HEAD
 #include <random>
 #include <chrono>
 #include <unordered_map>
 
 // Model router and tier hopping — Phase 31 implementation complete
-=======
-#include <iostream>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 namespace IDE {
 
-<<<<<<< HEAD
 // Model capability scores (0.0-1.0 scale)
 struct ModelCapabilities {
     double reasoning = 0.0;    // Logical analysis and problem solving
@@ -407,16 +402,6 @@ bool MultiModalModelRouter::registerModel(
     metadata.registeredTime = std::chrono::system_clock::now();
     
     m_availableModels[modelName] = metadata;
-=======
-MultiModalModelRouter::MultiModalModelRouter() {
-    // Default initialization
-}
-
-bool MultiModalModelRouter::initialize(const std::string& ollamaEndpoint) {
-    // In a real implementation, we would probe the endpoint
-    // For now, we seed with some defaults
-    loadModelsFromOllama();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 

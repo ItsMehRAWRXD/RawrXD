@@ -251,21 +251,13 @@ struct Symbol {
     uint64_t address;
     std::string signature;      // For procedures
     
-<<<<<<< HEAD
-=======
-    Symbol() : type(LABEL), line(0), address(0) {}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     Symbol(const std::string& n, Type t) : name(n), type(t), line(0), address(0) {}
 };
 
 // ============================================================================
 // Token Types
 // ============================================================================
-<<<<<<< HEAD
 enum TokenType {
-=======
-enum AsmTokenType {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     TOK_EOF = 0,
     TOK_IDENTIFIER,
     TOK_NUMBER,
@@ -284,29 +276,13 @@ enum AsmTokenType {
 };
 
 struct Token {
-<<<<<<< HEAD
     TokenType type;
-=======
-    AsmTokenType type;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string value;
     std::string filename;
     int line;
     int column;
     
-<<<<<<< HEAD
     Token(TokenType t = TOK_EOF) : type(t), line(0), column(0) {}
-=======
-    Token(AsmTokenType t = TOK_EOF) : type(t), line(0), column(0) {}
-
-    bool operator==(const Token& other) const {
-        return type == other.type
-            && value == other.value
-            && filename == other.filename
-            && line == other.line
-            && column == other.column;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 // ============================================================================
@@ -325,14 +301,9 @@ public:
         auto startTime = std::chrono::high_resolution_clock::now();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "RawrXD Universal Compiler v1.0.0\n";
             std::cout << "Target: " << m_config.targetArch << " (" << m_config.targetOS << ")\n";
             std::cout << "Output: " << m_config.outputFile << "\n\n";
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
 
         // --- System Compiler Orchestration ---
@@ -344,20 +315,12 @@ public:
             
             if (invokeSystemCompiler()) {
                 if (m_config.verbose) {
-<<<<<<< HEAD
                     std::cout << "✓ System compilation successful.\n";
-=======
-                    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
                 return true;
             } else {
                 if (m_config.verbose) {
-<<<<<<< HEAD
                     std::cout << "⚠ System compiler failed or not found. Falling back to internal engine...\n";
-=======
-                    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
                 // Fallthrough to internal compiled (which only supports ASM really, but we'll see)
             }
@@ -366,11 +329,7 @@ public:
         // Process each source file
         for (const auto& sourceFile : m_config.sourceFiles) {
             if (m_config.verbose) {
-<<<<<<< HEAD
                 std::cout << "Processing: " << sourceFile << "\n";
-=======
-                
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             
             if (!processFile(sourceFile)) {
@@ -399,17 +358,12 @@ public:
         }
         
         // Print summary
-<<<<<<< HEAD
         std::cout << "\nBuild " << (m_stats.errorCount == 0 ? "succeeded!" : "failed!") << "\n";
         std::cout << "\n  Files:     " << m_stats.filesProcessed << "/" << m_config.sourceFiles.size() << " compiled";
         std::cout << "\n  Errors:    " << m_stats.errorCount;
         std::cout << "\n  Warnings:  " << m_stats.warningCount;
         std::cout << "\n  Time:      " << m_stats.duration.count() << "ms\n";
         
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return (m_stats.errorCount == 0);
     }
 
@@ -421,11 +375,7 @@ private:
          // Select compiler based on language
          if (m_config.language == "cpp" || m_config.language == "c++") {
              // Try common C++ compilers
-<<<<<<< HEAD
              if (m_config.verbose) std::cout << "  [System] Detecting C++ compiler...\n";
-=======
-             if (m_config.verbose) 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
              
              // Detect GCC/G++
              if (std::system("g++ --version >nul 2>nul") == 0) {
@@ -452,12 +402,9 @@ private:
              else return false;
          }
          // ... (other languages omitted for brevity)
-<<<<<<< HEAD
          else {
              return false; // Unknown language
          }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
          else if (m_config.language == "rust") {
              if (std::system("rustc --version >nul 2>nul") == 0) {
                  cmd = "rustc";
@@ -491,11 +438,7 @@ private:
          }
 
          if (m_config.verbose) {
-<<<<<<< HEAD
              std::cout << "  [Exec] " << ss.str() << "\n";
-=======
-             
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
          }
          
          int result = std::system(ss.str().c_str());
@@ -528,11 +471,7 @@ private:
         
         // Lexical analysis
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "  [Lexer] Tokenizing source...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (!lexicalAnalysis(source)) {
             return false;
@@ -540,11 +479,7 @@ private:
         
         // Syntax analysis
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "  [Parser] Building AST...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (!syntaxAnalysis()) {
             return false;
@@ -552,11 +487,7 @@ private:
         
         // Semantic analysis
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "  [Semantic] Analyzing symbols...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (!semanticAnalysis()) {
             return false;
@@ -564,11 +495,7 @@ private:
         
         // Code generation
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "  [CodeGen] Generating machine code...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         if (!codeGeneration()) {
             return false;
@@ -692,11 +619,7 @@ private:
             
             // Operators and punctuation
             char c = source[pos];
-<<<<<<< HEAD
             TokenType type = TOK_EOF;
-=======
-            AsmTokenType type = TOK_EOF;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             
             if (c == ',') type = TOK_COMMA;
             else if (c == ':') type = TOK_COLON;
@@ -732,11 +655,7 @@ private:
         m_stats.tokenCount += m_tokens.size();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "    Tokens: " << m_tokens.size() << "\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return true;
@@ -799,11 +718,7 @@ private:
         m_stats.astNodeCount = m_tokens.size();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "    AST nodes: " << m_stats.astNodeCount << "\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return true;
@@ -827,11 +742,7 @@ private:
         m_stats.symbolCount = m_symbolTable.size();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "    Symbols: " << m_stats.symbolCount << "\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return true;
@@ -839,11 +750,7 @@ private:
     
     bool codeGeneration() {
         // Generate machine code
-<<<<<<< HEAD
         // Simplified: emit NOPs for now
-=======
-        // Simplified: NOPs for now
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         // Add entry point boilerplate (sub rsp, 28h)
         // 48 83 EC 28
@@ -875,11 +782,7 @@ private:
         m_stats.machineCodeSize = m_machineCode.size();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "    Machine code: " << m_stats.machineCodeSize << " bytes\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return true;
@@ -887,11 +790,7 @@ private:
     
     bool linkObjects() {
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "\n[Linker] Linking objects...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         // Link all generated code
@@ -900,11 +799,7 @@ private:
     
     bool generateOutput() {
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "\n[Writer] Generating " << m_config.outputFile << "...\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         // Generate PE/ELF file
@@ -921,11 +816,7 @@ private:
         outFile.close();
         
         if (m_config.verbose) {
-<<<<<<< HEAD
             std::cout << "  Output size: " << peFile.size() << " bytes\n";
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
         
         return true;
@@ -1029,7 +920,6 @@ private:
         sect[0].PointerToRawData = headerSize;
         sect[0].Characteristics = IMAGE_SCN_CNT_CODE | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ;
 
-<<<<<<< HEAD
         // 2. .rdata (Imports/Data) - Placeholder for now logic
         // For this "stub" fix, valid PE is enough.
         // Let's simply make .rdata empty but present to satisfy alignment if needed
@@ -1059,80 +949,10 @@ private:
         nt->OptionalHeader.SizeOfImage = 0x1000 + ((DWORD)codeRawSize + sectionAlignment - 1) & ~(sectionAlignment - 1);
         nt->OptionalHeader.DataDirectory[1].VirtualAddress = 0; // Imports
         nt->OptionalHeader.DataDirectory[1].Size = 0;
-=======
-        // 2. .rdata (Imports/Data) - Minimal implementation for ExitProcess
-        std::vector<uint8_t> rdataSection(512, 0); // Fixed 512 byte buffer for imports (Files alignment)
-        
-        // Calculate alignment
-        // RVA calculation: Start of .text + aligned size of .text
-        DWORD rdataVirtualAddress = 0x2000;
-        if (codeVirtualSize > 0) {
-             rdataVirtualAddress = (0x1000 + ((DWORD)codeVirtualSize + sectionAlignment - 1) & ~(sectionAlignment - 1));
-        }
-        if (rdataVirtualAddress < 0x2000) rdataVirtualAddress = 0x2000;
-
-        // Structured offsets within rdata
-        // We use hardcoded offsets for simplicity in this native writer
-        DWORD offsetImportDesc = 0;
-        DWORD offsetILT = 48; // After Null Desc + padding
-        DWORD offsetIAT = 80; 
-        DWORD offsetKernel32 = 120;
-        DWORD offsetExitProcess = 144;
-        
-        IMAGE_IMPORT_DESCRIPTOR* impDesc = (IMAGE_IMPORT_DESCRIPTOR*)(rdataSection.data() + offsetImportDesc);
-        
-        // Setup Descriptor for KERNEL32.DLL
-        impDesc[0].OriginalFirstThunk = rdataVirtualAddress + offsetILT;
-        impDesc[0].TimeDateStamp = 0;
-        impDesc[0].ForwarderChain = 0;
-        impDesc[0].Name = rdataVirtualAddress + offsetKernel32;
-        impDesc[0].FirstThunk = rdataVirtualAddress + offsetIAT;
-        
-        // Validating KERNEL32 access via Import Lookup Table
-        auto* ilt = reinterpret_cast<DWORD*>(rdataSection.data() + offsetILT);
-        ilt[0] = rdataVirtualAddress + offsetExitProcess; // Point to Hint/Name
-        ilt[1] = 0; // Terminator
-        
-        // Import Address Table (Identical to ILT initially)
-        auto* iat = reinterpret_cast<DWORD*>(rdataSection.data() + offsetIAT);
-        iat[0] = rdataVirtualAddress + offsetExitProcess;
-        iat[1] = 0; // Terminator
-        
-        // DLL Name string
-        std::memcpy(rdataSection.data() + offsetKernel32, "KERNEL32.dll", 13);
-        
-        // Hint/Name Table entry
-        // Word Hint (0) followed by Name "ExitProcess"
-        std::memcpy(rdataSection.data() + offsetExitProcess + 2, "ExitProcess", 12);
-        
-        // Configure Section Header 2 (.rdata)
-        std::memcpy(sect[1].Name, ".rdata\0\0", 8);
-        sect[1].Misc.VirtualSize = (DWORD)rdataSection.size();
-        sect[1].VirtualAddress = rdataVirtualAddress;
-        sect[1].SizeOfRawData = 512; // Aligned (file alignment usually 512)
-        sect[1].PointerToRawData = headerSize + ((DWORD)codeRawSize + fileAlignment - 1) & ~(fileAlignment - 1);
-        sect[1].Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
-
-        nt->FileHeader.NumberOfSections = 2;
-        nt->OptionalHeader.SizeOfImage = rdataVirtualAddress + ((DWORD)rdataSection.size() + sectionAlignment - 1) & ~(sectionAlignment - 1);
-        nt->OptionalHeader.DataDirectory[1].VirtualAddress = rdataVirtualAddress;
-        nt->OptionalHeader.DataDirectory[1].Size = sizeof(IMAGE_IMPORT_DESCRIPTOR) * 2; // Size of Directory
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         // Append section data
         pe.insert(pe.end(), codeSection.begin(), codeSection.end());
         
-<<<<<<< HEAD
-=======
-        // Alignment padding for text section if needed
-        size_t codePadding = sect[1].PointerToRawData - (headerSize + codeSection.size());
-        if (codePadding > 0 && codePadding < 4096) {
-             pe.insert(pe.end(), codePadding, 0);
-        }
-
-        pe.insert(pe.end(), rdataSection.begin(), rdataSection.end());
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return pe;
     }
     
@@ -1152,11 +972,7 @@ private:
         Message err(Message::MSG_ERROR, file, line, col, msg);
         m_messages.push_back(err);
         m_stats.errorCount++;
-<<<<<<< HEAD
         std::cerr << err.toString() << "\n";
-=======
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     void addWarning(const std::string& file, int line, int col, const std::string& msg) {
@@ -1165,11 +981,7 @@ private:
         Message warn(Message::MSG_WARNING, file, line, col, msg);
         m_messages.push_back(warn);
         m_stats.warningCount++;
-<<<<<<< HEAD
         std::cerr << warn.toString() << "\n";
-=======
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 };
 
@@ -1274,7 +1086,6 @@ CompilerConfig parseCommandLine(int argc, char* argv[]) {
 }
 
 void printHelp() {
-<<<<<<< HEAD
     std::cout << 
         "MASM CLI Compiler v1.0.0\n"
         "Usage: masm_cli_compiler [options] <source files>\n\n"
@@ -1305,13 +1116,6 @@ void printVersion() {
         "MASM CLI Compiler v1.0.0\n"
         "Self-Compiling Zero-Dependency MASM Compiler\n"
         "Copyright (C) 2026 RawrXD Project\n";
-=======
-    
-}
-
-void printVersion() {
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // ============================================================================
@@ -1336,13 +1140,8 @@ int main(int argc, char* argv[]) {
     }
     
     if (config.sourceFiles.empty()) {
-<<<<<<< HEAD
         std::cerr << "Error: No input files specified\n";
         std::cerr << "Use -h or --help for usage information\n";
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return 1;
     }
     
@@ -1351,7 +1150,3 @@ int main(int argc, char* argv[]) {
     
     return success ? 0 : 1;
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

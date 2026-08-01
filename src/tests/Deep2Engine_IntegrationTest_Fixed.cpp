@@ -40,6 +40,7 @@
 // Only include Vulkan if available
 #ifdef RAWR_ENABLE_VULKAN
 #include "../kernels/VulkanComputeKernels.hpp"
+#include "vulkan_compute.h"
 #endif
 
 using namespace RawrXD;
@@ -150,3 +151,4 @@ int main() {
         return 1;
     }
 }
+

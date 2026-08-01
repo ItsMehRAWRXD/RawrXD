@@ -1,27 +1,50 @@
 ; utils.asm - Common utilities for Sovereign Universal Transpiler
+; Production: correct register usage, no clobbered counts
+
+option casemap:none
 
 .code
 
 ; MemoryCopy - Copy memory block
 ; RCX = dest, RDX = src, R8 = count
+; Returns: RAX = dest (original)
+; Preserves: none (volatile per Win64 ABI)
 MemoryCopy PROC
-    mov r9, rcx
-    mov rax, r8
-    test rax, rax
+    push rdi
+    push rsi
+    
+    mov r9, rcx            ; save dest for return
+    mov rdi, rcx           ; dest for rep movsb
+    mov rsi, rdx           ; src for rep movsb
+    mov rcx, r8            ; count for rep movsb
+    test rcx, rcx
     jz copy_done
     rep movsb
 copy_done:
-    mov rax, r9
+    mov rax, r9            ; return original dest
+    
+    pop rsi
+    pop rdi
     ret
 MemoryCopy ENDP
 
 ; MemorySet - Fill memory with byte
 ; RCX = dest, RDX = byte value, R8 = count
+; Returns: RAX = dest (original)
 MemorySet PROC
-    mov r9, rcx
-    mov al, dl
+    push rdi
+    
+    mov r9, rcx            ; save dest for return
+    mov rdi, rcx           ; dest for rep stosb
+    mov al, dl             ; byte value
+    mov rcx, r8            ; count
+    test rcx, rcx
+    jz set_done
     rep stosb
-    mov rax, r9
+set_done:
+    mov rax, r9            ; return original dest
+    
+    pop rdi
     ret
 MemorySet ENDP
 
@@ -68,39 +91,65 @@ compare_diff:
     ret
 StringCompare ENDP
 
-; NumberToString - Convert number to decimal string
-; RCX = number, RDX = output buffer
-; Returns: RAX = string length
+; NumberToString - Convert unsigned 64-bit number to decimal string
+; RCX = number, RDX = output buffer (at least 21 bytes)
+; Returns: RAX = string length (not including null terminator)
+; Output is null-terminated
 NumberToString PROC
     push rbx
     push rsi
-    mov rax, rcx
-    mov rsi, rdx
-    mov rbx, 10
+    push rdi
     
-    ; Handle 0
+    mov rax, rcx            ; number
+    mov rsi, rdx            ; output buffer
+    mov rdi, rdx            ; save start
+    mov rbx, 10             ; divisor
+    
+    ; Handle 0 specially
     test rax, rax
     jnz num_conv_loop
     mov byte ptr [rsi], '0'
+    mov byte ptr [rsi + 1], 0
     mov rax, 1
-    pop rsi
-    pop rbx
-    ret
+    jmp num_done
     
 num_conv_loop:
     test rax, rax
-    jz num_conv_done
+    jz num_reverse
     xor rdx, rdx
-    div rbx
+    div rbx                 ; RDX:RAX / 10 -> RAX=quotient, RDX=remainder
     add dl, '0'
-    mov [rsi], dl
+    mov [rsi], dl           ; store digit (LSB first)
     inc rsi
     jmp num_conv_loop
     
-num_conv_done:
-    ; Reverse the string (simplified - in production would reverse)
-    mov rax, rsi
-    sub rax, rdx    ; length
+num_reverse:
+    ; Null-terminate
+    mov byte ptr [rsi], 0
+    
+    ; Calculate length
+    mov rcx, rsi
+    sub rcx, rdi            ; length = end - start
+    
+    ; Reverse the string in-place
+    ; rdi = start, rsi = end (one past last char)
+    dec rsi                 ; rsi = last char
+rev_loop:
+    cmp rdi, rsi
+    jge rev_done
+    mov al, [rdi]
+    mov bl, [rsi]
+    mov [rdi], bl
+    mov [rsi], al
+    inc rdi
+    dec rsi
+    jmp rev_loop
+rev_done:
+    
+    mov rax, rcx            ; return length
+    
+num_done:
+    pop rdi
     pop rsi
     pop rbx
     ret

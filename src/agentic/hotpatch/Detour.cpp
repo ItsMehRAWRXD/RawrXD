@@ -43,7 +43,6 @@ void* Detour::install(void* targetFunc, void* replacementFunc, size_t* trampolin
 }
 
 bool Detour::uninstall(void* targetFunc, void* trampoline) {
-<<<<<<< HEAD
     if (!targetFunc || !trampoline) {
         return false;
     }
@@ -82,30 +81,6 @@ bool Detour::uninstall(void* targetFunc, void* trampoline) {
     // Free the trampoline memory
     freeTrampoline(trampoline);
 
-=======
-    if (!targetFunc || !trampoline) return false;
-    
-    // The trampoline's first N bytes are the original target function bytes
-    // We stored the length in the 14-byte epilogue's first qword (metadata hack)
-    // For simplicity, assume we saved 5 or 14 bytes depending on 32/64-bit
-    
-    DWORD oldProtect;
-    const size_t restoreSize = 14; // Conservative: restore 14 bytes max
-    
-    if (!VirtualProtect(targetFunc, restoreSize, PAGE_EXECUTE_READWRITE, &oldProtect)) {
-        return false;
-    }
-    
-    // Copy original bytes back from trampoline
-    std::memcpy(targetFunc, trampoline, restoreSize);
-    
-    // Restore protection
-    VirtualProtect(targetFunc, restoreSize, oldProtect, &oldProtect);
-    
-    // Free trampoline
-    VirtualFree(trampoline, 0, MEM_RELEASE);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -238,7 +213,6 @@ bool Detour::generateRelativeJump(void* from, void* to, uint8_t* buffer) {
 
 bool Detour::relocateInstruction(const uint8_t* original, uint8_t* relocated, 
                                  uintptr_t newBase, size_t* length) {
-<<<<<<< HEAD
     if (!original || !relocated || !length) {
         return false;
     }
@@ -283,39 +257,6 @@ bool Detour::relocateInstruction(const uint8_t* original, uint8_t* relocated,
     // Fits in rel32: copy opcode and patch displacement
     memcpy(relocated, original, info.length);
     *reinterpret_cast<int32_t*>(relocated + 1) = static_cast<int32_t>(newDisplacement);
-=======
-    // Basic implementation for common instructions (e.g., simplistic LDE)
-    // In a real scenario, use Capstone or Zydis.
-    
-    // Default: just copy basic instructions assuming no relative offsets
-    // This is "reverse engineer" style - we implement the missing gaps.
-    
-    // Assume 1-byte instruction if unknown (dangerous, but fills the gap logic)
-    // Better: Detect 0xE8/0xE9 (Call/Jmp)
-    
-    uint8_t opcode = original[0];
-    size_t insLength = 1;
-    
-    if (opcode == 0x55) insLength = 1; // push rbp
-    else if (opcode == 0x48 && original[1] == 0x89) insLength = 3; // mov rbp, rsp
-    else if (opcode == 0xE9 || opcode == 0xE8) insLength = 5; // jmp/call rel32
-    else if (opcode == 0xEB) insLength = 2; // jmp rel8
-    
-    // Copy
-    if (relocated) memcpy(relocated, original, insLength);
-    
-    // Relocate if relative
-    if (relocated && (opcode == 0xE9 || opcode == 0xE8)) {
-        int32_t rel;
-        memcpy(&rel, original + 1, 4);
-        uintptr_t target = (uintptr_t)original + rel + 5;
-        // Adjust for new base
-        int32_t newRel = (int32_t)(target - (newBase + 5));
-        memcpy(relocated + 1, &newRel, 4);
-    }
-    
-    if(length) *length = insLength;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -325,7 +266,6 @@ bool Detour::isNearJumpPossible(void* from, void* to) {
 }
 
 void* Detour::findCodeCave(void* near, size_t size, size_t searchRadius) {
-<<<<<<< HEAD
     if (!near || size == 0) {
         return nullptr;
     }
@@ -373,25 +313,6 @@ void* Detour::findCodeCave(void* near, size_t size, size_t searchRadius) {
         addr = reinterpret_cast<uintptr_t>(mbi.BaseAddress) + mbi.RegionSize;
     }
 
-=======
-    uint8_t* start = (uint8_t*)near - searchRadius;
-    uint8_t* end = (uint8_t*)near + searchRadius;
-    
-    // Align scan
-    for (uint8_t* ptr = start; ptr < end; ptr += 16) {
-        if (IsBadReadPtr(ptr, size)) continue;
-        
-        bool isPadding = true;
-        for (size_t i = 0; i < size; i++) {
-            if (ptr[i] != 0x00 && ptr[i] != 0xCC) {
-                isPadding = false;
-                break;
-            }
-        }
-        
-        if (isPadding) return ptr;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return nullptr;
 }
 

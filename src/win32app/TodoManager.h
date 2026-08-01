@@ -4,15 +4,10 @@
 #pragma once
 
 #include <windows.h>
-<<<<<<< HEAD
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <functional>
-=======
-#include <string>
-#include <vector>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -64,11 +59,7 @@ struct TodoItem {
 // Todo list manager
 class TodoManager {
 public:
-<<<<<<< HEAD
     TodoManager(const std::string& storagePath = "");  // default: %APPDATA%\RawrXD\todos.json
-=======
-    TodoManager(const std::string& storagePath = "D:\\lazy init ide\\data\\todos.json");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ~TodoManager();
     
     // Core operations
@@ -94,12 +85,9 @@ public:
     int GetCount() const { return static_cast<int>(items_.size()); }
     int GetMaxCount() const { return maxItems_; }
     bool CanAdd() const { return items_.size() < maxItems_; }
-<<<<<<< HEAD
 
     // Configurable limit (1–99): set from IDEConfig or audit estimate
     void SetMaxItems(int max) { maxItems_ = std::clamp(static_cast<size_t>(max), size_t(1), size_t(99)); }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Statistics
     struct Statistics {

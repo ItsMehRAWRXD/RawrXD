@@ -2,7 +2,25 @@
 ; Target: print("text")
 ; Generates: IR_LOAD_CONST + IR_CALL print + IR_EXIT
 
-include uir.asm
+; External declarations from uir.asm
+extrn UIRCreateContext:proc
+extrn UIRCreateNode:proc
+extrn UIRGetNode:proc
+extrn UIRAddConstant:proc
+extrn UIRGetConstant:proc
+extrn UIRAddRelocation:proc
+extrn UIRAllocVReg:proc
+extrn UIRReset:proc
+extrn UIRGetNodeCount:proc
+extrn UIRValidateHeader:proc
+
+; UIR Opcodes
+IR_NOP          EQU 0
+IR_LOAD_CONST   EQU 1
+IR_CALL         EQU 2
+IR_RETURN       EQU 3
+IR_EXIT         EQU 4
+IR_MOVE         EQU 14
 
 .code
 

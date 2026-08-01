@@ -1254,7 +1254,6 @@ json NetworkManager::getNetworkStatus() const {
     };
 }
 
-<<<<<<< HEAD
 size_t ConnectionPool::getActiveConnections() const { 
     std::lock_guard<std::mutex> lock(m_mutex);
     size_t active = 0;
@@ -1290,13 +1289,6 @@ RawrXD::Expected<void, NetError> WebSocketClient::pong() {
     std::vector<uint8_t> pongFrame = {0x8A, 0x00}; // FIN=1, opcode=pong, mask=0, len=0
     return sendRaw(pongFrame.data(), pongFrame.size());
 }
-=======
-size_t ConnectionPool::getActiveConnections() const { return 0; } // TODO
-size_t ConnectionPool::getIdleConnections() const { return 0; } // TODO
-json ConnectionPool::getStatus() const { return {{"active", 0}}; } // TODO
-RawrXD::Expected<void, NetError> WebSocketClient::ping() { return {}; }
-RawrXD::Expected<void, NetError> WebSocketClient::pong() { return {}; }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 void WebSocketClient::setMessageHandler(std::function<void(const WebSocketFrame&)> handler) {
     std::lock_guard lock(m_handlerMutex);
     m_messageHandler = handler;

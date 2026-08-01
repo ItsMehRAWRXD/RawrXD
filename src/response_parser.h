@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-<<<<<<< HEAD
 #include <cstdio>
 #include <cstring>
 #include <mutex>
@@ -107,10 +106,6 @@ enum class BoundaryType {
     Section,
     None
 };
-=======
-#include "logger.h"
-#include "metrics.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct ParsedCompletion {
     std::string text;
@@ -125,7 +120,6 @@ public:
     ResponseParser(std::shared_ptr<Logger> logger, std::shared_ptr<Metrics> metrics);
     
     std::vector<ParsedCompletion> parseResponse(const std::string& response);
-<<<<<<< HEAD
     std::vector<ParsedCompletion> parseChunk(const std::string& chunk);
     
     std::vector<ParsedCompletion> flush();
@@ -134,33 +128,20 @@ public:
     void reset();
     void setCustomDelimiters(const std::vector<std::string>& delimiters);
     void setStatementBoundaries(const std::vector<std::string>& boundaries);
-=======
-    std::vector<ParsedCompletion> flush();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 private:
     std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Metrics> m_metrics;
-<<<<<<< HEAD
     
     std::vector<std::string> m_statementBoundaries = {";", "}\n", "\n\n"};
     std::vector<std::string> m_customDelimiters;
     std::string m_buffer;
     size_t m_totalCharsParsed = 0;
-=======
-    std::string m_buffer;
-    
-    std::vector<std::string> m_statementBoundaries = {";", "}", ")\n"};
-    std::vector<std::string> m_customDelimiters = {"```", "<|endoftext|>"};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     std::vector<ParsedCompletion> splitByStatementBoundaries(const std::string& text);
     std::vector<ParsedCompletion> splitByLineBoundaries(const std::string& text);
     std::vector<ParsedCompletion> splitByTokenBoundaries(const std::string& text);
-<<<<<<< HEAD
     
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int estimateTokenCount(const std::string& text);
     double calculateConfidence(const std::string& text);
 };

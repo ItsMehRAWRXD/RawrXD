@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // ============================================================================
 // File: src/agent/agent_hot_patcher.hpp
 //
@@ -16,30 +15,14 @@
 
 #include "simple_json.hpp"
 
-=======
-#pragma once
-
-#include <vector>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <string>
 #include <vector>
 #include <map>
 #include <mutex>
 #include <atomic>
-<<<<<<< HEAD
 #include <cstdint>
-=======
-#include <mutex>
-#include <chrono>
-#include <functional>
-#include <nlohmann/json.hpp>
-
-// Forward declare json
-using json = nlohmann::json;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct HallucinationDetection {
-<<<<<<< HEAD
     std::string detectionId;              ///< Unique detection ID
     std::string hallucinationType;        ///< Type: invalid_path, fabricated_path, logic_contradiction, etc.
     double confidence = 0.0;              ///< Confidence (0.0-1.0)
@@ -48,21 +31,9 @@ struct HallucinationDetection {
     std::string correctionStrategy;       ///< How to fix it
     std::string detectedAt;               ///< ISO timestamp when detected
     bool correctionApplied = false;       ///< Was correction applied
-=======
-    std::string detectionId;
-    std::string hallucinationType;
-    double confidence = 0.0;
-    std::string detectedContent;
-    std::string expectedContent;
-    std::string correctionStrategy;
-    std::string originalText; // Added to store context for correction
-    std::chrono::system_clock::time_point detectedAt;
-    bool correctionApplied = false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 struct NavigationFix {
-<<<<<<< HEAD
     std::string fixId;                    ///< Unique fix ID
     std::string incorrectPath;            ///< Original path
     std::string correctPath;              ///< Normalized path
@@ -70,17 +41,9 @@ struct NavigationFix {
     double effectiveness = 0.0;           ///< How effective (0.0-1.0)
     std::string lastApplied;              ///< ISO timestamp when last applied
     int timesCorrected = 0;               ///< How many times corrected
-=======
-    std::string fixId;
-    std::string incorrectPath;
-    std::string correctPath;
-    std::string reasoning;
-    double effectiveness = 0.0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 struct BehaviorPatch {
-<<<<<<< HEAD
     std::string patchId;                  ///< Unique patch ID
     std::string patchType;                ///< Type: prompt_modifier, output_filter, validator
     std::string condition;                ///< When to apply
@@ -173,37 +136,6 @@ public:
      * Register a correction pattern
      * @param pattern Pattern to register
      */
-=======
-    std::string patchId;
-    std::string patchType;
-    std::string condition;
-    std::string action;
-    std::vector<std::string> affectedModels;
-    double successRate = 0.0;
-    bool enabled = true;
-    std::chrono::system_clock::time_point createdAt;
-};
-
-class AgentHotPatcher {
-public:
-    AgentHotPatcher();
-    ~AgentHotPatcher();
-
-    // Delete copy
-    AgentHotPatcher(const AgentHotPatcher&) = delete;
-    AgentHotPatcher& operator=(const AgentHotPatcher&) = delete;
-
-    void initialize(const std::string& ggufLoaderPath, int flags);
-
-    // Returns json object
-    json interceptModelOutput(const std::string& modelOutput, const json& context);
-
-    HallucinationDetection detectHallucination(const std::string& content, const json& context);
-    std::string correctHallucination(const HallucinationDetection& detection);
-    NavigationFix fixNavigationError(const std::string& path, const json& context);
-    std::string applyBehaviorPatches(const std::string& output);
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void registerCorrectionPattern(const HallucinationDetection& pattern);
     void registerNavigationFix(const NavigationFix& fix);
     void createBehaviorPatch(const BehaviorPatch& patch);
@@ -217,7 +149,6 @@ public:
     bool isHotPatchingEnabled() const;
     void setDebugLogging(bool enabled);
 
-<<<<<<< HEAD
     /**
      * Get correction statistics
      * @return Statistics as JsonValue
@@ -238,23 +169,12 @@ public:
     void registerNavigationErrorFixedCallback(NavigationErrorFixedCallback cb, void* userData);
     void registerBehaviorPatchAppliedCallback(BehaviorPatchAppliedCallback cb, void* userData);
     void registerStatisticsUpdatedCallback(StatisticsUpdatedCallback cb, void* userData);
-=======
-    json getCorrectionStatistics() const;
-    int getCorrectionPatternCount() const;
-
-    // Callbacks
-    std::function<void(const HallucinationDetection&)> onHallucinationDetected;
-    std::function<void(const HallucinationDetection&)> onHallucinationCorrected;
-    std::function<void(const NavigationFix&)> onNavigationErrorFixed;
-    std::function<void(const BehaviorPatch&)> onBehaviorPatchApplied;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 private:
     std::atomic<int> m_totalHallucinationsDetected{0};
     std::atomic<int> m_hallucinationsCorrected{0};
     std::atomic<int> m_navigationFixesApplied{0};
 
-<<<<<<< HEAD
     // ====== Runtime state (protected by m_mutex) ======
     bool m_enabled = false;
     bool m_debugLogging = false;
@@ -286,23 +206,11 @@ private:
     JsonValue processInterceptedResponse(const JsonValue& response);
 
     // Detection helpers
-=======
-    bool m_hotPatchingEnabled = false;
-    bool m_debugLogging = false;
-    mutable std::mutex m_mutex;
-    std::string m_ggufLoaderPath;
-    
-    std::vector<HallucinationDetection> m_correctionPatterns;
-    std::vector<NavigationFix> m_navigationPatterns;
-    std::vector<BehaviorPatch> m_behaviorPatches;
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     HallucinationDetection detectPathHallucination(const std::string& content);
     HallucinationDetection detectLogicContradiction(const std::string& content);
     HallucinationDetection detectIncompleteReasoning(const std::string& content);
     std::string normalizePathInContent(const std::string& content, const std::string& validPath);
     bool isValidPath(const std::string& path) const;
-<<<<<<< HEAD
 
     // ====== Callback notification helpers ======
     void notifyHallucinationDetected(const HallucinationDetection& detection);
@@ -323,6 +231,4 @@ private:
     std::vector<NavigationErrorFixedCB>   m_navigationErrorFixedCBs;
     std::vector<BehaviorPatchAppliedCB>   m_behaviorPatchAppliedCBs;
     std::vector<StatisticsUpdatedCB>      m_statisticsUpdatedCBs;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };

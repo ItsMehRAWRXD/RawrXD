@@ -108,6 +108,7 @@
 #include <QGroupBox>
 #include <QCheckBox>
 #include <QDialogButtonBox>
+#include "gguf_loader.h"
 
 // ============================================================
 // Global Circuit Breakers for External Services
@@ -9532,4 +9533,5 @@ void MainWindow::onAIChatCodeInsertRequested(const QString& code) {
         QString("Code inserted from AI (length: %1, total: %2)").arg(code.length()).arg(insertCount),
         QJsonObject{{"code_length", code.length()}, {"total_inserts", insertCount}});
 }
+
 

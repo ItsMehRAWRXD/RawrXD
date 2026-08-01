@@ -14,6 +14,7 @@
 
 #include <atomic>
 #include <mutex>
+#include "gguf_loader.h"
 
 namespace {
 
@@ -234,3 +235,4 @@ void asm_orchestrator_lsp_sync(void* symbolIndex, void* contextAnalyzer, uint32_
 }
 
 } // extern "C"
+

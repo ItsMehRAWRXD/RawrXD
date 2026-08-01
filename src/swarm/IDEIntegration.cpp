@@ -1,5 +1,6 @@
 #include "IDEIntegration.hpp"
 #include <fstream>
+#include <iostream>
 #include <filesystem>
 #include <chrono>
 #include <sstream>

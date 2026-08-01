@@ -27,6 +27,7 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <shlobj.h>
+#include "gguf_loader.h"
 
 // Model source resolver — Phase 31 implementation complete
 
@@ -1399,3 +1400,4 @@ std::vector<std::string> ModelSourceResolver::SplitJSONObjects(const std::string
 }
 
 } // namespace RawrXD
+

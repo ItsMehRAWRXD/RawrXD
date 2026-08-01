@@ -1,31 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-/*  DrawingEngine.h  -  Custom Drawing Engine from Scratch (C++20, no Qt)
-    
-    A complete, high-performance drawing engine for rendering:
-    - Geometric primitives (lines, rectangles, circles, polygons)
-    - Text rendering with font support
-    - Gradient fills and patterns
-    - Transformations (translate, rotate, scale)
-    - Clipping regions
-    - Layering and composition
-    - Custom shapes and paths
-    - GUI component rendering
-    
-    Built on top of a low-level rasterizer with optional GPU acceleration.
-*/
-
-#include <memory>
-#include <cstdint>
-#include <vector>
-#include <string>
-#include <cmath>
-#include <functional>
-
-namespace RawrXD {
-namespace Drawing {
-
-// ============================================================================
+=====================================================================
 // FUNDAMENTAL TYPES
 // ============================================================================
 
@@ -739,4 +712,4 @@ private:
 
 } // namespace Drawing
 } // namespace RawrXD
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

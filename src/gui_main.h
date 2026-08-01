@@ -23,16 +23,12 @@ public:
     HMENU getMainMenu() const { return m_mainMenu; }
 
 private:
-<<<<<<< HEAD
     // Window creation
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     RawrXD::Expected<void, std::string> registerWindowClass();
     RawrXD::Expected<void, std::string> createMainWindow();
     RawrXD::Expected<void, std::string> createEditorWindow();
     RawrXD::Expected<void, std::string> setupLayout();
 
-<<<<<<< HEAD
     // Message handling
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
     LRESULT handleMessageInternal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -48,11 +44,6 @@ private:
     void updateStatusBar(const std::string& message);
 
     // Menu handlers
-=======
-    static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    LRESULT handleMessageInternal(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void onFileNewInternal();
     void onFileOpenInternal();
     void onFileSaveInternal();
@@ -64,7 +55,6 @@ private:
     void onBuildInternal();
     void onRunInternal();
     void onDebugInternal();
-<<<<<<< HEAD
     
     // Sovereign Coordination System handlers
     void onSovereignBuild();
@@ -89,12 +79,6 @@ private:
     // IDE components
     std::unique_ptr<IDEOrchestrator> m_ide;
     std::shared_ptr<MonacoEditor> m_editor;
-=======
-
-    HWND m_mainWindow{NULL};
-    HWND m_editorWindow{NULL};
-    HMENU m_mainMenu{NULL};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace RawrXD

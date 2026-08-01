@@ -32,6 +32,7 @@ namespace Deep2 {
     eax = _info[0]; ebx = _info[1]; ecx = _info[2]; edx = _info[3]; }
 #else
 #include <cpuid.h>
+#include "gguf_loader.h"
 #define DEEP2_CPUID(level, eax, ebx, ecx, edx) \
     __cpuid(level, eax, ebx, ecx, edx);
 #define DEEP2_CPUIDEX(level, subleaf, eax, ebx, ecx, edx) \
@@ -856,3 +857,4 @@ std::string QuantKernelRegistry::DumpTable() const {
 }
 
 } // namespace Deep2
+

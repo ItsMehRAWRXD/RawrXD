@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // OllamaProxy — C++20, no Qt. Lightweight proxy to Ollama REST API.
 // ============================================================================
 // Use WinHTTP or similar in .cpp; this header declares the API only.
@@ -129,4 +126,4 @@ private:
     // Network handles or implementation detail
     void* m_networkManager = nullptr; // Placeholder for WinHttp handle or similar
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

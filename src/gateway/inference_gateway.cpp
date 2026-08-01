@@ -159,7 +159,7 @@ InferenceGateway::~InferenceGateway() {
 }
 
 bool InferenceGateway::Initialize(const GatewayConfig& config) {
-    impl_>config_ = config;
+    impl_->config_ = config;
     
     printf("[VAL-063] Initializing Inference Gateway...\n");
     printf("  Evidence directory: %s\n", config.evidence_directory.c_str());
@@ -171,36 +171,36 @@ bool InferenceGateway::Initialize(const GatewayConfig& config) {
     std::filesystem::create_directories(config.evidence_directory);
     
     // Initialize certification
-    if (!impl_>InitializeCertification()) {
+    if (!impl_->InitializeCertification()) {
         return false;
     }
     
     // Initialize bypass detection
-    if (!impl_>InitializeBypassDetection()) {
+    if (!impl_->InitializeBypassDetection()) {
         return false;
     }
     
     // Initialize artifact locks
-    if (!impl_>InitializeArtifactLocks()) {
+    if (!impl_->InitializeArtifactLocks()) {
         return false;
     }
     
-    impl_>initialized_.store(true);
+    impl_->initialized_.store(true);
     printf("[VAL-063] Gateway initialization complete\n");
     return true;
 }
 
 void InferenceGateway::Shutdown() {
-    if (!impl_>initialized_.exchange(false)) {
+    if (!impl_->initialized_.exchange(false)) {
         return;
     }
     
-    impl_>shutdown_.store(true);
+    impl_->shutdown_.store(true);
     printf("[VAL-063] Gateway shutdown complete\n");
 }
 
 bool InferenceGateway::IsReady() const {
-    return impl_>initialized_.load() && !impl_>shutdown_.load();
+    return impl_->initialized_.load() && !impl_->shutdown_.load();
 }
 
 InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
@@ -214,7 +214,7 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     }
     
     // Check bypass (VAL-063A)
-    if (impl_>config_.enable_bypass_detection) {
+    if (impl_->config_.enable_bypass_detection) {
         BypassDetector::Instance().RecordGatewayCall();
         auto bypass_result = BypassDetector::Instance().VerifyNoBypass();
         if (!bypass_result.IsSuccess()) {
@@ -225,7 +225,7 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     }
     
     // Phase 1: Begin request attestation
-    auto request_attest = impl_>attestor_>BeginRequest(
+    auto request_attest = impl_->attestor_>BeginRequest(
         request.prompt,
         request.model_path,
         request.sampling,
@@ -241,8 +241,8 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     response.request_id = request_attest->request_id;
     
     // Phase 2: Verify model provenance (VAL-063B)
-    if (impl_>config_.verify_model_integrity) {
-        auto model_result = impl_>attestor_>VerifyModelProvenance(
+    if (impl_->config_.verify_model_integrity) {
+        auto model_result = impl_->attestor_>VerifyModelProvenance(
             request.model_path,
             request_attest->model_manifest_sha256
         );
@@ -255,8 +255,8 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     }
     
     // Phase 3: Verify artifact identity lock
-    if (impl_>config_.lock_artifact_identity) {
-        auto provenance = impl_>attestor_>GetModelProvenance(request.model_path);
+    if (impl_->config_.lock_artifact_identity) {
+        auto provenance = impl_->attestor_>GetModelProvenance(request.model_path);
         if (!ArtifactIdentityLock::VerifyLockedIdentity(
                 request.model_path, provenance.manifest_sha256)) {
             response.success = false;
@@ -286,7 +286,7 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     response.success = true;
     
     // Phase 5: Seal output attestation
-    auto output_attest = impl_>attestor_>SealOutput(
+    auto output_attest = impl_->attestor_>SealOutput(
         response.token_ids,
         response.generated_text,
         response.latency_ms_total,
@@ -296,16 +296,16 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     output_attest.prompt_token_count = response.prompt_token_count;
     
     // Phase 6: Generate evidence
-    auto model_provenance = impl_>attestor_>GetModelProvenance(request.model_path);
-    auto evidence_json = impl_>attestor_>GenerateEvidenceJSON(
+    auto model_provenance = impl_->attestor_>GetModelProvenance(request.model_path);
+    auto evidence_json = impl_->attestor_>GenerateEvidenceJSON(
         request_attest.value(),
         output_attest,
-        impl_>runtime_cert_,
+        impl_->runtime_cert_,
         model_provenance
     );
     
     // Write evidence to file
-    std::string evidence_path = impl_>config_.evidence_directory + 
+    std::string evidence_path = impl_->config_.evidence_directory + 
         "/VAL-063_" + request_attest->request_id + ".json";
     std::ofstream evidence_file(evidence_path);
     if (evidence_file) {
@@ -318,7 +318,7 @@ InferenceResponse InferenceGateway::Execute(const InferenceRequest& request) {
     UpdateLatestEvidence(evidence_json);
     
     // Phase 7: Replay verification (VAL-063C)
-    if (impl_>config_.enable_replay_verification) {
+    if (impl_->config_.enable_replay_verification) {
         ReplayConfiguration replay_config;
         replay_config.input_sha256 = request_attest->input_sha256;
         replay_config.model_manifest_sha256 = request_attest->model_manifest_sha256;
@@ -351,17 +351,17 @@ std::vector<InferenceResponse> InferenceGateway::ExecuteBatch(
 }
 
 RuntimeCertificationState InferenceGateway::GetRuntimeCertification() const {
-    return impl_>runtime_cert_;
+    return impl_->runtime_cert_;
 }
 
 InferenceGateway::Statistics InferenceGateway::GetStatistics() const {
-    std::lock_guard<std::mutex> lock(impl_>stats_mutex_);
-    return impl_>stats_;
+    std::lock_guard<std::mutex> lock(impl_->stats_mutex_);
+    return impl_->stats_;
 }
 
 std::string InferenceGateway::GetLatestEvidence() const {
-    std::lock_guard<std::mutex> lock(impl_>evidence_mutex_);
-    return impl_>latest_evidence_;
+    std::lock_guard<std::mutex> lock(impl_->evidence_mutex_);
+    return impl_->latest_evidence_;
 }
 
 BypassDetectionMetrics InferenceGateway::GetBypassMetrics() const {

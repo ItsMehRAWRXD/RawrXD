@@ -11,6 +11,7 @@
 #include <cstring>
 #include <algorithm>
 #include <numeric>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace Model {
@@ -574,3 +575,4 @@ const char* GGUFLoader_GetArchitecture(void* loader) {
 
 } // namespace Model
 } // namespace RawrXD
+

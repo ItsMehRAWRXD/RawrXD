@@ -34,7 +34,7 @@ bool EmbeddedTerminal::executeCommand(const std::string& command,
     if (running_) return false;
     
     std::string full_cmd = "cmd.exe /c " + command;
-    STARTUPINFO si{};
+    STARTUPINFOA si{};
     si.cb = sizeof(si);
     si.dwFlags |= STARTF_USESTDHANDLES;
     si.hStdInput = hConPTY_in_;
@@ -42,7 +42,7 @@ bool EmbeddedTerminal::executeCommand(const std::string& command,
     si.hStdError = hConPTY_out_;
     
     PROCESS_INFORMATION pi{};
-    BOOL created = CreateProcess(
+    BOOL created = CreateProcessA(
         nullptr,
         const_cast<char*>(full_cmd.c_str()),
         nullptr, nullptr, TRUE,

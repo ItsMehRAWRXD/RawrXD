@@ -7,7 +7,6 @@
 #include <chrono> 
 #include <memory>
 #include <unordered_map>
-<<<<<<< HEAD
 #include <functional>
 #include <string>
 
@@ -15,10 +14,6 @@
 namespace RawrXD {
     class UniversalModelRouter;
 }
-=======
-// Forward decl
-namespace RawrXD { class UniversalModelRouter; }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 struct CloudProvider {
     std::string providerId;        // aws, azure, gcp, huggingface, ollama
@@ -291,7 +286,6 @@ private:
     PerformanceMetrics performanceMetrics;
     FailoverConfig failoverConfig;
     
-<<<<<<< HEAD
     // Event callbacks
     std::function<void(const std::string&)> m_costLimitCallback;
     
@@ -306,11 +300,6 @@ private:
     void** networkManager;
     std::unordered_map<std::string, void**> activeRequests;
     
-=======
-    void** networkManager;
-    std::unordered_map<std::string, void**> activeRequests;
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     void** healthCheckTimer;
     int healthCheckIntervalMs;
     

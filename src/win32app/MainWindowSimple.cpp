@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-=======
-<<<<<<<< HEAD:src/qtapp/MainWindowSimple.cpp
 #include "MainWindowSimple.h"
 #include "../../include/editor_buffer.h"
 #include "../../include/syntax_engine.h"
@@ -2454,7 +2451,6 @@ void MainWindow::toggleFloatingPanel() {
 }
 #endif
 ========
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include "MainWindowSimple.h"
 #include "../../include/editor_buffer.h"
 #include "../../include/syntax_engine.h"
@@ -2471,10 +2467,7 @@ void MainWindow::toggleFloatingPanel() {
 #include <chrono>
 #include <ctime>
 #include <psapi.h>
-<<<<<<< HEAD
 #include <set>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #ifdef _WIN32
 #include <richedit.h>
@@ -2487,7 +2480,6 @@ void MainWindow::toggleFloatingPanel() {
 
 namespace fs = std::filesystem;
 
-<<<<<<< HEAD
 namespace {
 std::vector<long> g_multiCursorCarets;
 std::set<int> g_breakpointLines;
@@ -2498,8 +2490,6 @@ int g_debuggerTabIndex = 0; // 0=breakpoints,1=watch,2=variables,3=stack
 std::vector<std::string> g_debugWatchExpressions;
 }
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 MainWindow::MainWindow()
     : m_hwnd(nullptr), m_editorHwnd(nullptr), m_terminalHwnd(nullptr),
       m_overclockHwnd(nullptr), m_floatingPanel(nullptr),
@@ -2866,7 +2856,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         // Production toggle comment implementation
         ToggleCommentForCurrentLanguage();
         break;
-<<<<<<< HEAD
     case IDM_EDIT_MULTICURSOR_ADD:
         if (m_editorHwnd) {
             DWORD selStart = 0;
@@ -2896,8 +2885,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             sendToTerminal(ss.str());
         }
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // ========== SELECTION COMMANDS ==========
     case IDM_SEL_EXPAND:
@@ -2912,7 +2899,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         m_columnSelectionMode = !m_columnSelectionMode;
         CheckMenuItem(m_menuBar, IDM_SEL_COLUMN_MODE, m_columnSelectionMode ? MF_CHECKED : MF_UNCHECKED);
         break;
-<<<<<<< HEAD
     case IDM_SEL_ADD_CURSOR_ABOVE:
     case IDM_SEL_ADD_CURSOR_BELOW:
         if (m_editorHwnd) {
@@ -2970,8 +2956,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             }
         }
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // ========== VIEW COMMANDS ==========
     case IDM_VIEW_COMMAND_PALETTE:
@@ -2993,14 +2977,11 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         m_secondarySidebarVisible = !m_secondarySidebarVisible;
         CheckMenuItem(m_menuBar, IDM_VIEW_SECONDARY_SIDEBAR, m_secondarySidebarVisible ? MF_CHECKED : MF_UNCHECKED);
         break;
-<<<<<<< HEAD
     case 1200: // IDC_SECONDARY_SIDEBAR
         m_secondarySidebarVisible = !m_secondarySidebarVisible;
         CheckMenuItem(m_menuBar, IDM_VIEW_SECONDARY_SIDEBAR, m_secondarySidebarVisible ? MF_CHECKED : MF_UNCHECKED);
         sendToTerminal(m_secondarySidebarVisible ? "# Secondary sidebar enabled\n" : "# Secondary sidebar disabled\n");
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     case IDM_VIEW_PANEL:
         m_panelVisible = !m_panelVisible;
         CheckMenuItem(m_menuBar, IDM_VIEW_PANEL, m_panelVisible ? MF_CHECKED : MF_UNCHECKED);
@@ -3011,7 +2992,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         CheckMenuItem(m_menuBar, IDM_VIEW_STATUS_BAR, m_statusBarVisible ? MF_CHECKED : MF_UNCHECKED);
         if (m_statusBarHwnd) ShowWindow(m_statusBarHwnd, m_statusBarVisible ? SW_SHOW : SW_HIDE);
         break;
-<<<<<<< HEAD
     case 2000: // IDC_STATUS_BAR
         m_statusBarVisible = !m_statusBarVisible;
         CheckMenuItem(m_menuBar, IDM_VIEW_STATUS_BAR, m_statusBarVisible ? MF_CHECKED : MF_UNCHECKED);
@@ -3263,8 +3243,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         sendToTerminal("Get-PSCallStack\n");
         sendToTerminal("# Stack list requested\n");
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     case IDM_VIEW_ZEN_MODE:
         m_zenModeEnabled = !m_zenModeEnabled;
         CheckMenuItem(m_menuBar, IDM_VIEW_ZEN_MODE, m_zenModeEnabled ? MF_CHECKED : MF_UNCHECKED);
@@ -3293,7 +3271,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             SetFocus(m_fileBrowserHwnd);
         }
         break;
-<<<<<<< HEAD
     case IDM_VIEW_SEARCH:
         if (m_findPanelHwnd) {
             ShowWindow(m_findPanelHwnd, SW_SHOW);
@@ -3303,15 +3280,12 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             sendToTerminal("# Search panel opened\n");
         }
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     case IDM_VIEW_TERMINAL:
         if (m_terminalHwnd) {
             ShowWindow(m_terminalHwnd, SW_SHOW);
             SetFocus(m_terminalHwnd);
         }
         break;
-<<<<<<< HEAD
     case IDM_VIEW_OUTPUT:
         if (m_terminalHwnd) {
             m_panelVisible = true;
@@ -3336,11 +3310,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
         sendToTerminal(msg);
         break;
     }
-=======
-    case IDM_VIEW_PROBLEMS:
-        toggleProblemsPanel();
-        break;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     case IDM_VIEW_MINIMAP:
         toggleMinimap();
         CheckMenuItem(m_menuBar, IDM_VIEW_MINIMAP, m_minimapEnabled ? MF_CHECKED : MF_UNCHECKED);
@@ -3372,7 +3341,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
     case IDM_RUN_RESTART:
         sendToTerminal("# Restart debugging\n");
         break;
-<<<<<<< HEAD
     case IDM_RUN_STEP_OVER:
         sendToTerminal("v\n"); // PowerShell debugger: step over
         sendToTerminal("# Debugger: step over\n");
@@ -3488,8 +3456,6 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             }
         }
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // ========== TERMINAL COMMANDS ==========
     case IDM_TERM_NEW:
@@ -3605,11 +3571,8 @@ void MainWindow::handleMenuCommand(WORD cmdId)
             "(c) 2025 RawrXD Team",
             "About RawrXD IDE", MB_OK | MB_ICONINFORMATION);
         break;
-<<<<<<< HEAD
     default:
         break;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 #endif
 }
@@ -5431,7 +5394,6 @@ void MainWindow::loadSettings() {
     std::string theme = findVal("theme"); if(!theme.empty()){ if(theme.find("dark")!=std::string::npos) m_currentTheme=0; else m_currentTheme=1; }
     std::string fontSize = findVal("fontSize"); if(!fontSize.empty()) m_fontSize = atoi(fontSize.c_str());
     std::string tabSz = findVal("tabSize"); if(!tabSz.empty()) m_tabSize = atoi(tabSz.c_str());
-<<<<<<< HEAD
     std::string secondarySidebarVisible = findVal("secondarySidebarVisible");
     if (!secondarySidebarVisible.empty()) {
         m_secondarySidebarVisible = (secondarySidebarVisible.find("true") != std::string::npos || secondarySidebarVisible.find("1") != std::string::npos);
@@ -5497,8 +5459,6 @@ void MainWindow::loadSettings() {
             }
         }
     }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void MainWindow::saveSettings() {
@@ -5506,7 +5466,6 @@ void MainWindow::saveSettings() {
     out << "{\n";
     out << "  \"theme\": \"" << (m_currentTheme < m_themes.size()? m_themes[m_currentTheme].name: "dark") << "\",\n";
     out << "  \"fontSize\": " << m_fontSize << ",\n";
-<<<<<<< HEAD
     out << "  \"tabSize\": " << m_tabSize << ",\n";
     out << "  \"secondarySidebarVisible\": " << (m_secondarySidebarVisible ? "true" : "false") << ",\n";
     out << "  \"statusBarVisible\": " << (m_statusBarVisible ? "true" : "false") << ",\n";
@@ -5538,9 +5497,6 @@ void MainWindow::saveSettings() {
         first = false;
     }
     out << "]\n";
-=======
-    out << "  \"tabSize\": " << m_tabSize << "\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     out << "}\n";
     out.close();
 }
@@ -5580,8 +5536,3 @@ void MainWindow::toggleFloatingPanel() {
     }
 }
 #endif
-<<<<<<< HEAD
-=======
-
->>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9:src/win32app/MainWindowSimple.cpp
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

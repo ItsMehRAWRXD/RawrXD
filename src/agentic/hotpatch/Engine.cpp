@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <memory>
 #include <cstdint>
-<<<<<<< HEAD
 #include <cstring>
 
 namespace {
@@ -13,8 +12,6 @@ double Clamp01(double v) {
     return v;
 }
 }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD::Agentic::Hotpatch {
 
@@ -174,7 +171,6 @@ Engine& Engine::instance() {
 }
 
 bool Engine::installHook(const std::string& name, HookType type, void* target, void* replacement) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (hooks_.find(name) != hooks_.end() && unrestrictiveDial_ < 0.80) {
@@ -185,11 +181,6 @@ bool Engine::installHook(const std::string& name, HookType type, void* target, v
         // Unrestricted mode: allow replacing an existing hook definition.
         removeHook(name);
     }
-=======
-    if (hooks_.find(name) != hooks_.end()) {
-        return false; // Already exists
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     if (!validateTarget(target)) {
         return false;
@@ -200,7 +191,6 @@ bool Engine::installHook(const std::string& name, HookType type, void* target, v
     config.type = type;
     config.target = target;
     config.replacement = replacement;
-<<<<<<< HEAD
     config.trampoline = nullptr;
     config.runtimeHandle = nullptr;
     config.patchSize = 0;
@@ -219,23 +209,6 @@ bool Engine::installHook(const std::string& name, HookType type, void* target, v
             } else {
                 config.patchSize = 32;
             }
-=======
-    config.enabled = true;
-    
-    // Create appropriate hook based on type
-    switch (type) {
-        case HookType::DETOUR: {
-            auto detour = std::make_unique<Detour>(target, replacement);
-            if (!detour->install()) {
-                return false;
-            }
-            config.trampoline = reinterpret_cast<void*>(detour->getTrampoline<void()>());
-            break;
-        }
-        case HookType::PATCH:
-            // Simple patch - save original code
-            config.patchSize = 16; // Default patch size
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             config.originalCode.resize(config.patchSize);
             memcpy(config.originalCode.data(), target, config.patchSize);
             break;
@@ -244,22 +217,16 @@ bool Engine::installHook(const std::string& name, HookType type, void* target, v
     }
     
     hooks_[name] = config;
-<<<<<<< HEAD
 
     if (hotpatchingEnabled_) {
         return applyHook(hooks_[name]);
     }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
 bool Engine::removeHook(const std::string& name) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto it = hooks_.find(name);
     if (it == hooks_.end()) {
         return false;
@@ -274,15 +241,12 @@ bool Engine::removeHook(const std::string& name) {
 }
 
 bool Engine::enableHook(const std::string& name) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!hotpatchingEnabled_) {
         return false;
     }
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto config = findHook(name);
     if (!config || config->enabled) {
         return false;
@@ -292,11 +256,8 @@ bool Engine::enableHook(const std::string& name) {
 }
 
 bool Engine::disableHook(const std::string& name) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto config = findHook(name);
     if (!config || !config->enabled) {
         return false;
@@ -305,7 +266,6 @@ bool Engine::disableHook(const std::string& name) {
     return removeHook(*config);
 }
 
-<<<<<<< HEAD
 bool Engine::setHotpatchingEnabled(bool enabled) {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -390,9 +350,6 @@ void Engine::applyTemperaturePolicyLocked() {
 bool Engine::registerHotkey(UINT vkCode, std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-=======
-bool Engine::registerHotkey(UINT vkCode, std::function<void()> callback) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (hotkeys_.find(vkCode) != hotkeys_.end()) {
         return false; // Already registered
     }
@@ -402,31 +359,22 @@ bool Engine::registerHotkey(UINT vkCode, std::function<void()> callback) {
 }
 
 bool Engine::unregisterHotkey(UINT vkCode) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return hotkeys_.erase(vkCode) > 0;
 }
 
 bool Engine::isHotkey(UINT vkCode) const {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return hotkeys_.find(vkCode) != hotkeys_.end();
 }
 
 bool Engine::execute(UINT vkCode) {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!hotpatchingEnabled_) {
         return false;
     }
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto it = hotkeys_.find(vkCode);
     if (it == hotkeys_.end()) {
         return false;
@@ -437,7 +385,6 @@ bool Engine::execute(UINT vkCode) {
 }
 
 bool Engine::installModuleHooks(HMODULE module) {
-<<<<<<< HEAD
     if (!hotpatchingEnabled_) {
         return true;
     }
@@ -445,11 +392,6 @@ bool Engine::installModuleHooks(HMODULE module) {
     // Module-wide hook installation
     // This would scan module exports and install hooks automatically
     // Currently tracks the module only - hook installation pending
-=======
-    // Module-wide hook installation
-    // This would scan module exports and install hooks automatically
-    // For now, just track the module
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -459,11 +401,8 @@ bool Engine::removeModuleHooks(HMODULE module) {
 }
 
 size_t Engine::getActiveHookCount() const {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(mutex_);
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     size_t count = 0;
     for (const auto& [name, config] : hooks_) {
         if (config.enabled) {
@@ -477,26 +416,17 @@ bool Engine::validateTarget(void* target) const {
     if (!target) {
         return false;
     }
-<<<<<<< HEAD
 
     // High dial means broad, context-agnostic patch acceptance.
     if (unrestrictiveDial_ >= 0.50) {
         return true;
     }
 
-=======
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     MEMORY_BASIC_INFORMATION mbi;
     if (!VirtualQuery(target, &mbi, sizeof(mbi))) {
         return false;
     }
-<<<<<<< HEAD
 
-=======
-    
-    // Check if executable
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return (mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE)) != 0;
 }
 
@@ -515,20 +445,16 @@ HookConfig* Engine::findHook(const std::string& name) {
 }
 
 bool Engine::applyHook(HookConfig& config) {
-<<<<<<< HEAD
     if (!hotpatchingEnabled_) {
         return false;
     }
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (config.enabled) {
         return true; // Already applied
     }
     
     switch (config.type) {
         case HookType::DETOUR: {
-<<<<<<< HEAD
             auto* detour = new Detour(config.target, config.replacement);
             if (!detour->install()) {
                 delete detour;
@@ -536,13 +462,6 @@ bool Engine::applyHook(HookConfig& config) {
             }
             config.trampoline = reinterpret_cast<void*>(detour->getTrampoline<void()>());
             config.runtimeHandle = detour;
-=======
-            auto detour = std::make_unique<Detour>(config.target, config.replacement);
-            if (!detour->install()) {
-                return false;
-            }
-            config.trampoline = reinterpret_cast<void*>(detour->getTrampoline<void()>());
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             break;
         }
         case HookType::PATCH: {
@@ -550,16 +469,12 @@ bool Engine::applyHook(HookConfig& config) {
             if (!prot.isValid()) {
                 return false;
             }
-<<<<<<< HEAD
             // Save original bytes before patching
             config.originalCode.resize(config.patchSize);
             memcpy(config.originalCode.data(), config.target, config.patchSize);
             // Apply the patch data over the target memory
             memcpy(config.target, config.patchData.data(),
                    std::min(config.patchSize, static_cast<size_t>(config.patchData.size())));
-=======
-            // Apply patch (placeholder)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             break;
         }
         default:
@@ -577,7 +492,6 @@ bool Engine::removeHook(HookConfig& config) {
     
     switch (config.type) {
         case HookType::DETOUR: {
-<<<<<<< HEAD
             auto* detour = static_cast<Detour*>(config.runtimeHandle);
             if (detour) {
                 if (!detour->remove()) {
@@ -596,14 +510,6 @@ bool Engine::removeHook(HookConfig& config) {
                     memcpy(config.target, config.originalCode.data(), 5);
                 }
             }
-=======
-            // Restore original code
-            MemoryProtection prot(config.target, 5, PAGE_EXECUTE_READWRITE);
-            if (!prot.isValid()) {
-                return false;
-            }
-            memcpy(config.target, config.originalCode.data(), 5);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             break;
         }
         case HookType::PATCH: {

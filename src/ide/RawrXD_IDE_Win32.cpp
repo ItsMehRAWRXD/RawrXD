@@ -943,18 +943,25 @@ LRESULT CALLBACK RawrXD_IDE_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
             /* Try GhostTextEngine first (Sovereign Runtime) */
             if (ide->ghostEngine && ide->ghostEngine->IsAvailable()) {
                 /* Get editor content and cursor position */
-                int textLen = GetWindowTextLengthA(ide->hWndEditor);
+                int textLen = GetWindowTextLengthW(ide->hWndEditor);
                 if (textLen > 0) {
-                    char* buffer = (char*)malloc(textLen + 1);
+                    wchar_t* buffer = (wchar_t*)malloc((textLen + 1) * sizeof(wchar_t));
                     if (buffer) {
-                        GetWindowTextA(ide->hWndEditor, buffer, textLen + 1);
+                        GetWindowTextW(ide->hWndEditor, buffer, textLen + 1);
                         /* Get actual cursor position from RichEdit */
                         DWORD selStart = 0, selEnd = 0;
-                        SendMessage(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-                        int line = (int)SendMessage(ide->hWndEditor, EM_LINEFROMCHAR, (WPARAM)selStart, 0);
-                        int lineStart = (int)SendMessage(ide->hWndEditor, EM_LINEINDEX, (WPARAM)line, 0);
+                        SendMessageW(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+                        int line = (int)SendMessageW(ide->hWndEditor, EM_LINEFROMCHAR, (WPARAM)selStart, 0);
+                        int lineStart = (int)SendMessageW(ide->hWndEditor, EM_LINEINDEX, (WPARAM)line, 0);
                         int col = (int)(selStart - lineStart);
-                        ide->ghostEngine->OnTextChanged(buffer, line, col);
+                        // Convert to UTF-8 for ghost engine
+                        std::string utf8;
+                        int utf8Len = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, nullptr, 0, nullptr, nullptr);
+                        if (utf8Len > 0) {
+                            utf8.resize(utf8Len - 1);
+                            WideCharToMultiByte(CP_UTF8, 0, buffer, -1, &utf8[0], utf8Len, nullptr, nullptr);
+                        }
+                        ide->ghostEngine->OnTextChanged(utf8.c_str(), line, col);
                         free(buffer);
                     }
                 }
@@ -1177,18 +1184,25 @@ void RawrXD_IDE_OnCommand(RawrXD_IDE* ide, WORD cmdId, WORD notifyCode, HWND hCt
 
         /* Legacy GhostTextEngine integration (if available) */
         if (ide->ghostEngine && ide->ghostEngine->IsAvailable()) {
-            int textLen = GetWindowTextLengthA(ide->hWndEditor);
+            int textLen = GetWindowTextLengthW(ide->hWndEditor);
             if (textLen > 0) {
-                char* buffer = (char*)malloc(textLen + 1);
+                wchar_t* buffer = (wchar_t*)malloc((textLen + 1) * sizeof(wchar_t));
                 if (buffer) {
-                    GetWindowTextA(ide->hWndEditor, buffer, textLen + 1);
+                    GetWindowTextW(ide->hWndEditor, buffer, textLen + 1);
                     /* Get actual cursor position from RichEdit */
                     DWORD selStart = 0, selEnd = 0;
-                    SendMessage(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-                    int line = (int)SendMessage(ide->hWndEditor, EM_LINEFROMCHAR, (WPARAM)selStart, 0);
-                    int lineStart = (int)SendMessage(ide->hWndEditor, EM_LINEINDEX, (WPARAM)line, 0);
+                    SendMessageW(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+                    int line = (int)SendMessageW(ide->hWndEditor, EM_LINEFROMCHAR, (WPARAM)selStart, 0);
+                    int lineStart = (int)SendMessageW(ide->hWndEditor, EM_LINEINDEX, (WPARAM)line, 0);
                     int col = (int)(selStart - lineStart);
-                    ide->ghostEngine->OnTextChanged(buffer, line, col);
+                    // Convert to UTF-8 for ghost engine
+                    std::string utf8;
+                    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, buffer, -1, nullptr, 0, nullptr, nullptr);
+                    if (utf8Len > 0) {
+                        utf8.resize(utf8Len - 1);
+                        WideCharToMultiByte(CP_UTF8, 0, buffer, -1, &utf8[0], utf8Len, nullptr, nullptr);
+                    }
+                    ide->ghostEngine->OnTextChanged(utf8.c_str(), line, col);
                     free(buffer);
                 }
             }
@@ -3509,11 +3523,25 @@ void RawrXD_IDE_GhostText_CaptureSnapshot(RawrXD_IDE* ide, InferenceContext* ctx
     
     /* 4. Fast memcpy into snapshot arena (O(N) where N is small) */
     /* This is safe because we're on the UI thread and editor buffer is stable */
-    GetWindowTextA(ide->hWndEditor, ctx->buffer, (int)bytesToCopy + 1);
-    ctx->length = bytesToCopy;
-    
-    /* 5. Ensure null termination */
-    ctx->buffer[bytesToCopy] = '\0';
+    int wideLen = GetWindowTextLengthW(ide->hWndEditor);
+    if (wideLen > 0) {
+        std::wstring wbuffer(wideLen + 1, L'\0');
+        GetWindowTextW(ide->hWndEditor, &wbuffer[0], wideLen + 1);
+        // Convert to UTF-8
+        int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wbuffer.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        if (utf8Len > 0) {
+            std::string utf8;
+            utf8.resize(utf8Len - 1);
+            WideCharToMultiByte(CP_UTF8, 0, wbuffer.c_str(), -1, &utf8[0], utf8Len, nullptr, nullptr);
+            size_t bytesToCopy = (utf8.length() < GHOSTTEXT_MAX_CONTEXT - 1) ? utf8.length() : GHOSTTEXT_MAX_CONTEXT - 1;
+            memcpy(ctx->buffer, utf8.c_str(), bytesToCopy);
+            ctx->buffer[bytesToCopy] = '\0';
+            ctx->length = bytesToCopy;
+        }
+    } else {
+        ctx->length = 0;
+        ctx->buffer[0] = '\0';
+    }
     
     OutputDebugStringA("[GhostText] Context snapshot captured\n");
 }
@@ -4070,6 +4098,7 @@ void RawrXD_IDE_ErrorClear(RawrXD_IDE* ide) {
  *=========================================================================*/
 
 #include "IDEDebuggerTypes.h"
+#include "gguf_loader.h"
 
 void RawrXD_IDE_UpdateDebugPanels(RawrXD_IDE* ide, DebugStatePayload* payload) {
     if (!ide || !payload) return;
@@ -4535,3 +4564,4 @@ void RawrXD_IDE_MoERouteTest(RawrXD_IDE* ide) {
 }
 
 /* E> End of file <3 */ 
+

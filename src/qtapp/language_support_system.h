@@ -211,7 +211,8 @@ public:
         int supportedWithLinter;
     };
     LanguageStats getStatistics() const;
-\nprivate:\n    void onLSPServerStarted(LanguageID id);
+
+\nprivate:\n    void onLSPServerStarted(LanguageID id);
     void onLSPServerError(LanguageID id, const std::string& error);
     void onFormatterFinished(LanguageID id, const std::string& output);
 
@@ -225,7 +226,8 @@ private:
     std::map<LanguageID, LanguageConfiguration> m_languages;
     std::map<LanguageID, void**> m_lspServers;
     std::map<LanguageID, void**> m_formatters;
-\npublic:\n    void languageSupported(LanguageID id);
+
+\npublic:\n    void languageSupported(LanguageID id);
     void languageNotSupported(LanguageID id);
     void lspServerStarted(LanguageID id);
     void lspServerError(LanguageID id, const std::string& error);
@@ -395,7 +397,8 @@ public:
     bool getCallStack(StackCallback callback);
     bool getVariables(int frameId, VariablesCallback callback);
     bool evaluate(int frameId, const std::string& expression, EvaluateCallback callback);
-\npublic:\n    void debugStarted();
+
+\npublic:\n    void debugStarted();
     void debugStopped();
     void debugContinued();
     void debugOutput(const std::string& output);

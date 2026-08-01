@@ -3,7 +3,6 @@
 ; ============================================================================
 
 option casemap:none
-option win64:3
 
 ; ----------------------------------------------------------------------------
 ; Token Types - Universal across all frontends
@@ -34,14 +33,17 @@ TOK_LE          EQU 22
 TOK_GE          EQU 23
 
 ; ----------------------------------------------------------------------------
-; Token Structure
+; Token Structure (24 bytes - aligned)
 ; ----------------------------------------------------------------------------
 TOKEN STRUCT
-    type        DWORD ?
-    start       QWORD ?      ; Pointer to start in source
-    length      DWORD ?
-    line        DWORD ?
-    column      DWORD ?
+    tok_type    DWORD ?
+    tok_flags   DWORD ?      ; Token flags (reserved for future use)
+    tok_start   QWORD ?      ; Pointer to start in source
+    tok_length  DWORD ?
+    tok_line    DWORD ?
+    tok_column  DWORD ?
+    tok_value   QWORD ?      ; Parsed value (for numbers, etc.)
+    tok_pad     DWORD ?      ; Padding to align
 TOKEN ENDS
 
 ; ----------------------------------------------------------------------------
@@ -49,7 +51,7 @@ TOKEN ENDS
 ; ----------------------------------------------------------------------------
 .data
 ALIGN 16
-token_buffer TOKEN 4096 DUP(<>)
+token_buffer TOKEN 256 DUP(<>)
 token_count DWORD 0
 
 ; ----------------------------------------------------------------------------
@@ -91,31 +93,34 @@ TokenCreate PROC
     ; Check capacity
     mov eax, token_count
     cmp eax, 4096
-    jge .full
+    jge full
     
-    ; Calculate token address
-    mov edi, eax
-    shl edi, 4          ; index * 16 (sizeof TOKEN)
+    ; Calculate token address (TOKEN is now 24 bytes, but we use 32 for alignment)
+    ; Actually, let's keep it simple: use SIZEOF TOKEN
+    imul edi, eax, SIZEOF TOKEN
     lea rdi, [token_buffer + rdi]
     
     ; Fill token
-    mov [rdi].TOKEN.type, ebx
-    mov [rdi].TOKEN.start, rdx
-    mov [rdi].TOKEN.length, r8d
-    mov [rdi].TOKEN.line, r9d
+    mov [rdi].TOKEN.tok_type, ebx
+    mov dword ptr [rdi].TOKEN.tok_flags, 0     ; Initialize flags
+    mov [rdi].TOKEN.tok_start, rdx
+    mov [rdi].TOKEN.tok_length, r8d
+    mov [rdi].TOKEN.tok_line, r9d
     mov eax, [rbp+28h]
-    mov [rdi].TOKEN.column, eax
+    mov [rdi].TOKEN.tok_column, eax
+    mov qword ptr [rdi].TOKEN.tok_value, 0     ; Initialize value
+    mov dword ptr [rdi].TOKEN.tok_pad, 0       ; Initialize padding
     
     ; Return index and increment
     mov eax, token_count
     inc token_count
     
-    jmp .done
+    jmp done
     
-.full:
+full:
     mov rax, -1
     
-.done:
+done:
     pop rdi
     pop rbx
     leave
@@ -132,17 +137,16 @@ TokenGet PROC
     mov rbp, rsp
     
     cmp ecx, token_count
-    jae .invalid
+    jae invalid
     
-    mov eax, ecx
-    shl eax, 4          ; index * 16
+    imul eax, ecx, SIZEOF TOKEN
     lea rax, [token_buffer + rax]
-    jmp .done
+    jmp done
     
-.invalid:
+invalid:
     xor rax, rax
     
-.done:
+done:
     leave
     ret
 TokenGet ENDP
@@ -184,55 +188,55 @@ TokenTypeToString PROC
     .code
     
     cmp ecx, TOK_EOF
-    je .eof
+    je eof
     cmp ecx, TOK_IDENTIFIER
-    je .identifier
+    je identifier
     cmp ecx, TOK_STRING
-    je .string
+    je string
     cmp ecx, TOK_NUMBER
-    je .number
+    je number
     cmp ecx, TOK_KEYWORD
-    je .keyword
+    je keyword
     cmp ecx, TOK_OPERATOR
-    je .operator
+    je operator
     cmp ecx, TOK_SEMICOLON
-    je .semicolon
+    je semicolon
     cmp ecx, TOK_LPAREN
-    je .lparen
+    je lparen
     cmp ecx, TOK_RPAREN
-    je .rparen
+    je rparen
     
     lea rax, str_unknown
-    jmp .done
+    jmp done
     
-.eof:
+eof:
     lea rax, str_eof
-    jmp .done
-.identifier:
+    jmp done
+identifier:
     lea rax, str_identifier
-    jmp .done
-.string:
+    jmp done
+string:
     lea rax, str_string
-    jmp .done
-.number:
+    jmp done
+number:
     lea rax, str_number
-    jmp .done
-.keyword:
+    jmp done
+keyword:
     lea rax, str_keyword
-    jmp .done
-.operator:
+    jmp done
+operator:
     lea rax, str_operator
-    jmp .done
-.semicolon:
+    jmp done
+semicolon:
     lea rax, str_semicolon
-    jmp .done
-.lparen:
+    jmp done
+lparen:
     lea rax, str_lparen
-    jmp .done
-.rparen:
+    jmp done
+rparen:
     lea rax, str_rparen
     
-.done:
+done:
     leave
     ret
 TokenTypeToString ENDP

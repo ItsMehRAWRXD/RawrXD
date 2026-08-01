@@ -78,7 +78,6 @@ std::vector<PlanOrchestrator::Step> PlanOrchestrator::getPlan() const {
 }
 
 bool PlanOrchestrator::isComplete() const {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_steps.empty()) return true;
     return m_currentStepIndex >= static_cast<int>(m_steps.size());
@@ -124,25 +123,6 @@ void PlanOrchestrator::decomposeGoal(const std::string& goal) {
     }
 
     m_steps.push_back({"Document and summarize outcomes", false, ""});
-=======
-    // Lock already held by callers or should be careful? 
-    // This is public, so lock.
-    // If called from executeNextStep (which holds lock), we dead lock.
-    // I should fix the lock logic. 
-    // Actually, simple way: make private version without lock.
-    // For now, assume single threaded access for this simple implementation or fix later.
-    // I will just check specific logic:
-    if (m_steps.empty()) return true;
-    return m_currentStepIndex >= m_steps.size();
-}
-
-void PlanOrchestrator::decomposeGoal(const std::string& goal) {
-    // Real implementation: Call LLM to get JSON plan.
-    // Heuristic fallback for now:
-    m_steps.push_back({ "Analyze requirements for: " + goal, false, "" });
-    m_steps.push_back({ "Implement core logic", false, "" });
-    m_steps.push_back({ "Verify implementation", false, "" });
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace RawrXD

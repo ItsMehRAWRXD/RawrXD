@@ -195,19 +195,14 @@ bool SmartRewriteEngineIntegration::applySuggestion(const RewriteSuggestion& sug
         return anyApplied;
         
     } catch (const std::exception& e) {
-<<<<<<< HEAD
         m_logger->error("Error applying suggestion: {}", e.what());
         m_metrics->incrementCounter("rewrite_apply_error");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 }
 
 bool SmartRewriteEngineIntegration::previewSuggestion(const RewriteSuggestion& suggestion) {
     try {
-<<<<<<< HEAD
         m_logger->info("Previewing rewrite suggestion");
         
         // Generate line-level diff and format it for display
@@ -230,9 +225,6 @@ bool SmartRewriteEngineIntegration::previewSuggestion(const RewriteSuggestion& s
         m_logger->info("=== END PREVIEW ===");
         
         m_metrics->incrementCounter("rewrite_previewed");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
         
     } catch (const std::exception& e) {
@@ -242,7 +234,6 @@ bool SmartRewriteEngineIntegration::previewSuggestion(const RewriteSuggestion& s
 }
 
 void SmartRewriteEngineIntegration::undoLastChange() {
-<<<<<<< HEAD
     m_logger->info("Undoing last change");
     
     if (s_undoStack.empty()) {
@@ -264,9 +255,6 @@ void SmartRewriteEngineIntegration::undoLastChange() {
     
     m_logger->info("Reverted {} to previous state ({} bytes)", filePath, previousContent.size());
     m_metrics->incrementCounter("rewrite_undo");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<DiffHunk> SmartRewriteEngineIntegration::generateDiff(

@@ -287,5 +287,20 @@
     })();
     </script>
     <!-- End BigDaddyG Auto-Connection Script -->
+
+    <!-- Electron API Bridge -->
+    <script>
+    if (typeof require !== 'undefined') {
+        try {
+            const { ipcRenderer } = require('electron');
+            window.electronAPI = {
+                selectFile: () => ipcRenderer.invoke('select-file'),
+                generateStub: (payloadPath, options) => ipcRenderer.invoke('generate-stub', payloadPath, options)
+            };
+        } catch (e) {
+            console.log('Electron not available');
+        }
+    }
+    </script>
 </body>
 </html>

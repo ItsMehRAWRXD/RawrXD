@@ -7,6 +7,7 @@
 #include "ANSIColorParser.hpp"
 #include <richedit.h>
 #include <commctrl.h>
+#include <commdlg.h>
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -111,7 +112,7 @@ void GitCommitDialog::CreateControls() {
         20, 240, 580, 220, m_hwnd, (HMENU)IDC_DIFF_VIEW, hInst, nullptr);
     
     // Set diff view font
-    HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hFont = CreateFontW(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                             DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas");
     SendMessage(m_hwndDiffView, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -185,7 +186,7 @@ void GitCommitDialog::UpdateStatus() {
                           L"Staged: " + std::to_wstring(staged) + L"\n" +
                           L"Unstaged: " + std::to_wstring(unstaged);
     
-    SetWindowText(m_hwndStatusLabel, status.c_str());
+    SetWindowTextW(m_hwndStatusLabel, status.c_str());
 }
 
 void GitCommitDialog::UpdateDiffView() {
@@ -216,18 +217,26 @@ void GitCommitDialog::UpdateDiffView() {
 
 void GitCommitDialog::DoCommit() {
     // Get message
-    char msg[4096];
-    GetWindowTextA(m_hwndMessageEdit, msg, sizeof(msg));
+    wchar_t msg[4096];
+    GetWindowTextW(m_hwndMessageEdit, msg, sizeof(msg)/sizeof(msg[0]));
     
-    if (strlen(msg) == 0) {
-        MessageBoxA(m_hwnd, "Please enter a commit message.", "Git Commit", 
+    if (wcslen(msg) == 0) {
+        MessageBoxW(m_hwnd, L"Please enter a commit message.", L"Git Commit", 
                     MB_OK | MB_ICONWARNING);
         return;
     }
     
+    // Convert to UTF-8 for git
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, msg, -1, nullptr, 0, nullptr, nullptr);
+    std::string utf8msg;
+    if (utf8Len > 0) {
+        utf8msg.resize(utf8Len - 1);
+        WideCharToMultiByte(CP_UTF8, 0, msg, -1, &utf8msg[0], utf8Len, nullptr, nullptr);
+    }
+    
     // Build result
     m_result.confirmed = true;
-    m_result.message = msg;
+    m_result.message = utf8msg;
     m_result.amend = IsDlgButtonChecked(m_hwnd, IDC_AMEND_CHECK) == BST_CHECKED;
     m_result.signOff = IsDlgButtonChecked(m_hwnd, IDC_SIGNOFF_CHECK) == BST_CHECKED;
     
@@ -318,7 +327,8 @@ void GitCommitDialog::SetFiles(const std::vector<GitFileStatus>& files) {
 
 void GitCommitDialog::SetLastCommitMessage(const std::string& msg) {
     if (m_hwndMessageEdit) {
-        SetWindowTextA(m_hwndMessageEdit, msg.c_str());
+        std::wstring wmsg(msg.begin(), msg.end());
+        SetWindowTextW(m_hwndMessageEdit, wmsg.c_str());
     }
 }
 

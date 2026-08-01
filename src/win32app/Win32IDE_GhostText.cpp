@@ -33,6 +33,20 @@
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
 
+// Forward declarations from ai_completion_real.cpp (must be at global scope)
+extern "C" {
+    const char* RequestGhostTextCompletion(
+        const char* context,
+        const char* language,
+        const char* suffix,
+        const char* file_path,
+        int cursor_line,
+        int cursor_col
+    );
+    void FreeCompletionString(const char* str);
+    bool IsCompletionEngineReady();
+}
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -333,20 +347,6 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
 
         // ---- NEW: ai_completion_real.cpp C API (VAL-063) ----
         if (provider == GhostProviderKind::AICompletionReal) {
-            // Forward declarations from ai_completion_real.cpp
-            extern "C" {
-                const char* RequestGhostTextCompletion(
-                    const char* context,
-                    const char* language,
-                    const char* suffix,
-                    const char* file_path,
-                    int cursor_line,
-                    int cursor_col
-                );
-                void FreeCompletionString(const char* str);
-                bool IsCompletionEngineReady();
-            }
-
             if (IsCompletionEngineReady()) {
                 const char* completion = RequestGhostTextCompletion(
                     context.c_str(),

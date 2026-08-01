@@ -20,6 +20,7 @@
 #include "MoERouter.hpp"
 #include "MoEWeightProxy.hpp"
 #include "GGUFLoader.hpp"
+#include "gguf_loader.h"
 
 // Test configuration
 #define TEST_HIDDEN_DIM 7168
@@ -352,3 +353,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+

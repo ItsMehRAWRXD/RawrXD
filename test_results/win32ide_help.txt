@@ -1,7 +1,27 @@
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
-2026-07-29 05:40:45 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap begin (no startup scan/index)
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [RawrXD::Quant] Layout Legend: Q4S (Signed 4-bit): UI '-4bit', Wire: val+8, Range [-8,7]. Q6S (Signed 6-bit): UI '-6bit', Wire: val+32, Range [-32,31]. Q4U/Q6U: Standard Unsigned Mapping.
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [CompressedPoolBudget] budget_bytes=0
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [ModularModelLoader] resident layer budget=0
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [RuntimeSurface] llama.cpp/exllamaV2 parity register entries=12
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [RuntimeSurface] four-lane gate ready (max 4 of 5 lanes unless explicit module)
+2026-07-31 23:49:36 [INFO] [RuntimeSurface] [RuntimeSurface] bootstrap complete
+[AMD-GPU] DX12 compute queue creation failed, but device is valid.
+[AMD-GPU] DX12 backend initialized.
+[AMD-GPU] AMD features detected: 0x4d0c
+  WMMA: no
+  MFMA: no
+  InfinityCache: no
+  PackedFP16: YES
+  INT8DP4: no
+  AsyncCompute: YES
+[AMD-GPU] AMDGPUAccelerator initialized.
+  GPU: AMD Radeon AI PRO R9700
+  Vendor: 0x1002 Device: 0x7551
+  VRAM: 32476 MB
+  CUs: 96
+  Backend: DX12 Compute
+  AMD Features: 0x4d0c
+  GPU Enabled: YES
+[AMD-GPU] Triggering GPU warmup (anti-lag)...
+[AMD-GPU] Warmup complete: 14ms (matmul=10919us memcpy=1197us)
+2026-07-31 23:49:36 [INFO] [Win32IDE_Breadcrumbs] Breadcrumb bar created

@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ======================== STB_IMAGE_WRITE (Header-only PNG/JPG/BMP) ========================
+================= STB_IMAGE_WRITE (Header-only PNG/JPG/BMP) ========================
 // Place this before including image_generator.h to enable PNG export
 // #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include "stb_image_write.h"
@@ -376,4 +373,4 @@ inline Canvas apply_blur(const Canvas& src, int radius) {
 }
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

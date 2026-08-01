@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-07-30T18:03:49.372471",
+  "gpus": [
+    {
+      "name": "AMD Radeon AI PRO R9700",
+      "vendor": "AMD",
+      "dedicated_vram_gb": 48.0,
+      "backend": "discrete",
+      "vulkan_supported": true,
+      "hip_supported": true
+    },
+    {
+      "name": "AMD Radeon RX 7800 XT",
+      "vendor": "AMD",
+      "dedicated_vram_gb": 16.0,
+      "backend": "discrete",
+      "vulkan_supported": true,
+      "hip_supported": true
+    }
+  ],
+  "gpu_count": 2,
+  "system_ram_gb": 64.0,
+  "cpu_name": "AMD Ryzen 9 7950X3D",
+  "cpu_cores": 16,
+  "cpu_threads": 32,
+  "os": "Windows 11",
+  "vulkan_runtime": true,
+  "hip_runtime": true,
+  "cuda_runtime": false,
+  "vram_total_gb": 64.0,
+  "vram_free_gb": 48.0,
+  "model_path": "models/deep2-22b-q4.gguf",
+  "model_context": 32768,
+  "kv_cache": true,
+  "inference_latency_ms": 45.0,
+  "kernels_dispatched": 32
+}

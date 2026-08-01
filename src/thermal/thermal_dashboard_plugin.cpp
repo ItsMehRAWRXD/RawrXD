@@ -1,13 +1,8 @@
 /**
  * @file thermal_dashboard_plugin.cpp
  * @brief Thermal Dashboard Plugin Implementation
-<<<<<<< HEAD
  *
  * Hot-injectable DLL for thermal monitoring; Win32/non-Qt.
-=======
- * 
- * Hot-injectable DLL for thermal monitoring with Qt6 UI
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
  */
 
 #include "thermal_dashboard_plugin.hpp"
@@ -16,7 +11,6 @@
 
 #include <cstring>
 
-<<<<<<< HEAD
 // Thermal dashboard void* parent doc — Phase 33 implementation complete
 
 
@@ -30,22 +24,6 @@ public:
         , m_pollTimer(nullptr)
     {
         (void)parent;
-=======
-namespace rawrxd::thermal {
-
-class ThermalDashboardPlugin : public void, public IThermalDashboardPlugin {
-
-    (IID IThermalDashboardPlugin_iid FILE "thermal_dashboard.json")
-
-
-public:
-    ThermalDashboardPlugin(void* parent = nullptr)
-        : void(parent)
-        , m_isMonitoring(false)
-        , m_currentBurstMode(2)  // Default: hybrid
-        , m_pollTimer(nullptr)
-    {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::memset(&m_currentSnapshot, 0, sizeof(ThermalSnapshot));
     }
     
@@ -58,14 +36,8 @@ public:
     // ═══════════════════════════════════════════════════════════════════════════
     
     bool initialize() override {
-<<<<<<< HEAD
         // Timer not needed for backend; poll via pollThermals() when needed
         m_pollTimer = nullptr;
-=======
-        
-        m_pollTimer = new void*(this);
-        m_pollTimer->setInterval(1000);  // 1 second poll
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Qt connect removed
         // Initialize thermal snapshot
         memset(&m_currentSnapshot, 0, sizeof(ThermalSnapshot));
@@ -79,15 +51,7 @@ public:
     
     void shutdown() override {
         stopMonitoring();
-<<<<<<< HEAD
         m_pollTimer = nullptr;
-=======
-        if (m_pollTimer) {
-            m_pollTimer->stop();
-            delete m_pollTimer;
-            m_pollTimer = nullptr;
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     std::string pluginName() const override {
@@ -125,11 +89,7 @@ public:
         if (m_isMonitoring) return;
         
         m_isMonitoring = true;
-<<<<<<< HEAD
         // Timer not used for backend; poll via pollThermals() when needed
-=======
-        m_pollTimer->start();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         // Initial poll
         pollThermals();
@@ -139,12 +99,6 @@ public:
         if (!m_isMonitoring) return;
         
         m_isMonitoring = false;
-<<<<<<< HEAD
-=======
-        if (m_pollTimer) {
-            m_pollTimer->stop();
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     bool isMonitoring() const override {
@@ -342,11 +296,7 @@ private:
 private:
     bool m_isMonitoring;
     int m_currentBurstMode;
-<<<<<<< HEAD
     void* m_pollTimer;  // Win32: stub (was QTimer), nullptr
-=======
-    void** m_pollTimer;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ThermalSnapshot m_currentSnapshot;
     mutable std::mutex m_snapshotMutex;
 };

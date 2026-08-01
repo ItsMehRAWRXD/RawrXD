@@ -39,9 +39,8 @@
 #include <cstdint>
 #include <optional>
 
-// Forward-declare nlohmann::json to avoid pulling the full header here.
-// The .cpp includes <nlohmann/json.hpp>.
-namespace nlohmann { class json; }
+// Include nlohmann/json.hpp for proper json type definition
+#include <nlohmann/json.hpp>
 
 namespace RawrXD {
 namespace LSPServer {

@@ -1,8 +1,5 @@
 #pragma once
-<<<<<<< HEAD
 #ifndef RAWRXD_NO_VULKAN
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <vulkan/vulkan.h>
 #include <vector>
 #include <string>
@@ -119,7 +116,4 @@ private:
 };
 
 } // namespace RawrXD
-<<<<<<< HEAD
 #endif // RAWRXD_NO_VULKAN
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

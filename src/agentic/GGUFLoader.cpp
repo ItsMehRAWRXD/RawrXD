@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace Agentic {
@@ -356,3 +357,4 @@ void GGUFLoader::SetError(const std::string& msg) {
 
 } // namespace Agentic
 } // namespace RawrXD
+

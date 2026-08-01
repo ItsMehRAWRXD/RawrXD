@@ -16,7 +16,6 @@
 
 #pragma once
 
-<<<<<<< HEAD
 #include "simple_json.hpp"
 
 #include <string>
@@ -32,15 +31,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-=======
-#include <string>
-#include <vector>
-#include <map>
-#include <functional>
-#include <memory>
-#include <nlohmann/json.hpp>
-#include "agentic_engine.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 /**
  * @enum ActionType
@@ -65,23 +55,14 @@ enum class ActionType {
  */
 struct Action {
     ActionType type = ActionType::Unknown;
-<<<<<<< HEAD
     std::string id;                         ///< Unique action ID
     std::string target;                     ///< File, command, or resource name
     JsonValue params;                       ///< Action-specific parameters (Object)
-=======
-    std::string target;                     ///< File, command, or resource name
-    nlohmann::json params;                  ///< Action-specific parameters
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string description;                ///< Human-readable description
 
     // Result tracking
     bool executed = false;
-<<<<<<< HEAD
     bool success  = false;
-=======
-    bool success = false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string result;
     std::string error;
 };
@@ -109,7 +90,6 @@ typedef JsonValue (*ModelInvokeFunc)(const std::string& wish, const JsonValue& p
  * @brief Stateful context for plan execution
  */
 struct ExecutionContext {
-<<<<<<< HEAD
     std::string projectRoot;                    ///< Project working directory
     std::vector<std::string> environmentVars;   ///< Additional env vars
     int timeoutMs = 30000;                      ///< Default action timeout
@@ -119,13 +99,6 @@ struct ExecutionContext {
     // Model invocation (for recursive agent)
     ModelInvokeFunc modelInvokeFunc = nullptr;
     void* modelInvokeUserData = nullptr;
-=======
-    std::string projectRoot;                ///< Project working directory
-    std::vector<std::string> environmentVars; ///< Additional env vars
-    int timeoutMs = 30000;                  ///< Default action timeout
-    bool dryRun = false;                    ///< Preview without executing
-    nlohmann::json state;                   ///< Shared state across actions
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     // Tracking
     int currentActionIndex = 0;
@@ -147,7 +120,6 @@ typedef void (*UserInputNeededCallback)(const std::string& query, const std::vec
 /**
  * @class ActionExecutor
  * @brief Executes agent-generated action plans with error handling
-<<<<<<< HEAD
  *
  * Responsibilities:
  * - Parse JSON actions from agent plan
@@ -168,8 +140,6 @@ typedef void (*UserInputNeededCallback)(const std::string& query, const std::vec
  * executor.registerActionCompletedCallback(onActionDone, nullptr);
  * executor.executePlan(planArray);
  * @endcode
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
  */
 class ActionExecutor {
 public:
@@ -179,20 +149,12 @@ public:
     /**
      * @brief Constructor
      */
-<<<<<<< HEAD
     ActionExecutor();
-=======
-    explicit ActionExecutor();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     /**
      * @brief Destructor - joins background thread if active
      */
-<<<<<<< HEAD
     ~ActionExecutor();
-=======
-    virtual ~ActionExecutor();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     /**
      * @brief Set execution context (project root, env, timeout)
@@ -217,16 +179,11 @@ public:
      * @brief Execute complete plan (asynchronous, runs on background thread)
      * @param actions JsonValue Array of actions to execute
      * @param stopOnError If true, stop at first failure; if false, continue
-<<<<<<< HEAD
      *
      * Fires ActionStarted/ActionCompleted callbacks for each action.
      * Fires PlanCompleted callback at end with overall result.
      */
     void executePlan(const JsonValue& actions, bool stopOnError = true);
-=======
-     */
-    void executePlan(const nlohmann::json& actions, bool stopOnError = true);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     /**
      * @brief Cancel executing plan
@@ -256,7 +213,6 @@ public:
      * @brief Get aggregated result from plan
      * @return JsonValue object with results from all actions
      */
-<<<<<<< HEAD
     JsonValue getAggregatedResult() const;
 
     // -----------------------------------------------------------------
@@ -273,30 +229,9 @@ public:
 
 private:
     // -----------------------------------------------------------------
-=======
-    nlohmann::json getAggregatedResult() const;
-
-    // Callbacks (replacing Qt signals)
-    std::function<void(int)> onPlanStarted;
-    std::function<void(int, const std::string&)> onActionStarted;
-    std::function<void(int, bool, const nlohmann::json&)> onActionCompleted;
-    std::function<void(int, const std::string&, bool)> onActionFailed;
-    std::function<void(int, int)> onProgressUpdated;
-    std::function<void(bool, const nlohmann::json&)> onPlanCompleted;
-    std::function<void(const std::string&, const std::vector<std::string>&)> onUserInputNeeded;
-    std::function<void(const std::string&, const std::string&)> onRecursiveTaskNeeded;
-
-    // Setter for engine
-    void setAgenticEngine(AgenticEngine* engine) { m_agenticEngine = engine; }
-
-private:
-    AgenticEngine* m_agenticEngine = nullptr;
-    // ─────────────────────────────────────────────────────────────────────
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Action Handlers
     // -----------------------------------------------------------------
 
-<<<<<<< HEAD
     /** @brief Execute file edit action */
     bool handleFileEdit(Action& action);
 
@@ -319,15 +254,6 @@ private:
     bool handleRecursiveAgent(Action& action);
 
     /** @brief Prompt user for input */
-=======
-    bool handleFileEdit(Action& action);
-    bool handleSearchFiles(Action& action);
-    bool handleRunBuild(Action& action);
-    bool handleExecuteTests(Action& action);
-    bool handleCommitGit(Action& action);
-    bool handleInvokeCommand(Action& action);
-    bool handleRecursiveAgent(Action& action);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     bool handleQueryUser(Action& action);
 
     /** @brief Execute agentic routing/dispatch (ASM) */
@@ -337,7 +263,6 @@ private:
     // Utility Methods
     // -----------------------------------------------------------------
 
-<<<<<<< HEAD
     /** @brief Parse JSON action object into Action struct */
     Action parseJsonAction(const JsonValue& jsonAction);
 
@@ -356,17 +281,6 @@ private:
     bool validateFileEditSafety(const std::string& filePath, const std::string& action);
 
     /** @brief Map action type string to enum */
-=======
-    Action parseJsonAction(const nlohmann::json& jsonAction);
-    bool createBackup(const std::string& filePath);
-    bool restoreFromBackup(const std::string& filePath);
-    
-    nlohmann::json executeCommand(const std::string& command,
-                                   const std::vector<std::string>& args,
-                                   int timeoutMs);
-
-    bool validateFileEditSafety(const std::string& filePath, const std::string& action);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ActionType stringToActionType(const std::string& typeStr) const;
 
     // -----------------------------------------------------------------
@@ -404,7 +318,6 @@ private:
     bool m_stopOnError = true;
     std::atomic<bool> m_cancelled{false};
 
-<<<<<<< HEAD
     std::vector<Action> m_executedActions;          ///< History of executed actions
     std::map<std::string, std::string> m_backups;   ///< Backup file mappings
 
@@ -437,9 +350,5 @@ private:
     std::vector<ProgressUpdatedCB>  m_progressUpdatedCBs;
     std::vector<PlanCompletedCB>    m_planCompletedCBs;
     std::vector<UserInputNeededCB>  m_userInputNeededCBs;
-=======
-    std::vector<Action> m_executedActions;      ///< History of executed actions
-    std::map<std::string, std::string> m_backups; ///< Backup file mappings
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 

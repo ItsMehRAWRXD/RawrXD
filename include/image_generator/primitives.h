@@ -1,13 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-#include <vector>
-#include <cmath>
-#include "canvas.h"
-#include "colors.h"
-
-namespace ig {
-
-// ======================== Line Drawing (Xiaolin Wu AA) ========================
+================= Line Drawing (Xiaolin Wu AA) ========================
 
 static inline float ipart(float x) { return std::floor(x); }
 static inline float fpart(float x) { return x - std::floor(x); }
@@ -533,4 +524,4 @@ inline void flood_fill(Canvas& c, int x, int y, const Color& new_color) {
 }
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

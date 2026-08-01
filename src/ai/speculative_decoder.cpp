@@ -5,6 +5,7 @@
 #include "../atc_gpu_dispatch.h"
 #include <algorithm>
 #include <cmath>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -309,4 +310,5 @@ void SpeculativeDecoder::SetTemperature(float temp) {
 }
 
 } // namespace RawrXD
+
 

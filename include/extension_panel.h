@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-#ifndef EXTENSION_PANEL_H
-#define EXTENSION_PANEL_H
-
-// ============================================================================
+=====================================================================
 // ExtensionPanel — C++20, Win32. No Qt. (QWidget, QListWidget, signals removed)
 // ============================================================================
 
@@ -123,4 +119,4 @@ private:
 } // namespace IDE
 
 #endif // EXTENSION_PANEL_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

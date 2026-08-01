@@ -7,12 +7,8 @@
 #include <atomic>
 #include <thread>
 #include <future>
-<<<<<<< HEAD
 #include <unordered_map>
 #include <nlohmann/json.hpp>
-=======
-#include "nlohmann/json.hpp"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -23,14 +19,11 @@ struct LSPConfig {
     std::string rootPath;
 };
 
-<<<<<<< HEAD
 struct Position {
     int line;
     int character;
 };
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Abstract transport interface
 class JsonRpcTransport {
 public:
@@ -56,33 +49,24 @@ public:
     std::future<nlohmann::json> completion(const std::string& uri, int line, int character);
     std::future<nlohmann::json> definition(const std::string& uri, int line, int character);
     
-<<<<<<< HEAD
     // Incremental sync
     void sendIncrementalUpdate(const std::string& uri, int64_t version,
                                 const std::string& oldContent,
                                 const std::string& newContent);
     void cancelRequest(const std::string& id);
     
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 private:
     LSPConfig m_config;
     std::unique_ptr<JsonRpcTransport> m_transport;
     std::atomic<bool> m_initialized{false};
     std::atomic<int> m_requestId{0};
     std::mutex m_mutex;
-<<<<<<< HEAD
     std::unordered_map<std::string, bool> m_pendingCancellations;
     
     nlohmann::json createRequest(const std::string& method, const nlohmann::json& params);
     nlohmann::json createNotification(const std::string& method, const nlohmann::json& params);
     void sendNotification(const std::string& method, const std::string& params);
     Position offsetToPosition(const std::string& text, int offset);
-=======
-    
-    nlohmann::json createRequest(const std::string& method, const nlohmann::json& params);
-    nlohmann::json createNotification(const std::string& method, const nlohmann::json& params);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace RawrXD

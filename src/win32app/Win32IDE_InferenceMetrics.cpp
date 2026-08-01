@@ -23,6 +23,7 @@
 #include "../config/IDEConfig.h"
 #include "../core/perf_telemetry.hpp"
 #include "../core/system_integrity_audit_trail.h"
+#include "../inference/Deep2Engine.hpp"
 #include <cstdio>
 #include <deque>
 #include <numeric>
@@ -78,6 +79,13 @@ struct InferenceMetrics {
     double integrityPassRate = 0.0;
     double integrityFailures = 0.0;
     double perfActiveSlots = 0.0;
+
+    // Deep2Engine live stats (671B dual-GPU inference)
+    bool deep2Available = false;
+    double deep2Tps = 0.0;
+    double deep2LatencyMs = 0.0;
+    uint64_t deep2TokensGenerated = 0;
+    uint32_t deep2ContextLength = 0;
 };
 
 static InferenceMetrics getMetricsSnapshot()
@@ -133,6 +141,24 @@ static InferenceMetrics getMetricsSnapshot()
     auto& perf = RawrXD::Perf::PerfTelemetry::instance();
     if (perf.isInitialized()) {
         m.perfActiveSlots = static_cast<double>(perf.getActiveSlotCount());
+    }
+
+    // Pull live stats from the Deep2Engine if it has been initialized.
+    try {
+        auto& engine = RawrXD::Inference::GetDeep2Engine();
+        if (engine.IsInitialized()) {
+            m.deep2Available = true;
+            m.deep2Tps = engine.GetThroughputTps();
+            m.deep2LatencyMs = engine.GetAverageLatencyMs();
+            m.deep2ContextLength = engine.GetContextLength();
+            // If the global telemetry gauges are empty, seed them from the engine
+            // so the rest of the panel shows real numbers.
+            if (m.currentTPS <= 0.0) m.currentTPS = m.deep2Tps;
+            if (m.avgTPS <= 0.0)     m.avgTPS = m.deep2Tps;
+            if (m.p50Latency <= 0.0) m.p50Latency = m.deep2LatencyMs;
+        }
+    } catch (...) {
+        // Engine not constructed yet — leave deep2Available = false.
     }
 
     return m;
@@ -301,6 +327,17 @@ static void CALLBACK MetricsTimerProc(HWND hwnd, UINT msg, UINT_PTR idTimer, DWO
              m.integrityFailures,
              m.perfActiveSlots);
     SetWindowTextW(s_metrics.hwndKVDisplay, buf);
+
+    // Append Deep2Engine status to the KV line when the 671B engine is live.
+    if (m.deep2Available) {
+        wchar_t deep2buf[256];
+        swprintf(deep2buf, _countof(deep2buf),
+                 L"\nDeep2Engine: %.1f TPS  %.2f ms  ctx=%u",
+                 m.deep2Tps, m.deep2LatencyMs, m.deep2ContextLength);
+        wchar_t combined[512];
+        swprintf(combined, _countof(combined), L"%s%s", buf, deep2buf);
+        SetWindowTextW(s_metrics.hwndKVDisplay, combined);
+    }
 
     // Track TPS history for potential sparkline
     s_metrics.tpsHistory.push_back(m.currentTPS);

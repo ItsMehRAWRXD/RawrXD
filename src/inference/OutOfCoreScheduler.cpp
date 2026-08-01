@@ -546,7 +546,7 @@ void OutOfCoreScheduler::ExecuteLayerOnGpu(uint32_t layer_id, uint32_t gpu_devic
     
     layer->compute_time_us = duration;
     layer->execution_count++;
-    layer->last_token_id = next_token_id_.load() - 1;
+    layer->last_token_id = next_token_id_ - 1;
     
     UpdateMetricsPostExecution(layer_id, gpu_device, duration);
 }
@@ -562,7 +562,7 @@ void OutOfCoreScheduler::UpdateMetricsPostExecution(uint32_t layer_id, uint32_t 
     metrics_.avg_layer_latency_ms = (1.0 - alpha) * current_avg + alpha * new_sample;
     
     // Update throughput
-    metrics_.tokens_processed = next_token_id_.load() - 1;
+    metrics_.tokens_processed = next_token_id_ - 1;
     if (metrics_.avg_layer_latency_ms > 0) {
         metrics_.throughput_tps = 1000.0 / (metrics_.avg_layer_latency_ms * config_.num_layers);
     }

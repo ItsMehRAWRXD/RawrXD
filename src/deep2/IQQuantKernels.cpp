@@ -25,6 +25,7 @@
 #include <immintrin.h>
 #include <cstring>
 #include <cstdint>
+#include "gguf_loader.h"
 
 namespace Deep2 {
 
@@ -633,3 +634,4 @@ void RegisterIQKernels() {
 }
 
 } // namespace Deep2
+

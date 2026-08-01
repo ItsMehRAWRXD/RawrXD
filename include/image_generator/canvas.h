@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-#include <cstdint>
-#include <vector>
-#include "colors.h"
-
-namespace ig {
-
-// ======================== Canvas Class ========================
+================= Canvas Class ========================
 
 class Canvas {
 public:
@@ -252,4 +244,4 @@ public:
 };
 
 } // namespace ig
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

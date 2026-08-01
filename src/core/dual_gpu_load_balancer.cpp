@@ -20,6 +20,15 @@ struct GpuInfo {
     std::atomic<uint32_t> activeLayers{0};
 };
 
+// Nanolayer configuration — sub-layer granularity for fine-grained GPU distribution
+struct NanoLayerConfig {
+    bool enabled = false;              // Enable nanolayer splitting
+    uint32_t subLayersPerLayer = 4;    // How many sub-units per transformer layer
+    float minChunkSize = 0.1f;         // Minimum chunk as fraction of a layer (10%)
+    bool dynamicAdjust = true;         // Allow runtime rebalancing
+    uint32_t gpuStripeWidth = 1;       // GPU assignment stripe width (1 = round-robin)
+};
+
 // Load Balancer State
 static struct {
     std::vector<GpuInfo> gpus;
@@ -30,6 +39,7 @@ static struct {
     float primaryGpuWeight = 0.7f;      // R9700 gets 70% of layers by default
     float thermalThreshold = 85.0f;    // Throttle above 85°C
     size_t vramReserve = 2ULL * 1024 * 1024 * 1024;  // Reserve 2GB per GPU
+    NanoLayerConfig nanoConfig;         // Nanolayer split configuration
 } g_balancer;
 
 // External function declarations (would link to actual GPU detection)
@@ -110,7 +120,60 @@ extern "C" __declspec(dllexport) int DualGpuBalancer_GetGpuForLayer(
     if (g_balancer.gpus.size() == 1)
         return g_balancer.gpus[0].index;
     
-    // Primary GPU (R9700) - assign first 70% of layers
+    // NANOLAYER MODE: Sub-layer granularity distribution
+    if (g_balancer.nanoConfig.enabled) {
+        uint32_t subLayers = g_balancer.nanoConfig.subLayersPerLayer;
+        uint32_t totalSubLayers = totalLayers * subLayers;
+        uint32_t primarySubLayers = (uint32_t)(totalSubLayers * g_balancer.primaryGpuWeight);
+        
+        // Each layer is split into subLayers chunks
+        // The subLayerIndex within this layer determines GPU assignment
+        // This allows fine-grained 70/30 split at sub-layer level
+        uint32_t subLayerBase = layerIndex * subLayers;
+        
+        // Check thermal throttling at sub-layer granularity
+        for (auto& gpu : g_balancer.gpus) {
+            if (gpu.temperature > g_balancer.thermalThreshold) {
+                // Hot GPU — shift its sub-layers to cooler GPU
+                for (uint32_t s = 0; s < subLayers; s++) {
+                    uint32_t globalSubIdx = subLayerBase + s;
+                    if (gpu.index == g_balancer.gpus[0].index && globalSubIdx < primarySubLayers) {
+                        // Primary hot, shift this sub-layer to secondary
+                        return g_balancer.gpus[1].index;
+                    } else if (gpu.index == g_balancer.gpus[1].index && globalSubIdx >= primarySubLayers) {
+                        // Secondary hot, shift this sub-layer to primary
+                        return g_balancer.gpus[0].index;
+                    }
+                }
+            }
+        }
+        
+        // Stripe distribution: interleave sub-layers across GPUs
+        if (g_balancer.nanoConfig.gpuStripeWidth > 1) {
+            uint32_t stripeIdx = (layerIndex * subLayers) / g_balancer.nanoConfig.gpuStripeWidth;
+            return g_balancer.gpus[stripeIdx % g_balancer.gpus.size()].index;
+        }
+        
+        // Standard nanolayer distribution: assign sub-layer chunks by weight
+        uint32_t subLayerStart = layerIndex * subLayers;
+        uint32_t subLayerEnd = subLayerStart + subLayers;
+        
+        // Count how many sub-layers go to each GPU
+        uint32_t primarySubCount = 0;
+        for (uint32_t s = subLayerStart; s < subLayerEnd; s++) {
+            if (s < primarySubLayers) primarySubCount++;
+        }
+        
+        // If majority of this layer's sub-layers go to primary, assign whole layer to primary
+        // Otherwise assign to secondary — this prevents thrashing
+        if (primarySubCount >= (subLayers / 2)) {
+            return g_balancer.gpus[0].index;
+        } else {
+            return g_balancer.gpus[1].index;
+        }
+    }
+    
+    // LEGACY MODE: Whole-layer distribution (original 70/30 split)
     uint32_t primaryLayers = (uint32_t)(totalLayers * g_balancer.primaryGpuWeight);
     
     // Check thermal throttling
@@ -193,6 +256,104 @@ extern "C" __declspec(dllexport) void DualGpuBalancer_SetPrimaryWeight(float wei
 {
     std::lock_guard<std::mutex> lock(g_balancer.mutex);
     g_balancer.primaryGpuWeight = std::max(0.1f, std::min(0.9f, weight));
+}
+
+// =============================================================================
+// Nanolayer Configuration
+// =============================================================================
+
+extern "C" __declspec(dllexport) void DualGpuBalancer_SetNanoLayerConfig(
+    bool enabled,
+    uint32_t subLayersPerLayer,
+    float minChunkSize,
+    bool dynamicAdjust,
+    uint32_t gpuStripeWidth)
+{
+    std::lock_guard<std::mutex> lock(g_balancer.mutex);
+    g_balancer.nanoConfig.enabled = enabled;
+    g_balancer.nanoConfig.subLayersPerLayer = std::max(1u, std::min(64u, subLayersPerLayer));
+    g_balancer.nanoConfig.minChunkSize = std::max(0.01f, std::min(0.5f, minChunkSize));
+    g_balancer.nanoConfig.dynamicAdjust = dynamicAdjust;
+    g_balancer.nanoConfig.gpuStripeWidth = std::max(1u, gpuStripeWidth);
+    
+    char buf[256];
+    snprintf(buf, sizeof(buf),
+        "[DualGpuBalancer] NanoLayer: enabled=%d subLayers=%u stripe=%u minChunk=%.2f\n",
+        enabled, subLayersPerLayer, gpuStripeWidth, minChunkSize);
+    OutputDebugStringA(buf);
+}
+
+extern "C" __declspec(dllexport) bool DualGpuBalancer_GetNanoLayerConfig(
+    bool* outEnabled,
+    uint32_t* outSubLayersPerLayer,
+    float* outMinChunkSize,
+    bool* outDynamicAdjust,
+    uint32_t* outGpuStripeWidth)
+{
+    std::lock_guard<std::mutex> lock(g_balancer.mutex);
+    if (outEnabled) *outEnabled = g_balancer.nanoConfig.enabled;
+    if (outSubLayersPerLayer) *outSubLayersPerLayer = g_balancer.nanoConfig.subLayersPerLayer;
+    if (outMinChunkSize) *outMinChunkSize = g_balancer.nanoConfig.minChunkSize;
+    if (outDynamicAdjust) *outDynamicAdjust = g_balancer.nanoConfig.dynamicAdjust;
+    if (outGpuStripeWidth) *outGpuStripeWidth = g_balancer.nanoConfig.gpuStripeWidth;
+    return true;
+}
+
+extern "C" __declspec(dllexport) uint32_t DualGpuBalancer_GetNanoLayerCount(uint32_t totalLayers)
+{
+    std::lock_guard<std::mutex> lock(g_balancer.mutex);
+    if (!g_balancer.nanoConfig.enabled)
+        return totalLayers;
+    return totalLayers * g_balancer.nanoConfig.subLayersPerLayer;
+}
+
+extern "C" __declspec(dllexport) int DualGpuBalancer_GetGpuForNanoLayer(
+    uint32_t layerIndex,
+    uint32_t subLayerIndex,
+    uint32_t totalLayers,
+    size_t subLayerMemoryEstimate)
+{
+    std::lock_guard<std::mutex> lock(g_balancer.mutex);
+    
+    if (!g_balancer.initialized || g_balancer.gpus.empty())
+        return 0;
+    
+    if (g_balancer.gpus.size() == 1)
+        return g_balancer.gpus[0].index;
+    
+    if (!g_balancer.nanoConfig.enabled) {
+        // Fall back to whole-layer assignment
+        return DualGpuBalancer_GetGpuForLayer(layerIndex, totalLayers, subLayerMemoryEstimate * g_balancer.nanoConfig.subLayersPerLayer);
+    }
+    
+    uint32_t subLayers = g_balancer.nanoConfig.subLayersPerLayer;
+    uint32_t totalSubLayers = totalLayers * subLayers;
+    uint32_t primarySubLayers = (uint32_t)(totalSubLayers * g_balancer.primaryGpuWeight);
+    uint32_t globalSubIdx = layerIndex * subLayers + subLayerIndex;
+    
+    // Check thermal throttling at nanolayer level
+    for (auto& gpu : g_balancer.gpus) {
+        if (gpu.temperature > g_balancer.thermalThreshold) {
+            if (gpu.index == g_balancer.gpus[0].index && globalSubIdx < primarySubLayers) {
+                return g_balancer.gpus[1].index;  // Shift to secondary
+            } else if (gpu.index == g_balancer.gpus[1].index && globalSubIdx >= primarySubLayers) {
+                return g_balancer.gpus[0].index;  // Shift to primary
+            }
+        }
+    }
+    
+    // Stripe distribution
+    if (g_balancer.nanoConfig.gpuStripeWidth > 1) {
+        uint32_t stripeIdx = globalSubIdx / g_balancer.nanoConfig.gpuStripeWidth;
+        return g_balancer.gpus[stripeIdx % g_balancer.gpus.size()].index;
+    }
+    
+    // Standard nanolayer distribution
+    if (globalSubIdx < primarySubLayers) {
+        return g_balancer.gpus[0].index;
+    } else {
+        return g_balancer.gpus[1].index;
+    }
 }
 
 // =============================================================================

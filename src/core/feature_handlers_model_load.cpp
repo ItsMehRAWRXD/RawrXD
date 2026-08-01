@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
+#include "gguf_loader.h"
 
 CommandResult handleFileLoadModel(const CommandContext& ctx)
 {
@@ -45,3 +46,4 @@ CommandResult handleFileLoadModel(const CommandContext& ctx)
     ctx.output(oss.str().c_str());
     return CommandResult::ok("file.loadModel");
 }
+

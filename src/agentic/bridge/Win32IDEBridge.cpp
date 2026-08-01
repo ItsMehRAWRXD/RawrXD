@@ -1,10 +1,7 @@
 #include "Win32IDEBridge.hpp"
 #include "../manifestor/SelfManifestor.hpp"
-<<<<<<< HEAD
 #include "../OrchestratorBridge.h"
 #include <chrono>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <fstream>
 #include <nlohmann/json.hpp>
 
@@ -41,20 +38,13 @@ bool Win32IDEBridge::initialize(HINSTANCE hInst, int nCmdShow) {
         return false;
     }
     
-<<<<<<< HEAD
     // Initialize hotpatching unconditionally so it is callable in any context.
     if (!initializeHotpatching()) {
-=======
-    // Initialize hotpatching
-    if (config_.enableHotpatching && !initializeHotpatching()) {
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
     initialized_ = true;
 
-<<<<<<< HEAD
     // Initialize the Agent Orchestrator Bridge
     // This wires ToolRegistry, OllamaClient, FIMPromptBuilder into BoundedAgentLoop
     {
@@ -69,8 +59,6 @@ bool Win32IDEBridge::initialize(HINSTANCE hInst, int nCmdShow) {
             // Non-fatal: agent features unavailable but IDE still works
         }
     }
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     return true;
 }
@@ -118,16 +106,12 @@ LRESULT Win32IDEBridge::preprocessMessage(HWND hwnd, UINT msg, WPARAM wParam, LP
         case WM_TIMER:
             // Periodic telemetry updates
             if (telemetry_ && wParam == 1001) {
-<<<<<<< HEAD
                 telemetry_->recordEvent("timer_tick", {{"interval_ms", 1000}});
                 // Export buffered metrics to disk periodically
                 auto now = std::chrono::system_clock::now();
                 auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
                     now.time_since_epoch()).count();
                 telemetry_->recordEvent("metrics_flush", {{"timestamp_ms", nowMs}});
-=======
-                
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             break;
     }
@@ -139,7 +123,6 @@ void Win32IDEBridge::onIdle() {
     if (!initialized_) {
         return;
     }
-<<<<<<< HEAD
 
     // Export metrics periodically via telemetry subsystem
     if (telemetry_) {
@@ -153,11 +136,6 @@ void Win32IDEBridge::onIdle() {
                 {"hotpatches", getHotpatchCount()}
             });
         }
-=======
-    
-    // Export metrics periodically
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -185,11 +163,7 @@ bool Win32IDEBridge::registerCapability(const char* name, uint32_t version,
 }
 
 bool Win32IDEBridge::registerHotpatch(const char* target, void* replacement) {
-<<<<<<< HEAD
     if (!hotpatch_ && !initializeHotpatching()) {
-=======
-    if (!hotpatch_) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
@@ -202,11 +176,7 @@ bool Win32IDEBridge::registerHotpatch(const char* target, void* replacement) {
 }
 
 bool Win32IDEBridge::enableHotpatch(const char* name) {
-<<<<<<< HEAD
     if (!hotpatch_ && !initializeHotpatching()) {
-=======
-    if (!hotpatch_) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
@@ -214,11 +184,7 @@ bool Win32IDEBridge::enableHotpatch(const char* name) {
 }
 
 bool Win32IDEBridge::disableHotpatch(const char* name) {
-<<<<<<< HEAD
     if (!hotpatch_ && !initializeHotpatching()) {
-=======
-    if (!hotpatch_) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
     
@@ -226,7 +192,6 @@ bool Win32IDEBridge::disableHotpatch(const char* name) {
 }
 
 void Win32IDEBridge::logFunctionCall(const std::string& functionName) {
-<<<<<<< HEAD
     if (telemetry_) {
         telemetry_->recordEvent("function_call", {{"function", functionName}});
     }
@@ -248,17 +213,6 @@ void Win32IDEBridge::metric(const std::string& name, double value) {
             {"value", value}
         });
     }
-=======
-    
-}
-
-void Win32IDEBridge::logError(const std::string& functionName, const std::string& error) {
-    
-}
-
-void Win32IDEBridge::metric(const std::string& name, double value) {
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void Win32IDEBridge::setFeatureFlag(const std::string& feature, bool enabled) {
@@ -291,7 +245,6 @@ bool Win32IDEBridge::initializeCapabilities() {
     
     // Register discovered capabilities
     for (auto& cap : capabilities) {
-<<<<<<< HEAD
         // Create factory from discovered build artifact's factory function pointer
         Wiring::CapabilityFactory factory = [cap]() -> std::unique_ptr<Wiring::ICapability> {
             if (cap.factory) {
@@ -304,19 +257,6 @@ bool Win32IDEBridge::initializeCapabilities() {
         };
         
         router_->registerCapability(cap.name, cap.version, factory, cap.dependencies);
-=======
-        // Create factory from discovered capability
-        Wiring::CapabilityFactory factory = [cap]() {
-            // This would create the actual capability instance
-            // For now, return a placeholder
-            return std::unique_ptr<Wiring::ICapability>(nullptr);
-        };
-        
-        router_->registerCapability(cap.name, cap.version, factory, cap.dependencies);
-        
-        });
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     // Initialize all capabilities
@@ -349,7 +289,6 @@ bool Win32IDEBridge::initializeHotpatching() {
 }
 
 bool Win32IDEBridge::initializeObservability() {
-<<<<<<< HEAD
     // Initialize the global telemetry subsystem (two-phase: hardware polling deferred)
     if (!telemetry::Initialize()) {
         return false;
@@ -397,38 +336,10 @@ LRESULT Win32IDEBridge::handleAgenticMessage(WPARAM wParam, LPARAM lParam) {
             return 1;
         }
     }
-=======
-    telemetry_ = &Observability::Telemetry::instance();
-    
-    Observability::ObservabilityConfig obsConfig;
-    obsConfig.enableLogging = true;
-    obsConfig.enableMetrics = true;
-    obsConfig.enableTracing = true;
-    obsConfig.serviceName = "RawrXD-Win32IDE";
-    
-    return 
-}
-
-LRESULT Win32IDEBridge::handleAgenticMessage(WPARAM wParam, LPARAM lParam) {
-    // Handle agentic-specific messages
-    switch (wParam) {
-        case 1: // Capability request
-            // Process capability request
-            break;
-        case 2: // Hotpatch request
-            // Process hotpatch request
-            break;
-        case 3: // Telemetry update
-            // Process telemetry update
-            break;
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return 0;
 }
 
 LRESULT Win32IDEBridge::handleHotkeyMessage(WPARAM wParam, LPARAM lParam) {
-<<<<<<< HEAD
     if (hotpatch_) {
         UINT vk = static_cast<UINT>(wParam);
         if (hotpatch_->isHotkey(vk)) {
@@ -436,9 +347,6 @@ LRESULT Win32IDEBridge::handleHotkeyMessage(WPARAM wParam, LPARAM lParam) {
             return hotpatch_->execute(vk);
         }
     }
-=======
-    // Handle hotkey messages
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return 0;
 }
 

@@ -1,4 +1,9 @@
 #pragma once
+
+// Include guard to prevent duplicate definitions when included from multiple paths
+#ifndef RAWRXD_PLUGINS_MEMORY_PLUGIN_HPP_INCLUDED
+#define RAWRXD_PLUGINS_MEMORY_PLUGIN_HPP_INCLUDED
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -46,3 +51,5 @@ public:
 };
 
 }
+
+#endif // RAWRXD_PLUGINS_MEMORY_PLUGIN_HPP_INCLUDED

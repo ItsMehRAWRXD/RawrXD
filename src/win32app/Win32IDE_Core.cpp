@@ -13,6 +13,8 @@ extern "C" void ShutdownAICompletion();
 #include "../../include/benchmark_menu_widget.hpp"
 #include "../../include/checkpoint_manager.h"
 #include "../../include/ci_cd_settings.h"
+#include "CICDSettings.h"
+#include "BenchmarkMenu.h"
 #include "../../include/enterprise_license.h"
 #include "../../include/feature_flags_runtime.h"
 #include "../../include/interpretability_panel.h"
@@ -87,6 +89,7 @@ static const char* kWindowClassName = "RawrXD_IDE_MainWindow";
 // Interface includes for proper abstraction
 #include "IV280Bridge.h"
 #include "IMultiFileSearchWidget.h"
+#include "gguf_loader.h"
 
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
@@ -3995,3 +3998,4 @@ void Win32IDE::persistPerformanceVulkanRendererToConfig()
         cfg.saveToFile(dir + "rawrxd.config.json");
     }
 }
+

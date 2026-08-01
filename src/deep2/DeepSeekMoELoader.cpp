@@ -17,6 +17,7 @@
 
 #ifdef _WIN32
     #include <psapi.h>
+#include "gguf_loader.h"
     #pragma comment(lib, "psapi.lib")
     // Undefine GetFileSize macro from windows.h to avoid collision
     #ifdef GetFileSize
@@ -1379,3 +1380,4 @@ DeepSeekMoETestHarness::RunQuickTest(const char* ggufPath) {
 }
 
 } // namespace Deep2
+

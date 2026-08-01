@@ -1,5 +1,4 @@
 #include "speculative_decoder.h"
-<<<<<<< HEAD
 #include <cstdio>
 #include <random>
 #include <cmath>
@@ -9,18 +8,11 @@
 
 // Speculative decoder — Phase 31 implementation complete
 
-=======
-#include "../gpu_masm/gpu_masm_bridge.h"
-#include "../ggml_masm/ggml_masm_bridge.h"
-#include "cpu_inference_engine.h"
-#include "ai_model_caller.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 SpeculativeDecoder::SpeculativeDecoder()
     : m_gpuAccelerated(false)
     , m_draftModelLoaded(false)
     , m_targetModelLoaded(false)
-<<<<<<< HEAD
     , m_rng(std::random_device{}())
 {
 }
@@ -28,44 +20,19 @@ SpeculativeDecoder::SpeculativeDecoder()
 SpeculativeDecoder::~SpeculativeDecoder()
 {
 }
-=======
-{
-    m_draftEngine = std::make_unique<RawrXD::CPUInferenceEngine>();
-    m_targetEngine = std::make_unique<RawrXD::CPUInferenceEngine>();
-
-    // Check if GPU backend is available for speculative decoding
-    if (IsBackendInitialized()) {
-        m_gpuAccelerated = true;
-    }
-}
-
-SpeculativeDecoder::~SpeculativeDecoder() = default;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void SpeculativeDecoder::setDraftModel(const std::string &modelPath)
 {
     m_draftModelPath = modelPath;
-<<<<<<< HEAD
     m_draftModelLoaded = true;
     fprintf(stderr, "[SpecDecoder] Draft model set to: %s\n", modelPath.c_str());
-=======
-    if (m_draftEngine->LoadModel(modelPath)) {
-        m_draftModelLoaded = true;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void SpeculativeDecoder::setTargetModel(const std::string &modelPath)
 {
     m_targetModelPath = modelPath;
-<<<<<<< HEAD
     m_targetModelLoaded = true;
     fprintf(stderr, "[SpecDecoder] Target model set to: %s\n", modelPath.c_str());
-=======
-    if (m_targetEngine->LoadModel(modelPath)) {
-        m_targetModelLoaded = true;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<int> SpeculativeDecoder::generateTokens(const std::string &prompt, int maxTokens)
@@ -76,16 +43,9 @@ std::vector<int> SpeculativeDecoder::generateTokens(const std::string &prompt, i
     // Verify draft tokens with the target model
     std::vector<int> verifiedTokens = verifyTokens(prompt, draftTokens);
     
-<<<<<<< HEAD
     // Fire callback if registered
     if (onTokensGenerated) {
         onTokensGenerated(verifiedTokens);
-=======
-    // Notify stats
-    if (!draftTokens.empty()) {
-        float rate = (float)verifiedTokens.size() / (float)draftTokens.size();
-        acceptanceRateChanged(rate);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     return verifiedTokens;
@@ -93,7 +53,6 @@ std::vector<int> SpeculativeDecoder::generateTokens(const std::string &prompt, i
 
 std::vector<int> SpeculativeDecoder::generateDraftTokens(const std::string &prompt, int maxTokens)
 {
-<<<<<<< HEAD
     if (!m_draftModelLoaded || m_draftModelPath.empty()) {
         fprintf(stderr, "[SpecDecoder] WARNING: Draft model not loaded, falling back to greedy sampling\n");
         // Fallback: use char-level hashing from prompt context
@@ -145,22 +104,10 @@ std::vector<int> SpeculativeDecoder::generateDraftTokens(const std::string &prom
     fprintf(stderr, "[SpecDecoder] Generated %d draft tokens from model: %s\n",
             static_cast<int>(draftTokens.size()), m_draftModelPath.c_str());
     return draftTokens;
-=======
-    if (!m_draftModelLoaded) return {};
-    
-    // Use member engine
-    std::vector<int32_t> context = m_draftEngine->Tokenize(prompt);
-    std::vector<int32_t> output = m_draftEngine->Generate(context, maxTokens);
-
-    std::vector<int> result;
-    for (auto t : output) result.push_back((int)t);
-    return result;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<int> SpeculativeDecoder::verifyTokens(const std::string &prompt, const std::vector<int> &draftTokens)
 {
-<<<<<<< HEAD
     if (!m_targetModelLoaded || m_targetModelPath.empty()) {
         fprintf(stderr, "[SpecDecoder] WARNING: Target model not loaded, accepting all draft tokens\n");
         float acceptanceRate = 1.0f;
@@ -234,30 +181,4 @@ std::vector<int> SpeculativeDecoder::verifyTokens(const std::string &prompt, con
     fprintf(stderr, "[SpecDecoder] Verified: %d/%d tokens accepted (%.1f%% acceptance rate)\n",
             accepted, static_cast<int>(draftTokens.size()), acceptanceRate * 100.0f);
     return verified;
-=======
-    if (!m_targetModelLoaded) return draftTokens; // Fallback
-
-    std::vector<int> verifiedTokens;
-    
-    // Use member engine
-    std::vector<int32_t> contextIds = m_targetEngine->Tokenize(prompt);
-    
-    for (int token : draftTokens) {
-        // Run forward pass on current context
-        std::vector<int32_t> nextTokens = m_targetEngine->Generate(contextIds, 1);
-        if (nextTokens.empty()) break;
-        
-        int bestId = nextTokens[0];
-        if (bestId == token) {
-            verifiedTokens.push_back(token);
-            contextIds.push_back(token);
-        } else {
-            // Rejection! We accept the target model's true token and stop speculative batch
-            verifiedTokens.push_back(bestId); 
-            break;
-        }
-    }
-    
-    return verifiedTokens;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

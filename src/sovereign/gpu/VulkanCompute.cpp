@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include "vulkan_compute.h"
 
 namespace Sovereign {
 
@@ -147,3 +148,4 @@ void VulkanCompute::ResetStats() {
 }
 
 } // namespace Sovereign
+

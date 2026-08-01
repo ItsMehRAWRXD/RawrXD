@@ -1,10 +1,6 @@
 #pragma once
 #include "RawrXD_Win32_Foundation.h"
 #include <vector>
-<<<<<<< HEAD
-=======
-#include <unordered_set>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD {
 
@@ -46,15 +42,4 @@ public:
     }
 };
 
-<<<<<<< HEAD
-=======
-class CppLexer : public Lexer {
-public:
-    CppLexer();
-    void lex(const std::wstring& text, std::vector<Token>& outTokens) override;
-private:
-    std::unordered_set<std::wstring> keywords;
-};
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 } // namespace RawrXD

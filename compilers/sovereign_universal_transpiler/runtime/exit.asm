@@ -1,5 +1,6 @@
 ; exit.asm - Native process termination for Sovereign Universal Transpiler
 
+; Windows API functions
 extrn ExitProcess:proc
 
 .code

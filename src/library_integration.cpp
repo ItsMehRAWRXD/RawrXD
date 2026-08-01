@@ -246,7 +246,6 @@ bool HTTPClient::streamRequest(
     urlComp.dwUrlPathLength = (DWORD)-1;
     urlComp.dwExtraInfoLength = (DWORD)-1;
 
-<<<<<<< HEAD
 #if !(defined(HAVE_CURL) && HAVE_CURL)
     // WinHTTP streaming implementation
     HINTERNET hSession = WinHttpOpen(L"RawrXD/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
@@ -383,60 +382,6 @@ bool HTTPClient::streamRequest(
         return false;
     }
 #endif
-=======
-    if (!WinHttpCrackUrl(wUrl.c_str(), (DWORD)wUrl.length(), 0, &urlComp)) return false;
-
-    HINTERNET hSession = WinHttpOpen(L"RawrXD-Native-Stream/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!hSession) return false;
-
-    std::wstring hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
-    HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), urlComp.nPort, 0);
-    if (!hConnect) { WinHttpCloseHandle(hSession); return false; }
-
-    std::wstring urlPath(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
-     if (urlComp.dwExtraInfoLength > 0) {
-        urlPath += std::wstring(urlComp.lpszExtraInfo, urlComp.dwExtraInfoLength);
-    }
-    
-    std::wstring method = s2ws(request.method);
-    if (method.empty()) method = L"GET";
-    
-    DWORD flags = (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, method.c_str(), urlPath.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
-    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false; }
-
-    std::wstring headers;
-    for (const auto& h : request.headers) headers += s2ws(h.first) + L": " + s2ws(h.second) + L"\r\n";
-
-    if (WinHttpSendRequest(hRequest, headers.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : headers.c_str(), 
-                          headers.empty() ? 0 : (DWORD)headers.length(), 
-                          (LPVOID)request.body.c_str(), (DWORD)request.body.length(), (DWORD)request.body.length(), 0)) {
-        
-        if (WinHttpReceiveResponse(hRequest, NULL)) {
-            DWORD dwSizeAvail = 0;
-            std::vector<char> buffer;
-            do {
-                dwSizeAvail = 0;
-                if (!WinHttpQueryDataAvailable(hRequest, &dwSizeAvail)) break;
-                if (dwSizeAvail == 0) break;
-                buffer.resize(dwSizeAvail);
-                DWORD dwRead = 0;
-                if (WinHttpReadData(hRequest, &buffer[0], dwSizeAvail, &dwRead)) {
-                    if (dwRead > 0) callback(std::string(buffer.begin(), buffer.begin() + dwRead));
-                }
-            } while (dwSizeAvail > 0);
-             WinHttpCloseHandle(hRequest);
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return true;
-        }
-    }
-    
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-    return false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool HTTPClient::downloadFile(const std::string& url, const std::string& outputPath) {
@@ -452,7 +397,6 @@ bool HTTPClient::downloadFile(const std::string& url, const std::string& outputP
             return false;
         }
 
-<<<<<<< HEAD
         URL_COMPONENTS urlComp = {};
         urlComp.dwStructSize = sizeof(urlComp);
         wchar_t hostName[256] = {}, urlPath[1024] = {};
@@ -512,9 +456,6 @@ bool HTTPClient::downloadFile(const std::string& url, const std::string& outputP
         WinHttpCloseHandle(hSession);
 
         if (m_logger) m_logger->info("Download complete: {} ({} bytes)", outputPath, totalBytes);
-=======
-        if (m_logger) m_
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         if (m_metrics) m_metrics->incrementCounter("file_downloads");
         return totalBytes > 0;
 
@@ -925,7 +866,6 @@ std::string LibraryIntegration::getLibraryVersion(const std::string& libraryName
     };
 
     if (libraryName == "curl") {
-<<<<<<< HEAD
         // Dynamically query libcurl version if loaded
         typedef const char* (*PFN_curl_version)();
         HMODULE hCurl = GetModuleHandleA("libcurl.dll");
@@ -950,19 +890,6 @@ std::string LibraryIntegration::getLibraryVersion(const std::string& libraryName
         return "1.5.2";  // Fallback if not loaded
     } else if (libraryName == "json") {
         return "3.11.2";  // nlohmann/json is header-only, version known at compile time
-=======
-        return GetCurlVersion(); 
-    } else if (libraryName == "zstd") {
-        return "1.5.2 (Real)"; 
-    } else if (libraryName == "json") {
-#ifdef NLOHMANN_JSON_VERSION_MAJOR
-        return std::to_string(NLOHMANN_JSON_VERSION_MAJOR) + "." + 
-               std::to_string(NLOHMANN_JSON_VERSION_MINOR) + "." + 
-               std::to_string(NLOHMANN_JSON_VERSION_PATCH);
-#else
-        return "3.11.2 (Detected)"; 
-#endif
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     return "unknown";
 }

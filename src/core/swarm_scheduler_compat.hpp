@@ -37,6 +37,12 @@ namespace Compat {
         constexpr const E& error() const & { return std::get<1>(m_val); }
         constexpr E& error() & { return std::get<1>(m_val); }
 
+        constexpr const T& operator*() const & { return std::get<0>(m_val); }
+        constexpr T& operator*() & { return std::get<0>(m_val); }
+
+        constexpr const T* operator->() const { return &std::get<0>(m_val); }
+        constexpr T* operator->() { return &std::get<0>(m_val); }
+
     private:
         std::variant<T, E> m_val;
     };

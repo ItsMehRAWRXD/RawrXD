@@ -1,39 +1,4 @@
-<<<<<<< HEAD
-/**
- * @file tool_registry_init.hpp
- * @brief Complete tool registration system for agentic IDE
- *
- * This module provides comprehensive tool registration including:
- * - File system operations (read, write, list, delete, search, grep)
- * - Version control operations (git status, diff, log, commit, push)
- * - Build and test operations (run tests, analyze code, compile)
- * - Execution operations (execute command, run process, shell)
- * - Model operations (list models, load model, run inference, unload model)
- * - Code analysis operations (lint, format, refactor suggestions)
- * - Deployment operations (docker build, kubernetes deploy)
- *
- * All tools follow production-ready patterns:
- * - Structured logging at DEBUG/INFO/WARN/ERROR levels
- * - Input validation and schema checking
- * - Error recovery and retry strategies
- * - Resource guards (files closed immediately, processes terminated)
- * - Execution metrics (latency, input/output sizes)
- * - Feature toggles for dangerous operations
- *
- * @author RawrXD Agent Team
- * @version 2.0.0
- * @date 2025-12-12
- */
-
-#pragma once
-
-#include "tool_registry.hpp"
-#include <memory>
-#include <string>
-#include <vector>
-#include <cstdint>
-
-// ============================================================================
+=====================================================================
 // Main Initialization Function
 // ============================================================================
 
@@ -457,4 +422,4 @@ QString detectLanguage(const QString& filePath);
 json analyzeCodeComplexity(const QString& code, const QString& language);
 
 // End of file
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

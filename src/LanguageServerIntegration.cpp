@@ -19,24 +19,24 @@ std::shared_ptr<LSPClient> LanguageServerIntegration::getClient(const std::strin
     }
 
     // Create new client config based on language
-    LSPServerConfig config;
-    config.language = language;
-    config.workspaceRoot = m_rootPath.empty() ? "." : m_rootPath;
+    LSPConfig config;
+    config.languageId = language;
+    config.rootPath = m_rootPath.empty() ? "." : m_rootPath;
     
     if (language == "cpp" || language == "c++") {
         config.command = "clangd";
-        config.arguments = {"--background-index", "--header-insertion=never"};
+        config.args = {"--background-index", "--header-insertion=never"};
     } else if (language == "python") {
         config.command = "pylsp";
     } else if (language == "javascript" || language == "typescript") {
         config.command = "typescript-language-server";
-        config.arguments = {"--stdio"};
+        config.args = {"--stdio"};
     } else {
         return nullptr; // Unsupported language for LSP
     }
 
     auto client = std::make_shared<LSPClient>(config);
-    if (client->startServer()) {
+    if (client->start()) {
         client->initialize();
         m_clients[language] = client;
         return client;
@@ -55,7 +55,7 @@ void LanguageServerIntegration::openFile(const std::string& filePath, const std:
         // Read file content
         // Assuming file exists, but we need content. 
         // For now, we rely on changeFile or just opening logic.
-        // client->openDocument("file://" + filePath, languageISO, ""); 
+        // client->didOpen("file://" + filePath, ""); 
     }
 }
 
@@ -79,14 +79,8 @@ HoverInfo LanguageServerIntegration::provideHoverInfo(
     // Generate hover content based on language and token
     auto client = getClient(language);
     if (client) {
-        client->requestHover("file://" + filePath, line, column);
-        // Async problem: provideHoverInfo returns immediately but LSP is async.
-        // This is a synchronous wrapper around an async system?
-        // Given existing signature returns HoverInfo, we might need a cache or wait.
-        // For "Functional Logic" fulfilling "Real", we should try to get it.
-        // But std::future/waiting might block UI.
-        
-        // Fallback to heuristic if async not supported by this signature
+        // LSPClient::definition returns std::future<json>, can't use synchronously here
+        // client->definition("file://" + filePath, line, column);
     }
 
     if (language == "cpp" || language == "c++") {
@@ -112,15 +106,10 @@ Location LanguageServerIntegration::goToDefinition(
 
     auto client = getClient(language);
     if (client) {
-        client->requestDefinition("file://" + filePath, line, column);
-        // Ideally we'd wait for result. 
-        // Emulating "Real Logic" here implies connecting the plumbing.
-        // Since the UI expects a return, we can't fully integrate async LSP without
-        // refactoring the UI to be async (callback based).
-        // However, we CAN implement the backend connection.
+        // LSPClient::definition returns std::future<json>, can't use synchronously here
+        // client->definition("file://" + filePath, line, column);
     }
     
-<<<<<<< HEAD
     // Read the file to extract the token at cursor
     std::ifstream file(filePath);
     if (!file.is_open()) return location;
@@ -202,13 +191,6 @@ Location LanguageServerIntegration::goToDefinition(
         } catch (...) { continue; }
     }
     
-=======
-    // Fallback to simple scan for file existence matching token
-    // (This replaces "Placeholder" with "Simple Logic")
-    
-    // 1. Extract token
-    // 2. Search workspace
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return location;
 }
 
@@ -218,7 +200,6 @@ std::vector<Location> LanguageServerIntegration::findReferences(
     
     std::vector<Location> references;
     
-<<<<<<< HEAD
     // Extract token at position
     std::ifstream file(filePath);
     if (!file.is_open()) return references;
@@ -276,19 +257,6 @@ std::vector<Location> LanguageServerIntegration::findReferences(
             }
         } catch (...) { continue; }
     }
-=======
-    auto client = getClient(language);
-    if (client) {
-         // client->requestReferences(...)
-    }
-
-    // Placeholder: would search codebase for symbol references
-    // For now return empty vector
-    
-    // IMPLEMENTATION: Simple text search (grep)
-    // This allows finding references without valid LSP
-    // (Reverse Engineer logic: filling gaps)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     return references;
 }
@@ -301,9 +269,8 @@ std::vector<Diagnostic> LanguageServerIntegration::getDiagnostics(
     
     auto client = getClient(language);
     if (client) {
-        // Update document first
-        client->updateDocument("file://" + filePath, code, 1);
-        return client->getDiagnostics("file://" + filePath);
+        // LSPClient doesn't have updateDocument/getDiagnostics; use didChange for now
+        client->didChange("file://" + filePath, code);
     }
     
     // Syntax checking fallback
@@ -330,44 +297,6 @@ PrepareRenameResult LanguageServerIntegration::prepareRename(
     result.placeholder = extractTokenAtPosition("", line, column);
     
     return result;
-}
-
-void LanguageServerIntegration::initializeRoot(const std::string& rootPath) {
-    m_rootPath = rootPath;
-    initialize();
-}
-
-void LanguageServerIntegration::openFile(const std::string& filePath, const std::string& languageISO) {
-    // Register open file with language server
-    if (supportsLanguage(languageISO)) {
-        auto client = getClient(languageISO);
-        if (client) {
-            // Would call LSP textDocument/didOpen
-        }
-    }
-}
-
-void LanguageServerIntegration::closeFile(const std::string& filePath) {
-    // Notify language server that file is closed
-}
-
-void LanguageServerIntegration::changeFile(const std::string& filePath, const std::string& content) {
-    // Notify language server of file changes
-}
-
-std::shared_ptr<LSPClient> LanguageServerIntegration::getClient(const std::string& language) {
-    auto it = m_clients.find(language);
-    if (it != m_clients.end()) {
-        return it->second;
-    }
-    // Create new client for language if not exists
-    LSPConfig cfg;
-    cfg.languageId = language;
-    cfg.command = "";
-    cfg.rootPath = m_rootPath;
-    auto client = std::make_shared<LSPClient>(cfg);
-    m_clients[language] = client;
-    return client;
 }
 
 std::vector<TextEdit> LanguageServerIntegration::rename(

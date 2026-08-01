@@ -5,6 +5,7 @@
 #include "sovereign/ExpertCache.hpp"
 #include "sovereign/VulkanCompute.hpp"
 #include <cstring>
+#include "vulkan_compute.h"
 
 namespace Sovereign {
 namespace AutoRepair {
@@ -146,3 +147,4 @@ uint32_t GetRepairCount() {
 
 } // namespace AutoRepair
 } // namespace Sovereign
+

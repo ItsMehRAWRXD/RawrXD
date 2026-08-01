@@ -10,7 +10,6 @@ FeatureFlags& FeatureFlags::instance() {
 }
 
 void FeatureFlags::set(const std::string& name, bool value) {
-<<<<<<< HEAD
     bool oldValue = false;
     bool changed = false;
     {
@@ -23,12 +22,6 @@ void FeatureFlags::set(const std::string& name, bool value) {
     if (changed) {
         notifyCallbacks(name, oldValue, value);
     }
-=======
-    std::lock_guard<std::mutex> lock(m_mutex);
-    bool oldValue = m_boolFlags[name].load();
-    m_boolFlags[name].store(value);
-    notifyCallbacks(name, oldValue, value);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool FeatureFlags::get(const std::string& name, bool defaultValue) const {
@@ -75,7 +68,6 @@ void FeatureFlags::onFlagChanged(const std::string& name, FlagCallback callback)
     m_callbacks[name].push_back(callback);
 }
 
-<<<<<<< HEAD
 bool FeatureFlags::loadFromFile(const std::string& filePath) {
     std::ifstream ifs(filePath);
     if (!ifs.is_open()) {
@@ -153,71 +145,12 @@ bool FeatureFlags::saveToFile(const std::string& filePath) const {
 
     ofs << toJson();
     return ofs.good();
-=======
-#include <nlohmann/json.hpp>
-
-// ...existing code...
-
-
-bool FeatureFlags::loadFromFile(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file.is_open()) return false;
-    
-    try {
-        nlohmann::json j;
-        file >> j;
-        
-        std::lock_guard<std::mutex> lock(m_mutex);
-        
-        // Parse simple key-value pairs
-        if (j.contains("bools")) {
-             for (auto& element : j["bools"].items()) {
-                 m_boolFlags[element.key()].store(element.value().get<bool>());
-             }
-        }
-        if (j.contains("strings")) {
-             for (auto& element : j["strings"].items()) {
-                 m_stringFlags[element.key()] = element.value().get<std::string>();
-             }
-        }
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
-bool FeatureFlags::saveToFile(const std::string& filePath) const {
-    try {
-        nlohmann::json j;
-        j["bools"] = nlohmann::json::object();
-        j["strings"] = nlohmann::json::object();
-
-        {
-             std::lock_guard<std::mutex> lock(m_mutex);
-             for (const auto& pair : m_boolFlags) {
-                 j["bools"][pair.first] = pair.second.load();
-             }
-             for (const auto& pair : m_stringFlags) {
-                 j["strings"][pair.first] = pair.second;
-             }
-        }
-        
-        std::ofstream file(filePath);
-        if (!file.is_open()) return false;
-        
-        file << j.dump(4);
-        return true;
-    } catch (...) {
-        return false;
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::string FeatureFlags::toJson() const {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::ostringstream json;
     json << "{\n";
-<<<<<<< HEAD
 
     bool first = true;
 
@@ -250,45 +183,6 @@ std::string FeatureFlags::toJson() const {
     }
 
     json << "\n}\n";
-=======
-    json << "  \"boolFlags\": {\n";
-    bool first = true;
-    for (const auto& [key, val] : m_boolFlags) {
-        if (!first) json << ",\n";
-        json << "    \"" << key << "\": " << (val ? "true" : "false");
-        first = false;
-    }
-    json << "\n  },\n";
-    
-    json << "  \"intFlags\": {\n";
-    first = true;
-    for (const auto& [key, val] : m_intFlags) {
-        if (!first) json << ",\n";
-        json << "    \"" << key << "\": " << val;
-        first = false;
-    }
-    json << "\n  },\n";
-    
-    json << "  \"floatFlags\": {\n";
-    first = true;
-    for (const auto& [key, val] : m_floatFlags) {
-        if (!first) json << ",\n";
-        json << "    \"" << key << "\": " << val;
-        first = false;
-    }
-    json << "\n  },\n";
-    
-    json << "  \"stringFlags\": {\n";
-    first = true;
-    for (const auto& [key, val] : m_stringFlags) {
-        if (!first) json << ",\n";
-        json << "    \"" << key << "\": \"" << val << "\"";
-        first = false;
-    }
-    json << "\n  }\n";
-    
-    json << "}\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return json.str();
 }
 
@@ -304,7 +198,6 @@ void FeatureFlags::clear() {
 std::vector<std::string> FeatureFlags::listFlags() const {
     std::lock_guard<std::mutex> lock(m_mutex);
     std::vector<std::string> flags;
-<<<<<<< HEAD
     flags.reserve(m_boolFlags.size() + m_intFlags.size() + m_floatFlags.size() + m_stringFlags.size());
     for (const auto& [name, _] : m_boolFlags) {
         flags.push_back(name);
@@ -320,16 +213,10 @@ std::vector<std::string> FeatureFlags::listFlags() const {
     }
     std::sort(flags.begin(), flags.end());
     flags.erase(std::unique(flags.begin(), flags.end()), flags.end());
-=======
-    for (const auto& [name, _] : m_boolFlags) {
-        flags.push_back(name);
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return flags;
 }
 
 void FeatureFlags::notifyCallbacks(const std::string& name, bool oldValue, bool newValue) {
-<<<<<<< HEAD
     std::vector<FlagCallback> callbacks;
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -342,14 +229,6 @@ void FeatureFlags::notifyCallbacks(const std::string& name, bool oldValue, bool 
     for (const auto& callback : callbacks) {
         callback(name, oldValue, newValue);
     }
-=======
-    auto it = m_callbacks.find(name);
-    if (it != m_callbacks.end()) {
-        for (const auto& callback : it->second) {
-            callback(name, oldValue, newValue);
-        }
-    }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace RawrXD::Agentic::Wiring

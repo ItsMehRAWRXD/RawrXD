@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include "gguf_loader.h"
 
 namespace Prometheus {
 
@@ -215,3 +216,4 @@ WeightLoadResult KimiLoader::loadModel(const std::string& modelPath, const Hardw
 }
 
 } // namespace Prometheus
+

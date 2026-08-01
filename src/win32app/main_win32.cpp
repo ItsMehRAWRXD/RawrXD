@@ -67,7 +67,6 @@ static std::ofstream* s_startupLog = nullptr;
 static std::mutex s_startupLogMutex;
 static void startupTrace(const char* step, const char* detail = nullptr)
 {
-<<<<<<< HEAD
     std::lock_guard<std::mutex> lock(s_startupLogMutex);
     if (!s_startupLog)
         return;
@@ -2668,31 +2667,4 @@ int runSelftest(HWND hwnd)
                     "RawrXD Self-test", code == 0 ? (MB_OK | MB_ICONINFORMATION) : (MB_OK | MB_ICONERROR));
     }
     return code;
-=======
-    // Initialize logger early
-    try {
-        IDELogger::getInstance().initialize("C:\\RawrXD_IDE.log");
-        IDELogger::getInstance().setLevel(IDELogger::Level::DEBUG);
-
-    } catch (...) {
-        // Fallback to file diagnostic if logger fails
-        std::ofstream errLog("C:\\LOGGER_INIT_FAILED.txt");
-        errLog << "Logger initialization threw exception" << std::endl;
-        errLog.close();
-    }
-
-    Win32IDE ide(hInstance);
-
-    if (!ide.createWindow()) {
-
-        MessageBoxA(nullptr, "Failed to create window", "Error", MB_OK | MB_ICONERROR);
-        return 1;
-    }
-
-    ide.showWindow();
-
-    int rc = ide.runMessageLoop();
-
-    return rc;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

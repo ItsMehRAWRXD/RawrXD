@@ -18,6 +18,7 @@
     #include <malloc.h>
 #else
     #include <stdlib.h>
+#include "gguf_loader.h"
 #endif
 
 // Deep2 kernel integration for aligned memory performance
@@ -626,3 +627,4 @@ void GgmlEngine::Log(LogLevel level, const std::string& message) {
 
 } // namespace Agentic
 } // namespace RawrXD
+

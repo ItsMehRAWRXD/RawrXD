@@ -103,6 +103,7 @@ void AgenticExecutor::errorOccurred(const std::string& error) {}
 
 // AgenticEngine
 #include "agentic_engine.h"
+#include "gguf_loader.h"
 AgenticEngine::AgenticEngine() { std::cout << "STUB: AgenticEngine\n"; }
 AgenticEngine::~AgenticEngine() {}
 void AgenticEngine::initialize() {}
@@ -116,3 +117,4 @@ ModelTrainer::~ModelTrainer() {}
 bool ModelTrainer::initialize(RawrXD::CPUInferenceEngine* engine, const std::string& datasetPath) { return true; }
 bool ModelTrainer::startTraining(const TrainingConfig& config) { return true; }
 void ModelTrainer::stopTraining() {}
+

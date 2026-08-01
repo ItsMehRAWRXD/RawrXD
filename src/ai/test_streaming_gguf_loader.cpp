@@ -8,7 +8,6 @@
 #include <string>
 #include <chrono>
 
-<<<<<<< HEAD
 static void printMemoryStats(RawrXD::StreamingGGUFLoader& loader) {
     uint64_t totalFile = loader.GetTotalFileSize();
     auto tensors = loader.GetAllTensorInfo();
@@ -21,15 +20,6 @@ static void printMemoryStats(RawrXD::StreamingGGUFLoader& loader) {
 
 int main(int argc, char* argv[]) {
     std::cout << "StreamingGGUFLoader Test Program (C++20)\n" << std::endl;
-=======
-void printMemoryStats(const StreamingGGUFLoader//MemoryStats& stats) {
-
-
-}
-
-int main(int argc, char* argv[]) {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     if (argc < 2) {
 
@@ -38,26 +28,16 @@ int main(int argc, char* argv[]) {
     }
 
     std::string modelPath = argv[1];
-<<<<<<< HEAD
     std::cout << "Loading model: " << modelPath << "\n" << std::endl;
 
     RawrXD::StreamingGGUFLoader loader;
 
-=======
-
-
-    // Create loader
-    StreamingGGUFLoaderQt loader;
-    
-    // Measure load time
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     auto startTime = std::chrono::high_resolution_clock::now();
     bool success = loader.Open(modelPath);
     auto endTime = std::chrono::high_resolution_clock::now();
     auto loadTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
 
     if (!success) {
-<<<<<<< HEAD
         std::cerr << "Failed to load model!" << std::endl;
         return 1;
     }
@@ -96,39 +76,5 @@ int main(int argc, char* argv[]) {
 
     std::cout << "\nAll tests passed. Streaming loading works correctly." << std::endl;
     loader.Close();
-=======
-
-
-        return 1;
-    }
-
-
-    // Print model info
-
-
-    // Print memory stats
-    printMemoryStats(loader.getMemoryStats());
-    
-    // Print some metadata keys
-    
-    auto keys = loader.getAllMetadataKeys();
-    int count = 0;
-    for (const auto& key : keys) {
-        
-        if (++count >= 10) {
-            
-            break;
-        }
-    }
-    
-    // Test tensor access (without loading - just verify it exists)
-    
-    if (loader.getTensorCount() > 0) {
-
-
-    }
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return 0;
 }

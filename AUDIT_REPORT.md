@@ -1,316 +1,405 @@
-# RawrXD IDE v1.0.0 - Hidden Features & Stability Audit Report
-**Date:** 2026-06-23  
-**Auditor:** AI Codebase Sweep  
-**Scope:** d:\rawrxd\src\win32app\ (Core IDE Layer)
+# RawrXD IDE — Full Security & Code Quality Audit Report
+**Generated:** 2026-07-13  
+**Auditor:** Amazon Q Code Review  
+**Scope:** `D:\rawrxd\src\` — sectioned audit  
+**Methodology:** SAST (Static Application Security Testing) — full code scan per module  
+**Note:** Monthly scan quota reached. Remaining sections queued for next billing cycle.
 
 ---
 
-## 🚨 EXECUTIVE SUMMARY
+## 📊 Executive Summary
 
-**Current State:** The IDE is operating in **"Minimum Viable State"** with significant dormant functionality.
+| Section | Status | Critical | High | Medium | Low |
+|---------|--------|----------|------|--------|-----|
+| `security-engines` | ⚠️ Issues Found | 1 | 1 | 1 | 0 |
+| `auth` | ⚠️ Issues Found | 0 | 5 | 1 | 0 |
+| `hotpatch` | ✅ Clean | 0 | 0 | 0 | 0 |
+| `agent` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `inference` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `lsp` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `telemetry` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `sandbox` | ⚠️ Issues Found | 0 | 7 | 0 | 0 |
+| `beacon` | ⚠️ Issues Found | 0 | 7 | 0 | 0 |
+| `editor` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `win32ide` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `runtime` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `kernel` | ✅ Clean | 0 | 0 | 0 | 0 |
+| `gguf` | ⚠️ Issues Found | 0 | 27 | 0 | 0 |
+| `vulkan` | ✅ Clean | 0 | 0 | 0 | 0 |
+| `tokenizer` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `memory` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `orchestration` | ⚠️ Issues Found | 0 | 5 | 0 | 1 |
+| `ipc` | ⚠️ Overflow (30+) | ? | ? | ? | ? |
+| `recovery` | ⚠️ Issues Found | 0 | 4 | 0 | 0 |
+| `plugins` | ⏸️ Quota Reached | - | - | - | - |
 
-**Critical Finding:** The **AgentBridge** (AI Control Bridge) is configured ON but initialization code is **MISSING** from the startup sequence. This is a broken dependency chain.
-
-**Stability Risk:** MEDIUM - The deferred initialization system is robust, but missing feature wiring creates "ghost" functionality.
-
----
-
-## 📊 AUDIT LAYER 1: CONFIG FLAGS (Runtime Disabling)
-
-### File: `rawrxd.config.json`
-
-| Feature | Config Path | Status | Risk |
-|---------|-------------|--------|------|
-| **AgentBridge** | `agentBridge.enabled` | ✅ `true` but **NOT INITIALIZED** | 🔴 HIGH - Config says ON, code says OFF |
-| Voice Automation | `voiceAutomation.enabled` | ❌ `false` | 🟢 Intentional |
-| Auto-Approve | `agent.autoApprove` | ❌ `false` | 🟢 Safety feature |
-| Deferred Rendering | `performance.deferredRendering` | ✅ `true` | 🟢 Active |
-| Lazy Init | `performance.lazyInit` | ✅ `true` | 🟢 Active |
-
-**Finding:** The AgentBridge is the only feature with a **configuration/implementation mismatch**.
-
----
-
-## 📊 AUDIT LAYER 2: PREPROCESSOR MACROS (Compile-Time Exclusion)
-
-### Critical `#if 0` Blocks Found
-
-| File | Line | Content | Reason |
-|------|------|---------|--------|
-| `feature_handlers.cpp` | 1194 | Feature handler code | **UNKNOWN** - Needs review |
-| `ssot_handlers_ext.cpp` | 20216, 20285, 20300, 20318, 21138, 21156, 21188, 21221, 22412, 22444, 22463, 22480, 22497, 22512, 25064, 25079, 25094, 25109, 25124, 25139 | Handler functions | "DUPLICATE REMOVED - defined elsewhere" |
-
-**Finding:** 20+ `#if 0` blocks in `ssot_handlers_ext.cpp` - these appear to be legitimate duplicates, but `feature_handlers.cpp:1194` needs investigation.
+> **Note:** Sections marked `Overflow (30+)` exceeded the scan result limit. Full findings are in the **Code Issues Panel**.  
+> **Note:** Monthly scan quota reached. `plugins` and remaining sections scan next cycle.
 
 ---
 
-## 📊 AUDIT LAYER 3: "HACK" LOGIC (Temporary Patches)
-
-### TODO/FIXME/HACK Comments Found
-
-| File | Line | Comment | Severity |
-|------|------|---------|----------|
-| `agentic/ASTContextExtractor.cpp` | 108 | `TODO: Add Python, JavaScript, Rust, Go patterns` | 🟡 Low |
-| `agentic/Phase23_ExpandedOptimization.cpp` | 242 | `// Profiling disabled` | 🟡 Low |
-| `agentic/Phase23_ExpandedOptimization.cpp` | 246 | `// Kernel generation disabled` | 🟡 Low |
-| `agentic/Phase23_ExpandedOptimization.cpp` | 250 | `// Validation disabled` | 🟡 Low |
-| `agent/agent_main.cpp` | 94 | `// Help text output disabled` | 🟢 Info |
-| `agent/agent_main.cpp` | 99 | `// Version output disabled` | 🟢 Info |
-| `agentic/autonomous_communicator.cpp` | 732 | `// Console output disabled` | 🟢 Info |
-| `agentic/autonomous_communicator.cpp` | 750 | `// File output disabled` | 🟢 Info |
-
-**Finding:** No critical HACKs or FIXMEs that indicate stability risks. Mostly feature gaps.
+## 🔴 CRITICAL Findings
 
 ---
 
-## 📊 AUDIT LAYER 4: INITIALIZATION SEQUENCE (Dependency Chain)
+### [C-001] Code Injection via Unsanitized Input
+- **What:** Unsanitized user input is passed directly to a code execution method (e.g. `eval` or equivalent dynamic execution)
+- **Where:** `D:\rawrxd\src\security-engines\security-bridge.js` — Lines 26–27
+- **Why it matters:** An attacker can inject arbitrary JavaScript and execute it within the application context, leading to full system compromise, data exfiltration, or privilege escalation
+- **When it triggers:** Any time user-supplied input reaches the dynamic execution path without sanitization
+- **How to fix:**
+  - Never pass unsanitized input to `eval()`, `new Function()`, or `execSync()`
+  - Validate and allowlist all inputs before processing
+  - Use a sandboxed VM context (`vm.runInNewContext`) with strict resource limits if dynamic execution is truly required
+  - Reference: [OWASP Code Injection](https://owasp.org/www-community/attacks/Code_Injection)
+- **CWE:** CWE-94
+- **Severity:** 🔴 Critical
 
-### Current Deferred Initialization Flow
+---
+
+## 🟠 HIGH Findings
+
+---
+
+### [H-001] Path Traversal — security-bridge.js
+- **What:** File paths are constructed from untrusted input without normalization or boundary checks
+- **Where:** `D:\rawrxd\src\security-engines\security-bridge.js` — Lines 26–27
+- **Why it matters:** An attacker can supply `../../` sequences to escape the intended directory and read/write arbitrary files on disk
+- **When it triggers:** When user-controlled strings are used to build file paths passed to `fs` operations
+- **How to fix:**
+  ```js
+  const safePath = path.resolve(baseDir, userInput);
+  if (!safePath.startsWith(path.resolve(baseDir))) throw new Error('Path traversal detected');
+  ```
+- **CWE:** CWE-22, CWE-23
+- **Severity:** 🟠 High
+
+---
+
+### [H-002] Missing Authorization — enterprise_auth_manager.cpp
+- **What:** Access control checks are absent at critical entry points, allowing actions to proceed without verifying caller permissions
+- **Where:** `D:\rawrxd\src\auth\enterprise_auth_manager.cpp` — Lines 88–89
+- **Why it matters:** Any caller — authenticated or not — can trigger privileged operations, leading to unauthorized data access, denial of service, or arbitrary code execution
+- **When it triggers:** When the auth manager is invoked without a prior permission gate
+- **How to fix:**
+  - Add explicit role/permission checks before every privileged operation
+  - Use a centralized `AuthGuard` or capability token pattern
+  - Reference: [OWASP Missing Authorization](https://owasp.org/www-project-mobile-top-10/2014-risks/m5-poor-authorization-and-authentication)
+- **CWE:** CWE-862
+- **Severity:** 🟠 High
+
+---
+
+### [H-003] Path Traversal — enterprise_auth_manager.cpp
+- **What:** Unsanitized file paths from user input used in filesystem operations
+- **Where:** `D:\rawrxd\src\auth\enterprise_auth_manager.cpp` — Lines 87–88
+- **Why it matters:** Allows directory escape attacks, exposing config files, keys, or system files
+- **When it triggers:** During auth token/config file resolution using user-supplied paths
+- **How to fix:**
+  ```cpp
+  auto resolved = fs::canonical(fs::path(baseDir) / userInput);
+  if (resolved.string().find(baseDir) != 0) throw std::runtime_error("Path traversal");
+  ```
+- **CWE:** CWE-22, CWE-23, CWE-24
+- **Severity:** 🟠 High
+
+---
+
+### [H-004] Use of Incorrect Operator — enterprise_auth_manager.cpp (×4)
+- **What:** Wrong operators used in conditional or assignment expressions, causing logic errors
+- **Where:** `D:\rawrxd\src\auth\enterprise_auth_manager.cpp`
+  - Lines 160–161
+  - Lines 233–238
+  - Lines 265–266
+  - Lines 269–270
+- **Why it matters:** Incorrect operators (e.g. `=` instead of `==`, `&` instead of `&&`) silently corrupt logic, potentially bypassing auth checks or causing undefined behavior
+- **When it triggers:** At runtime during auth evaluation — bugs may only surface under specific input conditions
+- **How to fix:**
+  - Audit each flagged line for `=` vs `==`, `&` vs `&&`, `|` vs `||`
+  - Enable compiler warnings: `-Wall -Wextra` (MSVC: `/W4`)
+  - Use parentheses to make operator precedence explicit
+- **CWE:** CWE-480
+- **Severity:** 🟠 High
+
+---
+
+### [H-005] OS Command Injection — sandbox.cpp
+- **What:** User-controlled data is concatenated into a system command string and executed
+- **Where:** `D:\rawrxd\src\sandbox\sandbox.cpp` — Lines 292–293
+- **Why it matters:** This is the most dangerous class of injection — an attacker can run arbitrary OS commands with the application's privilege level, potentially owning the host machine
+- **When it triggers:** When sandbox execution receives unsanitized input that reaches a `system()`, `popen()`, or `CreateProcess()` call
+- **How to fix:**
+  - Never build command strings via string concatenation with user input
+  - Use `CreateProcess()` with explicit argument arrays (no shell interpolation)
+  - Validate inputs against a strict allowlist before any execution
+  - Reference: [CWE-78](https://cwe.mitre.org/data/definitions/78.html)
+- **CWE:** CWE-78, CWE-77
+- **Severity:** 🟠 High
+
+---
+
+### [H-006] Path Traversal — sandbox.cpp (×3)
+- **What:** Multiple unsanitized path constructions from user input in sandbox filesystem operations
+- **Where:** `D:\rawrxd\src\sandbox\sandbox.cpp`
+  - Lines 116–117
+  - Lines 126–127
+  - Lines 131–132
+- **Why it matters:** The sandbox is supposed to be a containment boundary — path traversal here directly defeats that purpose, allowing escape from the sandboxed directory
+- **When it triggers:** When sandboxed code or user input specifies file paths for read/write operations
+- **How to fix:**
+  - Resolve all paths with `fs::canonical()` and verify they remain within the sandbox root
+  - Maintain a strict sandbox root constant and reject any path that doesn't start with it
+- **CWE:** CWE-22, CWE-23, CWE-24
+- **Severity:** 🟠 High
+
+---
+
+### [H-007] Missing Authorization — sandbox.cpp (×2)
+- **What:** Sandbox operations execute without verifying the caller has permission to use the sandbox
+- **Where:** `D:\rawrxd\src\sandbox\sandbox.cpp`
+  - Lines 105–106
+  - Lines 118–119
+- **Why it matters:** Any code path that reaches the sandbox can execute arbitrary sandboxed operations without an authorization gate
+- **When it triggers:** On sandbox initialization and operation dispatch
+- **How to fix:**
+  - Add a capability/token check at sandbox entry points
+  - Tie sandbox access to authenticated session context
+- **CWE:** CWE-862
+- **Severity:** 🟠 High
+
+---
+
+### [H-008] Use of Incorrect Operator — sandbox.cpp (×2)
+- **What:** Incorrect operators in sandbox control flow logic
+- **Where:** `D:\rawrxd\src\sandbox\sandbox.cpp`
+  - Lines 244–245
+  - Lines 312–313
+- **Why it matters:** Logic errors in sandbox boundary enforcement could allow containment bypass
+- **When it triggers:** During sandbox policy evaluation
+- **How to fix:** Same as H-004 — audit operators, enable warnings, add parentheses
+- **CWE:** CWE-480
+- **Severity:** 🟠 High
+
+---
+
+## 🟡 MEDIUM Findings
+
+---
+
+### [M-001] Lazy Module Loading — security-bridge.js
+- **What:** A Node.js module is `require()`'d inside a function rather than at the top of the file
+- **Where:** `D:\rawrxd\src\security-engines\security-bridge.js` — Lines 26–27
+- **Why it matters:** Lazy loading can block the event loop at unpredictable times, causing performance degradation or denial of service under load
+- **When it triggers:** Every time the function containing the `require()` is called
+- **How to fix:** Move all `require()` statements to the top of the file, outside any functions
+- **Severity:** 🟡 Medium
+
+---
+
+### [M-002] Null Pointer Dereference — enterprise_auth_manager.cpp
+- **What:** A pointer is dereferenced without a prior null check
+- **Where:** `D:\rawrxd\src\auth\enterprise_auth_manager.cpp` — Lines 162–163
+- **Why it matters:** Causes a crash (access violation) if the pointer is null, which can be triggered by an attacker to cause denial of service
+- **When it triggers:** When the pointer is null due to a failed allocation or uninitialized state
+- **How to fix:**
+  ```cpp
+  if (ptr != nullptr) {
+      ptr->doSomething();
+  }
+  ```
+- **CWE:** CWE-476
+- **Severity:** 🟡 Medium
+
+---
+
+## ✅ Clean Sections
+
+| Section | Result |
+|---------|--------|
+| `hotpatch` | No findings |
+| `kernel` | No findings |
+| `vulkan` | No findings |
+
+---
+
+## ⚠️ Sections Requiring Code Issues Panel Review
+
+The following sections returned **30+ findings** and were truncated. Open the **Code Issues Panel** in the IDE to see full details:
+
+| Section | Action Required |
+|---------|----------------|
+| `agent` | Open Code Issues Panel → filter by `src/agent` |
+| `inference` | Open Code Issues Panel → filter by `src/inference` |
+| `lsp` | Open Code Issues Panel → filter by `src/lsp` |
+| `telemetry` | Open Code Issues Panel → filter by `src/telemetry` |
+| `editor` | Open Code Issues Panel → filter by `src/editor` |
+| `win32ide` | Open Code Issues Panel → filter by `src/win32ide` |
+| `runtime` | Open Code Issues Panel → filter by `src/runtime` |
+| `tokenizer` | Open Code Issues Panel → filter by `src/tokenizer` |
+| `memory` | Open Code Issues Panel → filter by `src/memory` |
+| `ipc` | Open Code Issues Panel → filter by `src/ipc` |
+
+---
+
+## 🗂️ Sections Not Yet Audited (Next Cycle)
+
+Monthly quota reached. Queue for next scan cycle:
 
 ```
-WinMain
-  └── CreateWindowExA
-        └── WM_CREATE
-              └── onCreate()
-                    └── PostMessage(hwnd, WM_APP + 1001)  // WM_APP_DEFERRED_INIT
-                          └── Message Loop
-                                └── WM_APP + 100 (deferredHeavyInit)
-                                      ├── initLogger()
-                                      ├── initEnterpriseLicense()
-                                      ├── initTier1Core()      // Basic UI
-                                      ├── initTier2Panels()    // Sidebars
-                                      ├── initTier3Cosmetics() // Polish
-                                      ├── initTier4Async()     // Background tasks
-                                      ├── initTier5Cosmetics() // Final UI touches
-                                      ├── initBackendManager() // AI Backend
-                                      └── initLLMRouter()      // Model routing
-                                └── WM_APP + 1004  // WM_APP_DEFERRED_INIT_BACKEND
-                                      ├── initBackendManager()
-                                      └── initLLMRouter()
-```
-
-### 🔴 CRITICAL GAP: Missing AgentBridge Initialization
-
-**Expected Location:** `WM_APP_DEFERRED_INIT_BACKEND` handler (line ~1816 in Win32IDE_Core.cpp)
-
-**Current Code:**
-```cpp
-case WM_APP + 1004:  // WM_APP_DEFERRED_INIT_BACKEND
-{
-    OutputDebugStringA("[DEFERRED] WM_APP_DEFERRED_INIT_BACKEND: initializing backend\n");
-    try
-    {
-        this->initBackendManager();
-        this->initLLMRouter();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("[DEFERRED] Backend init pass failed with unknown error\n");
-    }
-    finalizeCopilotChatInterlockAfterDeferredLoad();
-    return 0;
-}
-```
-
-**MISSING:** `initializeAgentBridge()` call!
-
-**Evidence:**
-1. `Win32IDE_AgentBridge.cpp` exists and is compiled (obj file confirmed)
-2. `Win32IDE_AgentBridge.hpp` is included in `Win32IDE_Core.cpp` (line 45)
-3. `rawrxd.config.json` has `agentBridge.enabled: true`
-4. **NO** `initializeAgentBridge()` call found in the entire `Win32IDE_Core.cpp`
-5. **NO** `m_agentBridge` member initialization found
-
----
-
-## 🎯 ROOT CAUSE ANALYSIS
-
-### Why AgentBridge Is Dormant
-
-Based on conversation history and code analysis:
-
-1. **Initial Attempt:** AgentBridge initialization was added to `WM_APP_DEFERRED_INIT_BACKEND`
-2. **Crash Occurred:** Heap corruption (0xc0000374) during `CreateWindowExA`
-3. **Removal:** Initialization code was removed to achieve stability
-4. **Current State:** AgentBridge code is "dead" - present but never invoked
-
-### The Architecture Problem
-
-The current deferred initialization uses **UI-thread message posting** but NOT **background threading**. The AgentBridge initialization was happening on the UI thread, causing heap contention during window creation.
-
-**VS Code's Solution:** Extension Host runs in a **separate process**, not just a deferred message.
-
----
-
-## 🛠️ RECOMMENDED FIXES
-
-### Fix 1: Add AgentBridge to Deferred Init (Safe Mode)
-
-Add to `WM_APP_DEFERRED_INIT_BACKEND` handler with SEH protection:
-
-```cpp
-case WM_APP + 1004:
-{
-    // ... existing initBackendManager() and initLLMRouter() ...
-    
-    // Initialize AgentBridge with SEH protection
-    __try
-    {
-        if (AgentBridge::initialize(m_config.agentBridgeConfig))
-        {
-            OutputDebugStringA("[AgentBridge] Initialized successfully\n");
-        }
-    }
-    __except(EXCEPTION_EXECUTE_HANDLER)
-    {
-        OutputDebugStringA("[AgentBridge] Initialization failed - continuing without AI bridge\n");
-    }
-    
-    finalizeCopilotChatInterlockAfterDeferredLoad();
-    return 0;
-}
-```
-
-### Fix 2: Create Background Thread for AgentBridge (VS Code Model)
-
-Create a proper background thread like the deferred init thread:
-
-```cpp
-// In Win32IDE.h - add member
-std::unique_ptr<std::thread> m_agentBridgeThread;
-std::atomic<bool> m_agentBridgeReady{false};
-
-// In WM_APP_DEFERRED_INIT_BACKEND handler:
-m_agentBridgeThread = std::make_unique<std::thread>([this](){
-    __try
-    {
-        if (AgentBridge::initialize(m_config.agentBridgeConfig))
-        {
-            m_agentBridgeReady = true;
-            PostMessage(m_hwndMain, WM_APP + 200, 0, 0); // Notify UI
-        }
-    }
-    __except(EXCEPTION_EXECUTE_HANDLER)
-    {
-        OutputDebugStringA("[AgentBridge] Background init failed\n");
-    }
-});
-m_agentBridgeThread->detach();
-```
-
-### Fix 3: Manual Menu Trigger (Safest)
-
-Add a Tools menu item to manually initialize AgentBridge:
-
-```cpp
-// In menu handler
-case IDM_TOOLS_INIT_AGENTBRIDGE:
-{
-    if (!m_agentBridgeReady)
-    {
-        std::thread([this](){
-            AgentBridge::initialize(m_config.agentBridgeConfig);
-        }).detach();
-    }
-    return 0;
-}
-```
-
----
-
-## 📋 COMPLETE "OFF SWITCH" INVENTORY
-
-### Hardcoded `false` / `0` Returns
-
-| File | Line | Context | Purpose |
-|------|------|---------|---------|
-| `action_executor.cpp` | 67, 69, 86, 123, 152, 174, 190, 198, 559 | Various init flags | State initialization |
-| `advanced_coding_agent.cpp` | 256-275 | Parser state flags | Parsing logic |
-| `AdvancedCodingAgent.cpp` | 17, 41 | Result initialization | Return values |
-
-**Finding:** No hardcoded feature disables - these are all legitimate state initializations.
-
-### Disabled Output/Debug Features
-
-| Feature | Location | Status |
-|---------|----------|--------|
-| Help text output | `agent/agent_main.cpp:94` | Disabled |
-| Version output | `agent/agent_main.cpp:99` | Disabled |
-| Console output | `agentic/autonomous_communicator.cpp:732` | Disabled |
-| File output | `agentic/autonomous_communicator.cpp:750` | Disabled |
-| Audit logging | `agentic/agentic_audit_sink.cpp:40` | Disabled |
-| Logging | `agent/auto_update_new.cpp:108` | Disabled |
-
----
-
-## 🎭 THE "STATE MACHINE" VIEW
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    RawrXD IDE States                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  [SKELETON] ──► [UI_LOADED] ──► [BACKEND_INIT] ──► [READY] │
-│      │              │                │              │         │
-│      ▼              ▼                ▼              ▼         │
-│  Window          Message           Backend         All        │
-│  Created         Loop              Ready           Features   │
-│  (Stable)        (Stable)          (Stable)        (Partial)  │
-│                                                              │
-│  Missing: AGENTBRIDGE ──► Should be: [AGENT_READY]         │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Current State:** `READY` but missing `AGENT_READY` substate.
-
----
-
-## ✅ ACTION ITEMS
-
-| Priority | Action | Owner | Effort |
-|----------|--------|-------|--------|
-| 🔴 P0 | Add AgentBridge initialization to deferred init | Dev | 2 hrs |
-| 🟡 P1 | Add SEH protection around AgentBridge init | Dev | 30 min |
-| 🟡 P1 | Add `m_agentBridgeReady` atomic flag | Dev | 30 min |
-| 🟢 P2 | Investigate `feature_handlers.cpp:1194` `#if 0` | Dev | 1 hr |
-| 🟢 P2 | Add Tools menu item for manual AgentBridge init | Dev | 1 hr |
-| 🔵 P3 | Review all `#if 0` blocks in ssot_handlers_ext.cpp | Dev | 2 hrs |
-
----
-
-## 🔍 AUDIT VERIFICATION
-
-To verify this audit, run these PowerShell commands:
-
-```powershell
-# Verify AgentBridge is not initialized
-grep -n "initializeAgentBridge\|AgentBridge::initialize\|m_agentBridge" d:\rawrxd\src\win32app\Win32IDE_Core.cpp
-
-# Should return NO MATCHES (confirming the gap)
-
-# Verify config says enabled
-grep -n "agentBridge" d:\rawrxd\rawrxd.config.json
-
-# Should show: "enabled": true
-
-# Verify AgentBridge code exists
-grep -rn "class AgentBridge\|namespace AgentBridge" d:\rawrxd\src\win32app\
-
-# Should show the implementation exists
+plugins                 deployment      cloud
+crypto                  agents          agentic
+win32app                gpu             kernels
+core                    distributed     swarm
+validation              diagnostics     monitoring
+logging                 serve           model
 ```
 
 ---
 
-## 📌 CONCLUSION
-
-The RawrXD IDE v1.0.0 is **stable but incomplete**. The deferred initialization architecture is sound and prevents the crashes seen during early AgentBridge integration. 
-
-**The AgentBridge feature is ready to be enabled** - the code is compiled, the config is set, but the initialization wire is missing. Adding it with proper SEH protection and background threading will complete the AI Control Bridge feature without compromising stability.
-
-**Estimated time to enable AgentBridge:** 2-4 hours with proper testing.
+## 🆕 NEW Findings — Batch 2
 
 ---
 
-*Report generated by AI Codebase Sweep*  
-*RawrXD IDE v1.0.0 Audit Complete*
+### beacon/BeaconClient.cpp — CWE-480 Incorrect Operator ×3
+- **Where:** Lines 68–69, 69–70, 70–71
+- **What:** Three consecutive incorrect operator usages in beacon client logic
+- **Why:** Logic errors in beacon connection/retry control flow — could cause beacon to fire when it shouldn't or skip error handling
+- **How:** Audit each line for `=` vs `==`, enable `/W4` warnings, add parentheses
+- **Severity:** 🟠 High
+
+---
+
+### beacon/gui_pane_beacon_wiring.cpp — CWE-117 Log Injection ×4
+- **Where:** Lines 20–21, 28–29, 36–37, 44–45
+- **What:** Unsanitized user input written directly to logs in the GUI beacon wiring layer
+- **Why:** Attacker can inject newlines/control chars to forge log entries, bypass log monitors, or corrupt audit trails
+- **How:** Strip `\n`, `\r`, and control characters from all inputs before logging. Use a sanitize helper: `str.erase(remove_if(str.begin(), str.end(), ::iscntrl), str.end())`
+- **CWE:** CWE-117
+- **Severity:** 🟠 High
+
+---
+
+### gguf/gguf_loader_minimal.cpp — CWE-480 Incorrect Operator ×6 + CWE-134 Format Specifier ×6
+- **Where:** Lines 71, 221–226 (operators); Lines 100, 108, 116, 139, 166, 185, 194 (format specifiers)
+- **What:** Incorrect operators in loader logic + wrong/missing printf format specifiers
+- **Why:** Format specifier mismatches can cause buffer overflows or memory corruption during model loading — this is in the critical path for GGUF ingestion
+- **How:** Use `%zu` for `size_t`, `%lld` for `int64_t`, `PRIu64` macro for portable 64-bit. Fix operators with `-Wall` pass.
+- **CWE:** CWE-134, CWE-787, CWE-480
+- **Severity:** 🟠 High
+
+---
+
+### gguf/vocab_resolver.cpp — CWE-480 Incorrect Operator ×8
+- **Where:** Lines 124–133 (dense cluster of 8 consecutive findings)
+- **What:** Dense block of incorrect operators in vocabulary resolution logic
+- **Why:** Vocab resolution errors corrupt tokenization — wrong tokens in, wrong output out. Silent logic bugs.
+- **How:** Full review of lines 124–133, enable `-Wall -Wextra`
+- **Severity:** 🟠 High
+
+---
+
+### gguf/gguf_loader_production.cpp — CWE-480 Incorrect Operator ×8
+- **Where:** Lines 88, 95, 102, 123, 127, 193–194, 225
+- **What:** Widespread incorrect operators across the production GGUF loader
+- **Why:** Production loader is the live path — logic errors here affect every model load
+- **How:** Systematic operator audit with compiler warnings enabled
+- **Severity:** 🟠 High
+
+---
+
+### gguf/gguf_loader.cpp — CWE-480 Incorrect Operator ×1
+- **Where:** Line 326
+- **Severity:** 🟠 High
+
+---
+
+### orchestration/swarm_weight_distributor.cpp — CWE-200 Sensitive Info Leak
+- **Where:** Line 44
+- **What:** Memory addresses exposed in logs/error output
+- **Why:** Leaks heap layout to attackers — enables ROP chain construction and ASLR bypass
+- **How:** Replace `%p` / address logging with generic error codes. Never log raw pointers in production builds.
+- **CWE:** CWE-200
+- **Severity:** 🟠 High
+
+---
+
+### orchestration/TaskOrchestrator.cpp — CWE-117 Log Injection
+- **Where:** Lines 11–12
+- **Severity:** 🟠 High
+
+---
+
+### orchestration/session_state.cpp — CWE-352 CSRF + CWE-480 Operator
+- **Where:** Line 51 (CSRF), Line 258 (operator)
+- **What:** State-changing HTTP operations missing CSRF token validation
+- **Why:** Allows attackers to forge requests on behalf of authenticated sessions
+- **How:** Add `X-CSRF-Token` header validation, check `Origin`/`Referer`, use `SameSite=Strict` cookies
+- **CWE:** CWE-352
+- **Severity:** 🟠 High
+
+---
+
+### orchestration/kubernetes_adapter.cpp — CWE-798 Hardcoded Credentials
+- **Where:** Line 145
+- **What:** Credentials hardcoded directly in the Kubernetes adapter source
+- **Why:** Anyone with source access has the credentials. Even after removal, they may already be compromised.
+- **How:** Move to environment variables or AWS Secrets Manager / Windows Credential Store. Rotate the hardcoded credential immediately.
+- **CWE:** CWE-798
+- **Severity:** 🟡 Low (but rotate NOW)
+
+---
+
+### recovery/auto_recovery.cpp — CWE-480 Incorrect Operator ×3
+- **Where:** Lines 90, 300–302
+- **What:** Operator errors in recovery logic
+- **Why:** Recovery system with broken logic may fail to recover or trigger recovery incorrectly
+- **Severity:** 🟠 High
+
+---
+
+### recovery/CrashHandler.cpp — CWE-480 Incorrect Operator ×1
+- **Where:** Line 70
+- **Why:** Crash handler with a logic error may fail to handle crashes correctly — worst possible place for a bug
+- **Severity:** 🟠 High
+
+---
+
+## 🔧 Remediation Priority Order (Full)
+
+| Priority | Finding | File | Effort |
+|----------|---------|------|--------|
+| 1 | C-001 Code Injection | security-bridge.js:26 | Low |
+| 2 | H-005 OS Command Injection | sandbox.cpp:292 | Medium |
+| 3 | Hardcoded Credentials | kubernetes_adapter.cpp:145 | Low — rotate + move to secrets |
+| 4 | CSRF Missing Token | session_state.cpp:51 | Medium |
+| 5 | Memory Address Leak | swarm_weight_distributor.cpp:44 | Low |
+| 6 | Log Injection ×4 | gui_pane_beacon_wiring.cpp | Low |
+| 7 | Log Injection ×1 | TaskOrchestrator.cpp:11 | Low |
+| 8 | Format Specifier ×6 | gguf_loader_minimal.cpp | Low — use correct format macros |
+| 9 | Path Traversal ×3 | sandbox.cpp | Low |
+| 10 | Path Traversal | security-bridge.js:26 | Low |
+| 11 | Path Traversal | enterprise_auth_manager.cpp:87 | Low |
+| 12 | Missing Auth ×2 | sandbox.cpp:105,118 | Medium |
+| 13 | Missing Auth | enterprise_auth_manager.cpp:88 | Medium |
+| 14 | Null Dereference | enterprise_auth_manager.cpp:162 | Low |
+| 15 | Incorrect Operator (all files) | gguf×23, auth×4, sandbox×2, beacon×3, recovery×4, orchestration×3 | Low — compiler pass |
+
+---
+
+## 📋 Next Audit Sections (Next Monthly Cycle)
+
+1. `D:\rawrxd\src\plugins`
+2. `D:\rawrxd\src\deployment`
+3. `D:\rawrxd\src\cloud`
+4. `D:\rawrxd\src\crypto`
+5. `D:\rawrxd\src\gpu`
+6. `D:\rawrxd\src\kernels`
+7. `D:\rawrxd\src\core`
+8. `D:\rawrxd\src\distributed`
+9. `D:\rawrxd\src\swarm`
+10. `D:\rawrxd\src\validation`
+
+---
+
+*Report generated by Amazon Q Developer — SAST full scan per section.*  
+*For findings exceeding 30 per section, use the Code Issues Panel in the IDE.*

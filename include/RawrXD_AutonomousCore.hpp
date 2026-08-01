@@ -1,17 +1,4 @@
-<<<<<<< HEAD
-// RawrXD_AutonomousCore.hpp - THE MISSING HEART
-#pragma once
-#include <windows.h>
-#include <string>
-#include <vector>
-#include <functional>
-#include <future>
-#include <atomic>
-#include <queue>
-#include <mutex>
-#include <regex>
-
-// ============================================================================
+=====================================================================
 // TASK ORCHESTRATION ENGINE (Reverse-engineered from Cursor's composer)
 // ============================================================================
 
@@ -481,4 +468,4 @@ Provide the corrected tool_input to fix this error.)";
         });
     }
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

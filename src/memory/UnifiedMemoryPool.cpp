@@ -8,6 +8,7 @@
 #include <thread>
 #include <cmath>
 #include <cstdlib>
+#include "vulkan_compute.h"
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
@@ -833,3 +834,4 @@ void UnifiedMemoryPool::FreeDisk(void* ptr) {
 }
 
 } // namespace RawrXD
+

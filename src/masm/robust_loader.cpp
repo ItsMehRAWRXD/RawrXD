@@ -79,7 +79,6 @@ extern "C" void __cdecl Robust_Free(void* ptr) {
 extern "C" int __cdecl Robust_OpenStream(const wchar_t* filename, void* io_context) {
     EnsureInit();
     if (pOpenStream) return pOpenStream(filename, io_context);
-<<<<<<< HEAD
     // Fallback: open file with Win32 CreateFileW, store handle in io_context
     if (!filename || !io_context) return 0;
     HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, nullptr,
@@ -88,16 +87,11 @@ extern "C" int __cdecl Robust_OpenStream(const wchar_t* filename, void* io_conte
     // Store the HANDLE in the first 8 bytes of io_context
     *reinterpret_cast<HANDLE*>(io_context) = hFile;
     return 1;
-=======
-    // Fallback: not implemented
-    return 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 extern "C" uint64_t __cdecl Robust_ReadSafe(void* io_context, void* dest, uint64_t bytesToRead) {
     EnsureInit();
     if (pReadSafe) return pReadSafe(io_context, dest, bytesToRead);
-<<<<<<< HEAD
     // Fallback: read from Win32 HANDLE stored in io_context
     if (!io_context || !dest || bytesToRead == 0) return 0;
     HANDLE hFile = *reinterpret_cast<HANDLE*>(io_context);
@@ -113,10 +107,6 @@ extern "C" uint64_t __cdecl Robust_ReadSafe(void* io_context, void* dest, uint64
         totalRead += bytesRead;
     }
     return totalRead;
-=======
-    // Fallback: not implemented
-    return 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 extern "C" uint64_t __cdecl Robust_SkipString(void* io_context) {

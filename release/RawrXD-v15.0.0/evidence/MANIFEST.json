@@ -1,0 +1,17 @@
+{
+  "release_version": "v15.0.0-RC0.2",
+  "generation_date": "2026-07-30T16:23:12.408802",
+  "status": "RELEASE_CANDIDATE",
+  "artifacts": [
+    "release_manifest.json",
+    "hardware_attestation.json",
+    "inference_witness.json",
+    "performance_certification.json",
+    "val_certification.json",
+    "release_freeze_evidence.json",
+    "ceo_agent_recovery.json",
+    "deep2_provider_witness.json"
+  ],
+  "validation_status": "PASS",
+  "release_ready": true
+}

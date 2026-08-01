@@ -34,10 +34,6 @@
 #include <regex>
 #include <cstring>
 #include <cstdlib>
-<<<<<<< HEAD
-=======
-#include "ai_model_caller.h" // AI Integration
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #ifdef _WIN32
 #include <windows.h>
@@ -50,11 +46,6 @@
 #include <signal.h>
 #endif
 
-<<<<<<< HEAD
-=======
-using namespace RawrXD; // Bring in ModelCaller
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 namespace fs = std::filesystem;
 
 // ============================================================================
@@ -161,10 +152,6 @@ struct CompileOptions {
     bool emitASM = false;
     bool showTimings = false;
     bool dryRun = false;
-<<<<<<< HEAD
-=======
-    bool useAI = false; // Enable AI assistance
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     bool parallel = true;
     int jobs = 0; // 0 = auto-detect
     std::vector<std::string> includePaths;
@@ -407,7 +394,6 @@ public:
             std::string status = success ? 
                 std::string(Color::get(Color::Green)) + "✓" + Color::get(Color::Reset) :
                 std::string(Color::get(Color::Red)) + "✗" + Color::get(Color::Reset);
-<<<<<<< HEAD
             
             std::cout << "[" << m_completedFiles << "/" << m_totalFiles << "] "
                       << status << " " << file;
@@ -426,22 +412,6 @@ public:
                 std::cout << ")";
             }
             std::cout << std::endl;
-=======
-
-
-            if (errors > 0 || warnings > 0) {
-                
-                if (errors > 0) {
-                    
-                }
-                if (errors > 0 && warnings > 0) 
-                if (warnings > 0) {
-                    
-                }
-                
-            }
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
@@ -449,11 +419,7 @@ public:
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_style == OutputStyle::Human) {
             if (m_isTerminal) clearLine();
-<<<<<<< HEAD
             std::cout << msg << std::endl;
-=======
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
@@ -461,7 +427,6 @@ private:
     void updateProgress() {
         int percent = m_totalFiles > 0 ? 
             (m_completedFiles * 100 / m_totalFiles) : 0;
-<<<<<<< HEAD
         
         std::cout << "\r[";
         int barWidth = 30;
@@ -472,29 +437,11 @@ private:
             else std::cout << "░";
         }
         std::cout << "] " << percent << "% " << m_currentFile;
-=======
-
-
-        int barWidth = 30;
-        int filled = barWidth * percent / 100;
-        for (int i = 0; i < barWidth; i++) {
-            if (i < filled) std::cout << "=";
-            else if (i == filled) std::cout << ">";
-            else std::cout << " ";
-        }
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::cout.flush();
     }
     
     void clearLine() {
-<<<<<<< HEAD
         std::cout << "\r" << std::string(m_terminalWidth, ' ') << "\r";
-=======
-        if (m_isTerminal) {
-            std::cout << "\r" << std::string(m_terminalWidth, ' ') << "\r";
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     OutputStyle m_style;
@@ -507,11 +454,7 @@ private:
 };
 
 // ============================================================================
-<<<<<<< HEAD
 // Compiler (integrates with full compiler backend)
-=======
-// Simplified Compiler (integrates with full compiler backend)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ============================================================================
 class Compiler {
 public:
@@ -541,53 +484,7 @@ public:
                  if (std::filesystem::exists(outputFile)) result.outputSize = std::filesystem::file_size(outputFile);
                  return result;
              }
-<<<<<<< HEAD
              // System compiler failed - do NOT fall back to stub
-=======
-             // System compiler failed.
-             // Attempt to use Agentic AI fix if enabled, instead of just failing.
-             if (options.useAI) {
-                 std::cout << "\n[AI] System compiler failed. Attempting autonomous fix..." << std::endl;
-                 
-                 // Read broken source
-                 std::string brokenSource = Utils::readFile(inputFile);
-                 if (!brokenSource.empty()) {
-                     // create backup
-                     std::string backupPath = inputFile + ".bak";
-                     Utils::writeFile(backupPath, brokenSource);
-                     
-                     // Call Model
-                     std::cout << "[AI] Analyzing code..." << std::endl;
-                     std::string fixedSource = RawrXD::ModelCaller::generateRewrite(
-                         brokenSource, 
-                         "Fix compilation errors in this file. Correct syntax, missing semicolons, headers, or type mismatches. Return the full corrected file content.", 
-                         "File extension: " + ext
-                     );
-
-                     if (!fixedSource.empty() && fixedSource != brokenSource) {
-                         std::cout << "[AI] Applying fix and retrying..." << std::endl;
-                         Utils::writeFile(inputFile, fixedSource);
-                         
-                         // Retry compilation
-                         if (invokeSystemCompiler(inputFile, outputFile, options)) {
-                             std::cout << "[AI] Fix successful! (Original backed up to " << backupPath << ")" << std::endl;
-                             result.success = true;
-                             auto endTime = std::chrono::high_resolution_clock::now();
-                             result.compilationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-                             if (std::filesystem::exists(outputFile)) result.outputSize = std::filesystem::file_size(outputFile);
-                             return result;
-                         } else {
-                             std::cout << "[AI] Fix failed to compile. Restoring original file." << std::endl;
-                             Utils::writeFile(inputFile, brokenSource);
-                         }
-                     } else {
-                         std::cout << "[AI] Model returned no changes or failed." << std::endl;
-                     }
-                 }
-             }
-
-             // Do NOT fall back to stub (Verified: Code logic is correct here)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
              Diagnostic diag;
              diag.severity = DiagnosticSeverity::Error;
              diag.message = "System compiler execution failed.";
@@ -656,7 +553,6 @@ public:
             } else if (options.format == OutputFormat::IR) {
                 Utils::writeFile(outputFile, ir);
             } else {
-<<<<<<< HEAD
                 // Assemble and link for binary output formats (Exe, Dll, Lib, Obj)
                 std::string asmFile = outputFile + ".asm";
                 Utils::writeFile(asmFile, code);
@@ -773,28 +669,6 @@ public:
                     if (options.format != OutputFormat::Obj) {
                         try { fs::remove(objFile); } catch (...) {}
                     }
-=======
-                // Would assemble and link
-                // Explicitly invoke assembler/linker if available in system path
-                if (std::system("ml64 /? >nul 2>&1") == 0) {
-                     // Write assembly temp file
-                     std::string asmFile = outputFile + ".asm";
-                     Utils::writeFile(asmFile, code);
-                     std::string linkCmd = "ml64 /nologo /c /Fo\"" + outputFile + ".obj\" \"" + asmFile + "\" && link /nologo \"" + outputFile + ".obj\" /OUT:\"" + outputFile + "\"";
-                     if (std::system(linkCmd.c_str()) != 0) {
-                         // Fallback to just saving ASM if link fails
-                         Utils::writeFile(outputFile, code);
-                     }
-                } else {
-                    // Fallback: Write assembly
-                    // Utils::writeFile(outputFile, code);
-                    // Generate proper error if toolchain missing
-                    Diagnostic diag;
-                    diag.severity = DiagnosticSeverity::Error;
-                    diag.message = "Binary generation failed: ml64/link not found in PATH.";
-                    diag.file = inputFile;
-                    result.diagnostics.push_back(diag);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 }
             }
         }
@@ -818,7 +692,6 @@ public:
     
 private:
     bool invokeSystemCompiler(const std::string& inputFile, const std::string& outputFile, const CompileOptions& options) {
-<<<<<<< HEAD
         // Safe process execution helper — uses CreateProcessA on Windows
         auto runCmd = [&](const std::string& cmdLine) -> int {
 #ifdef _WIN32
@@ -843,18 +716,12 @@ private:
             return runCmd(checkCmd) == 0;
         };
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         std::string cmd;
         std::string ext = std::filesystem::path(inputFile).extension().string();
         
         // C++
         if (ext == ".cpp" || ext == ".cc" || ext == ".cxx") {
-<<<<<<< HEAD
             if (toolExists("cl >nul 2>nul")) {
-=======
-            if (std::system("cl >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                  cmd = "cl /nologo /EHsc /std:c++17";
                  if (options.optimization >= OptLevel::O2) cmd += " /O2";
                  
@@ -869,11 +736,7 @@ private:
                  for(const auto& libPath : options.libraryPaths) cmd += " /LIBPATH:\"" + libPath + "\"";
                  for(const auto& lib : options.libraries) cmd += " \"" + lib + "\"";
 
-<<<<<<< HEAD
             } else if (toolExists("g++ --version >nul 2>nul")) {
-=======
-            } else if (std::system("g++ --version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                  cmd = "g++ -std=c++17";
                  if (options.optimization >= OptLevel::O2) cmd += " -O2";
                  
@@ -888,11 +751,7 @@ private:
                  for(const auto& libPath : options.libraryPaths) cmd += " -L\"" + libPath + "\"";
                  for(const auto& lib : options.libraries) cmd += " -l\"" + lib + "\"";
                  
-<<<<<<< HEAD
             } else if (toolExists("clang++ --version >nul 2>nul")) {
-=======
-            } else if (std::system("clang++ --version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                  cmd = "clang++ -std=c++17";
                  if (options.optimization >= OptLevel::O2) cmd += " -O2";
                  
@@ -911,11 +770,7 @@ private:
         } 
         // C
         else if (ext == ".c") {
-<<<<<<< HEAD
             if (toolExists("cl >nul 2>nul")) {
-=======
-            if (std::system("cl >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                  cmd = "cl /nologo";
                  if (options.optimization >= OptLevel::O2) cmd += " /O2";
                  
@@ -930,11 +785,7 @@ private:
                  for(const auto& libPath : options.libraryPaths) cmd += " /LIBPATH:\"" + libPath + "\"";
                  for(const auto& lib : options.libraries) cmd += " \"" + lib + "\"";
 
-<<<<<<< HEAD
             } else if (toolExists("gcc --version >nul 2>nul")) {
-=======
-            } else if (std::system("gcc --version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                  cmd = "gcc";
                  if (options.optimization >= OptLevel::O2) cmd += " -O2";
                  
@@ -953,53 +804,32 @@ private:
         }
         // Rust
         else if (ext == ".rs") {
-<<<<<<< HEAD
             if (toolExists("rustc --version >nul 2>nul")) {
-=======
-            if (std::system("rustc --version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 cmd = "rustc \"" + inputFile + "\" -o \"" + outputFile + "\"";
                 if (options.optimization >= OptLevel::O2) cmd += " -C opt-level=3";
             } else return false;
         }
         // Go
         else if (ext == ".go") {
-<<<<<<< HEAD
             if (toolExists("go version >nul 2>nul")) {
-=======
-            if (std::system("go version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 cmd = "go build -o \"" + outputFile + "\" \"" + inputFile + "\"";
                 // Go optimizes by default
             } else return false;
         }
         // Assembly
         else if (ext == ".asm" || ext == ".s") {
-<<<<<<< HEAD
             if (toolExists("nasm -v >nul 2>nul")) {
-=======
-            if (std::system("nasm -v >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 // NASM assembly
                 std::string objFile = outputFile + ".obj";
                 std::string format = "win64"; // Defaulting to win64 for now
                 
                 cmd = "nasm -f " + format + " \"" + inputFile + "\" -o \"" + objFile + "\"";
-<<<<<<< HEAD
                 if (runCmd(cmd) != 0) return false;
                 
                 // Link
                  if (toolExists("cl >nul 2>nul")) { // checking linker availability
                     cmd = "link /nologo /ENTRY:main /SUBSYSTEM:CONSOLE \"" + objFile + "\" /OUT:\"" + outputFile + "\" kernel32.lib user32.lib"; // minimal libs
                  } else if (toolExists("gcc --version >nul 2>nul")) {
-=======
-                if (std::system(cmd.c_str()) != 0) return false;
-                
-                // Link
-                 if (std::system("cl >nul 2>nul") == 0) { // checking linker availability
-                    cmd = "link /nologo /ENTRY:main /SUBSYSTEM:CONSOLE \"" + objFile + "\" /OUT:\"" + outputFile + "\" kernel32.lib user32.lib"; // minimal libs
-                 } else if (std::system("gcc --version >nul 2>nul") == 0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     cmd = "gcc \"" + objFile + "\" -o \"" + outputFile + "\"";
                  } else {
                      return false; 
@@ -1015,30 +845,20 @@ private:
             if (ext == ".py") interpreter = "python";
             else if (ext == ".js") interpreter = "node";
             else if (ext == ".ts") {
-<<<<<<< HEAD
                 if (toolExists("ts-node --version >nul 2>nul")) interpreter = "ts-node";
                 else if (toolExists("npx --version >nul 2>nul")) interpreter = "npx ts-node";
-=======
-                if (std::system("ts-node --version >nul 2>nul") == 0) interpreter = "ts-node";
-                else if (std::system("npx --version >nul 2>nul") == 0) interpreter = "npx ts-node";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 else return false;
             }
             
             // Check if interpreter exists (for non-npx case or double check)
             if (interpreter.rfind("npx", 0) != 0) { // if not starting with npx
                  std::string checkCmd = interpreter + " --version >nul 2>nul";
-<<<<<<< HEAD
                  if (runCmd(checkCmd) != 0) return false;
-=======
-                 if (std::system(checkCmd.c_str()) != 0) return false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             // For npx, we assume it works if npx --version worked, handling npx ts-node execution lazily
 
             // Create wrapper source
             // Writes the script to a temp file and runs it with the interpreter
-<<<<<<< HEAD
             std::string wrapperSrc;
 #ifdef _WIN32
             wrapperSrc += "#define WIN32_LEAN_AND_MEAN\n#include <windows.h>\n";
@@ -1064,9 +884,6 @@ private:
             wrapperSrc += "}\n";
 #else
             wrapperSrc += "#include <cstdlib>\n#include <string>\n#include <fstream>\n#include <iostream>\n#include <cstdio>\n";
-=======
-            std::string wrapperSrc = "#include <cstdlib>\n#include <string>\n#include <fstream>\n#include <iostream>\n#include <cstdio>\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             wrapperSrc += "int main(int argc, char* argv[]) {\n";
             wrapperSrc += "    std::string scriptContent = R\"RAW_SCRIPT(" + Utils::readFile(inputFile) + ")RAW_SCRIPT\";\n";
             wrapperSrc += "    std::string tempFile = \"temp_script" + ext + "\";\n";
@@ -1078,10 +895,7 @@ private:
             wrapperSrc += "    std::remove(tempFile.c_str());\n";
             wrapperSrc += "    return ret;\n";
             wrapperSrc += "}\n";
-<<<<<<< HEAD
 #endif
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             
             std::string wrapperFile = outputFile + ".wrapper.cpp";
             Utils::writeFile(wrapperFile, wrapperSrc);
@@ -1099,23 +913,12 @@ private:
             return false;
         }
 
-<<<<<<< HEAD
         if (options.verbose) std::cout << "[System] " << cmd << "\n";
         return (runCmd(cmd) == 0);
     }
 
     bool tokenize(const std::string& source, CompileResult& result) {
         // Basic tokenization
-=======
-        if (options.verbose) {
-            std::cout << "[CMD] " << cmd << std::endl;
-        }
-        return (std::system(cmd.c_str()) == 0);
-    }
-
-    bool tokenize(const std::string& source, CompileResult& result) {
-        // Real tokenization logic for Eon language
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         int line = 1;
         int column = 1;
         size_t pos = 0;
@@ -1133,12 +936,7 @@ private:
             
             // Skip whitespace
             if (std::isspace(c)) {
-<<<<<<< HEAD
                 column++;
-=======
-                if (c == '\t') column += 4;
-                else column++;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 pos++;
                 continue;
             }
@@ -1163,17 +961,10 @@ private:
                 }
             }
             
-<<<<<<< HEAD
             // Count tokens (simplified)
             result.tokenCount++;
             
             // Skip token
-=======
-            // Tokens
-            result.tokenCount++;
-            
-            // Strings
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (c == '"' || c == '\'') {
                 char quote = c;
                 pos++;
@@ -1182,7 +973,6 @@ private:
                     pos++;
                 }
                 if (pos < source.size()) pos++;
-<<<<<<< HEAD
             } else if (std::isalpha(c) || c == '_') {
                 while (pos < source.size() && (std::isalnum(source[pos]) || source[pos] == '_')) {
                     pos++;
@@ -1192,23 +982,6 @@ private:
                     pos++;
                 }
             } else {
-=======
-            } 
-            // Identifiers / Keywords
-            else if (std::isalpha(c) || c == '_') {
-                while (pos < source.size() && (std::isalnum(source[pos]) || source[pos] == '_')) {
-                    pos++;
-                }
-            } 
-            // Numbers
-            else if (std::isdigit(c)) {
-                while (pos < source.size() && (std::isalnum(source[pos]) || source[pos] == '.')) {
-                    pos++;
-                }
-            } 
-            // Operators / Punctuation
-            else {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 pos++;
             }
             column++;
@@ -1217,7 +990,6 @@ private:
         return true;
     }
     
-<<<<<<< HEAD
     bool parse(CompileResult& result) {
         // Recursive-descent AST construction from token stream
         // Parse the source into a structured AST with node counting
@@ -1289,58 +1061,10 @@ private:
         }
         
         result.astNodeCount = nodeCount;
-=======
-    // Simple recursive parser state
-    struct ParserState {
-        int errors = 0;
-    } m_parserState;
-
-    bool parse(CompileResult& result) {
-        // Simple distinct parsing pass to validate structure
-        // Checks for basic function definitions: func name() { ... }
-        // This makes the compiler logically valid for basic Eon syntax
-        
-        // Reset state
-        m_parserState.errors = 0;
-        
-        // Logical "AST" Construction (Explicit)
-        // We perform a basic brace matching and function detection pass
-        int braceDepth = 0;
-        int nodes = 0;
-        for (const auto& token : m_tokens) {
-            if (token == "{") braceDepth++;
-            else if (token == "}") {
-                braceDepth--;
-                if (braceDepth < 0) {
-                     m_parserState.errors++;
-                     result.diagnostics.push_back({DiagnosticSeverity::Error, "Unmatched closing brace"});
-                }
-            } else if (token == "fn" || token == "let" || token == "if") {
-                nodes++;
-            }
-        }
-        
-        if (braceDepth != 0) {
-             m_parserState.errors++;
-             result.diagnostics.push_back({DiagnosticSeverity::Error, "Unmatched opening brace"});
-             return false;
-        }
-        
-        result.astNodeCount = nodes > 0 ? nodes : result.tokenCount / 4; 
- 
-        
-        // If we found 0 tokens, it's valid empty file or just comments
-        if (result.tokenCount == 0 && result.inputSize > 0) {
-            // It was all comments/whitespace
-            return true;
-        }
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
     }
     
     bool analyze(CompileResult& result) {
-<<<<<<< HEAD
         // Semantic analysis pass
         // Performs: type checking, scope resolution, use-before-define detection,
         //          const-correctness verification, unreachable code detection
@@ -1402,16 +1126,10 @@ private:
         // or from parsed AST nodes, which the invokeSystemCompiler handles
         // for real compilation targets
         
-=======
-        // Semantic analysis: Symbol resolution, type checking
-        // For Eon, we ensure 'main' exists if it's an executable
-        // (Logic implementation: Always pass for now to allow compilation of snippets)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
     }
     
     std::string generateIR(CompileResult& result) {
-<<<<<<< HEAD
         // Generate intermediate representation
         std::ostringstream ir;
         ir << "; RawrXD Compiler IR\n";
@@ -1420,35 +1138,10 @@ private:
         ir << "entry:\n";
         ir << "  ret i32 0\n";
         ir << "}\n";
-=======
-        // Generate LLVM-style Intermediate Representation
-        std::ostringstream ir;
-        ir << "; ModuleID = '" << result.outputFile << "'\n";
-        ir << "source_filename = \"" << result.outputFile << "\"\n";
-        ir << "target datalayout = \"e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128\"\n";
-        ir << "target triple = \"x86_64-pc-windows-msvc\"\n\n";
-        
-        // Emit main function IR
-        ir << "; Function Attrs: noinline nounwind optnone uwtable\n";
-        ir << "define dso_local i32 @main() #0 {\n";
-        ir << "entry:\n";
-        ir << "  %retval = alloca i32, align 4\n";
-        ir << "  store i32 0, i32* %retval, align 4\n";
-        ir << "  ret i32 0\n";
-        ir << "}\n\n";
-        
-        ir << "attributes #0 = { noinline nounwind optnone uwtable \"correctly-rounded-divide-sqrt-fp-math\"=\"false\" \"disable-tail-calls\"=\"false\" \"frame-pointer\"=\"none\" \"less-precise-fpmad\"=\"false\" \"min-legal-vector-width\"=\"0\" \"no-infs-fp-math\"=\"false\" \"no-jump-tables\"=\"false\" \"no-nans-fp-math\"=\"false\" \"no-signed-zeros-fp-math\"=\"false\" \"no-trapping-math\"=\"false\" \"stack-protector-buffer-size\"=\"8\" \"target-cpu\"=\"x86-64\" \"target-features\"=\"+cx8,+fxsr,+mmx,+sse,+sse2,+x87\" \"unsafe-fp-math\"=\"false\" \"use-soft-float\"=\"false\" }\n";
-        
-        ir << "!llvm.module.flags = !{!0, !1}\n";
-        ir << "!0 = !{i32 1, !\"wchar_size\", i32 2}\n";
-        ir << "!1 = !{i32 7, !\"PIC Level\", i32 2}\n";
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return ir.str();
     }
     
     void optimize(std::string& ir, OptLevel level) {
-<<<<<<< HEAD
         // Multi-pass IR optimization
         // Passes applied based on optimization level:
         //   O1: Dead code elimination, constant folding
@@ -1588,33 +1281,6 @@ private:
     }
 };
 
-=======
-        // In a real pass we would parse the IR and apply transforms.
-        // For this explicit logic, we append optimization comments to prove the pass ran.
-        ir += "\n; Optimization Pass: Level " + std::to_string((int)level) + " applied.\n";
-        if (level >= OptLevel::O2) {
-             ir += "; - Dead code elimination\n";
-             ir += "; - Constant folding\n";
-        }
-    }
-
-    std::string generateCode(const std::string& ir, TargetArch target) {
-        // AI-Driven Compilation (Real Inference)
-        std::string targetName = "x86-64 Assembly";
-        if (target == TargetArch::ARM64) targetName = "ARM64 Assembly";
-        else if (target == TargetArch::X86_32) targetName = "x86-32 Assembly";
-        else if (target == TargetArch::WASM) targetName = "WebAssembly";
-
-        std::string instruction = "Compile the following IR/Code to " + targetName + ". optimized. Output ONLY the code.";
-        
-        return RawrXD::ModelCaller::generateCode(instruction, "asm", ir);
-    }
-    
-    std::vector<std::string> m_tokens;
-};
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ============================================================================
 // Argument Parser
 // ============================================================================
@@ -1656,11 +1322,7 @@ public:
                         found = true;
                         if (opt.hasValue) {
                             if (i + 1 >= argc) {
-<<<<<<< HEAD
                                 std::cerr << "Error: " << arg << " requires a value\n";
-=======
-                                
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                                 return false;
                             }
                             m_values[opt.longName] = argv[++i];
@@ -1695,11 +1357,7 @@ public:
                 }
                 
                 if (!found) {
-<<<<<<< HEAD
                     std::cerr << "Error: Unknown option " << arg << "\n";
-=======
-                    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     return false;
                 }
             } else {
@@ -1730,7 +1388,6 @@ public:
     }
     
     void showHelp() const {
-<<<<<<< HEAD
         std::cout << Color::get(Color::Bold) << "USAGE:" << Color::get(Color::Reset) << "\n";
         std::cout << "    " << m_program << " [OPTIONS] <input-files>...\n\n";
         
@@ -1747,24 +1404,10 @@ public:
             }
             if (!opt.longName.empty()) {
                 std::cout << Color::get(Color::Green) << opt.longName << Color::get(Color::Reset);
-=======
-        std::cout << m_program << " - " << m_description << "\n\n";
-        std::cout << "Usage: " << m_program << " [options] file...\n\n";
-        std::cout << "Options:\n";
-        for (const auto& opt : m_options) {
-            std::cout << "  ";
-            if (!opt.shortName.empty()) {
-                std::cout << opt.shortName;
-                if (!opt.longName.empty()) std::cout << ", ";
-            }
-            if (!opt.longName.empty()) {
-                std::cout << opt.longName;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             if (opt.hasValue) {
                 std::cout << " <" << opt.valueName << ">";
             }
-<<<<<<< HEAD
             std::cout << "\n";
             std::cout << "            " << opt.description;
             if (!opt.defaultValue.empty()) {
@@ -1786,18 +1429,6 @@ public:
         std::cout << "RawrXD Compiler v" << VERSION << "\n";
         std::cout << "Build: " << BUILD_DATE << " " << BUILD_TIME << "\n";
         std::cout << "Copyright (c) 2024-2026 RawrXD IDE Project\n";
-=======
-            std::cout << "\n      " << opt.description;
-            if (!opt.defaultValue.empty()) {
-                std::cout << " (default: " << opt.defaultValue << ")";
-            }
-            std::cout << "\n";
-        }
-    }
-
-    void showVersion() const {
-        std::cout << m_program << " version " << VERSION << "\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
 private:
@@ -1822,15 +1453,10 @@ public:
     
     void run() {
         m_running = true;
-<<<<<<< HEAD
         
         std::cout << Color::get(Color::Cyan) << "👁 Watch mode started. Press Ctrl+C to exit.\n" 
                   << Color::get(Color::Reset);
         
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         // Initial compilation
         compileAll();
         
@@ -1852,12 +1478,8 @@ public:
                     if (lastModified[file] != modTime) {
                         lastModified[file] = modTime;
                         changed = true;
-<<<<<<< HEAD
                         std::cout << Color::get(Color::Yellow) << "File changed: " << file 
                                   << Color::get(Color::Reset) << "\n";
-=======
-                        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     }
                 }
             }
@@ -1901,7 +1523,6 @@ private:
             endTime - startTime).count();
         
         if (stats.errorCount == 0) {
-<<<<<<< HEAD
             std::cout << Color::get(Color::Green) << "✓ Build succeeded" 
                       << Color::get(Color::Reset) << " (" 
                       << Utils::formatTime(stats.totalTimeMs) << ")\n";
@@ -1909,11 +1530,6 @@ private:
             std::cout << Color::get(Color::Red) << "✗ Build failed" 
                       << Color::get(Color::Reset) << " with " 
                       << stats.errorCount << " error(s)\n";
-=======
-            
-        } else {
-            
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
@@ -1940,29 +1556,17 @@ private:
                 icon = "💡";
                 break;
         }
-<<<<<<< HEAD
         
         std::cout << Color::get(color) << icon << Color::get(Color::Reset) << " ";
         if (!diag.file.empty()) {
             std::cout << Color::get(Color::Bold) << diag.file << Color::get(Color::Reset);
-=======
-
-
-        std::cout << color << icon << Color::Reset << " ";
-        if (!diag.file.empty()) {
-            std::cout << diag.file;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (diag.line > 0) {
                 std::cout << ":" << diag.line;
                 if (diag.column > 0) std::cout << ":" << diag.column;
             }
             std::cout << ": ";
         }
-<<<<<<< HEAD
         std::cout << Color::get(color) << diag.message << Color::get(Color::Reset) << "\n";
-=======
-        std::cout << diag.message << "\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     CompileOptions m_options;
@@ -2010,25 +1614,14 @@ public:
                 color = Color::Blue;
                 break;
         }
-<<<<<<< HEAD
         
         std::cout << Color::get(Color::Bold);
         if (!diag.file.empty()) {
             std::cout << diag.file;
-=======
-
-
-        std::cout << Color::Bold << color << severity << Color::Reset << ": ";
-        std::cout << diag.message << "\n";
-
-        if (!diag.file.empty()) {
-            std::cout << "  --> " << diag.file;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (diag.line > 0) {
                 std::cout << ":" << diag.line;
                 if (diag.column > 0) std::cout << ":" << diag.column;
             }
-<<<<<<< HEAD
             std::cout << ": ";
         }
         
@@ -2038,14 +1631,6 @@ public:
         for (const auto& suggestion : diag.suggestions) {
             std::cout << "    " << Color::get(Color::Green) << "hint: " 
                       << Color::get(Color::Reset) << suggestion << "\n";
-=======
-            std::cout << "\n";
-        }
-
-
-        for (const auto& suggestion : diag.suggestions) {
-            std::cout << "  Suggestion: " << suggestion << "\n"; 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
     
@@ -2054,7 +1639,6 @@ public:
     }
     
     void summary(const BuildStats& stats) override {
-<<<<<<< HEAD
         std::cout << "\n";
         
         if (stats.failedFiles == 0) {
@@ -2070,30 +1654,17 @@ public:
         std::cout << "  Errors:    " << stats.errorCount << "\n";
         std::cout << "  Warnings:  " << stats.warningCount << "\n";
         std::cout << "  Time:      " << Utils::formatTime(stats.totalTimeMs) << "\n";
-=======
-        if (stats.failedFiles == 0) {
-             std::cout << Color::Green << Color::Bold << "Build successful!" << Color::Reset << "\n";
-        } else {
-             std::cout << Color::Red << Color::Bold << "Build failed!" << Color::Reset << "\n";
-        }
-        std::cout << "Time: " << Utils::formatTime(stats.totalTimeMs) << "\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 };
 
 class JsonFormatter : public OutputFormatter {
 public:
     void begin() override {
-<<<<<<< HEAD
         std::cout << "{\"diagnostics\":[";
-=======
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_first = true;
     }
     
     void end() override {
-<<<<<<< HEAD
         std::cout << "]}\n";
     }
     
@@ -2108,21 +1679,11 @@ public:
                   << "\"line\":" << diag.line << ","
                   << "\"column\":" << diag.column
                   << "}";
-=======
-        
-    }
-    
-    void diagnostic(const Diagnostic& diag) override {
-        if (!m_first) std::cout << ",\n";
-        m_first = false;
-        std::cout << "  { \"severity\": \"" << (int)diag.severity << "\", \"message\": \"" << Utils::escapeJson(diag.message) << "\" }";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     void result(const CompileResult& result) override {}
     
     void summary(const BuildStats& stats) override {
-<<<<<<< HEAD
         std::cout << ",\"summary\":{"
                   << "\"success\":" << (stats.failedFiles == 0 ? "true" : "false") << ","
                   << "\"totalFiles\":" << stats.totalFiles << ","
@@ -2131,9 +1692,6 @@ public:
                   << "\"warnings\":" << stats.warningCount << ","
                   << "\"timeMs\":" << stats.totalTimeMs
                   << "}";
-=======
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
 private:
@@ -2143,7 +1701,6 @@ private:
 class XmlFormatter : public OutputFormatter {
 public:
     void begin() override {
-<<<<<<< HEAD
         std::cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         std::cout << "<build>\n<diagnostics>\n";
     }
@@ -2160,24 +1717,11 @@ public:
                   << "column=\"" << diag.column << "\">"
                   << Utils::escapeXml(diag.message)
                   << "</diagnostic>\n";
-=======
-
-
-    }
-    
-    void end() override {
-        
-    }
-    
-    void diagnostic(const Diagnostic& diag) override {
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     void result(const CompileResult& result) override {}
     
     void summary(const BuildStats& stats) override {
-<<<<<<< HEAD
         std::cout << "<summary "
                   << "success=\"" << (stats.failedFiles == 0 ? "true" : "false") << "\" "
                   << "total=\"" << stats.totalFiles << "\" "
@@ -2185,9 +1729,6 @@ public:
                   << "errors=\"" << stats.errorCount << "\" "
                   << "warnings=\"" << stats.warningCount << "\" "
                   << "timeMs=\"" << stats.totalTimeMs << "\"/>\n";
-=======
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 };
 
@@ -2215,18 +1756,10 @@ public:
         parser.addOption("-l", "--link", "Link with library", true, "name");
         parser.addOption("-W", "--warning", "Warning control", true, "option");
         parser.addOption("", "--werror", "Treat warnings as errors", false);
-<<<<<<< HEAD
         parser.addOption("", "--emit-ir", "Output intermediate representation", false);
         parser.addOption("", "--emit-asm", "Output assembly code", false);
         parser.addOption("", "--dry-run", "Don't actually compile, just check", false);
         parser.addOption("", "--time", "Show compilation timings", false);
-=======
-        parser.addOption("", "---ir", "Output intermediate representation", false);
-        parser.addOption("", "---asm", "Output assembly code", false);
-        parser.addOption("", "--dry-run", "Don't actually compile, just check", false);
-        parser.addOption("", "--time", "Show compilation timings", false);
-        parser.addOption("", "--ai-fix", "Attempt to fix compilation errors using AI", false);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         parser.addOption("", "--json", "Output in JSON format", false);
         parser.addOption("", "--xml", "Output in XML format", false);
         parser.addOption("", "--no-color", "Disable colored output", false);
@@ -2251,14 +1784,9 @@ public:
         // Check for input files
         const auto& inputs = parser.getPositional();
         if (inputs.empty()) {
-<<<<<<< HEAD
             std::cerr << Color::get(Color::Red) << "Error: " << Color::get(Color::Reset)
                       << "No input files specified\n";
             std::cerr << "Use --help for usage information\n";
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return 1;
         }
         
@@ -2271,16 +1799,9 @@ public:
         options.debugInfo = parser.hasFlag("--debug");
         options.verbose = parser.hasFlag("--verbose");
         options.warningsAsErrors = parser.hasFlag("--werror");
-<<<<<<< HEAD
         options.emitIR = parser.hasFlag("--emit-ir");
         options.emitASM = parser.hasFlag("--emit-asm");
         options.showTimings = parser.hasFlag("--time");
-=======
-        options.emitIR = parser.hasFlag("---ir");
-        options.emitASM = parser.hasFlag("---asm");
-        options.showTimings = parser.hasFlag("--time");
-        options.useAI = parser.hasFlag("--ai-fix");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         options.dryRun = parser.hasFlag("--dry-run");
         
         // Parse optimization level
@@ -2323,12 +1844,8 @@ public:
             // Setup signal handler
 #ifndef _WIN32
             signal(SIGINT, [](int) {
-<<<<<<< HEAD
                 std::cout << "\n" << Color::get(Color::Cyan) 
                           << "Stopping watch mode..." << Color::get(Color::Reset) << "\n";
-=======
-                
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 exit(0);
             });
 #endif
@@ -2343,7 +1860,6 @@ public:
     
 private:
     void printBanner() {
-<<<<<<< HEAD
         std::cout << Color::get(Color::Cyan);
         std::cout << R"(
   ╦═╗╔═╗╦ ╦╦═╗═╗ ╦╔╦╗  ╔═╗╔═╗╔╦╗╔═╗╦╦  ╔═╗╦═╗
@@ -2352,10 +1868,6 @@ private:
 )";
         std::cout << Color::get(Color::Reset);
         std::cout << "  Version " << VERSION << " - Built " << BUILD_DATE << "\n\n";
-=======
-
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     int compile(const CompileOptions& options) {
@@ -2433,7 +1945,6 @@ private:
                 
                 // Print additional info
                 if (options.verbose && options.outputStyle == OutputStyle::Human) {
-<<<<<<< HEAD
                     std::cout << "  Time: " << Utils::formatTime(result.compilationTimeMs)
                               << ", Input: " << Utils::formatSize(result.inputSize)
                               << ", Output: " << Utils::formatSize(result.outputSize)
@@ -2442,21 +1953,11 @@ private:
                 }
                 
                 // Emit IR/ASM if requested
-=======
-                    
-                }
-                
-                // IR/ASM if requested
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                 if (options.emitIR && !result.irDump.empty()) {
                     std::string irFile = fs::path(file).stem().string() + ".ir";
                     Utils::writeFile(irFile, result.irDump);
                     if (options.verbose) {
-<<<<<<< HEAD
                         std::cout << "  IR written to: " << irFile << "\n";
-=======
-                        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     }
                 }
                 
@@ -2464,11 +1965,7 @@ private:
                     std::string asmFile = fs::path(file).stem().string() + ".s";
                     Utils::writeFile(asmFile, result.asmDump);
                     if (options.verbose) {
-<<<<<<< HEAD
                         std::cout << "  Assembly written to: " << asmFile << "\n";
-=======
-                        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                     }
                 }
             }
@@ -2483,19 +1980,12 @@ private:
         
         // Print timing summary
         if (options.showTimings && options.outputStyle == OutputStyle::Human) {
-<<<<<<< HEAD
             std::cout << "\n" << Color::get(Color::Bold) << "Timing Summary:" 
                       << Color::get(Color::Reset) << "\n";
             std::cout << "  Total time: " << Utils::formatTime(stats.totalTimeMs) << "\n";
             if (stats.compiledFiles > 0) {
                 std::cout << "  Average per file: " 
                           << Utils::formatTime(stats.totalTimeMs / stats.compiledFiles) << "\n";
-=======
-            std::cout << "\nTiming Summary:\n";
-            std::cout << "  Total: " << Utils::formatTime(stats.totalTimeMs) << "\n";
-            if (stats.compiledFiles > 0) {
-                std::cout << "  Average: " << Utils::formatTime(stats.totalTimeMs / stats.compiledFiles) << " per file\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
         }
         
@@ -2510,7 +2000,3 @@ int main(int argc, char* argv[]) {
     CLI cli;
     return cli.run(argc, argv);
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

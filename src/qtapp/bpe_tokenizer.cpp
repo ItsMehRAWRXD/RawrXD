@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <string_view>
 #include <QLoggingCategory>
+#include "gguf_loader.h"
 
 namespace {
 struct TraceScope {
@@ -359,3 +360,4 @@ bool BPETokenizer::greedyLongestMatch(const QString& text, std::vector<int32_t>&
     }
     return ok;
 }
+

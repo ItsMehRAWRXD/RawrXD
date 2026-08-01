@@ -3,11 +3,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
-<<<<<<< HEAD
 #include <queue>
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <functional>
 
 namespace RawrXD::Agentic::Manifestor {

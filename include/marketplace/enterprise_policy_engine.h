@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // EnterprisePolicyEngine — C++20, no Qt. Enterprise extension policies.
 // ============================================================================
 
@@ -150,4 +147,4 @@ private:
     QString getCurrentTimestamp();
     bool verifyJwtSignature(const QString& token);
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

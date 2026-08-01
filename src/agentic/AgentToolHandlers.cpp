@@ -1194,7 +1194,7 @@ json AgentToolHandlers::GetAllSchemas() {
 
     // Helper: build a JSON array of strings (avoids json::array() initializer issues)
     auto jstrArr = [](std::initializer_list<const char*> items) -> json {
-        json arr = json::array();
+        json arr = json::array_t{};
         for (auto s : items) arr.push_back(s);
         return arr;
     };

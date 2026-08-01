@@ -126,8 +126,7 @@ CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
     if (!compute.Initialize()) {
         return errorResult(ctx, "Vulkan renderer initialization failed");
     }
-    const auto info = compute.GetDeviceInfo();
-    const std::string message = std::string("Vulkan renderer initialized on device: ") + info.device_name;
+    const std::string message = std::string("Vulkan renderer initialized");
     compute.Cleanup();
     return okResult(ctx, message);
 }

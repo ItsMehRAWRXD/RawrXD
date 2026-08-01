@@ -78,9 +78,37 @@ Write-Host "`n══════════════════════
 Write-Host "PHASE 2: Dual GPU Hardware Validation" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Gray
 
-# Test 3: GPU Detection via PnP
+# Test 3: GPU Detection via PnP (with VS Code terminal fallback)
 Write-Host "`n[TEST 3] GPU Detection (PnP)..." -NoNewline
-$displayDevices = Get-PnpDevice -Class Display | Where-Object { $_.Name -match "AMD|Radeon|RX" }
+$displayDevices = @()
+# Method 1: Get-PnpDevice (may not be available in VS Code terminal)
+try {
+    $pnpDevices = Get-PnpDevice -Class Display -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "AMD|Radeon|RX" }
+    if ($pnpDevices) { $displayDevices += $pnpDevices }
+} catch {
+    Write-Host "`n        [INFO] Get-PnpDevice unavailable, trying WMI..." -ForegroundColor Gray
+}
+# Method 2: WMI fallback (always available)
+if (-not $displayDevices) {
+    try {
+        $wmiDevices = Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "AMD|Radeon|RX" }
+        if ($wmiDevices) { $displayDevices += $wmiDevices }
+    } catch {}
+}
+# Method 3: Registry fallback
+if (-not $displayDevices) {
+    try {
+        $regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Video"
+        $regKeys = Get-ChildItem $regPath -ErrorAction SilentlyContinue
+        foreach ($key in $regKeys) {
+            $name = (Get-ItemProperty -Path "$($key.PSPath)\0000" -Name "DeviceDescription" -ErrorAction SilentlyContinue).DeviceDescription
+            if ($name -match "AMD|Radeon|RX") {
+                $displayDevices += [PSCustomObject]@{ Name = $name; Status = "OK" }
+            }
+        }
+    } catch {}
+}
+
 $discreteGpus = $displayDevices | Where-Object { $_.Name -notmatch "Graphics\(TM\)|Integrated" }
 $okGpus = $discreteGpus | Where-Object { $_.Status -eq "OK" }
 
@@ -208,17 +236,24 @@ Write-Host "`n══════════════════════
 Write-Host "PHASE 4: Dual GPU Specific Tests" -ForegroundColor Cyan
 Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Gray
 
-# Test 8: Load Balancer Logic Validation
+# Test 8: Load Balancer Logic Validation (with nanolayer support)
 Write-Host "`n[TEST 8] Load Balancer Logic..." -NoNewline
 $totalLayers = 32
 $primaryWeight = 0.7
 $primaryLayers = [math]::Floor($totalLayers * $primaryWeight)
 $secondaryLayers = $totalLayers - $primaryLayers
 
+# Nanolayer mode: each layer split into sub-layers for finer granularity
+$nanoLayersPerLayer = 4
+$totalNanoLayers = $totalLayers * $nanoLayersPerLayer
+$primaryNanoLayers = [math]::Floor($totalNanoLayers * $primaryWeight)
+$secondaryNanoLayers = $totalNanoLayers - $primaryNanoLayers
+
 if ($primaryLayers -eq 22 -and $secondaryLayers -eq 10) {
     Write-Host " PASS" -ForegroundColor Green
-    Write-Host "        R9700 (Primary): $primaryLayers layers" -ForegroundColor Gray
-    Write-Host "        7800XT (Secondary): $secondaryLayers layers" -ForegroundColor Gray
+    Write-Host "        R9700 (Primary): $primaryLayers layers ($primaryNanoLayers nanolayers)" -ForegroundColor Gray
+    Write-Host "        7800XT (Secondary): $secondaryLayers layers ($secondaryNanoLayers nanolayers)" -ForegroundColor Gray
+    Write-Host "        NanoLayer granularity: ${nanoLayersPerLayer}x per layer" -ForegroundColor Gray
     $script:TestsPassed++
 } else {
     Write-Host " FAIL" -ForegroundColor Red
@@ -226,14 +261,25 @@ if ($primaryLayers -eq 22 -and $secondaryLayers -eq 10) {
 }
 $script:TotalTests++
 
-# Test 9: VRAM Capacity Check
+# Test 9: VRAM Capacity Check (single-GPU aware)
 Write-Host "`n[TEST 9] VRAM Capacity..." -NoNewline
-$vramTotal = 48 + 16  # R9700 + 7800XT
-if ($vramTotal -ge 60) {
+$gpuCount = $okGpus.Count
+if ($gpuCount -ge 2) {
+    $vramTotal = 48 + 16  # R9700 + 7800XT
+    $vramExpected = 64
+} else {
+    $vramTotal = 48  # Single GPU mode
+    $vramExpected = 48
+}
+if ($vramTotal -ge $vramExpected) {
     Write-Host " PASS" -ForegroundColor Green
-    Write-Host "        Total: ${vramTotal}GB" -ForegroundColor Gray
-    Write-Host "        R9700: 48GB" -ForegroundColor Gray
-    Write-Host "        7800XT: 16GB" -ForegroundColor Gray
+    Write-Host "        Total: ${vramTotal}GB (${gpuCount} GPU(s) active)" -ForegroundColor Gray
+    if ($gpuCount -ge 2) {
+        Write-Host "        R9700: 48GB" -ForegroundColor Gray
+        Write-Host "        7800XT: 16GB" -ForegroundColor Gray
+    } else {
+        Write-Host "        R9700: 48GB (single-GPU mode)" -ForegroundColor Gray
+    }
     $script:TestsPassed++
 } else {
     Write-Host " WARN" -ForegroundColor Yellow

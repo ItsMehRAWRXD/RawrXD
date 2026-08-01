@@ -1,5 +1,4 @@
 #include "vulkan_compute.h"
-<<<<<<< HEAD
 #include <chrono>
 #include <fstream>
 #include <shaderc/shaderc.hpp>
@@ -8,30 +7,12 @@
 
 // Vulkan compute backend implementation
 // Uses standard Vulkan 1.3 API for cross-platform GPU compute
-=======
-#include <fstream>
-#include <sstream>
-#include <chrono>
-#include <stdexcept>
-#include <shaderc/shaderc.hpp>
-
-// Shim for volk if not present, or assume linked
-// In a real scenario we'd include volk.h
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #ifndef VK_API_VERSION_1_3
 #define VK_API_VERSION_1_3 VK_MAKE_VERSION(1, 3, 0)
 #endif
 
-<<<<<<< HEAD
 namespace RawrXD
 {
-=======
-// Mock volkInitialize if strictly needed, but let's assume it's available or user will link it.
-// For now, implementing standard Vulkan calls.
-// Note: User prompt used volkInitialize, requiring volk.
-
-namespace RawrXD {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Real SPIR-V shaders for matrix operations
 static const char* MATMUL_SHADER = R"(
@@ -109,19 +90,14 @@ void main() {
 }
 )";
 
-<<<<<<< HEAD
 VulkanCompute::VulkanCompute()
 {
-=======
-VulkanCompute::VulkanCompute() {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Initialize Vulkan loader
     // if (volkInitialize() != VK_SUCCESS) {
     //    throw std::runtime_error("Failed to initialize Vulkan loader");
     // }
 }
 
-<<<<<<< HEAD
 VulkanCompute::~VulkanCompute()
 {
     shutdown();
@@ -158,46 +134,12 @@ void VulkanCompute::shutdown()
 
     if (m_instance != VK_NULL_HANDLE)
     {
-=======
-VulkanCompute::~VulkanCompute() {
-    shutdown();
-}
-
-void VulkanCompute::shutdown() {
-    if (m_device != VK_NULL_HANDLE) {
-        vkDeviceWaitIdle(m_device);
-        
-        if (m_commandPool != VK_NULL_HANDLE) {
-            vkDestroyCommandPool(m_device, m_commandPool, nullptr);
-        }
-        
-        if (m_descriptorPool != VK_NULL_HANDLE) {
-            vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
-        }
-        
-        for (auto& [name, pipeline] : m_pipelines) {
-            vkDestroyPipeline(m_device, pipeline, nullptr);
-        }
-        
-        for (auto& [name, layout] : m_pipelineLayouts) {
-            vkDestroyPipelineLayout(m_device, layout, nullptr);
-        }
-        
-        vkDestroyDevice(m_device, nullptr);
-    }
-    
-    if (m_instance != VK_NULL_HANDLE) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         vkDestroyInstance(m_instance, nullptr);
     }
 }
 
-<<<<<<< HEAD
 std::expected<void, VulkanError> VulkanCompute::initialize()
 {
-=======
-std::expected<void, VulkanError> VulkanCompute::initialize() {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Real instance creation
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -206,19 +148,11 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
     appInfo.pEngineName = "RawrXD Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_3;
-<<<<<<< HEAD
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-=======
-    
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // const char* validationLayers[] = {"VK_LAYER_KHRONOS_validation"};
     // createInfo.enabledLayerCount = 1;
     // createInfo.ppEnabledLayerNames = validationLayers;
@@ -226,7 +160,6 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
 
     // Fixed: Use VK_KHR_SURFACE_EXTENSION_NAME only if needed for presentation, but code is compute only.
     // Removing surface extension for pure compute to simplify dependencies.
-<<<<<<< HEAD
     // const char* extensions[] = {VK_KHR_SURFACE_EXTENSION_NAME};
     createInfo.enabledExtensionCount = 0;
     // createInfo.ppEnabledExtensionNames = extensions;
@@ -236,22 +169,11 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
         return std::unexpected(VulkanError::InstanceCreationFailed);
     }
 
-=======
-    // const char* extensions[] = {VK_KHR_SURFACE_EXTENSION_NAME}; 
-    createInfo.enabledExtensionCount = 0;
-    // createInfo.ppEnabledExtensionNames = extensions;
-    
-    if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) {
-        return std::unexpected(VulkanError::InstanceCreationFailed);
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // voltLoadInstance(m_instance); // If using volk
 
     // Real device selection
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-<<<<<<< HEAD
 
     if (deviceCount == 0)
     {
@@ -271,66 +193,31 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
 
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
-=======
-    
-    if (deviceCount == 0) {
-        return std::unexpected(VulkanError::DeviceSelectionFailed);
-    }
-    
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
-    
-    // Select first discrete GPU
-    m_physicalDevice = VK_NULL_HANDLE;
-    for (const auto& device : devices) {
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(device, &props);
-        
-        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             m_physicalDevice = device;
             break;
         }
     }
-<<<<<<< HEAD
 
     if (m_physicalDevice == VK_NULL_HANDLE)
     {
         m_physicalDevice = devices[0];  // Fall back to first device
     }
 
-=======
-    
-    if (m_physicalDevice == VK_NULL_HANDLE) {
-        m_physicalDevice = devices[0]; // Fall back to first device
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Real device creation
     float queuePriority = 1.0f;
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-<<<<<<< HEAD
     queueCreateInfo.queueFamilyIndex = 0;  // Compute queue family - simplified, should query
     queueCreateInfo.queueCount = 1;
     queueCreateInfo.pQueuePriorities = &queuePriority;
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
-=======
-    queueCreateInfo.queueFamilyIndex = 0; // Compute queue family - simplified, should query
-    queueCreateInfo.queueCount = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
-    
-    VkPhysicalDeviceFeatures deviceFeatures{};
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     VkDeviceCreateInfo deviceCreateInfo{};
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-<<<<<<< HEAD
 
     // Enable compute shader extensions for optimal performance
     const char* deviceExtensions[] = {
@@ -366,55 +253,27 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
 
     vkGetDeviceQueue(m_device, 0, 0, &m_computeQueue);
 
-=======
-    
-    const char* deviceExtensions[] = {VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    // deviceCreateInfo.enabledExtensionCount = 1;
-    // deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions;
-    // Simplified: disabled extensions to ensure basic compatibility if SDK missing them
-    deviceCreateInfo.enabledExtensionCount = 0;
-    
-    if (vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device) != VK_SUCCESS) {
-        return std::unexpected(VulkanError::DeviceSelectionFailed);
-    }
-    
-    vkGetDeviceQueue(m_device, 0, 0, &m_computeQueue);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Create command pool
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = 0;
-<<<<<<< HEAD
 
     if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
     {
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }
 
-=======
-    
-    if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
-        return std::unexpected(VulkanError::PipelineCreationFailed);
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Create descriptor pool
     VkDescriptorPoolSize poolSize{};
     poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     poolSize.descriptorCount = 100;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     VkDescriptorPoolCreateInfo descriptorPoolInfo{};
     descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     descriptorPoolInfo.poolSizeCount = 1;
     descriptorPoolInfo.pPoolSizes = &poolSize;
     descriptorPoolInfo.maxSets = 100;
-<<<<<<< HEAD
 
     if (vkCreateDescriptorPool(m_device, &descriptorPoolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
     {
@@ -449,73 +308,23 @@ std::expected<void, VulkanError> VulkanCompute::initialize() {
     {
         // Shader compilation failed
         return std::unexpected(VulkanError::PipelineCreationFailed);
-=======
-    
-    if (vkCreateDescriptorPool(m_device, &descriptorPoolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
-        return std::unexpected(VulkanError::PipelineCreationFailed);
-    }
-    
-    // Create compute pipelines
-    try {
-        auto matmulResult = createComputePipeline(
-            "matmul",
-            compileGLSLToSPIRV(MATMUL_SHADER, "main"),
-            {
-                {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
-                {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
-                {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
-            }
-        );
-        
-        if (!matmulResult) {
-            return std::unexpected(matmulResult.error());
-        }
-        
-        auto softmaxResult = createComputePipeline(
-            "softmax",
-            compileGLSLToSPIRV(SOFTMAX_SHADER, "main"),
-            {
-                {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
-                {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
-            }
-        );
-        
-        if (!softmaxResult) {
-            return std::unexpected(softmaxResult.error());
-        }
-    } catch (...) {
-        // Shader compilation failed
-         return std::unexpected(VulkanError::PipelineCreationFailed);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     return {};
 }
 
-<<<<<<< HEAD
 std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(const VulkanBuffer& a,
                                                                             const VulkanBuffer& b, VulkanBuffer& result,
                                                                             size_t dim)
 {
     std::lock_guard lock(m_mutex);
 
-=======
-std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
-    const VulkanBuffer& a,
-    const VulkanBuffer& b,
-    VulkanBuffer& result,
-    size_t dim
-) {
-    std::lock_guard lock(m_mutex);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Real command buffer recording
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = m_commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
-<<<<<<< HEAD
 
     VkCommandBuffer commandBuffer;
     if (vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer) != VK_SUCCESS)
@@ -532,23 +341,6 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
     // Bind pipeline
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelines["matmul"]);
 
-=======
-    
-    VkCommandBuffer commandBuffer;
-    if (vkAllocateCommandBuffers(m_device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
-        return std::unexpected(VulkanError::KernelExecutionFailed);
-    }
-    
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-    
-    // Bind pipeline
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelines["matmul"]);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Bind descriptors
     VkDescriptorSet descriptorSet;
     VkDescriptorSetAllocateInfo descriptorAllocInfo{};
@@ -556,19 +348,11 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
     descriptorAllocInfo.descriptorPool = m_descriptorPool;
     descriptorAllocInfo.descriptorSetCount = 1;
     descriptorAllocInfo.pSetLayouts = &m_pipelineLayouts["matmul"];
-<<<<<<< HEAD
 
     vkAllocateDescriptorSets(m_device, &descriptorAllocInfo, &descriptorSet);
 
     VkWriteDescriptorSet descriptorWrites[3];
 
-=======
-    
-    vkAllocateDescriptorSets(m_device, &descriptorAllocInfo, &descriptorSet);
-    
-    VkWriteDescriptorSet descriptorWrites[3];
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Input A
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[0].dstSet = descriptorSet;
@@ -577,11 +361,7 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
     descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[0].descriptorCount = 1;
     descriptorWrites[0].pBufferInfo = &a.buffer;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Input B
     descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[1].dstSet = descriptorSet;
@@ -590,11 +370,7 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[1].descriptorCount = 1;
     descriptorWrites[1].pBufferInfo = &b.buffer;
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Output
     descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     descriptorWrites[2].dstSet = descriptorSet;
@@ -603,7 +379,6 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
     descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[2].descriptorCount = 1;
     descriptorWrites[2].pBufferInfo = &result.buffer;
-<<<<<<< HEAD
 
     vkUpdateDescriptorSets(m_device, 3, descriptorWrites, 0, nullptr);
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelineLayouts["matmul"], 0, 1,
@@ -623,32 +398,11 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
 
     vkEndCommandBuffer(commandBuffer);
 
-=======
-    
-    vkUpdateDescriptorSets(m_device, 3, descriptorWrites, 0, nullptr);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, 
-                           m_pipelineLayouts["matmul"], 0, 1, &descriptorSet, 0, nullptr);
-    
-    // Push constants
-    struct PushConstants {
-        uint32_t dim;
-    } pushConstants{static_cast<uint32_t>(dim)};
-    
-    vkCmdPushConstants(commandBuffer, m_pipelineLayouts["matmul"], 
-                       VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConstants), &pushConstants);
-    
-    // Dispatch
-    vkCmdDispatch(commandBuffer, (uint32_t)(dim * dim + 255) / 256, 1, 1);
-    
-    vkEndCommandBuffer(commandBuffer);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Submit
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffer;
-<<<<<<< HEAD
 
     if (vkQueueSubmit(m_computeQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
     {
@@ -656,40 +410,20 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(
         return std::unexpected(VulkanError::KernelExecutionFailed);
     }
 
-=======
-    
-    if (vkQueueSubmit(m_computeQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
-        vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
-        return std::unexpected(VulkanError::KernelExecutionFailed);
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     vkQueueWaitIdle(m_computeQueue);
 
     // Cleanup
     vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
-<<<<<<< HEAD
 
     return {};
 }
 
 std::vector<uint32_t> VulkanCompute::compileGLSLToSPIRV(const std::string& glslCode, const std::string& entryPoint)
 {
-=======
-    
-    return {};
-}
-
-std::vector<uint32_t> VulkanCompute::compileGLSLToSPIRV(
-    const std::string& glslCode,
-    const std::string& entryPoint
-) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Real GLSL to SPIR-V compilation using shaderc
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetOptimizationLevel(shaderc_optimization_level_performance);
-<<<<<<< HEAD
 
     auto result = compiler.CompileGlslToSpv(glslCode, shaderc_glsl_compute_shader, entryPoint.c_str(), options);
 
@@ -700,48 +434,21 @@ std::vector<uint32_t> VulkanCompute::compileGLSLToSPIRV(
         // throw std::runtime_error(result.GetErrorMessage());
     }
 
-=======
-    
-    auto result = compiler.CompileGlslToSpv(
-        glslCode,
-        shaderc_glsl_compute_shader,
-        entryPoint.c_str(),
-        options
-    );
-    
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        // Fallback or empty if failed
-         return {};
-         // throw std::runtime_error(result.GetErrorMessage());
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return std::vector<uint32_t>(result.begin(), result.end());
 }
 
 std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
-<<<<<<< HEAD
     const std::string& name, const std::vector<uint32_t>& shaderCode,
     const std::vector<VkDescriptorSetLayoutBinding>& bindings)
 {
-=======
-    const std::string& name,
-    const std::vector<uint32_t>& shaderCode,
-    const std::vector<VkDescriptorSetLayoutBinding>& bindings
-) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = shaderCode.size() * sizeof(uint32_t);
     createInfo.pCode = shaderCode.data();
 
     VkShaderModule shaderModule;
-<<<<<<< HEAD
     if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
     {
-=======
-    if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }
 
@@ -752,26 +459,16 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     layoutInfo.pBindings = bindingsData;
 
     VkDescriptorSetLayout descriptorSetLayout;
-<<<<<<< HEAD
     if (vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
     {
         vkDestroyShaderModule(m_device, shaderModule, nullptr);
         return std::unexpected(VulkanError::PipelineCreationFailed);
-=======
-    if (vkCreateDescriptorSetLayout(m_device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-        vkDestroyShaderModule(m_device, shaderModule, nullptr);
-         return std::unexpected(VulkanError::PipelineCreationFailed);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     VkPushConstantRange pushConstantRange{};
     pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
     pushConstantRange.offset = 0;
-<<<<<<< HEAD
     pushConstantRange.size = 128;  // Large enough for params
-=======
-    pushConstantRange.size = 128; // Large enough for params
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -780,12 +477,8 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-<<<<<<< HEAD
     if (vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayouts[name]) != VK_SUCCESS)
     {
-=======
-    if (vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayouts[name]) != VK_SUCCESS) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         vkDestroyShaderModule(m_device, shaderModule, nullptr);
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }
@@ -801,12 +494,8 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     pipelineInfo.layout = m_pipelineLayouts[name];
     pipelineInfo.stage = shaderStageInfo;
 
-<<<<<<< HEAD
     if (vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipelines[name]) != VK_SUCCESS)
     {
-=======
-    if (vkCreateComputePipelines(m_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipelines[name]) != VK_SUCCESS) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         vkDestroyShaderModule(m_device, shaderModule, nullptr);
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }
@@ -815,7 +504,6 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     return {};
 }
 
-<<<<<<< HEAD
 // Production implementation for Vulkan buffer creation
 std::expected<VulkanBuffer, VulkanError> VulkanCompute::createBuffer(size_t size, VkBufferUsageFlags usage,
                                                                      VkMemoryPropertyFlags properties)
@@ -1009,19 +697,3 @@ json VulkanCompute::getStatus() const
 }
 
 }  // namespace RawrXD
-=======
-// Stub implementation for other methods to satisfy linker
-std::expected<VulkanBuffer, VulkanError> VulkanCompute::createBuffer(size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
-    // simplified
-     return std::unexpected(VulkanError::MemoryAllocationFailed);
-}
-
-void VulkanCompute::destroyBuffer(VulkanBuffer& buffer) {}
-
-std::expected<void, VulkanError> VulkanCompute::executeSoftmax(VulkanBuffer&, float, size_t) { return {}; }
-std::expected<void, VulkanError> VulkanCompute::executeAttention(const VulkanBuffer&, const VulkanBuffer&, const VulkanBuffer&, VulkanBuffer&, size_t, size_t) { return {}; }
-std::expected<void, VulkanError> VulkanCompute::synchronize() { return {}; }
-json VulkanCompute::getStatus() const { return json{{"status", "active"}}; }
-
-} // namespace RawrXD
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

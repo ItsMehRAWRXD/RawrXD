@@ -1,10 +1,7 @@
 #pragma once
 
 #include <string>
-<<<<<<< HEAD
 #include <vector>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <unordered_map>
 #include <functional>
 #include <mutex>

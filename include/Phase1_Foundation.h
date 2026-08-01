@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-#include <cstdint>
-#include <cstring>
-#include <windows.h>
-
-/*
-================================================================================
+=========================================================================
  PHASE1_FOUNDATION.H - Public API for RawrXD Foundation Layer
  
  This header provides the C++ interface to the x64 assembly-based Phase 1
@@ -690,4 +682,4 @@ extern "C" {
 }  // namespace Phase1
 
 #endif // PHASE1_FOUNDATION_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

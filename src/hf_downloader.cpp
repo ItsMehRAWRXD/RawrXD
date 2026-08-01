@@ -1,11 +1,8 @@
 #include "hf_downloader.h"
-<<<<<<< HEAD
 #include <iostream>
 #include <curl/curl.h>
 #include <fstream>
 #include <nlohmann/json.hpp>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 HFDownloader::HFDownloader() : is_downloading_(false) {}
 HFDownloader::~HFDownloader() {}
@@ -22,7 +19,6 @@ bool HFDownloader::DownloadModel(const std::string& repo_id, const std::string& 
     return false;
 }
 
-<<<<<<< HEAD
 bool HFDownloader::SearchModels(const std::string& query, std::vector<ModelInfo>& results, 
                                 const std::string& token) {
     std::string url = "https://huggingface.co/api/models?search=" + query + "&filter=gguf";
@@ -119,10 +115,6 @@ bool HFDownloader::DownloadModelAsync(const std::string& repo_id, const std::str
     });
     
     return true;
-=======
-bool HFDownloader::DownloadModelAsync(const std::string& repo_id, const std::string& filename, const std::string& output_dir, ProgressCallback callback, const std::string& token) {
-    return false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool HFDownloader::CancelDownload() {
@@ -141,7 +133,6 @@ bool HFDownloader::FetchJSON(const std::string& url, std::string& response, cons
     return false;
 }
 
-<<<<<<< HEAD
 bool HFDownloader::DownloadFile(const std::string& url, const std::string& output_path,
                                ProgressCallback callback, const std::string& token) {
     std::cout << "Downloading: " << url << " to " << output_path << std::endl;
@@ -202,17 +193,12 @@ bool HFDownloader::DownloadFile(const std::string& url, const std::string& outpu
     current_progress_ = progress;
 
     return success;
-=======
-bool HFDownloader::DownloadFile(const std::string& url, const std::string& output_path, ProgressCallback callback, const std::string& token) {
-    return false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool HFDownloader::ParseModelMetadata(const std::string& response, ModelInfo& info) {
     return false;
 }
 
-<<<<<<< HEAD
 std::string HFDownloader::GetAuthHeader(const std::string& token) const {
     return "Bearer " + token;
 }
@@ -256,8 +242,4 @@ bool HFDownloader::ParseModelMetadata(const std::string& json_response, ModelInf
         std::cerr << "JSON parse error in ParseModelMetadata: " << e.what() << std::endl;
         return false;
     }
-=======
-std::string HFDownloader::BuildHFUrl(const std::string& repo_id, const std::string& filename) {
-    return "";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

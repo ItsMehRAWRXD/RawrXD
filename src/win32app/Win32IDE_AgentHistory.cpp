@@ -26,6 +26,7 @@
 #include <nlohmann/json.hpp>
 #include <commctrl.h>
 #include <set>
+#include "gguf_loader.h"
 
 // Agent history and replay — Phase 33 implementation complete
 
@@ -682,31 +683,36 @@ void Win32IDE::updateAgentHistoryPanel() {
         item.iItem = rowIdx;
         item.iSubItem = 0;
         item.pszText = timeBuf;
-        ListView_InsertItem(m_hwndHistoryList, &item);
+        SendMessageA(m_hwndHistoryList, LVM_INSERTITEMA, 0, (LPARAM)&item);
 
         // Column 1: Type
         std::string typeStr = ev.typeString();
-        ListView_SetItemText(m_hwndHistoryList, rowIdx, 1, (LPSTR)typeStr.c_str());
+        LVITEMA lvi1 = {}; lvi1.iSubItem = 1; lvi1.pszText = (LPSTR)typeStr.c_str();
+        SendMessageA(m_hwndHistoryList, LVM_SETITEMTEXTA, (WPARAM)rowIdx, (LPARAM)&lvi1);
 
         // Column 2: Agent ID (truncated)
         std::string agentStr = ev.agentId.empty() ? "-" : ev.agentId.substr(0, 12);
-        ListView_SetItemText(m_hwndHistoryList, rowIdx, 2, (LPSTR)agentStr.c_str());
+        LVITEMA lvi2 = {}; lvi2.iSubItem = 2; lvi2.pszText = (LPSTR)agentStr.c_str();
+        SendMessageA(m_hwndHistoryList, LVM_SETITEMTEXTA, (WPARAM)rowIdx, (LPARAM)&lvi2);
 
         // Column 3: Prompt (first 80 chars)
         std::string promptStr = ev.prompt.substr(0, 80);
         // Replace newlines with spaces for display
         std::replace(promptStr.begin(), promptStr.end(), '\n', ' ');
         std::replace(promptStr.begin(), promptStr.end(), '\r', ' ');
-        ListView_SetItemText(m_hwndHistoryList, rowIdx, 3, (LPSTR)promptStr.c_str());
+        LVITEMA lvi3 = {}; lvi3.iSubItem = 3; lvi3.pszText = (LPSTR)promptStr.c_str();
+        SendMessageA(m_hwndHistoryList, LVM_SETITEMTEXTA, (WPARAM)rowIdx, (LPARAM)&lvi3);
 
         // Column 4: Duration
         std::string durStr = ev.durationMs > 0 ?
             std::to_string(ev.durationMs) + "ms" : "-";
-        ListView_SetItemText(m_hwndHistoryList, rowIdx, 4, (LPSTR)durStr.c_str());
+        LVITEMA lvi4 = {}; lvi4.iSubItem = 4; lvi4.pszText = (LPSTR)durStr.c_str();
+        SendMessageA(m_hwndHistoryList, LVM_SETITEMTEXTA, (WPARAM)rowIdx, (LPARAM)&lvi4);
 
         // Column 5: OK
         std::string okStr = ev.success ? "Y" : "N";
-        ListView_SetItemText(m_hwndHistoryList, rowIdx, 5, (LPSTR)okStr.c_str());
+        LVITEMA lvi5 = {}; lvi5.iSubItem = 5; lvi5.pszText = (LPSTR)okStr.c_str();
+        SendMessageA(m_hwndHistoryList, LVM_SETITEMTEXTA, (WPARAM)rowIdx, (LPARAM)&lvi5);
     }
 }
 
@@ -982,3 +988,4 @@ std::string Win32IDE::truncateForLog(const std::string& text, size_t maxLen) con
     if (text.size() <= maxLen) return text;
     return text.substr(0, maxLen - 3) + "...";
 }
+

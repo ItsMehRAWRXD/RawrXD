@@ -1,5 +1,4 @@
 #include "IocpFileWatcher.h"
-<<<<<<< HEAD
 #include "IDELogger.h"
 
 #include <filesystem>
@@ -10,11 +9,6 @@
 // IocpFileWatcher and reload — Phase 33 implementation complete
 
 
-=======
-
-#include <filesystem>
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 namespace {
 std::string WideToUtf8(const std::wstring& value) {
     if (value.empty()) return "";

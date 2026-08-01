@@ -764,7 +764,6 @@ int EnhancedPredictiveThrottling::calculateThrottlePercent(double predictedTemp,
 
 std::unique_ptr<MLPredictor> MLPredictorFactory::create(const std::string& modelPath)
 {
-<<<<<<< HEAD
     // Attempt to load an ML predictor from the given model path
     // Currently supports ONNX Runtime when available; returns nullptr if unavailable
     if (!isMLAvailable()) {
@@ -806,16 +805,10 @@ std::unique_ptr<MLPredictor> MLPredictorFactory::create(const std::string& model
     } catch (...) {
         return nullptr;
     }
-=======
-    // Placeholder - would instantiate ONNX or TensorFlow runtime predictor
-    (modelPath);
-    return nullptr;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool MLPredictorFactory::isMLAvailable()
 {
-<<<<<<< HEAD
     // Check if ONNX Runtime DLL is loadable at runtime
 #ifdef _WIN32
     HMODULE hOrt = LoadLibraryA("onnxruntime.dll");
@@ -831,10 +824,6 @@ bool MLPredictorFactory::isMLAvailable()
     }
 #endif
     return false;
-=======
-    // Check if ONNX runtime or TensorFlow is available
-    return false;  // Placeholder
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 } // namespace rawrxd::thermal

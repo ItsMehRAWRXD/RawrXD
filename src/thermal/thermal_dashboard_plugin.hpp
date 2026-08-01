@@ -28,10 +28,7 @@ struct ThermalSnapshot {
 
 /**
  * @brief Plugin interface for thermal dashboard injection
-<<<<<<< HEAD
  * Win32: parent in widget creation is HWND for CreateWindowExW.
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
  */
 class IThermalDashboardPlugin {
 public:
@@ -43,11 +40,7 @@ public:
     virtual std::string pluginName() const = 0;
     virtual std::string pluginVersion() const = 0;
     
-<<<<<<< HEAD
     // Widget creation (parent: Win32 HWND)
-=======
-    // Widget creation
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     virtual void* createDashboardWidget(void* parent = nullptr) = 0;
     virtual void* createCompactWidget(void* parent = nullptr) = 0;  // Toolbar widget
     
@@ -66,12 +59,7 @@ public:
 
 } // namespace rawrxd::thermal
 
-<<<<<<< HEAD
 // DLL export signature for Win32 LoadLibrary-based plugin loading
 // The DLL must export: IThermalDashboardPlugin* CreateThermalPlugin()
 using CreateThermalPluginFunc = rawrxd::thermal::IThermalDashboardPlugin* (*)();
-=======
-#define IThermalDashboardPlugin_iid "com.rawrxd.thermal.IThermalDashboardPlugin/1.0"
-Q_DECLARE_INTERFACE(rawrxd::thermal::IThermalDashboardPlugin, IThermalDashboardPlugin_iid)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 

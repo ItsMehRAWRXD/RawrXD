@@ -271,7 +271,6 @@ bool HTTPStreamingClient::openStream(
     }
     
     if (m_logger) {
-<<<<<<< HEAD
         m_logger->info("HTTPStreamingClient", "Opening stream to: " + url);
     }
 
@@ -282,9 +281,6 @@ bool HTTPStreamingClient::openStream(
     if (!setupConnection(url)) {
         m_lastError = "Failed to setup connection";
         return false;
-=======
-        m_logger->info("Opening HTTP stream to: " + url);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     // We implement the FULL WinHttp stack here to avoid "simulated" logic
@@ -417,7 +413,6 @@ void HTTPStreamingClient::setConnectionTimeout(int timeoutMs) {
 }
 
 bool HTTPStreamingClient::setupConnection(const std::string& url) {
-<<<<<<< HEAD
     if (m_logger) {
         m_logger->debug("HTTPStreamingClient", "Setting up WinHTTP connection");
     }
@@ -507,9 +502,6 @@ bool HTTPStreamingClient::setupConnection(const std::string& url) {
         return false;
     }
 
-=======
-    // Deprecated: implemented directly in openStream thread
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 #else
     // POSIX: use raw TCP socket for HTTP streaming
@@ -560,7 +552,6 @@ bool HTTPStreamingClient::setupConnection(const std::string& url) {
 }
 
 bool HTTPStreamingClient::readChunkedResponse() {
-<<<<<<< HEAD
     if (m_logger) {
         m_logger->debug("HTTPStreamingClient", "Reading chunked response via WinHTTP");
     }
@@ -640,10 +631,6 @@ std::string HTTPStreamingClient::parseChunkSize(const std::string& line) {
         return line.substr(0, pos);
     }
     return line;
-=======
-    // Deprecated / Unused in favor of WinHttp async thread in openStream
-    return false;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // StreamingResponseBuilder Implementation

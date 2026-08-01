@@ -40,6 +40,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdlib>
+#include "gguf_loader.h"
 
 // Headless inference and model load — Phase 31 implementation complete
 
@@ -2441,3 +2442,4 @@ void HeadlessIDE::shutdownAll() {
 
     m_outputSink->flush();
 }
+

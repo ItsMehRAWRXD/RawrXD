@@ -1,23 +1,4 @@
-<<<<<<< HEAD
-// include/masm_lsp_bridge.h
-// Pure C ABI for AVX-512 accelerated LSP operations
-// Consumed by rawrxd_lsp_bridge.asm
-
-#ifndef MASM_LSP_BRIDGE_H
-#define MASM_LSP_BRIDGE_H
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Opaque handles
-typedef void* rxd_document_t;
-typedef void* rxd_cancel_token_t;
-
-// Structure mirrors (packed for MASM compatibility) =========================
+==================
 #pragma pack(push, 1)
 
 typedef struct {
@@ -154,4 +135,4 @@ void rxd_cpp_diagnostic_ready(const char* uri, rxd_diagnostic_t* diags, size_t c
 #endif
 
 #endif // MASM_LSP_BRIDGE_H
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

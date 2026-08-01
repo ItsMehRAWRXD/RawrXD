@@ -1,5 +1,4 @@
 #include "NeonFabric.hpp"
-<<<<<<< HEAD
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -11,11 +10,6 @@
 #endif
 #include <cstring>
 #include <iostream>
-=======
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <string>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 namespace RawrXD::Agentic::Vulkan {
 
@@ -25,16 +19,9 @@ FabricControlBlock* NeonFabric::s_controlBlock = nullptr;
 std::vector<void*> NeonFabric::s_mappedShards;
 std::vector<VulkanContext> NeonFabric::s_vulkanContexts;
 bool NeonFabric::s_initialized = false;
-<<<<<<< HEAD
 #ifdef _WIN32
 HANDLE NeonFabric::s_hMapFile = nullptr;
 #endif
-=======
-
-// Internal handles for Windows Shared Memory
-static HANDLE g_hControlBlockMap = NULL;
-static std::vector<HANDLE> g_hShardMaps;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool NeonFabric::initialize(const FabricConfig& config) {
     if (s_initialized) {
@@ -43,7 +30,6 @@ bool NeonFabric::initialize(const FabricConfig& config) {
 
     s_config = config;
     
-<<<<<<< HEAD
     // 1. Create shared memory for control block
 #ifdef _WIN32
     HANDLE hMapFile = CreateFileMappingW(
@@ -106,115 +92,6 @@ bool NeonFabric::initialize(const FabricConfig& config) {
     
     s_initialized = true;
     return true;
-=======
-    // Implement shared memory creation using standard vectors as fallback
-    if (s_mappedShards.empty()) {
-        s_mappedShards.resize(s_config.maxShards, nullptr);
-        g_hShardMaps.resize(s_config.maxShards, NULL);
-    }
-    
-    // Create REAL Shared Memory for Control Block
-    std::string cbName = "Local\\RawrXD_NeonFabric_Control";
-    size_t cbSize = sizeof(FabricControlBlock);
-    
-    g_hControlBlockMap = CreateFileMappingA(
-        INVALID_HANDLE_VALUE,    // Use paging file
-        NULL,                    // Default security
-        PAGE_READWRITE,          // Read/Write access
-        0,                       // Max size (high order)
-        (DWORD)cbSize,           // Max size (low order)
-        cbName.c_str()           // Name of mapping object
-    );
-
-    if (g_hControlBlockMap == NULL) {
-         // Fallback to malloc if shared memory fails (not ideal but safe)
-         static FabricControlBlock dummyControlBlock;
-         s_controlBlock = &dummyControlBlock;
-    } else {
-         bool firstInit = (GetLastError() != ERROR_ALREADY_EXISTS);
-         s_controlBlock = (FabricControlBlock*)MapViewOfFile(
-             g_hControlBlockMap,
-             FILE_MAP_ALL_ACCESS,
-             0, 0, cbSize
-         );
-         
-         if (s_controlBlock && firstInit) {
-             memset(s_controlBlock, 0, cbSize);
-             s_controlBlock->magic = 0x52415752; // 'RAWR'
-             s_controlBlock->processCount = 1;
-         } else if (s_controlBlock) {
-             InterlockedIncrement((LONG*)&s_controlBlock->processCount);
-         }
-    }
-
-    // Initialize Vulkan contexts if enabled
-    if (config.enableVulkan) {
-        for (uint32_t i = 0; i < config.numGpus; ++i) {
-             VulkanContext ctx;
-             if (VulkanManager::initialize(ctx, i)) {
-                 s_vulkanContexts.push_back(ctx);
-             }
-        }
-    }
-    
-    // Set up P2P memory sharing using VK_KHR_external_memory_win32
-    // This completes the cross-GPU fabric initialization
-    if (config.enableVulkan && s_vulkanContexts.size() > 1) {
-        // Enumerate devices and check support for external memory
-        for (size_t i = 0; i < s_vulkanContexts.size(); ++i) {
-             // In a production engine, we would create exportable VkDeviceMemory here
-             // and pass the HANDLEs to other contexts.
-             // For this implementation, we verify the capability exists.
-             auto& ctx = s_vulkanContexts[i];
-             // (Logic added to confirm P2P capability rather than assume it)
-             // We configure the 's_mappedShards' to point to real device-mapped host buffers
-             // if available, or stay with system RAM if P2P is not supported.
-        }
-    }
-    
-    // Explicitly initialize shared control block structure
-    if (s_controlBlock) {
-        s_controlBlock->fabricState = FabricState::ACTIVE;
-        s_controlBlock->activeShards = static_cast<uint32_t>(s_mappedShards.size());
-        s_controlBlock->globalSequenceId = 1;
-    }
-    
-    // Initialize P2P routing table / Shared Shards
-    for (size_t i = 0; i < s_mappedShards.size(); i++) {
-        if (!s_mappedShards[i]) {
-            // Create Real Shared Memory for Shard
-            std::string shardName = "Local\\RawrXD_NeonFabric_Shard_" + std::to_string(i);
-            size_t shardSize = s_config.shardSize > 0 ? s_config.shardSize : 1024*1024;
-            
-            g_hShardMaps[i] = CreateFileMappingA(
-                INVALID_HANDLE_VALUE,
-                NULL,
-                PAGE_READWRITE,
-                0,
-                (DWORD)shardSize,
-                shardName.c_str()
-            );
-            
-            if (g_hShardMaps[i]) {
-                s_mappedShards[i] = MapViewOfFile(
-                    g_hShardMaps[i],
-                    FILE_MAP_ALL_ACCESS,
-                    0, 0, shardSize
-                );
-                
-                if (s_mappedShards[i] && GetLastError() != ERROR_ALREADY_EXISTS) {
-                    memset(s_mappedShards[i], 0, shardSize);
-                }
-            } else {
-                 // Fallback
-                 s_mappedShards[i] = malloc(shardSize);
-                 if (s_mappedShards[i]) memset(s_mappedShards[i], 0, shardSize);
-            }
-        }
-    }
-    
-    return true; // Added return logic
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void NeonFabric::shutdown() {
@@ -227,7 +104,6 @@ void NeonFabric::shutdown() {
         unmapShard(i);
     }
     
-<<<<<<< HEAD
     // Cleanup Vulkan contexts
     for (auto& ctx : s_vulkanContexts) {
         VulkanManager::destroyContext(ctx);
@@ -250,25 +126,6 @@ void NeonFabric::shutdown() {
     }
     
     std::cout << "[NeonFabric] Shutdown complete" << std::endl;
-=======
-    // Release shared memory
-    if (s_controlBlock && g_hControlBlockMap) {
-        InterlockedDecrement((LONG*)&s_controlBlock->processCount);
-        UnmapViewOfFile(s_controlBlock);
-        CloseHandle(g_hControlBlockMap);
-        g_hControlBlockMap = NULL;
-    }
-    s_controlBlock = nullptr;
-    
-    // Cleanup Vulkan contexts
-    for (auto& ctx : s_vulkanContexts) {
-        VulkanManager::cleanup(ctx);
-    }
-    s_vulkanContexts.clear();
-    s_mappedShards.clear();
-    g_hShardMaps.clear();
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     s_initialized = false;
 }
 
@@ -277,7 +134,6 @@ void* NeonFabric::mapShard(uint32_t shardId) {
         return nullptr;
     }
 
-<<<<<<< HEAD
     // Map shard memory region at computed address
     uintptr_t shardAddr = s_config.baseAddress + (static_cast<uint64_t>(shardId) * s_config.shardSize);
 
@@ -314,13 +170,6 @@ void* NeonFabric::mapShard(uint32_t shardId) {
 
     std::cout << "[NeonFabric] Mapped shard " << shardId << " at " << mapped << std::endl;
     return mapped;
-=======
-    if (s_mappedShards[shardId]) return s_mappedShards[shardId];
-    
-    // (Logic duplicates initialization loop, but handles on-demand mapping if needed)
-    // For now we assume init mapped everything.
-    return nullptr; 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool NeonFabric::unmapShard(uint32_t shardId) {
@@ -328,7 +177,6 @@ bool NeonFabric::unmapShard(uint32_t shardId) {
         return false;
     }
     
-<<<<<<< HEAD
     // Unmap shard memory
     void* shardPtr = s_mappedShards[shardId];
     if (!shardPtr) return true;  // Already unmapped
@@ -347,18 +195,6 @@ bool NeonFabric::unmapShard(uint32_t shardId) {
     s_mappedShards[shardId] = nullptr;
     if (s_controlBlock) {
         s_controlBlock->shardBaseAddresses[shardId] = 0;
-=======
-    if (s_mappedShards[shardId]) {
-        if (g_hShardMaps.size() > shardId && g_hShardMaps[shardId]) {
-            UnmapViewOfFile(s_mappedShards[shardId]);
-            CloseHandle(g_hShardMaps[shardId]);
-            g_hShardMaps[shardId] = NULL;
-        } else {
-            // Was malloc'd
-            free(s_mappedShards[shardId]); // Corrected from delete[]
-        }
-        s_mappedShards[shardId] = nullptr;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return true;
@@ -373,7 +209,6 @@ bool NeonFabric::synchronize() {
         return false;
     }
     
-<<<<<<< HEAD
     // Barrier synchronization: atomic increment + spin-wait until all processes arrive
 #ifdef _WIN32
     InterlockedIncrement(reinterpret_cast<volatile LONG*>(&s_controlBlock->readyBarrier));
@@ -397,12 +232,6 @@ bool NeonFabric::synchronize() {
 
     // Reset barrier for next sync cycle
     s_controlBlock->readyBarrier = 0;
-=======
-    // Implement barrier synchronization
-    // Simple CPU barrier for now
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 

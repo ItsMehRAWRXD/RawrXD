@@ -14,7 +14,6 @@
 #include <vector>
 #include <functional>
 #include <optional>
-<<<<<<< HEAD
 #include <string>
 #include <map>
 #include <unordered_map>
@@ -27,21 +26,6 @@ namespace rawrxd::auth {
 using json = nlohmann::json;
 
 // Win32: void* parent in wizard/page/dialog classes is HWND (CreateWindowExW parent).
-=======
-
-// Forward declarations
-
-
-#include <cstdint>
-#include <map>
-#include <string>
-#include "nlohmann/json.hpp"
-
-using json = nlohmann::json;
-
-namespace rawrxd::auth {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // ═══════════════════════════════════════════════════════════════════════════════
 // Data Structures
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -60,7 +44,6 @@ enum class KeyAlgorithm {
 /**
  * @brief Key purpose/usage flags
  */
-<<<<<<< HEAD
 enum class KeyPurpose {
     SystemAuthentication = 0x01,
     ThermalDataSigning = 0x02,
@@ -85,17 +68,6 @@ inline constexpr KeyPurposes operator&(KeyPurposes a, KeyPurpose b) {
 inline constexpr bool hasFlag(KeyPurposes flags, KeyPurpose flag) {
     return (flags & static_cast<uint32_t>(flag)) != 0;
 }
-=======
-using KeyPurposes = uint32_t;
-struct KeyPurpose {
-    static constexpr uint8_t SystemAuthentication = 0x01;
-    static constexpr uint8_t ThermalDataSigning = 0x02;
-    static constexpr uint8_t ConfigEncryption = 0x04;
-    static constexpr uint8_t IPC_Authentication = 0x08;
-    static constexpr uint8_t DriveBinding = 0x10;
-    static constexpr uint8_t All = 0xFF;
-};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 /**
  * @brief Key strength level
@@ -108,16 +80,11 @@ enum class KeyStrength {
 };
 
 /**
-<<<<<<< HEAD
  * @brief Generated key metadata (C++20 / no Qt)
-=======
- * @brief Generated key metadata
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
  */
 struct KeyMetadata {
     std::string keyId;
     std::string keyName;
-<<<<<<< HEAD
     KeyAlgorithm algorithm;
     KeyStrength strength;
     KeyPurposes purposes;
@@ -139,29 +106,6 @@ struct KeyMetadata {
 
     std::map<std::string, json> customMetadata;
 
-=======
-    KeyAlgorithm algorithm = KeyAlgorithm::RDRAND_AES256;
-    KeyStrength strength = KeyStrength::Standard;
-    KeyPurposes purposes = KeyPurpose::All;
-    
-    int64_t created = 0;
-    int64_t expires = 0;
-    int64_t lastUsed = 0;
-    
-    std::string hardwareFingerprint;
-    std::string systemFingerprint;
-    bool isBoundToHardware = false;
-    
-    int usageCount = 0;
-    int maxUsages = 0;  // 0 = unlimited
-    
-    bool isRevoked = false;
-    std::string revocationReason;
-    int64_t revocationDate = 0;
-    
-    std::map<std::string, json> customMetadata;
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     json toJson() const;
     static KeyMetadata fromJson(const json& obj);
 };
@@ -208,7 +152,6 @@ struct EnrollmentStatus {
 
 using KeyGeneratedCallback = std::function<void(const KeyGenerationResult& result)>;
 using EnrollmentCallback = std::function<void(const EnrollmentStatus& status)>;
-<<<<<<< HEAD
 using EntropyCallback = std::function<void(double entropyBits, int samplesCollected)>;
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -221,44 +164,21 @@ using EntropyCallback = std::function<void(double entropyBits, int samplesCollec
  */
 class QuantumAuthManager
 {
-=======
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Quantum Auth Manager
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class QuantumAuthManager {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 public:
     QuantumAuthManager();
     ~QuantumAuthManager();
 
-<<<<<<< HEAD
     double measureEntropy();
     KeyGenerationResult generateKey(const std::string& name, KeyAlgorithm algo, KeyStrength strength);
     std::vector<KeyMetadata> listKeys() const;
     bool revokeKey(const std::string& keyId, const std::string& reason);
     std::optional<KeyMetadata> getKey(const std::string& keyId) const;
 
-=======
-    // Key Generation Pipeline
-    KeyGenerationResult generateKey(const std::string& name, KeyAlgorithm algo, KeyStrength strength);
-    
-    // Management
-    bool revokeKey(const std::string& keyId, const std::string& reason);
-    std::vector<KeyMetadata> listKeys() const;
-    std::optional<KeyMetadata> getKey(const std::string& keyId) const;
-
-    // Simulation of entropy collection (real implementation to come)
-    double measureEntropy();
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 private:
     std::string m_keystorePath;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
 // Entropy Visualizer Widget
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -619,8 +539,6 @@ private:
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Key Storage Backend
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -629,12 +547,7 @@ private:
  * @brief Secure key storage and retrieval
  */
 class KeyStorage 
-<<<<<<< HEAD
 {public:
-=======
-{
-public:
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     static KeyStorage& instance();
     
     // Storage operations
@@ -646,23 +559,16 @@ public:
     // Queries
     std::vector<KeyMetadata> getAllKeys();
     std::vector<KeyMetadata> getKeysByPurpose(KeyPurposes purposeMask);
-<<<<<<< HEAD
     std::optional<KeyMetadata> getActiveKeyForPurpose(KeyPurpose purpose);
     
     // Lifecycle
     bool revokeKey(const std::string& keyId, const std::string& reason);
     bool renewKey(const std::string& keyId, int64_t newExpiration);
-=======
-    
-    // Lifecycle
-    bool revokeKey(const std::string& keyId, const std::string& reason);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Verification
     bool verifyKeyIntegrity(const std::string& keyId);
     bool verifyHardwareBinding(const std::string& keyId);
 
-<<<<<<< HEAD
     // Path accessor
     std::string getStoragePath() const;
 
@@ -670,11 +576,6 @@ public:
     void keyStored(const std::string& keyId);
     void keyDeleted(const std::string& keyId);
     void keyRevoked(const std::string& keyId);
-=======
-    // Notifications (formerly signals)
-    using StorageCallback = std::function<void(const std::string&)>;
-    void setStorageCallback(StorageCallback cb) { m_callback = cb; }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 private:
     KeyStorage();
@@ -682,10 +583,6 @@ private:
     
     void loadFromDisk();
     void saveToDisk();
-<<<<<<< HEAD
-=======
-    std::string getStoragePath() const;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<uint8_t> encryptMetadata(const std::vector<uint8_t>& data);
     std::vector<uint8_t> decryptMetadata(const std::vector<uint8_t>& data);
     
@@ -693,17 +590,10 @@ private:
     std::map<std::string, std::vector<uint8_t>> m_encryptedKeys;
     std::string m_storagePath;
     std::vector<uint8_t> m_masterKey;
-<<<<<<< HEAD
     std::function<void(const std::string&)> m_callback;
-=======
-    StorageCallback m_callback;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 } // namespace rawrxd::auth
 
-<<<<<<< HEAD
 // Q_DECLARE_OPERATORS_FOR_FLAGS removed — operators defined inline in namespace
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

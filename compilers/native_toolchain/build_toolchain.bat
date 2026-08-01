@@ -148,6 +148,33 @@ set /a BUILD_COUNT+=1
 
 echo.
 echo ================================================================================
+echo Eon-ASM Compiler System Integration
+echo ================================================================================
+echo.
+if exist "C:\Users\HiH8e\Eon-ASM\compilers" (
+    echo [Eon-ASM] Found Eon-ASM compiler system at C:\Users\HiH8e\Eon-ASM
+    echo [Eon-ASM] Adding include paths for transpiler/builder/compiler pipeline
+    set "EON_ASM_INCLUDE=-IC:\Users\HiH8e\Eon-ASM -IC:\Users\HiH8e\Eon-ASM\compilers -IC:\Users\HiH8e\Eon-ASM\src"
+    echo [Eon-ASM] Include paths: %EON_ASM_INCLUDE%
+    
+    REM Check for NASM and build Eon-ASM compilers
+    where nasm >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo [Eon-ASM] NASM found, building Eon-ASM compiler components...
+        if not exist "C:\Users\HiH8e\Eon-ASM\compilers\bin" mkdir "C:\Users\HiH8e\Eon-ASM\compilers\bin"
+        nasm -f win64 "C:\Users\HiH8e\Eon-ASM\compilers\eon_lexer.asm" -o "C:\Users\HiH8e\Eon-ASM\compilers\bin\eon_lexer.obj" 2>&1 && echo   [OK] eon_lexer.obj || echo   [SKIP] eon_lexer.asm
+        nasm -f win64 "C:\Users\HiH8e\Eon-ASM\compilers\eon_template_engine.asm" -o "C:\Users\HiH8e\Eon-ASM\compilers\bin\eon_template_engine.obj" 2>&1 && echo   [OK] eon_template_engine.obj || echo   [SKIP] eon_template_engine.asm
+        nasm -f win64 "C:\Users\HiH8e\Eon-ASM\compilers\eon_template_generator.asm" -o "C:\Users\HiH8e\Eon-ASM\compilers\bin\eon_template_generator.obj" 2>&1 && echo   [OK] eon_template_generator.obj || echo   [SKIP] eon_template_generator.asm
+        echo [Eon-ASM] Compiler build complete
+    ) else (
+        echo [Eon-ASM] NASM not found, skipping Eon-ASM compiler build
+    )
+) else (
+    echo [Eon-ASM] Eon-ASM not found at C:\Users\HiH8e\Eon-ASM, skipping
+)
+
+echo.
+echo ================================================================================
 echo Build Summary
 echo ================================================================================
 echo   Total:   %BUILD_COUNT% components

@@ -83,6 +83,7 @@ public:
     bool Create(HWND hwndParent, HINSTANCE hInstance);
     void Destroy();
     bool IsCreated() const { return m_hwnd != nullptr; }
+    HWND GetHwnd() const { return m_hwnd; }
     
     // Content
     void SetDiff(const std::string& diffText);

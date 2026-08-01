@@ -9,6 +9,7 @@
 #include <fstream>
 #include <algorithm>
 #include <json/json.hpp>
+#include "gguf_loader.h"
 
 namespace Deep2 {
 namespace ModelRegistry {
@@ -771,3 +772,4 @@ void ModelRegistry::SetModelRegisteredCallback(ModelEventCallback cb) {
 
 } // namespace ModelRegistry
 } // namespace Deep2
+

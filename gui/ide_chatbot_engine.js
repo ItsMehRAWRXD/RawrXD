@@ -3768,8 +3768,24 @@ async function bridgeLoadModel() {
       signal: AbortSignal.timeout(30000)
     });
 
-    var data = await res.json();
     if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u274C Model load failed: HTTP ' + res.status + ' — ' + errText.substring(0, 120));
+      logDebug('[ModelBridge] Load failed: HTTP ' + res.status + ' — ' + errText.substring(0, 200), 'error');
+      return;
+    }
+
+    var data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      var rawText = await res.text();
+      addMessage('system', '\u274C Model load failed: Invalid JSON response');
+      logDebug('[ModelBridge] Load failed: Invalid JSON — ' + rawText.substring(0, 200), 'error');
+      return;
+    }
+
+    if (data.error || data.message) {
       addMessage('system', '\u274C Model load failed: ' + (data.error || data.message || 'Unknown error'));
       logDebug('[ModelBridge] Load failed: ' + JSON.stringify(data), 'error');
       return;
@@ -3848,8 +3864,23 @@ async function bridgeUnloadModel() {
       signal: AbortSignal.timeout(10000)
     });
 
-    var data = await res.json();
     if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u26A0\uFE0F Unload: HTTP ' + res.status + ' — ' + errText.substring(0, 120));
+      logDebug('[ModelBridge] Unload failed: HTTP ' + res.status, 'error');
+      return;
+    }
+
+    var data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      addMessage('system', '\u26A0\uFE0F Unload: Invalid JSON response');
+      logDebug('[ModelBridge] Unload failed: Invalid JSON', 'error');
+      return;
+    }
+
+    if (data.error || data.message) {
       addMessage('system', '\u26A0\uFE0F Unload: ' + (data.error || data.message || 'no model loaded'));
       return;
     }
@@ -3925,8 +3956,21 @@ async function fetchBridgeCapabilities() {
   try {
     var activeUrl = getActiveUrl();
     var res = await fetch(activeUrl + '/api/engine/capabilities', { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var caps = await res.json();
+    if (!res.ok) {
+      var errText = await res.text();
+      addMessage('system', '\u274C Capabilities fetch failed: HTTP ' + res.status);
+      logDebug('[ModelBridge] Caps error: HTTP ' + res.status + ' — ' + errText.substring(0, 200), 'error');
+      return;
+    }
+
+    var caps;
+    try {
+      caps = await res.json();
+    } catch (jsonErr) {
+      addMessage('system', '\u274C Capabilities fetch failed: Invalid JSON');
+      logDebug('[ModelBridge] Caps error: Invalid JSON', 'error');
+      return;
+    }
 
     BridgeState.hardware = caps;
 
@@ -5264,6 +5308,37 @@ function closeDebug() {
 async function runDiagnostics() {
   logDebug('=== Running Diagnostics ===', 'info');
 
+  // In Ollama direct mode, test Ollama-native endpoints
+  if (State.backend.directMode) {
+    var ollamaUrl = State.backend.ollamaDirectUrl;
+
+    logDebug('Testing Ollama root...', 'info');
+    try {
+      var t0 = performance.now();
+      var res = await fetch(ollamaUrl + '/', { signal: AbortSignal.timeout(3000) });
+      var lat = Math.round(performance.now() - t0);
+      var txt = await res.text();
+      logDebug('Ollama root: OK (' + lat + 'ms) \u2014 ' + txt.substring(0, 60), 'info');
+    } catch (e) {
+      logDebug('Ollama root: FAILED \u2014 ' + e.message, 'error');
+    }
+
+    logDebug('Testing /api/tags...', 'info');
+    try {
+      var t1 = performance.now();
+      var res2 = await fetch(ollamaUrl + '/api/tags', { signal: AbortSignal.timeout(5000) });
+      var d2 = await res2.json();
+      var lt = Math.round(performance.now() - t1);
+      logDebug('Models: ' + (d2.models ? d2.models.length : 0) + ' found (' + lt + 'ms)', 'info');
+    } catch (e) {
+      logDebug('Models: FAILED \u2014 ' + e.message, 'error');
+    }
+
+    logDebug('=== Diagnostics Complete (Ollama Direct) ===', 'info');
+    return;
+  }
+
+  // RawrXD backend mode: test native endpoints
   logDebug('Testing /health...', 'info');
   try {
     var t0 = performance.now();
@@ -5300,13 +5375,24 @@ async function runDiagnostics() {
 
 async function testAllEndpoints() {
   var activeUrl = getActiveUrl();
-  var eps = [
-    { method: 'GET', path: '/health' },
-    { method: 'GET', path: '/status' },
-    { method: 'GET', path: '/models' },
-    { method: 'GET', path: '/api/tags' },
-    { method: 'POST', path: '/ask', body: { question: 'ping', model: '' } },
-  ];
+
+  // Endpoint list depends on backend mode
+  var eps;
+  if (State.backend.directMode) {
+    eps = [
+      { method: 'GET', path: '/' },
+      { method: 'GET', path: '/api/tags' },
+      { method: 'POST', path: '/api/generate', body: { model: State.model.current || 'deepseek-coder:latest', prompt: 'ping', stream: false } },
+    ];
+  } else {
+    eps = [
+      { method: 'GET', path: '/health' },
+      { method: 'GET', path: '/status' },
+      { method: 'GET', path: '/models' },
+      { method: 'GET', path: '/api/tags' },
+      { method: 'POST', path: '/ask', body: { question: 'ping', model: '' } },
+    ];
+  }
 
   logDebug('=== Testing All Endpoints (via ' + activeUrl + (State.backend.directMode ? ' [DIRECT]' : '') + ') ===', 'info');
 

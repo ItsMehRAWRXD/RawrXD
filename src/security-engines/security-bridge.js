@@ -22,7 +22,16 @@ class SecurityBridge extends EventEmitter {
   }
 
   // Safe require — returns null if module can't load
+  // SECURITY: Validates modulePath is within engineDir to prevent path traversal
   _safeRequire(modulePath, name) {
+    // Path traversal guard: ensure resolved path stays within engineDir
+    const resolved = path.resolve(modulePath);
+    const baseDir  = path.resolve(__dirname);
+    const baseDirSep = baseDir.endsWith(path.sep) ? baseDir : baseDir + path.sep;
+    if (!resolved.startsWith(baseDirSep) && resolved !== baseDir) {
+      console.log(`[SecurityBridge] 🚫 Path traversal blocked: ${modulePath}`);
+      return null;
+    }
     try {
       const mod = require(modulePath);
       this.engines.set(name, mod);

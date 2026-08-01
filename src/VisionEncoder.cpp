@@ -5,6 +5,7 @@
 #include <chrono>
 #include <fstream>
 #include <vector>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -143,3 +144,4 @@ VisionEmbedding VisionEncoder::encode_image(const VisionInput& input) {
 }
 
 } // namespace RawrXD
+

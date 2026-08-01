@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <mutex>
 #include <immintrin.h>
+#include "gguf_loader.h"
 
 // Deep2 kernel interface
 extern "C" {
@@ -2694,3 +2695,4 @@ const NUFusedPacker::Stats& Deep2Engine::getNUPackerStats() const {
 }
 
 } // namespace Deep2
+

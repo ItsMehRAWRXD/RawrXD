@@ -71,10 +71,10 @@ void Win32IDE::createPowerShellPanel() {
     );
     
     // Set output font (DPI-scaled)
-    HFONT hFont = CreateFont(
+    HFONT hFont = CreateFontW(
         -dpiScale(16), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas"
+        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, L"Consolas"
     );
     SendMessage(m_hwndPowerShellOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
     
@@ -123,10 +123,10 @@ void Win32IDE::createPowerShellPanel() {
         NULL
     );
     
-    HFONT hSmallFont = CreateFont(
+    HFONT hSmallFont = CreateFontW(
         -dpiScale(12), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI"
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI"
     );
     SendMessage(m_hwndPowerShellStatusBar, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
     

@@ -1,3 +1,5 @@
+#pragma once
+
 // gpu_masm_bridge.h
 // C-callable interface for MASM GPU backend
 // Exposes MASM routines for C++ integration
@@ -31,3 +33,4 @@ extern int GPU_DeviceCount;
 #ifdef __cplusplus
 }
 #endif
+

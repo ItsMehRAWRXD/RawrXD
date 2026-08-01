@@ -14,6 +14,7 @@
 #include <chrono>
 #include <random>
 #include <windows.h>
+#include "vulkan_compute.h"
 
 // ============================================================================
 // IDEConfig — Load / Save / Defaults
@@ -521,3 +522,4 @@ std::string MetricsCollector::exportPrometheus() const
 
     return oss.str();
 }
+

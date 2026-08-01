@@ -127,7 +127,6 @@ std::string AgenticCopilotBridge::generateCodeCompletion(const std::string& cont
         fprintf(stderr, "[CRIT] [AgenticCopilotBridge] Exception in generateCodeCompletion: %s\n", e.what());
         if (onErrorOccurred) onErrorOccurred(std::string("Code completion failed: ") + e.what());
         return std::string();
-=======
 }
 
 std::string AgenticCopilotBridge::generateCodeCompletion(const std::string& context, const std::string& prefix) {
@@ -188,12 +187,10 @@ std::string AgenticCopilotBridge::generateCodeCompletion(const std::string& cont
     } catch (const std::exception& e) {
         errorOccurred(std::string("Code completion failed: ") + e.what());
         return "";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
 std::string AgenticCopilotBridge::analyzeActiveFile() {
-<<<<<<< HEAD
     auto t0 = std::chrono::steady_clock::now();
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -1038,66 +1035,9 @@ std::string AgenticCopilotBridge::bypassRefusals(const std::string& response, co
         if (response.empty()) {
             fprintf(stderr, "[AgenticCopilotBridge] Empty response, no refusal check needed\n");
             return response;
-=======
-    auto start = std::chrono::steady_clock::now();
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    try {
-        std::string content;
-        
-        // Explicit Logic: Get content from actual editor
-        if (m_multiTabEditor) {
-            content = m_multiTabEditor->getCurrentText();
-        } 
-        
-        if (content.empty()) {
-            return "No active file content available for analysis.";
-        }
-
-        if (m_integrationHub) {
-            auto bugs = m_integrationHub->findBugs(content);
-            std::string report = "Local Analysis Report:\n";
-            if (bugs.empty()) {
-                report += "- No obvious bugs found.\n";
-            } else {
-                for(const auto& b : bugs) {
-                    report += "- Line " + std::to_string(b.line) + ": " + b.description + " [" + b.severity + "]\n";
-                }
-            }
-            analysisReady(report);
-            return report;
-        }
-
-        if (m_modelInvoker) {
-            std::string systemPrompt = "You are a Senior C++ Code Analyzer. Analyze the provided C++ file for logic errors, "
-                                    "memory leaks, and style violations. Return a bulleted list of issues.";
-            LLMResponse resp = m_modelInvoker->queryRaw(systemPrompt, content, 2048);
-            if (resp.success) {
-                 analysisReady(resp.rawOutput);
-                 return resp.rawOutput;
-            }
-        }
-        
-        return "Analysis failed: Model unavailable.";
-
-    } catch (const std::exception& e) {
-        errorOccurred(std::string("File analysis failed: ") + e.what());
-        return "";
-    }
-}
-
-std::string AgenticCopilotBridge::suggestRefactoring(const std::string& code) {
-    if (m_modelInvoker) {
-        std::string systemPrompt = "You are a senior C++ Developer. Analyze the following code and suggest refactoring improvements. "
-                                   "Focus on performance, readability, and modern C++ practices. Return a commented block.";
-        LLMResponse resp = m_modelInvoker->queryRaw(systemPrompt, code, 1024);
-        if (resp.success) {
-            return resp.rawOutput;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
-<<<<<<< HEAD
         // List of refusal patterns to detect
         std::vector<std::string> refusalPatterns = {
             "I cannot", "I'm unable", "I cannot assist", "I cannot provide",
@@ -1113,18 +1053,9 @@ std::string AgenticCopilotBridge::suggestRefactoring(const std::string& code) {
                 refusalFound = true;
                 matchedPattern = pattern;
                 break;
-=======
-    if (m_integrationHub) {
-        auto suggestions = m_integrationHub->optimizeCode(code);
-        if (!suggestions.empty()) {
-            std::string result = "// Suggested Optimizations:\n";
-            for (const auto& opt : suggestions) {
-                result += "// - " + opt.suggestion + " (Confidence: " + std::to_string(opt.confidence) + ")\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             return result;
         }
-<<<<<<< HEAD
 
         if (refusalFound) {
             fprintf(stderr, "[AgenticCopilotBridge] Refusal pattern detected: %s\n", matchedPattern.c_str());
@@ -1142,15 +1073,12 @@ std::string AgenticCopilotBridge::suggestRefactoring(const std::string& code) {
     } catch (const std::exception& e) {
         fprintf(stderr, "[CRIT] [AgenticCopilotBridge] Exception in bypassRefusals: %s\n", e.what());
         return response;
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     // No refactoring engine available
     return "// No refactoring suggestions available (Engine offline).";
 }
 
-<<<<<<< HEAD
 JsonObject AgenticCopilotBridge::buildExecutionContext() {
     auto t0 = std::chrono::steady_clock::now();
 
@@ -1241,16 +1169,6 @@ JsonObject AgenticCopilotBridge::buildExecutionContext() {
         fprintf(stderr, "[CRIT] [AgenticCopilotBridge] Exception in buildExecutionContext: %s\n", e.what());
         context["error"] = e.what();
         return context;
-=======
-std::string AgenticCopilotBridge::generateTestsForCode(const std::string& code) { 
-    if (m_integrationHub) {
-        auto tests = m_integrationHub->generateTests(code);
-        if (!tests.empty()) {
-            std::string text;
-            for(const auto& t : tests) text += t + "\n\n";
-            return text;
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     if (m_modelInvoker) {
@@ -1265,7 +1183,6 @@ std::string AgenticCopilotBridge::generateTestsForCode(const std::string& code) 
     return "// Test generation unavailable (No active model)."; 
 }
 
-<<<<<<< HEAD
 JsonObject AgenticCopilotBridge::buildCodeContext(const std::string& code) {
     auto t0 = std::chrono::steady_clock::now();
 
@@ -1411,25 +1328,6 @@ JsonObject AgenticCopilotBridge::buildFileContext() {
         context["error"] = e.what();
         context["timestamp"] = std::to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
         return context;
-=======
-std::string AgenticCopilotBridge::askAgent(const std::string& question, const json& context) { 
-    if (m_agenticEngine) {
-         // return m_agenticEngine->ask(question, context);
-         // Since we don't know the API, and m_agenticEngine is likely null in this env, we fall through.
-    }
-    
-    if (m_modelInvoker) {
-        InvocationParams params;
-        params.wish = question;
-        params.context = context.dump();
-        // Simple synchronous invoke for now
-        LLMResponse resp = m_modelInvoker->invoke(params);
-        if (resp.success) {
-            return resp.rawOutput; // Return raw answer or description of plan
-        } else {
-            return "Error calling agent: " + resp.error;
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     return "Agent is offline. Please initialize AgenticEngine."; 

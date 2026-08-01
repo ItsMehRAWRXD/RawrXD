@@ -184,22 +184,8 @@ void PerformanceOptimizer::backgroundIndexThread(
     for (const auto& filePath : filePaths) {
         if (!m_isIndexing) break;
         
-<<<<<<< HEAD
         // Index file content into context cache (TTL: 1 hour)
         cacheContext("indexed_" + filePath, filePath, 3600);
-=======
-        // Real indexing work
-        try {
-            std::ifstream file(filePath);
-            if (file.is_open()) {
-                 std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                 // Store actual content or semantic summary
-                 cacheContext("indexed_" + filePath, content, 3600);
-            }
-        } catch(...) {
-            // Soft fail on read
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 

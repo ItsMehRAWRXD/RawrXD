@@ -18,6 +18,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -805,3 +806,4 @@ const void* GGUFLoader_ReadTensorData(GGUFLoaderHandle* handle, const char* name
 
 } // namespace Core
 } // namespace RawrXD
+

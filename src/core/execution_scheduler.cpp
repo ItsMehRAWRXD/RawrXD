@@ -27,6 +27,7 @@
 #include <windows.h>    // QueryPerformanceCounter
 #else
 #include <time.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -963,3 +964,4 @@ void ExecutionScheduler::shutdown() {
 }
 
 } // namespace RawrXD
+

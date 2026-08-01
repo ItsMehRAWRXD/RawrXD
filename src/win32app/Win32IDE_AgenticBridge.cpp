@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 // ============================================================================
 // Agentic Framework Bridge Implementation (Consolidated - No Duplicates)
 // Connects Win32IDE to Native Agentic Framework
 // ============================================================================
-=======
-// Agentic Framework Bridge Implementation
-// Connects Win32IDE to Native Agentic Engine
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #include "Win32IDE_AgenticBridge.h"
 #include "../action_executor.h"
@@ -82,7 +77,6 @@ void SetIDEAgenticEngineForCommands(AgenticEngine* engine)
 // ============================================================================
 
 AgenticBridge::AgenticBridge(Win32IDE* ide)
-<<<<<<< HEAD
     : m_ide(ide), m_initialized(false), m_agentLoopRunning(false), m_hProcess(nullptr), m_hStdoutRead(nullptr),
       m_hStdoutWrite(nullptr), m_hStdinRead(nullptr), m_hStdinWrite(nullptr)
 {
@@ -101,27 +95,6 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
 {
     SCOPED_METRIC("agentic.initialize");
     if (m_initialized)
-=======
-    : m_ide(ide)
-    , m_initialized(false)
-    , m_agentLoopRunning(false)
-    , m_modelName("titan-embedded")
-    , m_ollamaServer("http://localhost:11434")
-    , m_nativeEngine(std::make_shared<AgenticEngine>())
-{
-}
-
-AgenticBridge::~AgenticBridge() {
-    StopAgentLoop();
-     if (m_nativeEngine) {
-        m_nativeEngine->shutdown();
-    }
-}
-
-bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::string& modelName) {
-    if (m_initialized) {
-        LOG_WARNING("AgenticBridge already initialized");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return true;
 
     LOG_INFO("Initializing Native Inference Stack...");
@@ -135,7 +108,6 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
         g_agentEngine = std::make_shared<AgenticEngine>();
         g_agentEngine->setInferenceEngine(cpu.get());
     }
-<<<<<<< HEAD
     if (!m_workspaceRoot.empty())
     {
         g_agentEngine->setWorkspaceRoot(m_workspaceRoot);
@@ -144,29 +116,10 @@ bool AgenticBridge::Initialize(const std::string& frameworkPath, const std::stri
 
     if (!modelName.empty())
     {
-=======
-    
-    // Initialize Native Engine
-    if (m_nativeEngine) {
-        m_nativeEngine->initialize();
-        m_nativeEngine->setModelName(modelName.empty() ? m_modelName : modelName);
-        
-        // Register callbacks
-        m_nativeEngine->onResponseReady = [this](const std::string& response) {
-            if (m_outputCallback) {
-                m_outputCallback("Agent Stream", response);
-            }
-        };
-    }
-
-    // Set model if provided
-    if (!modelName.empty()) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         m_modelName = modelName;
     }
 
     m_initialized = true;
-<<<<<<< HEAD
     LOG_INFO("Native Inference Stack initialized successfully.");
     return true;
 }
@@ -602,38 +555,6 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     if (!m_initialized)
     {
         LOG_ERROR("Cannot start agent loop - not initialized");
-=======
-    LOG_INFO("Native Agentic Bridge Initialized");
-    return true;
-}
-
-AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt) {
-    AgentResponse response;
-    response.type = AgentResponseType::AGENT_ERROR;
-    
-    if (!m_initialized) {
-        response.content = "Agentic framework not initialized";
-        return response;
-    }
-
-    if (!m_nativeEngine) {
-        response.content = "Native Engine not allocated";
-        return response;
-    }
-    
-    // Execute via Native C++ Engine
-    std::string engineOutput = m_nativeEngine->processQuery(prompt);
-    
-    // Parse the raw LLM output
-    response = ParseAgentResponse(engineOutput);
-    response.rawOutput = engineOutput;
-    
-    return response;
-}
-
-bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIterations) {
-    if (!m_initialized) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 
@@ -644,7 +565,6 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     }
 
     m_agentLoopRunning = true;
-<<<<<<< HEAD
     std::string currentPrompt = initialPrompt;
     bool success = true;
 
@@ -674,18 +594,6 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
             // No tool results, agent likely finished or reached a terminal state
             LOG_INFO("Agent loop completed: No further tool calls detected.");
             break;
-=======
-    
-    // Execute agent command (Blocking for now, can move to thread if needed)
-    // The native engine supports async but for the bridge interface we keep it simple
-    AgentResponse response = ExecuteAgentCommand(initialPrompt);
-    
-    // Send to output callback
-    if (m_outputCallback) {
-        m_outputCallback("Agent Response", response.content);
-        if (!response.rawOutput.empty()) {
-            m_outputCallback("Agent Debug", response.rawOutput);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
@@ -693,18 +601,13 @@ bool AgenticBridge::StartAgentLoop(const std::string& initialPrompt, int maxIter
     return success;
 }
 
-<<<<<<< HEAD
 void AgenticBridge::StopAgentLoop()
 {
     LOG_INFO("StopAgentLoop called");
-=======
-void AgenticBridge::StopAgentLoop() {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     m_agentLoopRunning = false;
     // Signal engine to stop if running async
 }
 
-<<<<<<< HEAD
 // ============================================================================
 // Status & Capability Queries
 // ============================================================================
@@ -715,15 +618,6 @@ std::vector<std::string> AgenticBridge::GetAvailableTools()
             "list_dir",    "list_directory",   "grep_files",      "search_files", "reference_symbol",
             "load_model",  "model_status",     "web_search",      "git_status",   "task_orchestrator",
             "runSubagent", "manage_todo_list", "chain",           "hexmag_swarm"};
-=======
-std::vector<std::string> AgenticBridge::GetAvailableTools() {
-    // Return tools available in the native registry
-    // This could also query m_nativeEngine->getAvailableTools() if implemented
-    return {
-        "access_fs", "read_file", "write_file", 
-        "web_fetch", "list_directory", "git_ops", "code_analysis"
-    };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::string AgenticBridge::GetAgentStatus()
@@ -732,13 +626,9 @@ std::string AgenticBridge::GetAgentStatus()
     status << "Native Agentic Framework Status:\n";
     status << "  Initialized: " << (m_initialized ? "Yes" : "No") << "\n";
     status << "  Model: " << m_modelName << "\n";
-<<<<<<< HEAD
     status << "  Ollama Server: " << m_ollamaServer << "\n";
     status << "  Framework Path: " << m_frameworkPath << "\n";
     status << "  Workspace Root: " << (m_workspaceRoot.empty() ? "<unset>" : m_workspaceRoot) << "\n";
-=======
-    status << "  Engine State: " << (m_nativeEngine ? "Active" : "Null") << "\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     status << "  Loop Running: " << (m_agentLoopRunning ? "Yes" : "No") << "\n";
     status << "  Max Mode: " << (m_maxMode ? "Yes" : "No") << "\n";
     status << "  Deep Thinking: " << (m_deepThinking ? "Yes" : "No") << "\n";
@@ -764,7 +654,6 @@ std::string AgenticBridge::GetAgentStatus()
 void AgenticBridge::SetModel(const std::string& modelName)
 {
     m_modelName = modelName;
-<<<<<<< HEAD
     LOG_INFO("Model set to: " + modelName);
 
     auto endsWith = [](const std::string& s, const std::string& ext) -> bool
@@ -801,10 +690,6 @@ void AgenticBridge::SetModel(const std::string& modelName)
         auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
         orch.SetModel(modelName);
         orch.SetFIMModel(modelName);
-=======
-    if (m_nativeEngine) {
-        m_nativeEngine->setModelName(modelName);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 
@@ -819,7 +704,6 @@ void AgenticBridge::SetOutputCallback(OutputCallback callback)
     m_outputCallback = callback;
 }
 
-<<<<<<< HEAD
 // ============================================================================
 // PowerShell Process Management (Full Implementation)
 // ============================================================================
@@ -888,55 +772,6 @@ bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs)
     if (!m_hStdoutRead)
     {
         LOG_ERROR("No stdout handle");
-=======
-AgentResponse AgenticBridge::ParseAgentResponse(const std::string& rawOutput) {
-    AgentResponse response;
-    response.rawOutput = rawOutput;
-    response.type = AgentResponseType::ANSWER; // 
-    
-    // Basic Heuristic Parsing for Native Model Output
-    if (rawOutput.find("Tool Call:") != std::string::npos) {
-        response.type = AgentResponseType::TOOL_CALL;
-        // Simple extraction logic
-        size_t start = rawOutput.find("Tool Call:");
-        response.content = rawOutput.substr(start);
-    } else {
-        response.content = rawOutput;
-    }
-    
-    return response;
-}
-
-std::string AgenticBridge::ResolveFrameworkPath() {
-    // Legacy: Was used for PowerShell scripts.
-    // Now we use native C++ logic, but return current dir for compatibility.
-    return ".";
-}
-
-std::string AgenticBridge::ResolveToolsModulePath() {
-    return ".\\modules";
-}
-
-bool AgenticBridge::IsToolCall(const std::string& line) {
-    return line.find("Tool Call:") != std::string::npos;
-}
-
-bool AgenticBridge::IsAnswer(const std::string& line) {
-    return !IsToolCall(line);
-}
-
-    CloseHandle(pi.hThread);
-
-    return true;
-}
-
-bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) {
-
-    output.clear();
-    
-    if (!m_hStdoutRead) {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return false;
     }
 
@@ -999,10 +834,7 @@ bool AgenticBridge::ReadProcessOutput(std::string& output, DWORD timeoutMs) {
         Sleep(100);
     }
 
-<<<<<<< HEAD
     LOG_DEBUG("Read " + std::to_string(output.length()) + " bytes from process");
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return !output.empty();
 }
 
@@ -1129,14 +961,9 @@ std::string AgenticBridge::ResolveFrameworkPath()
     for (const auto& path : searchPaths)
     {
         DWORD attr = GetFileAttributesA(path.c_str());
-<<<<<<< HEAD
         if (attr != INVALID_FILE_ATTRIBUTES)
         {
             LOG_INFO("Found Agentic-Framework.ps1 at: " + path);
-=======
-        if (attr != INVALID_FILE_ATTRIBUTES) {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             return path;
         }
     }

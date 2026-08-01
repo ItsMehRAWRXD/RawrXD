@@ -28,6 +28,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <winhttp.h>
+#include "gguf_loader.h"
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")
 
@@ -668,3 +669,4 @@ int main(int argc, char* argv[]) {
     
     return (Deep2::Phase1::g_testsFailed > 0) ? 1 : 0;
 }
+

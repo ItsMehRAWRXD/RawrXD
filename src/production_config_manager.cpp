@@ -41,13 +41,9 @@ bool ProductionConfigManager::loadConfig(const std::string& path) {
         std::ifstream file(configPath);
         if (!file.is_open()) return false;
         
-<<<<<<< HEAD
         std::string content((std::istreambuf_iterator<char>(file)),
                              std::istreambuf_iterator<char>());
         config_ = nlohmann::json::parse(content);
-=======
-        file >> config_;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         
         if (config_.contains("environment") && config_["environment"].is_string()) {
             environment_ = config_["environment"].get<std::string>();

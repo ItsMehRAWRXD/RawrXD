@@ -84,6 +84,9 @@ inline void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice, VkPhysicalDevi
 #endif // VK_VERSION_1_0
 #endif // !RAWR_VULKAN_AVAILABLE
 
+// Forward declaration for gguf_loader.h which uses VulkanTensor at global scope
+struct VulkanTensor;
+
 namespace CPUInference {
 
 // GPU compute optional - CPU inference always works

@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstring>
 #include <stdint.h>
+#include "vulkan_compute.h"
 
 //=============================================================================
 // Vulkan Compute Implementation (Issues #21, #39, #40, #42, #46)
@@ -666,3 +667,4 @@ extern "C" {
     uint32_t __stdcall Vulkan_DispatchCompute(void*, VkPipeline, uint32_t, uint32_t, uint32_t);
     void __stdcall Vulkan_DestroyComputeContext(void*);
 }
+

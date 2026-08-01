@@ -3,10 +3,7 @@
 #include "swarm_orchestrator.h" // Ensure these are included too if they weren't
 #include "chain_of_thought.h"
 #include "token_generator.h"
-<<<<<<< HEAD
 #include "toolchain_integration.hpp"
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -32,11 +29,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
     
     // Setup logging
     if (m_config.enableLogging) {
-<<<<<<< HEAD
         auto logLevel = static_cast<spdlog::level::level_enum>(std::min(6, std::max(0, m_config.logLevel)));
-=======
-        auto logLevel = spdlog::level::from_str(m_config.logLevel);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         spdlog::set_level(logLevel);
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
         
@@ -51,11 +44,7 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
             );
             auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
             
-<<<<<<< HEAD
             std::vector<spdlog::sinks::sink_ptr> sinks = {console_sink};
-=======
-            std::vector<spdlog::sink_ptr> sinks = {console_sink};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             if (m_config.enableFileLogging) {
                 sinks.push_back(file_sink);
             }
@@ -139,7 +128,6 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
     }
     spdlog::info("Inference engine initialized");
     
-<<<<<<< HEAD
     // Setup toolchain integration (MASM64 assembler + linker)
     {
         auto toolchainResult = setupToolchain();
@@ -152,8 +140,6 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::initialize() {
         }
     }
     
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Start background threads
     auto threadResult = startBackgroundThreads();
     if (!threadResult) {
@@ -424,7 +410,6 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::setupInference() {
     return {};
 }
 
-<<<<<<< HEAD
 RawrXD::Expected<void, IDEError> IDEOrchestrator::setupToolchain() {
     spdlog::debug("Setting up toolchain integration...");
     
@@ -447,8 +432,6 @@ RawrXD::Expected<void, IDEError> IDEOrchestrator::setupToolchain() {
     return {};
 }
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 RawrXD::Expected<void, IDEError> IDEOrchestrator::startBackgroundThreads() {
     spdlog::debug("Starting background threads...");
     

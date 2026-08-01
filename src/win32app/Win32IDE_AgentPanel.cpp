@@ -33,6 +33,7 @@
 #include <sstream>
 #include <algorithm>
 #include <filesystem>
+#include "gguf_loader.h"
 
 namespace fs = std::filesystem;
 using namespace RawrXD::Agent;
@@ -808,3 +809,4 @@ void Win32IDE::onBoundedAgentLoop() {
         startAgentSession(promptText);
     }
 }
+

@@ -19,6 +19,7 @@
 
 // Use shared quant utilities
 #include "quant_utils.hpp"
+#include "gguf_loader.h"
 
 InferenceEngine::InferenceEngine(const QString& ggufPath, QObject* parent)
     : QObject(parent), m_loader(nullptr)
@@ -1595,5 +1596,6 @@ bool InferenceEngine::loadFallbackTokenizer()
     qWarning() << "[InferenceEngine::loadFallbackTokenizer] No vocabulary available, using minimal fallback";
     return false;
 }
+
 
 

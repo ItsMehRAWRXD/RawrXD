@@ -2,8 +2,32 @@
 ; Target: <?php echo "text"; ?>
 ; Generates: IR_LOAD_CONST + IR_CALL print + IR_EXIT
 
-include uir.asm
-include token.asm
+; External declarations from uir.asm
+extrn UIRCreateContext:proc
+extrn UIRCreateNode:proc
+extrn UIRGetNode:proc
+extrn UIRAddConstant:proc
+extrn UIRGetConstant:proc
+extrn UIRAddRelocation:proc
+extrn UIRAllocVReg:proc
+extrn UIRReset:proc
+extrn UIRGetNodeCount:proc
+extrn UIRValidateHeader:proc
+
+; External declarations from token.asm
+extrn TokenInit:proc
+extrn TokenCreate:proc
+extrn TokenGet:proc
+extrn TokenGetCount:proc
+extrn TokenTypeToString:proc
+
+; UIR Opcodes
+IR_NOP          EQU 0
+IR_LOAD_CONST   EQU 1
+IR_CALL         EQU 2
+IR_RETURN       EQU 3
+IR_EXIT         EQU 4
+IR_MOVE         EQU 14
 
 .data
     ; PHP keywords
@@ -103,12 +127,13 @@ php_dq_end:
     dec rbx
     
     ; Emit IR_LOAD_CONST node
-    ; UIR_NODE: opcode(4) + flags(4) + op0(8) + op1(8) + op2(8) = 32 bytes
+    ; UIR_NODE: opcode(4) + flags(4) + op0(8) + op1(8) + dst_vreg(4) + op2(4) = 32 bytes
     mov dword ptr [rdi], IR_LOAD_CONST
     mov dword ptr [rdi + 4], 0          ; flags
     mov [rdi + 8], rcx                  ; op0 = string pointer
     mov [rdi + 16], r11                 ; op1 = string length
-    mov qword ptr [rdi + 24], 0         ; op2 = unused
+    mov dword ptr [rdi + 24], 0         ; dst_vreg = 0 (first vreg)
+    mov dword ptr [rdi + 28], 0         ; op2 = unused
     add rdi, 32
     inc r10
     
@@ -116,8 +141,9 @@ php_dq_end:
     mov dword ptr [rdi], IR_CALL
     mov dword ptr [rdi + 4], 0
     mov qword ptr [rdi + 8], 1          ; op0 = function ID (1 = print)
-    mov qword ptr [rdi + 16], 0
-    mov qword ptr [rdi + 24], 0
+    mov qword ptr [rdi + 16], 0         ; op1 = arg vreg (0)
+    mov dword ptr [rdi + 24], -1        ; dst_vreg = -1 (none)
+    mov dword ptr [rdi + 28], 0         ; op2
     add rdi, 32
     inc r10
     
@@ -126,7 +152,8 @@ php_dq_end:
     mov dword ptr [rdi + 4], 0
     mov qword ptr [rdi + 8], 0
     mov qword ptr [rdi + 16], 0
-    mov qword ptr [rdi + 24], 0
+    mov dword ptr [rdi + 24], -1        ; dst_vreg = -1
+    mov dword ptr [rdi + 28], 0
     add rdi, 32
     inc r10
     

@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <windows.h>
+#include "gguf_loader.h"
 
 namespace Deep2 {
 
@@ -258,3 +259,4 @@ bool GGUFDiagnostics::FixAlignmentIssues(GGUFLoadResult& result) {
 }
 
 } // namespace Deep2
+

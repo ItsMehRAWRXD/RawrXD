@@ -11,6 +11,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <string>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace Model {
@@ -151,3 +152,4 @@ void ModelLoaderFallbacksStub() {
 extern "C" void* RawrXD_GetModelLoader() {
     return &RawrXD::Model::ProductionModelLoader::Instance();
 }
+

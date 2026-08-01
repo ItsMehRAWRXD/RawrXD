@@ -30,7 +30,12 @@ void Win32IDE::handleExtensionCommand(int commandId)
         }
 
         char nameBuf[256] = {};
-        ListView_GetItemText(m_hwndExtensionsList, selected, 0, nameBuf, static_cast<int>(sizeof(nameBuf)));
+        LVITEMA lvItemA = {};
+        lvItemA.iItem = selected;
+        lvItemA.iSubItem = 0;
+        lvItemA.pszText = nameBuf;
+        lvItemA.cchTextMax = static_cast<int>(sizeof(nameBuf));
+        SendMessageA(m_hwndExtensionsList, LVM_GETITEMA, 0, (LPARAM)&lvItemA);
         return std::string(nameBuf);
     };
 

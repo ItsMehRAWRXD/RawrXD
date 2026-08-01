@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "tool_registry.h"
 #include <sstream>
 
@@ -20,19 +19,4 @@ void ToolRegistry::inject_tools(AgentRequest& req) {
     if (!tools.empty()) {
         req.prompt = "[TOOLS AVAILABLE]\n" + list_tools() + "\n" + req.prompt;
     }
-=======
-#include <spdlog/spdlog.h>
-#include <string>
-#include <vector>
-
-namespace RawrXD {
-
-class ToolRegistry {
-public:
-    void registerTool(const std::string& name) {
-        spdlog::info("Tool registered: {}", name);
-    }
-};
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

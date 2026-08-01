@@ -182,7 +182,6 @@ bool AgenticCopilotIntegration::validateNavigationTarget(const std::string& targ
 }
 
 bool AgenticCopilotIntegration::confirmCriticalAction(const std::string& action) {
-<<<<<<< HEAD
     // Show Win32 confirmation dialog for critical actions
 #ifdef _WIN32
     std::string message = "The agentic system wants to perform a critical action:\n\n" + action +
@@ -195,14 +194,6 @@ bool AgenticCopilotIntegration::confirmCriticalAction(const std::string& action)
     // Non-interactive mode: auto-confirm if the action is in the allowed list
     return true;
 #endif
-=======
-    // Real implementation: Host-side confirmation
-    // Ideally this goes through the IDE notification system, but for the bridge, we use a system modal
-    // ensuring the user explicitly approves dangerous actions.
-    std::string msg = "Agent requests critical action:\n\n" + action + "\n\nAllow execution?";
-    int result = MessageBoxA(NULL, msg.c_str(), "Agent Action Confirmation", MB_YESNO | MB_ICONWARNING | MB_TOPMOST | MB_SETFOREGROUND);
-    return (result == IDYES);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void AgenticCopilotIntegration::logNavigationPerformance(const NavigationResult& result) {

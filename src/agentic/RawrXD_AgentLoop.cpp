@@ -1,9 +1,6 @@
 #include "RawrXD_AgentLoop.h"
-<<<<<<< HEAD
 #include "../IDELogger.h"
 #include <nlohmann/json.hpp>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #include <chrono>
 
@@ -13,11 +10,7 @@ using RawrXD::Agentic::PerceptionEvent;
 AgentLoop::AgentLoop()
     : m_running(false)
     , m_bridge(nullptr)
-<<<<<<< HEAD
     , m_toolRegistry(&RawrXD::Agent::AgentToolRegistry::Instance()) {
-=======
-    , m_toolRegistry(&RawrXD::Agent::ToolRegistry::Instance()) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 }
 
@@ -81,7 +74,6 @@ void AgentLoop::ProcessEvent(const PerceptionEvent& evt) {
     if (response.type == AgentResponseType::TOOL_CALL) {
         std::string output;
         std::string argsJson = response.toolArgs.empty() ? "{}" : response.toolArgs;
-<<<<<<< HEAD
         nlohmann::json args;
         try {
             args = nlohmann::json::parse(argsJson);
@@ -90,16 +82,9 @@ void AgentLoop::ProcessEvent(const PerceptionEvent& evt) {
         }
         auto result = m_toolRegistry->Dispatch(response.toolName, args);
         output = result.output;
-=======
-        auto result = m_toolRegistry->Execute(response.toolName, argsJson, output);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         if (!output.empty()) {
 
         }
     }
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

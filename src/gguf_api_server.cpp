@@ -22,12 +22,7 @@
 #include <windows.h>
 #include <winhttp.h>
 #include <random>
-<<<<<<< HEAD
 #include <nlohmann/json.hpp>
-=======
-#include "ai_model_caller.h"
-#include "cpu_inference_engine.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")
@@ -215,7 +210,6 @@ private:
     // Proxy /api/generate to Ollama backend via WinHTTP
     std::string HandleGenerateRequest(const std::string& body) {
         auto start_time = std::chrono::high_resolution_clock::now();
-<<<<<<< HEAD
 
         // Resolve Ollama backend from environment or defaults
         std::string ollamaHost = "localhost";
@@ -300,20 +294,6 @@ private:
 
         auto end_time = std::chrono::high_resolution_clock::now();
         double latencyMs = std::chrono::duration<double, std::milli>(end_time - start_time).count();
-=======
-        
-        // Execute Real Inference using local engine (loaded in main)
-        std::string generated_text;
-        if (g_engine && g_engine->IsModelLoaded()) {
-             generated_text = g_engine->infer(prompt);
-        } else {
-             generated_text = "Error: Model not loaded in server.";
-        }
-        
-        auto end_time = std::chrono::high_resolution_clock::now();
-        double actual_latency = std::chrono::duration<double, std::milli>(end_time - start_time).count();
-        int tokens_generated = (int)generated_text.size() / 4;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         // Record metrics
         RequestMetrics metric;
@@ -329,32 +309,12 @@ private:
         strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%SZ", &tm);
         metric.timestamp = timestamp;
         RecordMetric(metric);
-<<<<<<< HEAD
 
         std::printf("[Generate] Ollama HTTP %lu in %.0f ms (%zu bytes)\n",
                     statusCode, latencyMs, responseBody.size());
 
         // Forward response
         std::string response = "HTTP/1.1 " + std::to_string(statusCode) + " OK\r\n";
-=======
-        
-        // Generate response (JSON)
-        // Note: generated_text is now real
-        
-        std::string json_body = R"({
-  "response": ")" + generated_text + R"(",
-  "created_at": ")" + std::string(timestamp) + R"(",
-  "done": true,
-  "total_duration": )" + std::to_string((int64_t)actual_latency * 1000000) + R"(,
-  "load_duration": 1000000,
-  "prompt_eval_duration": 5000000,
-  "eval_duration": )" + std::to_string((int64_t)(actual_latency * 1000000 - 6000000)) + R"(,
-  "context": [)" + std::to_string(tokens_generated) + R"(],
-  "eval_count": )" + std::to_string(tokens_generated) + R"(
-})";
-        
-        std::string response = "HTTP/1.1 200 OK\r\n";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         response += "Content-Type: application/json\r\n";
         response += "Access-Control-Allow-Origin: *\r\n";
         response += "Content-Length: " + std::to_string(responseBody.length()) + "\r\n";
@@ -453,7 +413,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     auto file_size = fs::file_size(model_path) / (1024.0 * 1024 * 1024);
-<<<<<<< HEAD
     std::cout << "  ✓ Found: " << fs::path(model_path).filename().string() 
               << " (" << file_size << "GB)\n\n";
     
@@ -475,20 +434,6 @@ int main(int argc, char* argv[]) {
         std::cout << "  ✓ Ready for inference requests\n\n";
     } catch (const std::exception& e) {
         std::cerr << "  ✗ Error preparing endpoint: " << e.what() << "\n";
-=======
-
-
-    try {
-        g_engine = std::make_unique<RawrXD::CPUInferenceEngine>();
-        if (!g_engine->LoadModel(model_path)) {
-            std::cerr << "Failed to load model: " << model_path << std::endl;
-            return 1;
-        }
-
-
-    } catch (const std::exception& e) {
-        
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         return 1;
     }
 

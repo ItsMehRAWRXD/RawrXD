@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-// ============================================================================
+=====================================================================
 // ProductionAgenticIDE — C++20, Win32. No Qt. (QMainWindow, QWidget removed)
 // ============================================================================
 
@@ -68,4 +65,4 @@ public slots:
     void onFeatureToggled(const QString& featureId, bool enabled);
     void onFeatureClicked(const QString& featureId);
 };
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

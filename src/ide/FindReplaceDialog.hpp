@@ -85,6 +85,7 @@ private:
     HWND m_hwndDownRadio;
     
     // Helpers
+    void CreateControls();
     void UpdateOptionsFromUI();
     void DoFind();
     void DoReplace();

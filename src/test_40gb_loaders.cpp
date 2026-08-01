@@ -4,6 +4,7 @@
 #include <string>
 #include <iomanip>
 #include <cmath>
+#include "gguf_loader.h"
 
 // Forward declarations for actual loaders
 namespace GGUFLoaderNamespace {
@@ -95,3 +96,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+

@@ -1,6 +1,5 @@
 #include "OSExplorerInterceptor.h"
 
-<<<<<<< HEAD
 #include <winsock2.h>
 #include <windows.h>
 #include <winternl.h>
@@ -9,11 +8,6 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
-=======
-#include <windows.h>
-#include <winternl.h>
-#include <psapi.h>
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <tlhelp32.h>
 #include <vector>
 #include <memory>
@@ -23,7 +17,6 @@
 #include <sstream>
 #include <iomanip>
 
-<<<<<<< HEAD
 #ifndef LOG_FUNCTION
 #define LOG_FUNCTION() ((void)0)
 #endif
@@ -39,8 +32,6 @@ extern void* MyWSAConnectHook;
 extern void* MySendHook;
 extern void* MyRecvHook;
 
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Global interceptor instance
 std::unique_ptr<OSExplorerInterceptor> g_osInterceptor = nullptr;
 
@@ -388,16 +379,10 @@ void FormatCallInfo(CallLogEntry* entry) {
     if (!entry) return;
     
     // Format: [Time] [ThreadID] Function(Param1, Param2, ...) = ReturnValue
-<<<<<<< HEAD
     std::string fnName = GetFunctionName(entry->apiFunction);
     char buffer[2048];
     sprintf_s(buffer, sizeof(buffer), "[%llu] [TID:%d] %s(", 
               entry->timestamp, entry->threadID, fnName.c_str());
-=======
-    char buffer[2048];
-    sprintf_s(buffer, sizeof(buffer), "[%llu] [TID:%d] %s(", 
-              entry->timestamp, entry->threadID, GetFunctionName(entry->apiFunction));
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     // Add parameters
     for (int i = 0; i < 8; i++) {
@@ -424,11 +409,7 @@ void FormatCallInfo(CallLogEntry* entry) {
 }
 
 // Get function name from address
-<<<<<<< HEAD
 std::string GetFunctionName(void* function) {
-=======
-const char* GetFunctionName(void* function) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Simple lookup table for common functions
     // In production, use symbol resolution
     
@@ -464,11 +445,7 @@ const char* GetFunctionName(void* function) {
 bool IsSensitiveFile(const std::string& path) {
     // Check for sensitive file patterns
     std::string lowerPath = path;
-<<<<<<< HEAD
     std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-=======
-    std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(), ::tolower);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     if (lowerPath.find("password") != std::string::npos) return true;
     if (lowerPath.find("credential") != std::string::npos) return true;
@@ -484,11 +461,7 @@ bool IsSensitiveFile(const std::string& path) {
 bool IsSensitiveRegistryKey(const std::string& key) {
     // Check for sensitive registry patterns
     std::string lowerKey = key;
-<<<<<<< HEAD
     std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-=======
-    std::transform(lowerKey.begin(), lowerKey.end(), lowerKey.begin(), ::tolower);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     if (lowerKey.find("password") != std::string::npos) return true;
     if (lowerKey.find("credential") != std::string::npos) return true;
@@ -502,11 +475,7 @@ bool IsSensitiveRegistryKey(const std::string& key) {
 bool IsSensitiveNetworkAddress(const std::string& address) {
     // Check for sensitive network patterns
     std::string lowerAddr = address;
-<<<<<<< HEAD
     std::transform(lowerAddr.begin(), lowerAddr.end(), lowerAddr.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-=======
-    std::transform(lowerAddr.begin(), lowerAddr.end(), lowerAddr.begin(), ::tolower);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     if (lowerAddr.find("api") != std::string::npos) return true;
     if (lowerAddr.find("auth") != std::string::npos) return true;
@@ -538,7 +507,6 @@ void* FindPattern(void* start, size_t size, const BYTE* pattern, size_t patternS
     return nullptr;
 }
 
-<<<<<<< HEAD
 // ============================================================================
 // Stealth Hook — Production VEH + Inline Trampoline Implementation
 // Saves original bytes, patches JMP, returns trampoline to original code.
@@ -695,26 +663,6 @@ void* MyRegQueryValueExWHook = (void*)HookedRegQueryValueExW;
 void* MyWSAConnectHook       = (void*)HookedWSAConnect;
 void* MySendHook             = (void*)HookedSend;
 void* MyRecvHook             = (void*)HookedRecv;
-=======
-// Stealth hook implementation (placeholder)
-void* StealthHook(void* targetFunction, void* hookFunction) {
-    // Implementation depends on stealth hooking technique
-    // Could use hardware breakpoints, VEH, page guard, etc.
-    
-    // For now, return original function
-    return targetFunction;
-}
-
-// Hook implementations (placeholders)
-void* MyCreateFileWHook = nullptr;
-void* MyReadFileHook = nullptr;
-void* MyWriteFileHook = nullptr;
-void* MyRegOpenKeyExWHook = nullptr;
-void* MyRegQueryValueExWHook = nullptr;
-void* MyWSAConnectHook = nullptr;
-void* MySendHook = nullptr;
-void* MyRecvHook = nullptr;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Initialize OS interceptor
 bool InitOSExplorerInterceptor(DWORD targetPID, OSInterceptorCallback callback) {
@@ -749,7 +697,7 @@ bool InjectIntoTaskManager() {
         
         if (Process32First(hSnapshot, &pe32)) {
             do {
-                if (_stricmp(pe32.szExeFile, "taskmgr.exe") == 0) {
+                if (_wcsicmp(pe32.szExeFile, L"taskmgr.exe") == 0) {
                     taskmgrPID = pe32.th32ProcessID;
                     break;
                 }
@@ -760,7 +708,6 @@ bool InjectIntoTaskManager() {
     }
     
     if (taskmgrPID == 0) {
-<<<<<<< HEAD
         OutputDebugStringA("[OSIntercept] Task Manager not found\n");
         return false;
     }
@@ -803,15 +750,6 @@ bool InjectIntoTaskManager() {
     CloseHandle(hProcess);
     
     OutputDebugStringA("[OSIntercept] Injected into Task Manager\n");
-=======
-
-        return false;
-    }
-    
-    // Manual map our DLL into Task Manager
-    // Implementation depends on manual mapping technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -822,7 +760,6 @@ bool HookTaskManager() {
     // Find Task Manager window
     HWND hTaskmgr = FindWindowA("TaskManagerWindow", NULL);
     if (!hTaskmgr) {
-<<<<<<< HEAD
         return false;
     }
     
@@ -836,15 +773,6 @@ bool HookTaskManager() {
     SetPropA(hTaskmgr, "RawrXD_OrigWndProc", (HANDLE)originalWndProc);
     
     OutputDebugStringA("[OSIntercept] Task Manager window hooked successfully\n");
-=======
-
-        return false;
-    }
-    
-    // Hook window procedure
-    // Implementation depends on hooking technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -852,7 +780,6 @@ bool HookTaskManager() {
 bool AddContextMenuItems() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     // Register shell extension for "OS Intercept" context menu
     HKEY hKey = nullptr;
     LSTATUS status = RegCreateKeyExW(
@@ -894,11 +821,6 @@ bool AddContextMenuItems() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
     
     OutputDebugStringA("[OSIntercept] Context menu items registered\n");
-=======
-    // Add "OS Intercept" to context menu
-    // Implementation depends on menu modification technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -916,7 +838,7 @@ bool InjectIntoExplorer() {
         
         if (Process32First(hSnapshot, &pe32)) {
             do {
-                if (_stricmp(pe32.szExeFile, "explorer.exe") == 0) {
+                if (_wcsicmp(pe32.szExeFile, L"explorer.exe") == 0) {
                     explorerPID = pe32.th32ProcessID;
                     break;
                 }
@@ -927,7 +849,6 @@ bool InjectIntoExplorer() {
     }
     
     if (explorerPID == 0) {
-<<<<<<< HEAD
         OutputDebugStringA("[OSIntercept] Explorer not found\n");
         return false;
     }
@@ -970,15 +891,6 @@ bool InjectIntoExplorer() {
     CloseHandle(hProcess);
     
     OutputDebugStringA("[OSIntercept] Injected into Explorer\n");
-=======
-
-        return false;
-    }
-    
-    // Manual map our DLL into Explorer
-    // Implementation depends on manual mapping technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -986,7 +898,6 @@ bool InjectIntoExplorer() {
 bool HookExplorer() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     // Hook Explorer file operations by installing a ReadDirectoryChangesW watcher
     // This monitors file system activity without invasive injection
     
@@ -1010,19 +921,12 @@ bool HookExplorer() {
     }
     
     return false;
-=======
-    // Hook Explorer file operations
-    // Implementation depends on hooking technique
-
-    return true;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // Hook file operations
 bool HookFileOperations() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
     if (!hKernel32) return false;
     
@@ -1045,11 +949,6 @@ bool HookFileOperations() {
     }
     
     OutputDebugStringA("[OSIntercept] File operations hooked (CopyFile/MoveFile/DeleteFile)\n");
-=======
-    // Hook CopyFileW, MoveFileW, DeleteFileW
-    // Implementation depends on hooking technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -1070,7 +969,6 @@ bool StartNetworkInterception() {
 bool StopNetworkInterception() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     // Restore original network API functions from backup table
     std::lock_guard<std::mutex> lock(g_hookMutex);
     
@@ -1105,11 +1003,6 @@ bool StopNetworkInterception() {
     }
     
     OutputDebugStringA("[OSIntercept] Network interception stopped\n");
-=======
-    // Unhook network APIs
-    // Implementation depends on hooking technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -1117,7 +1010,6 @@ bool StopNetworkInterception() {
 bool HookNetworkAPIs() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     HMODULE hWS2 = GetModuleHandleA("ws2_32.dll");
     if (!hWS2) {
         hWS2 = LoadLibraryA("ws2_32.dll");
@@ -1153,11 +1045,6 @@ bool HookNetworkAPIs() {
     }
     
     OutputDebugStringA("[OSIntercept] Network APIs hooked (WSAConnect/send/recv/WSASend/WSARecv)\n");
-=======
-    // Hook WSAConnect, send, recv, WSASend, WSARecv, etc.
-    // Implementation depends on hooking technique
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return true;
 }
 
@@ -1179,7 +1066,6 @@ bool ApplyHotpatch(void* address, void* patch, size_t size) {
     return true;
 }
 
-<<<<<<< HEAD
 // Remove hotpatch — restore original bytes from backup table
 bool RemoveHotpatch(void* address, size_t size) {
     LOG_FUNCTION();
@@ -1230,23 +1116,10 @@ struct BeaconSignature {
 static std::vector<BeaconSignature> g_beacons;
 static bool g_beaconismInitialized = false;
 
-=======
-// Remove hotpatch
-bool RemoveHotpatch(void* address, size_t size) {
-    LOG_FUNCTION();
-    
-    // Restore original bytes
-    // Implementation depends on how original bytes were saved
-
-    return true;
-}
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 // Initialize beaconism
 bool InitializeBeaconism() {
     LOG_FUNCTION();
     
-<<<<<<< HEAD
     g_beacons.clear();
     
     // Register standard beacon signatures for detection
@@ -1374,32 +1247,6 @@ bool ScanForBeacons() {
     OutputDebugStringA(summary);
     
     return beaconsFound > 0;
-=======
-    // Initialize beacon system
-    // Implementation depends on beaconism technique
-
-    return true;
-}
-
-// Inject beacons
-bool InjectBeacons() {
-    LOG_FUNCTION();
-    
-    // Inject beacon signatures into memory
-    // Implementation depends on beaconism technique
-
-    return true;
-}
-
-// Scan for beacons
-bool ScanForBeacons() {
-    LOG_FUNCTION();
-    
-    // Scan memory for beacon signatures
-    // Implementation depends on beaconism technique
-
-    return true;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 // Manual map DLL
@@ -1535,26 +1382,3 @@ bool ResolveImports(HANDLE hProcess, void* mappedBase, void* dllData) {
 
     return true;
 }
-<<<<<<< HEAD
-=======
-
-// Initialize global interceptor
-bool InitOSExplorerInterceptor(DWORD targetPID, OSInterceptorCallback callback) {
-    if (!g_osInterceptor) {
-        g_osInterceptor = std::make_unique<OSExplorerInterceptor>();
-    }
-    
-    return g_osInterceptor->Initialize(targetPID, callback);
-}
-
-// Cleanup global interceptor
-void CleanupOSExplorerInterceptor() {
-    g_osInterceptor.reset();
-}
-
-// Get global interceptor instance
-OSExplorerInterceptor* GetOSExplorerInterceptor() {
-    return g_osInterceptor.get();
-}
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

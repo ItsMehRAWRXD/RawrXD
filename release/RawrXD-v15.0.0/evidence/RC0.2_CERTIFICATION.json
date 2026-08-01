@@ -1,0 +1,19 @@
+{
+  "version": "15.0.0-RC0.2",
+  "certification_date": "2026-07-30T16:23:46.951960",
+  "status": "CERTIFIED",
+  "results": {
+    "release_manifest": true,
+    "hardware_attestation": true,
+    "inference_witness": true,
+    "performance_certification": true,
+    "val_certification": true,
+    "release_freeze": true,
+    "fault_injection": true
+  },
+  "summary": {
+    "total_checks": 7,
+    "passed_checks": 7,
+    "failed_checks": 0
+  }
+}

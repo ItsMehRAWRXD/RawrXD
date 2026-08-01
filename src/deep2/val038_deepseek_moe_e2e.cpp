@@ -40,6 +40,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include "gguf_loader.h"
 
 // ---------------------------------------------------------------------------
 // VAL result printer
@@ -549,3 +550,4 @@ int main(int argc, char* argv[]) {
 
     return allPass ? 0 : 1;
 }
+

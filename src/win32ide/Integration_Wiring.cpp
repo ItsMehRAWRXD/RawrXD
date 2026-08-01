@@ -1,4 +1,4 @@
-﻿// Auto-generated GUI wiring implementation
+// Auto-generated GUI wiring implementation
 // Generated: 2026-07-08 08:27:40
 
 #include "Integration_Wiring.h"

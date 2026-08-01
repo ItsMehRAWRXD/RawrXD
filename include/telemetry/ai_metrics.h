@@ -1,35 +1,4 @@
-<<<<<<< HEAD
-#pragma once
-
-/**
- * @file telemetry/ai_metrics.h
- * AI Model Inference Metrics Collection
- * Tracks request latency, token usage, tool invocations, and error rates
- */
-
-#include <string>
-#include <vector>
-#include <map>
-#include <deque>
-#include <cstdint>
-#include <chrono>
-#include <mutex>
-
-namespace RawrXD {
-namespace Telemetry {
-
-// Constants
-constexpr size_t MAX_TIME_SERIES_POINTS = 1000;
-constexpr size_t MAX_RECENT_ERRORS = 100;
-
-// Forward declarations
-struct MetricPoint;
-struct LatencyStats;
-struct TokenStats;
-struct ToolStats;
-struct ModelMetrics;
-
-// ============================================================================
+=====================================================================
 // DATA STRUCTURES
 // ============================================================================
 
@@ -368,4 +337,4 @@ AIMetricsCollector& GetMetricsCollector();
 
 } // namespace Telemetry
 } // namespace RawrXD
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+

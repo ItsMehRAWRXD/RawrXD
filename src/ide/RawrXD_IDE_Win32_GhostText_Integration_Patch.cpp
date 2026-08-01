@@ -7,6 +7,10 @@
  * Apply these changes to the main IDE window procedure and initialization.
  *===========================================================================*/
 
+#include <windows.h>
+#include <string>
+#include <cstring>
+
 /* 
  * ============================================================================
  * SECTION 1: ADD TO INCLUDES (at top of RawrXD_IDE_Win32.cpp)
@@ -14,6 +18,30 @@
  */
 
 #include "GhostTextIntegration_Wiring.h"
+
+/*
+ * ============================================================================
+ * HELPER FUNCTIONS: UTF-8 <-> Wide String Conversion
+ * ============================================================================
+ */
+
+static std::wstring Utf8ToWide(const char* utf8) {
+    if (!utf8 || !*utf8) return std::wstring();
+    int len = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, nullptr, 0);
+    if (len <= 0) return std::wstring();
+    std::wstring result(len - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, &result[0], len);
+    return result;
+}
+
+static std::string WideToUtf8(const std::wstring& wide) {
+    if (wide.empty()) return std::string();
+    int len = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (len <= 0) return std::string();
+    std::string result(len - 1, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, &result[0], len, nullptr, nullptr);
+    return result;
+}
 
 /*
  * ============================================================================
@@ -230,17 +258,30 @@ BOOL RawrXD_IDE_GetEditorContent(RawrXD_IDE* ide, char* buffer, int bufferSize,
 {
     if (!ide || !ide->hWndEditor) return FALSE;
     
-    // Get text from editor
-    int textLen = GetWindowTextA(ide->hWndEditor, buffer, bufferSize);
-    if (textLen == 0) return FALSE;
+    // Get text from editor (Unicode)
+    int textLen = GetWindowTextLengthW(ide->hWndEditor);
+    if (textLen == 0) {
+        buffer[0] = '\0';
+        return TRUE;
+    }
+    
+    std::wstring wtext(textLen + 1, L'\0');
+    GetWindowTextW(ide->hWndEditor, &wtext[0], textLen + 1);
+    
+    // Convert to UTF-8
+    std::string utf8 = WideToUtf8(wtext);
+    if ((int)utf8.length() >= bufferSize) {
+        utf8 = utf8.substr(0, bufferSize - 1);
+    }
+    strcpy_s(buffer, bufferSize, utf8.c_str());
     
     // Get cursor position
     DWORD selStart, selEnd;
-    SendMessage(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+    SendMessageW(ide->hWndEditor, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
     
     // Calculate line/column
-    *outCursorLine = (int)SendMessage(ide->hWndEditor, EM_LINEFROMCHAR, selStart, 0);
-    *outCursorCol = selStart - (int)SendMessage(ide->hWndEditor, EM_LINEINDEX, *outCursorLine, 0);
+    *outCursorLine = (int)SendMessageW(ide->hWndEditor, EM_LINEFROMCHAR, selStart, 0);
+    *outCursorCol = selStart - (int)SendMessageW(ide->hWndEditor, EM_LINEINDEX, *outCursorLine, 0);
     
     return TRUE;
 }
@@ -252,8 +293,9 @@ void RawrXD_IDE_InsertText(RawrXD_IDE* ide, const char* text)
 {
     if (!ide || !ide->hWndEditor || !text) return;
     
-    // Replace current selection with text
-    SendMessageA(ide->hWndEditor, EM_REPLACESEL, TRUE, (LPARAM)text);
+    // Convert UTF-8 to wide and insert
+    std::wstring wtext = Utf8ToWide(text);
+    SendMessageW(ide->hWndEditor, EM_REPLACESEL, TRUE, (LPARAM)wtext.c_str());
 }
 
 /**
@@ -266,10 +308,23 @@ void RawrXD_IDE_GetCurrentLineText(RawrXD_IDE* ide, char* buffer, int bufferSize
         return;
     }
     
-    int line = (int)SendMessage(ide->hWndEditor, EM_LINEFROMCHAR, -1, 0);
-    *(WORD*)buffer = bufferSize;  // EM_GETLINE requires size in first word
-    int len = (int)SendMessageA(ide->hWndEditor, EM_GETLINE, line, (LPARAM)buffer);
-    buffer[len] = '\0';
+    int line = (int)SendMessageW(ide->hWndEditor, EM_LINEFROMCHAR, -1, 0);
+    
+    // Get line length and allocate buffer
+    int lineLen = (int)SendMessageW(ide->hWndEditor, EM_LINELENGTH, 
+        SendMessageW(ide->hWndEditor, EM_LINEINDEX, line, 0), 0);
+    
+    std::wstring wline(lineLen + 1, L'\0');
+    *(WORD*)wline.data() = (WORD)(lineLen + 1);  // EM_GETLINE requires size in first word
+    int len = (int)SendMessageW(ide->hWndEditor, EM_GETLINE, line, (LPARAM)wline.data());
+    wline[len] = L'\0';
+    
+    // Convert to UTF-8
+    std::string utf8 = WideToUtf8(wline);
+    if ((int)utf8.length() >= bufferSize) {
+        utf8 = utf8.substr(0, bufferSize - 1);
+    }
+    strcpy_s(buffer, bufferSize, utf8.c_str());
 }
 
 /**

@@ -22,6 +22,7 @@
     #include <sys/mman.h>
     #include <fcntl.h>
     #include <unistd.h>
+#include "gguf_loader.h"
 #endif
 
 namespace Deep2 {
@@ -559,3 +560,4 @@ GGUFLoadResult GGUFLoader::LoadHardened(const char* filepath, const GGUFLoadOpti
 }
 
 } // namespace Deep2
+

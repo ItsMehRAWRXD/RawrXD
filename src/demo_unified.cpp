@@ -6,6 +6,7 @@
 #include "RawrXD_Final_Unified.hpp"
 #include <iostream>
 #include <iomanip>
+#include "gguf_loader.h"
 
 using namespace RawrXD;
 
@@ -219,3 +220,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+

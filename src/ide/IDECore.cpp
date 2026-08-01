@@ -21,6 +21,7 @@
 #include <thread>
 #include <chrono>
 #include <json/json.h>
+#include "gguf_loader.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -1439,3 +1440,4 @@ const char* IDECore_GetLastError(void* core) {
 
 } // namespace IDE
 } // namespace RawrXD
+

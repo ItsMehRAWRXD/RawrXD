@@ -12,12 +12,8 @@
 #include "Win32IDE_SubAgent.h"
 #include <functional>
 #include <memory>
-<<<<<<< HEAD
 #include <string>
 #include <vector>
-=======
-#include "../agentic_engine.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 // Forward declaration
 class Win32IDE;
@@ -40,16 +36,10 @@ struct AgentResponse
 };
 
 // Agentic Framework Bridge for Win32IDE
-<<<<<<< HEAD
 // Integrates PowerShell-based agentic framework with C++ IDE
 class AgenticBridge
 {
   public:
-=======
-// Integrates Native C++ Agentic Engine with Win32IDE
-class AgenticBridge {
-public:
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     AgenticBridge(Win32IDE* ide);
     ~AgenticBridge();
 
@@ -71,7 +61,6 @@ public:
 
     // Configuration
     void SetModel(const std::string& modelName);
-<<<<<<< HEAD
     void SetOllamaServer(const std::string& serverUrl);
     void SetMaxMode(bool enabled);
     bool GetMaxMode() const { return m_maxMode; }
@@ -100,9 +89,6 @@ public:
     /** Forwards to CPUInferenceEngine::GetSharedInstance() (same object as Win32IDE::m_nativeEngine). */
     void SetCpuEngineLayerProgressCallback(std::function<void(const std::string&)> cb);
     void SetCpuEngineSwarmTelemetryOutputCallback(std::function<void(const std::string&)> cb);
-=======
-    void SetOllamaServer(const std::string& serverUrl); // Kept for API interface compatibility but unused internally now
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::string GetCurrentModel() const { return m_modelName; }
 
     // Language-aware context propagation
@@ -118,7 +104,6 @@ public:
     using OutputCallback = std::function<void(const std::string&, const std::string&)>;
     void SetOutputCallback(OutputCallback callback);
 
-<<<<<<< HEAD
     // Compatibility callbacks used by Win32IDE_AgentCommands.cpp
     using ErrorCallback = std::function<void(const std::string&)>;
     using ProgressCallback = std::function<void(const std::string&)>;
@@ -185,10 +170,6 @@ public:
     bool ReadProcessOutput(std::string& output, DWORD timeoutMs = 5000);
     void KillPowerShellProcess();
 
-=======
-private:
-   
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Response parsing
     AgentResponse ParseAgentResponse(const std::string& rawOutput);
     bool IsToolCall(const std::string& line);
@@ -209,7 +190,6 @@ private:
     std::string m_toolsModulePath;
     std::string m_modelName;
     std::string m_ollamaServer;
-<<<<<<< HEAD
 
     HANDLE m_hProcess;
     HANDLE m_hStdoutRead;
@@ -233,12 +213,6 @@ private:
     std::string m_workspaceRoot;    // Project/workspace folder for agent context
 
     // Output callback for streaming results to UI
-=======
-    
-    // Native Engine
-    std::shared_ptr<AgenticEngine> m_nativeEngine;
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     OutputCallback m_outputCallback;
     ErrorCallback m_errorCallback;
     ProgressCallback m_progressCallback;

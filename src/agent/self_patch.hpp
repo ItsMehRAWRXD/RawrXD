@@ -1,5 +1,4 @@
 #pragma once
-<<<<<<< HEAD
 // self_patch.hpp – Qt-free SelfPatch (C++20 / Win32)
 // Pattern: Function pointer callbacks, no exceptions in patch path
 #include <cstdint>
@@ -16,28 +15,11 @@ public:
     // Add C++ wrapper for kernel
     bool addCpp(const std::string& name, const std::string& deps);
 
-=======
-#include <string>
-#include <functional>
-
-class SelfPatch {
-public:
-    explicit SelfPatch();
-    virtual ~SelfPatch() = default;
-    
-    // Add Vulkan kernel from template
-    bool addKernel(const std::string& name, const std::string& templateName);
-    
-    // Add C++ wrapper for kernel
-    bool addCpp(const std::string& name, const std::string& deps);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Hot-reload the binary (rebuild + restart)
     bool hotReload();
 
     // Patch existing file
     bool patchFile(const std::string& filename, const std::string& patch);
-<<<<<<< HEAD
 
     // --- Callback registration (replaces Qt signals) ---
     using StringCallback    = void(*)(void* ctx, const char* name);
@@ -58,12 +40,4 @@ private:
     StringCallback m_onCppAdded     = nullptr;  void* m_cppCtx        = nullptr;
     ReloadCallback m_onReloadStarted = nullptr; void* m_reloadCtx     = nullptr;
     ReloadCallback m_onReloadDone   = nullptr;  void* m_reloadDoneCtx = nullptr;
-=======
-    
-    // Callbacks (replacing signals)
-    std::function<void(const std::string&)> onKernelAdded;
-    std::function<void(const std::string&)> onCppAdded;
-    std::function<void()> onReloadStarted;
-    std::function<void(bool)> onReloadCompleted;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };

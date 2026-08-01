@@ -1,9 +1,6 @@
 #include "chain_of_thought.h"
 #include "../../include/agentic_engine.h"
-<<<<<<< HEAD
 #include <cctype>
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <sstream>
 #include <iostream>
 #include <regex>
@@ -24,19 +21,11 @@ ChainOfThought::~ChainOfThought() {
     }
 }
 
-<<<<<<< HEAD
 RawrXD::Expected<ReasoningChain, ChainError> ChainOfThought::generateChain(
     const std::string& goal,
     const std::unordered_map<std::string, std::string>& context
 ) {
     if (!m_inferenceEngine) return RawrXD::unexpected(ChainError::StepGenerationFailed);
-=======
-std::expected<ReasoningChain, ChainError> ChainOfThought::generateChain(
-    const std::string& goal,
-    const std::unordered_map<std::string, std::string>& context
-) {
-    if (!m_inferenceEngine) return std::unexpected(ChainError::StepGenerationFailed);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ReasoningChain chain;
     chain.id = generateChainId();
@@ -59,11 +48,7 @@ std::expected<ReasoningChain, ChainError> ChainOfThought::generateChain(
     
     if (response.empty() || response.find("Error") != std::string::npos && response.length() < 20) {
         // Fallback for simulation detection
-<<<<<<< HEAD
         return RawrXD::unexpected(ChainError::StepGenerationFailed);
-=======
-        return std::unexpected(ChainError::StepGenerationFailed);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     // Parse the response
@@ -131,7 +116,6 @@ std::expected<ReasoningChain, ChainError> ChainOfThought::generateChain(
     return chain;
 }
 
-<<<<<<< HEAD
 RawrXD::Expected<ThoughtStep, ChainError> ChainOfThought::generateNextStep(
     const ReasoningChain& chain,
     const std::vector<ThoughtStep>& previousSteps
@@ -216,19 +200,6 @@ RawrXD::Expected<ThoughtStep, ChainError> ChainOfThought::generateNextStep(
 }
 
 RawrXD::Expected<std::string, ChainError> ChainOfThought::generateExplanation(
-=======
-std::expected<ThoughtStep, ChainError> ChainOfThought::generateNextStep(
-    const ReasoningChain& chain,
-    const std::vector<ThoughtStep>& previousSteps
-) {
-    if (!m_inferenceEngine) return std::unexpected(ChainError::StepGenerationFailed);
-    
-    // Future: Iterative step generation
-    return ThoughtStep(); 
-}
-
-std::expected<std::string, ChainError> ChainOfThought::generateExplanation(
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     const ReasoningChain& chain
 ) {
     std::string explanation = "Reasoning for: " + chain.goal + "\n\n";
@@ -240,8 +211,3 @@ std::expected<std::string, ChainError> ChainOfThought::generateExplanation(
 }
 
 } // namespace RawrXD
-<<<<<<< HEAD
-=======
-
-} // namespace RawrXD
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

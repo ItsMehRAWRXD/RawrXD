@@ -86,7 +86,6 @@ std::vector<std::string> IntelligentCompletionEngine::getMultiLineCompletions(
                         " lines. Return ONLY code, no explanation.\n\n" +
                         context.contextBefore + "\n" + context.currentLine;
     
-<<<<<<< HEAD
     // Call Ollama /api/generate for multi-line completion
     try {
         json payload = {
@@ -168,22 +167,6 @@ std::vector<std::string> IntelligentCompletionEngine::getMultiLineCompletions(
         // Fallback to single-line completions
         auto single = getCompletions(context, 1);
         if (!single.empty()) results.push_back(single[0].text);
-=======
-    EnsureEngineLoaded();
-    
-    if (g_completionEngine && g_completionEngine->isModelLoaded()) {
-        // Real Inference
-        std::string generated = g_completionEngine->infer(prompt, maxLines * 20); // Approx 20 tokens per line
-        if (!generated.empty()) {
-            results.push_back(generated);
-        }
-    } else {
-        // Fallback or empty if no model
-        std::vector<CompletionSuggestion> single = getCompletions(context, 1);
-        if (!single.empty()) {
-            results.push_back(single[0].text);
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return results;
@@ -247,7 +230,6 @@ std::vector<CompletionSuggestion> IntelligentCompletionEngine::inferCompletions(
     // Build prompt for code completion
     std::string prompt = enrichContext(context);
     
-<<<<<<< HEAD
     // Call Ollama /api/generate via WinHTTP
     try {
         json payload = {
@@ -329,51 +311,18 @@ std::vector<CompletionSuggestion> IntelligentCompletionEngine::inferCompletions(
     // Heuristic fallback if no model response
     if (suggestions.empty()) {
         std::vector<std::string> fallbacks = {
-=======
-    EnsureEngineLoaded();
-
-    if (g_completionEngine && g_completionEngine->isModelLoaded()) {
-        // Run inference
-        // Suggest completions for the current line
-        std::string result = g_completionEngine->infer(prompt);
-        
-        // Parse result - assume model returns text that completes the line or multiple lines
-        if (!result.empty()) {
-            CompletionSuggestion s;
-            s.text = result;
-            s.label = result.substr(0, std::min(result.length(), (size_t)30));
-            s.confidence = 0.85f; // From model
-            s.priority = 100;
-            s.kind = "ai-generated";
-            suggestions.push_back(s);
-        }
-    }
-    
-    // If we didn't get results (or as fallback/addition), add structural suggestions
-    if (suggestions.empty()) {
-        std::vector<std::string> completions = {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             context.linePrefix + " = ",
             context.linePrefix + "()",
             "if (" + context.linePrefix + ") {\n}",
             "for (auto " + context.linePrefix + " : ",
         };
         
-<<<<<<< HEAD
         for (const auto& comp : fallbacks) {
             CompletionSuggestion s;
             s.text = comp;
             s.label = comp.substr(0, 30);
             s.confidence = 0.3f;
             s.priority = 20;
-=======
-        for (const auto& comp : completions) {
-            CompletionSuggestion s;
-            s.text = comp;
-            s.label = comp.substr(0, 30);
-            s.confidence = 0.2f; // Low confidence for heuristics
-            s.priority = 10;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             s.kind = "snippet";
             suggestions.push_back(s);
         }

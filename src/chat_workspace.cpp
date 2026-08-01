@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // ============================================================================
 // chat_workspace.cpp - Weaponized Agent Integration
 // ============================================================================
@@ -43,17 +42,3 @@ void ChatWorkspace::ProcessAgentCommand(std::istringstream& iss) {
 }
 
 } // namespace RawrXD
-=======
-// Chat Workspace - Agentic chat interface
-#include "chat_workspace.h"
-
-ChatWorkspace::ChatWorkspace(void* parent) : void(parent) {
-    // Lightweight constructor - defer Qt widget creation
-}
-
-void ChatWorkspace::initialize() {
-    void* layout = new void(this);
-    layout->addWidget(new void("Chat Workspace"));
-}
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

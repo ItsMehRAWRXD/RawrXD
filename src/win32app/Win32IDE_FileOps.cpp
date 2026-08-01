@@ -3,11 +3,8 @@
 
 #include "Win32IDE.h"
 #include "IDELogger.h"
-<<<<<<< HEAD
 #include "IDEConfig.h"
-=======
 #include "../gui/ModelConversionDialog.h"
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #include <fstream>
 #include <sstream>
 #include <commdlg.h>
@@ -23,13 +20,9 @@
 // ============================================================================
 
 void Win32IDE::openFileDialog() {
-<<<<<<< HEAD
     SCOPED_METRIC("file.open_dialog_fileops");
     METRICS.increment("file.dialog_opens");
     LOG_INFO("openFileDialog() called");
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     OPENFILENAMEA ofn = {};
     char szFile[MAX_PATH] = {0};
     
@@ -50,7 +43,6 @@ void Win32IDE::openFileDialog() {
 
     if (GetOpenFileNameA(&ofn)) {
         std::string filePath = szFile;
-<<<<<<< HEAD
         LOG_INFO("File selected: " + filePath);
         
         // Check if it's a model file (GGUF or other) - load as model and into agentic bridge for chat/agentic
@@ -64,44 +56,12 @@ void Win32IDE::openFileDialog() {
         };
         if (isModelFile(filePath)) {
             LOG_INFO("Detected model file, loading as model and into agentic bridge");
-=======
-        std::filesystem::path fsPath(filePath);
-        std::string ext = fsPath.extension().string();
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-
-        // Check for conversion need
-        if (ext == ".bin" || ext == ".pth") {
-             // Trigger Conversion Dialog
-             ModelConversionDialog dialog({"PyTorch .pth", "GGML .bin"}, "GGUF", fsPath, m_hwndMain);
-             auto result = dialog.exec();
-             
-             if (result == ModelConversionDialog::Converted) {
-                 // Update filePath to the new GGUF file
-                 auto conversionRes = dialog.getConversionResult();
-                 filePath = conversionRes.convertedModelPath.string();
-                 ext = ".gguf"; // Force extension update for next check
-                 
-                 std::string msg = "Model Converted Successfully!\nNew Path: " + filePath;
-                 MessageBoxA(m_hwndMain, msg.c_str(), "Conversion Complete", MB_OK | MB_ICONINFORMATION);
-             } else {
-                 // User cancelled or failed
-                 return;
-             }
-        }
-
-        // Check if it's a GGUF model file FIRST - DON'T load as text, bypass size limits!
-        if (ext == ".gguf") {
-
-            // GGUF files can be multi-GB, they use streaming loader
-            // Add safety check to prevent crashes on corrupted/invalid files
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             try {
                 bool ggufOk = loadGGUFModel(filePath);
                 bool bridgeOk = loadModelForInference(filePath);
                 if (ggufOk || bridgeOk) {
                     std::string message = "✅ Model loaded: " + filePath + "\n\n" + (ggufOk ? getModelInfo() : "Ready for chat and agentic.");
                     appendToOutput(message, "Output", OutputSeverity::Info);
-<<<<<<< HEAD
                     MessageBoxA(m_hwndMain, "Model loaded. Chat and agentic features use this model.", "Model Loaded", MB_OK | MB_ICONINFORMATION);
                     LOG_INFO("Model loaded successfully");
                 } else {
@@ -117,23 +77,6 @@ void Win32IDE::openFileDialog() {
                 LOG_ERROR("Unknown exception while loading model file");
                 appendToOutput("Unknown exception while loading model file", "Errors", OutputSeverity::Error);
                 MessageBoxA(m_hwndMain, "Unknown error loading model file.", "Model Load Error", MB_OK | MB_ICONERROR);
-=======
-                    MessageBoxA(m_hwndMain, "Model loaded successfully! Check Output panel and Copilot Chat for agentic features.", "Model Loaded", MB_OK | MB_ICONINFORMATION);
-
-                } else {
-
-                    MessageBoxA(m_hwndMain, "Failed to load GGUF model. Check Output/Errors panel for details.", "Model Load Failed", MB_OK | MB_ICONERROR);
-                }
-            } catch (const std::exception& e) {
-                std::string error = "Exception while loading GGUF: " + std::string(e.what());
-
-                appendToOutput(error, "Errors", OutputSeverity::Error);
-                MessageBoxA(m_hwndMain, error.c_str(), "Model Load Error", MB_OK | MB_ICONERROR);
-            } catch (...) {
-
-                appendToOutput("Unknown exception while loading GGUF file", "Errors", OutputSeverity::Error);
-                MessageBoxA(m_hwndMain, "Unknown error loading GGUF file.", "Model Load Error", MB_OK | MB_ICONERROR);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
             }
             return;  // Exit early - model files never load into editor
         }
@@ -293,14 +236,27 @@ void Win32IDE::openModelDialog() {
 
         // Check for conversion need
         if (ext == ".bin" || ext == ".pth") {
-             // Reuse the conversion logic via the dialog class
-             // (We can assume ModelConversionDialog is included as I added it to the top of this file)
-             ModelConversionDialog dialog({"PyTorch .pth", "GGML .bin"}, "GGUF", fsPath, m_hwndMain);
-             auto result = dialog.exec();
+             // Setup conversion config
+             ConversionConfig cfg = {};
+             cfg.unsupportedTypes[0] = L"PyTorch .pth";
+             cfg.unsupportedTypes[1] = L"GGML .bin";
+             cfg.unsupportedTypes[2] = nullptr;
+             cfg.unsupportedCount = 2;
+             wcscpy_s(cfg.recommendedType, L"GGUF");
              
-             if (result == ModelConversionDialog::Converted) {
-                 auto conversionRes = dialog.getConversionResult();
-                 filePath = conversionRes.convertedModelPath.string();
+             // Convert path to wide
+             std::wstring wpath = fsPath.wstring();
+             wcscpy_s(cfg.modelPath, wpath.c_str());
+             
+             ModelConversionDialog dialog(m_hwndMain, cfg);
+             ConversionResult result = dialog.showModal();
+             
+             if (result == ConversionResult::ConversionSucceeded) {
+                 // Convert back to narrow string
+                 const wchar_t* converted = dialog.convertedPath();
+                 int len = WideCharToMultiByte(CP_UTF8, 0, converted, -1, nullptr, 0, nullptr, nullptr);
+                 filePath.resize(len - 1);
+                 WideCharToMultiByte(CP_UTF8, 0, converted, -1, &filePath[0], len, nullptr, nullptr);
                  ext = ".gguf";
                  
                  std::string msg = "Model Converted Successfully!\nNew Path: " + filePath;

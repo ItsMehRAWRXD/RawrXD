@@ -4,18 +4,10 @@
 #include <string>
 #include <vector>
 
-<<<<<<< HEAD
 class SelfTest {
 public:
     SelfTest();
     ~SelfTest() = default;
-=======
-
-class SelfTest {
-
-public:
-    explicit SelfTest(void* parent = nullptr);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     bool runAll();               // unit + integration + perf
     bool runUnitTests();         // build/bin/*_test.exe
@@ -25,7 +17,6 @@ public:
     bool runBenchmarkBaseline(); // tokens/sec vs. stored baseline
     bool runCompletionShipGate();// COMP-01..COMP-03 checks
 
-<<<<<<< HEAD
     const std::string& lastOutput() const { return m_output; }
     const std::string& lastError()  const { return m_error; }
 
@@ -44,19 +35,5 @@ private:
 
     LogCallback m_logCb  = nullptr;
     void*       m_logCtx = nullptr;
-=======
-    std::string lastOutput() const { return m_output; }
-    std::string lastError() const { return m_error; }
-
-    void log(const std::string& line);
-
-private:
-    bool runProcess(const std::string& prog, const std::vector<std::string>& args, int timeoutMs = 60000);
-    double parseTPS(const std::string& log) const;
-    bool checkBenchmarkRegression(const std::string& name, double current, double baseline);
-
-    std::string m_output;
-    std::string m_error;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 

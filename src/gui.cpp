@@ -216,7 +216,6 @@ void GUI::DisplayModelInfo(const std::string& model_path) {
 
 void GUI::SendMessage(AppState& state, const std::string& message) {
     AddChatMessage(state, "user", message);
-<<<<<<< HEAD
 
     // Route through CPUInferenceEngine if model is loaded
     if (state.model_ready.load() && state.inference_engine) {
@@ -229,28 +228,6 @@ void GUI::SendMessage(AppState& state, const std::string& message) {
     } else {
         AddChatMessage(state, "assistant", "[No model loaded — type /load <model> to begin]");
     }
-=======
-    
-    // Explicit Logic: Real Inference
-    std::string response;
-    
-    if (!state.inference_engine) {
-        state.inference_engine = std::make_shared<RawrXD::CPUInferenceEngine>();
-        // Try to load model if configured
-        if (!state.model_path.empty()) {
-            state.inference_engine->loadModel(state.model_path);
-            state.loaded_model = true;
-        }
-    }
-    
-    if (state.inference_engine) {
-        response = state.inference_engine->infer(message);
-    } else {
-        response = "Error: Failed to initialize inference engine.";
-    }
-    
-    AddChatMessage(state, "assistant", response);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void GUI::AddChatMessage(AppState& state, const std::string& role, const std::string& content) {

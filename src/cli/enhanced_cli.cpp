@@ -4,11 +4,7 @@
 #include <fstream>
 #include <numeric>
 
-<<<<<<< HEAD
 // Compatibility readline implementation for Windows
-=======
-// Mock readline implementation for Windows if needed
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #if !__has_include(<readline/readline.h>)
 #include <string>
 #include <iostream>
@@ -113,7 +109,6 @@ RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdExit(const std::vector<s
 }
 
 // Stubs for other commands mentioned in header
-<<<<<<< HEAD
 RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdStatus(const std::vector<std::string>&) {
     std::stringstream ss;
     ss << "RawrXD CLI Status\n";
@@ -278,27 +273,6 @@ RawrXD::Expected<void, CLIError> EnhancedCLI::runBatch(const std::vector<std::st
     }
     return {};
 }
-=======
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdStatus(const std::vector<std::string>&) { return "Status: OK"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdLoadModel(const std::vector<std::string>&) { return "Model loaded"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdGenerate(const std::vector<std::string>&) { return "Generated text"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdSwarm(const std::vector<std::string>&) { return "Swarm executed"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdChain(const std::vector<std::string>&) { return "Chain executed"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdHistory(const std::vector<std::string>&) { return "History"; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::cmdClearHistory(const std::vector<std::string>&) { return "History cleared"; }
-
-RawrXD::Expected<void, CLIError> EnhancedCLI::startSwarmMode() { return {}; }
-RawrXD::Expected<void, CLIError> EnhancedCLI::stopSwarmMode() { return {}; }
-RawrXD::Expected<void, CLIError> EnhancedCLI::enableChainOfThought() { return {}; }
-RawrXD::Expected<void, CLIError> EnhancedCLI::disableChainOfThought() { return {}; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::executeWithSwarm(const std::string&, const std::vector<std::string>&) { return ""; }
-RawrXD::Expected<std::string, CLIError> EnhancedCLI::executeWithChainOfThought(const std::string&, const std::vector<std::string>&) { return ""; }
-json EnhancedCLI::getStatus() const { return json{}; }
-void EnhancedCLI::loadHistory(const std::string&) {}
-void EnhancedCLI::saveHistory(const std::string&) {}
-std::string EnhancedCLI::applySyntaxHighlighting(const std::string& input) { return input; }
-RawrXD::Expected<void, CLIError> EnhancedCLI::runBatch(const std::vector<std::string>&) { return {}; }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 } // namespace RawrXD
 

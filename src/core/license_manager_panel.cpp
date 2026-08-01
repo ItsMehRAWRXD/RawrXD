@@ -48,7 +48,7 @@ bool LicenseManagerPanel::create(HWND parentHwnd, int x, int y, int width, int h
     m_hwndParent = parentHwnd;
 
     // Register window class
-    static const char* className = "RawrXD_LicenseManagerPanel";
+    static const wchar_t* className = L"RawrXD_LicenseManagerPanel";
     static bool classRegistered = false;
 
     if (!classRegistered) {
@@ -67,7 +67,7 @@ bool LicenseManagerPanel::create(HWND parentHwnd, int x, int y, int width, int h
     m_hwnd = CreateWindowEx(
         WS_EX_CLIENTEDGE,
         className,
-        "License Manager",
+        L"License Manager",
         WS_CHILD | WS_VISIBLE,
         x, y, width, height,
         parentHwnd,
@@ -211,29 +211,29 @@ void LicenseManagerPanel::drawLicenseInfo(HDC hdc, const RECT& rect) {
     SetBkColor(hdc, RGB(240, 240, 240));
 
     RECT rcText = rect;
-    DrawText(hdc, tierText.c_str(), tierText.length(), &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, tierText.c_str(), tierText.length(), &rcText, DT_LEFT | DT_TOP);
 
     // Draw feature count
     rcText.top += 30;
     std::string featureText = "Enabled Features: " + std::to_string(lic.enabledFeatureCount());
-    DrawText(hdc, featureText.c_str(), featureText.length(), &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, featureText.c_str(), featureText.length(), &rcText, DT_LEFT | DT_TOP);
 
     // Draw HWID
     rcText.top += 30;
     std::string hwidText = "Hardware ID: " + m_cachedHWIDStr;
-    DrawText(hdc, hwidText.c_str(), hwidText.length(), &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, hwidText.c_str(), hwidText.length(), &rcText, DT_LEFT | DT_TOP);
 }
 
 void LicenseManagerPanel::drawFeatureList(HDC hdc, const RECT& rect) {
     auto& lic = EnterpriseLicenseV2::Instance();
     RECT rcText = rect;
-    DrawText(hdc, "Features", 8, &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, "Features", 8, &rcText, DT_LEFT | DT_TOP);
     rcText.top += 18;
     for (uint32_t i = 0; i < TOTAL_FEATURES; ++i) {
         const auto& def = lic.getFeatureDef(static_cast<FeatureID>(i));
         std::string line = lic.isFeatureEnabled(static_cast<FeatureID>(i)) ? "[+] " : "[-] ";
         line += def.name;
-        DrawText(hdc, line.c_str(), static_cast<int>(line.length()), &rcText, DT_LEFT | DT_TOP);
+        DrawTextA(hdc, line.c_str(), static_cast<int>(line.length()), &rcText, DT_LEFT | DT_TOP);
         rcText.top += 16;
     }
 }
@@ -244,7 +244,7 @@ void LicenseManagerPanel::drawAuditLog(HDC hdc, const RECT& rect) {
         + ", " + std::to_string(lic.enabledFeatureCount()) + " features, "
         + formatTimestamp(static_cast<uint32_t>(std::time(nullptr)));
     RECT rcText = rect;
-    DrawText(hdc, audit.c_str(), static_cast<int>(audit.length()), &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, audit.c_str(), static_cast<int>(audit.length()), &rcText, DT_LEFT | DT_TOP);
 }
 
 void LicenseManagerPanel::drawLimits(HDC hdc, const RECT& rect) {
@@ -256,7 +256,7 @@ void LicenseManagerPanel::drawLimits(HDC hdc, const RECT& rect) {
     text += "Max Context: " + std::to_string(limits.maxContextTokens) + " tokens\n";
 
     RECT rcText = rect;
-    DrawText(hdc, text.c_str(), text.length(), &rcText, DT_LEFT | DT_TOP);
+    DrawTextA(hdc, text.c_str(), text.length(), &rcText, DT_LEFT | DT_TOP);
 }
 
 void LicenseManagerPanel::createControls() {

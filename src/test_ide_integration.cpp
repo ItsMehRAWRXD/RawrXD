@@ -9,6 +9,7 @@
 #include <cassert>
 #include <chrono>
 #include <thread>
+#include "vulkan_compute.h"
 
 // Mock implementations for testing
 class MockAgenticEngine : public AgenticEngine {
@@ -524,3 +525,4 @@ int main() {
     
     return 0;
 }
+

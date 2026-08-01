@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // benchmark_menu_widget.cpp — Qt-free Win32 implementation of the benchmark suite UI.
 
 #include "../include/benchmark_menu_widget.hpp"
@@ -319,106 +318,6 @@ void BenchmarkSelector::setupUI() {
     CreateWindowExW(0, L"BUTTON", L"Select None",
         WS_CHILD | WS_VISIBLE | WS_TABSTOP,
         0, 0, 10, 10, parent_, (HMENU)(INT_PTR)IDC_SELECT_NONE, GetModuleHandleW(nullptr), nullptr);
-=======
-/**
- * \file benchmark_menu_widget.cpp
- * \brief Implementation of benchmark menu system for IDE (Stubbed)
- * \author RawrXD Team
- * \date 2026-02-01
- */
-
-#include "benchmark_menu_widget.hpp"
-#include "benchmark_runner.hpp"
-#include <iostream>
-
-// ============================================================================
-// BENCHMARK SELECTOR STUB
-// ============================================================================
-
-BenchmarkSelector::BenchmarkSelector(void* parent) {
-}
-
-std::vector<std::string> BenchmarkSelector::getSelectedTests() const {
-    // Default to all tests for CLI/Stub
-    return {
-        "cold_start", "warm_cache", "rapid_fire", 
-        "multi_lang", "context_aware", "memory"
-    };
-}
-
-std::string BenchmarkSelector::getSelectedModel() const {
-    return ""; // Default model
-}
-
-bool BenchmarkSelector::isGpuEnabled() const {
-    return true;
-}
-
-bool BenchmarkSelector::isVerbose() const {
-    return true;
-}
-
-// ============================================================================
-// BENCHMARK MENU WIDGET STUB
-// ============================================================================
-
-BenchmarkMenuWidget::BenchmarkMenuWidget(void* parent) {
-    runner_ = std::make_unique<BenchmarkRunner>();
-}
-
-BenchmarkMenuWidget::~BenchmarkMenuWidget() {
-}
-
-void BenchmarkMenuWidget::show() {
-    // CLI mode or No-op
-    startBenchmarks();
-}
-
-void BenchmarkMenuWidget::startBenchmarks() {
-    if (!runner_) return;
-
-    if (!selector_) {
-         selector_ = std::make_unique<BenchmarkSelector>();
-    }
-
-    auto tests = selector_->getSelectedTests();
-    std::string model = selector_->getSelectedModel();
-    bool gpu = selector_->isGpuEnabled();
-    bool verbose = selector_->isVerbose();
-
-    // Hook up callbacks
-    runner_->setLogCallback([this](const std::string& msg, int level) {
-        this->logMessage(msg, level);
-    });
-
-    runner_->setProgressCallback([this](int current, int total) {
-        this->updateProgress(current, total);
-    });
-
-    runner_->runBenchmarks(tests, model, gpu, verbose);
-}
-
-void BenchmarkMenuWidget::stopBenchmarks() {
-    if (runner_) runner_->stop();
-}
-
-void BenchmarkMenuWidget::addTestResult(const std::string& name, bool passed, double latency) {
-    std::cout << "[RESULT] " << name << ": " << (passed ? "PASS" : "FAIL") 
-              << " (" << latency << "ms)" << std::endl;
-}
-
-void BenchmarkMenuWidget::updateProgress(int current, int total) {
-    std::cout << "[PROGRESS] " << current << "/" << total << std::endl;
-}
-
-void BenchmarkMenuWidget::logMessage(const std::string& msg, int level) {
-    // Simple stdout logging for now
-    std::cout << "[LOG:" << level << "] " << msg << std::endl;
-}
-
-    mainLayout->addWidget(configGroup);
-    mainLayout->addStretch();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<std::string> BenchmarkSelector::getSelectedTests() const {
@@ -433,15 +332,11 @@ std::vector<std::string> BenchmarkSelector::getSelectedTests() const {
 }
 
 std::string BenchmarkSelector::getModelPath() const {
-<<<<<<< HEAD
     return wToU8(getWindowTextWString(modelCombo_));
 }
 
 void BenchmarkSelector::setModelPath(const std::string& path) {
     setWindowTextU8(modelCombo_, path);
-=======
-    return modelCombo_->currentData().toString();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 bool BenchmarkSelector::isGPUEnabled() const {
@@ -464,16 +359,8 @@ void BenchmarkSelector::deselectAll() {
 // BenchmarkLogOutput
 // ============================================================================
 
-<<<<<<< HEAD
 void BenchmarkLogOutput::attach(HWND hwnd) {
     m_hwnd = hwnd;
-=======
-BenchmarkLogOutput::BenchmarkLogOutput(void* parent)
-    : void(parent) {
-    setReadOnly(true);
-    setFont(std::string("Courier", 9));
-    setStyleSheet("background-color: #1e1e1e; color: #d4d4d4;");
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void BenchmarkLogOutput::logMessage(const std::string& message, LogLevel level) {
@@ -481,7 +368,6 @@ void BenchmarkLogOutput::logMessage(const std::string& message, LogLevel level) 
 }
 
 void BenchmarkLogOutput::logProgress(int current, int total) {
-<<<<<<< HEAD
     std::ostringstream oss;
     oss << "Progress: " << current << "/" << total;
     formatLog(oss.str(), INFO);
@@ -502,49 +388,6 @@ void BenchmarkLogOutput::formatLog(const std::string& message, LogLevel level) {
     std::ostringstream oss;
     oss << "[" << nowTimeStamp() << "] " << levelToString(level) << " " << message << "\r\n";
     appendEditU8(m_hwnd, oss.str());
-=======
-    std::string msg = std::string("Progress: %1/%2 (%3%)")
-
-
-        );
-    formatLog(msg, INFO);
-}
-
-void BenchmarkLogOutput::logTestResult(const std::string& testName, bool passed, double latencyMs) {
-    std::string status = passed ? "✅ PASS" : "❌ FAIL";
-    std::string msg = std::string("  %1 %2 - %3 ms")
-
-
-        ;
-    formatLog(msg, passed ? SUCCESS : WARNING);
-}
-
-void BenchmarkLogOutput::clear() {
-    void::clear();
-}
-
-void BenchmarkLogOutput::formatLog(const std::string& message, LogLevel level) {
-    std::string timestamp = std::chrono::system_clock::time_point::currentDateTime().toString("hh:mm:ss");
-    std::string levelStr = levelToString(level);
-    
-    QTextCharFormat format;
-    format.setForeground(uint32_t(levelToColor(level)));
-    format.setFont(std::string("Courier", 9));
-    
-    // Move cursor to end
-    moveCursor(QTextCursor::End);
-    
-    // Insert formatted text
-    setCurrentCharFormat(format);
-    insertPlainText(std::string("[%1] %2 %3\n")
-
-
-        );
-    
-    // Scroll to bottom
-    moveCursor(QTextCursor::End);
-    ensureCursorVisible();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::string BenchmarkLogOutput::levelToString(LogLevel level) {
@@ -558,13 +401,9 @@ std::string BenchmarkLogOutput::levelToString(LogLevel level) {
     }
 }
 
-<<<<<<< HEAD
 uint32_t BenchmarkLogOutput::levelToColor(LogLevel level) {
     // Return RGB color values for different log levels
     // Format: 0x00BBGGRR (Windows COLORREF format)
-=======
-std::string BenchmarkLogOutput::levelToColor(LogLevel level) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     switch (level) {
         case DEBUG:   return 0x00808080;  // Gray
         case INFO:    return 0x00FFFFFF;  // White
@@ -579,21 +418,13 @@ std::string BenchmarkLogOutput::levelToColor(LogLevel level) {
 // BenchmarkResultsDisplay
 // ============================================================================
 
-<<<<<<< HEAD
 void BenchmarkResultsDisplay::create(HWND parent, int x, int y, int w, int h) {
     parent_ = parent;
     (void)x; (void)y; (void)w; (void)h;
-=======
-// TestResult struct is now defined in benchmark_menu_widget.hpp
-
-BenchmarkResultsDisplay::BenchmarkResultsDisplay(void* parent)
-    : void(parent), totalTests_(0) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     setupUI();
 }
 
 void BenchmarkResultsDisplay::setupUI() {
-<<<<<<< HEAD
     if (!parent_) return;
     if (resultsDisplay_ && IsWindow(resultsDisplay_)) return;
 
@@ -606,25 +437,6 @@ void BenchmarkResultsDisplay::setupUI() {
         0, 0, 10, 10, parent_, (HMENU)(INT_PTR)IDC_PROGRESS, GetModuleHandleW(nullptr), nullptr);
     SendMessageW(progressBar_, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
     SendMessageW(progressBar_, PBM_SETPOS, 0, 0);
-=======
-    auto layout = new void(this);
-
-    // Progress bar
-    progressBar_ = new void(this);
-    progressBar_->setRange(0, 100);
-    progressBar_->setValue(0);
-    layout->addWidget(new void("Overall Progress:", this));
-    layout->addWidget(progressBar_);
-
-    // Results table
-    resultsDisplay_ = new void(this);
-    resultsDisplay_->setReadOnly(true);
-    resultsDisplay_->setFont(std::string("Courier", 9));
-    layout->addWidget(new void("Results Summary:", this));
-    layout->addWidget(resultsDisplay_);
-
-    layout->addStretch();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void BenchmarkResultsDisplay::setTotalTests(int count) {
@@ -642,7 +454,6 @@ void BenchmarkResultsDisplay::updateProgress(int current) {
 }
 
 void BenchmarkResultsDisplay::addResult(const std::string& testName, bool passed,
-<<<<<<< HEAD
                                        double avgLatencyMs, double p95LatencyMs, double successRate) {
     TestResult r;
     r.testName = testName;
@@ -669,41 +480,6 @@ void BenchmarkResultsDisplay::showSummary(int passed, int total, double executio
         << "  time=" << executionTimeSec << "s\r\n";
     oss << "============================================================\r\n";
     appendEditU8(resultsDisplay_, oss.str());
-=======
-                                        double avgLatencyMs, double p95LatencyMs,
-                                        double successRate) {
-    TestResult result{testName, passed, avgLatencyMs, p95LatencyMs, successRate};
-    results_.push_back(result);
-
-    // Update display
-    std::string status = passed ? "✅" : "⚠";
-    std::string line = std::string("%1 %2 - Avg: %3ms, P95: %4ms, Success: %5%\n")
-
-
-        );
-
-    resultsDisplay_->append(line);
-}
-
-void BenchmarkResultsDisplay::showSummary(int passed, int total, double executionTimeSec) {
-    std::string divider = std::string("=").repeated(60);
-    std::string summary = std::string("\n%1\nBENCHMARK SUMMARY\n%2\n\n"
-        "Tests Passed:  %3/%4\n"
-        "Execution Time: %5 seconds\n\n")
-
-
-        ;
-
-    if (passed == total) {
-        summary += "ALL TESTS PASSED!\n";
-    } else if (passed >= static_cast<int>(total * 0.75)) {
-        summary += "✓ MOST TESTS PASSED - Minor issues\n";
-    } else {
-        summary += "⚠ Some tests failed - Review needed\n";
-    }
-
-    resultsDisplay_->append(summary);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void BenchmarkResultsDisplay::reset() {
@@ -711,20 +487,14 @@ void BenchmarkResultsDisplay::reset() {
 }
 
 // ============================================================================
-// BenchmarkMenu (Win32 integration)
+// BenchmarkMenuWidget (Win32 integration)
 // ============================================================================
 
-<<<<<<< HEAD
-BenchmarkMenu::BenchmarkMenu(HWND mainWindow)
+BenchmarkMenuWidget::BenchmarkMenuWidget(HWND mainWindow)
     : mainWindow_(mainWindow) {
-=======
-BenchmarkMenu::BenchmarkMenu(void* mainWindow)
-    : mainWindow_(mainWindow), runnerThread_(nullptr) {
-    initialize();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
-BenchmarkMenu::~BenchmarkMenu() {
+BenchmarkMenuWidget::~BenchmarkMenuWidget() {
     stopBenchmarks();
     if (runnerThread_.joinable()) runnerThread_.join();
     delete selector_;
@@ -735,39 +505,38 @@ BenchmarkMenu::~BenchmarkMenu() {
     resultsDisplay_ = nullptr;
 }
 
-BenchmarkSelector* BenchmarkMenu::ensureSelectorAttached(HWND parent) {
+BenchmarkSelector* BenchmarkMenuWidget::ensureSelectorAttached(HWND parent) {
     if (!selector_) selector_ = new BenchmarkSelector();
     selector_->create(parent, 0, 0, 0, 0);
     return selector_;
 }
 
-BenchmarkLogOutput* BenchmarkMenu::ensureLogAttached(HWND logEdit) {
+BenchmarkLogOutput* BenchmarkMenuWidget::ensureLogAttached(HWND logEdit) {
     if (!logOutput_) logOutput_ = new BenchmarkLogOutput();
     logOutput_->attach(logEdit);
     return logOutput_;
 }
 
-BenchmarkResultsDisplay* BenchmarkMenu::ensureResultsAttached(HWND parent) {
+BenchmarkResultsDisplay* BenchmarkMenuWidget::ensureResultsAttached(HWND parent) {
     if (!resultsDisplay_) resultsDisplay_ = new BenchmarkResultsDisplay();
     resultsDisplay_->create(parent, 0, 0, 0, 0);
     return resultsDisplay_;
 }
 
-void BenchmarkMenu::notifyFinished() {
-    runnerActive_.store(false, std::memory_order_release);
+void BenchmarkMenuWidget::notifyFinished() {
+    running_.store(false, std::memory_order_release);
 }
 
-void BenchmarkMenu::initialize() {
+void BenchmarkMenuWidget::initialize() {
     createMenu();
     connectHandlers();
 }
 
-void BenchmarkMenu::createMenu() {
-<<<<<<< HEAD
+void BenchmarkMenuWidget::createMenu() {
     // Win32IDE already wires menu commands; we only provide the dialog behavior.
 }
 
-void BenchmarkMenu::createDialog() {
+void BenchmarkMenuWidget::createDialog() {
     ensureCommonControls();
     ensureClassRegistered();
 
@@ -783,90 +552,13 @@ void BenchmarkMenu::createDialog() {
         nullptr,
         GetModuleHandleW(nullptr),
         this);
-=======
-    // Find or create Tools menu
-    auto menuBar = mainWindow_->menuBar();
-    benchmarkMenu_ = nullptr;
-
-    for (auto action : menuBar->actions()) {
-        if (action->text() == "Tools") {
-            benchmarkMenu_ = action->menu();
-            break;
-        }
-    }
-
-    if (!benchmarkMenu_) {
-        benchmarkMenu_ = menuBar->addMenu("Tools");
-    }
-
-    // Add benchmark submenu
-    auto benchmarkSubmenu = benchmarkMenu_->addMenu("Benchmarks");
-    
-    auto openAction = benchmarkSubmenu->addAction("Run Benchmarks...");
-// Qt connect removed
-    benchmarkSubmenu->addSeparator();
-
-    auto viewAction = benchmarkSubmenu->addAction("View Results");
-// Qt connect removed
 }
 
-void BenchmarkMenu::createDialog() {
-    // Create main dialog
-    auto dialog = new void(mainWindow_);
-    dialog->setWindowTitle("RawrXD Benchmark Suite");
-    dialog->resize(1000, 700);
-
-    auto mainLayout = new void(dialog);
-
-    // Left side: selector
-    auto leftWidget = new void();
-    auto leftLayout = new void(leftWidget);
-    selector_ = new BenchmarkSelector();
-    leftLayout->addWidget(selector_);
-    
-    auto runButton = new void("Run Benchmarks");
-    auto stopButton = new void("Stop");
-    stopButton->setEnabled(false);
-    
-    auto buttonLayout = new void();
-    buttonLayout->addWidget(runButton);
-    buttonLayout->addWidget(stopButton);
-    leftLayout->addLayout(buttonLayout);
-
-    auto leftScroll = new void();
-    leftScroll->setWidget(leftWidget);
-    leftScroll->setWidgetResizable(true);
-    mainLayout->addWidget(leftScroll, 1);
-
-    // Right side: output and results
-    auto rightWidget = new void();
-    auto rightLayout = new void(rightWidget);
-
-    rightLayout->addWidget(new void("Benchmark Output:"));
-    logOutput_ = new BenchmarkLogOutput();
-    rightLayout->addWidget(logOutput_);
-
-    rightLayout->addWidget(new void("Results:"));
-    resultsDisplay_ = new BenchmarkResultsDisplay();
-    rightLayout->addWidget(resultsDisplay_);
-
-    mainLayout->addWidget(rightWidget, 2);
-
-    // Connect buttons
-// Qt connect removed
-// Qt connect removed
-    dialog->setLayout(mainLayout);
-
-    // Show dialog
-    dialog->exec();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
-}
-
-void BenchmarkMenu::connectHandlers() {
+void BenchmarkMenuWidget::connectHandlers() {
     if (!runner_) runner_ = std::make_unique<BenchmarkRunner>();
 }
 
-void BenchmarkMenu::openBenchmarkDialog() {
+void BenchmarkMenuWidget::openBenchmarkDialog() {
     createDialog();
     if (dialogHwnd_ && IsWindow(dialogHwnd_)) {
         ShowWindow(dialogHwnd_, SW_SHOW);
@@ -874,20 +566,13 @@ void BenchmarkMenu::openBenchmarkDialog() {
     }
 }
 
-void BenchmarkMenu::show() {
+void BenchmarkMenuWidget::show() {
     openBenchmarkDialog();
 }
 
-void BenchmarkMenu::runSelectedBenchmarks() {
-<<<<<<< HEAD
+void BenchmarkMenuWidget::runSelectedBenchmarks() {
     if (!runner_) runner_ = std::make_unique<BenchmarkRunner>();
     if (!dialogHwnd_ || !IsWindow(dialogHwnd_)) return;
-=======
-    auto selectedTests = selector_->getSelectedTests();
-    std::string modelPath = selector_->getModelPath();
-    bool gpuEnabled = selector_->isGPUEnabled();
-    bool verbose = selector_->isVerbose();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
     if (!selector_ || !logOutput_ || !resultsDisplay_) return;
 
@@ -896,75 +581,19 @@ void BenchmarkMenu::runSelectedBenchmarks() {
     const bool gpu = selector_->isGPUEnabled();
     const bool verbose = selector_->isVerbose();
 
-<<<<<<< HEAD
     if (tests.empty()) {
         logOutput_->logMessage("No tests selected.", BenchmarkLogOutput::WARNING);
         return;
     }
     if (model.empty()) {
         logOutput_->logMessage("No model path set. Browse to a GGUF path first.", BenchmarkLogOutput::WARNING);
-=======
-    logOutput_->logMessage(std::string("Model: %1"), 
-                          BenchmarkLogOutput::INFO);
-    logOutput_->logMessage(std::string("GPU: %1"), 
-                          BenchmarkLogOutput::INFO);
-    logOutput_->logMessage(std::string("Verbose: %1"), 
-                          BenchmarkLogOutput::INFO);
-    logOutput_->logMessage("", BenchmarkLogOutput::INFO);
-
-    logOutput_->logMessage(std::string("Running %1 tests...")), 
-                          BenchmarkLogOutput::INFO);
-    logOutput_->logMessage("", BenchmarkLogOutput::INFO);
-
-    resultsDisplay_->setTotalTests(selectedTests.size());
-
-    // Real Benchmark Execution (Replaces simulation)
-    // Note: Requires valid model path configuration
-    const std::string benchmarkModelPath = "models/benchmark.gguf"; 
-    
-    try {
-        auto engine = std::make_unique<RawrXD::CPUInferenceEngine>();
-        if (std::filesystem::exists(benchmarkModelPath)) {
-            engine->LoadModel(benchmarkModelPath);
-            
-            auto start = std::chrono::high_resolution_clock::now();
-            
-            // Perplexity/Speed Test
-            std::string prompt = "Benchmark initialization seq";
-            auto tokens = engine->Tokenize(prompt);
-            engine->Eval(tokens);
-            
-            auto end = std::chrono::high_resolution_clock::now();
-            double latencyMs = std::chrono::duration<double, std::milli>(end - start).count();
-            
-            // Log real results...
-        } else {
-             logOutput_->logMessage("Benchmark model not found, skipping specific test.", BenchmarkLogOutput::WARNING);
-        }
-    } catch (const std::exception& e) {
-        logOutput_->logMessage(std::string("Benchmark Error: ") + e.what(), BenchmarkLogOutput::ERROR);
-    }
-    
-    // Fallback for demo purposes if model missing:
-    // Run mathematical workload to stress CPU but label it clearly.
-    {
-        // CPU Stress Test
-
-        double p95LatencyMs = latencyMs * 1.1; 
-        double successRate = 100.0;
-        bool passed = latencyMs < 5000.0; // Pass if under 5s
-
-        logOutput_->logTestResult(std::string::fromStdString(testName), passed, latencyMs);
-        resultsDisplay_->addResult(std::string::fromStdString(testName), passed, 
-                                  latencyMs, p95LatencyMs, successRate);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 
     resultsDisplay_->setTotalTests((int)tests.size());
     logOutput_->clear();
     logOutput_->logMessage("Benchmark run starting...", BenchmarkLogOutput::INFO);
 
-    runnerActive_.store(true, std::memory_order_release);
+    running_.store(true, std::memory_order_release);
 
     const HWND hwnd = dialogHwnd_;
 
@@ -1018,9 +647,9 @@ void BenchmarkMenu::runSelectedBenchmarks() {
     runner_->runBenchmarks(tests, model, gpu, verbose);
 }
 
-void BenchmarkMenu::stopBenchmarks() {
+void BenchmarkMenuWidget::stopBenchmarks() {
     if (runner_) runner_->stop();
-    runnerActive_.store(false, std::memory_order_release);
+    running_.store(false, std::memory_order_release);
     if (dialogHwnd_ && IsWindow(dialogHwnd_)) {
         EnableWindow(GetDlgItem(dialogHwnd_, IDC_RUN), TRUE);
         EnableWindow(GetDlgItem(dialogHwnd_, IDC_STOP), FALSE);
@@ -1028,7 +657,7 @@ void BenchmarkMenu::stopBenchmarks() {
     }
 }
 
-void BenchmarkMenu::viewBenchmarkResults() {
+void BenchmarkMenuWidget::viewBenchmarkResults() {
     openBenchmarkDialog();
 }
 
@@ -1037,7 +666,7 @@ void BenchmarkMenu::viewBenchmarkResults() {
 // ============================================================================
 
 static LRESULT CALLBACK BenchWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    auto* menu = reinterpret_cast<BenchmarkMenu*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    auto* menu = reinterpret_cast<BenchmarkMenuWidget*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
 
     if (msg == WM_NCCREATE) {
         const CREATESTRUCTW* cs = reinterpret_cast<const CREATESTRUCTW*>(lParam);
@@ -1047,7 +676,7 @@ static LRESULT CALLBACK BenchWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
     switch (msg) {
         case WM_CREATE: {
-            menu = reinterpret_cast<BenchmarkMenu*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+            menu = reinterpret_cast<BenchmarkMenuWidget*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
             if (!menu) return 0;
 
             // Create left-side selector controls.

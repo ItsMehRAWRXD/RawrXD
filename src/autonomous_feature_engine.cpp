@@ -11,7 +11,6 @@
 #include <cmath>
 #include <iomanip>
 #include <fstream>
-<<<<<<< HEAD
 #include <filesystem>
 
 using namespace RawrXD;
@@ -43,13 +42,6 @@ AutonomousFeatureEngine::~AutonomousFeatureEngine() {
     hybridCloudManager = nullptr;
     codebaseEngine = nullptr;
 }
-=======
-
-using namespace RawrXD;
-
-AutonomousFeatureEngine::AutonomousFeatureEngine(void* parent) {}
-AutonomousFeatureEngine::~AutonomousFeatureEngine() {}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 void AutonomousFeatureEngine::setHybridCloudManager(HybridCloudManager* manager) {
     hybridCloudManager = manager;
@@ -87,7 +79,6 @@ std::string GenerateUUID() {
     return std::string(buffer);
 }
 
-<<<<<<< HEAD
 // Helper to generate documentation template for a function
 static std::string generateDocumentationTemplate(const FunctionInfo& func) {
     std::stringstream ss;
@@ -140,20 +131,6 @@ GeneratedTest AutonomousFeatureEngine::generateTestsForFunction(const std::strin
     
     ExecutionResult res = hybridCloudManager->execute(req);
     
-=======
-GeneratedTest AutonomousFeatureEngine::generateTestsForFunction(const std::string& code, const std::string& language) {
-    GeneratedTest test;
-    if (!hybridCloudManager) return test;
-    
-    ExecutionRequest req;
-    req.requestId = "gen-test-" + GenerateUUID();
-    req.taskType = "generation";
-    req.prompt = generatePrompt("test", code);
-    req.language = language;
-    
-    ExecutionResult res = hybridCloudManager->execute(req);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     if (res.success) {
         test.testCode = res.response;
         test.framework = "GoogleTest";
@@ -225,7 +202,6 @@ std::vector<PerformanceOptimization> AutonomousFeatureEngine::suggestOptimizatio
              size_t nextLine = res.response.find('\n', rPos);
              opt.reasoning = res.response.substr(rPos + 10, nextLine - (rPos + 10));
         }
-<<<<<<< HEAD
         // Estimate expected speedup from heuristic keywords.
         if (res.response.find("O(1)") != std::string::npos || res.response.find("cache") != std::string::npos || res.response.find("allocation") != std::string::npos) {
              opt.expectedSpeedup = 2.0;
@@ -235,16 +211,6 @@ std::vector<PerformanceOptimization> AutonomousFeatureEngine::suggestOptimizatio
              opt.expectedSpeedup = 1.1;
         }
         opt.confidence = 0.7;
-=======
-        // Parse impact analysis or infer from keywords
-        if (res.response.find("O(1)") != std::string::npos || res.response.find("cache") != std::string::npos || res.response.find("allocation") != std::string::npos) {
-             opt.impact = "High";
-        } else if (res.response.find("O(n)") != std::string::npos || res.response.find("loop") != std::string::npos) {
-             opt.impact = "Medium";
-        } else {
-             opt.impact = "Low";
-        }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
         opts.push_back(opt);
     }
@@ -264,7 +230,6 @@ void AutonomousFeatureEngine::analyzeCode(const std::string& code, const std::st
         }
     }
     
-<<<<<<< HEAD
     // Check for documentation gaps using comprehensive analysis
     // This uses the CodebaseEngine to perform deep semantic analysis
     if (codebaseEngine) {
@@ -331,34 +296,6 @@ void AutonomousFeatureEngine::analyzeCode(const std::string& code, const std::st
             
             if (!line.empty()) prevLine = line;
         }
-=======
-    // Check for documentation gaps (Real Logic)
-    // We assume access to CodebaseEngine singleton or pass it in
-    // For now we implement basic gap detection: look for functions without preceding comments
-    // Simple heuristic for C++
-    std::istringstream stream(code);
-    std::string line;
-    std::string prevLine;
-    int lineNum = 0;
-    while (std::getline(stream, line)) {
-        lineNum++;
-        size_t funcPos = line.find("void ");
-        if (funcPos == std::string::npos) funcPos = line.find("int ");
-        if (funcPos == std::string::npos) funcPos = line.find("bool ");
-        
-        if (funcPos != std::string::npos && line.find("(") != std::string::npos && line.find(")") != std::string::npos && line.find(";") == std::string::npos) {
-             // Found potential function definition
-             if (prevLine.find("//") == std::string::npos && prevLine.find("*/") == std::string::npos) {
-                 AutonomousSuggestion s;
-                 s.type = "doc_missing";
-                 s.filePath = filePath;
-                 s.explanation = "Missing documentation for function at line " + std::to_string(lineNum);
-                 s.confidence = 0.6;
-                 suggestions.push_back(s);
-             }
-        }
-        if(!line.empty()) prevLine = line;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     for (const auto& s : suggestions) {
@@ -377,21 +314,13 @@ std::vector<AutonomousSuggestion> AutonomousFeatureEngine::getSuggestionsForCode
     CodeQualityMetrics q = assessCodeQuality(code, language);
     
     // 2. Complexity Reduction Suggestion
-<<<<<<< HEAD
     const double cyclomatic = q.details.value("cyclomatic_complexity", 0.0);
     if (cyclomatic > 15.0) {
-=======
-    if (q.details["cyclomatic_complexity"] > 15) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         AutonomousSuggestion s;
         s.suggestionId = GenerateUUID();
         s.type = "refactoring";
         s.filePath = "buffer";
-<<<<<<< HEAD
         s.explanation = "High cyclomatic complexity (" + std::to_string(static_cast<int>(cyclomatic)) + "). Consider breaking down function.";
-=======
-        s.explanation = "High cyclomatic complexity (" + std::to_string(int(q.details["cyclomatic_complexity"])) + "). Consider breaking down function.";
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         s.confidence = 0.85;
         suggestions.push_back(s);
     }
@@ -512,7 +441,6 @@ std::vector<AutonomousSuggestion> AutonomousFeatureEngine::getActiveSuggestions(
     return activeSuggestions;
 }
 
-<<<<<<< HEAD
 void AutonomousFeatureEngine::acceptSuggestion(const std::string& id) {
     auto it = std::find_if(activeSuggestions.begin(), activeSuggestions.end(),
                            [&](const AutonomousSuggestion& s){ return s.suggestionId == id; });
@@ -544,17 +472,6 @@ std::vector<GeneratedTest> AutonomousFeatureEngine::generateTestSuite(const std:
     
     auto symbols = codebaseEngine->getSymbolsInFile(filePath);
     
-=======
-void AutonomousFeatureEngine::acceptSuggestion(const std::string& id) {}
-void AutonomousFeatureEngine::rejectSuggestion(const std::string& id) {}
-void AutonomousFeatureEngine::dismissSuggestion(const std::string& id) {}
-std::vector<GeneratedTest> AutonomousFeatureEngine::generateTestSuite(const std::string& filePath) {
-    std::vector<GeneratedTest> tests;
-    if (!codebaseEngine) return tests;
-    
-    auto symbols = codebaseEngine->getSymbolsInFile(filePath);
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Call Model Instead
     for (const auto& sym : symbols) {
         if (sym.type == "function") {
@@ -874,11 +791,7 @@ void AutonomousFeatureEngine::updateLearningModel(const std::string& c, const st
            << "}" << std::endl;
     }
 }
-<<<<<<< HEAD
 std::vector<std::string> AutonomousFeatureEngine::predictNextAction(const std::string& codeContext) {
-=======
-std::vector<std::string> AutonomousFeatureEngine::getRecommendedActions(const std::string& codeContext) {
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     std::vector<std::string> actions;
     
     // Heuristic: If code has 'TODO', suggest 'Implement TODO'
@@ -897,7 +810,6 @@ std::vector<std::string> AutonomousFeatureEngine::getRecommendedActions(const st
     }
     
     // Use Cloud for intelligent prediction if available
-<<<<<<< HEAD
     if (hybridCloudManager) {
         ExecutionRequest req;
         req.requestId = "pred-" + GenerateUUID();
@@ -908,16 +820,6 @@ std::vector<std::string> AutonomousFeatureEngine::getRecommendedActions(const st
         if (res.success && res.response.length() < 50) {
              actions.insert(actions.begin(), res.response);
         }
-=======
-    ExecutionRequest req;
-    req.requestId = "pred-" + GenerateUUID();
-    req.taskType = "prediction";
-    req.prompt = "Predict the next mostly likely developer action for this code:\n" + codeContext.substr(0, 1000); // Limit context
-    
-    ExecutionResult res = hybridCloudManager->execute(req);
-    if (res.success && res.response.length() < 50) {
-         actions.insert(actions.begin(), res.response);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     if (actions.empty()) actions.push_back("Refactor");
@@ -1050,7 +952,6 @@ void AutonomousFeatureEngine::errorOccurred(const std::string& e) {
     if (onErrorOccurred) onErrorOccurred(e);
 }
 void AutonomousFeatureEngine::onAnalysisTimerTimeout() {
-<<<<<<< HEAD
     // Trigger periodic re-analysis of active files
     // This ensures suggestions stay current as the codebase evolves
     
@@ -1144,14 +1045,6 @@ void AutonomousFeatureEngine::onAnalysisTimerTimeout() {
         
         // Also check git status for modified files
         CheckGitStatusForModifications(currentProjectPath);
-=======
-    // Real logic: detailed scan if idle?
-    // For now, assume this triggers re-checking of active files or full scan if needed.
-    // If we have a project path, we might want to ask CodebaseEngine for updates.
-    if (codebaseEngine && !currentProjectPath.empty()) {
-        // Maybe inconsistent if thread safety isn't handled in engine, but let's assume it is.
-        // codebaseEngine->analyzeEntireCodebase(currentProjectPath); // Too heavy?
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
 }
 AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(const std::string& c, const std::string& l) {
@@ -1168,7 +1061,6 @@ AutonomousSuggestion AutonomousFeatureEngine::generateTestSuggestion(const std::
     return s;
 }
 
-<<<<<<< HEAD
 // ============================================================================
 // Additional Helper Implementations
 // ============================================================================
@@ -1569,6 +1461,3 @@ void AutonomousFeatureEngine::CheckGitStatusForModifications(const std::string& 
     
     _pclose(pipe);
 }
-=======
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

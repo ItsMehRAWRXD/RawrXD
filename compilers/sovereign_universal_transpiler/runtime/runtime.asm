@@ -1,47 +1,60 @@
 ; runtime.asm - Runtime registration for Sovereign Universal Transpiler
-; Provides the tiny native support layer
+; v0.2 - Production: Real function pointer table with proper references
+
+option casemap:none
+
+; The runtime functions are defined in separate modules:
+; - print.asm: RuntimePrintString
+; - exit.asm: RuntimeExit
+; - memory.asm: RuntimeAlloc, RuntimeFree
+
+extrn RuntimePrintString:proc
+extrn RuntimeExit:proc
+extrn RuntimeAlloc:proc
+extrn RuntimeFree:proc
 
 .data
-    ; Runtime function table
-    runtime_table    dq 0    ; array of function pointers
-    runtime_count    dd 0
-    
     ; Function IDs
     FUNC_PRINT       equ 1
     FUNC_EXIT        equ 2
     FUNC_ALLOC       equ 3
+    FUNC_FREE        equ 4
 
 .code
 
 ; RuntimeInit - Initialize runtime function table
+; Returns: RAX = 1 on success
 RuntimeInit PROC
-    ; Register functions
-    ; In production: allocate table, populate with function pointers
-    mov dword ptr [runtime_count], 3
+    ; No initialization needed - functions are linked directly
+    mov rax, 1
     ret
 RuntimeInit ENDP
 
 ; RuntimeGetFunction - Get function pointer by ID
 ; RCX = function ID
-; Returns: RAX = function pointer
+; Returns: RAX = function pointer (0 if invalid)
 RuntimeGetFunction PROC
-    cmp rcx, FUNC_PRINT
+    cmp ecx, FUNC_PRINT
     je get_print
-    cmp rcx, FUNC_EXIT
+    cmp ecx, FUNC_EXIT
     je get_exit
-    cmp rcx, FUNC_ALLOC
+    cmp ecx, FUNC_ALLOC
     je get_alloc
+    cmp ecx, FUNC_FREE
+    je get_free
     xor rax, rax
     ret
 get_print:
-    ; lea rax, RuntimePrintString
-    mov rax, 0              ; placeholder
+    lea rax, [RuntimePrintString]
     ret
 get_exit:
-    mov rax, 0
+    lea rax, [RuntimeExit]
     ret
 get_alloc:
-    mov rax, 0
+    lea rax, [RuntimeAlloc]
+    ret
+get_free:
+    lea rax, [RuntimeFree]
     ret
 RuntimeGetFunction ENDP
 

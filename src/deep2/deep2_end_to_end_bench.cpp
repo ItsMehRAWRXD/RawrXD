@@ -26,6 +26,7 @@
 #else
     #include <sys/resource.h>
     #include <sys/time.h>
+#include "gguf_loader.h"
 #endif
 
 // DeepSeek V3 671B Configuration
@@ -594,3 +595,4 @@ int main(int argc, char* argv[]) {
     
     return results.success ? 0 : 1;
 }
+

@@ -5,6 +5,7 @@
 #include "GGUFLoader.hpp"
 #include "GGUFDiagnostics.hpp"
 #include <cstdio>
+#include "gguf_loader.h"
 
 using namespace Deep2;
 
@@ -73,3 +74,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+

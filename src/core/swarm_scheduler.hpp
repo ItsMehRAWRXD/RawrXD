@@ -282,8 +282,8 @@ class ISwarmMemoryBackend
                                                                        std::uint64_t size) = 0;
     virtual void unpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) = 0;
 
-    /// Warm a second mapping without unmapping the compute window (loader dual-window). Default: NotImplemented.
-    [[nodiscard]] virtual RawrXD::Swarm::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex,
+    /// Warm a second mapping without unmapping the compute window (loader dual-window). Default: returns true.
+    [[nodiscard]] virtual bool prefetchPinRange(std::uint32_t modelIndex,
                                                                                std::uint64_t offset,
                                                                                std::uint64_t size);
     virtual void prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size);
@@ -696,7 +696,7 @@ class RawrXDModelLoaderMemoryBackend final : public ISwarmMemoryBackend
     [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> pinRange(std::uint32_t modelIndex, std::uint64_t offset,
                                                                std::uint64_t size) override;
     void unpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) override;
-    [[nodiscard]] RawrXD::Swarm::expected<void, SchedulerError> prefetchPinRange(std::uint32_t modelIndex, std::uint64_t offset,
+    [[nodiscard]] bool prefetchPinRange(std::uint32_t modelIndex, std::uint64_t offset,
                                                                        std::uint64_t size) override;
     void prefetchUnpinRange(std::uint32_t modelIndex, std::uint64_t offset, std::uint64_t size) override;
     void resetPrefetchPins() override;

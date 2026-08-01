@@ -63,7 +63,6 @@ bool ShadowPage::write(void* address, const void* data, size_t size) {
         return false;
     }
     
-<<<<<<< HEAD
     // Bounds check: ensure write doesn't exceed shadow page boundary
     uintptr_t shadowStart = reinterpret_cast<uintptr_t>(m_shadowPage);
     uintptr_t writeEnd = reinterpret_cast<uintptr_t>(shadowAddr) + size;
@@ -72,8 +71,6 @@ bool ShadowPage::write(void* address, const void* data, size_t size) {
         return false;  // Would write past end of shadow page
     }
     
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     // Write to shadow
     memcpy(shadowAddr, data, size);
     

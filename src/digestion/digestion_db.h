@@ -1,14 +1,10 @@
-<<<<<<< HEAD
 // ============================================================================
 // digestion_db.h — Digestion Database (SQLite3 C API, no Qt)
 // ============================================================================
-=======
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 #pragma once
 
 #include <string>
 #include <vector>
-<<<<<<< HEAD
 #include <map>
 #include <mutex>
 #include <cstdint>
@@ -21,22 +17,10 @@ struct DigestionMetrics {
     int64_t startMs = 0;
     int64_t endMs = 0;
     int64_t elapsedMs = 0;
-=======
-#include <nlohmann/json.hpp>
-#include <mutex>
-
-using json = nlohmann::json;
-
-struct DigestionMetrics {
-    long long startMs = 0;
-    long long endMs = 0;
-    long long elapsedMs = 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     int totalFiles = 0;
     int scannedFiles = 0;
     int stubsFound = 0;
     int fixesApplied = 0;
-<<<<<<< HEAD
     int64_t bytesProcessed = 0;
 };
 
@@ -71,15 +55,11 @@ struct DigestionTaskObj {
     std::string confidence;
     bool applied = false;
     std::string backupId;
-=======
-    long long bytesProcessed = 0;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 };
 
 class DigestionDatabase {
 public:
     explicit DigestionDatabase();
-<<<<<<< HEAD
     ~DigestionDatabase();
 
     bool open(const std::string &path, std::string *error = nullptr);
@@ -94,33 +74,14 @@ public:
     bool insertTask(int fileId, const DigestionTaskObj &taskObj, std::string *error = nullptr);
 
     std::vector<DigestionRunRow> fetchRecentRuns(int limit = 10, std::string *error = nullptr) const;
-=======
-
-    bool open(const std::string &path, std::string *error = nullptr);
-    bool ensureSchema(const std::string &schemaPath, std::string *error = nullptr);
-    bool insertRun(const std::string &rootDir, const DigestionMetrics &metrics, const json& report, int *runId, std::string *error = nullptr);
-    bool insertFileResult(int runId, const json& fileObj, std::string *error = nullptr);
-    
-    std::vector<json> fetchRecentRuns(int limit = 10, std::string *error = nullptr) const;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     bool deleteRun(int runId, std::string *error = nullptr);
 
     static std::string defaultSchema();
 
 private:
-<<<<<<< HEAD
     bool executeBatch(const std::vector<std::string> &statements, std::string *error);
 
     sqlite3* m_db = nullptr;
     mutable std::mutex m_mutex;
 };
 
-=======
-    std::string m_dbPath;
-    mutable std::mutex m_mutex;
-    
-    // Simple JSON-based storage helper
-    json loadDb() const;
-    bool saveDb(const json& db) const;
-};
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

@@ -300,15 +300,11 @@ void BatchProcessingEngine::batchWorker() {
 // 3. ADVANCED TOKENIZERS IMPLEMENTATION
 // ============================================================================
 
-<<<<<<< HEAD
 BPETokenizer::BPETokenizer()
     : m_mergeRanks()
     , m_vocab()
     , m_inverseVocab()
 {}
-=======
-BPETokenizer::BPETokenizer() {}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool BPETokenizer::loadMerges(const std::string& mergesFile) {
     std::ifstream file(mergesFile);
@@ -370,7 +366,6 @@ std::vector<int32_t> BPETokenizer::tokenize(const std::string& text) {
         tokens.erase(tokens.begin() + bestIdx + 1);
     }
     
-<<<<<<< HEAD
     // Convert merged tokens to IDs via vocabulary lookup
     std::vector<int32_t> result;
     for (const auto& t : tokens) {
@@ -400,16 +395,6 @@ std::vector<int32_t> BPETokenizer::tokenize(const std::string& text) {
                 result.push_back(static_cast<int32_t>(c));
             }
         }
-=======
-    // Convert to IDs (using simple hash or just bytes if vocab not full)
-    // Assuming implicit vocab from merges or we map string -> id
-    std::vector<int32_t> result;
-    for (const auto& t : tokens) {
-        // Mock ID generation for now since we don't reload full vocab map
-        int32_t id = 0; 
-        for(char c : t) id = (id << 8) | (unsigned char)c;
-        result.push_back(id & 0xFFFF); // Truncate
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     return result;
 }
@@ -424,15 +409,11 @@ std::string BPETokenizer::detokenize(const std::vector<int32_t>& tokens) {
     return result;
 }
 
-<<<<<<< HEAD
 SentencePieceTokenizer::SentencePieceTokenizer()
     : m_pieceToId()
     , m_idToPiece()
     , m_unknownId(-1)
 {}
-=======
-SentencePieceTokenizer::SentencePieceTokenizer() {}
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 bool SentencePieceTokenizer::loadModel(const std::string& modelPath) {
     std::ifstream file(modelPath);
@@ -841,11 +822,7 @@ std::string StructuredOutputFormatter::formatToken(const std::string& token, Out
         
         case OutputFormat::XML:
             return "<token index=\"" + std::to_string(tokenIndex) + "\">" + 
-<<<<<<< HEAD
                    StructuredOutputFormatter::formatToken(token, OutputFormat::TEXT, tokenIndex) + 
-=======
-                   StreamingUtils::escapeXML(token) + 
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
                    "</token>\n";
         
         default:

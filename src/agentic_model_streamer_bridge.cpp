@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <sstream>
 #include <chrono>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace Agentic {
@@ -838,3 +839,4 @@ void StreamingModelInferenceEngine::EvictLRUZones(size_t requiredBytes) {
 
 } // namespace Agentic
 } // namespace RawrXD
+

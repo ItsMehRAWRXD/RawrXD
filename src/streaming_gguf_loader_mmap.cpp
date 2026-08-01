@@ -10,6 +10,7 @@
 #endif
 #include <algorithm>
 #include <iostream>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -482,3 +483,4 @@ bool StreamingGGUFLoaderMMap::streamZoneAsync(
 }
 
 } // namespace RawrXD
+

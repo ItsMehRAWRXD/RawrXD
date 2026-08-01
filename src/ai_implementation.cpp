@@ -272,7 +272,6 @@ AIImplementation::AIImplementation(
 
 bool AIImplementation::initialize(const LLMConfig& config) {
     m_config = config;
-<<<<<<< HEAD
 
     const bool isLocalRuntime = (m_config.backend == "local" || m_config.backend == "ollama");
     if (m_config.backend != "local" && m_config.backend != "ollama" && m_config.backend != "openai" &&
@@ -395,10 +394,6 @@ bool AIImplementation::initialize(const LLMConfig& config) {
                 " lane=" + m_resolvedRuntimeLane +
                 " endpoint=" + m_config.endpoint);
         }
-=======
-    if (m_logger) {
-
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     return testConnectivity();
 }

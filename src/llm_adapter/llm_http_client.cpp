@@ -92,7 +92,6 @@ bool LLMHttpClient::initialize(
     {
         std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
         for (int i = 0; i < config.connectionPoolSize; ++i) {
-<<<<<<< HEAD
             // Create WinHTTP session handles for the connection pool
 #ifdef _WIN32
             HINTERNET hSession = WinHttpOpen(
@@ -111,13 +110,6 @@ bool LLMHttpClient::initialize(
             // POSIX: pool index marker for curl multi handle
             m_connectionPool.push(reinterpret_cast<void*>(static_cast<uintptr_t>(i + 1)));
 #endif
-=======
-            // Real connection objects
-            CURL* curl = curl_easy_init();
-            if (curl) {
-                 m_connectionPool.push(curl);
-            }
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         }
     }
 
@@ -1042,7 +1034,6 @@ bool LLMHttpClient::isTokenExpired() const {
 }
 
 bool LLMHttpClient::refreshOAuth2Token() {
-<<<<<<< HEAD
     // OAuth2 token refresh via HTTP POST to the token endpoint
     std::string tokenUrl = m_config.baseUrl;
     // Derive token endpoint from base URL (strip /v1 or /api, append /oauth/token)
@@ -1158,47 +1149,6 @@ bool LLMHttpClient::refreshOAuth2Token() {
         m_credentials.tokenExpiresAt = getCurrentTimestampMs() + 3600 * 1000; // default 1hr
         return true;
     }
-=======
-    if (m_credentials.refreshToken.empty() || m_credentials.tokenEndpoint.empty()) {
-        return false;
-    }
-
-    // Real OAuth2 Token Refresh
-    APIRequest req;
-    req.endpoint = m_credentials.tokenEndpoint; // Usually absolute URL, need handling
-    // If endpoint is relative, prepend baseUrl? Assuming absolute or config handles it.
-    // For safety, generic implementation:
-    
-    // Construct generic OAuth2 refresh body
-    json body;
-    body["grant_type"] = "refresh_token";
-    body["refresh_token"] = m_credentials.refreshToken;
-    if (!m_credentials.clientId.empty()) body["client_id"] = m_credentials.clientId;
-    if (!m_credentials.clientSecret.empty()) body["client_secret"] = m_credentials.clientSecret;
-    
-    req.body = body;
-    req.method = "POST";
-    
-    // Bypass token check to avoid recursion
-    APIResponse resp = sendHTTPRequest(req, false); 
-    
-    if (resp.success) {
-        try {
-            auto j = json::parse(resp.responseBody);
-            if (j.contains("access_token")) {
-                m_credentials.apiKey = j["access_token"]; // Update token (apiKey holds bearer)
-                if (j.contains("expires_in")) {
-                    m_credentials.tokenExpiresAt = getCurrentTimestampMs() + (j["expires_in"].get<int>() * 1000);
-                }
-                if (j.contains("refresh_token")) {
-                    m_credentials.refreshToken = j["refresh_token"];
-                }
-                return true;
-            }
-        } catch (...) {}
-    }
-    
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     return false;
 #endif
 }

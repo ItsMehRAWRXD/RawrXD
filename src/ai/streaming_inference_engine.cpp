@@ -9,6 +9,7 @@
 #include <cstring>
 #include <sstream>
 #include <random>
+#include "vulkan_compute.h"
 
 namespace RawrXD {
 
@@ -722,3 +723,4 @@ std::unique_ptr<StreamingInferenceEngine> CreateStreamingEngine(VulkanCompute* v
 }
 
 } // namespace RawrXD
+

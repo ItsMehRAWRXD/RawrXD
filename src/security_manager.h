@@ -6,6 +6,7 @@
 #include <memory>
 #include <cstdint>
 #include <chrono>
+#include <fstream>
 
 // Encryption algorithm constants
 enum class EncryptionAlgorithm {
@@ -50,8 +51,8 @@ public:
     // Singleton access
     static SecurityManager& getInstance();
     
-    // Initialization
-    bool initialize(const std::string& masterPassword = "");
+    // Initialization — masterPassword must not be empty
+    bool initialize(const std::string& masterPassword);
     bool validateSetup() const;
     
     // Encryption / Decryption
@@ -113,6 +114,13 @@ private:
     void loadStoredCredentials();
     void loadACLConfiguration();
     
+    // Persist/load the PBKDF2 salt so the master key is reproducible across sessions
+    bool persistSalt(const std::vector<uint8_t>& salt);
+    std::vector<uint8_t> loadPersistedSalt();
+
+    // Append one audit entry to the on-disk log
+    void appendAuditEntryToDisk(const SecurityAuditEntry& entry);
+
     // State
     bool m_initialized;
     bool m_debugMode;
@@ -120,16 +128,19 @@ private:
     std::string m_currentKeyId;
     int64_t m_lastKeyRotation;
     int64_t m_keyRotationInterval;      // in seconds
-    
+
     // Credentials storage (encrypted)
     std::map<std::string, CredentialInfo> m_credentials;
-    
+
     // Access control lists
     std::map<std::string, std::map<std::string, AccessLevel>> m_acl;
-    
+
     // Certificate pinning database
     std::map<std::string, std::string> m_pinnedCertificates;
-    
-    // Audit log
+
+    // In-memory audit ring (last 10 000 entries for fast query)
     std::vector<SecurityAuditEntry> m_auditLog;
+
+    // Path for the persistent audit log file
+    std::string m_auditLogPath;
 };

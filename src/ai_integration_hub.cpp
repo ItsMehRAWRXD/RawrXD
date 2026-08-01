@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "ai_integration_hub.h"
 #include <stdexcept>
 #include <chrono>
@@ -10,24 +9,6 @@
 // AI Integration Hub - Production Implementation
 // Bridges AI capabilities to IDE components
 
-=======
-#include "../include/ai_integration_hub.h"
-#include <iostream>
-#include <filesystem>
-
-// Component Headers
-#include "../include/CompletionEngine.h"
-#include "../include/CodebaseContextAnalyzer.h"
-#include "../include/SmartRewriteEngine.h"
-#include "../include/MultiModalModelRouter.h"
-#include "../include/LanguageServerIntegration.h"
-#include "../include/PerformanceOptimizer.h"
-#include "../include/AdvancedCodingAgent.h"
-
-// Namespaces
-using namespace RawrXD;
-using namespace RawrXD::IDE;
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 AIIntegrationHub::AIIntegrationHub() {
     m_logger = std::make_shared<Logger>("AIHub");
@@ -118,7 +99,6 @@ std::vector<CodeCompletion> AIIntegrationHub::getCompletions(
 ) {
     if (!m_completionEngine || !isReady()) return {};
 
-<<<<<<< HEAD
     auto span = m_tracer->startSpan("ai_hub.get_completions");
     span->setAttribute("file_path", filePath);
 
@@ -216,24 +196,6 @@ std::vector<CodeCompletion> AIIntegrationHub::getCompletions(
         m_metrics->incrementCounter("completion_errors");
         span->setStatus("error", e.what());
         return {};
-=======
-    CompletionContext ctx;
-    ctx.filePath = filePath;
-    ctx.linePrefix = prefix;
-    ctx.lineSuffix = suffix;
-    // ctx.lineNumber = ...; // Would need fuller context
-    
-    auto suggestions = m_completionEngine->getCompletions(ctx);
-    
-    std::vector<CodeCompletion> result;
-    for (const auto& s : suggestions) {
-        CodeCompletion cc;
-        cc.text = s.text;
-        cc.detail = s.description;
-        cc.confidence = s.confidence;
-        cc.kind = s.kind;
-        result.push_back(cc);
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     
     return result;
@@ -241,7 +203,6 @@ std::vector<CodeCompletion> AIIntegrationHub::getCompletions(
 
 std::vector<CodeSuggestion> AIIntegrationHub::getSuggestions(
     const std::string& code,
-<<<<<<< HEAD
     const std::string& context) {
 
     auto span = m_tracer->startSpan("ai_hub.get_suggestions");
@@ -594,43 +555,6 @@ void AIIntegrationHub::indexCodebase(const std::string& rootPath) {
     } catch (const std::exception& e) {
         m_logger->error("Error indexing codebase: {}", e.what());
         span->setStatus("error", e.what());
-=======
-    const std::string& context
-) {
-    // Coding Agent not implemented fully for suggestions yet
-    return {};
-}
-
-std::string AIIntegrationHub::generateDocumentation(const std::string& code) {
-    // Placeholder for Agent documentation generation
-    return "";
-}
-
-std::vector<GeneratedTestCase> AIIntegrationHub::generateTests(const std::string& function) {
-    if (!m_codingAgent || !isReady()) return {};
-    
-    // Assuming Agent has generateTests capability exposed or we use implementFeature
-    // For now returning empty to satisfy interface
-    return {};
-}
-
-std::vector<BugReport> AIIntegrationHub::findBugs(const std::string& code) {
-    // Analyzing code for bugs
-    return {};
-}
-
-std::vector<Optimization> AIIntegrationHub::optimizeCode(const std::string& code) {
-    if (!m_rewriteEngine || !isReady()) return {};
-    
-    // auto res = m_rewriteEngine->optimizeCode(code, "cpp");
-    // Convert TransformationResult to Optimization
-    return {};
-}
-
-void AIIntegrationHub::indexCodebase(const std::string& rootPath) {
-    if (m_backgroundThread && m_backgroundThread->joinable()) {
-        m_backgroundThread->join();
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     }
     m_backgroundThread = std::make_unique<std::thread>([this, rootPath]() {
         if (m_contextAnalyzer) {
@@ -644,7 +568,6 @@ void AIIntegrationHub::indexCodebase(const std::string& rootPath) {
 
 
 void AIIntegrationHub::setLatencyTarget(int milliseconds) {
-<<<<<<< HEAD
     m_logger->info("Setting latency target to {} ms", milliseconds);
     // Configure inference engine for target latency
     if (m_inferenceEngine) {
@@ -658,9 +581,6 @@ void AIIntegrationHub::setLatencyTarget(int milliseconds) {
         }
     }
     m_metrics->recordHistogram("latency_target_ms", milliseconds);
-=======
-    // Logic to adjust inference engine parameters
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 std::vector<std::string> AIIntegrationHub::getAvailableModels() const {
@@ -671,7 +591,6 @@ std::vector<std::string> AIIntegrationHub::getAvailableModels() const {
 }
 
 void AIIntegrationHub::backgroundInitialization() {
-<<<<<<< HEAD
     try {
         m_logger->info("Starting background initialization");
 
@@ -784,23 +703,6 @@ void AIIntegrationHub::startBackgroundServices() {
     
     // Model health monitoring
     m_logger->info("Model health monitor active");
-=======
-    // Warmup caches, etc.
-}
-
-bool AIIntegrationHub::validateModelCompatibility(const std::string& modelPath) {
-    return true;
-}
-
-void AIIntegrationHub::setupModelRouting() {
-    if (m_formatRouter && !m_currentModel.empty()) {
-        // m_formatRouter->Configure(m_currentModel);
-    }
-}
-
-void AIIntegrationHub::initializeAIComponents() {
-    // Link components together if needed
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }
 
 void AIIntegrationHub::startBackgroundServices() {
