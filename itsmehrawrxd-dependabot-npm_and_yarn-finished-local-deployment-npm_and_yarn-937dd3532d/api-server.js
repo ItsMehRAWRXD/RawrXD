@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
 const crypto = require('crypto');
+const { SovereignBeaconStreamer } = require('./SovereignBeacon');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -186,6 +187,57 @@ async function initializeEngine() {
         console.log('Real Encryption Engine initialized');
     }
 }
+
+// Sovereign Beacon — unidirectional UDP pulse emitter
+let sovereignBeacon = null;
+
+function initializeBeacon() {
+    const nodeId = process.env.BEACON_NODE_ID || 'rawrz-api-server';
+    const targetHost = process.env.BEACON_TARGET_HOST || '127.0.0.1';
+    const targetPort = parseInt(process.env.BEACON_TARGET_PORT || '9999', 10);
+    const minSeconds = parseInt(process.env.BEACON_MIN_INTERVAL || '10', 10);
+    const maxSeconds = parseInt(process.env.BEACON_MAX_INTERVAL || '30', 10);
+
+    sovereignBeacon = new SovereignBeaconStreamer(nodeId, targetHost, targetPort, {
+        includeSysinfo: true,
+        includeEntropy: true,
+        jitter: true
+    });
+    sovereignBeacon.start(minSeconds, maxSeconds);
+    console.log(`[BEACON] Sovereign beacon mounted: ${nodeId} -> ${targetHost}:${targetPort}`);
+}
+
+// Beacon status endpoint
+app.get('/api/beacon/status', (req, res) => {
+    if (!sovereignBeacon) {
+        return res.status(503).json({
+            success: false,
+            error: 'Beacon not initialized'
+        });
+    }
+    res.json({
+        success: true,
+        beacon: sovereignBeacon.getStatus(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Beacon manual pulse trigger
+app.post('/api/beacon/pulse', (req, res) => {
+    if (!sovereignBeacon) {
+        return res.status(503).json({
+            success: false,
+            error: 'Beacon not initialized'
+        });
+    }
+    const { status } = req.body || {};
+    sovereignBeacon.transmitPulse(status || 'MANUAL_PULSE');
+    res.json({
+        success: true,
+        message: 'Pulse transmitted',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Routes
 
@@ -702,11 +754,15 @@ app.delete('/api/files/delete/:filename', async (req, res) => {
 async function startServer() {
     await ensureDirectories();
 
+    // Initialize Sovereign Beacon — dark outbound signaling
+    initializeBeacon();
+
     app.listen(PORT, () => {
         console.log(`RawrZ Security Platform - Real Only`);
         console.log(`Server running on port ${PORT}`);
         console.log(`Main interface: http://localhost:${PORT}`);
         console.log(`API endpoints: http://localhost:${PORT}/api/`);
+        console.log(`Beacon status: http://localhost:${PORT}/api/beacon/status`);
     });
 }
 
