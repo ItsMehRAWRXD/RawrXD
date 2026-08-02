@@ -179,7 +179,15 @@ rawrxd_rotate_buffer_slots PROC FRAME
     xor     rax, rax
 
 @exit:
-    leave
+    mov     rsp, rbp
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rsi
+    pop     rdi
+    pop     rbx
+    pop     rbp
     ret
 rawrxd_rotate_buffer_slots ENDP
 
