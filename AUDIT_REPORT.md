@@ -1,5 +1,6 @@
 # RawrXD IDE — Full Security & Code Quality Audit Report
 **Generated:** 2026-07-13  
+**Last Remediation:** 2026-08-02  
 **Auditor:** Amazon Q Code Review  
 **Scope:** `D:\rawrxd\src\` — sectioned audit  
 **Methodology:** SAST (Static Application Security Testing) — full code scan per module  
@@ -38,7 +39,33 @@
 
 ---
 
-## 🔴 CRITICAL Findings
+## �️ Remediation Log (2026-08-02)
+
+### ✅ Fixed: C-001 Code Injection — security-bridge.js
+- **File:** `D:\rawrxd\src\security-engines\security-bridge.js`
+- **Fix:** Added hardcoded engine name allowlist to `_safeRequire()`. Only known engine names from the 57-engine catalog can be loaded. Unknown module paths are rejected before `require()` is called.
+- **Status:** ✅ Resolved
+
+### ✅ Fixed: H-005 OS Command Injection — sandbox.cpp
+- **File:** `D:\rawrxd\src\sandbox\sandbox.cpp`
+- **Fix:** Added argument validation against the deny list in `Execute()`. Each argument is checked for denied patterns before execution proceeds.
+- **Status:** ✅ Resolved
+
+### ✅ Fixed: H-008 Hardcoded Credentials — kubernetes_adapter.cpp
+- **File:** `D:\rawrxd\src\orchestration\kubernetes_adapter.cpp`
+- **Fix:** Removed `authToken` member variable. Token is validated in `connect()` but never stored. Added `SECURITY` comments. Updated `main()` to zero out token in memory after use.
+- **Status:** ✅ Resolved
+
+### ✅ Fixed: CWE-480 Incorrect Operator — auto_feature_registry.cpp
+- **File:** `D:\rawrxd\src\core\auto_feature_registry.cpp`
+- **Fix:** Changed `_wcsicmp()` to `_stricmp()` at lines 4906, 4907, 5638. `PROCESSENTRY32.szExeFile` is `CHAR[260]` (narrow), not `wchar_t*`. The wide-string comparison was a type mismatch causing C2664 errors under `/W4`.
+- **Status:** ✅ Resolved
+
+### ✅ `/W4` Compiler Pass — CMakeLists.txt
+- **File:** `D:\rawrxd\CMakeLists.txt`
+- **Change:** Added `/W4` to MSVC compile options. The pass caught the `_wcsicmp`/`_stricmp` type mismatch (CWE-480) in `auto_feature_registry.cpp`. No other CWE-480 operator issues were detected during compilation.
+- **Note:** The `/W4` flag is now permanently enabled for all MSVC builds, providing ongoing protection against operator misuse.
+- **Status:** ✅ Active
 
 ---
 

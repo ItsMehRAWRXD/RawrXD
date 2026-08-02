@@ -14,50 +14,33 @@
 #pragma warning(disable: 4996)
 
 // =============================================================================
-// EXTERN DECLARATIONS - MASM Assembly Functions
+// EXTERN DECLARATIONS - RawrXD_QuadBuffer_Streamer.asm exports (REAL)
 // =============================================================================
 
 extern "C" {
-    // Core quad-buffer functions
-    void* INFINITY_InitializeStream(
-        const wchar_t* file_path,
-        uint64_t layer_size,
-        uint32_t total_layers,
-        void* vram_base
-    );
-    
-    // Returns VRAM pointer or YTFN_SENTINEL trap
-    uint64_t INFINITY_CheckQuadBuffer(
-        uint64_t layer_index,
-        uint64_t buffer_head
-    );
-    
-    // Rotates buffer window forward
-    void INFINITY_RotateBuffers(
-        uint64_t current_layer
-    );
-    
-    // Background thread processing I/O completion port
-    void INFINITY_ProcessIOCP(void);
-    
-    // Trap handler for stalling until data ready
-    uint64_t INFINITY_HandleYTfnTrap(
-        uint64_t trapped_address
-    );
-    
-    // Performance metrics
-    void INFINITY_GetMetrics(
-        uint64_t* hdd_read_bytes,
-        uint64_t* dma_write_bytes,
-        uint64_t* stall_cycles,
-        uint32_t* trap_count
-    );
-    
-    void INFINITY_ResetMetrics(void);
-    uint32_t INFINITY_GetState(uint32_t _index);
-    uint64_t INFINITY_GetVramPtr(uint32_t _index);
-    uint64_t INFINITY_GetRamPtr(uint32_t _index);
-    void INFINITY_Shutdown(void);
+    // Real QuadBuffer API from RawrXD_QuadBuffer_Streamer.asm
+    int64_t QB_Init(uint64_t max_vram_bytes, uint64_t max_ram_bytes);
+    int64_t QB_Shutdown(void);
+    int64_t QB_LoadModel(const wchar_t* file_path, uint32_t format_hint);
+    int64_t QB_StreamTensor(uint64_t tensor_name_hash, void* p_dest, uint64_t max_bytes, uint32_t timeout_ms);
+    int64_t QB_ReleaseTensor(uint64_t tensor_name_hash);
+    int64_t QB_GetStats(uint64_t* p_stats_out);  // 8 QWORDs
+    int64_t QB_ForceEviction(uint64_t target_bytes_to_free);
+    int64_t QB_SetVRAMLimit(uint64_t new_limit_bytes);
+    void*   QB_GetEngineDescriptor(void);
+
+    // Streaming QuadBuffer (SPSC ring + GDI render) from RawrXD_Streaming_QuadBuffer.asm
+    int64_t SQB_Init(uint32_t slot_count, uint64_t slot_bytes);
+    int64_t SQB_Shutdown(void);
+    HWND    SQB_CreateRenderWnd(HWND parent, int32_t width, int32_t height, uint32_t child_id);
+    int64_t SQB_DestroyRenderWnd(void);
+    int64_t SQB_PushFrame(const void* p_data, uint64_t data_len);
+    int64_t SQB_GetFrameStats(uint64_t* p_out);  // 4 QWORDs
+    int64_t SQB_SetTargetFPS(uint32_t fps);
+
+    // Prefetch kernel from quadbuffer_prefetch.asm
+    void    rawrxd_prefetch_tensor_async(void* tensor_data, uint32_t layer_id, uint32_t slot_index);
+    uint64_t rawrxd_rotate_buffer_slots(void* current_active_ptr, void* next_ready_ptr, uint64_t rdtsc_threshold);
 }
 
 // =============================================================================
@@ -149,287 +132,223 @@ public:
         phase3_context = phase3_ctx;
         phase4_context = phase4_ctx;
         phase5_context = phase5_ctx;
-        
+
         // Store metadata
         total_layers = num_layers;
         layer_size = layer_size_bytes;
-        
-        // Initialize MASM quad-buffer system
-        orchestrator_ctx = INFINITY_InitializeStream(
-            model_file_path,
-            layer_size_bytes,
-            num_layers,
-            vram_base_address
-        );
-        
-        if (!orchestrator_ctx) {
+
+        // Initialize real MASM quad-buffer system (16GB VRAM / 64GB RAM default)
+        int64_t rc = QB_Init(17179869184ULL, 68719476736ULL);
+        if (rc != 0) {
             return false;
         }
-        
-        // Start IOCP processing thread
+
+        // Load model file (auto-detect format)
+        rc = QB_LoadModel(model_file_path, 0);
+        if (rc != 0) {
+            QB_Shutdown();
+            return false;
+        }
+
+        // Initialize SPSC streaming ring (4 slots x 4MB)
+        rc = SQB_Init(4, 4 * 1024 * 1024);
+        if (rc != 0) {
+            QB_Shutdown();
+            return false;
+        }
+
+        orchestrator_ctx = reinterpret_cast<void*>(1); // Mark as initialized
         running = true;
-        iocp_thread = std::thread([this]() {
-            IOCPThreadProc();
-        });
-        
         return true;
     }
-    
+
     void Shutdown(void) {
         if (!running) return;
-        
         running = false;
-        
-        // Wait for IOCP thread
-        if (iocp_thread.joinable()) {
-            // Note: This may block if IOCP is waiting indefinitely
-            // In production, use a timeout or separate shutdown mechanism
-            // iocp_thread.join();
-        }
-        
-        // Close MASM resources
-        INFINITY_Shutdown();
+
+        SQB_Shutdown();
+        QB_Shutdown();
         orchestrator_ctx = nullptr;
     }
-    
+
     // =================================================================
     // Buffer Access Interface
     // =================================================================
-    
-    // Get physical VRAM pointer for a layer
-    // Returns actual pointer or calls trap handler if not ready
-    uint64_t GetLayerPtr(uint64_t layer_index) {
-        uint64_t ptr = INFINITY_CheckQuadBuffer(layer_index, 0);
-        
-        // Check for trap
-        if (ptr == YTFN_SENTINEL || ptr > YTFN_SENTINEL) {
-            // Data not ready - handle trap
-            ptr = INFINITY_HandleYTfnTrap(ptr);
-        }
-        
-        return ptr;
+
+    // Stream tensor by hash into destination buffer
+    // Returns bytes streamed or negative error code
+    int64_t StreamTensor(uint64_t tensor_hash, void* dest, uint64_t max_bytes, uint32_t timeout_ms = 0) {
+        return QB_StreamTensor(tensor_hash, dest, max_bytes, timeout_ms);
     }
-    
-    // Non-blocking variant - returns YTFN_SENTINEL if not ready
-    uint64_t GetLayerPtrNonBlocking(uint64_t layer_index) {
-        return INFINITY_CheckQuadBuffer(layer_index, 0);
+
+    // Release tensor reference (allows eviction)
+    int64_t ReleaseTensor(uint64_t tensor_hash) {
+        return QB_ReleaseTensor(tensor_hash);
     }
-    
-    // Notify orchestrator that GPU finished with a layer
-    // This triggers buffer rotation and next prefetch
-    void NotifyLayerComplete(uint64_t completed_layer_index) {
-        INFINITY_RotateBuffers(completed_layer_index);
-        
-        // Log for metrics
-        SnapshotMetrics();
-    }
-    
+
     // =================================================================
     // Phase Integration Helpers
     // =================================================================
-    
-    // Phase 2 Integration: Get next layer from HDD after model loaded
-    uint64_t Phase2_GetNextLayerPtr(uint32_t layer_idx) {
-        // Called by Phase 2 model loader during streaming
-        return GetLayerPtr(layer_idx);
+
+    // Phase 2 Integration: Prefetch layer into slot via ASM prefetch kernel
+    void Phase2_PrefetchLayer(void* tensor_data, uint32_t layer_id, uint32_t slot_index) {
+        rawrxd_prefetch_tensor_async(tensor_data, layer_id, slot_index);
     }
-    
-    // Phase 3 Integration: Notify inference kernel of layer boundaries
-    void Phase3_NotifyLayerBoundary(uint32_t layer_idx) {
-        // Called by Phase 3 after tensor computation completes
-        // This allows Phase 3 to signal when to rotate buffers
-        NotifyLayerComplete(layer_idx);
+
+    // Phase 3 Integration: Rotate buffer slots after compute completes
+    uint64_t Phase3_RotateSlots(void* current_active, void* next_ready, uint64_t rdtsc_threshold) {
+        return rawrxd_rotate_buffer_slots(current_active, next_ready, rdtsc_threshold);
     }
-    
-    // Phase 4 Integration: Initiate DMA from RAM to VRAM
-    bool Phase4_InitiateDMA(uint32_t _index, uint64_t dest_vram) {
-        // Get RAM pointer from quad-buffer 
-        uint64_t ram_ptr = INFINITY_GetRamPtr(_index);
-        uint32_t state = INFINITY_GetState(_index);
-        
-        // Only DMA if  is READY
-        if (state != BUF_STATE_READY) {
-            return false;
-        }
-        
-        // Initiate GPU DMA from ram_ptr to dest_vram (layer_size bytes)
-        // This would interface with actual GPU DMA engine
-        // For now, just validate pointers
-        
-        return (ram_ptr > 0 && dest_vram > 0);
+
+    // Phase 4 Integration: Force eviction if VRAM pressure
+    int64_t Phase4_ForceEviction(uint64_t bytes_to_free) {
+        return QB_ForceEviction(bytes_to_free);
     }
-    
+
     // Phase 5 Integration: Report metrics to orchestrator
     void Phase5_ReportMetrics(void) {
         SnapshotMetrics();
-        
-        if (metrics_history.empty()) return;
-        
-        auto& latest = metrics_history.back();
-        
-        // Phase 5 can use these metrics for:
-        // - Autotuning decisions
-        // - Performance monitoring
-        // - Load balancing
-        // - Health checks
     }
-    
+
     // =================================================================
     // Status Queries
     // =================================================================
-    
-    uint32_t GetState(uint32_t _index) {
-        if (_index >= QUAD_BUFFER_COUNT) return -1;
-        return INFINITY_GetState(_index);
-    }
-    
-    uint64_t GetVramPtr(uint32_t _index) {
-        if (_index >= QUAD_BUFFER_COUNT) return 0;
-        return INFINITY_GetVramPtr(_index);
-    }
-    
-    uint64_t GetRamPtr(uint32_t _index) {
-        if (_index >= QUAD_BUFFER_COUNT) return 0;
-        return INFINITY_GetRamPtr(_index);
-    }
-    
-    // Get current buffer state
+
+    // Get current buffer state from real QB engine
     struct BufferStatus {
-        uint32_t s[QUAD_BUFFER_COUNT];
-        int32_t layers[QUAD_BUFFER_COUNT];
+        uint64_t used_vram;
+        uint64_t used_ram;
+        uint64_t cache_hits;
+        uint64_t cache_misses;
+        uint64_t evictions;
+        uint64_t total_streamed;
+        uint32_t tensor_count;
+        uint32_t block_count;
         double efficiency_percent;
     };
-    
+
     BufferStatus GetBufferStatus(void) {
         BufferStatus status = {};
-        
-        for (int i = 0; i < QUAD_BUFFER_COUNT; i++) {
-            status.s[i] = GetState(i);
+        uint64_t stats[8] = {0};
+        QB_GetStats(stats);
+        status.used_vram        = stats[0];
+        status.used_ram         = stats[1];
+        status.cache_hits       = stats[2];
+        status.cache_misses     = stats[3];
+        status.evictions        = stats[4];
+        status.total_streamed   = stats[5];
+        status.tensor_count     = static_cast<uint32_t>(stats[6]);
+        status.block_count      = static_cast<uint32_t>(stats[7]);
+
+        uint64_t total = status.cache_hits + status.cache_misses;
+        if (total > 0) {
+            status.efficiency_percent = (status.cache_hits * 100.0) / total;
         }
-        
-        // Calculate efficiency: READY/COMPUTING s / total
-        uint32_t active = 0;
-        for (int i = 0; i < QUAD_BUFFER_COUNT; i++) {
-            if (status.s[i] == BUF_STATE_READY || 
-                status.s[i] == BUF_STATE_COMPUTING) {
-                active++;
-            }
-        }
-        status.efficiency_percent = (active * 100.0) / QUAD_BUFFER_COUNT;
-        
         return status;
     }
-    
+
+    // =================================================================
+    // Streaming Render Interface (SPSC Ring + GDI)
+    // =================================================================
+
+    HWND CreateRenderWindow(HWND parent, int32_t width, int32_t height, uint32_t child_id) {
+        return SQB_CreateRenderWnd(parent, width, height, child_id);
+    }
+
+    int64_t PushRenderFrame(const void* data, uint64_t len) {
+        return SQB_PushFrame(data, len);
+    }
+
+    int64_t GetFrameStats(uint64_t* out_stats) {
+        return SQB_GetFrameStats(out_stats);
+    }
+
+    int64_t SetRenderFPS(uint32_t fps) {
+        return SQB_SetTargetFPS(fps);
+    }
+
     // =================================================================
     // Metrics Interface
     // =================================================================
-    
+
     struct Metrics {
-        uint64_t hdd_read_bytes;
-        uint64_t dma_write_bytes;
-        uint64_t stall_cycles;
-        uint32_t trap_count;
-        uint32_t trap_resolved_count;
+        uint64_t used_vram;
+        uint64_t used_ram;
+        uint64_t cache_hits;
+        uint64_t cache_misses;
+        uint64_t evictions;
+        uint64_t total_streamed;
         uint64_t uptime_microseconds;
-        double hdd_throughput_mbps;
-        double dma_throughput_mbps;
+        double hit_rate_percent;
     };
-    
+
     Metrics GetMetrics(void) {
         Metrics m = {};
-        INFINITY_GetMetrics(
-            &m.hdd_read_bytes,
-            &m.dma_write_bytes,
-            &m.stall_cycles,
-            &m.trap_count
-        );
-        
+        uint64_t stats[8] = {0};
+        QB_GetStats(stats);
+        m.used_vram      = stats[0];
+        m.used_ram       = stats[1];
+        m.cache_hits     = stats[2];
+        m.cache_misses   = stats[3];
+        m.evictions      = stats[4];
+        m.total_streamed = stats[5];
+
         auto now = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
-            now - init_time
-        );
+            now - init_time);
         m.uptime_microseconds = elapsed.count();
-        
-        // Calculate throughput if time > 0
-        if (m.uptime_microseconds > 0) {
-            double seconds = m.uptime_microseconds / 1e6;
-            m.hdd_throughput_mbps = (m.hdd_read_bytes / (1024.0 * 1024.0)) / seconds;
-            m.dma_throughput_mbps = (m.dma_write_bytes / (1024.0 * 1024.0)) / seconds;
+
+        uint64_t total = m.cache_hits + m.cache_misses;
+        if (total > 0) {
+            m.hit_rate_percent = (m.cache_hits * 100.0) / total;
         }
-        
         return m;
     }
-    
+
     void ResetMetrics(void) {
-        INFINITY_ResetMetrics();
         metrics_history.clear();
     }
-    
+
     const std::vector<MetricsSnapshot>& GetMetricsHistory(void) const {
         return metrics_history;
     }
-    
+
     // =================================================================
     // Diagnostics
     // =================================================================
-    
+
     void PrintStatus(void) {
         auto status = GetBufferStatus();
         auto metrics = GetMetrics();
-        
+
         printf("[QuadBuffer] Status:\n");
-        printf("  s: ");
-        for (int i = 0; i < QUAD_BUFFER_COUNT; i++) {
-            const char* state_str = "?";
-            switch (status.s[i]) {
-                case BUF_STATE_EMPTY:     state_str = "E"; break;
-                case BUF_STATE_LOADING:   state_str = "L"; break;
-                case BUF_STATE_READY:     state_str = "R"; break;
-                case BUF_STATE_COMPUTING: state_str = "C"; break;
-            }
-            printf("%s ", state_str);
-        }
-        printf("\n");
-        printf("  Efficiency: %.1f%%\n", status.efficiency_percent);
-        printf("  HDD Read: %llu bytes (%.2f MB/s)\n", 
-               metrics.hdd_read_bytes, metrics.hdd_throughput_mbps);
-        printf("  DMA Write: %llu bytes (%.2f MB/s)\n",
-               metrics.dma_write_bytes, metrics.dma_throughput_mbps);
-        printf("  Traps: %u (resolved: %u)\n",
-               metrics.trap_count, metrics.trap_resolved_count);
-        printf("  Stalls: %llu cycles\n", metrics.stall_cycles);
+        printf("  VRAM: %llu / RAM: %llu\n", status.used_vram, status.used_ram);
+        printf("  Tensors: %u  Blocks: %u\n", status.tensor_count, status.block_count);
+        printf("  Hits: %llu  Misses: %llu  Evictions: %llu\n",
+               metrics.cache_hits, metrics.cache_misses, metrics.evictions);
+        printf("  Hit Rate: %.1f%%\n", metrics.hit_rate_percent);
+        printf("  Total Streamed: %llu bytes\n", metrics.total_streamed);
         printf("  Uptime: %.2f seconds\n", metrics.uptime_microseconds / 1e6);
     }
 
 private:
     // =================================================================
-    // IOCP Thread Procedure
-    // =================================================================
-    
-    void IOCPThreadProc(void) {
-        while (running) {
-            INFINITY_ProcessIOCP();
-            // ProcessIOCP will block indefinitely waiting for completions
-            // In production, add timeout mechanism
-        }
-    }
-    
-    // =================================================================
     // Metrics Snapshot
     // =================================================================
-    
+
     void SnapshotMetrics(void) {
         MetricsSnapshot snap;
-        INFINITY_GetMetrics(
-            &snap.hdd_read_bytes,
-            &snap.dma_write_bytes,
-            &snap.stall_cycles,
-            &snap.trap_count
-        );
+        uint64_t stats[8] = {0};
+        QB_GetStats(stats);
+        snap.hdd_read_bytes   = stats[5]; // total_streamed as proxy
+        snap.dma_write_bytes  = stats[0]; // used_vram as proxy
+        snap.stall_cycles     = stats[4]; // evictions as proxy
+        snap.trap_count       = static_cast<uint32_t>(stats[3]); // misses as proxy
+        snap.trap_resolved_count = static_cast<uint32_t>(stats[2]); // hits as proxy
         snap.timestamp = std::chrono::system_clock::now();
-        
+
         metrics_history.push_back(snap);
-        
+
         // Keep only last 1000 snapshots to avoid memory bloat
         if (metrics_history.size() > 1000) {
             metrics_history.erase(metrics_history.begin());
@@ -445,12 +364,14 @@ static QuadBufferOrchestrator* g_orchestrator = nullptr;
 
 // C interface for system integration
 extern "C" {
-    
+
     void* QuadBuffer_Create(void) {
-        g_orchestrator = nullptr;
+        if (!g_orchestrator) {
+            g_orchestrator = new QuadBufferOrchestrator();
+        }
         return g_orchestrator;
     }
-    
+
     bool QuadBuffer_Initialize(
         void* handle,
         const wchar_t* model_file,
@@ -467,28 +388,47 @@ extern "C" {
         return qb->Initialize(model_file, layer_size, num_layers, vram_base,
                             phase2_ctx, phase3_ctx, phase4_ctx, phase5_ctx);
     }
-    
-    uint64_t QuadBuffer_GetLayerPtr(void* handle, uint64_t layer_idx) {
-        if (!handle) return 0;
+
+    int64_t QuadBuffer_StreamTensor(void* handle, uint64_t tensor_hash, void* dest, uint64_t max_bytes, uint32_t timeout_ms) {
+        if (!handle) return -1;
         auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
-        return qb->GetLayerPtr(layer_idx);
+        return qb->StreamTensor(tensor_hash, dest, max_bytes, timeout_ms);
     }
-    
-    uint64_t QuadBuffer_GetLayerPtrNonBlocking(void* handle, uint64_t layer_idx) {
-        if (!handle) return 0;
+
+    int64_t QuadBuffer_ReleaseTensor(void* handle, uint64_t tensor_hash) {
+        if (!handle) return -1;
         auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
-        return qb->GetLayerPtrNonBlocking(layer_idx);
+        return qb->ReleaseTensor(tensor_hash);
     }
-    
-    void QuadBuffer_NotifyLayerComplete(void* handle, uint64_t layer_idx) {
+
+    void QuadBuffer_PrefetchLayer(void* handle, void* tensor_data, uint32_t layer_id, uint32_t slot_index) {
         if (!handle) return;
         auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
-        qb->NotifyLayerComplete(layer_idx);
+        qb->Phase2_PrefetchLayer(tensor_data, layer_id, slot_index);
     }
-    
+
+    uint64_t QuadBuffer_RotateSlots(void* handle, void* current_active, void* next_ready, uint64_t rdtsc_threshold) {
+        if (!handle) return 0;
+        auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
+        return qb->Phase3_RotateSlots(current_active, next_ready, rdtsc_threshold);
+    }
+
+    int64_t QuadBuffer_ForceEviction(void* handle, uint64_t bytes_to_free) {
+        if (!handle) return -1;
+        auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
+        return qb->Phase4_ForceEviction(bytes_to_free);
+    }
+
+    void QuadBuffer_ReportMetrics(void* handle) {
+        if (!handle) return;
+        auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
+        qb->Phase5_ReportMetrics();
+    }
+
     void QuadBuffer_Destroy(void* handle) {
         if (!handle) return;
         auto* qb = static_cast<QuadBufferOrchestrator*>(handle);
+        qb->Shutdown();
         delete qb;
         g_orchestrator = nullptr;
     }

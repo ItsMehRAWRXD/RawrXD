@@ -142,6 +142,7 @@ RefactorSuggestions.json
 
 # Additional build dirs and large files
 build_smoke_verify/
+build_ninja/
 build_ninja3/
 build_smoke_verify2/
 *.map
