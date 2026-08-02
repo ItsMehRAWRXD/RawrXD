@@ -863,8 +863,8 @@ QB_Init PROC FRAME
     mov     r13, rdx                    ; MaxRAM
 
     ; --- Allocate context structure ---
-    mov     rcx, SIZEOF QB_CONTEXT
-    xor     edx, edx
+    xor     ecx, ecx
+    mov     edx, SIZEOF QB_CONTEXT
     mov     r8d, MEM_COMMIT OR MEM_RESERVE
     mov     r9d, PAGE_READWRITE
     call    VirtualAlloc
@@ -887,8 +887,8 @@ QB_Init PROC FRAME
     mov     [r14].QB_CONTEXT.MaxRAMBytes, r13
 
     ; --- Allocate tensor table (16384 entries) ---
-    mov     rcx, QB_MAX_TENSORS * SIZEOF QB_TENSOR_INFO
-    xor     edx, edx
+    xor     ecx, ecx
+    mov     edx, QB_MAX_TENSORS * SIZEOF QB_TENSOR_INFO
     mov     r8d, MEM_COMMIT OR MEM_RESERVE
     mov     r9d, PAGE_READWRITE
     call    VirtualAlloc
@@ -897,8 +897,8 @@ QB_Init PROC FRAME
     mov     [r14].QB_CONTEXT.pTensorTable, rax
 
     ; --- Allocate block table (131072 entries) ---
-    mov     rcx, QB_MAX_BLOCKS * SIZEOF QB_BLOCK
-    xor     edx, edx
+    xor     ecx, ecx
+    mov     edx, QB_MAX_BLOCKS * SIZEOF QB_BLOCK
     mov     r8d, MEM_COMMIT OR MEM_RESERVE
     mov     r9d, PAGE_READWRITE
     call    VirtualAlloc

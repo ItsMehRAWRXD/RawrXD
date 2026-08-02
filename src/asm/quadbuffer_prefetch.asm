@@ -62,12 +62,12 @@ rawrxd_prefetch_tensor_async PROC FRAME
     mov     g_PrefetchRdtscStart, rax
 
     ; 2. Non-Temporal Prefetch Loop (SSE/AVX hint)
-    ; Prefetch every 4KB page for first 256MB of shard as warm-up.
+    ; Bounded to 64 bytes (one cache line) to avoid over-read on small buffers.
     xor     r11, r11            ; offset = 0
 @prefetch_loop:
     prefetchnta [r12 + r11]     ; non-temporal prefetch
-    add     r11, 4096           ; stride = 4KB
-    cmp     r11, 10000000h      ; 256MB warm-up
+    add     r11, 64             ; stride = 64 bytes (cache line)
+    cmp     r11, 40h            ; 64 bytes total
     jb      @prefetch_loop
 
     ; 3. Notify Hub of Async Launch via BeaconSend
@@ -85,7 +85,15 @@ rawrxd_prefetch_tensor_async PROC FRAME
 
     mov     rax, 0              ; Return 0 = success
 
-    leave
+    mov     rsp, rbp
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rsi
+    pop     rdi
+    pop     rbx
+    pop     rbp
     ret
 rawrxd_prefetch_tensor_async ENDP
 
