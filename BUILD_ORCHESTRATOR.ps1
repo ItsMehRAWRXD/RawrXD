@@ -31,9 +31,9 @@ function AnalyzeBuildState {
     if ($SkipAnalysis) { return @{ NeedsCompilers = $true; NeedsIDE = $true } }
     
     $state = @{
-        CompilersBuilt = (Get-ChildItem 'compilers' -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 50
-        IDEBuilt = (Get-ChildItem 'build' -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -in 'RawrXD-Win32IDE.exe','rawrxd.exe' } | Measure-Object).Count -gt 0
-        DesktopReady = (Get-ChildItem 'dist' -Filter '*.ps1' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
+        CompilersBuilt = @(Get-ChildItem 'compilers' -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 50
+        IDEBuilt = @(Get-ChildItem 'build' -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -in 'RawrXD-Win32IDE.exe','rawrxd.exe' } | Measure-Object).Count -gt 0
+        DesktopReady = @(Get-ChildItem 'dist' -Filter '*.ps1' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
     }
     
     return $state
@@ -242,9 +242,9 @@ function AnalyzeBuildState {
     if ($SkipAnalysis) { return @{ NeedsCompilers = $true; NeedsIDE = $true } }
     
     $state = @{
-        CompilersBuilt = (Get-ChildItem 'compilers' -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 50
-        IDEBuilt = (Get-ChildItem 'build' -Filter 'RawrXD.exe' -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
-        DesktopReady = (Get-ChildItem 'dist' -Filter '*.ps1' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
+        CompilersBuilt = @(Get-ChildItem 'compilers' -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 50
+        IDEBuilt = @(Get-ChildItem 'build' -Filter 'RawrXD.exe' -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
+        DesktopReady = @(Get-ChildItem 'dist' -Filter '*.ps1' -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0
     }
     
     return $state

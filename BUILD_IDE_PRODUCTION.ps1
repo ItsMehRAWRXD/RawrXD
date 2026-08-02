@@ -486,7 +486,7 @@ $report = @{
     'Project Root' = $ProjectRoot
     'Build Directory' = $BuildDir
     'Output Directory' = $OutputDir
-    'Compiler Count' = (Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
+    'Compiler Count' = @(Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
     'IDE Built' = if (Get-ChildItem $BuildDir -Recurse -Filter '*.exe' -ErrorAction SilentlyContinue | Where-Object { $_.Name -in 'RawrXD-Win32IDE.exe','rawrxd.exe' }) { 'Yes' } else { 'No' }
     'Total Artifacts' = $buildArtifacts.Count
 }
@@ -949,7 +949,7 @@ $report = @{
     'Project Root' = $ProjectRoot
     'Build Directory' = $BuildDir
     'Output Directory' = $OutputDir
-    'Compiler Count' = (Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
+    'Compiler Count' = @(Get-ChildItem $CompilerDir -Filter '*.exe' -ErrorAction SilentlyContinue | Measure-Object).Count
     'IDE Built' = if (Get-ChildItem $BuildDir -Filter 'RawrXD.exe' -Recurse -ErrorAction SilentlyContinue) { 'Yes' } else { 'No' }
     'Total Artifacts' = $buildArtifacts.Count
 }

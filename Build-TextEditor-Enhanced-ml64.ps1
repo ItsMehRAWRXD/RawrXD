@@ -129,7 +129,7 @@ Write-Host "[✓] Library creation successful: $libSize bytes`n" -ForegroundColo
 
 Write-Host "[Stage 3] Validating..." -ForegroundColor Cyan
 
-$objCount = (Get-ChildItem $objDir -Filter "*.obj").Count
+$objCount = @(Get-ChildItem $objDir -Filter "*.obj").Count
 Write-Host "[✓] Object files: $objCount"
 
 if (Test-Path $libFile) {
