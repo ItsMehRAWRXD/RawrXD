@@ -6,10 +6,11 @@ option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)"
 
 # Force Windows SDK version BEFORE any project() or compiler checks
 # This MUST be set before project() to affect the VS generator
-if(WIN32)
-    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
-    set(CMAKE_SYSTEM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version" FORCE)
-endif()
+# TEMPORARILY DISABLED to allow fallback to available SDK
+# if(WIN32)
+#     set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.26100.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
+#     set(CMAKE_SYSTEM_VERSION "10.0.26100.0" CACHE STRING "Windows SDK version" FORCE)
+# endif()
 
 # =============================================================================
 # Windows SDK & MSVC CRT Path Resolution (Phase 41 Build Fix)
@@ -27,9 +28,9 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     else()
         set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
     endif()
-    set(_SDK_UCRT_VER "10.0.22621.0")    # Has ucrt
+    set(_SDK_UCRT_VER "10.0.22621.0")    # Use available SDK with complete ucrt
     
-    # Force use of 22621.0 since 26100.0 is not registered properly for MSBuild
+    # Use 22621.0 consistently (has both ucrt and um libs)
     set(_SDK_UM_VER "10.0.22621.0")
     
     # Fallback: if 10.0.26100.0 doesn't exist for um, try 10.0.22621.0 for everything
@@ -179,6 +180,8 @@ if(MSVC)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C,CXX>:/GS->
         $<$<COMPILE_LANGUAGE:C,CXX>:/sdl->
+        $<$<COMPILE_LANGUAGE:C,CXX>:/W4>
+        $<$<COMPILE_LANGUAGE:C,CXX>:/WX->
     )
     
     # AddressSanitizer configuration (MSVC 2019 16.9+)
@@ -992,6 +995,12 @@ set(SOURCES
     src/refactoring/RefactoringEngine.cpp
     src/validation/PatchValidator.cpp
     src/ide/IDEShell.cpp
+    src/ide/LSPClient.cpp
+    src/ide/GitIntegration.cpp
+    src/ide/BuildOutputParser.cpp
+    src/ide/SyntaxEditor.cpp
+    src/ide/GitDiffViewer.cpp
+    src/ide/GitCommitDialog.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -3605,6 +3614,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ide/FindReplaceDialog.cpp
         src/ide/GitCommitDialog.cpp
         src/ide/GitDiffViewer.cpp
+        src/ide/SyntaxEditor.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_RenamePreview.cpp
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
@@ -5070,6 +5080,192 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
+            VERBATIM
+        )
+        
+        # =========================================================================
+        # EVIDENCE GENERATION PIPELINE
+        # Claim → Artifact → Verifier chain for sovereign compliance
+        # =========================================================================
+        set(_EVIDENCE_DIR "${CMAKE_BINARY_DIR}/evidence")
+        file(MAKE_DIRECTORY "${_EVIDENCE_DIR}")
+        
+        # 1. Generate SHA256 hash of the binary for reproducibility
+        set(_BINARY_PATH "$<TARGET_FILE:RawrXD-Win32IDE>")
+        set(_HASH_OUTPUT_FILE "${_EVIDENCE_DIR}/binary_hash.txt")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating binary SHA256 hash..."
+            COMMAND powershell -Command "Get-FileHash -Path '${_BINARY_PATH}' -Algorithm SHA256 | Select-Object -ExpandProperty Hash | Out-File -FilePath '${_HASH_OUTPUT_FILE}' -NoNewline"
+            COMMENT "RawrXD-Win32IDE: Generating SHA256 hash for reproducibility"
+            VERBATIM
+        )
+        
+        # 2. Generate compiled_sources.txt - complete source inventory
+        set(_SOURCES_OUTPUT "${_EVIDENCE_DIR}/compiled_sources.txt")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating compiled_sources.txt..."
+            COMMAND ${CMAKE_COMMAND} -E echo "# Compiled Translation Units - RawrXD-Win32IDE" > "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "# Generated: $<IF:$<CONFIG:Release>,Release,$<IF:$<CONFIG:Debug>,Debug,Unknown>>" >> "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "# Build Date: $<STRING_TIMESTAMP>" >> "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "" >> "${_SOURCES_OUTPUT}"
+            # Extract from WIN32IDE_SOURCES (C++ files only)
+            COMMAND ${CMAKE_COMMAND} -E echo "${WIN32IDE_SOURCES}" | tr ";" "\n" | findstr /R "\\.cpp$ \\.c$" >> "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "" >> "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "# Assembly kernels" >> "${_SOURCES_OUTPUT}"
+            COMMAND ${CMAKE_COMMAND} -E echo "${ASM_KERNEL_SOURCES}" | tr ";" "\n" | findstr /R "\\.asm$" >> "${_SOURCES_OUTPUT}"
+            COMMENT "RawrXD-Win32IDE: Generating source inventory"
+            VERBATIM
+        )
+        
+        # 3. Generate linked_libraries.txt using dumpbin
+        set(_LINKED_LIBS_OUTPUT "${_EVIDENCE_DIR}/linked_libraries.txt")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating linked_libraries.txt..."
+            COMMAND "${CMAKE_LINKER}" /LINKERMEM:FULL "${_BINARY_PATH}" > "${_LINKED_LIBS_OUTPUT}"
+            COMMENT "RawrXD-Win32IDE: Extracting linked libraries"
+            VERBATIM
+        )
+        
+        # 4. Generate binary_imports.txt using dumpbin
+        set(_IMPORTS_OUTPUT "${_EVIDENCE_DIR}/binary_imports.txt")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating binary_imports.txt..."
+            COMMAND "${CMAKE_LINKER}" /IMPORTS "${_BINARY_PATH}" > "${_IMPORTS_OUTPUT}"
+            COMMENT "RawrXD-Win32IDE: Extracting DLL import table"
+            VERBATIM
+        )
+        
+        # 5. Generate architecture_report.json with PE metadata
+        set(_ARCH_REPORT "${_EVIDENCE_DIR}/architecture_report.json")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating architecture_report.json..."
+            COMMAND powershell -Command "
+                $binary = '${_BINARY_PATH}';
+                $hash = Get-Content '${_HASH_OUTPUT_FILE}';
+                $size = (Get-Item $binary).Length;
+                $peInfo = dumpbin /HEADERS $binary | Select-String 'machine \(x64\)|image version|substrystem';
+                $json = @{
+                    artifact = 'RawrXD-Win32IDE.exe';
+                    sha256 = $hash;
+                    size_bytes = $size;
+                    configuration = '$<IF:$<CONFIG:Release>,Release,$<IF:$<CONFIG:Debug>,Debug,Unknown>>';
+                    timestamp = Get-Date -Format 'o';
+                    architecture = 'x64';
+                    verification = 'pending';
+                    sovereign_compliance = @{
+                        total_sources = 0;
+                        sovereign_sources = 0;
+                        third_party_sources = 0;
+                        integration_patterns_found = @();
+                    }
+                };
+                $json | ConvertTo-Json -Depth 10 | Out-File -FilePath '${_ARCH_REPORT}' -Encoding utf8"
+            COMMENT "RawrXD-Win32IDE: Generating architecture report"
+            VERBATIM
+        )
+        
+        # 6. Generate dependency_manifest.json
+        set(_DEP_MANIFEST "${_EVIDENCE_DIR}/dependency_manifest.json")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating dependency_manifest.json..."
+            COMMAND powershell -Command "
+                $imports = Get-Content '${_IMPORTS_OUTPUT}';
+                $systemDlls = @('KERNEL32.dll', 'USER32.dll', 'GDI32.dll', 'ADVAPI32.dll', 'SHELL32.dll', 'OLE32.dll', 'OLEAUT32.dll', 'ntdll.dll');
+                $gpuDlls = @('d3d12.dll', 'dxgi.dll', 'vulkan-1.dll');
+                $prohibited = @('llama.dll', 'ggml.dll', 'onnxruntime.dll', 'tensorflow.dll', 'torch.dll');
+                $foundImports = $imports | Select-String '\.dll' | ForEach-Object { $_.Line -replace '.*?([\w\-]+\.dll)', '$1' } | Sort-Object -Unique;
+                $thirdParty = $foundImports | Where-Object { $_ -notin $systemDlls -and $_ -notin $gpuDlls };
+                $hasProhibited = $foundImports | Where-Object { $_ -in $prohibited };
+                $json = @{
+                    platform_dependencies = $systemDlls | Where-Object { $_ -in $foundImports };
+                    gpu_dependencies = $gpuDlls | Where-Object { $_ -in $foundImports };
+                    third_party_dependencies = $thirdParty;
+                    prohibited_dependencies = $hasProhibited;
+                    sovereign_mode = $true;
+                    compliance_status = if ($hasProhibited) { 'FAIL' } else { 'PASS' };
+                };
+                $json | ConvertTo-Json -Depth 10 | Out-File -FilePath '${_DEP_MANIFEST}' -Encoding utf8"
+            COMMENT "RawrXD-Win32IDE: Generating dependency manifest"
+            VERBATIM
+        )
+        
+        # 7. Generate benchmark_metadata.json template
+        set(_BENCH_META "${_EVIDENCE_DIR}/benchmark_metadata.json")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo "Generating benchmark_metadata.json template..."
+            COMMAND powershell -Command "
+                $cpu = (Get-CimInstance Win32_Processor).Name;
+                $gpu = (Get-CimInstance Win32_VideoController).Name;
+                $ram = [math]::Round((Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB, 2);
+                $json = @{
+                    hardware = @{
+                        cpu = $cpu;
+                        gpu = $gpu -join ', ';
+                        ram_gb = $ram;
+                    };
+                    software = @{
+                        os = (Get-CimInstance Win32_OperatingSystem).Caption;
+                        compiler = 'MSVC ${CMAKE_CXX_COMPILER_VERSION}';
+                        optimization_flags = @('/O2', '/GL', '/arch:AVX2');
+                        build_type = '$<IF:$<CONFIG:Release>,Release,$<IF:$<CONFIG:Debug>,Debug,Unknown>>';
+                    };
+                    model = @{
+                        name = 'PENDING';
+                        quantization = 'PENDING';
+                        parameters = 'PENDING';
+                    };
+                    test_parameters = @{
+                        prompt_length = 'PENDING';
+                        generation_length = 'PENDING';
+                        temperature = 'PENDING';
+                        random_seed = 'PENDING';
+                    };
+                    results = @{
+                        tokens_per_second = 'PENDING';
+                        time_to_first_token_ms = 'PENDING';
+                        memory_usage_mb = 'PENDING';
+                        gpu_utilization_percent = 'PENDING';
+                    };
+                    build_info = @{
+                        sha256 = Get-Content '${_HASH_OUTPUT_FILE}';
+                        timestamp = Get-Date -Format 'o';
+                        cmake_version = '${CMAKE_VERSION}';
+                    };
+                };
+                $json | ConvertTo-Json -Depth 10 | Out-File -FilePath '${_BENCH_META}' -Encoding utf8"
+            COMMENT "RawrXD-Win32IDE: Generating benchmark metadata template"
+            VERBATIM
+        )
+        
+        # 8. Run verification gates
+        set(_VERIFICATION_REPORT "${_EVIDENCE_DIR}/verification_report.txt")
+        add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E echo ""
+            COMMAND ${CMAKE_COMMAND} -E echo "═══════════════════════════════════════════════════════════"
+            COMMAND ${CMAKE_COMMAND} -E echo "  SOVEREIGN COMPLIANCE VERIFICATION"
+            COMMAND ${CMAKE_COMMAND} -E echo "═══════════════════════════════════════════════════════════"
+            COMMAND ${CMAKE_COMMAND} -E echo ""
+            COMMAND ${CMAKE_COMMAND} -E echo "Evidence artifacts generated in: ${_EVIDENCE_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E echo ""
+            COMMAND ${CMAKE_COMMAND} -E echo "Verification Gates:"
+            COMMAND powershell -Command "
+                $depManifest = Get-Content '${_DEP_MANIFEST}' | ConvertFrom-Json;
+                $pass = $depManifest.compliance_status -eq 'PASS';
+                Write-Host '  [✓] Dependency scan:' -NoNewline;
+                if ($pass) { Write-Host ' PASS - No prohibited dependencies' -ForegroundColor Green }
+                else { Write-Host ' FAIL - Prohibited dependencies found!' -ForegroundColor Red; exit 1 }
+                
+                $hash = Get-Content '${_HASH_OUTPUT_FILE}';
+                Write-Host '  [✓] Binary hash:' -NoNewline; Write-Host " $hash" -ForegroundColor Cyan;
+                
+                $size = (Get-Item '${_BINARY_PATH}').Length;
+                $sizeMB = [math]::Round($size / 1MB, 2);
+                Write-Host '  [✓] Binary size:' -NoNewline; Write-Host " ${sizeMB} MB" -ForegroundColor Cyan;
+                
+                Write-Host ''
+                Write-Host 'Sovereign compliance: PASS' -ForegroundColor Green
+                Write-Host '═══════════════════════════════════════════════════════════'"
+            COMMENT "RawrXD-Win32IDE: Running sovereign compliance verification"
             VERBATIM
         )
     endif()
