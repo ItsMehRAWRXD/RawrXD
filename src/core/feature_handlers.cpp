@@ -718,6 +718,19 @@ CommandResult handleAgentStop(const CommandContext& ctx) {
     return CommandResult::ok("agent.stop");
 }
 
+CommandResult handleAgentAuditDrive(const CommandContext& ctx) {
+    ctx.output("[Agent] Drive audit requested. Dispatching to IDE...\n");
+    // The actual implementation is in Win32IDE_AgentCommands.cpp::onAgentAuditDrive()
+    // This handler is called from the command registry / chat command path
+    // We signal the IDE to run the audit via the agent bridge
+    if (ctx.hwnd) {
+        PostMessageA((HWND)ctx.hwnd, WM_COMMAND, IDM_AGENT_AUDIT_DRIVE, 0);
+        return CommandResult::ok("agent.auditDrive");
+    }
+    ctx.output("[Agent] No IDE window available for audit.\n");
+    return CommandResult::error("agent.auditDrive: no IDE window");
+}
+
 CommandResult handleAgentGoal(const CommandContext& ctx) {
     if (!ctx.args || !ctx.args[0]) {
         ctx.output("Usage: !agent_goal <goal-description>\n");

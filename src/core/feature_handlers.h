@@ -52,6 +52,7 @@ CommandResult handleAgentExecute(const CommandContext& ctx);
 CommandResult handleAgentLoop(const CommandContext& ctx);
 CommandResult handleAgentBoundedLoop(const CommandContext& ctx);
 CommandResult handleAgentStop(const CommandContext& ctx);
+CommandResult handleAgentAuditDrive(const CommandContext& ctx);
 CommandResult handleAgentGoal(const CommandContext& ctx);
 CommandResult handleAgentMemory(const CommandContext& ctx);
 CommandResult handleAgentMemoryView(const CommandContext& ctx);

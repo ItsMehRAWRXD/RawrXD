@@ -192,6 +192,7 @@ enum CmdFlags : uint32_t
     X(4103, AGENT_VIEW_TOOLS, "agent.viewTools", "!tools", BOTH, "Agent", handleAgentViewTools, CMD_NONE)              \
     X(4104, AGENT_VIEW_STATUS, "agent.viewStatus", "!agent_status", BOTH, "Agent", handleAgentViewStatus, CMD_NONE)    \
     X(4105, AGENT_STOP, "agent.stop", "!agent_stop", BOTH, "Agent", handleAgentStop, CMD_NONE)                         \
+    X(4296, AGENT_AUDIT_DRIVE, "agent.auditDrive", "!audit_drive", BOTH, "Agent", handleAgentAuditDrive, CMD_ASYNC) \
     X(4106, AGENT_MEMORY, "agent.memory", "!agent_memory", BOTH, "Agent", handleAgentMemory, CMD_NONE)                 \
     X(4107, AGENT_MEMORY_VIEW, "agent.memoryView", "!agent_memory_view", BOTH, "Agent", handleAgentMemoryView,         \
       CMD_NONE)                                                                                                        \
