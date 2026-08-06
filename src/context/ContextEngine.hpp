@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "RepositoryIndexer.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -168,6 +169,16 @@ public:
     // Cache management
     void InvalidateCache(const std::string& filePath);
     void ClearCache();
+    
+    // Repository Index integration (Phase: Audit Pipeline)
+    AssembledContext AssembleFromRepositoryIndex(
+        const RepositoryIndex& index,
+        ContextStrategy strategy = ContextStrategy::AgentTask,
+        const std::string& userQuery = ""
+    );
+    
+    static std::string BuildAuditPrompt(const RepositoryIndex& index, const std::string& userQuery = "");
+    static std::string BuildAuditSummary(const RepositoryIndex& index);
     
     // Statistics
     struct Stats {

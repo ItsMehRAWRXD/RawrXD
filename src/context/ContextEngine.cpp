@@ -267,6 +267,116 @@ AssembledContext ContextEngine::AssembleForDebug(const EditorState& editor) {
     return Assemble(editor, ContextStrategy::Debug, "");
 }
 
+// ============================================================================
+// REPOSITORY INDEX INTEGRATION — Audit Pipeline
+// ============================================================================
+
+AssembledContext ContextEngine::AssembleFromRepositoryIndex(
+    const RepositoryIndex& index,
+    ContextStrategy strategy,
+    const std::string& userQuery
+) {
+    AssembledContext result;
+    result.budget.maxTokens = pImpl ? pImpl->defaultBudget_.maxTokens : 4096;
+    result.primaryLanguage = "cpp"; // Default, could be detected
+    
+    // Build prompt from repository index
+    std::string prompt = BuildAuditPrompt(index, userQuery);
+    
+    ContextItem item;
+    item.type = ContextItemType::RepositoryPattern;
+    item.priority = ContextPriority::Critical;
+    item.content = prompt;
+    item.tokens = TokenCounter::Count(prompt);
+    item.relevance = 1.0f;
+    
+    result.items.push_back(item);
+    result.prompt = prompt;
+    result.totalTokens = item.tokens;
+    
+    // Include metadata
+    result.includedFiles.reserve(std::min(index.files.size(), size_t(20)));
+    for (size_t i = 0; i < std::min(index.files.size(), size_t(20)); ++i)
+        result.includedFiles.push_back(index.files[i].path);
+    
+    result.includedSymbols = index.topSymbols;
+    
+    return result;
+}
+
+std::string ContextEngine::BuildAuditPrompt(const RepositoryIndex& index, const std::string& userQuery) {
+    std::ostringstream oss;
+    
+    oss << "You are analyzing a C++ project for the RawrXD IDE.\n\n";
+    
+    // Project summary
+    oss << "Project: " << index.rootPath << "\n";
+    oss << "Files: " << index.totalFiles << " (C++: " << index.cppFiles << ", Headers: " << index.headerFiles << ")\n";
+    oss << "Build state: " << index.buildState << "\n\n";
+    
+    // Critical files
+    if (!index.files.empty()) {
+        oss << "Critical files:\n";
+        size_t count = 0;
+        for (const auto& file : index.files) {
+            auto name = std::filesystem::path(file.path).filename().string();
+            if (name == "CMakeLists.txt" || name == "README.md" || name == "AGENTS.md" ||
+                name == ".gitignore" || name == "build.bat" || name == "build.sh") {
+                oss << "  - " << file.path << "\n";
+                if (++count >= 10) break;
+            }
+        }
+        oss << "\n";
+    }
+    
+    // Top symbols
+    if (!index.topSymbols.empty()) {
+        oss << "Key symbols:\n";
+        for (size_t i = 0; i < std::min(index.topSymbols.size(), size_t(30)); ++i)
+            oss << "  - " << index.topSymbols[i] << "\n";
+        oss << "\n";
+    }
+    
+    // Dependencies
+    if (!index.dependencies.empty()) {
+        oss << "Dependencies:\n";
+        for (size_t i = 0; i < std::min(index.dependencies.size(), size_t(20)); ++i)
+            oss << "  - " << index.dependencies[i] << "\n";
+        oss << "\n";
+    }
+    
+    // Issues
+    if (!index.issues.empty()) {
+        oss << "Issues detected:\n";
+        for (const auto& issue : index.issues)
+            oss << "  - " << issue << "\n";
+        oss << "\n";
+    }
+    
+    // User query
+    if (!userQuery.empty()) {
+        oss << "Task: " << userQuery << "\n\n";
+    }
+    
+    oss << "Provide concise, actionable analysis. Focus on build issues, missing dependencies, "
+           "and code structure improvements. Suggest next steps for the developer.";
+    
+    return oss.str();
+}
+
+std::string ContextEngine::BuildAuditSummary(const RepositoryIndex& index) {
+    std::ostringstream oss;
+    oss << "Audit: " << index.rootPath << "\n";
+    oss << "Files: " << index.totalFiles << " | C++: " << index.cppFiles << " | Headers: " << index.headerFiles << "\n";
+    oss << "Build: " << index.buildState << "\n";
+    if (!index.issues.empty()) {
+        oss << "Issues: " << index.issues.size() << "\n";
+        for (const auto& issue : index.issues)
+            oss << "  - " << issue << "\n";
+    }
+    return oss.str();
+}
+
 void ContextEngine::SetBudget(uint32_t maxTokens) {
     pImpl->defaultBudget_.maxTokens = maxTokens;
 }
