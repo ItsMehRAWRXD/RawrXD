@@ -76,8 +76,8 @@ RENDER_CTX              STRUCT  8
     hMemDC              DQ      ?               ; Compatible mem DC
     hDIB                DQ      ?               ; DIB section bitmap
     pDIBBits            DQ      ?               ; -> locked bitmap bits
-    Width               DD      ?
-    Height              DD      ?
+    WndWidth            DD      ?
+    WndHeight           DD      ?
     BytesPerPixel       DD      ?
     Pitch               DD      ?
     hRenderThread       DQ      ?
@@ -189,8 +189,9 @@ SQB_Init PROC FRAME
     mov     eax, ecx
     cmp     eax, 1
     cmova   ecx, eax
-    cmp     ecx, SQB_RING_SLOTS
-    cmova   ecx, SQB_RING_SLOTS
+    mov     r8d, SQB_RING_SLOTS
+    cmp     ecx, r8d
+    cmova   ecx, r8d
     mov     [rbx].SPSC_RING.SlotCount, ecx
     mov     [rbx].SPSC_RING.WriteIdx, 0
     mov     [rbx].SPSC_RING.ReadIdx, 0
@@ -199,8 +200,9 @@ SQB_Init PROC FRAME
 
     ; Slot size = max(requested, 64KB)
     mov     rax, rdx
-    cmp     rax, 65536
-    cmovb   rax, 65536
+    mov     r8, 65536
+    cmp     rax, r8
+    cmovb   rax, r8
     mov     [rbx].SPSC_RING.SlotSize, rax
 
     ; --- Allocate slot metadata array ---
@@ -345,8 +347,8 @@ SQB_CreateRenderWnd PROC FRAME
     test    rax, rax
     jz      @crwnd_fail
     mov     [rbx].RENDER_CTX.hWnd, rax
-    mov     [rbx].RENDER_CTX.Width, r13d
-    mov     [rbx].RENDER_CTX.Height, r14d
+    mov     [rbx].RENDER_CTX.WndWidth, r13d
+    mov     [rbx].RENDER_CTX.WndHeight, r14d
     mov     DWORD PTR [rbx].RENDER_CTX.BytesPerPixel, 3
 
     ; --- Get window DC ---
@@ -641,8 +643,8 @@ SQB_RenderThreadProc PROC FRAME
     mov     rdx, [rsi].SPSC_SLOT.DataPtr
     mov     r8, [rsi].SPSC_SLOT.DataLen
     ; Clamp to DIB size
-    mov     eax, [rbx].RENDER_CTX.Width
-    imul    eax, [rbx].RENDER_CTX.Height
+    mov     eax, [rbx].RENDER_CTX.WndWidth
+    imul    eax, [rbx].RENDER_CTX.WndHeight
     imul    eax, 3
     cmp     r8, rax
     cmova   r8, rax
@@ -656,8 +658,8 @@ SQB_RenderThreadProc PROC FRAME
     mov     rcx, [rbx].RENDER_CTX.hDC
     xor     edx, edx                    ; dest x
     xor     r8d, r8d                    ; dest y
-    mov     r9d, [rbx].RENDER_CTX.Width
-    mov     eax, [rbx].RENDER_CTX.Height
+    mov     r9d, [rbx].RENDER_CTX.WndWidth
+    mov     eax, [rbx].RENDER_CTX.WndHeight
     mov     DWORD PTR [rsp+32], eax     ; dest h
     mov     rax, [rbx].RENDER_CTX.hMemDC
     mov     QWORD PTR [rsp+40], rax     ; src DC
@@ -815,10 +817,12 @@ SQB_SetTargetFPS PROC FRAME
     test    rbx, rbx
     jz      @fps_fail
 
-    cmp     ecx, 1
-    cmovb   ecx, 1
-    cmp     ecx, 240
-    cmova   ecx, 240
+    mov     r8d, 1
+    cmp     ecx, r8d
+    cmovb   ecx, r8d
+    mov     r8d, 240
+    cmp     ecx, r8d
+    cmova   ecx, r8d
 
     mov     [rbx].RENDER_CTX.TargetFPS, ecx
     mov     eax, 1000
