@@ -4379,6 +4379,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/agent/agentic_deep_thinking_engine.cpp
             # NOTE: Quantum fiction files already removed from SOURCES
             src/vulkan_compute.cpp
+            src/runtime/TensorExecutionRouter.cpp
             src/core/embedding_engine.cpp
             src/core/vector_index.cpp
             src/core/agentic_task_graph.cpp

@@ -5,7 +5,7 @@
 #include <memory>
 #include <future>
 #include <chrono>
-#include "../agent_self_healing_orchestrator.hpp"
+#include "RuntimeTypes.hpp"
 #include "LayerVersionRegistry.hpp"
 
 namespace RawrXD {
