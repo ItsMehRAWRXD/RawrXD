@@ -6716,6 +6716,9 @@ void initAutoFeatureRegistry() {
     autoReg("agent.stop", "Agent Stop", "Stop (agent system)",
         FeatureGroup::Agent, IDM_AGENT_STOP, "!agent_stop", "",
         handleAgentStop, true, true, false);
+    autoReg("agent.audit_drive", "Agent Audit Drive", "Audit drive and generate context (agent system)",
+        FeatureGroup::Agent, IDM_AGENT_AUDIT_DRIVE, "!agent_audit_drive", "",
+        handleAgentAuditDrive, true, true, false);
     autoReg("agent.memory", "Agent Memory", "Memory (agent system)",
         FeatureGroup::Agent, IDM_AGENT_MEMORY, "!agent_memory", "",
         handleAgentMemory, true, true, false);

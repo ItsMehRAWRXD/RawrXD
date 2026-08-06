@@ -769,6 +769,7 @@ void Win32IDE::updateCommandStates()
     m_commandStates[IDM_AGENT_EXECUTE_CMD] = agentReady;
     m_commandStates[IDM_AGENT_AUTONOMOUS_COMMUNICATOR] = agentReady;
     m_commandStates[IDM_AGENT_STOP] = agentReady;
+    m_commandStates[IDM_AGENT_AUDIT_DRIVE] = agentReady;
     // Autonomy: Start when not running, Stop when running — direct next step
     bool autonomyRunning = (m_autonomyManager && m_autonomyManager->isAutoLoopEnabled());
     m_commandStates[IDM_AUTONOMY_START] = agentReady && !autonomyRunning;
@@ -11047,6 +11048,7 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_AGENT_VIEW_TOOLS, "Agent: View Available Tools", "", "Agent"});
     m_commandRegistry.push_back({IDM_AGENT_VIEW_STATUS, "Agent: View Status", "", "Agent"});
     m_commandRegistry.push_back({IDM_AGENT_STOP, "Agent: Stop Agent", "", "Agent"});
+    m_commandRegistry.push_back({IDM_AGENT_AUDIT_DRIVE, "Agent: Audit Drive", "", "Agent"});
     m_commandRegistry.push_back({IDM_AGENT_AUTONOMOUS_COMMUNICATOR, "Agent: Autonomous Communicator", "", "Agent"});
     m_commandRegistry.push_back(
         {IDM_AGENT_SET_CYCLE_AGENT_COUNTER, "Agent: Set Cycle Agent Counter (1x-4x)", "", "Agent"});

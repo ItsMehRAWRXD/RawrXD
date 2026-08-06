@@ -236,6 +236,9 @@
 #define IDM_FAILURE_CLEAR_HISTORY   4294
 #define IDM_FAILURE_DIAGNOSTICS     4295
 
+// ---- Audit / Context Generation Pipeline (4296)
+#define IDM_AGENT_AUDIT_DRIVE       4296
+
 // ---- Change Impact Analyzer — Pre-commit ripple effect prediction (4350–4370)
 // Dependency graph traversal, risk scoring, commit blocking, approval gate integration
 #define IDM_IMPACT_ANALYZE_STAGED       4350

@@ -325,6 +325,7 @@ class Win32IDE
     void onAgentViewTools();
     void onAgentViewStatus();
     void onAgentStop();
+    void onAgentAuditDrive();
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager;  // high-level autonomous orchestrator
