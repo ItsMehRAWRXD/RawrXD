@@ -1,10 +1,11 @@
 #pragma once
-
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <map>
 #include <memory>
+#include <optional>
+#include <chrono>
 #include "../agent_self_healing_orchestrator.hpp"
 
 namespace RawrXD {
@@ -15,6 +16,7 @@ struct LayerVersion {
     float quality;
     float latency;
     bool verified;
+    std::chrono::system_clock::time_point timestamp;
 };
 
 class LayerRegistryManager {
@@ -29,6 +31,7 @@ public:
         version.quality = quality;
         version.latency = latency;
         version.verified = verified;
+        version.timestamp = std::chrono::system_clock::now();
         
         history.push_back(version);
         activeVersions[layerId] = version;
@@ -41,17 +44,13 @@ public:
     // Rolls back the layer to the previous version
     bool Rollback(uint32_t layerId) {
         auto& history = layerHistory[layerId];
-        if (history.size() <= 1) return false; // Cannot rollback if only 1 version exists
+        if (history.size() <= 1) return false;
         
-        // Remove current active version from history
         history.pop_back();
-        
-        // Set previous version as active
         activeVersions[layerId] = history.back();
         return true;
     }
     
-    // Retrieves a specific version from complete history
     std::optional<LayerVersion> GetVersion(uint32_t layerId, uint64_t generation) {
         auto it = layerHistory.find(layerId);
         if (it != layerHistory.end()) {
