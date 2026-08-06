@@ -95,34 +95,41 @@ static LaunchConfig ParseArgs(int argc, char** argv)
 // INFERENCE BRIDGE
 // ============================================================================
 
+static RawrXD::RawrXDInference g_Inference;
+
 static bool InitializeInference(const std::string& modelPath)
 {
-    // TODO: Integrate with rawrxd_inference.h SafeInit and model loading
-    // For now, report that we would load the model here
-    std::cout << "[Inference] Model path: " << modelPath << "\n";
-    std::cout << "[Inference] SafeInit would be called here\n";
-    return true;
+    // Integrated with rawrxd_inference.h and model loading
+    std::cout << "[Inference] Loading model: " << modelPath << "\n";
+    if (g_Inference.LoadGGUF(modelPath)) {
+        std::cout << "[Inference] Model loaded successfully.\n";
+        return true;
+    } else {
+        std::cerr << "[Error] Failed to load model: " << modelPath << "\n";
+        return false;
+    }
 }
 
 static std::string RunInference(const std::string& prompt, size_t maxTokens)
 {
-    // TODO: Replace with actual GGUF inference via rawrxd_inference.h
-    // This is the integration point for the local model runtime
-    std::cout << "[Inference] Sending " << prompt.size() << " chars to model...\n";
+    if (!g_Inference.IsLoaded()) {
+        std::cout << "[Inference] Sending " << prompt.size() << " chars to model (Placeholder)...\n";
+        std::ostringstream response;
+        response << "## Analysis\n\n"
+                 << "Based on the project audit, here are the key findings:\n\n"
+                 << "1. **Build System**: CMake detected with Ninja generator\n"
+                 << "2. **Architecture**: Win32 native C++20 application\n"
+                 << "3. **Key Components**: IDE, inference engine, agent framework\n\n"
+                 << "## Recommendations\n\n"
+                 << "- Verify all ASM files compile with ml64.exe\n"
+                 << "- Ensure CMakeLists.txt references all new context/ files\n"
+                 << "- Run build with `ninja -C build_win32ide` to validate\n\n"
+                 << "*(This is a placeholder response — please specify a valid --model for actual GGUF runtime)*";
+        return response.str();
+    }
     
-    // Placeholder: return a structured response
-    std::ostringstream response;
-    response << "## Analysis\n\n"
-               << "Based on the project audit, here are the key findings:\n\n"
-               << "1. **Build System**: CMake detected with Ninja generator\n"
-               << "2. **Architecture**: Win32 native C++20 application\n"
-               << "3. **Key Components**: IDE, inference engine, agent framework\n\n"
-               << "## Recommendations\n\n"
-               << "- Verify all ASM files compile with ml64.exe\n"
-               << "- Ensure CMakeLists.txt references all new context/ files\n"
-               << "- Run build with `ninja -C build_win32ide` to validate\n\n"
-               << "*(This is a placeholder response — integrate with actual GGUF runtime)*";
-    return response.str();
+    std::cout << "[Inference] Sending " << prompt.size() << " chars to model...\n";
+    return g_Inference.Generate(prompt, maxTokens);
 }
 
 // ============================================================================

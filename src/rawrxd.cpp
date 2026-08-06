@@ -689,6 +689,7 @@ struct Sampler {
 // =============================================================================
 // MAIN
 // =============================================================================
+#ifndef RAWRXD_LIBRARY
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage:\n"
@@ -852,3 +853,5 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+#endif // RAWRXD_LIBRARY
