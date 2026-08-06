@@ -41,6 +41,8 @@
 #include <windows.h>
 #endif
 
+#include "runtime/TensorExecutionRouter.hpp"
+
 // ─── FORWARD DECLS (from rawrxd.cpp) ────────────────────────────────────────
 struct GGUF;
 struct GGTensor;
@@ -724,11 +726,22 @@ struct Orchestrator {
     ~Orchestrator() { prefetcher.stop(); }
 
     // ─── Uncold with calibration + transaction logging ─────────────────────
-    const float* uncold(const std::string& name) {
+    // ─── Resolve returns a TensorHandle ──────────────────────────────
+    TensorHandle resolve(const std::string& name) {
+        TensorHandle handle = {};
+        handle.name = name.c_str();
+        
         std::lock_guard<std::mutex> lock(mtx);
         auto* entry = registry->get_by_name(name);
-        if (!entry) return nullptr;
+        if (!entry) return handle;
 
+        handle.bytes = entry->bytes_expanded;
+        // Currently not tracking GPU pointer or quant data in HotPatchEntry directly yet
+        // but we setup the handle structure here.
+        handle.device_ptr = nullptr; 
+        handle.is_quantized = false;
+        handle.quant_kind = 0;
+        
         // FIXED (3): if state is RECONSTRUCT_NEEDED, must reload from GGUF
         if (entry->state == PatchState::RECONSTRUCT_NEEDED) {
             entry->data.clear(); entry->data.shrink_to_fit();
@@ -739,7 +752,9 @@ struct Orchestrator {
             entry->use_count++;
             entry->last_used = (uint64_t)std::chrono::steady_clock::now().time_since_epoch().count();
             cache_hits++;
-            return entry->data.data();
+            handle.host_ptr = entry->data.data();
+            handle.is_hot = true;
+            return handle;
         }
 
         cache_misses++;
@@ -750,7 +765,7 @@ struct Orchestrator {
         }
 
         auto* t = gguf->get(name);
-        if (!t) return nullptr;
+        if (!t) return handle;
 
         entry->data.resize(t->elems());
         // NOTE: dequant() must be provided by includer (rawrxd.cpp)
@@ -771,7 +786,13 @@ struct Orchestrator {
         // FIXED (7): update eviction index
         eviction_index.insert({entry->evict_score(entry->last_used), entry->id});
 
-        return entry->data.data();
+        handle.host_ptr = entry->data.data();
+        handle.is_hot = true;
+        return handle;
+    }
+
+    const float* uncold(const std::string& name) {
+        return reinterpret_cast<const float*>(resolve(name).host_ptr);
     }
 
     // ─── Demote with logging ───────────────────────────────────────────────

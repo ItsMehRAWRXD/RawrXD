@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <windows.h>
+#include <commdlg.h>
 
 // External GGUF inspector functions
 extern "C" {
@@ -52,7 +53,7 @@ void Win32IDE::ShowGGUFInspectorPanel()
 void Win32IDE::CreateGGUFInspectorPanel()
 {
     // Create panel window
-    m_hwndGGUFInspectorPanel = CreateWindowEx(
+    m_hwndGGUFInspectorPanel = CreateWindowExA(
         WS_EX_CLIENTEDGE,
         "RawrXD_GGUFInspector",
         "GGUF Model Inspector",
@@ -79,7 +80,7 @@ void Win32IDE::CreateGGUFInspectorPanel()
     CreateGGUFInspectorDetailsView();
     
     // Create status bar
-    m_hwndGGUFInspectorStatus = CreateWindow(
+    m_hwndGGUFInspectorStatus = CreateWindowA(
         "STATIC", "Ready",
         WS_CHILD | WS_VISIBLE | SS_LEFT,
         10, 760, 1180, 20,
@@ -93,7 +94,7 @@ void Win32IDE::CreateGGUFInspectorPanel()
 void Win32IDE::CreateGGUFInspectorToolbar()
 {
     // Load button
-    m_hwndGGUFInspectorLoadBtn = CreateWindow(
+    m_hwndGGUFInspectorLoadBtn = CreateWindowA(
         "BUTTON", "Load GGUF",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         10, 10, 100, 30,
@@ -104,7 +105,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     );
     
     // Export JSON button
-    m_hwndGGUFInspectorExportBtn = CreateWindow(
+    m_hwndGGUFInspectorExportBtn = CreateWindowA(
         "BUTTON", "Export JSON",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         120, 10, 100, 30,
@@ -115,7 +116,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     );
     
     // Full analysis button
-    m_hwndGGUFInspectorAnalyzeBtn = CreateWindow(
+    m_hwndGGUFInspectorAnalyzeBtn = CreateWindowA(
         "BUTTON", "Full Analysis",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         230, 10, 100, 30,
@@ -126,7 +127,7 @@ void Win32IDE::CreateGGUFInspectorToolbar()
     );
     
     // File path display
-    m_hwndGGUFInspectorPath = CreateWindow(
+    m_hwndGGUFInspectorPath = CreateWindowA(
         "EDIT", "",
         WS_CHILD | WS_VISIBLE | WS_BORDER | ES_READONLY,
         340, 12, 600, 26,
@@ -140,9 +141,9 @@ void Win32IDE::CreateGGUFInspectorToolbar()
 void Win32IDE::CreateGGUFInspectorTreeView()
 {
     // Create tree view for tensor list
-    m_hwndGGUFInspectorTree = CreateWindowEx(
+    m_hwndGGUFInspectorTree = CreateWindowExA(
         WS_EX_CLIENTEDGE,
-        WC_TREEVIEW,
+        "SysTreeView32",
         "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
         TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS,
@@ -162,9 +163,9 @@ void Win32IDE::CreateGGUFInspectorDetailsView()
     // Create rich edit for details
     LoadLibraryA("Msftedit.dll");
     
-    m_hwndGGUFInspectorDetails = CreateWindowEx(
+    m_hwndGGUFInspectorDetails = CreateWindowExA(
         WS_EX_CLIENTEDGE,
-        MSFTEDIT_CLASS,
+        "RICHEDIT50W",
         "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL |
         ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
@@ -337,7 +338,7 @@ void Win32IDE::OnGGUFInspectorExport()
         return;
     }
     
-    OPENFILENAME ofn;
+    OPENFILENAMEW ofn;
     wchar_t szFile[MAX_PATH] = {0};
     
     ZeroMemory(&ofn, sizeof(ofn));
@@ -350,7 +351,7 @@ void Win32IDE::OnGGUFInspectorExport()
     ofn.lpstrDefExt = L"json";
     ofn.Flags = OFN_OVERWRITEPROMPT;
     
-    if (GetSaveFileName(&ofn)) {
+    if (GetSaveFileNameW(&ofn)) {
         // Copy analysis file to selected location
         std::string src = m_ggufInspectorCurrentFile + ".analysis.json";
         char dest[MAX_PATH];

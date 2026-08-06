@@ -1627,15 +1627,15 @@ void Win32IDE::onAgentAuditDrive()
         }
 
         // If we have a local model loaded, send compressed context
-        if (m_agenticBridge && m_agenticBridge->IsModelLoaded())
+        if (m_agenticBridge && !m_agenticBridge->GetCurrentModel().empty())
         {
             appendToOutput("\n📤 Sending compressed context to local model...\n", "Output", OutputSeverity::Info);
 
             std::string prompt = "Analyze this project audit and suggest next steps:\n\n" + report;
-            std::string response = m_agenticBridge->SendPrompt(prompt);
+            auto cmdResponse = m_agenticBridge->ExecuteAgentCommand(prompt);
 
             appendToOutput("\n=== Model Response ===\n", "Output", OutputSeverity::Info);
-            appendToOutput(response + "\n", "Output", OutputSeverity::Info);
+            appendToOutput(cmdResponse.content + "\n", "Output", OutputSeverity::Info);
         }
         else
         {

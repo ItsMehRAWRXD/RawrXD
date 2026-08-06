@@ -718,6 +718,10 @@ CommandResult handleAgentStop(const CommandContext& ctx) {
     return CommandResult::ok("agent.stop");
 }
 
+#ifndef IDM_AGENT_AUDIT_DRIVE
+#define IDM_AGENT_AUDIT_DRIVE 4296
+#endif
+
 CommandResult handleAgentAuditDrive(const CommandContext& ctx) {
     ctx.output("[Agent] Drive audit requested. Dispatching to IDE...\n");
     // The actual implementation is in Win32IDE_AgentCommands.cpp::onAgentAuditDrive()

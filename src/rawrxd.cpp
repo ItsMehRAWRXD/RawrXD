@@ -42,6 +42,7 @@
 #endif
 
 #include "rawrxd_orchestrator.hpp"
+#include "runtime/TensorExecutionRouter.hpp"
 
 // =============================================================================
 // FP CONVERSIONS
@@ -268,13 +269,16 @@ struct Model {
     AttentionGeometry geom;
     HotPatchRegistry registry;
     Orchestrator decider;
+    TensorExecutionRouter router;
 
     int nl=61, ne=7168, ffd=2048, nv=129280, nexp=256, neu=8;
     int qlr=1536, klr=512;
     float rf=10000, reps=1e-6f;
     bool mla=false, moe=false, shrd=false;
 
-    Model() : decider(&registry, &gguf) {}
+    Model() : decider(&registry, &gguf) {
+        router.InitializeVulkan();
+    }
 
     bool load(const std::string& path) {
         if (!gguf.load(path)) return false;
@@ -327,6 +331,7 @@ struct Model {
     }
 
     const float* S(const std::string& name) { return decider.uncold(name); }
+    TensorHandle resolve_tensor(const std::string& name) { return decider.resolve(name); }
     void release(const std::string& name) { /* let decider handle via eviction */ }
     void evict_layer(int layer) { decider.evict_layer(layer); }
     void evict_non_selected_experts(int layer, const std::vector<int>& selected) { decider.evict_non_selected_experts(layer, selected); }
@@ -391,6 +396,7 @@ struct Model {
 
             for (int i = 0; i < ne; i++) h[i] = hc2[i] + h[i];
 
+            router.snapshot_telemetry(l, p);
             evict_layer(l);
             if (l + 1 < nl) decider.wait_prefetch();
         }
@@ -398,9 +404,13 @@ struct Model {
         const float* out_norm = S("output_norm.weight");
         rmsn(h.data(), out_norm, ne, reps);
 
-        const float* out_w = S("output.weight");
+        auto out_w = resolve_tensor("output.weight");
         std::vector<float> logits(nv);
-        mm(out_w, h.data(), logits.data(), nv, ne);
+        
+        TensorView in_view{h.data(), (size_t)ne, nullptr};
+        TensorView out_view{logits.data(), (size_t)nv, nullptr};
+        
+        router.matmul(in_view, out_w, out_view, nv, ne);
 
         decider.demote("output.weight");
         return logits;
@@ -408,9 +418,13 @@ struct Model {
 
 private:
     void fwd_mla(int l, std::vector<float>& h, int pos, uint32_t tid, const std::string& p) {
-        const float* qa_w = S(p + "attn_q_a.weight");
+        auto qa_w = resolve_tensor(p + "attn_q_a.weight");
         std::vector<float> qa(qlr);
-        mm(qa_w, h.data(), qa.data(), qlr, ne);
+        
+        TensorView in_view{h.data(), (size_t)ne, nullptr};
+        TensorView out_view{qa.data(), (size_t)qlr, nullptr};
+        
+        router.matmul(in_view, qa_w, out_view, qlr, ne);
 
         if (has(p + "attn_q_a_norm.weight")) {
             const float* qan = S(p + "attn_q_a_norm.weight");

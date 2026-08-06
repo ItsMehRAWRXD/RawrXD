@@ -277,6 +277,7 @@ static LocalReasoningEngine& getLocalReasoningEngine() {
 #define IDM_AGENT_MEMORY_VIEW                         4107
 #define IDM_AGENT_MEMORY_CLEAR                        4108
 #define IDM_AGENT_MEMORY_EXPORT                       4109
+#define IDM_AGENT_AUDIT_DRIVE                         4296
 #define IDM_SUBAGENT_CHAIN                            4111
 #define IDM_SUBAGENT_SWARM                            4112
 #define IDM_SUBAGENT_TODO_LIST                        4113
@@ -4903,8 +4904,8 @@ CommandResult handleTerminalStop(const CommandContext& ctx) {
         if (Process32First(hSnap, &pe)) {
             do {
                 if (pe.th32ParentProcessID == myPid &&
-                    (_stricmp(pe.szExeFile, "cmd.exe") == 0 ||
-                     _stricmp(pe.szExeFile, "powershell.exe") == 0)) {
+                    (_wcsicmp(pe.szExeFile, L"cmd.exe") == 0 ||
+                     _wcsicmp(pe.szExeFile, L"powershell.exe") == 0)) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) { TerminateProcess(hProc, 0); CloseHandle(hProc); }
                 }
@@ -5635,7 +5636,7 @@ CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
     ; pe.dwSize = sizeof(pe);
         if (Process32First(hSnap, &pe)) {
             do {
-                if (_stricmp(pe.szExeFile, "mshta.exe") == 0) {
+                if (_wcsicmp(pe.szExeFile, L"mshta.exe") == 0) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) {
                         TerminateProcess(hProc, 0);
