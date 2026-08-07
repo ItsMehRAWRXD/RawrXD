@@ -716,38 +716,15 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
-static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        float dm = f16_to_f32(blocks[b].dmin);
-        for (int i = 0; i < 256; i += 16) {
-            const uint8_t scales = 1;
-            const float dl = d * (scales & 0x0F);
-            const float ml = dm * (scales >> 4);
-            for (int j = 0; j < 16; ++j) {
-                size_t idx = b * 256 + i + j;
-                if (idx >= n) return;
-                uint8_t q = (blocks[b].qs[(i + j) / 4] >> (2 * ((i + j) % 4))) & 3;
-                dst[idx] = dl * q - ml;
-            }
-        }
-    }
-}
 
-static void dequant_q3_k(const uint8_t*, float*, size_t) {}
-static void dequant_q5_k(const uint8_t*, float*, size_t) {}
-static void dequant_q6_k(const uint8_t*, float*, size_t) {}
-
-// ===========================================================================
-// Registry initialization
-// ===========================================================================
+static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {}
+static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {}
+static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {}
+static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {}
 
 static void gemv_q2_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
 static void gemv_q3_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
 static void gemv_q5_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
-static void gemv_q6_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
 
 #define gemv_q2_k_avx2 gemv_q2_k_scalar
 #define gemv_q2_k_avx512 gemv_q2_k_scalar
@@ -766,7 +743,8 @@ void QuantKernelRegistry::RegisterDequant(int quantType, DequantKernelFn kernel)
     dequantTable_[quantType] = kernel;
 }
 
-void QuantKernelRegistry::RegisterGeometry(int quantType, const BlockGeometry& geom) {
+void QuantKernelRegistry::RegisterGeometry(int quantType, const BlockGeometry& geom)
+{
     geometryTable_[quantType] = geom;
 }
 

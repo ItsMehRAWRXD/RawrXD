@@ -31,15 +31,15 @@ target_link_libraries(rawrxd_ceo PUBLIC
 # CEO Agent CLI Executable
 add_executable(rawrxd_ceo_cli
     main.cpp
-)
-
-target_link_libraries(rawrxd_ceo_cli PRIVATE
-    rawrxd_ceo
     ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/AgentToolHandlers.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_AgentLoop.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_ToolRegistry.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/ToolRegistry.cpp
+)
+
+target_link_libraries(rawrxd_ceo_cli PRIVATE
+    rawrxd_ceo
 )
 
 set_target_properties(rawrxd_ceo_cli PROPERTIES
