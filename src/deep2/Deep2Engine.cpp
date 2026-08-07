@@ -524,10 +524,11 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     printf("  Use KV Cache: %s\n", config.useKVCache ? "YES" : "NO");
     printf("  Use RoPE: %s\n", config.useRoPE ? "YES" : "NO");
 
-    // Initialize thread pool
+    // Initialize thread pool with auto-detected physical cores
     if (config.useThreadPool) {
-        threadPool = std::make_unique<ThreadPool>(config.numThreads);
-        printf("  ThreadPool: %zu threads\n", threadPool->size());
+        threadPool = std::make_unique<ThreadPool>();
+        threadPool->init(0);  // 0 = auto-detect physical cores
+        printf("  ThreadPool: %zu threads (auto-detected)\n", threadPool->size());
     }
 
     // Initialize KV cache
