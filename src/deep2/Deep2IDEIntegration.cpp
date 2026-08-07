@@ -273,7 +273,7 @@ Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
     m_cancelled.store(false);
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    Deep2::InferenceStats stats;
+    ::Deep2::InferenceStats stats;
     std::string accumulated;
     
     std::vector<int> promptTokens = m_engine->tokenize(prompt);

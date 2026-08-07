@@ -16,6 +16,14 @@
 #include <map>
 #include <memory>
 
-// Forward declarations only — full definitions in src/gguf_loader.h
+// Forward declarations only — full definitions in src/gguf_loader.h.
+// GGUFMetadata lives in the RawrXD namespace (see RawrXD_Interfaces.h). We do
+// NOT forward-declare a conflicting global ::GGUFMetadata here, and we mark the
+// using-alias block in src/gguf_loader.h as already-provided to avoid a
+// multiple-declaration (C2874) when both headers land in one TU.
+#ifndef RAWRXD_GGUF_USING_ALIASES_DEFINED
+#define RAWRXD_GGUF_USING_ALIASES_DEFINED
+#endif
+namespace RawrXD { struct GGUFMetadata; }
+using RawrXD::GGUFMetadata;
 class GGUFLoader;
-struct GGUFMetadata;

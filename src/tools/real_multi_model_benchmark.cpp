@@ -64,7 +64,7 @@ ModelBenchmarkResult benchmarkModel(const std::string& model_path, int num_token
 
         auto load_start = std::chrono::high_resolution_clock::now();
         
-        bool loaded = engine.loadModel(model_path);
+        bool loaded = engine.LoadModel(model_path);
         
         auto load_end = std::chrono::high_resolution_clock::now();
         double load_time_ms = std::chrono::duration<double, std::milli>(load_end - load_start).count();
@@ -84,7 +84,14 @@ ModelBenchmarkResult benchmarkModel(const std::string& model_path, int num_token
         // Run inference and measure time
         auto gen_start = std::chrono::high_resolution_clock::now();
         
-        std::string output = engine.generate(prompt, num_tokens);
+        std::string output;
+        {
+            std::vector<int32_t> promptTokens = engine.Tokenize(prompt);
+            engine.GenerateStreaming(
+                promptTokens, num_tokens,
+                [&output](const std::string& piece) { output += piece; },
+                []() {});
+        }
         
         auto gen_end = std::chrono::high_resolution_clock::now();
         result.total_time_ms = std::chrono::duration<double, std::milli>(gen_end - gen_start).count();
@@ -98,7 +105,7 @@ ModelBenchmarkResult benchmarkModel(const std::string& model_path, int num_token
 
 
         // Unload model
-        engine.unloadModel();
+        engine.ClearCache();
         
     } catch (const std::exception& e) {
         result.error = std::string("Exception: ") + e.what();

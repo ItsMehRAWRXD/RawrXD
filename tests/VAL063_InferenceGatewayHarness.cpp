@@ -449,7 +449,7 @@ private:
         log("VAL-063.3", "Testing tokenizer binding...");
         
         RawrXDTokenizer tokenizer;
-        if (!tokenizer.LoadFromFile("")) {
+        if (!tokenizer.Load("")) {
             log("VAL-063.3", "Tokenizer load skipped (no vocab file)", true);
             evidence.validationChecks.push_back("Tokenizer binding: skipped (no vocab)");
             return true; // Soft pass - tokenizer may be embedded
@@ -457,7 +457,7 @@ private:
         
         // Test encode/decode roundtrip
         std::string testText = "Hello, World!";
-        std::vector<int> tokens = tokenizer.Encode(testText);
+        std::vector<uint32_t> tokens = tokenizer.Encode(testText);
         std::string decoded = tokenizer.Decode(tokens);
         
         bool roundtripOk = (decoded.find("Hello") != std::string::npos);
@@ -474,7 +474,11 @@ private:
         RawrXDInference inference;
         
         auto loadStart = Clock::now();
-        bool loaded = inference.LoadModel(modelPath);
+        // Real engine uses Initialize(modelPath, vocabPath, mergesPath); the
+        // harness only has a single path, so vocab/merges are left empty and
+        // the synthetic-validation branch handles a soft failure gracefully.
+        std::wstring wModelPath(modelPath.begin(), modelPath.end());
+        bool loaded = inference.Initialize(wModelPath.c_str(), "", "");
         auto loadEnd = Clock::now();
         
         if (!loaded) {
@@ -522,26 +526,24 @@ private:
         
         // Generate with timing
         auto genStart = Clock::now();
-        std::vector<int> generated;
-        
-        // First token timing
+
+        // First token timing (single-step) then the remainder in one call.
         auto firstTokenStart = Clock::now();
-        int firstToken = inference.GenerateSingle(tokens, evidence.temperature, VAL063_TEST_SEED);
+        std::vector<uint32_t> firstOut =
+            inference.GenerateFromTokens(tokens, 1);
         auto firstTokenEnd = Clock::now();
-        evidence.firstTokenLatencyMs = duration<double, std::milli>(firstTokenEnd - firstTokenStart).count();
-        
-        generated.push_back(firstToken);
-        
-        // Continue generation
-        for (int i = 1; i < evidence.maxTokens && firstToken != inference.GetEOSId(); i++) {
-            tokens.push_back(firstToken);
-            firstToken = inference.GenerateSingle(tokens, evidence.temperature, VAL063_TEST_SEED + i);
-            generated.push_back(firstToken);
+        evidence.firstTokenLatencyMs =
+            duration<double, std::milli>(firstTokenEnd - firstTokenStart).count();
+
+        std::vector<uint32_t> generated =
+            inference.GenerateFromTokens(tokens, static_cast<uint32_t>(evidence.maxTokens));
+        if (generated.empty() && !firstOut.empty()) {
+            generated = firstOut;
         }
-        
+
         auto genEnd = Clock::now();
         evidence.generatedTokens = static_cast<int>(generated.size());
-        evidence.tokenSequence = generated;
+        evidence.tokenSequence.assign(generated.begin(), generated.end());
         
         // Calculate metrics
         evidence.totalLatencyMs = duration<double, std::milli>(genEnd - genStart).count();
@@ -549,7 +551,7 @@ private:
         evidence.peakMemoryBytes = getPeakMemoryUsage();
         
         // Decode tokens
-        for (int tok : generated) {
+        for (uint32_t tok : generated) {
             evidence.decodedTokens.push_back(inference.Detokenize({tok}));
         }
         

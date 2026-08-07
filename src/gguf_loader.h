@@ -21,10 +21,16 @@
 #include "../include/vulkan_compute.h"
 
 // Basic types for GGUF (defined in RawrXD_Interfaces.h)
+// Guarded so that if a differently-rooted copy of this header (e.g.
+// include/gguf_loader.h) is also pulled into the same TU, the using-
+// declarations are only introduced once (avoids C2874).
+#ifndef RAWRXD_GGUF_USING_ALIASES_DEFINED
+#define RAWRXD_GGUF_USING_ALIASES_DEFINED
 using RawrXD::GGMLType;
 using RawrXD::GGUFHeader;
 using RawrXD::GGUFMetadata;
 using RawrXD::TensorInfo;
+#endif
 
 
 /*

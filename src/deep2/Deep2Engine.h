@@ -179,6 +179,14 @@ public:
                    int* outputTokens, size_t maxOutputLen,
                     InferenceStats* stats = nullptr,
                     std::function<bool(int)> onToken = nullptr);
+    // Generate text (high-level API)
+    std::string generateText(const std::string& prompt, size_t maxTokens = 256);
+
+    // Public bridge for the extern "C" Deep2_Forward C-API to drive a single
+    // transformer layer forward pass without exposing internal buffers.
+    void forwardLayerPublic(size_t layer, const float* input, float* output, size_t seqLen) {
+        forwardLayer(layer, input, output, seqLen);
+    }
     // Reset state for new conversation
     void reset();
     

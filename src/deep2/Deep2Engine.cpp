@@ -2955,7 +2955,7 @@ void Deep2_Forward(void* engine, const float* input, float* output, size_t count
         for (size_t layer = 0; layer < numLayers; ++layer) {
             size_t seqPos = i; 
             // We pass seqPos+1 so RoPE matches expected index
-            e->forwardLayer(layer, layerInput, layerOutput, seqPos + 1);
+            e->forwardLayerPublic(layer, layerInput, layerOutput, seqPos + 1);
             std::swap(layerInput, layerOutput);
         }
         
