@@ -1528,6 +1528,32 @@ set(SOURCES
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
     src/deep2/GGUFLoader.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
+    src/sampling/advanced_sampler.cpp
     src/deep2/deep2_link_stubs.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
@@ -3328,6 +3354,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
     src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -7457,6 +7485,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
-add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp tests/deep2_link_stubs.cpp)
+add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp)
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation)
