@@ -28,11 +28,11 @@ if (Test-Path $vcvars) {
 }
 
 # Run ninja with the provided arguments
-ninja -C d:\rawrxd\build @NinjaArgs
+ninja -C d:\rawrxd\build-ninja @NinjaArgs
 $ninjaExit = $LASTEXITCODE
 
 # Catch vs_link_exe silent failures and retry with direct link
-$exePath = 'd:\rawrxd\build\bin\rawrxd-cli.exe'
+$exePath = 'd:\rawrxd\build-ninja\bin\rawrxd-cli.exe'
 $needsRawrxd = ($NinjaArgs -contains 'rawrxd') -or ($NinjaArgs -contains 'all') -or ($NinjaArgs.Count -eq 0)
 
 if ($ninjaExit -eq 0 -and $needsRawrxd -and -not (Test-Path $exePath)) {

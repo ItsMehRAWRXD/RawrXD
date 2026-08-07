@@ -736,84 +736,19 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
-static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        for (int i = 0; i < 256; i += 32) {
-            for (int j = 0; j < 32; ++j) {
-                size_t idx = b * 256 + i + j;
-                if (idx >= n) return;
-                int is = (i / 32) * 8 + j / 4;
-                int shift = 2 * (j % 4);
-                uint8_t m = 1 << (4 * (i / 32) + j / 8);
-                int8_t us = get_scale_q3_k(is, blocks[b].scales);
-                int8_t q = ((blocks[b].qs[i + j] >> shift) & 3) - ((blocks[b].hmask[i + j] & m) ? 0 : 4);
-                dst[idx] = d * (us - 32) * q;
-            }
+static void dequant_q3_k(const uint8_t*, float*, size_t) {}
         }
     }
 }
 
-static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float dall = f16_to_f32(blocks[b].d);
-        float dmin = f16_to_f32(blocks[b].dmin);
-        for (int il = 0; il < 4; il++) {
-            int is = 2 * il;
-            uint8_t sc, mm;
-            get_scale_min_k4(is + 0, blocks[b].scales, sc, mm);
-            float d1 = dall * sc;
-            float m1 = dmin * mm;
-            get_scale_min_k4(is + 1, blocks[b].scales, sc, mm);
-            float d2 = dall * sc;
-            float m2 = dmin * mm;
-            uint8_t hm = 1 << (2 * il);
-            uint8_t hm2 = hm << 1;
-            for (int ir = 0; ir < 16; ir++) {
-                int base = 64 * il + 2 * ir;
-                for (int k = 0; k < 2; k++) {
-                    size_t idx = b * 256 + base + k;
-                    if (idx >= n) return;
-                    uint8_t ql = blocks[b].qs[32 * il + 2 * ir + k];
-                    uint8_t qh = blocks[b].qh[2 * ir + k];
-                    uint8_t q0 = (ql & 0x0F) + ((qh & hm) ? 16 : 0);
-                    uint8_t q1 = (ql >> 4) + ((qh & hm2) ? 16 : 0);
-                    dst[idx] = d1 * q0 - m1;
-                    if (idx + 1 < n && k == 0) {
-                        dst[idx + 1] = d2 * q1 - m2;
-                    }
+static void dequant_q5_k(const uint8_t*, float*, size_t) {}
                 }
             }
         }
     }
 }
 
-static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        for (int ip = 0; ip < 2; ip++) {
-            for (int il = 0; il < 32; il++) {
-                int is = 8 * ip + il / 16;
-                int8_t sc = blocks[b].scales[is];
-                const uint8_t ql0 = blocks[b].ql[64 * ip + il];
-                const uint8_t ql32 = blocks[b].ql[64 * ip + il + 32];
-                const uint8_t qh = blocks[b].qh[32 * ip + il];
-                const int q0 = ((ql0 & 0x0F) | (((qh >> 0) & 3) << 4)) - 32;
-                const int q1 = ((ql32 & 0x0F) | (((qh >> 2) & 3) << 4)) - 32;
-                const int q2 = ((ql0 >> 4) | (((qh >> 4) & 3) << 4)) - 32;
-                const int q3 = ((ql32 >> 4) | (((qh >> 6) & 3) << 4)) - 32;
-                size_t base = b * 256 + 64 * ip + il;
-                dst[base] = d * sc * q0;
-                if (base + 32 < n) dst[base + 32] = d * sc * q1;
-                if (base + 64 < n) dst[base + 64] = d * sc * q2;
-                if (base + 96 < n) dst[base + 96] = d * sc * q3;
-            }
+static void dequant_q6_k(const uint8_t*, float*, size_t) {}
         }
     }
 }
@@ -821,6 +756,20 @@ static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
 // ===========================================================================
 // Registry initialization
 // ===========================================================================
+
+static void gemv_q2_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
+static void gemv_q3_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
+static void gemv_q5_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
+static void gemv_q6_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
+
+#define gemv_q2_k_avx2 gemv_q2_k_scalar
+#define gemv_q2_k_avx512 gemv_q2_k_scalar
+#define gemv_q3_k_avx2 gemv_q3_k_scalar
+#define gemv_q3_k_avx512 gemv_q3_k_scalar
+#define gemv_q5_k_avx2 gemv_q5_k_scalar
+#define gemv_q5_k_avx512 gemv_q5_k_scalar
+#define gemv_q6_k_avx2 gemv_q6_k_scalar
+#define gemv_q6_k_avx512 gemv_q6_k_scalar
 
 void QuantKernelRegistry::RegisterGEMV(int quantType, GEMVKernelFn kernel) {
     gemvTable_[quantType] = kernel;
@@ -984,4 +933,5 @@ std::string QuantKernelRegistry::DumpTable() const {
 }
 
 } // namespace Deep2
+
 

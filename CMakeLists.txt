@@ -3326,6 +3326,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
+    src/core/swarm_scheduler.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -3434,6 +3435,12 @@ if(WIN32)
     target_link_libraries(InferenceEngine PUBLIC
         shlwapi psapi dbghelp winhttp bcrypt advapi32 crypt32
     )
+endif()
+
+# Vulkan SDK link for InferenceEngine (symbols referenced by rawrxd_model_loader / vulkan_compute)
+if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_LIB)
+    target_link_libraries(InferenceEngine PUBLIC "${RAWR_VULKAN_LIB}")
+    target_compile_definitions(InferenceEngine PUBLIC RAWR_HAS_VULKAN=1)
 endif()
 
     if(RAWR_HAS_MASM)

@@ -8,45 +8,9 @@
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>
+#include "GGUFLoader.hpp"
 
-// --- Block structures (match GGUF on-disk layout) ---
-#define QK_K 256
-#define K_SCALE_SIZE 12
-
-struct block_q2_K {
-    uint8_t scales[QK_K / 16];   // 16 bytes: 4-bit packed scales+mins
-    uint8_t qs[QK_K / 4];        // 64 bytes: 2-bit packed quants
-    uint16_t d;                  // super-block scale (f16)
-    uint16_t dmin;               // super-block min scale (f16)
-};  // 84 bytes
-
-struct block_q3_K {
-    uint8_t hmask[QK_K / 8];      // 32 bytes: high-bit mask
-    uint8_t qs[QK_K / 4];         // 64 bytes: low 2-bit quants
-    uint8_t scales[K_SCALE_SIZE]; // 12 bytes: 6-bit packed scales
-    uint16_t d;                   // super-block scale (f16)
-};  // 110 bytes
-
-struct block_q5_K {
-    uint16_t d;                    // super-block scale (f16)
-    uint16_t dmin;                 // super-block min scale (f16)
-    uint8_t scales[K_SCALE_SIZE];  // 12 bytes: 6-bit packed scales+mins
-    uint8_t qh[QK_K / 8];          // 32 bytes: high bit of quants
-    uint8_t qs[QK_K / 2];          // 128 bytes: low 4-bit quants
-};  // 176 bytes
-
-struct block_q6_K {
-    uint8_t ql[QK_K / 2];     // 128 bytes: lower 4 bits
-    uint8_t qh[QK_K / 4];     // 64 bytes: upper 2 bits
-    int8_t scales[QK_K / 16]; // 16 bytes: 8-bit scales
-    uint16_t d;               // super-block scale (f16)
-};  // 210 bytes
-
-struct block_q8_K {
-    float d;                   // scale
-    int8_t qs[QK_K];           // 256 bytes: 8-bit quants
-    int16_t bsums[QK_K / 16]; // 16 bytes: block sums
-};  // 292 bytes
+using namespace Deep2;
 
 // --- f16 to f32 conversion ---
 static inline float f16_to_f32(uint16_t h) {

@@ -56,11 +56,11 @@ struct block_q5_1 { uint16_t d; uint16_t m; uint8_t qh[4]; uint8_t qs[16]; }; //
 struct block_q8_0 { uint16_t d; int8_t qs[32]; }; // 34 bytes
 struct block_q8_1 { uint16_t d; uint16_t s; int8_t qs[32]; }; // 36 bytes
 struct block_q2_K { uint8_t scales[16]; uint8_t qs[64]; uint16_t d; uint16_t dmin; }; // 84 bytes
-struct block_q3_K { uint8_t hmask[32]; uint8_t qs[64]; uint16_t d; }; // 98 bytes
+struct block_q3_K { uint8_t hmask[32]; uint8_t qs[64]; uint8_t scales[12]; uint16_t d; }; // 110 bytes
 struct block_q4_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qs[128]; }; // 144 bytes, 256 elements
-struct block_q5_K { uint16_t d; uint8_t qh[32]; uint8_t qs[128]; }; // 162 bytes
+struct block_q5_K { uint16_t d; uint16_t dmin; uint8_t scales[12]; uint8_t qh[32]; uint8_t qs[128]; }; // 176 bytes
 struct block_q6_K { uint8_t ql[128]; uint8_t qh[64]; int8_t scales[16]; uint16_t d; }; // 210 bytes
-struct block_q8_K { float d; float s; int8_t qs[256]; }; // 264 bytes
+struct block_q8_K { float d; int8_t qs[256]; int16_t bsums[16]; }; // 292 bytes
 #pragma pack(pop)
 struct block_iq2_xxs { uint16_t d; uint8_t qs[64]; }; // 66 bytes, 256 elements
 struct block_iq2_xs  { uint16_t d; uint16_t scales[2]; uint8_t qs[68]; }; // 74 bytes, 256 elements

@@ -614,6 +614,7 @@ if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/te
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         CXX_STANDARD 20
     )
+    target_link_libraries(test_agentic_supervisor PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
     add_test(NAME test_agentic_supervisor COMMAND test_agentic_supervisor)
     message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
 endif()
