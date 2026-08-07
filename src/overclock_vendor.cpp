@@ -1,13 +1,14 @@
 #include "overclock_vendor.h"
 #include <algorithm>
 #include "gui.h"
-#include <algorithm>
 #include <cstdio>
-#include <algorithm>
 #include <array>
-#include <algorithm>
 #include <filesystem>
-#include <algorithm>
+#include <cstdint>
+#include <vector>
+#include <string>
+#include <thread>
+#include <chrono>
 #include <iostream>
 #include <algorithm>
 #include <mutex>
@@ -154,7 +155,7 @@ bool ApplyGpuClockOffsetMhz(int offset) {
         }
         
         // Apply overclock level (map offset to OD percentage)
-        int odPercent = std::clamp(offset / 10, -15, 15); // Map MHz to OD%
+        int odPercent = (std::min)(15, (std::max)(-15, offset / 10)); // Map MHz to OD%
         std::string cmdOD = "\"" + toolPath + "\" set --overdrive " + std::to_string(odPercent) + " 2>&1";
         pipe = _popen(cmdOD.c_str(), "r");
         if (!pipe) {

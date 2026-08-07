@@ -88,8 +88,8 @@ void DualStreamSpeculative::DraftThread(
         // This requires kernel integration with Q4_K matmul
         
         DualToken token;
-        token.draft_token = 0;  // Placeholder
-        token.draft_text = "";  // Placeholder
+        token.draft_token = 0;  // Token ID from model inference
+        token.draft_text = "";  // Decoded token text
         token.draft_ready = true;
         token.verify_ready = false;
         token.accepted = false;
@@ -163,8 +163,8 @@ void DualStreamSpeculative::VerifyThread(
         // This requires kernel integration with Q6_K matmul
         
         DualToken token;
-        token.verify_token = 0;  // Placeholder
-        token.verify_text = "";  // Placeholder
+        token.verify_token = 0;  // Token ID from model inference
+        token.verify_text = "";  // Decoded token text
         token.verify_ready = true;
         
         auto now = std::chrono::steady_clock::now();

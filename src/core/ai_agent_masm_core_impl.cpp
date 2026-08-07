@@ -8,6 +8,13 @@
 #include <cstdio>
 #include <immintrin.h>
 #include <windows.h>
+#include <vector>
+#include <string>
+#include "../rawrxd_tokenizer.h"
+
+// Global tokenizer instance for production tokenization
+static RawrXDTokenizer g_rawr_tokenizer;
+static bool g_tokenizer_loaded = false;
 
 // Agent state structure
 struct AgentState {
@@ -100,24 +107,21 @@ int ai_agent_unload_model(void) {
     return 0; 
 }
 
-// Tokenization - production implementation
+// Tokenization - production implementation using RawrXDTokenizer
 int ai_agent_tokenize(const char* text, int* tokens, int max_tokens) {
     if (!text || !tokens || max_tokens <= 0) return 0;
     
+    // Lazy-load tokenizer with byte-level fallback vocab if not loaded
+    if (!g_tokenizer_loaded) {
+        g_rawr_tokenizer.Load(""); // Initialize with byte-level fallback
+        g_tokenizer_loaded = true;
+    }
+    
+    std::vector<uint32_t> encoded = g_rawr_tokenizer.Encode(text);
+    
     int count = 0;
-    const char* p = text;
-    while (*p && count < max_tokens) {
-        // Simple word-based tokenization
-        while (*p && (*p == ' ' || *p == '\t' || *p == '\n')) p++;
-        if (!*p) break;
-        
-        // Generate token ID from hash of word
-        unsigned int hash = 0;
-        const char* start = p;
-        while (*p && *p != ' ' && *p != '\t' && *p != '\n') {
-            hash = hash * 31 + *p++;
-        }
-        tokens[count++] = hash % 50000; // Vocab size
+    for (size_t i = 0; i < encoded.size() && count < max_tokens; ++i) {
+        tokens[count++] = static_cast<int>(encoded[i]);
     }
     
     g_agent_state.token_count = count;
@@ -127,14 +131,25 @@ int ai_agent_tokenize(const char* text, int* tokens, int max_tokens) {
 int ai_agent_detokenize(const int* tokens, int num_tokens, char* text, int max_len) {
     if (!tokens || !text || num_tokens <= 0 || max_len <= 0) return 0;
     
-    int pos = 0;
-    for (int i = 0; i < num_tokens && pos < max_len - 2; i++) {
-        // Convert token ID to string representation
-        int written = snprintf(text + pos, max_len - pos, "%d ", tokens[i]);
-        if (written > 0) pos += written;
+    if (!g_tokenizer_loaded) {
+        g_rawr_tokenizer.Load("");
+        g_tokenizer_loaded = true;
     }
-    if (pos > 0) text[pos - 1] = '\0'; // Remove trailing space
-    return pos;
+    
+    std::vector<uint32_t> token_vec;
+    token_vec.reserve(num_tokens);
+    for (int i = 0; i < num_tokens; ++i) {
+        token_vec.push_back(static_cast<uint32_t>(tokens[i]));
+    }
+    
+    std::string decoded = g_rawr_tokenizer.Decode(token_vec);
+    
+    int len = static_cast<int>(decoded.length());
+    if (len >= max_len) len = max_len - 1;
+    memcpy(text, decoded.c_str(), len);
+    text[len] = '\0';
+    
+    return len;
 }
 
 // Context management

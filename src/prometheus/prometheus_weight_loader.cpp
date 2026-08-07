@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include <nlohmann/json.hpp>
+#include "gguf_loader.h"
 
 namespace Prometheus {
 
@@ -444,3 +445,4 @@ LatencyEstimate LatencyEstimator::estimateCPU(
 }
 
 } // namespace Prometheus
+

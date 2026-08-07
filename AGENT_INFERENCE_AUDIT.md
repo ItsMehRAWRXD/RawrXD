@@ -26,3 +26,12 @@ The agent now attempts real inference for:
 - Response validation (via `AgenticPuppeteer`)
 
 This moves the system from "simulation" to "active inference" provided an LLM backend (Ollama/Local/OpenAI) is reachable.
+The agent now attempts real inference for:
+- Code completion (via `ModelInvoker`)
+- Refactoring suggestions (via `ModelInvoker`)
+- Test generation (via `ModelInvoker`)
+- File analysis (via `ModelInvoker` + `current_context.txt`)
+- Response validation (via `AgenticPuppeteer`)
+
+This moves the system from "simulation" to "active inference" provided an LLM backend (Ollama/Local/OpenAI) is reachable.
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

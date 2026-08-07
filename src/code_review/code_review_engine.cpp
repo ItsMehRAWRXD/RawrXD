@@ -628,8 +628,8 @@ ComplexityCalculator::HalsteadMetrics ComplexityCalculator::calculateHalstead(
     const std::string& language) {
     
     HalsteadMetrics metrics;
-    
-    // Simplified: count operators and operands
+
+    // Count operators and operands
     static const std::regex operatorPattern(
         R"((\+\+|--|->|::|\+=|-=|\*=|/=|%=|&=|\|=|\^=|<<|>>|<<=|>>=|==|!=|<=|>=|&&|\|\||[+\-*/%&|^~!<>?=]))");
     static const std::regex operandPattern(R"(\b([a-zA-Z_][a-zA-Z0-9_]*|[0-9]+(\.[0-9]+)?)\b)");
@@ -683,8 +683,8 @@ float ComplexityCalculator::calculateMaintainabilityIndex(
     uint32_t loc) {
     
     if (loc == 0) return 100.0f;
-    
-    // Simplified maintainability index
+
+    // Calculate maintainability index
     double mi = 171.0 - 5.2 * std::log(halsteadVolume + 1) 
                 - 0.23 * cyclomatic 
                 - 16.2 * std::log(loc + 1);

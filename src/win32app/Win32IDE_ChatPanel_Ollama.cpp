@@ -149,7 +149,7 @@ void Win32IDE::fetchOllamaModelsAsync()
             
             // Update UI on main thread
             if (m_hwndMain) {
-                PostMessage(m_hwndMain, WM_APP + 300, 
+                PostMessage(m_hwndMain, WM_APP + 310,  // Changed from 300 to avoid collision with WM_MODEL_PROGRESS_UPDATE
                     reinterpret_cast<WPARAM>(new std::vector<std::string>(models)), 0);
             }
         }

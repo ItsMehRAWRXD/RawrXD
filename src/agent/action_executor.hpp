@@ -351,3 +351,4 @@ private:
     std::vector<PlanCompletedCB>    m_planCompletedCBs;
     std::vector<UserInputNeededCB>  m_userInputNeededCBs;
 };
+

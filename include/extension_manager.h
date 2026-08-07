@@ -1,3 +1,4 @@
+
 #ifndef EXTENSION_MANAGER_H
 #define EXTENSION_MANAGER_H
 
@@ -64,3 +65,4 @@ ExtensionManager& GetExtensionManager();
 } // namespace IDE
 
 #endif // EXTENSION_MANAGER_H
+

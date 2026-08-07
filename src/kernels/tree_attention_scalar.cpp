@@ -16,6 +16,11 @@
 #include <cmath>
 #include <algorithm>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <intrin.h>
+#endif
+
 namespace RawrXD {
 namespace Kernels {
 
@@ -93,9 +98,30 @@ extern "C" void KVCacheInvalidate_Scalar(
 // Scalar Timing (portable)
 //============================================================================
 extern "C" uint64_t ReadTSC_Scalar() {
-    // Portable fallback using chrono
-    // In production: use platform-specific high-res timer
-    return 0;  // Placeholder
+    // Use x86/x64 RDTSC instruction for high-resolution timing
+    // This reads the Time Stamp Counter from the CPU
+    #ifdef _WIN32
+        #if defined(_M_X64) || defined(__x86_64__)
+            // x64: use __rdtsc() intrinsic
+            return __rdtsc();
+        #elif defined(_M_IX86) || defined(__i386__)
+            // x86: use inline assembly or intrinsic
+            return __rdtsc();
+        #else
+            // Fallback for other architectures: use QueryPerformanceCounter
+            LARGE_INTEGER freq, count;
+            if (QueryPerformanceFrequency(&freq) && QueryPerformanceCounter(&count)) {
+                // Return a TSC-like value (cycles scaled by typical 3GHz)
+                return static_cast<uint64_t>(count.QuadPart * 3000000000LL / freq.QuadPart);
+            }
+            return 0;
+        #endif
+    #else
+        // Linux/Unix: use rdtsc inline assembly
+        unsigned int lo, hi;
+        __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+        return ((uint64_t)hi << 32) | lo;
+    #endif
 }
 
 } // namespace Kernels

@@ -22,6 +22,7 @@
 #include <fstream>
 #include <algorithm>
 #include <memory>
+#include <iostream>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -931,7 +932,22 @@ private:
             }
         }
 
-        if (order.size() != wf.tasks.size()) return {}; // cycle detected
+        if (order.size() != wf.tasks.size()) {
+            // Cycle detected - report which nodes are involved
+            std::vector<std::string> cycleNodes;
+            for (const auto& task : wf.tasks) {
+                if (inDeg[task.id] > 0) {
+                    cycleNodes.push_back(task.id);
+                }
+            }
+            std::cerr << "[Workflow] Cycle detected involving tasks: ";
+            for (size_t i = 0; i < cycleNodes.size(); ++i) {
+                if (i > 0) std::cerr << ", ";
+                std::cerr << cycleNodes[i];
+            }
+            std::cerr << "\n";
+            return {}; // cycle detected
+        }
         return order;
     }
 

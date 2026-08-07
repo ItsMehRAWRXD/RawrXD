@@ -397,7 +397,7 @@ try {
   chrome.webview.postMessage(JSON.stringify({type:"agenticBrowserShellReady",v:1}));
 } catch(e) {}
 </script></body></html>)";
-    (void)navigateToHtmlUtf8(html);
+    navigateToHtmlUtf8(html);
 }
 
 } // namespace RawrXD::Ide

@@ -283,14 +283,33 @@ spec:
 // ============================================================================
 
 #ifdef BUILD_K8S_TEST
+#include <cstdlib>
+
+// Secure credential retrieval — never hardcode tokens or secrets
+static std::string getEnvOrDefault(const char* name, const char* defaultVal) {
+    const char* val = std::getenv(name);
+    return val ? std::string(val) : std::string(defaultVal);
+}
+
 int main() {
     std::cout << "RawrXD Kubernetes Adapter Test\n";
     std::cout << "Track C: Sovereign Security Feature\n\n";
 
     RawrXD::Sovereign::KubernetesAdapter k8s;
 
+    // Retrieve credentials from environment — fail closed if missing
+    std::string clusterUrl = getEnvOrDefault("RAWRXD_K8S_ENDPOINT", "");
+    std::string authToken  = getEnvOrDefault("RAWRXD_K8S_TOKEN", "");
+    std::string licenseKey = getEnvOrDefault("RAWRXD_LICENSE_KEY", "");
+
+    if (clusterUrl.empty() || authToken.empty()) {
+        std::cerr << "[SECURITY] K8s credentials must be provided via environment variables:\n"
+                  << "  RAWRXD_K8S_ENDPOINT, RAWRXD_K8S_TOKEN\n";
+        return 1;
+    }
+
     // Connect to cluster
-    k8s.connect("https://kubernetes.default.svc", "TOKEN_HERE");
+    k8s.connect(clusterUrl, authToken);
 
     // Deploy model
     k8s.deployModel("llama-3-70b", 3);
@@ -303,8 +322,10 @@ int main() {
     };
     k8s.createConfigMap("rawrxd-config", config);
 
-    // Create secret for license
-    k8s.createSecret("rawrxd-license", "LICENSE_KEY_HERE");
+    // Create secret for license (only if license key is provided)
+    if (!licenseKey.empty()) {
+        k8s.createSecret("rawrxd-license", licenseKey);
+    }
 
     // Enable autoscaling
     k8s.enableAutoscaling("rawrxd-llama-3-70b", 2, 10, 75);

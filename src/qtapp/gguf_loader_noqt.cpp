@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cstring>
+#include "gguf_loader.h"
 
 // GGUF format constants
 constexpr uint32_t GGUF_MAGIC = 0x46554747;  // "GGUF"
@@ -235,3 +236,4 @@ std::pair<int, int> GGUFLoader::getTensorShape(const std::string& name) const {
     if (shape.size() == 1) return {1, static_cast<int>(shape[0])};
     return {static_cast<int>(shape[0]), static_cast<int>(shape[1])};
 }
+

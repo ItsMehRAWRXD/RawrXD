@@ -1,0 +1,129 @@
+// ============================================================================
+// AIConfigDialog.rc - AI Configuration Dialog Resources
+// ============================================================================
+
+#include "resource.h"
+#include <Windows.h>
+
+// ============================================================================
+// AI Preferences Dialog
+// ============================================================================
+IDD_AI_PREFERENCES DIALOGEX 0, 0, 400, 420
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AI Completion Preferences"
+FONT 9, "Segoe UI", 0, 0, 0x1
+BEGIN
+    // Group: Generation Parameters
+    GROUPBOX        "Generation Parameters", IDC_STATIC, 7, 7, 386, 120
+    
+    // Temperature
+    LTEXT           "Temperature:", IDC_STATIC, 15, 22, 50, 8
+    LTEXT           "0.70", IDC_TEMP_LABEL, 65, 22, 30, 8
+    CONTROL         "", IDC_TEMP_SLIDER, "msctls_trackbar32", TBS_AUTOTICKS | 
+                    TBS_HORZ | TBS_TOOLTIPS | WS_TABSTOP, 100, 20, 200, 20
+    LTEXT           "Creative", IDC_STATIC, 305, 22, 30, 8
+    LTEXT           "Focused", IDC_STATIC, 15, 35, 30, 8
+    
+    // Top P
+    LTEXT           "Top P:", IDC_STATIC, 15, 47, 50, 8
+    LTEXT           "0.90", IDC_TOPP_LABEL, 65, 47, 30, 8
+    CONTROL         "", IDC_TOPP_SLIDER, "msctls_trackbar32", TBS_AUTOTICKS | 
+                    TBS_HORZ | TBS_TOOLTIPS | WS_TABSTOP, 100, 45, 200, 20
+    LTEXT           "Diverse", IDC_STATIC, 305, 47, 30, 8
+    LTEXT           "Deterministic", IDC_STATIC, 15, 60, 45, 8
+    
+    // Max Tokens
+    LTEXT           "Max Tokens:", IDC_STATIC, 15, 75, 50, 8
+    EDITTEXT        IDC_MAXTOKENS, 65, 73, 50, 14, ES_NUMBER | ES_AUTOHSCROLL
+    LTEXT           "(16-2048)", IDC_STATIC, 120, 75, 40, 8
+    
+    // Top K
+    LTEXT           "Top K:", IDC_STATIC, 15, 95, 50, 8
+    EDITTEXT        IDC_TOPK, 65, 93, 50, 14, ES_NUMBER | ES_AUTOHSCROLL
+    LTEXT           "(1-100)", IDC_STATIC, 120, 95, 30, 8
+    
+    // Repeat Penalty
+    LTEXT           "Repeat Penalty:", IDC_STATIC, 200, 75, 60, 8
+    EDITTEXT        IDC_REPEAT_PENALTY, 265, 73, 50, 14, ES_AUTOHSCROLL
+    LTEXT           "(1.0-2.0)", IDC_STATIC, 320, 75, 40, 8
+    
+    // Group: UI Behavior
+    GROUPBOX        "UI Behavior", IDC_STATIC, 7, 130, 386, 80
+    
+    // Auto-trigger
+    CONTROL         "Auto-trigger on '.' and '->'", IDC_AUTO_TRIGGER, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 145, 150, 10
+    
+    // Trigger Delay
+    LTEXT           "Trigger Delay:", IDC_STATIC, 15, 162, 55, 8
+    EDITTEXT        IDC_TRIGGER_DELAY, 75, 160, 40, 14, ES_NUMBER | ES_AUTOHSCROLL
+    LTEXT           "ms", IDC_STATIC, 120, 162, 15, 8
+    
+    // Show Inline
+    CONTROL         "Show ghost text inline", IDC_SHOW_INLINE, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 180, 120, 10
+    
+    // Gray out completed
+    CONTROL         "Gray out accepted completions", IDC_GRAY_OUT_COMPLETED, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 200, 180, 140, 10
+    
+    // Group: Model Selection
+    GROUPBOX        "Model", IDC_STATIC, 7, 215, 386, 55
+    
+    // Model Path
+    LTEXT           "Model Path:", IDC_STATIC, 15, 230, 45, 8
+    EDITTEXT        IDC_MODEL_PATH, 65, 228, 260, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...", IDC_BROWSE_MODEL, 330, 227, 55, 16
+    
+    // Model Info
+    LTEXT           "Select a GGUF model file to enable AI completions.", 
+                    IDC_STATIC, 15, 248, 350, 8, SS_NOPREFIX
+    
+    // Advanced Section (initially hidden)
+    GROUPBOX        "Advanced Settings", IDC_ADVANCED_GROUP, 7, 275, 386, 100
+    
+    // GPU Settings
+    CONTROL         "Use GPU acceleration", IDC_USE_GPU, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 290, 120, 10
+    
+    LTEXT           "GPU Layers:", IDC_STATIC, 15, 308, 50, 8
+    COMBOBOX        IDC_GPU_LAYERS, 70, 306, 80, 100, CBS_DROPDOWNLIST | 
+                    CBS_HASSTRINGS | WS_TABSTOP
+    
+    // Context Length
+    LTEXT           "Context Length:", IDC_STATIC, 200, 308, 60, 8
+    COMBOBOX        IDC_CONTEXT_LENGTH, 265, 306, 80, 100, CBS_DROPDOWNLIST | 
+                    CBS_HASSTRINGS | WS_TABSTOP
+    
+    // Flash Attention
+    CONTROL         "Use Flash Attention", IDC_FLASH_ATTENTION, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 328, 120, 10
+    
+    // Telemetry
+    CONTROL         "Enable telemetry", IDC_ENABLE_TELEMETRY, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 348, 100, 10
+    CONTROL         "Share anonymous usage data", IDC_SHARE_ANONYMOUS, 
+                    "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 348, 140, 10
+    
+    // Buttons
+    DEFPUSHBUTTON   "OK", IDOK, 230, 390, 50, 16
+    PUSHBUTTON      "Cancel", IDCANCEL, 285, 390, 50, 16
+    PUSHBUTTON      "Reset Defaults", IDC_RESET_DEFAULTS, 15, 390, 60, 16
+    PUSHBUTTON      "Show Advanced ▼", ID_ADVANCED_TOGGLE, 85, 390, 70, 16
+END
+
+// ============================================================================
+// String Table
+// ============================================================================
+STRINGTABLE
+BEGIN
+    IDS_AI_CONFIG_TITLE         "AI Completion Preferences"
+    IDS_AI_CONFIG_DESCRIPTION   "Configure AI-powered code completion settings"
+    IDS_TEMPERATURE_TOOLTIP     "Higher values make output more random, lower values more focused"
+    IDS_TOPP_TOOLTIP            "Nucleus sampling: consider tokens with top_p probability mass"
+    IDS_MAXTOKENS_TOOLTIP       "Maximum number of tokens to generate"
+    IDS_MODEL_REQUIRED          "Please select a GGUF model file"
+    IDS_MODEL_INVALID           "Invalid model file. Please select a valid GGUF file."
+    IDS_SETTINGS_SAVED          "Settings saved successfully"
+    IDS_SETTINGS_RESET          "Settings reset to defaults"
+END

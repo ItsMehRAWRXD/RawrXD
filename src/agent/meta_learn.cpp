@@ -436,7 +436,7 @@ bool MetaLearn::computeQuantSuggestion(std::string* bestQuant,
             found = true; chosen = name; cTps = at; cPpl = ap;
         }
     }
-
+    
     if (!found) {
         for (const auto& [name, v] : stats) {
             if (!v.count) continue;
@@ -446,7 +446,7 @@ bool MetaLearn::computeQuantSuggestion(std::string* bestQuant,
             }
         }
     }
-
+    
     if (!found) {
         if (bestQuant) bestQuant->clear();
         if (avgTps) *avgTps = 0; if (avgPpl) *avgPpl = 0;
@@ -485,7 +485,7 @@ bool MetaLearn::computeKernelSuggestion(std::string* bestKernel,
         double at = v.sumTps / v.count;
         if (!found || at > cTps) { found = true; chosen = name; cTps = at; }
     }
-
+    
     if (!found) {
         if (bestKernel) bestKernel->clear();
         if (avgTps) *avgTps = 0;

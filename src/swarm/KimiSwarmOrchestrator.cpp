@@ -348,7 +348,7 @@ ProjectResult KimiSwarmOrchestrator::generateProject(const ProjectRequest& reque
     auto design = architect_->designSystem(designReq);
     
     // Phase 2: Generate vibe/design system
-    CinematicVibeEngine::VibeSpec vibeSpec;
+    VibeSpec vibeSpec;
     vibeSpec.mood = request.vibe;
     vibeSpec.darkMode = request.darkMode;
     auto designSystem = vibeEngine_->generateDesignSystem(vibeSpec);

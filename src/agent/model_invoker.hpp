@@ -58,6 +58,7 @@ private:
     nlohmann::json sendOllamaRequest(const std::string& model, const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json sendClaudeRequest(const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json sendOpenAIRequest(const std::string& prompt, int maxTokens, double temperature);
+    nlohmann::json sendNativeInferenceRequest(const std::string& model, const std::string& prompt, int maxTokens, double temperature);
     nlohmann::json parsePlan(const std::string& llmOutput);
     bool validatePlanSanity(const nlohmann::json& plan);
     std::string getCacheKey(const InvocationParams& params) const;

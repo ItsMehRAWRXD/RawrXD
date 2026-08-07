@@ -1,5 +1,5 @@
 #include "AgentOllamaClient.h"
-#include "BackendOrchestrator.h"
+#include "../BackendOrchestrator.h"
 #include "hotpatch/Engine.hpp"
 
 #include <chrono>
@@ -20,8 +20,9 @@ extern "C" unsigned int rawr_cpu_has_avx2();
 
 AgentOllamaClient::AgentOllamaClient(const OllamaConfig& config)
     : m_config(config) {
-    if (!RawrXD::BackendOrchestrator::Instance().IsInitialized()) {
-        RawrXD::BackendOrchestrator::Instance().Initialize();
+    auto& bo = RawrXD::BackendOrchestrator::Instance();
+    if (!bo.IsInitialized()) {
+        bo.Initialize();
     }
 
     RawrXD::Agentic::Hotpatch::Engine::instance().setModelTemperature(m_config.temperature);
@@ -130,6 +131,7 @@ std::vector<std::string> AgentOllamaClient::ListModels() {
 InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& messages,
                                             const nlohmann::json& tools) {
     std::string prompt = BuildPromptFromMessages(messages, tools);
+    auto start_time = std::chrono::steady_clock::now();
 
     RawrXD::InferRequest req;
     req.id = m_nextRequestId++;
@@ -137,37 +139,38 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
     req.max_tokens = m_config.max_tokens;
     req.tenant_id = "agentic";
 
-    std::promise<std::string> completion_promise;
-    std::promise<std::string> metadata_promise;
+    auto completion_promise = std::make_shared<std::promise<std::string>>();
+    auto metadata_promise = std::make_shared<std::promise<std::string>>();
 
-    req.complete_cb = [&](const std::string& completion, const std::string& metadata) {
-        completion_promise.set_value(completion);
-        metadata_promise.set_value(metadata);
+    req.complete_cb = [completion_promise, metadata_promise](const std::string& completion, const std::string& metadata) {
+        completion_promise->set_value(completion);
+        metadata_promise->set_value(metadata);
     };
 
-    auto start_time = std::chrono::steady_clock::now();
     auto& bo = RawrXD::BackendOrchestrator::Instance();
     uint64_t req_id = bo.Enqueue(req);
 
-    std::future<std::string> completion_future = completion_promise.get_future();
+    std::future<std::string> completion_future = completion_promise->get_future();
+    std::future<std::string> metadata_future = metadata_promise->get_future();
     if (completion_future.wait_for(std::chrono::seconds(120)) != std::future_status::ready) {
         bo.Cancel(req_id);
-        return InferenceResult::error("Inference timeout");
+        return InferenceResult::error("ChatSync timeout");
+    }
+
+    std::string response = completion_future.get();
+    std::string metadata = metadata_future.get();
+
+    if (response.rfind("[BackendError]", 0) == 0) {
+        return InferenceResult::error(response);
     }
 
     InferenceResult result;
     result.success = true;
     result.has_tool_calls = false;
-    result.response = completion_future.get();
-    if (result.response.rfind("[BackendError]", 0) == 0) {
-        return InferenceResult::error(result.response);
-    }
-    result.prompt_tokens = 0;
-    result.completion_tokens = 0;
-    result.tokens_per_sec = 0.0;
+    result.response = response;
+    ParseToolCallsFromResponse(response, result);
 
     try {
-        std::string metadata = metadata_promise.get_future().get();
         nlohmann::json j = nlohmann::json::parse(metadata);
         if (j.contains("prompt_eval_count")) {
             result.prompt_tokens = j["prompt_eval_count"].get<uint64_t>();
@@ -186,8 +189,6 @@ InferenceResult AgentOllamaClient::ChatSync(const std::vector<ChatMessage>& mess
     auto end_time = std::chrono::steady_clock::now();
     result.total_duration_ms = static_cast<double>(
         std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count());
-
-    ParseToolCallsFromResponse(result.response, result);
 
     {
         std::lock_guard<std::mutex> lock(m_mutex);

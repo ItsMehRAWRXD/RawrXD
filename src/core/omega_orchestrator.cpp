@@ -136,7 +136,7 @@ uint64_t OmegaOrchestrator::implementGenerate(uint32_t taskId) {
 #else
     m_stats.codeGenerated++;
     m_world.codeUnits++;
-    return taskId * 0x100000001B3ULL;  // Simulated output hash
+    return taskId * 0x100000001B3ULL;  // Deterministic hash for non-MASM builds
 #endif
 }
 

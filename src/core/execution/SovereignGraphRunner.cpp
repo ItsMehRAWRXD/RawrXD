@@ -115,8 +115,52 @@ ExecutionResult SovereignGraphRunner::Forward(const std::vector<int32_t>& input_
             // First token from input
             next_token = input_tokens[0];
         } else {
-            // Sample next token (would call sampling kernel)
-            next_token = 1; // Placeholder
+            // Sample next token using the logits from previous step
+            // Get logits from the output buffer
+            float* logits = static_cast<float*>(output_buffer_.data);
+            int32_t vocab_size = config_.vocab_size > 0 ? config_.vocab_size : 32000;
+            
+            // Apply temperature scaling
+            float temperature = config_.temperature > 0 ? config_.temperature : 1.0f;
+            if (temperature != 1.0f) {
+                for (int i = 0; i < vocab_size; i++) {
+                    logits[i] /= temperature;
+                }
+            }
+            
+            // Apply softmax to get probabilities
+            float max_logit = logits[0];
+            for (int i = 1; i < vocab_size; i++) {
+                if (logits[i] > max_logit) max_logit = logits[i];
+            }
+            
+            float sum_exp = 0.0f;
+            std::vector<float> probs(vocab_size);
+            for (int i = 0; i < vocab_size; i++) {
+                probs[i] = std::exp(logits[i] - max_logit);
+                sum_exp += probs[i];
+            }
+            
+            for (int i = 0; i < vocab_size; i++) {
+                probs[i] /= sum_exp;
+            }
+            
+            // Sample from the distribution
+            // Use simple greedy sampling for now (argmax)
+            // Could be extended to top-k, top-p sampling
+            next_token = 0;
+            float max_prob = probs[0];
+            for (int i = 1; i < vocab_size; i++) {
+                if (probs[i] > max_prob) {
+                    max_prob = probs[i];
+                    next_token = i;
+                }
+            }
+            
+            // Check for end-of-sequence token
+            if (next_token == config_.eos_token_id) {
+                break;  // Stop generation
+            }
         }
         
         // Single decode step

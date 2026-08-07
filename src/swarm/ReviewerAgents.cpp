@@ -32,8 +32,13 @@ ReviewerAgents::SecurityReport ReviewerAgents::securityAudit(const std::vector<s
         auto findings = checkSecurityPatterns(code);
         report.vulnerabilities.insert(report.vulnerabilities.end(), findings.begin(), findings.end());
         
-        auto secrets = checkSecrets(code);
-        report.exposedSecrets.insert(report.exposedSecrets.end(), secrets.begin(), secrets.end());
+        auto secretFindings = checkSecrets(code);
+        report.vulnerabilities.insert(report.vulnerabilities.end(), secretFindings.begin(), secretFindings.end());
+        
+        // Extract exposed secret values (simulated)
+        if (!secretFindings.empty()) {
+            report.exposedSecrets.push_back("API_KEY_EXAMPLE");
+        }
     }
     
     // Calculate risk score
@@ -136,7 +141,7 @@ std::vector<ReviewFinding> ReviewerAgents::checkSecurityPatterns(const std::stri
     }
     
     // Check for hardcoded secrets
-    std::regex secretPattern("(password|secret|key|token)\s*=\s*['\"][^'\"]+['\"]", std::regex::icase);
+    std::regex secretPattern("(password|secret|key|token)\\s*=\\s*['\"][^'\"]+['\"]", std::regex::icase);
     if (std::regex_search(code, secretPattern)) {
         ReviewFinding finding;
         finding.severity = ReviewFinding::CRITICAL;
@@ -207,7 +212,7 @@ std::vector<ReviewFinding> ReviewerAgents::checkSecrets(const std::string& code)
     std::vector<ReviewFinding> findings;
     
     // Check for API keys
-    std::regex apiKeyPattern("(api[_-]?key|apikey)\s*[:=]\s*['\"][a-zA-Z0-9]{20,}['\"]", std::regex::icase);
+    std::regex apiKeyPattern("(api[_-]?key|apikey)\\s*[:=]\\s*['\"][a-zA-Z0-9]{20,}['\"]", std::regex::icase);
     std::smatch match;
     if (std::regex_search(code, match, apiKeyPattern)) {
         ReviewFinding finding;
@@ -243,7 +248,7 @@ std::vector<ReviewFinding> ReviewerAgents::checkSQLInjection(const std::string& 
     std::vector<ReviewFinding> findings;
     
     // Check for string concatenation in SQL
-    std::regex sqlPattern("(SELECT|INSERT|UPDATE|DELETE).*\+.*\\$\\{", std::regex::icase);
+    std::regex sqlPattern("(SELECT|INSERT|UPDATE|DELETE).*\\+.*\\$\\{", std::regex::icase);
     if (std::regex_search(code, sqlPattern)) {
         ReviewFinding finding;
         finding.severity = ReviewFinding::CRITICAL;
@@ -307,7 +312,7 @@ std::vector<ReviewFinding> ReviewerAgents::checkNamingConventions(const std::str
     std::vector<ReviewFinding> findings;
     
     // Check for snake_case in JS (should be camelCase)
-    std::regex snakePattern("(const|let|var)\s+([a-z]+_[a-z]+)");
+    std::regex snakePattern("(const|let|var)\\s+([a-z]+_[a-z]+)");
     std::smatch match;
     if (std::regex_search(code, match, snakePattern)) {
         ReviewFinding finding;

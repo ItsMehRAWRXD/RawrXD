@@ -74,19 +74,19 @@ $ObjFiles = @()
 
 # Get all monolithic files
 Write-Host "`n[*] Scanning monolithic directory..." -ForegroundColor Yellow
-$MonolithicFiles = Get-ChildItem -Path $MonolithicDir -Filter "*.asm" -File
+$MonolithicFiles = @(Get-ChildItem -Path $MonolithicDir -Filter "*.asm" -File)
 foreach ($file in $MonolithicFiles) {
     $AsmFiles += $file.FullName
 }
-Write-Host "  Found $($MonolithicFiles.Count) monolithic files" -ForegroundColor Gray
+Write-Host "  Found $($MonolithicFiles.Count) monolithic file(s)" -ForegroundColor Gray
 
 # Get all top-level ASM files
 Write-Host "`n[*] Scanning top-level ASM files..." -ForegroundColor Yellow
-$TopLevelFiles = Get-ChildItem -Path $SrcAsmDir -Filter "*.asm" -File | Where-Object { $_.Name -ne "RawrXD_UnifiedDebugger.asm" }
+$TopLevelFiles = @(Get-ChildItem -Path $SrcAsmDir -Filter "*.asm" -File | Where-Object { $_.Name -ne "RawrXD_UnifiedDebugger.asm" })
 foreach ($file in $TopLevelFiles) {
     $AsmFiles += $file.FullName
 }
-Write-Host "  Found $($TopLevelFiles.Count) top-level files" -ForegroundColor Gray
+Write-Host "  Found $($TopLevelFiles.Count) top-level file(s)" -ForegroundColor Gray
 
 # Add unified debugger
 $UnifiedDebugger = Join-Path $SrcAsmDir "RawrXD_UnifiedDebugger.asm"
@@ -127,10 +127,10 @@ foreach ($asmFile in $AsmFiles) {
     }
 }
 
-Write-Host "`n[*] Assembly results: $SuccessCount/$($AsmFiles.Count) files compiled" -ForegroundColor $(if ($SuccessCount -eq $AsmFiles.Count) { "Green" } else { "Yellow" })
+Write-Host "`n[*] Assembly results: $SuccessCount/$($AsmFiles.Count) file(s) compiled" -ForegroundColor $(if ($SuccessCount -eq $AsmFiles.Count) { "Green" } else { "Yellow" })
 
 if ($Errors.Count -gt 0) {
-    Write-Host "`n[ERROR] Assembly failures:" -ForegroundColor Red
+    Write-Host "`n[ERROR] $($Errors.Count) assembly failure(s):" -ForegroundColor Red
     foreach ($err in $Errors) {
         Write-Host $err -ForegroundColor Red
     }

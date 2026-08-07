@@ -1,20 +1,24 @@
+
 #ifndef PROMPT_TEMPLATES_H
 #define PROMPT_TEMPLATES_H
 
-// C++20, no Qt. Prompt templates for AI debugger. JSON as std::string.
+#include <QString>
+#include <QJsonObject>
+#include <QJsonDocument>
 
-#include <string>
-
+// Prompt templates for AI debugger
 class PromptTemplates
 {
 public:
-    /** Generate a prompt for the AI model based on debug information (JSON string). */
-    static std::string generateDebugPrompt(const std::string& debugInfoJson);
+    // Generate a prompt for the AI model based on debug information
+    static QString generateDebugPrompt(const QJsonObject &debugInfo);
 
 private:
-    static std::string formatLocals(const std::string& localsJson);
-    static std::string formatStack(const std::string& stackJson);
-    static std::string formatRegisters(const std::string& registersJson);
+    // Helper functions to format different parts of the debug info
+    static QString formatLocals(const QJsonArray &locals);
+    static QString formatStack(const QJsonArray &stack);
+    static QString formatRegisters(const QJsonArray ®isters);
 };
 
 #endif // PROMPT_TEMPLATES_H
+

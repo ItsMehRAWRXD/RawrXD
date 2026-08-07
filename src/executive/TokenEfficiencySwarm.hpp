@@ -77,16 +77,16 @@ public:
 
     // Get telemetry
     uint32_t getTriggerCount() const { return triggerCount_.load(); }
-    auto getLastTriggerTime() const { return lastTriggerTime_; }
+    auto getLastTriggerTime() const { return lastTriggerTime_.load(); }
     
     // Reset telemetry
     void resetTelemetry() {
         triggerCount_.store(0);
-        lastTriggerTime_ = {};
+        lastTriggerTime_.store(std::chrono::steady_clock::time_point{});
     }
 
     // Hysteresis check - prevents oscillation
-    bool canRetrigger() const;
+    bool canRetrigger();
 
 private:
     TokenEfficiencySwarm() = default;

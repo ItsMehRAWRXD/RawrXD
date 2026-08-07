@@ -53,7 +53,7 @@ uint64_t TerminalOwnership::CreateSession(const std::string& agentId, const std:
     session.stdoutPipe = stdoutRead;
     session.stderrPipe = stderrRead;
     
-    STARTUPINFO si = {sizeof(si)};
+    STARTUPINFOW si = {sizeof(si)};
     si.dwFlags = STARTF_USESTDHANDLES;
     si.hStdInput = stdinRead;
     si.hStdOutput = stdoutWrite;
@@ -61,9 +61,11 @@ uint64_t TerminalOwnership::CreateSession(const std::string& agentId, const std:
     
     PROCESS_INFORMATION pi;
     std::string cmdLine = "cmd.exe /c " + command;
+    std::wstring wCmdLine(cmdLine.begin(), cmdLine.end());
+    std::wstring wCwd(session.cwd.begin(), session.cwd.end());
     
-    if (CreateProcess(nullptr, &cmdLine[0], nullptr, nullptr, TRUE, 
-                      CREATE_NO_WINDOW, nullptr, session.cwd.c_str(), &si, &pi)) {
+    if (CreateProcessW(nullptr, &wCmdLine[0], nullptr, nullptr, TRUE, 
+                      CREATE_NO_WINDOW, nullptr, wCwd.c_str(), &si, &pi)) {
         session.pid = pi.dwProcessId;
         session.processHandle = pi.hProcess;
         session.state = TerminalState::RUNNING;

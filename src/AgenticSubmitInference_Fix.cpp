@@ -194,11 +194,11 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
     for (int iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
         result.toolIterations = iteration + 1;
         
-        // Send to LLM
+        // Send to native inference backend
         std::string rawResponse;
-        if (!SendToOllama(request, rawResponse)) {
-            result.error = "BackendError: Ollama connection failed";
-            OutputDebugStringA("[AgenticInference] ERROR: Ollama request failed\n");
+        if (!SendToNativeInference(request, rawResponse)) {
+            result.error = "BackendError: Native inference connection failed";
+            OutputDebugStringA("[AgenticInference] ERROR: Native inference request failed\n");
             return result;
         }
 
@@ -305,7 +305,7 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
 }
 
 // ============================================================================
-// Simplified Interface
+// Public Interface
 // ============================================================================
 
 bool AgenticInferenceBridge::SubmitInference(
@@ -487,7 +487,7 @@ std::vector<ToolCall> AgenticInferenceBridge::ExtractToolCalls(const json& respo
     return calls;
 }
 
-bool AgenticInferenceBridge::SendToOllama(const json& request, std::string& outResponse)
+bool AgenticInferenceBridge::SendToNativeInference(const json& request, std::string& outResponse)
 {
     try {
         const std::string modelName = JSONValidator::GetStringField(request, "model", "default");
@@ -519,7 +519,7 @@ bool AgenticInferenceBridge::SendToOllama(const json& request, std::string& outR
         return true;
         
     } catch (const std::exception& e) {
-        OutputDebugStringA(("[AgenticInference] SendToOllama error: " + std::string(e.what()) + "\n").c_str());
+        OutputDebugStringA(("[AgenticInference] SendToNativeInference error: " + std::string(e.what()) + "\n").c_str());
         return false;
     }
 }

@@ -1481,7 +1481,57 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         }
         if (!row_ok)
         {
-            printf("[Forward] FATAL: Missing token embedding tensor\n");
+            emb_name = "embeddings.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "input.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "v.token_embd.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "v.embeddings.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "v.input.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "transformer.wte.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "wte.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "word_embeddings.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "embed_tokens.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            emb_name = "tok_embeddings.weight";
+            row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x.data(), static_cast<size_t>(dim));
+        }
+        if (!row_ok)
+        {
+            printf("[Forward] FATAL: Missing token embedding tensor (tried: token_embd.weight, model.embed_tokens.weight, embeddings.weight, input.weight, v.token_embd.weight, v.embeddings.weight, v.input.weight, transformer.wte.weight, wte.weight, word_embeddings.weight, embed_tokens.weight, tok_embeddings.weight)\n");
             return {};
         }
 

@@ -1,9 +1,12 @@
 #include "CompletionEngine.h"
+#include "cpu_inference_engine.h"
+#include "utils/InferenceSettingsManager.h"
 #include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <regex>
 #include <nlohmann/json.hpp>
+#include <windows.h>
 #include <winhttp.h>
 
 #pragma comment(lib, "winhttp.lib")
@@ -12,6 +15,24 @@ using json = nlohmann::json;
 
 namespace RawrXD {
 namespace IDE {
+
+// Global static engine for completion to ensure persistent model state
+static std::unique_ptr<RawrXD::CPUInferenceEngine> g_completionEngine = nullptr;
+
+static void EnsureEngineLoaded() {
+    if (!g_completionEngine) {
+        g_completionEngine = std::make_unique<RawrXD::CPUInferenceEngine>();
+    }
+    
+    // Check if model is loaded or needs update
+    // For now we assume if it's created, we try to load the default model
+    auto& settings = RawrXD::InferenceSettingsManager::getInstance();
+    std::string modelPath = settings.getCurrentModelPath();
+    
+    if (!g_completionEngine->isModelLoaded() && !modelPath.empty()) {
+        g_completionEngine->LoadModel(modelPath);
+    }
+}
 
 IntelligentCompletionEngine::IntelligentCompletionEngine()
     : m_confidenceThreshold(0.5f), m_maxSuggestions(10),

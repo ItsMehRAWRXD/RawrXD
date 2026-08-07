@@ -361,7 +361,27 @@ void Editor::mouseMoveEvent(int x, int y, int mods) {
     }
 }
 
-void Editor::mouseReleaseEvent(int x, int y, int button) {}
+void Editor::mouseReleaseEvent(int x, int y, int button) {
+    // Handle mouse button release
+    if (button == 0) { // Left button
+        // Update cursor position on release
+        int line, col;
+        locFromScreenPos(x, y, line, col);
+        cursorLine = line;
+        cursorCol = col;
+        
+        // Clear selection if not dragging
+        if (!isDragging) {
+            selectionStartLine = cursorLine;
+            selectionStartCol = cursorCol;
+            selectionEndLine = cursorLine;
+            selectionEndCol = cursorCol;
+        }
+        isDragging = false;
+        
+        update();
+    }
+}
 
 void Editor::moveCursor(int dLine, int dCol, bool keepSelection) {
     if (!keepSelection && (dLine != 0 || dCol != 0)) {

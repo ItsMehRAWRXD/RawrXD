@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstddef>
@@ -51,3 +52,4 @@ private:
     LanguagePluginBase* m_lang{nullptr};
     GenericLanguagePlugin m_fallback;
 };
+

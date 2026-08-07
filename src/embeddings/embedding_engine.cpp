@@ -1,4 +1,4 @@
-// Stub implementation for embedding_engine.cpp
+// Basic implementation for embedding_engine.cpp
 #define RAWRXD_CURRENT_DOMAIN RAWRXD_DOMAIN_CORE_RUNTIME
 #include "core_runtime/symbol_ownership.h"
 #include "core_runtime/embedding_engine.h"

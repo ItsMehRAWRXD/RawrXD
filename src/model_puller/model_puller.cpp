@@ -14,6 +14,7 @@
 #include <cctype>
 #include <thread>
 #include <chrono>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -943,3 +944,4 @@ int ModelPuller::AutoScanDirectory(const std::string& dirPath) {
 }
 
 } // namespace RawrXD
+

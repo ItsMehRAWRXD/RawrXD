@@ -3,7 +3,7 @@
 #include <vector>
 #include <memory>
 #include <filesystem>
-#include <nlohmann/json.hpp>
+#include "../include/nlohmann/json.hpp"
 #include <mutex>
 #include <unordered_map>
 #include <functional>

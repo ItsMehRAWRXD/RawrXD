@@ -337,7 +337,10 @@ public:
     
     // Verify system integrity
     bool verifyIntegrity();
-    
+
+    // Check if patch system is in error state
+    bool isInErrorState() const;
+
     // Create restore point
     std::string createRestorePoint(const std::string& description);
     

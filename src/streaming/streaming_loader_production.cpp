@@ -5,6 +5,7 @@
 #include "streaming_loader_production.hpp"
 #include <algorithm>
 #include <iostream>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -330,3 +331,4 @@ void StreamingGGUFLoader::SetEvictionPolicy(const std::string& policy) {
 }
 
 } // namespace RawrXD
+

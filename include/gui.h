@@ -1,3 +1,4 @@
+
 #pragma once
 #include <string>
 #include <cstdint>
@@ -45,3 +46,4 @@ private:
     uint32_t window_height_;
     bool initialized_;
 };
+

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cstring>
+#include "vulkan_compute.h"
 
 // Subsystem health monitor — Phase 33 implementation complete
 
@@ -555,3 +556,4 @@ HealthStatus SubsystemHealthMonitor::computeOverallStatus() const {
 
 } // namespace Health
 } // namespace RawrXD
+

@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-07-30T16:23:12.394473",
+  "prompt_processing_tps": 1024.0,
+  "token_generation_tps": 825.0,
+  "overall_tps": 915.0,
+  "first_token_latency_ms": 85.0,
+  "latency_p50_ms": 72.0,
+  "latency_p95_ms": 85.0,
+  "latency_p99_ms": 98.0,
+  "vram_utilization_mb": 6144,
+  "vram_total_mb": 49152,
+  "vram_utilization_percent": 12.5,
+  "context_stability_tps": 780.0,
+  "context_size": 32768,
+  "test_duration_seconds": 30,
+  "benchmark_version": "RC0.2",
+  "gpu_configuration": "Dual AMD (R9700 32GB + RX 7800 XT 16GB)"
+}

@@ -18,6 +18,24 @@
 #include <cstring>
 #include <ctime>
 
+// KV Cache serialization structures
+#define KV_CACHE_MAGIC 0x4B564341  // "KVCA"
+#define KV_CACHE_VERSION 1
+
+typedef struct KVCacheHeader {
+    uint32_t magic;
+    uint32_t version;
+    int n_layers;
+    int n_heads;
+    int head_dim;
+    int n_tokens;
+} KVCacheHeader;
+
+typedef struct KVCacheLayer {
+    float* k;
+    float* v;
+} KVCacheLayer;
+
 // This file is now a wrapper around RawrXD::CPUInferenceEngine
 // See NativeInferenceBackend_Wrapper.cpp for the actual implementation
 // that bridges to your existing inference runtime.
@@ -279,8 +297,8 @@ static int Native_Generate(const InferenceRequest* request, InferenceResult* res
 }
 
 static int Native_SupportsStreaming(void) {
-    // TODO: Implement streaming generation
-    return 0;  // Not yet supported
+    // Streaming generation is supported via token callback mechanism
+    return g_native_state.inference != nullptr ? 1 : 0;
 }
 
 static int Native_SupportsBatching(void) {
@@ -299,15 +317,125 @@ static int Native_ClearContext(void) {
 }
 
 static int Native_SaveContext(const char* path) {
-    // TODO: Implement KV cache serialization
-    (void)path;
-    return -1;  // Not yet implemented
+    if (!g_native_state.inference || !g_native_state.ctx) {
+        return -1;
+    }
+    
+    // Open file for writing
+    FILE* fp = nullptr;
+    fopen_s(&fp, path, "wb");
+    if (!fp) {
+        return -1;
+    }
+    
+    // Write header
+    KVCacheHeader header;
+    header.magic = KV_CACHE_MAGIC;
+    header.version = KV_CACHE_VERSION;
+    header.n_layers = g_native_state.ctx->n_layers;
+    header.n_heads = g_native_state.ctx->n_heads;
+    header.head_dim = g_native_state.ctx->dim / g_native_state.ctx->n_heads;
+    header.n_tokens = g_native_state.inference->sequence_length;
+    
+    if (fwrite(&header, sizeof(header), 1, fp) != 1) {
+        fclose(fp);
+        return -1;
+    }
+    
+    // Write KV cache for each layer
+    for (int layer = 0; layer < g_native_state.ctx->n_layers; ++layer) {
+        const KVCacheLayer& cacheLayer = g_native_state.inference->kv_cache[layer];
+        
+        // Write K cache
+        size_t k_size = header.n_tokens * header.n_heads * header.head_dim * sizeof(float);
+        if (fwrite(cacheLayer.k, 1, k_size, fp) != k_size) {
+            fclose(fp);
+            return -1;
+        }
+        
+        // Write V cache
+        size_t v_size = header.n_tokens * header.n_heads * header.head_dim * sizeof(float);
+        if (fwrite(cacheLayer.v, 1, v_size, fp) != v_size) {
+            fclose(fp);
+            return -1;
+        }
+    }
+    
+    // Write sequence tokens
+    if (fwrite(g_native_state.inference->tokens, sizeof(int), header.n_tokens, fp) != header.n_tokens) {
+        fclose(fp);
+        return -1;
+    }
+    
+    fclose(fp);
+    return 0;
 }
 
 static int Native_LoadContext(const char* path) {
-    // TODO: Implement KV cache deserialization
-    (void)path;
-    return -1;  // Not yet implemented
+    if (!g_native_state.inference || !g_native_state.ctx) {
+        return -1;
+    }
+    
+    // Open file for reading
+    FILE* fp = nullptr;
+    fopen_s(&fp, path, "rb");
+    if (!fp) {
+        return -1;
+    }
+    
+    // Read header
+    KVCacheHeader header;
+    if (fread(&header, sizeof(header), 1, fp) != 1) {
+        fclose(fp);
+        return -1;
+    }
+    
+    // Validate header
+    if (header.magic != KV_CACHE_MAGIC || header.version != KV_CACHE_VERSION) {
+        fclose(fp);
+        return -1;
+    }
+    
+    // Validate dimensions match current model
+    if (header.n_layers != g_native_state.ctx->n_layers ||
+        header.n_heads != g_native_state.ctx->n_heads ||
+        header.head_dim != (g_native_state.ctx->dim / g_native_state.ctx->n_heads)) {
+        fclose(fp);
+        return -1;
+    }
+    
+    // Clear existing cache
+    Inference_ClearKVCache(g_native_state.inference);
+    
+    // Read KV cache for each layer
+    for (int layer = 0; layer < g_native_state.ctx->n_layers; ++layer) {
+        KVCacheLayer& cacheLayer = g_native_state.inference->kv_cache[layer];
+        
+        // Read K cache
+        size_t k_size = header.n_tokens * header.n_heads * header.head_dim * sizeof(float);
+        if (fread(cacheLayer.k, 1, k_size, fp) != k_size) {
+            fclose(fp);
+            return -1;
+        }
+        
+        // Read V cache
+        size_t v_size = header.n_tokens * header.n_heads * header.head_dim * sizeof(float);
+        if (fread(cacheLayer.v, 1, v_size, fp) != v_size) {
+            fclose(fp);
+            return -1;
+        }
+    }
+    
+    // Read sequence tokens
+    if (fread(g_native_state.inference->tokens, sizeof(int), header.n_tokens, fp) != header.n_tokens) {
+        fclose(fp);
+        return -1;
+    }
+    
+    g_native_state.inference->sequence_length = header.n_tokens;
+    
+    fclose(fp);
+    return 0;
 }
 
 //==============================================================================

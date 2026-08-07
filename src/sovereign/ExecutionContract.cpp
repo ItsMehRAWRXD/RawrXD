@@ -2,7 +2,11 @@
 // ExecutionContract.cpp — Sovereign Execution Contract Implementation
 // ============================================================================
 
+// VAL-051.2.B: Real inference integration ENABLED
+// swarm_scheduler.hpp dependency resolved - include path fixed in rawrxd_inference.h
+
 #include "ExecutionContract.hpp"
+#include "cpu_inference_engine.h"  // VAL-051.2.B: Real inference facade
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -472,24 +476,84 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
     ExecutionResult result;
     auto start = std::chrono::steady_clock::now();
     
-    // TODO: Integrate with actual inference engine
-    // For now, simulate inference
-    result.status = ExecutionResult::Status::SUCCESS;
-    result.statusMessage = "Inference complete";
+    // ═══ VAL-051.2.B: REAL INFERENCE INTEGRATION ═══
+    // Architecture: CPUInferenceEngine facade wraps RawrXDInference
+    // Component chain: GGUF Loader → Tokenizer → Transformer → Sampler → Output
     
-    // Simulate token generation
-    result.generatedText = "This is a simulated response from the RawrXD Sovereign Runtime. "
-                           "In production, this would be actual model output.";
-    
-    // Simulate tokens
-    for (size_t i = 0; i < req.maxTokens && i < 20; ++i) {
-        result.generatedTokens.push_back(static_cast<uint32_t>(i + 100));
-        result.tokenLogProbs.push_back(-0.5f - (i * 0.01f));
+    // Get the shared CPU inference engine instance
+    auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+    if (!engine) {
+        result.status = ExecutionResult::Status::FAILED_SETUP;
+        result.statusMessage = "Failed to get inference engine instance";
+        ExecutionResult::ErrorInfo err;
+        err.category = "SETUP";
+        err.component = "CPUInferenceEngine";
+        err.message = result.statusMessage;
+        result.error = err;
+        return result;
     }
     
-    result.telemetry.tokensGenerated = static_cast<uint32_t>(result.generatedTokens.size());
+    // Load model if not already loaded
+    if (!engine->IsModelLoaded()) {
+        bool loaded = engine->LoadModel(req.modelPath);
+        if (!loaded) {
+            result.status = ExecutionResult::Status::FAILED_SETUP;
+            result.statusMessage = "Failed to load model: " + engine->GetLastLoadErrorMessage();
+            ExecutionResult::ErrorInfo err;
+            err.category = "SETUP";
+            err.component = "ModelLoader";
+            err.message = result.statusMessage;
+            result.error = err;
+            return result;
+        }
+    }
+    
+    // Tokenize the prompt
+    auto tokStart = std::chrono::steady_clock::now();
+    std::vector<int32_t> promptTokens = engine->Tokenize(req.prompt);
+    result.timing.tokenizeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - tokStart);
+    result.telemetry.tokensPrompt = static_cast<uint32_t>(promptTokens.size());
+    
+    if (promptTokens.empty()) {
+        result.status = ExecutionResult::Status::FAILED_RUNTIME;
+        result.statusMessage = "Tokenization returned empty";
+        ExecutionResult::ErrorInfo err;
+        err.category = "RUNTIME";
+        err.component = "Tokenizer";
+        err.message = "Failed to tokenize prompt";
+        result.error = err;
+        return result;
+    }
+    
+    // Generate tokens using the engine
+    auto genStart = std::chrono::steady_clock::now();
+    std::vector<int32_t> generatedTokens = engine->Generate(promptTokens, req.maxTokens);
     result.timing.inferenceMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - start);
+        std::chrono::steady_clock::now() - genStart);
+    
+    if (generatedTokens.empty()) {
+        result.status = ExecutionResult::Status::FAILED_RUNTIME;
+        result.statusMessage = "Generation returned empty";
+        ExecutionResult::ErrorInfo err;
+        err.category = "RUNTIME";
+        err.component = "Generator";
+        err.message = "Failed to generate tokens";
+        result.error = err;
+        return result;
+    }
+    
+    // Convert to uint32_t for result
+    for (auto tok : generatedTokens) {
+        result.generatedTokens.push_back(static_cast<uint32_t>(tok));
+    }
+    result.telemetry.tokensGenerated = static_cast<uint32_t>(result.generatedTokens.size());
+    
+    // Detokenize to get text output
+    result.generatedText = engine->Detokenize(generatedTokens);
+    
+    result.status = ExecutionResult::Status::SUCCESS;
+    result.statusMessage = "Inference complete (VAL-051.2.B: Real inference via CPUInferenceEngine)";
     
     // Calculate TPS
     if (result.timing.inferenceMs.count() > 0) {

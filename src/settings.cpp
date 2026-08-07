@@ -187,10 +187,10 @@ bool Settings::SaveCompute(const AppState& state, const std::string& path) {
     std::ofstream ofs(path, std::ios::trunc);
     if (!ofs.is_open()) return false;
     ofs << "# RawrXD Model Loader Compute Settings\n";
-    // Real Write
-    ofs << "enable_gpu=" << (state.is_gpu_enabled ? "1" : "0") << "\n";
-    ofs << "thread_count=" << state.thread_count << "\n";
-    ofs << "vram_limit_mb=" << state.vram_limit_mb << "\n";
+    // Real Write - use field names that match AppState in gui.h
+    ofs << "enable_gpu=" << (state.gpu_enabled ? "1" : "0") << "\n";
+    ofs << "thread_count=" << state.cpu_threads << "\n";
+    ofs << "vram_limit_mb=" << state.vram_mb << "\n";
     return true;
 }
 
@@ -200,7 +200,30 @@ bool Settings::LoadOverclock(AppState& state, const std::string& path) {
 }
 
 bool Settings::SaveOverclock(const AppState& state, const std::string& path) {
-    return true;
+    // Save overclock settings to a JSON file
+    // In production, this would serialize the AppState overclock configuration
+    
+    try {
+        std::ofstream file(path);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        // Write overclock settings as JSON
+        file << "{\n";
+        file << "  \"overclock\": {\n";
+        file << "    \"enabled\": " << (state.overclockEnabled ? "true" : "false") << ",\n";
+        file << "    \"cpuBoost\": " << state.cpuBoostPercent << ",\n";
+        file << "    \"gpuBoost\": " << state.gpuBoostPercent << ",\n";
+        file << "    \"memoryOverclock\": " << state.memoryOverclockPercent << ",\n";
+        file << "    \"fanCurve\": \"" << state.fanCurve << "\"\n";
+        file << "  }\n";
+        file << "}\n";
+        
+        return true;
+    } catch (...) {
+        return false;
+    }
 }
 
 MonacoThemeColors Settings::GetThemePresetColors(MonacoThemePreset preset) {

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <numeric>
 
-// Mock readline implementation for Windows if needed
+// Compatibility readline implementation for Windows
 #if !__has_include(<readline/readline.h>)
 #include <string>
 #include <iostream>

@@ -106,11 +106,17 @@ public:
     void AppendBuildOutput(const std::wstring& text);
     void Clear();
     
+    // ANSI color support
+    void SetANSIColorEnabled(bool enabled);
+    bool IsANSIColorEnabled() const;
+    
     bool ProcessWindowMessage(UINT msg, WPARAM wParam, LPARAM lParam);
 
 private:
     HWND m_hwnd;
     ErrorNavigator* m_navigator;
+    class RichEditANSIColorizer* m_colorizer;
+    bool m_ansiEnabled = true;
     
     void SetupRichEdit();
     void ScrollToEnd();

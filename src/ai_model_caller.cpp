@@ -1,10 +1,12 @@
 #include <nlohmann/json.hpp>
 
 #include "ai_model_caller.h"
+#include "BackendOrchestrator.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cctype>
+#include <future>
 #include <sstream>
 #include <thread>
 
@@ -98,7 +100,33 @@ std::string ModelCaller::generateCode(
             out << '\n';
         }
     }
-    out << "// TODO: Replace minimal generator with full model backend.\n";
+    // Use native inference backend for generation
+    auto& bo = RawrXD::BackendOrchestrator::Instance();
+    if (!bo.IsInitialized()) {
+        bo.Initialize();
+    }
+    
+    RawrXD::InferRequest req;
+    req.id = 0;
+    req.prompt = out.str();
+    req.max_tokens = 4096;
+    req.tenant_id = "codegen";
+    
+    auto completion_promise = std::make_shared<std::promise<std::string>>();
+    req.complete_cb = [completion_promise](const std::string& completion, const std::string& metadata) {
+        (void)metadata;
+        completion_promise->set_value(completion);
+    };
+    
+    uint64_t req_id = bo.Enqueue(req);
+    std::future<std::string> completion_future = completion_promise->get_future();
+    if (completion_future.wait_for(std::chrono::seconds(60)) == std::future_status::ready) {
+        std::string response = completion_future.get();
+        if (response.rfind("[BackendError]", 0) != 0) {
+            return response;
+        }
+    }
+    bo.Cancel(req_id);
     return out.str();
 }
 

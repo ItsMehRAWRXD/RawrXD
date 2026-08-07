@@ -1249,7 +1249,7 @@ void Win32IDE::populatePlanListView()
         item.iItem = i;
         item.iSubItem = 0;
         item.pszText = numBuf;
-        ListView_InsertItem(m_hwndPlanList, &item);
+        SendMessageA(m_hwndPlanList, LVM_INSERTITEMA, 0, (LPARAM)&item);
 
         // Column 1: status icon
         const char* statusText = "Pending";
@@ -1271,31 +1271,38 @@ void Win32IDE::populatePlanListView()
                 statusText = "Skipped";
                 break;
         }
-        ListView_SetItemText(m_hwndPlanList, i, 1, const_cast<char*>(statusText));
+        LVITEMA lvi1 = {}; lvi1.iSubItem = 1; lvi1.pszText = const_cast<char*>(statusText);
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi1);
 
         // Column 2: title
-        ListView_SetItemText(m_hwndPlanList, i, 2, const_cast<char*>(step.title.c_str()));
+        LVITEMA lvi2 = {}; lvi2.iSubItem = 2; lvi2.pszText = const_cast<char*>(step.title.c_str());
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi2);
 
         // Column 3: type
         std::string typeStr = planStepTypeString(step.type);
-        ListView_SetItemText(m_hwndPlanList, i, 3, const_cast<char*>(typeStr.c_str()));
+        LVITEMA lvi3 = {}; lvi3.iSubItem = 3; lvi3.pszText = const_cast<char*>(typeStr.c_str());
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi3);
 
         // Column 4: estimated time
         char timeBuf[32];
         snprintf(timeBuf, sizeof(timeBuf), "%dm", step.estimatedMinutes);
-        ListView_SetItemText(m_hwndPlanList, i, 4, timeBuf);
+        LVITEMA lvi4 = {}; lvi4.iSubItem = 4; lvi4.pszText = timeBuf;
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi4);
 
         // Column 5: confidence
         char confBuf[16];
         snprintf(confBuf, sizeof(confBuf), "%d%%", (int)(step.confidence * 100));
-        ListView_SetItemText(m_hwndPlanList, i, 5, confBuf);
+        LVITEMA lvi5 = {}; lvi5.iSubItem = 5; lvi5.pszText = confBuf;
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi5);
 
         // Column 6: risk
-        ListView_SetItemText(m_hwndPlanList, i, 6, const_cast<char*>(step.risk.c_str()));
+        LVITEMA lvi6 = {}; lvi6.iSubItem = 6; lvi6.pszText = const_cast<char*>(step.risk.c_str());
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi6);
 
         {
             const char* gl = full_agentic_ide::AgenticPlanningOrchestrator::mutationGateLabel(step.mutationGate);
-            ListView_SetItemText(m_hwndPlanList, i, 7, const_cast<char*>(gl));
+            LVITEMA lvi7 = {}; lvi7.iSubItem = 7; lvi7.pszText = const_cast<char*>(gl);
+            SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)i, (LPARAM)&lvi7);
         }
     }
 }
@@ -1487,7 +1494,8 @@ void Win32IDE::updatePlanStepInDialog(int stepIndex, PlanStepStatus status)
             statusText = "Skipped";
             break;
     }
-    ListView_SetItemText(m_hwndPlanList, stepIndex, 1, const_cast<char*>(statusText));
+    LVITEMA lviS = {}; lviS.iSubItem = 1; lviS.pszText = const_cast<char*>(statusText);
+    SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)stepIndex, (LPARAM)&lviS);
 
     // Scroll to current step and select it
     if (status == PlanStepStatus::Running)
@@ -1684,7 +1692,8 @@ void Win32IDE::editSelectedPlanStep()
         step.targetFile = buf;
 
         // Refresh the ListView row
-        ListView_SetItemText(m_hwndPlanList, sel, 2, const_cast<char*>(step.title.c_str()));
+        LVITEMA lviE = {}; lviE.iSubItem = 2; lviE.pszText = const_cast<char*>(step.title.c_str());
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)sel, (LPARAM)&lviE);
 
         // Refresh detail
         onPlanListSelChanged();

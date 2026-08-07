@@ -84,7 +84,7 @@ bool LLMHttpClient::initialize(
 
     // Validate base URL
     if (!isValidURL(config.baseUrl)) {
-        std::cerr << "[LLMHttpClient] Invalid base URL: " << config.baseUrl << std::endl;
+        
         return false;
     }
 
@@ -113,10 +113,6 @@ bool LLMHttpClient::initialize(
         }
     }
 
-    std::cout << "[LLMHttpClient] Initialized for backend: " << (int)backend
-              << " | Endpoint: " << config.baseUrl
-              << " | Timeout: " << config.timeoutMs << "ms"
-              << " | Max retries: " << config.maxRetries << std::endl;
 
     return testConnectivity();
 }
@@ -144,7 +140,19 @@ APIResponse LLMHttpClient::makeStreamingRequest(
 
     int64_t startTime = getCurrentTimestampMs();
 
-    CURL* curl = curl_easy_init();
+    CURL* curl = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(m_poolMutex);
+        if (!m_connectionPool.empty()) {
+            curl = static_cast<CURL*>(m_connectionPool.front());
+            m_connectionPool.pop();
+        }
+    }
+
+    if (!curl) {
+        curl = curl_easy_init();
+    }
+
     if (!curl) {
         APIResponse resp;
         resp.statusCode = 0;
@@ -152,6 +160,9 @@ APIResponse LLMHttpClient::makeStreamingRequest(
         resp.error = "Failed to initialize CURL";
         return resp;
     }
+
+    // Reset handle for reuse
+    curl_easy_reset(curl);
 
     try {
         std::string fullUrl = m_config.baseUrl + request.endpoint;
@@ -232,7 +243,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing Ollama chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -247,7 +258,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing OpenAI chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -262,7 +273,7 @@ APIResponse LLMHttpClient::makeStreamingRequest(
                                 chunkCallback(chunk);
                             }
                         } catch (const std::exception& e) {
-                            std::cerr << "[LLMHttpClient] Error parsing Anthropic chunk: " << e.what() << std::endl;
+                            
                         }
                     }
                 }
@@ -287,12 +298,19 @@ APIResponse LLMHttpClient::makeStreamingRequest(
 
         // Cleanup
         curl_slist_free_all(headerList);
-        curl_easy_cleanup(curl);
+        
+        {
+            std::lock_guard<std::mutex> lock(m_poolMutex);
+            m_connectionPool.push(curl);
+        }
 
         return response;
 
     } catch (const std::exception& e) {
-        curl_easy_cleanup(curl);
+        {
+            std::lock_guard<std::mutex> lock(m_poolMutex);
+            m_connectionPool.push(curl);
+        }
         APIResponse resp;
         resp.statusCode = 0;
         resp.success = false;
@@ -473,7 +491,7 @@ StreamChunk LLMHttpClient::parseOllamaStreamChunk(const std::string& chunk) {
         parsed.metadata = jsonChunk;
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse Ollama chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -525,7 +543,7 @@ StreamChunk LLMHttpClient::parseOpenAIStreamChunk(const std::string& line) {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse OpenAI chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -567,7 +585,7 @@ StreamChunk LLMHttpClient::parseAnthropicStreamChunk(const std::string& line) {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "[LLMHttpClient] Failed to parse Anthropic chunk: " << e.what() << std::endl;
+        
     }
 
     return parsed;
@@ -619,13 +637,12 @@ bool LLMHttpClient::testConnectivity() {
         curl_easy_cleanup(curl);
 
         bool connected = (res == CURLE_OK && responseCode >= 200 && responseCode < 300);
-        std::cout << "[LLMHttpClient] Connectivity test: " << (connected ? "SUCCESS" : "FAILED")
-                  << " (response code: " << responseCode << ")" << std::endl;
+        
         return connected;
 
     } catch (const std::exception& e) {
         curl_easy_cleanup(curl);
-        std::cerr << "[LLMHttpClient] Connectivity test exception: " << e.what() << std::endl;
+        
         return false;
     }
 }
@@ -755,7 +772,16 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
     while (retryCount <= m_config.maxRetries) {
         int64_t startTime = getCurrentTimestampMs();
 
-        CURL* curl = curl_easy_init();
+        CURL* curl = nullptr;
+        {
+             std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+             if (!m_connectionPool.empty()) {
+                 curl = static_cast<CURL*>(m_connectionPool.front());
+                 m_connectionPool.pop();
+             }
+        }
+        if (!curl) curl = curl_easy_init();
+
         if (!curl) {
             APIResponse resp;
             resp.statusCode = 0;
@@ -847,13 +873,17 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
 
             // Cleanup
             curl_slist_free_all(headerList);
-            curl_easy_cleanup(curl);
+            // Return to pool
+            curl_easy_reset(curl);
+            {
+                 std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+                 m_connectionPool.push(curl);
+            }
 
             // Check if we should retry
             if (!response.success && retry && shouldRetry(static_cast<int>(responseCode), retryCount)) {
                 int delayMs = calculateBackoffDelay(retryCount);
-                std::cout << "[LLMHttpClient] Retry " << (retryCount + 1) << "/" << m_config.maxRetries
-                          << " after " << delayMs << "ms..." << std::endl;
+                
                 std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
                 retryCount++;
                 continue;
@@ -862,7 +892,13 @@ APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry
             return response;
 
         } catch (const std::exception& e) {
-            curl_easy_cleanup(curl);
+            // Return to pool on exception too, unless handle is corrupted? Reset should handle it.
+            if (curl) {
+                curl_easy_reset(curl);
+                std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
+                m_connectionPool.push(curl);
+            }
+            
             APIResponse resp;
             resp.statusCode = 0;
             resp.success = false;

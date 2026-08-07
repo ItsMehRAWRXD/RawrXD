@@ -1,67 +1,66 @@
+
 #ifndef METRICS_H
 #define METRICS_H
 
-#include <cstdint>
-#include <map>
-#include <mutex>
-#include <string>
+#include <QObject>
+#include <QMap>
+#include <QString>
+#include <QVariant>
+#include <QMutex>
 
 // Real-time metrics endpoint localhost:9090/metrics (Prometheus text format)
-class Metrics
+class Metrics : public QObject
 {
+    Q_OBJECT
+
 public:
-    Metrics();
+    explicit Metrics(QObject *parent = nullptr);
     ~Metrics();
 
     // Counter metric
     class Counter {
     public:
-        Counter(Metrics *metrics, const std::string &name, const std::map<std::string, std::string> &labels = {});
-        void increment(int64_t value = 1);
-        void decrement(int64_t value = 1);
-        int64_t value() const;
+        Counter(Metrics *metrics, const QString &name, const QMap<QString, QString> &labels = QMap<QString, QString>());
+        void increment(qint64 value = 1);
+        void decrement(qint64 value = 1);
+        qint64 value() const;
 
     private:
-        friend class Metrics;
         Metrics *m_metrics;
-        std::string m_name;
-        std::map<std::string, std::string> m_labels;
-        int64_t m_value = 0;
+        QString m_name;
+        QMap<QString, QString> m_labels;
     };
 
     // Gauge metric
     class Gauge {
     public:
-        Gauge(Metrics *metrics, const std::string &name, const std::map<std::string, std::string> &labels = {});
-        void set(double value);
-        void increment(double value = 1.0);
-        void decrement(double value = 1.0);
-        double value() const;
+        Gauge(Metrics *metrics, const QString &name, const QMap<QString, QString> &labels = QMap<QString, QString>());
+        void set(qreal value);
+        void increment(qreal value = 1.0);
+        void decrement(qreal value = 1.0);
+        qreal value() const;
 
     private:
-        friend class Metrics;
         Metrics *m_metrics;
-        std::string m_name;
-        std::map<std::string, std::string> m_labels;
-        double m_value = 0.0;
+        QString m_name;
+        QMap<QString, QString> m_labels;
     };
 
     // Get or create a counter
-    Counter& counter(const std::string &name, const std::map<std::string, std::string> &labels = {});
+    Counter& counter(const QString &name, const QMap<QString, QString> &labels = QMap<QString, QString>());
 
     // Get or create a gauge
-    Gauge& gauge(const std::string &name, const std::map<std::string, std::string> &labels = {});
+    Gauge& gauge(const QString &name, const QMap<QString, QString> &labels = QMap<QString, QString>());
 
     // Generate Prometheus text format metrics
-    std::string generateMetricsText();
+    QString generateMetricsText();
 
 private:
-    std::map<std::string, Counter*> m_counters;
-    std::map<std::string, Gauge*> m_gauges;
-    std::mutex m_mutex;
+    QMap<QString, Counter*> m_counters;
+    QMap<QString, Gauge*> m_gauges;
+    QMutex m_mutex;
 
     // Generate a unique key for a metric with labels
-    std::string metricKey(const std::string &name, const std::map<std::string, std::string> &labels);
+    QString metricKey(const QString &name, const QMap<QString, QString> &labels);
 };
 
-#endif // METRICS_H

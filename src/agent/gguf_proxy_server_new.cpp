@@ -121,13 +121,29 @@ static std::string readRequest(SOCKET s) {
         int bytes = recv(s, buf, sizeof(buf), 0);
         if (bytes <= 0) break;
         total.append(buf, bytes);
-        // Simple heuristic: end of headers. 
-        // Real implementation should parse content-length.
+        // Real HTTP parsing: check for end of headers
         if (total.find("\r\n\r\n") != std::string::npos) {
-            // If just GET, we might be done. If POST, check Content-Length.
-            // Simplified: just return what we got for forwarding.
-            // Assuming small requests for prompt.
-            break; 
+            // Parse Content-Length for POST requests
+            size_t headerEnd = total.find("\r\n\r\n");
+            std::string headers = total.substr(0, headerEnd);
+            
+            // Find Content-Length header
+            size_t clPos = headers.find("Content-Length:");
+            if (clPos != std::string::npos) {
+                size_t valStart = headers.find(' ', clPos) + 1;
+                size_t valEnd = headers.find('\r', valStart);
+                if (valEnd == std::string::npos) valEnd = headers.find('\n', valStart);
+                int contentLength = std::stoi(headers.substr(valStart, valEnd - valStart));
+                
+                // Read until we have the full body
+                size_t bodyStart = headerEnd + 4;
+                while (total.size() - bodyStart < static_cast<size_t>(contentLength)) {
+                    bytes = recv(s, buf, sizeof(buf), 0);
+                    if (bytes <= 0) break;
+                    total.append(buf, bytes);
+                }
+            }
+            break;  // We have the complete request
         }
     }
     return total;
@@ -149,26 +165,46 @@ void GGUFProxyServer::handleClient(SOCKET clientSocket) {
     }
 
     // 2. Read Response from Backend
-    // We need to capture the full response to patch, or stream pass-through.
-    // If we patch, we must buffer the whole JSON.
-    
+    // Real HTTP response reading with Content-Length parsing
     std::string responseData;
+    std::string responseHeaders;
+    std::string responseBody;
+    bool headersParsed = false;
+    int contentLength = -1;
+    
     while (true) {
         int r = recv(serverSocket, buffer, sizeof(buffer), 0);
         if (r <= 0) break;
         responseData.append(buffer, r);
-        // Check if complete? (Simplified: wait for close or timeout in real usage, 
-        // but here we just read as much as possible? No, HTTP keeps alive.)
-        // We really need Content-Length parsing.
         
-        // Simplified Logic: 
-        // If we see "}" at the end of body, we might assume JSON done?
-        // Or we just relay chunks if we can't patch safely.
+        // Parse headers once we have them
+        if (!headersParsed) {
+            size_t headerEnd = responseData.find("\r\n\r\n");
+            if (headerEnd != std::string::npos) {
+                responseHeaders = responseData.substr(0, headerEnd);
+                responseBody = responseData.substr(headerEnd + 4);
+                headersParsed = true;
+                
+                // Parse Content-Length
+                size_t clPos = responseHeaders.find("Content-Length:");
+                if (clPos != std::string::npos) {
+                    size_t valStart = responseHeaders.find(' ', clPos) + 1;
+                    size_t valEnd = responseHeaders.find('\r', valStart);
+                    if (valEnd == std::string::npos) valEnd = responseHeaders.find('\n', valStart);
+                    contentLength = std::stoi(responseHeaders.substr(valStart, valEnd - valStart));
+                }
+            }
+        }
+        
+        // Check if we have the complete body
+        if (headersParsed) {
+            if (contentLength >= 0 && static_cast<int>(responseBody.size()) >= contentLength) {
+                break;  // Complete response received
+            }
+        }
     }
     
-    // 3. Patch logic (Mocked for safety if incomplete read)
-    // In a real robust proxy, we parse HTTP. 
-    // Here we will try to find the JSON body.
+    // 3. Patch logic: parse HTTP response and apply hotpatcher if needed
     
     size_t headerEnd = responseData.find("\r\n\r\n");
     if (headerEnd != std::string::npos && m_hotPatcher) {
@@ -196,9 +232,7 @@ void GGUFProxyServer::handleClient(SOCKET clientSocket) {
                  newBody = body;
              }
              
-             // Update Content-Length in headers
-             // (String manipulation omitted for brevity, but critical for HTTP)
-             // For now, construct a new simple OK response
+             // Real HTTP response reconstruction with proper Content-Length
              std::stringstream ss;
              ss << "HTTP/1.1 200 OK\r\n";
              ss << "Content-Type: application/json\r\n";

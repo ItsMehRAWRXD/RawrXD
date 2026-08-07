@@ -790,3 +790,58 @@ const wchar_t* ModelConversionDialog_GetConvertedPath() {
 }
 
 }
+
+std::pair<fs::path, ConversionError> ModelConversionDialog::findConverter(const fs::path& searchRoot) {
+    // Basic search for common tools
+    std::vector<std::string> candidates = {"llama-quantize.exe", "convert.py", "quantize.exe"};
+    
+    // Check current dir
+    for(const auto& c : candidates) {
+        if (fs::exists(searchRoot / c)) return {searchRoot / c, ConversionError::None};
+    }
+    
+    // Check known bin folders
+    if (fs::exists(searchRoot / "bin")) {
+        for(const auto& c : candidates) {
+            if (fs::exists(searchRoot / "bin" / c)) return {searchRoot / "bin" / c, ConversionError::None};
+        }
+    }
+
+    return {{}, ConversionError::ConverterNotFound};
+}
+
+// Missing Implementations
+
+void ModelConversionDialog::execAsync(std::function<void(Result, const ConversionResult&)> callback) {
+    std::thread([this, callback]() {
+        Result res = this->exec();
+        if (callback) {
+            callback(res, this->m_conversionResult);
+        }
+    }).detach();
+}
+
+std::pair<bool, ConversionError> ModelConversionDialog::validatePaths() const {
+    // Validates both model path and converter path
+    if (!fs::exists(m_modelPath)) return {false, ConversionError::InvalidModelPath};
+    if (!fs::exists(m_config.converterPath)) return {false, ConversionError::InvalidConverterPath};
+    return {true, ConversionError::None};
+}
+
+std::string ModelConversionDialog::buildConverterNotFoundMessage() const {
+    return "Could not locate a valid model converter (llama-quantize or convert.py). Please check your installation.";
+}
+
+std::string ModelConversionDialog::readPipeOutput(HANDLE hPipe) const {
+    // Basic implementation if we were using pipes
+    std::string output;
+    char buffer[4096];
+    DWORD bytesRead;
+    if (ReadFile(hPipe, buffer, sizeof(buffer)-1, &bytesRead, NULL) && bytesRead > 0) {
+        buffer[bytesRead] = 0;
+        output = buffer;
+    }
+    return output;
+}
+
+// End of ModelConversionDialog.cpp

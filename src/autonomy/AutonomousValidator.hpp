@@ -60,6 +60,7 @@ struct ConvergenceMetrics {
 struct DecisionAccuracyMetrics {
     int totalDecisions{0};
     int correctDecisions{0};
+    int falseNegatives{0};  // Track false negatives for proper recall calculation
     double precision{0.0};
     double recall{0.0};
     double f1Score{0.0};
@@ -169,6 +170,16 @@ private:
     ValidationConfig config_;
     bool initialized_{false};
     
+    // System state for convergence measurement
+    struct SystemState {
+        double cpuUsage{0.0};
+        double memoryUsage{0.0};
+        double taskQueueDepth{0.0};
+        double decisionLatencyMs{0.0};
+        double errorRate{0.0};
+        int64_t timestamp{0};
+    };
+    
     // Metrics storage
     ConvergenceMetrics convergenceMetrics_;
     DecisionAccuracyMetrics accuracyMetrics_;
@@ -182,6 +193,10 @@ private:
     bool CheckConvergence(const std::vector<double>& stabilityHistory);
     OscillationMetrics DetectOscillations(const std::vector<double>& values);
     double CalculateVariance(const std::vector<double>& values) const;
+    
+    // System measurement helpers
+    SystemState MeasureSystemState();
+    double CalculateStability(const SystemState& state);
 };
 
 /**

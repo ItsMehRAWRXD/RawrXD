@@ -76,9 +76,46 @@ std::string CrashSignature::ToString() const {
 
 CrashSignature CrashSignature::FromString(const std::string& str) {
     CrashSignature sig;
-    // Parse from string format
-    // TODO: Implement proper parsing
-    (void)str;
+    // Parse from string format: {stackHash=X, instructionHash=Y, exceptionCode=Z, faultAddress=A, module=M, function=F, line=L}
+    
+    auto extractValue = [&str](const std::string& key) -> std::string {
+        size_t keyPos = str.find(key + "=");
+        if (keyPos == std::string::npos) return "";
+        
+        size_t valueStart = keyPos + key.length() + 1;
+        size_t valueEnd = str.find_first_of(",}", valueStart);
+        if (valueEnd == std::string::npos) valueEnd = str.length();
+        
+        return str.substr(valueStart, valueEnd - valueStart);
+    };
+    
+    // Parse numeric fields
+    std::string stackHashStr = extractValue("stackHash");
+    std::string instrHashStr = extractValue("instructionHash");
+    std::string excCodeStr = extractValue("exceptionCode");
+    std::string faultAddrStr = extractValue("faultAddress");
+    
+    if (!stackHashStr.empty()) {
+        try { sig.stackHash = std::stoull(stackHashStr, nullptr, 16); } catch (...) {}
+    }
+    if (!instrHashStr.empty()) {
+        try { sig.instructionHash = std::stoull(instrHashStr, nullptr, 16); } catch (...) {}
+    }
+    if (!excCodeStr.empty()) {
+        try { sig.exceptionCode = std::stoul(excCodeStr); } catch (...) {}
+    }
+    if (!faultAddrStr.empty()) {
+        try { sig.faultAddress = std::stoull(faultAddrStr, nullptr, 16); } catch (...) {}
+    }
+    
+    // Parse string fields
+    sig.moduleName = extractValue("module");
+    sig.functionName = extractValue("function");
+    std::string lineStr = extractValue("line");
+    if (!lineStr.empty()) {
+        try { sig.lineNumber = std::stoul(lineStr); } catch (...) {}
+    }
+    
     return sig;
 }
 

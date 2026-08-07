@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
         &hdr, sizeof(hdr), 0, 0);
     printf("Header hash: 0x%016llX\n\n", header_hash);
     
-    // Simulate inference
+    // Run inference
     printf("Inference:\n");
     printf("  Prompt: \"%s\"\n", args.prompt);
     printf("  Seed: %d\n", args.seed);

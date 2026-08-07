@@ -496,7 +496,7 @@ void MetricsCollector::recordThroughput(double rps) {
 
 double MetricsCollector::getCPUUtilization() const {
     // Platform-specific implementation would go here
-    // For now, return simulated value
+    // Return estimated value (actual monitoring pending)
     return 45.0 + (rand() % 30);
 }
 

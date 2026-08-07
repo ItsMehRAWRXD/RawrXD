@@ -1,0 +1,84 @@
+{
+  "schema": "VAL-051",
+  "version": 1,
+  "build": {
+    "gitCommit": "abc123def456",
+    "binarySha256": "sha256:a1b2c3d4e5f6...",
+    "timestamp": "2026-07-24T12:00:00.000Z"
+  },
+  "model": {
+    "path": "models/phi3-mini.gguf",
+    "sha256": "sha256:model_hash_here",
+    "sizeBytes": 3820000000,
+    "format": "GGUF"
+  },
+  "parameters": {
+    "promptSha256": "sha256:prompt_hash_here",
+    "promptTokenCount": 5,
+    "seed": 42,
+    "temperature": 0.0,
+    "topP": 0.9,
+    "topK": 40,
+    "maxTokens": 512
+  },
+  "stages": {
+    "modelLoad": {
+      "completed": true,
+      "success": true,
+      "durationMicros": 150000,
+      "checksum": "tensor_registry:abc123"
+    },
+    "tokenizer": {
+      "completed": true,
+      "success": true,
+      "durationMicros": 5000,
+      "checksum": "tokens:5"
+    },
+    "embedding": {
+      "completed": true,
+      "success": true,
+      "durationMicros": 25000,
+      "checksum": "embeddings:abc456"
+    },
+    "forwardPass": {
+      "completed": false,
+      "success": false,
+      "durationMicros": 0,
+      "checksum": "",
+      "error": "Not yet implemented"
+    },
+    "kvCache": {
+      "completed": false,
+      "success": false,
+      "durationMicros": 0,
+      "checksum": ""
+    },
+    "sampler": {
+      "completed": false,
+      "success": false,
+      "durationMicros": 0,
+      "checksum": ""
+    },
+    "tokenOutput": {
+      "completed": false,
+      "success": false,
+      "durationMicros": 0,
+      "checksum": ""
+    }
+  },
+  "output": {
+    "text": "",
+    "tokenChecksum": "",
+    "logitsChecksum": "",
+    "tokenCount": 0
+  },
+  "execution": {
+    "success": false,
+    "timestamp": "2026-07-24T12:00:00.500Z",
+    "totalDurationMicros": 180000
+  },
+  "failure": {
+    "stage": "forwardPass",
+    "reason": "Not yet implemented"
+  }
+}

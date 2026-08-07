@@ -136,7 +136,10 @@ private:
 struct PatchImpl {
     PatchMetadata metadata;
     PatchStatus status = PatchStatus::PENDING;
-    
+
+    // Patch code/data bytes
+    std::vector<uint8_t> code;
+
     // Type-specific data (no unions with non-trivial types)
     struct {
         void* target;
@@ -145,18 +148,24 @@ struct PatchImpl {
         uint8_t originalBytes[16];
         size_t patchSize;
     } funcHook;
-    
+
     struct {
         void* oldKernelPtr;
         void* newKernelPtr;
         void** vtableSlot;
     } kernelReplace;
-    
+
     struct {
         DecoderModePatch::Mode mode;
         DecoderModePatch::Config config;
     } decoderMode;
-    
+
+    struct {
+        std::string configPath;
+        std::string newValue;
+        std::string oldValue;
+    } configOverride;
+
     // Metrics
     PatchMetrics metrics;
     std::chrono::steady_clock::time_point applyTime;
@@ -291,8 +300,13 @@ public:
         
         // Verify checksum using SHA-256
         if (!patch->metadata.checksum.empty()) {
-            // In real implementation, compute hash of patch data
-            result.checksumValid = true;  // Placeholder - would verify actual hash
+            SHA256Checksum::Hash currentHash = SHA256Checksum::compute(
+                patch->code.data(), patch->code.size());
+            SHA256Checksum::Hash expectedHash = SHA256Checksum::fromString(patch->metadata.checksum);
+            result.checksumValid = SHA256Checksum::equal(currentHash, expectedHash);
+            if (!result.checksumValid) {
+                result.errors.push_back("Checksum mismatch for patch: " + patchId);
+            }
         } else {
             result.checksumValid = true;  // No checksum provided, skip
         }
@@ -460,7 +474,14 @@ public:
                 }
                 break;
             }
-            
+
+            case PatchType::CONFIG_OVERRIDE: {
+                // Config overrides don't need rollback (value is stored in patch)
+                printf("[HotPatcher] Rolled back config override: %s\n",
+                       patch->configOverride.configPath.c_str());
+                break;
+            }
+
             default:
                 break;
         }
@@ -571,6 +592,33 @@ std::string HotPatcher::registerDecoderMode(
     return patchId;
 }
 
+std::string HotPatcher::registerConfigOverride(
+    const std::string& configPath,
+    const std::string& newValue,
+    const PatchMetadata& meta) {
+    
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    
+    std::string patchId = impl_->generatePatchId();
+    auto patch = std::make_unique<PatchImpl>();
+    
+    patch->metadata = meta;
+    patch->metadata.id = patchId;
+    patch->metadata.type = PatchType::CONFIG_OVERRIDE;
+    patch->metadata.createdAt = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    
+    // Store config override data in patch
+    patch->configOverride.configPath = configPath;
+    patch->configOverride.newValue = newValue;
+    
+    impl_->patches[patchId] = std::move(patch);
+    
+    printf("[HotPatcher] Registered config override: %s = %s (%s)\n",
+           configPath.c_str(), newValue.c_str(), patchId.c_str());
+    return patchId;
+}
+
 // Lifecycle
 ValidationResult HotPatcher::validate(const std::string& patchId) {
     return impl_->validatePatch(patchId);
@@ -602,7 +650,15 @@ bool HotPatcher::apply(const std::string& patchId) {
             // Decoder mode switches are handled by the engine
             patch->status = PatchStatus::ACTIVE;
             return true;
-            
+
+        case PatchType::CONFIG_OVERRIDE:
+            // Config overrides are handled by the engine
+            patch->status = PatchStatus::ACTIVE;
+            printf("[HotPatcher] Applied config override: %s = %s\n",
+                   patch->configOverride.configPath.c_str(),
+                   patch->configOverride.newValue.c_str());
+            return true;
+
         default:
             return false;
     }
@@ -644,6 +700,25 @@ void HotPatcher::setAutoRollback(bool enabled) {
 
 bool HotPatcher::isAutoRollbackEnabled() const {
     return impl_->autoRollback.load();
+}
+
+bool HotPatcher::isInErrorState() const {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    for (const auto& [id, patch] : impl_->patches) {
+        if (patch->status == PatchStatus::FAILED) {
+            return true;
+        }
+    }
+    return false;
+}
+
+PatchMetadata HotPatcher::getMetadata(const std::string& patchId) {
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    auto it = impl_->patches.find(patchId);
+    if (it != impl_->patches.end()) {
+        return it->second->metadata;
+    }
+    return PatchMetadata{};
 }
 
 bool HotPatcher::emergencyRollback() {

@@ -1,3 +1,4 @@
+
 #pragma once
 
 /**
@@ -17,4 +18,3 @@
 #include "marketplace/vsix_installer.h"
 #include "marketplace/enterprise_policy_engine.h"
 #include "marketplace/offline_cache_store.h"
-#include "marketplace/marketplace_ui_view.h"

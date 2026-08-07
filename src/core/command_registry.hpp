@@ -192,6 +192,7 @@ enum CmdFlags : uint32_t
     X(4103, AGENT_VIEW_TOOLS, "agent.viewTools", "!tools", BOTH, "Agent", handleAgentViewTools, CMD_NONE)              \
     X(4104, AGENT_VIEW_STATUS, "agent.viewStatus", "!agent_status", BOTH, "Agent", handleAgentViewStatus, CMD_NONE)    \
     X(4105, AGENT_STOP, "agent.stop", "!agent_stop", BOTH, "Agent", handleAgentStop, CMD_NONE)                         \
+    X(4296, AGENT_AUDIT_DRIVE, "agent.auditDrive", "!audit_drive", BOTH, "Agent", handleAgentAuditDrive, CMD_ASYNC) \
     X(4106, AGENT_MEMORY, "agent.memory", "!agent_memory", BOTH, "Agent", handleAgentMemory, CMD_NONE)                 \
     X(4107, AGENT_MEMORY_VIEW, "agent.memoryView", "!agent_memory_view", BOTH, "Agent", handleAgentMemoryView,         \
       CMD_NONE)                                                                                                        \
@@ -277,23 +278,26 @@ enum CmdFlags : uint32_t
     X(5042, BACKEND_STATUS, "backend.status", "!backend status", BOTH, "Backend", handleBackendShowStatus, CMD_NONE)   \
     X(5043, BACKEND_SWITCHER, "backend.switcher", "!backend list", BOTH, "Backend", handleBackendShowSwitcher,         \
       CMD_NONE)                                                                                                        \
-    X(5048, BEACON_HALF_PULSE, "beacon.halfPulse", "!beacon_half", BOTH, "Performance", handleBeaconHalfPulse,         \
-      CMD_NONE)                                                                                                        \
-    X(5049, BEACON_FULL, "beacon.full", "!beacon_full", BOTH, "Performance", handleBeaconFullBeacon, CMD_NONE)         \
-    X(5050, BEACON_STATUS, "beacon.status", "!beacon_status", BOTH, "Performance", handleBeaconStatus, CMD_NONE)       \
+    /* Beacon commands moved to 50600+ to avoid conflict with Router (5048-5081) */                                   \
     X(5044, BACKEND_CONFIGURE, "backend.configure", "!backend config", BOTH, "Backend", handleBackendConfigure,        \
       CMD_NONE)                                                                                                        \
     X(5045, BACKEND_HEALTH, "backend.healthCheck", "!backend health", BOTH, "Backend", handleBackendHealthCheck,       \
       CMD_ASYNC)                                                                                                       \
     X(5046, BACKEND_API_KEY, "backend.setApiKey", "!backend apikey", BOTH, "Backend", handleBackendSetApiKey,          \
       CMD_NONE)                                                                                                        \
-    X(5047, BACKEND_SAVE_CFG, "backend.saveConfigs", "!backend save", BOTH, "Backend", handleBackendSaveConfigs,       \
+    X(5047, BACKEND_SAVE_CFG, "backend.saveConfigs", "!backend_save", BOTH, "Backend", handleBackendSaveConfigs,       \
       CMD_NONE)                                                                                                        \
                                                                                                                        \
+    /* ═══════════════════ BEACON (50600-50602) ═══════════════════ */                                               \
+    X(50600, BEACON_HALF_PULSE, "beacon.halfPulse", "!beacon_half", BOTH, "Performance", handleBeaconHalfPulse,         \
+      CMD_NONE)                                                                                                        \
+    X(50601, BEACON_FULL, "beacon.full", "!beacon_full", BOTH, "Performance", handleBeaconFullBeacon, CMD_NONE)        \
+    X(50602, BEACON_STATUS, "beacon.status", "!beacon_status", BOTH, "Performance", handleBeaconStatus, CMD_NONE)       \
+                                                                                                                       \
     /* ═══════════════════ ROUTER (5048-5081) ═══════════════════ */                                                   \
-    X(5048, ROUTER_ENABLE, "router.enable", "!router enable", BOTH, "Router", handleRouterEnable, CMD_NONE)            \
-    X(5049, ROUTER_DISABLE, "router.disable", "!router disable", BOTH, "Router", handleRouterDisable, CMD_NONE)        \
-    X(5050, ROUTER_STATUS, "router.status", "!router status", BOTH, "Router", handleRouterStatus, CMD_NONE)            \
+    X(5048, ROUTER_ENABLE, "router.enable", "!router_enable", BOTH, "Router", handleRouterEnable, CMD_NONE)             \
+    X(5049, ROUTER_DISABLE, "router.disable", "!router_disable", BOTH, "Router", handleRouterDisable, CMD_NONE)       \
+    X(5050, ROUTER_STATUS, "router.status", "!router_status", BOTH, "Router", handleRouterStatus, CMD_NONE)            \
     X(5051, ROUTER_DECISION, "router.decision", "!router decision", BOTH, "Router", handleRouterDecision, CMD_NONE)    \
     X(5052, ROUTER_SET_POLICY, "router.setPolicy", "!router policy", BOTH, "Router", handleRouterSetPolicy, CMD_NONE)  \
     X(5053, ROUTER_CAPABILITIES, "router.capabilities", "!router caps", BOTH, "Router", handleRouterCapabilities,      \
@@ -739,7 +743,7 @@ enum CmdFlags : uint32_t
     X(306, VIEW_ZOOM_OUT, "view.zoomOut", "!zoom_out", BOTH, "View", handleViewZoomOut, CMD_NONE)                      \
     X(307, VIEW_ZOOM_RESET, "view.zoomReset", "!zoom_reset", BOTH, "View", handleViewZoomReset, CMD_NONE)              \
                                                                                                                        \
-    /* ═══════════════════ IDE AI FEATURES (ide_constants.h 401-409) ═══════════════════ */                            \
+    /* ═══════════════════ IDE AI FEATURES (ide_constants.h 401-410) ═══════════════════ */                            \
     X(401, AI_INLINE_COMPLETE, "ai.inlineComplete", "!ai_complete", BOTH, "AIMode", handleAIInlineComplete,            \
       CMD_REQUIRES_FILE | CMD_REQUIRES_CARET)                                                                          \
     X(402, AI_CHAT_MODE, "ai.chatMode", "!ai_chat", BOTH, "AIMode", handleAIChatMode, CMD_NONE)                        \
@@ -754,6 +758,7 @@ enum CmdFlags : uint32_t
     X(408, AI_OPTIMIZE_CODE, "ai.optimizeCode", "!ai_optimize", BOTH, "AIMode", handleAIOptimizeCode,                  \
       CMD_REQUIRES_SELECT | CMD_ASYNC)                                                                                 \
     X(409, AI_MODEL_SELECT, "ai.modelSelect", "!ai_model", BOTH, "AIMode", handleAIModelSelect, CMD_NONE)              \
+    X(410, AI_STOP_GENERATION, "ai.stopGeneration", "!ai_stop", BOTH, "AIMode", handleAIStopGeneration, CMD_NONE)      \
                                                                                                                        \
     /* ═══════════════════ IDE TOOLS (ide_constants.h 501-506) ═══════════════════ */                                  \
     X(501, TOOLS_CMD_PALETTE, "tools.commandPalette", "!palette", BOTH, "Tools", handleToolsCommandPalette, CMD_NONE)  \
@@ -930,11 +935,18 @@ enum CmdFlags : uint32_t
 
 namespace RawrXD::Commands
 {
+    enum class CmdID : uint32_t
+    {
+        COMMAND_TABLE(EXPAND_CMD_ENUM)
+        CMD_INVALID = 0xFFFFFFFF
+    };
 
-// Note: CLI-only commands all have ID=0, so they share that value.
-// Use canonical name for CLI-only dispatch, not ID.
+    // Convert CmdID to uint32_t for dispatch
+    inline constexpr uint32_t ToUint32(CmdID id) { return static_cast<uint32_t>(id); }
 
 }  // namespace RawrXD::Commands
+
+#undef EXPAND_CMD_ENUM
 
 // ============================================================================
 // GENERATED: Command Descriptor Structure
@@ -985,5 +997,58 @@ inline constexpr size_t g_guiCommandCount = 0 COMMAND_TABLE(COUNT_GUI_CMD);
     +(CmdExposure::exp == CmdExposure::CLI_ONLY || CmdExposure::exp == CmdExposure::BOTH ? 1 : 0)
 inline constexpr size_t g_cliCommandCount = 0 COMMAND_TABLE(COUNT_CLI_CMD);
 #undef COUNT_CLI_CMD
+
+// Basic sanity checks
+static_assert(g_commandRegistrySize > 0, "Command registry cannot be empty");
+static_assert(g_guiCommandCount > 0, "Must have at least one GUI command");
+
+// ============================================================================
+// RUNTIME QUERY API
+// ============================================================================
+
+// Find command by ID (for Win32 dispatch)
+inline const CmdDescriptor* FindCommandById(uint32_t id)
+{
+    for (const auto& cmd : g_commandRegistry)
+    {
+        if (cmd.id == id)
+            return &cmd;
+    }
+    return nullptr;
+}
+
+// Find command by canonical name (for CLI dispatch)
+inline const CmdDescriptor* FindCommandByName(std::string_view name)
+{
+    for (const auto& cmd : g_commandRegistry)
+    {
+        if (name == cmd.canonicalName)
+            return &cmd;
+    }
+    return nullptr;
+}
+
+// Find command by CLI alias
+inline const CmdDescriptor* FindCommandByAlias(std::string_view alias)
+{
+    for (const auto& cmd : g_commandRegistry)
+    {
+        if (alias == cmd.cliAlias)
+            return &cmd;
+    }
+    return nullptr;
+}
+
+// Check if command can run in GUI
+inline bool IsGuiCommand(const CmdDescriptor* cmd)
+{
+    return cmd && (cmd->exposure == CmdExposure::GUI_ONLY || cmd->exposure == CmdExposure::BOTH);
+}
+
+// Check if command can run in CLI
+inline bool IsCliCommand(const CmdDescriptor* cmd)
+{
+    return cmd && (cmd->exposure == CmdExposure::CLI_ONLY || cmd->exposure == CmdExposure::BOTH);
+}
 
 #endif  // RAWRXD_COMMAND_REGISTRY_HPP

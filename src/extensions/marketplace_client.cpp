@@ -399,14 +399,74 @@ bool MarketplaceClient::downloadFile(const std::string& url, const std::string& 
 
 bool MarketplaceClient::extractArchive(const std::string& archivePath,
                                     const std::string& extractPath) {
-    // In production, this would use a proper archive library
-    // For now, we assume the extension is a simple directory structure
+    // Create extraction directory
     std::filesystem::create_directories(extractPath);
     
-    // TODO: Implement proper archive extraction
-    // This would typically use libzip, miniz, or similar
+    // Determine archive type by extension
+    std::string ext = std::filesystem::path(archivePath).extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
     
-    return true;
+    if (ext == ".zip") {
+        return extractZipArchive(archivePath, extractPath);
+    } else if (ext == ".tar" || ext == ".gz" || ext == ".tgz") {
+        return extractTarArchive(archivePath, extractPath);
+    } else if (ext == ".7z") {
+        return extract7zArchive(archivePath, extractPath);
+    } else {
+        // Unknown format - try to copy as single file
+        std::string destPath = extractPath + "/" + std::filesystem::path(archivePath).filename().string();
+        std::filesystem::copy_file(archivePath, destPath, 
+            std::filesystem::copy_options::overwrite_existing);
+        return true;
+    }
+}
+
+bool MarketplaceClient::extractZipArchive(const std::string& archivePath,
+                                        const std::string& extractPath) {
+    // Use Windows built-in zip extraction via Shell API
+    #ifdef _WIN32
+    // Create batch script to extract using PowerShell
+    std::string psCommand = "powershell -Command \"Expand-Archive -Path '\"" + 
+                           archivePath + "'\" -DestinationPath '\"" + 
+                           extractPath + "'\" -Force\"";
+    
+    int result = std::system(psCommand.c_str());
+    return result == 0;
+    #else
+    // Linux/Mac: use unzip command
+    std::string cmd = "unzip -o \"" + archivePath + "\" -d \"" + extractPath + "\"";
+    int result = std::system(cmd.c_str());
+    return result == 0;
+    #endif
+}
+
+bool MarketplaceClient::extractTarArchive(const std::string& archivePath,
+                                        const std::string& extractPath) {
+    // Use tar command for tar.gz/tgz files
+    #ifdef _WIN32
+    // Windows: use tar (available in Windows 10+)
+    std::string cmd = "tar -xzf \"" + archivePath + "\" -C \"" + extractPath + "\"";
+    #else
+    std::string cmd = "tar -xzf \"" + archivePath + "\" -C \"" + extractPath + "\"";
+    #endif
+    
+    int result = std::system(cmd.c_str());
+    return result == 0;
+}
+
+bool MarketplaceClient::extract7zArchive(const std::string& archivePath,
+                                       const std::string& extractPath) {
+    // Use 7z command line tool if available
+    std::string cmd = "7z x \"" + archivePath + "\" -o\"" + extractPath + "\" -y";
+    int result = std::system(cmd.c_str());
+    
+    if (result != 0) {
+        // Fallback: try 7za (standalone version)
+        cmd = "7za x \"" + archivePath + "\" -o\"" + extractPath + "\" -y";
+        result = std::system(cmd.c_str());
+    }
+    
+    return result == 0;
 }
 
 } // namespace RawrXD::Extensions

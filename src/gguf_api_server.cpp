@@ -30,6 +30,8 @@
 
 namespace fs = std::filesystem;
 
+static std::unique_ptr<RawrXD::CPUInferenceEngine> g_engine;
+
 // ============================================================
 // Simple In-Memory Metrics Tracking
 // ============================================================
@@ -70,13 +72,13 @@ public:
     bool Start() {
         WSADATA wsa_data;
         if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
-            std::cerr << "WSAStartup failed\n";
+            
             return false;
         }
         
         listen_socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (listen_socket_ == INVALID_SOCKET) {
-            std::cerr << "socket failed\n";
+            
             WSACleanup();
             return false;
         }
@@ -87,14 +89,14 @@ public:
         server_addr.sin_port = htons(port_);
         
         if (bind(listen_socket_, (sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-            std::cerr << "bind failed\n";
+            
             closesocket(listen_socket_);
             WSACleanup();
             return false;
         }
         
         if (listen(listen_socket_, SOMAXCONN) == SOCKET_ERROR) {
-            std::cerr << "listen failed\n";
+            
             closesocket(listen_socket_);
             WSACleanup();
             return false;
@@ -102,8 +104,8 @@ public:
         
         running_ = true;
         server_thread_ = std::thread(&SimpleHTTPServer::ServerLoop, this);
-        
-        std::cout << "HTTP Server listening on port " << port_ << std::endl;
+
+
         return true;
     }
     
@@ -404,16 +406,10 @@ int main(int argc, char* argv[]) {
             model_path = argv[++i];
         }
     }
-    
-    std::cout << "\n";
-    std::cout << "╔════════════════════════════════════════════════════════╗\n";
-    std::cout << "║      GGUF API Server - Real Model Inference            ║\n";
-    std::cout << "║  HTTP Server for Ollama-compatible Model Serving       ║\n";
-    std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
-    
-    std::cout << "[1/4] Verifying model file...\n";
+
+
     if (!fs::exists(model_path)) {
-        std::cerr << "ERROR: Model not found at " << model_path << std::endl;
+        
         return 1;
     }
     auto file_size = fs::file_size(model_path) / (1024.0 * 1024 * 1024);
@@ -440,30 +436,15 @@ int main(int argc, char* argv[]) {
         std::cerr << "  ✗ Error preparing endpoint: " << e.what() << "\n";
         return 1;
     }
-    
-    std::cout << "[4/4] Starting HTTP API Server...\n";
+
+
     SimpleHTTPServer server(port);
     if (!server.Start()) {
-        std::cerr << "Failed to start server\n";
+        
         return 1;
     }
-    
-    std::cout << "\n";
-    std::cout << "╔════════════════════════════════════════════════════════╗\n";
-    std::cout << "║         Server Ready for Inference Requests            ║\n";
-    std::cout << "╚════════════════════════════════════════════════════════╝\n\n";
-    
-    std::cout << "API Endpoints:\n";
-    std::cout << "  GET  http://localhost:" << port << "/api/tags\n";
-    std::cout << "  POST http://localhost:" << port << "/api/generate\n";
-    std::cout << "  GET  http://localhost:" << port << "/metrics\n\n";
-    
-    std::cout << "Example usage:\n";
-    std::cout << "  curl -X GET http://localhost:" << port << "/api/tags\n";
-    std::cout << "  curl -X POST -d '{\"prompt\":\"Hello\"}' http://localhost:" << port << "/api/generate\n\n";
-    
-    std::cout << "Running... Press Ctrl+C to exit.\n\n";
-    
+
+
     // Keep running
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

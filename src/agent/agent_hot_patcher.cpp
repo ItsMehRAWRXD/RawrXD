@@ -21,6 +21,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include "gguf_loader.h"
 #pragma comment(lib, "ws2_32.lib")
 #endif
 
@@ -577,9 +578,10 @@ void AgentHotPatcher::setHotPatchingEnabled(bool enabled)
     fprintf(stderr, "Hot patching %s\n", enabled ? "enabled" : "disabled");
 }
 
-bool AgentHotPatcher::isHotPatchingEnabled() const
-{
-    return m_enabled;
+std::string AgentHotPatcher::normalizePathInContent(const std::string& content, const std::string& validPath) {
+    std::string s = content;
+    std::replace(s.begin(), s.end(), '\\', '/');
+    return s;
 }
 
 void AgentHotPatcher::setDebugLogging(bool enabled)
@@ -934,3 +936,4 @@ void AgentHotPatcher::notifyBehaviorPatchApplied(const BehaviorPatch& patch) {
 void AgentHotPatcher::notifyStatisticsUpdated(const JsonValue& stats) {
     for (const auto& cb : m_statisticsUpdatedCBs) cb.fn(stats, cb.userData);
 }
+

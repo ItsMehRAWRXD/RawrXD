@@ -15,19 +15,20 @@
 // Minimal test framework stub
 namespace testing {
 
+// Free functions
+inline void InitGoogleTest(int* argc, char** argv) {}
+inline int RunAllTests() { 
+    std::cout << "[==========] Running stub tests.\n";
+    std::cout << "[==========] 0 tests ran.\n";
+    return 0; 
+}
+
 // Test base class
 class Test {
 public:
     virtual void SetUp() {}
     virtual void TearDown() {}
     virtual void TestBody() = 0;
-    
-    static void InitGoogleTest(int* argc, char** argv) {}
-    static int RunAllTests() { 
-        std::cout << "[==========] Running stub tests.\n";
-        std::cout << "[==========] 0 tests ran.\n";
-        return 0; 
-    }
 };
 
 // Assertion macros
@@ -150,7 +151,7 @@ inline void PrintTo(const std::string& str, std::ostream* os) { *os << str; }
 } // namespace testing
 
 // Main entry point macro
-#define RUN_ALL_TESTS() testing::Test::RunAllTests()
+#define RUN_ALL_TESTS() testing::RunAllTests()
 
 // Init Google Test
 inline void InitGoogleTest(int* argc, char** argv) {}

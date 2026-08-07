@@ -48,6 +48,56 @@ struct ASTContextExtractor::Impl {
     std::regex docCommentPattern{
         R"(/\*\*(.*?)\*/|///(.*)$)"
     };
+
+    // Python patterns
+    std::regex pythonFunctionPattern{
+        R"((?:^|\n)\s*def\s+([\w_][\w\d_]*)\s*\([^)]*\)\s*(?:->\s*[^:]+)?\s*:)"
+    };
+    std::regex pythonClassPattern{
+        R"((?:^|\n)\s*class\s+([\w_][\w\d_]*)(?:\s*\([^)]*\))?\s*:)"
+    };
+    std::regex pythonDecoratorPattern{
+        R"((?:^|\n)\s*@([\w_][\w\d_]*(?:\.[\w_][\w\d_]*)*))"
+    };
+
+    // JavaScript/TypeScript patterns
+    std::regex jsFunctionPattern{
+        R"((?:^|\n)\s*(?:async\s+)?(?:function\s+([\w_][\w\d_]*)|(?:const|let|var)\s+([\w_][\w\d_]*)\s*=\s*(?:async\s+)?(?:\([^)]*\)\s*=>|function\s*\([^)]*\)))"
+    };
+    std::regex jsClassPattern{
+        R"((?:^|\n)\s*class\s+([\w_][\w\d_]*)(?:\s+extends\s+[\w_][\w\d_]*)?\s*\{)"
+    };
+    std::regex jsMethodPattern{
+        R"((?:^|\n)\s*(?:async\s+)?(?:\*|get\s+|set\s+)?([\w_][\w\d_]*)\s*\([^)]*\)\s*\{)"
+    };
+
+    // Rust patterns
+    std::regex rustFunctionPattern{
+        R"((?:^|\n)\s*(?:pub\s+)?(?:unsafe\s+)?fn\s+([\w_][\w\d_]*)\s*(?:<[^>]*>)?\s*\([^)]*\))"
+    };
+    std::regex rustStructPattern{
+        R"((?:^|\n)\s*(?:pub\s+)?struct\s+([\w_][\w\d_]*))"
+    };
+    std::regex rustImplPattern{
+        R"((?:^|\n)\s*(?:pub\s+)?impl\s+(?:<[^>]*>\s+)?(?:[\w_][\w\d_]*))"
+    };
+    std::regex rustTraitPattern{
+        R"((?:^|\n)\s*(?:pub\s+)?trait\s+([\w_][\w\d_]*))"
+    };
+
+    // Go patterns
+    std::regex goFunctionPattern{
+        R"((?:^|\n)\s*func\s+(?:\([^)]*\)\s+)?([\w_][\w\d_]*)\s*\([^)]*\))"
+    };
+    std::regex goStructPattern{
+        R"((?:^|\n)\s*type\s+([\w_][\w\d_]*)\s+struct\s*\{)"
+    };
+    std::regex goInterfacePattern{
+        R"((?:^|\n)\s*type\s+([\w_][\w\d_]*)\s+interface\s*\{)"
+    };
+    std::regex goMethodPattern{
+        R"((?:^|\n)\s*func\s*\([^)]*\)\s*([\w_][\w\d_]*)\s*\([^)]*\))"
+    };
 };
 
 // ============================================================================
@@ -104,8 +154,15 @@ std::vector<Symbol> ASTContextExtractor::extractSymbols(const std::string& code,
 
     if (language == "cpp" || language == "c++" || language == "c") {
         symbols = QuickExtractCppSymbols(code);
+    } else if (language == "python" || language == "py") {
+        symbols = QuickExtractPythonSymbols(code);
+    } else if (language == "javascript" || language == "js" || language == "typescript" || language == "ts") {
+        symbols = QuickExtractJavaScriptSymbols(code);
+    } else if (language == "rust" || language == "rs") {
+        symbols = QuickExtractRustSymbols(code);
+    } else if (language == "go" || language == "golang") {
+        symbols = QuickExtractGoSymbols(code);
     }
-    // TODO: Add Python, JavaScript, Rust, Go patterns
 
     return symbols;
 }
@@ -495,6 +552,242 @@ uint64_t EstimateTokenCount(const std::string& text, uint64_t modelParameterCoun
     }
 
     return static_cast<uint64_t>(text.length() / charsPerToken) + 1;
+}
+
+// ============================================================================
+// Python Symbol Extraction
+// ============================================================================
+std::vector<Symbol> QuickExtractPythonSymbols(const std::string& code) {
+    std::vector<Symbol> symbols;
+    std::istringstream stream(code);
+    std::string line;
+    uint64_t lineNum = 0;
+
+    std::regex funcPattern{R"(^\s*def\s+([\w_][\w\d_]*)\s*\()"};
+    std::regex classPattern{R"(^\s*class\s+([\w_][\w\d_]*))"};
+    std::regex decoratorPattern{R"(^\s*@([\w_][\w\d_]*))"};
+
+    std::string currentDecorators;
+    uint64_t currentIndent = 0;
+
+    while (std::getline(stream, line)) {
+        ++lineNum;
+
+        // Calculate indentation
+        uint64_t indent = 0;
+        for (char c : line) {
+            if (c == ' ') indent++;
+            else if (c == '\t') indent += 4;
+            else break;
+        }
+
+        std::smatch match;
+
+        // Check for decorators
+        if (std::regex_search(line, match, decoratorPattern)) {
+            if (!currentDecorators.empty()) currentDecorators += ", ";
+            currentDecorators += "@" + match[1].str();
+            continue;
+        }
+
+        // Check for class definitions
+        if (std::regex_search(line, match, classPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Class;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.docComment = currentDecorators;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+            currentDecorators.clear();
+            currentIndent = indent;
+        }
+        // Check for function definitions
+        else if (std::regex_search(line, match, funcPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Function;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.docComment = currentDecorators;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+            currentDecorators.clear();
+            currentIndent = indent;
+        }
+    }
+
+    return symbols;
+}
+
+// ============================================================================
+// JavaScript/TypeScript Symbol Extraction
+// ============================================================================
+std::vector<Symbol> QuickExtractJavaScriptSymbols(const std::string& code) {
+    std::vector<Symbol> symbols;
+    std::istringstream stream(code);
+    std::string line;
+    uint64_t lineNum = 0;
+
+    std::regex funcPattern{R"((?:function\s+([\w_][\w\d_]*)|(?:const|let|var)\s+([\w_][\w\d_]*)\s*=\s*(?:async\s+)?(?:\([^)]*\)\s*=>|function)))"};
+    std::regex classPattern{R"(^\s*class\s+([\w_][\w\d_]*))"};
+    std::regex methodPattern{R"(^\s*(?:async\s+)?(?:\*|get\s+|set\s+)?([\w_][\w\d_]*)\s*\([^)]*\)\s*\{)"};
+    std::regex arrowFuncPattern{R"((?:const|let|var)\s+([\w_][\w\d_]*)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>)"};
+
+    while (std::getline(stream, line)) {
+        ++lineNum;
+        std::smatch match;
+
+        // Class definitions
+        if (std::regex_search(line, match, classPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Class;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Function declarations
+        else if (std::regex_search(line, match, funcPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Function;
+            sym.name = match[1].str().empty() ? match[2].str() : match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Method definitions (inside classes)
+        else if (std::regex_search(line, match, methodPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Function;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+    }
+
+    return symbols;
+}
+
+// ============================================================================
+// Rust Symbol Extraction
+// ============================================================================
+std::vector<Symbol> QuickExtractRustSymbols(const std::string& code) {
+    std::vector<Symbol> symbols;
+    std::istringstream stream(code);
+    std::string line;
+    uint64_t lineNum = 0;
+
+    std::regex funcPattern{R"(^\s*(?:pub\s+)?(?:unsafe\s+)?fn\s+([\w_][\w\d_]*))"};
+    std::regex structPattern{R"(^\s*(?:pub\s+)?struct\s+([\w_][\w\d_]*))"};
+    std::regex implPattern{R"(^\s*(?:pub\s+)?impl\s+(?:<[^>]*>\s+)?([\w_][\w\d_]*))"};
+    std::regex traitPattern{R"(^\s*(?:pub\s+)?trait\s+([\w_][\w\d_]*))"};
+    std::regex enumPattern{R"(^\s*(?:pub\s+)?enum\s+([\w_][\w\d_]*))"};
+
+    while (std::getline(stream, line)) {
+        ++lineNum;
+        std::smatch match;
+
+        // Function definitions
+        if (std::regex_search(line, match, funcPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Function;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Struct definitions
+        else if (std::regex_search(line, match, structPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Class;  // Using Class for struct
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Trait definitions
+        else if (std::regex_search(line, match, traitPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Interface;  // Using Interface for trait
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Enum definitions
+        else if (std::regex_search(line, match, enumPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Enum;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+    }
+
+    return symbols;
+}
+
+// ============================================================================
+// Go Symbol Extraction
+// ============================================================================
+std::vector<Symbol> QuickExtractGoSymbols(const std::string& code) {
+    std::vector<Symbol> symbols;
+    std::istringstream stream(code);
+    std::string line;
+    uint64_t lineNum = 0;
+
+    std::regex funcPattern{R"(^\s*func\s+(?:\([^)]*\)\s+)?([\w_][\w\d_]*)\s*\()"};
+    std::regex structPattern{R"(^\s*type\s+([\w_][\w\d_]*)\s+struct\s*\{)"};
+    std::regex interfacePattern{R"(^\s*type\s+([\w_][\w\d_]*)\s+interface\s*\{)"};
+
+    while (std::getline(stream, line)) {
+        ++lineNum;
+        std::smatch match;
+
+        // Function definitions (including methods with receiver)
+        if (std::regex_search(line, match, funcPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Function;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Struct definitions
+        else if (std::regex_search(line, match, structPattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Class;  // Using Class for struct
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+        // Interface definitions
+        else if (std::regex_search(line, match, interfacePattern)) {
+            Symbol sym;
+            sym.type = SymbolType::Interface;
+            sym.name = match[1].str();
+            sym.lineStart = lineNum;
+            sym.signature = line;
+            sym.lineEnd = lineNum;
+            symbols.push_back(sym);
+        }
+    }
+
+    return symbols;
 }
 
 } // namespace RawrXD::Agentic

@@ -1,0 +1,297 @@
+{
+  "name": "RawrXD Engine API Contract",
+  "version": "7.5.0",
+  "base_url": "http://localhost:8080",
+  "description": "HTTP API for RawrXD Engine - Agentic AI IDE Backend",
+  
+  "endpoints": {
+    "inference": {
+      "generate": {
+        "path": "/api/generate",
+        "method": "POST",
+        "description": "Generate text completion",
+        "content_type": "application/json",
+        "body": {
+          "prompt": "string",
+          "model": "string (optional)",
+          "max_tokens": "integer (optional)"
+        }
+      },
+      "chat_completions": {
+        "path": "/v1/chat/completions",
+        "method": "POST",
+        "description": "OpenAI-compatible chat completions",
+        "content_type": "application/json",
+        "body": {
+          "messages": [
+            {"role": "system|user|assistant", "content": "string"}
+          ],
+          "model": "string (optional)",
+          "stream": "boolean (optional)"
+        }
+      },
+      "complete": {
+        "path": "/complete",
+        "method": "POST",
+        "description": "Single completion endpoint"
+      },
+      "complete_stream": {
+        "path": "/complete/stream",
+        "method": "POST",
+        "description": "Streaming completion via SSE"
+      }
+    },
+    
+    "models": {
+      "list": {
+        "path": "/api/tags",
+        "method": "GET",
+        "description": "List available models"
+      },
+      "models_v1": {
+        "path": "/v1/models",
+        "method": "GET",
+        "description": "OpenAI-compatible model listing"
+      },
+      "pull": {
+        "path": "/api/pull",
+        "method": "POST",
+        "description": "Pull/download a model"
+      }
+    },
+    
+    "agentic": {
+      "chat": {
+        "path": "/api/chat",
+        "method": "POST",
+        "description": "Agentic chat with tool execution"
+      },
+      "agent_wish": {
+        "path": "/api/agent/wish",
+        "method": "POST",
+        "description": "Execute natural language wish",
+        "body": {
+          "prompt": "string - natural language request"
+        }
+      },
+      "tool": {
+        "path": "/api/tool",
+        "method": "POST",
+        "description": "Execute specific tool"
+      },
+      "subagent": {
+        "path": "/api/subagent",
+        "method": "POST",
+        "description": "Spawn a sub-agent for parallel task"
+      },
+      "chain": {
+        "path": "/api/chain",
+        "method": "POST",
+        "description": "Execute prompt chain"
+      },
+      "swarm": {
+        "path": "/api/swarm",
+        "method": "POST",
+        "description": "Launch HexMag swarm execution"
+      }
+    },
+    
+    "agent_management": {
+      "list": {
+        "path": "/api/agents",
+        "method": "GET",
+        "description": "List all active agents"
+      },
+      "status": {
+        "path": "/api/agents/status",
+        "method": "GET",
+        "description": "Get agent manager status"
+      },
+      "history": {
+        "path": "/api/agents/history",
+        "method": "GET",
+        "description": "Query agent event history"
+      },
+      "replay": {
+        "path": "/api/agents/replay",
+        "method": "POST",
+        "description": "Replay a recorded agent session"
+      },
+      "explain": {
+        "path": "/api/agents/explain",
+        "method": "GET",
+        "description": "Explain agent decision trace"
+      }
+    },
+    
+    "backends": {
+      "list": {
+        "path": "/api/backends",
+        "method": "GET",
+        "description": "List all AI backends"
+      },
+      "status": {
+        "path": "/api/backends/status",
+        "method": "GET",
+        "description": "Get active backend status"
+      },
+      "use": {
+        "path": "/api/backends/use",
+        "method": "POST",
+        "description": "Switch active backend"
+      }
+    },
+    
+    "gpu": {
+      "status": {
+        "path": "/api/gpu/status",
+        "method": "GET",
+        "description": "GPU acceleration status"
+      },
+      "toggle": {
+        "path": "/api/gpu/toggle",
+        "method": "POST",
+        "description": "Toggle GPU on/off"
+      },
+      "features": {
+        "path": "/api/gpu/features",
+        "method": "GET",
+        "description": "AMD GPU features"
+      },
+      "memory": {
+        "path": "/api/gpu/memory",
+        "method": "GET",
+        "description": "GPU memory usage"
+      }
+    },
+    
+    "system": {
+      "status": {
+        "path": "/status",
+        "method": "GET",
+        "description": "Server and model status"
+      },
+      "full_state": {
+        "path": "/api/full-state",
+        "method": "GET",
+        "description": "Complete system state"
+      },
+      "memory_stats": {
+        "path": "/api/memory/stats",
+        "method": "GET",
+        "description": "Memory statistics"
+      }
+    },
+    
+    "policies": {
+      "list": {
+        "path": "/api/policies",
+        "method": "GET",
+        "description": "List active policies"
+      },
+      "suggestions": {
+        "path": "/api/policies/suggestions",
+        "method": "GET",
+        "description": "Get policy suggestions"
+      },
+      "apply": {
+        "path": "/api/policies/apply",
+        "method": "POST",
+        "description": "Accept a policy suggestion"
+      },
+      "reject": {
+        "path": "/api/policies/reject",
+        "method": "POST",
+        "description": "Reject a policy suggestion"
+      },
+      "export": {
+        "path": "/api/policies/export",
+        "method": "GET",
+        "description": "Export policies"
+      },
+      "import": {
+        "path": "/api/policies/import",
+        "method": "POST",
+        "description": "Import policies"
+      },
+      "heuristics": {
+        "path": "/api/policies/heuristics",
+        "method": "GET",
+        "description": "Compute policy heuristics"
+      },
+      "stats": {
+        "path": "/api/policies/stats",
+        "method": "GET",
+        "description": "Policy engine statistics"
+      }
+    },
+    
+    "websocket": {
+      "path": "/ws",
+      "protocol": "WebSocket",
+      "description": "WebSocket for real-time push notifications"
+    }
+  },
+  
+  "repository_intelligence": {
+    "note": "Repository intelligence may be exposed through agent commands rather than direct HTTP routes",
+    "potential_endpoints": [
+      "/api/workspace/scan",
+      "/api/project/index",
+      "/api/repository/analyze"
+    ],
+    "agent_commands": [
+      "scan directory",
+      "index repository", 
+      "analyze codebase",
+      "find symbols"
+    ]
+  },
+  
+  "cli_repl_commands": [
+    "/chat <message>",
+    "/agent <prompt> [N]",
+    "/wish <natural lang>",
+    "/subagent <prompt>",
+    "/chain <step1> | <step2>",
+    "/swarm <p1> | <p2>",
+    "/agents",
+    "/tools",
+    "/run-tool <name> [json]",
+    "/smoke",
+    "/status",
+    "/history",
+    "/policies",
+    "/gpu",
+    "/backend"
+  ],
+  
+  "client_recommendations": {
+    "minimal_ide": {
+      "required_endpoints": [
+        "/api/agent/wish",
+        "/api/generate",
+        "/api/gpu/status",
+        "/api/backends",
+        "/status"
+      ],
+      "features": [
+        "Editor",
+        "Terminal",
+        "Agent Panel",
+        "Model Panel",
+        "GPU Monitor"
+      ]
+    },
+    "webview2_frontend": {
+      "advantages": [
+        "Faster iteration",
+        "Monaco editor integration",
+        "Better agent visualization",
+        "240Hz UI capable",
+        "No Win32 resource maintenance"
+      ],
+      "connection": "localhost HTTP to RawrEngine"
+    }
+  }
+}

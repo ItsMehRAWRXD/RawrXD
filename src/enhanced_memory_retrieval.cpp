@@ -185,8 +185,8 @@ std::vector<RetrievalResult> EnhancedMemoryRetrieval::getContextRelevantMemories
     const std::string& executionGoal,
     size_t maxResults)
 {
-    // For production: would use more sophisticated context matching
-    // For now: use semantic search with execution goal
+    // Production would use more sophisticated context matching
+    // Current implementation uses semantic search with execution goal
     return semanticSearch(executionGoal, maxResults);
 }
 

@@ -7,6 +7,7 @@
 #include "../core/native_ide_tools.h"
 #include <filesystem>
 #include <fstream>
+#include "gguf_loader.h"
 
 namespace RawrXD::Inference {
 
@@ -425,3 +426,4 @@ std::string FormatFileSize(size_t bytes) {
 }
 
 } // namespace RawrXD::Inference
+

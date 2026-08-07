@@ -88,3 +88,28 @@ void ChatInterface::clearHistory() {
 
 } // namespace RawrXD
 
+void ChatInterface::processResponse(const std::string& modelOutput) {
+    appendToHistory("assistant", modelOutput);
+    
+    if (onMessageReceived) {
+        onMessageReceived({ "assistant", modelOutput, std::time(nullptr) });
+    }
+}
+
+void ChatInterface::appendToHistory(const std::string& role, const std::string& content) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_history.push_back({ role, content, std::time(nullptr) });
+}
+
+std::vector<ChatInterface::Message> ChatInterface::getHistory() const {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_history;
+}
+
+void ChatInterface::clearHistory() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_history.clear();
+}
+
+} // namespace RawrXD
+

@@ -1,5 +1,9 @@
 // agentic_failure_detector.hpp - Detects 8 failure types with MASM acceleration (Qt-free)
 #pragma once
+#include <vector>
+#include <string>
+#include <mutex>
+#include <chrono>
 
 #include <string>
 #include <vector>

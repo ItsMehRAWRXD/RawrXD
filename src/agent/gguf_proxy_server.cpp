@@ -31,6 +31,13 @@
 
 #include <nlohmann/json.hpp>
 #include "agent_hot_patcher.hpp"
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <nlohmann/json.hpp>
+#include <regex>
+#include <cctype>
+#include <WS2tcpip.h>
 
 using json = nlohmann::json;
 
@@ -212,7 +219,6 @@ void GGUFProxyServer::forwardToGGUF(uintptr_t socketDescriptor) {
         std::lock_guard<std::mutex> lock(m_statsMutex);
         ++m_requestsProcessed;
     }
-}
 
 void GGUFProxyServer::processGGUFResponse(uintptr_t socketDescriptor) {
     auto it = m_connections.find(socketDescriptor);
@@ -231,7 +237,6 @@ void GGUFProxyServer::processGGUFResponse(uintptr_t socketDescriptor) {
                corrected.c_str(), static_cast<int>(corrected.size()), 0);
         conn->responseBuffer.clear();
     }
-}
 
 void GGUFProxyServer::sendResponseToClient(uintptr_t socketDescriptor,
                                             const std::string& response) {

@@ -508,7 +508,7 @@ void AlertSystem::checkResource(ResourceType type)
 float AlertSystem::queryCpuUsage() const
 {
 #ifdef _WIN32
-    // Simplified CPU usage via GetSystemTimes
+    // Basic CPU usage via GetSystemTimes
     static FILETIME prevIdle = {}, prevKernel = {}, prevUser = {};
     FILETIME idle, kernel, user;
 

@@ -414,7 +414,7 @@ public:
         result.testName = "KV-Cache - " + std::to_string(cacheSizeMB) + "MB";
         result.mode = TestMode::KV_CACHE_ACCESS;
         
-        // Simulate KV-cache with random access pattern
+        // Create KV-cache with random access pattern
         const size_t slotSize = 4096; // 4KB per slot
         const size_t numSlots = (cacheSizeMB * 1024 * 1024) / slotSize;
         std::vector<std::vector<float>> cache(numSlots, std::vector<float>(slotSize / sizeof(float)));
@@ -595,11 +595,135 @@ std::string BenchmarkHarness::CompareToBaseline(const BenchmarkResult& current,
     report << "\n  Comparison to Baseline:\n";
     report << "  ─────────────────────────────────────────────────────────────\n";
     
-    // TODO: Load baseline and compare
-    // For now, just report current values
-    report << "    Current Mean Latency: " << current.meanLatencyUs << " μs\n";
-    report << "    Current Throughput: " << current.throughputGbps << " GB/s\n";
-    report << "    (Baseline comparison not yet implemented)\n";
+    // Load baseline from file if it exists
+    BenchmarkResult baseline;
+    bool baselineLoaded = false;
+    
+    if (!baselinePath.empty()) {
+        std::ifstream baselineFile(baselinePath);
+        if (baselineFile.is_open()) {
+            std::string line;
+            while (std::getline(baselineFile, line)) {
+                // Parse CSV format: section,metric,value
+                size_t firstComma = line.find(',');
+                size_t secondComma = line.find(',', firstComma + 1);
+                
+                if (firstComma != std::string::npos && secondComma != std::string::npos) {
+                    std::string section = line.substr(0, firstComma);
+                    std::string metric = line.substr(firstComma + 1, secondComma - firstComma - 1);
+                    std::string valueStr = line.substr(secondComma + 1);
+                    
+                    try {
+                        double value = std::stod(valueStr);
+                        
+                        // Map metrics to baseline result
+                        if (section == "summary") {
+                            if (metric == "meanLatencyUs") baseline.meanLatencyUs = value;
+                            else if (metric == "p50LatencyUs") baseline.p50LatencyUs = value;
+                            else if (metric == "p99LatencyUs") baseline.p99LatencyUs = value;
+                            else if (metric == "throughputGbps") baseline.throughputGbps = value;
+                            else if (metric == "tokensPerSecond") baseline.tokensPerSecond = value;
+                            else if (metric == "memoryBandwidthGbps") baseline.memoryBandwidthGbps = value;
+                            else if (metric == "computeUtilization") baseline.computeUtilization = value;
+                        }
+                    } catch (...) {
+                        // Skip malformed lines
+                    }
+                }
+            }
+            baselineFile.close();
+            baselineLoaded = true;
+        }
+    }
+    
+    if (baselineLoaded) {
+        // Calculate percentage changes
+        auto calcChange = [](double current, double baseline) -> double {
+            if (baseline == 0.0) return 0.0;
+            return ((current - baseline) / baseline) * 100.0;
+        };
+        
+        auto formatChange = [](double change) -> std::string {
+            std::stringstream ss;
+            if (change > 0) {
+                ss << "+" << std::fixed << std::setprecision(2) << change << "%";
+            } else {
+                ss << std::fixed << std::setprecision(2) << change << "%";
+            }
+            return ss.str();
+        };
+        
+        // Report comparison
+        report << "    Metric                    Current        Baseline       Change\n";
+        report << "    ─────────────────────────────────────────────────────────────\n";
+        
+        double latencyChange = calcChange(current.meanLatencyUs, baseline.meanLatencyUs);
+        report << "    Mean Latency:             " << std::setw(10) << current.meanLatencyUs << " μs"
+               << "    " << std::setw(10) << baseline.meanLatencyUs << " μs"
+               << "    " << std::setw(10) << formatChange(latencyChange);
+        if (latencyChange < -5.0) report << " ✓";
+        else if (latencyChange > 5.0) report << " ⚠";
+        report << "\n";
+        
+        double throughputChange = calcChange(current.throughputGbps, baseline.throughputGbps);
+        report << "    Throughput:               " << std::setw(10) << std::fixed << std::setprecision(2) << current.throughputGbps << " GB/s"
+               << "    " << std::setw(10) << baseline.throughputGbps << " GB/s"
+               << "    " << std::setw(10) << formatChange(throughputChange);
+        if (throughputChange > 5.0) report << " ✓";
+        else if (throughputChange < -5.0) report << " ⚠";
+        report << "\n";
+        
+        double tpsChange = calcChange(current.tokensPerSecond, baseline.tokensPerSecond);
+        report << "    Tokens/Second:            " << std::setw(10) << std::fixed << std::setprecision(1) << current.tokensPerSecond << " TPS"
+               << "    " << std::setw(10) << baseline.tokensPerSecond << " TPS"
+               << "    " << std::setw(10) << formatChange(tpsChange);
+        if (tpsChange > 5.0) report << " ✓";
+        else if (tpsChange < -5.0) report << " ⚠";
+        report << "\n";
+        
+        double memChange = calcChange(current.memoryBandwidthGbps, baseline.memoryBandwidthGbps);
+        report << "    Memory Bandwidth:         " << std::setw(10) << std::fixed << std::setprecision(2) << current.memoryBandwidthGbps << " GB/s"
+               << "    " << std::setw(10) << baseline.memoryBandwidthGbps << " GB/s"
+               << "    " << std::setw(10) << formatChange(memChange);
+        if (memChange > 5.0) report << " ✓";
+        else if (memChange < -5.0) report << " ⚠";
+        report << "\n";
+        
+        double utilChange = calcChange(current.computeUtilization, baseline.computeUtilization);
+        report << "    Compute Utilization:      " << std::setw(10) << std::fixed << std::setprecision(1) << current.computeUtilization << "%"
+               << "    " << std::setw(10) << baseline.computeUtilization << "%"
+               << "    " << std::setw(10) << formatChange(utilChange);
+        if (utilChange > 5.0) report << " ✓";
+        else if (utilChange < -5.0) report << " ⚠";
+        report << "\n";
+        
+        // Overall assessment
+        report << "\n";
+        int improvements = 0;
+        int regressions = 0;
+        
+        if (latencyChange < -5.0) improvements++; else if (latencyChange > 5.0) regressions++;
+        if (throughputChange > 5.0) improvements++; else if (throughputChange < -5.0) regressions++;
+        if (tpsChange > 5.0) improvements++; else if (tpsChange < -5.0) regressions++;
+        if (memChange > 5.0) improvements++; else if (memChange < -5.0) regressions++;
+        if (utilChange > 5.0) improvements++; else if (utilChange < -5.0) regressions++;
+        
+        report << "    Summary: " << improvements << " improvements, " << regressions << " regressions\n";
+        if (improvements > regressions) {
+            report << "    Overall: ✓ Performance improved\n";
+        } else if (regressions > improvements) {
+            report << "    Overall: ⚠ Performance regressed\n";
+        } else {
+            report << "    Overall: = Performance stable\n";
+        }
+    } else {
+        // No baseline available
+        report << "    Current Mean Latency: " << current.meanLatencyUs << " μs\n";
+        report << "    Current Throughput: " << std::fixed << std::setprecision(2) << current.throughputGbps << " GB/s\n";
+        report << "    Current Tokens/Second: " << std::fixed << std::setprecision(1) << current.tokensPerSecond << " TPS\n";
+        report << "    (Baseline not found: " << baselinePath << ")\n";
+        report << "    Run with --save-baseline to create a baseline for comparison\n";
+    }
     
     return report.str();
 }

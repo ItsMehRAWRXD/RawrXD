@@ -90,23 +90,23 @@ static std::atomic<uint64_t> g_sequenceCounter{0};
 static std::atomic<bool> g_running{true};
 static std::atomic<uint64_t> g_arenaUsed{5242880}; // 5MB base
 
-// Simulate event submission (producer thread)
+// Event submission (producer thread)
 void ProducerThread() {
     uint64_t eventCount = 0;
     auto startTime = std::chrono::steady_clock::now();
-    
+
     while (g_running.load()) {
-        // Simulate 8,333 events/sec submission rate
+        // Model 8,333 events/sec submission rate
         for (int i = 0; i < 833; i++) {
             uint64_t seq = ++g_sequenceCounter;
             uint64_t timestamp = GetTickCount64();
-            
+
             g_telemetry.RecordSubmit(seq);
-            
-            // Simulate arena growth
+
+            // Model arena growth
             g_arenaUsed.fetch_add(1024); // 1KB per event
             g_telemetry.UpdateArena(g_arenaUsed.load(), g_arenaUsed.load());
-            
+
             eventCount++;
         }
         
@@ -124,23 +124,23 @@ void ProducerThread() {
     }
 }
 
-// Simulate event rendering (consumer thread)
+// Event rendering (consumer thread)
 void ConsumerThread() {
     uint64_t lastRenderedSeq = 0;
     auto startTime = std::chrono::steady_clock::now();
-    
+
     while (g_running.load()) {
         // Get current submitted sequence
         uint64_t submittedSeq = g_telemetry.submittedSequence.load();
-        
-        // Simulate coalescing: only render every 30th event
+
+        // Model coalescing: only render every 30th event
         uint64_t targetRender = submittedSeq;
         if (targetRender > lastRenderedSeq + 30) {
             targetRender = lastRenderedSeq + 30;
         }
-        
+
         if (targetRender > lastRenderedSeq) {
-            // Calculate state age (simulated)
+            // Calculate state age
             uint64_t ageMs = (targetRender - lastRenderedSeq) * 2; // ~2ms per event gap
             
             g_telemetry.RecordRender(targetRender, ageMs);

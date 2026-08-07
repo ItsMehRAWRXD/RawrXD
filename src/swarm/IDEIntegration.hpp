@@ -6,8 +6,9 @@
 #include "BackendCore.hpp"
 #include "QAHive.hpp"
 #include "ReviewerAgents.hpp"
+#include "LegacyRefactorModule.hpp"
 #include <functional>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 namespace rawrxd {
 namespace swarm {
@@ -16,7 +17,7 @@ namespace swarm {
 struct LSPMessage {
     std::string jsonrpc{"2.0"};
     std::string method;
-    Json::Value params;
+    nlohmann::json params;
     std::optional<std::string> id;
 };
 
@@ -124,7 +125,7 @@ public:
     );
     
     // Code review
-    ReviewerAgents::ReviewRequest reviewCode(
+    std::vector<ReviewerAgents::ReviewReport> reviewCode(
         const std::vector<std::string>& files
     );
     
@@ -143,7 +144,7 @@ public:
     
     // LSP integration
     void handleLSPMessage(const LSPMessage& message);
-    LSPMessage createLSPResponse(const std::string& id, const Json::Value& result);
+    LSPMessage createLSPResponse(const std::string& id, const nlohmann::json& result);
     
     // File operations
     void writeFile(const std::string& path, const std::string& content);
@@ -156,16 +157,16 @@ public:
     void disableHotReload();
     
     // Legacy refactor
-    LegacyRefactorModule::CodebaseAnalysis analyzeLegacyCodebase(
+    CodeMetrics analyzeLegacyCodebase(
         const std::string& path
     );
     
-    std::vector<std::string> generateRefactorPlan(
-        const LegacyRefactorModule::CodebaseAnalysis& analysis
+    std::vector<RefactorOperation> generateRefactorPlan(
+        const CodeMetrics& metrics
     );
     
     bool executeRefactoring(
-        const std::vector<std::string>& plan,
+        const std::vector<RefactorOperation>& plan,
         const std::string& codebasePath
     );
     
@@ -185,6 +186,10 @@ private:
     
     void updateProgress(GenerationProgress::Stage stage, const std::string& task);
     void executeInSwarm(const std::vector<Task>& tasks);
+    
+    // Helper methods
+    size_t getAvailableMemoryMB();
+    std::string extractComponentName(const std::string& description);
     
     // Stage handlers
     ArchitectAgent::SystemDesign runArchitectPhase(const ProjectRequest& request);
@@ -209,19 +214,19 @@ public:
     void disconnect();
     bool isConnected() const;
     
-    void sendMessage(const Json::Value& message);
-    void onMessage(std::function<void(const Json::Value&)> handler);
+    void sendMessage(const nlohmann::json& message);
+    void onMessage(std::function<void(const nlohmann::json&)> handler);
     
     // Command handlers
-    void handleGenerateProject(const Json::Value& params);
-    void handleGenerateComponent(const Json::Value& params);
-    void handleRefactor(const Json::Value& params);
-    void handleReview(const Json::Value& params);
-    void handleOptimize(const Json::Value& params);
+    void handleGenerateProject(const nlohmann::json& params);
+    void handleGenerateComponent(const nlohmann::json& params);
+    void handleRefactor(const nlohmann::json& params);
+    void handleReview(const nlohmann::json& params);
+    void handleOptimize(const nlohmann::json& params);
     
 private:
     bool connected_{false};
-    std::function<void(const Json::Value&)> messageHandler_;
+    std::function<void(const nlohmann::json&)> messageHandler_;
 };
 
 // JetBrains plugin bridge
@@ -231,8 +236,8 @@ public:
     void disconnect();
     bool isConnected() const;
     
-    void sendMessage(const Json::Value& message);
-    void onMessage(std::function<void(const Json::Value&)> handler);
+    void sendMessage(const nlohmann::json& message);
+    void onMessage(std::function<void(const nlohmann::json&)> handler);
 };
 
 // Cursor editor bridge
@@ -242,8 +247,8 @@ public:
     void disconnect();
     bool isConnected() const;
     
-    void sendMessage(const Json::Value& message);
-    void onMessage(std::function<void(const Json::Value&)> handler);
+    void sendMessage(const nlohmann::json& message);
+    void onMessage(std::function<void(const nlohmann::json&)> handler);
 };
 
 } // namespace swarm

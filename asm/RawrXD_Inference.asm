@@ -10,6 +10,20 @@
 ;   4. AVX2 GEMM kernels for matrix multiplication
 ;   5. Flash-Attention v2 tiled attention computation
 ;
+; ─── ABI CONTRACT ───
+; All exports use Microsoft x64 calling convention:
+;   RCX = 1st arg, RDX = 2nd arg, R8 = 3rd arg, R9 = 4th arg
+;   RAX = return value (count/ptr) or 0 on failure
+;   Stack: 16-byte aligned at call site, 32-byte shadow space
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, XMM0-XMM5
+; Preserves: RBX, RBP, RDI, RSI, R12-R15, XMM6-XMM15
+;
+; RawrXD_Inference_Init(RCX=model_handle, RDX=tokenizer_handle) → RAX=engine or 0
+; RawrXD_Inference_Generate(RCX=engine, RDX=prompt_tokens, R8=n_prompt, R9=out_tokens, [RSP+40]=max_gen) → RAX=n_gen
+; RawrXD_Inference_Free(RCX=engine) → void
+; ───────────────────
+;
 ; API:
 ;   RawrXD_Inference_Init(model_handle, tokenizer_handle) → engine
 ;   RawrXD_Inference_Generate(engine, prompt_tokens, n_prompt, out_tokens, max_gen) → n_gen

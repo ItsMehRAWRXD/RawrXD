@@ -1,6 +1,8 @@
 #include "PerformanceOptimizer.h"
 #include <algorithm>
 #include <thread>
+#include <fstream>
+#include <sstream>
 
 namespace RawrXD {
 namespace IDE {

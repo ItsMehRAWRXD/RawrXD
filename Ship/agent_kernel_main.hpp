@@ -24,6 +24,9 @@
 #include <algorithm>
 #include <sstream>
 #include <regex>
+#include <any>
+#include <condition_variable>
+#include <filesystem>
 
 namespace RawrXD {
 

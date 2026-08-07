@@ -14,6 +14,23 @@
 // Conditionally include Unicorn
 #ifdef HAS_UNICORN
 #include <unicorn/unicorn.h>
+#else
+// Fallback definitions when Unicorn is not available
+#define UC_PROT_NONE 0
+#define UC_PROT_READ 1
+#define UC_PROT_WRITE 2
+#define UC_PROT_EXEC 4
+#define UC_PROT_ALL (UC_PROT_READ | UC_PROT_WRITE | UC_PROT_EXEC)
+#define UC_HOOK_CODE 1
+#define UC_HOOK_BLOCK 2
+#define UC_HOOK_MEM_READ 4
+#define UC_HOOK_MEM_WRITE 8
+#define UC_HOOK_MEM_FETCH 16
+#define UC_HOOK_MEM_READ_WRITE (UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE)
+#define UC_HOOK_INTR 32
+#define UC_HOOK_INSN 64
+#define UC_HOOK_EDGE 128
+#define UC_X86_REG_RAX 0
 #endif
 
 #include <vector>

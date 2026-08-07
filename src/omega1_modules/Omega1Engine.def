@@ -1,0 +1,58 @@
+; ═════════════════════════════════════════════════════════════════════════════
+; OMEGA-1 Engine Module Definition File
+; Explicit export declarations for IAT slots 64-75
+; Prevents linker from stripping symbols when /OPT:REF is enabled
+; ═════════════════════════════════════════════════════════════════════════════
+
+LIBRARY Omega1Engine
+
+EXPORTS
+    ; IAT Slot 64: Initialize
+    Omega1_Initialize
+
+    ; IAT Slot 65: Shutdown
+    Omega1_Shutdown
+
+    ; IAT Slot 66: GetModuleCount
+    Omega1_GetModuleCount
+
+    ; IAT Slot 67: IsMutant
+    Omega1_IsMutant
+
+    ; IAT Slot 68: GetMutationCount
+    Omega1_GetMutationCount
+
+    ; IAT Slot 69: ExecuteReflective
+    Omega1_ExecuteReflective
+
+    ; IAT Slot 70: ValidateIntegrity
+    Omega1_ValidateIntegrity
+
+    ; IAT Slot 71: TriggerMutation
+    Omega1_TriggerMutation
+
+    ; IAT Slot 72: GetManifestJson
+    Omega1_GetManifestJson
+
+    ; IAT Slot 73: ExecutePowerShell
+    Omega1_ExecutePowerShell
+
+    ; IAT Slot 74: LoadModule
+    Omega1_LoadModule
+
+    ; IAT Slot 75: InvokeModule
+    Omega1_InvokeModule
+
+    ; C API Exports
+    Omega1_CreateContext
+    Omega1_DestroyContext
+    Omega1_EnumModules
+    Omega1_GetVersion
+    Omega1_GetStatus
+
+    ; Legacy Bridge Exports (for backward compatibility)
+    OmegaBridge_ExecutePowerShell
+    OmegaBridge_LoadModule
+    OmegaBridge_InvokeModule
+    OmegaBridge_InitializePowerShell
+    OmegaBridge_ShutdownPowerShell

@@ -208,9 +208,76 @@ std::vector<MarketplaceClient::ExtensionEntry> MarketplaceClient::Search(const S
 
     std::string response;
     std::string url = m_endpoint + "/extensionquery";
-    // For now, return empty — full HTTP POST implementation would require WinHTTP
-    (void)url;
-    (void)payload;
+    
+    // Perform HTTP POST to VS Marketplace
+    HINTERNET hInternet = InternetOpenA("RawrXD-ExtensionHost/1.0", INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    if (!hInternet) {
+        return results;
+    }
+    
+    HINTERNET hConnect = InternetConnectA(hInternet, "marketplace.visualstudio.com", 
+                                           INTERNET_DEFAULT_HTTPS_PORT, nullptr, nullptr, 
+                                           INTERNET_SERVICE_HTTP, 0, 0);
+    if (!hConnect) {
+        InternetCloseHandle(hInternet);
+        return results;
+    }
+    
+    HINTERNET hRequest = HttpOpenRequestA(hConnect, "POST", "/_apis/public/gallery/extensionquery",
+                                           nullptr, nullptr, nullptr, 
+                                           INTERNET_FLAG_SECURE | INTERNET_FLAG_RELOAD, 0);
+    if (!hRequest) {
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hInternet);
+        return results;
+    }
+    
+    std::string payloadStr = payload.dump();
+    std::string headers = "Content-Type: application/json\r\nAccept: application/json;api-version=7.1-preview.1\r\n";
+    
+    if (HttpSendRequestA(hRequest, headers.c_str(), (DWORD)headers.length(), 
+                         (LPVOID)payloadStr.c_str(), (DWORD)payloadStr.length())) {
+        char buffer[4096];
+        DWORD bytesRead = 0;
+        while (InternetReadFile(hRequest, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+            response.append(buffer, bytesRead);
+        }
+    }
+    
+    InternetCloseHandle(hRequest);
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hInternet);
+    
+    // Parse response
+    if (!response.empty()) {
+        try {
+            nlohmann::json j = nlohmann::json::parse(response);
+            if (j.contains("results") && j["results"].is_array()) {
+                for (const auto& result : j["results"]) {
+                    if (result.contains("extensions") && result["extensions"].is_array()) {
+                        for (const auto& ext : result["extensions"]) {
+                            ExtensionEntry entry;
+                            if (ext.contains("displayName")) entry.displayName = ext["displayName"].get<std::string>();
+                            if (ext.contains("extensionName")) entry.name = ext["extensionName"].get<std::string>();
+                            if (ext.contains("publisher")) {
+                                auto& pub = ext["publisher"];
+                                if (pub.contains("publisherName")) entry.publisher = pub["publisherName"].get<std::string>();
+                            }
+                            if (ext.contains("shortDescription")) entry.description = ext["shortDescription"].get<std::string>();
+                            if (ext.contains("versions") && ext["versions"].is_array() && !ext["versions"].empty()) {
+                                entry.version = ext["versions"][0]["version"].get<std::string>();
+                            }
+                            entry.extensionId = entry.publisher + "." + entry.name;
+                            results.push_back(entry);
+                        }
+                    }
+                }
+            }
+        } catch (...) {
+            // Parse error - return empty results
+        }
+    }
+    
     return results;
 }
 

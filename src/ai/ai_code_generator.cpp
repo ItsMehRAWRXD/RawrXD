@@ -389,7 +389,8 @@ std::string AICodeGenerator::generateCode(const std::string& prompt, const std::
         code << "// Generated " << lang << " code\n\n";
         code << "// Request: " << prompt.substr(0, 50) << "...\n";
         code << "// Error calling AI: " << response.error_message << "\n\n";
-        code << "// TODO: Implement manually\n";
+        code << "// Fallback: Basic structure based on request\n";
+        code << "// Please check backend connectivity and retry\n";
         return code.str();
     }
     

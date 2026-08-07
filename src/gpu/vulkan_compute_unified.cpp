@@ -675,6 +675,7 @@ extern "C" {
 #include <vector>
 #include <stdio.h>
 #include <cstring>
+#include "vulkan_compute.h"
 
 // ============================================================
 // STRUCTURED LOGGING
@@ -1085,3 +1086,4 @@ VkResult Titan_Vulkan_Init_Safe() {
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 }
+

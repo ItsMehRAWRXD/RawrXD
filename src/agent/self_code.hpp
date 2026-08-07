@@ -16,3 +16,4 @@ private:
     bool insertAfterIncludeGuard(const std::string& hpp, const std::string& includeLine);
     bool runProcess(const std::string& program, const std::vector<std::string>& args);
 };
+

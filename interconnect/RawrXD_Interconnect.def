@@ -22,6 +22,7 @@ EXPORTS
     StreamFormatter_FlushChunk
     StreamFormatter_Close
     Json_ExtractField
+<<<<<<< HEAD
     ; Local Parity (no API key) — same Cursor/GitHub parity via local inference
     LocalParity_Init
     LocalParity_Shutdown
@@ -29,3 +30,5 @@ EXPORTS
     LocalParity_NextToken
     LocalParity_ManifestGet
     LocalParity_EncodeChunk
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

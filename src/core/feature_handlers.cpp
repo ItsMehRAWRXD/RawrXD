@@ -52,7 +52,7 @@ static struct BackendConfig {
         bool available;
     };
     std::vector<BackendInfo> backends = {
-        {"Ollama (local)", "http://localhost:11434", false},
+        {"Deep2 Native", "http://localhost:11436", false},
         {"OpenAI API",     "https://api.openai.com/v1", false},
         {"Claude API",     "https://api.anthropic.com/v1", false},
         {"HuggingFace",    "https://api-inference.huggingface.co", false},
@@ -285,21 +285,21 @@ CommandResult handleFileModelFromHF(const CommandContext& ctx) {
 
 CommandResult handleFileModelFromOllama(const CommandContext& ctx) {
     if (!ctx.args || !ctx.args[0]) {
-        ctx.output("Usage: !model_ollama <model-name>\n");
-        return CommandResult::error("file.modelFromOllama: missing model");
+        ctx.output("Usage: !model_native <model-name>\n");
+        return CommandResult::error("file.modelFromNative: missing model");
     }
     std::string modelName(ctx.args);
-    ctx.output(("[Ollama] Pulling model: " + modelName + "\n").c_str());
-    // Use AgentOllamaClient to pull model via Ollama API
+    ctx.output(("[Native] Loading model: " + modelName + "\n").c_str());
+    // Use AgentOllamaClient (now wired to native BackendOrchestrator)
     try {
         RawrXD::Agent::OllamaConfig ollamaCfg;
         ollamaCfg.host = "127.0.0.1";
-        ollamaCfg.port = 11434;
+        ollamaCfg.port = 11436; // Deep2 native port
         RawrXD::Agent::AgentOllamaClient client(ollamaCfg);
         if (!client.TestConnection()) {
-            ctx.output("[Ollama] Cannot connect to Ollama at 127.0.0.1:11434.\n");
-            ctx.output("[Ollama] Start ollama with: ollama serve\n");
-            return CommandResult::error("file.modelFromOllama: no connection");
+            ctx.output("[Native] Cannot connect to Deep2 runtime at 127.0.0.1:11436.\n");
+            ctx.output("[Native] Ensure RawrEngine is running with a loaded model.\n");
+            return CommandResult::error("file.modelFromNative: no connection");
         }
         // List available models to verify the name
         auto models = client.ListModels();
@@ -311,31 +311,16 @@ CommandResult handleFileModelFromOllama(const CommandContext& ctx) {
             }
         }
         if (found) {
-            ctx.output(("[Ollama] Model '" + modelName + "' is available locally.\n").c_str());
+            ctx.output(("[Native] Model '" + modelName + "' is available locally.\n").c_str());
         } else {
-            ctx.output(("[Ollama] Model '" + modelName + "' not found locally. Run: ollama pull " + modelName + "\n").c_str());
-            // Attempt pull via CLI
-            std::string cmd = "ollama pull " + modelName + " 2>&1";
-            FILE* pipe = _popen(cmd.c_str(), "r");
-            if (pipe) {
-                char buf[256];
-                while (fgets(buf, sizeof(buf), pipe)) {
-                    ctx.output(buf);
-                }
-                int rc = _pclose(pipe);
-                if (rc == 0) {
-                    ctx.output("[Ollama] Pull complete.\n");
-                } else {
-                    ctx.output("[Ollama] Pull failed.\n");
-                    return CommandResult::error("file.modelFromOllama: pull failed");
-                }
-            }
+            ctx.output(("[Native] Model '" + modelName + "' not found. Download via !model_url or place .gguf in models/\n").c_str());
+            return CommandResult::error("file.modelFromNative: model not found");
         }
     } catch (...) {
-        ctx.output("[Ollama] Exception during model operation.\n");
-        return CommandResult::error("file.modelFromOllama: exception");
+        ctx.output("[Native] Exception during model operation.\n");
+        return CommandResult::error("file.modelFromNative: exception");
     }
-    return CommandResult::ok("file.modelFromOllama");
+    return CommandResult::ok("file.modelFromNative");
 }
 
 CommandResult handleFileModelFromURL(const CommandContext& ctx) {
@@ -426,8 +411,8 @@ CommandResult handleFileUnifiedLoad(const CommandContext& ctx) {
         ctx.output("[Unified] Detected local file. Routing to model_load handler.\n");
         return handleFileLoadModel(ctx);
     }
-    // Assume Ollama model name
-    ctx.output("[Unified] Assuming Ollama model. Routing to model_ollama handler.\n");
+    // Assume native model name
+    ctx.output("[Unified] Assuming native model. Routing to model_native handler.\n");
     return handleFileModelFromOllama(ctx);
 }
 
@@ -438,7 +423,7 @@ CommandResult handleFileQuickLoad(const CommandContext& ctx) {
     HANDLE hFind = FindFirstFileA(".\\models\\*.gguf", &fd);
     if (hFind == INVALID_HANDLE_VALUE) {
         ctx.output("[QuickLoad] No cached models found in .\\models\\\n");
-        ctx.output("[QuickLoad] Use !model_url or !model_ollama to download a model first.\n");
+        ctx.output("[QuickLoad] Use !model_url or !model_native to load a model first.\n");
         return CommandResult::ok("file.quickLoad");
     }
     // Find most recently modified GGUF file
@@ -716,6 +701,23 @@ CommandResult handleAgentStop(const CommandContext& ctx) {
         ctx.output("[Agent] Orchestrator already stopped/paused.\n");
     }
     return CommandResult::ok("agent.stop");
+}
+
+#ifndef IDM_AGENT_AUDIT_DRIVE
+#define IDM_AGENT_AUDIT_DRIVE 4296
+#endif
+
+CommandResult handleAgentAuditDrive(const CommandContext& ctx) {
+    ctx.output("[Agent] Drive audit requested. Dispatching to IDE...\n");
+    // The actual implementation is in Win32IDE_AgentCommands.cpp::onAgentAuditDrive()
+    // This handler is called from the command registry / chat command path
+    // We signal the IDE to run the audit via the agent bridge
+    if (ctx.hwnd) {
+        PostMessageA((HWND)ctx.hwnd, WM_COMMAND, IDM_AGENT_AUDIT_DRIVE, 0);
+        return CommandResult::ok("agent.auditDrive");
+    }
+    ctx.output("[Agent] No IDE window available for audit.\n");
+    return CommandResult::error("agent.auditDrive: no IDE window");
 }
 
 CommandResult handleAgentGoal(const CommandContext& ctx) {
@@ -1717,9 +1719,9 @@ CommandResult handleAIEngineSelect(const CommandContext& ctx) {
     std::string engine(ctx.args);
     std::lock_guard<std::mutex> lock(g_backendCfg.mtx);
     g_backendCfg.activeBackend = engine;
-    // Test connectivity for Ollama
-    if (engine == "ollama" || engine == "local") {
-        FILE* pipe = _popen("curl -s http://localhost:11434/api/version 2>&1", "r");
+    // Test connectivity for Deep2 native
+    if (engine == "deep2" || engine == "native" || engine == "local") {
+        FILE* pipe = _popen("curl -s http://localhost:11436/api/version 2>&1", "r");
         bool reachable = false;
         if (pipe) {
             char buf[256];
@@ -1730,7 +1732,7 @@ CommandResult handleAIEngineSelect(const CommandContext& ctx) {
         }
         g_backendCfg.connected = reachable;
         for (auto& b : g_backendCfg.backends) {
-            if (b.name.find("Ollama") != std::string::npos) b.available = reachable;
+            if (b.name.find("Deep2") != std::string::npos) b.available = reachable;
         }
     } else {
         g_backendCfg.connected = true;  // assume configured API keys work
@@ -2257,6 +2259,7 @@ CommandResult handleRECFGAnalysis(const CommandContext& ctx) {
 // ============================================================================
 
 #include <mmsystem.h>
+#include "gguf_loader.h"
 #pragma comment(lib, "winmm.lib")
 
 static struct VoiceState {
@@ -2385,8 +2388,8 @@ CommandResult handleVoiceTranscribe(const CommandContext& ctx) {
         ctx.output("[Voice] No audio buffer found. Record first with !voice record\n");
         return CommandResult::error("voice.transcribe: no buffer");
     }
-    // Attempt transcription via Ollama Whisper endpoint
-    FILE* pipe = _popen("curl -s http://localhost:11434/api/generate "
+    // Attempt transcription via native Deep2 endpoint
+    FILE* pipe = _popen("curl -s http://localhost:11436/api/generate "
                         "-d \"{\\\"model\\\":\\\"whisper\\\","
                         "\\\"prompt\\\":\\\"transcribe voice_buffer.wav\\\"}\" 2>&1", "r");
     if (pipe) {
@@ -2400,7 +2403,7 @@ CommandResult handleVoiceTranscribe(const CommandContext& ctx) {
             ctx.output("\n");
         } else {
             // Fallback: use Windows SAPI speech recognition outline
-            ctx.output("[Voice] Ollama Whisper not available. Falling back to file info.\n");
+            ctx.output("[Voice] Native Whisper not available. Falling back to file info.\n");
             FILE* wav = fopen("voice_buffer.wav", "rb");
             if (wav) {
                 fseek(wav, 0, SEEK_END);
@@ -2410,7 +2413,7 @@ CommandResult handleVoiceTranscribe(const CommandContext& ctx) {
                 oss << "  Buffer size: " << sz << " bytes\n"
                     << "  Est. duration: ~" << (sz / (g_voiceState.sampleRate * 2)) << " sec\n"
                     << "  Format: 16-bit PCM mono @ " << g_voiceState.sampleRate << " Hz\n"
-                    << "  To transcribe: install whisper model via !model_ollama whisper\n";
+                    << "  To transcribe: install whisper model via !model_native whisper\n";
                 ctx.output(oss.str().c_str());
             }
         }
@@ -2680,7 +2683,7 @@ static struct ServerProcessState {
     HANDLE hProcess = nullptr;
     HANDLE hThread = nullptr;
     DWORD pid = 0;
-    std::string command = "ollama serve";
+    std::string command = "RawrEngine.exe";
 
     bool isRunningNoLock() const {
         if (!hProcess) return false;
@@ -2983,7 +2986,7 @@ CommandResult handleBackendList(const CommandContext& ctx) {
 
 CommandResult handleBackendSelect(const CommandContext& ctx) {
     if (!ctx.args || !ctx.args[0]) {
-        ctx.output("Usage: !backend <name>  (ollama|openai|claude|huggingface|local)\n");
+        ctx.output("Usage: !backend <name>  (deep2|openai|claude|huggingface|local)\n");
         return CommandResult::error("backend.select: missing name");
     }
     std::lock_guard<std::mutex> lock(g_backendCfg.mtx);
@@ -3528,3 +3531,4 @@ CommandResult handleGenerateIDE(const CommandContext& ctx) {
     ctx.output(oss.str().c_str());
     return CommandResult::ok("cli.generateIDE");
 }
+

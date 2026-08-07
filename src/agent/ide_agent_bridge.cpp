@@ -86,9 +86,6 @@ IDEAgentBridge::IDEAgentBridge()
     m_projectRoot = std::filesystem::current_path().string();
 }
 
-/**
- * @brief Destructor
- */
 IDEAgentBridge::~IDEAgentBridge() = default;
 
 /**
@@ -293,13 +290,11 @@ void IDEAgentBridge::onPlanGenerated(const LLMResponse& response)
     m_currentPlan = convertToExecutionPlan(response.parsedPlan);
     if (onAgentGeneratedPlan) onAgentGeneratedPlan(m_currentPlan);
 
-    // If user approval is required, wait
     if (m_requireApproval) {
         m_waitingForApproval = true;
         if (onPlanApprovalNeeded) onPlanApprovalNeeded(m_currentPlan);
     } else {
-        // Auto-execute
-        executeCurrentPlan();
+        approveExecution();
     }
 }
 
@@ -345,6 +340,9 @@ void IDEAgentBridge::onPlanCompleted(bool success, const nlohmann::json& result)
         now.time_since_epoch()).count()) - m_executionStartTime;
 
     m_isExecuting = false;
+    
+    m_lastPlanJson.clear();
+}
 
     if (success) {
         recordExecution(m_currentPlan.wish, true, result, elapsedMs);

@@ -21,6 +21,7 @@
 
 // GGUF Metadata Parser for audit-grade model verification
 #include "GGUFMetadataParser.h"
+#include "gguf_loader.h"
 
 // Forward declarations for Deep2/CPUInference engine
 namespace CPUInference {
@@ -1060,3 +1061,4 @@ __declspec(dllexport) void Bridge_ClearSuggestion(void) {
  *   - CPUInferenceEngine (if available)
  *   - Windows libs: kernel32.lib user32.lib
  */
+

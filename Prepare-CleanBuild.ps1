@@ -138,11 +138,19 @@ $srcDir = "D:\RawrXD\src"
 $totalFiles = (Get-ChildItem -Path $srcDir -Recurse -Include "*.cpp", "*.h", "*.hpp" | Measure-Object).Count
 Write-Host "  Source files: $totalFiles C++ files" -ForegroundColor Gray
 
+<<<<<<< HEAD
 # Check for StdReplacements.hpp (Ship STL replacement layer)
 if (Test-Path "D:\RawrXD\Ship\StdReplacements.hpp") {
     Write-Host "  ✅ StdReplacements.hpp found" -ForegroundColor Green
 } else {
     Write-Host "  ❌ StdReplacements.hpp NOT FOUND!" -ForegroundColor Red
+=======
+# Check for QtReplacements.hpp
+if (Test-Path "$srcDir\QtReplacements.hpp") {
+    Write-Host "  ✅ QtReplacements.hpp found" -ForegroundColor Green
+} else {
+    Write-Host "  ❌ QtReplacements.hpp NOT FOUND!" -ForegroundColor Red
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     exit 1
 }
 

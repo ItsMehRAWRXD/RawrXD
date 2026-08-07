@@ -13,8 +13,11 @@
 #include "Win32SwarmBridge.h"
 #include <algorithm>
 #include <cctype>
+#include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <thread>
 
 // Local IDM constants used in switch-case dispatch (defined via #define in Commands.cpp/Win32IDE.cpp)
 // IDM_AGENT_AUTONOMOUS_COMMUNICATOR: free slot in 4163–4199 range
@@ -491,8 +494,14 @@ void Win32IDE::ensureAutonomousPipelineInitialized()
 
     m_autonomousPipeline = std::make_unique<RawrXD::AutonomousAgenticPipelineCoordinator>();
 
-    // E6: context window size — not yet exposed on pipeline coordinator
-    // TODO: add setContextWindow() to AutonomousAgenticPipelineCoordinator
+    // E6: context window size — configure on pipeline coordinator
+    if (m_agenticBridge) {
+        auto eng = m_agenticBridge->GetEngine();
+        if (eng) {
+            int ctxLimit = eng->GetContextLimit();
+            m_autonomousPipeline->setContextWindowSize(ctxLimit);
+        }
+    }
 
     // E1 + E5: workspace root + recent memory snapshot injected into every prompt
     m_autonomousPipeline->setBuildPrompt(
@@ -1407,6 +1416,250 @@ void Win32IDE::onAgentStop()
 }
 
 // ============================================================================
+// AUDIT DRIVE — RawrXD Context Generation Pipeline
+// Scans a drive, builds structured context, compresses it, and sends to local model
+// ============================================================================
+
+struct DriveAuditContext
+{
+    std::string root;
+    uint64_t files = 0;
+    uint64_t bytes = 0;
+    uint64_t cppFiles = 0;
+    uint64_t headerFiles = 0;
+    uint64_t buildFiles = 0;
+    std::vector<std::string> symbols;
+    std::vector<std::string> dependencies;
+    std::vector<std::string> issues;
+    std::vector<std::string> criticalFiles;
+    std::string buildState;
+};
+
+static DriveAuditContext ScanDrive(const std::string& root)
+{
+    DriveAuditContext ctx;
+    ctx.root = root;
+
+    namespace fs = std::filesystem;
+    if (!fs::exists(root) || !fs::is_directory(root))
+    {
+        ctx.issues.push_back("Root path does not exist or is not a directory: " + root);
+        return ctx;
+    }
+
+    // Collect file stats
+    for (const auto& entry : fs::recursive_directory_iterator(root,
+        fs::directory_options::skip_permission_denied))
+    {
+        try
+        {
+            if (fs::is_regular_file(entry))
+            {
+                ctx.files++;
+                ctx.bytes += fs::file_size(entry);
+
+                auto ext = entry.path().extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+                if (ext == ".cpp" || ext == ".cc" || ext == ".cxx")
+                    ctx.cppFiles++;
+                else if (ext == ".h" || ext == ".hpp" || ext == ".hxx")
+                    ctx.headerFiles++;
+                else if (ext == ".cmake" || ext == ".txt" || entry.path().filename() == "CMakeLists.txt")
+                    ctx.buildFiles++;
+                else if (ext == ".ninja" || ext == ".json" || ext == ".yaml" || ext == ".yml")
+                    ctx.buildFiles++;
+            }
+        }
+        catch (...)
+        {
+            // Skip files we can't access
+        }
+    }
+
+    // Identify critical files (top-level CMakeLists, main headers, etc.)
+    try
+    {
+        for (const auto& entry : fs::directory_iterator(root))
+        {
+            if (fs::is_regular_file(entry))
+            {
+                auto name = entry.path().filename().string();
+                auto ext = entry.path().extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+                if (name == "CMakeLists.txt" || name == "README.md" ||
+                    name == "AGENTS.md" || name == ".gitignore" ||
+                    ext == ".cmake" || name == "build.bat" || name == "build.sh")
+                {
+                    ctx.criticalFiles.push_back(name);
+                }
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+
+    // Detect build state
+    bool hasBuildDir = fs::exists(root + "/build") || fs::exists(root + "/build_win32ide");
+    bool hasCMakeCache = fs::exists(root + "/build/CMakeCache.txt") || fs::exists(root + "/build_win32ide/CMakeCache.txt");
+
+    if (hasBuildDir && hasCMakeCache)
+        ctx.buildState = "configured + built";
+    else if (hasBuildDir)
+        ctx.buildState = "partial (build dir exists, no cache)";
+    else
+        ctx.buildState = "not built";
+
+    // Detect common issues
+    if (!fs::exists(root + "/CMakeLists.txt"))
+        ctx.issues.push_back("missing CMakeLists.txt");
+    if (!fs::exists(root + "/src"))
+        ctx.issues.push_back("missing src/ directory");
+    if (ctx.cppFiles == 0 && ctx.headerFiles == 0)
+        ctx.issues.push_back("no C++ source files found");
+
+    return ctx;
+}
+
+static std::string CompressAuditContext(const DriveAuditContext& ctx)
+{
+    std::ostringstream oss;
+    oss << "Project Audit Report\n";
+    oss << "====================\n\n";
+    oss << "Drive: " << ctx.root << "\n\n";
+
+    oss << "Files scanned: " << ctx.files << "\n";
+    oss << "Total bytes: " << ctx.bytes << "\n";
+    oss << "C++ files: " << ctx.cppFiles << "\n";
+    oss << "Headers: " << ctx.headerFiles << "\n";
+    oss << "Build files: " << ctx.buildFiles << "\n\n";
+
+    oss << "Build state: " << ctx.buildState << "\n\n";
+
+    if (!ctx.criticalFiles.empty())
+    {
+        oss << "Critical files:\n";
+        for (const auto& f : ctx.criticalFiles)
+            oss << "  - " << f << "\n";
+        oss << "\n";
+    }
+
+    if (!ctx.issues.empty())
+    {
+        oss << "Issues:\n";
+        for (const auto& issue : ctx.issues)
+            oss << "  - " << issue << "\n";
+        oss << "\n";
+    }
+    else
+    {
+        oss << "Issues: none detected\n\n";
+    }
+
+    oss << "Context ready for model inference.\n";
+    return oss.str();
+}
+
+void Win32IDE::onAgentAuditDrive()
+{
+    LOG_INFO("onAgentAuditDrive called");
+
+    // Prompt user for drive path
+    char pathBuf[MAX_PATH] = "D:\\";
+    if (DialogBoxParamA(m_hInstance, "AGENT_PROMPT_DLG", m_hwndMain,
+        [](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) -> INT_PTR {
+            switch (msg) {
+                case WM_INITDIALOG:
+                    SetWindowTextA(GetDlgItem(hwnd, 101), "Enter drive/path to audit:");
+                    SetDlgItemTextA(hwnd, 102, (LPCSTR)lp);
+                    return TRUE;
+                case WM_COMMAND:
+                    if (LOWORD(wp) == IDOK) {
+                        GetDlgItemTextA(hwnd, 102, (char*)lp, MAX_PATH);
+                        EndDialog(hwnd, IDOK);
+                        return TRUE;
+                    } else if (LOWORD(wp) == IDCANCEL) {
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
+                    break;
+            }
+            return FALSE;
+        }, (LPARAM)pathBuf) != IDOK)
+    {
+        return;
+    }
+
+    std::string targetPath = pathBuf;
+    if (targetPath.empty())
+        targetPath = "D:\\";
+
+    appendToOutput("🔍 Starting drive audit: " + targetPath + "\n", "Output", OutputSeverity::Info);
+
+    // Run scan in background thread
+    std::thread([this, targetPath]() {
+        auto start = std::chrono::steady_clock::now();
+        DriveAuditContext audit = ScanDrive(targetPath);
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - start).count();
+
+        std::string report = CompressAuditContext(audit);
+
+        // Post results back to UI thread
+        PostMessageA(m_hwndMain, WM_USER + 0x500, 0, 0);
+
+        // Output to IDE console
+        appendToOutput("\n=== Drive Audit Complete ===\n", "Output", OutputSeverity::Info);
+        appendToOutput("Path: " + audit.root + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("Files: " + std::to_string(audit.files) + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("C++ files: " + std::to_string(audit.cppFiles) + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("Headers: " + std::to_string(audit.headerFiles) + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("Build state: " + audit.buildState + "\n", "Output", OutputSeverity::Info);
+        appendToOutput("Scan time: " + std::to_string(elapsed) + "ms\n", "Output", OutputSeverity::Info);
+
+        if (!audit.issues.empty())
+        {
+            appendToOutput("\nIssues detected:\n", "Output", OutputSeverity::Warning);
+            for (const auto& issue : audit.issues)
+                appendToOutput("  - " + issue + "\n", "Output", OutputSeverity::Warning);
+        }
+
+        // If we have a local model loaded, send compressed context
+        if (m_agenticBridge && !m_agenticBridge->GetCurrentModel().empty())
+        {
+            appendToOutput("\n📤 Sending compressed context to local model...\n", "Output", OutputSeverity::Info);
+
+            std::string prompt = "Analyze this project audit and suggest next steps:\n\n" + report;
+            auto cmdResponse = m_agenticBridge->ExecuteAgentCommand(prompt);
+
+            appendToOutput("\n=== Model Response ===\n", "Output", OutputSeverity::Info);
+            appendToOutput(cmdResponse.content + "\n", "Output", OutputSeverity::Info);
+        }
+        else
+        {
+            appendToOutput("\n⚠️ No local model loaded. Load a GGUF model to get AI analysis.\n", "Output", OutputSeverity::Warning);
+        }
+
+        // Show summary dialog
+        std::string summary = "Audit complete for " + audit.root + "\n\n";
+        summary += "Files: " + std::to_string(audit.files) + "\n";
+        summary += "C++: " + std::to_string(audit.cppFiles) + ", Headers: " + std::to_string(audit.headerFiles) + "\n";
+        summary += "Build: " + audit.buildState + "\n";
+        if (!audit.issues.empty())
+        {
+            summary += "\nIssues:\n";
+            for (const auto& issue : audit.issues)
+                summary += "- " + issue + "\n";
+        }
+        summary += "\nTime: " + std::to_string(elapsed) + "ms";
+
+        MessageBoxA(m_hwndMain, summary.c_str(), "Drive Audit Complete", MB_OK | MB_ICONINFORMATION);
+    }).detach();
+}
+
+// ============================================================================
 // KEYWORD: handleAgentCommand IMPLEMENTATION
 // Routes all AI/Agent commands from the 4100-4300 range
 // ============================================================================
@@ -1445,6 +1698,9 @@ void Win32IDE::handleAgentCommand(int commandId)
             break;
         case IDM_AGENT_STOP:
             onAgentStop();
+            break;
+        case IDM_AGENT_AUDIT_DRIVE:
+            onAgentAuditDrive();
             break;
         case IDM_AGENT_AUTONOMOUS_COMMUNICATOR:
             HandleAutonomousCommunicator(this);

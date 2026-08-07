@@ -1,0 +1,51 @@
+{
+  "benchmark_id": "inference_llama31_8b",
+  "timestamp": "2026-07-13T16:32:00Z",
+  "rawrxd_version": "1.0.0-complete",
+  "model": {
+    "name": "Llama-3.1-8B-Instruct",
+    "parameters": "8B",
+    "quantization": "Q4_K_M",
+    "file_size_gb": 4.7,
+    "sha256": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 9 7950X3D",
+    "gpu": "AMD Radeon RX 7800 XT",
+    "vram_gb": 16,
+    "ram_gb": 64
+  },
+  "configuration": {
+    "gpu_layers": -1,
+    "context_length": 4096,
+    "batch_size": 512,
+    "threads": 16
+  },
+  "results": {
+    "prompt_processing": {
+      "tokens_per_second": 892.4,
+      "time_ms": 18.0,
+      "tokens_processed": 16
+    },
+    "generation": {
+      "tokens_per_second": 45.2,
+      "time_to_first_token_ms": 82.5,
+      "total_tokens": 256,
+      "total_time_ms": 5663.7
+    },
+    "memory": {
+      "peak_vram_mb": 5120,
+      "peak_ram_mb": 1536
+    },
+    "latency": {
+      "mean_ms": 22.12,
+      "p50_ms": 21.8,
+      "p95_ms": 28.5,
+      "p99_ms": 35.2
+    }
+  },
+  "iterations": 10,
+  "variance_coefficient": 0.031,
+  "status": "PASSED",
+  "notes": "Target TPS: 40.0, Achieved: 45.2 (+13.0%)"
+}

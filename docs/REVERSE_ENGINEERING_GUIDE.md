@@ -485,6 +485,7 @@ class MyCopilot : DesktopCopilot {
 - **Generator**: `desktop\copilot_generator.ps1`
 - **Examples**: All templates in generator
 - **Documentation**: `docs\` folder
+<<<<<<< HEAD
 - **Game development (post-release only):** [REVERSE_ENGINEERING_GAME_DEVELOPMENT.md](REVERSE_ENGINEERING_GAME_DEVELOPMENT.md) — module locating, external/internal frameworks, ved/oemASMx64.
 - **Decompilation & x64 “subtitles”:** [REVERSE_ENGINEERING_DECOMPILATION_AND_X64.md](REVERSE_ENGINEERING_DECOMPILATION_AND_X64.md) — extension → clean source, execution trace (subtitles), code dump workflow, FLIRT/FLOSS, 1nruter FFO, pure x64 MASM/NASM, hot reload.
 - **Source/text digestion & alignment:** [REVERSE_ENGINEERING_SOURCE_DIGESTION_AND_ALIGNMENT.md](REVERSE_ENGINEERING_SOURCE_DIGESTION_AND_ALIGNMENT.md) — stopwords (“the”/“what”/“if”), modality (text if not sound), beaconism/cross-modal alignment, M = T + A − NIP with x64 MASM SIMD kernel.
@@ -492,6 +493,8 @@ class MyCopilot : DesktopCopilot {
 - **Boot sector & minimal kernel:** [REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md](REVERSE_ENGINEERING_BOOT_AND_MINIMAL_KERNEL.md) — 512-byte rule (0x55AA), bare-bones kernel (kernel.g), Python opcode boot generator, 16-bit MASM boot sector, long-mode trampoline, MBR builder (parameterized partition table source).
 
 All of the above for released finalization only (non–beta/alpha).
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ## 🎉 Conclusion
 

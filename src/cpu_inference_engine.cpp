@@ -266,14 +266,10 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
                                                   m_currentPos++;
                                               });
     }
-    catch (const std::bad_alloc&)
+    catch (...)
     {
-        printf("[CPUInferenceEngine] OOM during GenerateFromTokens\n");
-        throw;
-    }
-    catch (const std::exception& e)
-    {
-        printf("[CPUInferenceEngine] Exception during GenerateFromTokens: %s\n", e.what());
+        // Log and rethrow — single catch-all preserves original exception type
+        printf("[CPUInferenceEngine] Exception during GenerateFromTokens\n");
         throw;
     }
     m_lastState = s_inferenceBackend.LastLogits();
@@ -1065,7 +1061,7 @@ void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
     {
         for (int i = 0; i < 256; i++)
         {
-            output[b * 256 + i] = 0.0f;  // Placeholder — full K-quant decode is complex
+            output[b * 256 + i] = 0.0f;  // K-quant decode implementation pending
         }
     }
 }

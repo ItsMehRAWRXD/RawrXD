@@ -1,31 +1,35 @@
+
 #ifndef CRDT_BUFFER_H
 #define CRDT_BUFFER_H
-
-// C++20, no Qt. CRDT text buffer; callbacks replace signals.
 
 #include <string>
 #include <functional>
 
+// CRDT text buffer → conflict-free multi-user edits (Win32 native, no Qt)
 class CRDTBuffer
 {
 public:
-    using TextChangedFn    = std::function<void(const std::string& newText)>;
-    using OperationGeneratedFn = std::function<void(const std::string& operation)>;
+    explicit CRDTBuffer();
 
-    CRDTBuffer() = default;
+    // Apply remote operation
+    void applyRemoteOperation(const std::string &operationJson);
 
-    void setOnTextChanged(TextChangedFn f)         { m_onTextChanged = std::move(f); }
-    void setOnOperationGenerated(OperationGeneratedFn f) { m_onOperationGenerated = std::move(f); }
-
-    void applyRemoteOperation(const std::string& operation);
+    // Get current text
     std::string getText() const { return m_text; }
-    void insertText(int position, const std::string& text);
+
+    // Insert text at position
+    void insertText(int position, const std::string &text);
+
+    // Delete text from position
     void deleteText(int position, int length);
+
+    // Callbacks (replacing Qt signals)
+    std::function<void(const std::string&)> m_onTextChanged;
+    std::function<void(const std::string&)> m_onOperationGenerated;
 
 private:
     std::string m_text;
-    TextChangedFn    m_onTextChanged;
-    OperationGeneratedFn m_onOperationGenerated;
 };
 
 #endif // CRDT_BUFFER_H
+

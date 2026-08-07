@@ -9,6 +9,7 @@
 
 #include "Win32IDE_AgenticBridge.h"
 #include "ui/agentic_bridge_api.h"
+#include "../deep2/Deep2IDEIntegration.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -364,10 +365,21 @@ bool AgenticBridge::LoadModel(const std::string& path)
     bool loaded = true;
     if (HeadlessIsFile(path))
     {
-        loaded = m_nativeEngine->LoadModel(path);
+        // Try Deep2 sharded loader first (Kimi K2 / Moonshot)
+        if (RawrXD::Deep2ModelLoader::IsShardedModel(path)) {
+            std::string deep2Error;
+            loaded = RawrXD::Deep2LoadModelForBridge(path, deep2Error);
+            if (!loaded) {
+                m_lastModelLoadError = deep2Error;
+            }
+        } else {
+            loaded = m_nativeEngine->LoadModel(path);
+        }
         if (!loaded)
         {
-            m_lastModelLoadError = m_nativeEngine->GetLastLoadErrorMessage();
+            if (m_lastModelLoadError.empty()) {
+                m_lastModelLoadError = m_nativeEngine->GetLastLoadErrorMessage();
+            }
             if (m_lastModelLoadError.empty())
             {
                 m_lastModelLoadError = "native engine load failed without detailed error";

@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <vector>
 #include <immintrin.h>
+#include "gguf_loader.h"
 
 namespace
 {
@@ -862,3 +863,4 @@ extern "C"
     }
 
 }
+

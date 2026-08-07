@@ -58,8 +58,77 @@ bool AgenticConfiguration::loadFromEnv(const std::string& filePath)
 
 bool AgenticConfiguration::loadFromYaml(const std::string& filePath)
 {
-    std::cerr << "[AgenticConfiguration] YAML loading not implemented" << std::endl;
-    return false;
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "[AgenticConfiguration] Failed to open YAML file: " << filePath << std::endl;
+        return false;
+    }
+    
+    try {
+        std::string line;
+        std::string currentSection;
+        int lineNum = 0;
+        
+        while (std::getline(file, line)) {
+            lineNum++;
+            
+            // Trim whitespace
+            size_t start = line.find_first_not_of(" \t\r\n");
+            if (start == std::string::npos) continue;  // Empty line
+            size_t end = line.find_last_not_of(" \t\r\n");
+            line = line.substr(start, end - start + 1);
+            
+            // Skip comments
+            if (line[0] == '#') continue;
+            
+            // Check for section header
+            if (line[0] == '[' && line.back() == ']') {
+                currentSection = line.substr(1, line.length() - 2);
+                continue;
+            }
+            
+            // Parse key-value pair
+            size_t colonPos = line.find(':');
+            if (colonPos == std::string::npos) continue;
+            
+            std::string key = line.substr(0, colonPos);
+            std::string value = line.substr(colonPos + 1);
+            
+            // Trim key and value
+            key.erase(0, key.find_first_not_of(" \t"));
+            key.erase(key.find_last_not_of(" \t") + 1);
+            value.erase(0, value.find_first_not_of(" \t"));
+            value.erase(value.find_last_not_of(" \t") + 1);
+            
+            // Remove quotes if present
+            if ((value.front() == '"' && value.back() == '"') ||
+                (value.front() == '\'' && value.back() == '\'')) {
+                value = value.substr(1, value.length() - 2);
+            }
+            
+            // Build full key with section
+            std::string fullKey = currentSection.empty() ? key : currentSection + "." + key;
+            
+            // Determine type and set value
+            if (value == "true" || value == "false") {
+                setConfigDefault(fullKey, ConfigValue{ConfigType::Boolean, 
+                    value == "true", false, "", value == "true", false, {}});
+            } else if (std::all_of(value.begin(), value.end(), ::isdigit)) {
+                setConfigDefault(fullKey, ConfigValue{ConfigType::Integer,
+                    std::stoi(value), false, "", std::stoi(value), false, {}});
+            } else {
+                setConfigDefault(fullKey, ConfigValue{ConfigType::String,
+                    value, false, "", value, false, {}});
+            }
+        }
+        
+        std::cout << "[AgenticConfiguration] Loaded YAML config from: " << filePath << std::endl;
+        return true;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "[AgenticConfiguration] YAML parsing error: " << e.what() << std::endl;
+        return false;
+    }
 }
 
 void AgenticConfiguration::loadDefaults()
@@ -390,6 +459,7 @@ std::string AgenticConfiguration::maskSecrets(const std::string& text) const
 
 bool AgenticConfiguration::validateNoSecretsInLogs() const
 {
+    bool leaked = false;
     // Scan configured secret patterns against log output paths
     static const char* sensitivePatterns[] = {
         "password", "api_key", "secret", "token", "bearer",
@@ -403,16 +473,23 @@ bool AgenticConfiguration::validateNoSecretsInLogs() const
             secretVal = *s;
         }
         if (secretVal.empty() || secretVal.size() < 4) continue;
-        for (const auto& [otherKey, otherCfg] : m_config) {
+        for (auto& [otherKey, otherCfg] : m_config) {
             if (otherCfg.isSecret) continue;
             if (auto* otherS = std::get_if<std::string>(&otherCfg.value)) {
-                if (otherS->find(secretVal) != std::string::npos) {
-                    return false;  // Secret leaked into non-secret config
+                auto pos = otherS->find(secretVal);
+                if (pos != std::string::npos) {
+                    leaked = true;
+                    // Log the leak (masking the actual secret)
+                    std::cerr << "[SECURITY WARNING] Secret from key '" << key 
+                              << "' leaked into non-secret field '" << otherKey << "'. Auto-removing.\n";
+                    // Auto-remove the leaked secret from the non-secret field
+                    otherS->erase(pos, secretVal.length());
+                    otherS->insert(pos, "***REDACTED***");
                 }
             }
         }
     }
-    return true;
+    return !leaked;
 }
 
 // ===== DEFAULTS =====

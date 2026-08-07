@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <chrono>
@@ -149,3 +150,4 @@ SessionManager& GetSessionManager();
 
 } // namespace Session
 } // namespace RawrXD
+

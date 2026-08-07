@@ -395,8 +395,300 @@ bool DecisionMemory::Save(const std::string& path) const {
 }
 
 bool DecisionMemory::Load(const std::string& path) {
-    // Simplified load - would parse JSON
-    return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    std::ifstream file(path);
+    if (!file.is_open()) return false;
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                         std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Parse config
+    size_t configPos = content.find("\"config\"");
+    if (configPos != std::string::npos) {
+        size_t objStart = content.find('{', configPos);
+        size_t objEnd = content.find('}', objStart);
+        if (objStart != std::string::npos && objEnd != std::string::npos) {
+            // Parse maxEntries
+            size_t maxPos = content.find("\"maxEntries\":", objStart);
+            if (maxPos != std::string::npos && maxPos < objEnd) {
+                maxPos += 13;
+                size_t maxEnd = content.find_first_of(",}", maxPos);
+                if (maxEnd != std::string::npos) {
+                    config_.maxEntries = std::stoull(content.substr(maxPos, maxEnd - maxPos));
+                }
+            }
+            // Parse similarityThreshold
+            size_t simPos = content.find("\"similarityThreshold\":", objStart);
+            if (simPos != std::string::npos && simPos < objEnd) {
+                simPos += 21;
+                size_t simEnd = content.find_first_of(",}", simPos);
+                if (simEnd != std::string::npos) {
+                    config_.similarityThreshold = std::stod(content.substr(simPos, simEnd - simPos));
+                }
+            }
+            // Parse learningRate
+            size_t lrPos = content.find("\"learningRate\":", objStart);
+            if (lrPos != std::string::npos && lrPos < objEnd) {
+                lrPos += 14;
+                size_t lrEnd = content.find_first_of(",}", lrPos);
+                if (lrEnd != std::string::npos) {
+                    config_.learningRate = std::stod(content.substr(lrPos, lrEnd - lrPos));
+                }
+            }
+            // Parse discountFactor
+            size_t dfPos = content.find("\"discountFactor\":", objStart);
+            if (dfPos != std::string::npos && dfPos < objEnd) {
+                dfPos += 17;
+                size_t dfEnd = content.find_first_of(",}", dfPos);
+                if (dfEnd != std::string::npos) {
+                    config_.discountFactor = std::stod(content.substr(dfPos, dfEnd - dfPos));
+                }
+            }
+            // Parse enableForgetting
+            size_t efPos = content.find("\"enableForgetting\":", objStart);
+            if (efPos != std::string::npos && efPos < objEnd) {
+                efPos += 19;
+                size_t efEnd = content.find_first_of(",}", efPos);
+                if (efEnd != std::string::npos) {
+                    std::string efStr = content.substr(efPos, efEnd - efPos);
+                    config_.enableForgetting = (efStr == "true");
+                }
+            }
+            // Parse forgettingAgeMs
+            size_t faPos = content.find("\"forgettingAgeMs\":", objStart);
+            if (faPos != std::string::npos && faPos < objEnd) {
+                faPos += 18;
+                size_t faEnd = content.find_first_of(",}", faPos);
+                if (faEnd != std::string::npos) {
+                    config_.forgettingAgeMs = std::stoull(content.substr(faPos, faEnd - faPos));
+                }
+            }
+        }
+    }
+    
+    // Parse entries array
+    size_t entriesPos = content.find("\"entries\"");
+    if (entriesPos != std::string::npos) {
+        size_t arrStart = content.find('[', entriesPos);
+        size_t arrEnd = content.find(']', arrStart);
+        if (arrStart != std::string::npos && arrEnd != std::string::npos) {
+            size_t pos = arrStart + 1;
+            while (pos < arrEnd) {
+                size_t objStart = content.find('{', pos);
+                if (objStart == std::string::npos || objStart >= arrEnd) break;
+                
+                size_t objEnd = content.find('}', objStart);
+                if (objEnd == std::string::npos || objEnd > arrEnd) break;
+                
+                LearningEntry entry;
+                
+                // Parse entryId
+                size_t idPos = content.find("\"entryId\":\"", objStart);
+                if (idPos != std::string::npos && idPos < objEnd) {
+                    idPos += 11;
+                    size_t idEnd = content.find('"', idPos);
+                    if (idEnd != std::string::npos && idEnd < objEnd) {
+                        entry.entryId = content.substr(idPos, idEnd - idPos);
+                    }
+                }
+                
+                // Parse decisionId
+                size_t decPos = content.find("\"decisionId\":\"", objStart);
+                if (decPos != std::string::npos && decPos < objEnd) {
+                    decPos += 14;
+                    size_t decEnd = content.find('"', decPos);
+                    if (decEnd != std::string::npos && decEnd < objEnd) {
+                        entry.decisionId = content.substr(decPos, decEnd - decPos);
+                    }
+                }
+                
+                // Parse decisionType
+                size_t typePos = content.find("\"decisionType\":", objStart);
+                if (typePos != std::string::npos && typePos < objEnd) {
+                    typePos += 15;
+                    size_t typeEnd = content.find_first_of(",}", typePos);
+                    if (typeEnd != std::string::npos && typeEnd <= objEnd) {
+                        int typeVal = std::stoi(content.substr(typePos, typeEnd - typePos));
+                        entry.decisionType = static_cast<DecisionType>(typeVal);
+                    }
+                }
+                
+                // Parse predictedUtility
+                size_t utilPos = content.find("\"predictedUtility\":", objStart);
+                if (utilPos != std::string::npos && utilPos < objEnd) {
+                    utilPos += 19;
+                    size_t utilEnd = content.find_first_of(",}", utilPos);
+                    if (utilEnd != std::string::npos && utilEnd <= objEnd) {
+                        entry.predictedUtility = std::stod(content.substr(utilPos, utilEnd - utilPos));
+                    }
+                }
+                
+                // Parse predictedRisk
+                size_t riskPos = content.find("\"predictedRisk\":", objStart);
+                if (riskPos != std::string::npos && riskPos < objEnd) {
+                    riskPos += 16;
+                    size_t riskEnd = content.find_first_of(",}", riskPos);
+                    if (riskEnd != std::string::npos && riskEnd <= objEnd) {
+                        entry.predictedRisk = std::stod(content.substr(riskPos, riskEnd - riskPos));
+                    }
+                }
+                
+                // Parse actualReward
+                size_t rewardPos = content.find("\"actualReward\":", objStart);
+                if (rewardPos != std::string::npos && rewardPos < objEnd) {
+                    rewardPos += 15;
+                    size_t rewardEnd = content.find_first_of(",}", rewardPos);
+                    if (rewardEnd != std::string::npos && rewardEnd <= objEnd) {
+                        entry.actualReward = std::stod(content.substr(rewardPos, rewardEnd - rewardPos));
+                    }
+                }
+                
+                // Parse decisionTimestampMs
+                size_t tsPos = content.find("\"decisionTimestampMs\":", objStart);
+                if (tsPos != std::string::npos && tsPos < objEnd) {
+                    tsPos += 22;
+                    size_t tsEnd = content.find_first_of(",}", tsPos);
+                    if (tsEnd != std::string::npos && tsEnd <= objEnd) {
+                        entry.decisionTimestampMs = std::stoull(content.substr(tsPos, tsEnd - tsPos));
+                    }
+                }
+                
+                // Parse timeToOutcomeMs
+                size_t toPos = content.find("\"timeToOutcomeMs\":", objStart);
+                if (toPos != std::string::npos && toPos < objEnd) {
+                    toPos += 18;
+                    size_t toEnd = content.find_first_of(",}", toPos);
+                    if (toEnd != std::string::npos && toEnd <= objEnd) {
+                        entry.timeToOutcomeMs = std::stoull(content.substr(toPos, toEnd - toPos));
+                    }
+                }
+                
+                // Parse predictionError
+                size_t errPos = content.find("\"predictionError\":", objStart);
+                if (errPos != std::string::npos && errPos < objEnd) {
+                    errPos += 17;
+                    size_t errEnd = content.find_first_of(",}", errPos);
+                    if (errEnd != std::string::npos && errEnd <= objEnd) {
+                        entry.predictionError = std::stod(content.substr(errPos, errEnd - errPos));
+                    }
+                }
+                
+                // Parse wasSurprising
+                size_t surpPos = content.find("\"wasSurprising\":", objStart);
+                if (surpPos != std::string::npos && surpPos < objEnd) {
+                    surpPos += 16;
+                    size_t surpEnd = content.find_first_of(",}", surpPos);
+                    if (surpEnd != std::string::npos && surpEnd <= objEnd) {
+                        std::string surpStr = content.substr(surpPos, surpEnd - surpPos);
+                        entry.wasSurprising = (surpStr == "true");
+                    }
+                }
+                
+                // Add entry if valid
+                if (!entry.entryId.empty()) {
+                    size_t index = entries_.size();
+                    entries_.push_back(std::move(entry));
+                    decisionIdToIndex_[entry.decisionId] = index;
+                }
+                
+                pos = objEnd + 1;
+            }
+        }
+    }
+    
+    // Parse effectiveness
+    size_t effPos = content.find("\"effectiveness\"");
+    if (effPos != std::string::npos) {
+        size_t effStart = content.find('{', effPos);
+        size_t effEnd = content.find('}', effStart);
+        if (effStart != std::string::npos && effEnd != std::string::npos) {
+            size_t pos = effStart + 1;
+            while (pos < effEnd) {
+                // Find type name
+                size_t typeNamePos = content.find('"', pos);
+                if (typeNamePos == std::string::npos || typeNamePos >= effEnd) break;
+                
+                size_t typeNameEnd = content.find('"', typeNamePos + 1);
+                if (typeNameEnd == std::string::npos || typeNameEnd >= effEnd) break;
+                
+                std::string typeName = content.substr(typeNamePos + 1, typeNameEnd - typeNamePos - 1);
+                
+                // Find effectiveness object
+                size_t objStart = content.find('{', typeNameEnd);
+                if (objStart == std::string::npos || objStart >= effEnd) break;
+                
+                size_t objEnd = content.find('}', objStart);
+                if (objEnd == std::string::npos || objEnd > effEnd) break;
+                
+                DecisionEffectiveness eff;
+                // Parse type from string
+                if (typeName == "OPTIMIZE_PATH") eff.type = DecisionType::OPTIMIZE_PATH;
+                else if (typeName == "SPAWN_WORKERS") eff.type = DecisionType::SPAWN_WORKERS;
+                else if (typeName == "MERGE_TASKS") eff.type = DecisionType::MERGE_TASKS;
+                else if (typeName == "REBALANCE_RESOURCES") eff.type = DecisionType::REBALANCE_RESOURCES;
+                else if (typeName == "FREEZE_UNSTABLE_COMPONENT") eff.type = DecisionType::FREEZE_UNSTABLE_COMPONENT;
+                
+                // Parse totalAttempts
+                size_t taPos = content.find("\"totalAttempts\":", objStart);
+                if (taPos != std::string::npos && taPos < objEnd) {
+                    taPos += 16;
+                    size_t taEnd = content.find_first_of(",}", taPos);
+                    if (taEnd != std::string::npos) {
+                        eff.totalAttempts = std::stoull(content.substr(taPos, taEnd - taPos));
+                    }
+                }
+                
+                // Parse successfulAttempts
+                size_t saPos = content.find("\"successfulAttempts\":", objStart);
+                if (saPos != std::string::npos && saPos < objEnd) {
+                    saPos += 21;
+                    size_t saEnd = content.find_first_of(",}", saPos);
+                    if (saEnd != std::string::npos) {
+                        eff.successfulAttempts = std::stoull(content.substr(saPos, saEnd - saPos));
+                    }
+                }
+                
+                // Parse averageReward
+                size_t arPos = content.find("\"averageReward\":", objStart);
+                if (arPos != std::string::npos && arPos < objEnd) {
+                    arPos += 17;
+                    size_t arEnd = content.find_first_of(",}", arPos);
+                    if (arEnd != std::string::npos) {
+                        eff.averageReward = std::stod(content.substr(arPos, arEnd - arPos));
+                    }
+                }
+                
+                // Parse averagePredictionError
+                size_t apePos = content.find("\"averagePredictionError\":", objStart);
+                if (apePos != std::string::npos && apePos < objEnd) {
+                    apePos += 25;
+                    size_t apeEnd = content.find_first_of(",}", apePos);
+                    if (apeEnd != std::string::npos) {
+                        eff.averagePredictionError = std::stod(content.substr(apePos, apeEnd - apePos));
+                    }
+                }
+                
+                // Parse currentConfidence
+                size_t ccPos = content.find("\"currentConfidence\":", objStart);
+                if (ccPos != std::string::npos && ccPos < objEnd) {
+                    ccPos += 20;
+                    size_t ccEnd = content.find_first_of(",}", ccPos);
+                    if (ccEnd != std::string::npos) {
+                        eff.currentConfidence = std::stod(content.substr(ccPos, ccEnd - ccPos));
+                    }
+                }
+                
+                effectiveness_[eff.type] = std::move(eff);
+                
+                pos = objEnd + 1;
+            }
+        }
+    }
+    
+    initialized_ = true;
+    return true;
 }
 
 void DecisionMemory::Clear() {

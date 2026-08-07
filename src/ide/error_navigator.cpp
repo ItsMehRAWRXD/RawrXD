@@ -5,6 +5,7 @@
  */
 
 #include "error_navigator.h"
+#include "ANSIColorParser.hpp"
 #include <windows.h>
 #include <richedit.h>
 #include <regex>
@@ -360,9 +361,13 @@ bool ErrorNavigator::ExportToMSBuildFormat(const std::string& path) const {
 }
 
 // ErrorOutputWindow implementation
-ErrorOutputWindow::ErrorOutputWindow() : m_hwnd(nullptr), m_navigator(nullptr) {}
+ErrorOutputWindow::ErrorOutputWindow() 
+    : m_hwnd(nullptr), m_navigator(nullptr), m_colorizer(nullptr), m_ansiEnabled(true) {
+}
 
-ErrorOutputWindow::~ErrorOutputWindow() = default;
+ErrorOutputWindow::~ErrorOutputWindow() {
+    delete m_colorizer;
+}
 
 void ErrorOutputWindow::AttachToHWND(HWND hwnd) {
     m_hwnd = hwnd;
@@ -376,17 +381,25 @@ void ErrorOutputWindow::SetErrorNavigator(ErrorNavigator* navigator) {
 void ErrorOutputWindow::AppendBuildOutput(const std::string& text) {
     if (!m_hwnd) return;
     
-    // Convert to wide
-    int len = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
-    std::wstring wtext(len, 0);
-    MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wtext[0], len);
-    
-    // Append to Rich Edit
-    CHARRANGE cr;
-    cr.cpMin = -1;
-    cr.cpMax = -1;
-    SendMessage(m_hwnd, EM_EXSETSEL, 0, (LPARAM)&cr);
-    SendMessage(m_hwnd, EM_REPLACESEL, FALSE, (LPARAM)wtext.c_str());
+    if (m_ansiEnabled && ANSIColorParser::ContainsANSI(text)) {
+        // Use colorizer for ANSI text
+        if (!m_colorizer) {
+            m_colorizer = new RichEditANSIColorizer();
+            m_colorizer->Attach(m_hwnd);
+        }
+        m_colorizer->AppendText(text);
+    } else {
+        // Convert to wide and append plain text
+        int len = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+        std::wstring wtext(len, 0);
+        MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wtext[0], len);
+        
+        CHARRANGE cr;
+        cr.cpMin = -1;
+        cr.cpMax = -1;
+        SendMessage(m_hwnd, EM_EXSETSEL, 0, (LPARAM)&cr);
+        SendMessage(m_hwnd, EM_REPLACESEL, FALSE, (LPARAM)wtext.c_str());
+    }
     
     ScrollToEnd();
 }
@@ -394,13 +407,33 @@ void ErrorOutputWindow::AppendBuildOutput(const std::string& text) {
 void ErrorOutputWindow::AppendBuildOutput(const std::wstring& text) {
     if (!m_hwnd) return;
     
-    CHARRANGE cr;
-    cr.cpMin = -1;
-    cr.cpMax = -1;
-    SendMessage(m_hwnd, EM_EXSETSEL, 0, (LPARAM)&cr);
-    SendMessage(m_hwnd, EM_REPLACESEL, FALSE, (LPARAM)text.c_str());
+    if (m_ansiEnabled && ANSIColorParser::ContainsANSI(text)) {
+        // Use colorizer for ANSI text
+        if (!m_colorizer) {
+            m_colorizer = new RichEditANSIColorizer();
+            m_colorizer->Attach(m_hwnd);
+        }
+        m_colorizer->AppendText(text);
+    } else {
+        CHARRANGE cr;
+        cr.cpMin = -1;
+        cr.cpMax = -1;
+        SendMessage(m_hwnd, EM_EXSETSEL, 0, (LPARAM)&cr);
+        SendMessage(m_hwnd, EM_REPLACESEL, FALSE, (LPARAM)text.c_str());
+    }
     
     ScrollToEnd();
+}
+
+void ErrorOutputWindow::SetANSIColorEnabled(bool enabled) {
+    m_ansiEnabled = enabled;
+    if (m_colorizer) {
+        m_colorizer->SetANSIParsingEnabled(enabled);
+    }
+}
+
+bool ErrorOutputWindow::IsANSIColorEnabled() const {
+    return m_ansiEnabled;
 }
 
 void ErrorOutputWindow::Clear() {

@@ -16,6 +16,7 @@ class ChatInterface;
 class MultiTabEditor;
 class TerminalPool;
 class AgenticExecutor;
+class AIIntegrationHub; // Forward declare
 
 class AgenticCopilotBridge {
 public:

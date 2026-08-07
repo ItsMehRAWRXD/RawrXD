@@ -7,6 +7,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include "gguf_loader.h"
 
 struct GGUFHeader {
     uint32_t magic;
@@ -48,3 +49,4 @@ public:
     void* get_data() const { return mapped_view; }
     size_t get_size() const { return file_size; }
 };
+

@@ -1,3 +1,4 @@
+
 // RawrXD_TerminalIntegration.hpp - REAL Win32 terminal, not stubs
 #pragma once
 #include <windows.h>
@@ -118,3 +119,4 @@ private:
         CloseHandle(pi_.hThread);
     }
 };
+

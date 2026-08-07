@@ -108,7 +108,7 @@ void StepController::HandleStopped(const std::string& reason, uint32_t threadId)
         dapService_>requestStackTrace(threadId, 0, 1);
         
         // Callback will be triggered when stack trace arrives
-        // For now, notify with line 0 (unknown until stack trace)
+        // Current implementation notifies with line 0 (unknown until stack trace)
         if (onStepComplete) {
             onStepComplete(lastStepType_, 0);
         }

@@ -14,6 +14,7 @@
 #include <cmath>
 #include <sstream>
 #include <windows.h>
+#include <mutex>
 
 #include "Titan_KernelIntegration.hpp"
 
@@ -638,11 +639,49 @@ bool Titan_IsKernelAvailable(uint64_t kernelName) {
 
 // Get performance stats for a kernel execution
 bool Titan_GetKernelStats(uint64_t kernelName, uint64_t* avgTimeUs, uint64_t* totalCalls) {
-    // TODO: Implement kernel statistics tracking
-    // For now, return placeholder values
-    if (avgTimeUs) *avgTimeUs = 0;
-    if (totalCalls) *totalCalls = 0;
+    // Static storage for kernel statistics
+    static struct {
+        uint64_t totalTimeUs;
+        uint64_t callCount;
+        uint64_t lastTimeUs;
+        std::mutex mutex;
+    } stats[256];  // Fixed-size array for different kernels
+    
+    // Hash kernel name to index
+    uint32_t idx = (uint32_t)(kernelName % 256);
+    
+    std::lock_guard<std::mutex> lock(stats[idx].mutex);
+    
+    if (avgTimeUs) {
+        if (stats[idx].callCount > 0) {
+            *avgTimeUs = stats[idx].totalTimeUs / stats[idx].callCount;
+        } else {
+            *avgTimeUs = 0;
+        }
+    }
+    
+    if (totalCalls) {
+        *totalCalls = stats[idx].callCount;
+    }
+    
     return true;
+}
+
+// Internal function to record kernel execution time
+static void RecordKernelExecution(uint64_t kernelName, uint64_t executionTimeUs) {
+    static struct {
+        uint64_t totalTimeUs;
+        uint64_t callCount;
+        uint64_t lastTimeUs;
+        std::mutex mutex;
+    } stats[256];
+    
+    uint32_t idx = (uint32_t)(kernelName % 256);
+    
+    std::lock_guard<std::mutex> lock(stats[idx].mutex);
+    stats[idx].totalTimeUs += executionTimeUs;
+    stats[idx].callCount++;
+    stats[idx].lastTimeUs = executionTimeUs;
 }
 
 } // extern "C"

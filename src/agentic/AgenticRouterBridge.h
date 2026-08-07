@@ -132,9 +132,14 @@ private:
     
     // Logging
     void log(const std::string& msg);
+    
+    // Helper functions
+    std::string GetCurrentFileFromIDE();
+    std::vector<std::string> GetRecentlyModifiedFiles(const std::string& rootDir, size_t maxFiles);
 
     std::atomic<bool> m_running{false};
     std::atomic<AgenticMode> m_mode{AgenticMode::Passive};
+    std::atomic<bool> m_autoExecuteEnabled{true}; // Configurable auto-execution
     
     UnifiedInferenceRouter* m_router = nullptr;
     AgenticExecutor* m_executor = nullptr;

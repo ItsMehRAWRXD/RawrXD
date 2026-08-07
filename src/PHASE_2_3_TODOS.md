@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TODOS - Qt Removal Phase 2 & 3
 
 ## 🎯 Current Status (2026-02)
@@ -16,6 +17,15 @@ The batches below are **historical**. For any legacy or out-of-tree files that s
 - ✅ Phase 1 COMPLETE: Foundation work done
 - ✅ Phase 2/3: Qt removed from src + Ship (verified by Verify-Build.ps1)
 - ⏳ Phase 4: Ongoing — build fixes, stubs, parity (see UNFINISHED_FEATURES.md)
+=======
+# TODOS - Qt Removal Phase 2 & 3 (Ready to Execute)
+
+## 🎯 Current Status
+- ✅ Phase 1 COMPLETE: Foundation work done (this session)
+- ⏳ Phase 2 READY: Batch Qt removal from 1,186 files
+- ⏳ Phase 3 READY: Build system updates
+- ⏳ Phase 4 READY: Verification & testing
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ---
 

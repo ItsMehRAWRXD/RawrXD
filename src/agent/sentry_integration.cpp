@@ -76,6 +76,21 @@ SentryIntegration::~SentryIntegration() = default;
 
 // ── initialize ───────────────────────────────────────────────────────────
 
+static std::string getEnvVar(const std::string& name) {
+    char* val = nullptr;
+    size_t len = 0;
+    if (_dupenv_s(&val, &len, name.c_str()) == 0 && val) {
+        std::string s(val);
+        free(val);
+        return s;
+    }
+    return "";
+}
+
+SentryIntegration::SentryIntegration() {}
+
+SentryIntegration::~SentryIntegration() {}
+
 bool SentryIntegration::initialize() {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_initialized) return true;

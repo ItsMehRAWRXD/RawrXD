@@ -2,6 +2,7 @@
 #include "agentic_copilot_bridge.h"
 #include "agentic_engine.h"
 #include "agentic_executor.h"
+#include "advanced_coding_agent.h"
 #include <iostream>
 #include <chrono>
 #include <sstream>
@@ -193,10 +194,21 @@ std::string AgenticCopilotBridge::findBugs(const std::string& code)
     
     if (!m_engine) return "Engine not initialized";
     
-    std::string analysis = "Bug analysis:\n";
-    analysis += "- Check for null pointer dereferences\n";
-    analysis += "- Verify bounds checking\n";
-    analysis += "- Ensure proper resource cleanup";
+    // Delegate to real static analysis engine
+    auto logger = std::make_shared<Logger>();
+    auto metrics = std::make_shared<Metrics>();
+    AdvancedCodingAgentIntegration analyzer(logger, metrics);
+    
+    std::vector<std::string> bugs = analyzer.findBugs(code);
+    
+    if (bugs.empty()) {
+        return "No common bug patterns detected.";
+    }
+    
+    std::string analysis = "Bug analysis (" + std::to_string(bugs.size()) + " issues found):\n";
+    for (size_t i = 0; i < bugs.size(); ++i) {
+        analysis += std::to_string(i + 1) + ". " + bugs[i] + "\n";
+    }
     
     return analysis;
 }
@@ -309,8 +321,8 @@ json AgenticCopilotBridge::trainModel(const std::string& datasetPath, const std:
 bool AgenticCopilotBridge::isTrainingModel() const
 {
     if (!m_executor) return false;
-    // Check training status via executor
-    return false;
+    // Delegate to executor to check training status
+    return m_executor->isTrainingModel();
 }
 
 // ========== PRODUCTION FEATURES: UI DISPLAY ==========

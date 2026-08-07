@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstddef>
@@ -31,3 +32,4 @@ private:
     std::size_t m_gapEnd{0};
     std::vector<std::size_t> m_lineOffsets;
 };
+

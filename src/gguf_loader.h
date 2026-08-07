@@ -16,17 +16,9 @@
 #endif
 #include <windows.h>
 
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
-#else
-// Fake Vulkan types for interface compatibility
-typedef void* VkDevice;
-typedef void* VkPhysicalDevice;
-typedef void* VkQueue;
-typedef void* VkCommandPool;
-typedef void* VkCommandBuffer;
-#define VK_QUEUE_TRANSFER_BIT 0x01
-#endif
+// Phase 46: Vulkan support with graceful fallback for dual GPU testing
+// Include vulkan_compute.h from include directory for consistent Vulkan type definitions
+#include "../include/vulkan_compute.h"
 
 // Basic types for GGUF (defined in RawrXD_Interfaces.h)
 using RawrXD::GGMLType;
@@ -132,6 +124,10 @@ class GGUFLoader : public RawrXD::IGGUFLoader
     std::vector<std::string> GetLoadedZones() const override { return {}; }
     std::vector<std::string> GetAllZones() const override { return {}; }
     std::vector<RawrXD::TensorInfo> GetAllTensorInfo() const override { return tensors_; }
+
+    // Tensor lookup by name - returns nullptr if not found
+    RawrXD::TensorInfo* GetTensor(const std::string& name);
+    const RawrXD::TensorInfo* GetTensor(const std::string& name) const;
 
     virtual bool Load(VkDevice vkDevice, VkPhysicalDevice vkPhysDevice);
     virtual void CreateVulkanResources();

@@ -9,6 +9,7 @@
 
 // SHA256 implementation for model verification
 #include <wincrypt.h>
+#include "gguf_loader.h"
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "advapi32.lib")
 
@@ -333,3 +334,4 @@ bool ComputeFileSHA256W(const wchar_t* filePath, char* outHash, size_t hashBuffe
     WideCharToMultiByte(CP_UTF8, 0, filePath, -1, narrowPath, MAX_PATH, nullptr, nullptr);
     return ComputeFileSHA256(narrowPath, outHash, hashBufferSize);
 }
+

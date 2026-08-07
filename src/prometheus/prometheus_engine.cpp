@@ -9,6 +9,7 @@
 #include <chrono>
 #include <random>
 #include <sstream>
+#include "gguf_loader.h"
 
 namespace Prometheus {
 
@@ -429,3 +430,4 @@ SpeculativeDecoder& PrometheusEngine::speculativeDecoder() {
 }
 
 } // namespace Prometheus
+

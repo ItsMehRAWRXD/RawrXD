@@ -1,0 +1,44 @@
+{
+  "gpu_telemetry": {
+    "averages": {
+      "gpu_utilization": 80.51612903225806,
+      "memory_utilization": 67.0,
+      "power_draw": 210.25806451612902,
+      "temperature": 72.35483870967742,
+      "vram_used_mb": 21954
+    },
+    "latest": {
+      "core_clock_mhz": 2375,
+      "gpu_utilization": 82.0,
+      "memory_clock_mhz": 1112,
+      "memory_utilization": 81.0,
+      "power_draw": 209.0,
+      "temperature": 72.0,
+      "vram_free_mb": 6225,
+      "vram_used_mb": 26542
+    },
+    "sample_count": 31,
+    "timestamp": "2026-07-30 17:05:28"
+  },
+  "inference_telemetry": {
+    "gpu_breakdown": {
+      "GPU0": {
+        "avg_tps": 117.66666666666667,
+        "request_count": 3
+      },
+      "GPU1": {
+        "avg_tps": 121.8,
+        "request_count": 5
+      }
+    },
+    "statistics": {
+      "avg_latency_ms": 1109.1277046190671,
+      "avg_tps": 120.25,
+      "avg_ttft_ms": 133.875,
+      "max_tps": 143.0,
+      "min_tps": 101.0
+    },
+    "timestamp": "2026-07-30 17:05:28",
+    "total_requests": 8
+  }
+}

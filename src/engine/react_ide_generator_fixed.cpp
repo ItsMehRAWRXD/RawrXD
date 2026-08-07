@@ -741,19 +741,52 @@ std::vector<std::string> ReactIDEGenerator::GetTemplateFeatures(const std::strin
     return {};
 }
 
-// Stubs for language specific IDEs
+// Language specific IDE generators with Monaco editor configuration
 bool ReactIDEGenerator::GenerateCppIDE(const std::string& name, const std::filesystem::path& output_dir) {
-    // TODO: Add C++ specific monaco config
+    // C++ specific Monaco config: clangd LSP, C++20 syntax highlighting
+    const auto configPath = output_dir / "monaco.config.json";
+    std::ofstream config(configPath);
+    if (config) {
+        config << R"({
+  "language": "cpp",
+  "compilerOptions": { "std": "c++20" },
+  "lsp": { "enabled": true, "server": "clangd" },
+  "intellisense": { "enabled": true },
+  "formatting": { "enabled": true, "provider": "clang-format" }
+})";
+    }
     return GenerateFullIDE(name, output_dir);
 }
 
 bool ReactIDEGenerator::GenerateRustIDE(const std::string& name, const std::filesystem::path& output_dir) {
-    // TODO: Add Rust specific monaco config
+    // Rust specific Monaco config: rust-analyzer LSP
+    const auto configPath = output_dir / "monaco.config.json";
+    std::ofstream config(configPath);
+    if (config) {
+        config << R"({
+  "language": "rust",
+  "lsp": { "enabled": true, "server": "rust-analyzer" },
+  "intellisense": { "enabled": true },
+  "formatting": { "enabled": true, "provider": "rustfmt" },
+  "cargo": { "checkOnSave": true }
+})";
+    }
     return GenerateFullIDE(name, output_dir);
 }
 
 bool ReactIDEGenerator::GeneratePythonIDE(const std::string& name, const std::filesystem::path& output_dir) {
-    // TODO: Add Python specific monaco config
+    // Python specific Monaco config: pylsp or pyright LSP
+    const auto configPath = output_dir / "monaco.config.json";
+    std::ofstream config(configPath);
+    if (config) {
+        config << R"({
+  "language": "python",
+  "lsp": { "enabled": true, "server": "pylsp" },
+  "intellisense": { "enabled": true },
+  "formatting": { "enabled": true, "provider": "black" },
+  "linting": { "enabled": true, "provider": "pylint" }
+})";
+    }
     return GenerateFullIDE(name, output_dir);
 }
 

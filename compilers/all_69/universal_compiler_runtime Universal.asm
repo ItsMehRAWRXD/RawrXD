@@ -9,7 +9,7 @@ STD_OUTPUT_HANDLE equ -11
     hStdOut dq 0 
     bytes_written dq 0 
  
-    msg_banner db "Compiler vRuntime" "1.0""", 13, 10 
+    msg_banner db "Compiler vRuntime v1.0"", 13, 10 
     msg_banner_len equ $ - msg_banner 
  
     msg_ready db "[READY] Compiler initialized", 13, 10 

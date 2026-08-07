@@ -3,6 +3,7 @@
 #include "../logging/Logger.h"
 
 #include <algorithm>
+#include "gguf_loader.h"
 
 namespace RawrXD
 {
@@ -369,3 +370,4 @@ RawrXD::Expected<std::vector<uint8_t>, GGufTensorLoadError> GGufTensorLoader::lo
 }
 
 }  // namespace RawrXD
+

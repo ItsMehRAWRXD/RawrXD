@@ -25,7 +25,11 @@ endif()
 # ============================================================================
 
 if(NASM_EXECUTABLE)
+<<<<<<< HEAD
     set(MASM_SOLO_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/masm/masm_solo_compiler.asm)
+=======
+    set(MASM_SOLO_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src/masm/masm_solo_compiler_fixed.asm)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     set(MASM_SOLO_OBJ ${CMAKE_CURRENT_BINARY_DIR}/masm_solo_compiler.obj)
     
     add_custom_command(
@@ -46,7 +50,12 @@ if(NASM_EXECUTABLE)
     # Set linker properties for raw assembly
     set_target_properties(masm_solo_compiler PROPERTIES
         LINKER_LANGUAGE C
+<<<<<<< HEAD
         LINK_FLAGS "/ENTRY:main /SUBSYSTEM:CONSOLE /NODEFAULTLIB"
+=======
+        LINK_FLAGS "/ENTRY:main /SUBSYSTEM:CONSOLE /NODEFAULTLIB /LARGEADDRESSAWARE:NO"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     )
     
     install(TARGETS masm_solo_compiler DESTINATION bin)
@@ -64,6 +73,13 @@ add_executable(masm_cli_compiler
     src/masm/masm_cli_compiler.cpp
 )
 
+<<<<<<< HEAD
+=======
+set_target_properties(masm_cli_compiler PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 # Require C++17 for filesystem support
 target_compile_features(masm_cli_compiler PRIVATE cxx_std_17)
 
@@ -84,16 +100,52 @@ if(WIN32)
     target_compile_definitions(masm_cli_compiler PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
 
+<<<<<<< HEAD
+=======
+# Use static runtime for CLI compiler to avoid missing debug DLLs in tests
+if(MSVC)
+    set_property(TARGET masm_cli_compiler PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 install(TARGETS masm_cli_compiler DESTINATION bin)
 
 message(STATUS "MASM CLI Compiler: ENABLED")
 
 # ============================================================================
+<<<<<<< HEAD
 # 3. MASM IDE Integration (Win32 / C++20 — no Qt)
 # ============================================================================
 # IDE uses Win32 IDE (RawrXD-Win32IDE); MASM is integrated there. No Qt dependency.
 
 message(STATUS "MASM IDE: Win32/C++20 (no Qt)")
+=======
+# 3. MASM Qt IDE Integration
+# ============================================================================
+
+if(Qt6_FOUND OR Qt5_FOUND)
+    set(MASM_QT_SOURCES
+        src/masm/MASMCompilerWidget.cpp
+        src/masm/MASMCompilerWidget.h
+    )
+    
+    # Add to main Qt application
+    if(TARGET ${PROJECT_NAME})
+        target_sources(${PROJECT_NAME} PRIVATE ${MASM_QT_SOURCES})
+        
+        # Add MASM include directory
+        target_include_directories(${PROJECT_NAME} PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
+        )
+        
+        message(STATUS "MASM Qt IDE Integration: ENABLED")
+    else()
+        message(STATUS "Main Qt project target not found - Qt integration not added")
+    endif()
+else()
+    message(STATUS "MASM Qt IDE Integration: DISABLED (Qt not found)")
+endif()
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # ============================================================================
 # Test Programs
@@ -238,8 +290,13 @@ add_custom_target(masm_docs
     COMMAND ${CMAKE_COMMAND} -E echo "   Usage:    masm_cli_compiler [options] source.asm"
     COMMAND ${CMAKE_COMMAND} -E echo "   Help:     masm_cli_compiler --help"
     COMMAND ${CMAKE_COMMAND} -E echo ""
+<<<<<<< HEAD
     COMMAND ${CMAKE_COMMAND} -E echo "3. Win32 IDE Integration (C++20, no Qt)"
     COMMAND ${CMAKE_COMMAND} -E echo "   Location: Integrated into RawrXD Win32 IDE"
+=======
+    COMMAND ${CMAKE_COMMAND} -E echo "3. Qt IDE Integration"
+    COMMAND ${CMAKE_COMMAND} -E echo "   Location: Integrated into main Qt application"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     COMMAND ${CMAKE_COMMAND} -E echo "   Features: Syntax highlighting, error markers, debugger"
     COMMAND ${CMAKE_COMMAND} -E echo "   Access:   MASM menu in main application"
     COMMAND ${CMAKE_COMMAND} -E echo ""
@@ -281,6 +338,14 @@ else()
     message(STATUS "  Solo Compiler:      DISABLED")
 endif()
 message(STATUS "  CLI Compiler:       ENABLED")
+<<<<<<< HEAD
 message(STATUS "  IDE Integration:    Win32/C++20 (no Qt)")
+=======
+if(Qt6_FOUND OR Qt5_FOUND)
+    message(STATUS "  Qt IDE Integration: ENABLED")
+else()
+    message(STATUS "  Qt IDE Integration: DISABLED")
+endif()
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 message(STATUS "  Test Programs:      ${MASM_TEST_DIR}")
 message(STATUS "========================================")

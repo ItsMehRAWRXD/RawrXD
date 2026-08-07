@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <memory>
@@ -36,3 +37,4 @@ private:
 };
 
 } // namespace RawrXD::IDE
+

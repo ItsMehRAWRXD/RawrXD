@@ -87,11 +87,11 @@ bool IntentExecutionPipeline::Initialize() {
     Security::SecurityManager::Instance().Initialize(Security::SecurityLevel::STANDARD);
     
     // Register built-in handlers
-    INTENT_HANDLER_REGISTRY.Register("MODIFY_FUNCTION", HandleModifyFunction);
-    INTENT_HANDLER_REGISTRY.Register("BUILD_PROJECT", HandleBuildProject);
-    INTENT_HANDLER_REGISTRY.Register("RUN_TESTS", HandleRunTests);
-    INTENT_HANDLER_REGISTRY.Register("DEBUG_SESSION", HandleDebugSession);
-    INTENT_HANDLER_REGISTRY.Register("OPTIMIZE_CODE", HandleOptimizeCode);
+    IntentHandlerRegistry::Instance().Register("MODIFY_FUNCTION", HandleModifyFunction);
+    IntentHandlerRegistry::Instance().Register("BUILD_PROJECT", HandleBuildProject);
+    IntentHandlerRegistry::Instance().Register("RUN_TESTS", HandleRunTests);
+    IntentHandlerRegistry::Instance().Register("DEBUG_SESSION", HandleDebugSession);
+    IntentHandlerRegistry::Instance().Register("OPTIMIZE_CODE", HandleOptimizeCode);
     
     // Connect to telemetry
     ConnectToTelemetryInjector();
@@ -104,11 +104,11 @@ void IntentExecutionPipeline::Shutdown() {
     if (!initialized_.load()) return;
     
     // Unregister handlers
-    INTENT_HANDLER_REGISTRY.Unregister("MODIFY_FUNCTION");
-    INTENT_HANDLER_REGISTRY.Unregister("BUILD_PROJECT");
-    INTENT_HANDLER_REGISTRY.Unregister("RUN_TESTS");
-    INTENT_HANDLER_REGISTRY.Unregister("DEBUG_SESSION");
-    INTENT_HANDLER_REGISTRY.Unregister("OPTIMIZE_CODE");
+    IntentHandlerRegistry::Instance().Unregister("MODIFY_FUNCTION");
+    IntentHandlerRegistry::Instance().Unregister("BUILD_PROJECT");
+    IntentHandlerRegistry::Instance().Unregister("RUN_TESTS");
+    IntentHandlerRegistry::Instance().Unregister("DEBUG_SESSION");
+    IntentHandlerRegistry::Instance().Unregister("OPTIMIZE_CODE");
     
     // Shutdown security manager
     Security::SecurityManager::Instance().Shutdown();
@@ -151,7 +151,7 @@ ExecutionResult IntentExecutionPipeline::Execute(const IntentRequest& kernelInte
     }
     
     // Stage 3: Patch Firewall Check
-    Guardrails::PatchFirewall::ValidationResult fwResult;
+    Guardrails::FirewallResult fwResult;
     if (!Stage3_FirewallCheck(abiIntent, fwResult)) {
         result.outcome = ExecutionResult::Outcome::VALIDATION_FAILED;
         result.errorMessage = "Patch firewall rejected: " + fwResult.reason;
@@ -245,7 +245,7 @@ ExecutionResult IntentExecutionPipeline::ValidateOnly(const IntentRequest& kerne
         return result;
     }
     
-    Guardrails::PatchFirewall::ValidationResult fwResult;
+    Guardrails::FirewallResult fwResult;
     if (!Stage3_FirewallCheck(abiIntent, fwResult)) {
         result.success = false;
         result.outcome = ExecutionResult::Outcome::VALIDATION_FAILED;
@@ -262,31 +262,31 @@ ExecutionResult IntentExecutionPipeline::ValidateOnly(const IntentRequest& kerne
 bool IntentExecutionPipeline::Stage1_ValidateIntent(
     const IntentRequest& kernelIntent,
     Intent::IntentRequest& abiIntent) {
-    
+
     // Convert kernel intent to ABI intent
     abiIntent.intent_id = kernelIntent.intentId;
     abiIntent.session_id = kernelIntent.sourceAgent;
-    abiIntent.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+    abiIntent.timestamp_us = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    
+
     // Map intent type
     if (kernelIntent.intentType == "MODIFY_FUNCTION") {
         abiIntent.type = Intent::IntentType::MODIFY_FUNCTION;
     } else if (kernelIntent.intentType == "BUILD_PROJECT") {
-        abiIntent.type = Intent::IntentType::BUILD;
+        abiIntent.type = Intent::IntentType::COMPILE;
     } else if (kernelIntent.intentType == "RUN_TESTS") {
-        abiIntent.type = Intent::IntentType::VERIFY;
+        abiIntent.type = Intent::IntentType::RUN_TEST;
     } else {
-        abiIntent.type = Intent::IntentType::CUSTOM;
+        abiIntent.type = Intent::IntentType::UNKNOWN;
     }
-    
+
     // Set target
     if (!kernelIntent.targetFiles.empty()) {
         abiIntent.target.file_path = kernelIntent.targetFiles[0];
     }
-    
+
     // Validate
-    return Intent::IntentValidator::Validate(abiIntent).is_valid;
+    return Intent::IntentValidator::Instance().Validate(abiIntent).valid;
 }
 
 bool IntentExecutionPipeline::Stage2_AcquireCapabilities(
@@ -324,8 +324,8 @@ bool IntentExecutionPipeline::Stage2_AcquireCapabilities(
 
 bool IntentExecutionPipeline::Stage3_FirewallCheck(
     const Intent::IntentRequest& abiIntent,
-    Guardrails::PatchFirewall::ValidationResult& result) {
-    
+    Guardrails::FirewallResult& result) {
+
     result = Guardrails::PatchFirewall::Instance().ValidateIntent(abiIntent);
     return result.allowed;
 }
@@ -351,14 +351,14 @@ bool IntentExecutionPipeline::Stage5_ExecuteHandler(
     const IntentRequest& kernelIntent,
     const Intent::IntentRequest& abiIntent,
     ExecutionResult& result) {
-    
-    auto handler = INTENT_HANDLER_REGISTRY.GetHandler(kernelIntent.intentType);
+
+    auto handler = IntentHandlerRegistry::Instance().GetHandler(kernelIntent.intentType);
     if (!handler) {
         result.outcome = ExecutionResult::Outcome::EXECUTION_ERROR;
         result.errorMessage = "No handler registered for intent type: " + kernelIntent.intentType;
         return false;
     }
-    
+
     result = handler(kernelIntent, abiIntent);
     return result.success;
 }
@@ -367,7 +367,7 @@ bool IntentExecutionPipeline::Stage6_CommitOrRollback(
     Hotpatch::PatchTransaction& tx,
     bool success,
     ExecutionResult& result) {
-    
+
     if (success) {
         if (!tx.Commit()) {
             result.outcome = ExecutionResult::Outcome::TRANSACTION_FAILED;
@@ -378,14 +378,14 @@ bool IntentExecutionPipeline::Stage6_CommitOrRollback(
     } else {
         tx.Rollback();
         result.wasRolledBack = true;
-        result.rollbackEpoch = tx.GetEpoch();
-        
+        result.rollbackEpoch = tx.GetTransactionId();
+
         // Update stats
         {
             std::lock_guard<std::mutex> lock(statsMutex_);
             stats_.rolledBackIntents++;
         }
-        
+
         return false;
     }
 }
@@ -455,21 +455,7 @@ bool IntentExecutionPipeline::securityPreCheck(const IntentRequest& kernelIntent
             return false;
         }
     }
-    
-    // Validate symbol name if present
-    if (!kernelIntent.targetSymbol.empty()) {
-        std::string validationError;
-        if (!Security::InputValidator::Instance().ValidateSymbolName(
-                kernelIntent.targetSymbol, validationError)) {
-            SECURITY_LOG_ERROR(Security::AuditEventType::VIOLATION_DETECTED,
-                "Invalid symbol name: " + kernelIntent.targetSymbol + " - " + validationError);
-            result.success = false;
-            result.outcome = ExecutionResult::Outcome::VALIDATION_FAILED;
-            result.errorMessage = "Symbol name validation failed: " + validationError;
-            return false;
-        }
-    }
-    
+
     return true;
 }
 

@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include "gguf_loader.h"
 
 // ============================================================================
 // ZERO-DEPENDENCY GGUF LOADER IMPLEMENTATION
@@ -442,3 +443,4 @@ bool ZeroDependencyGGUFLoader::ValidateChecksum() {
 }
 
 } // namespace RawrXD
+

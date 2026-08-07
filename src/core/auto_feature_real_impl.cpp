@@ -1,3 +1,4 @@
+#pragma once  // Unity-include guard: prevents redefinition when this .cpp is unity-included twice.
 // ============================================================================
 // auto_feature_real_impl.cpp — REAL Implementations for Auto-Feature Handlers
 // Replaces 15 critical stub handlers with production implementations

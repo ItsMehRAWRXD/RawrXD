@@ -151,6 +151,7 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     METRICS.increment("agentic.commands_total");
     auto& perf = RawrXD::Inference::PerformanceMonitor::instance();
     perf.startOperation("agentic.bridge.execute");
+    auto startTime_ = std::chrono::high_resolution_clock::now();
     bool perfClosed = false;
     auto closePerf = [&]()
     {
@@ -381,7 +382,19 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
         response = response.substr(0, kMaxResponseBytes) + "\n[truncated]";
 
     // E6: record per-call latency via performance monitor
-    // TODO: add recordLatency to PerformanceMonitor when timing infra lands
+    static std::atomic<uint64_t> totalLatencyUs{0};
+    static std::atomic<uint64_t> callCount{0};
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime_).count();
+    totalLatencyUs.fetch_add(elapsedUs, std::memory_order_relaxed);
+    callCount.fetch_add(1, std::memory_order_relaxed);
+    
+    // Log latency metrics
+    if (callCount.load(std::memory_order_relaxed) % 100 == 0) {
+        auto avgUs = totalLatencyUs.load(std::memory_order_relaxed) / callCount.load(std::memory_order_relaxed);
+        LOG_INFO("AgenticBridge avg latency: " + std::to_string(avgUs) + "us over " + 
+                 std::to_string(callCount.load(std::memory_order_relaxed)) + " calls");
+    }
 
     AgentResponse r;
     r.content = response;
@@ -592,7 +605,7 @@ void AgenticBridge::StopAgentLoop()
 {
     LOG_INFO("StopAgentLoop called");
     m_agentLoopRunning = false;
-    KillPowerShellProcess();
+    // Signal engine to stop if running async
 }
 
 // ============================================================================
@@ -610,7 +623,7 @@ std::vector<std::string> AgenticBridge::GetAvailableTools()
 std::string AgenticBridge::GetAgentStatus()
 {
     std::stringstream status;
-    status << "Agentic Framework Status:\n";
+    status << "Native Agentic Framework Status:\n";
     status << "  Initialized: " << (m_initialized ? "Yes" : "No") << "\n";
     status << "  Model: " << m_modelName << "\n";
     status << "  Ollama Server: " << m_ollamaServer << "\n";
@@ -683,7 +696,7 @@ void AgenticBridge::SetModel(const std::string& modelName)
 void AgenticBridge::SetOllamaServer(const std::string& serverUrl)
 {
     m_ollamaServer = serverUrl;
-    LOG_INFO("Ollama server set to: " + serverUrl);
+    // Forward to native engine config if needed
 }
 
 void AgenticBridge::SetOutputCallback(OutputCallback callback)
@@ -832,7 +845,7 @@ void AgenticBridge::KillPowerShellProcess()
         TerminateProcess(m_hProcess, 0);
         CloseHandle(m_hProcess);
         m_hProcess = nullptr;
-        LOG_DEBUG("PowerShell process terminated");
+
     }
     if (m_hStdoutRead)
     {

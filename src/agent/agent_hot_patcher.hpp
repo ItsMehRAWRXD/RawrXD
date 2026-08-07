@@ -22,10 +22,6 @@
 #include <atomic>
 #include <cstdint>
 
-/**
- * @struct HallucinationDetection
- * @brief Information about detected hallucination
- */
 struct HallucinationDetection {
     std::string detectionId;              ///< Unique detection ID
     std::string hallucinationType;        ///< Type: invalid_path, fabricated_path, logic_contradiction, etc.
@@ -37,10 +33,6 @@ struct HallucinationDetection {
     bool correctionApplied = false;       ///< Was correction applied
 };
 
-/**
- * @struct NavigationFix
- * @brief Information about fixed navigation error
- */
 struct NavigationFix {
     std::string fixId;                    ///< Unique fix ID
     std::string incorrectPath;            ///< Original path
@@ -51,10 +43,6 @@ struct NavigationFix {
     int timesCorrected = 0;               ///< How many times corrected
 };
 
-/**
- * @struct BehaviorPatch
- * @brief Behavior modification for model outputs
- */
 struct BehaviorPatch {
     std::string patchId;                  ///< Unique patch ID
     std::string patchType;                ///< Type: prompt_modifier, output_filter, validator
@@ -149,49 +137,16 @@ public:
      * @param pattern Pattern to register
      */
     void registerCorrectionPattern(const HallucinationDetection& pattern);
-
-    /**
-     * Register navigation fix pattern
-     * @param fix Fix to register
-     */
     void registerNavigationFix(const NavigationFix& fix);
-
-    /**
-     * Create behavior patch
-     * @param patch Patch to create
-     */
     void createBehaviorPatch(const BehaviorPatch& patch);
 
-    /**
-     * Convenience wrapper: add correction pattern (bridge compatibility)
-     */
+    // Compatibility wrappers
     inline void addCorrectionPattern(const HallucinationDetection& p) { registerCorrectionPattern(p); }
-
-    /**
-     * Convenience wrapper: add navigation fix (bridge compatibility)
-     */
     inline void addNavigationFix(const NavigationFix& f) { registerNavigationFix(f); }
-
-    /**
-     * Convenience wrapper: add behavior patch (bridge compatibility)
-     */
     inline void addBehaviorPatch(const BehaviorPatch& p) { createBehaviorPatch(p); }
 
-    /**
-     * Enable/disable hot patching
-     * @param enabled True to enable
-     */
     void setHotPatchingEnabled(bool enabled);
-
-    /**
-     * Check if hot patching is enabled
-     */
     bool isHotPatchingEnabled() const;
-
-    /**
-     * Enable debug logging
-     * @param enabled True to enable
-     */
     void setDebugLogging(bool enabled);
 
     /**
@@ -216,7 +171,6 @@ public:
     void registerStatisticsUpdatedCallback(StatisticsUpdatedCallback cb, void* userData);
 
 private:
-    // ====== Statistics (lock-free atomic counters) ======
     std::atomic<int> m_totalHallucinationsDetected{0};
     std::atomic<int> m_hallucinationsCorrected{0};
     std::atomic<int> m_navigationFixesApplied{0};

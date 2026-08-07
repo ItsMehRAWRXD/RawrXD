@@ -5,7 +5,9 @@
 #include <map>
 #include <memory>
 #include <functional>
-#include <json/json.h>
+#include <chrono>
+#include <mutex>
+#include <nlohmann/json.hpp>
 
 namespace rawrxd {
 namespace swarm {
@@ -36,7 +38,7 @@ struct UnifiedRequest {
     std::map<std::string, std::string> metadata;
     
     // Tool calling
-    std::vector<std::map<std::string, Json::Value>> tools;
+    std::vector<std::map<std::string, nlohmann::json>> tools;
     std::string toolChoice{"auto"}; // "auto", "none", or specific tool name
 };
 
@@ -146,22 +148,22 @@ public:
     bool supportsStreaming(const std::string& provider);
     
     // Tool calling adapters
-    Json::Value convertToolsToOpenAI(const std::vector<std::map<std::string, Json::Value>>& tools);
-    Json::Value convertToolsToAnthropic(const std::vector<std::map<std::string, Json::Value>>& tools);
-    std::vector<std::map<std::string, std::string>> parseToolCallsOpenAI(const Json::Value& response);
-    std::vector<std::map<std::string, std::string>> parseToolCallsAnthropic(const Json::Value& response);
+    nlohmann::json convertToolsToOpenAI(const std::vector<std::map<std::string, nlohmann::json>>& tools);
+    nlohmann::json convertToolsToAnthropic(const std::vector<std::map<std::string, nlohmann::json>>& tools);
+    std::vector<std::map<std::string, std::string>> parseToolCallsOpenAI(const nlohmann::json& response);
+    std::vector<std::map<std::string, std::string>> parseToolCallsAnthropic(const nlohmann::json& response);
     
     // Message format converters
-    Json::Value convertMessagesToOpenAI(const std::vector<std::map<std::string, std::string>>& messages);
-    Json::Value convertMessagesToAnthropic(const std::vector<std::map<std::string, std::string>>& messages);
-    std::vector<std::map<std::string, std::string>> parseMessagesOpenAI(const Json::Value& messages);
-    std::vector<std::map<std::string, std::string>> parseMessagesAnthropic(const Json::Value& messages);
+    nlohmann::json convertMessagesToOpenAI(const std::vector<std::map<std::string, std::string>>& messages);
+    nlohmann::json convertMessagesToAnthropic(const std::vector<std::map<std::string, std::string>>& messages);
+    std::vector<std::map<std::string, std::string>> parseMessagesOpenAI(const nlohmann::json& messages);
+    std::vector<std::map<std::string, std::string>> parseMessagesAnthropic(const nlohmann::json& messages);
     
     // Response format converters
-    UnifiedResponse parseOpenAIResponse(const Json::Value& json);
-    UnifiedResponse parseAnthropicResponse(const Json::Value& json);
-    UnifiedResponse parseOllamaResponse(const Json::Value& json);
-    UnifiedResponse parseLlamaCppResponse(const Json::Value& json);
+    UnifiedResponse parseOpenAIResponse(const nlohmann::json& json);
+    UnifiedResponse parseAnthropicResponse(const nlohmann::json& json);
+    UnifiedResponse parseOllamaResponse(const nlohmann::json& json);
+    UnifiedResponse parseLlamaCppResponse(const nlohmann::json& json);
     
     // Error handling
     UnifiedResponse createErrorResponse(const std::string& message, int code);

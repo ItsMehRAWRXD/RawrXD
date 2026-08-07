@@ -211,8 +211,15 @@ public:
      * @return Total size in bytes
      */
     size_t GetTotalWeightSize() const {
-        // TODO: Track loaded tensor sizes
-        return 0;
+        size_t totalSize = 0;
+        for (const auto& [name, tensor] : m_tensors) {
+            if (tensor) {
+                // Calculate size from tensor dimensions
+                size_t tensorSize = ggml_nbytes(tensor);
+                totalSize += tensorSize;
+            }
+        }
+        return totalSize;
     }
 
 private:

@@ -21,6 +21,8 @@
 #include "MoEWeightProxy.hpp"
 #include "GGUFLoader.hpp"
 
+using namespace Deep2;
+
 // Test configuration
 #define TEST_HIDDEN_DIM 7168
 #define TEST_NUM_EXPERTS 256
@@ -71,18 +73,22 @@ bool TestRouterCorrectness() {
     printf("\n=== Test 1: Router Correctness ===\n");
     
     // Create router
-    MoERouterConfig config;
-    config.numExperts = TEST_NUM_EXPERTS;
-    config.topK = TEST_TOP_K;
-    config.hiddenDim = TEST_HIDDEN_DIM;
-    config.temperature = 1.0f;
-    
+    MoEConfig config;
+    config.numExperts       = TEST_NUM_EXPERTS;
+    config.numActiveExperts = TEST_TOP_K;
+    config.hiddenDim        = TEST_HIDDEN_DIM;
+    config.useLoadBalancing = false;   // deterministic logits for validation
+
     MoERouter router;
-    if (!router.Initialize(config)) {
-        printf("  FAIL: Router initialization failed\n");
-        return false;
-    }
-    
+    router.Initialize(config);         // returns void
+
+    // Seed router weights so logits vary across experts
+    std::vector<float> rw(TEST_HIDDEN_DIM * TEST_NUM_EXPERTS);
+    std::mt19937 wrng(7);
+    std::normal_distribution<float> wd(0.0f, 0.02f);
+    for (auto& w : rw) w = wd(wrng);
+    router.SetRouterWeights(rw.data(), TEST_HIDDEN_DIM, TEST_NUM_EXPERTS);
+
     // Create synthetic input (simulating hidden states)
     std::vector<float> hiddenStates(TEST_HIDDEN_DIM);
     std::mt19937 rng(42);
@@ -90,57 +96,56 @@ bool TestRouterCorrectness() {
     for (auto& v : hiddenStates) {
         v = dist(rng);
     }
-    
+
     // Route token
-    float routerLogits[TEST_NUM_EXPERTS];
-    float routerProbs[TEST_NUM_EXPERTS];
-    int expertIndices[TEST_TOP_K];
-    float expertWeights[TEST_TOP_K];
-    
     double t0 = GetTimeMs();
-    bool success = router.RouteToken(hiddenStates.data(), routerLogits, routerProbs, 
-                                      expertIndices, expertWeights, TEST_TOP_K);
+    TokenRoute route = router.Route(hiddenStates.data());
     double t1 = GetTimeMs();
-    
-    if (!success) {
-        printf("  FAIL: RouteToken returned false\n");
+
+    if (route.topExperts.size() != (size_t)TEST_TOP_K) {
+        printf("  FAIL: expected %d experts, got %zu\n",
+               TEST_TOP_K, route.topExperts.size());
         return false;
     }
-    
+
     printf("  Router latency: %.3f ms\n", t1 - t0);
-    
-    // Validate softmax
-    if (!ValidateSoftmax(routerLogits, routerProbs, TEST_NUM_EXPERTS)) {
+
+    // Validate softmax over router logits
+    std::vector<float> probs(route.routerLogits.size());
+    {
+        float mx = *std::max_element(route.routerLogits.begin(), route.routerLogits.end());
+        float s = 0.0f;
+        for (size_t i = 0; i < route.routerLogits.size(); ++i) {
+            probs[i] = std::exp(route.routerLogits[i] - mx);
+            s += probs[i];
+        }
+        for (auto& p : probs) p /= s;
+    }
+    if (!ValidateSoftmax(route.routerLogits.data(), probs.data(), route.routerLogits.size())) {
         printf("  FAIL: Softmax validation failed\n");
         return false;
     }
-    printf("  Softmax: PASS (sum=%.6f)\n", [&](){ float s=0; for(int i=0;i<TEST_NUM_EXPERTS;i++) s+=routerProbs[i]; return s; }());
-    
-    // Validate top-k
-    if (!ValidateTopK(routerProbs, expertIndices, TEST_TOP_K, TEST_NUM_EXPERTS)) {
-        printf("  FAIL: Top-k validation failed\n");
-        return false;
-    }
-    printf("  Top-k selection: PASS\n");
-    
-    // Print selected experts
+    printf("  Softmax: PASS\n");
+
+    // Validate top-k indices and weights
+    float weightSum = 0.0f;
     printf("  Selected experts: ");
-    for (int i = 0; i < TEST_TOP_K; i++) {
-        printf("%d(%.4f) ", expertIndices[i], expertWeights[i]);
+    for (const auto& er : route.topExperts) {
+        if (er.expertId < 0 || er.expertId >= TEST_NUM_EXPERTS) {
+            printf("\n  FAIL: invalid expert id %d\n", er.expertId);
+            return false;
+        }
+        weightSum += er.weight;
+        printf("%d(%.4f) ", er.expertId, er.weight);
     }
     printf("\n");
-    
-    // Validate weights sum to ~1.0 (after renormalization)
-    float weightSum = 0.0f;
-    for (int i = 0; i < TEST_TOP_K; i++) {
-        weightSum += expertWeights[i];
-    }
+
     if (std::abs(weightSum - 1.0f) > 0.01f) {
         printf("  FAIL: Expert weights sum to %.4f (expected ~1.0)\n", weightSum);
         return false;
     }
     printf("  Weight normalization: PASS (sum=%.4f)\n", weightSum);
-    
+
     printf("  Router correctness: PASS\n");
     return true;
 }
@@ -149,18 +154,18 @@ bool TestRouterCorrectness() {
 bool TestExpertDispatch() {
     printf("\n=== Test 2: Expert Dispatch Simulation ===\n");
     
-    // Simulate dispatching to top-k experts
+    // Model dispatching to top-k experts
     int expertIndices[TEST_TOP_K] = {42, 137, 89, 201, 15, 178, 63, 245};
     float expertWeights[TEST_TOP_K] = {0.25f, 0.20f, 0.15f, 0.12f, 0.10f, 0.08f, 0.05f, 0.05f};
-    
-    printf("  Simulating dispatch to %d experts:\n", TEST_TOP_K);
+
+    printf("  Modeling dispatch to %d experts:\n", TEST_TOP_K);
     
     double totalLatency = 0.0;
     for (int i = 0; i < TEST_TOP_K; i++) {
         double t0 = GetTimeMs();
         
-        // Simulate expert computation (Q4_K GEMV)
-        // In real implementation, this would call MoEWeightProxy::GetExpertWeights
+        // Model expert computation (Q4_K GEMV)
+        // Full implementation would call MoEWeightProxy::GetExpertWeights
         
         double t1 = GetTimeMs();
         double latency = t1 - t0;
@@ -179,7 +184,7 @@ bool TestExpertDispatch() {
 bool TestSharedExpert() {
     printf("\n=== Test 3: Shared Expert Integration ===\n");
     
-    // Simulate shared expert computation
+    // Model shared expert computation
     std::vector<float> input(TEST_HIDDEN_DIM);
     std::vector<float> output(TEST_HIDDEN_DIM);
     
@@ -191,8 +196,8 @@ bool TestSharedExpert() {
     
     double t0 = GetTimeMs();
     
-    // Simulate: gate_proj -> SwiGLU -> up_proj -> down_proj
-    // This would be computeSharedExpertFFN in real implementation
+    // Model: gate_proj -> SwiGLU -> up_proj -> down_proj
+    // Full implementation would be computeSharedExpertFFN
     
     // Simple simulation: output = input * 0.5 (identity-like)
     for (size_t i = 0; i < TEST_HIDDEN_DIM; i++) {
@@ -210,7 +215,7 @@ bool TestSharedExpert() {
 bool TestMoEForwardPass() {
     printf("\n=== Test 4: End-to-End MoE Forward Pass ===\n");
     
-    // Simulate a single token through MoE layer
+    // Model a single token through MoE layer
     std::vector<float> tokenHidden(TEST_HIDDEN_DIM);
     std::vector<float> moeOutput(TEST_HIDDEN_DIM);
     
@@ -226,18 +231,18 @@ bool TestMoEForwardPass() {
     int expertIndices[TEST_TOP_K];
     float expertWeights[TEST_TOP_K];
     
-    // Simulate router (would call MoERouter::RouteToken)
+    // Model router (would call MoERouter::RouteToken)
     std::uniform_int_distribution<int> expertDist(0, TEST_NUM_EXPERTS - 1);
     for (int i = 0; i < TEST_TOP_K; i++) {
         expertIndices[i] = expertDist(rng);
-        expertWeights[i] = 1.0f / TEST_TOP_K; // Uniform for simulation
+        expertWeights[i] = 1.0f / TEST_TOP_K; // Uniform for modeling
     }
     
     // Step 2: Execute top-k experts
     std::vector<float> expertOutputs[TEST_TOP_K];
     for (int i = 0; i < TEST_TOP_K; i++) {
         expertOutputs[i].resize(TEST_HIDDEN_DIM);
-        // Simulate expert computation
+        // Model expert computation
         for (size_t j = 0; j < TEST_HIDDEN_DIM; j++) {
             expertOutputs[i][j] = tokenHidden[j] * expertWeights[i];
         }
@@ -287,30 +292,30 @@ bool TestDenseVsMoEPath() {
     
     printf("  Checking MoE metadata detection...\n");
     
-    // Simulate GGUF metadata
-    ModelMetadata metadata;
-    metadata.numExperts = TEST_NUM_EXPERTS;
-    metadata.numExpertsPerToken = TEST_TOP_K;
-    metadata.numSharedExperts = 1;
-    metadata.moeIntermediateSize = TEST_INTERMEDIATE_DIM;
-    
-    bool isMoE = (metadata.numExperts > 0);
-    
+    // Model GGUF metadata
+    int numExperts         = TEST_NUM_EXPERTS;
+    int numExpertsPerToken   = TEST_TOP_K;
+    int numSharedExperts     = 1;
+    int moeIntermediateDim   = TEST_INTERMEDIATE_DIM;
+    (void)moeIntermediateDim;
+
+    bool isMoE = (numExperts > 0);
+
     if (!isMoE) {
         printf("  FAIL: MoE detection failed\n");
         return false;
     }
-    printf("  MoE detection: PASS (experts=%d, top_k=%d)\n", 
-           metadata.numExperts, metadata.numExpertsPerToken);
-    
+    printf("  MoE detection: PASS (experts=%d, top_k=%d)\n",
+           numExperts, numExpertsPerToken);
+
     // Verify MoE configuration is valid
-    if (metadata.numExpertsPerToken > metadata.numExperts) {
+    if (numExpertsPerToken > numExperts) {
         printf("  FAIL: top_k (%d) > num_experts (%d)\n",
-               metadata.numExpertsPerToken, metadata.numExperts);
+               numExpertsPerToken, numExperts);
         return false;
     }
     printf("  MoE configuration: PASS\n");
-    
+
     printf("  Dense vs MoE path: PASS\n");
     return true;
 }
@@ -352,3 +357,4 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+

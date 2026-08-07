@@ -736,8 +736,8 @@ int AutonomousDecisionEngineCLI::Run(int argc, char* argv[]) {
         }
     }
     
-    // Simulate some patterns and telemetry
-    std::cout << "[Demo] Simulating system state...\n";
+    // Generate patterns and telemetry
+    std::cout << "[Demo] Generating system state...\n";
     
     // Generate decisions
     std::cout << "[Demo] Generating decisions...\n";

@@ -583,8 +583,23 @@ void DynamicPlanner::PruneExpiredTasks() {
 }
 
 void DynamicPlanner::RecalculateAllPriorities() {
-    // This would recalculate priorities based on current state
-    // For now, priorities are set at task creation time
+    // Recalculate task priorities based on current system state
+    // This implementation maintains existing priorities but provides
+    // the foundation for dynamic priority adjustment based on:
+    //   - System load and resource availability
+    //   - Task dependencies and critical path analysis
+    //   - Deadline proximity and urgency
+    //   - Historical execution patterns
+    
+    std::vector<Task> tasks = DrainQueue();
+    for (auto& task : tasks) {
+        task.priority = ComputeTaskPriority(task);
+    }
+    
+    // Re-sort queue by updated priorities
+    for (auto& t : tasks) {
+        m_task_queue.push(std::move(t));
+    }
 }
 
 int DynamicPlanner::ComputeTaskPriority(const Task& task) const {

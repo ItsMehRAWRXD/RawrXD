@@ -13,7 +13,7 @@ namespace swarm {
 // Main generation function
 FrontendSquad::ComponentLibrary FrontendSquad::generateApplication(
     const std::vector<PageRequest>& requests,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     ComponentLibrary library;
     
@@ -38,7 +38,7 @@ FrontendSquad::ComponentLibrary FrontendSquad::generateApplication(
 // Page generator
 FrontendSquad::GeneratedPage FrontendSquad::generatePage(
     const PageRequest& request,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     GeneratedPage page;
     page.route = request.route;
@@ -53,7 +53,7 @@ FrontendSquad::GeneratedPage FrontendSquad::generatePage(
     page.scssContent = generatePageStyles(request, designSystem);
     
     // Generate test content
-    page.testContent = generatePageTest(request);
+    page.testContent = generatePageTest(request, designSystem);
     
     // Collect dependencies
     page.dependencies = request.components.size() > 0 ? 
@@ -66,7 +66,7 @@ FrontendSquad::GeneratedPage FrontendSquad::generatePage(
 // Component generator
 std::string FrontendSquad::generateComponent(
     const ComponentSpec& spec,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     
@@ -102,7 +102,7 @@ std::string FrontendSquad::generateComponent(
 // Form generator
 std::string FrontendSquad::generateForm(
     const std::vector<FormField>& fields,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     
@@ -167,7 +167,7 @@ std::string FrontendSquad::generateForm(
 // Style generator
 std::string FrontendSquad::generateStyles(
     const ComponentSpec& spec,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     ss << "." << spec.name << " {\n";
@@ -181,7 +181,7 @@ std::string FrontendSquad::generateStyles(
 // Animation generator
 std::string FrontendSquad::generateAnimation(
     const ComponentSpec& spec,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     if (!spec.animated) return "";
     
@@ -209,7 +209,7 @@ std::string FrontendSquad::generateAnimation(
 
 // React-specific generators
 std::string FrontendSquad::generateReactComponent(const ComponentSpec& spec) {
-    return generateComponent(spec, CinematicVibeEngine::DesignSystem{});
+    return generateComponent(spec, DesignSystem{});
 }
 
 std::string FrontendSquad::generateReactHook(const std::string& name, const std::vector<std::string>& deps) {
@@ -307,7 +307,7 @@ std::string FrontendSquad::generateE2ETest(const PageRequest& request) {
 // Helper methods
 std::string FrontendSquad::generateImports(
     const PageRequest& request,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     ss << "import React from 'react';\n";
@@ -317,7 +317,7 @@ std::string FrontendSquad::generateImports(
 
 std::string FrontendSquad::generatePageComponent(
     const PageRequest& request,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     ss << "export const " << request.title << "Page: React.FC = () => {\n";
@@ -332,7 +332,7 @@ std::string FrontendSquad::generatePageComponent(
 
 std::string FrontendSquad::generatePageStyles(
     const PageRequest& request,
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     std::stringstream ss;
     ss << "." << request.layout << "-layout {\n";
@@ -343,12 +343,13 @@ std::string FrontendSquad::generatePageStyles(
     return ss.str();
 }
 
-std::string FrontendSquad::generatePageTest(const PageRequest& request) {
+std::string FrontendSquad::generatePageTest(const PageRequest& request, const DesignSystem& designSystem) {
+    (void)designSystem;
     return generateE2ETest(request);
 }
 
 std::map<std::string, std::string> FrontendSquad::generateSharedComponents(
-    const CinematicVibeEngine::DesignSystem& designSystem
+    const DesignSystem& designSystem
 ) {
     return {
         {"Button", "export const Button = () => \u003cbutton\u003eClick\u003c/button\u003e;"},
@@ -357,11 +358,11 @@ std::map<std::string, std::string> FrontendSquad::generateSharedComponents(
     };
 }
 
-std::string FrontendSquad::generateThemeFile(const CinematicVibeEngine::DesignSystem& designSystem) {
+std::string FrontendSquad::generateThemeFile(const DesignSystem& designSystem) {
     return ":root {\n  --primary: #007bff;\n  --secondary: #6c757d;\n  --success: #28a745;\n}";
 }
 
-std::string FrontendSquad::generateGlobalStyles(const CinematicVibeEngine::DesignSystem& designSystem) {
+std::string FrontendSquad::generateGlobalStyles(const DesignSystem& designSystem) {
     return "* {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}";
 }
 

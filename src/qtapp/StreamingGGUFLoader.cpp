@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QFileInfo>
 #include <algorithm>
+#include "gguf_loader.h"
 
 StreamingGGUFLoader::StreamingGGUFLoader(QObject* parent)
     : QObject(parent) {
@@ -565,3 +566,4 @@ void StreamingGGUFLoader::updateZoneAccessTime(const QString& zoneName) {
         m_loadedZones[zoneName].access_count++;
     }
 }
+

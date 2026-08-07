@@ -1,0 +1,248 @@
+# RawrXD OMEGA-1 CI/CD Pipeline
+# Automated build, test, and release workflow
+
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run nightly builds at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  BUILD_TYPE: Release
+  VULKAN_SDK_VERSION: 1.4.328.1
+
+jobs:
+  # ============================================================================
+  # Build Job
+  # ============================================================================
+  build:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        arch: [x64]
+        config: [Release, Debug]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
+    
+    - name: Setup Vulkan SDK
+      run: |
+        $vulkanUrl = "https://sdk.lunarg.com/sdk/download/${{ env.VULKAN_SDK_VERSION }}/windows/VulkanSDK-${{ env.VULKAN_SDK_VERSION }}-Installer.exe"
+        Invoke-WebRequest -Uri $vulkanUrl -OutFile VulkanSDK.exe
+        Start-Process -FilePath .\VulkanSDK.exe -ArgumentList "--accept-licenses --default-answer --confirm-command install" -Wait
+        echo "VULKAN_SDK=C:\VulkanSDK\${{ env.VULKAN_SDK_VERSION }}" >> $env:GITHUB_ENV
+    
+    - name: Setup Ninja
+      run: choco install ninja
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build `
+          -G Ninja `
+          -DCMAKE_BUILD_TYPE=${{ matrix.config }} `
+          -DCMAKE_C_COMPILER=cl `
+          -DCMAKE_CXX_COMPILER=cl `
+          -DRAWRXD_ENABLE_OMEGA1=ON `
+          -DRAWRXD_ENABLE_DUAL_GPU=ON
+    
+    - name: Build Win32IDE
+      run: cmake --build build --target RawrXD-Win32IDE --config ${{ matrix.config }} -j8
+    
+    - name: Build InferenceEngine
+      run: cmake --build build --target RawrXD-InferenceEngine --config ${{ matrix.config }} -j8
+    
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries-${{ matrix.config }}-${{ matrix.arch }}
+        path: |
+          build/bin/RawrXD-Win32IDE.exe
+          build/bin/RawrXD-InferenceEngine.exe
+          build/bin/*.dll
+        retention-days: 7
+
+  # ============================================================================
+  # Test Job
+  # ============================================================================
+  test:
+    needs: build
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: binaries-Release-x64
+        path: build/bin
+    
+    - name: Setup PowerShell
+      shell: pwsh
+      run: |
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+    
+    - name: Run Dual GPU Test
+      shell: pwsh
+      run: |
+        .\scripts\dual_gpu_live_test.ps1 -BinDir .\build\bin
+      continue-on-error: true
+    
+    - name: Run IPC Validation Test
+      shell: pwsh
+      run: |
+        .\scripts\ipc_validation_test.ps1 -BinDir .\build\bin
+      continue-on-error: true
+    
+    - name: Run E2E Integration Test
+      shell: pwsh
+      run: |
+        .\scripts\e2e_integration_test.ps1 -BinDir .\build\bin
+      continue-on-error: true
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test_results/*.json
+        retention-days: 30
+
+  # ============================================================================
+  # Package Job
+  # ============================================================================
+  package:
+    needs: [build, test]
+    runs-on: windows-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Download Build Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: binaries-Release-x64
+        path: build/bin
+    
+    - name: Create Release Package
+      shell: pwsh
+      run: |
+        $version = "${{ github.ref_name }}".Replace('v', '')
+        .\scripts\create_release_package.ps1 -Version $version
+    
+    - name: Upload Release Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-package
+        path: releases/*.zip
+        retention-days: 90
+
+  # ============================================================================
+  # Release Job
+  # ============================================================================
+  release:
+    needs: package
+    runs-on: windows-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download Release Package
+      uses: actions/download-artifact@v4
+      with:
+        name: release-package
+        path: releases
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: releases/*.zip
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+        generate_release_notes: true
+        body: |
+          ## RawrXD OMEGA-1 ${{ github.ref_name }}
+          
+          ### What's Included
+          - RawrXD-Win32IDE.exe - Main IDE (303+ MB)
+          - RawrXD-InferenceEngine.exe - Inference server
+          - Complete documentation
+          - Automated test scripts
+          
+          ### System Requirements
+          - Windows 10/11 (64-bit)
+          - 64GB DDR5 RAM
+          - Dual AMD GPU setup (Radeon AI PRO R9700 + RX 7800 XT)
+          
+          ### Quick Start
+          1. Extract the release package
+          2. Run `deploy_omega1.ps1` for automated installation
+          3. Or manually run `bin\RawrXD-Win32IDE.exe`
+          
+          ### Documentation
+          See `docs\` folder for complete documentation.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # Documentation Job
+  # ============================================================================
+  documentation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Check Documentation
+      run: |
+        # Verify documentation files exist
+        test -f OMEGA1_FINAL_REPORT.md
+        test -f OMEGA1_BUILD_SUMMARY.md
+        test -f QUICKSTART.md
+        echo "✅ All documentation files present"
+    
+    - name: Validate Markdown
+      uses: DavidAnson/markdownlint-cli2-action@v14
+      with:
+        globs: '**/*.md'
+        config: '.markdownlint.json'
+      continue-on-error: true
+
+  # ============================================================================
+  # Code Quality Job
+  # ============================================================================
+  code-quality:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Run Diagnostic Toolkit
+      shell: pwsh
+      run: |
+        .\scripts\diagnostic_toolkit.ps1 -Mode quick -GenerateReport
+    
+    - name: Upload Diagnostic Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: diagnostic-report
+        path: diagnostics/*.json
+        retention-days: 30

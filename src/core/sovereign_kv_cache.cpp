@@ -20,8 +20,10 @@
 struct KVCacheBlock {
     SovereignKVCacheBlock header;
     uint32_t in_use;
+    void* k_data;  // Pointer to K tensor data
+    void* v_data;  // Pointer to V tensor data
     
-    KVCacheBlock() : in_use(0) {
+    KVCacheBlock() : in_use(0), k_data(nullptr), v_data(nullptr) {
         memset(&header, 0, sizeof(header));
         header.state = SOVEREIGN_KV_BLOCK_FREE;
     }
@@ -263,9 +265,14 @@ __declspec(dllexport) SovereignKVCacheBlockHandle Sovereign_KVCache_AllocateBloc
         manager->free_blocks.pop_back();
         manager->stats.cache_hits++;
     } else {
-        // Need to evict
+        // Need to evict - try to free some blocks
         manager->stats.cache_misses++;
-        // TODO: Implement LRU eviction
+        uint64_t freed = Sovereign_KVCache_RunEviction(manager, 
+            manager->config.block_size * manager->config.head_dim * sizeof(float) * 2);
+        if (freed > 0 && !manager->free_blocks.empty()) {
+            block = manager->free_blocks.back();
+            manager->free_blocks.pop_back();
+        }
     }
     
     if (block) {
@@ -500,7 +507,7 @@ __declspec(dllexport) void Sovereign_KVCache_DumpState(SovereignKVCacheManagerHa
 }
 
 // =============================================================================
-// Placeholder Functions (for future implementation)
+// Advanced KV Cache Operations
 // =============================================================================
 
 __declspec(dllexport) SovereignKVCacheBlockHandle Sovereign_KVCache_GetBlockForToken(
@@ -522,17 +529,89 @@ __declspec(dllexport) void Sovereign_KVCache_MarkBlockComputed(SovereignKVCacheB
 __declspec(dllexport) int Sovereign_KVCache_GetAttentionBlock(
     SovereignKVCacheHandle cache, uint32_t start_token, uint32_t end_token,
     uint32_t layer_id, void** k_out, void** v_out, uint32_t* num_tokens_out) {
-    (void)cache; (void)start_token; (void)end_token; (void)layer_id;
-    if (k_out) *k_out = nullptr;
-    if (v_out) *v_out = nullptr;
-    if (num_tokens_out) *num_tokens_out = 0;
-    return -1;  // TODO: Implement contiguous block gathering
+    if (!cache || !k_out || !v_out || !num_tokens_out) return -1;
+    
+    auto* seq = reinterpret_cast<KVCacheSequence*>(cache);
+    
+    // Validate token range
+    if (start_token >= seq->header.total_tokens || end_token > seq->header.total_tokens) {
+        return -1;
+    }
+    
+    if (start_token >= end_token) {
+        return -1;
+    }
+    
+    // Calculate block indices
+    uint32_t start_block = start_token / SOVEREIGN_KV_BLOCK_SIZE;
+    uint32_t end_block = (end_token - 1) / SOVEREIGN_KV_BLOCK_SIZE;
+    
+    // Check if contiguous
+    if (start_block != end_block) {
+        // Non-contiguous - would need to gather
+        // For now, return first block
+        end_block = start_block;
+        end_token = std::min(end_token, (start_block + 1) * SOVEREIGN_KV_BLOCK_SIZE);
+    }
+    
+    if (start_block >= seq->block_list.size()) {
+        return -1;
+    }
+    
+    KVCacheBlock* block = seq->block_list[start_block].get();
+    if (!block) return -1;
+    
+    // Calculate offset within block
+    uint32_t block_offset = start_token % SOVEREIGN_KV_BLOCK_SIZE;
+    uint32_t tokens_in_block = end_token - start_token;
+    
+    // Calculate byte offset for this layer
+    size_t layer_stride = SOVEREIGN_KV_BLOCK_SIZE * seq->header.head_dim * sizeof(float);
+    size_t offset = layer_id * layer_stride * 2 + block_offset * seq->header.head_dim * sizeof(float);
+    
+    *k_out = reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(block->k_data) + offset);
+    *v_out = reinterpret_cast<void*>(reinterpret_cast<uint8_t*>(block->v_data) + offset);
+    *num_tokens_out = tokens_in_block;
+    
+    // Update access time
+    block->header.last_access_time = GetTickCount64();
+    
+    return 0;
 }
 
 __declspec(dllexport) int Sovereign_KVCache_ShareBlocks(
     SovereignKVCacheHandle source, SovereignKVCacheHandle target, uint32_t num_tokens) {
-    (void)source; (void)target; (void)num_tokens;
-    return 0;  // TODO: Implement fine-grained sharing
+    if (!source || !target) return -1;
+    
+    auto* src_seq = reinterpret_cast<KVCacheSequence*>(source);
+    auto* tgt_seq = reinterpret_cast<KVCacheSequence*>(target);
+    
+    if (num_tokens > src_seq->header.total_tokens) {
+        num_tokens = src_seq->header.total_tokens;
+    }
+    
+    // Calculate number of blocks to share
+    uint32_t num_blocks = (num_tokens + SOVEREIGN_KV_BLOCK_SIZE - 1) / SOVEREIGN_KV_BLOCK_SIZE;
+    num_blocks = std::min(num_blocks, (uint32_t)src_seq->block_list.size());
+    
+    // Share blocks by incrementing reference count
+    for (uint32_t i = 0; i < num_blocks; i++) {
+        if (i < src_seq->block_list.size()) {
+            KVCacheBlock* block = src_seq->block_list[i];
+            if (block) {
+                // Increment reference count atomically
+                InterlockedIncrement64(reinterpret_cast<volatile LONGLONG*>(&block->header.ref_count));
+                
+                // Add to target sequence
+                tgt_seq->block_list.push_back(block);
+            }
+        }
+    }
+    
+    // Update target sequence header
+    tgt_seq->header.total_tokens += num_tokens;
+    
+    return (int)num_tokens;
 }
 
 __declspec(dllexport) void Sovereign_KVCache_TrimSequence(SovereignKVCacheHandle cache, uint32_t new_length) {
@@ -545,19 +624,128 @@ __declspec(dllexport) void Sovereign_KVCache_TrimSequence(SovereignKVCacheHandle
 
 __declspec(dllexport) uint64_t Sovereign_KVCache_RunEviction(
     SovereignKVCacheManagerHandle manager, uint64_t target_free_bytes) {
-    (void)manager; (void)target_free_bytes;
-    return 0;  // TODO: Implement LRU eviction
+    if (!manager || target_free_bytes == 0) return 0;
+    
+    EnterCriticalSection(&manager->lock);
+    
+    uint64_t freed_bytes = 0;
+    
+    // Simple LRU eviction: find least recently used blocks
+    // Sort blocks by last_access_time and free until target reached
+    
+    std::vector<KVCacheBlock*> candidates;
+    for (auto* block : manager->all_blocks) {
+        if (block->header.state == SOVEREIGN_KV_BLOCK_ALLOCATED && 
+            block->header.ref_count == 0) {
+            candidates.push_back(block);
+        }
+    }
+    
+    // Sort by last access time (oldest first)
+    std::sort(candidates.begin(), candidates.end(),
+              [](KVCacheBlock* a, KVCacheBlock* b) {
+                  return a->header.last_access_time < b->header.last_access_time;
+              });
+    
+    // Evict blocks until we free enough
+    for (auto* block : candidates) {
+        if (freed_bytes >= target_free_bytes) break;
+        
+        // Mark as free
+        block->header.state = SOVEREIGN_KV_BLOCK_FREE;
+        block->header.num_tokens = 0;
+        block->in_use = 0;
+        
+        // Add to free list
+        manager->free_blocks.push_back(block);
+        
+        // Calculate freed size (approximate)
+        freed_bytes += manager->config.block_size * manager->config.head_dim * sizeof(float) * 2;
+        
+        manager->stats.used_blocks--;
+        manager->stats.free_blocks++;
+    }
+    
+    LeaveCriticalSection(&manager->lock);
+    
+    return freed_bytes;
 }
 
 __declspec(dllexport) uint64_t Sovereign_KVCache_Compact(SovereignKVCacheManagerHandle manager) {
-    (void)manager;
-    return 0;  // TODO: Implement defragmentation
+    if (!manager) return 0;
+    
+    EnterCriticalSection(&manager->lock);
+    
+    uint64_t blocks_moved = 0;
+    
+    // Simple defragmentation: compact free blocks to the end
+    // This is a simplified version - production would use more sophisticated algorithms
+    
+    // Find all free blocks and move them to the end of all_blocks
+    std::vector<KVCacheBlock*> free_blocks;
+    std::vector<KVCacheBlock*> used_blocks;
+    
+    for (auto* block : manager->all_blocks) {
+        if (block->header.state == SOVEREIGN_KV_BLOCK_FREE) {
+            free_blocks.push_back(block);
+        } else {
+            used_blocks.push_back(block);
+        }
+    }
+    
+    // Rebuild all_blocks with used blocks first, then free blocks
+    manager->all_blocks.clear();
+    manager->all_blocks.insert(manager->all_blocks.end(), 
+                                   used_blocks.begin(), used_blocks.end());
+    manager->all_blocks.insert(manager->all_blocks.end(), 
+                                   free_blocks.begin(), free_blocks.end());
+    
+    // Update free_blocks list
+    manager->free_blocks = free_blocks;
+    
+    blocks_moved = free_blocks.size();
+    
+    LeaveCriticalSection(&manager->lock);
+    
+    return blocks_moved;
 }
 
 __declspec(dllexport) void Sovereign_KVCache_PrefetchBlocks(
     SovereignKVCacheHandle cache, uint32_t start_token, uint32_t num_tokens) {
-    (void)cache; (void)start_token; (void)num_tokens;
-    // TODO: Implement software prefetching
+    if (!cache || num_tokens == 0) return;
+    
+    auto* seq = reinterpret_cast<KVCacheSequence*>(cache);
+    if (!seq) return;
+    
+    // Calculate block range to prefetch
+    uint32_t start_block = start_token / SOVEREIGN_KV_BLOCK_SIZE;
+    uint32_t end_block = (start_token + num_tokens - 1) / SOVEREIGN_KV_BLOCK_SIZE;
+    
+    // Clamp to sequence bounds
+    if (end_block >= seq->block_list.size()) {
+        end_block = (uint32_t)seq->block_list.size() - 1;
+    }
+    
+    // Prefetch blocks using Windows prefetch API
+    for (uint32_t block_idx = start_block; block_idx <= end_block; block_idx++) {
+        if (block_idx >= seq->block_list.size()) break;
+        
+        KVCacheBlock* block = seq->block_list[block_idx];
+        if (!block || !block->k_data || !block->v_data) continue;
+        
+        // Prefetch K data
+        WIN32_MEMORY_RANGE_ENTRY entry;
+        entry.VirtualAddress = block->k_data;
+        entry.NumberOfBytes = SOVEREIGN_KV_BLOCK_SIZE * seq->header.head_dim * sizeof(float);
+        PrefetchVirtualMemory(GetCurrentProcess(), 1, &entry, 0);
+        
+        // Prefetch V data
+        entry.VirtualAddress = block->v_data;
+        PrefetchVirtualMemory(GetCurrentProcess(), 1, &entry, 0);
+        
+        // Update access time to mark as recently used
+        block->header.last_access_time = GetTickCount64();
+    }
 }
 
 __declspec(dllexport) void Sovereign_KVCache_SetPrefetchWindow(

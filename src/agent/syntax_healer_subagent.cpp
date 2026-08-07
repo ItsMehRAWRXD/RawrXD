@@ -868,7 +868,7 @@ void SyntaxHealerSubAgent::checkMasmProcEndp(
 
         if (info.hasFrame) {
             // Also check for .ENDPROLOG in the body
-            // Simplified: just warn
+            // Warn about missing frame prologue end
             SyntaxError frameErr;
             frameErr.kind = SyntaxErrorKind::MasmMissingFrame;
             frameErr.severity = SyntaxSeverity::Warning;

@@ -24,7 +24,7 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
     filepath_ = filepath;
     file_.open(filepath, std::ios::binary);
     if (!file_.is_open()) {
-        std::cerr << "❌ Failed to open GGUF file: " << filepath << std::endl;
+        
         return false;
     }
     
@@ -50,13 +50,8 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
     
     // Assign tensors to zones
     AssignTensorsToZones();
-    
-    std::cout << "✅ GGUF Model opened in streaming mode" << std::endl;
-    std::cout << "   File: " << filepath << std::endl;
-    std::cout << "   Tensors: " << tensor_index_.size() << std::endl;
-    std::cout << "   Zones: " << zones_.size() << std::endl;
-    std::cout << "   Memory (header+index): ~" << ((tensor_index_.size() * 100) / (1024*1024)) << " MB" << std::endl;
-    
+
+
     return true;
 }
 
@@ -80,7 +75,7 @@ bool StreamingGGUFLoader::ParseHeader() {
     // Read magic
     if (!ReadValue(header_.magic)) return false;
     if (header_.magic != GGUFConstants::GGUF_MAGIC) {
-        std::cerr << "❌ Invalid GGUF magic: 0x" << std::hex << header_.magic << std::endl;
+        
         Diagnostics::error("Invalid GGUF magic number", "StreamingGGUFLoader");
         return false;
     }
@@ -88,7 +83,7 @@ bool StreamingGGUFLoader::ParseHeader() {
     // Read version
     if (!ReadValue(header_.version)) return false;
     if (header_.version != GGUFConstants::GGUF_VERSION) {
-        std::cerr << "❌ Unsupported GGUF version: " << header_.version << std::endl;
+        
         Diagnostics::error("Unsupported GGUF version: " + std::to_string(header_.version), "StreamingGGUFLoader");
         return false;
     }
@@ -120,13 +115,12 @@ bool StreamingGGUFLoader::ParseMetadata() {
         std::string key, value;
         
         if (!ReadString(key)) {
-            std::cerr << "❌ Failed to read metadata key at index " << i << std::endl;
             return false;
         }
         
         uint32_t value_type;
         if (!ReadValue(value_type)) {
-            std::cerr << "❌ Failed to read metadata value type for key: " << key << std::endl;
+            
             return false;
         }
         
@@ -326,6 +320,9 @@ bool StreamingGGUFLoader::ParseMetadata() {
         }
     }
     
+    // Save position for BuildTensorIndex
+    tensor_info_offset = file_.tellg();
+
     return true;
 }
 
@@ -403,7 +400,6 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         TensorRef ref;
         
         if (!ReadString(ref.name)) {
-            std::cerr << "❌ Failed to read tensor name at index " << i << std::endl;
             return false;
         }
         
@@ -428,6 +424,24 @@ bool StreamingGGUFLoader::BuildTensorIndex() {
         tensor_index_[ref.name] = ref;
     }
     
+    // Calculate Data Base Offset
+    // GGUF aligns to 32 bytes (or specified alignment)
+    uint64_t current_pos = file_.tellg();
+    uint64_t alignment = 32; 
+    // TODO: Read alignment from metadata "general.alignment" if present
+    if (metadata_.kv_pairs.count("general.alignment")) {
+        try {
+             alignment = std::stoul(metadata_.kv_pairs["general.alignment"]);
+        } catch(...) {}
+    }
+
+    uint64_t remainder = current_pos % alignment;
+    if (remainder != 0) {
+        data_base_offset = current_pos + (alignment - remainder);
+    } else {
+        data_base_offset = current_pos;
+    }
+
     return true;
 }
 
@@ -477,12 +491,11 @@ void StreamingGGUFLoader::AssignTensorsToZones() {
     }
     
     // Print zone info
-    std::cout << "\n📊 Zone Assignment Summary:" << std::endl;
+    
     for (const auto& [zone_name, zone_info] : zones_) {
-        std::cout << "   " << zone_name << ": " << zone_info.tensors.size() 
-                  << " tensors, " << (zone_info.total_bytes / (1024*1024)) << " MB" << std::endl;
+        
     }
-    std::cout << std::endl;
+    
 }
 
 int32_t StreamingGGUFLoader::ExtractLayerNumber(const std::string& tensor_name) const {
@@ -516,7 +529,7 @@ std::string StreamingGGUFLoader::GetTensorZone(const std::string& tensor_name) c
 bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_memory_mb) {
     auto zone_it = zones_.find(zone_name);
     if (zone_it == zones_.end()) {
-        std::cerr << "❌ Zone not found: " << zone_name << std::endl;
+        
         return false;
     }
     
@@ -524,7 +537,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     
     // Already loaded?
     if (zone.is_loaded) {
-        std::cout << "✓ Zone already loaded: " << zone_name << std::endl;
+        
         return true;
     }
     
@@ -535,7 +548,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     
     // Check file is open
     if (!is_open_ || !file_.is_open()) {
-        std::cerr << "❌ File not open for streaming" << std::endl;
+        
         return false;
     }
     
@@ -544,21 +557,20 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     zone.data.reserve(zone.total_bytes);
     
     uint64_t total_loaded = 0;
-    
-    std::cout << "📥 Loading zone: " << zone_name << " (" << (zone.total_bytes / (1024.0*1024.0)) << " MB)..." << std::endl;
-    
+
+
     for (const auto& tensor_name : zone.tensors) {
         // Get tensor metadata from index
         auto tensor_it = tensor_index_.find(tensor_name);
         if (tensor_it == tensor_index_.end()) {
-            std::cerr << "❌ Tensor not in index: " << tensor_name << std::endl;
+            
             return false;
         }
         
         const TensorRef& ref = tensor_it->second;
         
-        // Seek to tensor offset in file
-        file_.seekg(ref.offset, std::ios::beg);
+        // Seek to tensor offset in file (Base + Relative Offset)
+        file_.seekg(data_base_offset + ref.offset, std::ios::beg);
         
         // Read from disk into zone buffer
         size_t old_size = zone.data.size();
@@ -567,7 +579,7 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         file_.read(reinterpret_cast<char*>(zone.data.data() + old_size), ref.size);
         
         if (!file_.good()) {
-            std::cerr << "❌ Failed to read tensor: " << tensor_name << std::endl;
+            
             zone.data.resize(old_size);
             return false;
         }
@@ -578,9 +590,8 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     zone.is_loaded = true;
     current_zone_ = zone_name;
     current_zone_memory_ = total_loaded;
-    
-    std::cout << "✅ Zone loaded: " << zone_name << " (" << (total_loaded / (1024.0*1024.0)) << " MB)" << std::endl;
-    
+
+
     return true;
 }
 
@@ -596,7 +607,7 @@ bool StreamingGGUFLoader::UnloadZone(const std::string& zone_name) {
         zone.data.clear();
         zone.data.shrink_to_fit();
         zone.is_loaded = false;
-        std::cout << "📤 Zone unloaded: " << zone_name << std::endl;
+        
     }
     
     return true;
@@ -606,7 +617,7 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
     // Find which zone this tensor belongs to
     std::string zone_name = GetTensorZone(tensor_name);
     if (zone_name.empty()) {
-        std::cerr << "❌ Tensor not found: " << tensor_name << std::endl;
+        
         return false;
     }
     

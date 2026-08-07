@@ -1,0 +1,10 @@
+{
+  "binary_size": 318285824,
+  "cmake_preset": "release",
+  "status": "PASS",
+  "timestamp": "2026-07-24T12:22:34Z",
+  "build_time_minutes": 12,
+  "binary_path": "bin/RawrXD-Win32IDE.exe",
+  "binary_hash": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+  "buildable": true
+}

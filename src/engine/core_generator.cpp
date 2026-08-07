@@ -695,7 +695,7 @@ bool UniversalGenerator::AddCustomTemplate(const ProjectTemplate& tmpl) {
 
 bool UniversalGenerator::AddCustomLanguage(const LanguageConfig& config) {
     // Find a matching LanguageType by name, or add to a custom bucket
-    // For now, log and return true — the config is stored via the programmatic API
+    // Current implementation logs and returns true — the config is stored via the programmatic API
     std::cout << "[gen] Custom language '" << config.name << "' registered.\n";
     return true;
 }

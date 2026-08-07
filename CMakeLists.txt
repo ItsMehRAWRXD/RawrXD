@@ -1,4 +1,8 @@
+# CMakeLists_native.txt - Pure Native RawrXD Build
 cmake_minimum_required(VERSION 3.20)
+
+# Phase 46: Enable Vulkan for dual GPU testing
+option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)" ON)
 
 # Force Windows SDK version BEFORE any project() or compiler checks
 # This MUST be set before project() to affect the VS generator
@@ -130,12 +134,33 @@ if(WIN32)
     )
 endif()
 
+# ============================================================================
+# Vulkan SDK Detection (Common - must run before targets are defined)
+# ============================================================================
+if(RAWR_ENABLE_VULKAN)
+    # Try manual path first — D: first, then C:
+    file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
+    if(NOT _VK_SDK_DIRS)
+        file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
+    endif()
+    if(_VK_SDK_DIRS)
+        list(SORT _VK_SDK_DIRS)
+        list(GET _VK_SDK_DIRS -1 _VK_SDK_DIR)
+        message(STATUS "[Vulkan] Common SDK: ${_VK_SDK_DIR}")
+        set(RAWR_VULKAN_SDK_ROOT "${_VK_SDK_DIR}" CACHE PATH "Vulkan SDK root")
+        set(RAWR_VULKAN_INCLUDE "${_VK_SDK_DIR}/Include" CACHE PATH "Vulkan include dir")
+        set(RAWR_VULKAN_LIB "${_VK_SDK_DIR}/Lib/vulkan-1.lib" CACHE FILEPATH "Vulkan library")
+    endif()
+endif()
+
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
-# MSVC: std::expected (<expected>) is only available at C++23 (STL4038 at C++20).
+# MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
+# Pin to C++20 for build stability. std::expected is available via
+# <expected> polyfill or 3rdparty if needed.
 if(MSVC)
-    set(CMAKE_CXX_STANDARD 23)
+    set(CMAKE_CXX_STANDARD 20)
 else()
     set(CMAKE_CXX_STANDARD 20)
 endif()
@@ -194,16 +219,33 @@ if(RAWRXD_BUILD_CLI)
     file(GLOB UI_SOURCES "src/ui/*.cpp")
     file(GLOB ASM_SOURCES "src/asm/RawrXD_IPC_Dispatcher.asm" "src/asm/RawrXD_Disasm_Kernel.asm")
 
-    add_executable(rawrxd 
+    add_executable(rawrxd
         src/ui/entry_point.cpp
         src/ui/RawrXD_MainLoop.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
+        src/asm/rawr_cpu_features.asm
         src/cli/rawrxd_cli_link_shims.cpp
         src/res/Resource.rc
-        # Agentic components for CLI Ollama testing
-        src/agentic/OrchestratorBridge.cpp
-        src/agentic/AgentOllamaClient.cpp
+        src/rawrxd_link_stubs.cpp
+        # Core inference components for dual GPU testing
+        src/rawrxd_inference.cpp
+        src/rawrxd_model_loader.cpp
+        src/rawrxd_tokenizer.cpp
+        src/rawrxd_transformer.cpp
+        src/rawrxd_sampler.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/core/swarm_scheduler.cpp
+        src/core/link_stubs.cpp
+        src/core/gguf_swarm_plan_builder.cpp
+        src/core/inference_witness.cpp
+        src/logging/Logger.cpp
+        # Generation Bouncer - unified entry point
+        src/runtime/GenerationBouncer.cpp
+        # Agentic components for CLI Ollama testing - TEMPORARILY DISABLED
+        # src/agentic/OrchestratorBridge.cpp
+        # src/agentic/AgentOllamaClient.cpp
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
     )
@@ -223,7 +265,266 @@ if(RAWRXD_BUILD_CLI)
         endif()
     endif()
 
+    # Add LIBPATH flags for Windows SDK, MSVC runtime, and UCRT
+    target_link_options(rawrxd PRIVATE
+        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64"
+        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64"
+        "/LIBPATH:C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64"
+        "/LIBPATH:C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/onecore/x64"
+    )
+    
+    # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
     target_link_libraries(rawrxd PRIVATE
+        kernel32.lib
+        user32.lib
+        gdi32.lib
+        winspool.lib
+        shell32.lib
+        ole32.lib
+        oleaut32.lib
+        uuid.lib
+        comdlg32.lib
+        advapi32.lib
+        version.lib
+        ws2_32.lib
+        dxgi.lib
+    )
+    
+    # Vulkan SDK support for rawrxd
+    # Phase 46: Auto-detect Vulkan SDK for dual GPU testing
+    if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
+        message(STATUS "[rawrxd] Vulkan SDK: ${RAWR_VULKAN_SDK_ROOT}")
+        target_include_directories(rawrxd PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_directories(rawrxd PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+        target_link_libraries(rawrxd PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1 RAWR_VULKAN_AVAILABLE=1)
+    elseif(RAWR_ENABLE_VULKAN AND DEFINED VULKAN_INCLUDE_DIR)
+        target_include_directories(rawrxd PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(rawrxd PRIVATE dxgi)
+        target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(rawrxd PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(rawrxd PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        message(STATUS "[rawrxd] Vulkan SDK not found — GPU compute uses CPU fallback")
+        target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
+    endif()
+endif()
+
+# =============================================================================
+# VAL-051.2.A: Real Token Proof Harness
+# =============================================================================
+# Standalone test executable that validates the full RawrXDInference
+# component chain produces real tokens from a GGUF model.
+if(WIN32)
+    add_executable(val_051_2_a_real_token
+        tests/val_051_2_a_real_token.cpp
+        src/rawrxd_inference.cpp
+        src/rawrxd_model_loader.cpp
+        src/rawrxd_tokenizer.cpp
+        src/rawrxd_transformer.cpp
+        src/rawrxd_sampler.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/core/inference_witness.cpp
+        src/core/swarm_scheduler.cpp
+        src/core/memory_stubs.cpp
+        src/core/link_stubs.cpp
+        src/core/gguf_swarm_plan_builder.cpp
+        src/logging/Logger.cpp
+    )
+    set_target_properties(val_051_2_a_real_token PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(val_051_2_a_real_token PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    # Vulkan SDK support for val_051_2_a_real_token (shares sources with rawrxd)
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(val_051_2_a_real_token PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(val_051_2_a_real_token PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(val_051_2_a_real_token PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(val_051_2_a_real_token PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(val_051_2_a_real_token PRIVATE dxgi)
+        target_compile_definitions(val_051_2_a_real_token PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(val_051_2_a_real_token PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(val_051_2_a_real_token PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(val_051_2_a_real_token PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(val_051_2_a_real_token PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(val_051_2_a_real_token PRIVATE dxgi)
+    else()
+        target_link_libraries(val_051_2_a_real_token PRIVATE dxgi)
+    endif()
+    # Add LIBPATH directly using the SDK paths defined at top of file
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET val_051_2_a_real_token APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    # Use short library names - LIBPATH above provides the paths
+    target_link_libraries(val_051_2_a_real_token PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
+endif()
+
+# =============================================================================
+# Dual GPU Smoke Test
+# Validates both GPUs are detected and usable
+# =============================================================================
+if(WIN32)
+    add_executable(dual_gpu_smoke_test
+        tests/dual_gpu_smoke_test.cpp
+    )
+    set_target_properties(dual_gpu_smoke_test PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(dual_gpu_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET dual_gpu_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    # Vulkan SDK support for dual_gpu_smoke_test
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(dual_gpu_smoke_test PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_directories(dual_gpu_smoke_test PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+        target_link_libraries(dual_gpu_smoke_test PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(dual_gpu_smoke_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(dual_gpu_smoke_test PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(dual_gpu_smoke_test PRIVATE dxgi)
+        target_compile_definitions(dual_gpu_smoke_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(dual_gpu_smoke_test PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(dual_gpu_smoke_test PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(dual_gpu_smoke_test PRIVATE RAWR_HAS_VULKAN=1)
+    else()
+        target_compile_definitions(dual_gpu_smoke_test PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(dual_gpu_smoke_test PRIVATE dxgi)
+    endif()
+    target_link_libraries(dual_gpu_smoke_test PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Dual GPU Smoke Test configured")
+endif()
+
+# =============================================================================
+# GGUF Inspector Tool
+# Deep model architecture analysis for IDE integration
+# =============================================================================
+if(WIN32)
+    add_executable(gguf_inspector
+        tools/gguf_inspector.cpp
+    )
+    set_target_properties(gguf_inspector PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_compile_features(gguf_inspector PRIVATE cxx_std_20)
+    message(STATUS "GGUF Inspector tool configured")
+endif()
+
+# =============================================================================
+# Comprehensive Dual GPU Test
+# Full validation of multi-GPU inference pipeline
+# =============================================================================
+if(WIN32)
+    add_executable(comprehensive_dual_gpu_test
+        tests/comprehensive_dual_gpu_test.cpp
+    )
+    set_target_properties(comprehensive_dual_gpu_test PROPERTIES 
+        EXCLUDE_FROM_ALL TRUE 
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(comprehensive_dual_gpu_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET comprehensive_dual_gpu_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    # Vulkan SDK support for comprehensive_dual_gpu_test
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_directories(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(comprehensive_dual_gpu_test PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=1)
+    else()
+        target_compile_definitions(comprehensive_dual_gpu_test PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(comprehensive_dual_gpu_test PRIVATE dxgi)
+    endif()
+    target_link_libraries(comprehensive_dual_gpu_test PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Comprehensive Dual GPU Test configured")
+endif()
+
+# =============================================================================
+# OMEGA-1 Bridge Test Harness
+# Validates IAT slots 64-75 for self-mutating engine integration
+# =============================================================================
+if(WIN32)
+    add_executable(test_omega1_bridge
+        tests/test_omega1_bridge.cpp
+        src/omega1_modules/OmegaPowerShellBridge.cpp
+    )
+    set_target_properties(test_omega1_bridge PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
+    target_include_directories(test_omega1_bridge PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/omega1_modules
+    )
+    if(MSVC)
+        target_link_directories(test_omega1_bridge PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(test_omega1_bridge PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    target_link_libraries(test_omega1_bridge PRIVATE
+        Omega1Engine
         kernel32
         user32
         gdi32
@@ -237,9 +538,8 @@ if(RAWRXD_BUILD_CLI)
         version
         ws2_32
     )
-    # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
     if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        target_link_libraries(rawrxd PRIVATE
+        target_link_libraries(test_omega1_bridge PRIVATE
             "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/kernel32.lib"
             "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/user32.lib"
             "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/gdi32.lib"
@@ -254,6 +554,7 @@ if(RAWRXD_BUILD_CLI)
             "${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64/ws2_32.lib"
         )
     endif()
+    message(STATUS "OMEGA-1 Bridge Test Harness configured")
 endif()
 
 # Resource compiler for icon/version (Windows only)
@@ -520,6 +821,9 @@ set(SOURCES
     src/gguf_loader.cpp
     src/gguf_vocab_resolver.cpp
     src/compression_interface.cpp
+    src/core/memory_production.cpp
+    src/core/link_stubs_production.cpp
+    src/vulkan_kernel_stubs.cpp
     
     src/engine/gguf_core.cpp
     src/engine/inference_kernels.cpp
@@ -544,7 +848,7 @@ set(SOURCES
     src/core/confidence_gate.cpp
     src/core/deterministic_replay.cpp
     src/core/execution_governor.cpp
-    src/core/multi_response_engine.cpp
+    # src/core/multi_response_engine.cpp  # excluded: methods defined inline in win32app/multi_response_engine.h
     src/core/streaming_engine_registry.cpp
     src/core/flash_attention.cpp
     src/core/gpu_backend_bridge.cpp
@@ -559,7 +863,7 @@ set(SOURCES
     
     # Three-layer hotpatch system (needed by decision tree)
     src/core/model_memory_hotpatch.cpp
-    src/core/byte_level_hotpatcher.cpp
+    # src/core/byte_level_hotpatcher.cpp  # excluded: patch_bytes and search_and_patch_bytes defined in link_stubs_production.cpp
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
@@ -596,7 +900,7 @@ set(SOURCES
     # ═══════════════════════════════════════════════════════════════════
     # Sovereign Puppeteer Architecture — Self-Modification System
     # ═══════════════════════════════════════════════════════════════════
-    src/sovereign/puppeteer/SymbolTableGenerator.cpp
+    src/sovereign/introspection/SymbolTableGenerator.cpp
     src/sovereign/puppeteer/PuppeteerAPI.cpp
     src/sovereign/puppeteer/VEH_Watchdog.cpp
 
@@ -668,6 +972,23 @@ set(SOURCES
 
     # Disk Recovery Agent (C++ wrapper for ASM SCSI kernel)
     src/agent/DiskRecoveryAgent.cpp
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # IDE Subsystems — Repository Intelligence, Build, Diagnostics, etc.
+    # ═══════════════════════════════════════════════════════════════════
+    src/repo/FileIndex.cpp
+    src/repo/SymbolTable.cpp
+    src/repo/ASTCache.cpp
+    src/repo/TypeDatabase.cpp
+    src/repo/CallGraph.cpp
+    src/repo/IncludeGraph.cpp
+    src/repo/SearchIndex.cpp
+    src/repo/EmbeddingIndex.cpp
+    src/build/BuildIntelligence.cpp
+    src/diagnostics/DiagnosticsEngine.cpp
+    src/refactoring/RefactoringEngine.cpp
+    src/validation/PatchValidator.cpp
+    src/ide/IDEShell.cpp
     
     # Phase 21: Distributed Swarm Bridge + Universal Model Hotpatcher
     src/core/swarm_decision_bridge.cpp
@@ -1046,6 +1367,9 @@ set(SOURCES
     # Universal Dorker — LDOAGTIAC, XOR obfuscation, hotpatch, result reversal
     src/security/RawrXD_Universal_Dorker.cpp
 
+    # Security hardening (AuditLog, SecurityManager, InputValidator)
+    src/security/SecurityHardening.cpp
+
     # Phase 15b: Code Linter — Real-time syntax/semantic linting (C++, ASM, Python, JS)
     src/core/code_linter.cpp
 
@@ -1077,9 +1401,9 @@ set(SOURCES
     # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
     
     # Batch 018-020: AgentOllamaClient, Win32IDE methods, Sovereign subsystem, Camellia256, Watchdog, Performance
-    src/core/unlinked_symbols_batch_018.cpp
-    src/core/unlinked_symbols_batch_019.cpp
-    src/core/unlinked_symbols_batch_020.cpp
+    # src/core/unlinked_symbols_batch_018.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_001.cpp
+    # src/core/unlinked_symbols_batch_019.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_005.cpp and unlinked_symbols_batch_011.cpp
+    # src/core/unlinked_symbols_batch_020.cpp  # excluded: duplicate symbols with unlinked_symbols_batch_001.cpp
 
     # Streaming orchestrator and analyzer distiller removed - symbols provided by unlinked_symbols_batch_*.cpp
     # src/core/streaming_orchestrator.cpp
@@ -1190,6 +1514,13 @@ set(SOURCES
     src/deep2/PatchCache.cpp
     src/deep2/BottleTTL.cpp
     src/deep2/CPUFrequency.cpp
+    # Dual GPU / Reverse Recovery / Streaming
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/FabricTensorTable.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -1313,6 +1644,9 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
     src/core/streaming_orchestrator.cpp
     src/core/analyzer_distiller.cpp
+    # Remove streaming_inference_engine.cpp - references KernelArbiter and Vulkan APIs not available in RawrEngine
+    src/ai/streaming_inference_engine.cpp
+    src/ai/speculative_tree_attention_bridge.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -1417,6 +1751,7 @@ endif()
 list(APPEND RAWR_ENGINE_SOURCES
     src/logging/Logger.cpp
     src/security/InputSanitizer.cpp
+    src/security/SecurityHardening.cpp
     src/core/ConfigurationValidator.cpp
     src/inference/PerformanceMonitor.cpp
     src/agentic/ErrorRecoveryManager.cpp
@@ -1440,7 +1775,6 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/modules/quickjs_extension_host.cpp
     src/modules/quickjs_vscode_bindings.cpp
     src/engine/pyre_compute.cpp
-    src/core/byte_level_hotpatcher.cpp
 )
 
 # RawrEngine is headless; exclude Win32IDE GUI translation units.
@@ -1504,9 +1838,97 @@ if(WIN32)
 endif()
 
 # =============================================================================
+# OMEGA-1 Self-Mutating Engine + PowerShell Bridge
+# IAT Slots 64-75: Self-mutation, reflective execution, PowerShell integration
+# =============================================================================
+set(OMEGA1_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules")
+
+set(OMEGA1_SOURCES
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.cpp
+)
+
+set(OMEGA1_HEADERS
+    ${OMEGA1_DIR}/OmegaPowerShellBridge.h
+)
+
+# OMEGA-1 Engine as static library
+add_library(Omega1Engine STATIC ${OMEGA1_SOURCES} ${OMEGA1_HEADERS})
+
+target_include_directories(Omega1Engine PUBLIC
+    ${OMEGA1_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+target_compile_definitions(Omega1Engine PRIVATE
+    OMEGA1_BUILDING=1
+    RAWRXD_OMEGA1_ENABLED=1
+)
+
+set_property(TARGET Omega1Engine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# =============================================================================
+# RawrXD Compression Library (Zero-Dependency Runtime ZLIB Loader)
+# Replaces ZLIB for checkpoint compression - no build dependencies
+# =============================================================================
+set(RAWRXD_COMPRESSION_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/compression")
+
+# Runtime ZLIB loader sources (zero build dependencies)
+set(RAWRXD_COMPRESSION_SOURCES
+    ${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.cpp
+)
+
+set(RAWRXD_COMPRESSION_HEADERS
+    ${RAWRXD_COMPRESSION_DIR}/zlib_runtime_loader.hpp
+)
+
+# Create compression library
+add_library(RawrXD_Compression STATIC ${RAWRXD_COMPRESSION_SOURCES})
+target_include_directories(RawrXD_Compression PUBLIC ${RAWRXD_COMPRESSION_DIR})
+
+# Link Windows libraries only (no ZLIB dependency)
+target_link_libraries(RawrXD_Compression PUBLIC
+    kernel32
+    user32
+)
+
+# Also create the MASM compression if available
+set(RAWRXD_COMPRESSION_ASM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/asm")
+if(EXISTS ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
+    # Build MASM compression as additional option
+    set(RAWRXD_COMPRESSION_ASM ${RAWRXD_COMPRESSION_ASM_DIR}/RawrXD_Compression.asm)
+    set(RAWRXD_COMPRESSION_OBJ ${CMAKE_BINARY_DIR}/RawrXD_Compression_MASM.obj)
+    
+    add_custom_command(
+        OUTPUT ${RAWRXD_COMPRESSION_OBJ}
+        COMMAND ${CMAKE_ASM_MASM_COMPILER} /c /W3 /nologo /Fo${RAWRXD_COMPRESSION_OBJ} ${RAWRXD_COMPRESSION_ASM}
+        DEPENDS ${RAWRXD_COMPRESSION_ASM}
+        COMMENT "Assembling RawrXD_Compression.asm (MASM)"
+        VERBATIM
+    )
+    
+    add_custom_target(RawrXD_Compression_MASM DEPENDS ${RAWRXD_COMPRESSION_OBJ})
+    add_dependencies(RawrXD_Compression RawrXD_Compression_MASM)
+    
+    target_compile_definitions(RawrXD_Compression PRIVATE HAS_MASM_COMPRESSION=1)
+endif()
+
+message(STATUS "✓ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)")
+
+# =============================================================================
 # Reverse Engineering Suite (sub-module)
 # =============================================================================
 add_subdirectory(src/reverse_engineering)
+
+# =============================================================================
+# CEO Agent Module — Autonomous Software Engineering Layer
+# =============================================================================
+add_subdirectory(src/ceo)
+
+# =============================================================================
+# Repository Intelligence Module — Deep Code Understanding
+# =============================================================================
+add_subdirectory(src/repository)
+add_subdirectory(src/generation)
 
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
@@ -1514,10 +1936,23 @@ if(WIN32)
     add_dependencies(RawrEngine regen-ssot-beacons verify-ssot-ext-ownership)
 endif()
 
+# ═════════════════════════════════════════════════════════════════════════════
+# OMEGA-1 Post-Build Manifest Generation
+# ═════════════════════════════════════════════════════════════════════════════
+if(WIN32)
+    add_custom_command(TARGET RawrEngine POST_BUILD
+        COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
+                -BinaryPath $<TARGET_FILE:RawrEngine>
+                -OutputPath ${CMAKE_BINARY_DIR}/omega1_manifest.json
+        COMMENT "Generating OMEGA-1 manifest for RawrEngine"
+        VERBATIM
+    )
+endif()
+
 # Lane B: curated sources already include required stubs.
 
-# Link RE library into RawrEngine
-target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library)
+# Link RE library and OMEGA-1 Engine into RawrEngine
+target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library Omega1Engine)
 
 target_include_directories(RawrEngine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -1539,10 +1974,17 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign/puppeteer
     ${CMAKE_CURRENT_SOURCE_DIR}/src/intent
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/repo
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/build
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/diagnostics
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/refactoring
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ide
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/validation
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/swarm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1564,6 +2006,7 @@ target_compile_definitions(RawrEngine PRIVATE
     RAWRXD_STANDALONE_MAIN=1
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
     $<$<BOOL:${_RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}>:RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=1>
+    RAWRXD_OMEGA1_ENABLED=1
 )
 
 # Lane B: keep RawrEngine minimal (no debugger/ollama shims).
@@ -1573,7 +2016,7 @@ if(NOT RAWR_ENGINE_LANE_B)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
-        # src/agentic/AgentOllamaClient.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/agentic/AgentOllamaClient.cpp
         src/core/command_handlers_lsp.cpp
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
@@ -1690,6 +2133,13 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_multi_model_agent_
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/quantum_missing_impl\\.cpp$")
 # Exclude streaming_inference_engine.cpp that references KernelArbiter (unresolved externals)
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/streaming_inference_engine\\.cpp$")
+# Exclude link_stubs_production.cpp from Gold - ASM files provide these symbols
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/link_stubs_production\\.cpp$")
+# Exclude memory_production.cpp from Gold - ASM files provide these symbols (rawr_cpu_has_avx512, etc.)
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
+# Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
@@ -1770,9 +2220,11 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 
 # Add Gold stub implementations for excluded files
 # REMOVED: src/gold_stubs/gold_link_stubs.cpp - stub file deleted
-# list(APPEND GOLD_UNDERSCORE_SOURCES
-#     src/gold_stubs/gold_link_stubs.cpp
-# )
+# Add Gold-specific stubs for symbols not provided by ASM files
+list(APPEND GOLD_UNDERSCORE_SOURCES
+    src/core/link_stubs_gold.cpp
+    src/core/vulkan_kernel_stubs.cpp
+)
 
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
@@ -1780,7 +2232,20 @@ if(WIN32)
     add_dependencies(RawrXD_Gold regen-ssot-beacons)
 endif()
 
-target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library)
+# ═════════════════════════════════════════════════════════════════════════════
+# OMEGA-1 Post-Build Manifest Generation for Gold
+# ═════════════════════════════════════════════════════════════════════════════
+if(WIN32)
+    add_custom_command(TARGET RawrXD_Gold POST_BUILD
+        COMMAND powershell -ExecutionPolicy Bypass -File ${OMEGA1_DIR}/Generate-Manifest.ps1
+                -BinaryPath $<TARGET_FILE:RawrXD_Gold>
+                -OutputPath ${CMAKE_BINARY_DIR}/gold/omega1_manifest.json
+        COMMENT "Generating OMEGA-1 manifest for RawrXD_Gold"
+        VERBATIM
+    )
+endif()
+
+target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine)
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -1804,6 +2269,7 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/guardrails
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hotpatch
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -1821,6 +2287,7 @@ target_compile_definitions(RawrXD_Gold PRIVATE
     RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=${_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}
     RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
+    RAWRXD_OMEGA1_ENABLED=1
 )
 if(RAWR_HAS_MASM)
     target_compile_definitions(RawrXD_Gold PRIVATE HAS_BRUTAL_GZIP_MASM=1)
@@ -2745,6 +3212,9 @@ endif()
 # =============================================================================
 # Vulkan SDK (optional — GPU compute acceleration)
 # =============================================================================
+# Phase 4A: Apply Vulkan detection fix for Windows
+include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
+
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
     message(STATUS "[Vulkan] Found SDK: ${Vulkan_INCLUDE_DIRS}")
@@ -2899,6 +3369,33 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     )
 endif()
 
+# Unified Generation CLI - uses GenerationBouncer
+add_executable(RawrXD-Generate EXCLUDE_FROM_ALL
+    src/cli/generate_cli.cpp
+    src/runtime/GenerationBouncer.cpp
+)
+target_link_libraries(RawrXD-Generate PRIVATE
+    InferenceEngine
+    Threads::Threads
+    kernel32
+    user32
+)
+target_include_directories(RawrXD-Generate PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+)
+set_target_properties(RawrXD-Generate PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-Generate
+)
+if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+    set_target_properties(RawrXD-Generate PROPERTIES
+        EXCLUDE_FROM_ALL FALSE
+        EXCLUDE_FROM_DEFAULT_BUILD FALSE
+    )
+endif()
+
 target_compile_definitions(InferenceEngine PRIVATE
     RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     RAWR_STANDALONE_INFERENCE=1
@@ -2921,6 +3418,7 @@ target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/codec
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
+    ${VULKAN_INCLUDE_DIR}
 )
 
 target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
@@ -3087,6 +3585,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
+        src/win32app/Win32IDE_Window.cpp
+        src/win32app/Win32IDE_Accelerators.cpp
+        src/win32app/IV280Bridge.cpp
+        src/win32app/IMultiFileSearchWidget.cpp
+        src/win32app/CICDSettings.cpp
+        src/win32app/BenchmarkMenu.cpp
             src/win32app/WindowManager.cpp
             src/win32app/EditorOperations.cpp
             src/win32app/RouterOperations.cpp
@@ -3116,6 +3620,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
         src/win32app/Win32IDE_Session.cpp
+        src/win32app/Win32IDE_GGUFInspector.cpp
         src/win32app/Win32IDE_FileOps.cpp
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
@@ -3125,7 +3630,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
         src/win32app/Win32IDE_FeatureManifest.cpp
         src/win32app/Win32IDE_GhostText.cpp
+        # Deep2 completion provider and bridge — real local inference for ghost text
+        src/ai_completion_real.cpp
+        src/ide/Deep2Bridge.cpp
         src/ide/SovereignSharedMemoryBridge.cpp
+        src/ide/ANSIColorParser.cpp
+        src/ide/FindReplaceDialog.cpp
+        src/ide/GitCommitDialog.cpp
+        src/ide/GitDiffViewer.cpp
         src/win32app/Win32IDE_OutlinePanel.cpp
         src/win32app/Win32IDE_RenamePreview.cpp
         src/win32app/Win32IDE_Tier2Cosmetics.cpp
@@ -3185,7 +3697,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
-        # src/agentic/OllamaProvider.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/agentic/OllamaProvider.cpp
         src/agentic/DiffEngine.cpp
 
         # T3-D: Deterministic Replay Engine (DivergenceEvent + TelemetrySnapshot)
@@ -3205,6 +3717,57 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/RawrXD_AgentLoop.cpp
         src/agentic/agentic_executor.cpp
         src/agentic/FIMPromptBuilder.cpp
+        src/agentic/AgentOllamaClient.cpp
+
+        # Unlinked symbols batches - provide real implementations for link closure
+        src/core/unlinked_symbols_batch_001.cpp
+        src/core/unlinked_symbols_batch_002.cpp  # ADDED: Provides matmul_kernel_avx2, ggml_gemm_q4_0
+        src/core/unlinked_symbols_batch_003.cpp
+        src/core/unlinked_symbols_batch_004.cpp  # ADDED: Provides asm_watchdog_init
+        src/core/unlinked_symbols_batch_005.cpp
+        src/core/unlinked_symbols_batch_006.cpp  # ADDED: Provides asm_mesh_init, asm_mesh_quorum_vote, asm_mesh_crdt_merge
+        src/core/unlinked_symbols_batch_007.cpp  # ADDED: Provides asm_mesh_fedavg_aggregate, asm_mesh_zkp_generate, asm_speciator_*
+        src/core/unlinked_symbols_batch_008.cpp  # ADDED: Provides asm_neural_*, asm_hwsynth_*
+        src/core/unlinked_symbols_batch_009.cpp  # ADDED: Provides asm_hwsynth_profile_dataflow, asm_hwsynth_predict_perf
+        src/core/unlinked_symbols_batch_010.cpp  # ADDED: Provides SO_InitializeVulkan
+        src/core/unlinked_symbols_batch_011.cpp
+        src/core/unlinked_symbols_batch_012.cpp
+        src/core/unlinked_symbols_batch_018.cpp  # ADDED: Provides asm_gguf_loader_close, asm_lsp_bridge_shutdown, asm_spengine_cpu_optimize
+        src/core/unlinked_symbols_batch_019.cpp
+        src/core/unlinked_symbols_batch_020.cpp
+        src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
+        src/core/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
+
+        # ASM link stubs for missing symbols
+        # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)
+        src/gguf_d3d12_bridge.cpp  # ADDED: Real implementation (was gguf_d3d12_bridge_stub.cpp)
+        # src/core/rtp_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (RTP_* functions)
+        src/core/rdna3_stubs.cpp  # KEPT: No real implementations found for RDNA3_* functions
+        # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
+        # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
+        src/llm_adapter/rawrxd_ggufrunner_signals.cpp
+        # src/core/subsystem_api_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_011.cpp (AD_ProcessGGUF, SO_LoadExecFile), batch_010.cpp (SO_InitializeVulkan), batch_019.cpp
+        # src/core/crypto_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_005.cpp and batch_019.cpp (asm_camellia256_auth_*)
+        # src/core/watchdog_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp, batch_004.cpp, batch_005.cpp, batch_019.cpp
+        # src/core/pattern_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_019.cpp (find_pattern_asm)
+        # src/core/perf_telemetry_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_perf_init, asm_perf_begin, asm_perf_end), batch_020.cpp
+        # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
+        # src/core/native_log_stub.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp
+        # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
+        # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
+        # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        # src/core/spengine_stubs.cpp  # REMOVED: Real implementation in unlinked_symbols_batch_012.cpp (asm_spengine_cpu_optimize)
+        # src/core/collab_stubs.cpp  # REMOVED: Real implementations in src/collab/
+        src/collab/cursor_widget.cpp
+        src/collab/crdt_buffer.cpp
+        # src/core/mesh_brain_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_006.cpp, batch_007.cpp
+        # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
+        # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
+        # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
+        src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
+        # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
+        # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
+        src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -3483,7 +4046,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/codec/gzip_brutal_inflate.cpp
         src/core/ssot_handlers.cpp
         src/core/ssot_handlers_ext_isolated.cpp
-        src/core/beacon_link_stub.cpp
+        # src/core/beacon_link_stub.cpp  # REMOVED: File does not exist
         src/win32app/v280_link_bridge.cpp
         src/core/ssot_validation.cpp
 
@@ -3785,7 +4348,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Legacy support unit wiring removed from production lane.
         # Completed modules previously documented as shipped
         src/core/license_manager_panel.cpp
-        src/telemetry/logger.cpp
+        # Qt-based logger disabled (project is Qt-free; Win32IDE_Logger.cpp provides logging)
+        # src/telemetry/logger.cpp
         # License Creator + Feature Registry dialogs (showLicenseCreatorDialog, showFeatureRegistryDialog)
         src/win32app/Win32IDE_LicenseCreator.cpp
         # License enforcement + manifest (g_FeatureManifest + featureName from license_validator_manifest.cpp; LicenseEnforcer from license_enforcement.cpp)
@@ -3826,6 +4390,14 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/PatchCache.cpp
         src/deep2/BottleTTL.cpp
         src/deep2/CPUFrequency.cpp
+        # Dual GPU / Reverse Recovery / Streaming
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/ShardRouterIntegration.cpp
+        src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/deep2/FabricTensorTable.cpp
     )
 
     if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
@@ -3848,6 +4420,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/agent/agentic_deep_thinking_engine.cpp
             # NOTE: Quantum fiction files already removed from SOURCES
             src/vulkan_compute.cpp
+            src/runtime/TensorExecutionRouter.cpp
             src/core/embedding_engine.cpp
             src/core/vector_index.cpp
             src/core/agentic_task_graph.cpp
@@ -4338,7 +4911,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_ChatMessageRenderer.cpp
         src/win32app/Win32IDE_ToolActionStatus.cpp
         src/win32app/Win32IDE_ChatPanel.cpp
-        # src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # REMOVED: Ollama backend replaced with native GGUF loader
+        src/win32app/Win32IDE_ChatPanel_Ollama.cpp  # RESTORED: Required for HandleCopilotSend_Ollama and initializeChatPanelOllama
         src/win32app/Win32IDE_VulkanRenderer.cpp
         src/win32app/Win32IDE_OSExplorerInterceptor.cpp
         src/win32app/Win32IDE_IOCPFileWatcher.cpp
@@ -4368,9 +4941,36 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Batch 6: BackendOrchestrator — dynamic switching, sharding, semantic cache
     list(APPEND WIN32IDE_SOURCES
         src/memory/UnifiedMemoryPool.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
         src/InferenceProfiler.cpp
         src/BackendOrchestrator.cpp
     )
+
+    # Deep2Engine Integration Test
+    add_executable(Deep2Engine_IntegrationTest
+        src/tests/Deep2Engine_IntegrationTest_Minimal.cpp
+        src/memory/SequentialBlowoffValve.cpp
+        src/inference/OutOfCoreScheduler.cpp
+        src/inference/DualGpuPipeline.cpp
+        src/inference/Deep2Engine.cpp
+        src/kernels/VulkanComputeKernels.cpp
+    )
+    target_include_directories(Deep2Engine_IntegrationTest PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/inference
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/kernels
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Include)
+        target_link_directories(Deep2Engine_IntegrationTest PRIVATE ${RAWR_VULKAN_SDK_ROOT}/Lib)
+        target_link_libraries(Deep2Engine_IntegrationTest PRIVATE vulkan-1)
+    endif()
 
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
     # Replaced broken MASM syntax with portable C++ implementations
@@ -4413,6 +5013,24 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/sovereign_autonomy/SovereignReflectionEngine.cpp
         src/sovereign_autonomy/SovereignCritic.cpp
         src/sovereign_autonomy/SovereignAgentRuntime.cpp
+    )
+
+    # ═══════════════════════════════════════════════════════════════
+    # OMEGA-1 v2.0 IDE Integration - IPC Layer for Ghost Text & Telemetry
+    # ═══════════════════════════════════════════════════════════════
+    list(APPEND WIN32IDE_SOURCES
+        src/win32ide/Omega1IPCClient.cpp
+        src/win32ide/GhostTextRenderer.cpp
+        src/win32ide/StatusBarTelemetry.cpp
+        src/win32ide/Omega1IDEIntegration.cpp
+        src/win32ide/Win32IDE_Omega1Integration.cpp
+    )
+    
+    # ═══════════════════════════════════════════════════════════════
+    # OMEGA-1 Engine Server - IPC Server for IDE integration
+    # ═══════════════════════════════════════════════════════════════
+    list(APPEND RAWR_ENGINE_SOURCES
+        src/engine/Omega1Engine_Server.cpp
     )
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
@@ -4500,6 +5118,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
 
     # Runtime feature gates for this target's source graph.
     target_compile_definitions(RawrXD-Win32IDE PRIVATE
+        UNICODE
+        _UNICODE
         RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
         RAWR_HAS_SOVEREIGN_ENGINES=0
         RAWR_HAS_RAWR_INFERENCE=0
@@ -5112,6 +5732,16 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/MoEArchitectureParser.cpp
         src/deep2/QuantKernelRegistry.cpp
         src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        # MARS dual-GPU VRAM orchestration
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
         # VAL-000 Components
         src/deep2/ReverseIntegration.cpp
         src/reverse/ReverseEngine.cpp
@@ -5416,6 +6046,19 @@ if(WIN32)
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/include
     )
+    # Vulkan SDK support for RawrXD-Benchmark
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(RawrXD-Benchmark PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(RawrXD-Benchmark PRIVATE "${RAWR_VULKAN_LIB}")
+        target_compile_definitions(RawrXD-Benchmark PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(RawrXD-Benchmark PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_compile_definitions(RawrXD-Benchmark PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(RawrXD-Benchmark PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(RawrXD-Benchmark PRIVATE Vulkan::Vulkan)
+        target_compile_definitions(RawrXD-Benchmark PRIVATE RAWR_HAS_VULKAN=1)
+    endif()
     target_compile_definitions(RawrXD-Benchmark PRIVATE
         RAWR_BENCHMARK=1
     )
@@ -6078,6 +6721,20 @@ if(NOT TARGET rawrxd)
     add_executable(rawrxd
         src/sovereign/rawrxd.cpp
         src/sovereign/ExecutionContract.cpp
+        src/cpu_inference_engine.cpp
+        src/rawrxd_inference.cpp
+        src/rawrxd_model_loader.cpp
+        src/rawrxd_tokenizer.cpp
+        src/rawrxd_transformer.cpp
+        src/rawrxd_sampler.cpp
+        src/gguf_loader.cpp
+        src/gguf_vocab_resolver.cpp
+        src/core/inference_witness.cpp
+        src/core/swarm_scheduler.cpp
+        src/core/memory_stubs.cpp
+        src/core/link_stubs.cpp
+        src/core/gguf_swarm_plan_builder.cpp
+        src/logging/Logger.cpp
     )
 
 target_include_directories(rawrxd PRIVATE
@@ -6086,6 +6743,31 @@ target_include_directories(rawrxd PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/sovereign
 )
+
+# Vulkan SDK support for Sovereign Runtime rawrxd target
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    message(STATUS "[SovereignRuntime] Vulkan SDK: ${RAWR_VULKAN_SDK_ROOT}")
+    target_include_directories(rawrxd PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_directories(rawrxd PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+    target_link_libraries(rawrxd PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1 RAWR_VULKAN_AVAILABLE=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    message(STATUS "[SovereignRuntime] Vulkan via VULKAN_INCLUDE_DIR")
+    target_include_directories(rawrxd PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(rawrxd PRIVATE dxgi)
+    target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    message(STATUS "[SovereignRuntime] Vulkan via find_package")
+    target_include_directories(rawrxd PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(rawrxd PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    message(STATUS "[SovereignRuntime] Vulkan not found, using CPU fallback")
+    target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(rawrxd PRIVATE dxgi)
+else()
+    target_link_libraries(rawrxd PRIVATE dxgi)
+endif()
 
 target_compile_features(rawrxd PRIVATE cxx_std_17)
 
@@ -6212,7 +6894,9 @@ if(RAWRXD_BUILD_LSP_SERVER AND EXISTS "${CMAKE_SOURCE_DIR}/src/lsp/RawrXD_LSPSer
         ${CMAKE_SOURCE_DIR}/src
     )
     if(MSVC)
-        target_compile_options(RawrXD_LSPServer PRIVATE /W3 /EHsc /O2)
+        target_compile_options(RawrXD_LSPServer PRIVATE /W3 /EHsc
+            $<$<NOT:$<CONFIG:Debug>>:/O2>
+        )
     else()
         target_compile_options(RawrXD_LSPServer PRIVATE -Wall -Wextra -O2)
     endif()
@@ -6238,7 +6922,7 @@ if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/min
         ${CMAKE_SOURCE_DIR}/src
     )
     if(MSVC)
-        target_compile_options(RawrXDScriptDAPAdapter PRIVATE /W3 /EHsc /O2)
+        target_compile_options(RawrXDScriptDAPAdapter PRIVATE /W3 /EHsc $<$<NOT:$<CONFIG:Debug>>:/O2>)
     else()
         target_compile_options(RawrXDScriptDAPAdapter PRIVATE -Wall -Wextra -O2)
     endif()
@@ -6482,6 +7166,18 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/validation/CMakeLists.txt")
 endif()
 
 # =============================================================================
+# VAL-051 Witness System Test
+# =============================================================================
+add_executable(witness_system_test EXCLUDE_FROM_ALL
+    src/validation/witness_system_test.cpp
+    src/core/inference_witness.cpp
+)
+target_include_directories(witness_system_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+target_compile_features(witness_system_test PRIVATE cxx_std_17)
+
+# =============================================================================
 # MEASUREMENT FRAMEWORK - Rigorous Validation Tests
 # =============================================================================
 message(STATUS "========================================")
@@ -6662,3 +7358,87 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/benchmark_dispatch_pmc.cpp")
 endif()
 
 message(STATUS "========================================")
+
+# =============================================================================
+# Native Toolchain Build (separate project)
+# =============================================================================
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists_native.txt")
+    # Native build is configured separately via CMakeLists_native.txt
+    message(STATUS "[Native] Separate native toolchain build available")
+endif()
+
+# =============================================================================
+# MASM Components
+# =============================================================================
+
+# =============================================================================
+# SoloIDE — Sovereign Agentic Desktop Environment
+# =============================================================================
+set(SOLOIDE_SOURCES
+    src/soloide/main.cpp
+    src/soloide/Core/Bus.cpp
+    src/soloide/UI/SoloIDE.cpp
+    src/soloide/UI/Panels/EditorPanel.cpp
+    src/soloide/UI/Panels/ChatPanel.cpp
+    src/soloide/UI/Panels/DebugPanel.cpp
+    src/soloide/UI/Panels/TerminalPanel.cpp
+    src/soloide/UI/Panels/ProjectPanel.cpp
+    src/soloide/UI/Panels/StatusPanel.cpp
+    src/soloide/AI/CompletionEngine.cpp
+    src/soloide/AI/AdvancedCodingAgent.cpp
+    src/soloide/AI/MultiModalModelRouter.cpp
+    src/soloide/Debug/DAPClient.cpp
+    src/soloide/LSP/LSPClient.cpp
+)
+
+set(SOLOIDE_HEADERS
+    src/soloide/Core/Bus.hpp
+    src/soloide/UI/SoloIDE.hpp
+    src/soloide/UI/Panels/EditorPanel.hpp
+    src/soloide/UI/Panels/ChatPanel.hpp
+    src/soloide/UI/Panels/DebugPanel.hpp
+    src/soloide/UI/Panels/TerminalPanel.hpp
+    src/soloide/UI/Panels/ProjectPanel.hpp
+    src/soloide/UI/Panels/StatusPanel.hpp
+    src/soloide/AI/CompletionEngine.hpp
+    src/soloide/AI/AdvancedCodingAgent.hpp
+    src/soloide/AI/MultiModalModelRouter.hpp
+    src/soloide/Debug/DAPClient.hpp
+    src/soloide/LSP/LSPClient.hpp
+)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
+    # Find Qt6 — try qmake-based detection first, then manual paths
+    find_package(Qt6 COMPONENTS Widgets Network Core QUIET)
+    if(NOT Qt6_FOUND)
+        find_package(Qt6 COMPONENTS Widgets Network Core
+            PATHS
+                "C:/Qt/6.7.3/msvc2022_64"
+                "C:/Qt/6.8.0/msvc2022_64"
+                "C:/Qt/6.7.0/msvc2022_64"
+                "C:/Qt/6.6.0/msvc2022_64"
+                "C:/Qt/6.5.0/msvc2022_64"
+                "D:/Qt/6.8.0/msvc2022_64"
+                "D:/Qt/6.7.0/msvc2022_64"
+            NO_DEFAULT_PATH
+        )
+    endif()
+
+    if(Qt6_FOUND)
+        add_executable(RawrXD-SoloIDE WIN32 ${SOLOIDE_SOURCES} ${SOLOIDE_HEADERS})
+        target_link_libraries(RawrXD-SoloIDE PRIVATE
+            Qt6::Widgets Qt6::Network Qt6::Core
+        )
+        target_include_directories(RawrXD-SoloIDE PRIVATE
+            ${CMAKE_SOURCE_DIR}/src/soloide
+        )
+        target_compile_features(RawrXD-SoloIDE PRIVATE cxx_std_20)
+        set_target_properties(RawrXD-SoloIDE PROPERTIES
+            OUTPUT_NAME "RawrXD-SoloIDE"
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )
+        message(STATUS "[SoloIDE] RawrXD-SoloIDE target configured with Qt6")
+    else()
+        message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
+    endif()
+endif()

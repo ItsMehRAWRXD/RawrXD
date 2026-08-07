@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-07-30T18:03:49.375496",
+  "router_initialized": true,
+  "deep2_model_registered": true,
+  "deep2_backend_available": true,
+  "ollama_fallback_available": true,
+  "local_engine_ready": true,
+  "streaming_enabled": true,
+  "fim_supported": true,
+  "selected_backend": "Deep2",
+  "model_name": "deep2-22b-q4",
+  "context_length": 32768,
+  "available_backends": [
+    "RawrXD-Native (Local GGUF)",
+    "RawrXD Reasoning (Alpha)",
+    "Ollama (Local)"
+  ],
+  "available_models": [
+    "deep2-22b-q4",
+    "ollama-fallback"
+  ],
+  "init_latency_ms": 2.3,
+  "all_passed": true
+}

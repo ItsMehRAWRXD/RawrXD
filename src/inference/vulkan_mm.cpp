@@ -27,6 +27,7 @@
 #ifdef RAWRXD_VULKAN_IMPL
 
 #include <vulkan/vulkan.h>
+#include "vulkan_compute.h"
 
 namespace rawrxd {
 
@@ -549,3 +550,4 @@ private:
 
 #endif // RAWRXD_VULKAN_IMPL
 #endif // RAWRXD_VULKAN_MM_HPP
+

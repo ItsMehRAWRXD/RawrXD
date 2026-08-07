@@ -8,11 +8,11 @@
 
 #include "planner.hpp"
 #include "self_patch.hpp"
+#include "self_code.hpp"
 #include "release_agent.hpp"
 #include "meta_learn.hpp"
 #include "self_test_gate.hpp"
 #include "simple_json.hpp"
-#include "agent_self_healing_orchestrator.hpp"
 #include "agentic_hotpatch_orchestrator.hpp"
 
 #include <string>
@@ -217,11 +217,11 @@ int main(int argc, char *argv[])
             success = rel.tweet(task.value("text").toString());
         } else if (type == "meta_learn") {
             success = ml.record(
-                task.value("quant").toString(),
-                task.value("kernel").toString(),
-                task.value("gpu").toString(),
-                task.value("tps").toDouble(),
-                task.value("ppl").toDouble()
+                task.value("quant", ""),
+                task.value("kernel", ""),
+                task.value("gpu", ""),
+                task.value("tps", 0.0),
+                task.value("ppl", 0.0)
             );
         } else if (type == "bench" || type == "bench_all") {
             fprintf(stderr, "Benchmark (handled by build)\n");

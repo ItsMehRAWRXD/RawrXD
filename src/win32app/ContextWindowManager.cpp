@@ -132,8 +132,16 @@ bool ContextWindowManager::useMemoryMappedFile(bool enable) {
 
 float ContextWindowManager::getUtilization() const {
     if (m_bytesAllocated == 0) return 0.0f;
-    // This would need actual usage tracking from the inference engine
-    return 0.0f; // Placeholder
+    
+    // Calculate utilization based on active token count vs capacity
+    // Track bytes actually in use from the inference engine's perspective
+    size_t bytesInUse = 0;
+    for (const auto& window : m_contextWindows) {
+        bytesInUse += window.tokens.size() * sizeof(int);  // Each token is an int
+    }
+    
+    float utilization = static_cast<float>(bytesInUse) / static_cast<float>(m_bytesAllocated);
+    return std::min(1.0f, std::max(0.0f, utilization));
 }
 
 // ============================================================================

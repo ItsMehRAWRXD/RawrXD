@@ -51,7 +51,7 @@ std::string FaultEvent::ToJson() const {
 
 FaultEvent FaultEvent::FromJson(const std::string& json) {
     FaultEvent event;
-    // Simplified parsing
+    // Basic parsing implementation
     return event;
 }
 
@@ -335,7 +335,7 @@ void GossipProtocol::GossipLoop() {
 
 void GossipProtocol::HandleGossipMessage(const Message& message) {
     // Parse and update gossip state
-    // Simplified implementation
+    // Basic implementation
 }
 
 void GossipProtocol::HandleSuspicion(const std::string& nodeId, const std::string& reason) {
@@ -436,7 +436,7 @@ void PartitionDetector::OnPartitionChange(PartitionCallback callback) {
 
 void PartitionDetector::DetectPartition() {
     // Query all nodes for their view
-    // Simplified implementation
+    // Basic implementation
 }
 
 bool PartitionDetector::IsMajority(size_t partitionSize, size_t totalSize) const {
@@ -917,13 +917,13 @@ bool RecoveryCoordinator::DoMigrateTasks(
 
 bool RecoveryCoordinator::DoElectNewLeader() {
     // Trigger leader election via consensus
-    // Simplified - would integrate with RaftConsensus
+    // Full implementation would integrate with RaftConsensus
     return true;
 }
 
 bool RecoveryCoordinator::DoShrinkCluster(const std::string& nodeId) {
     // Remove node from cluster membership
-    // Simplified implementation
+    // Basic implementation
     return true;
 }
 

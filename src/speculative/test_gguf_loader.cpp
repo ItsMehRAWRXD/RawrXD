@@ -9,6 +9,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include "gguf_loader.h"
 
 int main(int argc, char** argv) {
     const char* filename = (argc > 1) ? argv[1] : "d:/codestral22b.gguf";
@@ -113,3 +114,4 @@ int main(int argc, char** argv) {
     std::cerr << "\n[TEST] PASSED" << std::endl;
     return 0;
 }
+

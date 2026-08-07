@@ -23,6 +23,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "gguf_loader.h"
 #endif
 
 using namespace RawrXD::LSPBridge;
@@ -599,3 +600,4 @@ std::vector<HotpatchSymbolEntry> HotpatchSymbolProvider::getFileSymbols(
 
     return result;
 }
+

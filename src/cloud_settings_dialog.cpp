@@ -21,7 +21,7 @@ static std::string DPAPI_Encrypt(const std::string& input) {
     DataIn.cbData = (DWORD)input.length();
     
     // Optional: Add entropy for additional security (e.g. machine specific GUID)
-    // For now we rely on user credentials implicit in DPAPI
+    // Using DPAPI with implicit user credentials
     
     if (CryptProtectData(
         &DataIn,

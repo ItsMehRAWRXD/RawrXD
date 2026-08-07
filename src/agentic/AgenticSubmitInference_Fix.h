@@ -13,7 +13,7 @@ public:
     struct RuntimeConfig {
         std::string workingDirectory = ".";
         std::string host = "127.0.0.1";
-        uint16_t port = 11434;  // Default Ollama port
+        uint16_t port = 11436;  // Default Deep2 port (was Ollama 11434)
         float temperature = 0.1f;
         int maxToolIterations = 8;
     };

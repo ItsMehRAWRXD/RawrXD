@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -424,4 +425,5 @@ bool BuildAnatomyFromGgufPath(const std::string& filePath, ModelAnatomy& out, st
 }
 
 }  // namespace RawrXD
+
 

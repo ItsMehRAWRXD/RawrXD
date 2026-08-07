@@ -17,6 +17,7 @@
 
 #ifdef _WIN32
     #include <psapi.h>
+#include "gguf_loader.h"
     #pragma comment(lib, "psapi.lib")
     // Undefine GetFileSize macro from windows.h to avoid collision
     #ifdef GetFileSize
@@ -786,9 +787,28 @@ bool DeepSeekMoELoader::ParseIndex() {
                 if (!ReadAt(cursor, &numElems, sizeof(numElems))) return false;
                 cursor += sizeof(numElems);
                 
-                size_t elemSize = GGMLTypeSize(static_cast<GGMLType>(elemType));
-                if (elemSize == 0) elemSize = 4;
-                cursor += numElems * elemSize;
+                for (uint64_t j = 0; j < numElems; ++j) {
+                    switch (elemType) {
+                        case GGUF_TYPE_UINT8:  cursor += 1; break;
+                        case GGUF_TYPE_INT8:   cursor += 1; break;
+                        case GGUF_TYPE_UINT16: cursor += 2; break;
+                        case GGUF_TYPE_INT16:  cursor += 2; break;
+                        case GGUF_TYPE_UINT32: cursor += 4; break;
+                        case GGUF_TYPE_INT32:  cursor += 4; break;
+                        case GGUF_TYPE_FLOAT32: cursor += 4; break;
+                        case GGUF_TYPE_BOOL:   cursor += 1; break;
+                        case GGUF_TYPE_UINT64: cursor += 8; break;
+                        case GGUF_TYPE_INT64:  cursor += 8; break;
+                        case GGUF_TYPE_FLOAT64: cursor += 8; break;
+                        case GGUF_TYPE_STRING: {
+                            uint64_t strLen = 0;
+                            if (!ReadAt(cursor, &strLen, sizeof(strLen))) return false;
+                            cursor += sizeof(strLen) + strLen;
+                            break;
+                        }
+                        default: cursor += 4; break;
+                    }
+                }
                 break;
             }
             default:
@@ -1379,3 +1399,4 @@ DeepSeekMoETestHarness::RunQuickTest(const char* ggufPath) {
 }
 
 } // namespace Deep2
+

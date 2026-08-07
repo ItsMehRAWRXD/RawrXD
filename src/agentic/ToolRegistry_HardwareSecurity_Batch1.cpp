@@ -53,7 +53,7 @@ struct KernelBenchResult
 };
 
 // These would be declared in their respective headers in production
-// For now, we provide interface assumptions:
+// Interface assumptions provided for compilation:
 namespace BackendOrchestrator
 {
 BackendHealth GetBackendHealth(const char* backendKind)
@@ -448,7 +448,7 @@ ToolExecResult HandleCreateMemorySilo(const json& args)
         result["status"] = "created";
 
         // Note: In production, we'd store jobHandle in a static map for later retrieval
-        // For now, the handle is encoded in silo_id
+        // The handle is encoded in silo_id for this implementation
 
         return ToolExecResult::ok(result.dump());
     }
@@ -695,7 +695,7 @@ ToolExecResult HandleMapModelAperture(const json& args)
             offset.QuadPart = offsetMb * 1024 * 1024;
             SIZE_T length = lengthMb * 1024 * 1024;
 
-            // Simplified: use standard MapViewOfFile for compatibility
+            // Use standard MapViewOfFile for compatibility
             viewAddress = MapViewOfFile(mappingHandle, mapAccess, offset.HighPart, offset.LowPart, length);
             if (viewAddress == NULL)
             {

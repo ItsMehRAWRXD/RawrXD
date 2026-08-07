@@ -11,7 +11,7 @@
 
 
 #include "inference_engine.h"
-#include "plugins/MemoryPlugin.hpp"
+#include "../plugins/MemoryPlugin.hpp"
 #include "rawrxd_inference.h"
 
 

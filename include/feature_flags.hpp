@@ -1,4 +1,4 @@
-#pragma once
+
 // feature_flags.hpp
 namespace rxd::features {
     constexpr bool LSP_SEMANTIC_TOKENS = false;      // Deferred (high complexity)
@@ -8,3 +8,4 @@ namespace rxd::features {
     constexpr bool AVX_512_TEXT_PROC   = true;       // MASM bridge active
     constexpr bool INCREMENTAL_SYNC    = true;       // Myers diff active
 }
+

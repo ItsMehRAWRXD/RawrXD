@@ -12,6 +12,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <iomanip>
+#include "gguf_loader.h"
 
 // GGUF v3 format structures (from RC1)
 #pragma pack(push, 1)
@@ -754,3 +755,4 @@ int main(int argc, char* argv[]) {
     
     return all_passed ? 0 : 1;
 }
+

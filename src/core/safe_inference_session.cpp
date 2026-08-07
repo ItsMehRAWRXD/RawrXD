@@ -484,21 +484,51 @@ void ResourceMonitor::start() {
     start_time_ = std::chrono::steady_clock::now();
     monitoring_.store(true);
     
-    // TODO: Implement actual resource monitoring
-    // This would use platform-specific APIs to get CPU/memory usage
+    // Get initial process handle for monitoring
+    process_handle_ = GetCurrentProcess();
+    
+    // Get initial memory usage
+    PROCESS_MEMORY_COUNTERS memCounters;
+    if (GetProcessMemoryInfo(process_handle_, &memCounters, sizeof(memCounters))) {
+        initial_memory_mb_ = memCounters.WorkingSetSize / (1024 * 1024);
+        current_memory_mb_.store(initial_memory_mb_);
+    }
+    
+    // Get initial CPU time
+    FILETIME creationTime, exitTime, kernelTime, userTime;
+    if (GetProcessTimes(process_handle_, &creationTime, &exitTime, &kernelTime, &userTime)) {
+        ULARGE_INTEGER kernel, user;
+        kernel.LowPart = kernelTime.dwLowDateTime;
+        kernel.HighPart = kernelTime.dwHighDateTime;
+        user.LowPart = userTime.dwLowDateTime;
+        user.HighPart = userTime.dwHighDateTime;
+        initial_cpu_time_ = (kernel.QuadPart + user.QuadPart) / 10000;  // Convert to milliseconds
+    }
+    
+    // Start monitoring thread
+    monitor_thread_ = std::thread([this]() {
+        while (monitoring_.load()) {
+            update_metrics();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    });
 }
 
 ResourceMonitor::ResourceUsage ResourceMonitor::stop() {
     monitoring_.store(false);
+    
+    if (monitor_thread_.joinable()) {
+        monitor_thread_.join();
+    }
     
     ResourceUsage usage;
     usage.duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - start_time_
     );
     
-    // TODO: Implement actual resource usage collection
+    // Get final metrics
     usage.peak_cpu_percent = current_cpu_percent_.load();
-    usage.avg_cpu_percent = current_cpu_percent_.load();
+    usage.avg_cpu_percent = current_cpu_percent_.load();  // Could track average over time
     usage.peak_memory_mb = current_memory_mb_.load();
     usage.avg_memory_mb = current_memory_mb_.load();
     
@@ -569,6 +599,44 @@ void TokenValidator::reset() {
 std::vector<std::string> TokenValidator::get_accumulated_tokens() const {
     std::lock_guard lock(mutex_);
     return accumulated_tokens_;
+}
+
+// ResourceMonitor helper implementation
+void ResourceMonitor::update_metrics() {
+    if (!process_handle_) return;
+    
+    // Update memory usage
+    PROCESS_MEMORY_COUNTERS memCounters;
+    if (GetProcessMemoryInfo(process_handle_, &memCounters, sizeof(memCounters))) {
+        size_t memory_mb = memCounters.WorkingSetSize / (1024 * 1024);
+        current_memory_mb_.store(memory_mb);
+    }
+    
+    // Update CPU usage
+    FILETIME creationTime, exitTime, kernelTime, userTime;
+    if (GetProcessTimes(process_handle_, &creationTime, &exitTime, &kernelTime, &userTime)) {
+        ULARGE_INTEGER kernel, user;
+        kernel.LowPart = kernelTime.dwLowDateTime;
+        kernel.HighPart = kernelTime.dwHighDateTime;
+        user.LowPart = userTime.dwLowDateTime;
+        user.HighPart = userTime.dwHighDateTime;
+        
+        uint64_t current_cpu_time = (kernel.QuadPart + user.QuadPart) / 10000;  // ms
+        uint64_t elapsed_cpu = current_cpu_time - initial_cpu_time_;
+        
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed_wall = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - start_time_
+        ).count();
+        
+        if (elapsed_wall > 0) {
+            // CPU percent = (CPU time / Wall time) * 100 / num_cores
+            // Simplified: assume single core for now
+            double cpu_percent = (static_cast<double>(elapsed_cpu) / elapsed_wall) * 100.0;
+            cpu_percent = std::min(cpu_percent, 100.0);  // Cap at 100%
+            current_cpu_percent_.store(cpu_percent);
+        }
+    }
 }
 
 } // namespace RawrXD::Core

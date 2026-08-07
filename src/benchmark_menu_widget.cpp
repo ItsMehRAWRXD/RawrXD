@@ -401,8 +401,17 @@ std::string BenchmarkLogOutput::levelToString(LogLevel level) {
     }
 }
 
-uint32_t BenchmarkLogOutput::levelToColor(LogLevel) {
-    return 0;
+uint32_t BenchmarkLogOutput::levelToColor(LogLevel level) {
+    // Return RGB color values for different log levels
+    // Format: 0x00BBGGRR (Windows COLORREF format)
+    switch (level) {
+        case DEBUG:   return 0x00808080;  // Gray
+        case INFO:    return 0x00FFFFFF;  // White
+        case SUCCESS: return 0x0000FF00;  // Green
+        case WARNING: return 0x0000FFFF;  // Yellow
+        case LOG_ERROR: return 0x000000FF;  // Red
+        default:      return 0x00FFFFFF;  // White (default)
+    }
 }
 
 // ============================================================================
@@ -478,14 +487,14 @@ void BenchmarkResultsDisplay::reset() {
 }
 
 // ============================================================================
-// BenchmarkMenu (Win32 integration)
+// BenchmarkMenuWidget (Win32 integration)
 // ============================================================================
 
-BenchmarkMenu::BenchmarkMenu(HWND mainWindow)
+BenchmarkMenuWidget::BenchmarkMenuWidget(HWND mainWindow)
     : mainWindow_(mainWindow) {
 }
 
-BenchmarkMenu::~BenchmarkMenu() {
+BenchmarkMenuWidget::~BenchmarkMenuWidget() {
     stopBenchmarks();
     if (runnerThread_.joinable()) runnerThread_.join();
     delete selector_;
@@ -496,38 +505,38 @@ BenchmarkMenu::~BenchmarkMenu() {
     resultsDisplay_ = nullptr;
 }
 
-BenchmarkSelector* BenchmarkMenu::ensureSelectorAttached(HWND parent) {
+BenchmarkSelector* BenchmarkMenuWidget::ensureSelectorAttached(HWND parent) {
     if (!selector_) selector_ = new BenchmarkSelector();
     selector_->create(parent, 0, 0, 0, 0);
     return selector_;
 }
 
-BenchmarkLogOutput* BenchmarkMenu::ensureLogAttached(HWND logEdit) {
+BenchmarkLogOutput* BenchmarkMenuWidget::ensureLogAttached(HWND logEdit) {
     if (!logOutput_) logOutput_ = new BenchmarkLogOutput();
     logOutput_->attach(logEdit);
     return logOutput_;
 }
 
-BenchmarkResultsDisplay* BenchmarkMenu::ensureResultsAttached(HWND parent) {
+BenchmarkResultsDisplay* BenchmarkMenuWidget::ensureResultsAttached(HWND parent) {
     if (!resultsDisplay_) resultsDisplay_ = new BenchmarkResultsDisplay();
     resultsDisplay_->create(parent, 0, 0, 0, 0);
     return resultsDisplay_;
 }
 
-void BenchmarkMenu::notifyFinished() {
-    runnerActive_.store(false, std::memory_order_release);
+void BenchmarkMenuWidget::notifyFinished() {
+    running_.store(false, std::memory_order_release);
 }
 
-void BenchmarkMenu::initialize() {
+void BenchmarkMenuWidget::initialize() {
     createMenu();
     connectHandlers();
 }
 
-void BenchmarkMenu::createMenu() {
+void BenchmarkMenuWidget::createMenu() {
     // Win32IDE already wires menu commands; we only provide the dialog behavior.
 }
 
-void BenchmarkMenu::createDialog() {
+void BenchmarkMenuWidget::createDialog() {
     ensureCommonControls();
     ensureClassRegistered();
 
@@ -545,11 +554,11 @@ void BenchmarkMenu::createDialog() {
         this);
 }
 
-void BenchmarkMenu::connectHandlers() {
+void BenchmarkMenuWidget::connectHandlers() {
     if (!runner_) runner_ = std::make_unique<BenchmarkRunner>();
 }
 
-void BenchmarkMenu::openBenchmarkDialog() {
+void BenchmarkMenuWidget::openBenchmarkDialog() {
     createDialog();
     if (dialogHwnd_ && IsWindow(dialogHwnd_)) {
         ShowWindow(dialogHwnd_, SW_SHOW);
@@ -557,11 +566,11 @@ void BenchmarkMenu::openBenchmarkDialog() {
     }
 }
 
-void BenchmarkMenu::show() {
+void BenchmarkMenuWidget::show() {
     openBenchmarkDialog();
 }
 
-void BenchmarkMenu::runSelectedBenchmarks() {
+void BenchmarkMenuWidget::runSelectedBenchmarks() {
     if (!runner_) runner_ = std::make_unique<BenchmarkRunner>();
     if (!dialogHwnd_ || !IsWindow(dialogHwnd_)) return;
 
@@ -584,7 +593,7 @@ void BenchmarkMenu::runSelectedBenchmarks() {
     logOutput_->clear();
     logOutput_->logMessage("Benchmark run starting...", BenchmarkLogOutput::INFO);
 
-    runnerActive_.store(true, std::memory_order_release);
+    running_.store(true, std::memory_order_release);
 
     const HWND hwnd = dialogHwnd_;
 
@@ -638,9 +647,9 @@ void BenchmarkMenu::runSelectedBenchmarks() {
     runner_->runBenchmarks(tests, model, gpu, verbose);
 }
 
-void BenchmarkMenu::stopBenchmarks() {
+void BenchmarkMenuWidget::stopBenchmarks() {
     if (runner_) runner_->stop();
-    runnerActive_.store(false, std::memory_order_release);
+    running_.store(false, std::memory_order_release);
     if (dialogHwnd_ && IsWindow(dialogHwnd_)) {
         EnableWindow(GetDlgItem(dialogHwnd_, IDC_RUN), TRUE);
         EnableWindow(GetDlgItem(dialogHwnd_, IDC_STOP), FALSE);
@@ -648,7 +657,7 @@ void BenchmarkMenu::stopBenchmarks() {
     }
 }
 
-void BenchmarkMenu::viewBenchmarkResults() {
+void BenchmarkMenuWidget::viewBenchmarkResults() {
     openBenchmarkDialog();
 }
 
@@ -657,7 +666,7 @@ void BenchmarkMenu::viewBenchmarkResults() {
 // ============================================================================
 
 static LRESULT CALLBACK BenchWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    auto* menu = reinterpret_cast<BenchmarkMenu*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    auto* menu = reinterpret_cast<BenchmarkMenuWidget*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
 
     if (msg == WM_NCCREATE) {
         const CREATESTRUCTW* cs = reinterpret_cast<const CREATESTRUCTW*>(lParam);
@@ -667,7 +676,7 @@ static LRESULT CALLBACK BenchWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
     switch (msg) {
         case WM_CREATE: {
-            menu = reinterpret_cast<BenchmarkMenu*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+            menu = reinterpret_cast<BenchmarkMenuWidget*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
             if (!menu) return 0;
 
             // Create left-side selector controls.
@@ -805,3 +814,4 @@ static LRESULT CALLBACK BenchWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
+

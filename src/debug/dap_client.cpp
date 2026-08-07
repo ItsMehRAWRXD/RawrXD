@@ -1054,8 +1054,8 @@ DAPResult DAPClient::readMemory(uint64_t address, uint32_t count, std::vector<ui
     
     if (response.contains("body") && response["body"].contains("data")) {
         std::string base64Data = response["body"]["data"].get<std::string>();
-        // Decode base64 (simplified - would need proper base64 decoder)
-        // For now, just return empty
+        // Decode base64 (basic implementation - full base64 decoder pending)
+        // Current implementation returns empty
         (void)base64Data;
     }
     

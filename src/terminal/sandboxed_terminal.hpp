@@ -123,3 +123,5 @@ private:
     StringCb    m_errCb    = nullptr;  void* m_errCtx    = nullptr;
     MetricsCb   m_metCb    = nullptr;  void* m_metCtx    = nullptr;
 };
+
+

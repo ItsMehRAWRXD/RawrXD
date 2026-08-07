@@ -266,15 +266,15 @@ AIImplementation::AIImplementation(
 ) : m_logger(logger), m_metrics(metrics), m_httpClient(httpClient),
     m_responseParser(responseParser), m_modelTester(modelTester) {
     if (m_logger) {
-        m_logger->info("AIImplementation", "Initialized");
+
     }
 }
 
 bool AIImplementation::initialize(const LLMConfig& config) {
     m_config = config;
 
-    const bool isLocalRuntime = (m_config.backend == "local" || m_config.backend == "ollama");
-    if (m_config.backend != "local" && m_config.backend != "ollama" && m_config.backend != "openai" &&
+    const bool isLocalRuntime = (m_config.backend == "local" || m_config.backend == "deep2" || m_config.backend == "native");
+    if (m_config.backend != "local" && m_config.backend != "deep2" && m_config.backend != "native" && m_config.backend != "openai" &&
         m_config.backend != "anthropic") {
         if (m_logger) {
             m_logger->error("AIImplementation", "Unsupported backend: " + m_config.backend);
@@ -403,20 +403,20 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
     CompletionResponse response;
 
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
-            // Build Ollama request (simplified)
-            std::string ollamaBody = "{\"model\":\"" + m_config.modelName + "\",\"prompt\":\"" + request.prompt + "\",\"stream\":false}";
+        if (m_config.backend == "deep2" || m_config.backend == "native" || m_config.backend == "local") {
+            // Build native inference request (simplified)
+            std::string nativeBody = "{\"model\":\"" + m_config.modelName + "\",\"prompt\":\"" + request.prompt + "\",\"stream\":false}";
 
             HTTPRequest httpReq;
             httpReq.method = "POST";
             httpReq.url = m_config.endpoint + "/api/generate";
-            httpReq.body = ollamaBody;
+            httpReq.body = nativeBody;
             httpReq.headers.push_back({"Content-Type", "application/json"});
 
             auto httpResp = m_httpClient->sendRequest(httpReq);
 
             if (httpResp.success) {
-                // Parse Ollama JSON response: {"response":"...","total_duration":...,"eval_count":N,...}
+                // Parse native inference JSON response: {"response":"...","total_duration":...,"eval_count":N,...}
                 std::string respBody = httpResp.body;
                 std::string completionText;
                 int evalCount = 0;
@@ -537,7 +537,7 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
         }
 
         if (m_logger && response.success) {
-            m_logger->info("AIImplementation", 
+
                 "Completion successful: " + std::to_string(response.latencyMs) + "ms, " +
                 std::to_string(response.totalTokens) + " tokens");
         }
@@ -546,7 +546,7 @@ CompletionResponse AIImplementation::complete(const CompletionRequest& request) 
         response.success = false;
         response.errorMessage = std::string("Exception: ") + e.what();
         if (m_logger) {
-            m_logger->error("AIImplementation", "Complete failed: " + response.errorMessage);
+
         }
     }
 
@@ -561,15 +561,15 @@ CompletionResponse AIImplementation::streamComplete(
     CompletionResponse response;
 
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
-            // Build Ollama streaming request
-            std::string ollamaBody = "{\"model\":\"" + m_config.modelName + 
+        if (m_config.backend == "deep2" || m_config.backend == "native" || m_config.backend == "local") {
+            // Build native inference streaming request
+            std::string nativeBody = "{\"model\":\"" + m_config.modelName + 
                 "\",\"prompt\":\"" + request.prompt + "\",\"stream\":true}";
 
             HTTPRequest httpReq;
             httpReq.method = "POST";
             httpReq.url = m_config.endpoint + "/api/generate";
-            httpReq.body = ollamaBody;
+            httpReq.body = nativeBody;
             httpReq.headers.push_back({"Content-Type", "application/json"});
 
             // Use streaming callback on the HTTP client
@@ -577,7 +577,7 @@ CompletionResponse AIImplementation::streamComplete(
             int totalTokens = 0;
 
             auto httpResp = m_httpClient->sendRequest(httpReq, [&](const std::string& chunk) {
-                // Ollama streams JSON lines: {"response":"token","done":false}
+                // Native inference streams JSON lines: {"response":"token","done":false}
                 // Parse each line for the "response" field
                 size_t respPos = chunk.find("\"response\":\"");
                 if (respPos != std::string::npos) {
@@ -707,7 +707,7 @@ CompletionResponse AIImplementation::streamComplete(
 void AIImplementation::registerTool(const ToolDefinition& tool) {
     m_registeredTools[tool.name] = tool;
     if (m_logger) {
-        m_logger->info("AIImplementation", "Registered tool: " + tool.name);
+
     }
 }
 
@@ -715,7 +715,7 @@ json AIImplementation::executeTool(const std::string& toolName, const json& para
     auto it = m_registeredTools.find(toolName);
     if (it == m_registeredTools.end()) {
         if (m_logger) {
-            m_logger->error("AIImplementation", "Tool not found: " + toolName);
+
         }
         json result;
         return result;
@@ -729,7 +729,7 @@ json AIImplementation::executeTool(const std::string& toolName, const json& para
         return result;
     } catch (const std::exception& e) {
         if (m_logger) {
-            m_logger->error("AIImplementation", "Tool execution failed: " + std::string(e.what()));
+
         }
         json result;
         return result;
@@ -748,7 +748,7 @@ CompletionResponse AIImplementation::agenticLoop(
 
     while (iteration < maxIterations) {
         if (m_logger) {
-            m_logger->info("AIImplementation", "Agentic loop iteration " + std::to_string(iteration + 1));
+
         }
 
         auto response = complete(currentRequest);
@@ -763,7 +763,7 @@ CompletionResponse AIImplementation::agenticLoop(
     }
 
     if (iteration >= maxIterations && m_logger) {
-        m_logger->warn("AIImplementation", "Agentic loop hit max iterations");
+
     }
 
     return finalResponse;
@@ -791,7 +791,7 @@ bool AIImplementation::supportsToolCalling() const {
 
 bool AIImplementation::testConnectivity() {
     try {
-        if (m_config.backend == "ollama" || m_config.backend == "local") {
+        if (m_config.backend == "deep2" || m_config.backend == "native" || m_config.backend == "local") {
             if (!m_config.allowRemoteFallback && !isLoopbackEndpoint(m_config.endpoint)) {
                 return false;
             }

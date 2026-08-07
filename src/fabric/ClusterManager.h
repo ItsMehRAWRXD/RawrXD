@@ -165,6 +165,11 @@ private:
     void PerformRebalance();
     uint64_t GetTimestampUs() const;
     void BroadcastToCluster(const FabricMessage& msg);
+    
+    // System metrics helpers
+    uint8_t GetSystemLoadPercent();
+    uint32_t GetLocalTensorCount();
+    std::string GetNodeAddress(uint32_t nodeId);
 };
 
 } // namespace Fabric

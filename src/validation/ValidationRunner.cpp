@@ -62,10 +62,10 @@ int main(int argc, char** argv) {
     }
     
     // Register VAL-061 Token Estimator Swarm Gate
-    registry.Register(std::make_unique<VAL061_TokenEstimatorSwarmGate>());
+    registry.RegisterGate(std::make_shared<VAL061_TokenEstimatorSwarmGate>());
     
     // Register VAL-062 Swarm Integration Gate
-    registry.Register(std::make_unique<VAL062_SwarmIntegrationGate>());
+    registry.RegisterGate(std::make_shared<VAL062_SwarmIntegrationGate>());
     
     if (strcmp(argv[1], "--list") == 0) {
         auto gates = registry.GetAllGates();

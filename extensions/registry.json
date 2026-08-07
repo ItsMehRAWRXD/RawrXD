@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿{
     "TestPlugin":  {
                        "Enabled":  true,
@@ -39,4 +40,17 @@
                            "Installed":  true,
                            "Source":  "marketplace"
                        }
+=======
+{
+  "TestPlugin": {
+    "Enabled": true,
+    "Path": "d:\\lazy init ide\\craft_room\\TestPlugin.psm1",
+    "InstalledPath": "D:\\lazy init ide\\scripts\\modules\\TestPlugin.psm1",
+    "Created": "2026-01-26 06:22:41",
+    "Type": "Custom",
+    "LastEnabled": "2026-01-26 06:22:41",
+    "Parameters": {},
+    "Installed": true
+  }
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 }

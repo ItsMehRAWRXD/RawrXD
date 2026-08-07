@@ -239,7 +239,31 @@ std::vector<SwarmExecutionTelemetry> InfinitePerfectionTelemetrySQLite::QuerySwa
     std::vector<SwarmExecutionTelemetry> results;
     if (!IsOpen()) return results;
     
-    // Placeholder implementation
+    const char* sql = "SELECT timestamp, agent_id, task_kind, engine_cycle, "
+                     "confidence, execution_time_ms, success "
+                     "FROM swarm_executions WHERE timestamp >= ? AND timestamp <= ? "
+                     "ORDER BY timestamp DESC LIMIT ?";
+    
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int64(stmt, 1, startTime);
+        sqlite3_bind_int64(stmt, 2, endTime);
+        sqlite3_bind_int(stmt, 3, limit);
+        
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            SwarmExecutionTelemetry exec;
+            exec.timestamp = sqlite3_column_int64(stmt, 0);
+            exec.agentId = static_cast<uint32_t>(sqlite3_column_int(stmt, 1));
+            exec.taskKind = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            exec.engineCycle = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            exec.confidence = static_cast<float>(sqlite3_column_double(stmt, 4));
+            exec.executionTimeMs = sqlite3_column_int64(stmt, 5);
+            exec.success = sqlite3_column_int(stmt, 6) != 0;
+            results.push_back(exec);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
     return results;
 }
 
@@ -249,16 +273,63 @@ std::vector<std::pair<int64_t, double>> InfinitePerfectionTelemetrySQLite::Query
     std::vector<std::pair<int64_t, double>> results;
     if (!IsOpen()) return results;
     
-    // Placeholder implementation
+    const char* sql = "SELECT timestamp, convergence_score FROM swarm_executions "
+                     "WHERE timestamp >= ? AND timestamp <= ? AND convergence_score > 0 "
+                     "ORDER BY timestamp ASC";
+    
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int64(stmt, 1, startTime);
+        sqlite3_bind_int64(stmt, 2, endTime);
+        
+        while (sqlite3_step(stmt) == SQLITE_ROW) {
+            int64_t ts = sqlite3_column_int64(stmt, 0);
+            double score = sqlite3_column_double(stmt, 1);
+            results.emplace_back(ts, score);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
     return results;
 }
 
 InfinitePerfectionTelemetrySQLite::TelemetryStats 
 InfinitePerfectionTelemetrySQLite::GetStatistics(int64_t startTime, int64_t endTime) const {
-    TelemetryStats stats;
+    TelemetryStats stats{};
     if (!IsOpen()) return stats;
     
-    // Placeholder implementation
+    // Query total executions
+    const char* countSql = "SELECT COUNT(*), AVG(execution_time_ms) "
+                          "FROM swarm_executions WHERE timestamp >= ? AND timestamp <= ?";
+    
+    sqlite3_stmt* stmt = nullptr;
+    if (sqlite3_prepare_v2(db_, countSql, -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int64(stmt, 1, startTime);
+        sqlite3_bind_int64(stmt, 2, endTime);
+        
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            stats.totalExecutions = sqlite3_column_int64(stmt, 0);
+            stats.averageExecutionTimeMs = sqlite3_column_double(stmt, 1);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
+    // Query success count
+    const char* successSql = "SELECT COUNT(*) FROM swarm_executions "
+                              "WHERE timestamp >= ? AND timestamp <= ? AND success = 1";
+    
+    if (sqlite3_prepare_v2(db_, successSql, -1, &stmt, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int64(stmt, 1, startTime);
+        sqlite3_bind_int64(stmt, 2, endTime);
+        
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            stats.successfulExecutions = sqlite3_column_int64(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    }
+    
+    stats.failedExecutions = stats.totalExecutions - stats.successfulExecutions;
+    
     return stats;
 }
 

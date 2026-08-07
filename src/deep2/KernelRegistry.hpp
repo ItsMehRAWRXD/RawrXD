@@ -19,6 +19,10 @@
 #include <memory>
 #include <mutex>
 
+#ifdef __GNUC__
+#include <cpuid.h>
+#endif
+
 #ifdef _MSC_VER
     #include <intrin.h>
 #endif
@@ -390,7 +394,11 @@ public:
     static ISATarget DetectBestISA() {
         // Check AVX-512
         int cpuInfo[4];
+#ifdef _MSC_VER
         __cpuid(cpuInfo, 7);
+#else
+        __cpuid(7, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
         bool hasAVX512F = (cpuInfo[1] & (1 << 16)) != 0;
         bool hasAVX512BW = (cpuInfo[1] & (1 << 30)) != 0;
         bool hasAVX512VL = (cpuInfo[1] & (1 << 31)) != 0;
@@ -404,7 +412,11 @@ public:
         }
 
         // Check AVX2
+#ifdef _MSC_VER
         __cpuid(cpuInfo, 1);
+#else
+        __cpuid(1, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
         bool hasAVX2 = (cpuInfo[2] & (1 << 5)) != 0;
         if (hasAVX2) {
             return ISATarget::AVX2;

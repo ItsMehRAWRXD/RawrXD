@@ -293,42 +293,98 @@ MultiResponseResult MultiResponseEngine::generateAll(uint64_t sessionId,
     int generated = 0;
     int errors    = 0;
 
-    for (size_t i = 0; i < session->responses.size(); ++i) {
-        auto& slot = session->responses[i];
-        const ResponseTemplate& tmpl = getTemplate(slot.templateId);
+    // Use parallel execution when 2+ responses are needed
+    if (session->responses.size() >= 2) {
+        std::vector<std::thread> threads;
+        std::mutex resultMutex;
+        
+        for (size_t i = 0; i < session->responses.size(); ++i) {
+            threads.emplace_back([this, session, i, &resultMutex, &generated, &errors, perResponseCb, cbUserData]() {
+                auto& slot = session->responses[i];
+                const ResponseTemplate& tmpl = getTemplate(slot.templateId);
 
-        GeneratedResponse result = generateSingleResponse(
-            session->prompt, session->context, tmpl, (int)i);
+                GeneratedResponse result = generateSingleResponse(
+                    session->prompt, session->context, tmpl, (int)i);
 
-        slot.content     = std::move(result.content);
-        slot.tokenCount  = result.tokenCount;
-        slot.latencyMs   = result.latencyMs;
-        slot.complete    = result.complete;
-        slot.error       = result.error;
-        slot.errorDetail = std::move(result.errorDetail);
+                {
+                    std::lock_guard<std::mutex> lock(resultMutex);
+                    slot.content     = std::move(result.content);
+                    slot.tokenCount  = result.tokenCount;
+                    slot.latencyMs   = result.latencyMs;
+                    slot.complete    = result.complete;
+                    slot.error       = result.error;
+                    slot.errorDetail = std::move(result.errorDetail);
 
-        if (slot.error) {
-            ++errors;
-        } else {
-            ++generated;
+                    if (slot.error) {
+                        ++errors;
+                    } else {
+                        ++generated;
+                    }
+                }
+
+                // Notify per-response callback
+                if (perResponseCb) {
+                    perResponseCb(slot, cbUserData);
+                }
+
+                // Update stats
+                {
+                    std::lock_guard<std::mutex> slock(m_statsMutex);
+                    m_stats.totalResponsesGenerated++;
+                    int tidx = static_cast<int>(slot.templateId);
+                    if (tidx >= 0 && tidx < 4) {
+                        double prevAvg = m_stats.avgLatencyMs[tidx];
+                        uint64_t count = m_stats.totalResponsesGenerated;
+                        m_stats.avgLatencyMs[tidx] = prevAvg + (slot.latencyMs - prevAvg) / (double)count;
+                    }
+                    if (slot.error) m_stats.errorCount++;
+                }
+            });
         }
 
-        // Notify per-response callback
-        if (perResponseCb) {
-            perResponseCb(slot, cbUserData);
+        // Wait for all threads to complete
+        for (auto& t : threads) {
+            if (t.joinable()) t.join();
         }
+    } else {
+        // Sequential execution for single response
+        for (size_t i = 0; i < session->responses.size(); ++i) {
+            auto& slot = session->responses[i];
+            const ResponseTemplate& tmpl = getTemplate(slot.templateId);
 
-        // Update stats
-        {
-            std::lock_guard<std::mutex> slock(m_statsMutex);
-            m_stats.totalResponsesGenerated++;
-            int tidx = static_cast<int>(slot.templateId);
-            if (tidx >= 0 && tidx < 4) {
-                double prevAvg = m_stats.avgLatencyMs[tidx];
-                uint64_t count = m_stats.totalResponsesGenerated; // approximation
-                m_stats.avgLatencyMs[tidx] = prevAvg + (slot.latencyMs - prevAvg) / (double)count;
+            GeneratedResponse result = generateSingleResponse(
+                session->prompt, session->context, tmpl, (int)i);
+
+            slot.content     = std::move(result.content);
+            slot.tokenCount  = result.tokenCount;
+            slot.latencyMs   = result.latencyMs;
+            slot.complete    = result.complete;
+            slot.error       = result.error;
+            slot.errorDetail = std::move(result.errorDetail);
+
+            if (slot.error) {
+                ++errors;
+            } else {
+                ++generated;
             }
-            if (slot.error) m_stats.errorCount++;
+
+            // Notify per-response callback
+            if (perResponseCb) {
+                perResponseCb(slot, cbUserData);
+            }
+
+            // Update stats
+            {
+                std::lock_guard<std::mutex> slock(m_statsMutex);
+                m_stats.totalResponsesGenerated++;
+                int tidx = static_cast<int>(slot.templateId);
+                if (tidx >= 0 && tidx < 4) {
+                    double prevAvg = m_stats.avgLatencyMs[tidx];
+                    uint64_t count = m_stats.totalResponsesGenerated;
+                    m_stats.avgLatencyMs[tidx] = prevAvg + (slot.latencyMs - prevAvg) / (double)count;
+                }
+                if (slot.error) m_stats.errorCount++;
+            }
         }
     }
 

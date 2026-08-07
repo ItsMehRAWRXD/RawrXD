@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Fixed
 - **Electron AI providers:** `localhost` → **`127.0.0.1`** in `config/providers.json`, `preferIpv4Loopback()` on every request, and **`http.Agent({ family: 4 })`** for axios so Node cannot prefer **`::1`** when Ollama is IPv4-only; `providers.json` cache cleared on load. Clearer **`ECONNREFUSED`** text (`docs/AUTONOMOUS_AGENT_ELECTRON.md`).
 - **Electron IRC bridge:** `electron/irc_protocol.js` — repaired invalid **`split(/\n')`** typo that broke module load; protocol helpers + **`irc-bridge-selfcheck.js`** validate chunking and parsers without opening sockets.
@@ -65,11 +66,22 @@ All notable changes to this project will be documented in this file.
 - **Win32 IDE — AMD unified memory toggle:** Settings GUI (**AI / Model** → **AMD Unified Memory (SAM)**) persists `amdUnifiedMemoryEnabled` in `settings.json`; `applySettings()` enables/disables `AMDGPUAccelerator` unified mode + `UnifiedMemoryExecutor` (hardware SAM when available, else 512 MiB host-backed arena). `unified_memory_executor.cpp` linked for Win32IDE and RawrEngine-family targets.
 - **VS Code blank window (Windows):** `docs/VSCODE_BLANK_WINDOW_FIX.md` + `scripts/Launch-VSCode-Safe.ps1` — `CalculateNativeWinOcclusion` workaround; `-CloseExistingCode` + doc for **mutex already exists**; Chromium “unknown option” warnings; correct log path hint for `-FreshUserData`; quoted paths, GPU-disable, `argv.json`, verbose logging.
 - **Tier G Sovereign examples index:** `examples/sovereign/README.md` + **`examples/sovereign/symbol_registry_smoke.c`** (FNV-1a registry smoke); cross-links from `examples/README.md`, `SOVEREIGN_*` docs, and `toolchain/sovereign_minimal/README.md`.
+=======
+### Added
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 - **Vulkan Backend Enhancement**: Implemented accurate free VRAM reporting using `VK_EXT_memory_budget`.
   - Added `VkPhysicalDeviceMemoryBudgetPropertiesEXT` query to `GPUBackend::availableMemory()`.
   - Added fallback to `total - allocated` when the extension is unavailable.
   - Improved scheduling decisions for large model loading (e.g., BigDaddyG 40GB).
 - **Thermal NVMe Array Management**: Added `Initialize-ThermalNVMeArray.ps1` for thermal-aware Virtual VRAM paging across multiple NVMe drives.
 - **Stress Test Suite**: Added `StressTest-BigDaddyG.ps1` to validate 40GB model loading with thermal-aware paging and dynamic drive selection.
+<<<<<<< HEAD
 - **Win32 swarm model scan:** **`Win32IDE_SwarmModelSelector.h/.cpp`** — **`enumerateSwarmModelCandidates()`** lists **`*.gguf`** under **`RAWRXD_SWARM_MODEL_DIR`** or **`%USERPROFILE%\.ollama\models`** (non-recursive); **`RawrXD-Win32IDE`** CMake sources include the unit (replaces dummy stub TU).
 - **Docs:** **`docs/FULL_SOURCE_DIAGNOSTICS_AUDIT_2026-03-20.md`** — remediation delta table; **`docs/IDE_MASTER_PROGRESS.md`** — Batch 4 (UI/remediation) + inference matrix status tweak.
+=======
+
+### Fixed
+- **Metrics Collector**: Resolved recursive mutex locking in `metrics_collector.cpp` by using snapshot-based aggregation.
+- **Feature Tests**: Added VRAM allocation guards in `production_feature_test.cpp` to prevent crashes on systems with limited Vulkan budget.
+- **MASM Entropy**: Implemented `XorShift64*` fast entropy generation in `soft_throttle_dispatch.asm` for high-performance thermal throttling jitter.
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

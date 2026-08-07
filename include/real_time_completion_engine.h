@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <string>
@@ -10,7 +11,7 @@
 
 #include "logging/logger.h"
 #include "metrics/metrics.h"
-#include "inference_engine.h"
+#include "../src/cpu_inference_engine.h"
 
 struct CodeCompletion {
     std::string text;
@@ -34,7 +35,7 @@ class RealTimeCompletionEngine {
 private:
     std::shared_ptr<Logger> m_logger;
     std::shared_ptr<Metrics> m_metrics;
-    InferenceEngine* m_inferenceEngine;  // Pointer to shared inference engine
+    RawrXD::InferenceEngine* m_inferenceEngine;  // Pointer to shared inference engine
 
     // Caching
     std::unordered_map<std::string, std::vector<CodeCompletion>> m_completionCache;
@@ -58,7 +59,7 @@ public:
     );
 
     // Set InferenceEngine reference (called by AIIntegrationHub)
-    void setInferenceEngine(InferenceEngine* engine) {
+    void setInferenceEngine(RawrXD::InferenceEngine* engine) {
         m_inferenceEngine = engine;
         if (m_inferenceEngine && m_logger) {
             m_logger->info("InferenceEngine set for CompletionEngine");
@@ -124,3 +125,4 @@ private:
     void updateCache(const std::string& key, const std::vector<CodeCompletion>& completions);
     std::string generateCacheKey(const std::string& prefix, const std::string& suffix);
 };
+

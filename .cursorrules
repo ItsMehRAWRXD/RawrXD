@@ -11,7 +11,6 @@
 ### **Canonical repository root (Windows)**
 - Production tree and all scripted defaults assume **`D:\RawrXD`**. Do not document or default to Cursor worktrees or other drive paths.
 - Optional override: environment variable **`RAWRXD_REPO_ROOT`** (see `docs/REPOSITORY_ROOT.md`).
-
 ---
 
 ## 💻 C++ STYLE GUIDELINES (2026 Standard)
@@ -85,6 +84,22 @@ OutputDebugStringW(L"Error occurred"); // still avoid for production — use Log
 #include "StdReplacements.hpp"
 std::expected<std::string, Error> processCoreLogic(const std::string& input);
 WideString displayResult = WideString::fromStdString(result.value());
+```
+
+### **Qt Conventions**
+- Use `QString` for UI strings, `std::string` for core logic
+- Use `QProcess` for PowerShell bridging (async only)
+- Use `QSqlDatabase` for SQLite operations
+- Use `QHttpServer` for REST API endpoints
+- **NEVER** mix Qt and std containers in public APIs
+
+**Correct**:
+```cpp
+// Core logic uses std
+std::expected<std::string, Error> processCoreLogic(const std::string& input);
+
+// UI layer uses QString
+QString displayResult = QString::fromStdString(result.value());
 ```
 
 **Incorrect**:
@@ -401,6 +416,14 @@ CreateProcess(...);
 WaitForSingleObject(pi.hProcess, INFINITE);
 
 // Right — async: use overlapped I/O, completion ports, or fire-and-forget with callbacks
+QProcess process;
+process.start("command");
+process.waitForFinished();  // Blocks UI!
+
+// Right
+connect(&process, &QProcess::finished, this, &MyClass::onFinished);
+process.start("command");
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ```
 
 ---

@@ -587,7 +587,7 @@ std::unique_ptr<MonacoEditor> MonacoFactory::createEditorWithTheme(MonacoVariant
 
 MonacoVariant MonacoFactory::recommendVariant() {
     // Check system capabilities and recommend best variant
-    // For now, default to Core
+    // Default to Core (variant selection based on system capabilities pending)
     return MonacoVariant::Core;
 }
 

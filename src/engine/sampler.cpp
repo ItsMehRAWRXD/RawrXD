@@ -32,13 +32,21 @@ void Sampler::ensureBuffers(int n_vocab) {
 
 // Sample from a probability distribution using PCG32
 int Sampler::sampleFromProbs(float* probs, int n) {
+    // Normalize probabilities to ensure sum == 1.0 (guard against FP drift)
+    float sum = 0.0f;
+    for (int i = 0; i < n; i++) sum += probs[i];
+    if (sum > 0.0f && std::abs(sum - 1.0f) > 1e-6f) {
+        float inv_sum = 1.0f / sum;
+        for (int i = 0; i < n; i++) probs[i] *= inv_sum;
+    }
+    
     float r = fast_rng.nextf();
     float cumsum = 0.0f;
     for (int i = 0; i < n; i++) {
         cumsum += probs[i];
         if (cumsum >= r) return i;
     }
-    return n - 1;  // Rounding safety
+    return n - 1;  // Rounding safety — last token gets any residual probability
 }
 
 bool Sampler::setCustomStopSequences(const std::vector<std::string>& sequences) {

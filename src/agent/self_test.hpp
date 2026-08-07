@@ -12,6 +12,7 @@ public:
     bool runAll();               // unit + integration + perf
     bool runUnitTests();         // build/bin/*_test.exe
     bool runIntegrationTests();  // deflate_50mb, flash_attn, etc.
+    bool runInferenceTests();    // ModelInvoker check
     bool runLint();              // cl.exe /analyze
     bool runBenchmarkBaseline(); // tokens/sec vs. stored baseline
     bool runCompletionShipGate();// COMP-01..COMP-03 checks
@@ -35,3 +36,4 @@ private:
     LogCallback m_logCb  = nullptr;
     void*       m_logCtx = nullptr;
 };
+

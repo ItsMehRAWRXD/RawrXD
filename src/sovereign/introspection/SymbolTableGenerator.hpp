@@ -1,9 +1,14 @@
 #pragma once
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
 #include <cstdint>
 #include <cstddef>
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <mutex>
 #include <functional>
 
@@ -102,11 +107,20 @@ public:
     // Find symbol by exact name
     const SymbolEntry* FindSymbol(const std::string& name) const;
     
+    // Get symbol by name (alias for FindSymbol)
+    const SymbolEntry* GetSymbol(const std::string& name) const;
+    
+    // Get symbol address by name
+    uintptr_t GetAddress(const std::string& name) const;
+    
     // Find symbol by address (nearest match)
     const SymbolEntry* FindSymbolByAddress(uintptr_t addr) const;
     
     // Find all symbols matching pattern (e.g., "Deep2Engine::*")
     std::vector<const SymbolEntry*> FindSymbolsByPattern(const std::string& pattern) const;
+    
+    // Find symbols by pattern (returns vector of pointers)
+    std::vector<const SymbolEntry*> FindSymbols(const std::string& pattern) const;
     
     // Get symbol at specific address range
     std::vector<const SymbolEntry*> GetSymbolsInRange(uintptr_t start, uintptr_t end) const;
@@ -127,6 +141,18 @@ public:
     // Check if address is writable data
     bool IsWritableDataAddress(uintptr_t addr) const;
     
+    // Check if address is readable
+    bool IsAddressReadable(uintptr_t addr) const;
+    
+    // Check if address is writable
+    bool IsAddressWritable(uintptr_t addr) const;
+    
+    // Check if patch target is valid (by name)
+    bool IsValidPatchTarget(const std::string& name) const;
+    
+    // Check if patch target is valid (by address)
+    bool IsValidPatchTarget(uintptr_t addr) const;
+    
     // -------------------------------------------------------------------------
     // Symbol Table Management
     // -------------------------------------------------------------------------
@@ -142,6 +168,9 @@ public:
     
     // Export symbol table to file
     bool ExportToFile(const std::string& path) const;
+    
+    // Export symbol table to binary
+    std::vector<uint8_t> ExportToBinary() const;
     
     // Import symbol table from file
     bool ImportFromFile(const std::string& path);

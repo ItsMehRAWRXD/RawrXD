@@ -10,6 +10,7 @@
 #include <format>
 #include <unordered_set>
 #include <numeric>
+#include "vulkan_compute.h"
 
 namespace fs = std::filesystem;
 
@@ -969,3 +970,4 @@ json IDEAuditor::getMonitoringData() const {
 }
 
 } // namespace RawrXD
+

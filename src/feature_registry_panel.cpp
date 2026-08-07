@@ -189,7 +189,11 @@ FeatureRegistry::FeatureRegistry() {
     initializeBuiltInFeatures();
 }
 
-FeatureRegistry::~FeatureRegistry() {}
+FeatureRegistry::~FeatureRegistry() {
+    // Cleanup: clear all feature data
+    m_features.clear();
+    m_usageStats.clear();
+}
 
 void FeatureRegistry::initializeBuiltInFeatures() {
     // Real-time Code Completion

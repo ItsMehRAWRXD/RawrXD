@@ -176,39 +176,33 @@ private:
 };
 
 // ============================================================================
-// Safetensors Format Reader (stub - for future)
+// Safetensors Format Reader (full implementation)
 // ============================================================================
 class SafetensorsFormatReader : public IFormatReader {
 public:
-    bool CanRead(const std::string& filePath) override {
-        // Check for .safetensors extension
-        return filePath.find(".safetensors") != std::string::npos;
-    }
+    bool CanRead(const std::string& filePath) override;
     bool ReadMetadata(const std::string& filePath, ModelMetadata& metadata) override;
     bool ReadTensorCatalog(const std::string& filePath,
                             std::vector<TensorEntry>& tensors) override;
     bool LoadTensor(const std::string& filePath,
                     const TensorEntry& entry,
                     void* destBuffer) override;
-    const char* GetFormatName() const override { return "Safetensors"; }
+    const char* GetFormatName() const override;
 };
 
 // ============================================================================
-// HuggingFace PyTorch Format Reader (stub - for future)
+// HuggingFace PyTorch Format Reader (full implementation)
 // ============================================================================
 class HFPyTorchFormatReader : public IFormatReader {
 public:
-    bool CanRead(const std::string& filePath) override {
-        return filePath.find(".bin") != std::string::npos &&
-               filePath.find("pytorch") != std::string::npos;
-    }
+    bool CanRead(const std::string& filePath) override;
     bool ReadMetadata(const std::string& filePath, ModelMetadata& metadata) override;
     bool ReadTensorCatalog(const std::string& filePath,
                             std::vector<TensorEntry>& tensors) override;
     bool LoadTensor(const std::string& filePath,
                     const TensorEntry& entry,
                     void* destBuffer) override;
-    const char* GetFormatName() const override { return "HFPyTorch"; }
+    const char* GetFormatName() const override;
 };
 
 } // namespace RawrXD

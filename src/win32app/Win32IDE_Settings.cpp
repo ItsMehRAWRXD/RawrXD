@@ -476,13 +476,99 @@ void Win32IDE::applyDefaultSettings()
 
 void Win32IDE::applySettings()
 {
-    // Apply settings to UI components
-    // TODO: Implement UI updates based on m_settings
-    // For example: update font, theme, etc.
+    // Determine if dark theme based on themeId
+    bool isDarkTheme = (m_settings.themeId == 3101 || m_settings.themeId == 3102); // DARK_PLUS or DARK_MODERN
+
+    if (isDarkTheme)
+    {
+        m_currentTheme.backgroundColor = RGB(30, 30, 30);
+        m_currentTheme.textColor = RGB(212, 212, 212);
+        m_currentTheme.selectionColor = RGB(38, 79, 120);
+        m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+    }
+    else
+    {
+        m_currentTheme.backgroundColor = RGB(255, 255, 255);
+        m_currentTheme.textColor = RGB(0, 0, 0);
+        m_currentTheme.selectionColor = RGB(0, 120, 215);
+        m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+    }
+
+    // Recreate fonts with new sizes
+    recreateFonts();
+
+    // Apply to editor if exists
+    if (m_hwndEditor && IsWindow(m_hwndEditor))
+    {
+        SendMessage(m_hwndEditor, WM_SETFONT, (WPARAM)m_editorFont, TRUE);
+    }
+
+    // Force redraw to apply theme
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        InvalidateRect(m_hwndMain, nullptr, TRUE);
+    }
+
+    // Save settings to disk
+    saveSettings();
+
+    OutputDebugStringA("[Settings] Applied and saved\n");
 }
 
 void Win32IDE::showSettingsDialog()
 {
-    // TODO: Implement settings dialog
-    // For now, stub
+    // Determine theme for display
+    bool isDarkTheme = (m_settings.themeId == 3101 || m_settings.themeId == 3102);
+
+    // Create settings dialog
+    HWND hwndDlg = CreateWindowExA(
+        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST,
+        "RawrXDSettingsDialog",
+        "RawrXD IDE Settings",
+        WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 600, 500,
+        m_hwndMain, nullptr, m_hInstance, nullptr
+    );
+
+    if (!hwndDlg)
+    {
+        // Fallback: simple message box with settings info
+        char msg[1024];
+        snprintf(msg, sizeof(msg),
+            "RawrXD IDE Settings\n\n"
+            "Theme: %s\n"
+            "Font Size: %d\n"
+            "Tab Size: %d\n"
+            "AI Context Window: %d tokens\n"
+            "Auto-save: %s\n\n"
+            "Settings file: rawrxd.config.json",
+            isDarkTheme ? "Dark" : "Light",
+            m_settings.fontSize,
+            m_settings.tabSize,
+            m_settings.aiContextWindow,
+            m_settings.autoSaveEnabled ? "Enabled" : "Disabled"
+        );
+        MessageBoxA(m_hwndMain, msg, "Settings", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    // Show modal dialog
+    ShowWindow(hwndDlg, SW_SHOW);
+    EnableWindow(m_hwndMain, FALSE);
+
+    // Message loop for modal dialog
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (!IsDialogMessage(hwndDlg, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        if (!IsWindow(hwndDlg))
+            break;
+    }
+
+    EnableWindow(m_hwndMain, TRUE);
+    SetActiveWindow(m_hwndMain);
 }

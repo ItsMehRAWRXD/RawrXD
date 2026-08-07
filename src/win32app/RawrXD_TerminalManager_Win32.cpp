@@ -60,11 +60,12 @@ public:
 
         PROCESS_INFORMATION pi = {0};
 
-        wchar_t cmdLine[32768];
-        wcscpy_s(cmdLine, 32768, L"cmd.exe /c ");
-        if (command) wcscat_s(cmdLine, 32768, command);
+        // Heap-allocated to prevent stack overflow in onCreate call chain
+        auto cmdLine = std::make_unique<wchar_t[]>(32768);
+        wcscpy_s(cmdLine.get(), 32768, L"cmd.exe /c ");
+        if (command) wcscat_s(cmdLine.get(), 32768, command);
 
-        if (!CreateProcessW(nullptr, cmdLine, nullptr, nullptr, FALSE,
+        if (!CreateProcessW(nullptr, cmdLine.get(), nullptr, nullptr, FALSE,
             CREATE_NO_WINDOW, nullptr, workingDir, &si, &pi)) {
             return 0;
         }

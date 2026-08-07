@@ -116,6 +116,7 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+<<<<<<< HEAD
 # Build amphibious autonomous components as first-class IDE artifacts
 $amphibiousScript = Join-Path $PSScriptRoot "Build-Amphibious-ml64.ps1"
 if (-not (Test-Path $amphibiousScript)) {
@@ -150,12 +151,17 @@ if ((Test-Path $autoHealCli) -and (Test-Path $autoHealGui)) {
     exit 1
 }
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "Build Complete!" -ForegroundColor Green
 Write-Host "Output: RawrXD_IDE_unified.exe" -ForegroundColor Green
+<<<<<<< HEAD
 Write-Host "Output: RawrXD_AutoHeal_CLI.exe" -ForegroundColor Green
 Write-Host "Output: RawrXD_Amphibious_GUI.exe" -ForegroundColor Green
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Usage:" -ForegroundColor Cyan
@@ -170,6 +176,9 @@ Write-Host "            .\RawrXD_IDE_unified.exe -avscan" -ForegroundColor White
 Write-Host "            .\RawrXD_IDE_unified.exe -entropy" -ForegroundColor White
 Write-Host "            .\RawrXD_IDE_unified.exe -stubgen" -ForegroundColor White
 Write-Host "            .\RawrXD_IDE_unified.exe -trace" -ForegroundColor White
+<<<<<<< HEAD
 Write-Host "  AutoHeal CLI: .\RawrXD_AutoHeal_CLI.exe" -ForegroundColor White
 Write-Host "  Amphibious GUI: .\RawrXD_Amphibious_GUI.exe" -ForegroundColor White
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 Write-Host ""

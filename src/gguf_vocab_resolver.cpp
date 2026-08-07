@@ -64,9 +64,15 @@ static float read_f32(std::ifstream& f) {
 
 static std::string read_gguf_string(std::ifstream& f) {
     uint64_t len = read_u64(f);
-    if (len == 0 || len > 1024 * 1024) return {};
+    // Cap at 64KB to prevent OOM from corrupted GGUF files
+    const uint64_t MAX_STRING_LEN = 64 * 1024;
+    if (len == 0 || len > MAX_STRING_LEN) return {};
     std::string s(static_cast<size_t>(len), '\0');
     f.read(s.data(), static_cast<std::streamsize>(len));
+    // Verify we actually read the expected number of bytes
+    if (static_cast<uint64_t>(f.gcount()) != len) {
+        return {}; // Truncated read — corrupted file
+    }
     return s;
 }
 

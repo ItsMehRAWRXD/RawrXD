@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <cmath>
 #include <iostream> // For debug output instead of Diagnostics
+#include "gguf_loader.h"
 
 // ============================================================================
 // CONSTRUCTION & INITIALIZATION
@@ -1102,3 +1103,4 @@ bool DecompressZSTD(const std::vector<uint8_t>& compressed,
 }
 
 }  // namespace EnhancedLoaderUtils
+

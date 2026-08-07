@@ -309,9 +309,18 @@ std::string AITestGenerator::generateGoogleTest(const FunctionInfo& func, int in
         test << ";\n";
     }
     
-    test << "    // TODO: Add test logic\n";
-    test << "    EXPECT_TRUE(true);\n";
-    test << "}\n";
+test << "    // Test logic for " << func.name << "\n";
+        test << "    // Verify function behavior with expected inputs\n";
+        test << "    auto result = " << func.name << "(";
+        for (size_t i = 0; i < func.params.size(); ++i) {
+            if (i > 0) test << ", ";
+            if (func.params[i].type == "int") test << (index * 10 + 5);
+            else if (func.params[i].type == "std::string" || func.params[i].type == "string") test << "\"test\"";
+            else test << func.params[i].name;
+        }
+        test << ");\n";
+        test << "    EXPECT_TRUE(result); // Adjust assertion based on actual return type\n";
+        test << "}\n";
     
     return test.str();
 }
@@ -320,8 +329,9 @@ std::string AITestGenerator::generateDoctest(const FunctionInfo& func, int index
     std::stringstream test;
     
     test << "TEST_CASE(\"" << func.name << " - " << (index + 1) << "\") {\n";
-    test << "    // TODO: Implement test\n";
-    test << "    CHECK(true);\n";
+    test << "    // Test " << func.name << " with typical inputs\n";
+    test << "    auto result = " << func.name << "();\n";
+    test << "    CHECK(result); // Adjust based on actual return type\n";
     test << "}\n";
     
     return test.str();
@@ -332,7 +342,9 @@ std::string AITestGenerator::generateGenericTest(const FunctionInfo& func, int i
     
     test << "void test_" << func.name << "_" << (index + 1) << "() {\n";
     test << "    // Test case " << (index + 1) << " for " << func.name << "\n";
-    test << "    // TODO: Implement\n";
+    test << "    // Call function and verify behavior\n";
+    test << "    auto result = " << func.name << "();\n";
+    test << "    // Add assertions based on expected behavior\n";
     test << "}\n";
     
     return test.str();

@@ -19,6 +19,15 @@ namespace Agentic {
 // Forward declaration
 class AgentCoordinator;
 
+// Enhancement 4: Priority-based Scheduling (moved before AgentTask)
+enum class TaskPriority {
+    CRITICAL = 0,    // System stability, immediate response required
+    HIGH = 1,        // User-facing features, deadlines approaching
+    NORMAL = 2,      // Regular development tasks
+    LOW = 3,         // Background maintenance, optimization
+    BACKGROUND = 4   // Non-urgent tasks, can be delayed
+};
+
 // Full definitions (used by AgentOrchestrator and AdvancedAgentCoordinator)
 struct AgentTask {
     std::string id;
@@ -26,6 +35,8 @@ struct AgentTask {
     std::string specialization;
     nlohmann::json parameters;
     std::function<void(const nlohmann::json&)> callback;
+    TaskPriority priority = TaskPriority::NORMAL;
+    std::chrono::steady_clock::time_point createdAt = std::chrono::steady_clock::now();
 };
 
 struct AgentMetrics {
@@ -67,15 +78,6 @@ struct TaskDependency {
     std::vector<std::string> dependents;
     bool completed = false;
     std::chrono::steady_clock::time_point completionTime;
-};
-
-// Enhancement 4: Priority-based Scheduling
-enum class TaskPriority {
-    CRITICAL = 0,    // System stability, immediate response required
-    HIGH = 1,        // User-facing features, deadlines approaching
-    NORMAL = 2,      // Regular development tasks
-    LOW = 3,         // Background maintenance, optimization
-    BACKGROUND = 4   // Non-urgent tasks, can be delayed
 };
 
 struct PrioritizedTask {
@@ -213,6 +215,7 @@ private:
     std::unordered_map<std::string, AgentLoad> m_agentLoads;
     std::unordered_map<std::string, AgentHealth> m_agentHealth;
     std::unordered_map<std::string, TaskDependency> m_taskDependencies;
+    std::unordered_map<std::string, std::shared_ptr<AgentTask>> m_tasks;
     std::priority_queue<PrioritizedTask> m_taskQueue;
     std::unordered_map<std::string, CommunicationChannel> m_communicationChannels;
     std::vector<FailureRecovery> m_activeRecoveries;

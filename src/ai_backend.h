@@ -21,33 +21,33 @@
 
 // ── Backend type enum ──────────────────────────────────────────────────────
 enum class AIBackendType {
-    LocalGGUF = 0,
-    Ollama    = 1,
-    OpenAI    = 2,
-    Claude    = 3,
-    Gemini    = 4,
-    Custom    = 5
+    LocalGGUF    = 0,
+    Deep2Native  = 1,
+    OpenAI       = 2,
+    Claude       = 3,
+    Gemini       = 4,
+    Custom       = 5
 };
 
 inline const char* aiBackendTypeName(AIBackendType t) {
     switch (t) {
-        case AIBackendType::LocalGGUF: return "LocalGGUF";
-        case AIBackendType::Ollama:    return "Ollama";
-        case AIBackendType::OpenAI:    return "OpenAI";
-        case AIBackendType::Claude:    return "Claude";
-        case AIBackendType::Gemini:    return "Gemini";
-        case AIBackendType::Custom:    return "Custom";
+        case AIBackendType::LocalGGUF:   return "LocalGGUF";
+        case AIBackendType::Deep2Native: return "Deep2Native";
+        case AIBackendType::OpenAI:      return "OpenAI";
+        case AIBackendType::Claude:      return "Claude";
+        case AIBackendType::Gemini:      return "Gemini";
+        case AIBackendType::Custom:      return "Custom";
     }
     return "Unknown";
 }
 
 inline AIBackendType aiBackendTypeFromName(const std::string& name) {
-    if (name == "LocalGGUF" || name == "local")  return AIBackendType::LocalGGUF;
-    if (name == "Ollama"    || name == "ollama")  return AIBackendType::Ollama;
-    if (name == "OpenAI"    || name == "openai")  return AIBackendType::OpenAI;
-    if (name == "Claude"    || name == "claude")  return AIBackendType::Claude;
-    if (name == "Gemini"    || name == "gemini")  return AIBackendType::Gemini;
-    if (name == "Custom"    || name == "custom")  return AIBackendType::Custom;
+    if (name == "LocalGGUF" || name == "local")     return AIBackendType::LocalGGUF;
+    if (name == "Deep2Native" || name == "deep2" || name == "native") return AIBackendType::Deep2Native;
+    if (name == "OpenAI"    || name == "openai")     return AIBackendType::OpenAI;
+    if (name == "Claude"    || name == "claude")     return AIBackendType::Claude;
+    if (name == "Gemini"    || name == "gemini")     return AIBackendType::Gemini;
+    if (name == "Custom"    || name == "custom")     return AIBackendType::Custom;
     return AIBackendType::LocalGGUF; // fallback
 }
 

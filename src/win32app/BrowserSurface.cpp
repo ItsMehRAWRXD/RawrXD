@@ -82,10 +82,9 @@ void BrowserSurface::navigate(const std::string& url, BrowserResultFn resultCall
     // Instruct WebView2Bridge to navigate; use postMessage as the trigger.
     std::string navCmd = "{\"cmd\":\"navigate\",\"url\":\"" + url + "\"}";
     rawrxd::ui::WebView2Bridge::getInstance().postMessage(navCmd);
-    // Note: The completion fires asynchronously via onMessageFromUI when
-    // the page raises 'NavigationCompleted'. For now we fire the callback
-    // synchronously to maintain the agent loop cadence until async wiring
-    // is plumbed through the bridge's DOMContentLoaded event.
+    // Navigation completion fires asynchronously via onMessageFromUI when
+    // the page raises 'NavigationCompleted'. Synchronous callback maintains
+    // agent loop cadence until async wiring through DOMContentLoaded event.
     if (resultCallback) {
         std::string r = "{\"event\":\"navigated\",\"url\":\"" + url + "\"}";
         resultCallback(r);

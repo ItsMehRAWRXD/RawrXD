@@ -25,4 +25,9 @@ struct AppState {
     std::atomic<bool> model_ready{false};
     std::string loaded_model_name;
     uint32_t context_size = 2048;
+    
+    // ---- Settings compatibility fields ----
+    bool gpu_enabled = false;
+    int cpu_threads = 8;
+    int vram_mb = 4096;
 };

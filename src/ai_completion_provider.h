@@ -3,7 +3,8 @@
  * @file ai_completion_provider.h
  * @brief AI-powered code completion provider for RawrXD IDE
  * 
- * Provides async code completions via Ollama REST API or local models.
+ * Provides async code completions via Deep2 Native API or fallback providers.
+ * Auto-discovers backends in priority order: Deep2 -> RawrXD -> Ollama
  * Supports streaming responses, confidence scoring, and timeout fallbacks.
  */
 
@@ -11,6 +12,7 @@
 #include <vector>
 #include <functional>
 #include <atomic>
+#include "deep2/Deep2Discovery.h"
 
 namespace RawrXD {
 
@@ -36,7 +38,8 @@ public:
     ~AICompletionProvider();
 
     // Configuration
-    void setModelEndpoint(const std::string& endpoint);
+    void setModelEndpoint(const std::string& endpoint);  // Manual override
+    void autoDiscoverEndpoint();                          // Auto-detect best backend
     void setAllowRemoteEndpoint(bool enabled);
     void setModel(const std::string& modelName);
     void setRequestTimeout(int timeoutMs);
@@ -59,6 +62,8 @@ public:
     // Status
     bool isPending() const { return m_isPending; }
     double getLastLatency() const { return m_lastLatencyMs; }
+    std::string getCurrentEndpoint() const { return m_modelEndpoint; }
+    bool isUsingDeep2Native() const { return m_usingDeep2Native; }
 
     // Callbacks
     using CompletionCallback = std::function<void(const std::vector<AICompletion>&)>;
@@ -82,15 +87,18 @@ private:
     std::vector<AICompletion> parseCompletions(const std::string& responseText);
     float extractConfidence(const std::string& suggestion);
     std::string generateFallbackCompletion(const std::string& prompt);
+    void discoverEndpoint();
 
     // Configuration
-    std::string m_modelEndpoint = "http://localhost:11434";
+    std::string m_modelEndpoint = "http://localhost:11436";  // Default to Deep2
     bool m_allowRemoteEndpoint = false;
-    std::string m_modelName = "llama2";
+    std::string m_modelName = "deep2-native";
     int m_requestTimeoutMs = 5000;
     bool m_useTimeoutFallback = true;
     float m_minConfidence = 0.1f;
     int m_maxSuggestions = 5;
+    bool m_usingDeep2Native = true;
+    bool m_endpointDiscovered = false;
 
     // State
     std::atomic<bool> m_isPending{false};

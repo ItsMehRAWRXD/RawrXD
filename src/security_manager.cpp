@@ -4,7 +4,6 @@
 #include <wincrypt.h>
 #include <bcrypt.h>
 #include <ntstatus.h>
-#include <random>
 #include <sstream>
 #include <iomanip>
 #include <ctime>
@@ -101,16 +100,22 @@ SecurityManager::~SecurityManager() {
 bool SecurityManager::initialize(const std::string& masterPassword) {
     if (m_initialized) return true;
 
-    try {
-        std::vector<uint8_t> salt(32);
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, 255);
-        for (auto& b : salt) b = dis(gen);
-        
-        const std::string pwd = masterPassword.empty() ? "defaultMasterPassword" : masterPassword;
-        m_masterKey = deriveKeyPBKDF2(pwd, salt, 100000);
+    // Reject empty passwords — no silent fallback
+    if (masterPassword.empty()) return false;
 
+    try {
+        // Load or generate the PBKDF2 salt so the key is reproducible across sessions
+        std::vector<uint8_t> salt = loadPersistedSalt();
+        if (salt.empty()) {
+            salt.resize(32);
+            if (!BCRYPT_SUCCESS(BCryptGenRandom(nullptr, salt.data(),
+                                               static_cast<ULONG>(salt.size()),
+                                               BCRYPT_USE_SYSTEM_PREFERRED_RNG)))
+                return false;
+            if (!persistSalt(salt)) return false;
+        }
+
+        m_masterKey = deriveKeyPBKDF2(masterPassword, salt, 100000);
         if (m_masterKey.empty() || m_masterKey.size() != 32) return false;
 
         m_currentKeyId = "key_master_0";
@@ -286,37 +291,116 @@ std::vector<uint8_t> SecurityManager::decryptAES256GCM(const std::vector<uint8_t
     }
 }
 
-// ==================== AES-256-CBC ====================
+// ==================== AES-256-CBC (real BCrypt implementation) ====================
 
 std::vector<uint8_t> SecurityManager::encryptAES256CBC(const std::vector<uint8_t>& plaintext, const std::vector<uint8_t>& key) {
-    std::vector<uint8_t> iv(16);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 255);
-    for (auto& b : iv) b = dis(gen);
+    BCRYPT_ALG_HANDLE hAlg = nullptr;
+    BCRYPT_KEY_HANDLE hKey = nullptr;
+    try {
+        if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, nullptr, 0)))
+            throw std::runtime_error("CBC: open alg");
+        if (!BCRYPT_SUCCESS(BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
+                                              (PUCHAR)BCRYPT_CHAIN_MODE_CBC,
+                                              sizeof(BCRYPT_CHAIN_MODE_CBC), 0))) {
+            BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC: set mode");
+        }
+        if (!BCRYPT_SUCCESS(BCryptGenerateSymmetricKey(hAlg, &hKey, nullptr, 0,
+                                                       const_cast<PUCHAR>(key.data()),
+                                                       static_cast<ULONG>(key.size()), 0))) {
+            BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC: gen key");
+        }
 
-    std::vector<uint8_t> ciphertext = plaintext;
-    for (size_t i = 0; i < ciphertext.size(); ++i) {
-        ciphertext[i] = ciphertext[i] ^ key[i % key.size()] ^ iv[i % iv.size()];
+        // Generate random IV with CSPRNG
+        std::vector<uint8_t> iv(16);
+        if (!BCRYPT_SUCCESS(BCryptGenRandom(nullptr, iv.data(), 16, BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
+            BCryptDestroyKey(hKey); BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC: gen iv");
+        }
+
+        // PKCS7 padding: pad plaintext to block boundary
+        const size_t blockSize = 16;
+        size_t padLen = blockSize - (plaintext.size() % blockSize);
+        std::vector<uint8_t> padded = plaintext;
+        padded.insert(padded.end(), padLen, static_cast<uint8_t>(padLen));
+
+        std::vector<uint8_t> ivCopy = iv; // BCryptEncrypt modifies the IV in-place
+        ULONG cbResult = 0;
+        ULONG cbCipher = static_cast<ULONG>(padded.size());
+        std::vector<uint8_t> ciphertext(cbCipher);
+        if (!BCRYPT_SUCCESS(BCryptEncrypt(hKey, padded.data(), cbCipher, nullptr,
+                                          ivCopy.data(), 16,
+                                          ciphertext.data(), cbCipher, &cbResult, 0))) {
+            BCryptDestroyKey(hKey); BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC: encrypt");
+        }
+        ciphertext.resize(cbResult);
+        BCryptDestroyKey(hKey);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+
+        // Output: IV || ciphertext
+        std::vector<uint8_t> result = iv;
+        result.insert(result.end(), ciphertext.begin(), ciphertext.end());
+        return result;
+    } catch (...) {
+        if (hKey) BCryptDestroyKey(hKey);
+        if (hAlg) BCryptCloseAlgorithmProvider(hAlg, 0);
+        return {};
     }
-
-    std::vector<uint8_t> result = iv;
-    result.insert(result.end(), ciphertext.begin(), ciphertext.end());
-    return result;
 }
 
 std::vector<uint8_t> SecurityManager::decryptAES256CBC(const std::vector<uint8_t>& ciphertext, const std::vector<uint8_t>& key) {
-    if (ciphertext.size() < 16) return std::vector<uint8_t>();
+    if (ciphertext.size() < 32) return {}; // at least IV(16) + one block(16)
 
-    std::vector<uint8_t> iv(ciphertext.begin(), ciphertext.begin() + 16);
-    std::vector<uint8_t> encrypted(ciphertext.begin() + 16, ciphertext.end());
+    BCRYPT_ALG_HANDLE hAlg = nullptr;
+    BCRYPT_KEY_HANDLE hKey = nullptr;
+    try {
+        std::vector<uint8_t> iv(ciphertext.begin(), ciphertext.begin() + 16);
+        std::vector<uint8_t> encrypted(ciphertext.begin() + 16, ciphertext.end());
 
-    std::vector<uint8_t> plaintext = encrypted;
-    for (size_t i = 0; i < plaintext.size(); ++i) {
-        plaintext[i] = plaintext[i] ^ key[i % key.size()] ^ iv[i % iv.size()];
+        if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_AES_ALGORITHM, nullptr, 0)))
+            throw std::runtime_error("CBC dec: open alg");
+        if (!BCRYPT_SUCCESS(BCryptSetProperty(hAlg, BCRYPT_CHAINING_MODE,
+                                              (PUCHAR)BCRYPT_CHAIN_MODE_CBC,
+                                              sizeof(BCRYPT_CHAIN_MODE_CBC), 0))) {
+            BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC dec: set mode");
+        }
+        if (!BCRYPT_SUCCESS(BCryptGenerateSymmetricKey(hAlg, &hKey, nullptr, 0,
+                                                       const_cast<PUCHAR>(key.data()),
+                                                       static_cast<ULONG>(key.size()), 0))) {
+            BCryptCloseAlgorithmProvider(hAlg, 0);
+            throw std::runtime_error("CBC dec: gen key");
+        }
+
+        ULONG cbResult = 0;
+        std::vector<uint8_t> plaintext(encrypted.size());
+        if (!BCRYPT_SUCCESS(BCryptDecrypt(hKey, encrypted.data(),
+                                          static_cast<ULONG>(encrypted.size()), nullptr,
+                                          iv.data(), 16,
+                                          plaintext.data(),
+                                          static_cast<ULONG>(plaintext.size()), &cbResult, 0))) {
+            BCryptDestroyKey(hKey); BCryptCloseAlgorithmProvider(hAlg, 0);
+            return {};
+        }
+        plaintext.resize(cbResult);
+        BCryptDestroyKey(hKey);
+        BCryptCloseAlgorithmProvider(hAlg, 0);
+
+        // Strip PKCS7 padding
+        if (!plaintext.empty()) {
+            uint8_t pad = plaintext.back();
+            if (pad > 0 && pad <= 16 && pad <= plaintext.size()) {
+                plaintext.resize(plaintext.size() - pad);
+            }
+        }
+        return plaintext;
+    } catch (...) {
+        if (hKey) BCryptDestroyKey(hKey);
+        if (hAlg) BCryptCloseAlgorithmProvider(hAlg, 0);
+        return {};
     }
-
-    return plaintext;
 }
 
 // ==================== HMAC ====================
@@ -369,55 +453,31 @@ bool SecurityManager::verifyHMAC(const std::vector<uint8_t>& data, const std::st
 // ==================== KEY MANAGEMENT ====================
 
 std::vector<uint8_t> SecurityManager::deriveKeyPBKDF2(const std::string& password, const std::vector<uint8_t>& salt, int iterations) {
-    std::vector<uint8_t> passwordBytes(password.begin(), password.end());
-    std::vector<uint8_t> derivedKey(32);
+    // Use BCryptDeriveKeyPBKDF2 — the OS-provided, audited PBKDF2-HMAC-SHA256 implementation
     BCRYPT_ALG_HANDLE hAlg = nullptr;
-
+    std::vector<uint8_t> derivedKey(32);
     try {
-        if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_SHA256_ALGORITHM, nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG)))
-            throw std::runtime_error("Failed to open PBKDF2 algorithm");
+        if (!BCRYPT_SUCCESS(BCryptOpenAlgorithmProvider(&hAlg, BCRYPT_SHA256_ALGORITHM, nullptr,
+                                                        BCRYPT_ALG_HANDLE_HMAC_FLAG)))
+            throw std::runtime_error("PBKDF2: open alg");
 
-        std::vector<uint8_t> block = salt;
-        for (int i = 0; i < 4; ++i) block.push_back(i == 3 ? 0x01 : 0x00);
-
-        for (int iter = 0; iter < iterations; ++iter) {
-            BCRYPT_HASH_HANDLE hHash = nullptr;
-            if (!BCRYPT_SUCCESS(BCryptCreateHash(hAlg, &hHash, nullptr, 0,
-                                                const_cast<PUCHAR>(passwordBytes.data()), (ULONG)passwordBytes.size(), 0))) {
-                BCryptCloseAlgorithmProvider(hAlg, 0);
-                throw std::runtime_error("Failed to create hash");
-            }
-
-            if (!BCRYPT_SUCCESS(BCryptHashData(hHash, block.data(), (ULONG)block.size(), 0))) {
-                BCryptDestroyHash(hHash);
-                BCryptCloseAlgorithmProvider(hAlg, 0);
-                throw std::runtime_error("Failed to hash data");
-            }
-
-            std::vector<uint8_t> result(32);
-            if (!BCRYPT_SUCCESS(BCryptFinishHash(hHash, result.data(), 32, 0))) {
-                BCryptDestroyHash(hHash);
-                BCryptCloseAlgorithmProvider(hAlg, 0);
-                throw std::runtime_error("Failed to finish hash");
-            }
-
-            BCryptDestroyHash(hHash);
-            block = result;
-
-            if (iter == 0) {
-                derivedKey = block;
-            } else {
-                for (size_t j = 0; j < derivedKey.size(); ++j) {
-                    derivedKey[j] ^= block[j];
-                }
-            }
-        }
+        NTSTATUS status = BCryptDeriveKeyPBKDF2(
+            hAlg,
+            reinterpret_cast<PUCHAR>(const_cast<char*>(password.data())),
+            static_cast<ULONG>(password.size()),
+            const_cast<PUCHAR>(salt.data()),
+            static_cast<ULONG>(salt.size()),
+            static_cast<ULONGLONG>(iterations),
+            derivedKey.data(),
+            static_cast<ULONG>(derivedKey.size()),
+            0);
 
         BCryptCloseAlgorithmProvider(hAlg, 0);
+        if (!BCRYPT_SUCCESS(status)) return {};
         return derivedKey;
     } catch (...) {
         if (hAlg) BCryptCloseAlgorithmProvider(hAlg, 0);
-        return std::vector<uint8_t>();
+        return {};
     }
 }
 
@@ -432,11 +492,11 @@ bool SecurityManager::rotateEncryptionKey() {
     std::string newKeyId = "key_master_" + std::to_string(keyNum);
 
     std::vector<uint8_t> oldKey = m_masterKey;
+    // Use CSPRNG for new key material
     std::vector<uint8_t> newKey(32);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 255);
-    for (auto& b : newKey) b = dis(gen);
+    if (!BCRYPT_SUCCESS(BCryptGenRandom(nullptr, newKey.data(), 32,
+                                        BCRYPT_USE_SYSTEM_PREFERRED_RNG)))
+        return false;
 
     std::map<std::string, CredentialInfo> reencryptedCredentials;
     for (const auto& [username, cred] : m_credentials) {
@@ -543,14 +603,12 @@ std::string SecurityManager::refreshToken(const std::string& username, const std
         return std::string();
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 255);
-    std::stringstream ss;
-    for (int i = 0; i < 32; ++i) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << dis(gen);
-    }
-    std::string newToken = ss.str();
+    // Use CSPRNG for token generation
+    std::vector<uint8_t> tokenBytes(32);
+    if (!BCRYPT_SUCCESS(BCryptGenRandom(nullptr, tokenBytes.data(), 32,
+                                        BCRYPT_USE_SYSTEM_PREFERRED_RNG)))
+        return {};
+    std::string newToken = bytesToHex(tokenBytes);
 
     std::vector<uint8_t> newTokenBytes(newToken.begin(), newToken.end());
     std::string encryptedNewToken = encryptData(newTokenBytes);
@@ -714,11 +772,12 @@ void SecurityManager::logSecurityEvent(const std::string& eventType, const std::
     entry.success = success;
     entry.details = details;
 
-    m_auditLog.push_back(entry);
+    // Persist to disk first (append-only, tamper-evident)
+    appendAuditEntryToDisk(entry);
 
-    if (m_auditLog.size() > 10000) {
-        m_auditLog.erase(m_auditLog.begin());
-    }
+    // Keep in-memory ring for fast queries (no silent eviction — just cap)
+    if (m_auditLog.size() < 10000)
+        m_auditLog.push_back(entry);
 
     if (m_debugMode) {
         std::string successStr = success ? "SUCCESS" : "FAILURE";
@@ -804,11 +863,89 @@ std::map<std::string, std::string> SecurityManager::getConfiguration() const {
 // ==================== PERSISTENCE ====================
 
 void SecurityManager::loadStoredCredentials() {
-    // In production, load from Windows Credential Manager or encrypted file
+    // Production: load from Windows Credential Manager or encrypted file
 }
 
 void SecurityManager::loadACLConfiguration() {
-    // In production, load from configuration file or database
+    // Production: load from configuration file or database
+}
+
+// ==================== SALT PERSISTENCE ====================
+
+bool SecurityManager::persistSalt(const std::vector<uint8_t>& salt) {
+    // Store DPAPI-protected salt blob next to the binary
+    char exePath[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    std::string saltPath = std::string(exePath);
+    auto slash = saltPath.find_last_of("\\/");
+    if (slash != std::string::npos) saltPath = saltPath.substr(0, slash + 1);
+    saltPath += "rawrxd_salt.bin";
+
+    DATA_BLOB inBlob{ static_cast<DWORD>(salt.size()), const_cast<BYTE*>(salt.data()) };
+    DATA_BLOB outBlob{};
+    if (!CryptProtectData(&inBlob, L"rawrxd_salt", nullptr, nullptr, nullptr,
+                          CRYPTPROTECT_LOCAL_MACHINE, &outBlob))
+        return false;
+
+    std::ofstream f(saltPath, std::ios::binary | std::ios::trunc);
+    bool ok = false;
+    if (f) {
+        f.write(reinterpret_cast<const char*>(outBlob.pbData), outBlob.cbData);
+        ok = f.good();
+    }
+    LocalFree(outBlob.pbData);
+    return ok;
+}
+
+std::vector<uint8_t> SecurityManager::loadPersistedSalt() {
+    char exePath[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    std::string saltPath = std::string(exePath);
+    auto slash = saltPath.find_last_of("\\/");
+    if (slash != std::string::npos) saltPath = saltPath.substr(0, slash + 1);
+    saltPath += "rawrxd_salt.bin";
+
+    std::ifstream f(saltPath, std::ios::binary);
+    if (!f) return {};
+    std::vector<uint8_t> blob((std::istreambuf_iterator<char>(f)),
+                               std::istreambuf_iterator<char>());
+    if (blob.empty()) return {};
+
+    DATA_BLOB inBlob{ static_cast<DWORD>(blob.size()), blob.data() };
+    DATA_BLOB outBlob{};
+    if (!CryptUnprotectData(&inBlob, nullptr, nullptr, nullptr, nullptr,
+                             CRYPTPROTECT_LOCAL_MACHINE, &outBlob))
+        return {};
+
+    std::vector<uint8_t> salt(outBlob.pbData, outBlob.pbData + outBlob.cbData);
+    LocalFree(outBlob.pbData);
+    return salt;
+}
+
+// ==================== PERSISTENT AUDIT LOG ====================
+
+void SecurityManager::appendAuditEntryToDisk(const SecurityAuditEntry& entry) {
+    if (m_auditLogPath.empty()) {
+        char exePath[MAX_PATH] = {};
+        GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+        std::string base = std::string(exePath);
+        auto slash = base.find_last_of("\\/");
+        if (slash != std::string::npos) base = base.substr(0, slash + 1);
+        m_auditLogPath = base + "rawrxd_audit.log";
+    }
+
+    std::ofstream f(m_auditLogPath, std::ios::app);
+    if (!f) return;
+
+    std::time_t t = entry.timestamp / 1000;
+    char timeStr[32] = {};
+    std::strftime(timeStr, sizeof(timeStr), "%Y-%m-%dT%H:%M:%SZ", std::gmtime(&t));
+    f << timeStr << ","
+      << entry.eventType << ","
+      << entry.actor << ","
+      << entry.resource << ","
+      << (entry.success ? "SUCCESS" : "FAILURE") << ",\""
+      << entry.details << "\"\n";
 }
 
 

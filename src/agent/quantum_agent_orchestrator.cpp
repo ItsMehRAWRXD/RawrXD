@@ -767,7 +767,7 @@ ExecutionResult QuantumOrchestrator::executeTask(
     result.iterationCount = totalIterations;
     result.totalDurationMs = static_cast<uint64_t>(duration);
     result.avgModelDurationMs = result.modelCount > 0 ? duration / result.modelCount : 0;
-    result.maxModelDurationMs = duration;  // Simplified for now
+    result.maxModelDurationMs = result.modelCount > 0 ? duration : 0;  // Use total duration as max
     
     // Record execution for timeout learning
     m_impl->timeoutAdjuster_->recordExecution({
@@ -1383,6 +1383,8 @@ MultiModelManager::ParallelResult MultiModelManager::executeParallel(
     result.success.reserve(m_impl->models_.size());
     result.durations.reserve(m_impl->models_.size());
     
+    auto startTime = std::chrono::steady_clock::now();
+    
     std::vector<std::future<std::pair<std::string, bool>>> futures;
     
     // Launch parallel executions
@@ -1607,7 +1609,8 @@ MultiModelManager::ParallelResult MultiModelManager::executeParallel(
         auto [output, success] = future.get();
         result.outputs.push_back(output);
         result.success.push_back(success);
-        result.durations.push_back(0);  // Simplified
+        result.durations.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - startTime).count());  // Real per-model duration
     }
     
     // Determine best model (highest success)

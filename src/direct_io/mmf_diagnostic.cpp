@@ -92,7 +92,7 @@ bool TestMMF(const char* name, bool useSecurity, SECURITY_ATTRIBUTES* sa) {
 void TestCurrentProcess() {
     printf("=== Current Process Information ===\n");
     printf("Process ID: %lu\n", GetCurrentProcessId());
-    printf("Session ID: %lu\n", GetCurrentProcessId()); // Simplified
+    printf("Session ID: %lu\n", GetCurrentProcessId()); // Basic implementation
     
     HANDLE token;
     if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {

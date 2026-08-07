@@ -22,6 +22,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <psapi.h>
+#include "vulkan_compute.h"
 #pragma comment(lib, "psapi.lib")
 
 #ifndef MEM_RESERVE_PLACEHOLDER
@@ -1177,3 +1178,4 @@ void BackendOrchestrator::MetricsExportLoop(int interval_s) {
 }
 
 } // namespace RawrXD
+

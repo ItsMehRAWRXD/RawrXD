@@ -178,13 +178,13 @@ bool HttpGetBinary(const std::wstring& host, const std::wstring& path, const std
     }
 
     DWORD bytesRead;
-    char buf[32768];
+    auto buf = std::make_unique<char[]>(32768);
     bool ok = true;
     do {
         bytesRead = 0;
-        if (!WinHttpReadData(hRequest, buf, sizeof(buf), &bytesRead)) { ok = false; break; }
+        if (!WinHttpReadData(hRequest, buf.get(), 32768, &bytesRead)) { ok = false; break; }
         if (bytesRead == 0) break;
-        out.write(buf, bytesRead);
+        out.write(buf.get(), bytesRead);
     } while (bytesRead > 0);
 
     WinHttpCloseHandle(hRequest);

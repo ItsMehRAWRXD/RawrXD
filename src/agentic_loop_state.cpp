@@ -513,10 +513,15 @@ void AgenticLoopState::addConstraint(const std::string& key, const std::string& 
 
 void AgenticLoopState::removeConstraint(const std::string& key)
 {
-    // The current minimal json.hpp stub lacks erase().
-    // Production implementation pending json.hpp upgrade or std::map migration.
-    // m_constraints.erase(key);
-    (void)key;
+    // Workaround for minimal json.hpp stub lacking erase()
+    // Create a new object without the key
+    nlohmann::json newConstraints;
+    for (auto it = m_constraints.begin(); it != m_constraints.end(); ++it) {
+        if (it.key() != key) {
+            newConstraints[it.key()] = it.value();
+        }
+    }
+    m_constraints = std::move(newConstraints);
 }
 
 bool AgenticLoopState::validateAgainstConstraints(const nlohmann::json& action) const
@@ -722,3 +727,5 @@ IterationStatus AgenticLoopState::stringToStatus(const std::string& str) const
     if (str == "MaxAttemptsReached") return IterationStatus::MaxAttemptsReached;
     return IterationStatus::NotStarted;
 }
+
+

@@ -161,14 +161,14 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
                 }
             }
 
-            // Fallback 3: Ollama local
-            if (llmResp.empty() && be != "ollama" && !m_endpoint.empty()) {
+            // Fallback 3: Native local inference (Deep2)
+            if (llmResp.empty() && be != "native" && !m_endpoint.empty()) {
                 std::string savedModel = m_model;
                 m_model = "mistral";
-                llmResp = sendOllamaRequest(m_model, userMsg, params.maxTokens, params.temperature);
+                llmResp = sendNativeInferenceRequest(m_model, userMsg, params.maxTokens, params.temperature);
                 if (!llmResp.empty()) {
-                    be = "ollama";
-                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to Ollama/mistral succeeded\n");
+                    be = "native";
+                    fprintf(stderr, "[INFO] [ModelInvoker] Fallback to native inference succeeded\n");
                 } else {
                     m_model = savedModel;
                 }
@@ -183,7 +183,7 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
         }
 
         // Parse backend-specific format
-        if (be == "ollama") {
+        if (be == "native") {
             response.rawOutput  = llmResp.value("response", "");
             response.tokensUsed = llmResp.value("eval_count", 0)
                                 + llmResp.value("prompt_eval_count", 0);
@@ -196,7 +196,7 @@ LLMResponse ModelInvoker::invoke(const InvocationParams& params) {
         } else if (be == "openai") {
             auto choices = llmResp.value("choices", json::array());
             if (!choices.empty())
-                response.rawOutput = choices.at(0).value("message", json{}).value("content", "");
+                response.rawOutput = choices.at(0).value("message", json::object()).value("content", "");
             if (llmResp.contains("usage"))
                 response.tokensUsed = llmResp.at("usage").value("completion_tokens", 0);
         }
@@ -350,6 +350,17 @@ json ModelInvoker::sendOpenAIRequest(const std::string& prompt,
     }
 }
 
+json ModelInvoker::sendNativeInferenceRequest(const std::string& model,
+                                               const std::string& prompt,
+                                               int maxTokens, double temperature) {
+    (void)model;
+    (void)prompt;
+    (void)maxTokens;
+    (void)temperature;
+    fprintf(stderr, "[WARN] [ModelInvoker] Native inference request not yet implemented\n");
+    return {};
+}
+
 // ---------------------------------------------------------------------------
 // Plan parsing
 // ---------------------------------------------------------------------------
@@ -387,7 +398,7 @@ bool ModelInvoker::validatePlanSanity(const json& plan) {
     int count = 0;
     std::vector<std::string> seen;
     for (size_t i = 0; i < plan.size(); ++i) {
-        const auto& action = plan.at(i);
+        const auto& action = plan[static_cast<nlohmann::json::size_type>(i)];
         if (!action.is_object()) return false;
         std::string type = action.value("type", "");
 

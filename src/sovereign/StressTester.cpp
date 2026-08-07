@@ -4,6 +4,7 @@
 #include "sovereign/ExpertCache.hpp"
 #include "sovereign/VulkanCompute.hpp"
 #include <iostream>
+#include "vulkan_compute.h"
 
 namespace Sovereign {
 namespace StressTester {
@@ -101,3 +102,4 @@ bool ValidateNVMePaging() {
 
 } // namespace StressTester
 } // namespace Sovereign
+

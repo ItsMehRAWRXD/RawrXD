@@ -1,3 +1,4 @@
+#pragma once  // Unity-include guard: prevents redefinition when this .cpp is unity-included twice.
 #include <windows.h>
 #include <iostream>
 #include <string>

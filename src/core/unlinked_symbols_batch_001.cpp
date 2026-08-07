@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstring>
 #include <mutex>
+#include "gguf_loader.h"
 
 namespace {
 
@@ -172,3 +173,4 @@ void asm_perf_reset_slot(int slot) {
 }
 
 } // extern "C"
+

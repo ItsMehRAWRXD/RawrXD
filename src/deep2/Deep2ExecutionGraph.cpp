@@ -397,6 +397,13 @@ void TokenBatchRouter::SetBatchSize(uint32_t batchSize) {
     batchSize_ = batchSize;
 }
 
+void TokenBatchRouter::InitializeRouter(uint32_t numExperts, uint32_t topK, uint32_t hiddenDim, const float* routerWeights) {
+    numExperts_ = numExperts;
+    topK_ = topK;
+    hiddenDim_ = hiddenDim;
+    routerWeights_ = routerWeights;
+}
+
 void TokenBatchRouter::AddToken(uint32_t tokenId, const float* hiddenState) {
     tokenIds_.push_back(tokenId);
     hiddenStates_.push_back(const_cast<float*>(hiddenState));
@@ -421,15 +428,61 @@ void TokenBatchRouter::ExecuteBatched() {
     results_.clear();
     results_.reserve(tokenIds_.size());
     
+    // Route tokens through the MoE router to select top-k experts
+    // The router computes: router_logits = W_router * hidden_state
+    // Then selects top-k experts via softmax and gating
     for (size_t i = 0; i < tokenIds_.size(); ++i) {
         BatchResult result;
         result.tokenId = tokenIds_[i];
         result.outputHidden = hiddenStates_[i];
-        // Router forward pass to get experts
-        // Simplified: assign experts based on token ID
-        result.numExperts = 8;
-        for (uint32_t j = 0; j < 8; ++j) {
-            result.selectedExperts[j] = (tokenIds_[i] + j) % 256;
+        
+        // Compute router logits: project hidden state through router weights
+        // router_weights: [num_experts, hidden_dim]
+        std::vector<float> routerLogits(numExperts_, 0.0f);
+        if (routerWeights_) {
+            // Real router forward pass: logits = W_router * h
+            for (uint32_t e = 0; e < numExperts_; ++e) {
+                const float* expertWeights = routerWeights_ + e * hiddenDim_;
+                float logit = 0.0f;
+                for (size_t d = 0; d < hiddenDim_; ++d) {
+                    logit += expertWeights[d] * hiddenStates_[i][d];
+                }
+                routerLogits[e] = logit;
+            }
+            
+            // Apply softmax to get expert weights
+            float maxLogit = *std::max_element(routerLogits.begin(), routerLogits.end());
+            float sumExp = 0.0f;
+            for (uint32_t e = 0; e < numExperts_; ++e) {
+                routerLogits[e] = std::exp(routerLogits[e] - maxLogit);
+                sumExp += routerLogits[e];
+            }
+            for (uint32_t e = 0; e < numExperts_; ++e) {
+                routerLogits[e] /= sumExp;
+            }
+            
+            // Select top-k experts by weight
+            result.numExperts = topK_;
+            std::vector<std::pair<float, uint32_t>> expertWeights;
+            for (uint32_t e = 0; e < numExperts_; ++e) {
+                expertWeights.push_back({routerLogits[e], e});
+            }
+            std::partial_sort(expertWeights.begin(), 
+                            expertWeights.begin() + topK_,
+                            expertWeights.end(),
+                            std::greater<std::pair<float, uint32_t>>());
+            
+            for (uint32_t j = 0; j < topK_; ++j) {
+                result.selectedExperts[j] = expertWeights[j].second;
+                result.expertWeights[j] = expertWeights[j].first;
+            }
+        } else {
+            // Fallback: uniform distribution when router not initialized
+            result.numExperts = topK_;
+            for (uint32_t j = 0; j < topK_; ++j) {
+                result.selectedExperts[j] = j;
+                result.expertWeights[j] = 1.0f / topK_;
+            }
         }
         results_.push_back(result);
     }

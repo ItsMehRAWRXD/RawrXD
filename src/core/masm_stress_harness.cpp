@@ -17,6 +17,7 @@
 #include <windows.h>
 #include <cstdio>
 #include <cstring>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 namespace Stress {
@@ -594,3 +595,4 @@ uint64_t MASMStressHarness::nowMs() const {
 
 } // namespace Stress
 } // namespace RawrXD
+

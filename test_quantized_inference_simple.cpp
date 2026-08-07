@@ -83,15 +83,23 @@ bool TestQuantization() {
         original[i] = (i % 10 - 5) * 0.1f;  // -0.5 to 0.4
     }
     
+    std::cout << "  DEBUG: original[0]=" << original[0] << " original[255]=" << original[255] << std::endl;
+    
     // Quantize to Q4_0
     std::vector<uint8_t> q4_data;
     QuantizationUtils::QuantizeF32ToQ4_0(original.data(), original.size(), q4_data);
     
+    std::cout << "  DEBUG: after quantize original[0]=" << original[0] << " q4_data.size=" << q4_data.size() << std::endl;
+    
     QuantizedTensor q4_tensor;
     q4_tensor.LoadFromGGUF(q4_data.data(), original.size(), QuantType::Q4_0);
     
+    std::cout << "  DEBUG: after load original[0]=" << original[0] << " tensor.rows=" << q4_tensor.GetRows() << " cols=" << q4_tensor.GetCols() << " blocks=" << q4_tensor.GetNumBlocks() << std::endl;
+    
     // Dequantize
     std::vector<float> dequantized = q4_tensor.DequantizeScalar();
+    
+    std::cout << "  DEBUG: after dequant original[0]=" << original[0] << " dequantized.size=" << dequantized.size() << std::endl;
     
     // Calculate error
     float max_error = 0.0f;

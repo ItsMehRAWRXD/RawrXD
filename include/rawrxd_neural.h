@@ -1,3 +1,4 @@
+
 #ifndef RAWRXD_NEURAL_H
 #define RAWRXD_NEURAL_H
 
@@ -56,3 +57,4 @@ __declspec(dllimport) void __stdcall RawrXD_GetStats(RawrXD_Model* ctx, RawrXD_S
 #endif
 
 #endif // RAWRXD_NEURAL_H
+

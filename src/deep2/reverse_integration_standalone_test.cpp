@@ -242,7 +242,7 @@ bool Test_ReverseIntegration_LayerHooks() {
     
     ReverseIntegration integration;
     
-    // Simulate layer processing
+    // Model layer processing
     std::vector<float> activations(256);
     for (size_t i = 0; i < activations.size(); i++) {
         activations[i] = static_cast<float>(i) / 255.0f;

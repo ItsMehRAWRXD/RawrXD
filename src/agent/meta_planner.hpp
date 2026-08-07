@@ -110,3 +110,4 @@ private:
     uint32_t allocTaskId() { return nextTaskId_++; }
     void resetTaskIds() { nextTaskId_ = 1; }
 };
+

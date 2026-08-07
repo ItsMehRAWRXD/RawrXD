@@ -277,7 +277,7 @@ static bool writeFragmentedGgufV3(const std::filesystem::path& path, uint32_t nu
         appendU64(buf, 4u);  // dim0
         appendU32(buf, kTensorTypeF32);
         const size_t offPos = buf.size();
-        appendU64(buf, 0);  // placeholder absolute offset
+        appendU64(buf, cursor);  // absolute offset to tensor data
         OffsetPatch p{};
         p.offsetFieldPos = offPos;
         p.absOffset = 0;

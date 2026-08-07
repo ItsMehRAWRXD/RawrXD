@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstddef>
@@ -33,3 +34,4 @@ float cosine(const std::vector<float>& a, const std::vector<float>& b);
 
 } // namespace Context
 } // namespace RawrXD
+

@@ -128,7 +128,7 @@ TaskNode* IncrementalDAG::pop_ready() {
 
 void CommandPacketQueue::enqueue(DeferredCommand cmd) {
     // Priority-based insertion would go here
-    // For now, simple enqueue
+    // Current implementation uses simple enqueue
     while (!queue_.push(std::move(cmd))) {
         // Queue full - spin briefly
         _mm_pause();
@@ -402,7 +402,7 @@ void ExecutionScheduler_v2::flush_telemetry() {
         auto event = telemetry_ring_.pop();
         if (event) {
             // In production, would batch and write to file/socket
-            // For now, just consume
+            // Current implementation consumes event
             (void)event;
         } else {
             // No events - brief pause

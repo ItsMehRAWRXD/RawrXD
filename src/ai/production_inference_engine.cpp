@@ -39,9 +39,9 @@ bool ProductionInferenceEngine::IsModelLoaded() const {
 }
 
 std::vector<int32_t> ProductionInferenceEngine::Tokenize(const std::string& text) {
-    // For now, we reuse the prompt-based entry point or simulate via the internal tokenizer
+    // Reuse the prompt-based entry point or internal tokenizer
     // In a full implementation, we'd expose g_tokenizer.tokenize(text)
-    // For the bridge, we'll return an empty vector or minimal tokens if not exposed.
+    // For the bridge, we return an empty vector or minimal tokens if not exposed.
     return {}; 
 }
 

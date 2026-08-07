@@ -1,5 +1,4 @@
 #include "agentic_copilot_bridge.hpp"
-#include "agent_self_healing_orchestrator.hpp"
 #include "agent_hot_patcher.hpp"
 #include <iostream>
 #include <chrono>

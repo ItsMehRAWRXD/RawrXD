@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # =============================================================================
 # RawrXD-Shell Production Dockerfile
 # Multi-stage: Build context + Runtime
@@ -81,3 +82,14 @@ USER rawrxd
 # Use tini as PID 1 for proper signal handling
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["pwsh", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "/app/RawrXD.ps1"]
+=======
+FROM mcr.microsoft.com/powershell:lts-alpine-3.18
+WORKDIR /app
+COPY . /app
+RUN mkdir -p /app/logs /app/config
+ENV POWERSHELL_TELEMETRY_OPTOUT=1
+ENV RAWRXD_ENV=production
+CMD ["pwsh", "-NoLogo", "-ExecutionPolicy", "Bypass", "-File", "RawrXD.ps1"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD pwsh -c "Test-Path /app/logs/RawrXD.log"
+VOLUME ["/app/logs", "/app/config"]
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

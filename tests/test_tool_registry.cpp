@@ -39,22 +39,22 @@ public:
     
     std::vector<LogEntry> entries;
     
-    void debug(const std::string& component, const std::string& message) override {
+    void debug(const std::string& component, const std::string& message) {
         entries.push_back({"DEBUG", component, message});
         std::cout << "[DEBUG] " << component << ": " << message << std::endl;
     }
     
-    void info(const std::string& component, const std::string& message) override {
+    void info(const std::string& component, const std::string& message) {
         entries.push_back({"INFO", component, message});
         std::cout << "[INFO] " << component << ": " << message << std::endl;
     }
     
-    void warn(const std::string& component, const std::string& message) override {
+    void warn(const std::string& component, const std::string& message) {
         entries.push_back({"WARN", component, message});
         std::cout << "[WARN] " << component << ": " << message << std::endl;
     }
     
-    void error(const std::string& component, const std::string& message) override {
+    void error(const std::string& component, const std::string& message) {
         entries.push_back({"ERROR", component, message});
         std::cout << "[ERROR] " << component << ": " << message << std::endl;
     }
@@ -70,19 +70,11 @@ public:
     std::map<std::string, std::vector<double>> histograms;
     std::map<std::string, double> gauges;
     
-    void incrementCounter(const std::string& name, double value) override {
+    void incrementCounter(const std::string& name, int64_t value = 1) {
         counters[name] += static_cast<uint64_t>(value);
     }
     
-    void decrementGauge(const std::string& name, double value) override {
-        gauges[name] -= value;
-    }
-    
-    void incrementGauge(const std::string& name, double value) override {
-        gauges[name] += value;
-    }
-    
-    void recordHistogram(const std::string& name, double value) override {
+    void recordHistogram(const std::string& name, double value) {
         histograms[name].push_back(value);
     }
 };

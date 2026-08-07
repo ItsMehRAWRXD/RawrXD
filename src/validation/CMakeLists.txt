@@ -839,6 +839,8 @@ add_executable(ValidationRunner
     gates/TokenEfficiencySwarm.cpp
     gates/VAL061_TokenEstimatorSwarmGate.cpp
     gates/VAL062_SwarmIntegrationGate.cpp
+    ../executive/SwarmIntegration.cpp
+    ../executive/TokenEfficiencySwarm.cpp
 )
 
 # Include directories for ValidationRunner

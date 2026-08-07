@@ -149,6 +149,8 @@ bool Rollback::openIssue(const std::string& title, const std::string& body) {
         fprintf(stderr, "[WARN] Rollback: GITHUB_TOKEN not set, skipping issue\n");
         return true; // allow in dev
     }
+    std::string tokenStr(token);
+    free(token);
 
     JsonObject issue;
     issue["title"] = JsonValue(title);

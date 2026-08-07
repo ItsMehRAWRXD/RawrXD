@@ -1,6 +1,7 @@
 #include "plan_orchestrator.h"
 #include <algorithm>
 #include <cctype>
+#include <iostream>
 #include <sstream>
 
 namespace RawrXD {
@@ -12,7 +13,11 @@ std::string toLower(std::string s) {
 }
 }  // namespace
 
-PlanOrchestrator::PlanOrchestrator() {}
+PlanOrchestrator::PlanOrchestrator()
+    : m_currentStepIndex(0)
+    , onStepCompleted(nullptr)
+    , onPlanCompleted(nullptr)
+{}
 PlanOrchestrator::~PlanOrchestrator() {}
 
 void PlanOrchestrator::createPlan(const std::string& goal) {

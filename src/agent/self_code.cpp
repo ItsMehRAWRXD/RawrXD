@@ -79,7 +79,16 @@ bool SelfCode::rebuildTarget(const std::string& target,
         m_lastError = "Binary not produced or zero size";
         return false;
     }
-    return true;
+    
+    // Snippet replacement
+    size_t pos = content.find(oldText);
+    if (pos != std::string::npos) {
+        content.replace(pos, oldText.length(), newText);
+        return writeFileContent(path, content);
+    }
+    
+    m_lastError = "Could not locate text to replace";
+    return false;
 }
 
 bool SelfCode::replaceInFile(const std::string& path,

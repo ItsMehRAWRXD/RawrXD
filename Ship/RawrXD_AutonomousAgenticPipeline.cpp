@@ -114,6 +114,7 @@ struct AutonomousAgenticPipelineCoordinator::Impl
     std::atomic<uint64_t> tokensStreamed{0};
     std::chrono::milliseconds totalPipelineTimeMs{0};
     mutable std::mutex statsMutex;
+    int contextWindowSize = 8192;
 
     PipelineResult<std::string> runPipelineInternal(const std::string& userMessage);
     void reportPipelineFailureInternal(PipelineStage stage, const std::string& message);
@@ -219,6 +220,11 @@ void AutonomousAgenticPipelineCoordinator::setAppendRenderer(AppendRenderFn fn)
 void AutonomousAgenticPipelineCoordinator::setDequeueTaskFn(DequeueTaskFn fn)
 {
     m_impl->dequeueTaskFn = std::move(fn);
+}
+
+void AutonomousAgenticPipelineCoordinator::setContextWindowSize(int size)
+{
+    m_impl->contextWindowSize = size;
 }
 
 PipelineResult<std::string> AutonomousAgenticPipelineCoordinator::runPipeline(const std::string& userMessage)

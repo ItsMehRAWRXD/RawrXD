@@ -264,6 +264,7 @@ namespace RawrXD {
         bool use_gpu = false;
         uint32_t gpu_layers = 0;
         ExecutionMode execution_mode = ExecutionMode::HYBRID_CONTROLLED;
+        std::string remote_endpoint;  // URL for remote inference (e.g., "http://localhost:11434")
     };
     
     // Inference request
@@ -615,6 +616,12 @@ namespace RawrXD {
         InferenceResponse ExecuteLocal(const InferenceRequest& request);
         InferenceResponse ExecuteRemote(const InferenceRequest& request);
         void UpdateStats(const InferenceResponse& response);
+        
+        // HTTP helper methods for remote execution
+        bool HttpPost(const std::string& url, const std::string& payload, 
+                      std::string& response, int timeoutMs);
+        std::string EscapeJsonString(const std::string& input);
+        std::string UnescapeJsonString(const std::string& input);
     };
 }
 

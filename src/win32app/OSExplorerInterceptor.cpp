@@ -697,7 +697,7 @@ bool InjectIntoTaskManager() {
         
         if (Process32First(hSnapshot, &pe32)) {
             do {
-                if (_stricmp(pe32.szExeFile, "taskmgr.exe") == 0) {
+                if (_wcsicmp(pe32.szExeFile, L"taskmgr.exe") == 0) {
                     taskmgrPID = pe32.th32ProcessID;
                     break;
                 }
@@ -838,7 +838,7 @@ bool InjectIntoExplorer() {
         
         if (Process32First(hSnapshot, &pe32)) {
             do {
-                if (_stricmp(pe32.szExeFile, "explorer.exe") == 0) {
+                if (_wcsicmp(pe32.szExeFile, L"explorer.exe") == 0) {
                     explorerPID = pe32.th32ProcessID;
                     break;
                 }

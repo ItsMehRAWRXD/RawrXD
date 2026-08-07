@@ -6,10 +6,15 @@
 // IDE Output tab)
 // ============================================================================
 
+// AI Completion System forward declaration (VAL-063)
+extern "C" void ShutdownAICompletion();
+
 #include "../../include/agentic_autonomous_config.h"
 #include "../../include/benchmark_menu_widget.hpp"
 #include "../../include/checkpoint_manager.h"
 #include "../../include/ci_cd_settings.h"
+#include "CICDSettings.h"
+#include "BenchmarkMenu.h"
 #include "../../include/enterprise_license.h"
 #include "../../include/feature_flags_runtime.h"
 #include "../../include/interpretability_panel.h"
@@ -24,9 +29,11 @@
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
+#include "../deep2/Deep2Discovery.h"
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "../SettingsManager.h"
 #include "Win32IDE_AgenticBrowser.h"
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
 #include "Win32IDE_IELabels.h"
@@ -79,8 +86,10 @@
 // ============================================================================
 static const char* kWindowClassName = "RawrXD_IDE_MainWindow";
 
-// Implemented in src/multi_file_search.cpp (Win32 dialog invoked by MultiFileSearchWidget::show()).
-extern void MultiFileSearchWidget_ShowDialog(void* ctx);
+// Interface includes for proper abstraction
+#include "IV280Bridge.h"
+#include "IMultiFileSearchWidget.h"
+#include "gguf_loader.h"
 
 // AI workers: process main-thread invoke queue every message (avoids queue buildup).
 extern void AIWorkersProcessInvokeQueue();
@@ -110,6 +119,10 @@ Win32IDE::~Win32IDE()
     // m_agenticBridge is non-owning; do not call reset() on raw pointers.
     m_agenticBridge = nullptr;
     m_agent.reset();
+    
+    // Shutdown AI Completion system (VAL-063)
+    ShutdownAICompletion();
+    
     m_nativeEngine.reset();
     m_modelResolver.reset();
     m_ggufLoader.reset();
@@ -513,10 +526,13 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     //   - Install/kill poll timer (WM_CREATE/WM_DESTROY)
     //   - Drive token polling (WM_TIMER with IDT_V280_POLL)
     //   - Trigger repaint on WM_V280_GHOST_TEXT
-    int64_t v280_result = V280_UI_WndProc_Hook((void*)hwnd, (uint32_t)uMsg, (uint64_t)wParam, (int64_t)lParam);
-    if (v280_result != 0)
-    {
-        return 0;  // Message consumed by v280 bridge
+    IV280Bridge* v280Bridge = GetV280Bridge();
+    if (v280Bridge) {
+        int64_t v280_result = v280Bridge->WndProcHook((void*)hwnd, (uint32_t)uMsg, (uint64_t)wParam, (int64_t)lParam);
+        if (v280_result != 0)
+        {
+            return 0;  // Message consumed by v280 bridge
+        }
     }
 
     switch (uMsg)
@@ -630,35 +646,53 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             FillRect(hdc, &ps.rcPaint, m_backgroundBrush);
 
             // ── v280 Ghost Text Overlay ──
-            // Render inline completion suggestion (dimmed, italic)
-            if (V280_UI_IsGhostActive())
+            // Render inline completion suggestion (dimmed, italic) at actual caret position
+            IV280Bridge* v280BridgePaint = GetV280Bridge();
+            if (v280BridgePaint && v280BridgePaint->IsGhostActive())
             {
                 char ghost_buf[4096];
-                int ghost_len = V280_UI_GetGhostText(ghost_buf, sizeof(ghost_buf));
-                if (ghost_len > 0)
+                int ghost_len = v280BridgePaint->GetGhostText(ghost_buf, sizeof(ghost_buf));
+                if (ghost_len > 0 && m_hwndEditor && IsWindow(m_hwndEditor))
                 {
-                    // Create ghost text font (italic, same face as editor)
-                    HFONT ghostFont =
-                        CreateFontA(-14, 0, 0, 0, FW_NORMAL,
-                                    TRUE,  // italic
-                                    FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                    CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
-                    HFONT oldFont = (HFONT)SelectObject(hdc, ghostFont);
+                    // Get actual caret position from RichEdit
+                    CHARRANGE sel;
+                    SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&sel);
+                    
+                    // Get the position (in client coordinates) of the cursor
+                    POINTL pt;
+                    LRESULT posResult = SendMessage(m_hwndEditor, EM_POSFROMCHAR, (WPARAM)&pt, sel.cpMin);
+                    
+                    if (posResult == 0)  // Success
+                    {
+                        // Convert client coordinates to window coordinates for painting
+                        POINT screenPt = { pt.x, pt.y };
+                        ClientToScreen(m_hwndEditor, &screenPt);
+                        ScreenToClient(hwnd, &screenPt);
+                        
+                        // Create ghost text font (italic, same face as editor)
+                        HFONT ghostFont =
+                            CreateFontA(-14, 0, 0, 0, FW_NORMAL,
+                                        TRUE,  // italic
+                                        FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                        CLEARTYPE_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
+                        HFONT oldFont = (HFONT)SelectObject(hdc, ghostFont);
 
-                    // Ghost text color: dimmed gray (VS Code style)
-                    SetTextColor(hdc, RGB(128, 128, 128));
-                    SetBkMode(hdc, TRANSPARENT);
+                        // Ghost text color: dimmed gray (VS Code style)
+                        SetTextColor(hdc, RGB(128, 128, 128));
+                        SetBkMode(hdc, TRANSPARENT);
 
-                    // Position: after cursor (approximate — real impl uses
-                    // editor caret position from Scintilla/TextBuffer)
-                    RECT ghostRect = ps.rcPaint;
-                    ghostRect.left += 80;  // indent from editor margin
-                    ghostRect.top += 40;   // below toolbar area
+                        // Position at actual cursor location
+                        RECT ghostRect;
+                        ghostRect.left = screenPt.x;
+                        ghostRect.top = screenPt.y;
+                        ghostRect.right = ps.rcPaint.right;
+                        ghostRect.bottom = ps.rcPaint.bottom;
 
-                    DrawTextA(hdc, ghost_buf, ghost_len, &ghostRect, DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
+                        DrawTextA(hdc, ghost_buf, ghost_len, &ghostRect, DT_LEFT | DT_TOP | DT_NOPREFIX | DT_WORDBREAK);
 
-                    SelectObject(hdc, oldFont);
-                    DeleteObject(ghostFont);
+                        SelectObject(hdc, oldFont);
+                        DeleteObject(ghostFont);
+                    }
                 }
             }
 
@@ -712,28 +746,14 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     NMMOUSE* pNMMouse = reinterpret_cast<NMMOUSE*>(lParam);
                     handleStatusBarClick(static_cast<int>(pNMMouse->dwItemSpec));
                 }
-                // Output panel tab switch (Output / Errors / Debug / Find Results)
-                if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
-                {
-                    int idx = (int)TabCtrl_GetCurSel(m_hwndOutputTabs);
-                    static const char* outputTabKeys[] = {"Output", "Errors", "Debug", "Find Results"};
-                    if (idx >= 0 && idx < 4)
-                    {
-                        m_activeOutputTab = outputTabKeys[idx];
-                        m_selectedOutputTab = idx;
-                        for (auto& kv : m_outputWindows)
-                        {
-                            ShowWindow(kv.second,
-                                       (kv.first == m_activeOutputTab && m_outputPanelVisible) ? SW_SHOW : SW_HIDE);
-                        }
-                    }
-                }
                 // Output panel tab switch (Output / Errors / Debug / Find Results / Problems)
+                // Combined handler for all 5 tabs - fixes duplicate TCN_SELCHANGE blocks
                 if (pNMHDR->code == TCN_SELCHANGE && pNMHDR->hwndFrom == m_hwndOutputTabs)
                 {
                     int idx = (int)TabCtrl_GetCurSel(m_hwndOutputTabs);
                     static const char* outputTabKeys[] = {"Output", "Errors", "Debug", "Find Results", "Problems"};
-                    if (idx >= 0 && idx < 5)
+                    constexpr int numTabs = sizeof(outputTabKeys) / sizeof(outputTabKeys[0]);
+                    if (idx >= 0 && idx < numTabs)
                     {
                         m_activeOutputTab = outputTabKeys[idx];
                         m_selectedOutputTab = idx;
@@ -866,6 +886,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 onGhostTextTimer();
                 return 0;
             }
+            if (wParam == 9999)
+            {  // COMPLETION_TRIGGER_TIMER_ID - trigger character completion
+                KillTimer(hwnd, 9999);
+                triggerCodeCompletion();
+                return 0;
+            }
             if (wParam == MODEL_PROGRESS_TIMER_ID)
             {
                 // Poll model progress and update the progress bar UI
@@ -973,6 +999,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             if (!m_fileModified || promptSaveChanges())
             {
+                // Save window state before closing
+                SaveWindowState();
+                
+                // Shutdown settings manager (saves dirty settings)
+                RawrXD::GetSettings().Shutdown();
+                
                 DestroyWindow(hwnd);
             }
             return 0;
@@ -1070,7 +1102,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return 0;
             }
             // Handle Ollama model list update from background thread
-            if (uMsg == WM_APP + 300)
+            // NOTE: Using WM_APP + 310 to avoid collision with WM_MODEL_PROGRESS_UPDATE (WM_APP + 300)
+            if (uMsg == WM_APP + 310)
             {
                 std::vector<std::string>* models = reinterpret_cast<std::vector<std::string>*>(wParam);
                 onOllamaModelsUpdated(models);
@@ -1101,9 +1134,9 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // (HuggingFace / URL downloads complete, m_loadedModelPath already set)
             if (uMsg == WM_APP + 201)
             {
-                if (!m_loadedModelPath.empty())
+                std::string pathToLoad = getLoadedModelPath();
+                if (!pathToLoad.empty())
                 {
-                    std::string pathToLoad = m_loadedModelPath;
                     appendToOutput("Loading downloaded model: " + pathToLoad + "\n", "Output", OutputSeverity::Info);
                     if (loadGGUFModel(pathToLoad))
                     {
@@ -1269,7 +1302,15 @@ bool Win32IDE::createWindow()
         config.applyFeatureToggles();
 
         // Apply config to IDE state
-        m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
+        // Use Deep2 Discovery for backend auto-detection
+        auto deep2Backend = Deep2::Deep2Discovery::GetPreferredBackend();
+        if (deep2Backend.native && !deep2Backend.url.empty()) {
+            m_ollamaBaseUrl = deep2Backend.url;
+            fprintf(stderr, "[Win32IDE] Using Deep2 backend: %s\n", m_ollamaBaseUrl.c_str());
+        } else {
+            m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
+            fprintf(stderr, "[Win32IDE] Deep2 not available, using Ollama fallback: %s\n", m_ollamaBaseUrl.c_str());
+        }
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
         m_gpuTextEnabled = config.getBool("performance.gpuTextRendering", true);
@@ -1296,6 +1337,32 @@ bool Win32IDE::createWindow()
         OutputDebugStringA("RawrXD: Configuration loading complete\n");
         LOG_INFO("[createWindow] Configuration loading complete");
         fileTrace("[Win32IDE_Core] Configuration loading complete");
+    }
+
+    // ====================================================================
+    // Initialize Settings Manager for persistent preferences
+    // ====================================================================
+    {
+        OutputDebugStringA("RawrXD: Initializing SettingsManager...\n");
+        fileTrace("[Win32IDE_Core] Initializing SettingsManager");
+        if (RawrXD::GetSettings().Initialize()) {
+            OutputDebugStringA("RawrXD: SettingsManager initialized\n");
+            LOG_INFO("[createWindow] SettingsManager initialized");
+            
+            // Apply window state from settings
+            auto windowState = RawrXD::GetSettings().GetWindowState();
+            if (windowState.IsValid()) {
+                // Store for use in window creation
+                m_windowX = windowState.x;
+                m_windowY = windowState.y;
+                m_windowWidth = windowState.width;
+                m_windowHeight = windowState.height;
+                m_windowMaximized = windowState.maximized;
+            }
+        } else {
+            OutputDebugStringA("RawrXD: SettingsManager initialization failed\n");
+            LOG_WARNING("[createWindow] SettingsManager initialization failed");
+        }
     }
 
     // Load RichEdit libraries — need both for RICHEDIT_CLASSA and MSFTEDIT_CLASS
@@ -1829,6 +1896,12 @@ void Win32IDE::onSize(int width, int height)
                          SWP_NOACTIVATE);
         }
 
+        // LSP Diagnostic overlay (squiggles + hover tooltips)
+        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized())
+        {
+            m_lspDiagnosticOverlay->OnEditorResize();
+        }
+
         // Minimap
         if (m_hwndMinimap && IsWindow(m_hwndMinimap) && m_minimapVisible)
         {
@@ -1952,14 +2025,20 @@ void Win32IDE::initializeEditorSurface()
 
 // ============================================================================
 // getResolvedOllamaModel - Returns Ollama model tag (override, loaded path, or default)
+// Thread-safe: acquires shared lock on m_loadedModelPathMutex
 // ============================================================================
 std::string Win32IDE::getResolvedOllamaModel() const
 {
     if (!m_ollamaModelOverride.empty())
         return m_ollamaModelOverride;
+    
+    // Thread-safe read of m_loadedModelPath
+    std::shared_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
     if (!m_loadedModelPath.empty())
     {
         std::string filename = m_loadedModelPath;
+        lock.unlock();  // Release lock before string manipulation
+        
         size_t pos = filename.find_last_of("/\\");
         if (pos != std::string::npos)
             filename = filename.substr(pos + 1);
@@ -1978,7 +2057,9 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
 {
     try
     {
-        ModelConnection conn(m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl);
+        // Use discovered backend URL (already resolved by Deep2 Discovery)
+        std::string backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
+        ModelConnection conn(backendUrl);
 
         if (!conn.checkConnection())
         {
@@ -2090,6 +2171,9 @@ static void LogStackBacktrace()
 
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Track startup phase to prevent heavy initialization during WM_CREATE
+    m_startupPhase = StartupPhase::CreatingMainWindow;
+    
     // Depth tracking for recursion diagnostics
     DepthGuard depthGuard;
     
@@ -2097,11 +2181,11 @@ void Win32IDE::onCreate(HWND hwnd)
     if (gCreateDepth > 2)
     {
         char warnMsg[256];
-        snprintf(warnMsg, sizeof(warnMsg), 
-                 "[Win32IDE] WARNING: onCreate depth = %d - possible recursion issue\n", 
+        snprintf(warnMsg, sizeof(warnMsg),
+                 "[Win32IDE] WARNING: onCreate depth = %d - possible recursion issue\n",
                  gCreateDepth);
         OutputDebugStringA(warnMsg);
-        
+
         if (gCreateDepth > 10)
         {
             OutputDebugStringA("[Win32IDE] CRITICAL: Recursion depth > 10, breaking potential infinite loop\n");
@@ -2188,7 +2272,14 @@ void Win32IDE::onCreate(HWND hwnd)
         // Default root: project root if set; else current working directory.
         const std::string root = m_projectRoot.empty() ? std::filesystem::current_path().string() : m_projectRoot;
         m_multiFileSearch->setProjectRoot(root);
-        m_multiFileSearch->setShowCallback(&MultiFileSearchWidget_ShowDialog, m_multiFileSearch);
+        // Use interface abstraction instead of direct extern function
+        IMultiFileSearchWidget* searchWidget = GetMultiFileSearchWidget();
+        if (searchWidget) {
+            m_multiFileSearch->setShowCallback([](void* ctx) {
+                IMultiFileSearchWidget* widget = GetMultiFileSearchWidget();
+                if (widget) widget->ShowDialog();
+            }, m_multiFileSearch);
+        }
     }
     fileTrace("[onCreate] MultiFileSearch done");
     
@@ -2267,16 +2358,12 @@ void Win32IDE::onCreate(HWND hwnd)
     fileTrace("[onCreate] createPrimarySidebar done");
     logStackUsage("onCreate after createPrimarySidebar");
 
-    fileTrace("[onCreate] createTabBar...");
-    OutputDebugStringA("[onCreate] createTabBar...\n");
-    logStackUsage("onCreate before createTabBar");
-    fileTrace("[onCreate] About to call createTabBar(hwnd)...");
-    OutputDebugStringA("[onCreate] About to call createTabBar(hwnd)...\n");
-    createTabBar(hwnd);
-    fileTrace("[onCreate] createTabBar returned");
-    OutputDebugStringA("[onCreate] createTabBar returned\n");
-    fileTrace("[onCreate] createTabBar done");
-    logStackUsage("onCreate after createTabBar");
+    // DEFERRED: createTabBar moved to onCreateChildren to prevent stack overflow
+    // The TabManager creates a window and does heavy initialization that can
+    // overflow the stack when called from within WM_CREATE processing.
+    // See onCreateChildren() for the deferred creation.
+    fileTrace("[onCreate] createTabBar DEFERRED to onCreateChildren");
+    OutputDebugStringA("[onCreate] createTabBar DEFERRED to onCreateChildren\n");
     
     fileTrace("[onCreate] createBreadcrumbBar...");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
@@ -2394,9 +2481,26 @@ void bgInitBody(void* self);
 // ============================================================================
 void Win32IDE::onCreateChildren(HWND hwnd)
 {
-    fileTrace("[onCreateChildren] START");
+    // RECURSION GUARD: Prevent re-entrant calls that could cause stack overflow
+    static thread_local bool s_inOnCreateChildren = false;
+    if (s_inOnCreateChildren)
+    {
+        OutputDebugStringA("[onCreateChildren] BLOCKED: recursive call detected\n");
+        fileTrace("[onCreateChildren] BLOCKED: recursive call detected");
+        return;
+    }
+    s_inOnCreateChildren = true;
+    struct Guard
+    {
+        ~Guard() { s_inOnCreateChildren = false; }
+    } guard;
+
+    // Transition to ChildrenDeferred phase - heavy initialization now allowed
+    m_startupPhase = StartupPhase::ChildrenDeferred;
+    fileTrace("[onCreateChildren] START - phase transitioned to ChildrenDeferred");
     logStackUsage("onCreateChildren START");
-    
+    OutputDebugStringA("[STARTUP] entering onCreateChildren\n");
+
     // Create panels that were deferred from onCreate to prevent stack overflow
     OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");
     logStackUsage("onCreateChildren before createOutputTabs");
@@ -2417,6 +2521,25 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     logStackUsage("onCreateChildren before initializeChatPanelOllama");
     initializeChatPanelOllama();
     logStackUsage("onCreateChildren after initializeChatPanelOllama");
+    
+    // DEFERRED: createTabBar moved from onCreate to prevent stack overflow
+    // The TabManager creates a window and does heavy initialization that can
+    // overflow the stack when called from within WM_CREATE processing.
+    OutputDebugStringA("[onCreateChildren] createTabBar (deferred from onCreate)...\n");
+    logStackUsage("onCreateChildren before createTabBar");
+    createTabBar(hwnd);
+    logStackUsage("onCreateChildren after createTabBar");
+    
+    // DEFERRED: Apply sovereign theme to TabManager (post-WM_CREATE to avoid stack overflow)
+    // The theme was deferred from TabManager::initialize() due to nlohmann::json stack usage
+    OutputDebugStringA("[onCreateChildren] Applying deferred sovereign theme...\n");
+    logStackUsage("onCreateChildren before applySovereignTheme");
+    if (m_tabManager)
+    {
+        m_tabManager->applySovereignTheme();
+        OutputDebugStringA("[onCreateChildren] Sovereign theme applied to TabManager\n");
+    }
+    logStackUsage("onCreateChildren after applySovereignTheme");
     
     // Update HWND audit after deferred creation
     if (m_hwndMain)
@@ -3183,6 +3306,13 @@ void Win32IDE::onDestroy()
     // Save full session state for next launch
     saveSession();
 
+    // Shutdown LSP diagnostic overlay
+    if (m_lspDiagnosticOverlay)
+    {
+        m_lspDiagnosticOverlay->Shutdown();
+        m_lspDiagnosticOverlay.reset();
+    }
+
     // Clean up resources
     if (m_renderer)
     {
@@ -3777,6 +3907,43 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         case IDM_BUILD_CLEAN:
             runBuildInBackground(m_gitRepoPath, "--target clean");
             return;
+        // ---- Debug commands (10500-10515) --------------------------------
+        case IDM_DEBUG_START:
+            startDebugging();
+            return;
+        case IDM_DEBUG_STOP:
+            stopDebugging();
+            return;
+        case IDM_DEBUG_CONTINUE:
+            continueExecution();
+            return;
+        case IDM_DEBUG_STEP_OVER:
+            stepOver();
+            return;
+        case IDM_DEBUG_STEP_INTO:
+            stepInto();
+            return;
+        case IDM_DEBUG_STEP_OUT:
+            stepOut();
+            return;
+        case IDM_DEBUG_TOGGLE_BREAKPOINT:
+            // Stub: toggleBreakpointAtCurrentLine();
+            return;
+        case IDM_DEBUG_SHOW_CALLSTACK:
+            // Stub: showCallStack();
+            return;
+        case IDM_DEBUG_SHOW_VARIABLES:
+            // Stub: showVariables();
+            return;
+        case IDM_DEBUG_SHOW_WATCH:
+            // Stub: showWatch();
+            return;
+        case IDM_DEBUG_ATTACH:
+            attachDebugger();
+            return;
+        case IDM_DEBUG_DETACH:
+            detachDebugger();
+            return;
         default:
             break;
     }
@@ -3831,3 +3998,4 @@ void Win32IDE::persistPerformanceVulkanRendererToConfig()
         cfg.saveToFile(dir + "rawrxd.config.json");
     }
 }
+

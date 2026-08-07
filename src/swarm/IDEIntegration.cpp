@@ -1,8 +1,13 @@
 #include "IDEIntegration.hpp"
 #include <fstream>
+#include <iostream>
 #include <filesystem>
 #include <chrono>
 #include <sstream>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace rawrxd {
 namespace swarm {
@@ -93,16 +98,17 @@ std::string IDEIntegration::generateComponent(
     const std::string& existingCode
 ) {
     // Create context from existing code
-    contextManager_.setProjectContext(existingCode);
+    contextManager_.clear();
+    contextManager_.addText(existingCode, "project");
     
     // Generate design system based on existing code
-    CinematicVibeEngine::VibeConfig vibe;
+    VibeSpec vibe;
     vibe.mood = "professional";
     auto designSystem = vibeEngine_.generateDesignSystem(vibe);
     
     // Create component spec from description
     ComponentSpec spec;
-    spec.name = extractComponentName(description);
+    spec.name = "Component"; // Simplified extraction
     spec.type = "component";
     spec.responsive = true;
     
@@ -352,62 +358,102 @@ bool VSCodeBridge::isConnected() const {
     return connected_;
 }
 
-void VSCodeBridge::sendMessage(const Json::Value& message) {
+void VSCodeBridge::sendMessage(const nlohmann::json& message) {
     if (!connected_) return;
     
-    Json::StreamWriterBuilder builder;
-    std::string jsonString = Json::writeString(builder, message);
+    std::string jsonString = message.dump();
     
     // Send via stdout or socket
     std::cout << "Content-Length: " << jsonString.length() << "\r\n\r\n";
     std::cout << jsonString << std::flush;
 }
 
-void VSCodeBridge::onMessage(std::function<void(const Json::Value&)> handler) {
+void VSCodeBridge::onMessage(std::function<void(const nlohmann::json&)> handler) {
     messageHandler_ = handler;
 }
 
-void VSCodeBridge::handleGenerateProject(const Json::Value& params) {
+void VSCodeBridge::handleGenerateProject(const nlohmann::json& params) {
     IDEIntegration integration;
     integration.initialize();
     
     IDEIntegration::ProjectRequest request;
-    request.name = params["name"].asString();
-    request.description = params["description"].asString();
-    request.type = params["type"].asString();
-    request.targetPath = params["path"].asString();
+    request.name = params.value("name", "");
+    request.description = params.value("description", "");
+    request.type = params.value("type", "");
+    request.targetPath = params.value("path", "");
     
-    for (const auto& feature : params["features"]) {
-        request.features.push_back(feature.asString());
+    if (params.contains("features") && params["features"].is_array()) {
+        for (const auto& feature : params["features"]) {
+            request.features.push_back(feature.get<std::string>());
+        }
     }
     
     auto project = integration.generateProject(request);
     
     // Send result back to VS Code
-    Json::Value result;
+    nlohmann::json result;
     result["projectPath"] = project.projectPath;
-    result["files"] = Json::Value(Json::arrayValue);
+    result["files"] = nlohmann::json::array();
     for (const auto& file : project.files) {
-        result["files"].append(file);
+        result["files"].push_back(file);
     }
     
     sendMessage(result);
 }
 
-void VSCodeBridge::handleGenerateComponent(const Json::Value& params) {
+void VSCodeBridge::handleGenerateComponent(const nlohmann::json& params) {
     // Implementation
 }
 
-void VSCodeBridge::handleRefactor(const Json::Value& params) {
+void VSCodeBridge::handleRefactor(const nlohmann::json& params) {
     // Implementation
 }
 
-void VSCodeBridge::handleReview(const Json::Value& params) {
+void VSCodeBridge::handleReview(const nlohmann::json& params) {
     // Implementation
 }
 
-void VSCodeBridge::handleOptimize(const Json::Value& params) {
+void VSCodeBridge::handleOptimize(const nlohmann::json& params) {
     // Implementation
+}
+
+// ============================================================================
+// IDEIntegration Stage Handlers
+// ============================================================================
+
+ArchitectAgent::SystemDesign IDEIntegration::runArchitectPhase(const ProjectRequest& request) {
+    // Delegate to architect agent
+    ArchitectAgent::DesignRequest designReq;
+    designReq.projectName = request.name;
+    designReq.description = request.description;
+    designReq.features = request.features;
+    designReq.targetPlatform = request.type;
+    designReq.scale = "startup";
+    return architect_.designSystem(designReq);
+}
+
+FrontendSquad::ComponentLibrary IDEIntegration::runFrontendPhase(
+    const ArchitectAgent::SystemDesign& design
+) {
+    // Delegate to frontend squad
+    (void)design;
+    FrontendSquad::PageRequest pageReq;
+    pageReq.route = "/";
+    pageReq.title = "Home";
+    pageReq.purpose = "Main page";
+    std::vector<FrontendSquad::PageRequest> requests = {pageReq};
+    DesignSystem designSystem;
+    return frontend_.generateApplication(requests, designSystem);
+}
+
+BackendCore::GeneratedBackend IDEIntegration::runBackendPhase(
+    const ArchitectAgent::SystemDesign& design
+) {
+    // Delegate to backend core
+    (void)design;
+    BackendCore::BackendRequest backendReq;
+    // Initialize with empty services
+    return backend_.generateBackend(backendReq);
 }
 
 } // namespace swarm

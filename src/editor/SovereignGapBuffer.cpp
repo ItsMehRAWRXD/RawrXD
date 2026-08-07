@@ -8,7 +8,9 @@
 // ============================================================================
 
 #include "SovereignGapBuffer.h"
+#include "../agentic/DiffEngine.h"
 #include <windows.h>
+#include <sstream>
 
 namespace RawrXD {
 namespace Editor {
@@ -379,11 +381,189 @@ bool SovereignGapBuffer::ApplyReplace(size_t pos, size_t oldLen, std::string_vie
 }
 
 bool SovereignGapBuffer::ApplyPatch(std::string_view unifiedDiff) {
-    // Delegate to DiffEngine for parsing, then apply hunks
-    // This is a stub for integration — full implementation would parse
-    // unified diff format and call ApplyReplace per hunk.
-    (void)unifiedDiff;
-    return false; // TODO: integrate with DiffEngine::ComputeDiff
+    // Parse unified diff format and apply hunks using DiffEngine
+    if (!base_ || unifiedDiff.empty()) return false;
+    
+    // Get current buffer content as "old" text
+    std::string oldText = GetText();
+    
+    // Parse the unified diff to extract hunks
+    // Format:
+    // --- a/filename
+    // +++ b/filename
+    // @@ -oldStart,oldCount +newStart,newCount @@
+    // -deleted line
+    // +added line
+    //  context line
+    
+    std::vector<RawrXD::Diff::DiffHunk> hunks;
+    std::istringstream diffStream(std::string(unifiedDiff));
+    std::string line;
+    
+    RawrXD::Diff::DiffHunk currentHunk;
+    bool inHunk = false;
+    int oldLineNum = 0;
+    int newLineNum = 0;
+    
+    while (std::getline(diffStream, line)) {
+        // Handle different line endings
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        
+        // Skip file headers
+        if (line.size() > 3 && line.substr(0, 3) == "---") continue;
+        if (line.size() > 3 && line.substr(0, 3) == "+++") continue;
+        
+        // Parse hunk header: @@ -oldStart,oldCount +newStart,newCount @@
+        if (line.size() > 2 && line.substr(0, 2) == "@@") {
+            if (inHunk && !currentHunk.lines.empty()) {
+                hunks.push_back(currentHunk);
+            }
+            
+            // Parse hunk header
+            size_t oldStart = 0, oldCount = 0, newStart = 0, newCount = 0;
+            if (sscanf(line.c_str(), "@@ -%zu,%zu +%zu,%zu @@", 
+                       &oldStart, &oldCount, &newStart, &newCount) >= 2) {
+                currentHunk = RawrXD::Diff::DiffHunk();
+                currentHunk.oldStart = static_cast<int>(oldStart);
+                currentHunk.oldCount = static_cast<int>(oldCount);
+                currentHunk.newStart = static_cast<int>(newStart);
+                currentHunk.newCount = static_cast<int>(newCount);
+                inHunk = true;
+                oldLineNum = currentHunk.oldStart;
+                newLineNum = currentHunk.newStart;
+            }
+            continue;
+        }
+        
+        if (!inHunk) continue;
+        
+        // Parse diff lines
+        RawrXD::Diff::DiffLine diffLine;
+        diffLine.text = line;
+        
+        if (line.empty()) {
+            // Empty context line
+            diffLine.op = RawrXD::Diff::DiffOp::Equal;
+            diffLine.oldLineNum = oldLineNum++;
+            diffLine.newLineNum = newLineNum++;
+        } else if (line[0] == '-') {
+            // Deleted line
+            diffLine.op = RawrXD::Diff::DiffOp::Delete;
+            diffLine.text = line.substr(1);
+            diffLine.oldLineNum = oldLineNum++;
+            diffLine.newLineNum = -1;
+        } else if (line[0] == '+') {
+            // Inserted line
+            diffLine.op = RawrXD::Diff::DiffOp::Insert;
+            diffLine.text = line.substr(1);
+            diffLine.oldLineNum = -1;
+            diffLine.newLineNum = newLineNum++;
+        } else if (line[0] == ' ') {
+            // Context line (unchanged)
+            diffLine.op = RawrXD::Diff::DiffOp::Equal;
+            diffLine.text = line.substr(1);
+            diffLine.oldLineNum = oldLineNum++;
+            diffLine.newLineNum = newLineNum++;
+        } else if (line[0] == '\\') {
+            // "\ No newline at end of file" - skip
+            continue;
+        } else {
+            // Context line without leading space (some diff formats)
+            diffLine.op = RawrXD::Diff::DiffOp::Equal;
+            diffLine.oldLineNum = oldLineNum++;
+            diffLine.newLineNum = newLineNum++;
+        }
+        
+        currentHunk.lines.push_back(diffLine);
+    }
+    
+    // Add final hunk
+    if (inHunk && !currentHunk.lines.empty()) {
+        hunks.push_back(currentHunk);
+    }
+    
+    if (hunks.empty()) {
+        return false; // No hunks found
+    }
+    
+    // Apply hunks in reverse order (from end to start) to maintain line numbers
+    bool success = true;
+    for (auto it = hunks.rbegin(); it != hunks.rend(); ++it) {
+        const auto& hunk = *it;
+        
+        // Calculate position in buffer (convert from 1-based to 0-based)
+        size_t pos = 0;
+        int targetLine = hunk.oldStart - 1;
+        
+        // Find position of target line
+        const char* text = oldText.c_str();
+        size_t textLen = oldText.length();
+        int currentLine = 0;
+        
+        for (size_t i = 0; i < textLen && currentLine < targetLine; i++) {
+            if (text[i] == '\n') {
+                currentLine++;
+                if (currentLine == targetLine) {
+                    pos = i + 1;
+                    break;
+                }
+            }
+        }
+        
+        // Calculate length of text to replace
+        size_t oldLen = 0;
+        int linesToSkip = hunk.oldCount;
+        if (linesToSkip == 0) {
+            // Insertion point - no old text to replace
+            oldLen = 0;
+        } else {
+            for (size_t i = pos; i < textLen && linesToSkip > 0; i++) {
+                oldLen++;
+                if (text[i] == '\n') {
+                    linesToSkip--;
+                }
+            }
+            // Include the last newline if present
+            if (pos + oldLen < textLen && text[pos + oldLen - 1] != '\n' && linesToSkip == 0) {
+                // Find next newline or end
+                while (pos + oldLen < textLen && text[pos + oldLen] != '\n') {
+                    oldLen++;
+                }
+                if (pos + oldLen < textLen) oldLen++; // Include newline
+            }
+        }
+        
+        // Build new text from hunk lines
+        std::string newText;
+        for (const auto& diffLine : hunk.lines) {
+            if (diffLine.op == RawrXD::Diff::DiffOp::Equal || 
+                diffLine.op == RawrXD::Diff::DiffOp::Insert) {
+                newText += diffLine.text;
+                if (!newText.empty() && newText.back() != '\n') {
+                    newText += '\n';
+                }
+            }
+        }
+        
+        // Remove trailing newline if original didn't have one
+        if (!newText.empty() && !oldText.empty() && 
+            oldText[pos + oldLen - 1] != '\n' && newText.back() == '\n') {
+            newText.pop_back();
+        }
+        
+        // Apply the replacement
+        if (!ApplyReplace(pos, oldLen, newText)) {
+            success = false;
+            break;
+        }
+        
+        // Update oldText for next iteration
+        oldText = GetText();
+    }
+    
+    return success;
 }
 
 } // namespace Editor

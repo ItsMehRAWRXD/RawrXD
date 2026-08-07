@@ -11,6 +11,21 @@
 ;   - Use vpmaddubsw for packed multiply: (a*b + c*d) in 16-bit
 ;   - Use vpmaddwd to accumulate to 32-bit
 ;   - Apply scales at the end
+;
+; ─── ABI CONTRACT ───
+; Microsoft x64 calling convention:
+;   RCX = A (Q4_0 weight matrix, M x K/2 bytes)
+;   RDX = B (Q8_0 activation matrix, K x N)
+;   R8  = C (output F32 matrix, M x N)
+;   R9  = M (rows of A / output)
+;   [RSP+40] = N (cols of B / output)
+;   [RSP+48] = K (inner dimension)
+;   RAX = return value (ptr to C) or 0 on failure
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, R12, R13, R14, R15, XMM0-XMM7, ZMM0-ZMM7
+; Preserves: RBX, RBP, RDI, RSI, XMM8-XMM15
+; Stack: 16-byte aligned, 32-byte shadow space
+; ───────────────────
 ; ============================================================================
 
 .686p

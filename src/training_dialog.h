@@ -58,3 +58,4 @@ class TrainingDialog : public DialogBase
     PushButton* m_cancelBtn;
     ModelTrainer* m_trainer;
 };
+

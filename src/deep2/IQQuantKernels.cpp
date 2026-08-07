@@ -25,6 +25,7 @@
 #include <immintrin.h>
 #include <cstring>
 #include <cstdint>
+#include "gguf_loader.h"
 
 namespace Deep2 {
 
@@ -55,18 +56,9 @@ static inline float f16_to_f32(uint16_t h) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ2_XXS block layout (66 bytes, 256 elements)
-//   uint16_t d;          // super-block scale (2 bytes)
-//   uint8_t  qs[64];     // packed 2-bit indices (64 bytes = 256 * 2 / 8)
-//   Total: 66 bytes
-//
-// Dequantization: each 2-bit index selects from a lookup table of 4 values
-// derived from the super-block scale d.
+// IQ2_XXS
 // ---------------------------------------------------------------------------
-struct block_iq2_xxs {
-    uint16_t d;
-    uint8_t  qs[64];
-};
+// (block_iq2_xxs defined in GGUFLoader.hpp)
 
 // IQ2 lookup table (4 entries for 2-bit codes)
 // These are the standard IQ2_XXS grid values (normalized)
@@ -119,17 +111,9 @@ static void dequant_iq2_xxs(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ2_XS block layout (74 bytes, 256 elements)
-//   uint16_t d;          // super-block scale
-//   uint16_t scales[2];  // per-group scales
-//   uint8_t  qs[68];     // packed 2-bit indices
-//   Total: 74 bytes
+// IQ2_XS
 // ---------------------------------------------------------------------------
-struct block_iq2_xs {
-    uint16_t d;
-    uint16_t scales[2];
-    uint8_t  qs[68];
-};
+// (block_iq2_xs defined in GGUFLoader.hpp)
 
 static const float iq2_xs_grid[4] = {
     -1.0f, -0.5f, 0.5f, 1.0f
@@ -187,13 +171,9 @@ static void dequant_iq2_xs(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ2_S block layout (82 bytes, 256 elements)
+// IQ2_S
 // ---------------------------------------------------------------------------
-struct block_iq2_s {
-    uint16_t d;
-    uint8_t  scales[8];
-    uint8_t  qs[72];
-};
+// (block_iq2_s defined in GGUFLoader.hpp)
 
 static const float iq2_s_grid[4] = {
     -1.0f, -0.25f, 0.25f, 1.0f
@@ -255,15 +235,9 @@ static void dequant_iq2_s(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ3_XXS block layout (98 bytes, 256 elements)
-//   uint16_t d;
-//   uint8_t  qs[96];     // packed 3-bit indices (96 bytes = 256 * 3 / 8)
-//   Total: 98 bytes
+// IQ3_XXS
 // ---------------------------------------------------------------------------
-struct block_iq3_xxs {
-    uint16_t d;
-    uint8_t  qs[96];
-};
+// (block_iq3_xxs defined in GGUFLoader.hpp)
 
 // IQ3 lookup table (8 entries for 3-bit codes)
 static const float iq3_xxs_grid[8] = {
@@ -321,17 +295,9 @@ static void dequant_iq3_xxs(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ3_S block layout (110 bytes, 256 elements)
-//   uint16_t d;
-//   uint8_t  scales[8];
-//   uint8_t  qs[100];
-//   Total: 110 bytes
+// IQ3_S
 // ---------------------------------------------------------------------------
-struct block_iq3_s {
-    uint16_t d;
-    uint8_t  scales[8];
-    uint8_t  qs[100];
-};
+// (block_iq3_s defined in GGUFLoader.hpp)
 
 static void gemv_iq3_s_scalar(
     const uint8_t* __restrict__ w,
@@ -390,17 +356,9 @@ static void dequant_iq3_s(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ4_NL block layout (132 bytes, 256 elements)
-//   uint16_t d;
-//   uint16_t dmin;
-//   uint8_t  qs[128];    // packed 4-bit indices (128 bytes = 256 * 4 / 8)
-//   Total: 132 bytes
+// IQ4_NL
 // ---------------------------------------------------------------------------
-struct block_iq4_nl {
-    uint16_t d;
-    uint16_t dmin;
-    uint8_t  qs[128];
-};
+// (block_iq4_nl defined in GGUFLoader.hpp)
 
 // IQ4_NL lookup table (16 entries for 4-bit codes)
 // Non-linear quantization grid (k-quant importance matrix)
@@ -450,17 +408,9 @@ static void dequant_iq4_nl(const uint8_t* src, float* dst, size_t n) {
 }
 
 // ---------------------------------------------------------------------------
-// IQ4_XS block layout (136 bytes, 256 elements)
-//   uint16_t d;
-//   uint8_t  scales[6];
-//   uint8_t  qs[128];
-//   Total: 136 bytes
+// IQ4_XS
 // ---------------------------------------------------------------------------
-struct block_iq4_xs {
-    uint16_t d;
-    uint8_t  scales[6];
-    uint8_t  qs[128];
-};
+// (block_iq4_xs defined in GGUFLoader.hpp)
 
 static void gemv_iq4_xs_scalar(
     const uint8_t* __restrict__ w,
@@ -633,3 +583,4 @@ void RegisterIQKernels() {
 }
 
 } // namespace Deep2
+

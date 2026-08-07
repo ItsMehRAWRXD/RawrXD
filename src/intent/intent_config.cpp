@@ -82,16 +82,16 @@ void IntentRuntimeConfig::LoadFromFile(const char* path) {
         file >> j;
         
         // Master switches
-        if (j.contains("enableGuardrails")) enableGuardrails.store(j["enableGuardrails"]);
-        if (j.contains("enableValidation")) enableValidation.store(j["enableValidation"]);
-        if (j.contains("enableTransactions")) enableTransactions.store(j["enableTransactions"]);
-        if (j.contains("enableCapabilityTokens")) enableCapabilityTokens.store(j["enableCapabilityTokens"]);
-        if (j.contains("enableJournal")) enableJournal.store(j["enableJournal"]);
-        if (j.contains("enableFirewall")) enableFirewall.store(j["enableFirewall"]);
-        if (j.contains("enableReflector")) enableReflector.store(j["enableReflector"]);
-        if (j.contains("enableAtomicActivation")) enableAtomicActivation.store(j["enableAtomicActivation"]);
-        if (j.contains("enableRollback")) enableRollback.store(j["enableRollback"]);
-        if (j.contains("enableModelAdapter")) enableModelAdapter.store(j["enableModelAdapter"]);
+        if (j.contains("enableGuardrails")) enableGuardrails.store(j["enableGuardrails"].get<bool>());
+        if (j.contains("enableValidation")) enableValidation.store(j["enableValidation"].get<bool>());
+        if (j.contains("enableTransactions")) enableTransactions.store(j["enableTransactions"].get<bool>());
+        if (j.contains("enableCapabilityTokens")) enableCapabilityTokens.store(j["enableCapabilityTokens"].get<bool>());
+        if (j.contains("enableJournal")) enableJournal.store(j["enableJournal"].get<bool>());
+        if (j.contains("enableFirewall")) enableFirewall.store(j["enableFirewall"].get<bool>());
+        if (j.contains("enableReflector")) enableReflector.store(j["enableReflector"].get<bool>());
+        if (j.contains("enableAtomicActivation")) enableAtomicActivation.store(j["enableAtomicActivation"].get<bool>());
+        if (j.contains("enableRollback")) enableRollback.store(j["enableRollback"].get<bool>());
+        if (j.contains("enableModelAdapter")) enableModelAdapter.store(j["enableModelAdapter"].get<bool>());
         
         // Emergency bypass
         if (j.contains("emergencyBypass")) emergencyBypass.store(j["emergencyBypass"].get<bool>());

@@ -229,3 +229,4 @@ private:
 };
 
 #endif // ERROR_RECOVERY_SYSTEM_H
+

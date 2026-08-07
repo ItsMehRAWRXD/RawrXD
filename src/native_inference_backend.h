@@ -1,5 +1,6 @@
 #pragma once
 
+#include "runtime/CoreTypes.hpp"
 #include <memory>
 #include <mutex>
 #include <string>
@@ -7,12 +8,7 @@
 
 namespace RawrXD {
 
-struct GenerationConfig {
-    int max_tokens = 512;
-    float temperature = 0.7f;
-    int top_k = 40;
-    float top_p = 0.9f;
-};
+// GenerationConfig now in CoreTypes.hpp — using canonical definition
 
 class INativeInferenceBackend {
 public:

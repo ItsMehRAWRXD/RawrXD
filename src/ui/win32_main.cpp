@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <iostream>
 #include "webview2_bridge.hpp"
-#include "../agent/agent_self_healing_orchestrator.hpp"
 
 // External ASM entry point from rawrxd_ui_dispatcher.asm
 // Note: MASM symbols are usually case-sensitive/normalized via .CODE naming

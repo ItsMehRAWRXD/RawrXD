@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -88,3 +89,4 @@ bool SpeculativeDecoder::verifyTokens(
 }
 
 } // namespace RawrXD
+

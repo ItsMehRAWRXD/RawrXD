@@ -255,6 +255,7 @@ public:
     
 private:
     std::unordered_map<IntentType, IntentHandler> handlers_;
+    std::mutex handlers_mutex_;
     std::atomic<bool> enabled_{true};
 };
 

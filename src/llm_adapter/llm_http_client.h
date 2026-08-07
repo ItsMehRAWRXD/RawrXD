@@ -315,7 +315,6 @@ private:
     int m_activeConnections = 0;
 
     // Logging
-    std::shared_ptr<class Logger> m_logger;
 
     // Helper methods
     std::string generateRequestId();

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <fstream>
 
 // Forward declare Vulkan types to avoid pulling in vulkan.h
 typedef struct VkInstance_T* VkInstance;
@@ -92,12 +93,39 @@ public:
     /// Check Vulkan availability
     static bool isVulkanAvailable();
     
+    /// Enumerate available Vulkan devices
+    static std::vector<std::string> enumerateDevices(VulkanContext& context);
+    
+    /// Select specific device by index
+    static bool selectDevice(VulkanContext& context, uint32_t deviceIndex);
+    
+    /// Get total device memory size
+    static uint64_t getDeviceMemorySize(const VulkanContext& context);
+    
+    /// Get used device memory
+    static uint64_t getDeviceMemoryUsed(const VulkanContext& context);
+    
+    /// Copy data between buffers
+    static bool copyBuffer(VulkanContext& context, VkBuffer_T* srcBuffer, VkBuffer_T* dstBuffer, uint64_t size);
+    
+    /// Insert pipeline barrier
+    static void cmdPipelineBarrier(VulkanContext& context, uint32_t srcStage, uint32_t dstStage, 
+                                    VkBuffer_T* buffer, uint32_t srcAccess, uint32_t dstAccess);
+    
+    /// Wait for GPU completion with timeout
+    static bool waitForCompletion(VulkanContext& context, uint64_t timeoutNs);
+    
 private:
     static bool createDevice(VulkanContext& context);
     static bool createCommandPool(VulkanContext& context);
     static bool createDescriptorPool(VulkanContext& context);
     static bool createPipeline(VulkanContext& context);
+    static bool createPipeline(VulkanContext& context, const char* shaderPath);
+    static bool updateDescriptorSet(VulkanContext& context, VkBuffer_T* buffer0, VkBuffer_T* buffer1, VkBuffer_T* buffer2);
     static uint32_t findMemoryType(const VulkanContext& context, uint32_t typeFilter, uint32_t properties);
+    
+    // Helper: Read SPIR-V binary file
+    static std::vector<char> readFile(const std::string& filename);
 };
 
 } // namespace RawrXD::Agentic::Vulkan

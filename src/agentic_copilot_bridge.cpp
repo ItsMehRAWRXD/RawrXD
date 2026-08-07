@@ -150,43 +150,53 @@ std::string AgenticCopilotBridge::generateTestsForCode(const std::string& code)
 
 // ========== MULTI-TURN CONVERSATION (COPILOT CHAT) ==========
 
-std::string AgenticCopilotBridge::askAgent(const std::string& question, const void*& context)
+std::string AgenticCopilotBridge::askAgent(const std::string& question, const json& context)
 {
     if (!m_agenticEngine) return "Engine not initialized";
 
-
-    // Build full context
-    void* fullContext = context;
-    if (fullContext.empty()) {
-        fullContext = buildExecutionContext();
+    // Build full context from current IDE state and provided context
+    json fullContext = buildExecutionContext();
+    if (!context.empty()) {
+        fullContext.merge_patch(context);
     }
     
     // Process message with agent
     m_agenticEngine->processMessage(question);
     
-    // The response will be emitted via signal - we'll capture it
-    // For now, generate a response
-    std::string response = m_agenticEngine->generateResponse(question);
+    // Generate response using the agent engine with full context
+    std::string response = m_agenticEngine->generateResponse(question, fullContext);
     
     // Apply hotpatching for safety and quality
     response = hotpatchResponse(response, fullContext);
     
-    // Store in conversation history
-    m_conversationHistory.append(void* {
+    // Store in conversation history with timestamps
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    
+    m_conversationHistory.push_back({
         {"role", "user"},
         {"content", question},
-        {"timestamp", std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate)}
+        {"timestamp", timestamp}
     });
     
-    m_conversationHistory.append(void* {
+    m_conversationHistory.push_back({
         {"role", "assistant"},
         {"content", response},
-        {"timestamp", std::chrono::system_clock::time_point::currentDateTime().toString(//ISODate)}
+        {"timestamp", timestamp}
     });
+    
+    // Trim history if too long (keep last 20 messages)
+    if (m_conversationHistory.size() > 40) {
+        m_conversationHistory.erase(m_conversationHistory.begin(), 
+                                     m_conversationHistory.begin() + (m_conversationHistory.size() - 40));
+    }
     
     m_lastConversationContext = response;
     
+    // Emit signal for UI update
     agentResponseReady(response);
+    
     return response;
 }
 

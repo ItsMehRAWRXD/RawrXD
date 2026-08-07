@@ -631,3 +631,4 @@ __declspec(dllexport) void RawrXD_GetStats(
 #endif // RAWRXD_EXPORT_C_API
 
 #endif // RAWRXD_PIPE_CLIENT_H
+

@@ -3,11 +3,10 @@
 #pragma once
 
 #include "agent_kernel_main.hpp"
+#include "QtReplacements.hpp"
 #include <functional>
 #include <chrono>
 #include <any>
-#include <mutex>
-#include <algorithm>
 
 namespace RawrXD {
 
@@ -124,11 +123,11 @@ struct ToolEntry {
 // Tool execution context
 struct ToolContext {
     String workingDirectory;
-    std::map<String, String> environment;
+    QMap<QString, QString> environment;
     bool dryRun = false;
     int maxOutputLength = 100000;
-    std::function<void(const String&)> onOutput;
-    std::function<bool(const String&, const String&)> onConfirmation;
+    std::function<void(const QString&)> onOutput;
+    std::function<bool(const QString&, const QString&)> onConfirmation;
 };
 
 // Tool execution engine
@@ -138,7 +137,7 @@ public:
 
     // Register a tool
     void registerTool(const ToolDefinition& def, ToolExecutor executor) {
-        std::lock_guard<std::mutex> lock(m_mutex);
+        QMutexLocker lock(&m_mutex);
         ToolEntry entry;
         entry.definition = def;
         entry.executor = std::move(executor);
@@ -147,19 +146,18 @@ public:
     }
 
     // Unregister a tool
-    void unregisterTool(const String& name) {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_tools.find(name);
-        if (it != m_tools.end()) m_tools.erase(it);
+    void unregisterTool(const QString& name) {
+        QMutexLocker lock(&m_mutex);
+        m_tools.erase(m_tools.find(name));
     }
 
     // Check if tool exists
-    bool hasTool(const String& name) const {
-        return m_tools.find(name) != m_tools.end();
+    bool hasTool(const QString& name) const {
+        return m_tools.contains(name);
     }
 
     // Get tool definition
-    Optional<ToolDefinition> getToolDefinition(const String& name) const {
+    Optional<ToolDefinition> getToolDefinition(const QString& name) const {
         auto it = m_tools.find(name);
         if (it != m_tools.end()) {
             return it->second.definition;
@@ -214,22 +212,15 @@ public:
         return schema;
     }
 
-    /** Return tools as JSON schema string (UTF-8) for external agents / API. */
-    std::string GetToolsJsonSchema() const {
-        JsonArray arr = getToolsSchema();
-        JsonValue v(arr);
-        return JsonParser::Serialize(v);
-    }
-
     // Execute a tool
-    ToolResult execute(const String& name, const JsonObject& params) {
+    ToolResult execute(const QString& name, const JsonObject& params) {
         auto start = std::chrono::steady_clock::now();
 
         auto it = m_tools.find(name);
         if (it == m_tools.end()) {
             ToolResult r;
             r.status = ToolStatus::NotFound;
-            r.errorMessage = L"Tool not found: " + name;
+            r.errorMessage = QString("Tool not found: ") + name;
             return r;
         }
 
@@ -237,7 +228,7 @@ public:
         if (!entry.enabled) {
             ToolResult r;
             r.status = ToolStatus::Error;
-            r.errorMessage = L"Tool is disabled: " + name;
+            r.errorMessage = QString("Tool is disabled: ") + name;
             return r;
         }
 
@@ -246,7 +237,7 @@ public:
             if (p.required && params.find(p.name) == params.end()) {
                 ToolResult r;
                 r.status = ToolStatus::InvalidParams;
-                r.errorMessage = L"Missing required parameter: " + p.name;
+                r.errorMessage = QString("Missing required parameter: ") + p.name;
                 return r;
             }
         }
@@ -256,7 +247,7 @@ public:
             if (!m_context.onConfirmation(name, entry.definition.description)) {
                 ToolResult r;
                 r.status = ToolStatus::PermissionDenied;
-                r.errorMessage = L"User denied execution";
+                r.errorMessage = QString("User denied execution");
                 return r;
             }
         }
@@ -276,7 +267,7 @@ public:
             }
         } catch (const std::exception& e) {
             result.status = ToolStatus::Error;
-            result.errorMessage = StringUtils::FromUtf8(e.what());
+            result.errorMessage = QString::fromStdString(e.what());
         }
 
         auto end = std::chrono::steady_clock::now();
@@ -286,7 +277,7 @@ public:
     }
 
     // Execute with timeout
-    ToolResult executeWithTimeout(const String& name, const JsonObject& params, int timeoutMs) {
+    ToolResult executeWithTimeout(const QString& name, const JsonObject& params, int timeoutMs) {
         std::atomic<bool> completed{false};
         ToolResult result;
 
@@ -306,7 +297,7 @@ public:
             } else {
                 worker.detach();
                 result.status = ToolStatus::Timeout;
-                result.errorMessage = L"Tool execution timed out after " + std::to_wstring(timeoutMs) + L"ms";
+                result.errorMessage = QString("Tool execution timed out after %1ms").arg(timeoutMs);
             }
         }
 
@@ -323,7 +314,7 @@ public:
     }
 
     // Enable/disable tool
-    void setToolEnabled(const String& name, bool enabled) {
+    void setToolEnabled(const QString& name, bool enabled) {
         auto it = m_tools.find(name);
         if (it != m_tools.end()) {
             it->second.enabled = enabled;
@@ -331,10 +322,10 @@ public:
     }
 
     // Get tool categories
-    Vector<String> getCategories() const {
-        Vector<String> categories;
+    QStringList getCategories() const {
+        QStringList categories;
         for (const auto& [name, entry] : m_tools) {
-            if (std::find(categories.begin(), categories.end(), entry.definition.category) == categories.end()) {
+            if (!categories.contains(entry.definition.category)) {
                 categories.push_back(entry.definition.category);
             }
         }
@@ -342,7 +333,7 @@ public:
     }
 
     // Get tools by category
-    Vector<ToolDefinition> getToolsByCategory(const String& category) const {
+    Vector<ToolDefinition> getToolsByCategory(const QString& category) const {
         Vector<ToolDefinition> result;
         for (const auto& [name, entry] : m_tools) {
             if (entry.enabled && entry.definition.category == category) {
@@ -353,29 +344,29 @@ public:
     }
 
 private:
-    Map<String, ToolEntry> m_tools;
+    QMap<QString, ToolEntry> m_tools;
     ToolContext m_context;
-    mutable std::mutex m_mutex;
+    mutable QMutex m_mutex;
 };
 
 // Tool builder helper
 class ToolBuilder {
 public:
-    ToolBuilder(const String& name) {
+    ToolBuilder(const QString& name) {
         m_def.name = name;
     }
 
-    ToolBuilder& description(const String& desc) {
+    ToolBuilder& description(const QString& desc) {
         m_def.description = desc;
         return *this;
     }
 
-    ToolBuilder& category(const String& cat) {
+    ToolBuilder& category(const QString& cat) {
         m_def.category = cat;
         return *this;
     }
 
-    ToolBuilder& param(const String& name, const String& type, const String& desc, bool required = false) {
+    ToolBuilder& param(const QString& name, const QString& type, const QString& desc, bool required = false) {
         ToolParameter p;
         p.name = name;
         p.type = type;
@@ -411,9 +402,9 @@ private:
 // Helper to get string from JsonValue
 inline String jsonToString(const JsonValue& val) {
     if (std::holds_alternative<String>(val)) {
-        return std::get<String>(val);
+        return QString(std::get<String>(val));
     }
-    return String();
+    return QString();
 }
 
 // Helper to get int from JsonValue
@@ -449,7 +440,7 @@ inline JsonObject jsonToObject(const JsonValue& val) {
 }
 
 // Parameter extraction helpers
-inline String getParam(const JsonObject& params, const String& key, const String& defaultVal = String()) {
+inline String getParam(const JsonObject& params, const String& key, const QString& defaultVal = QString()) {
     auto it = params.find(key);
     if (it != params.end()) {
         return jsonToString(it->second);
@@ -474,3 +465,4 @@ inline bool getParamBool(const JsonObject& params, const String& key, bool defau
 }
 
 } // namespace RawrXD
+

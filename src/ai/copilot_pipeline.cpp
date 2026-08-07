@@ -53,13 +53,31 @@ std::vector<std::string> CopilotPipeline::ListModels() const {
     
     // Try to open models directory
     std::string models_dir = "models/";
-    // Note: In production, use filesystem API to scan directory
-    // For now, return common model names as hints
     
-    models.push_back("llama-2-7b-chat.gguf");
-    models.push_back("llama-2-13b-chat.gguf");
-    models.push_back("mistral-7b-instruct.gguf");
-    models.push_back("ministral-3b.gguf");
+    // Use filesystem API to scan directory
+    try {
+        if (std::filesystem::exists(models_dir) && std::filesystem::is_directory(models_dir)) {
+            for (const auto& entry : std::filesystem::directory_iterator(models_dir)) {
+                if (entry.is_regular_file()) {
+                    std::string ext = entry.path().extension().string();
+                    if (ext == ".gguf" || ext == ".bin" || ext == ".safetensors") {
+                        models.push_back(entry.path().filename().string());
+                    }
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        // Log error but continue with defaults
+        std::cerr << "[CopilotPipeline] Error scanning models directory: " << e.what() << std::endl;
+    }
+    
+    // If no models found, return common model names as hints
+    if (models.empty()) {
+        models.push_back("llama-2-7b-chat.gguf");
+        models.push_back("llama-2-13b-chat.gguf");
+        models.push_back("mistral-7b-instruct.gguf");
+        models.push_back("ministral-3b.gguf");
+    }
     
     return models;
 }

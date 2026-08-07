@@ -16,6 +16,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <process.h>
+#include "gguf_loader.h"
 #endif
 
 namespace RawrXD {
@@ -466,7 +467,7 @@ ValidationResult VAL056_DependencyValidationGate::Execute() {
     };
     
     for (const auto& [name, exists] : optionalDeps) {
-        printf("      [%s] %s\n", exists ? "FOUND" : "NOT FOUND", name);
+        printf("      [%s] %s\n", exists ? "FOUND" : "NOT FOUND", name.c_str());
     }
     
     auto end = std::chrono::high_resolution_clock::now();
@@ -695,3 +696,4 @@ ValidationResult VAL060_ContinuousBuildHealthGate::Execute() {
 
 } // namespace Validation
 } // namespace RawrXD
+

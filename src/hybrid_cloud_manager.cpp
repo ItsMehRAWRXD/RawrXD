@@ -474,20 +474,103 @@ void HybridCloudManager::processPendingRequests() {
     requestQueue.clear();
 }
 
-void HybridCloudManager::executionStarted(const std::string& requestId) { (void)requestId; }
-void HybridCloudManager::executionComplete(const ExecutionResult& result) { (void)result; }
+void HybridCloudManager::executionStarted(const std::string& requestId) {
+    // Log execution start
+    printf("[HybridCloud] Execution started: %s\n", requestId.c_str());
+    
+    // Update metrics
+    costMetrics.totalRequests++;
+}
+
+void HybridCloudManager::executionComplete(const ExecutionResult& result) {
+    // Log execution completion
+    printf("[HybridCloud] Execution complete: %s (success=%s, latency=%.2fms)\n",
+           result.requestId.c_str(), result.success ? "true" : "false", result.latencyMs);
+    
+    // Update metrics
+    if (result.success) {
+        performanceMetrics.successRate = 
+            (performanceMetrics.successRate * (costMetrics.totalRequests - 1) + 100) / costMetrics.totalRequests;
+    } else {
+        performanceMetrics.successRate = 
+            (performanceMetrics.successRate * (costMetrics.totalRequests - 1)) / costMetrics.totalRequests;
+    }
+    
+    // Record latency
+    recordLatency(result.latencyMs);
+    
+    // Add to execution history
+    executionHistory.push_back(result);
+    if (executionHistory.size() > 1000) {
+        executionHistory.erase(executionHistory.begin());
+    }
+}
+
 void HybridCloudManager::providerHealthChanged(const std::string& providerId, bool isHealthy) {
-    (void)providerId;
-    (void)isHealthy;
+    // Update provider health status
+    auto it = providers.find(providerId);
+    if (it != providers.end()) {
+        bool oldHealth = it->second.isHealthy;
+        it->second.isHealthy = isHealthy;
+        
+        if (oldHealth != isHealthy) {
+            printf("[HybridCloud] Provider %s health changed: %s -> %s\n",
+                   providerId.c_str(), oldHealth ? "healthy" : "unhealthy",
+                   isHealthy ? "healthy" : "unhealthy");
+            
+            // Trigger failover if provider became unhealthy and it's the current provider
+            if (!isHealthy && providerId == m_currentProviderId) {
+                failoverTriggered(providerId, selectOptimalProvider(ExecutionRequest{}));
+            }
+        }
+    }
 }
-void HybridCloudManager::costLimitReached(const std::string& limitType) { (void)limitType; }
+
+void HybridCloudManager::costLimitReached(const std::string& limitType) {
+    printf("[HybridCloud] WARNING: Cost limit reached: %s\n", limitType.c_str());
+    
+    // Disable cloud execution if daily limit reached
+    if (limitType == "daily") {
+        preferLocal = true;
+        switchToLocal("Daily cost limit reached");
+    }
+}
+
 void HybridCloudManager::failoverTriggered(const std::string& fromProvider, const std::string& toProvider) {
-    (void)fromProvider;
-    (void)toProvider;
+    printf("[HybridCloud] Failover triggered: %s -> %s\n", fromProvider.c_str(), toProvider.c_str());
+    
+    m_failoverCount++;
+    m_currentProviderId = toProvider;
+    
+    // Update metrics
+    performanceMetrics.failoverCount++;
 }
-void HybridCloudManager::cloudSwitched(bool usingCloud) { (void)usingCloud; }
-void HybridCloudManager::errorOccurred(const std::string& error) { (void)error; }
-void HybridCloudManager::healthCheckCompleted() {}
+
+void HybridCloudManager::cloudSwitched(bool usingCloud) {
+    printf("[HybridCloud] Cloud mode switched: %s\n", usingCloud ? "CLOUD" : "LOCAL");
+    currentlyUsingCloud = usingCloud;
+}
+
+void HybridCloudManager::errorOccurred(const std::string& error) {
+    printf("[HybridCloud] ERROR: %s\n", error.c_str());
+    
+    m_lastError = error;
+    m_errorCount++;
+}
+
+void HybridCloudManager::healthCheckCompleted() {
+    // Update health check timestamp
+    m_lastHealthCheck = std::chrono::steady_clock::now();
+    
+    // Count healthy providers
+    int healthyCount = 0;
+    for (const auto& [id, provider] : providers) {
+        if (provider.isHealthy) healthyCount++;
+    }
+    
+    printf("[HybridCloud] Health check completed: %d/%zu providers healthy\n",
+           healthyCount, providers.size());
+}
 
 void HybridCloudManager::onNetworkReplyFinished(void** reply) { (void)reply; }
 void HybridCloudManager::onHealthCheckTimerTimeout() { checkAllProvidersHealth(); }

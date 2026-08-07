@@ -336,7 +336,7 @@ bool LocalReasoningEngine::detectBufferOverflow(const std::string& code, std::st
 // Use-after-free: delete/free followed by usage
 bool LocalReasoningEngine::detectUseAfterFree(const std::string& code, std::string& evidence) {
     // Regex: find patterns like "delete ptr;" followed later by "ptr->"
-    // Simplified heuristic: look for delete/free then check if pointer used again
+    // Heuristic: look for delete/free then check if pointer used again within the same scope
     
     std::regex deletePattern(R"((delete|free)\s*\(?(\w+)\)?;)");
     std::smatch match;
@@ -435,7 +435,7 @@ bool LocalReasoningEngine::detectRaceCondition(const std::string& code, std::str
 
 // Deadlock: multiple lock acquisitions in different order
 bool LocalReasoningEngine::detectDeadlock(const std::string& code, std::string& evidence) {
-    // Simplified: look for multiple lock() calls - requires manual review
+    // Heuristic: look for multiple lock() calls - requires manual review
     int lockCount = countOccurrences(code, ".lock()");
     lockCount += countOccurrences(code, "pthread_mutex_lock");
     lockCount += countOccurrences(code, "EnterCriticalSection");
@@ -594,7 +594,7 @@ std::vector<LocalReasoningEngine::CodeIssue> LocalReasoningEngine::analyzeAssemb
 
 bool LocalReasoningEngine::detectMissingStackAlignment(const std::string& asmCode, std::string& evidence) {
     // x64: RSP must be 16-byte aligned at function entry, and 16-byte aligned + 8 before call
-    // Simplified check: look for "call" without preceding "and rsp" or "sub rsp" with multiple of 16
+    // Check: look for "call" without preceding "and rsp" or "sub rsp" with multiple of 16
     
     size_t callPos = asmCode.find("call");
     if (callPos == std::string::npos) return false;
@@ -688,7 +688,7 @@ bool LocalReasoningEngine::detectIneffientInstruction(const std::string& asmCode
 // ════════════════════════════════════════════════════════════════════════
 
 std::vector<LocalReasoningEngine::BasicBlock> LocalReasoningEngine::buildControlFlowGraph(const std::string& code) {
-    //Simplified CFG: split on branches/returns
+    // CFG: split on branches/returns
     std::vector<BasicBlock> cfg;
     BasicBlock currentBlock;
     currentBlock.id = 0;
@@ -730,7 +730,7 @@ std::vector<LocalReasoningEngine::BasicBlock> LocalReasoningEngine::buildControl
 }
 
 bool LocalReasoningEngine::detectInfiniteLoop(const std::vector<BasicBlock>& cfg) {
-    // Simplified: look for back edges without exit conditions
+    // Look for back edges without exit conditions
     for (const auto& block : cfg) {
         for (int succId : block.successors) {
             if (succId <= block.id) {  // Back edge (loop)
@@ -751,7 +751,7 @@ bool LocalReasoningEngine::detectInfiniteLoop(const std::vector<BasicBlock>& cfg
 }
 
 bool LocalReasoningEngine::detectUnreachableCode(const std::vector<BasicBlock>& cfg) {
-    // Simplified: blocks with no predecessors (except entry)
+    // Detect blocks with no predecessors (except entry)
     for (size_t i = 1; i < cfg.size(); ++i) {
         if (cfg[i].predecessors.empty()) {
             return true;  // Unreachable block

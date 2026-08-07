@@ -514,15 +514,41 @@ TerminalExecutionResult DynamicPowerShellTerminalManager::execute_command_intern
     result.detected_complexity = analyze_command_complexity(request.command);
     
     try {
-        // Execute PowerShell command (simplified implementation)
-        // In production, this would use proper process creation and management
-        
+        // Execute PowerShell command using _popen for real output capture
         std::cout << "[PowerShell:" << session_id << "] " << request.command << std::endl;
         std::cout << "[PowerShell:" << session_id << "] Timeout: " << timeout.count() << "ms" << std::endl;
         
-        // Simulate command execution based on complexity
-        std::this_thread::sleep_for(std::chrono::milliseconds(
-            static_cast<int64_t>(result.detected_complexity) * 100));
+        // Build PowerShell command with NoProfile and ExecutionPolicy Bypass
+        std::string psCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"" + request.command + "\"";
+        
+        FILE* pipe = _popen(psCmd.c_str(), "r");
+        if (!pipe) {
+            result.success = false;
+            result.error_message = "Failed to execute PowerShell command";
+            result.exit_code = -1;
+            return result;
+        }
+        
+        // Capture output with timeout checking
+        char buffer[4096];
+        while (fgets(buffer, sizeof(buffer), pipe)) {
+            result.output += buffer;
+            auto elapsed = std::chrono::high_resolution_clock::now() - start_time;
+            if (elapsed > timeout) {
+                _pclose(pipe);
+                result.success = false;
+                result.timed_out = true;
+                result.error_message = "Command execution timed out";
+                result.exit_code = -1;
+                return result;
+            }
+        }
+        result.exit_code = _pclose(pipe);
+        result.success = (result.exit_code == 0);
+        
+        // Trim trailing whitespace
+        while (!result.output.empty() && (result.output.back() == '\n' || result.output.back() == '\r'))
+            result.output.pop_back();
         
         // Update session statistics
         session->last_used = std::chrono::system_clock::now();

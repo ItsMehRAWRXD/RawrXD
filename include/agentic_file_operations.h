@@ -1,16 +1,11 @@
-#ifndef AGENTIC_FILE_OPERATIONS_H
-#define AGENTIC_FILE_OPERATIONS_H
-
-// C++20 / Win32 — no Qt. File operation approval workflow with callbacks.
+#pragma once
 
 #include <string>
 #include <vector>
 #include <functional>
 #include <chrono>
+#include <cstddef>
 #include <fstream>
-#include <iterator>
-#include <cstdio>
-
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -146,4 +141,3 @@ inline void AgenticFileOperations::undoLastAction()
     m_actionHistory.pop_back();
 }
 
-#endif // AGENTIC_FILE_OPERATIONS_H

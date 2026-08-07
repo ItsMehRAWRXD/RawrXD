@@ -226,7 +226,7 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
     recoveryCfg.maxDelay = std::chrono::milliseconds(5000);
 
     for (int step = 0; step < stepLimit; ++step) {
-        perf.startOperation("ollama.chat");
+        perf.startOperation("native.chat");
         InferenceResult result;
         try {
             result = recovery.executeWithRecovery([&]() {
@@ -236,10 +236,10 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
                 }
                 return r;
             }, recoveryCfg);
-            perf.endOperation("ollama.chat");
+            perf.endOperation("native.chat");
         } catch (const std::exception& ex) {
-            perf.recordError("ollama.chat");
-            perf.endOperation("ollama.chat");
+            perf.recordError("native.chat");
+            perf.endOperation("native.chat");
             logger.error("OrchestratorBridge", std::string("ChatSync failed: ") + ex.what());
             return "[ERROR] " + std::string(ex.what());
         }
@@ -323,7 +323,7 @@ Prediction::PredictionResult OrchestratorBridge::RequestGhostText(
     recoveryCfg.baseDelay = std::chrono::milliseconds(300);
     recoveryCfg.maxDelay = std::chrono::milliseconds(2500);
 
-    perf.startOperation("ollama.fim");
+    perf.startOperation("native.fim");
     try {
         InferenceResult result = recovery.executeWithRecovery([&]() {
             InferenceResult r = m_ollamaClient->FIMSync(ctx.prefix, ctx.suffix, ctx.filePath);
@@ -332,14 +332,14 @@ Prediction::PredictionResult OrchestratorBridge::RequestGhostText(
             }
             return r;
         }, recoveryCfg);
-        perf.endOperation("ollama.fim");
+        perf.endOperation("native.fim");
         return Prediction::PredictionResult::Ok(
             result.response,
             static_cast<int>(result.completion_tokens),
             100);
     } catch (const std::exception& ex) {
-        perf.recordError("ollama.fim");
-        perf.endOperation("ollama.fim");
+        perf.recordError("native.fim");
+        perf.endOperation("native.fim");
         GetLogger().error("OrchestratorBridge", std::string("FIMSync failed: ") + ex.what());
         return Prediction::PredictionResult::Error(ex.what());
     }

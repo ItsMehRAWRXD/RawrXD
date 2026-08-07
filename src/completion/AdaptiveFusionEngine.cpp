@@ -66,11 +66,11 @@ void AdaptiveFusionEngine::reset() {
 }
 
 // =============================================================================
-// Persistence (stubbed - no JSON dependency)
+// Persistence (disabled - no JSON dependency)
 // =============================================================================
 
 std::string AdaptiveFusionEngine::get_default_cache_path() {
-    // Stub - persistence disabled
+    // Persistence disabled
     return "";
 }
 

@@ -12,7 +12,11 @@ AutonomousModelManager::AutonomousModelManager() {
     registerModel({ "local-llama-3", "Llama 3 8B", 8192, 0.0f, true });
 }
 
-AutonomousModelManager::~AutonomousModelManager() {}
+AutonomousModelManager::~AutonomousModelManager() {
+    // Cleanup: clear model registry
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_models.clear();
+}
 
 void AutonomousModelManager::registerModel(const ModelInfo& info) {
     std::lock_guard<std::mutex> lock(m_mutex);

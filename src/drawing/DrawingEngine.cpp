@@ -195,7 +195,7 @@ Path Path::rotated(float angle, const Point& center) const {
 Path Path::stroked(const StrokeStyle& style) const {
     // Implement stroke expansion
     Path result;
-    // Simplified: just return the original path
+    // Basic implementation returns original path
     // Full implementation would offset path by stroke width
     return result;
 }

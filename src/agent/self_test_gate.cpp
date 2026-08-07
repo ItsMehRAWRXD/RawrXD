@@ -25,3 +25,4 @@ bool runSelfTestGate() {
     fprintf(stderr, "[SelfTestGate] Result: %s\n", pass ? "PASS" : "FAIL");
     return pass;
 }
+

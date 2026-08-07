@@ -157,9 +157,40 @@ bool SovereignKClient::UnlockHostMemory(HANDLE handle) {
         return false;
     }
     
-    // TODO: Implement unlock IOCTL
-    SetError("Unlock not yet implemented");
-    return false;
+    if (!handle) {
+        SetError("Invalid handle");
+        return false;
+    }
+    
+    // Prepare unlock request
+    SOVEREIGNK_UNLOCK_REQUEST req = {};
+    req.Handle = handle;
+    req.Flags = 0;  // Could use SOVEREIGNK_UNLOCK_FLAG_ASYNC for async unlock
+    
+    SOVEREIGNK_UNLOCK_RESPONSE resp = {};
+    DWORD bytesReturned = 0;
+    
+    // Send IOCTL to driver
+    BOOL result = DeviceIoControl(
+        hDevice_,
+        IOCTL_SOVEREIGNK_UNLOCK_HOST,
+        &req, sizeof(req),
+        &resp, sizeof(resp),
+        &bytesReturned,
+        nullptr
+    );
+    
+    if (!result) {
+        SetError("IOCTL_SOVEREIGNK_UNLOCK_MEMORY failed: %lu", GetLastError());
+        return false;
+    }
+    
+    if (!resp.Success) {
+        SetError("Driver failed to unlock memory: status %lu", resp.Status);
+        return false;
+    }
+    
+    return true;
 }
 
 // ============================================================================

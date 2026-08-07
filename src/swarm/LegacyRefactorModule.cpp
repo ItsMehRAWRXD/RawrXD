@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <filesystem>
+#include <functional>
 
 namespace rawrxd {
 namespace swarm {

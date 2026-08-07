@@ -636,6 +636,7 @@ szTypeCharPtr           BYTE    "char*", 0
 szTypeVoidPtr           BYTE    "void*", 0
 szTypeBool              BYTE    "bool", 0
 
+<<<<<<< HEAD
 ; File mapping state
 pFileBuffer             QWORD   0               ; Mapped file base pointer
 qwFileSize              QWORD   0               ; Mapped file size
@@ -652,6 +653,13 @@ szOutputPath            BYTE    MAX_PATH DUP(0)
 ; Console handles
 hStdOut                 QWORD   0
 hStdIn                  QWORD   0
+=======
+; Analysis Buffers
+szDecompiledOutput      BYTE    1048576 DUP(?)   ; 1MB decompilation buffer
+szTypeDatabase          BYTE    524288 DUP(?)    ; 512KB type info
+szXRefTable             BYTE    1048576 DUP(?)   ; 1MB cross references
+szStringTable           BYTE    524288 DUP(?)    ; String references
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ; Statistics
 dwFunctionsFound        DWORD   0
@@ -660,6 +668,7 @@ dwXRefsFound            DWORD   0
 dwStringsRecovered      DWORD   0
 dwAIHits                DWORD   0
 
+<<<<<<< HEAD
 ; Format buffers
 szFmtBuf                BYTE    4096 DUP(0)
 szReadBuf               BYTE    MAX_PATH DUP(0)
@@ -711,12 +720,17 @@ szXRefTable             BYTE    1048576 DUP(?)   ; 1MB cross references
 szStringTable           BYTE    524288 DUP(?)    ; String references
 AnalysisCtx             ANALYSIS_CONTEXT <>      ; Global analysis context
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ;============================================================================
 ; AI ENGINE CODE
 ;============================================================================
 
+<<<<<<< HEAD
 .CODE
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ;----------------------------------------------------------------------------
 ; AI PATTERN MATCHING ENGINE
 ;----------------------------------------------------------------------------
@@ -724,7 +738,10 @@ AnalysisCtx             ANALYSIS_CONTEXT <>      ; Global analysis context
 ; Initialize AI pattern database
 InitAIPatterns PROC FRAME
     LOCAL pPattern:QWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     lea rax, AIPatterns
     mov pPattern, rax
@@ -762,7 +779,10 @@ AIMatchPattern PROC FRAME pData:QWORD, pPattern:QWORD
     LOCAL pMask:QWORD
     LOCAL dwLen:DWORD
     LOCAL i:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov rax, pPattern
     mov ecx, (AI_PATTERN PTR [rax]).PatternLength
@@ -817,7 +837,10 @@ AnalyzeControlFlow PROC FRAME dwStartRVA:DWORD, dwEndRVA:DWORD
     LOCAL dwCurrent:DWORD
     LOCAL pCode:QWORD
     LOCAL bOpcode:BYTE
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov eax, dwStartRVA
     mov dwCurrent, eax
@@ -888,7 +911,10 @@ GenerateCCode PROC FRAME pFunc:QWORD, pOutput:QWORD
     LOCAL pFuncInfo:QWORD
     LOCAL pOut:QWORD
     LOCAL dwIndent:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov pFuncInfo, pFunc
     mov pOut, pOutput
@@ -933,7 +959,10 @@ ReconstructStructure PROC FRAME pUsageSites:QWORD, dwSiteCount:DWORD
     LOCAL pType:QWORD
     LOCAL dwOffset:DWORD
     LOCAL dwSize:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Allocate type info
     lea rax, szTypeDatabase
@@ -964,7 +993,10 @@ ReconstructStructure ENDP
 RemoveFlattening PROC FRAME pFuncStart:QWORD, dwFuncSize:DWORD
     LOCAL pCode:QWORD
     LOCAL dwStateVar:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Look for state machine pattern:
     ; mov eax, [state]
@@ -991,7 +1023,10 @@ RemoveFlattening ENDP
 AutoDecryptStrings PROC FRAME pSection:QWORD, dwSectionSize:DWORD
     LOCAL pCurrent:QWORD
     LOCAL dwRemaining:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov pCurrent, pSection
     mov dwRemaining, dwSectionSize
@@ -1028,7 +1063,10 @@ AutoDecryptStrings ENDP
 TryXORDecrypt PROC FRAME pData:QWORD, dwLen:DWORD
     LOCAL i:DWORD
     LOCAL bValid:BYTE
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov i, 0
     mov bValid, 1
@@ -1067,6 +1105,7 @@ GenerateFullSource PROC FRAME
     LOCAL hMainC:QWORD
     LOCAL hMainH:QWORD
     LOCAL hTypesH:QWORD
+<<<<<<< HEAD
     .endprolog
     
     ; Ensure output directory exists
@@ -1078,6 +1117,8 @@ GenerateFullSource PROC FRAME
     mov QWORD PTR [rsp+20h], 0
     call CreateProcessA
     add rsp, 28h
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     ; Create main.c
     mov rcx, OFFSET szOutputPath
@@ -1133,7 +1174,10 @@ GenerateFullSource ENDP
 
 RunAIAnalysis PROC FRAME
     LOCAL dwProgress:DWORD
+<<<<<<< HEAD
     .endprolog
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     
     mov dwProgress, 0
     
@@ -1188,6 +1232,7 @@ DiscoverFunctionsAI PROC FRAME
     LOCAL pCode:QWORD
     LOCAL dwCodeSize:DWORD
     LOCAL i:DWORD
+<<<<<<< HEAD
     .endprolog
     
     ; Get code section base + size from analysis context
@@ -1201,6 +1246,9 @@ DiscoverFunctionsAI PROC FRAME
     mov eax, 65536              ; Default scan 64K
 @@has_size:
     mov dwCodeSize, eax
+=======
+    
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     mov i, 0
     
 @@scan:
@@ -1227,6 +1275,7 @@ DiscoverFunctionsAI PROC FRAME
 DiscoverFunctionsAI ENDP
 
 ;----------------------------------------------------------------------------
+<<<<<<< HEAD
 ; CONSOLE I/O HELPERS
 ;----------------------------------------------------------------------------
 
@@ -2217,10 +2266,13 @@ memcpy PROC FRAME
 memcpy ENDP
 
 ;----------------------------------------------------------------------------
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ; ENTRY POINT
 ;----------------------------------------------------------------------------
 
 main PROC FRAME
+<<<<<<< HEAD
     .endprolog
     
     ; Get console handles
@@ -2231,6 +2283,8 @@ main PROC FRAME
     call GetStdHandle
     mov hStdIn, rax
     
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     ; Initialize
     call InitAIPatterns
     
@@ -2299,6 +2353,7 @@ szTypesHPath            BYTE    "\\reconstructed_source\\types.h", 0
 szPromptInput           BYTE    "Target binary: ", 0
 szErrorLoad             BYTE    "[-] Failed to load target", 13, 10, 0
 
+<<<<<<< HEAD
 ;============================================================================
 ; COMMAND TABLE AND AGENT HANDLER WIRING
 ;============================================================================
@@ -3522,4 +3577,6 @@ szCmdCollision          BYTE    "[!] COMMAND_TABLE ID collision detected", 13, 1
 szAgentInitOK           BYTE    "[+] Agent initialized", 13, 10, 0
 szAgentShutdownOK       BYTE    "[+] Agent shutdown", 13, 10, 0
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 END main

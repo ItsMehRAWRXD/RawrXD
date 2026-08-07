@@ -9,6 +9,7 @@
 #include "ToolCallResult.h"
 #include "../ai/inference_retry_shim.h"
 #include "../engine/global_runtime_orchestrator.h"
+#include "../deep2/Deep2Discovery.h"
 
 #include <algorithm>
 #include <cctype>
@@ -262,9 +263,32 @@ AgenticInferenceBridge::InferenceResult AgenticInferenceBridge::SubmitInferenceW
         return bridgeResult;
     }
 
+    // Use Deep2 Discovery to get the correct endpoint
+    auto backend = Deep2::Deep2Discovery::GetPreferredBackend();
+    
     Agent::NativeInferenceConfig clientConfig;
-    clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
-    clientConfig.port = runtime.port == 0 ? 11434 : runtime.port;  // Default Ollama port
+    if (backend.available && backend.type == "deep2") {
+        // Parse URL from Deep2 Discovery
+        std::string url = backend.url;
+        if (url.find("://") != std::string::npos) {
+            url = url.substr(url.find("://") + 3);
+        }
+        size_t colonPos = url.find(':');
+        if (colonPos != std::string::npos) {
+            clientConfig.host = url.substr(0, colonPos);
+            try {
+                clientConfig.port = std::stoi(url.substr(colonPos + 1));
+            } catch (...) {
+                clientConfig.port = 11436;
+            }
+        } else {
+            clientConfig.host = url;
+            clientConfig.port = 11436;
+        }
+    } else {
+        clientConfig.host = runtime.host.empty() ? "127.0.0.1" : runtime.host;
+        clientConfig.port = runtime.port == 0 ? 11436 : runtime.port;  // Default Deep2 port
+    }
     clientConfig.chat_model = modelName.empty() ? "headless-default" : modelName;
     clientConfig.temperature = runtime.temperature;
     clientConfig.max_tokens = ClampMaxTokens(max_tokens);

@@ -149,9 +149,8 @@ static std::string computeSHA256(const std::vector<uint8_t>& data) {
 bool AutoUpdate::checkAndInstall() {
     auto start = std::chrono::high_resolution_clock::now();
     
-    // Feature toggle check via config file or env? Using simple env for now as settings replacement
-    // or checking a config json if exists.
-    // For now assuming enabled unless disabled by env
+    // Feature toggle check via environment variable
+    // Auto-update is enabled by default, disabled when RAWRXD_AUTO_UPDATE_DISABLED=1
     if (getEnv("RAWRXD_AUTO_UPDATE_DISABLED") == "1") {
         logUpdateEvent("SKIPPED", "Auto-update disabled in environment");
         return true;

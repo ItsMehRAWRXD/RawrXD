@@ -94,8 +94,9 @@ bool BeaconClient::registerBeacon(const std::string& componentId, const std::str
 }
 
 bool BeaconClient::unregisterBeacon(const std::string& componentId) {
-    // For unregister, we could implement if needed
-    // For now, just return true
+    // Unregister implementation pending
+    // Returns true to indicate success
+    (void)componentId;
     return true;
 }
 

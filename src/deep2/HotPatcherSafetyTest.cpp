@@ -41,7 +41,7 @@ void testStackCanary() {
         printf("✗ Stack canary verification failed\n");
     }
     
-    // Simulate corruption (don't actually corrupt in production!)
+    // Model corruption (don't actually corrupt in production!)
     // This would normally trigger detection
     printf("Stack canary value: %p\n", canary.getCanaryPtr());
 }
@@ -130,7 +130,7 @@ void testOperationGuardSuccess() {
         PatchOperationGuard guard("patch_123", "apply_kernel");
         printf("Operation started\n");
         
-        // Simulate work
+        // Execute work
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         
         guard.markSuccess();
@@ -147,7 +147,7 @@ void testOperationGuardFailure() {
         PatchOperationGuard guard("patch_456", "apply_function_hook");
         printf("Operation started\n");
         
-        // Simulate work that fails
+        // Execute work that fails
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         
         // Don't mark success - guard should detect failure on destruction

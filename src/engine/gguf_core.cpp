@@ -1,6 +1,7 @@
 #include "gguf_core.h"
 #include <iostream>
 #include <algorithm>
+#include "gguf_loader.h"
 
 EngineGGUFLoader::~EngineGGUFLoader() {
     unload();
@@ -70,7 +71,7 @@ bool EngineGGUFLoader::parse() {
     
     // Header
     uint32_t magic = *(uint32_t*)ptr; ptr += 4;
-    // if (magic != GGUF_MAGIC) return false; // Strict check disabled for broader compat in snippets
+    if (magic != GGUF_MAGIC) return false; // Strict GGUF magic check for format validation
     
     uint32_t version = *(uint32_t*)ptr; ptr += 4;
     uint64_t n_tensors = *(uint64_t*)ptr; ptr += 8;
@@ -159,3 +160,4 @@ size_t EngineGGUFLoader::ggml_nbytes(ggml_type type, size_t n) {
         default: return 0;
     }
 }
+

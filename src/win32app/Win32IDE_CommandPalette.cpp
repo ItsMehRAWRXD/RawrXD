@@ -839,11 +839,15 @@ std::vector<SearchResult> FileProvider::Query(const std::wstring& input,
             result.providerId = GetName();
             result.score = score;
             result.onAccept = [file]() {
-                // Open file in editor
-                HWND hwndMain = GetActiveWindow();
-                if (hwndMain) {
-                    // Post message to open file
-                    // TODO: Implement file open message
+                // Open file in editor via IDE's openFile method
+                CommandPalette* palette = CommandPalette::GetInstance();
+                if (palette && palette->m_hwndParent) {
+                    // Get IDE instance from parent window
+                    Win32IDE* ide = reinterpret_cast<Win32IDE*>(GetWindowLongPtrW(palette->m_hwndParent, GWLP_USERDATA));
+                    if (ide) {
+                        std::string pathUtf8 = wideToUtf8(file.path);
+                        ide->openFile(pathUtf8);
+                    }
                 }
             };
             results.push_back(std::move(result));

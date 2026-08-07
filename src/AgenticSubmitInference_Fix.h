@@ -89,8 +89,8 @@ private:
     // Extract tool calls from response
     std::vector<ToolCall> ExtractToolCalls(const json& response);
     
-    // Send request to Ollama
-    bool SendToOllama(const json& request, std::string& outResponse);
+    // Send request to native inference backend
+    bool SendToNativeInference(const json& request, std::string& outResponse);
     
     // Build system prompt with tool instructions
     std::string BuildSystemPrompt(size_t toolCount);

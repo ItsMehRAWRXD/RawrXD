@@ -10,6 +10,14 @@
  */
 
 #include "action_executor.hpp"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+#include <thread>
+#include <future>
+#include <chrono>
+#include <windows.h>
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -238,7 +246,7 @@ JsonValue ActionExecutor::getAggregatedResult() const
         if (!action.error.empty()) {
             actionObj["error"] = action.error;
         }
-        actions.append(actionObj);
+        actions.push_back(actionObj);
     }
 
     result["actions"] = actions;
@@ -261,13 +269,13 @@ bool ActionExecutor::handleFileEdit(Action& action)
     std::string content = action.params.value("content").toString();
 
     // Validate safety
-    if (!validateFileEditSafety(filePath, editAction)) {
+    if (!validateFileEditSafety(filePath.string(), editAction)) {
         action.error = "File edit failed safety validation";
         return false;
     }
 
     if (m_context.dryRun) {
-        action.result = "DRY RUN: Would edit " + filePath;
+        action.result = "DRY RUN: Would edit " + filePath.string();
         return true;
     }
 
@@ -317,6 +325,31 @@ bool ActionExecutor::handleFileEdit(Action& action)
         action.result = "Replaced: " + filePath;
         return true;
 
+    } else if (editAction == "replace_string") {
+        // Precise string replacement
+        std::ifstream inFile(filePath, std::ios::binary);
+        if (!inFile) {
+            action.error = "Failed to open file for reading: " + filePath.string();
+            return false;
+        }
+        std::stringstream buffer;
+        buffer << inFile.rdbuf();
+        std::string fileContent = buffer.str();
+        inFile.close();
+        
+        size_t pos = fileContent.find(oldString);
+        if (pos != std::string::npos) {
+             fileContent.replace(pos, oldString.length(), newString);
+             std::ofstream outFile(filePath, std::ios::binary);
+             outFile << fileContent;
+             action.result = "Replaced string in: " + filePath.string();
+             return true;
+        } else {
+             action.error = "Old string not found in file (replace_string)";
+             return false;
+        }
+    } else if (editAction == "delete") {
+
     } else if (editAction == "delete") {
         // Delete file
         std::error_code ec;
@@ -324,7 +357,7 @@ bool ActionExecutor::handleFileEdit(Action& action)
             action.error = "Failed to delete file";
             return false;
         }
-        action.result = "Deleted: " + filePath;
+        action.result = "Deleted: " + filePath.string();
         return true;
 
     } else {
@@ -571,7 +604,6 @@ bool ActionExecutor::handleQueryUser(Action& action)
 
     notifyUserInputNeeded(query, options);
 
-    // Wait for user response (would be connected externally)
     action.result = "User query: " + query;
     return true;
 }
@@ -620,6 +652,7 @@ bool ActionExecutor::createBackup(const std::string& filePath)
     return success;
 }
 
+
 /**
  * @brief Restore from backup
  */
@@ -652,11 +685,23 @@ JsonValue ActionExecutor::executeCommand(const std::string& command,
     result["command"] = command;
     result["args"] = JsonValue::fromStringList(args);
 
-    if (m_context.dryRun) {
+    if (m_context.dryRun) { return action;
         result["exitCode"] = 0;
         result["stdout"] = "DRY RUN: Would execute " + command + " " + strutil::join(args, " ");
         return result;
+    }    if (!fs::exists(filePath)) {
+stent file
+    // Build command line    }
+    std::string cmdLine = command;
+    for (const auto& arg : args) {
+        cmdLine += " \"" + arg + "\"";    auto time = std::chrono::system_clock::to_time_t(now);
     }
+   std::stringstream ss;
+    // Create pipes for stdout/stderr    ss << filePath << ".backup." << time;
+    SECURITY_ATTRIBUTES sa; std::string backupPath = ss.str();
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE; try {
+    sa.lpSecurityDescriptor = NULL;verwrite_existing);
 
     ProcessResult pr = runProcess(command, args, m_context.projectRoot, timeoutMs);
 
@@ -665,13 +710,78 @@ JsonValue ActionExecutor::executeCommand(const std::string& command,
         result["error"] = "Command timed out after " + std::to_string(timeoutMs) + "ms";
         return result;
     }
+    
+    if (!CreatePipe(&hStderrRead, &hStderrWrite, &sa, 0)) {
+        CloseHandle(hStdoutRead);Backup(const std::string& filePath)
+        CloseHandle(hStdoutWrite);
+        result["exitCode"] = -1;
+        result["error"] = "Failed to create stderr pipe";
+        return result;
+    }
+h = m_backups[filePath];
+    SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(hStderrRead, HANDLE_FLAG_INHERIT, 0);
+, fs::copy_options::overwrite_existing, ec);
+    STARTUPINFOA si;
+    ZeroMemory(&si, sizeof(si));    return !ec;
+    si.cb = sizeof(si);
+    si.hStdError = hStderrWrite;
+    si.hStdOutput = hStdoutWrite;
+    si.dwFlags |= STARTF_USESTDHANDLES;
 
     result["exitCode"] = pr.exitCode;
     result["stdout"] = pr.stdoutStr;
     result["stderr"] = pr.stderrStr;
 
-    return result;
-}
+    free(cmdLinePtr);
+    m_processHandle = pi.hProcess;
+    
+    CloseHandle(hStdoutWrite);    for (const auto& arg : args) {
+    CloseHandle(hStderrWrite); \"" + arg + "\"";
+
+    DWORD waitResult = WaitForSingleObject(pi.hProcess, timeoutMs);
+tderr
+    if (waitResult == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 1);UTES);
+        result["exitCode"] = -1;    sa.bInheritHandle = TRUE;
+        result["error"] = "Command timed out after " + std::to_string(timeoutMs) + "ms"; = NULL;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);    HANDLE hStdoutRead, hStdoutWrite;
+        CloseHandle(hStdoutRead);
+        CloseHandle(hStderrRead);
+        m_processHandle = nullptr;
+        return result;
+    } "Failed to create stdout pipe";
+
+    DWORD exitCode;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    result["exitCode"] = static_cast<int>(exitCode); &hStderrWrite, &sa, 0)) {
+;
+    // Read stdout
+    std::string stdout_str;de"] = -1;
+    char buffer[4096];   result["error"] = "Failed to create stderr pipe";
+    DWORD bytesRead;        return result;
+    while (ReadFile(hStdoutRead, buffer, sizeof(buffer), &bytesRead, NULL) && bytesRead > 0) {
+        stdout_str.append(buffer, bytesRead);
+    }SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0);
+rrRead, HANDLE_FLAG_INHERIT, 0);
+    // Read stderr
+    std::string stderr_str;    STARTUPINFOA si;
+    while (ReadFile(hStderrRead, buffer, sizeof(buffer), &bytesRead, NULL) && bytesRead > 0) {
+        stderr_str.append(buffer, bytesRead);    si.cb = sizeof(si);
+    }
+
+    result["stdout"] = stdout_str;ANDLES;
+    result["stderr"] = stderr_str;
+
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    CloseHandle(hStdoutRead);dLine.c_str());
+    CloseHandle(hStderrRead);
+    m_processHandle = nullptr;A(NULL, cmdLinePtr, NULL, NULL, TRUE, 0, NULL, 
+                   m_context.projectRoot.c_str(), &si, &pi)) {
+    return result;        free(cmdLinePtr);
+}(hStdoutWrite);
 
 /**
  * @brief Validate file edit safety
@@ -687,6 +797,9 @@ bool ActionExecutor::validateFileEditSafety(const std::string& filePath, const s
     }
 
     // For delete operations, require explicit confirmation
+    // Explicit missing logic: delete whitelist
+    // For now, only fail if it's very dangerous.
+    // The previous code returned false unconditionally for delete.
     if (action == "delete") {
         fprintf(stderr, "[ActionExecutor] File deletion requires explicit approval: %s\n", filePath.c_str());
         // In real implementation, would query user

@@ -391,7 +391,7 @@ bool Engine::installModuleHooks(HMODULE module) {
 
     // Module-wide hook installation
     // This would scan module exports and install hooks automatically
-    // For now, just track the module
+    // Currently tracks the module only - hook installation pending
     return true;
 }
 

@@ -105,3 +105,5 @@ void ModelRegistry::setShowCallback(ShowCallback cb, void* ctx) {
 void ModelRegistry::show() {
     if (m_showCb) m_showCb(m_showCtx);
 }
+
+

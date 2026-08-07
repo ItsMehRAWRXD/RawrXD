@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstdint>
@@ -108,3 +109,4 @@ struct BrowserMessage {
 
 } // namespace Backend
 } // namespace RawrXD
+

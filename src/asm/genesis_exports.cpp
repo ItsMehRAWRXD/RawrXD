@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string>
 #include <cstdio>
+#include "vulkan_compute.h"
 
 static bool g_vulkanInitialized = false;
 static bool g_extensionHostCreated = false;
@@ -149,3 +150,4 @@ extern "C" __declspec(dllexport) int Genesis_BuildOrchestrator_AddJob(void* jobP
 extern "C" __declspec(dllexport) void Genesis_BuildOrchestrator_WaitAll() {
     // Wait for all jobs to complete
 }
+

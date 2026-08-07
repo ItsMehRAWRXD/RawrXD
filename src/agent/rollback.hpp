@@ -7,3 +7,4 @@ public:
     bool revertLastCommit();
     bool openIssue(const std::string& title, const std::string& body);
 };
+

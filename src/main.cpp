@@ -58,6 +58,7 @@
 
 // Agentic Autonomous: Operation mode + Model selection + parallel cap
 #include "agentic_autonomous_config.h"
+#include "BackendOrchestrator.h"
 
 void SignalHandler(int signal)
 {
@@ -155,6 +156,8 @@ int main(int argc, char** argv)
     bool swarm_mode = false;
     int chain_depth = 1;
     std::string manifest_model;
+    std::string tensor_split;           // --tensor-split 24,16 for dual-GPU VRAM distribution
+    std::string hip_visible_devices;    // --hip-visible-devices 0,2 to exclude iGPU
 
     for (int i = 1; i < argc; ++i)
     {
@@ -190,6 +193,14 @@ int main(int argc, char** argv)
         else if (arg == "--manifest" && i + 1 < argc)
         {
             manifest_model = argv[++i];
+        }
+        else if (arg == "--tensor-split" && i + 1 < argc)
+        {
+            tensor_split = argv[++i];  // Format: "24,16" for 24GB:16GB split
+        }
+        else if (arg == "--hip-visible-devices" && i + 1 < argc)
+        {
+            hip_visible_devices = argv[++i];  // Format: "0,2" to use GPU 0 and 2, skip iGPU
         }
         else if (arg == "--max-mode")
         {
@@ -229,6 +240,9 @@ Usage: RawrEngine [options]  (or RawrXD_CLI for pure CLI build)
   --swarm-mode      Enable swarm inference mode
   --chain-depth <n> Number of models to chain in swarm (default: 1)
   --manifest <path> Manifest model for swarm orchestration
+  --tensor-split <gb1,gb2>  VRAM split for multi-GPU (e.g., "32,16" for 70B models)
+                              (optional; if omitted, auto-balances by detected VRAM)
+  --hip-visible-devices <ids>  GPU device IDs to use (e.g., "0,2" to skip iGPU)
   --max-mode        Enable maximum performance mode
   --no-refusal      Enable no-refusal mode for swarm
   --bypass-all      Enable all security bypasses
@@ -335,44 +349,20 @@ REPL Commands (chat + agentic — same as Win32 IDE):
         }
     }
 
-    // --list: list Ollama models and exit (production CLI)
+    // --list: list native models and exit (production CLI)
     if (list_models_only)
     {
-        std::string host = "localhost";
-        int ollama_port = 11434;
-        const char* e = std::getenv("OLLAMA_HOST");
-        if (e && e[0])
-        {
-            std::string u = e;
-            size_t p = u.find("://");
-            if (p != std::string::npos)
-                u = u.substr(p + 3);
-            size_t c = u.rfind(':');
-            if (c != std::string::npos && c + 1 < u.size())
-            {
-                host = u.substr(0, c);
-                ollama_port = std::stoi(u.substr(c + 1));
-            }
-            else
-            {
-                host = u;
-            }
+        auto& bo = RawrXD::BackendOrchestrator::Instance();
+        if (!bo.IsInitialized()) {
+            bo.Initialize();
         }
-        std::vector<std::string> names;
-        if (OllamaListModelsSync(host, ollama_port, names))
-        {
-            std::cout << "Ollama models at " << host << ":" << ollama_port << ":\n";
-            if (names.empty())
-                std::cout << "  (none — run 'ollama pull <model>' to add models)\n";
-            else
-                for (const auto& n : names)
-                    std::cout << "  " << n << "\n";
-        }
+        auto tags = bo.GetLoadedModelTags();
+        std::cout << "Native models:\n";
+        if (tags.empty())
+            std::cout << "  (none — load a GGUF model to begin)\n";
         else
-        {
-            std::cout << "Could not reach Ollama at " << host << ":" << ollama_port
-                      << ". Start Ollama or set OLLAMA_HOST.\n";
-        }
+            for (const auto& n : tags)
+                std::cout << "  " << n << "\n";
         return 0;
     }
 
@@ -417,6 +407,59 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                   << (license.Is800BUnlocked() ? "UNLOCKED" : "locked (requires Enterprise license)") << "\n";
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Multi-GPU Tensor Split Setup (before engine creation)
+    // ═══════════════════════════════════════════════════════════════════
+    if (!hip_visible_devices.empty())
+    {
+        _putenv_s("HIP_VISIBLE_DEVICES", hip_visible_devices.c_str());
+        std::cout << "[MULTI-GPU] HIP_VISIBLE_DEVICES=" << hip_visible_devices << "\n";
+    }
+
+    std::vector<float> tensorSplitRatios;
+    if (!tensor_split.empty())
+    {
+        // Parse tensor split (e.g., "24,16" for 24GB:16GB distribution)
+        std::stringstream ss(tensor_split);
+        std::string token;
+        float totalVram = 0.0f;
+        std::vector<float> vramValues;
+
+        while (std::getline(ss, token, ','))
+        {
+            float gb = std::stof(token);
+            vramValues.push_back(gb);
+            totalVram += gb;
+        }
+
+        // Convert to ratios (e.g., 24,16 -> 0.6, 0.4)
+        for (float gb : vramValues)
+        {
+            tensorSplitRatios.push_back(gb / totalVram);
+        }
+
+        std::cout << "[MULTI-GPU] Tensor split configured: " << tensor_split << " GB (ratios: ";
+        for (size_t i = 0; i < tensorSplitRatios.size(); ++i)
+        {
+            std::cout << std::fixed << std::setprecision(2) << tensorSplitRatios[i];
+            if (i + 1 < tensorSplitRatios.size()) std::cout << ":";
+        }
+        std::cout << ")\n";
+
+        // Initialize MultiGPUManager with layer-parallel strategy
+        auto& mgr = RawrXD::Enterprise::MultiGPUManager::Instance();
+        auto result = mgr.Initialize();
+        if (result.success)
+        {
+            mgr.SetStrategy(RawrXD::Enterprise::DispatchStrategy::LayerParallel);
+            std::cout << "[MULTI-GPU] MultiGPUManager initialized with " << mgr.GetDeviceCount() << " device(s)\n";
+        }
+        else
+        {
+            std::cerr << "[MULTI-GPU] Warning: MultiGPUManager init failed: " << result.detail << "\n";
+        }
+    }
+
     // Create inference engine based on --engine flag
     RawrXD::CPUInferenceEngine cpuEngine;
     RawrXD::DMLInferenceEngine dmlEngine;
@@ -443,6 +486,41 @@ REPL Commands (chat + agentic — same as Win32 IDE):
         else
         {
             std::cout << "[SYSTEM] Model loaded via " << engine->GetEngineName() << " engine.\n";
+
+            // Apply tensor-split layer distribution if configured
+            if (!tensorSplitRatios.empty() && engine == &cpuEngine)
+            {
+                auto& mgr = RawrXD::Enterprise::MultiGPUManager::Instance();
+                if (mgr.IsInitialized())
+                {
+                    // Get model layer count from the loaded model
+                    int numLayers = cpuEngine.GetNumLayers();
+                    if (numLayers > 0)
+                    {
+                        // Build layer assignments based on VRAM ratios
+                        uint32_t totalLayers = static_cast<uint32_t>(numLayers);
+                        uint64_t modelBytes = 0;
+
+                        auto result = mgr.BuildLayerAssignments(totalLayers, modelBytes,
+                                                                   RawrXD::Enterprise::DispatchStrategy::LayerParallel);
+                        if (result.success)
+                        {
+                            const auto& assignments = mgr.GetLayerAssignments();
+                            std::cout << "[MULTI-GPU] Layer distribution across " << assignments.size() << " GPU(s):\n";
+                            for (const auto& assign : assignments)
+                            {
+                                std::cout << "  GPU " << assign.deviceId << ": layers "
+                                          << assign.startLayer << "-" << assign.endLayer
+                                          << " (" << (assign.endLayer - assign.startLayer + 1) << " layers)\n";
+                            }
+                        }
+                        else
+                        {
+                            std::cerr << "[MULTI-GPU] Layer assignment failed: " << result.detail << "\n";
+                        }
+                    }
+                }
+            }
         }
     }
     else
@@ -565,16 +643,16 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                 std::cout << prefix[level] << " " << msg << "\n";
             }
         });
-    // Pre-register Ollama as a common second backend
+    // Pre-register Deep2 native as a common second backend
     {
-        AIBackendConfig ollama;
-        ollama.id = "ollama";
-        ollama.displayName = "Ollama";
-        ollama.type = AIBackendType::Ollama;
-        ollama.endpoint = "http://localhost:11434";
-        ollama.model = "llama3";
-        ollama.enabled = true;
-        backendMgr.addBackend(ollama);
+        AIBackendConfig deep2;
+        deep2.id = "deep2";
+        deep2.displayName = "Deep2 Native";
+        deep2.type = AIBackendType::Deep2Native;
+        deep2.endpoint = "http://localhost:11436";
+        deep2.model = "llama3";
+        deep2.enabled = true;
+        backendMgr.addBackend(deep2);
     }
     std::cout << "[SYSTEM] Backend manager: " << backendMgr.backendCount()
               << " backends, active=" << backendMgr.getActiveBackendName() << " (Phase 8B)\n";
@@ -852,58 +930,36 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         {
                             return agentEngine.chat(message);
                         }
-                        if (!modelOverride.empty() || backendMgr.getActiveId() == "ollama")
-                        {
-                            std::string host = "localhost";
-                            int port = 11434;
-                            const char* envHost = std::getenv("OLLAMA_HOST");
-                            if (envHost && envHost[0])
-                            {
-                                std::string u = envHost;
-                                size_t p = u.find("://");
-                                if (p != std::string::npos)
-                                    u = u.substr(p + 3);
-                                size_t c = u.rfind(':');
-                                if (c != std::string::npos && c + 1 < u.size())
-                                {
-                                    host = u.substr(0, c);
-                                    port = std::stoi(u.substr(c + 1));
-                                }
-                                else
-                                {
-                                    host = u;
-                                }
-                            }
-                            else if (backendMgr.getActiveId() == "ollama")
-                            {
-                                auto cfg = backendMgr.getActiveBackend();
-                                std::string ep = cfg.endpoint;
-                                size_t p = ep.find("://");
-                                if (p != std::string::npos)
-                                    ep = ep.substr(p + 3);
-                                size_t c = ep.rfind(':');
-                                if (c != std::string::npos && c + 1 < ep.size())
-                                {
-                                    host = ep.substr(0, c);
-                                    port = std::stoi(ep.substr(c + 1));
-                                }
-                            }
-                            std::string ollamaModel =
-                                modelOverride.empty() ? backendMgr.getActiveBackend().model : modelOverride;
-                            if (ollamaModel.empty())
-                                ollamaModel = "llama3.2";
-                            std::string response;
-                            if (OllamaGenerateSync(host, port, ollamaModel, message, response))
-                            {
-                                return response;
-                            }
-                            return "[Ollama error: start Ollama or check OLLAMA_HOST / backend]";
+                        // Use native inference backend
+                        auto& bo = RawrXD::BackendOrchestrator::Instance();
+                        if (!bo.IsInitialized()) {
+                            bo.Initialize();
                         }
-                        if (agentEngine.isModelLoaded())
-                        {
-                            return agentEngine.chat(message);
+                        
+                        RawrXD::InferRequest req;
+                        req.id = 0;
+                        req.prompt = message;
+                        req.max_tokens = 4096;
+                        req.tenant_id = "cli";
+                        
+                        auto completion_promise = std::make_shared<std::promise<std::string>>();
+                        req.complete_cb = [completion_promise](const std::string& completion, const std::string& metadata) {
+                            (void)metadata;
+                            completion_promise->set_value(completion);
+                        };
+                        
+                        uint64_t req_id = bo.Enqueue(req);
+                        std::future<std::string> completion_future = completion_promise->get_future();
+                        if (completion_future.wait_for(std::chrono::seconds(120)) != std::future_status::ready) {
+                            bo.Cancel(req_id);
+                            return "[Error] Native inference timeout";
                         }
-                        return "";
+                        
+                        std::string response = completion_future.get();
+                        if (response.rfind("[BackendError]", 0) == 0) {
+                            return "[Error] " + response;
+                        }
+                        return response;
                     };
                     historyRecorder.recordChatRequest(msg);
                     auto chatStart = std::chrono::steady_clock::now();
@@ -979,7 +1035,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                     else
                     {
                         auto cfg = backendMgr.getActiveBackend();
-                        if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                        if (cfg.type == AIBackendType::Deep2Native && !cfg.endpoint.empty())
                         {
                             std::string ep = cfg.endpoint;
                             size_t p = ep.find("://");
@@ -1077,7 +1133,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                             else
                             {
                                 auto cfg = backendMgr.getActiveBackend();
-                                if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                                if (cfg.type == AIBackendType::Deep2Native && !cfg.endpoint.empty())
                                 {
                                     std::string ep = cfg.endpoint;
                                     size_t p = ep.find("://");
@@ -1250,7 +1306,7 @@ REPL Commands (chat + agentic — same as Win32 IDE):
                         else
                         {
                             auto cfg = backendMgr.getActiveBackend();
-                            if (cfg.type == AIBackendType::Ollama && !cfg.endpoint.empty())
+                            if (cfg.type == AIBackendType::Deep2Native && !cfg.endpoint.empty())
                             {
                                 std::string ep = cfg.endpoint;
                                 size_t p = ep.find("://");

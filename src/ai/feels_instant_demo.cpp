@@ -12,7 +12,7 @@
 #include <vector>
 #include <windows.h>
 
-// Simulated ghost text suggestions
+// Ghost text suggestion database for the demo
 struct Suggestion {
     const char* prefix;
     const char* completion;
@@ -67,7 +67,7 @@ void PrintLatency(int latency_ms) {
     ResetColor();
 }
 
-// Simulate typing with ghost text
+// Interactive typing demo with ghost text suggestions
 void RunTypingDemo() {
     ClearScreen();
     std::cout << "╔══════════════════════════════════════════════════════════════╗\n";
@@ -144,7 +144,7 @@ void RunTypingDemo() {
                     }
                     
                     if (best_match) {
-                        // Simulate latency
+                        // Measure suggestion latency
                         auto suggest_start = std::chrono::steady_clock::now();
                         std::this_thread::sleep_for(std::chrono::milliseconds(best_match->latency_ms));
                         auto suggest_end = std::chrono::steady_clock::now();

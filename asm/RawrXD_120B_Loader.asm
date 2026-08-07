@@ -11,6 +11,24 @@
 ;   4. Sliding window KV cache with SVD compression
 ;   5. Layer-on-demand streaming (only resident layers in RAM)
 ;
+; ─── ABI CONTRACT ───
+; All exports use Microsoft x64 calling convention:
+;   RCX = 1st arg, RDX = 2nd arg, R8 = 3rd arg, R9 = 4th arg
+;   RAX = return value (handle/ptr) or 0 on failure
+;   Stack: 16-byte aligned at call site, 32-byte shadow space
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, XMM0-XMM5
+; Preserves: RBX, RBP, RDI, RSI, R12-R15, XMM6-XMM15
+;
+; RawrXD_LoadModel(RCX=path:char*) → RAX=model_handle or 0
+; RawrXD_UnloadModel(RCX=handle) → void
+; RawrXD_GetLayer(RCX=handle, RDX=layer_idx) → RAX=tensor_ptr or 0
+; RawrXD_Quantize(RCX=src, RDX=dst, R8=n_elements, R9=quant_type) → RAX=0 ok / -1 fail
+; RawrXD_KVCache_Init() → RAX=cache_handle or 0
+; RawrXD_KVCache_Update(RCX=handle, RDX=token_id) → RAX=0 ok / -1 fail
+; RawrXD_KVCache_Evict(RCX=handle, RDX=layer_idx) → RAX=0 ok / -1 fail
+; ───────────────────
+;
 ; Entry: RawrXD_LoadModel(path) → returns model handle
 ; Entry: RawrXD_UnloadModel(handle) → cleanup
 ; Entry: RawrXD_GetLayer(handle, layer_idx) → returns tensor ptr

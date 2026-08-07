@@ -12,6 +12,53 @@ LanguageServerIntegration::LanguageServerIntegration()
     : m_isInitialized(false), m_serverCapabilities(0) {
 }
 
+std::shared_ptr<LSPClient> LanguageServerIntegration::getClient(const std::string& language) {
+    auto it = m_clients.find(language);
+    if (it != m_clients.end()) {
+        return it->second;
+    }
+
+    // Create new client config based on language
+    LSPConfig config;
+    config.languageId = language;
+    config.rootPath = m_rootPath.empty() ? "." : m_rootPath;
+    
+    if (language == "cpp" || language == "c++") {
+        config.command = "clangd";
+        config.args = {"--background-index", "--header-insertion=never"};
+    } else if (language == "python") {
+        config.command = "pylsp";
+    } else if (language == "javascript" || language == "typescript") {
+        config.command = "typescript-language-server";
+        config.args = {"--stdio"};
+    } else {
+        return nullptr; // Unsupported language for LSP
+    }
+
+    auto client = std::make_shared<LSPClient>(config);
+    if (client->start()) {
+        client->initialize();
+        m_clients[language] = client;
+        return client;
+    }
+    
+    return nullptr;
+}
+
+void LanguageServerIntegration::initializeRoot(const std::string& rootPath) {
+    m_rootPath = rootPath;
+}
+
+void LanguageServerIntegration::openFile(const std::string& filePath, const std::string& languageISO) {
+    auto client = getClient(languageISO);
+    if (client) {
+        // Read file content
+        // Assuming file exists, but we need content. 
+        // For now, we rely on changeFile or just opening logic.
+        // client->didOpen("file://" + filePath, ""); 
+    }
+}
+
 HoverInfo LanguageServerIntegration::provideHoverInfo(
     const std::string& filePath, int line, int column,
     const std::string& language, const std::string& codeContext) {
@@ -30,6 +77,12 @@ HoverInfo LanguageServerIntegration::provideHoverInfo(
     }
     
     // Generate hover content based on language and token
+    auto client = getClient(language);
+    if (client) {
+        // LSPClient::definition returns std::future<json>, can't use synchronously here
+        // client->definition("file://" + filePath, line, column);
+    }
+
     if (language == "cpp" || language == "c++") {
         info.contents = generateCppHoverInfo(token, filePath);
     } else if (language == "python") {
@@ -48,10 +101,14 @@ Location LanguageServerIntegration::goToDefinition(
     const std::string& language) {
     
     Location location;
-    location.filePath = filePath;
-    location.line = line;
-    location.column = column;
+    location.filePath = "";
     location.found = false;
+
+    auto client = getClient(language);
+    if (client) {
+        // LSPClient::definition returns std::future<json>, can't use synchronously here
+        // client->definition("file://" + filePath, line, column);
+    }
     
     // Read the file to extract the token at cursor
     std::ifstream file(filePath);
@@ -210,7 +267,13 @@ std::vector<Diagnostic> LanguageServerIntegration::getDiagnostics(
     
     std::vector<Diagnostic> diagnostics;
     
-    // Syntax checking
+    auto client = getClient(language);
+    if (client) {
+        // LSPClient doesn't have updateDocument/getDiagnostics; use didChange for now
+        client->didChange("file://" + filePath, code);
+    }
+    
+    // Syntax checking fallback
     auto syntaxDiags = checkSyntax(code, language);
     diagnostics.insert(diagnostics.end(), syntaxDiags.begin(), syntaxDiags.end());
     
@@ -234,44 +297,6 @@ PrepareRenameResult LanguageServerIntegration::prepareRename(
     result.placeholder = extractTokenAtPosition("", line, column);
     
     return result;
-}
-
-void LanguageServerIntegration::initializeRoot(const std::string& rootPath) {
-    m_rootPath = rootPath;
-    initialize();
-}
-
-void LanguageServerIntegration::openFile(const std::string& filePath, const std::string& languageISO) {
-    // Register open file with language server
-    if (supportsLanguage(languageISO)) {
-        auto client = getClient(languageISO);
-        if (client) {
-            // Would call LSP textDocument/didOpen
-        }
-    }
-}
-
-void LanguageServerIntegration::closeFile(const std::string& filePath) {
-    // Notify language server that file is closed
-}
-
-void LanguageServerIntegration::changeFile(const std::string& filePath, const std::string& content) {
-    // Notify language server of file changes
-}
-
-std::shared_ptr<LSPClient> LanguageServerIntegration::getClient(const std::string& language) {
-    auto it = m_clients.find(language);
-    if (it != m_clients.end()) {
-        return it->second;
-    }
-    // Create new client for language if not exists
-    LSPConfig cfg;
-    cfg.languageId = language;
-    cfg.command = "";
-    cfg.rootPath = m_rootPath;
-    auto client = std::make_shared<LSPClient>(cfg);
-    m_clients[language] = client;
-    return client;
 }
 
 std::vector<TextEdit> LanguageServerIntegration::rename(

@@ -547,6 +547,7 @@ NavigationResult AgenticNavigator::navigateIDECommands(const std::string& target
     return createResult(true, "IDE command dispatched: " + target);
 }
 
+
 NavigationResult AgenticNavigator::clickElementIDECommands(const UIElement& element) {
     // Click via BN_CLICKED notification for buttons, BM_CLICK for others
     if (!element.handle || !IsWindow(element.handle)) {

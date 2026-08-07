@@ -19,6 +19,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "gguf_loader.h"
 #endif
 
 namespace fs = std::filesystem;
@@ -536,3 +537,4 @@ std::string ContextAssembler::buildFIMPrompt(const std::string& prefix,
 
 } // namespace Context
 } // namespace RawrXD
+

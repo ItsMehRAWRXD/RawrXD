@@ -53,7 +53,7 @@ foreach ($pattern in $SourcePatterns) {
 }
 
 # Remove duplicates and sort
-$UniqueFiles = $AllFiles | Sort-Object FullName -Unique
+$UniqueFiles = @($AllFiles | Sort-Object FullName -Unique)
 $TotalFiles = $UniqueFiles.Count
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -114,8 +114,8 @@ foreach ($file in $ReversedFiles) {
 }
 
 # Summary
-$SuccessCount = ($BatchResults | Where-Object { $_.Status -eq "SUCCESS" }).Count
-$FailCount = ($BatchResults | Where-Object { $_.Status -eq "FAILED" }).Count
+$SuccessCount = @($BatchResults | Where-Object { $_.Status -eq "SUCCESS" }).Count
+$FailCount = @($BatchResults | Where-Object { $_.Status -eq "FAILED" }).Count
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "BUILD SUMMARY" -ForegroundColor Cyan
@@ -129,6 +129,6 @@ if ($FailCount -eq 0 -and $SuccessCount -gt 0) {
     Write-Host "Objects in: $OBJ_DIR" -ForegroundColor Yellow
     
     # List all object files for linking
-    $objFiles = Get-ChildItem -Path "$OBJ_DIR\*.obj" | Select-Object -ExpandProperty FullName
+    $objFiles = @(Get-ChildItem -Path "$OBJ_DIR\*.obj" | Select-Object -ExpandProperty FullName)
     Write-Host "`nObject files ready for linking: $($objFiles.Count)" -ForegroundColor Cyan
 }

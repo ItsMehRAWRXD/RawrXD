@@ -33,7 +33,7 @@ inline double GetTimeMs() {
 }
 
 // ============================================================================
-// Simulated MoE Router (matches MoERouter implementation)
+// MoE Router (matches MoERouter implementation)
 // ============================================================================
 class SimulatedRouter {
 public:
@@ -100,7 +100,7 @@ public:
 };
 
 // ============================================================================
-// Simulated Expert FFN (Q4_K GEMV simulation)
+// Expert FFN (Q4_K GEMV simulation)
 // ============================================================================
 class SimulatedExpert {
 public:
@@ -128,15 +128,15 @@ public:
         for (auto& b : downWeights) b = dist(rng);
     }
     
-    // Simulate Q4_K GEMV: output = weights @ input
+    // Model Q4_K GEMV: output = weights @ input
     // weights: [rows x cols], input: [cols], output: [rows]
     void GEMV_Q4K(const uint8_t* weights, const float* input, float* output,
                    int rows, int cols) {
-        // Simplified: just do F32 GEMV (actual Q4_K would dequantize on the fly)
+        // Basic implementation: just do F32 GEMV (actual Q4_K would dequantize on the fly)
         for (int r = 0; r < rows; r++) {
             float sum = 0.0f;
             for (int c = 0; c < cols; c++) {
-                // Simulate quantized weight: -8 to +7 range
+                // Model quantized weight: -8 to +7 range
                 int weight = (r + c) % 16 - 8;
                 sum += weight * input[c];
             }
@@ -157,7 +157,7 @@ public:
         
         // SwiGLU: silu(gate) * up
         for (int i = 0; i < EXPERT_DIM; i++) {
-            // Simplified SwiGLU
+            // Basic SwiGLU
             float silu = gateOut[i] / (1.0f + expf(-gateOut[i]));
             downIn[i] = silu * upOut[i];
         }

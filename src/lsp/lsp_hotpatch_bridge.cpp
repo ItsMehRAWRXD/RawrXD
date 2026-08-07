@@ -43,6 +43,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include "gguf_loader.h"
 #endif
 
 using json = nlohmann::json;
@@ -1010,3 +1011,4 @@ void LSPHotpatchBridge::handleWorkspaceStats(int id, const json& params) {
 
     m_lastResult = result;
 }
+

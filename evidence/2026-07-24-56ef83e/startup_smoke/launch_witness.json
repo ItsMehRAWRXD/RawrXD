@@ -1,0 +1,38 @@
+{
+  "binary_size_bytes": 48094720,
+  "ready_state_reached": true,
+  "windows_created": [
+    {
+      "handle": "7145002",
+      "process_id": 28204,
+      "title": "RawrXD IDE - Native Win32 AI Development Environment"
+    }
+  ],
+  "binary_sha256": "1F26126BB017939B6826697E7BD40C55867F4961BE8B03161D605507FB310B26",
+  "binary": "d:\\rawrxd\\build-ninja\\bin\\RawrXD-Win32IDE.exe",
+  "crash_code": null,
+  "launch_success": true,
+  "test_id": "VAL-051",
+  "timestamp": "2026-07-24T13:04:48Z",
+  "invariants": {
+    "no_stack_overflow": true,
+    "message_loop_running": true,
+    "no_access_violation": true,
+    "main_window_created": true,
+    "no_heap_corruption": true
+  },
+  "crash_detected": false,
+  "subsystems_initialized": [
+    "Win32Core",
+    "WindowManager",
+    "MessageLoop",
+    "TabManager (deferred)",
+    "OutputPanels (deferred)",
+    "ChatPanel (deferred)"
+  ],
+  "exit_code": null,
+  "startup_ms": 2542.58,
+  "pid": 28204,
+  "launch_attempted": true,
+  "test_name": "IDE Launch Witness"
+}

@@ -67,7 +67,7 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
         result.success = true;
         
     } catch (const std::exception& e) {
-        std::cerr << "Exception benchmarking model: " << e.what() << std::endl;
+        
     }
     
     return result;
@@ -75,7 +75,7 @@ BenchmarkResult benchmarkModel(const std::string& model_path, int num_tokens = 2
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: multi_model_benchmark <model_path> [num_tokens]" << std::endl;
+        
         return 1;
     }
 

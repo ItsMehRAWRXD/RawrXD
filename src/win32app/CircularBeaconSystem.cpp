@@ -24,6 +24,7 @@
 #include <cassert>
 #include <windows.h>
 #include <utility>
+#include "vulkan_compute.h"
 
 namespace RawrXD {
 
@@ -723,5 +724,6 @@ int rawrxd_beacon_count()
 } // extern "C"
 
 } // namespace RawrXD
+
 
 

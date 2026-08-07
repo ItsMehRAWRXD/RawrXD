@@ -15,6 +15,63 @@
 // Window Management Implementation for Win32IDE
 // Completes the GUI IDE loop by providing the missing Window Procedure and creation logic.
 
+// Recursion detection instrumentation
+static thread_local int g_onCreateDepth = 0;
+static thread_local int g_onSizeDepth = 0;
+static thread_local int g_handleMessageDepth = 0;
+static thread_local int g_sendMessageDepth = 0;
+static thread_local int g_createWindowDepth = 0;
+
+struct DepthScope {
+    int* depth;
+    const char* name;
+    DepthScope(int* d, const char* n) : depth(d), name(n) {
+        ++(*depth);
+        char buf[256];
+        snprintf(buf, sizeof(buf), "[DEPTH] %s entered: depth=%d\n", name, *depth);
+        OutputDebugStringA(buf);
+        if (*depth > 5) {
+            OutputDebugStringA("[DEPTH] WARNING: Recursion detected! Breaking...\n");
+            __debugbreak();
+        }
+    }
+    ~DepthScope() {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "[DEPTH] %s exiting: depth=%d\n", name, *depth);
+        OutputDebugStringA(buf);
+        --(*depth);
+    }
+};
+
+// Wrapper to track SendMessage recursion
+static LRESULT TrackSendMessageA(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, const char* context) {
+    ++g_sendMessageDepth;
+    char buf[256];
+    snprintf(buf, sizeof(buf), "[SENDMSG] %s: msg=0x%04X depth=%d\n", context, msg, g_sendMessageDepth);
+    OutputDebugStringA(buf);
+    if (g_sendMessageDepth > 10) {
+        OutputDebugStringA("[SENDMSG] WARNING: Deep SendMessage recursion!\n");
+        __debugbreak();
+    }
+    LRESULT result = SendMessageA(hwnd, msg, wParam, lParam);
+    --g_sendMessageDepth;
+    return result;
+}
+
+static LRESULT TrackSendMessageW(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, const char* context) {
+    ++g_sendMessageDepth;
+    char buf[256];
+    snprintf(buf, sizeof(buf), "[SENDMSG] %s: msg=0x%04X depth=%d\n", context, msg, g_sendMessageDepth);
+    OutputDebugStringA(buf);
+    if (g_sendMessageDepth > 10) {
+        OutputDebugStringA("[SENDMSG] WARNING: Deep SendMessage recursion!\n");
+        __debugbreak();
+    }
+    LRESULT result = SendMessageW(hwnd, msg, wParam, lParam);
+    --g_sendMessageDepth;
+    return result;
+}
+
 bool Win32IDE::createWindow()
 {
     WNDCLASSEXA wc = {0};
@@ -120,6 +177,40 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 
 LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    // Guard against re-entrancy at the message handler level
+    static thread_local bool s_inHandleMessage = false;
+    static thread_local UINT s_lastMsg = 0;
+    static thread_local int s_msgRecursionCount = 0;
+    
+    if (s_inHandleMessage) {
+        if (uMsg == s_lastMsg) {
+            s_msgRecursionCount++;
+            char buf[256];
+            snprintf(buf, sizeof(buf), "[handleMessage] WARNING: Same message (0x%04X) recursion count=%d\n", 
+                     uMsg, s_msgRecursionCount);
+            OutputDebugStringA(buf);
+            if (s_msgRecursionCount > 5) {
+                OutputDebugStringA("[handleMessage] ERROR: Breaking recursion!\n");
+                return DefWindowProc(hwnd, uMsg, wParam, lParam);
+            }
+        }
+    }
+    
+    s_inHandleMessage = true;
+    s_lastMsg = uMsg;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        int* count;
+        GuardReset(bool* g, int* c) : guard(g), count(c) {}
+        ~GuardReset() { 
+            *guard = false; 
+            if (!*guard) *count = 0;
+        }
+    } guardReset(&s_inHandleMessage, &s_msgRecursionCount);
+    
+    DepthScope scope(&g_handleMessageDepth, "Win32IDE::handleMessage");
     switch (uMsg)
     {
         case WM_CREATE:
@@ -295,52 +386,11 @@ static void LogPanelException(const char* panelName, DWORD exceptionCode, const 
     }
 }
 
-// SEH wrapper for individual panel creation
+// Exception wrapper for individual panel creation (using C++ exceptions only)
 static bool CreatePanelWithSEH(const char* panelName, std::function<void()> createFn, HWND hwnd)
 {
     bool success = false;
-    DWORD exceptionCode = 0;
     
-#if defined(_MSC_VER)
-    __try
-    {
-        createFn();
-        success = true;
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        exceptionCode = GetExceptionCode();
-        
-        // Get exception description
-        const char* exceptionDesc = "Unknown exception";
-        switch (exceptionCode)
-        {
-            case 0xE06D7363: exceptionDesc = "C++ exception (0xE06D7363)"; break;
-            case EXCEPTION_ACCESS_VIOLATION: exceptionDesc = "Access violation"; break;
-            case EXCEPTION_INT_DIVIDE_BY_ZERO: exceptionDesc = "Divide by zero"; break;
-            case EXCEPTION_STACK_OVERFLOW: exceptionDesc = "Stack overflow"; break;
-            case EXCEPTION_ILLEGAL_INSTRUCTION: exceptionDesc = "Illegal instruction"; break;
-            case EXCEPTION_PRIV_INSTRUCTION: exceptionDesc = "Privileged instruction"; break;
-            case EXCEPTION_IN_PAGE_ERROR: exceptionDesc = "In-page error"; break;
-            case EXCEPTION_NONCONTINUABLE_EXCEPTION: exceptionDesc = "Non-continuable exception"; break;
-            case EXCEPTION_INVALID_DISPOSITION: exceptionDesc = "Invalid disposition"; break;
-            case EXCEPTION_GUARD_PAGE: exceptionDesc = "Guard page violation"; break;
-            case EXCEPTION_INVALID_HANDLE: exceptionDesc = "Invalid handle"; break;
-        }
-        
-        LogPanelException(panelName, exceptionCode, exceptionDesc);
-        
-        // Show warning dialog with panel name
-        char msg[512];
-        snprintf(msg, sizeof(msg), 
-                 "Panel '%s' failed to initialize.\n\n"
-                 "Exception: 0x%08lX (%s)\n\n"
-                 "The IDE will continue but this panel may be missing or non-functional.\n\n"
-                 "Error logged to: rawrxd_panel_errors.log",
-                 panelName, exceptionCode, exceptionDesc);
-        MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
-    }
-#else
     try
     {
         createFn();
@@ -372,13 +422,28 @@ static bool CreatePanelWithSEH(const char* panelName, std::function<void()> crea
                  panelName);
         MessageBoxA(hwnd, msg, "RawrXD IDE - Panel Initialization Warning", MB_OK | MB_ICONWARNING);
     }
-#endif
     
     return success;
 }
 
 void Win32IDE::onCreate(HWND hwnd)
 {
+    // Guard against re-entrancy
+    static thread_local bool s_inOnCreate = false;
+    if (s_inOnCreate) {
+        OutputDebugStringA("[onCreate] BLOCKED: Re-entrancy detected!\n");
+        return;
+    }
+    s_inOnCreate = true;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        GuardReset(bool* g) : guard(g) {}
+        ~GuardReset() { *guard = false; }
+    } guardReset(&s_inOnCreate);
+    
+    DepthScope scope(&g_onCreateDepth, "Win32IDE::onCreate");
     LOG_INFO("Main Window Created: Initializing UI Components");
     
     // Clear previous panel error log on fresh startup
@@ -461,6 +526,22 @@ void Win32IDE::onDestroy()
 
 void Win32IDE::onSize(int width, int height)
 {
+    // Guard against re-entrancy
+    static thread_local bool s_inOnSize = false;
+    if (s_inOnSize) {
+        OutputDebugStringA("[onSize] BLOCKED: Re-entrancy detected!\n");
+        return;
+    }
+    s_inOnSize = true;
+    
+    // Auto-reset guard on exit
+    struct GuardReset {
+        bool* guard;
+        GuardReset(bool* g) : guard(g) {}
+        ~GuardReset() { *guard = false; }
+    } guardReset(&s_inOnSize);
+    
+    DepthScope scope(&g_onSizeDepth, "Win32IDE::onSize");
     // ── Parity-audit: dimension guards ──────────────────────────────────────
     // Clamp to safe minimums so layout arithmetic never produces negatives.
     // The assert fires in Debug builds; the clamp protects Release builds.

@@ -26,3 +26,5 @@ bool BrutalGzipWrapper::Decompress(const std::vector<uint8_t>& compressed, std::
     raw = codec::inflate(compressed, &ok);
     return ok;
 }
+
+

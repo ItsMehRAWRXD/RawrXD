@@ -23,6 +23,44 @@ cmake_minimum_required(VERSION 3.20)
 # Enable testing
 enable_testing()
 
+# ============================================================================
+# Google Test Setup - Use prebuilt from build-master
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/build-master/lib/gtest.lib")
+    # Use prebuilt gtest from build-master
+    add_library(gtest STATIC IMPORTED)
+    set_target_properties(gtest PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/build-master/lib/gtest.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/build-master/_deps/googletest-src/googletest/include"
+    )
+    message(STATUS "  ✓ Using prebuilt gtest from build-master")
+else()
+    find_package(GTest QUIET)
+    if(NOT GTest_FOUND)
+        # Fetch Google Test if not found
+        include(FetchContent)
+        FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG v1.14.0
+        )
+        # For Windows: Prevent overriding the parent project's compiler/linker settings
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(googletest)
+    endif()
+endif()
+
+# ============================================================================
+# Common Test Link Libraries
+# ============================================================================
+set(RAWRXD_TEST_COMMON_LIBS gtest)
+if(WIN32)
+    list(APPEND RAWRXD_TEST_COMMON_LIBS 
+        wintrust    # For WinVerifyTrust
+        crypt32     # For ImageEnumerateCertificates
+    )
+endif()
+
 message(STATUS "========================================")
 message(STATUS "Registering Tests with CTest")
 message(STATUS "========================================")
@@ -77,15 +115,24 @@ endif()
 if(NOT TARGET test_ai_completions AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_ai_completions.cpp")
     add_executable(test_ai_completions test_ai_completions.cpp)
     target_include_directories(test_ai_completions PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_ai_completions PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    # Link against InferenceEngine library if available
+    if(TARGET InferenceEngine)
+        target_link_libraries(test_ai_completions PRIVATE InferenceEngine)
+    endif()
     set_target_properties(test_ai_completions PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_ai_completions COMMAND test_ai_completions)
     message(STATUS "  ✓ Added test_ai_completions")
 endif()
 
-# LLM Connectivity Test
+# LLM Connectivity Test - Uses WinHTTP-based client (no curl dependency)
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
-    add_executable(test_llm_connectivity test_llm_connectivity.cpp)
-    target_include_directories(test_llm_connectivity PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/llm_adapter)
+    add_executable(test_llm_connectivity test_llm_connectivity.cpp 
+        ${CMAKE_SOURCE_DIR}/src/agent/llm_http_client.cpp)
+    target_include_directories(test_llm_connectivity PRIVATE 
+        ${CMAKE_SOURCE_DIR}/include 
+        ${CMAKE_SOURCE_DIR}/src 
+        ${CMAKE_SOURCE_DIR}/src/agent)
     set_target_properties(test_llm_connectivity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     if(WIN32)
         target_link_libraries(test_llm_connectivity PRIVATE ws2_32 winhttp)
@@ -96,7 +143,7 @@ endif()
 
 # Tool Registry Test
 if(NOT TARGET test_tool_registry AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_tool_registry.cpp")
-    add_executable(test_tool_registry test_tool_registry.cpp)
+    add_executable(test_tool_registry test_tool_registry.cpp tool_registry_full_impl.cpp)
     target_include_directories(test_tool_registry PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(test_tool_registry PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_tool_registry COMMAND test_tool_registry)
@@ -107,6 +154,7 @@ endif()
 if(NOT TARGET test_voice_processor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_voice_processor.cpp")
     add_executable(test_voice_processor test_voice_processor.cpp)
     target_include_directories(test_voice_processor PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_voice_processor PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
     set_target_properties(test_voice_processor PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_voice_processor COMMAND test_voice_processor)
     message(STATUS "  ✓ Added test_voice_processor")
@@ -114,8 +162,9 @@ endif()
 
 # Zero Retention Manager Test
 if(NOT TARGET test_zero_retention_manager AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_zero_retention_manager.cpp")
-    add_executable(test_zero_retention_manager test_zero_retention_manager.cpp)
+    add_executable(test_zero_retention_manager test_zero_retention_manager.cpp ${CMAKE_SOURCE_DIR}/src/terminal/zero_retention_manager.cpp)
     target_include_directories(test_zero_retention_manager PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_zero_retention_manager PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
     set_target_properties(test_zero_retention_manager PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_zero_retention_manager COMMAND test_zero_retention_manager)
     message(STATUS "  ✓ Added test_zero_retention_manager")
@@ -182,6 +231,11 @@ endif()
 if(NOT TARGET test_gguf_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_gguf_integration.cpp")
     add_executable(test_gguf_integration test_gguf_integration.cpp)
     target_include_directories(test_gguf_integration PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    target_link_libraries(test_gguf_integration PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    # Link against InferenceEngine library if available
+    if(TARGET InferenceEngine)
+        target_link_libraries(test_gguf_integration PRIVATE InferenceEngine)
+    endif()
     set_target_properties(test_gguf_integration PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     add_test(NAME test_gguf_integration COMMAND test_gguf_integration)
     message(STATUS "  ✓ Added test_gguf_integration")
@@ -217,6 +271,25 @@ if(NOT TARGET deterministic_replay_gate AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
         LABELS "deterministic;ide;ghosttext"
     )
     message(STATUS "  ✓ Added deterministic_replay_gate")
+endif()
+
+# VAL-063: Inference Gateway Certification Harness
+if(NOT TARGET VAL063_InferenceGatewayHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VAL063_InferenceGatewayHarness.cpp")
+    add_executable(VAL063_InferenceGatewayHarness VAL063_InferenceGatewayHarness.cpp)
+    target_include_directories(VAL063_InferenceGatewayHarness PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+    set_target_properties(VAL063_InferenceGatewayHarness PROPERTIES 
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" 
+        CXX_STANDARD 20
+    )
+    if(WIN32)
+        target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE kernel32 user32 psapi)
+    endif()
+    add_test(NAME VAL063_InferenceGatewayHarness COMMAND VAL063_InferenceGatewayHarness)
+    set_tests_properties(VAL063_InferenceGatewayHarness PROPERTIES
+        TIMEOUT 300
+        LABELS "certification;val-063;inference;gateway"
+    )
+    message(STATUS "  ✓ Added VAL063_InferenceGatewayHarness")
 endif()
 
 if(NOT TARGET test_swarm_expert_heatmap_stress AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_swarm_expert_heatmap_stress.cpp")
@@ -511,13 +584,13 @@ if(NOT TARGET sovereign_integrated_test AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         CXX_STANDARD 20
     )
-    # Link zlib for checkpoint compression (optional)
-    find_package(ZLIB)
-    if(ZLIB_FOUND)
-        target_link_libraries(sovereign_integrated_test PRIVATE ZLIB::ZLIB)
-        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_ZLIB=1)
+    # Link RawrXD compression (zero-dependency x64 MASM)
+    if(TARGET RawrXD_Compression)
+        target_link_libraries(sovereign_integrated_test PRIVATE RawrXD_Compression)
+        target_compile_definitions(sovereign_integrated_test PRIVATE HAS_RAWRXD_COMPRESSION=1)
+        message(STATUS "  ✓ Using RawrXD_Compression for checkpoint compression")
     else()
-        message(WARNING "  ZLIB not found - checkpoint compression disabled")
+        message(WARNING "  RawrXD_Compression not available - checkpoint compression disabled")
     endif()
     add_test(NAME sovereign_integrated_test COMMAND sovereign_integrated_test)
     message(STATUS "  ✓ Added sovereign_integrated_test (Sovereign Burn-in)")
@@ -544,3 +617,7 @@ if(NOT TARGET test_agentic_supervisor AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/te
     add_test(NAME test_agentic_supervisor COMMAND test_agentic_supervisor)
     message(STATUS "  ✓ Added test_agentic_supervisor (Agentic Supervisor)")
 endif()
+
+# ============================================================================
+# End of test registration
+# ============================================================================

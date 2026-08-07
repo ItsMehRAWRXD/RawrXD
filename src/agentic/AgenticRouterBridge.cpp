@@ -212,12 +212,30 @@ void AgenticRouterBridge::processObservationQueue() {
 // ============================================================================
 
 void AgenticRouterBridge::analyzeActiveFile() {
-    // In real implementation, this would get the currently open file from IDE
-    // For now, use last analyzed file or skip
-    if (m_lastAnalyzedFile.empty()) return;
+    // Get the currently open file from IDE integration
+    std::string currentFile = GetCurrentFileFromIDE();
+    
+    if (!currentFile.empty()) {
+        m_lastAnalyzedFile = currentFile;
+    }
+    
+    // If still no file to analyze, check for recently modified files
+    if (m_lastAnalyzedFile.empty()) {
+        auto recentFiles = GetRecentlyModifiedFiles(m_workspaceRoot, 5);
+        if (!recentFiles.empty()) {
+            m_lastAnalyzedFile = recentFiles[0];
+        }
+    }
+    
+    // Skip if no file available
+    if (m_lastAnalyzedFile.empty()) {
+        return;
+    }
     
     std::ifstream file(m_lastAnalyzedFile);
-    if (!file) return;
+    if (!file) {
+        return;
+    }
     
     std::string content((std::istreambuf_iterator<char>(file)),
                          std::istreambuf_iterator<char>());
@@ -235,9 +253,86 @@ void AgenticRouterBridge::analyzeCodePatterns(const std::string& filePath, const
     
     while (std::regex_search(searchStart, content.cend(), match, includeRegex)) {
         std::string header = match[1].str();
-        // Check if header symbols are actually used
-        // Simplified: just check if header name appears elsewhere
-        if (content.find(header) == match.position()) {
+        
+        // Check if header symbols are actually used in the code
+        // Look for common patterns that indicate header usage
+        bool headerUsed = false;
+        
+        // Extract header name without extension for symbol matching
+        std::string headerBase = header;
+        size_t lastDot = headerBase.find_last_of('.');
+        if (lastDot != std::string::npos) {
+            headerBase = headerBase.substr(0, lastDot);
+        }
+        
+        // Replace common separators with regex pattern
+        std::string headerPattern = headerBase;
+        std::replace(headerPattern.begin(), headerPattern.end(), '/', '|');
+        std::replace(headerPattern.begin(), headerPattern.end(), '_', '|');
+        std::replace(headerPattern.begin(), headerPattern.end(), '-', '|');
+        
+        // Check for class/struct definitions from this header
+        std::regex classFromHeader(R"(\b(class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)");
+        std::sregex_iterator classIter(content.begin(), content.end(), classFromHeader);
+        std::sregex_iterator classEnd;
+        
+        while (classIter != classEnd) {
+            std::string className = (*classIter)[2].str();
+            // Check if class name appears in header name
+            if (headerBase.find(className) != std::string::npos ||
+                className.find(headerBase) != std::string::npos) {
+                headerUsed = true;
+                break;
+            }
+            ++classIter;
+        }
+        
+        // Check for function calls that might come from this header
+        if (!headerUsed) {
+            // Common STL headers have specific usage patterns
+            static const std::map<std::string, std::vector<std::string>> stlPatterns = {
+                {"vector", {R"(\bvector<)", R"(\.push_back)", R"(\.emplace_back)", R"(\.resize)"}},
+                {"string", {R"(\bstring\s)", R"(\.c_str\(\))", R"(\.substr)", R"(\.find)"}},
+                {"map", {R"(\bmap<)", R"(\.insert\()")}},
+                {"unordered_map", {R"(\bunordered_map<)", R"(\[.*\].*=)"}},
+                {"memory", {R"(\bunique_ptr<)", R"(\bshared_ptr<)", R"(\bmake_unique)", R"(\bmake_shared)"}},
+                {"iostream", {R"(\bcout\s*<<)", R"(\bcin\s*>>)", R"(\bend)"}},
+                {"algorithm", {R"(\bstd::sort)", R"(\bstd::find)", R"(\bstd::copy)"}},
+            };
+            
+            auto it = stlPatterns.find(headerBase);
+            if (it != stlPatterns.end()) {
+                for (const auto& pattern : it->second) {
+                    std::regex usageRegex(pattern);
+                    if (std::regex_search(content, usageRegex)) {
+                        headerUsed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Check for direct usage of header-defined macros or types
+        if (!headerUsed) {
+            // Look for macros commonly defined in headers
+            std::regex macroRegex(R"(#define\s+([A-Z_][A-Z0-9_]*))");
+            std::sregex_iterator macroIter(content.begin(), content.end(), macroRegex);
+            std::sregex_iterator macroEnd;
+            
+            while (macroIter != macroEnd) {
+                std::string macroName = (*macroIter)[1].str();
+                // Check if macro is used elsewhere (not just defined)
+                size_t usagePos = content.find(macroName, (*macroIter).position() + (*macroIter).length());
+                if (usagePos != std::string::npos) {
+                    headerUsed = true;
+                    break;
+                }
+                ++macroIter;
+            }
+        }
+        
+        // If header doesn't appear to be used, suggest removal
+        if (!headerUsed) {
             auto action = createAction(
                 "Potentially unused include: " + header,
                 "suggestRemoveInclude",
@@ -356,6 +451,11 @@ void AgenticRouterBridge::detectIssues(const std::string& filePath, const std::s
 bool AgenticRouterBridge::shouldExecute(const AgenticAction& action) const {
     AgenticMode mode = m_mode.load();
     
+    // Check if auto-execution is globally disabled via policy
+    if (!m_autoExecuteEnabled.load()) {
+        return false;
+    }
+    
     switch (mode) {
         case AgenticMode::Passive:
             return false; // Never auto-execute
@@ -437,6 +537,100 @@ void AgenticRouterBridge::log(const std::string& msg) {
         m_logCb(msg);
     }
     OutputDebugStringA(("[AgenticRouterBridge] " + msg + "\n").c_str());
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+std::string AgenticRouterBridge::GetCurrentFileFromIDE() {
+    // Try to get the currently active file from the IDE
+    // This would integrate with the IDE's document manager
+    
+    // Method 1: Check if there's an IDE window with focus
+    HWND hwndForeground = GetForegroundWindow();
+    if (hwndForeground) {
+        char windowText[256];
+        GetWindowTextA(hwndForeground, windowText, sizeof(windowText));
+        
+        // Check if it's an IDE window (contains file path in title)
+        std::string title(windowText);
+        size_t dashPos = title.find(" - ");
+        if (dashPos != std::string::npos) {
+            std::string potentialPath = title.substr(0, dashPos);
+            // Verify it's a valid file path
+            if (std::filesystem::exists(potentialPath) && 
+                std::filesystem::is_regular_file(potentialPath)) {
+                return potentialPath;
+            }
+        }
+    }
+    
+    // Method 2: Check clipboard for file path
+    if (OpenClipboard(nullptr)) {
+        HANDLE hData = GetClipboardData(CF_TEXT);
+        if (hData) {
+            char* pszText = static_cast<char*>(GlobalLock(hData));
+            if (pszText) {
+                std::string clipboardText(pszText);
+                GlobalUnlock(hData);
+                
+                // Check if clipboard contains a valid file path
+                if (std::filesystem::exists(clipboardText) && 
+                    std::filesystem::is_regular_file(clipboardText)) {
+                    CloseClipboard();
+                    return clipboardText;
+                }
+            }
+        }
+        CloseClipboard();
+    }
+    
+    // Method 3: Check environment variable set by IDE
+    const char* currentFile = std::getenv("RAWRXD_CURRENT_FILE");
+    if (currentFile && std::filesystem::exists(currentFile)) {
+        return currentFile;
+    }
+    
+    return "";
+}
+
+std::vector<std::string> AgenticRouterBridge::GetRecentlyModifiedFiles(
+    const std::string& rootDir, size_t maxFiles) {
+    
+    std::vector<std::pair<std::string, std::filesystem::file_time_type>> files;
+    
+    try {
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(rootDir)) {
+            if (entry.is_regular_file()) {
+                std::string ext = entry.path().extension().string();
+                // Focus on source code files
+                if (ext == ".cpp" || ext == ".h" || ext == ".hpp" || 
+                    ext == ".c" || ext == ".cc") {
+                    files.emplace_back(entry.path().string(), 
+                                     entry.last_write_time());
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        OutputDebugStringA(("[AgenticRouterBridge] Error scanning files: " + 
+                          std::string(e.what()) + "\n").c_str());
+    }
+    
+    // Sort by modification time (most recent first)
+    std::sort(files.begin(), files.end(),
+        [](const auto& a, const auto& b) {
+            return a.second > b.second;
+        });
+    
+    // Return just the paths
+    std::vector<std::string> result;
+    size_t count = std::min(maxFiles, files.size());
+    for (size_t i = 0; i < count; ++i) {
+        result.push_back(files[i].first);
+    }
+    
+    return result;
 }
 
 } // namespace Agentic

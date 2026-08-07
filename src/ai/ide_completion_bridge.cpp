@@ -71,6 +71,7 @@ void IDECompletionBridge::RequestCompletion(
     generating_.store(true);
     cancelled_.store(false);
     current_completion_.clear();
+    current_confidence_ = 0.0f;
     
     // Start generation
     generation_thread_ = std::thread([this, context, request, prompt]() {

@@ -81,6 +81,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <shared_mutex>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <string>
@@ -119,6 +120,7 @@ void fileTrace(const char* msg);
 
 #include "Win32IDE_Commands.h"
 #include "Win32IDE_Types.h"
+#include "AnnotationOverlay.h"
 
 // Forward declarations for peek overlay (definition in Win32IDE_PeekOverlay.cpp)
 class PeekOverlayWindow;
@@ -274,6 +276,15 @@ class Win32IDE
         DebugConsole = 3
     };
 
+    // Startup phase tracking to prevent stack overflow from heavy init during WM_CREATE
+    enum class StartupPhase
+    {
+        PreCreate,           // Before any window creation
+        CreatingMainWindow,  // Inside WM_CREATE handler
+        ChildrenDeferred,    // After WM_CREATE, deferred init allowed
+        Running              // Fully initialized
+    };
+
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
@@ -314,6 +325,7 @@ class Win32IDE
     void onAgentViewTools();
     void onAgentViewStatus();
     void onAgentStop();
+    void onAgentAuditDrive();
 
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager;  // high-level autonomous orchestrator
@@ -549,6 +561,7 @@ class Win32IDE
     std::string getFileDialogPath(bool isSave = false);
 
     // GGUF Model operations
+    void openModelDialog();
     bool loadGGUFModel(const std::string& filepath);
     std::string getModelInfo() const;
     bool loadTensorData(const std::string& tensorName, std::vector<uint8_t>& data);
@@ -1169,6 +1182,10 @@ class Win32IDE
     void saveSessionEditorState(nlohmann::json& session);
     void restoreSessionEditorState(const nlohmann::json& session);
     std::string getSessionFilePath() const;
+    
+    // Window State Persistence (SettingsManager)
+    void SaveWindowState();
+    void LoadWindowState();
     /** Writes `performance.vulkanRenderer` to rawrxd.config.json (cwd, else exe dir). */
     void persistPerformanceVulkanRendererToConfig();
 
@@ -1289,6 +1306,7 @@ class Win32IDE
     void filterCommandPalette(const std::string& query);
     void executeCommandFromPalette(int index);
     void buildCommandRegistry();
+    void triggerCodeCompletion();
     static LRESULT CALLBACK CommandPaletteProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK CommandPaletteInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     // Command palette UI handles and data
@@ -1546,6 +1564,8 @@ class Win32IDE
 
     // GGUF Model loader (initialized in constructor) - supports both streaming and standard implementations
     std::unique_ptr<RawrXD::IGGUFLoader> m_ggufLoader;
+    // Thread-safe model path - protects against race between download completion and UI reads
+    mutable std::shared_mutex m_loadedModelPathMutex;
     std::string m_loadedModelPath;
     RawrXD::GGUFMetadata m_currentModelMetadata;
     std::vector<RawrXD::TensorInfo> m_modelTensors;
@@ -1680,6 +1700,22 @@ class Win32IDE
 
     HINSTANCE m_hInstance;
     HWND m_hwndMain;
+
+    // Startup phase tracking to prevent stack overflow from heavy init during WM_CREATE
+    StartupPhase m_startupPhase = StartupPhase::PreCreate;
+    bool allowHeavyInitialization() const { return m_startupPhase >= StartupPhase::ChildrenDeferred; }
+
+    // Accelerator table for keyboard shortcuts
+    HACCEL m_hAccel = nullptr;
+    void createAcceleratorTable();
+
+    // Window state for settings persistence
+    int m_windowX = CW_USEDEFAULT;
+    int m_windowY = CW_USEDEFAULT;
+    int m_windowWidth = 1280;
+    int m_windowHeight = 720;
+    bool m_windowMaximized = false;
+
     // ── Parity-audit: Visibility Watchdog members ──────────────────────────
     HANDLE m_watchdogThread = nullptr;
     volatile LONG m_watchdogRunning = 0;  // 1 = active, 0 = stop requested
@@ -1830,6 +1866,9 @@ class Win32IDE
     HFONT m_annotationFont;        // Smaller italic font for annotations
     std::map<std::string, std::vector<InlineAnnotation>>
         m_annotationCache;  // Per-file annotation stash for tab switching
+
+    // LSP Diagnostic Overlay (squiggles + hover tooltips)
+    std::unique_ptr<RawrXD::UI::AnnotationOverlay> m_lspDiagnosticOverlay;
 
     // Clipboard history
     std::vector<std::string> m_clipboardHistory;
@@ -2261,6 +2300,34 @@ class Win32IDE
     static LRESULT CALLBACK PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     // ========================================================================
+    // GGUF INSPECTOR PANEL - Deep Model Architecture Analysis
+    // ========================================================================
+    HWND m_hwndGGUFInspectorPanel = nullptr;
+    HWND m_hwndGGUFInspectorTree = nullptr;
+    HWND m_hwndGGUFInspectorDetails = nullptr;
+    HWND m_hwndGGUFInspectorStatus = nullptr;
+    HWND m_hwndGGUFInspectorLoadBtn = nullptr;
+    HWND m_hwndGGUFInspectorExportBtn = nullptr;
+    HWND m_hwndGGUFInspectorAnalyzeBtn = nullptr;
+    HWND m_hwndGGUFInspectorPath = nullptr;
+    std::string m_ggufInspectorCurrentFile;
+    
+    void RegisterGGUFInspectorClass();
+    void ShowGGUFInspectorPanel();
+    void CreateGGUFInspectorPanel();
+    void CreateGGUFInspectorToolbar();
+    void CreateGGUFInspectorTreeView();
+    void CreateGGUFInspectorDetailsView();
+    void HandleGGUFInspectorCommand(int commandId);
+    void OnGGUFInspectorLoad();
+    void OnGGUFInspectorExport();
+    void OnGGUFInspectorAnalyze();
+    void LoadGGUFInspectorFile(const std::string& path);
+    void PopulateGGUFInspectorTree(const std::string& jsonPath);
+    
+    friend LRESULT CALLBACK GGUFInspectorPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    
+    // ========================================================================
     // DEBUGGER IMPLEMENTATION
     // ========================================================================
     // Debugger UI Creation & Management
@@ -2450,6 +2517,12 @@ class Win32IDE
 
     // Resolved Ollama model (used by GhostText, AI caller)
     std::string getResolvedOllamaModel() const;
+    
+    // Thread-safe model path accessors
+    void setLoadedModelPath(const std::string& path);
+    void setLoadedModelPath(std::string&& path);
+    std::string getLoadedModelPath() const;
+    void clearLoadedModelPath();
 
     // Agentic mode (Plan/Agent/Ask) — agentic_mode_switcher.hpp
     void setAgenticMode(RawrXD::AgenticMode mode);

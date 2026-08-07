@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <cstring>
+#include "gguf_loader.h"
 
 // ---------------------------------------------------------------------------
 // Forward-pass helpers — shared by Engine800B and SovereignSmall
@@ -529,3 +530,4 @@ void register_sovereign_engines() {
     EngineRegistry::register_engine(&g_engine_800b);
     EngineRegistry::register_engine(&g_engine_small);
 }
+

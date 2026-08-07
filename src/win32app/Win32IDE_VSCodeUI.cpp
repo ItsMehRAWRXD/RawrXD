@@ -914,3 +914,4 @@ void Win32IDE::detectLanguageFromFile(const std::string& filePath)
         m_statusBarInfo.languageMode = "Plain Text";
     }
 }
+

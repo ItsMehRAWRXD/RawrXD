@@ -4,6 +4,7 @@
 #include "sovereign/SovereignRuntime.hpp"
 #include <iostream>
 #include <fstream>
+#include "vulkan_compute.h"
 
 namespace Sovereign {
 
@@ -194,3 +195,4 @@ void RunSmoketest() {
 }
 
 } // namespace Sovereign
+

@@ -121,6 +121,13 @@ struct ReplayRecord {
     
     // Compute deterministic hash
     std::string ComputeReplayHash() const;
+    
+    // Copy/move constructors (required due to unique_ptr member)
+    ReplayRecord() = default;
+    ReplayRecord(const ReplayRecord& other);
+    ReplayRecord(ReplayRecord&& other) noexcept;
+    ReplayRecord& operator=(const ReplayRecord& other);
+    ReplayRecord& operator=(ReplayRecord&& other) noexcept;
 };
 
 // ============================================================================

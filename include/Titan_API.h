@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <stdint.h>
@@ -216,3 +217,4 @@ TITAN_API int32_t Titan_Shutdown(void *handle);
 #ifdef __cplusplus
 }
 #endif
+

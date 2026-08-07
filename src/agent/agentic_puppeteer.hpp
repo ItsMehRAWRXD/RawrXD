@@ -5,8 +5,17 @@
 #include <vector>
 #include <mutex>
 #include <unordered_map>
-#include <nlohmann/json.hpp>
 #include <cstdint>
+
+// Include nlohmann json in a protected namespace to avoid conflicts
+#define nlohmann_json_protected nlohmann
+#include <nlohmann/json.hpp>
+#undef nlohmann_json_protected
+
+// Create our own alias that won't conflict
+namespace RawrXD_Agent_Json {
+    using json = ::nlohmann::json_abi_v3_11_2::json;
+}
 
 enum class FailureType {
     RefusalResponse, Hallucination, FormatViolation, InfiniteLoop,
@@ -32,7 +41,7 @@ public:
     virtual ~AgenticPuppeteer();
 
     CorrectionResult correctResponse(const std::string& originalResponse, const std::string& userPrompt = "");
-    CorrectionResult correctJsonResponse(const nlohmann::json& response, const std::string& context = "");
+    CorrectionResult correctJsonResponse(const RawrXD_Agent_Json::json& response, const std::string& context = "");
     FailureType detectFailure(const std::string& response);
     std::string diagnoseFailure(const std::string& response);
     void addRefusalPattern(const std::string& pattern);
@@ -98,8 +107,8 @@ public:
     CorrectionResult enforceJsonFormat(const std::string& response);
     CorrectionResult enforceMarkdownFormat(const std::string& response);
     CorrectionResult enforceCodeBlockFormat(const std::string& response);
-    void setRequiredJsonSchema(const nlohmann::json& schema);
-    nlohmann::json getRequiredJsonSchema() const;
+    void setRequiredJsonSchema(const RawrXD_Agent_Json::json& schema);
+    RawrXD_Agent_Json::json getRequiredJsonSchema() const;
 private:
-    nlohmann::json m_requiredSchema;
+    RawrXD_Agent_Json::json m_requiredSchema;
 };

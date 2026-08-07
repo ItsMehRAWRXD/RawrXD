@@ -1,0 +1,13 @@
+{
+  "release": "v15.0.0-RC0.1",
+  "generated": "2026-07-30T18:03:49.377030",
+  "artifacts": [
+    "HARDWARE_EVIDENCE.json",
+    "PERFORMANCE_CERTIFICATION.json",
+    "CEO_AGENT_RECOVERY.json",
+    "DEEP2_PROVIDER_WITNESS.json",
+    "VAL_CERTIFICATION.json",
+    "RELEASE_FREEZE_EVIDENCE.json"
+  ],
+  "status": "RELEASE_CANDIDATE"
+}

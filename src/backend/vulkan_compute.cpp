@@ -5,15 +5,11 @@
 #include <sstream>
 #include <stdexcept>
 
-// Shim for volk if not present, or assume linked
-// In a real scenario we'd include volk.h
+// Vulkan compute backend implementation
+// Uses standard Vulkan 1.3 API for cross-platform GPU compute
 #ifndef VK_API_VERSION_1_3
 #define VK_API_VERSION_1_3 VK_MAKE_VERSION(1, 3, 0)
 #endif
-
-// Mock volkInitialize if strictly needed, but let's assume it's available or user will link it.
-// For now, implementing standard Vulkan calls.
-// Note: User prompt used volkInitialize, requiring volk.
 
 namespace RawrXD
 {
@@ -223,11 +219,32 @@ std::expected<void, VulkanError> VulkanCompute::initialize()
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
     deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
-    const char* deviceExtensions[] = {VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME};
-    // deviceCreateInfo.enabledExtensionCount = 1;
-    // deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions;
-    // Simplified: disabled extensions to ensure basic compatibility if SDK missing them
-    deviceCreateInfo.enabledExtensionCount = 0;
+    // Enable compute shader extensions for optimal performance
+    const char* deviceExtensions[] = {
+        VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME
+    };
+    
+    // Check if extensions are available before enabling
+    uint32_t extensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &extensionCount, availableExtensions.data());
+    
+    bool hasShaderNonSemantic = false;
+    for (const auto& ext : availableExtensions) {
+        if (strcmp(ext.extensionName, VK_KHR_SHADER_NON_SEMANTIC_INFO_EXTENSION_NAME) == 0) {
+            hasShaderNonSemantic = true;
+            break;
+        }
+    }
+    
+    if (hasShaderNonSemantic) {
+        deviceCreateInfo.enabledExtensionCount = 1;
+        deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions;
+    } else {
+        // Fall back to no extensions if not available
+        deviceCreateInfo.enabledExtensionCount = 0;
+    }
 
     if (vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device) != VK_SUCCESS)
     {

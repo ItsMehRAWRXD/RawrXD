@@ -344,8 +344,30 @@ SovereignExecutionGraphBuilderEnhanced::DiscoverCyclesViaReflection() {
 
 std::vector<DiscoveredTask> 
 SovereignExecutionGraphBuilderEnhanced::DiscoverTasksViaReflection() {
-    // TODO: Implement actual reflection
-    return {};
+    std::vector<DiscoveredTask> tasks;
+    
+    // Discover tasks from registered task factories
+    for (const auto& [name, factory] : taskFactories_) {
+        DiscoveredTask task;
+        task.name = name;
+        task.factory = factory;
+        
+        // Extract task metadata from factory if available
+        auto metadata = factory->getMetadata();
+        task.inputs = metadata.inputs;
+        task.outputs = metadata.outputs;
+        task.executionMode = metadata.executionMode;
+        
+        tasks.push_back(task);
+    }
+    
+    // Sort by name for deterministic discovery
+    std::sort(tasks.begin(), tasks.end(),
+        [](const DiscoveredTask& a, const DiscoveredTask& b) {
+            return a.name < b.name;
+        });
+    
+    return tasks;
 }
 
 // ============================================================================

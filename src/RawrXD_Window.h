@@ -23,6 +23,17 @@ public:
     Window* parent = nullptr;
     std::vector<Window*> children;
     
+    // Callback setters for event handling
+    using MouseCallback = std::function<void(int, int, int)>;
+    using KeyCallback = std::function<void(int, int)>;
+    using CharCallback = std::function<void(wchar_t)>;
+    
+    void setMousePressCallback(MouseCallback cb) { m_mousePressCallback = cb; }
+    void setMouseReleaseCallback(MouseCallback cb) { m_mouseReleaseCallback = cb; }
+    void setMouseMoveCallback(std::function<void(int, int, int)> cb) { m_mouseMoveCallback = cb; }
+    void setKeyPressCallback(KeyCallback cb) { m_keyPressCallback = cb; }
+    void setCharCallback(CharCallback cb) { m_charCallback = cb; }
+    
     Window() = default;
     Window(Window* p) : parent(p) {}
     virtual ~Window();
@@ -47,6 +58,22 @@ public:
     // Child management
     void addChild(Window* child);
     void removeChild(Window* child);
+    
+private:
+    // Input state tracking
+    bool m_mouseButtons[3] = {false, false, false};
+    bool m_keyStates[256] = {false};
+    int m_lastMouseX = 0;
+    int m_lastMouseY = 0;
+    int m_mouseModifiers = 0;
+    int m_keyModifiers = 0;
+    
+    // Callbacks
+    MouseCallback m_mousePressCallback;
+    MouseCallback m_mouseReleaseCallback;
+    std::function<void(int, int, int)> m_mouseMoveCallback;
+    KeyCallback m_keyPressCallback;
+    CharCallback m_charCallback;
 };
 
 } // namespace RawrXD

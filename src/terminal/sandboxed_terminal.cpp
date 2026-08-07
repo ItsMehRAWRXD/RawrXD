@@ -688,3 +688,6 @@ std::string SandboxedTerminal::filterSensitiveData(const std::string& data) cons
 
     return filtered;
 }
+
+
+

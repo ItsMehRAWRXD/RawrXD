@@ -191,6 +191,10 @@ CDB_State CDB_GetState(void);
 /* Get last error message */
 const char* CDB_GetLastError(void);
 
+/* Get current process ID being debugged
+ * Returns: Process ID (0 if not attached) */
+uint32_t CDB_GetProcessId(void);
+
 /*===========================================================================
  * EXECUTION CONTROL
  *===========================================================================*/

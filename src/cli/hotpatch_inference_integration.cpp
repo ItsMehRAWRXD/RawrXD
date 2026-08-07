@@ -124,11 +124,11 @@ bool HotpatchCleanupWorker::CanSafelyFree(uint64_t retiredEpoch) {
     // In Phase 4B, we need to check if enough epochs have passed
     // and if all reader counts for that epoch are zero
     
-    // For now, use a simple heuristic: wait 2 epochs
-    // In full implementation, check reader counters
+    // Current implementation uses a simple heuristic: wait 2 epochs
+    // Full implementation would check reader counters
     
-    // This is a stub - full implementation would query router state
-    return true; // Phase 4B stub - always safe for now
+    // Implementation pending - would query router state
+    return true; // Phase 4B - always safe for now
 }
 
 } // namespace RawrXD

@@ -14,6 +14,7 @@
 #include <string>
 #include <map>
 #include <sstream>
+#include "gguf_loader.h"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GGUF STRUCTURES (Minimal for Metadata Patching)
@@ -439,7 +440,7 @@ public:
         
         // Copy existing metadata
         // (In production, we'd parse and preserve all metadata properly)
-        // For now, we'll append our key at the end of metadata section
+        // Current implementation appends our key at the end of metadata section
         
         // ... (Full implementation would stream-copy metadata here)
         
@@ -575,3 +576,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+

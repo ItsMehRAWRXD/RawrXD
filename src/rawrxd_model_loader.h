@@ -5,32 +5,62 @@
 #include <unordered_map>
 #include <vector>
 
-
 #include <array>
 #include <functional>
 #include <mutex>
-#ifdef RAWR_ENABLE_VULKAN
-#include <vulkan/vulkan.h>
+
+// Define RAWR_VULKAN_AVAILABLE before including gguf_loader.h so that
+// vulkan_compute.h uses the correct type definitions (real Vulkan or stubs).
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #pragma message("Vulkan SDK headers not found — using CPU fallback for dual GPU testing")
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
 #else
-// Standard Win32/CPU build - Vulkan handles not needed
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
 #ifndef VK_NULL_HANDLE
 #define VK_NULL_HANDLE 0
 #endif
+
+#include "gguf_loader.h"
+
+#include <windows.h>
+
+// Vulkan handle types — defined at global scope for the Tensor struct below.
+// When real Vulkan headers are available, they provide proper definitions.
+// When not, these stubs allow compilation.
+#ifndef VK_DEFINE_HANDLE
+typedef void* VkInstance;
+typedef void* VkPhysicalDevice;
+typedef void* VkDevice;
+typedef void* VkQueue;
 typedef void* VkBuffer;
 typedef void* VkDeviceMemory;
-typedef void* VkDevice;
-typedef void* VkPhysicalDevice;
-typedef struct
-{
-    uint32_t memoryTypeCount;
-} VkPhysicalDeviceMemoryProperties;
-typedef void* VkQueue;
 typedef void* VkCommandPool;
 typedef void* VkCommandBuffer;
 typedef void* VkFence;
+typedef void* VkShaderModule;
+typedef void* VkPipeline;
+typedef void* VkPipelineLayout;
+typedef void* VkDescriptorSetLayout;
+typedef void* VkDescriptorPool;
+typedef void* VkDescriptorSet;
 typedef uint32_t VkMemoryPropertyFlags;
+typedef uint32_t VkFlags;
+struct VkPhysicalDeviceProperties { uint32_t vendorID; uint32_t deviceID; char deviceName[256]; };
+struct VkMemoryType { uint32_t propertyFlags; uint32_t heapIndex; };
+struct VkMemoryHeap { uint64_t size; uint64_t flags; };
+struct VkPhysicalDeviceMemoryProperties {
+    uint32_t memoryTypeCount;
+    VkMemoryType memoryTypes[32];
+    uint32_t memoryHeapCount;
+    VkMemoryHeap memoryHeaps[16];
+};
 #endif
-#include <windows.h>
 
 struct Tensor
 {

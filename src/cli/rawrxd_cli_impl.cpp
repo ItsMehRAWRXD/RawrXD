@@ -5,7 +5,6 @@
 #include <vector>
 #include <utility>
 #include "../ui/webview2_bridge.hpp"
-#include "../agent/agent_self_healing_orchestrator.hpp"
 #include "../IDELogger.h"
 
 namespace rawrxd::ui {

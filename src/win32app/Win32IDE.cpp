@@ -1,4 +1,4 @@
-// Win32IDE.cpp - RawrXD Win32 IDE Implementation
+// Win32IDE.cpp - RawrXD Win32 IDE Implementation - g87
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
@@ -22,6 +22,27 @@
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
 #include "resource.h"
+#include "../ANSIParser.h"
+
+// AI Completion System Integration (VAL-063)
+// Forward declarations from ai_completion_real.cpp
+extern "C" {
+    void InitAICompletion();
+    void SetCompletionBackendNative(void* engine_ptr);
+    void ShutdownAICompletion();
+    // Ghost text integration API
+    const char* RequestGhostTextCompletion(
+        const char* context,
+        const char* language,
+        const char* suffix,
+        const char* file_path,
+        int cursor_line,
+        int cursor_col
+    );
+    void FreeCompletionString(const char* str);
+    bool IsCompletionEngineReady();
+    void GetCompletionEngineStatus(char* out_buffer, int buffer_size);
+}
 #include <commdlg.h>
 #include <nlohmann/json.hpp>
 #include <psapi.h>
@@ -692,6 +713,7 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDM_TOOLS_PROFILE_STOP 3011
 #define IDM_TOOLS_PROFILE_RESULTS 3012
 #define IDM_TOOLS_ANALYZE_SCRIPT 3013
+#define IDM_TOOLS_GGUF_INSPECTOR 3014
 
 #define IDM_GIT_STATUS 3020
 #define IDM_GIT_COMMIT 3021
@@ -949,6 +971,7 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_PROFILE_RESULTS, L"Profile &Results...");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_ANALYZE_SCRIPT, L"&Analyze Script");
+    AppendMenuW(hToolsMenu, MF_STRING, IDM_TOOLS_GGUF_INSPECTOR, L"GGUF Model &Inspector");
     AppendMenuW(hToolsMenu, MF_SEPARATOR, 0, nullptr);
 
     // Voice Chat submenu (Unicode — Qt removal / pure Win32)
@@ -1056,6 +1079,25 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_EXPORT_REPORT, L"&Export Report...");
     AppendMenuW(hAuditMenu, MF_STRING, IDM_AUDIT_QUICK_STATS, L"&Quick Stats");
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAuditMenu, L"&Audit");
+
+    // Debug menu (NEW - integrated with NativeDebuggerEngine)
+    HMENU hDebugMenu = CreatePopupMenu();
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_START, L"&Start Debugging\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STOP, L"S&top Debugging\tShift+F5");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_CONTINUE, L"&Continue\tF5");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_OVER, L"Step &Over\tF10");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_INTO, L"Step &Into\tF11");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_STEP_OUT, L"Step O&ut\tShift+F11");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_TOGGLE_BREAKPOINT, L"Toggle &Breakpoint\tF9");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_CALLSTACK, L"Show &Call Stack");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_VARIABLES, L"Show &Variables");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_SHOW_WATCH, L"Show &Watch");
+    AppendMenuW(hDebugMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_ATTACH, L"&Attach to Process...");
+    AppendMenuW(hDebugMenu, MF_STRING, IDM_DEBUG_DETACH, L"&Detach");
+    AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hDebugMenu, L"&Debug");
 
     // Git menu
     HMENU hGitMenu = CreatePopupMenu();
@@ -1673,6 +1715,14 @@ void Win32IDE::createEditor(HWND hwnd)
         WNDPROC oldEditorProc = (WNDPROC)SetWindowLongPtrW(m_hwndEditor, GWLP_WNDPROC, (LONG_PTR)EditorSubclassProc);
         SetPropW(m_hwndEditor, kEditorProcProp, (HANDLE)oldEditorProc);
     }
+
+    // Initialize LSP diagnostic overlay (squiggles + hover tooltips)
+    m_lspDiagnosticOverlay = std::make_unique<RawrXD::UI::AnnotationOverlay>(this);
+    if (m_lspDiagnosticOverlay->Initialize(m_hwndEditor)) {
+        LOG_INFO("LSP diagnostic overlay initialized");
+    } else {
+        LOG_ERROR("Failed to initialize LSP diagnostic overlay");
+    }
 }
 
 void Win32IDE::createTerminal(HWND hwnd)
@@ -1927,6 +1977,9 @@ void Win32IDE::createStatusBar(HWND hwnd)
 
         return;
     }
+
+    // Dark theme for status bar
+    SendMessage(m_hwndStatusBar, SB_SETBKCOLOR, 0, (LPARAM)RGB(30, 30, 30));
 
     // 0: primary status, 1: mode, 2: VMM ribbon, 3: spare, 4: context usage
     int parts[] = {200, 360, 540, 720, -1};
@@ -2786,6 +2839,16 @@ void Win32IDE::createOutputTabs()
                                      WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY, 0,
                                      tabBarHeight, client.right, m_outputTabHeight - tabBarHeight, m_hwndMain,
                                      (HMENU)(INT_PTR)defs[i].id, m_hInstance, nullptr);
+        // Dark theme for output RichEdit controls
+        if (hEdit)
+        {
+            SendMessage(hEdit, EM_SETBKGNDCOLOR, 0, RGB(30, 30, 30));
+            CHARFORMAT2W cf = {};
+            cf.cbSize = sizeof(cf);
+            cf.dwMask = CFM_COLOR;
+            cf.crTextColor = RGB(212, 212, 212);
+            SendMessageW(hEdit, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+        }
         m_outputWindows[defs[i].key] = hEdit;
     }
     m_activeOutputTab = "Output";
@@ -2849,19 +2912,25 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
         timestampedText = std::string(timestamp) + text;
     }
 
-    // Apply color formatting based on tab type
-    if (target == "Errors")
-    {
-        formatOutput(timestampedText, RGB(220, 50, 50), "Errors");  // Red
-    }
-    else if (target == "Debug")
-    {
-        formatOutput(timestampedText, RGB(200, 180, 50), "Debug");  // Yellow
-    }
-    else
-    {
-        HWND hwnd = m_outputWindows[target];
-        appendText(hwnd, timestampedText);
+    // Check for ANSI escape sequences
+    HWND hwnd = m_outputWindows[target];
+    if (RawrXD::ANSIParser().ContainsANSI(timestampedText)) {
+        // Use ANSI parser for colored output
+        RawrXD::AppendANSIToRichEdit(hwnd, timestampedText);
+    } else {
+        // Apply color formatting based on tab type (legacy path)
+        if (target == "Errors")
+        {
+            formatOutput(timestampedText, RGB(220, 50, 50), "Errors");  // Red
+        }
+        else if (target == "Debug")
+        {
+            formatOutput(timestampedText, RGB(200, 180, 50), "Debug");  // Yellow
+        }
+        else
+        {
+            appendText(hwnd, timestampedText);
+        }
     }
 }
 
@@ -2904,25 +2973,41 @@ void Win32IDE::formatOutput(const std::string& text, COLORREF color, const std::
 
 void Win32IDE::copyWithFormatting()
 {
-    // Simplified: copy selected plain text and store in history (vector<string>)
+    // Copy selected text with RTF formatting preservation
     CHARRANGE range;
     SendMessage(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&range);
     if (range.cpMax <= range.cpMin)
         return;
+    
     LONG len = range.cpMax - range.cpMin;
     std::vector<wchar_t> buffer(len + 1);
+    
+    // Get the selected text
     TEXTRANGEW tr{};
     tr.chrg = range;
     tr.lpstrText = buffer.data();
     SendMessageW(m_hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
     buffer[len] = L'\0';
+    
+    // Convert to UTF-8 for storage
     std::string text = wideToUtf8(buffer.data());
+    
+    // Add to clipboard history with deduplication
+    // Remove if already exists to move to front
+    auto it = std::find(m_clipboardHistory.begin(), m_clipboardHistory.end(), text);
+    if (it != m_clipboardHistory.end()) {
+        m_clipboardHistory.erase(it);
+    }
     m_clipboardHistory.insert(m_clipboardHistory.begin(), text);
     if (m_clipboardHistory.size() > MAX_CLIPBOARD_HISTORY)
         m_clipboardHistory.resize(MAX_CLIPBOARD_HISTORY);
+    
+    // Copy to system clipboard with both plain text and RTF formats
     if (OpenClipboard(m_hwndMain))
     {
         EmptyClipboard();
+        
+        // Plain text format
         HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, text.size() + 1);
         if (hMem)
         {
@@ -2931,6 +3016,49 @@ void Win32IDE::copyWithFormatting()
             GlobalUnlock(hMem);
             SetClipboardData(CF_TEXT, hMem);
         }
+        
+        // Unicode text format
+        std::wstring wtext = utf8ToWide(text);
+        HGLOBAL hMemW = GlobalAlloc(GMEM_MOVEABLE, (wtext.size() + 1) * sizeof(wchar_t));
+        if (hMemW)
+        {
+            wchar_t* destW = (wchar_t*)GlobalLock(hMemW);
+            memcpy(destW, wtext.c_str(), (wtext.size() + 1) * sizeof(wchar_t));
+            GlobalUnlock(hMemW);
+            SetClipboardData(CF_UNICODETEXT, hMemW);
+        }
+        
+        // RTF format - construct minimal RTF with formatting
+        std::string rtf = "{\\rtf1\\ansi\\ansicpg1252\\deff0\\nouicompat\\deflang1033"
+                         "{\\fonttbl{\\f0\\fnil\\fcharset0 Consolas;}}"
+                         "{\\colortbl ;\\red0\\green0\\blue0;}"
+                         "\\viewkind4\\uc1\\pard\\f0\\fs23 ";
+        
+        // Escape special RTF characters
+        for (char c : text) {
+            switch (c) {
+                case '\\': rtf += "\\\\"; break;
+                case '{': rtf += "\\{"; break;
+                case '}': rtf += "\\}"; break;
+                case '\n': rtf += "\\par\r\n"; break;
+                case '\r': break; // Skip standalone CR
+                default: rtf += c; break;
+            }
+        }
+        rtf += "}";
+        
+        // Register RTF format and set data
+        UINT rtfFormat = RegisterClipboardFormatA("Rich Text Format");
+        if (rtfFormat) {
+            HGLOBAL hMemRtf = GlobalAlloc(GMEM_MOVEABLE, rtf.size() + 1);
+            if (hMemRtf) {
+                char* destRtf = (char*)GlobalLock(hMemRtf);
+                memcpy(destRtf, rtf.c_str(), rtf.size() + 1);
+                GlobalUnlock(hMemRtf);
+                SetClipboardData(rtfFormat, hMemRtf);
+            }
+        }
+        
         CloseClipboard();
     }
 }
@@ -4879,7 +5007,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     }
 
     // Store model info
-    m_loadedModelPath = filepath;
+    setLoadedModelPath(filepath);
     m_currentModelMetadata = m_ggufLoader->GetMetadata();
     m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility
 
@@ -6055,7 +6183,7 @@ bool Win32IDE::ensureAgenticBridgeHasModel(const std::string& path)
         return false;
     if (m_agenticBridge->LoadModel(path))
     {
-        m_loadedModelPath = path;
+        setLoadedModelPath(path);
         return true;
     }
     return false;
@@ -6076,7 +6204,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
     {
         if (m_agenticBridge->LoadModel(filepath))
         {
-            m_loadedModelPath = filepath;
+            setLoadedModelPath(filepath);
             METRICS.gauge("model.loaded", 1.0);
             METRICS.increment("model.load_success");
             appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
@@ -6171,6 +6299,12 @@ bool Win32IDE::initializeInference()
                 m_nativeEngineLoaded = true;
                 appendToOutput("[AUDIT] ✅ Native Engine Model Loaded Successfully.", "Output", OutputSeverity::Info);
                 OutputDebugStringA("[AUDIT] m_nativeEngineLoaded = TRUE\n");
+                
+                // Wire completion system to native engine (VAL-063)
+                InitAICompletion();
+                SetCompletionBackendNative(static_cast<void*>(engine));
+                appendToOutput("[AUDIT] ✅ AI Completion system wired to native engine.", "Output", OutputSeverity::Info);
+                OutputDebugStringA("[AUDIT] AI Completion system initialized\n");
             }
             else
             {
@@ -6229,6 +6363,33 @@ void Win32IDE::shutdownInference()
     m_currentInferenceResponse.clear();
 
     appendToOutput("Inference shutdown complete", "Output", OutputSeverity::Info);
+}
+
+// ============================================================================
+// Thread-safe model path accessors
+// ============================================================================
+void Win32IDE::setLoadedModelPath(const std::string& path)
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath = path;
+}
+
+void Win32IDE::setLoadedModelPath(std::string&& path)
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath = std::move(path);
+}
+
+std::string Win32IDE::getLoadedModelPath() const
+{
+    std::shared_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    return m_loadedModelPath;
+}
+
+void Win32IDE::clearLoadedModelPath()
+{
+    std::unique_lock<std::shared_mutex> lock(m_loadedModelPathMutex);
+    m_loadedModelPath.clear();
 }
 
 std::string Win32IDE::generateResponse(const std::string& prompt)
@@ -7510,6 +7671,15 @@ void Win32IDE::createTabBar(HWND hwndParent)
 {
     OutputDebugStringA("[Win32IDE::createTabBar] START\n");
     fileTrace("[Win32IDE::createTabBar] START");
+
+    // GUARD: Prevent stack overflow by enforcing startup phase
+    if (!allowHeavyInitialization())
+    {
+        OutputDebugStringA("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase\n");
+        fileTrace("[Win32IDE::createTabBar] BLOCKED: heavy init not allowed in current phase");
+        return;
+    }
+
     if (!hwndParent)
     {
         OutputDebugStringA("[Win32IDE::createTabBar] hwndParent is null, returning\n");
@@ -7598,7 +7768,17 @@ void Win32IDE::onTabChanged()
             auto [line, col] = getCursorPosition();
             m_editorTabs[m_activeTabIndex].cursorLine = line;
             m_editorTabs[m_activeTabIndex].cursorCol = col;
-            // TODO: save scroll pos, multi-cursors, folds
+            // Save scroll position
+            m_editorTabs[m_activeTabIndex].scrollPos = (int)SendMessageW(m_hwndEditor, EM_GETSCROLLPOS, 0, 0);
+            // Save multi-cursor positions (primary cursor only for now)
+            CHARRANGE cr;
+            SendMessageW(m_hwndEditor, EM_EXGETSEL, 0, (LPARAM)&cr);
+            if (cr.cpMin == cr.cpMax) {
+                m_editorTabs[m_activeTabIndex].multiCursors.clear();
+                m_editorTabs[m_activeTabIndex].multiCursors.push_back({line, col});
+            }
+            // Save folded regions (placeholder - would need Scintilla or custom folding)
+            // m_editorTabs[m_activeTabIndex].foldedRegions preserved from last fold operation
         }
 
         // Stash annotations for the outgoing tab
@@ -7645,7 +7825,32 @@ void Win32IDE::onTabClosing(int index)
         // Check if tab is modified and prompt to save
         if (m_editorTabs[index].modified)
         {
-            // TODO: Show save dialog
+            // Show save dialog
+            std::wstring msg = L"Save changes to \"" + utf8ToWide(m_editorTabs[index].displayName) + L"\"?";
+            int result = MessageBoxW(m_hwndMain, msg.c_str(), L"RawrXD IDE", MB_YESNOCANCEL | MB_ICONQUESTION);
+            if (result == IDCANCEL)
+            {
+                return; // Cancel the close operation
+            }
+            if (result == IDYES)
+            {
+                // Save the file
+                if (m_activeTabIndex == index)
+                {
+                    saveCurrentFile();
+                }
+                else
+                {
+                    // Temporarily switch to save, then switch back
+                    int prevTab = m_activeTabIndex;
+                    setActiveTab(index);
+                    saveCurrentFile();
+                    if (prevTab >= 0 && prevTab < (int)m_editorTabs.size() && prevTab != index)
+                    {
+                        setActiveTab(prevTab);
+                    }
+                }
+            }
         }
         // Remove the tab
         removeTab(index);
@@ -8248,8 +8453,8 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
         {
             m_agenticBridge->SetModel(resolved.ollama_model_name);
             m_ollamaModelOverride = resolved.ollama_model_name;
-            if (m_loadedModelPath.empty())
-                m_loadedModelPath = resolved.ollama_model_name;
+            if (getLoadedModelPath().empty())
+                setLoadedModelPath(resolved.ollama_model_name);
             appendToOutput("Ollama model set in Agentic Bridge: " + resolved.ollama_model_name + "\n", "Output",
                            OutputSeverity::Info);
             METRICS.increment("model.resolve_success");
@@ -8570,7 +8775,7 @@ void Win32IDE::openModelFromHuggingFace()
                     {
                         // Load on main thread via PostMessage
                         // Store the path and signal the main thread
-                        m_loadedModelPath = localPath;
+                        setLoadedModelPath(localPath);
                         PostMessage(m_hwndMain, WM_APP + 201, 0, 0);  // Signal: load downloaded model
                     }
                     else
@@ -8936,7 +9141,7 @@ void Win32IDE::openModelFromURL()
 
                     if (!localPath.empty())
                     {
-                        m_loadedModelPath = localPath;
+                        setLoadedModelPath(localPath);
                         // Signal main thread to load the model
                         PostMessage(m_hwndMain, WM_APP + 201, 0, 0);
                     }
@@ -9118,13 +9323,18 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
         {
             case WM_VSCROLL:
             case WM_MOUSEWHEEL:
-                // After scroll, sync line numbers and minimap
+                // After scroll, sync line numbers, minimap, and diagnostic overlay
                 if (oldProc)
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->updateLineNumbers();
                     if (pThis->m_minimapVisible)
                         pThis->updateMinimap();
+                    // Sync LSP diagnostic overlay
+                    if (pThis->m_lspDiagnosticOverlay && pThis->m_lspDiagnosticOverlay->IsInitialized()) {
+                        int scrollPos = (int)SendMessage(hwnd, EM_GETFIRSTVISIBLELINE, 0, 0);
+                        pThis->m_lspDiagnosticOverlay->OnEditorScroll(scrollPos);
+                    }
                     return result;
                 }
                 break;
@@ -9134,6 +9344,12 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 if (pThis->handleGhostTextKey((UINT)wParam))
                 {
                     return 0;  // Ghost text consumed the key
+                }
+                // Ctrl+Space → code completion popup
+                if (wParam == VK_SPACE && (GetKeyState(VK_CONTROL) & 0x8000))
+                {
+                    pThis->triggerCodeCompletion();
+                    return 0;
                 }
                 // Ctrl+Shift+P → command palette
                 if (wParam == 'P' && (GetKeyState(VK_CONTROL) & 0x8000) && (GetKeyState(VK_SHIFT) & 0x8000))
@@ -9179,6 +9395,14 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
                 {
                     LRESULT result = CallWindowProcW(oldProc, hwnd, uMsg, wParam, lParam);
                     pThis->onEditorContentChanged();
+                    
+                    // Trigger completion on trigger characters: . -> ::
+                    wchar_t ch = (wchar_t)wParam;
+                    if (ch == L'.' || ch == L'>' || ch == L':')
+                    {
+                        // Small delay to let the character be inserted
+                        SetTimer(pThis->m_hwndMain, 9999, 50, nullptr);
+                    }
                     return result;
                 }
                 break;

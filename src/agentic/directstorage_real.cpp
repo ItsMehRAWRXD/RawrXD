@@ -158,16 +158,37 @@ extern "C" uint32_t DirectStorage_PollCompletions(
     while (!ctx->request_queue.empty() && completion_count < max_completions) {
         DSTORAGE_REQUEST& req = ctx->request_queue.front();
         
-        // Simulate completion status
-        out_results[completion_count] = S_OK;
+        // Execute the file read operation
+        HANDLE hFile = CreateFileA(req.Source.File.Source, GENERIC_READ, FILE_SHARE_READ, 
+                                   NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+        
+        if (hFile == INVALID_HANDLE_VALUE) {
+            out_results[completion_count] = HRESULT_FROM_WIN32(GetLastError());
+        } else {
+            // Read file data into destination buffer
+            DWORD bytesRead = 0;
+            LARGE_INTEGER fileOffset;
+            fileOffset.QuadPart = req.Source.File.Offset;
+            
+            SetFilePointerEx(hFile, fileOffset, NULL, FILE_BEGIN);
+            
+            BOOL success = ReadFile(hFile, req.Destination.Memory.Buffer, 
+                                   req.Destination.Memory.Size, &bytesRead, NULL);
+            
+            CloseHandle(hFile);
+            
+            if (success) {
+                out_results[completion_count] = S_OK;
+                ctx->total_bytes_transferred += bytesRead;
+            } else {
+                out_results[completion_count] = HRESULT_FROM_WIN32(GetLastError());
+            }
+        }
         
         ctx->request_queue.pop();
         ctx->completed_requests++;
         ctx->pending_requests--;
         completion_count++;
-        
-        // Track bytes transferred
-        ctx->total_bytes_transferred += req.Destination.Memory.Size;
     }
     
     return completion_count;
@@ -590,13 +611,21 @@ extern "C" uint32_t DirectStorage_SubmitBatch(
     for (uint32_t i = 0; i < request_count; i++) {
         AsyncIORequest& req = requests[i];
         
+        // Calculate compressed size based on compression type
+        uint32_t compressed_size = req.size;
+        if (req.compression_type == DSTORAGE_COMPRESSION_GDEFLATE) {
+            // GDEFLATE typically achieves 2-4x compression
+            // Use conservative estimate for compressed size
+            compressed_size = req.size / 2;
+        }
+        
         uint32_t result = DirectStorage_SubmitRequest(
             queue_handle,
             req.source_file,
             req.offset,
             req.destination_buffer,
             req.size,
-            req.size,  // For now, assume compressed_size = decompressed_size
+            compressed_size,
             req.completion_event);
         
         if (result) {

@@ -174,15 +174,22 @@ void ProductionPipeline::ApplyOptimizations(
     
     // 7. Start speculative decoding
     if (config_.speculative_config.enable_streaming) {
+        // Tokenize prompt context (prefix + mutable suffix)
+        std::string full_prompt = frozen_prefix + mutable_suffix;
+        std::vector<int32_t> prompt_tokens = tokenizer_ ? tokenizer_->Encode(full_prompt) : std::vector<int32_t>{};
+
+        // Bind cache handles into decoder state
+        speculative_decoder_->AttachKVCache(cache_entry ? cache_entry->gpu_handle : 0);
+
         speculative_decoder_->StartGeneration(
-            {},  // prompt_tokens (TODO: tokenize)
+            prompt_tokens,
             request.max_tokens,
             [this, callback](const std::string& token, bool is_draft) {
-                // Stream token
+                // Stream token to UI bridge
                 if (ide_bridge_) {
                     GhostText ghost = ide_bridge_->GetGhostText();
                     ghost.text += token;
-                    // Update ghost text
+                    ide_bridge_->SetGhostText(ghost);
                 }
             },
             [this, callback]() {
@@ -203,12 +210,13 @@ void ProductionPipeline::ApplyOptimizations(
     // 9. Record metrics for kernel switching
     TokenMetrics metrics;
     metrics.token_index = 0;
-    metrics.confidence = 0.9f;  // TODO: Get from model
+    // Extract confidence from actual inference result
+    metrics.confidence = result.confidence;
     metrics.kernel_used = kernel;
     kernel_switcher_->RecordMetrics(metrics);
     
     // 10. Check for early exit
-    std::vector<float> logits;  // TODO: Get from model
+    std::vector<float> logits = result.logits;
     std::vector<float> confidence_history;
     EarlyExitDecision early_exit = early_exit_manager_->ShouldEarlyExit(
         logits.data(), logits.size(), 0, confidence_history);
@@ -219,10 +227,10 @@ void ProductionPipeline::ApplyOptimizations(
         latency_profiler_->EndGeneration();
         generating_.store(false);
         
-        CompletionResult result;
-        result.text = "";  // TODO: Get from model
-        result.accepted = true;
-        callback(result);
+        CompletionResult completion;
+        completion.text = result.text;
+        completion.accepted = true;
+        callback(completion);
         return;
     }
     
@@ -230,8 +238,8 @@ void ProductionPipeline::ApplyOptimizations(
     latency_profiler_->EndToken(kernel);
     
     // 12. Store in KV cache
-    std::vector<uint32_t> token_ids;  // TODO: Get from model
-    std::vector<float> kv_cache_data;  // TODO: Get from model
+    std::vector<uint32_t> token_ids = result.token_ids;
+    std::vector<float> kv_cache_data = result.kv_cache;
     kv_cache_manager_->StoreCache(context_hash, token_ids, kv_cache_data);
 }
 

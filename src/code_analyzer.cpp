@@ -120,7 +120,7 @@ std::vector<std::string> CodeAnalyzer::ExtractDependencies(const std::string& co
 }
 
 std::string CodeAnalyzer::InferType(const std::string& expression, const std::string& context) {
-    // Simplified type inference
+    // Basic type inference from expression patterns
     if (expression.find("std::string") != std::string::npos) return "std::string";
     if (expression.find("int ") != std::string::npos || std::stoi(expression)) return "int";
     if (expression.find("float") != std::string::npos) return "float";
@@ -294,7 +294,7 @@ float CodeAnalyzer::CalculateDuplicationRatio(const std::string& code) {
 }
 
 float CodeAnalyzer::CalculateMaintainabilityIndex(const CodeMetrics& metrics) {
-    // Simplified Maintainability Index calculation
+    // Maintainability Index calculation (basic implementation)
     if (metrics.lines_of_code == 0) return 100.0f;
     
     float volume = std::log(metrics.lines_of_code) * 1.2f;

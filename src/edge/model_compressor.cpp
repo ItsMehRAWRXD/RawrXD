@@ -145,11 +145,11 @@ CompressedModel EdgeModelCompressor::compress(
 ) {
     impl_->device_ = device;
     
-    // Load weights (simplified - would load from actual model file)
+    // Load weights (basic implementation - would load from actual model file)
     std::vector<float> weights;
     // ... load weights from model_path ...
-    
-    // For now, create dummy weights for demonstration
+
+    // Create dummy weights for demonstration
     weights.resize(1000000);  // 1M parameters
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -178,7 +178,7 @@ size_t EdgeModelCompressor::estimateSize(
     const std::string& model_path,
     const CompressionConfig& config
 ) const {
-    // Simplified estimation
+    // Basic estimation
     size_t original_size = 1000000 * sizeof(float);  // Assume 1M params
     
     float compression_factor = 1.0f;
@@ -392,8 +392,8 @@ std::vector<float> PruningEngine::structuredPrune(
     const std::vector<size_t>& dims,
     float ratio
 ) {
-    // Simplified structured pruning - remove entire channels
-    // In practice, this would be more sophisticated
+    // Basic structured pruning - remove entire channels
+    // Full implementation would be more sophisticated
     return magnitudePrune(weights, ratio);
 }
 

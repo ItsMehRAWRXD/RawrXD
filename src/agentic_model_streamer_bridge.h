@@ -18,6 +18,7 @@
 #include <atomic>
 #include <queue>
 #include <mutex>
+#include <chrono>
 
 namespace RawrXD {
 namespace Agentic {
@@ -41,6 +42,33 @@ struct ModelLoadRequest {
     std::string taskId;
     std::string agentId;
     std::chrono::steady_clock::time_point requestTime;
+};
+
+// ============================================================================
+// Zone Management Structures
+// ============================================================================
+
+// Zone file magic number
+constexpr uint32_t ZONE_MAGIC = 0x5A4F4E45; // 'ZONE'
+
+// Zone file header
+struct ZoneHeader {
+    uint32_t magic;
+    uint32_t version;
+    uint32_t numTensors;
+    uint32_t reserved;
+    uint64_t dataOffset;
+};
+
+// Loaded zone in memory
+struct LoadedZone {
+    std::string name;
+    std::vector<uint8_t> data;
+    size_t dataSize = 0;
+    uint32_t version = 0;
+    uint32_t numTensors = 0;
+    std::chrono::steady_clock::time_point loadedAt;
+    std::chrono::steady_clock::time_point lastAccessed;
 };
 
 // ============================================================================
@@ -105,6 +133,9 @@ public:
     // Get current model info
     std::string GetCurrentModelPath() const;
     GGUFMetadata GetCurrentModelMetadata() const;
+    
+    // Get access to the streaming loader for tensor operations
+    StreamingGGUFLoader* GetStreamingLoader() const { return m_streamingLoader.get(); }
 
     // --------------------------------------------------------------------
     // Streaming Zone Management
@@ -263,6 +294,15 @@ private:
     std::vector<std::string> m_zoneCache;
     std::mutex m_cacheMutex;
     std::string m_cachePolicy = "lru";
+    
+    // Zone loading infrastructure
+    std::vector<LoadedZone> m_loadedZones;
+    std::string m_zonesBasePath;
+    size_t m_totalMemoryUsed = 0;
+    size_t m_maxMemoryAllowed = 8ULL * 1024 * 1024 * 1024; // 8GB default
+    
+    // Evict least recently used zones to free memory
+    void EvictLRUZones(size_t requiredBytes);
 };
 
 // ============================================================================
@@ -271,6 +311,23 @@ private:
 // Get the global bridge instance (singleton pattern)
 AgenticModelStreamerBridge* GetGlobalAgenticModelStreamer();
 void SetGlobalAgenticModelStreamer(AgenticModelStreamerBridge* bridge);
+
+// ============================================================================
+// Interrupt Flag - Global atomic for stopping generation
+// ============================================================================
+// Usage: Set g_interrupt_flag = true from UI thread to stop generation
+// Check: In token generation loops, check flag and break if set
+extern std::atomic<bool> g_interrupt_flag;
+
+// Convenience function to interrupt ongoing generation
+inline void InterruptGeneration() {
+    g_interrupt_flag.store(true, std::memory_order_release);
+}
+
+// Reset interrupt flag before starting new generation
+inline void ResetInterruptFlag() {
+    g_interrupt_flag.store(false, std::memory_order_release);
+}
 
 } // namespace Agentic
 } // namespace RawrXD

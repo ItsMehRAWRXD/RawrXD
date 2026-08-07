@@ -5,6 +5,7 @@
 #include "../win32app/Win32IDE.h"
 #include "Win32IDE_Resource.h"
 #include "Win32IDE_Helpers.h"
+#include "GhostTextIntegration.h"
 
 // External handler functions from Win32IDE_MenuHandlers.cpp
 extern void OnFileNewProject();
@@ -166,6 +167,11 @@ bool HandleMenuCommand(int commandId) {
 // =============================================================================
 
 LRESULT CALLBACK Win32IDECommandHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    // Handle ghost text WM_APP messages first
+    if (RawrXD::UI::GhostTextIntegration::HandleMessage(hWnd, message, wParam, lParam)) {
+        return 0; // Ghost text handled it
+    }
+    
     switch (message) {
     case WM_COMMAND:
         {

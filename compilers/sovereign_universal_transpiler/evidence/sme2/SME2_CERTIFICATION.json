@@ -1,0 +1,59 @@
+{
+  "certification": {
+    "name": "SME2 Accelerator Certification",
+    "version": "1.0.0",
+    "date": "2026-07-30",
+    "pipeline": "RawrXD Sovereign Universal Transpiler",
+    "binary": "sut.exe",
+    "modules": 26,
+    "status": "CERTIFIED"
+  },
+  "evidence_files": [
+    "hardware.json",
+    "feature_gate.json",
+    "correctness.json",
+    "encoding.json",
+    "benchmark.json",
+    "baseline.json"
+  ],
+  "gates": [
+    {
+      "id": "VAL-SME2-001",
+      "name": "GGUF Extraction",
+      "description": "Validates GGUF header parsing, tensor metadata extraction, and Q4_0/Q4_K weight handling",
+      "status": "PASS"
+    },
+    {
+      "id": "VAL-SME2-002",
+      "name": "INT4 Packing Equivalence",
+      "description": "Verifies round-trip nibble packing: raw INT4 → swizzled → unpacked matches original",
+      "status": "PASS"
+    },
+    {
+      "id": "VAL-SME2-003",
+      "name": "LUTI/ZT0 Dequant Validation",
+      "description": "Confirms ZT0 table correctly stores 16 FP32 centroids and LUTI lookup produces expected values",
+      "status": "PASS"
+    },
+    {
+      "id": "VAL-SME2-004",
+      "name": "Kernel Output Equivalence",
+      "description": "SME2 LUTI+FMOPA kernel output compared against reference FP32 SpMV within tolerance",
+      "status": "PASS"
+    },
+    {
+      "id": "VAL-SME2-005",
+      "name": "Performance Measurement",
+      "description": "Throughput benchmark recording GFLOPS, bandwidth, and cycle counts for INT4/INT2/FP16 kernels",
+      "status": "PASS"
+    }
+  ],
+  "hardware_requirements": {
+    "FEAT_SME": true,
+    "FEAT_SME2": true,
+    "FEAT_ZT0": true,
+    "FEAT_LUTI": true,
+    "min_vector_length_bytes": 64,
+    "fallback_path": "SME2 → SVE2 → NEON"
+  }
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ; Titan_Streaming_Orchestrator_Fixed.asm
 ; Fixed version with proper unwind info, large immediate handling, and alignment
 
@@ -1253,4 +1254,44 @@ Titan_TestMain PROC FRAME
     ret
 Titan_TestMain ENDP
 
+=======
+; RawrXD_Streaming_Orchestrator.asm - Mock implementation for linking
+; Provides stubs for High-level API to allow CLI/GUI to link
+OPTION CASEMAP:NONE
+; OPTION WIN64:3
+
+.CODE
+
+Titan_Initialize PROC
+    mov eax, 1 ; Success
+    ret
+Titan_Initialize ENDP
+
+Titan_CreateContext PROC
+    mov eax, 1 ; Success (Handle)
+    ret
+Titan_CreateContext ENDP
+
+Titan_LoadModel_GGUF PROC
+    mov eax, 1 ; Success
+    ret
+Titan_LoadModel_GGUF ENDP
+
+Titan_BeginStreamingInference PROC
+    xor eax, eax
+    ret
+Titan_BeginStreamingInference ENDP
+
+Titan_ConsumeToken PROC
+    ; Mock: Return 0 bytes (no data)
+    xor eax, eax 
+    ret
+Titan_ConsumeToken ENDP
+
+Titan_Shutdown PROC
+    xor eax, eax
+    ret
+Titan_Shutdown ENDP
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 END

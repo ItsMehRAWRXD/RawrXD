@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <string>
@@ -5,6 +6,7 @@
 #include <unordered_map>
 #include <memory>
 #include <set>
+#include <chrono>
 
 namespace RawrXD {
 namespace IDE {
@@ -127,3 +129,4 @@ private:
 
 } // namespace IDE
 } // namespace RawrXD
+

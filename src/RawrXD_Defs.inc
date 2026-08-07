@@ -131,6 +131,7 @@ EXTERNDEF QueueInferenceJob : PROC
 EXTERNDEF InferenceEngine_Submit : PROC
 EXTERNDEF AgentRouter_ExecuteTask : PROC
 EXTERNDEF StreamFormatter_WriteToken : PROC
+<<<<<<< HEAD
 
 ;==============================================================================
 ; GPU Backend EXTERNDEFs
@@ -157,3 +158,5 @@ EXTERNDEF ExtensionHostBridge_SendRequest : PROC
 EXTERNDEF ExtensionHost_Shutdown : PROC
 EXTERNDEF ExtensionHost_MessageLoop : PROC
 EXTERNDEF ExtensionHostBridge_ProcessMessages : PROC
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

@@ -4,11 +4,13 @@
 #include "Win32IDE.h"
 #include "IDELogger.h"
 #include "IDEConfig.h"
+#include "../gui/ModelConversionDialog.h"
 #include <fstream>
 #include <sstream>
 #include <commdlg.h>
 #include <commctrl.h>
 #include <algorithm>
+#include <filesystem>
 
 // File operations and model load from explorer — Phase 33 complete
 
@@ -28,18 +30,17 @@ void Win32IDE::openFileDialog() {
     ofn.hwndOwner = m_hwndMain;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
-                      "All Files (*.*)\0*.*\0"
-                      "PowerShell Scripts (*.ps1)\0*.ps1\0"
-                      "C++ Files (*.cpp;*.h)\0*.cpp;*.h\0"
-                      "GGUF Models (*.gguf)\0*.gguf\0";
+    ofn.lpstrFilter = "All Support Files\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json;*.gguf;*.bin;*.pth\0"
+                      "GGUF Models (*.gguf)\0*.gguf\0"
+                      "ML Models (*.bin;*.pth)\0*.bin;*.pth\0"
+                      "Text Files (*.txt;*.ps1;*.cpp;*.h;*.md;*.json)\0*.txt;*.ps1;*.cpp;*.h;*.md;*.json\0"
+                      "All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
-    
-    LOG_DEBUG("Opening file dialog");
+
     if (GetOpenFileNameA(&ofn)) {
         std::string filePath = szFile;
         LOG_INFO("File selected: " + filePath);
@@ -207,6 +208,81 @@ std::string Win32IDE::getFileDialogPath(bool isSave) {
     }
     
     return "";
+}
+
+// Explicit Model Loading Dialog
+void Win32IDE::openModelDialog() {
+    OPENFILENAMEA ofn = {};
+    char szFile[MAX_PATH] = {0};
+    
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = m_hwndMain;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrFilter = "GGUF Models (*.gguf)\0*.gguf\0"
+                      "ML Models (*.bin;*.pth)\0*.bin;*.pth\0"
+                      "All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1; // Default to GGUF
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = m_currentDirectory.empty() ? NULL : m_currentDirectory.c_str();
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER | OFN_ENABLESIZING;
+
+    if (GetOpenFileNameA(&ofn)) {
+        std::string filePath = szFile;
+        std::filesystem::path fsPath(filePath);
+        std::string ext = fsPath.extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        // Check for conversion need
+        if (ext == ".bin" || ext == ".pth") {
+             // Setup conversion config
+             ConversionConfig cfg = {};
+             cfg.unsupportedTypes[0] = L"PyTorch .pth";
+             cfg.unsupportedTypes[1] = L"GGML .bin";
+             cfg.unsupportedTypes[2] = nullptr;
+             cfg.unsupportedCount = 2;
+             wcscpy_s(cfg.recommendedType, L"GGUF");
+             
+             // Convert path to wide
+             std::wstring wpath = fsPath.wstring();
+             wcscpy_s(cfg.modelPath, wpath.c_str());
+             
+             ModelConversionDialog dialog(m_hwndMain, cfg);
+             ConversionResult result = dialog.showModal();
+             
+             if (result == ConversionResult::ConversionSucceeded) {
+                 // Convert back to narrow string
+                 const wchar_t* converted = dialog.convertedPath();
+                 int len = WideCharToMultiByte(CP_UTF8, 0, converted, -1, nullptr, 0, nullptr, nullptr);
+                 filePath.resize(len - 1);
+                 WideCharToMultiByte(CP_UTF8, 0, converted, -1, &filePath[0], len, nullptr, nullptr);
+                 ext = ".gguf";
+                 
+                 std::string msg = "Model Converted Successfully!\nNew Path: " + filePath;
+                 MessageBoxA(m_hwndMain, msg.c_str(), "Conversion Complete", MB_OK | MB_ICONINFORMATION);
+             } else {
+                 return;
+             }
+        }
+
+        if (ext == ".gguf") {
+             try {
+                if (loadGGUFModel(filePath)) {
+                    std::string message = "✅ Model loaded: " + filePath + "\n\n" + getModelInfo();
+                    appendToOutput(message, "Output", OutputSeverity::Info);
+                    MessageBoxA(m_hwndMain, "Model loaded successfully!", "Model Loaded", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    MessageBoxA(m_hwndMain, "Failed to load GGUF model.", "Model Load Failed", MB_OK | MB_ICONERROR);
+                }
+            } catch (const std::exception& e) {
+                std::string error = "Exception while loading GGUF: " + std::string(e.what());
+                appendToOutput(error, "Errors", OutputSeverity::Error);
+            }
+        } else {
+            MessageBoxA(m_hwndMain, "Selected file is not a supported model format.", "Invalid File", MB_OK | MB_ICONWARNING);
+        }
+    }
 }
 
 void Win32IDE::saveAll() {

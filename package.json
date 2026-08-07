@@ -1,6 +1,7 @@
 {
   "name": "rawrxd-backend",
   "version": "2.0.0",
+  "type": "commonjs",
   "description": "RawrXD Backend Server - Bridges HTTP API to Deep2/Sovereign runtime",
   "main": "server.js",
   "workspaces": [
@@ -39,3 +40,4 @@
     "node": ">=16.0.0"
   }
 }
+

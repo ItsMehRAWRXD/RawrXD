@@ -1,6 +1,7 @@
 // command_handlers_comprehensive.cpp - Comprehensive command handlers implementation
 // Covers all missing handlers for RawrEngine link closure
 
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -242,7 +243,7 @@ CommandResult handleBackendSwitchLocal(const CommandContext& ctx) {
 }
 
 CommandResult handleBackendSwitchOllama(const CommandContext& ctx) {
-    return {0, "Switched to Ollama backend", nullptr};
+    return {0, "Switched to native Deep2 backend", nullptr};
 }
 
 CommandResult handleBackendSwitchOpenAI(const CommandContext& ctx) {
@@ -1019,6 +1020,10 @@ CommandResult handleAIRefactor(const CommandContext& ctx) {
     return {0, "Refactoring complete", nullptr};
 }
 
+CommandResult handleAIStopGeneration(const CommandContext& ctx) {
+    return {0, "Generation stopped", nullptr};
+}
+
 // Autonomous Agent handler
 CommandResult HandleAutonomousAgent(const CommandContext& ctx) {
     return {0, "Autonomous agent activated", nullptr};
@@ -1191,27 +1196,240 @@ CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
 }
 
 // Direct read/search functions (C ABI)
+// Production implementations for low-level file and memory operations
+#include <windows.h>
+#include <cstdio>
+#include <string>
+
 extern "C" {
+    // Direct file read at specified offset
+    // Returns 0 on success, non-zero error code on failure
     int direct_read(const char* path, unsigned long long offset, unsigned long long size, void* buffer, unsigned long long* bytesRead) {
-        (void)path; (void)offset; (void)size; (void)buffer;
-        if (bytesRead) *bytesRead = 0;
-        return -1; // Not implemented
+        if (!path || !buffer || size == 0) {
+            if (bytesRead) *bytesRead = 0;
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        // Convert UTF-8 path to wide string
+        int wideLen = MultiByteToWideChar(CP_UTF8, 0, path, -1, nullptr, 0);
+        if (wideLen <= 0) {
+            if (bytesRead) *bytesRead = 0;
+            return ERROR_INVALID_NAME;
+        }
+        
+        std::wstring widePath(wideLen - 1, 0);
+        MultiByteToWideChar(CP_UTF8, 0, path, -1, &widePath[0], wideLen);
+
+        // Open file with read access
+        HANDLE hFile = CreateFileW(widePath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, 
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) {
+            if (bytesRead) *bytesRead = 0;
+            return GetLastError();
+        }
+
+        // Set file pointer to offset
+        LARGE_INTEGER liOffset;
+        liOffset.QuadPart = static_cast<LONGLONG>(offset);
+        
+        if (!SetFilePointerEx(hFile, liOffset, nullptr, FILE_BEGIN)) {
+            DWORD error = GetLastError();
+            CloseHandle(hFile);
+            if (bytesRead) *bytesRead = 0;
+            return error;
+        }
+
+        // Read data
+        DWORD bytesToRead = static_cast<DWORD>(size > 0xFFFFFFFF ? 0xFFFFFFFF : size);
+        DWORD bytesActuallyRead = 0;
+        
+        if (!ReadFile(hFile, buffer, bytesToRead, &bytesActuallyRead, nullptr)) {
+            DWORD error = GetLastError();
+            CloseHandle(hFile);
+            if (bytesRead) *bytesRead = 0;
+            return error;
+        }
+
+        CloseHandle(hFile);
+        
+        if (bytesRead) *bytesRead = bytesActuallyRead;
+        return 0; // Success
     }
 
+    // Search for byte pattern in file
+    // Returns offset where pattern found, or -1 if not found/error
     int direct_search(const char* path, const unsigned char* pattern, unsigned long long patternLen) {
-        (void)path; (void)pattern; (void)patternLen;
-        return -1; // Not implemented
+        if (!path || !pattern || patternLen == 0 || patternLen > 0x7FFFFFFF) {
+            return -1;
+        }
+
+        // Convert UTF-8 path to wide string
+        int wideLen = MultiByteToWideChar(CP_UTF8, 0, path, -1, nullptr, 0);
+        if (wideLen <= 0) return -1;
+        
+        std::wstring widePath(wideLen - 1, 0);
+        MultiByteToWideChar(CP_UTF8, 0, path, -1, &widePath[0], wideLen);
+
+        // Open file with read access
+        HANDLE hFile = CreateFileW(widePath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) return -1;
+
+        // Get file size
+        LARGE_INTEGER fileSize;
+        if (!GetFileSizeEx(hFile, &fileSize)) {
+            CloseHandle(hFile);
+            return -1;
+        }
+
+        // Read file in chunks and search for pattern
+        const size_t CHUNK_SIZE = 64 * 1024; // 64KB chunks
+        std::vector<unsigned char> buffer(CHUNK_SIZE + patternLen); // Extra space for overlap
+        
+        LARGE_INTEGER currentPos;
+        currentPos.QuadPart = 0;
+        
+        size_t overlap = 0;
+        
+        while (currentPos.QuadPart < fileSize.QuadPart) {
+            if (!SetFilePointerEx(hFile, currentPos, nullptr, FILE_BEGIN)) {
+                CloseHandle(hFile);
+                return -1;
+            }
+            
+            DWORD bytesToRead = static_cast<DWORD>(std::min(static_cast<LONGLONG>(CHUNK_SIZE + overlap), 
+                                                       fileSize.QuadPart - currentPos.QuadPart));
+            DWORD bytesRead = 0;
+            
+            if (!ReadFile(hFile, buffer.data(), bytesToRead, &bytesRead, nullptr) || bytesRead == 0) {
+                break;
+            }
+            
+            // Search for pattern in buffer
+            for (size_t i = 0; i <= bytesRead - patternLen; ++i) {
+                if (memcmp(buffer.data() + i, pattern, static_cast<size_t>(patternLen)) == 0) {
+                    CloseHandle(hFile);
+                    return static_cast<int>(currentPos.QuadPart + i);
+                }
+            }
+            
+            // Move position forward, keeping overlap for patterns that span chunks
+            if (bytesRead > patternLen) {
+                overlap = static_cast<size_t>(patternLen) - 1;
+                currentPos.QuadPart += (bytesRead - overlap);
+            } else {
+                break;
+            }
+        }
+
+        CloseHandle(hFile);
+        return -1; // Pattern not found
     }
 
+    // Apply byte patch to target file or memory
+    // Returns 0 on success, non-zero error code on failure
     int patch_bytes(const char* target, const BytePatchEnhanced* patch) {
-        (void)target; (void)patch;
-        return -1; // Not implemented
+        if (!target || !patch || !patch->pattern || !patch->replacement) {
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        // Convert UTF-8 path to wide string
+        int wideLen = MultiByteToWideChar(CP_UTF8, 0, target, -1, nullptr, 0);
+        if (wideLen <= 0) return ERROR_INVALID_NAME;
+        
+        std::wstring widePath(wideLen - 1, 0);
+        MultiByteToWideChar(CP_UTF8, 0, target, -1, &widePath[0], wideLen);
+
+        // Open file for read/write
+        HANDLE hFile = CreateFileW(widePath.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr,
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (hFile == INVALID_HANDLE_VALUE) return GetLastError();
+
+        // Get file size
+        LARGE_INTEGER fileSize;
+        if (!GetFileSizeEx(hFile, &fileSize)) {
+            CloseHandle(hFile);
+            return GetLastError();
+        }
+
+        // Search for pattern
+        const size_t CHUNK_SIZE = 64 * 1024;
+        std::vector<unsigned char> buffer(CHUNK_SIZE + patch->patternLen);
+        
+        LARGE_INTEGER currentPos;
+        currentPos.QuadPart = 0;
+        size_t overlap = 0;
+        bool found = false;
+        LONGLONG foundOffset = -1;
+
+        while (currentPos.QuadPart < fileSize.QuadPart && !found) {
+            if (!SetFilePointerEx(hFile, currentPos, nullptr, FILE_BEGIN)) break;
+            
+            DWORD bytesToRead = static_cast<DWORD>(std::min(static_cast<LONGLONG>(CHUNK_SIZE + overlap),
+                                                       fileSize.QuadPart - currentPos.QuadPart));
+            DWORD bytesRead = 0;
+            
+            if (!ReadFile(hFile, buffer.data(), bytesToRead, &bytesRead, nullptr) || bytesRead == 0) break;
+            
+            // Search for pattern
+            for (size_t i = 0; i <= bytesRead - patch->patternLen && !found; ++i) {
+                if (memcmp(buffer.data() + i, patch->pattern, patch->patternLen) == 0) {
+                    foundOffset = currentPos.QuadPart + i;
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found && bytesRead > patch->patternLen) {
+                overlap = patch->patternLen - 1;
+                currentPos.QuadPart += (bytesRead - overlap);
+            } else {
+                break;
+            }
+        }
+
+        if (!found) {
+            CloseHandle(hFile);
+            return ERROR_NOT_FOUND;
+        }
+
+        // Apply patch at found offset (or specified offset if provided)
+        LONGLONG patchOffset = (patch->offset > 0) ? static_cast<LONGLONG>(patch->offset) : foundOffset;
+        
+        LARGE_INTEGER liPatchOffset;
+        liPatchOffset.QuadPart = patchOffset;
+        
+        if (!SetFilePointerEx(hFile, liPatchOffset, nullptr, FILE_BEGIN)) {
+            CloseHandle(hFile);
+            return GetLastError();
+        }
+
+        DWORD bytesWritten = 0;
+        if (!WriteFile(hFile, patch->replacement, static_cast<DWORD>(patch->replacementLen), &bytesWritten, nullptr)) {
+            CloseHandle(hFile);
+            return GetLastError();
+        }
+
+        CloseHandle(hFile);
+        return 0; // Success
     }
 
+    // Search for pattern and replace with new pattern
+    // Returns 0 on success, non-zero error code on failure
     int search_and_patch_bytes(const char* target, 
                                const std::vector<unsigned char>& searchPattern,
                                const std::vector<unsigned char>& replacePattern) {
-        (void)target; (void)searchPattern; (void)replacePattern;
-        return -1; // Not implemented
+        if (!target || searchPattern.empty() || replacePattern.empty()) {
+            return ERROR_INVALID_PARAMETER;
+        }
+
+        BytePatchEnhanced patch;
+        patch.pattern = searchPattern.data();
+        patch.patternLen = searchPattern.size();
+        patch.replacement = replacePattern.data();
+        patch.replacementLen = replacePattern.size();
+        patch.offset = 0; // Auto-detect
+
+        return patch_bytes(target, &patch);
     }
 }

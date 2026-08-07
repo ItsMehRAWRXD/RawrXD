@@ -248,6 +248,7 @@ private:
     
     // Context collection helpers
     AgentSourceContext CaptureSourceContext(uint64_t address, uint32_t line);
+    std::vector<std::string> ReadSurroundingLines(const std::string& filePath, int targetLine, int contextLines);
     std::vector<AgentMemorySnapshot> CaptureMemorySnapshots(uint64_t exceptionAddr, uint64_t stackPtr);
     std::string DisassembleInstruction(uint64_t address);
     std::vector<std::string> CaptureRecentLogs(size_t count);

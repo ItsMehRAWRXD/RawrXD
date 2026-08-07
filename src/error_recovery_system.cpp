@@ -246,8 +246,8 @@ void ErrorRecoverySystem::setupDefaultStrategies() {
     killRestart.isAutomatic = false;
     killRestart.recoverySteps = { "Save state", "Kill hanging process", "Restart process", "Restore state" };
     strategies["kill_restart"] = killRestart;
-    
-    std::cout << "[ErrorRecoverySystem] Loaded " << strategies.size() << " recovery strategies" << std::endl;
+
+
 }
 
 std::string ErrorRecoverySystem::recordError(const std::string& component, ErrorSeverity severity,
@@ -978,8 +978,7 @@ void ErrorRecoverySystem::processAutoRecovery() {
 
 void ErrorRecoverySystem::enableAutoRecovery(bool enable) {
     autoRecoveryEnabled = enable;
-    std::cout << "[ErrorRecoverySystem] Auto-recovery " 
-              << (enable ? "enabled" : "disabled") << std::endl;
+    
 }
 
 void ErrorRecoverySystem::setMaxRetries(int retries) {
@@ -992,12 +991,12 @@ void ErrorRecoverySystem::setRetryDelay(int milliseconds) {
 
 void ErrorRecoverySystem::clearErrorHistory() {
     errorHistory.clear();
-    std::cout << "[ErrorRecoverySystem] Error history cleared" << std::endl;
+    
 }
 
 void ErrorRecoverySystem::clearRecoveredErrors() {
     recoveredErrors.clear();
-    std::cout << "[ErrorRecoverySystem] Recovered errors cleared" << std::endl;
+    
 }
 
 std::string ErrorRecoverySystem::generateErrorId() {
@@ -1061,3 +1060,5 @@ nlohmann::json ErrorRecoverySystem::getErrorStatistics() const {
     
     return stats;
 }
+
+

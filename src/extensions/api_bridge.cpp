@@ -47,7 +47,7 @@ int64_t APIBridge::sendRequest(int64_t targetId, const std::string& method,
     m_pendingRequests[requestId] = request;
     
     // In production, this would send over IPC
-    // For now, we queue it for processing
+    // Current implementation queues it for processing
     m_messageQueue.push({MessageType::Request, targetId, serializeRequest(request)});
     
     return requestId;

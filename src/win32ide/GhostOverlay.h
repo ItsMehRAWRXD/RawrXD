@@ -25,6 +25,9 @@ struct GhostSuggestion {
     std::wstring original;     // Original text (for replace)
     bool active = false;
     
+    // Stale suggestion protection
+    uint64_t generation_id = 0;  // Monotonically increasing ID
+    
     // Multi-file support
     std::wstring filePath;     // Target file
     bool isMultiFile = false;  // True if patch spans multiple files
@@ -56,8 +59,10 @@ private:
     static LRESULT CALLBACK SubclassProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     
     void DrawGhost(HDC hdc);
+    void DrawMultiLineGhost(HDC hdc, int x, int y, int lineHeight, const std::wstring& text);
     void ApplySuggestion();
     void RejectSuggestion();
+    void ExpireSuggestion();  // Dismissed due to typing/navigation (not user rejection)
     POINT GetCaretPixelPos();
     int GetLineHeight(HDC hdc);
 
@@ -65,6 +70,21 @@ private:
     WNDPROC m_origProc = nullptr;
     GhostSuggestion m_suggestion;
     bool m_attached = false;
+    
+    // Animation state for fade-in
+    struct AnimationState {
+        uint64_t startTime = 0;
+        uint32_t durationMs = 150;  // Fade-in duration
+        uint8_t currentAlpha = 0;
+        bool isAnimating = false;
+    } m_animation;
+    
+    void StartAnimation();
+    uint8_t CalculateCurrentAlpha();
+    
+    // Timer ID for animation
+    static constexpr UINT_PTR kAnimationTimerId = 1001;
+    static constexpr UINT kAnimationIntervalMs = 16;  // ~60fps
 
     // Colors
     static constexpr COLORREF kColorInsert = RGB(120, 200, 120);

@@ -1,0 +1,53 @@
+{
+  "id": "VAL-051",
+  "name": "IDE Launch Witness",
+  "timestamp": "2026-07-24T12:50:00Z",
+  "status": "PASS",
+  "claim": "RawrXD-Win32IDE completes full launch lifecycle without crash",
+  "prerequisite": "VAL-050",
+  "observation_target": {
+    "binary": "RawrXD-Win32IDE.exe",
+    "expected_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "minimum_duration_seconds": 5,
+    "maximum_duration_seconds": 60
+  },
+  "invariants": {
+    "no_access_violation": true,
+    "no_stack_overflow": true,
+    "no_heap_corruption": true,
+    "main_window_created": true,
+    "message_loop_running": true
+  },
+  "execution_results": {
+    "binary_sha256": "E6B0FF56BDB7704F925E66A9B249C7D67B9FACDD81CAC4C785052E718CA2F05A",
+    "pid": 19424,
+    "startup_ms": 6236.31,
+    "windows_created": [
+      {
+        "title": "RawrXD IDE - Native Win32 AI Development Environment",
+        "handle": "14813094",
+        "process_id": 19424
+      }
+    ],
+    "subsystems_initialized": [
+      "Win32Core",
+      "WindowManager",
+      "MessageLoop",
+      "TabManager (deferred)",
+      "OutputPanels (deferred)",
+      "ChatPanel (deferred)"
+    ],
+    "crash_detected": false,
+    "ready_state_reached": true,
+    "exit_code": null
+  },
+  "evidence_path": "startup_smoke/launch_witness.json",
+  "verification_method": "Process launch with window handle enumeration",
+  "success_criteria": [
+    "Process starts within 10 seconds",
+    "Main window handle obtained within 30 seconds",
+    "No exception codes in process exit",
+    "Process responsive to WM_NULL ping"
+  ],
+  "next_step": "VAL-052: Runtime Component Loading"
+}

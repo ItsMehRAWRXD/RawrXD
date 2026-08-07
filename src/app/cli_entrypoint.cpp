@@ -296,7 +296,8 @@ static int runInferenceTest(int argc, char* argv[])
     cfg.host = "127.0.0.1";
     cfg.port = 11434;
     cfg.chat_model = "phi3:mini";
-    AgentOllamaClient client(cfg);
+    // Use native inference client instead of Ollama
+    AgentOllamaClient client(cfg);  // Class name kept for compatibility, uses native backend
     std::cout << "[InferenceTest] Using model: " << client.GetConfig().chat_model << "\n";
 
     if (!client.TestConnection()) {

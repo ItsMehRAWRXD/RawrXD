@@ -164,6 +164,9 @@ private:
     std::vector<UnifiedCompletion> get_semantic_completions(const CursorContext& cursor);
     std::vector<UnifiedCompletion> get_ast_completions(const CursorContext& cursor);
     
+    // IDE integration helpers
+    std::string requestFileContentFromIDE(const std::string& file_path);
+    
     // Phase 17C.4: Hybrid retrieval methods
     std::vector<UnifiedCompletion> fuse_results(
         const std::vector<UnifiedCompletion>& trie_results,

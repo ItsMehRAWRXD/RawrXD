@@ -15,6 +15,7 @@
 #include "../agentic_engine.h"
 #include "../../include/chain_of_thought_engine.h"
 #include "../core/instructions_provider.hpp"
+#include "../deep2/Deep2IDEIntegration.hpp"
 
 // Phase 10+ singletons — wired for real status queries
 #include "../core/execution_governor.h"
@@ -40,6 +41,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdlib>
+#include "gguf_loader.h"
 
 // Headless inference and model load — Phase 31 implementation complete
 
@@ -906,7 +908,32 @@ bool HeadlessIDE::loadModel(const std::string& filepath) {
     
     std::string localPath = resolved.success ? resolved.local_path : filepath;
     
-    // Phase 2: Validate file exists on disk
+    // Phase 2: Check for multi-shard model (Kimi K2 / Moonshot)
+    // If path is a directory with shard files, use Deep2ModelLoader
+    if (RawrXD::Deep2ModelLoader::IsShardedModel(localPath)) {
+        std::string deep2Error;
+        if (RawrXD::Deep2LoadModelForIDE(localPath, deep2Error)) {
+            auto result = RawrXD::Deep2ModelLoader::Load(localPath);
+            m_loadedModelPath = localPath;
+            m_loadedModelName = result.modelName;
+            m_modelLoaded = true;
+
+            std::ostringstream info;
+            info << "Model loaded (Deep2 sharded): " << m_loadedModelName << "\n"
+                 << "  Shards: " << result.shardCount << "\n"
+                 << "  Tensors: " << result.tensorCount << "\n"
+                 << "  MoE: " << (result.isMoE ? "yes" : "no") << "\n"
+                 << "  Total size: " << (result.totalFileBytes / (1024*1024*1024)) << " GB\n"
+                 << "  Streaming: enabled\n";
+            m_outputSink->appendOutput(info.str().c_str(), OutputSeverity::Info);
+            return true;
+        } else {
+            m_outputSink->appendOutput(("Deep2 shard load failed: " + deep2Error).c_str(), OutputSeverity::Error);
+            // Fall through to standard loader
+        }
+    }
+
+    // Phase 2b: Validate single file exists on disk
     DWORD attr = GetFileAttributesA(localPath.c_str());
     if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
         std::string err = "Model file not found: " + localPath;
@@ -2441,3 +2468,4 @@ void HeadlessIDE::shutdownAll() {
 
     m_outputSink->flush();
 }
+

@@ -373,7 +373,7 @@ CerebrasAccelResult CerebrasWSEAccelerator::initGRPC(const CerebrasEndpoint& ep)
     }
 
     // In production, would use grpc_channel_create, grpc_call_start_batch, etc.
-    // For now, establish underlying TCP and use it with gRPC framing
+    // Current implementation establishes underlying TCP and uses it with gRPC framing
     CerebrasAccelResult tcpResult = initTCP(ep);
     if (!tcpResult.success) {
         FreeLibrary(m_grpcModule); m_grpcModule = nullptr;

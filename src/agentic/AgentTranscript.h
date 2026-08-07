@@ -59,10 +59,10 @@ struct TranscriptStep {
         j["timestamp_ms"] = timestampMs;
         if (!reasoning.empty()) j["reasoning"] = reasoning;
         if (!toolCallName.empty()) {
-            j["tool_call"] = {
-                {"name", toolCallName},
-                {"args", toolCallArgs}
-            };
+            nlohmann::json toolCall;
+            toolCall["name"] = toolCallName;
+            toolCall["args"] = toolCallArgs;
+            j["tool_call"] = toolCall;
             j["tool_result"] = toolResult.toJson();
             j["tool_latency_ms"] = toolLatencyMs;
         } else {
@@ -185,11 +185,19 @@ public:
         j["errors"] = ErrorCount();
 
         nlohmann::json stepsArr = nlohmann::json::array();
-        for (const auto& s : m_steps) stepsArr.push_back(s.toJson());
-        j["steps"] = stepsArr;
+        for (const auto& s : m_steps) {
+            stepsArr.push_back(s.toJson());
+        }
+        j["steps"] = std::move(stepsArr);
 
-        j["files_read"] = m_filesRead;
-        j["files_written"] = m_filesWritten;
+        // Convert vectors to JSON arrays manually
+        nlohmann::json filesReadArr = nlohmann::json::array();
+        for (const auto& f : m_filesRead) filesReadArr.push_back(f);
+        j["files_read"] = std::move(filesReadArr);
+        
+        nlohmann::json filesWrittenArr = nlohmann::json::array();
+        for (const auto& f : m_filesWritten) filesWrittenArr.push_back(f);
+        j["files_written"] = std::move(filesWrittenArr);
         return j;
     }
 

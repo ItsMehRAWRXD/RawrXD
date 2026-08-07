@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <iomanip>
+#include "gguf_loader.h"
 
 struct TensorInfo {
     std::vector<uint64_t> dims;
@@ -238,3 +239,4 @@ int main(int argc, char* argv[]) {
     
     return 0;
 }
+

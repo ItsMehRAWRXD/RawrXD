@@ -503,3 +503,5 @@ void* TrainingDialog::getTrainingConfig() const
 
     return static_cast<void*>(config);
 }
+
+

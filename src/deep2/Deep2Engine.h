@@ -7,6 +7,7 @@
 #define DEEP2_ENGINE_H
 
 #include "ReverseIntegration.hpp"
+#include "mars/MARSController.hpp"
 #include "ThreadPool.h"
 #include "KVCache.h"
 #include "GGUFLoader.hpp"
@@ -106,7 +107,10 @@ struct EngineConfig {
     size_t hiddenDim = 4096;
     size_t numLayers = 32;
     size_t numHeads = 32;
+    size_t numKVHeads = 32;
+    size_t headDim = 128;
     size_t vocabSize = 32000;
+    size_t intermediateDim = 11008;
     
     // Inference settings
     size_t maxSeqLen = 2048;
@@ -126,9 +130,12 @@ struct EngineConfig {
 
     // RoPE
     bool useRoPE = true;
+    float ropeTheta = 10000.0f;
+    float ropeScaling = 1.0f;
+    float normEps = 1e-6f;
     
-    // Model path for GGUF loading
-    std::string modelPath;
+    // Model path for GGUF loading (fixed size for C API compatibility)
+    char modelPath[512] = {};
 };
 
 // ============================================================================
@@ -184,6 +191,10 @@ public:
     const EngineConfig& getConfig() const { return config; }
     const ModelWeights& getModelWeights() const { return modelWeights; }
     
+    // API Server helpers
+    size_t getWeightSize() const { return weightSize; }
+    std::string getModelPath() const { return config.modelPath; }
+    
     // Performance tuning
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);
@@ -210,6 +221,14 @@ public:
         float expectedSpeedup = 1.0f);
     bool rollbackKernelPatch(const std::string& patchId);
     void emergencyRollbackAllPatches();
+    
+    // Tool Call Limit Extension via Hotpatching
+    // Dynamically extends the maximum tool iterations limit at runtime
+    // Returns patch ID on success, empty string on failure
+    std::string extendToolCallLimit(int newMaxIterations);
+    
+    // Get current tool call limit (returns -1 if not patched)
+    int getExtendedToolCallLimit() const;
     
     // Get feature stats
     const MedusaStats& getMedusaStats() const;
@@ -245,6 +264,42 @@ public:
     
     // Set sampler
     void setSampler(std::unique_ptr<rawrxd::sampling::ISampler> sampler);
+
+    // Token embedding lookup (public for tree speculative decoding)
+    void embedToken(int tokenId, float* output);
+
+    // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
+    void computeLogits(const float* hiddenState, float* logits);
+
+    // ------------------------------------------------------------------------
+    // MARS: Dynamic Dual-GPU VRAM Hotpatch
+    // ------------------------------------------------------------------------
+    // Enable MARS with specified VRAM sizes (bytes)
+    bool enableMARS(size_t gpu0VRAMBytes, size_t gpu1VRAMBytes);
+    void disableMARS();
+    bool isMARSEnabled() const { return marsEnabled_; }
+
+    // Place a model tensor under MARS lease control
+    MARS::VRAMLease* placeTensorMARS(
+        uint64_t tensorId,
+        const std::string& name,
+        size_t bytes,
+        float priority = 1.0f);
+
+    // Hotpatch redirect a tensor to a different GPU
+    MARS::HotpatchResult redirectTensor(uint64_t tensorId, int targetGPU);
+
+    // Rebalance VRAM across GPUs
+    void rebalanceMARS();
+
+    // Get current dynamic parity state
+    MARS::DynamicParity getDynamicParity() const;
+
+    // Handle tensor fault (reverse recovery)
+    bool handleTensorFault(uint64_t tensorId);
+
+    // Handle GPU failure (migrate all tensors off)
+    bool handleGPUFailure(int gpu);
 
 private:
     EngineConfig config;
@@ -293,6 +348,10 @@ private:
     bool slidingWindowEnabled_ = false;
     bool reverseAnalysisEnabled_ = false;
     
+    // MARS: Dynamic dual-GPU VRAM orchestration
+    std::unique_ptr<MARS::MARSController> marsController_;
+    bool marsEnabled_ = false;
+    
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
     
@@ -340,15 +399,9 @@ private:
     // Shared expert FFN
     void computeSharedExpertFFN(size_t layer, const float* input, float* output);
     
-    // Token embedding lookup
-    void embedToken(int tokenId, float* output);
-    
-    // LM head projection: hiddenDim -> vocabSize
-    void computeLogits(const float* hiddenState, float* logits);
-    
     // Sampling
     int sampleToken(const float* logits);
-    
+
     // Find tensor in GGUF by name pattern
     WeightTensor* findTensor(const std::string& namePattern);
     

@@ -220,8 +220,91 @@ bool KernelRegistry::ExecuteWithBackend(uint32_t backendId,
         return false;
     }
     
-    // Similar dispatch as Execute...
-    return false; // Placeholder
+    // Dispatch to appropriate method based on kernel ID
+    auto start_time = std::chrono::high_resolution_clock::now();
+    bool result = false;
+    
+    switch (id) {
+        case KernelId::MatMul_Q4_Q8:
+        case KernelId::MatMul_F32:
+        case KernelId::MatMul_F16: {
+            MatMulParams mmParams;
+            mmParams.M = params.dims[0];
+            mmParams.N = params.dims[1];
+            mmParams.K = params.dims[2];
+            mmParams.alpha = params.alpha;
+            mmParams.beta = params.beta;
+            result = backend->MatMul(input, input, output, mmParams, stats);
+            break;
+        }
+        case KernelId::FlashAttentionV2:
+        case KernelId::FlashAttentionV1: {
+            AttentionParams attnParams;
+            attnParams.batchSize = params.dims[0];
+            attnParams.numHeads = params.dims[1];
+            attnParams.seqLen = params.dims[2];
+            attnParams.headDim = params.dims[3];
+            attnParams.scale = params.scale;
+            result = backend->FlashAttention(input, input, input, output, attnParams, stats);
+            break;
+        }
+        case KernelId::RMSNorm:
+        case KernelId::LayerNorm: {
+            NormParams normParams;
+            normParams.epsilon = params.epsilon;
+            normParams.axis = params.axis;
+            result = backend->RMSNorm(input, output, normParams, stats);
+            break;
+        }
+        case KernelId::SiLU:
+        case KernelId::ReLU:
+        case KernelId::GELU: {
+            ActivationParams actParams;
+            actParams.type = params.activationType;
+            result = backend->Activation(input, output, actParams, stats);
+            break;
+        }
+        case KernelId::Softmax: {
+            SoftmaxParams smParams;
+            smParams.axis = params.axis;
+            smParams.temperature = params.temperature;
+            result = backend->Softmax(input, output, smParams, stats);
+            break;
+        }
+        case KernelId::RoPE: {
+            RoPEParams ropeParams;
+            ropeParams.seqLen = params.dims[0];
+            ropeParams.headDim = params.dims[1];
+            ropeParams.base = params.ropeBase;
+            result = backend->RoPE(input, output, ropeParams, stats);
+            break;
+        }
+        default:
+            // Try generic dispatch
+            result = backend->ExecuteGeneric(id, input, output, params, stats);
+            break;
+    }
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    
+    if (stats) {
+        stats->executionTimeUs = duration.count();
+        stats->gflops = CalculateGFLOPs(id, input.sizeBytes, duration.count());
+    }
+    
+    // Record performance for backend selection
+    if (result) {
+        PerformanceEntry entry;
+        entry.kernel = id;
+        entry.backendId = backendId;
+        entry.inputSize = input.sizeBytes;
+        entry.executionTimeUs = duration.count();
+        entry.timestamp = std::chrono::system_clock::now();
+        RecordPerformance(entry);
+    }
+    
+    return result;
 }
 
 //======================================================================
@@ -295,9 +378,26 @@ std::vector<KernelRegistry::ComparisonResult> KernelRegistry::CompareBackends(
     
     std::vector<ComparisonResult> results;
     
-    // Get reference output first
+    // Get reference output first using first available backend
     TensorDesc referenceOutput = expectedOutput;
+    bool hasReference = false;
     
+    for (const auto& [bid, backend] : backends_) {
+        if (!backend->SupportsKernel(id)) continue;
+        
+        ExecutionStats stats;
+        if (ExecuteWithBackend(bid, id, input, referenceOutput, params, &stats)) {
+            hasReference = true;
+            break;
+        }
+    }
+    
+    if (!hasReference) {
+        // No backend can execute this kernel
+        return results;
+    }
+    
+    // Test each backend against reference
     for (const auto& [bid, backend] : backends_) {
         if (!backend->SupportsKernel(id)) continue;
         
@@ -309,15 +409,31 @@ std::vector<KernelRegistry::ComparisonResult> KernelRegistry::CompareBackends(
         TensorDesc actualOutput = expectedOutput;
         ExecutionStats stats;
         
-        // Dispatch based on kernel type...
-        result.success = false; // Placeholder
+        result.success = ExecuteWithBackend(bid, id, input, actualOutput, params, &stats);
         
         if (result.success) {
             result.executionTimeUs = stats.executionTimeUs;
             result.gflops = stats.gflops;
             
             // Calculate error vs reference
-            // ...
+            result.maxError = 0.0;
+            result.meanError = 0.0;
+            
+            if (actualOutput.data && referenceOutput.data && 
+                actualOutput.sizeBytes == referenceOutput.sizeBytes) {
+                
+                size_t numElements = actualOutput.sizeBytes / sizeof(float);
+                const float* actual = static_cast<const float*>(actualOutput.data);
+                const float* ref = static_cast<const float*>(referenceOutput.data);
+                
+                double totalError = 0.0;
+                for (size_t i = 0; i < numElements; i++) {
+                    double error = std::abs(actual[i] - ref[i]);
+                    result.maxError = std::max(result.maxError, error);
+                    totalError += error;
+                }
+                result.meanError = totalError / numElements;
+            }
         }
         
         results.push_back(result);
@@ -329,7 +445,76 @@ std::vector<KernelRegistry::ComparisonResult> KernelRegistry::CompareBackends(
 bool KernelRegistry::ValidateBackend(uint32_t backendId, KernelId id, 
                                     double maxErrorTolerance) {
     // Run comparison and check errors
-    return false; // Placeholder
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto backendIt = backends_.find(backendId);
+    if (backendIt == backends_.end() || !backendIt->second->SupportsKernel(id)) {
+        return false;
+    }
+    
+    // Find reference backend (prefer CPU/reference implementations)
+    uint32_t refBackendId = 0;
+    for (const auto& [bid, backend] : backends_) {
+        if (backend->GetInfo().type == BackendType::Reference) {
+            refBackendId = bid;
+            break;
+        }
+    }
+    
+    if (refBackendId == 0 || refBackendId == backendId) {
+        // No reference available or testing against self
+        return true;
+    }
+    
+    // Create test input
+    TensorDesc testInput;
+    testInput.sizeBytes = 1024 * sizeof(float);  // 1K elements
+    testInput.data = malloc(testInput.sizeBytes);
+    if (!testInput.data) return false;
+    
+    // Fill with test pattern
+    float* data = static_cast<float*>(testInput.data);
+    for (size_t i = 0; i < 1024; i++) {
+        data[i] = static_cast<float>(i) * 0.01f;
+    }
+    
+    TensorDesc refOutput;
+    refOutput.sizeBytes = testInput.sizeBytes;
+    refOutput.data = malloc(refOutput.sizeBytes);
+    
+    TensorDesc testOutput;
+    testOutput.sizeBytes = testInput.sizeBytes;
+    testOutput.data = malloc(testOutput.sizeBytes);
+    
+    bool valid = false;
+    if (refOutput.data && testOutput.data) {
+        KernelParams params;
+        memset(&params, 0, sizeof(params));
+        
+        // Get reference output
+        if (ExecuteWithBackend(refBackendId, id, testInput, refOutput, params, nullptr)) {
+            // Get test output
+            if (ExecuteWithBackend(backendId, id, testInput, testOutput, params, nullptr)) {
+                // Compare
+                float* ref = static_cast<float*>(refOutput.data);
+                float* test = static_cast<float*>(testOutput.data);
+                
+                valid = true;
+                for (size_t i = 0; i < 1024 && valid; i++) {
+                    double error = std::abs(test[i] - ref[i]);
+                    if (error > maxErrorTolerance) {
+                        valid = false;
+                    }
+                }
+            }
+        }
+    }
+    
+    free(testInput.data);
+    free(refOutput.data);
+    free(testOutput.data);
+    
+    return valid;
 }
 
 //======================================================================

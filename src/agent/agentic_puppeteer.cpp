@@ -223,11 +223,13 @@ FailureType AgenticPuppeteer::detectFailure(const std::string& response)
     }
 
     // Check for hallucination indicators
+    int count = 0;
     for (const std::string& pattern : m_hallucinationPatterns) {
         std::string lowerPattern = toLower(pattern);
         if (lower.find(lowerPattern) != std::string::npos) {
             return FailureType::Hallucination;
         }
+        if (++count >= 3) return FailureType::InfiniteLoop;
     }
 
     // Check for infinite loops (repeated content)

@@ -11,6 +11,7 @@
 #ifdef USE_SENTENCEPIECE
 #include <sentencepiece_processor.h>
 #include <sentencepiece_trainer.h>
+#include "gguf_loader.h"
 #endif
 
 // Simple lattice structure for Viterbi algorithm
@@ -416,3 +417,4 @@ QString SentencePieceTokenizer::decode(const std::vector<int32_t>& tokens, bool 
     
     return result.trimmed();
 }
+

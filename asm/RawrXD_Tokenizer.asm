@@ -4,6 +4,21 @@
 ; Target: <1ms tokenization latency (vs ~15ms in llama.cpp)
 ; Method: Pre-computed merge table + SSE4.2 string matching
 ;
+; ─── ABI CONTRACT ───
+; All exports use Microsoft x64 calling convention:
+;   RCX = 1st arg, RDX = 2nd arg, R8 = 3rd arg, R9 = 4th arg
+;   RAX = return value (count) or 0 on failure
+;   Stack: 16-byte aligned at call site, 32-byte shadow space
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, XMM0-XMM3
+; Preserves: RBX, RBP, RDI, RSI, R12-R15, XMM6-XMM15
+;
+; RawrXD_Tokenizer_Init(RCX=vocab_path) → RAX=handle or 0
+; RawrXD_Tokenizer_Encode(RCX=handle, RDX=text, R8=text_len, R9=out_tokens, [RSP+40]=max_tokens) → RAX=n_tokens
+; RawrXD_Tokenizer_Decode(RCX=handle, RDX=tokens, R8=n_tokens, R9=out_text, [RSP+40]=max_len) → RAX=n_bytes
+; RawrXD_Tokenizer_Free(RCX=handle) → void
+; ───────────────────
+;
 ; API:
 ;   RawrXD_Tokenizer_Init(vocab_path) → handle
 ;   RawrXD_Tokenizer_Encode(handle, text, text_len, out_tokens, max_tokens) → n_tokens

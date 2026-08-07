@@ -40,14 +40,14 @@ void FirewallConfig::LoadFromFile(const std::filesystem::path& path) {
         if (j.contains("protected_prefixes")) {
             protected_prefixes.clear();
             for (const auto& p : j["protected_prefixes"]) {
-                protected_prefixes.push_back(p);
+                protected_prefixes.push_back(p.get<std::string>());
             }
         }
         
         if (j.contains("protected_patterns")) {
             protected_patterns.clear();
             for (const auto& p : j["protected_patterns"]) {
-                protected_patterns.push_back(p);
+                protected_patterns.push_back(p.get<std::string>());
             }
         }
     } catch (...) {

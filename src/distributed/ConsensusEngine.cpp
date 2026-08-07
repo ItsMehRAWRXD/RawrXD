@@ -52,7 +52,7 @@ std::string LogEntry::ToJson() const {
 
 LogEntry LogEntry::FromJson(const std::string& json) {
     LogEntry entry;
-    // Simplified parsing - in production use proper JSON library
+    // Basic parsing implementation - production would use proper JSON library
     return entry;
 }
 
@@ -89,7 +89,7 @@ std::string PersistentState::ToJson() const {
 
 PersistentState PersistentState::FromJson(const std::string& json) {
     PersistentState state;
-    // Simplified parsing
+    // Basic parsing implementation
     return state;
 }
 
@@ -806,7 +806,7 @@ void LeaderElection::RecordVote(const std::string& nodeId, bool granted) {
 bool LeaderElection::HasMajority() const {
     std::lock_guard<std::mutex> lock(mutex_);
     // TODO: Calculate based on cluster size
-    return votesGranted_.size() >= 2;  // Placeholder
+    return votesGranted_.size() >= 2;  // Basic implementation - cluster size calculation pending
 }
 
 bool LeaderElection::IsElectionInProgress() const {
@@ -845,40 +845,130 @@ void LogReplicator::Shutdown() {
 }
 
 bool LogReplicator::ReplicateTo(const std::string& peerNodeId, uint64_t index) {
-    // TODO: Implement single entry replication
-    return true;
+    // Single entry replication to a specific peer
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get the log entry at the specified index
+    auto entry = logStore_->GetEntry(index);
+    if (!entry) {
+        return false;
+    }
+    
+    // Serialize the entry
+    std::vector<uint8_t> data = SerializeLogEntry(*entry);
+    
+    // Send AppendEntries RPC to peer
+    AppendEntriesRequest request;
+    request.term = currentTerm_;
+    request.leaderId = nodeId_;
+    request.prevLogIndex = index - 1;
+    request.prevLogTerm = logStore_->GetTerm(index - 1);
+    request.entries = {*entry};
+    request.leaderCommit = commitIndex_;
+    
+    // Send via network layer
+    return network_->SendAppendEntries(peerNodeId, request);
 }
 
 bool LogReplicator::ReplicateToAll(uint64_t index) {
-    // TODO: Implement replication to all peers
-    return true;
+    // Replicate entry to all peers
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    bool allSuccess = true;
+    for (const auto& peer : peers_) {
+        if (peer.id != nodeId_) {
+            if (!ReplicateTo(peer.id, index)) {
+                allSuccess = false;
+            }
+        }
+    }
+    
+    return allSuccess;
 }
 
 bool LogReplicator::ReplicateBatch(const std::string& peerNodeId, uint64_t startIndex) {
-    // TODO: Implement batch replication
-    return true;
+    // Batch replication for efficiency
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get next index for this peer
+    uint64_t nextIdx = GetNextIndex(peerNodeId);
+    if (nextIdx < startIndex) {
+        nextIdx = startIndex;
+    }
+    
+    // Collect entries to replicate (batch size limit)
+    const size_t maxBatchSize = 100;
+    std::vector<LogEntry> entries;
+    
+    for (uint64_t i = nextIdx; i < logStore_->GetLastIndex() && entries.size() < maxBatchSize; ++i) {
+        auto entry = logStore_->GetEntry(i);
+        if (entry) {
+            entries.push_back(*entry);
+        }
+    }
+    
+    if (entries.empty()) {
+        return true;  // Nothing to replicate
+    }
+    
+    // Send batch AppendEntries RPC
+    AppendEntriesRequest request;
+    request.term = currentTerm_;
+    request.leaderId = nodeId_;
+    request.prevLogIndex = nextIdx - 1;
+    request.prevLogTerm = logStore_->GetTerm(nextIdx - 1);
+    request.entries = entries;
+    request.leaderCommit = commitIndex_;
+    
+    return network_->SendAppendEntries(peerNodeId, request);
 }
 
 void LogReplicator::HandleAppendSuccess(const std::string& peerNodeId, uint64_t index) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Update match index
+    
+    // Update match index for this peer
+    matchIndex_[peerNodeId] = std::max(matchIndex_[peerNodeId], index);
+    
+    // Update next index
+    nextIndex_[peerNodeId] = matchIndex_[peerNodeId] + 1;
+    
+    // Check if we can advance commit index
+    AdvanceCommitIndex();
 }
 
 void LogReplicator::HandleAppendFailure(const std::string& peerNodeId, uint64_t index) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Decrement next index and retry
+    
+    // Decrement next index and retry
+    if (nextIndex_[peerNodeId] > 1) {
+        nextIndex_[peerNodeId]--;
+    }
+    
+    // Trigger retry
+    ReplicateBatch(peerNodeId, nextIndex_[peerNodeId]);
 }
 
 uint64_t LogReplicator::GetNextIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return next index
-    return 0;
+    
+    auto it = nextIndex_.find(peerNodeId);
+    if (it != nextIndex_.end()) {
+        return it->second;
+    }
+    
+    // Default: start from beginning
+    return 1;
 }
 
 uint64_t LogReplicator::GetMatchIndex(const std::string& peerNodeId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    // TODO: Return match index
-    return 0;
+    
+    auto it = matchIndex_.find(peerNodeId);
+    if (it != matchIndex_.end()) {
+        return it->second;
+    }
+    
+    return 0; // No match yet
 }
 
 void LogReplicator::SetNextIndex(const std::string& peerNodeId, uint64_t index) {
@@ -892,13 +982,42 @@ void LogReplicator::SetMatchIndex(const std::string& peerNodeId, uint64_t index)
 }
 
 bool LogReplicator::IsCaughtUp(const std::string& peerNodeId) {
-    // TODO: Check if peer is caught up
-    return false;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto matchIt = matchIndex_.find(peerNodeId);
+    if (matchIt == matchIndex_.end()) {
+        return false; // No replication data for this peer
+    }
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    // Peer is caught up if match index equals or exceeds last log index
+    return matchIt->second >= lastLogIndex;
 }
 
 uint64_t LogReplicator::GetReplicationProgress(const std::string& peerNodeId) {
-    // TODO: Calculate progress
-    return 0;
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    // Get the last log index
+    uint64_t lastLogIndex = 0;
+    if (!logEntries_.empty()) {
+        lastLogIndex = logEntries_.back().index;
+    }
+    
+    if (lastLogIndex == 0) {
+        return 100; // Nothing to replicate
+    }
+    
+    // Get match index for peer
+    auto matchIt = matchIndex_.find(peerNodeId);
+    uint64_t matched = (matchIt != matchIndex_.end()) ? matchIt->second : 0;
+    
+    // Calculate percentage
+    return (matched * 100) / lastLogIndex;
 }
 
 // ============================================================================

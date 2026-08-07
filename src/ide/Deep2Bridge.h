@@ -86,6 +86,7 @@ typedef struct Deep2Config {
     uint32_t numExperts;        /* Total experts (e.g., 256) */
     uint32_t expertsPerToken;   /* Active experts per token (e.g., 8) */
     uint32_t numLayers;         /* Number of transformer layers */
+    uint32_t numHeads;          /* Number of attention heads */
     float    eps;               /* RMSNorm epsilon */
     BOOL     useAVX512;         /* TRUE = AVX-512, FALSE = AVX2 */
     BOOL     useLargePages;     /* TRUE = MEM_LARGE_PAGES for weights */
@@ -256,6 +257,75 @@ BOOL Deep2KVCache_IsActive(void);
 
 /* Get current sequence length */
 uint32_t Deep2KVCache_GetSeqLen(void);
+
+/*===========================================================================
+ * TOKENIZER — Encode/decode text for inference
+ *===========================================================================*/
+
+/* Encode text to token IDs using loaded model's tokenizer
+ * Returns: Number of tokens written, or 0 on error
+ * Caller must free outputTokens with Deep2Bridge_FreeTokens */
+int Deep2Bridge_Encode(
+    const char* text,
+    int** outputTokens
+);
+
+/* Decode token IDs back to text
+ * Returns: Decoded string (caller must free with Deep2Bridge_FreeString) */
+char* Deep2Bridge_Decode(
+    const int* tokens,
+    int numTokens
+);
+
+/* Decode a single token ID to text */
+char* Deep2Bridge_DecodeToken(int token);
+
+/* Free memory allocated by Encode/Decode */
+void Deep2Bridge_FreeTokens(int* tokens);
+void Deep2Bridge_FreeString(char* str);
+
+/* Get vocabulary size */
+int Deep2Bridge_VocabSize(void);
+
+/*===========================================================================
+ * STREAMING COMPLETION — Token-by-token callback for ghost text
+ *===========================================================================*/
+
+/* Token callback for streaming generation
+ * Called once per generated token during streaming inference
+ * Parameters:
+ *   token    - Generated token text (null-terminated)
+ *   userData - Opaque user pointer passed to GenerateStreaming
+ */
+typedef void (CALLBACK* Deep2TokenCallback)(const char* token, void* userData);
+
+/* Generate completion with streaming token callbacks
+ * For ghost text: renders tokens incrementally instead of waiting for full completion
+ *
+ * Parameters:
+ *   promptTokens  - Input token IDs [promptLen]
+ *   promptLen     - Number of prompt tokens
+ *   maxTokens     - Maximum tokens to generate
+ *   callback      - Called per token with generated text
+ *   userData      - Opaque pointer passed to callback
+ *   timeoutMs     - Max time before cancellation (0 = no timeout)
+ *
+ * Returns: TRUE on success, FALSE on error/timeout
+ */
+BOOL Deep2Bridge_GenerateStreaming(
+    const int* promptTokens,
+    uint32_t promptLen,
+    uint32_t maxTokens,
+    Deep2TokenCallback callback,
+    void* userData,
+    uint32_t timeoutMs
+);
+
+/* Cancel an in-progress streaming generation */
+void Deep2Bridge_CancelStreaming(void);
+
+/* Check if streaming is currently in progress */
+BOOL Deep2Bridge_IsStreaming(void);
 
 /*===========================================================================
  * PERFORMANCE MONITORING

@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <string>
@@ -9,16 +10,12 @@
 #include <mutex>
 #include <iomanip>
 
-#ifdef ERROR
-#undef ERROR
-#endif
-
 enum class LogLevel {
     DEBUG = 0,
     INFO = 1,
     WARN = 2,
-    ERROR = 3,
-    CRITICAL = 4
+    ERR = 3,
+    CRIT = 4
 };
 
 class Logger {
@@ -31,8 +28,6 @@ private:
     bool m_enableFile = true;
 
 public:
-    Logger() : m_name("RawrXD") {}
-    
     Logger(const std::string& name, const std::string& logPath = "logs/")
         : m_name(name) {
         // Create log directory and file
@@ -80,12 +75,12 @@ public:
 
     template<typename... Args>
     void error(const std::string& format, Args... args) {
-        log(LogLevel::ERROR, format, args...);
+        log(LogLevel::ERR, format, args...);
     }
 
     template<typename... Args>
     void critical(const std::string& format, Args... args) {
-        log(LogLevel::CRITICAL, format, args...);
+        log(LogLevel::CRIT, format, args...);
     }
 
 private:
@@ -110,7 +105,7 @@ private:
         std::string logLine = ss.str() + " [" + levelStr + "] [" + m_name + "] " + message;
 
         if (m_enableConsole) {
-            if (level >= LogLevel::ERROR) {
+            if (level >= LogLevel::ERR) {
                 std::cerr << logLine << std::endl;
             } else {
                 std::cout << logLine << std::endl;
@@ -128,8 +123,8 @@ private:
             case LogLevel::DEBUG: return "DEBUG";
             case LogLevel::INFO: return "INFO";
             case LogLevel::WARN: return "WARN";
-            case LogLevel::ERROR: return "ERROR";
-            case LogLevel::CRITICAL: return "CRITICAL";
+            case LogLevel::ERR: return "ERROR";
+            case LogLevel::CRIT: return "CRITICAL";
             default: return "UNKNOWN";
         }
     }
@@ -166,3 +161,5 @@ private:
         return format;
     }
 };
+
+

@@ -146,6 +146,14 @@ const SymbolEntry* SymbolTableGenerator::FindSymbol(const std::string& name) con
     return (it != symbols_.end()) ? &it->second : nullptr;
 }
 
+const SymbolEntry* SymbolTableGenerator::GetSymbol(const std::string& name) const {
+    return FindSymbol(name);
+}
+
+std::vector<const SymbolEntry*> SymbolTableGenerator::FindSymbols(const std::string& pattern) const {
+    return FindSymbolsByPattern(pattern);
+}
+
 const SymbolEntry* SymbolTableGenerator::FindSymbolByAddress(uintptr_t addr) const {
     std::lock_guard<std::mutex> lock(mutex_);
     
@@ -255,6 +263,68 @@ void SymbolTableGenerator::ForEachRegion(RegionCallback callback) const {
     for (const auto& region : regions_) {
         callback(region);
     }
+}
+
+// =============================================================================
+// Additional Methods for PuppeteerAPI
+// =============================================================================
+
+uintptr_t SymbolTableGenerator::GetAddress(const std::string& name) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto it = symbols_.find(name);
+    return (it != symbols_.end()) ? it->second.address : 0;
+}
+
+bool SymbolTableGenerator::IsAddressReadable(uintptr_t addr) const {
+    auto region = GetRegionForAddress(addr);
+    return region && region->IsReadable();
+}
+
+bool SymbolTableGenerator::IsAddressWritable(uintptr_t addr) const {
+    auto region = GetRegionForAddress(addr);
+    return region && region->IsWritable();
+}
+
+bool SymbolTableGenerator::IsValidPatchTarget(const std::string& name) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    
+    auto it = symbols_.find(name);
+    if (it == symbols_.end()) return false;
+    
+    // Check if it's in an executable region
+    auto region = GetRegionForAddress(it->second.address);
+    return region && region->IsExecutable();
+}
+
+bool SymbolTableGenerator::IsValidPatchTarget(uintptr_t addr) const {
+    auto region = GetRegionForAddress(addr);
+    return region && region->IsExecutable();
+}
+
+std::vector<uint8_t> SymbolTableGenerator::ExportToBinary() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<uint8_t> result;
+    
+    // Simple binary format: count (4 bytes) + entries
+    uint32_t count = static_cast<uint32_t>(symbols_.size());
+    result.insert(result.end(), reinterpret_cast<uint8_t*>(&count), 
+                  reinterpret_cast<uint8_t*>(&count) + sizeof(count));
+    
+    for (const auto& pair : symbols_) {
+        const auto& sym = pair.second;
+        // Write: address (8), size (4), name_len (4), name (N)
+        result.insert(result.end(), reinterpret_cast<const uint8_t*>(&sym.address),
+                      reinterpret_cast<const uint8_t*>(&sym.address) + sizeof(sym.address));
+        result.insert(result.end(), reinterpret_cast<const uint8_t*>(&sym.size),
+                      reinterpret_cast<const uint8_t*>(&sym.size) + sizeof(sym.size));
+        uint32_t name_len = static_cast<uint32_t>(sym.name.size());
+        result.insert(result.end(), reinterpret_cast<uint8_t*>(&name_len),
+                      reinterpret_cast<uint8_t*>(&name_len) + sizeof(name_len));
+        result.insert(result.end(), sym.name.begin(), sym.name.end());
+    }
+    
+    return result;
 }
 
 } // namespace Sovereign

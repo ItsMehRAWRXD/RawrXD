@@ -97,6 +97,9 @@ private:
     // Measure GPU utilization
     float MeasureGPUUtilization();
     
+    // Read GPU temperature
+    float ReadGPUTemperature();
+    
     // Measure PCIe bandwidth
     float MeasurePCIeBandwidth();
     

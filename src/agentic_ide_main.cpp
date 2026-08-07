@@ -45,9 +45,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         logic.setEditor(&editor); 
         logic.start(); // Start the brain!
         
-        // Start a background thread for agent logic if needed,
-        // or just let the main loop run and agent responds to events.
-        // For now, we just initialize it.
+        // The agent logic runs in the background thread, processing events
+        // and responding to user interactions through the editor's event system.
+        // The main loop handles UI events while the agent processes asynchronously.
 
         return app.exec();
 

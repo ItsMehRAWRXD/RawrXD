@@ -1,0 +1,185 @@
+
+==============================================================
+  RESIZEABLE LEARNING SMOKE TESTS
+==============================================================
+
+  [Test Group 1: Model Creation]
+  ✓ Model created
+  ✓ Model has name
+  ✓ Model has groups
+  ✓ Model has total params
+  ✓ All params start unweighted
+  ✓ All params are unweighted
+
+  [Test Group 2: Weight Groups]
+  ✓ Group has name
+  ✓ Group starts unweighted
+  ✓ Group has full weights
+  ✓ Group current weights are ~0
+  ✓ Group has num_params
+
+  [Test Group 3: Weighting Up]
+  ✓ Group transitions when weighting
+  ✓ Current weights move toward full
+  ✓ Group becomes weighted
+  ✓ Current weights match full
+
+  [Test Group 4: Unweighting]
+  ✓ Group transitions when unweighting
+  ✓ Group becomes unweighted
+  ✓ Current weights return to ~0
+
+  [Test Group 5: Router]
+  ✓ Router created
+  ✓ Router returns decision
+  ✓ Decision has primary groups
+  ✓ Decision has task type
+  ✓ Decision has confidence
+  ✓ Router detects code tasks
+  ✓ Router detects creative tasks
+  ✓ Router detects reasoning tasks
+
+  [Test Group 6: Full Inference]
+  ✓ Inference returns result
+  ✓ Result has input
+  ✓ Result has response
+  ✓ Result has decision
+  ✓ Result has model_state
+  ✓ Decision has task_type
+  ✓ Decision has primary groups
+  ✓ Model state has weighted params
+
+  [Test Group 7: Task-Specific Activation]
+  ✓ Math activates different groups than code
+  ✓ Code activates different groups than creative
+  ✓ Creative activates different groups than math
+
+  [Test Group 8: Weight Tracking]
+  ✓ Weighted group embedding has magnitude > 0
+  ✓ Weighted group attention_early has magnitude > 0
+  ✓ Weighted group attention_late has magnitude > 0
+  ✓ Weighted group ffn_early has magnitude > 0
+  ✓ Weighted group ffn_mid has magnitude > 0
+  ✓ Unweighted group norm_early has magnitude ~0
+  ✓ Unweighted group norm_mid has magnitude ~0
+  ✓ Unweighted group norm_late has magnitude ~0
+  ✓ Weighted group output has magnitude > 0
+
+  [Test Group 9: Memory Savings]
+  ✓ Memory saved is > 0%
+  ✓ Memory saved is < 100%
+  ✓ Weighted ratio is > 0
+  ✓ Weighted ratio is < 1
+
+  [Test Group 10: Resize]
+  ✓ Resize changes weighted params
+  ✓ Resize count incremented
+
+  [Test Group 11: Statistics]
+  ✓ Stats has name
+  ✓ Stats has total_params
+  ✓ Stats has weighted_params
+  ✓ Stats has unweighted_params
+  ✓ Stats has weighted_ratio
+  ✓ Stats has memory_saved
+  ✓ Stats has groups
+  ✓ Stats has router
+  ✓ Stats has total_inferences
+
+  [Test Group 12: Group Snapshots]
+  ✓ Group embedding snapshot has name
+  ✓ Group embedding snapshot has state
+  ✓ Group embedding snapshot has num_params
+  ✓ Group embedding snapshot has weight_magnitude
+  ✓ Group embedding snapshot has is_main_attraction
+  ✓ Group attention_early snapshot has name
+  ✓ Group attention_early snapshot has state
+  ✓ Group attention_early snapshot has num_params
+  ✓ Group attention_early snapshot has weight_magnitude
+  ✓ Group attention_early snapshot has is_main_attraction
+  ✓ Group attention_mid snapshot has name
+  ✓ Group attention_mid snapshot has state
+  ✓ Group attention_mid snapshot has num_params
+  ✓ Group attention_mid snapshot has weight_magnitude
+  ✓ Group attention_mid snapshot has is_main_attraction
+  ✓ Group attention_late snapshot has name
+  ✓ Group attention_late snapshot has state
+  ✓ Group attention_late snapshot has num_params
+  ✓ Group attention_late snapshot has weight_magnitude
+  ✓ Group attention_late snapshot has is_main_attraction
+  ✓ Group ffn_early snapshot has name
+  ✓ Group ffn_early snapshot has state
+  ✓ Group ffn_early snapshot has num_params
+  ✓ Group ffn_early snapshot has weight_magnitude
+  ✓ Group ffn_early snapshot has is_main_attraction
+  ✓ Group ffn_mid snapshot has name
+  ✓ Group ffn_mid snapshot has state
+  ✓ Group ffn_mid snapshot has num_params
+  ✓ Group ffn_mid snapshot has weight_magnitude
+  ✓ Group ffn_mid snapshot has is_main_attraction
+  ✓ Group ffn_late snapshot has name
+  ✓ Group ffn_late snapshot has state
+  ✓ Group ffn_late snapshot has num_params
+  ✓ Group ffn_late snapshot has weight_magnitude
+  ✓ Group ffn_late snapshot has is_main_attraction
+  ✓ Group norm_early snapshot has name
+  ✓ Group norm_early snapshot has state
+  ✓ Group norm_early snapshot has num_params
+  ✓ Group norm_early snapshot has weight_magnitude
+  ✓ Group norm_early snapshot has is_main_attraction
+  ✓ Group norm_mid snapshot has name
+  ✓ Group norm_mid snapshot has state
+  ✓ Group norm_mid snapshot has num_params
+  ✓ Group norm_mid snapshot has weight_magnitude
+  ✓ Group norm_mid snapshot has is_main_attraction
+  ✓ Group norm_late snapshot has name
+  ✓ Group norm_late snapshot has state
+  ✓ Group norm_late snapshot has num_params
+  ✓ Group norm_late snapshot has weight_magnitude
+  ✓ Group norm_late snapshot has is_main_attraction
+  ✓ Group output snapshot has name
+  ✓ Group output snapshot has state
+  ✓ Group output snapshot has num_params
+  ✓ Group output snapshot has weight_magnitude
+  ✓ Group output snapshot has is_main_attraction
+
+  [Test Group 13: Medium Model]
+  ✓ Medium model created
+  ✓ Medium model has more groups than small
+  ✓ Medium model has more params
+
+  [Test Group 14: Multiple Inferences]
+  ✓ Total inferences tracked
+  ✓ Router has history
+
+  [Test Group 15: Weight State Transitions]
+  ✓ Weight up reaches WEIGHTED
+  ✓ Unweight reaches UNWEIGHTED
+
+  [Test Group 16: Importance]
+  ✓ Embedding has high importance
+  ✓ Norm late has lower importance
+
+  [Test Group 17: Decay Rate]
+  ✓ Groups have decay rates
+
+  [Test Group 18: Grow Rate]
+  ✓ Groups have grow rates
+
+  [Test Group 19: Model Info]
+  ✓ Model has version
+  ✓ Model has signature
+  ✓ Model has created_at
+
+  [Test Group 20: Full Pipeline]
+  ✓ Pipeline handles: 'What is 2 + 2?...'
+  ✓ Pipeline handles: 'Write hello world in Python...'
+  ✓ Pipeline handles: 'Tell me a joke...'
+  ✓ Pipeline handles: 'Explain gravity...'
+  ✓ Pipeline handles: 'Plan a trip to Paris...'
+  ✓ Pipeline completed all tasks
+
+──────────────────────────────────────────────────────────────
+  Smoke Tests: 136/136 passed
+  ALL TESTS PASSED ✓
+──────────────────────────────────────────────────────────────

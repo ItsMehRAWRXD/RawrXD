@@ -1,34 +1,12 @@
-/**
- * @file tool_registry.hpp
- * @brief Complete tool registry system with full utility, production-ready observability and error handling
- *
- * This module provides:
- * - Centralized tool registration and execution
- * - Comprehensive structured logging with DEBUG/INFO/WARN/ERROR levels
- * - Metrics collection (counters, histograms, gauges)
- * - Distributed tracing hooks for observability
- * - Resource guards and cleanup
- * - Input validation and safety checks
- * - Error recovery strategies
- * - Tool-specific configuration and feature toggles
- * - Timeout and resource limits enforcement
- * - Execution statistics and profiling
- *
- * @author RawrXD Agent Team
- * @version 2.0.0
- * @date 2025-12-12
- */
-
 #pragma once
 
 #include <string>
-#include <memory>
-#include <map>
 #include <vector>
+#include <map>
 #include <functional>
-#include <chrono>
-#include <optional>
 #include <cstdint>
+#include <mutex>
+#include <memory>
 #include <nlohmann/json.hpp>
 
 #include "logging/logger.h"
@@ -814,4 +792,140 @@ private:
         const ToolExecutionConfig& config,
         std::function<ToolResult()> executeFunc
     );
+    
+private:
+    // ========================================================================
+    // Private Members
+    // ========================================================================
+    
+    std::shared_ptr<Logger> m_logger;
+    std::shared_ptr<Metrics> m_metrics;
+    
+    // Tool registry
+    mutable std::mutex m_toolRegistryMutex;
+    std::map<std::string, std::shared_ptr<ToolDefinition>> m_tools;
+    
+    // Configuration
+    int32_t m_globalTimeout = 30000;
+    std::map<std::string, ToolExecutionConfig> m_toolConfigs;
+    
+    // Execution tracking
+    mutable std::mutex m_executionMutex;
+    std::map<std::string, std::vector<ToolResult>> m_executionHistory;
+    std::map<std::string, uint32_t> m_activeExecutions;
+    
+    // Statistics tracking
+    struct ToolStats {
+        uint64_t totalExecutions = 0;
+        uint64_t successfulExecutions = 0;
+        uint64_t failedExecutions = 0;
+        int64_t totalLatencyMs = 0;
+        int64_t totalInputBytes = 0;
+        int64_t totalOutputBytes = 0;
+        uint32_t retryCount = 0;
+        uint32_t cacheHits = 0;
+        int64_t lastExecutionTimeMs = 0;
+        std::string lastError;
+    };
+    mutable std::mutex m_statsMutex;
+    std::map<std::string, ToolStats> m_statistics;
+    
+    // Caching
+    struct CacheEntry {
+        json data;
+        int64_t createdAtMs = 0;
+    };
+    mutable std::mutex m_cacheMutex;
+    std::map<std::string, std::map<std::string, CacheEntry>> m_cache;  // tool -> (params_hash -> result)
+    
+    // ========================================================================
+    // Private Methods
+    // ========================================================================
+    
+    /**
+     * @brief Internal tool execution with full error handling
+     */
+    ToolResult executeToolInternal(
+        const std::string& toolName,
+        const json& parameters,
+        const ToolExecutionConfig& config,
+        const std::string& traceId = "",
+        const std::string& parentSpanId = ""
+    );
+    
+    /**
+     * @brief Validate tool input
+     */
+    bool validateToolInput(
+        const std::string& toolName,
+        const json& parameters,
+        std::string& errorMsg
+    );
+    
+    /**
+     * @brief Check and retrieve cached result
+     */
+    std::optional<ToolResult> getCachedResult(
+        const std::string& toolName,
+        const json& parameters
+    );
+    
+    /**
+     * @brief Cache execution result
+     */
+    void cacheResult(
+        const std::string& toolName,
+        const json& parameters,
+        const ToolResult& result
+    );
+    
+    /**
+     * @brief Generate cache key from parameters
+     */
+    std::string generateCacheKey(const json& parameters) const;
+    
+    /**
+     * @brief Generate unique execution ID
+     */
+    std::string generateExecutionId() const;
+    
+    /**
+     * @brief Log structured execution start
+     */
+    void logExecutionStart(
+        const std::string& toolName,
+        const json& parameters,
+        const std::string& executionId,
+        bool detailedLogging
+    );
+    
+    /**
+     * @brief Log structured execution completion
+     */
+    void logExecutionCompletion(
+        const ToolResult& result,
+        const std::string& toolName,
+        bool detailedLogging
+    );
+    
+    /**
+     * @brief Record execution metrics
+     */
+    void recordMetrics(const ToolResult& result, const std::string& toolName);
+    
+    /**
+     * @brief Update statistics
+     */
+    void updateStatistics(const ToolResult& result, const std::string& toolName);
+    
+    /**
+     * @brief Execute tool with retry logic
+     */
+    ToolResult executeWithRetry(
+        const std::string& toolName,
+        const json& parameters,
+        const ToolExecutionConfig& config,
+        std::function<ToolResult()> executeFunc
+    );
 };
+

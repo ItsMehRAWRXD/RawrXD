@@ -78,7 +78,7 @@ GrammarCompileResult ConstrainedSampler::compileJsonSchema(
     // Convert JSON Schema to a GBNF grammar, then compile that.
     // Core types: string, number, integer, boolean, null, object, array
     //
-    // Simplified but functional: produces a GBNF that matches the JSON
+    // Basic implementation produces a GBNF that matches the JSON
     // structure.  Full recursive schema support would need a dedicated
     // schema walker — this covers the 80% case.
     std::string gbnf;
@@ -207,7 +207,7 @@ bool ConstrainedSampler::compileBNF(const std::string& bnf, GrammarSpec& out)
                 }
                 if (negate) {
                     // Allow all chars except those in class
-                    // Simplified: allow printable ASCII
+                    // Basic implementation: allow printable ASCII
                     for (int c = 32; c < 127; ++c)
                         nfa[current].charTransitions.push_back({c, next});
                 }

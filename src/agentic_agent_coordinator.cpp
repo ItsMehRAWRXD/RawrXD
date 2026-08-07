@@ -553,3 +553,5 @@ std::vector<std::string> AgenticAgentCoordinator::getActiveSovereignMissions() c
     if (!m_sovereignRuntime) return {};
     return m_sovereignRuntime->GetActiveMissions();
 }
+
+

@@ -113,7 +113,7 @@ bool GpuBackend::isBackendAvailable(Backend backend)
     return false;
 }
 
-const char* GpuBackend::backendName(Backend backend)
+std::string GpuBackend::backendName(Backend backend)
 {
     switch (backend) {
     case CPU:

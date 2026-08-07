@@ -25,6 +25,9 @@
 #include <sstream>
 #include <regex>
 #include <algorithm>
+#include <windows.h>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
 
 #ifdef _WIN32
 #include <windows.h>
@@ -128,7 +131,7 @@ public:
  *       "llama-2-7b.gguf",
  *       "./models",
  *       [](uint64_t downloaded, uint64_t total) {
- *           std::cout << "Downloaded: " << downloaded << "/" << total << std::endl;
+ *           
  *       }
  *   );
  */
@@ -157,7 +160,7 @@ public:
      * Example:
      *   auto results = client.searchModels("llama", 10);
      *   for (const auto& model : results) {
-     *       std::cout << model.repo_id << " (" << model.downloads << " downloads)" << std::endl;
+     *       
      *   }
      */
     std::vector<ModelMetadata> searchModels(const std::string& query, 
@@ -173,12 +176,11 @@ public:
             url += "&limit=" + std::to_string(limit);
             url += "&sort=downloads&direction=-1";  // Sort by popularity
 
-            std::cout << "🔍 Searching HuggingFace Hub for: " << query << std::endl;
 
             // Make HTTP request
             std::string response = fetchJSON(url, token);
             if (response.empty()) {
-                std::cerr << "❌ No response from HuggingFace API" << std::endl;
+                
                 return results;
             }
 
@@ -188,7 +190,7 @@ public:
             size_t arrayEnd = response.rfind(']');
             
             if (arrayStart == std::string::npos || arrayEnd == std::string::npos) {
-                std::cerr << "❌ Invalid API response format" << std::endl;
+                
                 return results;
             }
 
@@ -212,11 +214,11 @@ public:
                 }
             }
 
-            std::cout << "✅ Found " << results.size() << " models" << std::endl;
+
             return results;
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Search error: " << e.what() << std::endl;
+            
             return results;
         }
     }
@@ -231,7 +233,7 @@ public:
      * Example:
      *   auto model = client.getModelInfo("meta-llama/Llama-2-7b-hf");
      *   for (const auto& file : model.files) {
-     *       std::cout << file << std::endl;
+     *       
      *   }
      */
     ModelMetadata getModelInfo(const std::string& repo_id, const std::string& token = "") {
@@ -240,12 +242,11 @@ public:
 
         try {
             std::string url = "https://huggingface.co/api/models/" + repo_id;
-            
-            std::cout << "📋 Fetching model info: " << repo_id << std::endl;
+
 
             std::string response = fetchJSON(url, token);
             if (response.empty()) {
-                std::cerr << "❌ Failed to fetch model info" << std::endl;
+                
                 return meta;
             }
 
@@ -281,13 +282,11 @@ public:
                 }
             }
 
-            std::cout << "✅ Model has " << meta.files.size() << " files, total: " 
-                     << formatBytes(meta.total_size) << std::endl;
 
             return meta;
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Error fetching model info: " << e.what() << std::endl;
+            
             return meta;
         }
     }
@@ -309,7 +308,7 @@ public:
      *       "./models",
      *       [](uint64_t cur, uint64_t total) {
      *           int pct = (cur * 100) / total;
-     *           std::cout << "\r" << pct << "%" << std::flush;
+     *           
      *       }
      *   );
      */
@@ -324,15 +323,12 @@ public:
 
             std::string outputPath = outputDir + "/" + filename;
 
-            std::cout << "⬇️  Downloading: " << filename << std::endl;
-            std::cout << "   From: " << repo_id << std::endl;
-            std::cout << "   To: " << outputPath << std::endl;
 
             // Download with resume support
             return downloadFile(url, outputPath, progressCallback, token);
 
         } catch (const std::exception& e) {
-            std::cerr << "❌ Download error: " << e.what() << std::endl;
+            
             return false;
         }
     }
@@ -582,6 +578,43 @@ public:
         } catch (...) {
             return "";
         }
+
+        HINTERNET hSession = WinHttpOpen(L"RawrXD-Agent/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        if(hSession) {
+            HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
+            if(hConnect) {
+                HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+                if(hRequest) {
+                    std::wstring headers;
+                    if(!token.empty()) {
+                        headers = L"Authorization: Bearer " + std::wstring(token.begin(), token.end());
+                    }
+                    
+                    if(WinHttpSendRequest(hRequest, headers.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : headers.c_str(), headers.length(), WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+                        if(WinHttpReceiveResponse(hRequest, NULL)) {
+                            DWORD dwSize = 0;
+                            DWORD dwDownloaded = 0;
+                            do {
+                                dwSize = 0;
+                                if(!WinHttpQueryDataAvailable(hRequest, &dwSize)) break;
+                                if(dwSize == 0) break;
+                                
+                                std::vector<char> buffer(dwSize+1);
+                                if(WinHttpReadData(hRequest, buffer.data(), dwSize, &dwDownloaded)) {
+                                    buffer[dwDownloaded] = 0;
+                                    result.append(buffer.data(), dwDownloaded);
+                                }
+                            } while(dwSize > 0);
+                        }
+                    }
+                    WinHttpCloseHandle(hRequest);
+                }
+                WinHttpCloseHandle(hConnect);
+            }
+            WinHttpCloseHandle(hSession);
+        }
+        
+        return result;
     }
 
     /**

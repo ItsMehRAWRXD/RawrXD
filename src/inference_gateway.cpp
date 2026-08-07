@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <sstream>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -285,3 +286,4 @@ void InferenceGateway::setTraceCallback(std::function<void(const InferenceRespon
 }
 
 } // namespace RawrXD
+

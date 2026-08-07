@@ -349,7 +349,28 @@ void StartAsyncSuggester(std::function<void(const std::string&)> on_suggestion) 
     if (g_suggester_running) return;
 
     g_suggester_running = true;
-    // Placeholder: would implement background thread for real-time suggestions
+    
+    // Start background thread for real-time suggestions
+    g_suggester_thread = std::thread([on_suggestion]() {
+        while (g_suggester_running) {
+            // Poll for suggestions every 500ms
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            
+            if (!g_suggester_running) break;
+            
+            // Query Ollama for a suggestion based on current context
+            // In production, this would use the actual editor context
+            CompletionRequest req;
+            req.model = "codellama";
+            req.prompt = "// Suggest code completion based on context";
+            req.stream = false;
+            
+            CompletionResponse response = QueryCompletion(req);
+            if (response.success && !response.text.empty()) {
+                on_suggestion(response.text);
+            }
+        }
+    });
 }
 
 void StopAsyncSuggester() {

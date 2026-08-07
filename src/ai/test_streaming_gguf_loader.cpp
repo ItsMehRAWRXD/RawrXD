@@ -22,10 +22,8 @@ int main(int argc, char* argv[]) {
     std::cout << "StreamingGGUFLoader Test Program (C++20)\n" << std::endl;
 
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <path-to-gguf-file>" << std::endl;
-        std::cerr << "\nExample:" << std::endl;
-        std::cerr << "  " << argv[0] << " phi-3-mini.gguf" << std::endl;
-        std::cerr << "  " << argv[0] << " tinyllama-test.gguf" << std::endl;
+
+
         return 1;
     }
 

@@ -23,6 +23,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+<<<<<<< HEAD
 $ProjectRoot = 'D:\rawrxd'
 $AsmSource = "$ProjectRoot\src"
 $CompilerOut = "$ProjectRoot\build\compilers"
@@ -60,6 +61,20 @@ $Link = Join-Path $_msvcRoot "bin\Hostx64\x64\link.exe"
 $CMake = 'cmake'
 $MSBuild = (Split-Path (Split-Path $_msvcRoot -Parent) -Parent) + '\MSBuild\Current\Bin\MSBuild.exe'
 if (-not (Test-Path $MSBuild)) { $MSBuild = 'msbuild' }
+=======
+$ProjectRoot = 'd:\lazy init ide'
+$AsmSource = "$ProjectRoot\itsmehrawrxd-master"
+$CompilerOut = "$ProjectRoot\compilers"
+$BuildOut = "$ProjectRoot\build"
+$DistOut = "$ProjectRoot\dist"
+
+# Tool paths
+$MASM = 'C:\masm32\bin\ml64.exe'
+$NASM = 'C:\nasm\nasm.exe'
+$Link = 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.39.33519\bin\Hostx64\x64\link.exe'
+$CMake = 'cmake'
+$MSBuild = 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe'
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # HELPERS

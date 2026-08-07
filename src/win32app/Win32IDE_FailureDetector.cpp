@@ -845,7 +845,8 @@ bool Win32IDE::showRetryApprovalInPlanDialog(int stepIndex,
 
     // Highlight the failed step in the ListView
     if (m_hwndPlanList && stepIndex >= 0 && stepIndex < (int)m_currentPlan.steps.size()) {
-        ListView_SetItemText(m_hwndPlanList, stepIndex, 1, const_cast<char*>("RETRY?"));
+        LVITEMA lviR = {}; lviR.iSubItem = 1; lviR.pszText = const_cast<char*>("RETRY?");
+        SendMessageA(m_hwndPlanList, LVM_SETITEMTEXTA, (WPARAM)stepIndex, (LPARAM)&lviR);
         ListView_SetItemState(m_hwndPlanList, stepIndex,
                               LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
         ListView_EnsureVisible(m_hwndPlanList, stepIndex, FALSE);

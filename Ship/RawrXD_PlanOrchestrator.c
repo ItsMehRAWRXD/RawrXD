@@ -257,6 +257,7 @@ PlanningResult* PlanOrch_GeneratePlan(
     
     // Check for inference engine
     if (!orch->inference_generate) {
+<<<<<<< HEAD
         // No AI available - create a single-step manual plan from the user goal
         orch->current_plan.success = TRUE;
         wcscpy_s(orch->current_plan.plan_description, 1024,
@@ -283,6 +284,14 @@ PlanningResult* PlanOrch_GeneratePlan(
         if (gathered_count > 0) {
             for (int i = 0; i < gathered_count; i++) free(gathered_files[i]);
         }
+=======
+        // No AI available - create manual plan stub
+        orch->current_plan.success = TRUE;
+        wcscpy_s(orch->current_plan.plan_description, 1024, 
+            L"Manual planning mode (no AI inference engine configured)");
+        orch->current_plan.estimated_changes = 0;
+        
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         LeaveCriticalSection(&orch->cs);
         return &orch->current_plan;
     }

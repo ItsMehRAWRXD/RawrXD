@@ -249,7 +249,12 @@ PuppeteerResult PuppeteerAPI::RollbackLastPatch() {
     return result;
 }
 
+bool PuppeteerAPI::ValidatePatchTarget(uintptr_t address) {
+    return SymbolTableGenerator::Instance().IsValidPatchTarget(address);
+}
+
 bool PuppeteerAPI::ValidatePatchTarget(uintptr_t address, size_t size) {
+    (void)size;
     return SymbolTableGenerator::Instance().IsValidPatchTarget(address);
 }
 

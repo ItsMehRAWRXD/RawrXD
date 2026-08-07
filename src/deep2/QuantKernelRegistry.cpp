@@ -11,6 +11,7 @@
 
 #include "QuantKernelRegistry.hpp"
 #include "GGUFLoader.hpp"
+#include "QuantKernelRegistry_K.h"  // K-quant dequant/GEMV kernels
 
 #include <immintrin.h>
 #include <cstring>
@@ -32,6 +33,7 @@ namespace Deep2 {
     eax = _info[0]; ebx = _info[1]; ecx = _info[2]; edx = _info[3]; }
 #else
 #include <cpuid.h>
+#include "gguf_loader.h"
 #define DEEP2_CPUID(level, eax, ebx, ecx, edx) \
     __cpuid(level, eax, ebx, ecx, edx);
 #define DEEP2_CPUIDEX(level, subleaf, eax, ebx, ecx, edx) \
@@ -424,10 +426,10 @@ static void gemv_q4_k_avx512(
             // FMA: acc += (w * d) * x
             acc = _mm512_fmadd_ps(_mm512_mul_ps(w0, dVec), x0, acc);
 
-            // Process remaining nibble groups (simplified: process 16 at a time)
+            // Process remaining nibble groups (groups 1-15, 16 values each)
+            // Uses scalar fallback for non-vectorized path - production uses permute
             for (int g = 1; g < 16; ++g) {
-                // Extract 16 bytes starting at offset g*16 from the low/high nibble vectors
-                // This is a simplified path; production uses permute for zero-copy extraction
+                // Extract 16 quantized values from the block
                 float blockAcc = 0.0f;
                 for (int i = 0; i < 16; ++i) {
                     int idx = g * 16 + i;
@@ -435,7 +437,7 @@ static void gemv_q4_k_avx512(
                     float q = (idx % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
                     blockAcc += q * x[b * 256 + idx];
                 }
-                // Accumulate (simplified scale application)
+                // Apply scale and accumulate
                 __m512 partial = _mm512_set1_ps(blockAcc * d);
                 acc = _mm512_add_ps(acc, partial);
             }
@@ -496,12 +498,172 @@ static void gemv_f32_avx2(
         }
         float tail = 0.0f;
         for (; c < cols; ++c) tail += row[c] * x[c];
-        // Horizontal sum
-        float sum = 0.0f;
-        float tmp[8];
-        _mm256_storeu_ps(tmp, acc);
-        for (int i = 0; i < 8; ++i) sum += tmp[i];
+        // Horizontal sum using hadd
+        __m256 hsum = _mm256_hadd_ps(acc, acc);
+        hsum = _mm256_hadd_ps(hsum, hsum);
+        float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
+                    _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
         y[r] += sum + tail;
+    }
+}
+
+// --- F16 GEMV (AVX2 with F16C) ---
+static void gemv_f16_avx2(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const uint16_t* weights = reinterpret_cast<const uint16_t*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        const uint16_t* row = weights + r * cols;
+        __m256 acc = _mm256_setzero_ps();
+        size_t c = 0;
+        for (; c + 8 <= cols; c += 8) {
+            // Load 8 uint16_t and convert to float using F16C
+            __m128i hv = _mm_loadu_si128(reinterpret_cast<const __m128i*>(row + c));
+            __m256 wv = _mm256_cvtph_ps(hv);
+            __m256 xv = _mm256_loadu_ps(x + c);
+            acc = _mm256_fmadd_ps(wv, xv, acc);
+        }
+        float tail = 0.0f;
+        for (; c < cols; ++c) {
+            tail += f16_to_f32(row[c]) * x[c];
+        }
+        // Horizontal sum
+        __m256 hsum = _mm256_hadd_ps(acc, acc);
+        hsum = _mm256_hadd_ps(hsum, hsum);
+        float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
+                    _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
+        y[r] += sum + tail;
+    }
+}
+
+// --- Q8_0 GEMV (AVX2) ---
+// block_q8_0: 32 int8 weights + 1 float scale (34 bytes total)
+// Layout: float d; int8_t qs[32];
+static void gemv_q8_0_avx2(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(w);
+    size_t blocksPerRow = (cols + 31) / 32;
+
+    for (size_t r = 0; r < rows; ++r) {
+        __m256 acc = _mm256_setzero_ps();
+        const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q8_0& blk = rowBlocks[b];
+            __m256 dVec = _mm256_set1_ps(blk.d);
+
+            // Load 32 int8 weights
+            __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
+            
+            // Convert first 16 int8 to int32, then to float
+            __m128i qs_lo = _mm256_castsi256_si128(qs);
+            __m256i i32_lo = _mm256_cvtepi8_epi32(qs_lo);
+            __m256 wv_lo = _mm256_cvtepi32_ps(i32_lo);
+            
+            // Load first 16 activations and FMA
+            __m256 xv_lo = _mm256_loadu_ps(x + b * 32);
+            acc = _mm256_fmadd_ps(_mm256_mul_ps(wv_lo, dVec), xv_lo, acc);
+            
+            // Convert second 16 int8 to int32, then to float
+            __m128i qs_hi = _mm256_extracti128_si256(qs, 1);
+            __m256i i32_hi = _mm256_cvtepi8_epi32(qs_hi);
+            __m256 wv_hi = _mm256_cvtepi32_ps(i32_hi);
+            
+            // Load second 16 activations and FMA
+            __m256 xv_hi = _mm256_loadu_ps(x + b * 32 + 16);
+            acc = _mm256_fmadd_ps(_mm256_mul_ps(wv_hi, dVec), xv_hi, acc);
+        }
+        
+        // Horizontal sum
+        __m256 hsum = _mm256_hadd_ps(acc, acc);
+        hsum = _mm256_hadd_ps(hsum, hsum);
+        float sum = _mm_cvtss_f32(_mm256_castps256_ps128(hsum)) + 
+                    _mm_cvtss_f32(_mm256_extractf128_ps(hsum, 1));
+        y[r] += sum;
+    }
+}
+
+// --- Q4_K GEMV (AVX2) ---
+// block_q4_K: 256 weights in 4-bit, with super-block scales
+// Layout: float d, dmin; uint8_t scales[12]; uint8_t qs[128+128];
+static void gemv_q4_k_avx2(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+    size_t blocksPerRow = (cols + 255) / 256;
+    const __m256i lowMask = _mm256_set1_epi8(0x0F);
+
+    for (size_t r = 0; r < rows; ++r) {
+        float rowAcc = 0.0f;
+        const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q4_K& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float dmin = f16_to_f32(blk.dmin);
+            
+            // Process 8 sub-blocks of 32 weights each
+            for (int sb = 0; sb < 8; ++sb) {
+                // Extract scale and min for this sub-block
+                uint8_t scale = (blk.scales[sb] & 0x3F);
+                uint8_t min   = (blk.scales[sb + 8] & 0x3F);
+                float s = d * (scale - 8.0f) / 8.0f;
+                float m = dmin * (min - 8.0f) / 8.0f;
+                __m256 sVec = _mm256_set1_ps(s);
+                __m256 mVec = _mm256_set1_ps(m);
+                
+                // Process 32 weights in this sub-block (16 bytes of packed nibbles)
+                size_t qsOffset = sb * 16;  // 16 bytes = 32 nibbles
+                __m128i packed = _mm_loadu_si128(reinterpret_cast<const __m128i*>(blk.qs + qsOffset));
+                
+                // Extract low nibbles (indices 0, 2, 4, ... 30)
+                __m128i lowNibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
+                // Extract high nibbles (indices 1, 3, 5, ... 31)
+                __m128i highNibbles = _mm_srli_epi16(packed, 4);
+                highNibbles = _mm_and_si128(highNibbles, _mm_set1_epi8(0x0F));
+                
+                // Process first 8 low nibbles
+                __m256i i32_lo = _mm256_cvtepu8_epi32(lowNibbles);
+                __m256 wv_lo = _mm256_cvtepi32_ps(i32_lo);
+                __m256 xv_lo = _mm256_loadu_ps(x + b * 256 + sb * 32);
+                __m256 dequant_lo = _mm256_add_ps(_mm256_mul_ps(wv_lo, sVec), mVec);
+                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo, xv_lo, 0xF1)));
+                
+                // Process second 8 low nibbles
+                __m128i lowNibbles_hi = _mm_srli_si128(lowNibbles, 8);
+                __m256i i32_lo2 = _mm256_cvtepu8_epi32(lowNibbles_hi);
+                __m256 wv_lo2 = _mm256_cvtepi32_ps(i32_lo2);
+                __m256 xv_lo2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 8);
+                __m256 dequant_lo2 = _mm256_add_ps(_mm256_mul_ps(wv_lo2, sVec), mVec);
+                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo2, xv_lo2, 0xF1)));
+                
+                // Process first 8 high nibbles
+                __m256i i32_hi = _mm256_cvtepu8_epi32(highNibbles);
+                __m256 wv_hi = _mm256_cvtepi32_ps(i32_hi);
+                __m256 xv_hi = _mm256_loadu_ps(x + b * 256 + sb * 32 + 16);
+                __m256 dequant_hi = _mm256_add_ps(_mm256_mul_ps(wv_hi, sVec), mVec);
+                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi, xv_hi, 0xF1)));
+                
+                // Process second 8 high nibbles
+                __m128i highNibbles_hi = _mm_srli_si128(highNibbles, 8);
+                __m256i i32_hi2 = _mm256_cvtepu8_epi32(highNibbles_hi);
+                __m256 wv_hi2 = _mm256_cvtepi32_ps(i32_hi2);
+                __m256 xv_hi2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 24);
+                __m256 dequant_hi2 = _mm256_add_ps(_mm256_mul_ps(wv_hi2, sVec), mVec);
+                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi2, xv_hi2, 0xF1)));
+            }
+        }
+        y[r] += rowAcc;
     }
 }
 
@@ -554,6 +716,108 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        float dm = f16_to_f32(blocks[b].dmin);
+        for (int i = 0; i < 256; i += 16) {
+            const uint8_t scales = blocks[b].scales[i / 16];
+            const float dl = d * (scales & 0x0F);
+            const float ml = dm * (scales >> 4);
+            for (int j = 0; j < 16; ++j) {
+                size_t idx = b * 256 + i + j;
+                if (idx >= n) return;
+                uint8_t q = (blocks[b].qs[(i + j) / 4] >> (2 * ((i + j) % 4))) & 3;
+                dst[idx] = dl * q - ml;
+            }
+        }
+    }
+}
+
+static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        for (int i = 0; i < 256; i += 32) {
+            for (int j = 0; j < 32; ++j) {
+                size_t idx = b * 256 + i + j;
+                if (idx >= n) return;
+                int is = (i / 32) * 8 + j / 4;
+                int shift = 2 * (j % 4);
+                uint8_t m = 1 << (4 * (i / 32) + j / 8);
+                int8_t us = get_scale_q3_k(is, blocks[b].scales);
+                int8_t q = ((blocks[b].qs[i + j] >> shift) & 3) - ((blocks[b].hmask[i + j] & m) ? 0 : 4);
+                dst[idx] = d * (us - 32) * q;
+            }
+        }
+    }
+}
+
+static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float dall = f16_to_f32(blocks[b].d);
+        float dmin = f16_to_f32(blocks[b].dmin);
+        for (int il = 0; il < 4; il++) {
+            int is = 2 * il;
+            uint8_t sc, mm;
+            get_scale_min_k4(is + 0, blocks[b].scales, sc, mm);
+            float d1 = dall * sc;
+            float m1 = dmin * mm;
+            get_scale_min_k4(is + 1, blocks[b].scales, sc, mm);
+            float d2 = dall * sc;
+            float m2 = dmin * mm;
+            uint8_t hm = 1 << (2 * il);
+            uint8_t hm2 = hm << 1;
+            for (int ir = 0; ir < 16; ir++) {
+                int base = 64 * il + 2 * ir;
+                for (int k = 0; k < 2; k++) {
+                    size_t idx = b * 256 + base + k;
+                    if (idx >= n) return;
+                    uint8_t ql = blocks[b].qs[32 * il + 2 * ir + k];
+                    uint8_t qh = blocks[b].qh[2 * ir + k];
+                    uint8_t q0 = (ql & 0x0F) + ((qh & hm) ? 16 : 0);
+                    uint8_t q1 = (ql >> 4) + ((qh & hm2) ? 16 : 0);
+                    dst[idx] = d1 * q0 - m1;
+                    if (idx + 1 < n && k == 0) {
+                        dst[idx + 1] = d2 * q1 - m2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        for (int ip = 0; ip < 2; ip++) {
+            for (int il = 0; il < 32; il++) {
+                int is = 8 * ip + il / 16;
+                int8_t sc = blocks[b].scales[is];
+                const uint8_t ql0 = blocks[b].ql[64 * ip + il];
+                const uint8_t ql32 = blocks[b].ql[64 * ip + il + 32];
+                const uint8_t qh = blocks[b].qh[32 * ip + il];
+                const int q0 = ((ql0 & 0x0F) | (((qh >> 0) & 3) << 4)) - 32;
+                const int q1 = ((ql32 & 0x0F) | (((qh >> 2) & 3) << 4)) - 32;
+                const int q2 = ((ql0 >> 4) | (((qh >> 4) & 3) << 4)) - 32;
+                const int q3 = ((ql32 >> 4) | (((qh >> 6) & 3) << 4)) - 32;
+                size_t base = b * 256 + 64 * ip + il;
+                dst[base] = d * sc * q0;
+                if (base + 32 < n) dst[base + 32] = d * sc * q1;
+                if (base + 64 < n) dst[base + 64] = d * sc * q2;
+                if (base + 96 < n) dst[base + 96] = d * sc * q3;
+            }
+        }
+    }
+}
+
 // ===========================================================================
 // Registry initialization
 // ===========================================================================
@@ -585,34 +849,63 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterGeometry((int)GGMLType::GGML_TYPE_F16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_F16));
     RegisterDequant((int)GGMLType::GGML_TYPE_F16, dequant_f16);
     if (hasAVX512 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx512);
+    else if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
 
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
     if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx2);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
     if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx2);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+
+    // --- Q2_K ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_avx2);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+
+    // --- Q3_K ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_avx2);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+
+    // --- Q5_K ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_avx2);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q6_K, dequant_q6_k);
+    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx512);
+    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx2);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
-    // --- Remaining K-quants: scalar fallback for now, AVX-512 added later ---
+    // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1): scalar fallback ---
+    // These formats are deprecated in favor of K-quants but kept for compatibility
+    // AVX-512 optimized kernels can be added here when needed
     for (int t = (int)GGMLType::GGML_TYPE_Q4_0; t <= (int)GGMLType::GGML_TYPE_Q5_1; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
-        // Use Q8_0 scalar as a placeholder; specific kernels added per-type
+        // Use Q8_0 scalar as fallback; type-specific kernels registered on-demand
         RegisterGEMV(t, gemv_q8_0_scalar);
     }
-    for (int t = (int)GGMLType::GGML_TYPE_Q2_K; t <= (int)GGMLType::GGML_TYPE_Q5_K; ++t) {
-        if (t == (int)GGMLType::GGML_TYPE_Q4_K) continue; // already registered
+    // IQ types fallback
+    for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
-        RegisterGEMV(t, gemv_q4_k_scalar); // generic K-quant fallback
+        RegisterGEMV(t, gemv_q4_k_scalar); // IQ fallback
     }
     for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
@@ -691,3 +984,4 @@ std::string QuantKernelRegistry::DumpTable() const {
 }
 
 } // namespace Deep2
+

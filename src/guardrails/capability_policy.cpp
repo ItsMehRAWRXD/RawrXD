@@ -23,13 +23,13 @@ void PolicyConfig::LoadFromFile(const std::filesystem::path& path) {
         nlohmann::json j;
         file >> j;
         
-        if (j.contains("enabled")) enabled = j["enabled"];
-        if (j.contains("enforce_capabilities")) enforce_capabilities = j["enforce_capabilities"];
-        if (j.contains("enforce_scope_limits")) enforce_scope_limits = j["enforce_scope_limits"];
-        if (j.contains("enforce_rate_limits")) enforce_rate_limits = j["enforce_rate_limits"];
-        if (j.contains("require_token_for_execution")) require_token_for_execution = j["require_token_for_execution"];
-        if (j.contains("auto_revoke_on_violation")) auto_revoke_on_violation = j["auto_revoke_on_violation"];
-        if (j.contains("log_all_capability_checks")) log_all_capability_checks = j["log_all_capability_checks"];
+        if (j.contains("enabled")) enabled = j["enabled"].get<bool>();
+        if (j.contains("enforce_capabilities")) enforce_capabilities = j["enforce_capabilities"].get<bool>();
+        if (j.contains("enforce_scope_limits")) enforce_scope_limits = j["enforce_scope_limits"].get<bool>();
+        if (j.contains("enforce_rate_limits")) enforce_rate_limits = j["enforce_rate_limits"].get<bool>();
+        if (j.contains("require_token_for_execution")) require_token_for_execution = j["require_token_for_execution"].get<bool>();
+        if (j.contains("auto_revoke_on_violation")) auto_revoke_on_violation = j["auto_revoke_on_violation"].get<bool>();
+        if (j.contains("log_all_capability_checks")) log_all_capability_checks = j["log_all_capability_checks"].get<bool>();
         
         if (j.contains("max_modifications_per_minute")) max_modifications_per_minute = j["max_modifications_per_minute"].get<uint32_t>();
         if (j.contains("max_executions_per_minute")) max_executions_per_minute = j["max_executions_per_minute"].get<uint32_t>();
@@ -55,9 +55,9 @@ void PolicyConfig::SaveToFile(const std::filesystem::path& path) const {
     j["require_token_for_execution"] = require_token_for_execution;
     j["auto_revoke_on_violation"] = auto_revoke_on_violation;
     j["log_all_capability_checks"] = log_all_capability_checks;
-    j["max_modifications_per_minute"] = max_modifications_per_minute;
-    j["max_executions_per_minute"] = max_executions_per_minute;
-    j["max_high_risk_per_hour"] = max_high_risk_per_hour;
+    j["max_modifications_per_minute"] = static_cast<uint64_t>(max_modifications_per_minute);
+    j["max_executions_per_minute"] = static_cast<uint64_t>(max_executions_per_minute);
+    j["max_high_risk_per_hour"] = static_cast<uint64_t>(max_high_risk_per_hour);
     
     std::ofstream file(path);
     if (file.is_open()) {
@@ -176,8 +176,8 @@ std::string CapabilityToken::ToJson() const {
     j["intent_id"] = intent_id_;
     j["capabilities"] = static_cast<uint64_t>(capabilities_);
     j["expiry_timestamp"] = expiry_timestamp_;
-    j["max_uses"] = max_uses_;
-    j["uses_remaining"] = uses_remaining_.load();
+    j["max_uses"] = static_cast<uint64_t>(max_uses_);
+    j["uses_remaining"] = static_cast<uint64_t>(uses_remaining_.load());
     j["revoked"] = revoked_.load();
     j["revoke_reason"] = revoke_reason_;
     return j.dump();

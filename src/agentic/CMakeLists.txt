@@ -10,7 +10,11 @@ if(MSVC)
 endif()
 
 # Set C++ standard
+<<<<<<< HEAD
 set(CMAKE_CXX_STANDARD 20)
+=======
+set(CMAKE_CXX_STANDARD 17)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Include directories
@@ -54,8 +58,19 @@ set(VULKAN_SOURCES
 )
 
 # Source files - Assembly (NEON Vulkan Fabric)
+<<<<<<< HEAD
 # NOTE: The ml64-compatible implementation is pending; do not link placeholder ASM.
 set(VULKAN_ASM_SOURCES)
+=======
+# Using stub while full production assembly is validated for ml64 compatibility
+if(MSVC)
+    set(VULKAN_ASM_SOURCES
+        vulkan/NEON_VULKAN_FABRIC_STUB.asm
+    )
+else()
+    set(VULKAN_ASM_SOURCES)
+endif()
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # Source files - Bridge
 set(BRIDGE_SOURCES
@@ -71,6 +86,7 @@ set(COORDINATION_SOURCES
 # Source files - Planning (Phase 2)
 set(PLANNING_SOURCES
     planning/ModelGuidedPlanner.cpp
+<<<<<<< HEAD
     agentic_planning_orchestrator.cpp
     agentic_orchestrator_integration.cpp
     agentic_audit_sink.cpp
@@ -118,6 +134,10 @@ else()
     set(SOURCEEDIT_ASM_SOURCES)
 endif()
 
+=======
+)
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 # Combine all sources
 set(AGENTIC_SOURCES
     ${MANIFESTOR_SOURCES}
@@ -128,12 +148,16 @@ set(AGENTIC_SOURCES
     ${BRIDGE_SOURCES}
     ${COORDINATION_SOURCES}
     ${PLANNING_SOURCES}
+<<<<<<< HEAD
     ${AGENT_LOOP_SOURCES}
     ${ORCHESTRATOR_SOURCES}
     ${T4_RECOVERY_SOURCES}
     ${VULKAN_ASM_SOURCES}
     ${DISK_RECOVERY_ASM_SOURCES}
     ${SOURCEEDIT_ASM_SOURCES}
+=======
+    ${VULKAN_ASM_SOURCES}
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 )
 
 # Create library
@@ -146,12 +170,16 @@ if(MSVC)
     # MASM source files - MUST NOT get C++ compiler flags
     set_source_files_properties(
         ${VULKAN_ASM_SOURCES}
+<<<<<<< HEAD
         ${DISK_RECOVERY_ASM_SOURCES}
         ${SOURCEEDIT_ASM_SOURCES}
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         PROPERTIES
         LANGUAGE ASM_MASM
         COMPILE_FLAGS "/DWIN64 /D_WIN64"
     )
+<<<<<<< HEAD
 
     # DiskRecoveryAgent ASM needs its include path for RawrXD_Common.inc
     if(DISK_RECOVERY_ASM_SOURCES)
@@ -170,11 +198,17 @@ if(MSVC)
             COMPILE_FLAGS "/DWIN64 /D_WIN64 /I${CMAKE_CURRENT_SOURCE_DIR}/../asm"
         )
     endif()
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 endif()
 
 # Target properties
 set_target_properties(RawrXD-Agentic PROPERTIES
+<<<<<<< HEAD
     CXX_STANDARD 20
+=======
+    CXX_STANDARD 17
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     CXX_STANDARD_REQUIRED ON
 )
 if(MSVC)
@@ -200,8 +234,11 @@ target_link_libraries(RawrXD-Agentic PUBLIC
 # Include directories for targets
 target_include_directories(RawrXD-Agentic PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+<<<<<<< HEAD
     ${CMAKE_CURRENT_SOURCE_DIR}/../
     ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include/rawrxd/agentic>
 )
@@ -223,7 +260,11 @@ target_compile_definitions(RawrXD-Agentic PRIVATE
 # Compiler options (C++ only - not for MASM)
 if(MSVC)
     target_compile_options(RawrXD-Agentic PRIVATE
+<<<<<<< HEAD
         $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
+=======
+        $<$<COMPILE_LANGUAGE:CXX>:/std:c++17>
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
         $<$<COMPILE_LANGUAGE:CXX>:/W4>
         $<$<COMPILE_LANGUAGE:CXX>:/WX->
         $<$<COMPILE_LANGUAGE:CXX>:/permissive->
@@ -259,7 +300,18 @@ endif()
 install(DIRECTORY
     manifestor/ wiring/ hotpatch/ observability/ vulkan/ bridge/
     DESTINATION include/rawrxd/agentic
+<<<<<<< HEAD
     FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+=======
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
+# Install library
+install(TARGETS RawrXD-Agentic
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 )
 
 # Feature flags
@@ -269,6 +321,14 @@ target_compile_definitions(RawrXD-Agentic PRIVATE
     $<$<BOOL:${ENABLE_OBSERVABILITY}>:AGENTIC_OBSERVABILITY=1>
 )
 
+<<<<<<< HEAD
+=======
+# Include what you use
+target_include_directories(RawrXD-Agentic PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 # Installation
 install(TARGETS RawrXD-Agentic
     ARCHIVE DESTINATION lib
@@ -278,7 +338,11 @@ install(TARGETS RawrXD-Agentic
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION include/agentic
+<<<<<<< HEAD
     FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+=======
+    FILES_MATCHING PATTERN "*.hpp"
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 )
 
 # Tests (if enabled)

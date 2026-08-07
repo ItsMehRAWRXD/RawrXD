@@ -6,10 +6,13 @@
 ; ============================================================================
 
 option casemap:none
+<<<<<<< HEAD
 
 ; ─── Cross-module symbol resolution ───
 INCLUDE rawrxd_master.inc
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 option win64:3
 
 .code

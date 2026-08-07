@@ -294,7 +294,43 @@ FileAnalysisResult CodebaseAuditSystem::analyze_source_file(const std::string& f
         }
         
         if (config_.check_coding_standards) {
-            std::map<std::string, std::string> project_context; // Simplified for this implementation
+            // Build project context from existing files for architecture compliance
+            std::map<std::string, std::string> project_context;
+            
+            // Collect project-wide context from key configuration files
+            std::vector<std::string> contextFiles = {
+                "CMakeLists.txt", "Makefile", "package.json", "Cargo.toml", 
+                "pom.xml", "build.gradle", "setup.py", "requirements.txt"
+            };
+            
+            for (const auto& ctxFile : contextFiles) {
+                std::string ctxPath = std::filesystem::path(file_path).parent_path().string() + "/" + ctxFile;
+                if (std::filesystem::exists(ctxPath)) {
+                    try {
+                        std::ifstream file(ctxPath);
+                        std::string content((std::istreambuf_iterator<char>(file)),
+                                               std::istreambuf_iterator<char>());
+                        project_context[ctxFile] = content;
+                    } catch (...) {
+                        // Continue if we can't read a context file
+                    }
+                }
+            }
+            
+            // Also extract includes and dependencies from the current file
+            std::regex include_pattern(R"(#include\s*[<\"]([^>\"]+)[>\"])");
+            std::sregex_iterator inc_iter(file_content.begin(), file_content.end(), include_pattern);
+            std::sregex_iterator inc_end;
+            
+            std::string includes;
+            while (inc_iter != inc_end) {
+                includes += (*inc_iter)[1].str() + ";";
+                ++inc_iter;
+            }
+            if (!includes.empty()) {
+                project_context["includes"] = includes;
+            }
+            
             result.architecture_compliance = assess_architecture_compliance(file_content, project_context);
         }
         
@@ -755,9 +791,63 @@ uint32_t CodebaseAuditSystem::count_classes(const std::string& content) {
 }
 
 uint32_t CodebaseAuditSystem::calculate_cyclomatic_complexity(const std::string& content) {
-    // Simplified cyclomatic complexity calculation
-    std::regex complexity_pattern(R"(\bif\b|\bwhile\b|\bfor\b|\bswitch\b|\bcase\b|\bcatch\b|\?)");
-    return 1 + count_pattern_occurrences(content, complexity_pattern);
+    // Calculate cyclomatic complexity using McCabe's formula
+    // Complexity = E - N + 2P, where E = edges, N = nodes, P = connected components
+    // For a single function: Complexity = decision points + 1
+    
+    uint32_t decisionPoints = 0;
+    
+    // Count if statements (including else if)
+    std::regex if_pattern(R"(\bif\s*\()");
+    decisionPoints += count_pattern_occurrences(content, if_pattern);
+    
+    // Count loops
+    std::regex loop_pattern(R"(\b(for|while|do)\s*[\(\{])");
+    decisionPoints += count_pattern_occurrences(content, loop_pattern);
+    
+    // Count case statements (each adds a path)
+    std::regex case_pattern(R"(\bcase\s+[^:]+:)");
+    decisionPoints += count_pattern_occurrences(content, case_pattern);
+    
+    // Count catch blocks
+    std::regex catch_pattern(R"(\bcatch\s*\()");
+    decisionPoints += count_pattern_occurrences(content, catch_pattern);
+    
+    // Count ternary operators
+    std::regex ternary_pattern(R"(\?[^;]*:)");
+    decisionPoints += count_pattern_occurrences(content, ternary_pattern);
+    
+    // Count logical operators (&& and ||) as they create short-circuit paths
+    std::regex logical_and_pattern(R"(\&\&)");
+    std::regex logical_or_pattern(R"(\|\|)");
+    decisionPoints += count_pattern_occurrences(content, logical_and_pattern);
+    decisionPoints += count_pattern_occurrences(content, logical_or_pattern);
+    
+    // Count try blocks (each adds an exit path)
+    std::regex try_pattern(R"(\btry\s*\{)");
+    decisionPoints += count_pattern_occurrences(content, try_pattern);
+    
+    // Count goto statements
+    std::regex goto_pattern(R"(\bgoto\s+\w+)");
+    decisionPoints += count_pattern_occurrences(content, goto_pattern);
+    
+    // Cyclomatic complexity = decision points + 1 (for the entry point)
+    return decisionPoints + 1;
+}
+    std::regex logical_and_pattern(R"(\&\&)");
+    std::regex logical_or_pattern(R"(\|\|)");
+    decisionPoints += count_pattern_occurrences(content, logical_and_pattern);
+    decisionPoints += count_pattern_occurrences(content, logical_or_pattern);
+    
+    // Count goto statements (unstructured control flow)
+    std::regex goto_pattern(R"(\bgoto\s+\w+)");
+    decisionPoints += count_pattern_occurrences(content, goto_pattern);
+    
+    // Base complexity is 1 (single path), add decision points
+    uint32_t complexity = 1 + decisionPoints;
+    
+    // Cap at reasonable maximum to avoid overflow
+    return std::min(complexity, 100u);
 }
 
 std::vector<std::smatch> CodebaseAuditSystem::find_regex_matches(const std::string& content, 
@@ -891,11 +981,32 @@ void CodebaseAuditSystem::generate_file_recommendations(FileAnalysisResult& resu
 }
 
 bool CodebaseAuditSystem::check_naming_conventions(const std::string& content) {
-    // Simplified naming convention check
-    std::regex snake_case_pattern(R"(\b[a-z][a-z0-9_]*\b)");
-    std::regex camel_case_pattern(R"(\b[a-z][a-zA-Z0-9]*\b)");
+    // Real naming convention check: verify identifiers follow consistent patterns
+    // Check for mixed naming (snake_case AND camelCase in same file is a violation)
+    std::regex snake_case_pattern(R"(\b[a-z][a-z0-9_]+\b)");
+    std::regex camel_case_pattern(R"(\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b)");
+    std::regex pascal_case_pattern(R"(\b[A-Z][a-zA-Z0-9]*\b)");
     
-    return contains_pattern(content, snake_case_pattern) || contains_pattern(content, camel_case_pattern);
+    auto snake_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), snake_case_pattern),
+                                        std::sregex_iterator());
+    auto camel_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), camel_case_pattern),
+                                        std::sregex_iterator());
+    auto pascal_matches = std::distance(std::sregex_iterator(content.begin(), content.end(), pascal_case_pattern),
+                                         std::sregex_iterator());
+    
+    // Good: has identifiers and follows at least one convention
+    if (snake_matches + camel_matches + pascal_matches == 0) {
+        return false;  // No identifiers found
+    }
+    
+    // Check for consistency: if both snake_case and camelCase are heavily used, it's inconsistent
+    if (snake_matches > 10 && camel_matches > 10) {
+        // Mixed conventions - check if it's C++ (classes use PascalCase, functions use snake_case)
+        // This is acceptable in C++ codebases
+        return pascal_matches > 0;  // Has class names
+    }
+    
+    return true;
 }
 
 void CodebaseAuditSystem::update_statistics(const ProjectAuditResult& result) {

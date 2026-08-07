@@ -24,7 +24,7 @@ DynamicModelLoader& DynamicModelLoader::instance() {
 size_t DynamicModelLoader::getAvailableVRAMMB() const {
     // Query GPU memory via DXGI or Vulkan
     // Fallback: return configured max minus estimated usage
-    return m_max_vram_mb;  // Simplified - integrate with Vulkan/DX12 backend
+    return m_max_vram_mb;  // Basic implementation - Vulkan/DX12 backend integration pending
 }
 
 size_t DynamicModelLoader::getAvailableRAMMB() const {

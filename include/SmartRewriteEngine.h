@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <string>
@@ -162,3 +163,4 @@ private:
 
 } // namespace IDE
 } // namespace RawrXD
+

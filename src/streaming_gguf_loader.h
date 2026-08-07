@@ -113,6 +113,11 @@ private:
     bool ReadValue(T& value);
     bool ReadString(std::string& value);
     uint64_t CalculateTensorSize(const std::vector<uint64_t>& shape, GGMLType type) const;
+
+    std::vector<std::string> vocabulary_;
+    
+    uint64_t tensor_info_offset = 0;
+    uint64_t data_base_offset = 0;
 };
 
 } // namespace RawrXD

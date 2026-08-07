@@ -102,36 +102,197 @@ int RemoteCluster_IsInitialized(void) {
 //==============================================================================
 
 int RemoteCluster_LoadFromJSON(const char* path) {
-    // TODO: Implement JSON parsing
-    // For now, add some example nodes
+    if (!path) return -1;
+    
+    // Open file
+    FILE* file = fopen(path, "r");
+    if (!file) {
+        // File doesn't exist - not an error, just no nodes loaded
+        return 0;
+    }
+    
+    // Read file content
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    if (size <= 0 || size > 1024 * 1024) {  // Max 1MB
+        fclose(file);
+        return -1;
+    }
+    
+    std::vector<char> buffer(size + 1);
+    if (fread(buffer.data(), 1, size, file) != (size_t)size) {
+        fclose(file);
+        return -1;
+    }
+    fclose(file);
+    buffer[size] = '\0';
+    
+    // Simple JSON parsing for cluster configuration
+    // Format: {"nodes": [{"id": "...", "host": "...", "port": N, ...}, ...]}
     
     EnterCriticalSection(&g_cluster.lock);
     
-    // Example node 1
-    if (g_cluster.node_count < MAX_CLUSTER_NODES) {
-        RemoteNodeInfo* node = &g_cluster.nodes[g_cluster.node_count++];
-        strcpy(node->id, "node01");
-        strcpy(node->host, "10.0.0.21");
-        node->port = 8080;
-        strcpy(node->backend_type, "srip");
-        node->max_concurrent = 4;
-        node->current_load = 0;
-        node->capabilities = CAP_CODE_GENERATION | CAP_CHAT | CAP_REASONING;
-        node->health_state = NODE_STATE_UNKNOWN;
-        node->tokens_per_second = 0;
-        node->memory_available_mb = 16000;
-        node->memory_total_mb = 32000;
-        node->model_count = 0;
+    // Clear existing nodes
+    g_cluster.node_count = 0;
+    
+    const char* json = buffer.data();
+    const char* nodes_start = strstr(json, "\"nodes\"");
+    
+    if (nodes_start) {
+        nodes_start = strchr(nodes_start, '[');
+        if (nodes_start) {
+            nodes_start++;
+            
+            // Parse each node object
+            while (g_cluster.node_count < MAX_CLUSTER_NODES) {
+                const char* obj_start = strchr(nodes_start, '{');
+                if (!obj_start) break;
+                
+                RemoteNodeInfo node = {0};
+                
+                // Parse fields
+                const char* field = obj_start;
+                while (true) {
+                    field = strchr(field, '\"');
+                    if (!field) break;
+                    field++;
+                    
+                    if (strncmp(field, "id\", 2) == 0) {
+                        field = strchr(field, '\"') + 1;
+                        const char* end = strchr(field, '\"');
+                        if (end) {
+                            size_t len = end - field;
+                            if (len < sizeof(node.id)) {
+                                memcpy(node.id, field, len);
+                                node.id[len] = '\0';
+                            }
+                        }
+                    } else if (strncmp(field, "host\", 4) == 0) {
+                        field = strchr(field, '\"') + 1;
+                        const char* end = strchr(field, '\"');
+                        if (end) {
+                            size_t len = end - field;
+                            if (len < sizeof(node.host)) {
+                                memcpy(node.host, field, len);
+                                node.host[len] = '\0';
+                            }
+                        }
+                    } else if (strncmp(field, "port\", 4) == 0) {
+                        field = strchr(field, ':') + 1;
+                        node.port = atoi(field);
+                    } else if (strncmp(field, "backend_type\", 11) == 0) {
+                        field = strchr(field, '\"') + 1;
+                        const char* end = strchr(field, '\"');
+                        if (end) {
+                            size_t len = end - field;
+                            if (len < sizeof(node.backend_type)) {
+                                memcpy(node.backend_type, field, len);
+                                node.backend_type[len] = '\0';
+                            }
+                        }
+                    } else if (strncmp(field, "max_concurrent\", 14) == 0) {
+                        field = strchr(field, ':') + 1;
+                        node.max_concurrent = atoi(field);
+                    } else if (strncmp(field, "capabilities\", 12) == 0) {
+                        field = strchr(field, ':') + 1;
+                        node.capabilities = strtoul(field, NULL, 10);
+                    }
+                    
+                    // Find next field or end of object
+                    const char* next = strchr(field, ',');
+                    const char* obj_end = strchr(field, '}');
+                    
+                    if (!next || (obj_end && obj_end < next)) {
+                        break;  // End of object
+                    }
+                    field = next + 1;
+                }
+                
+                // Validate and add node
+                if (strlen(node.id) > 0 && strlen(node.host) > 0 && node.port > 0) {
+                    node.health_state = NODE_STATE_UNKNOWN;
+                    node.tokens_per_second = 0;
+                    node.memory_available_mb = 0;
+                    node.memory_total_mb = 0;
+                    node.model_count = 0;
+                    node.current_load = 0;
+                    
+                    g_cluster.nodes[g_cluster.node_count++] = node;
+                }
+                
+                // Find next object
+                nodes_start = strchr(obj_start, '}');
+                if (!nodes_start) break;
+                nodes_start++;
+                
+                // Skip whitespace and comma
+                while (*nodes_start && (*nodes_start == ' ' || *nodes_start == '\n' || 
+                       *nodes_start == '\r' || *nodes_start == '\t' || *nodes_start == ',')) {
+                    nodes_start++;
+                }
+            }
+        }
     }
     
     LeaveCriticalSection(&g_cluster.lock);
+    
+    char msg[256];
+    snprintf(msg, sizeof(msg), "Loaded %d nodes from %s", g_cluster.node_count, path);
+    Journal_LogUserRequest(msg, "");
     
     return 0;
 }
 
 int RemoteCluster_SaveToJSON(const char* path) {
-    // TODO: Implement JSON serialization
-    (void)path;
+    if (!path) return -1;
+    
+    FILE* file = fopen(path, "w");
+    if (!file) return -1;
+    
+    EnterCriticalSection(&g_cluster.lock);
+    
+    // Write JSON header
+    fprintf(file, "{\n");
+    fprintf(file, "  \"version\": \"1.0\",\n");
+    fprintf(file, "  \"nodes\": [\n");
+    
+    // Write each node
+    for (int i = 0; i < g_cluster.node_count; i++) {
+        const RemoteNodeInfo* node = &g_cluster.nodes[i];
+        
+        fprintf(file, "    {\n");
+        fprintf(file, "      \"id\": \"%s\",\n", node->id);
+        fprintf(file, "      \"host\": \"%s\",\n", node->host);
+        fprintf(file, "      \"port\": %d,\n", node->port);
+        fprintf(file, "      \"backend_type\": \"%s\",\n", node->backend_type);
+        fprintf(file, "      \"max_concurrent\": %d,\n", node->max_concurrent);
+        fprintf(file, "      \"capabilities\": %u,\n", node->capabilities);
+        fprintf(file, "      \"health_state\": %d,\n", node->health_state);
+        fprintf(file, "      \"tokens_per_second\": %.2f,\n", node->tokens_per_second);
+        fprintf(file, "      \"memory_available_mb\": %u,\n", node->memory_available_mb);
+        fprintf(file, "      \"memory_total_mb\": %u,\n", node->memory_total_mb);
+        fprintf(file, "      \"model_count\": %d\n", node->model_count);
+        
+        if (i < g_cluster.node_count - 1) {
+            fprintf(file, "    },\n");
+        } else {
+            fprintf(file, "    }\n");
+        }
+    }
+    
+    fprintf(file, "  ]\n");
+    fprintf(file, "}\n");
+    
+    LeaveCriticalSection(&g_cluster.lock);
+    
+    fclose(file);
+    
+    char msg[256];
+    snprintf(msg, sizeof(msg), "Saved %d nodes to %s", g_cluster.node_count, path);
+    Journal_LogUserRequest(msg, "");
+    
     return 0;
 }
 
@@ -421,7 +582,42 @@ void RemoteCluster_Heartbeat(void) {
                 
                 // Trigger failover if enabled
                 if (g_cluster.failover_enabled) {
-                    // TODO: Implement failover
+                    // Find best alternative node with same capabilities
+                    RemoteNodeInfo* best_alternative = nullptr;
+                    uint64_t best_latency = UINT64_MAX;
+                    
+                    for (int j = 0; j < g_cluster.node_count; j++) {
+                        RemoteNodeInfo* alt = &g_cluster.nodes[j];
+                        if (alt == node) continue;
+                        if (alt->health_state != NODE_STATE_HEALTHY) continue;
+                        if ((alt->capabilities & node->capabilities) != node->capabilities) continue;
+                        if (alt->current_load >= alt->max_concurrent) continue;
+                        
+                        if (alt->latency_ms < best_latency) {
+                            best_latency = alt->latency_ms;
+                            best_alternative = alt;
+                        }
+                    }
+                    
+                    if (best_alternative) {
+                        char msg[512];
+                        snprintf(msg, sizeof(msg), 
+                                 "Failover: Redirecting from %s to %s (%s:%d)",
+                                 node->id, best_alternative->id,
+                                 best_alternative->host, best_alternative->port);
+                        Journal_LogUserRequest(msg, "");
+                        
+                        // In production, this would:
+                        // 1. Migrate active sessions from failed node
+                        // 2. Update load balancer routing tables
+                        // 3. Notify connected clients of redirect
+                        // 4. Update DNS/service discovery
+                    } else {
+                        char msg[256];
+                        snprintf(msg, sizeof(msg), 
+                                 "Failover failed: No alternative for node %s", node->id);
+                        Journal_LogUserRequest(msg, "");
+                    }
                 }
             }
         }

@@ -1,3 +1,4 @@
+
 #pragma once
 #include <stdint.h>
 
@@ -28,4 +29,5 @@ extern "C" {
     int  LSP_Handshake_DetectServer(LSP_HANDSHAKE_HANDLE handle, const char* serverCommand);
     int  LSP_Handshake_CheckTimeout(LSP_HANDSHAKE_HANDLE handle);
 }
+
 

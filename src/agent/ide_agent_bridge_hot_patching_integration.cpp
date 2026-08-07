@@ -222,6 +222,8 @@ void IDEAgentBridgeWithHotPatching::initializeWithHotPatching() {
             fprintf(stderr, "[INFO] [IDEAgentBridge] ModelInvoker redirected to proxy\n");
         }
 
+        if (this->getModelInvoker()) this->getModelInvoker()->setEndpoint("http://localhost:11435");
+        
         m_hotPatchingEnabled = true;
         fprintf(stderr, "[INFO] [IDEAgentBridge] Hot patching initialization complete\n");
 

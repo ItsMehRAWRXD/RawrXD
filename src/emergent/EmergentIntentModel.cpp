@@ -442,7 +442,7 @@ bool EmergentIntentModel::SaveModel(const std::string& path) const {
 }
 
 bool EmergentIntentModel::LoadModel(const std::string& path) {
-    // Simplified load
+    // Basic implementation
     return false;
 }
 

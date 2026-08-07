@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <intrin.h>
 #include <math.h>
+#include "gguf_loader.h"
 
 // ============================================================================
 // Win32 API Typedefs (no windows.h)
@@ -835,3 +836,4 @@ extern "C" __declspec(dllexport) void Titan_Abort(void) {
 // ============================================================================
 // End of titan_infer_dll.cpp
 // ============================================================================
+

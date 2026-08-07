@@ -1,23 +1,13 @@
 # Build artifacts
 build/
-build_fresh/
-build_manual/
-build2/
-build_clean/
-build_fresh/
-build_ghost/
-build_mingw/
-build_msvc/
-build_nasm/
-build_new/
-build_output/
-build_pure_cpp/
-build_test/
-build_universal/
-build_verify/
-build_win32_gui_test/
-build_gui_3/
+**/build/
+build_*/
+**/build_*/
+build-*/
+**/build-*/
 build-arm64/
+**/build-arm64/
+build2/
 bin/
 lib/
 obj/
@@ -28,20 +18,28 @@ obj/
 *.exe
 *.dylib
 *.obj
-*.pdb
-*.lst
-*.lib
-*.exp
-*.ilk
-NUL.obj
-# Windows reserved name at repo root — breaks `git checkout` / `reset` on Windows
-/nul
 
 # CMake
 CMakeFiles/
+**/CMakeFiles/
 CMakeCache.txt
+**/CMakeCache.txt
 cmake_install.cmake
+**/cmake_install.cmake
 Makefile
+**/Makefile
+compile_commands.json
+**/compile_commands.json
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
 # IDE
 .vscode/
@@ -145,6 +143,7 @@ RefactorSuggestions.json
 
 # Additional build dirs and large files
 build_smoke_verify/
+build_ninja/
 build_ninja3/
 build_smoke_verify2/
 *.map

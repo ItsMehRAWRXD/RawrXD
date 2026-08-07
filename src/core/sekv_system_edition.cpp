@@ -11,6 +11,7 @@
 #include <intrin.h>
 #include <algorithm>
 #include <chrono>
+#include "vulkan_compute.h"
 
 namespace RawrXD {
 namespace SEKV {
@@ -1106,3 +1107,4 @@ void SEKVSystemEdition::Cleanup() {
 
 } // namespace SEKV
 } // namespace RawrXD
+

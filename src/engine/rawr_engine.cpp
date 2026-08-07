@@ -191,10 +191,15 @@ std::string RawrEngine::generate(const std::string& prompt, int max_tokens,
             }
         }
         
-        // Stop on EOS, if present in tokenizer.
-        auto eos_it = tokenizer.encoder.find("<|endoftext|>");
-        if (eos_it != tokenizer.encoder.end() && next_tok == eos_it->second) {
-            break;
+        // Stop on EOS — check multiple common EOS token strings from model metadata
+        static const char* eos_candidates[] = {
+            "<|endoftext|>", "<|eot_id|>", "<|im_end|>", "</s>", "<|eos|>", "<|end|>", "<|stop|>"
+        };
+        for (const char* eos_str : eos_candidates) {
+            auto eos_it = tokenizer.encoder.find(eos_str);
+            if (eos_it != tokenizer.encoder.end() && next_tok == eos_it->second) {
+                break;
+            }
         }
 
         if (next_tok == prev_token) {

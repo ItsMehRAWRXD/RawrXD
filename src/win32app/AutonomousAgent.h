@@ -48,11 +48,17 @@ struct DiagnosticCheckpoint {
     DWORD timestamp;
     DWORD threadId;
     HRESULT hr;
+    int severity;  // 1=info, 2=warning, 3=error, 4=critical
     std::string message;
     std::string context;
-    
+
+    // Full constructor with severity
+    DiagnosticCheckpoint(BeaconType t, HRESULT h, int sev, const std::string& msg, const std::string& ctx)
+        : type(t), timestamp(GetTickCount()), threadId(GetCurrentThreadId()), hr(h), severity(sev), message(msg), context(ctx) {}
+
+    // Backward-compatible constructor (defaults severity to 1/info)
     DiagnosticCheckpoint(BeaconType t, HRESULT h = S_OK, const std::string& msg = "", const std::string& ctx = "")
-        : type(t), timestamp(GetTickCount()), threadId(GetCurrentThreadId()), hr(h), message(msg), context(ctx) {}
+        : type(t), timestamp(GetTickCount()), threadId(GetCurrentThreadId()), hr(h), severity(1), message(msg), context(ctx) {}
 };
 
 // Self-Healing Actions

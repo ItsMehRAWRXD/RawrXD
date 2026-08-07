@@ -1,94 +1,152 @@
+
 #pragma once
 
-/**
- * FileResourceGuard — RAII file/directory guard (C++20, no Qt)
- * Replaces QFile/QDir with std::fstream and std::filesystem.
- */
-
-#include <string>
-#include <fstream>
-#include <filesystem>
+#include <QString>
+#include <QFile>
+#include <QDir>
 #include <memory>
+#include <QDebug>
 
-namespace rawrxd {
-
-inline void fileResourceGuardLog(const char* /* tag */, const char* /* msg */) {
-#ifdef _DEBUG
-    // Optionally: OutputDebugStringA(tag); OutputDebugStringA(msg);
-#endif
-}
-
+/**
+ * @class FileResourceGuard
+ * @brief RAII-style resource guard for file operations
+ * 
+ * Ensures proper cleanup of file resources even in error conditions.
+ * Automatically closes files and can optionally clean up temporary files.
+ */
 class FileResourceGuard {
-public:
-    using path_type = std::filesystem::path;
+private:
+    QString m_filePath;
+    QFile* m_file;
+    bool m_shouldCleanup;
+    bool m_isTemporary;
 
-    explicit FileResourceGuard(const std::string& filePath, std::FILE* file = nullptr, bool isTemporary = false)
+public:
+    /**
+     * @brief Construct a file resource guard
+     * @param filePath Path to the file being managed
+     * @param file Pointer to QFile object (can be nullptr)
+     * @param isTemporary Whether this is a temporary file that should be cleaned up
+     */
+    explicit FileResourceGuard(const QString& filePath, QFile* file = nullptr, bool isTemporary = false)
         : m_filePath(filePath)
         , m_file(file)
         , m_shouldCleanup(false)
         , m_isTemporary(isTemporary)
-    {}
-
-    ~FileResourceGuard() { release(); }
-
-    void markForCleanup() { m_shouldCleanup = true; }
-
-    void release()
     {
-        if (m_file) {
-            std::fclose(m_file);
-            m_file = nullptr;
+        qDebug() << "[FileResourceGuard] Created guard for:" << filePath;
+    }
+
+    /**
+     * @brief Destructor - automatically cleans up resources
+     */
+    ~FileResourceGuard() {
+        release();
+    }
+
+    /**
+     * @brief Mark this resource for cleanup
+     */
+    void markForCleanup() {
+        m_shouldCleanup = true;
+    }
+
+    /**
+     * @brief Release resources manually
+     */
+    void release() {
+        // Close file if open
+        if (m_file && m_file->isOpen()) {
+            m_file->close();
+            qDebug() << "[FileResourceGuard] Closed file:" << m_filePath;
         }
+
+        // Clean up temporary file if marked
         if (m_shouldCleanup && m_isTemporary) {
-            std::error_code ec;
-            if (std::filesystem::remove(m_filePath, ec)) {
-                fileResourceGuardLog("[FileResourceGuard]", ("Cleaned up temp: " + m_filePath.string()).c_str());
+            if (QFile::remove(m_filePath)) {
+                qDebug() << "[FileResourceGuard] Cleaned up temporary file:" << m_filePath;
+            } else {
+                qWarning() << "[FileResourceGuard] Failed to clean up temporary file:" << m_filePath;
             }
+        } else if (m_shouldCleanup) {
+            qDebug() << "[FileResourceGuard] Marked for cleanup but not temporary:" << m_filePath;
         }
     }
 
-    std::string filePath() const { return m_filePath.string(); }
-    const path_type& path() const { return m_filePath; }
-    bool isTemporary() const { return m_isTemporary; }
+    /**
+     * @brief Get the file path being managed
+     */
+    const QString& filePath() const {
+        return m_filePath;
+    }
 
-private:
-    path_type m_filePath;
-    std::FILE* m_file;
-    bool m_shouldCleanup;
-    bool m_isTemporary;
+    /**
+     * @brief Check if this is a temporary file
+     */
+    bool isTemporary() const {
+        return m_isTemporary;
+    }
 };
 
+/**
+ * @class DirectoryResourceGuard
+ * @brief RAII-style resource guard for directory operations
+ * 
+ * Ensures proper cleanup of directory resources even in error conditions.
+ */
 class DirectoryResourceGuard {
-public:
-    using path_type = std::filesystem::path;
+private:
+    QString m_dirPath;
+    bool m_shouldCleanup;
 
-    explicit DirectoryResourceGuard(const std::string& dirPath)
+public:
+    /**
+     * @brief Construct a directory resource guard
+     * @param dirPath Path to the directory being managed
+     */
+    explicit DirectoryResourceGuard(const QString& dirPath)
         : m_dirPath(dirPath)
         , m_shouldCleanup(false)
-    {}
-
-    ~DirectoryResourceGuard() { release(); }
-
-    void markForCleanup() { m_shouldCleanup = true; }
-
-    void release()
     {
+        qDebug() << "[DirectoryResourceGuard] Created guard for:" << dirPath;
+    }
+
+    /**
+     * @brief Destructor - automatically cleans up resources
+     */
+    ~DirectoryResourceGuard() {
+        release();
+    }
+
+    /**
+     * @brief Mark this resource for cleanup
+     */
+    void markForCleanup() {
+        m_shouldCleanup = true;
+    }
+
+    /**
+     * @brief Release resources manually
+     */
+    void release() {
+        // Clean up directory if marked
         if (m_shouldCleanup) {
-            std::error_code ec;
-            if (std::filesystem::exists(m_dirPath, ec) && std::filesystem::is_directory(m_dirPath, ec)) {
-                if (std::filesystem::remove_all(m_dirPath, ec)) {
-                    fileResourceGuardLog("[DirectoryResourceGuard]", ("Cleaned up dir: " + m_dirPath.string()).c_str());
+            QDir dir(m_dirPath);
+            if (dir.exists()) {
+                if (dir.removeRecursively()) {
+                    qDebug() << "[DirectoryResourceGuard] Cleaned up directory:" << m_dirPath;
+                } else {
+                    qWarning() << "[DirectoryResourceGuard] Failed to clean up directory:" << m_dirPath;
                 }
             }
         }
     }
 
-    std::string dirPath() const { return m_dirPath.string(); }
-    const path_type& path() const { return m_dirPath; }
-
-private:
-    path_type m_dirPath;
-    bool m_shouldCleanup;
+    /**
+     * @brief Get the directory path being managed
+     */
+    const QString& dirPath() const {
+        return m_dirPath;
+    }
 };
 
-} // namespace rawrxd

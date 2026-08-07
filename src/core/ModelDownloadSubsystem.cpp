@@ -8,12 +8,16 @@
 #include "ModelRegistry.h"
 #include <windows.h>
 #include <wininet.h>
+#include <wincrypt.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <process.h>
+#include <vector>
+#include <string>
 
 #pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "crypt32.lib")
 
 //==============================================================================
 // Internal State
@@ -662,12 +666,70 @@ int ModelDownload_VerifySHA256(const char* file_path, const char* expected_hash)
 }
 
 int ModelDownload_CalculateSHA256(const char* file_path, char* out_hash, size_t hash_size) {
-    // Simplified SHA256 - in production use proper crypto library
-    // For now, just return placeholder
     if (hash_size < 65) return -1;
     
-    // TODO: Implement actual SHA256 using Windows CryptoAPI or OpenSSL
-    strcpy(out_hash, "0000000000000000000000000000000000000000000000000000000000000000");
+    // Open file
+    HANDLE hFile = CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, nullptr, 
+                                OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+    
+    // Acquire crypto context for SHA256
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    
+    if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+        CloseHandle(hFile);
+        return -1;
+    }
+    
+    if (!CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash)) {
+        CryptReleaseContext(hProv, 0);
+        CloseHandle(hFile);
+        return -1;
+    }
+    
+    // Read file and hash
+    const size_t bufferSize = 65536;
+    std::vector<BYTE> buffer(bufferSize);
+    DWORD bytesRead = 0;
+    BOOL result = TRUE;
+    
+    while (result) {
+        result = ReadFile(hFile, buffer.data(), (DWORD)bufferSize, &bytesRead, nullptr);
+        if (!result || bytesRead == 0) break;
+        
+        if (!CryptHashData(hHash, buffer.data(), bytesRead, 0)) {
+            CryptDestroyHash(hHash);
+            CryptReleaseContext(hProv, 0);
+            CloseHandle(hFile);
+            return -1;
+        }
+    }
+    
+    CloseHandle(hFile);
+    
+    // Get hash value
+    BYTE hash[32];
+    DWORD hashLen = sizeof(hash);
+    if (!CryptGetHashParam(hHash, HP_HASHVAL, hash, &hashLen, 0)) {
+        CryptDestroyHash(hHash);
+        CryptReleaseContext(hProv, 0);
+        return -1;
+    }
+    
+    // Cleanup
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv, 0);
+    
+    // Convert to hex string
+    const char* hexChars = "0123456789abcdef";
+    for (int i = 0; i < 32; ++i) {
+        out_hash[i * 2] = hexChars[(hash[i] >> 4) & 0xF];
+        out_hash[i * 2 + 1] = hexChars[hash[i] & 0xF];
+    }
+    out_hash[64] = '\0';
     
     return 0;
 }
@@ -785,17 +847,158 @@ int ModelDownload_ResolveHFUrl(const char* model_id, char* out_url, size_t url_s
 }
 
 int ModelDownload_ListHFFiles(const char* model_id, char** out_files, int max_files, int* out_count) {
-    // TODO: Implement HuggingFace API call to list files
-    // For now, return empty list
+    if (!model_id || !out_count) return -1;
+    
     *out_count = 0;
+    if (!out_files || max_files <= 0) return 0;
+    
+    // Parse model ID (format: "org/model" or just "model")
+    char org[128] = {0};
+    char model[128] = {0};
+    
+    const char* slash = strchr(model_id, '/');
+    if (slash) {
+        size_t org_len = slash - model_id;
+        if (org_len >= sizeof(org)) org_len = sizeof(org) - 1;
+        memcpy(org, model_id, org_len);
+        org[org_len] = '\0';
+        
+        strncpy(model, slash + 1, sizeof(model) - 1);
+    } else {
+        strncpy(model, model_id, sizeof(model) - 1);
+    }
+    
+    // Build HuggingFace API URL for file listing
+    char api_url[512];
+    if (strlen(org) > 0) {
+        snprintf(api_url, sizeof(api_url), 
+                 "https://huggingface.co/api/models/%s/%s/tree/main", org, model);
+    } else {
+        snprintf(api_url, sizeof(api_url), 
+                 "https://huggingface.co/api/models/%s/tree/main", model);
+    }
+    
+    // Initialize WinINet
+    HINTERNET hInternet = InternetOpenA("RawrXD/1.0", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) {
+        return -1;
+    }
+    
+    // Open URL
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, api_url, NULL, 0, 
+                                       INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
+    if (!hUrl) {
+        InternetCloseHandle(hInternet);
+        return -1;
+    }
+    
+    // Read response
+    char buffer[8192];
+    DWORD bytesRead;
+    std::string response;
+    
+    while (InternetReadFile(hUrl, buffer, sizeof(buffer) - 1, &bytesRead) && bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        response += buffer;
+    }
+    
+    InternetCloseHandle(hUrl);
+    InternetCloseHandle(hInternet);
+    
+    // Parse JSON response (simplified - look for "path" fields)
+    // Expected format: [{"type": "file", "path": "model.gguf", ...}, ...]
+    int file_count = 0;
+    const char* search = response.c_str();
+    
+    while (file_count < max_files) {
+        const char* path_start = strstr(search, "\"path\":\"");
+        if (!path_start) break;
+        
+        path_start += 8;  // Skip "path":"
+        const char* path_end = strchr(path_start, '\"');
+        if (!path_end) break;
+        
+        size_t path_len = path_end - path_start;
+        if (path_len > 0 && path_len < 256) {
+            out_files[file_count] = (char*)malloc(path_len + 1);
+            if (out_files[file_count]) {
+                memcpy(out_files[file_count], path_start, path_len);
+                out_files[file_count][path_len] = '\0';
+                file_count++;
+            }
+        }
+        
+        search = path_end + 1;
+    }
+    
+    *out_count = file_count;
     return 0;
 }
 
 int ModelDownload_GetHFModelInfo(const char* model_id, char* out_info_json, size_t info_size) {
-    // TODO: Implement HuggingFace API call for model info
-    if (out_info_json && info_size > 0) {
-        out_info_json[0] = '\0';
+    if (!model_id || !out_info_json || info_size == 0) return -1;
+    
+    // Parse model ID
+    char org[128] = {0};
+    char model[128] = {0};
+    
+    const char* slash = strchr(model_id, '/');
+    if (slash) {
+        size_t org_len = slash - model_id;
+        if (org_len >= sizeof(org)) org_len = sizeof(org) - 1;
+        memcpy(org, model_id, org_len);
+        org[org_len] = '\0';
+        strncpy(model, slash + 1, sizeof(model) - 1);
+    } else {
+        strncpy(model, model_id, sizeof(model) - 1);
     }
+    
+    // Build HuggingFace API URL for model info
+    char api_url[512];
+    if (strlen(org) > 0) {
+        snprintf(api_url, sizeof(api_url),
+                 "https://huggingface.co/api/models/%s/%s", org, model);
+    } else {
+        snprintf(api_url, sizeof(api_url),
+                 "https://huggingface.co/api/models/%s", model);
+    }
+    
+    // Initialize WinINet
+    HINTERNET hInternet = InternetOpenA("RawrXD/1.0", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (!hInternet) {
+        return -1;
+    }
+    
+    // Open URL
+    HINTERNET hUrl = InternetOpenUrlA(hInternet, api_url, NULL, 0,
+                                       INTERNET_FLAG_RELOAD | INTERNET_FLAG_SECURE, 0);
+    if (!hUrl) {
+        InternetCloseHandle(hInternet);
+        return -1;
+    }
+    
+    // Read response
+    char buffer[8192];
+    DWORD bytesRead;
+    std::string response;
+    
+    while (InternetReadFile(hUrl, buffer, sizeof(buffer) - 1, &bytesRead) && bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        response += buffer;
+    }
+    
+    InternetCloseHandle(hUrl);
+    InternetCloseHandle(hInternet);
+    
+    // Copy response to output buffer
+    if (response.length() < info_size) {
+        memcpy(out_info_json, response.c_str(), response.length() + 1);
+    } else {
+        // Truncate if too long
+        memcpy(out_info_json, response.c_str(), info_size - 1);
+        out_info_json[info_size - 1] = '\0';
+    }
+    
     return 0;
 }
 

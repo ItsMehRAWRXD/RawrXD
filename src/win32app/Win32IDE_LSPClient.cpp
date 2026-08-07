@@ -29,6 +29,7 @@
 
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include "core/problems_aggregator.hpp"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -1257,6 +1258,22 @@ void Win32IDE::onDiagnosticsReceived(const std::string& uri, const std::vector<L
         updateEnhancedStatusBar();
     }
 
+    // Push to ProblemsAggregator for unified panel integration
+    {
+        auto& agg = RawrXD::ProblemsAggregator::instance();
+        agg.clear("LSP");  // Clear previous LSP diagnostics
+        for (const auto& d : diagnostics)
+        {
+            int sev = (d.severity == 1) ? 1 : (d.severity == 2) ? 2 : 3;  // LSP: 1=Error, 2=Warning, 3=Info, 4=Hint
+            std::string code = d.code.empty() ? "LSP" : d.code;
+            std::string source = d.source.empty() ? "lsp" : d.source;
+            agg.add("LSP", filePath, d.range.start.line + 1, d.range.start.character + 1,
+                    sev, code, d.message, source);
+        }
+        // Trigger refresh of unified Problems panel
+        refreshProblemsView();
+    }
+
     // Map diagnostics to the existing annotation system for visual display
     displayDiagnosticsAsAnnotations(uri);
 }
@@ -1310,23 +1327,33 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
     // Clear old LSP annotations
     clearAllAnnotations("lsp");
 
+    // Clear LSP diagnostic overlay (squiggles)
+    if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized()) {
+        m_lspDiagnosticOverlay->ClearAnnotations();
+    }
+
     auto diags = getDiagnosticsForFile(uri);
     for (const auto& d : diags)
     {
         AnnotationSeverity sev = AnnotationSeverity::Info;
+        RawrXD::UI::DiagnosticSeverity overlaySev = RawrXD::UI::DiagnosticSeverity::Information;
         switch (d.severity)
         {
             case 1:
                 sev = AnnotationSeverity::Error;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Error;
                 break;
             case 2:
                 sev = AnnotationSeverity::Warning;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Warning;
                 break;
             case 3:
                 sev = AnnotationSeverity::Info;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Information;
                 break;
             case 4:
                 sev = AnnotationSeverity::Info;
+                overlaySev = RawrXD::UI::DiagnosticSeverity::Hint;
                 break;  // Hint → Info
         }
 
@@ -1337,7 +1364,27 @@ void Win32IDE::displayDiagnosticsAsAnnotations(const std::string& uri)
         if (!d.source.empty())
             msg += " (" + d.source + ")";
 
+        // Add inline annotation (text after line)
         addAnnotation(d.range.start.line + 1, sev, msg, "lsp");
+
+        // Add to overlay (squiggles + hover tooltip)
+        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized()) {
+            RawrXD::UI::AnnotationItem item;
+            item.line = d.range.start.line;           // 0-based
+            item.startColumn = d.range.start.character;
+            item.endColumn = d.range.end.character;
+            item.severity = overlaySev;
+            item.message = msg;
+            item.code = d.code;
+            item.isActive = true;
+            m_lspDiagnosticOverlay->AddAnnotation(item);
+        }
+    }
+
+    // Show the overlay if we have diagnostics
+    if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized() && !diags.empty()) {
+        m_lspDiagnosticOverlay->SetVisible(true);
+        m_lspDiagnosticOverlay->Invalidate();
     }
 }
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [1/1] RawrXD-Win32IDE: PRE_LINK optional del exe/pdb if unlocked; Linking CXX executable bin\RawrXD-Win32IDE.exe
 FAILED: bin/RawrXD-Win32IDE.exe 
 C:\WINDOWS\system32\cmd.exe /C "C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.exe D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.pdb && cd D:\rawrxd\build-ninja" && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1951 --intdir=CMakeFiles\RawrXD-Win32IDE.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrXD-Win32IDE.rsp  /out:bin\RawrXD-Win32IDE.exe /implib:RawrXD-Win32IDE.lib /pdb:bin\RawrXD-Win32IDE.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:windows /LTCG /LARGEADDRESSAWARE:NO /DEBUG:FULL /MAP:D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map /MAPINFO:EXPORTS /MANIFEST:NO && C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja && "C:\Program Files\CMake\bin\cmake.exe" -E copy_if_different D:/rawrxd/build-ninja/bin/RawrXD-Win32IDE.map D:/rawrxd/build-ninja/RawrXD-Win32IDE.map""
@@ -1152,3 +1153,43 @@ bin\RawrXD-Win32IDE.exe : fatal error LNK1169: one or more multiply defined symb
 
 
 ninja: build stopped: subcommand failed.
+=======
+ Assembling: D:\lazy init ide\OmegaPolyglot_v4.asm
+Microsoft (R) Macro Assembler Version 6.14.8444
+Copyright (C) Microsoft Corp 1981-1997.  All rights reserved.
+
+
+***********
+ASCII build
+***********
+
+D:\lazy init ide\OmegaPolyglot_v4.asm(272) : error A2111: conflicting parameter definition
+D:\lazy init ide\OmegaPolyglot_v4.asm(383) : error A2070: invalid instruction operands
+D:\lazy init ide\OmegaPolyglot_v4.asm(745) : error A2133: register value overwritten by INVOKE
+D:\lazy init ide\OmegaPolyglot_v4.asm(747) : error A2070: invalid instruction operands
+D:\lazy init ide\OmegaPolyglot_v4.asm(760) : error A2085: instruction or register not accepted in current CPU mode
+D:\lazy init ide\OmegaPolyglot_v4.asm(761) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(766) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(767) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(769) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(771) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(773) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(775) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(777) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(779) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(781) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(783) : error A2008: syntax error : c
+D:\lazy init ide\OmegaPolyglot_v4.asm(789) : error A2137: too few arguments to INVOKE
+D:\lazy init ide\OmegaPolyglot_v4.asm(812) : error A2006: undefined symbol : r
+D:\lazy init ide\OmegaPolyglot_v4.asm(812) : error A2114: INVOKE argument type mismatch : argument : 1
+D:\lazy init ide\OmegaPolyglot_v4.asm(820) : error A2006: undefined symbol : r
+D:\lazy init ide\OmegaPolyglot_v4.asm(820) : error A2114: INVOKE argument type mismatch : argument : 1
+D:\lazy init ide\OmegaPolyglot_v4.asm(827) : error A2085: instruction or register not accepted in current CPU mode
+D:\lazy init ide\OmegaPolyglot_v4.asm(834) : error A2085: instruction or register not accepted in current CPU mode
+D:\lazy init ide\OmegaPolyglot_v4.asm(541) : error A2026: constant expected
+D:\lazy init ide\OmegaPolyglot_v4.asm(544) : error A2026: constant expected
+D:\lazy init ide\OmegaPolyglot_v4.asm(616) : error A2026: constant expected
+D:\lazy init ide\OmegaPolyglot_v4.asm(809) : error A2006: undefined symbol : r
+D:\lazy init ide\OmegaPolyglot_v4.asm(817) : error A2006: undefined symbol : r
+D:\lazy init ide\OmegaPolyglot_v4.asm(137) : error A2071: initializer magnitude too large for specified size
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

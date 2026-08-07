@@ -7,10 +7,14 @@
 #include <chrono> 
 #include <memory>
 #include <unordered_map>
-// Forward decl
-namespace RawrXD { class UniversalModelRouter; }
+#include <functional>
+#include <string>
 
-// Cloud provider information
+// Forward declaration for UniversalModelRouter
+namespace RawrXD {
+    class UniversalModelRouter;
+}
+
 struct CloudProvider {
     std::string providerId;        // aws, azure, gcp, huggingface, ollama
     std::string name;
@@ -281,6 +285,17 @@ private:
     CostMetrics costMetrics;
     PerformanceMetrics performanceMetrics;
     FailoverConfig failoverConfig;
+    
+    // Event callbacks
+    std::function<void(const std::string&)> m_costLimitCallback;
+    
+    // State tracking
+    std::string m_currentProviderId;
+    std::string m_lastError;
+    int m_failoverCount = 0;
+    int m_errorCount = 0;
+    bool m_usingCloud = false;
+    std::chrono::steady_clock::time_point m_lastHealthCheck;
     
     void** networkManager;
     std::unordered_map<std::string, void**> activeRequests;

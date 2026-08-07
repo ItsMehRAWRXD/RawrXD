@@ -522,9 +522,102 @@ ExecutionResult ToolExecutor::spawnProcess(const std::string& exe, const std::ve
 
     return result;
 #else
-    result.stderr_text = "spawnProcess not implemented on this platform";
-    return result;
+    // Linux/Mac implementation using fork/exec
+    int pipe_stdout[2];
+    int pipe_stderr[2];
+    
+    if (pipe(pipe_stdout) == -1 || pipe(pipe_stderr) == -1) {
+        result.stderr_text = "Failed to create pipes";
+        return result;
+    }
+    
+    pid_t pid = fork();
+    if (pid == -1) {
+        result.stderr_text = "Failed to fork process";
+        return result;
+    }
+    
+    if (pid == 0) {
+        // Child process
+        close(pipe_stdout[0]);
+        close(pipe_stderr[0]);
+        
+        dup2(pipe_stdout[1], STDOUT_FILENO);
+        dup2(pipe_stderr[1], STDERR_FILENO);
+        
+        close(pipe_stdout[1]);
+        close(pipe_stderr[1]);
+        
+        // Change working directory if specified
+        if (!params.working_directory.empty()) {
+            chdir(params.working_directory.c_str());
+        }
+        
+        // Set up environment
+        if (!params.environment.empty()) {
+            for (const auto& [key, value] : params.environment) {
+                setenv(key.c_str(), value.c_str(), 1);
+            }
+        }
+        
+        // Execute command
+        execl("/bin/sh", "sh", "-c", params.command.c_str(), nullptr);
+        _exit(127); // Command not found
+    }
+    
+    // Parent process
+    close(pipe_stdout[1]);
+    close(pipe_stderr[1]);
+    
+    // Read output
+    char buffer[4096];
+    ssize_t bytes_read;
+    
+    // Read stdout
+    while ((bytes_read = read(pipe_stdout[0], buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytes_read] = '\0';
+        result.stdout_text += buffer;
+    }
+    
+    // Read stderr
+    while ((bytes_read = read(pipe_stderr[0], buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[bytes_read] = '\0';
+        result.stderr_text += buffer;
+    }
+    
+    close(pipe_stdout[0]);
+    close(pipe_stderr[0]);
+    
+    // Wait for process
+    int status;
+    pid_t wait_result = waitpid(pid, &status, 0);
+    
+    if (wait_result == -1) {
+        result.stderr_text = "Failed to wait for process";
+        return result;
+    }
+    
+    if (WIFEXITED(status)) {
+        result.exit_code = WEXITSTATUS(status);
+        result.success = (result.exit_code == 0);
+    } else if (WIFSIGNALED(status)) {
+        result.exit_code = -WTERMSIG(status);
+        result.stderr_text += "Process terminated by signal";
+    }
+    
+    // Output callbacks
+    if (m_outputFn) {
+        if (!result.stdout_text.empty()) {
+            m_outputFn(result.stdout_text);
+        }
+        if (!result.stderr_text.empty()) {
+            m_outputFn(result.stderr_text);
+        }
+    }
 #endif
+    
+    return result;
+}
 }
 
 bool ToolExecutor::monitorProcess(void* process_handle, int timeout_ms, std::string& stdout, std::string& stderr) {

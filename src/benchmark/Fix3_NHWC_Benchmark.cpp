@@ -307,7 +307,7 @@ struct EndToEndSimulation {
     static void Run() {
         printf("\n=== Test E: End-to-End Performance Simulation ===\n\n");
         
-        // Simulate attention-like operation
+        // Model attention-like operation
         const int batch = 1;
         const int heads = 8;
         const int seq_len = 512;
@@ -342,7 +342,7 @@ struct EndToEndSimulation {
             key_nchw.data(), key_nhwc.data(), N, C, H, W
         );
         
-        // Simulate Q @ K^T operation
+        // Model Q @ K^T operation
         const int iterations = 100;
         PerfCounter timer;
         

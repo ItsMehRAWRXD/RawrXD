@@ -167,6 +167,7 @@
 #define IDM_AGENT_VIEW_TOOLS        1904
 #define IDM_AGENT_VIEW_STATUS       1905
 #define IDM_AGENT_STOP              1906
+#define IDM_AI_STOP_GENERATION      1907  /* Stop AI generation (Esc) */
 
 /* Security: 2000-2099 */
 #define IDM_SECURITY_SCAN           2001
@@ -556,6 +557,9 @@ typedef struct RawrXD_IDE {
 
     /* Debugger Adapter (opaque pointer to C++ object) */
     void*           debuggerAdapter;
+    
+    /* LSP Diagnostics Display (opaque pointer to C++ object) */
+    void*           lspDiagnosticsDisplay;
 
 } RawrXD_IDE;
 
@@ -832,6 +836,17 @@ void    RawrXD_IDE_LaunchNativeIntelliSense(RawrXD_IDE* ide);
 void    RawrXD_IDE_LaunchMASMLexer(RawrXD_IDE* ide);
 void    RawrXD_IDE_LaunchASTBridge(RawrXD_IDE* ide);
 void    RawrXD_IDE_LaunchRealTimeCompletion(RawrXD_IDE* ide);
+
+/* Options Dialog */
+void    RawrXD_IDE_ShowOptionsDialog(RawrXD_IDE* ide);
+BOOL    RawrXD_IDE_InputDialog(RawrXD_IDE* ide, const WCHAR* title, const WCHAR* prompt, WCHAR* outBuffer, int bufferSize);
+
+/* Autonomy */
+void    RawrXD_IDE_SetAutonomyGoal(RawrXD_IDE* ide);
+void    RawrXD_IDE_ShowAutonomyMemory(RawrXD_IDE* ide);
+
+/* Prometheus MoE */
+void    RawrXD_IDE_MoERouteTest(RawrXD_IDE* ide);
 
 #ifdef __cplusplus
 }

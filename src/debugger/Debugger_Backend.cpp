@@ -134,7 +134,7 @@ public:
     
     std::optional<uint64_t> ResolveSourceLine(const std::wstring& filePath, uint32_t lineNumber) {
         // This would require iterating symbols to find matching line
-        // Simplified implementation
+        // Basic implementation
         return std::nullopt;
     }
 };
@@ -496,10 +496,116 @@ std::vector<StackFrame> DebugSession::GetCallStack(uint32_t maxFrames) {
 }
 
 std::vector<LocalVariable> DebugSession::GetLocalVariables(uint32_t frameNumber) {
-    (void)frameNumber;
-    // TODO: Implement local variable enumeration via debug symbols
-    // This requires parsing PDB/DWARF symbols for stack frame layout
-    return {};
+    std::vector<LocalVariable> vars;
+    
+    if (!IsActive() || !threadHandle_) {
+        return vars;
+    }
+    
+    // Get stack frame for the specified frame number
+    STACKFRAME64 frame = {};
+    frame.AddrPC.Mode = AddrModeFlat;
+    frame.AddrFrame.Mode = AddrModeFlat;
+    frame.AddrStack.Mode = AddrModeFlat;
+    
+    CONTEXT ctx = {};
+    ctx.ContextFlags = CONTEXT_FULL;
+    if (!GetThreadContext(threadHandle_, &ctx)) {
+        return vars;
+    }
+    
+    #ifdef _WIN64
+    frame.AddrPC.Offset = ctx.Rip;
+    frame.AddrFrame.Offset = ctx.Rbp;
+    frame.AddrStack.Offset = ctx.Rsp;
+    #else
+    frame.AddrPC.Offset = ctx.Eip;
+    frame.AddrFrame.Offset = ctx.Ebp;
+    frame.AddrStack.Offset = ctx.Esp;
+    #endif
+    
+    // Walk to the requested frame
+    HANDLE hProcess = processHandle_;
+    for (uint32_t i = 0; i < frameNumber; ++i) {
+        if (!StackWalk64(IMAGE_FILE_MACHINE_AMD64, hProcess, threadHandle_, &frame, &ctx,
+                         nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr)) {
+            return vars;
+        }
+    }
+    
+    // Get symbol information for the current frame
+    DWORD64 displacement = 0;
+    char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME] = {};
+    PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+    pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    pSymbol->MaxNameLen = MAX_SYM_NAME;
+    
+    if (!SymFromAddr(hProcess, frame.AddrPC.Offset, &displacement, pSymbol)) {
+        return vars;
+    }
+    
+    // Enumerate local variables using SymEnumSymbols
+    struct EnumContext {
+        std::vector<LocalVariable>* vars;
+        HANDLE hProcess;
+        uint64_t frameBase;
+        CONTEXT* ctx;
+    } enumCtx = { &vars, hProcess, frame.AddrFrame.Offset, &ctx };
+    
+    auto enumCallback = [](PSYMBOL_INFO pSymInfo, ULONG SymbolSize, PVOID UserContext) -> BOOL {
+        (void)SymbolSize;
+        EnumContext* pCtx = static_cast<EnumContext*>(UserContext);
+        
+        // Only process local variables (not parameters, etc.)
+        if (pSymInfo->Tag != SymTagData) {
+            return TRUE;
+        }
+        
+        DWORD dwType = 0;
+        SymGetTypeInfo(pCtx->hProcess, pSymInfo->ModBase, pSymInfo->TypeIndex, 
+                       TI_GET_TYPE, &dwType);
+        
+        // Get variable value based on location
+        LocalVariable var;
+        var.name = pSymInfo->Name;
+        var.type = "unknown";
+        
+        // Resolve type name
+        WCHAR typeName[256] = {};
+        if (SymGetTypeInfo(pCtx->hProcess, pSymInfo->ModBase, pSymInfo->TypeIndex,
+                           TI_GET_SYMNAME, &typeName)) {
+            var.type = typeName;
+            LocalFree(typeName);
+        }
+        
+        // Read variable value from memory
+        // For stack-based locals, calculate address from frame base
+        if (pSymInfo->Address < 0x10000) {
+            // Likely a stack offset
+            uint64_t varAddr = pCtx->frameBase + pSymInfo->Address;
+            
+            // Try to read the value
+            DWORD64 value = 0;
+            SIZE_T bytesRead = 0;
+            if (ReadProcessMemory(pCtx->hProcess, (LPCVOID)varAddr, &value, 
+                                  sizeof(value), &bytesRead)) {
+                std::stringstream ss;
+                ss << "0x" << std::hex << value;
+                var.value = ss.str();
+            } else {
+                var.value = "<unavailable>";
+            }
+        } else {
+            var.value = "<optimized out>";
+        }
+        
+        pCtx->vars->push_back(var);
+        return TRUE;
+    };
+    
+    SymEnumSymbols(hProcess, 0, nullptr, enumCallback, &enumCtx);
+    
+    return vars;
 }
 
 std::vector<RegisterValue> DebugSession::GetRegisters() {

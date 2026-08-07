@@ -33,6 +33,20 @@
 #include "../agentic/OllamaProvider.h"
 #include "../agentic/OrchestratorBridge.h"
 
+// Forward declarations from ai_completion_real.cpp (must be at global scope)
+extern "C" {
+    const char* RequestGhostTextCompletion(
+        const char* context,
+        const char* language,
+        const char* suffix,
+        const char* file_path,
+        int cursor_line,
+        int cursor_col
+    );
+    void FreeCompletionString(const char* str);
+    bool IsCompletionEngineReady();
+}
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -316,11 +330,13 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
     };
 
     enum class GhostProviderKind {
+        AICompletionReal,  // NEW: ai_completion_real.cpp C API (VAL-063)
         Local,
         Snippet,
         Lsp
     };
-    const std::array<GhostProviderKind, 3> precedence = {
+    const std::array<GhostProviderKind, 4> precedence = {
+        GhostProviderKind::AICompletionReal,  // Try new completion system first
         GhostProviderKind::Local,
         GhostProviderKind::Snippet,
         GhostProviderKind::Lsp
@@ -328,6 +344,30 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
 
     for (GhostProviderKind provider : precedence) {
         if (isStale()) return "";
+
+        // ---- NEW: ai_completion_real.cpp C API (VAL-063) ----
+        if (provider == GhostProviderKind::AICompletionReal) {
+            if (IsCompletionEngineReady()) {
+                const char* completion = RequestGhostTextCompletion(
+                    context.c_str(),
+                    language.c_str(),
+                    suffix.c_str(),
+                    filePath.c_str(),
+                    cursorLine,
+                    cursorCol
+                );
+                if (completion) {
+                    std::string result = trimGhostText(completion);
+                    FreeCompletionString(completion);
+                    if (!result.empty()) {
+                        std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
+                        m_ghostTextMetrics.localWins++;
+                        return result;
+                    }
+                }
+            }
+            continue;
+        }
 
         if (provider == GhostProviderKind::Local) {
             // ---- Primary: OrchestratorBridge FIM (uses AgentOllamaClient + FIMPromptBuilder) ----

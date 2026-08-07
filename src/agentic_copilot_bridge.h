@@ -44,7 +44,7 @@ public:
     std::string generateTestsForCode(const std::string& code);
     
     // Multi-turn conversation (like Copilot Chat)
-    std::string askAgent(const std::string& question, const void*& context = nullptr);
+    std::string askAgent(const std::string& question, const void* context = nullptr);
     std::string continuePreviousConversation(const std::string& followUp);
     
     // Puppeteering and hotpatching (Cursor IDE style)

@@ -98,6 +98,10 @@ public:
     void registerExpert(int layerId, int expertId,
                          int64_t fileOffset, size_t sizeBytes);
     
+    // Set current layer context for prefetch operations
+    void setCurrentLayer(int layerId) { currentLayerId_ = layerId; }
+    int getCurrentLayer() const { return currentLayerId_; }
+    
     // Shutdown
     void shutdown();
     
@@ -132,6 +136,7 @@ private:
     size_t cacheMisses;
     size_t pageFaults;
     uint64_t currentTick;
+    int currentLayerId_ = 0;  // Current layer context for prefetch operations
     
     // Helpers
     int64_t makeKey(int layer, int expert) const {

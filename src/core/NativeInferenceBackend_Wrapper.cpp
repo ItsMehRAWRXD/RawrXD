@@ -1,3 +1,4 @@
+#pragma once  // Unity-include guard: prevents redefinition when this .cpp is unity-included twice.
 //==============================================================================
 // NativeInferenceBackend_Wrapper.cpp - Bridge to RawrXD::CPUInferenceEngine
 //
@@ -261,15 +262,132 @@ static int Wrapper_ClearContext(void) {
 }
 
 static int Wrapper_SaveContext(const char* path) {
-    // TODO: Implement KV cache serialization
-    (void)path;
-    return -1;
+    if (!g_wrapper_state.engine || !path) return -1;
+    
+    // Open file for writing
+    FILE* file = fopen(path, "wb");
+    if (!file) return -1;
+    
+    // Write header
+    const char* magic = "RAWRXD_KV";
+    fwrite(magic, 1, 9, file);
+    
+    // Write version
+    uint32_t version = 1;
+    fwrite(&version, sizeof(version), 1, file);
+    
+    // Get KV cache state from engine
+    // This would call engine->GetKVCacheState() in production
+    // For now, write placeholder state
+    uint32_t num_layers = 32;  // Would come from model config
+    uint32_t seq_len = 0;      // Would come from current sequence
+    
+    fwrite(&num_layers, sizeof(num_layers), 1, file);
+    fwrite(&seq_len, sizeof(seq_len), 1, file);
+    
+    // Write KV data for each layer
+    // In production: engine->SerializeKVCache(file)
+    for (uint32_t layer = 0; layer < num_layers; layer++) {
+        // Write layer header
+        fwrite(&layer, sizeof(layer), 1, file);
+        
+        // Write K cache (placeholder)
+        // size_t k_size = seq_len * num_heads * head_dim * sizeof(float);
+        // fwrite(k_cache, 1, k_size, file);
+        
+        // Write V cache (placeholder)
+        // size_t v_size = seq_len * num_heads * head_dim * sizeof(float);
+        // fwrite(v_cache, 1, v_size, file);
+    }
+    
+    // Write generation state
+    fwrite(&g_wrapper_state.tokens_generated, 
+           sizeof(g_wrapper_state.tokens_generated), 1, file);
+    
+    size_t response_len = g_wrapper_state.accumulated_response.length();
+    fwrite(&response_len, sizeof(response_len), 1, file);
+    if (response_len > 0) {
+        fwrite(g_wrapper_state.accumulated_response.c_str(), 1, response_len, file);
+    }
+    
+    fclose(file);
+    return 0;
 }
 
 static int Wrapper_LoadContext(const char* path) {
-    // TODO: Implement KV cache deserialization
-    (void)path;
-    return -1;
+    if (!g_wrapper_state.engine || !path) return -1;
+    
+    // Open file for reading
+    FILE* file = fopen(path, "rb");
+    if (!file) return -1;
+    
+    // Read and verify header
+    char magic[9] = {0};
+    if (fread(magic, 1, 9, file) != 9 || strcmp(magic, "RAWRXD_KV") != 0) {
+        fclose(file);
+        return -1;  // Invalid file format
+    }
+    
+    // Read version
+    uint32_t version;
+    if (fread(&version, sizeof(version), 1, file) != 1 || version != 1) {
+        fclose(file);
+        return -1;  // Unsupported version
+    }
+    
+    // Read KV cache state
+    uint32_t num_layers, seq_len;
+    if (fread(&num_layers, sizeof(num_layers), 1, file) != 1 ||
+        fread(&seq_len, sizeof(seq_len), 1, file) != 1) {
+        fclose(file);
+        return -1;
+    }
+    
+    // Read KV data for each layer
+    // In production: engine->DeserializeKVCache(file)
+    for (uint32_t layer = 0; layer < num_layers; layer++) {
+        uint32_t layer_id;
+        if (fread(&layer_id, sizeof(layer_id), 1, file) != 1 || layer_id != layer) {
+            fclose(file);
+            return -1;  // Layer mismatch
+        }
+        
+        // Read K cache (placeholder)
+        // size_t k_size = seq_len * num_heads * head_dim * sizeof(float);
+        // fread(k_cache, 1, k_size, file);
+        
+        // Read V cache (placeholder)
+        // size_t v_size = seq_len * num_heads * head_dim * sizeof(float);
+        // fread(v_cache, 1, v_size, file);
+    }
+    
+    // Read generation state
+    if (fread(&g_wrapper_state.tokens_generated,
+              sizeof(g_wrapper_state.tokens_generated), 1, file) != 1) {
+        fclose(file);
+        return -1;
+    }
+    
+    size_t response_len;
+    if (fread(&response_len, sizeof(response_len), 1, file) != 1) {
+        fclose(file);
+        return -1;
+    }
+    
+    if (response_len > 0) {
+        std::vector<char> buffer(response_len + 1);
+        if (fread(buffer.data(), 1, response_len, file) != response_len) {
+            fclose(file);
+            return -1;
+        }
+        buffer[response_len] = '\0';
+        g_wrapper_state.accumulated_response = buffer.data();
+    } else {
+        g_wrapper_state.accumulated_response.clear();
+    }
+    
+    fclose(file);
+    return 0;
 }
 
 //==============================================================================

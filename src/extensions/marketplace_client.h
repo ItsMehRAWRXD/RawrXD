@@ -127,6 +127,11 @@ private:
     bool downloadFile(const std::string& url, const std::string& path);
     bool extractArchive(const std::string& archivePath, const std::string& extractPath);
     
+    // Archive extraction helpers
+    bool extractZipArchive(const std::string& archivePath, const std::string& extractPath);
+    bool extractTarArchive(const std::string& archivePath, const std::string& extractPath);
+    bool extract7zArchive(const std::string& archivePath, const std::string& extractPath);
+    
     ClientConfig m_config;
     void* m_curl;
 };

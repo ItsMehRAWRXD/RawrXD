@@ -4,6 +4,21 @@
 #include <algorithm>
 #include <cctype>
 
+// WinHttp Support
+#include <windows.h>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
+
+// Helper
+static std::wstring s2ws(const std::string& s) {
+    if (s.empty()) return L"";
+    int len = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+    std::wstring buf(len, 0);
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &buf[0], len);
+    if (!buf.empty()) buf.pop_back(); // Remove null terminator added by MultiByteToWideChar with -1
+    return buf;
+}
+
 #if defined(HAVE_CURL) && HAVE_CURL
 #include <curl/curl.h>
 #endif
@@ -20,7 +35,7 @@ HTTPClient::HTTPClient(
     std::shared_ptr<Logger> logger,
     std::shared_ptr<Metrics> metrics)
     : m_logger(logger), m_metrics(metrics) {
-    if (m_logger) m_logger->info("HTTPClient initialized");
+    if (m_logger) m_logger->log("HTTPClient initialized");
 }
 
 #if defined(HAVE_CURL) && HAVE_CURL
@@ -37,20 +52,107 @@ static size_t curl_write_callback(void* contents, size_t size, size_t nmemb, voi
 #endif
 
 HTTPResponse HTTPClient::sendRequest(const HTTPRequest& request) {
-    if (m_logger) m_logger->debug("Sending {} request to: {}", request.method, request.url);
+    if (m_logger) m_logger->log("Sending HTTP Request: " + request.url);
 
     HTTPResponse response;
     response.success = false;
 
-#if !(defined(HAVE_CURL) && HAVE_CURL)
-    response.errorMessage = "libcurl not available; set CURL_DIR or install libcurl";
-    if (m_logger) m_logger->warn("HTTP request skipped: {}", response.errorMessage);
-    if (m_metrics) m_metrics->incrementCounter("http_errors");
+#if !defined(HAVE_CURL) || !HAVE_CURL
+    // WinHTTP Fallback Implementation
+    std::wstring wUrl = s2ws(request.url);
+    URL_COMPONENTS urlComp = {0};
+    urlComp.dwStructSize = sizeof(urlComp);
+    urlComp.dwSchemeLength = (DWORD)-1;
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwExtraInfoLength = (DWORD)-1;
+
+    if (!WinHttpCrackUrl(wUrl.c_str(), (DWORD)wUrl.length(), 0, &urlComp)) {
+        response.errorMessage = "WinHttpCrackUrl failed";
+        return response;
+    }
+
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-Native/1.0", 
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) {
+        response.errorMessage = "WinHttpOpen failed";
+        return response;
+    }
+
+    std::wstring hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
+    HINTERNET hConnect = WinHttpConnect(hSession, hostName.c_str(), urlComp.nPort, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        response.errorMessage = "WinHttpConnect failed";
+        return response;
+    }
+
+    std::wstring urlPath(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    if (urlComp.dwExtraInfoLength > 0) {
+        urlPath += std::wstring(urlComp.lpszExtraInfo, urlComp.dwExtraInfoLength);
+    }
+
+    std::wstring method = s2ws(request.method);
+    if (method.empty()) method = L"GET";
+
+    DWORD flags = (urlComp.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, method.c_str(), urlPath.c_str(), 
+                                          NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        response.errorMessage = "WinHttpOpenRequest failed";
+        return response;
+    }
+
+    std::wstring headers;
+    for (const auto& h : request.headers) {
+        headers += s2ws(h.first) + L": " + s2ws(h.second) + L"\r\n";
+    }
+
+    if (WinHttpSendRequest(hRequest, 
+                          headers.empty() ? WINHTTP_NO_ADDITIONAL_HEADERS : headers.c_str(),
+                          headers.empty() ? 0 : (DWORD)headers.length(),
+                          (LPVOID)request.body.c_str(), 
+                          (DWORD)request.body.length(), 
+                          (DWORD)request.body.length(), 0)) {
+        
+        if (WinHttpReceiveResponse(hRequest, NULL)) {
+            DWORD dwStatusCode = 0;
+            DWORD dwSize = sizeof(dwStatusCode);
+            WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                WINHTTP_HEADER_NAME_BY_INDEX, &dwStatusCode, &dwSize, WINHTTP_NO_HEADER_INDEX);
+            
+            response.statusCode = dwStatusCode;
+            response.success = (dwStatusCode >= 200 && dwStatusCode < 300);
+
+            DWORD dwSizeAvail = 0;
+            std::vector<char> buffer;
+            do {
+                dwSizeAvail = 0;
+                if (!WinHttpQueryDataAvailable(hRequest, &dwSizeAvail)) break;
+                if (dwSizeAvail == 0) break;
+                
+                size_t oldSize = response.body.size();
+                buffer.resize(dwSizeAvail);
+                DWORD dwRead = 0;
+                if (WinHttpReadData(hRequest, &buffer[0], dwSizeAvail, &dwRead)) {
+                    response.body.append(buffer.begin(), buffer.begin() + dwRead);
+                }
+            } while (dwSizeAvail > 0);
+        }
+    } else {
+        response.errorMessage = "WinHttpSendRequest failed: " + std::to_string(GetLastError());
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
     return response;
 #else
     CURL* curl = curl_easy_init();
     if (!curl) {
-        if (m_logger) m_logger->error("Failed to initialize curl");
+        if (m_logger) m_
         response.errorMessage = "Failed to initialize curl";
         if (m_metrics) m_metrics->incrementCounter("http_errors");
         return response;
@@ -85,7 +187,7 @@ HTTPResponse HTTPClient::sendRequest(const HTTPRequest& request) {
 
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            if (m_logger) m_logger->error("HTTP request failed: {}", curl_easy_strerror(res));
+            if (m_logger) m_
             response.errorMessage = curl_easy_strerror(res);
             if (m_metrics) m_metrics->incrementCounter("http_errors");
         } else {
@@ -96,7 +198,7 @@ HTTPResponse HTTPClient::sendRequest(const HTTPRequest& request) {
             response.body = response_body;
             response.success = response_code >= 200 && response_code < 300;
 
-            if (m_logger) m_logger->debug("Response: {} ({} bytes)", response_code, response_body.length());
+            if (m_logger) m_
             if (m_metrics) {
                 m_metrics->incrementCounter("http_requests");
                 m_metrics->recordHistogram("http_response_size", response_body.length());
@@ -104,7 +206,7 @@ HTTPResponse HTTPClient::sendRequest(const HTTPRequest& request) {
         }
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("HTTP request failed: {}", e.what());
+        if (m_logger) m_
         response.errorMessage = e.what();
         if (m_metrics) m_metrics->incrementCounter("http_errors");
     }
@@ -135,7 +237,14 @@ bool HTTPClient::streamRequest(
     const HTTPRequest& request,
     std::function<void(const std::string& chunk)> callback) {
 
-    if (m_logger) m_logger->debug("Starting streaming request to: {}", request.url);
+    // Real WinHttp Streaming Implementation
+    std::wstring wUrl = s2ws(request.url);
+    URL_COMPONENTS urlComp = {0};
+    urlComp.dwStructSize = sizeof(urlComp);
+    urlComp.dwSchemeLength = (DWORD)-1;
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwExtraInfoLength = (DWORD)-1;
 
 #if !(defined(HAVE_CURL) && HAVE_CURL)
     // WinHTTP streaming implementation
@@ -276,7 +385,7 @@ bool HTTPClient::streamRequest(
 }
 
 bool HTTPClient::downloadFile(const std::string& url, const std::string& outputPath) {
-    if (m_logger) m_logger->info("Downloading file from: {} to: {}", url, outputPath);
+    if (m_logger) m_
 
     try {
         // Use WinHTTP to download directly to file
@@ -351,7 +460,7 @@ bool HTTPClient::downloadFile(const std::string& url, const std::string& outputP
         return totalBytes > 0;
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("Download failed: {}", e.what());
+        if (m_logger) m_
         if (m_metrics) m_metrics->incrementCounter("download_errors");
         return false;
     }
@@ -372,14 +481,14 @@ CompressionHandler::CompressionHandler(
     std::shared_ptr<Logger> logger,
     std::shared_ptr<Metrics> metrics)
     : m_logger(logger), m_metrics(metrics) {
-    if (m_logger) m_logger->info("CompressionHandler initialized");
+    if (m_logger) m_
 }
 
 std::vector<uint8_t> CompressionHandler::compress(
     const std::vector<uint8_t>& data,
     int compressionLevel) {
 
-    if (m_logger) m_logger->debug("Compressing {} bytes with level {}", data.size(), compressionLevel);
+    if (m_logger) m_
 
     std::vector<uint8_t> compressed;
 
@@ -397,7 +506,7 @@ std::vector<uint8_t> CompressionHandler::compress(
         );
 
         if (ZSTD_isError(compressedSize)) {
-            if (m_logger) m_logger->error("Compression failed: {}", ZSTD_getErrorName(compressedSize));
+            if (m_logger) m_
             compressed.clear();
             if (m_metrics) m_metrics->incrementCounter("compression_errors");
             return compressed;
@@ -409,19 +518,17 @@ std::vector<uint8_t> CompressionHandler::compress(
         size_t savedBytes = data.size() > compressed.size() ? data.size() - compressed.size() : 0;
         m_compressionSaved += savedBytes;
 
-        if (m_logger) m_logger->info("Compressed {} -> {} bytes ({} saved, {:.1f}% ratio)",
-                       data.size(), compressed.size(), savedBytes,
-                       (compressed.size() * 100.0) / data.size());
+        if (m_logger) m_
         if (m_metrics) m_metrics->recordHistogram("compression_ratio",
                                    (compressed.size() * 100.0) / data.size());
 #else
         compressed = data;
-        if (m_logger) m_logger->warn("ZSTD not available; returning uncompressed data");
+        if (m_logger) m_ returning uncompressed data");
         if (m_metrics) m_metrics->incrementCounter("compression_passthrough");
 #endif
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("Compression failed: {}", e.what());
+        if (m_logger) m_
         if (m_metrics) m_metrics->incrementCounter("compression_errors");
     }
 
@@ -429,7 +536,7 @@ std::vector<uint8_t> CompressionHandler::compress(
 }
 
 std::vector<uint8_t> CompressionHandler::decompress(const std::vector<uint8_t>& compressedData) {
-    if (m_logger) m_logger->debug("Decompressing {} bytes", compressedData.size());
+    if (m_logger) m_
 
     std::vector<uint8_t> decompressed;
 
@@ -440,7 +547,7 @@ std::vector<uint8_t> CompressionHandler::decompress(const std::vector<uint8_t>& 
             compressedData.size());
 
         if (decompressedSize == ZSTD_CONTENTSIZE_ERROR) {
-            if (m_logger) m_logger->error("Invalid ZSTD frame header");
+            if (m_logger) m_
             if (m_metrics) m_metrics->incrementCounter("decompression_errors");
             return decompressed;
         }
@@ -454,28 +561,28 @@ std::vector<uint8_t> CompressionHandler::decompress(const std::vector<uint8_t>& 
             compressedData.size());
 
         if (ZSTD_isError(actualSize)) {
-            if (m_logger) m_logger->error("Decompression failed: {}", ZSTD_getErrorName(actualSize));
+            if (m_logger) m_
             decompressed.clear();
             if (m_metrics) m_metrics->incrementCounter("decompression_errors");
             return decompressed;
         }
 
         if (actualSize != decompressedSize) {
-            if (m_logger) m_logger->warn("Decompressed size mismatch: {} vs {}", actualSize, decompressedSize);
+            if (m_logger) m_
         }
 
         m_totalDecompressed += decompressedSize;
 
-        if (m_logger) m_logger->info("Decompressed {} bytes", decompressedSize);
+        if (m_logger) m_
         if (m_metrics) m_metrics->incrementCounter("decompressions");
 #else
         decompressed = compressedData;
-        if (m_logger) m_logger->warn("ZSTD not available; returning input data");
+        if (m_logger) m_ returning input data");
         if (m_metrics) m_metrics->incrementCounter("decompression_passthrough");
 #endif
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("Decompression failed: {}", e.what());
+        if (m_logger) m_
         if (m_metrics) m_metrics->incrementCounter("decompression_errors");
     }
 
@@ -486,13 +593,13 @@ bool CompressionHandler::compressFile(
     const std::string& inputPath,
     const std::string& outputPath) {
 
-    if (m_logger) m_logger->info("Compressing file: {} -> {}", inputPath, outputPath);
+    if (m_logger) m_
 
     try {
         // Read input file
         std::ifstream inFile(inputPath, std::ios::binary);
         if (!inFile) {
-            if (m_logger) m_logger->error("Cannot open input file: {}", inputPath);
+            if (m_logger) m_
             return false;
         }
 
@@ -506,18 +613,18 @@ bool CompressionHandler::compressFile(
         // Write output file
         std::ofstream outFile(outputPath, std::ios::binary);
         if (!outFile) {
-            if (m_logger) m_logger->error("Cannot open output file: {}", outputPath);
+            if (m_logger) m_
             return false;
         }
 
         outFile.write(reinterpret_cast<const char*>(compressed.data()), compressed.size());
         outFile.close();
 
-        if (m_logger) m_logger->info("File compression complete");
+        if (m_logger) m_
         return true;
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("File compression failed: {}", e.what());
+        if (m_logger) m_
         return false;
     }
 }
@@ -526,13 +633,13 @@ bool CompressionHandler::decompressFile(
     const std::string& inputPath,
     const std::string& outputPath) {
 
-    if (m_logger) m_logger->info("Decompressing file: {} -> {}", inputPath, outputPath);
+    if (m_logger) m_
 
     try {
         // Read compressed file
         std::ifstream inFile(inputPath, std::ios::binary);
         if (!inFile) {
-            if (m_logger) m_logger->error("Cannot open input file: {}", inputPath);
+            if (m_logger) m_
             return false;
         }
 
@@ -546,18 +653,18 @@ bool CompressionHandler::decompressFile(
         // Write output file
         std::ofstream outFile(outputPath, std::ios::binary);
         if (!outFile) {
-            if (m_logger) m_logger->error("Cannot open output file: {}", outputPath);
+            if (m_logger) m_
             return false;
         }
 
         outFile.write(reinterpret_cast<const char*>(decompressed.data()), decompressed.size());
         outFile.close();
 
-        if (m_logger) m_logger->info("File decompression complete");
+        if (m_logger) m_
         return true;
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("File decompression failed: {}", e.what());
+        if (m_logger) m_
         return false;
     }
 }
@@ -576,11 +683,11 @@ std::vector<std::pair<std::string, double>> CompressionHandler::getStatistics() 
 
 JSONHandler::JSONHandler(std::shared_ptr<Logger> logger)
     : m_logger(logger) {
-    if (m_logger) m_logger->info("JSONHandler initialized");
+    if (m_logger) m_
 }
 
 bool JSONHandler::parseJSON(const std::string& jsonString) {
-    if (m_logger) m_logger->debug("Parsing JSON: {} chars", jsonString.length());
+    if (m_logger) m_
 
     // Simple validation: check for matching braces
     int braceCount = 0;
@@ -592,9 +699,9 @@ bool JSONHandler::parseJSON(const std::string& jsonString) {
     bool valid = braceCount == 0 && !jsonString.empty();
 
     if (valid) {
-        if (m_logger) m_logger->debug("JSON parsing successful");
+        if (m_logger) m_
     } else {
-        if (m_logger) m_logger->warn("Invalid JSON: unmatched braces");
+        if (m_logger) m_
     }
 
     return valid;
@@ -620,14 +727,14 @@ std::string JSONHandler::extractValue(
     const std::string& jsonString,
     const std::string& key) {
 
-    if (m_logger) m_logger->debug("Extracting key: {} from JSON", key);
+    if (m_logger) m_
 
     // Simple extraction: look for "key": "value"
     std::string searchStr = "\"" + key + "\":";
     size_t pos = jsonString.find(searchStr);
 
     if (pos == std::string::npos) {
-        if (m_logger) m_logger->warn("Key not found: {}", key);
+        if (m_logger) m_
         return "";
     }
 
@@ -655,12 +762,12 @@ bool JSONHandler::validateJSON(const std::string& jsonString) {
 
     bool valid = braces == 0 && brackets == 0;
     
-    if (m_logger) m_logger->debug("JSON validation: {}", valid ? "PASS" : "FAIL");
+    if (m_logger) m_
     return valid;
 }
 
 std::string JSONHandler::prettyPrint(const std::string& jsonString) {
-    if (m_logger) m_logger->debug("Pretty-printing JSON");
+    if (m_logger) m_
 
     std::ostringstream result;
     int indentLevel = 0;
@@ -700,7 +807,7 @@ std::string JSONHandler::prettyPrint(const std::string& jsonString) {
 }
 
 std::string JSONHandler::minify(const std::string& jsonString) {
-    if (m_logger) m_logger->debug("Minifying JSON");
+    if (m_logger) m_
 
     std::ostringstream result;
     bool inString = false;
@@ -733,7 +840,7 @@ LibraryIntegration::LibraryIntegration(
     m_compressionHandler = std::make_shared<CompressionHandler>(logger, metrics);
     m_jsonHandler = std::make_shared<JSONHandler>(logger);
 
-    if (m_logger) m_logger->info("LibraryIntegration initialized with HTTP, compression, and JSON support");
+    if (m_logger) m_
 }
 
 bool LibraryIntegration::isLibraryAvailable(const std::string& libraryName) {
@@ -748,6 +855,16 @@ bool LibraryIntegration::isLibraryAvailable(const std::string& libraryName) {
 }
 
 std::string LibraryIntegration::getLibraryVersion(const std::string& libraryName) {
+
+    // Use macro versions from headers or define safe defaults
+    auto GetCurlVersion = []() -> std::string {
+#ifdef LIBCURL_VERSION
+        return LIBCURL_VERSION;
+#else
+        return "7.85.0 (Static)";
+#endif
+    };
+
     if (libraryName == "curl") {
         // Dynamically query libcurl version if loaded
         typedef const char* (*PFN_curl_version)();
@@ -778,23 +895,23 @@ std::string LibraryIntegration::getLibraryVersion(const std::string& libraryName
 }
 
 bool LibraryIntegration::initializeAll() {
-    if (m_logger) m_logger->info("Initializing all libraries");
+    if (m_logger) m_
 
     try {
         // Initialize HTTP (would do curl_global_init())
-        if (m_logger) m_logger->debug("Initializing HTTP client");
+        if (m_logger) m_
 
         // Initialize compression (would init Zstd context)
-        if (m_logger) m_logger->debug("Initializing compression handler");
+        if (m_logger) m_
 
         // Initialize JSON (header-only, nothing to do)
-        if (m_logger) m_logger->debug("Initializing JSON handler");
+        if (m_logger) m_
 
-        if (m_logger) m_logger->info("All libraries initialized successfully");
+        if (m_logger) m_
         return true;
 
     } catch (const std::exception& e) {
-        if (m_logger) m_logger->error("Library initialization failed: {}", e.what());
+        if (m_logger) m_
         return false;
     }
 }

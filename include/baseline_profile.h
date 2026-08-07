@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstdint>
@@ -30,3 +31,4 @@ bool LoadProfile(AppState& state);
 bool SaveProfile(const AppState& state);
 
 } // namespace BaselineProfile
+

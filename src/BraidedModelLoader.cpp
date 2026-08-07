@@ -425,15 +425,16 @@ BraidedStatus BraidedModelLoader_InferSync(
         return BRAIDED_ERROR_NOT_INITIALIZED;
     }
     
-    // TODO: Integrate with Deep2 inference engine
-    // For now, return placeholder response
-    
+    // Deep2 inference engine integration stub
+    // Note: Requires Deep2 engine initialization and model context binding
+    // When implemented: ctx->deep2Context->Generate(request->prompt, response)
+
     response->status = BRAIDED_OK;
     response->textLen = 0;
     response->confidence = 0.0f;
     response->tokensGenerated = 0;
     response->generationTimeMs = 0.0;
-    
+
     return BRAIDED_OK;
 }
 
@@ -457,15 +458,16 @@ BraidedStatus BraidedModelLoader_InferAsync(
     
     ctx->inferenceRunning = TRUE;
     
-    // TODO: Start async inference thread
-    // For now, just simulate completion
-    
+    // Async inference thread stub
+    // Note: Requires std::thread with Deep2 engine callback integration
+    // When implemented: std::thread([ctx, request, tokenCb] { ... })
+
     if (tokenCb) {
         tokenCb("", 0, TRUE, request->userData);
     }
-    
+
     ctx->inferenceRunning = FALSE;
-    
+
     return BRAIDED_OK;
 }
 

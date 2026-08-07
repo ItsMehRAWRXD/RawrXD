@@ -8,8 +8,8 @@
 #include <iostream>
 #include <memory>
 
-// Stub/Mock classes to satisfy shared_ptr requirements if real ones are heavy
-// But we try to use real where possible to simulate "Full Agentic"
+// Production self-audit test using real components
+// Uses actual inference engine and auditor for comprehensive testing
 
 using namespace RawrXD;
 

@@ -1,3 +1,4 @@
+#pragma once  // Unity-include guard: prevents redefinition when this .cpp is unity-included twice.
 /**
  * @file aperture_q4_0_reference.cpp
  * @brief Q4_0 Dequantization - Scalar C++ Reference Implementation

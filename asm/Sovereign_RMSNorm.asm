@@ -11,7 +11,19 @@
 ;   - In-place or out-of-place operation
 ;   - Aligned memory access
 ;
-; Calling Convention: Microsoft x64 (RCX, RDX, R8, R9)
+; ─── ABI CONTRACT ───
+; Microsoft x64 calling convention:
+;   RCX = 1st arg, RDX = 2nd arg, R8 = 3rd arg, R9 = 4th arg
+;   RAX = return value or 0 on failure
+;   Stack: 16-byte aligned at call site, 32-byte shadow space
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, XMM0-XMM5
+; Preserves: RBX, RBP, RDI, RSI, R12-R15, XMM6-XMM15
+;
+; Sovereign_RMSNorm_F32_AVX2(RCX=x, RDX=weight, R8=n, R9=epsilon) → void
+; Sovereign_RMSNorm_F32_InPlace_AVX2(RCX=x, RDX=weight, R8=n, R9=epsilon) → void
+; Sovereign_RMSNorm_F16_AVX2(RCX=x, RDX=weight, R8=n, R9=epsilon) → void
+; ───────────────────
 ; ============================================================================
 
 ; ----------------------------------------------------------------------------

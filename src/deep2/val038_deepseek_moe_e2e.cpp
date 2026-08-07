@@ -40,6 +40,7 @@
 #include <string>
 #include <vector>
 #include <atomic>
+#include "gguf_loader.h"
 
 // ---------------------------------------------------------------------------
 // VAL result printer
@@ -341,7 +342,7 @@ static bool TestKVCache() {
     Deep2::KVCache kvCache(1, 8, 128, 2048);
     kvCache.reset();
 
-    // Simulate storing K and V for 4 tokens
+    // Model storing K and V for 4 tokens
     float k[4 * 8 * 128];
     float v[4 * 8 * 128];
     for (int i = 0; i < 4 * 8 * 128; ++i) {
@@ -406,7 +407,7 @@ static bool TestE2EThroughput(int threads) {
 
     auto& reg = Deep2::QuantKernelRegistry::Instance();
 
-    // Simulate a single transformer layer with MoE dispatch
+    // Model a single transformer layer with MoE dispatch
     const size_t hiddenDim = 7168;
     const size_t numExperts = 256;
     const size_t activeExperts = 8;
@@ -549,3 +550,4 @@ int main(int argc, char* argv[]) {
 
     return allPass ? 0 : 1;
 }
+

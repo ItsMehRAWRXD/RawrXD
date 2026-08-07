@@ -27,7 +27,7 @@ protected:
 
 // GGUFLoader from main tree uses Open/Close/GetFileSize (no IsOpen; treat !Open as not open)
 TEST_F(GGUFIntegrationTest, GGUFLoaderInitialization) {
-    RawrXD::GGUFLoader loader;
+    GGUFLoader loader;
     EXPECT_FALSE(loader.Open("/nonexistent/path/model.gguf"));
     EXPECT_EQ(loader.GetFileSize(), 0u);
 }
@@ -38,7 +38,7 @@ TEST_F(GGUFIntegrationTest, InferenceEngineConstruction) {
 }
 
 TEST_F(GGUFIntegrationTest, MissingGGUFFileHandling) {
-    RawrXD::GGUFLoader loader;
+    GGUFLoader loader;
     bool result = loader.Open("/nonexistent/path/model.gguf");
     EXPECT_FALSE(result);
     EXPECT_EQ(loader.GetFileSize(), 0u);

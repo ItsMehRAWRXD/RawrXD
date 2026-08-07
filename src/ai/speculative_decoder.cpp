@@ -5,6 +5,7 @@
 #include "../atc_gpu_dispatch.h"
 #include <algorithm>
 #include <cmath>
+#include "gguf_loader.h"
 
 namespace RawrXD {
 
@@ -282,7 +283,7 @@ std::vector<std::vector<float>> SpeculativeDecoder::SpeculativeBatchPrecompute(
 
     // In a full production environment, we would use a batched matmul (BatchGEMM)
     // here to compute all candidates in a single kernel call.
-    // For now, we utilize the high-speed ATC dispatch in a loop, but with 
+    // Current implementation utilizes the high-speed ATC dispatch in a loop with
     // persistent weight mapping.
     return SpeculativePrecompute(candidate_tokens, context);
 }
@@ -309,4 +310,5 @@ void SpeculativeDecoder::SetTemperature(float temp) {
 }
 
 } // namespace RawrXD
+
 

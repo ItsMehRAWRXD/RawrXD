@@ -390,7 +390,6 @@ bool AgenticFailureDetector::isResourceExhausted(const std::string& output) cons
             return true;
         }
     }
-    
     return false;
 }
 
@@ -403,7 +402,6 @@ bool AgenticFailureDetector::isTimeout(const std::string& output) const
             return true;
         }
     }
-    
     return false;
 }
 

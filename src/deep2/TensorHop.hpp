@@ -19,6 +19,7 @@ struct TensorHop {
     uint32_t layerIdx;        // Which layer this expert belongs to
     uint32_t expertIdx;       // Which expert within layer
     uint32_t priority;        // Higher = load sooner
+    uint32_t deviceId;        // Target device: 0=CPU, 1+=GPU index (dual GPU support)
     bool     isPinned;        // Don't evict if true
 };
 

@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
-#include "../plugins/MemoryPlugin.hpp"
+#include "../../plugins/MemoryPlugin.hpp"
 #include "../cpu_inference_engine.h"
 
 namespace RawrXD {

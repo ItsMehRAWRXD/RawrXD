@@ -1,0 +1,8 @@
+create vdisk file="D:\rawrxd\tools\bios_flash\bios_flash.vhd" maximum=100 type=fixed
+select vdisk file="D:\rawrxd\tools\bios_flash\bios_flash.vhd"
+attach vdisk
+convert mbr
+create partition primary size=100
+format fs=fat32 quick label="BIOFLASH"
+assign letter=B
+exit

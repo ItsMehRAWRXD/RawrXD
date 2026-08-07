@@ -185,7 +185,7 @@ static LocalReasoningEngine& getLocalReasoningEngine() {
 #define IDM_FILE_RECENT_CLEAR                         1020
 #define IDM_FILE_LOAD_MODEL                           1030
 #define IDM_FILE_MODEL_FROM_HF                        1031
-#define IDM_FILE_MODEL_FROM_OLLAMA                    1032
+#define IDM_FILE_MODEL_FROM_NATIVE                    1032
 #define IDM_FILE_MODEL_FROM_URL                       1033
 #define IDM_FILE_MODEL_UNIFIED                        1034
 #define IDM_FILE_MODEL_QUICK_LOAD                     1035
@@ -277,6 +277,7 @@ static LocalReasoningEngine& getLocalReasoningEngine() {
 #define IDM_AGENT_MEMORY_VIEW                         4107
 #define IDM_AGENT_MEMORY_CLEAR                        4108
 #define IDM_AGENT_MEMORY_EXPORT                       4109
+#define IDM_AGENT_AUDIT_DRIVE                         4296
 #define IDM_SUBAGENT_CHAIN                            4111
 #define IDM_SUBAGENT_SWARM                            4112
 #define IDM_SUBAGENT_TODO_LIST                        4113
@@ -321,7 +322,7 @@ static LocalReasoningEngine& getLocalReasoningEngine() {
 #define IDM_REVENG_DECOMP_SYNC                        4318
 #define IDM_REVENG_DECOMP_CLOSE                       4319
 #define IDM_BACKEND_SWITCH_LOCAL                      5037
-#define IDM_BACKEND_SWITCH_OLLAMA                     5038
+#define IDM_BACKEND_SWITCH_NATIVE                     5038
 #define IDM_BACKEND_SWITCH_OPENAI                     5039
 #define IDM_BACKEND_SWITCH_CLAUDE                     5040
 #define IDM_BACKEND_SWITCH_GEMINI                     5041
@@ -610,7 +611,7 @@ CommandResult handleAgentConfigureModel(const CommandContext& ctx) {
     if (ctx.args && ctx.args[0]) {
         std::string backend(ctx.args);
         std::string endpoint;
-        if (backend == "ollama") endpoint = "http://localhost:11434";
+        if (backend == "deep2") endpoint = "http://localhost:11434";
         else if (backend == "openai") endpoint = "https://api.openai.com/v1";
         else if (backend == "claude") endpoint = "https://api.anthropic.com/v1";
         else if (backend == "local") endpoint = "local://gguf";
@@ -625,7 +626,7 @@ CommandResult handleAgentConfigureModel(const CommandContext& ctx) {
         char buf[256];
         snprintf(buf, sizeof(buf), "Current backend: %s\n", current.c_str());
         ctx.output(buf);
-        ctx.output("Usage: !agent_configure_model <ollama|openai|claude|local>\n");
+        ctx.output("Usage: !agent_configure_model <deep2|openai|claude|local>\n");
     }
     return CommandResult::ok("agent.configure");
 }
@@ -662,7 +663,7 @@ CommandResult handleAgentStartLoop(const CommandContext& ctx) {
     // Use user-configured backend model, fall back to AgentLoopConfig default
     auto& mi = getModelInvoker();
     if (!mi.getLLMBackend().empty()) config.model = mi.getLLMBackend();
-    config.ollamaBaseUrl = "http://localhost:11434";
+    config.ollamaBaseUrl = "http://localhost:11436";
     if (ctx.args && ctx.args[0]) config.model = ctx.args;
     config.autoVerify = true;
     ctx.output("[Agent] Starting bounded agent loop...\n");
@@ -1304,8 +1305,8 @@ CommandResult handleAiModelSelect(const CommandContext& ctx) {
         } else if (model == "local-gguf") {
             getModelInvoker().setLLMBackend("local", "local://gguf");
         } else {
-            // Treat as Ollama model name
-            getModelInvoker().setLLMBackend("ollama", "http://localhost:11434");
+            // Treat as native model name
+            getModelInvoker().setLLMBackend("deep2", "http://localhost:11436");
         }
         char buf[256];
         snprintf(buf, sizeof(buf), "[AI] Model selected: %s (backend: %s)\n",
@@ -1319,7 +1320,7 @@ CommandResult handleAiModelSelect(const CommandContext& ctx) {
         ctx.output("  gpt-4o          (OpenAI, 128K context)\n");
         ctx.output("  gpt-4-turbo     (OpenAI, 128K context)\n");
         ctx.output("  claude-3-sonnet (Anthropic, 200K context)\n");
-        ctx.output("  mistral         (Ollama local, 32K context)\n");
+        ctx.output("  mistral         (Native Deep2, 32K context)\n");
         ctx.output("  local-gguf      (Direct GGUF inference)\n");
     }
     return CommandResult::ok("ai.model");
@@ -2153,7 +2154,7 @@ CommandResult handleAutonomySetGoal(const CommandContext& ctx) {
     // Use user's configured model backend, not a hardcoded provider
     auto& mi = getModelInvoker();
     cfg.model = mi.getLLMBackend().empty() ? "qwen2.5-coder:14b" : mi.getLLMBackend();
-    cfg.ollamaBaseUrl = "http://localhost:11434";
+    cfg.ollamaBaseUrl = "http://localhost:11436";
     RawrXD::Agent::BoundedAgentLoop loop; loop.Configure(cfg);
     auto result = loop.Execute(std::string("Goal: ") + ctx.args);
     char buf[512];
@@ -2505,7 +2506,7 @@ CommandResult handleFileModelQuickLoad(const CommandContext& ctx) {
     ctx.output("[File] Quick-loading model from local cache...\n");
     if (ctx.isGui) { HWND h=(HWND)(ctx.idePtr); if(h) SendMessage(h, WM_COMMAND, IDM_FILE_MODEL_QUICK_LOAD, 0); }
 
-    // CLI path: scan default cache + Ollama blobs for available models
+    // CLI path: scan default cache + native model blobs for available models
     if (!ctx.isGui || !ctx.idePtr) {
         RawrXD::ModelSourceResolver resolver;
         auto blobs = resolver.FindOllamaBlobs();
@@ -2536,14 +2537,14 @@ CommandResult handleFileModelQuickLoad(const CommandContext& ctx) {
 }
 
 CommandResult handleFileModelUnified(const CommandContext& ctx) {
-    ctx.output("[File] Unified model loader: auto-detecting source (HF/URL/local/Ollama)...\n");
+    ctx.output("[File] Unified model loader: auto-detecting source (HF/URL/local/Native)...\n");
     if (ctx.isGui) { HWND h=(HWND)(ctx.idePtr); if(h) SendMessage(h, WM_COMMAND, IDM_FILE_MODEL_UNIFIED, 0); }
 
     // CLI path: resolve model source if args provided
     if (!ctx.isGui && ctx.args && ctx.args[0]) {
         RawrXD::ModelSourceResolver resolver;
         auto sourceType = resolver.DetectSourceType(ctx.args);
-        const char* typeNames[] = { "Unknown", "LocalFile", "OllamaBlob", "HuggingFace", "HTTP_URL" };
+        const char* typeNames[] = { "Unknown", "LocalFile", "NativeBlob", "HuggingFace", "HTTP_URL" };
         int typeIdx = static_cast<int>(sourceType);
         if (typeIdx < 0 || typeIdx > 4) typeIdx = 0;
         char buf[512];
@@ -2576,7 +2577,7 @@ CommandResult handleFileModelUnified(const CommandContext& ctx) {
             ctx.output(buf);
         }
     } else if (!ctx.isGui) {
-        ctx.output("  Usage: !file_model_unified <path|url|hf_repo|ollama_model>\n");
+        ctx.output("  Usage: !file_model_unified <path|url|hf_repo|native_model>\n");
     }
     return CommandResult::ok("file.modelUnified");
 }
@@ -4228,7 +4229,7 @@ CommandResult handleRouterShowCapabilities(const CommandContext& ctx) {
     ctx.output(buf);
     // Query registered backends from known endpoint configurations
     const char* knownBackends[][3] = {
-        {"ollama",   "http://localhost:11434",             "local inference, streaming"},
+        {"deep2",    "http://localhost:11436",             "local inference, streaming"},
         {"openai",   "https://api.openai.com/v1",          "GPT models, function calling"},
         {"claude",   "https://api.anthropic.com/v1",       "Claude models, tool use"},
         {"directml", "local://dml",                        "local GPU inference (DirectML)"},
@@ -4276,7 +4277,7 @@ CommandResult handleRouterShowFallbacks(const CommandContext& ctx) {
     FallbackEntry chain[] = {
         {"openai",  "cloud primary"},
         {"claude",  "cloud alternate"},
-        {"ollama",  "local fallback"},
+        {"deep2",   "local fallback"},
         {"local",   "GGUF CPU fallback"}
     };
     for (const auto& fb : chain) {
@@ -4898,17 +4899,17 @@ CommandResult handleTerminalStop(const CommandContext& ctx) {
     // Terminate child console processes
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnap != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32 pe{}; pe.dwSize = sizeof(pe);
+        PROCESSENTRY32W pe{}; pe.dwSize = sizeof(pe);
         DWORD myPid = GetCurrentProcessId();
-        if (Process32First(hSnap, &pe)) {
+        if (Process32FirstW(hSnap, &pe)) {
             do {
                 if (pe.th32ParentProcessID == myPid &&
-                    (_stricmp(pe.szExeFile, "cmd.exe") == 0 ||
-                     _stricmp(pe.szExeFile, "powershell.exe") == 0)) {
+                    (_wcsicmp(pe.szExeFile, L"cmd.exe") == 0 ||
+                     _wcsicmp(pe.szExeFile, L"powershell.exe") == 0)) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) { TerminateProcess(hProc, 0); CloseHandle(hProc); }
                 }
-            } while (Process32Next(hSnap, &pe));
+            } while (Process32NextW(hSnap, &pe));
         }
         CloseHandle(hSnap);
     }
@@ -5631,18 +5632,18 @@ CommandResult handleVoiceAutoStop(const CommandContext& ctx) {
     // Kill any mshta TTS processes we may have spawned
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnap != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32 pe{}
+        PROCESSENTRY32W pe{}
     ; pe.dwSize = sizeof(pe);
-        if (Process32First(hSnap, &pe)) {
+        if (Process32FirstW(hSnap, &pe)) {
             do {
-                if (_stricmp(pe.szExeFile, "mshta.exe") == 0) {
+                if (_wcsicmp(pe.szExeFile, L"mshta.exe") == 0) {
                     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
                     if (hProc) {
                         TerminateProcess(hProc, 0);
                         CloseHandle(hProc);
                     }
                 }
-            } while (Process32Next(hSnap, &pe));
+            } while (Process32NextW(hSnap, &pe));
         }
         CloseHandle(hSnap);
     }
@@ -6278,7 +6279,7 @@ CommandResult handleModelBfScanAll(const CommandContext& ctx) {
         return CommandResult::error("Scan in progress", -1);
     }
     ctx.output("[BruteForce] Starting full model brute-force scan...\n");
-    ctx.output("  Scanning: local dirs, Ollama blobs, HuggingFace cache, user cache\n");
+    ctx.output("  Scanning: local dirs, native blobs, HuggingFace cache, user cache\n");
 
     RawrXD::BruteForceScanConfig config;
     if (ctx.args && ctx.args[0]) {
@@ -6343,7 +6344,7 @@ CommandResult handleModelBfProbeSingle(const CommandContext& ctx) {
     snprintf(buf, sizeof(buf),
         "[BruteForce] %-40s │ %-8s │ %-6s │ %.1fGB\n"
         "  Tensors: %llu │ Ctx: %uK │ Layers: %u │ Heads: %u/%u\n"
-        "  CPU: %s │ Ollama: %s │ Native: %s │ Tok/s: %.1f\n"
+        "  CPU: %s │ Deep2: %s │ Native: %s │ Tok/s: %.1f\n"
         "  CLI: %s │ GUI: %s │ HTML: %s\n",
         result.filename.c_str(), result.architecture.c_str(),
         result.quantization.c_str(), sizeGB,
@@ -6483,7 +6484,7 @@ CommandResult handleModelBfStatus(const CommandContext& ctx) {
     return CommandResult::ok("model_bf.status");
 }
 
-// ---- 8. Hotpatch Enable — live-patch Ollama server inference path ----
+// ---- 8. Hotpatch Enable — live-patch native server inference path ----
 CommandResult handleModelBfHotpatchEnable(const CommandContext& ctx) {
     ctx.output("[BruteForce/Hotpatch] Enabling model brute-force hotpatching...\n");
 
@@ -6651,16 +6652,16 @@ CommandResult handleModelBfHotpatchStatus(const CommandContext& ctx) {
     // Query brute-force scan state
     auto& engine = getBruteForceEngine();
     auto& results = engine.GetLastResults();
-    int ollamaCount = 0, cpuCount = 0, nativeCount = 0;
+    int deep2Count = 0, cpuCount = 0, nativeCount = 0;
     for (const auto& r : results) {
-        if (r.ollama_available) ollamaCount++;
+        if (r.ollama_available) deep2Count++;
         if (r.cpu_loadable) cpuCount++;
         if (r.native_loadable) nativeCount++;
     }
 
     snprintf(buf, sizeof(buf), "║ Cached Models: %d\n", (int)results.size());
     ctx.output(buf);
-    snprintf(buf, sizeof(buf), "║ Ollama-ready:  %d\n", ollamaCount);
+    snprintf(buf, sizeof(buf), "║ Deep2-ready:  %d\n", deep2Count);
     ctx.output(buf);
     snprintf(buf, sizeof(buf), "║ CPU-loadable:  %d\n", cpuCount);
     ctx.output(buf);
@@ -6716,6 +6717,9 @@ void initAutoFeatureRegistry() {
     autoReg("agent.stop", "Agent Stop", "Stop (agent system)",
         FeatureGroup::Agent, IDM_AGENT_STOP, "!agent_stop", "",
         handleAgentStop, true, true, false);
+    autoReg("agent.audit_drive", "Agent Audit Drive", "Audit drive and generate context (agent system)",
+        FeatureGroup::Agent, IDM_AGENT_AUDIT_DRIVE, "!agent_audit_drive", "",
+        handleAgentAuditDrive, true, true, false);
     autoReg("agent.memory", "Agent Memory", "Memory (agent system)",
         FeatureGroup::Agent, IDM_AGENT_MEMORY, "!agent_memory", "",
         handleAgentMemory, true, true, false);
@@ -6908,8 +6912,8 @@ void initAutoFeatureRegistry() {
     autoReg("backend.switch_local", "Backend Switch Local", "Switch local (backend system)",
         FeatureGroup::LLMRouter, IDM_BACKEND_SWITCH_LOCAL, "!backend_switch_local", "",
         handleBackendSwitchLocal, true, true, false);
-    autoReg("backend.switch_ollama", "Backend Switch Ollama", "Switch ollama (backend system)",
-        FeatureGroup::LLMRouter, IDM_BACKEND_SWITCH_OLLAMA, "!backend_switch_ollama", "",
+    autoReg("backend.switch_deep2", "Backend Switch Deep2", "Switch deep2 (backend system)",
+        FeatureGroup::LLMRouter, IDM_BACKEND_SWITCH_NATIVE, "!backend_switch_deep2", "",
         handleBackendSwitchOllama, true, true, false);
     autoReg("backend.switch_openai", "Backend Switch Openai", "Switch openai (backend system)",
         FeatureGroup::LLMRouter, IDM_BACKEND_SWITCH_OPENAI, "!backend_switch_openai", "",
@@ -7157,8 +7161,8 @@ void initAutoFeatureRegistry() {
     autoReg("file.model_from_hf", "File Model From Hf", "Model from hf (file system)",
         FeatureGroup::FileOps, IDM_FILE_MODEL_FROM_HF, "!file_model_from_hf", "",
         handleFileModelFromHf, true, true, false);
-    autoReg("file.model_from_ollama", "File Model From Ollama", "Model from ollama (file system)",
-        FeatureGroup::FileOps, IDM_FILE_MODEL_FROM_OLLAMA, "!file_model_from_ollama", "",
+    autoReg("file.model_from_native", "File Model From Native", "Model from native (file system)",
+        FeatureGroup::FileOps, IDM_FILE_MODEL_FROM_NATIVE, "!file_model_from_native", "",
         handleFileModelFromOllama, true, true, false);
     autoReg("file.model_from_url", "File Model From Url", "Model from url (file system)",
         FeatureGroup::FileOps, IDM_FILE_MODEL_FROM_URL, "!file_model_from_url", "",

@@ -10,6 +10,12 @@
 #include <cctype>
 #include <exception>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+#endif
+
 // ===== STATIC HELPERS =====
 
 std::string AgenticErrorHandler::generateErrorId()
@@ -551,8 +557,52 @@ std::string AgenticErrorHandler::analyzeError(const std::exception& e)
 
 std::string AgenticErrorHandler::extractStackTrace()
 {
-    // Platform-specific stack trace extraction would go here
+#ifdef _WIN32
+    HANDLE process = GetCurrentProcess();
+    HANDLE thread = GetCurrentThread();
+    
+    // Initialize symbol handler
+    SymInitialize(process, nullptr, TRUE);
+    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+    
+    // Capture stack trace
+    const int maxFrames = 64;
+    void* stack[maxFrames];
+    WORD frames = CaptureStackBackTrace(0, maxFrames, stack, nullptr);
+    
+    std::string stackTrace = "Stack trace:\n";
+    
+    SYMBOL_INFO* symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+    symbol->MaxNameLen = 255;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    
+    IMAGEHLP_LINE64 line;
+    DWORD lineDisplacement;
+    
+    for (WORD i = 0; i < frames; ++i) {
+        DWORD64 address = (DWORD64)(stack[i]);
+        
+        // Get symbol name
+        if (SymFromAddr(process, address, nullptr, symbol)) {
+            stackTrace += "  [" + std::to_string(i) + "] " + symbol->Name;
+            
+            // Get line info
+            if (SymGetLineFromAddr64(process, address, &lineDisplacement, &line)) {
+                stackTrace += " (" + std::string(line.FileName) + ":" + std::to_string(line.LineNumber) + ")";
+            }
+            stackTrace += "\n";
+        } else {
+            stackTrace += "  [" + std::to_string(i) + "] 0x" + std::to_string(address) + "\n";
+        }
+    }
+    
+    free(symbol);
+    SymCleanup(process);
+    
+    return stackTrace;
+#else
     return "Stack trace not available on this platform";
+#endif
 }
 
 void AgenticErrorHandler::recordMetrics(const ErrorContext& context)
@@ -578,3 +628,5 @@ ErrorSafeOperation::ErrorSafeOperation(
 ErrorSafeOperation::~ErrorSafeOperation()
 {
 }
+
+

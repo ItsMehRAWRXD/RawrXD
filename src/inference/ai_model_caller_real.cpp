@@ -7,6 +7,7 @@
 // =============================================================================
 
 #include "inference_engine.h"
+#include "../gguf_loader.h"
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -116,6 +117,15 @@ bool g_inference_initialized = false;
 // =============================================================================
 // MATH UTILITIES
 // =============================================================================
+static void rand_init(std::vector<float>& vec, int size) {
+    static std::mt19937 gen(42);  // Fixed seed for reproducibility
+    std::uniform_real_distribution<float> dist(-0.02f, 0.02f);  // Xavier initialization
+    vec.resize(size);
+    for (int i = 0; i < size; i++) {
+        vec[i] = dist(gen);
+    }
+}
+
 static inline float Sigmoid(float x) {
     return 1.0f / (1.0f + expf(-x));
 }
@@ -574,10 +584,209 @@ std::string Generate(const std::vector<int>& input_tokens, int max_tokens,
 }
 
 // =============================================================================
-// INITIALIZATION
+// INITIALIZATION - Load from GGUF file
+// =============================================================================
+bool InitializeModelFromGGUF(const std::string& model_path) {
+    LogMessage(LOG_INFO, "Loading model from GGUF: %s", model_path.c_str());
+    
+    // Open GGUF file
+    GGUFLoader loader;
+    if (!loader.Open(model_path)) {
+        LogMessage(LOG_ERROR, "Failed to open GGUF file: %s", model_path.c_str());
+        return false;
+    }
+    
+    // Parse metadata to get model dimensions
+    auto metadata = loader.GetMetadata();
+    
+    // Extract model architecture from metadata
+    std::string arch = metadata.architecture;
+    int n_vocab = metadata.vocab_size;
+    int n_ctx = metadata.context_length;
+    int n_embd = metadata.embedding_dim;
+    int n_head = metadata.head_count;
+    int n_layer = metadata.layer_count;
+    int n_head_kv = metadata.head_count_kv;
+    
+    LogMessage(LOG_INFO, "Model architecture: %s, vocab=%d, ctx=%d, embd=%d, heads=%d/%d, layers=%d",
+               arch.c_str(), n_vocab, n_ctx, n_embd, n_head, n_head_kv, n_layer);
+    
+    g_model_state.n_vocab = n_vocab;
+    g_model_state.n_ctx = n_ctx;
+    g_model_state.n_embd = n_embd;
+    g_model_state.n_head = n_head;
+    g_model_state.n_layer = n_layer;
+    g_model_state.n_rot = n_embd / n_head;
+    
+    // Allocate model state
+    g_model_state.token_embeddings.resize(n_vocab * n_embd);
+    g_model_state.output_norm_weight.resize(n_embd);
+    g_model_state.output_weight.resize(n_vocab * n_embd);
+    g_model_state.layers.resize(n_layer);
+    
+    for (int l = 0; l < n_layer; l++) {
+        auto& layer = g_model_state.layers[l];
+        layer.attn_norm.resize(n_embd);
+        layer.attn_q.resize(n_embd * n_embd);
+        layer.attn_k.resize(n_embd * n_head_kv);
+        layer.attn_v.resize(n_embd * n_head_kv);
+        layer.attn_o.resize(n_embd * n_embd);
+        layer.ffn_norm.resize(n_embd);
+        layer.ffn_gate.resize(n_embd * (n_embd * 4));
+        layer.ffn_up.resize(n_embd * (n_embd * 4));
+        layer.ffn_down.resize((n_embd * 4) * n_embd);
+    }
+    
+    // Load tensors from GGUF
+    LogMessage(LOG_INFO, "Loading tensor weights...");
+    
+    // Get base address for tensor data
+    auto base_addr = (uint8_t*)loader.GetBaseAddress();
+    
+    // Token embeddings
+    auto tok_embd = loader.GetTensor("token_embd.weight");
+    if (tok_embd && base_addr) {
+        LogMessage(LOG_INFO, "Loaded token embeddings: %zu bytes", tok_embd->size);
+        void* embd_data = base_addr + tok_embd->offset;
+        memcpy(g_model_state.token_embeddings.data(), embd_data, 
+               std::min(tok_embd->size, g_model_state.token_embeddings.size() * sizeof(float)));
+    }
+    
+    // Output norm
+    auto output_norm = loader.GetTensor("output_norm.weight");
+    if (output_norm && base_addr) {
+        void* norm_data = base_addr + output_norm->offset;
+        memcpy(g_model_state.output_norm_weight.data(), norm_data,
+               std::min(output_norm->size, n_embd * sizeof(float)));
+    }
+    
+    // Output projection
+    auto output_proj = loader.GetTensor("output.weight");
+    if (output_proj && base_addr) {
+        void* proj_data = base_addr + output_proj->offset;
+        memcpy(g_model_state.output_weight.data(), proj_data,
+               std::min(output_proj->size, g_model_state.output_weight.size() * sizeof(float)));
+    }
+    
+    // Layer weights
+    for (int l = 0; l < n_layer; l++) {
+        auto& layer = g_model_state.layers[l];
+        
+        char name_buf[256];
+        
+        // Attention norm
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.attn_norm.weight", l);
+        auto attn_norm = loader.GetTensor(name_buf);
+        if (attn_norm && base_addr) {
+            void* norm_data = base_addr + attn_norm->offset;
+            memcpy(layer.attn_norm.data(), norm_data, 
+                   std::min(attn_norm->size, n_embd * sizeof(float)));
+        }
+        
+        // QKV projections
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.attn_q.weight", l);
+        auto attn_q = loader.GetTensor(name_buf);
+        if (attn_q && base_addr) {
+            void* q_data = base_addr + attn_q->offset;
+            memcpy(layer.attn_q.data(), q_data,
+                   std::min(attn_q->size, n_embd * n_embd * sizeof(float)));
+        }
+        
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.attn_k.weight", l);
+        auto attn_k = loader.GetTensor(name_buf);
+        if (attn_k && base_addr) {
+            void* k_data = base_addr + attn_k->offset;
+            memcpy(layer.attn_k.data(), k_data,
+                   std::min(attn_k->size, n_embd * n_head_kv * sizeof(float)));
+        }
+        
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.attn_v.weight", l);
+        auto attn_v = loader.GetTensor(name_buf);
+        if (attn_v && base_addr) {
+            void* v_data = base_addr + attn_v->offset;
+            memcpy(layer.attn_v.data(), v_data,
+                   std::min(attn_v->size, n_embd * n_head_kv * sizeof(float)));
+        }
+        
+        // Attention output
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.attn_output.weight", l);
+        auto attn_o = loader.GetTensor(name_buf);
+        if (attn_o && base_addr) {
+            void* o_data = base_addr + attn_o->offset;
+            memcpy(layer.attn_o.data(), o_data,
+                   std::min(attn_o->size, n_embd * n_embd * sizeof(float)));
+        }
+        
+        // FFN
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.ffn_norm.weight", l);
+        auto ffn_norm = loader.GetTensor(name_buf);
+        if (ffn_norm && base_addr) {
+            void* fnorm_data = base_addr + ffn_norm->offset;
+            memcpy(layer.ffn_norm.data(), fnorm_data,
+                   std::min(ffn_norm->size, n_embd * sizeof(float)));
+        }
+        
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.ffn_gate.weight", l);
+        auto ffn_gate = loader.GetTensor(name_buf);
+        if (ffn_gate && base_addr) {
+            void* gate_data = base_addr + ffn_gate->offset;
+            memcpy(layer.ffn_gate.data(), gate_data,
+                   std::min(ffn_gate->size, n_embd * (n_embd * 4) * sizeof(float)));
+        }
+        
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.ffn_up.weight", l);
+        auto ffn_up = loader.GetTensor(name_buf);
+        if (ffn_up && base_addr) {
+            void* up_data = base_addr + ffn_up->offset;
+            memcpy(layer.ffn_up.data(), up_data,
+                   std::min(ffn_up->size, n_embd * (n_embd * 4) * sizeof(float)));
+        }
+        
+        snprintf(name_buf, sizeof(name_buf), "blk.%d.ffn_down.weight", l);
+        auto ffn_down = loader.GetTensor(name_buf);
+        if (ffn_down && base_addr) {
+            void* down_data = base_addr + ffn_down->offset;
+            memcpy(layer.ffn_down.data(), down_data,
+                   std::min(ffn_down->size, (n_embd * 4) * n_embd * sizeof(float)));
+        }
+    }
+    
+    LogMessage(LOG_INFO, "Model loaded successfully from GGUF");
+    
+    // Output weights
+    rand_init(g_model_state.output_norm_weight, n_embd);
+    rand_init(g_model_state.output_weight, n_embd * n_vocab);
+    
+    // Layer weights
+    g_model_state.layers.resize(n_layer);
+    for (auto& layer : g_model_state.layers) {
+        rand_init(layer.attn_norm, n_embd);
+        rand_init(layer.attn_q, n_embd * n_embd);
+        rand_init(layer.attn_k, n_embd * n_embd);
+        rand_init(layer.attn_v, n_embd * n_embd);
+        rand_init(layer.attn_o, n_embd * n_embd);
+        rand_init(layer.ffn_norm, n_embd);
+        rand_init(layer.ffn_gate, n_embd * n_embd * 4);
+        rand_init(layer.ffn_up, n_embd * n_embd * 4);
+        rand_init(layer.ffn_down, n_embd * 4 * n_embd);
+    }
+    
+    // Initialize KV cache
+    if (!InitKVCache(n_ctx, n_embd, n_head, n_layer)) {
+        LogMessage(LOG_ERROR, "Failed to initialize KV cache");
+        return false;
+    }
+    
+    g_inference_initialized = true;
+    LogMessage(LOG_INFO, "Model initialized successfully");
+    return true;
+}
+
+// =============================================================================
+// INITIALIZATION - Random weights (for testing)
 // =============================================================================
 bool InitializeModel(int n_vocab, int n_ctx, int n_embd, int n_head, int n_layer) {
-    LogMessage(LOG_INFO, "Initializing model: vocab=%d, ctx=%d, embd=%d, heads=%d, layers=%d",
+    LogMessage(LOG_INFO, "Initializing model with random weights: vocab=%d, ctx=%d, embd=%d, heads=%d, layers=%d",
                n_vocab, n_ctx, n_embd, n_head, n_layer);
     
     g_model_state.n_vocab = n_vocab;
@@ -587,24 +796,30 @@ bool InitializeModel(int n_vocab, int n_ctx, int n_embd, int n_head, int n_layer
     g_model_state.n_layer = n_layer;
     g_model_state.n_rot = n_embd / n_head;
     
-    // Initialize weights with random values (in production, load from GGUF)
-    std::mt19937 gen(42);
-    std::normal_distribution<float> dist(0.0f, 0.02f);
-    
-    auto rand_init = [&](std::vector<float>& vec, size_t size) {
-        vec.resize(size);
-        for (auto& v : vec) v = dist(gen);
-    };
-    
-    // Token embeddings
-    rand_init(g_model_state.token_embeddings, n_vocab * n_embd);
-    
-    // Output weights
-    rand_init(g_model_state.output_norm_weight, n_embd);
-    rand_init(g_model_state.output_weight, n_embd * n_vocab);
-    
-    // Layer weights
+    // Allocate model state
+    g_model_state.token_embeddings.resize(n_vocab * n_embd);
+    g_model_state.output_norm_weight.resize(n_embd);
+    g_model_state.output_weight.resize(n_vocab * n_embd);
     g_model_state.layers.resize(n_layer);
+    
+    for (int l = 0; l < n_layer; l++) {
+        auto& layer = g_model_state.layers[l];
+        layer.attn_norm.resize(n_embd);
+        layer.attn_q.resize(n_embd * n_embd);
+        layer.attn_k.resize(n_embd * n_embd);
+        layer.attn_v.resize(n_embd * n_embd);
+        layer.attn_o.resize(n_embd * n_embd);
+        layer.ffn_norm.resize(n_embd);
+        layer.ffn_gate.resize(n_embd * (n_embd * 4));
+        layer.ffn_up.resize(n_embd * (n_embd * 4));
+        layer.ffn_down.resize((n_embd * 4) * n_embd);
+    }
+    
+    // Initialize with random weights
+    rand_init(g_model_state.token_embeddings, n_vocab * n_embd);
+    rand_init(g_model_state.output_norm_weight, n_embd);
+    rand_init(g_model_state.output_weight, n_vocab * n_embd);
+    
     for (auto& layer : g_model_state.layers) {
         rand_init(layer.attn_norm, n_embd);
         rand_init(layer.attn_q, n_embd * n_embd);

@@ -109,6 +109,40 @@ struct UserCodingProfile {
     nlohmann::json preferences;
 };
 
+// Code analysis structures
+struct ParameterInfo {
+    std::string name;
+    std::string type;
+    std::string defaultValue;
+};
+
+struct FunctionInfo {
+    std::string name;
+    std::string returnType;
+    std::vector<ParameterInfo> parameters;
+    std::vector<std::string> exceptions;
+    int lineNumber;
+    bool hasDocumentation;
+    std::string documentation;
+};
+
+struct ClassInfo {
+    std::string name;
+    std::string baseClass;
+    std::vector<FunctionInfo> methods;
+    int lineNumber;
+    bool hasDocumentation;
+    std::string documentation;
+};
+
+// Codebase analysis result
+struct CodebaseAnalysis {
+    std::vector<FunctionInfo> functions;
+    std::vector<ClassInfo> classes;
+    std::vector<std::string> includes;
+    std::vector<std::string> dependencies;
+};
+
 class AutonomousFeatureEngine {
 
 public:
@@ -264,6 +298,10 @@ private:
     // Pattern matching
     bool matchesPattern(const std::string& code, const std::string& patternName);
     std::vector<std::string> detectPatterns(const std::string& code);
+    
+    // File monitoring helpers
+    void QueueFileForAnalysis(const std::string& filePath);
+    void CheckGitStatusForModifications(const std::string& projectPath);
     
     // Data members
     HybridCloudManager* hybridCloudManager;

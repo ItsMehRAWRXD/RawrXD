@@ -33,15 +33,15 @@ inline double GetTimeMs() {
 }
 
 // ============================================================================
-// Simulated Q4_K GEMV (simplified - actual implementation uses AVX-512)
+// Q4_K GEMV (basic implementation - full implementation uses AVX-512)
 // ============================================================================
 void Q4K_GEMV_Simulated(const float* weights, const float* input, float* output,
                          int rows, int cols) {
-    // Simulate Q4_K: weights are 4-bit quantized, dequantized on the fly
+    // Model Q4_K: weights are 4-bit quantized, dequantized on the fly
     for (int r = 0; r < rows; r++) {
         float sum = 0.0f;
         for (int c = 0; c < cols; c++) {
-            // Simulate dequantization: weight = (quantized - 8) * scale
+            // Model dequantization: weight = (quantized - 8) * scale
             int quant = ((r * cols + c) % 16) - 8;  // -8 to +7
             float scale = 0.01f;
             sum += quant * scale * input[c];

@@ -7,8 +7,58 @@
 #include "NUFusedPacker.hpp"
 #include <algorithm>
 #include <cstring>
+#include <cstdint>
 
 namespace Deep2 {
+
+// ============================================================================
+// FP32 to FP16 conversion (IEEE 754 compliant)
+// ============================================================================
+static inline uint16_t floatToFP16(float value) {
+    // IEEE 754 FP32: 1 sign bit, 8 exponent bits, 23 mantissa bits
+    // IEEE 754 FP16: 1 sign bit, 5 exponent bits, 10 mantissa bits
+    union { float f; uint32_t i; } u;
+    u.f = value;
+    uint32_t f32 = u.i;
+    
+    uint32_t sign = (f32 >> 31) & 0x1;
+    uint32_t exp = (f32 >> 23) & 0xFF;
+    uint32_t mant = f32 & 0x7FFFFF;
+    
+    uint32_t f16;
+    
+    if (exp == 0) {
+        // Zero or subnormal - flush to zero for FP16
+        f16 = sign << 15;
+    } else if (exp == 0xFF) {
+        // Infinity or NaN
+        if (mant == 0) {
+            f16 = (sign << 15) | 0x7C00;  // Infinity
+        } else {
+            f16 = (sign << 15) | 0x7E00;  // NaN
+        }
+    } else {
+        // Normal number
+        int32_t newExp = (int32_t)exp - 127 + 15;  // Adjust bias
+        if (newExp >= 31) {
+            // Overflow to infinity
+            f16 = (sign << 15) | 0x7C00;
+        } else if (newExp <= 0) {
+            // Underflow to zero (or subnormal, but we flush to zero)
+            f16 = sign << 15;
+        } else {
+            // Round mantissa from 23 bits to 10 bits
+            uint32_t newMant = mant >> 13;
+            uint32_t roundBit = (mant >> 12) & 1;
+            if (roundBit && newMant < 0x3FF) {
+                newMant++;
+            }
+            f16 = (sign << 15) | ((uint32_t)newExp << 10) | newMant;
+        }
+    }
+    
+    return (uint16_t)f16;
+}
 
 NUFusedPacker::NUFusedPacker() {}
 NUFusedPacker::~NUFusedPacker() {}
@@ -160,9 +210,9 @@ void NUFusedPacker::packQ4_K(const float* src, uint8_t* dst, size_t n) {
             float min = minVal;
 
             // Write FP16 scale and min
-            // Simplified FP16 conversion
-            uint16_t scaleF16 = (uint16_t)(scale * 1024.0f);  // Approximate
-            uint16_t minF16 = (uint16_t)(min * 1024.0f);
+            // IEEE 754 compliant FP16 conversion
+            uint16_t scaleF16 = floatToFP16(scale);
+            uint16_t minF16 = floatToFP16(min);
             memcpy(dst + b * 144 + g * 2, &scaleF16, 2);
             memcpy(dst + b * 144 + 64 + g * 2, &minF16, 2);
 

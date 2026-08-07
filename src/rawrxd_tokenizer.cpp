@@ -5,29 +5,48 @@
 #include <algorithm>
 
 bool RawrXDTokenizer::Load(const std::string& vocabPath) {
-    // 1. Initialize with bytes 
+    // 1. Initialize with bytes (always available as fallback)
+    vocab.clear();
+    reverse_vocab.clear();
     for (int i = 0; i < 256; i++) {
-        std::string s(1, (char)i);
-        // Standard Llama token mapping often has <0xXX> for bytes or raw bytes
-        // We'll map them to a safe range if needed, or assume raw index.
-        // For simplicity:
+        std::string s(1, static_cast<char>(i));
         vocab[s] = i + 3; 
         reverse_vocab[i + 3] = s;
     }
     
-    // 2. Load file if exists (e.g. tokenizer.model or vocab.json)
-    // Stub: Try to read basic lines
-    std::ifstream f(vocabPath);
-    if (!f.is_open()) {
-        // Fallback to ASCII byte encoding only
+    // 2. If no vocab file provided, byte-level fallback is sufficient
+    if (vocabPath.empty()) {
         return true;
     }
     
+    // 3. Attempt to load vocab file
+    std::ifstream f(vocabPath, std::ios::binary);
+    if (!f.is_open()) {
+        // File not found — byte-level fallback is acceptable
+        return true;
+    }
+    
+    // Peek at first non-whitespace char to detect JSON
+    char first = 0;
+    while (f.get(first) && std::isspace(static_cast<unsigned char>(first))) {}
+    if (!f) {
+        return true; // Empty file
+    }
+    f.seekg(0, std::ios::beg);
+    
+    if (first == '{') {
+        // tokenizer.json format — parse with nlohmann/json if available
+        // For now, we don't have json.hpp included here; fall through to line-by-line
+        // TODO: Add JSON parsing when nlohmann/json is available in this TU
+    }
+    
+    // Line-by-line fallback (handles simple vocab files)
     std::string line;
     int idx = 259; // Start after bytes
     while (std::getline(f, line)) {
-        // Minimal parser
         if (line.empty()) continue;
+        // Strip trailing carriage return (Windows line endings)
+        if (!line.empty() && line.back() == '\r') line.pop_back();
         vocab[line] = idx;
         reverse_vocab[idx] = line;
         idx++;

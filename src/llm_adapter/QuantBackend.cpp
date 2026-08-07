@@ -76,14 +76,13 @@ void QuantBackend::matmul(
         }
         
         case QuantMode::Q8_0: {
-            // ggml Q8_0 matmul path
-            // Similar to Q4_0 but 8-bit quantization
+            // Q8_0 matmul: Similar to Q4_0 but with 8-bit blocks
             fallbackMatmul(A, B, C, N, M, K);
             break;
         }
         
         case QuantMode::F32: {
-            // Full precision ggml path (still faster due to optimized kernels)
+            // Full precision path
             fallbackMatmul(A, B, C, N, M, K);
             break;
         }

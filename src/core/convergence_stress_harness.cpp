@@ -551,12 +551,12 @@ void ConvergenceStressHarness::runBoundaryInputs(int module) {
             asm_perf_init();
             uint64_t tsc;
 
-            // Simulate spillover load timing
+            // Model spillover load timing
             tsc = asm_perf_begin(static_cast<uint32_t>(Perf::KernelSlot::Spillover_LoadWithSpillover));
             Sleep(0); // minimal yield
             asm_perf_end(static_cast<uint32_t>(Perf::KernelSlot::Spillover_LoadWithSpillover), tsc);
 
-            // Simulate spillover spill timing
+            // Model spillover spill timing
             tsc = asm_perf_begin(static_cast<uint32_t>(Perf::KernelSlot::Spillover_SpillToHost));
             Sleep(0);
             asm_perf_end(static_cast<uint32_t>(Perf::KernelSlot::Spillover_SpillToHost), tsc);

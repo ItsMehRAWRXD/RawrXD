@@ -78,6 +78,7 @@ private:
 
     HWND m_searchInput = nullptr;
     HWND m_statusLabel = nullptr;
+    HWND m_resultsTree = nullptr;
 
     std::string m_projectRoot;
     std::string m_searchQuery;

@@ -17,6 +17,7 @@
 // Forward declarations from ai_model_caller_real.cpp
 namespace RawrXD {
 namespace Inference {
+    extern bool InitializeModelFromGGUF(const std::string& model_path);
     extern bool InitializeModel(int n_vocab, int n_ctx, int n_embd, int n_head, int n_layer);
     extern std::string Generate(const std::vector<int>& input_tokens, int max_tokens,
                                  float temperature, float top_p, int top_k,
@@ -41,15 +42,8 @@ public:
     };
     
     bool Initialize(const std::string& model_path) {
-        // For now, initialize with default model dimensions
-        // In production, parse these from GGUF metadata
-        return RawrXD::Inference::InitializeModel(
-            32000,   // n_vocab
-            4096,    // n_ctx
-            4096,    // n_embd
-            32,      // n_head
-            32       // n_layer
-        );
+        // Load model from GGUF file - parses metadata and weights
+        return RawrXD::Inference::InitializeModelFromGGUF(model_path);
     }
     
     bool IsModelLoaded() const {

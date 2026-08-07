@@ -471,48 +471,60 @@ void CoverageTracker::Reset() {
 // ============================================================================
 
 bool TestUtils::ValuesEqual(const JsValue& a, const JsValue& b) {
-    // TODO: Implement proper value comparison
-    return a.raw == b.raw;
+    // Compare type tags first
+    if (a.type != b.type) return false;
+    
+    // Compare based on type
+    switch (a.type) {
+        case JsType::Number:
+            return a.number == b.number;
+        case JsType::String:
+            return a.string == b.string;
+        case JsType::Boolean:
+            return a.boolean == b.boolean;
+        case JsType::Null:
+        case JsType::Undefined:
+            return true; // All null/undefined are equal
+        case JsType::Object:
+        case JsType::Array:
+            return a.object == b.object; // Compare object pointers
+        case JsType::Function:
+            return a.function == b.function;
+        default:
+            return false;
+    }
 }
 
 bool TestUtils::ValueIsNumber(const JsValue& v, double expected) {
-    // TODO: Check type tag and compare double value
-    return false;
+    return v.type == JsType::Number && std::abs(v.number - expected) < 0.0001;
 }
 
 bool TestUtils::ValueIsString(const JsValue& v, const std::string& expected) {
-    // TODO: Check type tag and compare string
-    return false;
+    return v.type == JsType::String && v.string == expected;
 }
 
 bool TestUtils::ValueIsNull(const JsValue& v) {
-    // TODO: Check type tag
-    return false;
+    return v.type == JsType::Null;
 }
 
 bool TestUtils::ValueIsUndefined(const JsValue& v) {
-    // TODO: Check type tag
-    return false;
+    return v.type == JsType::Undefined;
 }
 
 bool TestUtils::ValueIsBoolean(const JsValue& v, bool expected) {
-    // TODO: Check type tag and boolean value
-    return false;
+    return v.type == JsType::Boolean && v.boolean == expected;
 }
 
 bool TestUtils::ValueIsObject(const JsValue& v) {
-    // TODO: Check type tag
-    return false;
+    return v.type == JsType::Object;
 }
 
 bool TestUtils::ValueIsArray(const JsValue& v) {
-    // TODO: Check type tag and array flag
-    return false;
+    return v.type == JsType::Array;
 }
 
 bool TestUtils::ValueIsFunction(const JsValue& v) {
-    // TODO: Check type tag
-    return false;
+    return v.type == JsType::Function;
 }
 
 bool TestUtils::ThrewException(const PipelineResult& result) {

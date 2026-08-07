@@ -56,10 +56,13 @@ struct ContextWindow {
 // KV cache entry for prefix reuse
 struct KVCacheEntry {
     uint64_t prefix_hash;
+    uint64_t hash;
     uint32_t seq_len;
     std::vector<uint32_t> token_ids;
     std::chrono::steady_clock::time_point last_used;
     bool valid;
+    // Vulkan buffer for GPU caching
+    size_t size{0};
 };
 
 // Streaming statistics for adaptive optimization
@@ -204,6 +207,12 @@ private:
     };
     SampleResult SampleToken(const float* logits, size_t vocab_size);
     
+    // Logits computation for token generation
+    void ComputeLogits(const std::vector<uint32_t>& tokens, float* logits, size_t vocab_size);
+    
+    // Detokenize token IDs to text
+    std::string Detokenize(const std::vector<uint32_t>& tokens);
+    
     // Members
     VulkanCompute* vulkan_;
     KernelArbiter arbiter_;
@@ -228,6 +237,9 @@ private:
     
     // Current kernel mode
     std::atomic<int> current_kernel_mode_{1}; // Default: Q4_K
+    
+    // Temperature for sampling
+    std::atomic<float> current_temperature_{0.8f};
     
     // Speculative state
     SpeculativeState spec_state_;

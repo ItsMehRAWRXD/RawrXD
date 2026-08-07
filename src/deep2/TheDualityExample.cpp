@@ -32,7 +32,7 @@ int optimizedCompute(int a, int b) {
 }
 
 int maliciousCompute(int a, int b) {
-    // Simulated malicious patch
+    // Model malicious patch
     return 0;  // Always returns 0
 }
 
@@ -114,7 +114,7 @@ void testUnauthorizedDetection() {
     GetAntiPatcher().startMonitoring(500);  // Check every 500ms
     printf("Monitoring started\n");
     
-    // Simulate time passing
+    // Model time passing
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
     // In real scenario, an unauthorized patch would be detected here

@@ -12,7 +12,10 @@ add_library(RawrXDGit STATIC
 # Qt-free: uses nlohmann::json + STL + WinHTTP
 target_link_libraries(RawrXDGit
     PUBLIC
+<<<<<<< HEAD
         $<$<PLATFORM_ID:Windows>:winhttp>
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
     PRIVATE
         RawrXDOrchestration
 )

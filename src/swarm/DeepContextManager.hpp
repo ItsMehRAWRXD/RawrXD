@@ -28,6 +28,7 @@ struct ContextSegment {
     std::string category; // "system", "user", "assistant", "tool", "memory"
     size_t priority{0};
     bool compressed{false};
+    std::chrono::steady_clock::time_point timestamp;
 };
 
 // Attention weights for selective focus

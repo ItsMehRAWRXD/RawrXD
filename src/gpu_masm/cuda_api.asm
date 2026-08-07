@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ; Production Implementation
 
 ; ============================================================
@@ -179300,3 +179301,24 @@ QuantumBeaconismBackend_getTelemetry PROC
 QuantumBeaconismBackend_getTelemetry ENDP
 
 END
+=======
+; CUDA interop placeholders (MASM x64)
+option casemap:none
+
+PUBLIC cuda_init
+PUBLIC cuda_shutdown
+
+.code
+cuda_init PROC
+    ; TODO: Dynamically probe CUDA (if present)
+    xor rax, rax
+    ret
+cuda_init ENDP
+
+cuda_shutdown PROC
+    xor rax, rax
+    ret
+cuda_shutdown ENDP
+
+END
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9

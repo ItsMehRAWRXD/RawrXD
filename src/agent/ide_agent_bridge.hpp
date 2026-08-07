@@ -75,7 +75,6 @@ protected:
     std::unique_ptr<ModelInvoker> m_invoker;
     std::unique_ptr<ActionExecutor> m_executor;
     bool m_isExecuting = false;
-    bool m_waitingForApproval = false;
     bool m_dryRun = false;
     std::string m_projectRoot;
     ExecutionPlan m_currentPlan;

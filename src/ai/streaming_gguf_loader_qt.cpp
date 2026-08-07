@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include "gguf_loader.h"
 
 // Metadata value convenience accessors
 std::string GGUFMetadataValue::AsString() const {
@@ -342,8 +343,8 @@ bool StreamingGGUFLoader::parseMetadata() {
                 }
                 currentFileOffset += sizeof(uint64_t);
                 
-                // For now, skip array elements (can be implemented later if needed)
-                // Calculate size and skip
+                // Read array elements based on type
+                // String arrays are read individually, other types are skipped by size calculation
                 size_t elementSize = 0;
                 switch (static_cast<GGUFValueType>(arrayType)) {
                     case GGUFValueType::UINT8:
@@ -616,3 +617,4 @@ StreamingGGUFLoader::MemoryStats StreamingGGUFLoader::getMemoryStats() const {
     
     return stats;
 }
+

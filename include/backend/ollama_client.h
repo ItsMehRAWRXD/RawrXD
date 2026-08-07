@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <cstdint>
@@ -104,3 +105,4 @@ private:
 
 } // namespace Backend
 } // namespace RawrXD
+

@@ -478,11 +478,14 @@ DebugResult NativeDebuggerEngine::launchProcess(const std::string& exePath,
         cmdLine += " " + args;
     }
 
-    // CreateProcess via DbgEng
-    HRESULT hr = m_debugClient->CreateProcessA(
+    // CreateProcess via DbgEng — use CreateProcessAndAttach with ProcessId=0
+    // to avoid the Windows CreateProcess macro conflict (CreateProcessA/CreateProcessW).
+    HRESULT hr = m_debugClient->CreateProcessAndAttach(
         0,                                  // Server (local = 0)
         const_cast<char*>(cmdLine.c_str()), // Command line
-        DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS   // Create flags
+        DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS,  // Create flags
+        0,                                  // ProcessId = 0 → acts as CreateProcess
+        0                                   // AttachFlags = 0
     );
 
     if (FAILED(hr)) {

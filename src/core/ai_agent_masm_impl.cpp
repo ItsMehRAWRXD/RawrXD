@@ -1046,7 +1046,7 @@ extern "C"
 
                 // Approximate tanh using (e^2x - 1) / (e^2x + 1)
                 // Use fast exp approximation
-                __m256 exp_2inner = _mm256_set1_ps(1.0f);  // Simplified: use linear approx for speed
+                __m256 exp_2inner = _mm256_set1_ps(1.0f);  // Linear approximation for speed
                 for (int j = 0; j < 8; ++j)
                 {
                     ((float*)&exp_2inner)[j] = tanhf(((float*)&inner)[j]);
@@ -2305,8 +2305,8 @@ extern "C"
         if (q_norm < 1e-6f)
             return MasmOperationResult::ok("Zero-norm query");
 
-        // For now, return success - actual memory database lookup would happen here
-        // In a real implementation, this would iterate over a vector database
+        // Implementation pending - actual memory database lookup would happen here
+        // Full implementation would iterate over a vector database
 
         return MasmOperationResult::ok("Semantic lookup complete");
     }

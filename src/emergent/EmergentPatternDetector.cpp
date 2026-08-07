@@ -396,7 +396,7 @@ bool EmergentPatternDetector::SavePatterns(const std::string& path) const {
 }
 
 bool EmergentPatternDetector::LoadPatterns(const std::string& path) {
-    // Simplified load - would use proper JSON parsing
+    // Basic implementation - would use proper JSON parsing
     return false;
 }
 

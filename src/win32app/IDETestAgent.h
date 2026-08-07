@@ -25,14 +25,12 @@ public:
     };
 
     IDETestAgent(Win32IDE* ide) : m_ide(ide), m_testsRun(0), m_testsPassed(0), m_testsFailed(0) {
-        LOG_INFO("IDETestAgent initialized");
+
     }
 
     // Run all tests
     void runAllTests() {
-        LOG_INFO("========================================");
-        LOG_INFO("Starting comprehensive IDE test suite");
-        LOG_INFO("========================================");
+
 
         // Core window tests
         testWindowCreation();
@@ -159,7 +157,7 @@ private:
             if (!IsWindowVisible(hwnd)) {
                 LOG_WARNING("Window exists but is not visible");
             } else {
-                LOG_DEBUG("Window is visible");
+
             }
             return PatchResult::ok("Window visibility checked");
         });
@@ -175,8 +173,7 @@ private:
             }
             
             int menuCount = GetMenuItemCount(menu);
-            LOG_DEBUG("Menu bar has " + std::to_string(menuCount) + " items");
-            
+
             if (menuCount == 0) {
                 return PatchResult::error("Menu bar is empty");
             }
@@ -192,7 +189,7 @@ private:
             if (!toolbar) {
                 LOG_WARNING("Toolbar window not found");
             } else {
-                LOG_DEBUG("Toolbar found");
+
             }
             return PatchResult::ok("Toolbar checked");
         });
@@ -213,7 +210,7 @@ private:
     void testSidebar() {
         runTest("Sidebar", [this]() -> PatchResult {
             // Test sidebar visibility and state
-            LOG_DEBUG("Testing sidebar presence");
+
             // Sidebar is created in onCreate, should exist
             return PatchResult::ok("Sidebar checked");
         });
@@ -258,8 +255,7 @@ private:
             
             // Verify text was set
             int len = SendMessageA(editor, WM_GETTEXTLENGTH, 0, 0);
-            LOG_DEBUG("Editor text length: " + std::to_string(len));
-            
+
             if (len == 0) {
                 return PatchResult::error("Failed to set editor text");
             }
@@ -311,27 +307,27 @@ private:
             if (!tree) {
                 LOG_WARNING("File explorer tree view not found");
             } else {
-                LOG_DEBUG("File explorer tree view found");
+
             }
         });
     }
 
     void testRecentFiles() {
         runTest("Recent Files", [this]() {
-            LOG_DEBUG("Testing recent files system");
+
         });
     }
 
     // Terminal tests
     void testTerminal() {
         runTest("Terminal", [this]() {
-            LOG_DEBUG("Testing terminal component");
+
         });
     }
 
     void testTerminalOutput() {
         runTest("Terminal Output", [this]() {
-            LOG_DEBUG("Testing terminal output handling");
+
         });
     }
 
@@ -344,155 +340,148 @@ private:
                 LOG_WARNING("Output tabs not found");
             } else {
                 int tabCount = SendMessage(tabs, TCM_GETITEMCOUNT, 0, 0);
-                LOG_DEBUG("Output tabs found with " + std::to_string(tabCount) + " tabs");
+
             }
         });
     }
 
     void testOutputFiltering() {
         runTest("Output Filtering", [this]() {
-            LOG_DEBUG("Testing output severity filtering");
+
         });
     }
 
     // PowerShell tests
     void testPowerShellPanel() {
         runTest("PowerShell Panel", [this]() {
-            LOG_DEBUG("Testing PowerShell panel");
+
         });
     }
 
     void testPowerShellExecution() {
         runTest("PowerShell Execution", [this]() {
-            LOG_DEBUG("Testing PowerShell command execution");
+
         });
     }
 
     void testRawrXDModule() {
         runTest("RawrXD PowerShell Module", [this]() {
-            LOG_DEBUG("Testing RawrXD PowerShell module loading");
+
         });
     }
 
     // Debugger tests
     void testDebugger() {
         runTest("Debugger UI", [this]() {
-            LOG_DEBUG("Testing debugger interface");
+
         });
     }
 
     void testBreakpoints() {
         runTest("Breakpoints", [this]() {
-            LOG_DEBUG("Testing breakpoint system");
+
         });
     }
 
     void testWatchVariables() {
         runTest("Watch Variables", [this]() {
-            LOG_DEBUG("Testing variable watch system");
+
         });
     }
 
     // Search/Replace tests
     void testFindDialog() {
         runTest("Find Dialog", [this]() {
-            LOG_DEBUG("Testing find dialog");
+
         });
     }
 
     void testReplaceDialog() {
         runTest("Replace Dialog", [this]() {
-            LOG_DEBUG("Testing replace dialog");
+
         });
     }
 
     void testSearchInFiles() {
         runTest("Search in Files", [this]() {
-            LOG_DEBUG("Testing search in files functionality");
+
         });
     }
 
     // Git tests
     void testGitStatus() {
         runTest("Git Status", [this]() {
-            LOG_DEBUG("Testing Git status detection");
+
         });
     }
 
     void testGitOperations() {
         runTest("Git Operations", [this]() {
-            LOG_DEBUG("Testing Git operations (commit, push, pull, etc.)");
+
         });
     }
 
     // Model/GGUF tests
     void testGGUFLoader() {
         runTest("GGUF Loader", [this]() {
-            LOG_DEBUG("Testing GGUF loader initialization");
+
         });
     }
 
     void testModelInference() {
         runTest("Model Inference", [this]() {
-            LOG_DEBUG("Testing AI model inference system");
+
         });
     }
 
     // Copilot tests
     void testCopilotChat() {
         runTest("Copilot Chat", [this]() {
-            LOG_DEBUG("Testing Copilot chat interface");
+
         });
     }
 
     void testAgenticCommands() {
         runTest("Agentic Commands", [this]() {
-            LOG_DEBUG("Testing agentic command execution");
+
         });
     }
 
     // Theme tests
     void testThemes() {
         runTest("Theme System", [this]() {
-            LOG_DEBUG("Testing theme application");
+
         });
     }
 
     void testSnippets() {
         runTest("Code Snippets", [this]() {
-            LOG_DEBUG("Testing code snippet system");
+
         });
     }
 
     void testClipboardHistory() {
         runTest("Clipboard History", [this]() {
-            LOG_DEBUG("Testing clipboard history");
+
         });
     }
 
     // Renderer tests
     void testTransparentRenderer() {
         runTest("Transparent Renderer", [this]() {
-            LOG_DEBUG("Testing DirectX transparent renderer");
+
         });
     }
 
     void testGPUText() {
         runTest("GPU Text Rendering", [this]() {
-            LOG_DEBUG("Testing GPU-accelerated text rendering");
+
         });
     }
 
     void printTestSummary() {
-        LOG_INFO("========================================");
-        LOG_INFO("Test Suite Summary");
-        LOG_INFO("========================================");
-        LOG_INFO("Total Tests:  " + std::to_string(m_testsRun));
-        LOG_INFO("Passed:       " + std::to_string(m_testsPassed) + " (" + 
-                 std::to_string(m_testsRun > 0 ? (m_testsPassed * 100 / m_testsRun) : 0) + "%)");
-        LOG_INFO("Failed:       " + std::to_string(m_testsFailed));
-        LOG_INFO("========================================");
-        
+
+
         if (m_testsFailed > 0) {
             LOG_WARNING("Failed tests:");
             for (const auto& result : m_results) {

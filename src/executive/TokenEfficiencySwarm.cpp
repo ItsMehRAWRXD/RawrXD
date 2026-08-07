@@ -43,7 +43,7 @@ void TokenEfficiencySwarm::trigger(uint64_t goalId, const char* goalName,
 // ============================================================
 // Hysteresis Check - Prevents Oscillation
 // ============================================================
-bool TokenEfficiencySwarm::canRetrigger() const {
+bool TokenEfficiencySwarm::canRetrigger() {
     auto lastTrigger = lastTriggerTime_.load(std::memory_order_relaxed);
     auto now = std::chrono::steady_clock::now();
     

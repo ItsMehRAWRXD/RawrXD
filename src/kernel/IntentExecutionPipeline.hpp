@@ -140,7 +140,7 @@ private:
     bool Stage2_AcquireCapabilities(const IntentRequest& kernelIntent,
                                      Guardrails::CapabilityToken& token);
     bool Stage3_FirewallCheck(const Intent::IntentRequest& abiIntent,
-                               Guardrails::PatchFirewall::ValidationResult& result);
+                               Guardrails::FirewallResult& result);
     bool Stage4_CreateTransaction(const IntentRequest& kernelIntent,
                                    Hotpatch::PatchTransaction& tx);
     bool Stage5_ExecuteHandler(const IntentRequest& kernelIntent,

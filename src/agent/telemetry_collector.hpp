@@ -62,3 +62,5 @@ private:
     VoidCb  m_disabledCb = nullptr;  void* m_disabledCtx = nullptr;
     FlushCb m_flushedCb  = nullptr;  void* m_flushedCtx  = nullptr;
 };
+
+

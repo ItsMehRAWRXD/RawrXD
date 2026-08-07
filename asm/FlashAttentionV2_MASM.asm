@@ -3,6 +3,21 @@
 ; ============================================================================
 ; Implements online softmax attention algorithm with AVX2
 ; Algorithm: O = softmax(Q @ K^T / sqrt(d)) @ V
+;
+; ─── ABI CONTRACT ───
+; Microsoft x64 calling convention with FRAME directive:
+;   RCX = Q (query matrix, seq_len x head_dim)
+;   RDX = K (key matrix, seq_len x head_dim)
+;   R8  = V (value matrix, seq_len x head_dim)
+;   R9  = output (result matrix)
+;   [RSP+40] = seq_len
+;   [RSP+48] = head_dim
+;   RAX = return value (ptr to output) or 0 on failure
+;
+; Clobbers: RAX, RCX, RDX, R8, R9, R10, R11, R12, R13, XMM0-XMM5
+; Preserves: RBX, RBP, RDI, RSI, R14, R15, XMM6-XMM15
+; Stack frame: push rbp, rbx, rsi, rdi, r12, r13 (6 regs + return = 56 bytes)
+; ───────────────────
 ; ============================================================================
 
 .686p

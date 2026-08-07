@@ -534,7 +534,7 @@ static void test_production_config() {
     TEST(value_with_default)
         auto& cfg = RawrXD::ProductionConfigManager::instance();
         nlohmann::json val = cfg.value("nonexistent.key", "fallback");
-        ASSERT_TRUE(val == "fallback");
+        ASSERT_TRUE(val.get<std::string>() == "fallback");
     PASS;
 
     TEST(feature_toggle)

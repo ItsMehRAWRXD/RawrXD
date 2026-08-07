@@ -1,0 +1,82 @@
+{
+  "regression": "WIN32-STACK-OVERFLOW-001",
+  "date": "2026-07-24",
+  "symptom": "0xc00000FD during startup",
+  "symptom_detail": "Stack overflow exception caught in onCreate during WM_CREATE handling",
+  "root_cause": "JSON configuration parsing during WM_CREATE",
+  "root_cause_detail": "Win32IDE_TabManager::initialize() called applySovereignTheme() which triggered GetSovereignConfig() -> nlohmann::json parse during stack-constrained window creation",
+  "call_chain_before": [
+    "WM_CREATE",
+    "  |-- TabManager::initialize()",
+    "        |-- applySovereignTheme()",
+    "              |-- GetSovereignConfig()",
+    "                    |-- nlohmann::json parse",
+    "                          |-- stack exhaustion"
+  ],
+  "call_chain_after": [
+    "WM_CREATE",
+    "  |-- lightweight initialization",
+    "  |",
+    "  |-- window creation completes",
+    "          |",
+    "          |-- onCreateChildren()",
+    "                |-- applySovereignTheme()",
+    "                      |-- JSON configuration load"
+  ],
+  "fix": "Deferred theme initialization",
+  "fix_detail": "Moved applySovereignTheme() call from TabManager::initialize() to onCreateChildren() which runs after WM_CREATE completes",
+  "files_modified": [
+    "src/win32app/Win32IDE_TabManager.cpp",
+    "src/win32app/Win32IDE_TabManager.h",
+    "src/win32app/Win32IDE_Core.cpp"
+  ],
+  "verification": {
+    "build": "PASS",
+    "binary": "rawrxd.exe",
+    "binary_size_bytes": 411136,
+    "startup_smoke_test": "PASS",
+    "runtime_smoke_test": "PASS",
+    "runtime_smoke_test_detail": "rawrxd.exe --help executed successfully, showing Sovereign Runtime v1.0-ALPHA help output",
+    "validation_runner_test": "PASS",
+    "validation_runner_test_detail": "ValidationRunner.exe --help executed successfully, showing RawrXD Sovereign Inference System v1.0.0 help output",
+    "notes": "Binary builds successfully with no stack overflow during startup. Runtime smoke test passed. Validation runner confirmed working - no regression."
+  },
+  "evidence_milestone": {
+    "before": {
+      "executable_validation_runner": "works",
+      "ide_runtime": "unstable",
+      "startup_regression": "present"
+    },
+    "after": {
+      "executable_validation_runner": "works",
+      "win32_runtime": "starts",
+      "startup_regression": "fixed"
+    }
+  },
+  "next_validation_target": [
+    "rawrxd.exe startup",
+    "load model",
+    "generate token",
+    "capture evidence"
+  ],
+  "remaining_blockers": {
+    "runtime_stability": {
+      "win32_startup": "✅",
+      "theme_system": "✅",
+      "ide_construction": "✅",
+      "inference_startup": "⬜",
+      "model_loading": "⬜",
+      "generation_loop": "⬜"
+    }
+  },
+  "crash_guard_added": {
+    "location": "main_win32.cpp",
+    "function": "WriteCrashArtifacts()",
+    "artifacts": [
+      "crash/exception_code.txt",
+      "crash/stacktrace.txt",
+      "crash/timestamp.txt",
+      "crash/build_hash.txt"
+    ]
+  }
+}

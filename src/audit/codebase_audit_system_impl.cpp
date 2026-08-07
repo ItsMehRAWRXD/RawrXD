@@ -397,7 +397,29 @@ CodeQualityMetrics CodebaseAuditSystem::analyze_cpp_quality(const std::string& c
     metrics.has_documentation = content.find("/**") != std::string::npos || 
                                content.find("//!") != std::string::npos;
     
-    metrics.follows_naming_conventions = true; // Simplified check
+    // Real naming convention check: verify function/variable naming follows project conventions
+    int conventionViolations = 0;
+    int totalIdentifiers = 0;
+    
+    // Check for inconsistent naming (e.g., mixed camelCase and snake_case in functions)
+    std::regex funcPattern(R"((?:void|int|bool|float|double|auto|std::string)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\()");
+    auto funcIter = std::sregex_iterator(content.begin(), content.end(), funcPattern);
+    auto funcEnd = std::sregex_iterator();
+    while (funcIter != funcEnd) {
+        std::string funcName = (*funcIter)[1].str();
+        totalIdentifiers++;
+        // Check for mixed conventions
+        bool hasUnderscore = funcName.find('_') != std::string::npos;
+        bool hasUpperCase = false;
+        for (char c : funcName) { if (c >= 'A' && c <= 'Z') { hasUpperCase = true; break; } }
+        if (hasUnderscore && hasUpperCase) {
+            conventionViolations++;  // Mixed snake_case and camelCase
+        }
+        ++funcIter;
+    }
+    
+    metrics.follows_naming_conventions = totalIdentifiers > 0 ? 
+        (conventionViolations == 0) : true;
     
     return metrics;
 }

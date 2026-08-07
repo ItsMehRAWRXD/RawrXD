@@ -32,15 +32,117 @@ inline void LogMessage(LogLevel level, const char* fmt, ...) {
     va_end(args);
 }
 
-// Stub for SafeRunInference - will be replaced with real implementation
+// Real implementation of SafeRunInference with model integration
 InferenceResult SafeRunInference(const std::vector<int>& input_tokens, int max_new_tokens) {
     InferenceResult result;
     result.error_code = 0;
-    // Simulate token generation
-    for (int i = 0; i < max_new_tokens && i < 10; i++) {
-        result.tokens.push_back(100 + i);  // Dummy tokens
+    
+    // Check if we have a loaded model
+    auto* model = GetCurrentModel();
+    if (!model) {
+        result.error_code = -1;
+        result.error_message = "No model loaded";
+        return result;
     }
+    
+    // Validate input
+    if (input_tokens.empty()) {
+        result.error_code = -2;
+        result.error_message = "Empty input tokens";
+        return result;
+    }
+    
+    // Run inference through the model
+    try {
+        // Prepare input tensor
+        std::vector<float> input_embeddings = model->EmbedTokens(input_tokens);
+        
+        // Run through transformer layers
+        std::vector<float> hidden_states = input_embeddings;
+        for (int layer = 0; layer < model->GetNumLayers(); ++layer) {
+            hidden_states = model->RunLayer(layer, hidden_states);
+        }
+        
+        // Generate tokens autoregressively
+        std::vector<int> generated_tokens = input_tokens;
+        int current_token = input_tokens.back();
+        
+        for (int i = 0; i < max_new_tokens; ++i) {
+            // Get logits for next token
+            std::vector<float> logits = model->GetLogits(hidden_states);
+            
+            // Sample next token (with temperature)
+            float temperature = 0.8f;
+            current_token = SampleFromLogits(logits, temperature);
+            
+            // Check for EOS
+            if (current_token == model->GetEOSToken()) {
+                break;
+            }
+            
+            generated_tokens.push_back(current_token);
+            result.tokens.push_back(current_token);
+            
+            // Update hidden states for next iteration
+            hidden_states = model->ForwardPass(current_token, hidden_states);
+        }
+        
+        // Calculate perplexity
+        result.perplexity = CalculatePerplexity(model, generated_tokens);
+        result.tokens_generated = static_cast<int>(result.tokens.size());
+        
+    } catch (const std::exception& e) {
+        result.error_code = -3;
+        result.error_message = std::string("Inference error: ") + e.what();
+    }
+    
     return result;
+}
+
+// Helper function implementations
+namespace {
+    Model* GetCurrentModel() {
+        // Get the currently loaded model from the global model manager
+        static ModelManager& manager = ModelManager::Instance();
+        return manager.GetActiveModel();
+    }
+    
+    int SampleFromLogits(const std::vector<float>& logits, float temperature) {
+        if (logits.empty()) return 0;
+        
+        // Apply temperature
+        std::vector<float> probs(logits.size());
+        float max_logit = *std::max_element(logits.begin(), logits.end());
+        float sum = 0.0f;
+        
+        for (size_t i = 0; i < logits.size(); ++i) {
+            probs[i] = std::exp((logits[i] - max_logit) / temperature);
+            sum += probs[i];
+        }
+        
+        // Normalize
+        for (auto& p : probs) p /= sum;
+        
+        // Sample from distribution
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::discrete_distribution<> dist(probs.begin(), probs.end());
+        
+        return dist(gen);
+    }
+    
+    float CalculatePerplexity(Model* model, const std::vector<int>& tokens) {
+        if (tokens.size() < 2) return 0.0f;
+        
+        float log_prob_sum = 0.0f;
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            // Get log probability of token given previous tokens
+            float log_prob = model->GetLogProb(tokens[i], tokens.data(), i);
+            log_prob_sum += log_prob;
+        }
+        
+        return std::exp(-log_prob_sum / static_cast<float>(tokens.size() - 1));
+    }
 }
 
 // ============================================================

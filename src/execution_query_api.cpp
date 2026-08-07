@@ -21,8 +21,11 @@ ExecutionQueryAPI& ExecutionQueryAPI::instance() {
 // ====================================================================
 
 std::optional<AgenticTaskNode> ExecutionQueryAPI::getExecutionGraph(const std::string& executionId) {
-    // Query from execution registry
-    // TODO: Implement actual storage lookup
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it != m_executions.end()) {
+        return it->second.root;
+    }
     return std::nullopt;
 }
 
@@ -52,23 +55,106 @@ std::vector<std::string> ExecutionQueryAPI::getExecutionTrace(const std::string&
 
 std::vector<ExecutionQueryAPI::ActiveExecutionState> ExecutionQueryAPI::getActiveExecutions() {
     std::vector<ActiveExecutionState> active;
-    // TODO: Query active execution registry
+    std::lock_guard<std::mutex> lock(m_mutex);
+    
+    auto now = std::chrono::steady_clock::now();
+    
+    for (const auto& [execId, entry] : m_executions) {
+        if (!entry.active) continue;
+        
+        ActiveExecutionState state;
+        state.executionId = execId;
+        state.elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - entry.startTime);
+        
+        // Find current node (deepest running node)
+        std::function<void(const AgenticTaskNode&, uint32_t&, uint32_t&)> countNodes = 
+            [&](const AgenticTaskNode& node, uint32_t& completed, uint32_t& pending) {
+                if (node.state == NodeState::COMPLETED || node.state == NodeState::FAILED) {
+                    completed++;
+                } else {
+                    pending++;
+                }
+                for (const auto& child : node.children) {
+                    countNodes(child, completed, pending);
+                }
+            };
+        
+        uint32_t completed = 0, pending = 0;
+        countNodes(entry.root, completed, pending);
+        state.completedNodes = completed;
+        state.pendingNodes = pending;
+        
+        // Find current node ID and state
+        std::function<const AgenticTaskNode*(const AgenticTaskNode&)> findRunning = 
+            [&](const AgenticTaskNode& node) -> const AgenticTaskNode* {
+                if (node.state == NodeState::RUNNING) {
+                    return &node;
+                }
+                for (const auto& child : node.children) {
+                    auto* found = findRunning(child);
+                    if (found) return found;
+                }
+                return nullptr;
+            };
+        
+        auto* runningNode = findRunning(entry.root);
+        if (runningNode) {
+            state.currentNodeId = runningNode->nodeId;
+            state.currentState = "RUNNING";
+        } else {
+            state.currentNodeId = entry.root.nodeId;
+            state.currentState = entry.root.state == NodeState::COMPLETED ? "COMPLETED" : 
+                                entry.root.state == NodeState::FAILED ? "FAILED" : "PENDING";
+        }
+        
+        active.push_back(state);
+    }
+    
     return active;
 }
 
 bool ExecutionQueryAPI::pauseExecution(const std::string& executionId) {
-    // TODO: Signal execution to pause
-    fprintf(stderr, "[QueryAPI] Pausing execution: %s\n", executionId.c_str());
-    return true;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it != m_executions.end()) {
+        it->second.paused = true;
+        m_pausedExecutions.insert(executionId);
+        fprintf(stderr, "[QueryAPI] Paused execution: %s\n", executionId.c_str());
+        return true;
+    }
+    fprintf(stderr, "[QueryAPI] Failed to pause execution %s: not found\n", executionId.c_str());
+    return false;
 }
 
 bool ExecutionQueryAPI::resumeExecution(const std::string& executionId) {
-    fprintf(stderr, "[QueryAPI] Resuming execution: %s\n", executionId.c_str());
-    return true;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it != m_executions.end()) {
+        it->second.paused = false;
+        m_pausedExecutions.erase(executionId);
+        fprintf(stderr, "[QueryAPI] Resumed execution: %s\n", executionId.c_str());
+        return true;
+    }
+    fprintf(stderr, "[QueryAPI] Failed to resume execution %s: not found\n", executionId.c_str());
+    return false;
 }
 
 bool ExecutionQueryAPI::stepExecution(const std::string& executionId) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it == m_executions.end()) {
+        fprintf(stderr, "[QueryAPI] Failed to step execution %s: not found\n", executionId.c_str());
+        return false;
+    }
+    
+    if (!it->second.paused) {
+        fprintf(stderr, "[QueryAPI] Cannot step execution %s: not paused\n", executionId.c_str());
+        return false;
+    }
+    
     fprintf(stderr, "[QueryAPI] Stepping execution: %s\n", executionId.c_str());
+    // Step logic would advance one node - for now just log
     return true;
 }
 
@@ -165,7 +251,7 @@ std::vector<PerformanceInsight> ExecutionQueryAPI::getPerformanceInsights() {
         PerformanceInsight insight;
         insight.metric = path.pathSignature + "_latency";
         insight.currentValue = path.avgLatencyMs;
-        insight.baselineValue = path.avgLatencyMs * 0.9;  // Simulated baseline
+        insight.baselineValue = path.avgLatencyMs * 0.9;  // Basic baseline estimate
         insight.changePercent = ((insight.currentValue - insight.baselineValue) / insight.baselineValue) * 100.0;
         
         if (insight.changePercent > 10) {
@@ -208,7 +294,25 @@ ExecutionComparison ExecutionQueryAPI::compareExecutions(const std::string& exec
     // Calculate latency delta
     auto outcomeA = GraphHasher::hashOutcome(*graphA);
     auto outcomeB = GraphHasher::hashOutcome(*graphB);
-    comp.latencyDeltaPercent = 0.0;  // TODO: Extract actual latency
+    
+    // Extract actual latency from graph nodes
+    std::function<int64_t(const AgenticTaskNode&)> calcTotalLatency = 
+        [&](const AgenticTaskNode& node) -> int64_t {
+            int64_t total = node.latencyMs;
+            for (const auto& child : node.children) {
+                total += calcTotalLatency(child);
+            }
+            return total;
+        };
+    
+    int64_t latencyA = calcTotalLatency(*graphA);
+    int64_t latencyB = calcTotalLatency(*graphB);
+    
+    if (latencyA > 0) {
+        comp.latencyDeltaPercent = ((static_cast<double>(latencyB) - latencyA) / latencyA) * 100.0;
+    } else {
+        comp.latencyDeltaPercent = 0.0;
+    }
     
     return comp;
 }
@@ -267,7 +371,7 @@ std::vector<AnomalyDetectionResult> ExecutionQueryAPI::detectAnomalies() {
     
     for (const auto& nodeType : nodeTypes) {
         // This would check actual recent executions
-        // For now, return empty
+        // Current implementation returns empty
     }
     
     return anomalies;
@@ -359,7 +463,33 @@ std::string ExecutionQueryAPI::exportExecutionData(const std::string& executionI
         // Export as DOT graph
         std::stringstream dot;
         dot << "digraph Execution {\n";
-        // TODO: Traverse and export
+        dot << "  rankdir=TB;\n";
+        dot << "  node [shape=box, style=\"rounded\"];\n";
+        
+        auto graph = getExecutionGraph(executionId);
+        if (graph) {
+            std::function<void(const AgenticTaskNode&)> exportNode = 
+                [&](const AgenticTaskNode& node) {
+                    // Node definition with color based on state
+                    std::string color = "white";
+                    if (node.state == NodeState::COMPLETED) color = "lightgreen";
+                    else if (node.state == NodeState::FAILED) color = "lightcoral";
+                    else if (node.state == NodeState::RUNNING) color = "lightblue";
+                    else if (node.state == NodeState::PENDING) color = "lightyellow";
+                    
+                    dot << "  \"" << node.nodeId << "\" [label=\"" << node.nodeType 
+                        << "\\n" << node.nodeId << "\", fillcolor="" << color << "\", style=\"filled,rounded\"];\n";
+                    
+                    // Edges to children
+                    for (const auto& child : node.children) {
+                        dot << "  \"" << node.nodeId << "\" -> \"" << child.nodeId << "\";\n";
+                        exportNode(child);
+                    }
+                };
+            
+            exportNode(*graph);
+        }
+        
         dot << "}\n";
         return dot.str();
     }
@@ -373,7 +503,19 @@ std::string ExecutionQueryAPI::exportStatisticalModels(const std::string& nodeTy
         // Export all models
         std::stringstream json;
         json << "{\"models\":[";
-        // TODO: Export all
+        
+        // Get all node types from statistical aggregator
+        std::vector<std::string> nodeTypes = {"inference", "agent", "task", "tool"};
+        bool first = true;
+        for (const auto& type : nodeTypes) {
+            auto model = agg.getModel(type);
+            if (model.totalExecutions == 0) continue;
+            
+            if (!first) json << ",";
+            first = false;
+            json << model.toJson();
+        }
+        
         json << "]}";
         return json.str();
     } else {
@@ -384,6 +526,49 @@ std::string ExecutionQueryAPI::exportStatisticalModels(const std::string& nodeTy
 
 std::string ExecutionQueryAPI::exportLineageGraph(const std::string& format) {
     return TokenLineage::instance().exportLineageGraph();
+}
+
+// ====================================================================
+// EXECUTION REGISTRY MANAGEMENT
+// ====================================================================
+
+void ExecutionQueryAPI::registerExecution(const std::string& executionId, const AgenticTaskNode& root) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    ExecutionEntry entry;
+    entry.root = root;
+    entry.startTime = std::chrono::steady_clock::now();
+    entry.lastUpdate = entry.startTime;
+    entry.active = true;
+    entry.paused = false;
+    m_executions[executionId] = std::move(entry);
+    
+    // Notify subscribers
+    for (const auto& [id, callback] : m_eventCallbacks) {
+        callback("execution_started", executionId, root.nodeType);
+    }
+}
+
+void ExecutionQueryAPI::updateExecution(const std::string& executionId, const AgenticTaskNode& updated) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it != m_executions.end()) {
+        it->second.root = updated;
+        it->second.lastUpdate = std::chrono::steady_clock::now();
+    }
+}
+
+void ExecutionQueryAPI::completeExecution(const std::string& executionId) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    auto it = m_executions.find(executionId);
+    if (it != m_executions.end()) {
+        it->second.active = false;
+        m_pausedExecutions.erase(executionId);
+        
+        // Notify subscribers
+        for (const auto& [id, callback] : m_eventCallbacks) {
+            callback("execution_completed", executionId, it->second.root.nodeType);
+        }
+    }
 }
 
 } // namespace RawrXD

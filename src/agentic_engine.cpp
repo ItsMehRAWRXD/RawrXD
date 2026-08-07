@@ -57,7 +57,7 @@ struct FeedbackEntry {
 };
 
 // MASM Telemetry bridge — lock-free atomic counters
-#include "rawrxd_telemetry_exports.h"
+#include "../include/rawrxd_telemetry_exports.h"
 #include <cmath>
 #include <algorithm>
 
@@ -115,7 +115,12 @@ std::string resolvePathForEngine(const std::string& inputPath, const std::string
 
 AgenticEngine::AgenticEngine() : m_inferenceEngine(nullptr) {}
 
-AgenticEngine::~AgenticEngine() {}
+AgenticEngine::~AgenticEngine() {
+    // Cleanup any resources if needed
+    if (m_inferenceEngine) {
+        m_inferenceEngine = nullptr;
+    }
+}
 
 void AgenticEngine::initialize() {
     // Initialization logic if needed

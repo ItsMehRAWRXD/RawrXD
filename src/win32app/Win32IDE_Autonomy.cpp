@@ -28,7 +28,7 @@ AutonomyManager::AutonomyManager(AgenticBridge* bridge)
 AutonomyManager::~AutonomyManager()
 {
     stop();
-    LOG_INFO("AutonomyManager destroyed");
+
 }
 
 void AutonomyManager::start()
@@ -36,7 +36,7 @@ void AutonomyManager::start()
     if (m_running.load())
         return;
     m_running.store(true);
-    LOG_INFO("Autonomy started");
+
 }
 
 void AutonomyManager::stop()
@@ -50,7 +50,7 @@ void AutonomyManager::stop()
     {
         m_loopThread.join();
     }
-    LOG_INFO("Autonomy stopped");
+
 }
 
 void AutonomyManager::enableAutoLoop(bool enable)
@@ -82,7 +82,7 @@ void AutonomyManager::setGoal(const std::string& goal)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_goal = goal;
-    LOG_INFO("Goal set: " + goal);
+
 }
 
 std::string AutonomyManager::getGoal() const
@@ -100,7 +100,7 @@ void AutonomyManager::addObservation(const std::string& obs)
     {
         m_memory.erase(m_memory.begin());
     }
-    LOG_DEBUG("Observation added");
+
 }
 
 std::vector<std::string> AutonomyManager::getMemorySnapshot()
@@ -150,7 +150,7 @@ void AutonomyManager::loop()
         tick();
         std::this_thread::sleep_for(std::chrono::milliseconds(800));
     }
-    LOG_INFO("Autonomy loop thread exiting");
+
 }
 
 std::string AutonomyManager::planNextAction()
@@ -333,7 +333,7 @@ void AutonomyManager::executeAction(const std::string& action)
         auto resp = m_bridge->ExecuteAgentCommand(action);
         addObservation("RAW:" + resp.content);
     }
-    LOG_INFO("Executed autonomy action: " + action);
+
 }
 
 bool AutonomyManager::rateLimitAllow()

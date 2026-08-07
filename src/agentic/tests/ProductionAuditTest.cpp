@@ -16,7 +16,7 @@ void ProductionStressTest() {
 
     // 1. Initialize Telemetry
     auto& tel = SovereignTelemetry::instance();
-    tel.updateNodeCount(12); // Simulated mesh size
+    tel.updateNodeCount(12); // Test mesh size
     std::cout << "[Audit] Telemetry subsystem online. Monitoring 12 nodes." << std::endl;
 
     // 2. Simulate Node Failure and Failover

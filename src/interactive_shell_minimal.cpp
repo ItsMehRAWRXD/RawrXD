@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <fstream>
 
 // Interactive shell /agent commands — Phase 31 implementation complete
 
@@ -82,6 +83,46 @@ void InteractiveShell::DisplayPrompt() {
     if (output_callback_) output_callback_(">> ");
 }
 
-// Minimal shell: no persistent history; override in a full shell if needed.
-void InteractiveShell::SaveHistory() {}
-void InteractiveShell::LoadHistory() {}
+// Save command history to file
+void InteractiveShell::SaveHistory() {
+    if (command_history_.empty() || config_.history_file.empty()) return;
+    
+    std::ofstream file(config_.history_file);
+    if (!file.is_open()) return;
+    
+    // Save up to max_history_size commands
+    size_t start = 0;
+    if (command_history_.size() > config_.max_history_size) {
+        start = command_history_.size() - config_.max_history_size;
+    }
+    
+    for (size_t i = start; i < command_history_.size(); ++i) {
+        file << command_history_[i] << "\n";
+    }
+    file.close();
+}
+
+// Load command history from file
+void InteractiveShell::LoadHistory() {
+    if (config_.history_file.empty()) return;
+    
+    std::ifstream file(config_.history_file);
+    if (!file.is_open()) return;
+    
+    command_history_.clear();
+    std::string line;
+    while (std::getline(file, line)) {
+        if (!line.empty()) {
+            command_history_.push_back(line);
+        }
+    }
+    file.close();
+    
+    // Limit to max_history_size
+    if (command_history_.size() > config_.max_history_size) {
+        command_history_.erase(command_history_.begin(), 
+            command_history_.begin() + (command_history_.size() - config_.max_history_size));
+    }
+    
+    history_index_ = command_history_.size();
+}

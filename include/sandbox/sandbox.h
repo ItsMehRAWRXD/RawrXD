@@ -1,30 +1,39 @@
+
 #ifndef SANDBOX_H
 #define SANDBOX_H
 
-// C++20 / Win32. Command sandbox: allow-list; Win32 Job Objects, no Qt.
+#include <QObject>
+#include <QString>
+#include <QProcess>
 
-#include <string>
-#include <vector>
-
-class Sandbox
+// Command sandbox: allow-list + chroot on Linux, Job Objects on Win32.
+class Sandbox : public QObject
 {
+    Q_OBJECT
+
 public:
-    Sandbox() = default;
-    ~Sandbox() = default;
+    explicit Sandbox(QObject *parent = nullptr);
+    ~Sandbox();
 
-    void setAllowList(const std::vector<std::string>& allowList);
+    // Set allow-list of commands
+    void setAllowList(const QStringList &allowList);
 
-    /** Execute command in sandbox. Returns true on success. */
-    bool executeCommand(const std::string& command, const std::vector<std::string>& arguments = {});
+    // Execute a command in the sandbox
+    bool executeCommand(const QString &command, const QStringList &arguments = QStringList());
 
-    std::string getOutput() const { return m_output; }
+    // Get the output of the last executed command
+    QString getOutput() const;
 
 private:
-    bool executeCommandWindows(const std::string& command, const std::vector<std::string>& arguments);
-    bool executeCommandLinux(const std::string& command, const std::vector<std::string>& arguments);
-
-    std::vector<std::string> m_allowList;
-    std::string m_output;
+    QStringList m_allowList;
+    QString m_output;
+    
+    // Execute command on Windows using Job Objects
+    bool executeCommandWindows(const QString &command, const QStringList &arguments);
+    
+    // Execute command on Linux using chroot
+    bool executeCommandLinux(const QString &command, const QStringList &arguments);
 };
 
 #endif // SANDBOX_H
+

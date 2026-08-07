@@ -842,7 +842,7 @@ void DistributedBenchmark::calculateResults(const std::string& benchmarkId) {
     auto latencies = metricsCollector_->getLatencies();
     
     result.totalRequests = latencies.size();
-    result.successfulRequests = latencies.size(); // Simplified
+    result.successfulRequests = latencies.size(); // Basic implementation - error tracking pending
     
     if (!latencies.empty()) {
         result.minLatencyMs = *std::min_element(latencies.begin(), latencies.end());

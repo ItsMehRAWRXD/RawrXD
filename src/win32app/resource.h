@@ -83,4 +83,11 @@
 // --- VSCode extension (handled via vscode_extension_api.h, alias here) -------
 // IDM_VSCEXT_API_STATUS et al. are defined in ../modules/vscode_extension_api.h
 
+// --- GGUF Inspector (4201-4299) ----------------------------------------------
+#define IDM_GGUF_LOAD           4201
+#define IDM_GGUF_EXPORT         4202
+#define IDM_GGUF_ANALYZE        4203
+#define IDM_GGUF_TREE           4204
+#define IDM_GGUF_DETAILS        4205
+
 #endif // RAWRXD_RESOURCE_H

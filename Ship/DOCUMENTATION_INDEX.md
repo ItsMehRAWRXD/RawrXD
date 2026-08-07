@@ -4,10 +4,13 @@
 
 All Qt framework removed from 1,161 files. Code is 100% Qt-free and ready for compilation.
 
+<<<<<<< HEAD
 **Verification (repo root):** Run `.\Verify-Build.ps1 -BuildDir "D:\rawrxd\build"` — must pass 7/7.  
 **Open items:** See repo-root **UNFINISHED_FEATURES.md** for remaining TODOs, stubs, and completed audits.  
 **Parity & stubs:** Backend health (GitHub Copilot / Amazon Q) wired to VSIXLoader; Multi-Agent comment clarified. Intentional stub holders documented in UNFINISHED_FEATURES.md (NativeHttpServerStubs, tier1_headless_stubs, license /alternatename, feature manifest planned items). **void\* parent:** All UI parent parameters documented as Win32 HWND; file list in Ship/EXACT_ACTION_ITEMS.md TODO #3.
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ---
 
 ## 📖 READ THESE IN ORDER
@@ -121,7 +124,10 @@ This will compile the code and save errors to `build.log`.
 D:\RawrXD\Ship\
 ├── START_HERE.ps1                 ← Start here
 ├── BUILD_PHASE_GUIDE.md           ← Build phase overview
+<<<<<<< HEAD
 ├── QUICK_START.md                 ← Exact commands & 8-step process
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ├── EXACT_ACTION_ITEMS.md          ← Detailed 8-step guide ⭐
 ├── CHECKLIST.md                   ← Quick checklist
 ├── COMPLETION_SUMMARY.md          ← Summary of what was done
@@ -129,7 +135,10 @@ D:\RawrXD\Ship\
 ├── DOCUMENTATION_INDEX.md         ← This file
 └── [Many other status files from previous sessions]
 ```
+<<<<<<< HEAD
 Repo root: **IDE_LAUNCH.md** — which exe to run (RawrXD-Win32IDE.exe vs RE toolkit).
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 ### Code Changes (Already Applied)
 ```
@@ -157,11 +166,16 @@ D:\RawrXD\Ship\
 ### Support Files
 ```
 D:\RawrXD\Ship\
+<<<<<<< HEAD
 ├── StdReplacements.hpp     (STL/Win32 replacement library)
+=======
+├── QtReplacements.hpp       (stub library - intentional)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ├── CMakeLists.txt           (updated for Win32)
 └── [Build artifacts from previous attempts]
 ```
 
+<<<<<<< HEAD
 ### Pure CLI (101% Win32 GUI parity)
 **RawrXD_CLI** / **RawrXD_Agent_Console** (same binary from `Integration.cpp`):
 - Full interactive chat (streaming), agentic autonomous mode, 44+ tools.
@@ -169,6 +183,8 @@ D:\RawrXD\Ship\
 - HTTP server on port 23959 (`/api/chat`, `/api/tool`) for Win32 IDE.
 - Run: `RawrXD_CLI` or `RawrXD_Agent_Console` (optional: `--model`, `--dir`, `--auto-approve`, `--help`).
 
+=======
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 ---
 
 ## ⚠️ EXPECTED ERRORS (Don't Worry)
@@ -277,7 +293,11 @@ You asked to remove ALL Qt dependencies. I executed 5 systematic phases that:
 - 55 references (all safe):
   - CSS strings with "QWidget {" (not executable)
   - Comments mentioning Qt (historical)
+<<<<<<< HEAD
   - StdReplacements.hpp (intentional STL replacement layer)
+=======
+  - QtReplacements.hpp stubs (intentional)
+>>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
   - 8 QTimer placeholders (to be fixed in build phase)
 
 ### What Works Now

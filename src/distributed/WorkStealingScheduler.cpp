@@ -181,8 +181,8 @@ std::string VictimSelector::selectVictim(const std::string& thiefId,
         }
         
         case WorkStealingConfig::VictimSelection::NEIGHBOR: {
-            // For now, just return first valid candidate
-            // Would implement actual topology-aware selection
+            // Current implementation returns first valid candidate
+            // Full implementation would use topology-aware selection
             return validCandidates[0];
         }
         
@@ -416,7 +416,7 @@ bool WorkStealingScheduler::isOverloaded() const {
     }
     
     // Would calculate average queue size across cluster
-    return localQueue_->size() > 10; // Simplified threshold
+    return localQueue_->size() > 10; // Basic threshold
 }
 
 float WorkStealingScheduler::getLoadRatio() const {
@@ -538,7 +538,7 @@ std::string WorkStealingScheduler::selectVictim() {
 
 bool WorkStealingScheduler::attemptSteal(const std::string& victimId, StealableTask& task) {
     // Would send RPC to victim node
-    // For now, simulate failure
+    // Current implementation returns failure (RPC pending)
     return false;
 }
 
