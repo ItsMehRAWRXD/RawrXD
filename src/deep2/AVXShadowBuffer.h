@@ -31,7 +31,7 @@ public:
         if (it != shadows_.end()) {
             // Reuse existing shadow if size matches
             if (it->second.numFloats >= numFloats) {
-                return it->second.alignedPtr;
+                return static_cast<float*>(it->second.alignedPtr);
             }
             // Need larger buffer - free old one
             FreeShadow(it->second);
@@ -47,7 +47,7 @@ public:
         // Copy data to aligned buffer
         std::memcpy(entry.alignedPtr, data, numFloats * sizeof(float));
         
-        float* result = static_cast<float*>(entry.alignedPtr);
+        float* result = reinterpret_cast<float*>(entry.alignedPtr);
         shadows_[tensorId] = std::move(entry);
         return result;
     }

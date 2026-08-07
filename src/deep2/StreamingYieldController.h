@@ -6,7 +6,7 @@
 #pragma once
 #include <cstdint>
 #include <chrono>
-#include <math>
+#include <cmath>
 #include <functional>
 
 namespace Deep2 {
