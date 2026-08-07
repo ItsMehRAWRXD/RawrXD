@@ -23,6 +23,7 @@ namespace Deep2 {
 // ============================================================================
 class ThreadPool {
 public:
+    ThreadPool() : ThreadPool(0) {}  // Default constructor - auto-detect threads
     explicit ThreadPool(size_t numThreads);
     ~ThreadPool();
 
@@ -35,6 +36,9 @@ public:
 
     // Get thread count
     size_t size() const { return workers.size(); }
+
+    // Initialize/reinitialize with specific thread count (0 = auto-detect)
+    void init(size_t numThreads);
 
 private:
     std::vector<std::thread> workers;

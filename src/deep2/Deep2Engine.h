@@ -177,11 +177,8 @@ public:
     // Returns number of tokens generated
     size_t generate(const int* promptTokens, size_t promptLen,
                    int* outputTokens, size_t maxOutputLen,
-                   InferenceStats* stats = nullptr);
-    
-    // Generate text (high-level API)
-    std::string generateText(const std::string& prompt, size_t maxTokens = 256);
-    
+                    InferenceStats* stats = nullptr,
+                    std::function<bool(int)> onToken = nullptr);
     // Reset state for new conversation
     void reset();
     

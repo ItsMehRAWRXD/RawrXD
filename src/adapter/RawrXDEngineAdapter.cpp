@@ -3,9 +3,10 @@
 // =============================================================================
 
 #include "RawrXDEngineAdapter.h"
-#include "deep2/Deep2Engine.h"
-#include "deep2/Tokenizer.hpp"
+#include "../deep2/Deep2Engine.h"
+#include "../deep2/Tokenizer.hpp"
 #include <memory>
+#include <cstring>
 
 class RawrXDEngineAdapter::Impl {
 public:
@@ -20,41 +21,51 @@ public:
         deep2Cfg.maxSeqLen = cfg.maxSeqLen;
         deep2Cfg.useKVCache = cfg.useKVCache;
         deep2Cfg.useRoPE = cfg.useRoPE;
-        deep2Cfg.modelPath = cfg.modelPath;
+        // modelPath is a fixed-size char buffer in Deep2::EngineConfig.
+        {
+            const std::string& p = cfg.modelPath;
+            const size_t n = (p.size() < sizeof(deep2Cfg.modelPath) - 1)
+                                 ? p.size()
+                                 : sizeof(deep2Cfg.modelPath) - 1;
+            std::memcpy(deep2Cfg.modelPath, p.data(), n);
+            deep2Cfg.modelPath[n] = '\0';
+        }
 
         return engine_->initialize(deep2Cfg);
     }
 
     std::vector<int> tokenize(const std::string& text) {
-        if (!tokenizer_) {
-            tokenizer_ = std::make_unique<Deep2::Tokenizer>();
-            if (!tokenizer_->load("tokenizer.model")) {
-                return {};
-            }
-        }
-        return tokenizer_->encode(text);
+        return engine_->tokenize(text);
     }
 
     std::string detokenize(const std::vector<int>& tokens) {
-        if (!tokenizer_) return "";
-        return tokenizer_->decode(tokens);
+        return engine_->detokenize(tokens);
     }
 
     void prefill(const std::vector<int>& tokens) {
-        engine_->prefill(tokens.data(), tokens.size());
+        // Deep2Engine exposes a single-shot generate() API rather than an
+        // explicit prefill/decode split; retain the prompt so decode() can
+        // advance generation one token at a time.
+        promptTokens_ = tokens;
     }
 
     int decode() {
-        return engine_->decode();
+        if (promptTokens_.empty()) return -1;
+        int out = -1;
+        engine_->generate(promptTokens_.data(), promptTokens_.size(),
+                          &out, 1, nullptr);
+        if (out >= 0) promptTokens_.push_back(out);
+        return out;
     }
 
     void clearCache() {
-        engine_->clearKVCache();
+        engine_->reset();
+        promptTokens_.clear();
     }
 
 private:
     std::unique_ptr<Deep2::Deep2Engine> engine_;
-    std::unique_ptr<Deep2::Tokenizer> tokenizer_;
+    std::vector<int> promptTokens_;
 };
 
 // Public API

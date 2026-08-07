@@ -10,12 +10,13 @@
 #include "../module5_context.h"
 #include "../module6_generate.h"
 #include "../module7_glue.h"
+#include "../../rawrxd_sampler.h"
 
 // Forward declarations for RawrEngine components
+namespace RawrXD {
+    class CPUInferenceEngine;
+}
 class RawrXDTokenizer;
-class VulkanInferenceEngine;
-class RawrXDSampler;
-class VulkanCompute;
 
 // The interface that generation modules expect
 class Deep2Engine {
@@ -38,12 +39,6 @@ public:
     RawrXDEngineAdapter();
     ~RawrXDEngineAdapter();
 
-    // --- Initialize from RawrEngine components ---
-    void setInferenceEngine(std::shared_ptr<VulkanInferenceEngine> engine);
-    void setTokenizer(std::shared_ptr<RawrXDTokenizer> tokenizer);
-    void setSampler(std::shared_ptr<RawrXDSampler> sampler);
-    void setKVCache(std::shared_ptr<VulkanCompute> kvCache);
-
     bool isReady() const override;
 
     // --- The generate() call that the generation control plane invokes ---
@@ -56,26 +51,22 @@ public:
 
     // --- Configuration ---
     void setMaxDecodeTokens(uint32_t n) { maxDecodeTokens_ = n; }
-    void setTemperature(float t);
-    void setTopP(float p);
-    void setTopK(int k);
+    void setTemperature(float t) { sampler_.temperature = t; }
+    void setTopP(float p) { sampler_.top_p = p; }
+    void setTopK(int k) { sampler_.top_k = k; }
 
 private:
-    std::atomic<bool> ready_;
-    std::atomic<bool> modelLoaded_;
     uint32_t maxDecodeTokens_ = 512;
 
     // RawrEngine components
-    std::shared_ptr<VulkanInferenceEngine> inferenceEngine_;
-    std::shared_ptr<RawrXDTokenizer> tokenizer_;
-    std::shared_ptr<RawrXDSampler> sampler_;
-    std::shared_ptr<VulkanCompute> kvCache_;
+    std::shared_ptr<RawrXD::CPUInferenceEngine> inferenceEngine_;
+    RawrXDSampler sampler_;
 
     // --- Helper methods ---
-    bool tokenize(const std::string& text, std::vector<int>& tokens);
-    std::string detokenize(int tokenId);
+    bool tokenize(const std::string& text, std::vector<int32_t>& tokens);
+    std::string detokenize(int32_t tokenId);
     int getEosTokenId();
-    bool prefill(const std::vector<int>& tokens);
+    bool prefill(const std::vector<int32_t>& tokens);
     int decodeStep();
 };
 };

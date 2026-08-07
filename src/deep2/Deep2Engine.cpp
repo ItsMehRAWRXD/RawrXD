@@ -1202,7 +1202,8 @@ void Deep2Engine::reset() {
 // ============================================================================
 size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                                int* outputTokens, size_t maxOutputLen,
-                               InferenceStats* stats) {
+                               InferenceStats* stats,
+                               std::function<bool(int)> onToken) {
     if (!initialized) {
         printf("[Deep2Engine] ERROR: Engine not initialized\n");
         return 0;
@@ -1272,6 +1273,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         int nextToken = sampleToken(logits);
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
+        
+        if (onToken) {
+            if (!onToken(nextToken)) {
+                break;
+            }
+        }
 
         // Embed the new token for next iteration
         embedToken(nextToken, hiddenStates);

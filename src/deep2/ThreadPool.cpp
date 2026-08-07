@@ -63,6 +63,73 @@ ThreadPool::ThreadPool(size_t numThreads) : stop(false) {
     printf("[ThreadPool] Initialized %zu worker threads\n", workers.size());
 }
 
+void ThreadPool::init(size_t numThreads) {
+    // Shutdown existing workers if any
+    {
+        std::unique_lock<std::mutex> lock(queueMutex);
+        if (!workers.empty()) {
+            stop = true;
+        }
+    }
+    condition.notify_all();
+    
+    for (auto& worker : workers) {
+        if (worker.joinable()) {
+            worker.join();
+        }
+    }
+    workers.clear();
+    
+    // Reset state
+    stop = false;
+    activeTasks = 0;
+    
+    // Reinitialize with new thread count
+    if (numThreads == 0) {
+        numThreads = std::thread::hardware_concurrency();
+        if (numThreads == 0) numThreads = 4;
+    }
+    
+    printf("[ThreadPool] Reinitializing with %zu threads...\n", numThreads);
+    
+    workers.reserve(numThreads);
+    for (size_t i = 0; i < numThreads; ++i) {
+        workers.emplace_back([this, i] {
+            #ifdef _WIN32
+                SetThreadAffinityMask(GetCurrentThread(), 1ULL << i);
+            #endif
+            
+            for (;;) {
+                std::function<void()> task;
+                {
+                    std::unique_lock<std::mutex> lock(queueMutex);
+                    condition.wait(lock, [this] { 
+                        return stop || !tasks.empty(); 
+                    });
+                    
+                    if (stop && tasks.empty()) {
+                        return;
+                    }
+                    
+                    task = std::move(tasks.front());
+                    tasks.pop();
+                }
+                
+                task();
+                
+                if (activeTasks.fetch_sub(1) == 1) {
+                    std::unique_lock<std::mutex> lock(queueMutex);
+                    if (tasks.empty()) {
+                        finished.notify_all();
+                    }
+                }
+            }
+        });
+    }
+    
+    printf("[ThreadPool] Reinitialized %zu worker threads\n", workers.size());
+}
+
 ThreadPool::~ThreadPool() {
     {
         std::unique_lock<std::mutex> lock(queueMutex);

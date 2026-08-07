@@ -23,7 +23,7 @@ int main() {
     profiler.stopProfiling();
 
     const auto report = profiler.getProfilingReport();
-    std::cout << "Report length: " << report.length() << " characters\n";
+    std::cout << "Report length: " << report.dump().length() << " characters\n";
     std::cout << "Basic profiler test completed successfully\n";
     return 0;
 }

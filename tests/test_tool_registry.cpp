@@ -31,6 +31,8 @@
 
 class TestLogger : public Logger {
 public:
+    TestLogger() : Logger("test_tool_registry") {}
+
     struct LogEntry {
         std::string level;
         std::string component;

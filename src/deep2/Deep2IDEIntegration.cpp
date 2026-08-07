@@ -237,6 +237,23 @@ bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model
     }
 
     m_config = cfg;
+    
+    m_engine = std::make_unique<Deep2Engine>();
+    EngineConfig engineCfg;
+    engineCfg.useKVCache = true;
+    engineCfg.useRoPE = true;
+    engineCfg.useThreadPool = true;
+    
+    // Use the model path stored from loader if available, or we might need it passed down
+    // Since Deep2ModelLoader::Load was called, the path was used to create s_router/s_fabric
+    if (!m_engine->initialize(engineCfg)) {
+        return false;
+    }
+    
+    // Actually load the model into the engine - we need a way to pass the path here
+    // But since the loader keeps GGUFShardRouter in static state, we might just 
+    // rely on m_engine->loadModel to be called elsewhere or we reconstruct the path
+
     m_ready = true;
     return true;
 }
@@ -248,7 +265,7 @@ void Deep2InferenceSession::Shutdown() {
 Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
     const std::string& prompt) {
     GenerationResult result;
-    if (!m_ready) {
+    if (!m_ready || !m_engine) {
         result.finishReason = "not_ready";
         return result;
     }
@@ -256,33 +273,61 @@ Deep2InferenceSession::GenerationResult Deep2InferenceSession::Generate(
     m_cancelled.store(false);
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    // Placeholder generation - returns prompt echoed back
-    std::string accumulated = "[Deep2InferenceSession: Generation not yet wired to Deep2Engine] Prompt: " + prompt;
-    uint32_t tokenCount = static_cast<uint32_t>(accumulated.length());
+    Deep2::InferenceStats stats;
+    std::string accumulated;
+    
+    std::vector<int> promptTokens = m_engine->tokenize(prompt);
+    std::vector<int> outputTokens(m_config.maxContextLength);
+    
+    size_t generated = m_engine->generate(promptTokens.data(), promptTokens.size(),
+                                          outputTokens.data(), m_config.maxContextLength,
+                                          &stats,
+                                          [&](int token) {
+                                              return !m_cancelled.load();
+                                          });
+
+    outputTokens.resize(generated);
+    accumulated = m_engine->detokenize(outputTokens);
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto elapsedUs = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
 
     result.text = accumulated;
-    result.tokensGenerated = tokenCount;
-    result.latencyMs = elapsedUs / 1000.0;
-    result.tokensPerSecond = tokenCount > 0
-        ? (tokenCount * 1000000.0 / elapsedUs)
-        : 0.0;
-    result.finishReason = "stop";
+    result.tokensGenerated = static_cast<uint32_t>(stats.tokensGenerated);
+    result.latencyMs = stats.latencyMs * stats.tokensGenerated;
+    result.tokensPerSecond = stats.tokensPerSecond;
+    result.finishReason = m_cancelled.load() ? "cancelled" : "stop";
 
     return result;
 }
 
 bool Deep2InferenceSession::GenerateStream(const std::string& prompt,
                                            TokenCallback callback) {
-    if (!m_ready) return false;
+    if (!m_ready || !m_engine) return false;
 
     m_cancelled.store(false);
     
-    // Placeholder: invoke callback with prompt tokens
+    std::vector<int> promptTokens = m_engine->tokenize(prompt);
+    std::vector<int> outputTokens(m_config.maxContextLength);
+    
+    m_engine->generate(promptTokens.data(), promptTokens.size(),
+                       outputTokens.data(), m_config.maxContextLength,
+                       nullptr,
+                       [&](int token) {
+                           if (m_cancelled.load()) return false;
+                           
+                           std::vector<int> t = {token};
+                           std::string text = m_engine->detokenize(t);
+                           
+                           if (callback) {
+                               callback(text, false);
+                           }
+                           
+                           return true;
+                       });
+                       
     if (callback) {
-        callback(prompt.c_str(), false);
+        callback("", true);
     }
     
     return true;

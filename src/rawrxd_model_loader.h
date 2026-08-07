@@ -28,41 +28,24 @@
 
 #include "gguf_loader.h"
 
+// Vulkan handle/struct types. The header under include/ (NOT the src/ file of
+// the same name, which is a real VulkanCompute wrapper that hard-requires the
+// SDK) is the single source of truth: it provides real Vulkan types when the
+// SDK is present and CPU-fallback stubs otherwise. Include it explicitly by a
+// path that cannot resolve to the adjacent src/vulkan_compute.h.
+#include "../include/vulkan_compute.h"
+
 #include <windows.h>
 
-// Vulkan handle types — defined at global scope for the Tensor struct below.
-// These stubs are ONLY used when Vulkan SDK types are NOT already defined.
-// The gguf_loader.h may have already included Vulkan headers via vulkan_compute.h
-#ifdef VK_DEFINE_HANDLE
-// Vulkan headers were included - types already defined, skip stubs
-#else
-// No Vulkan headers - define minimal stubs for compilation
-typedef void* VkInstance;
-typedef void* VkPhysicalDevice;
-typedef void* VkDevice;
-typedef void* VkQueue;
-typedef void* VkBuffer;
-typedef void* VkDeviceMemory;
-typedef void* VkCommandPool;
-typedef void* VkCommandBuffer;
-typedef void* VkFence;
-typedef void* VkShaderModule;
-typedef void* VkPipeline;
-typedef void* VkPipelineLayout;
-typedef void* VkDescriptorSetLayout;
-typedef void* VkDescriptorPool;
-typedef void* VkDescriptorSet;
-typedef uint32_t VkMemoryPropertyFlags;
+// A few extra Vulkan handle typedefs the loader references that the CPU
+// fallback in vulkan_compute.h may not declare. Guard against real headers.
+#if !RAWR_VULKAN_AVAILABLE
+#ifndef VK_VERSION_1_0
+#ifndef RAWR_MODEL_LOADER_VK_EXTRA_STUBS
+#define RAWR_MODEL_LOADER_VK_EXTRA_STUBS
 typedef uint32_t VkFlags;
-struct VkPhysicalDeviceProperties { uint32_t vendorID; uint32_t deviceID; char deviceName[256]; };
-struct VkMemoryType { uint32_t propertyFlags; uint32_t heapIndex; };
-struct VkMemoryHeap { uint64_t size; uint64_t flags; };
-struct VkPhysicalDeviceMemoryProperties {
-    uint32_t memoryTypeCount;
-    VkMemoryType memoryTypes[32];
-    uint32_t memoryHeapCount;
-    VkMemoryHeap memoryHeaps[16];
-};
+#endif
+#endif
 #endif
 
 struct Tensor

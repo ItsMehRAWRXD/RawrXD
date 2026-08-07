@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iomanip>
 #include <random>
+#include <iostream>
 
 namespace RawrXD {
 namespace Agentic {

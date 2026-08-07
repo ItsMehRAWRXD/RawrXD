@@ -20966,6 +20966,71 @@ build bin\benchmark_dispatch_pmc.exe: CXX_EXECUTABLE_LINKER__benchmark_dispatch_
   TARGET_PDB = bin\benchmark_dispatch_pmc.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\benchmark_dispatch_pmc.dir
 
+# =============================================================================
+# Object build statements for EXECUTABLE target test_generation
+
+
+#############################################
+# Order-only phony target for test_generation
+
+build cmake_object_order_depends_target_test_generation: phony || .
+
+build CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\tests\test_generation.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\tests
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\adapter\RawrXDEngineAdapter.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\adapter
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\deep2\Deep2Engine.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target test_generation
+
+
+#############################################
+# Link the executable bin\test_generation.exe
+
+build bin\test_generation.exe: CXX_EXECUTABLE_LINKER__test_generation_Release CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj
+  CONFIG = Release
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
+  LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
+  LINK_LIBRARIES = Deep2Engine.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  POST_BUILD = cd .
+  PRE_LINK = cd .
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_FILE = bin\test_generation.exe
+  TARGET_IMPLIB = test_generation.lib
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
 
 #############################################
 # Utility command for test
@@ -22301,6 +22366,89 @@ build src\repository\CMakeFiles\install\strip.util: CUSTOM_COMMAND src\repositor
   restat = 1
 
 build src\repository\install\strip: phony src\repository\CMakeFiles\install\strip.util
+
+# =============================================================================
+# Write statements declared in CMakeLists.txt:
+# D:/rawrxd/CMakeLists.txt
+# =============================================================================
+
+
+#############################################
+# Utility command for test
+
+build src\generation\CMakeFiles\test.util: CUSTOM_COMMAND
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\ctest.exe" "
+  DESC = Running tests...
+  pool = console
+  restat = 1
+
+build src\generation\test: phony src\generation\CMakeFiles\test.util
+
+
+#############################################
+# Utility command for edit_cache
+
+build src\generation\CMakeFiles\edit_cache.util: CUSTOM_COMMAND
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\cmake-gui.exe" -SD:\rawrxd -BD:\rawrxd\build-ninja"
+  DESC = Running CMake cache editor...
+  pool = console
+  restat = 1
+
+build src\generation\edit_cache: phony src\generation\CMakeFiles\edit_cache.util
+
+
+#############################################
+# Utility command for rebuild_cache
+
+build src\generation\CMakeFiles\rebuild_cache.util: CUSTOM_COMMAND
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\cmake.exe" --regenerate-during-build -SD:\rawrxd -BD:\rawrxd\build-ninja"
+  DESC = Running CMake to regenerate build system...
+  pool = console
+  restat = 1
+
+build src\generation\rebuild_cache: phony src\generation\CMakeFiles\rebuild_cache.util
+
+
+#############################################
+# Utility command for list_install_components
+
+build src\generation\list_install_components: phony
+
+
+#############################################
+# Utility command for install
+
+build src\generation\CMakeFiles\install.util: CUSTOM_COMMAND src\generation\all
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\cmake.exe" -P cmake_install.cmake"
+  DESC = Install the project...
+  pool = console
+  restat = 1
+
+build src\generation\install: phony src\generation\CMakeFiles\install.util
+
+
+#############################################
+# Utility command for install/local
+
+build src\generation\CMakeFiles\install\local.util: CUSTOM_COMMAND src\generation\all
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake"
+  DESC = Installing only the local directory...
+  pool = console
+  restat = 1
+
+build src\generation\install\local: phony src\generation\CMakeFiles\install\local.util
+
+
+#############################################
+# Utility command for install/strip
+
+build src\generation\CMakeFiles\install\strip.util: CUSTOM_COMMAND src\generation\all
+  COMMAND = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-ninja\src\generation && "C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake"
+  DESC = Installing the project stripped...
+  pool = console
+  restat = 1
+
+build src\generation\install\strip: phony src\generation\CMakeFiles\install\strip.util
 
 # =============================================================================
 # Write statements declared in CMakeLists.txt:
@@ -26172,6 +26320,10 @@ build test_batch3_profiler_smoke: phony tests\test_batch3_profiler_smoke.exe
 
 build test_batch3_profiler_smoke.exe: phony tests\test_batch3_profiler_smoke.exe
 
+build test_generation: phony bin\test_generation.exe
+
+build test_generation.exe: phony bin\test_generation.exe
+
 build test_gguf_integration: phony tests\test_gguf_integration.exe
 
 build test_gguf_integration.exe: phony tests\test_gguf_integration.exe
@@ -26336,7 +26488,7 @@ build zero_assembly_test.exe: phony bin\zero_assembly_test.exe
 #############################################
 # Folder: D:/rawrxd/build-ninja
 
-build all: phony Omega1Engine.lib RawrXD_Compression.lib bin\RawrEngine.exe gold\RawrXD_Gold.exe InferenceEngine.lib bin\rawrxd-monaco-gen.exe bin\RawrXD_MultiWindow_Kernel.dll bin\Deep2Engine_IntegrationTest.exe bin\RawrXD-Win32IDE.exe quickjs_static.lib bin\RawrXD-InferenceRoutingTest.exe bin\test_autonomous_pipeline.exe bin\RawrXD_LSPServer.exe bin\RawrXDScriptDAPAdapter.exe lib\q4_preprocessed_avx512.lib pmc_profiler.lib flame_graph_profiler.lib src\reverse_engineering\all src\ceo\all src\repository\all tests\all src\tools\all src\validation\all
+build all: phony Omega1Engine.lib RawrXD_Compression.lib bin\RawrEngine.exe gold\RawrXD_Gold.exe InferenceEngine.lib bin\rawrxd-monaco-gen.exe bin\RawrXD_MultiWindow_Kernel.dll bin\Deep2Engine_IntegrationTest.exe bin\RawrXD-Win32IDE.exe quickjs_static.lib bin\RawrXD-InferenceRoutingTest.exe bin\test_autonomous_pipeline.exe bin\RawrXD_LSPServer.exe bin\RawrXDScriptDAPAdapter.exe lib\q4_preprocessed_avx512.lib pmc_profiler.lib flame_graph_profiler.lib bin\test_generation.exe src\reverse_engineering\all src\ceo\all src\repository\all src\generation\all tests\all src\tools\all src\validation\all
 
 # =============================================================================
 
@@ -26344,6 +26496,13 @@ build all: phony Omega1Engine.lib RawrXD_Compression.lib bin\RawrEngine.exe gold
 # Folder: D:/rawrxd/build-ninja/src/ceo
 
 build src\ceo\all: phony src\ceo\rawrxd_ceo.lib bin\rawrxd-ceo.exe
+
+# =============================================================================
+
+#############################################
+# Folder: D:/rawrxd/build-ninja/src/generation
+
+build src\generation\all: phony
 
 # =============================================================================
 
@@ -26394,14 +26553,14 @@ build tests\all: phony tests\test_ai_completions.exe tests\test_llm_connectivity
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja D$:\rawrxd\build-ninja\cmake_install.cmake D$:\rawrxd\build-ninja\src\reverse_engineering\cmake_install.cmake D$:\rawrxd\build-ninja\src\ceo\cmake_install.cmake D$:\rawrxd\build-ninja\src\repository\cmake_install.cmake D$:\rawrxd\build-ninja\tests\cmake_install.cmake D$:\rawrxd\build-ninja\src\tools\cmake_install.cmake D$:\rawrxd\build-ninja\src\validation\cmake_install.cmake D$:\rawrxd\build-ninja\src\validation\kernels\cmake_install.cmake D$:\rawrxd\build-ninja\CTestTestfile.cmake D$:\rawrxd\build-ninja\tests\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\tools\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\validation\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\validation\kernels\CTestTestfile.cmake: RERUN_CMAKE | C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckCSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckIncludeFile.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckLibraryExists.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageHandleStandardArgs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageMessage.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython3.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython\Support.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindThreads.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindVulkan.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CheckSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake CMakeCache.txt CMakeFiles\4.2.0\CMakeASM_MASMCompiler.cmake CMakeFiles\4.2.0\CMakeCCompiler.cmake CMakeFiles\4.2.0\CMakeCXXCompiler.cmake CMakeFiles\4.2.0\CMakeRCCompiler.cmake CMakeFiles\4.2.0\CMakeSystem.cmake D$:\rawrxd\CMakeLists.txt D$:\rawrxd\cmake\AutoFeatureRegistry.cmake D$:\rawrxd\cmake\IntentGuardrails.cmake D$:\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake D$:\rawrxd\src\ceo\CMakeLists.txt D$:\rawrxd\src\repository\CMakeLists.txt D$:\rawrxd\src\reverse_engineering\CMakeLists.txt D$:\rawrxd\src\tools\CMakeLists.txt D$:\rawrxd\src\validation\CMakeLists.txt D$:\rawrxd\src\validation\kernels\CMakeLists.txt D$:\rawrxd\tests\CMakeLists.txt
+build build.ninja D$:\rawrxd\build-ninja\cmake_install.cmake D$:\rawrxd\build-ninja\src\reverse_engineering\cmake_install.cmake D$:\rawrxd\build-ninja\src\ceo\cmake_install.cmake D$:\rawrxd\build-ninja\src\repository\cmake_install.cmake D$:\rawrxd\build-ninja\src\generation\cmake_install.cmake D$:\rawrxd\build-ninja\tests\cmake_install.cmake D$:\rawrxd\build-ninja\src\tools\cmake_install.cmake D$:\rawrxd\build-ninja\src\validation\cmake_install.cmake D$:\rawrxd\build-ninja\src\validation\kernels\cmake_install.cmake D$:\rawrxd\build-ninja\CTestTestfile.cmake D$:\rawrxd\build-ninja\tests\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\tools\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\validation\CTestTestfile.cmake D$:\rawrxd\build-ninja\src\validation\kernels\CTestTestfile.cmake: RERUN_CMAKE | C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckCSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckIncludeFile.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckLibraryExists.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageHandleStandardArgs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageMessage.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython3.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython\Support.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindThreads.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindVulkan.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CheckSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake CMakeCache.txt CMakeFiles\4.2.0\CMakeASM_MASMCompiler.cmake CMakeFiles\4.2.0\CMakeCCompiler.cmake CMakeFiles\4.2.0\CMakeCXXCompiler.cmake CMakeFiles\4.2.0\CMakeRCCompiler.cmake CMakeFiles\4.2.0\CMakeSystem.cmake D$:\rawrxd\CMakeLists.txt D$:\rawrxd\cmake\AutoFeatureRegistry.cmake D$:\rawrxd\cmake\IntentGuardrails.cmake D$:\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake D$:\rawrxd\src\ceo\CMakeLists.txt D$:\rawrxd\src\generation\CMakeLists.txt D$:\rawrxd\src\repository\CMakeLists.txt D$:\rawrxd\src\reverse_engineering\CMakeLists.txt D$:\rawrxd\src\tools\CMakeLists.txt D$:\rawrxd\src\validation\CMakeLists.txt D$:\rawrxd\src\validation\kernels\CMakeLists.txt D$:\rawrxd\tests\CMakeLists.txt
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckCSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckIncludeFile.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckLibraryExists.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageHandleStandardArgs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageMessage.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython3.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython\Support.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindThreads.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindVulkan.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CheckSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake CMakeCache.txt CMakeFiles\4.2.0\CMakeASM_MASMCompiler.cmake CMakeFiles\4.2.0\CMakeCCompiler.cmake CMakeFiles\4.2.0\CMakeCXXCompiler.cmake CMakeFiles\4.2.0\CMakeRCCompiler.cmake CMakeFiles\4.2.0\CMakeSystem.cmake D$:\rawrxd\CMakeLists.txt D$:\rawrxd\cmake\AutoFeatureRegistry.cmake D$:\rawrxd\cmake\IntentGuardrails.cmake D$:\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake D$:\rawrxd\src\ceo\CMakeLists.txt D$:\rawrxd\src\repository\CMakeLists.txt D$:\rawrxd\src\reverse_engineering\CMakeLists.txt D$:\rawrxd\src\tools\CMakeLists.txt D$:\rawrxd\src\validation\CMakeLists.txt D$:\rawrxd\src\validation\kernels\CMakeLists.txt D$:\rawrxd\tests\CMakeLists.txt: phony
+build C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeASM_MASMInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCXXInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeCommonLanguageInclude.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeGenericSystem.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeInitializeConfigs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeLanguageInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeRCInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CMakeSystemSpecificInitialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckCSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckIncludeFile.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\CheckLibraryExists.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\CMakeCommonCompilerMacros.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Compiler\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageHandleStandardArgs.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPackageMessage.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython3.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindPython\Support.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindThreads.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\FindVulkan.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeASM_MASMLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCXXLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CMakeCommonLinkerInformation.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Internal\CheckSourceCompiles.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Linker\MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Linker\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-Initialize.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-C.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC-CXX.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows-MSVC.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\Windows.cmake C$:\Program$ Files\CMake\share\cmake-4.2\Modules\Platform\WindowsPaths.cmake CMakeCache.txt CMakeFiles\4.2.0\CMakeASM_MASMCompiler.cmake CMakeFiles\4.2.0\CMakeCCompiler.cmake CMakeFiles\4.2.0\CMakeCXXCompiler.cmake CMakeFiles\4.2.0\CMakeRCCompiler.cmake CMakeFiles\4.2.0\CMakeSystem.cmake D$:\rawrxd\CMakeLists.txt D$:\rawrxd\cmake\AutoFeatureRegistry.cmake D$:\rawrxd\cmake\IntentGuardrails.cmake D$:\rawrxd\cmake\RawrXD-Vulkan-Fix.cmake D$:\rawrxd\src\ceo\CMakeLists.txt D$:\rawrxd\src\generation\CMakeLists.txt D$:\rawrxd\src\repository\CMakeLists.txt D$:\rawrxd\src\reverse_engineering\CMakeLists.txt D$:\rawrxd\src\tools\CMakeLists.txt D$:\rawrxd\src\validation\CMakeLists.txt D$:\rawrxd\src\validation\kernels\CMakeLists.txt D$:\rawrxd\tests\CMakeLists.txt: phony
 
 
 #############################################
