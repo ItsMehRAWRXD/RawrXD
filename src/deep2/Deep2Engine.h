@@ -357,6 +357,14 @@ private:
     std::unique_ptr<MARS::MARSController> marsController_;
     bool marsEnabled_ = false;
     
+    // Batch 1 Blockers: Runtime Operations & Data Path
+    EOSShortCircuit eosShortCircuit_;
+    StreamingYieldController yieldController_;
+    RoPECacheOptimizer ropeCacheOptimizer_;
+    AVXShadowBuffer avxShadowBuffer_;
+    TensorNameHashTable tensorNameHashTable_;
+    MoEWeightPinner moeWeightPinner_;
+    
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
     

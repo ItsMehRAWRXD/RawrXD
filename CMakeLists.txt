@@ -5785,6 +5785,8 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/mars/TensorHotpatch.cpp
         src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
+        # Batch 1 Blockers: Multi-GPU Residency & Routing
+        src/deep2/QuantKernelRegistryHooks.cpp
         # VAL-000 Components
         src/deep2/ReverseIntegration.cpp
         src/reverse/ReverseEngine.cpp

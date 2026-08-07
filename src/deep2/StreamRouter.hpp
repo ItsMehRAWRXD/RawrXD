@@ -10,6 +10,7 @@
 #include <atomic>
 #include <array>
 #include <immintrin.h>
+#include "StreamEngine.hpp"
 
 namespace Deep2 {
 

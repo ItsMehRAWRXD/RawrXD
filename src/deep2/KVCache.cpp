@@ -185,6 +185,9 @@ static inline float fast_expf(float x) {
     return expf(x);
 }
 
+// Forward declaration for fast_expf used in AttentionWithCache
+static inline float fast_expf(float x);
+
 // ============================================================================
 // Attention with KV Cache
 // Production AVX2-optimized scaled dot-product attention with softmax
