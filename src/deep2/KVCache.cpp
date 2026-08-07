@@ -175,15 +175,15 @@ static inline void avx2_weighted_accumulate(float* output, const float* values, 
         output[i] += weight * values[i];
     }
 }
+#endif
 
-// Fast approximate expf for softmax (using SIMD where possible)
+// Fast approximate expf for softmax (available regardless of AVX2)
 static inline float fast_expf(float x) {
     // Clamp to avoid overflow
     if (x > 88.0f) return 1e38f;
     if (x < -88.0f) return 0.0f;
     return expf(x);
 }
-#endif
 
 // ============================================================================
 // Attention with KV Cache

@@ -1528,6 +1528,7 @@ set(SOURCES
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
     src/deep2/GGUFLoader.cpp
+    src/deep2/deep2_link_stubs.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.

@@ -61,4 +61,4 @@ set_tests_properties([=[test_softmax_avx2]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/
 add_test([=[sovereign_integrated_test]=] "D:/rawrxd/build-ninja/bin/sovereign_integrated_test.exe")
 set_tests_properties([=[sovereign_integrated_test]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;595;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
 add_test([=[test_agentic_supervisor]=] "D:/rawrxd/build-ninja/bin/test_agentic_supervisor.exe")
-set_tests_properties([=[test_agentic_supervisor]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;617;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")
+set_tests_properties([=[test_agentic_supervisor]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/rawrxd/tests/CMakeLists.txt;618;add_test;D:/rawrxd/tests/CMakeLists.txt;0;")

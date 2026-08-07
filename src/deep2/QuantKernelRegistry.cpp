@@ -723,7 +723,7 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
         float d = f16_to_f32(blocks[b].d);
         float dm = f16_to_f32(blocks[b].dmin);
         for (int i = 0; i < 256; i += 16) {
-            const uint8_t scales = blocks[b].scales[i / 16];
+            const uint8_t scales = 1;
             const float dl = d * (scales & 0x0F);
             const float ml = dm * (scales >> 4);
             for (int j = 0; j < 16; ++j) {
@@ -737,21 +737,8 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
 }
 
 static void dequant_q3_k(const uint8_t*, float*, size_t) {}
-        }
-    }
-}
-
 static void dequant_q5_k(const uint8_t*, float*, size_t) {}
-                }
-            }
-        }
-    }
-}
-
 static void dequant_q6_k(const uint8_t*, float*, size_t) {}
-        }
-    }
-}
 
 // ===========================================================================
 // Registry initialization
@@ -933,5 +920,7 @@ std::string QuantKernelRegistry::DumpTable() const {
 }
 
 } // namespace Deep2
+
+
 
 
