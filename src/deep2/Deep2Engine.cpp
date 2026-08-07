@@ -2920,10 +2920,47 @@ int Deep2_Initialize(void* engine, const void* config) {
 }
 
 void Deep2_Forward(void* engine, const float* input, float* output, size_t count) {
-    if (!engine || !input || !output) return;
+    if (!engine || !input || !output || count == 0) return;
     auto* e = static_cast<Deep2::Deep2Engine*>(engine);
-    // Placeholder: real forward would process through all layers
-    std::memcpy(output, input, count * sizeof(float));
+    
+    // Check if configuration has been initialized
+    if (e->getConfig().hiddenDim == 0) {
+        std::memcpy(output, input, count * sizeof(float));
+        return;
+    }
+    
+    const size_t hiddenDim = e->getConfig().hiddenDim;
+    const size_t numLayers = e->getConfig().numLayers;
+    
+    // We expect count to be a multiple of hiddenDim
+    size_t iters = count / hiddenDim;
+    if (iters == 0) {
+        std::memcpy(output, input, count * sizeof(float));
+        return;
+    }
+    
+    // Process each token sequentially through all layers
+    for (size_t i = 0; i < iters; i++) {
+        const float* currentInput = input + i * hiddenDim;
+        float* currentOutput = output + i * hiddenDim;
+        
+        // Setup temporary buffers for layer ping-pong
+        std::vector<float> temp1(currentInput, currentInput + hiddenDim);
+        std::vector<float> temp2(hiddenDim);
+        
+        float* layerInput = temp1.data();
+        float* layerOutput = temp2.data();
+        
+        // Pass through each transformer block
+        for (size_t layer = 0; layer < numLayers; ++layer) {
+            size_t seqPos = i; 
+            // We pass seqPos+1 so RoPE matches expected index
+            e->forwardLayer(layer, layerInput, layerOutput, seqPos + 1);
+            std::swap(layerInput, layerOutput);
+        }
+        
+        std::memcpy(currentOutput, layerInput, hiddenDim * sizeof(float));
+    }
 }
 
 } // extern "C"

@@ -24,6 +24,8 @@
 #include <random>
 #include <nlohmann/json.hpp>
 
+#include "cpu_inference_engine.h"
+
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")
 #pragma warning(disable : 4996)
