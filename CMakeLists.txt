@@ -1521,6 +1521,13 @@ set(SOURCES
     src/deep2/ShardRouterIntegration.cpp
     src/deep2/Deep2IDEIntegration.cpp
     src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/GGUFLoader.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
