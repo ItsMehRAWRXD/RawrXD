@@ -161,23 +161,6 @@ static inline float vec_dot_q2_K_q8_K_avx2(
                 reinterpret_cast<int8_t*>(&q2_8bit)[l] = static_cast<int8_t>(q2);
             }
 
-            // Dot product via _mm256_dpbusd_avx_epi32 (AVX-VNNI) if available,
-            // otherwise manual multiply-add
-            __m256i q8_32 = _mm256_cvtepi8_epi32(_mm256_castsi256_si128(q8));
-            __m256i q2_32 = _mm256_cvtepi8_epi32(_mm256_castsi256_si128(q2_8bit));
-
-            // Multiply and accumulate
-            __m256 prod = _mm256_cvtepi32_ps(
-                _mm256_add_epi32(
-                    _mm256_mullo_epi32(q2_32, q8_32),
-                    _mm256_setzero_si256()));
-            // Actually do proper dot product
-            __m256i dot = _mm256_madd_epi16(
-                _mm256_packs_epi16(
-                    _mm256_cvtepi32_epi16(q2_32),
-                    _mm256_cvtepi32_epi16(q8_32)),
-                _mm256_set1_epi16(1));
-
             // Simplified: scalar fallback for correctness
             int sumi = 0;
             for (int l = 0; l < 32; l++) {

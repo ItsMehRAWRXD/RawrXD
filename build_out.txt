@@ -1,5 +1,256 @@
-**********************************************************************
-** Visual Studio 2022 Developer Command Prompt v17.14.27
-** Copyright (c) 2025 Microsoft Corporation
-**********************************************************************
-[vcvarsall.bat] Environment initialized for: 'x64'
+ninja: warning: premature end of file; recovering
+ninja: Entering directory `build-ninja'
+[1/56] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\quickjs-libc.c.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[2/56] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\libregexp.c.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[3/56] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\dtoa.c.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[4/56] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\libunicode.c.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[5/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\license_enforcement.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[6/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\compression_interface.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[7/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\feature_flags_runtime.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[8/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\tools\license_validator_manifest.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[9/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ignite_800b.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[10/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\license_anti_tampering.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[11/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_vocab_resolver.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[12/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\enterprise_licensev2_impl.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[13/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\memory_core.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[14/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ultra_fast_inference.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[15/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[16/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_model_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[17/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[18/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[19/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ollama_blob_parser.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[20/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\gguf_core.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[21/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\polymorphic_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[22/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[23/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ConfigurationValidator.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[24/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_globals.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\rawr_globals.asm
+[25/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[26/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[27/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\rawr_cpu_features.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\rawr_cpu_features.asm
+[28/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\inference_kernels.asm
+[29/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[30/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\quant_avx2.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\quant_avx2.asm
+[31/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\inference_core.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\inference_core.asm
+[32/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[33/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[34/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[35/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\RawrXD_KQuant_Kernel.asm
+[36/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_KQuant_Dequant.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\RawrXD_KQuant_Dequant.asm
+[37/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\FlashAttention_AVX512.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\FlashAttention_AVX512.asm
+[38/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_transformer_masm_fixed.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\masm\rawrxd_transformer_masm_fixed.asm
+[39/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[40/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\masm\rawrxd_math_masm.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\masm\rawrxd_math_masm.asm
+[41/56] Building ASM_MASM object CMakeFiles\InferenceEngine.dir\src\asm\RawrXD_Telemetry_Kernel.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.51.36246.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\asm\RawrXD_Telemetry_Kernel.asm
+[42/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[43/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[44/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[45/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[46/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[47/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[48/56] Building CXX object CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj
+[49/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[50/56] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[51/56] Building CXX object CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj
+[52/56] Building CXX object CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj
+[53/56] Building C object CMakeFiles\quickjs_static.dir\3rdparty\quickjs_ng\quickjs.c.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[54/56] Linking C static library quickjs_static.lib
+[55/56] Linking CXX static library InferenceEngine.lib
+[56/56] Linking CXX executable bin\test_generation.exe
+FAILED: [code=4294967295] bin/test_generation.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1951 --intdir=CMakeFiles\test_generation.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj  /out:bin\test_generation.exe /implib:test_generation.lib /pdb:bin\test_generation.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 deflate_brutal_masm.obj  InferenceEngine.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  quickjs_static.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj /out:bin\test_generation.exe /implib:test_generation.lib /pdb:bin\test_generation.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64 -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64 -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 deflate_brutal_masm.obj InferenceEngine.lib shlwapi.lib psapi.lib dbghelp.lib winhttp.lib bcrypt.lib advapi32.lib crypt32.lib quickjs_static.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: static class rawr::RawrXDInferenceAdapter & __cdecl rawr::RawrXDInferenceAdapter::Get(void)" (?Get@RawrXDInferenceAdapter@rawr@@SAAEAV12@XZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::RawrXDInferenceAdapter::Initialize(void)" (?Initialize@RawrXDInferenceAdapter@rawr@@QEAA_NXZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::RawrXDInferenceAdapter::Shutdown(void)" (?Shutdown@RawrXDInferenceAdapter@rawr@@QEAAXXZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::RawrXDInferenceAdapter::Generate(char const *,class std::function<void __cdecl(char const *,unsigned int)>)" (?Generate@RawrXDInferenceAdapter@rawr@@QEAA_NPEBDV?$function@$$A6AXPEBDI@Z@std@@@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: static class rawr::Deep2Bridge & __cdecl rawr::Deep2Bridge::Get(void)" (?Get@Deep2Bridge@rawr@@SAAEAV12@XZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::Deep2Bridge::Initialize(struct rawr::EngineConfig const &)" (?Initialize@Deep2Bridge@rawr@@QEAA_NAEBUEngineConfig@2@@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::Deep2Bridge::Shutdown(void)" (?Shutdown@Deep2Bridge@rawr@@QEAAXXZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::Deep2Bridge::LoadModel(char const *)" (?LoadModel@Deep2Bridge@rawr@@QEAA_NPEBD@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl rawr::Deep2Bridge::Generate(char const *,class std::function<void __cdecl(char const *,unsigned int)>,class std::function<void __cdecl(char const *)>)" (?Generate@Deep2Bridge@rawr@@QEAA_NPEBDV?$function@$$A6AXPEBDI@Z@std@@V?$function@$$A6AXPEBD@Z@4@@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: struct rawr::Deep2Bridge::Metrics __cdecl rawr::Deep2Bridge::GetMetrics(void)const " (?GetMetrics@Deep2Bridge@rawr@@QEBA?AUMetrics@12@XZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl rawr::InferenceSession::InferenceSession(unsigned int)" (??0InferenceSession@rawr@@QEAA@I@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl rawr::InferenceSession::~InferenceSession(void)" (??1InferenceSession@rawr@@QEAA@XZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::InferenceSession::Start(char const *)" (?Start@InferenceSession@rawr@@QEAAXPEBD@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::InferenceSession::AddMessage(char const *,char const *)" (?AddMessage@InferenceSession@rawr@@QEAAXPEBD0@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::InferenceSession::RecordTokens(unsigned __int64)" (?RecordTokens@InferenceSession@rawr@@QEAAX_K@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: static class rawr::ModelRegistry & __cdecl rawr::ModelRegistry::Get(void)" (?Get@ModelRegistry@rawr@@SAAEAV12@XZ)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: unsigned int __cdecl rawr::ModelRegistry::RegisterModel(char const *,char const *)" (?RegisterModel@ModelRegistry@rawr@@QEAAIPEBD0@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: struct rawr::ModelInfo * __cdecl rawr::ModelRegistry::GetModel(unsigned int)" (?GetModel@ModelRegistry@rawr@@QEAAPEAUModelInfo@2@I@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::ModelRegistry::SetModelLoaded(unsigned int,bool)" (?SetModelLoaded@ModelRegistry@rawr@@QEAAXI_N@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl rawr::ModelRegistry::AddSession(unsigned int)" (?AddSession@ModelRegistry@rawr@@QEAAXI@Z)
+test_generation.cpp.obj : error LNK2001: unresolved external symbol "public: unsigned int __cdecl rawr::ModelRegistry::GetLoadedCount(void)const " (?GetLoadedCount@ModelRegistry@rawr@@QEBAIXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ReverseIntegration::ReverseIntegration(void)" (??0ReverseIntegration@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ReverseIntegration::~ReverseIntegration(void)" (??1ReverseIntegration@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::attachToEngine(class Deep2::Deep2Engine *)" (?attachToEngine@ReverseIntegration@Deep2@@QEAAXPEAVDeep2Engine@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::detachFromEngine(void)" (?detachFromEngine@ReverseIntegration@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::enableRealTimeAnalysis(bool)" (?enableRealTimeAnalysis@ReverseIntegration@Deep2@@QEAAX_N@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::onTokenGenerated(unsigned __int64,unsigned char const *,unsigned __int64)" (?onTokenGenerated@ReverseIntegration@Deep2@@QEAAX_KPEBE0@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::onLayerProcessed(int,float const *,unsigned __int64)" (?onLayerProcessed@ReverseIntegration@Deep2@@QEAAXHPEBM_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseIntegration::onAttentionComputed(int,float const *,unsigned __int64)" (?onAttentionComputed@ReverseIntegration@Deep2@@QEAAXHPEBM_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: enum Deep2::MARS::HotpatchResult __cdecl Deep2::MARS::TensorHotpatch::Redirect(unsigned __int64,int)" (?Redirect@TensorHotpatch@MARS@Deep2@@QEAA?AW4HotpatchResult@23@_KH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MARS::MARSController::MARSController(void)" (??0MARSController@MARS@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MARS::MARSController::~MARSController(void)" (??1MARSController@MARS@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MARS::MARSController::Initialize(unsigned __int64,unsigned __int64)" (?Initialize@MARSController@MARS@Deep2@@QEAA_N_K0@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MARS::MARSController::Shutdown(void)" (?Shutdown@MARSController@MARS@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: struct Deep2::MARS::VRAMLease * __cdecl Deep2::MARS::MARSController::PlaceTensor(unsigned __int64,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,unsigned __int64,float,bool)" (?PlaceTensor@MARSController@MARS@Deep2@@QEAAPEAUVRAMLease@23@_KAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0M_N@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MARS::MARSController::Rebalance(void)" (?Rebalance@MARSController@MARS@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MARS::MARSController::HandleTensorFault(unsigned __int64)" (?HandleTensorFault@MARSController@MARS@Deep2@@QEAA_N_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MARS::MARSController::HandleGPUFailure(int)" (?HandleGPUFailure@MARSController@MARS@Deep2@@QEAA_NH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: struct Deep2::MARS::DynamicParity __cdecl Deep2::MARS::MARSController::GetCurrentParity(void)const " (?GetCurrentParity@MARSController@MARS@Deep2@@QEBA?AUDynamicParity@23@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ThreadPool::ThreadPool(unsigned __int64)" (??0ThreadPool@Deep2@@QEAA@_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ThreadPool::~ThreadPool(void)" (??1ThreadPool@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ThreadPool::waitAll(void)" (?waitAll@ThreadPool@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ThreadPool::init(unsigned __int64)" (?init@ThreadPool@Deep2@@QEAAX_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::KVCache::KVCache(void)" (??0KVCache@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::KVCache::~KVCache(void)" (??1KVCache@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::KVCache::initialize(struct Deep2::KVCacheConfig const &)" (?initialize@KVCache@Deep2@@QEAA_NAEBUKVCacheConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::KVCache::reset(void)" (?reset@KVCache@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::KVCache::getKVPointers(unsigned __int64,unsigned __int64,float * *,float * *)" (?getKVPointers@KVCache@Deep2@@QEAAX_K0PEAPEAM1@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::KVCache::advance(void)" (?advance@KVCache@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "void __cdecl Deep2::AttentionWithCache(float const *,class Deep2::KVCache const &,unsigned __int64,unsigned __int64,float *,unsigned __int64)" (?AttentionWithCache@Deep2@@YAXPEBMAEBVKVCache@1@_K2PEAM2@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: static struct Deep2::GGUFLoadResult __cdecl Deep2::GGUFLoader::Load(char const *,struct Deep2::GGUFLoadOptions const &)" (?Load@GGUFLoader@Deep2@@SA?AUGGUFLoadResult@2@PEBDAEBUGGUFLoadOptions@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "protected: static class std::vector<float,class std::allocator<float> > __cdecl rawrxd::sampling::ISampler::softmax(class std::vector<float,class std::allocator<float> > const &)" (?softmax@ISampler@sampling@rawrxd@@KA?AV?$vector@MV?$allocator@M@std@@@std@@AEBV45@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: virtual struct rawrxd::sampling::SamplingResult __cdecl rawrxd::sampling::TopKSampler::sample(class std::vector<float,class std::allocator<float> > const &,struct rawrxd::sampling::SamplingContext const &)" (?sample@TopKSampler@sampling@rawrxd@@UEAA?AUSamplingResult@23@AEBV?$vector@MV?$allocator@M@std@@@std@@AEBUSamplingContext@23@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MoERouter::MoERouter(void)" (??0MoERouter@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MoERouter::~MoERouter(void)" (??1MoERouter@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoERouter::Initialize(struct Deep2::MoEConfig const &)" (?Initialize@MoERouter@Deep2@@QEAAXAEBUMoEConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: struct Deep2::TokenRoute __cdecl Deep2::MoERouter::Route(float const *)" (?Route@MoERouter@Deep2@@QEAA?AUTokenRoute@2@PEBM@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoERouter::ResetExpertLoads(void)" (?ResetExpertLoads@MoERouter@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoERouter::ResetStats(void)" (?ResetStats@MoERouter@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MoELayer::~MoELayer(void)" (??1MoELayer@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoEWeightProxy::Attach(class Deep2::MoEWeightsLoader *)" (?Attach@MoEWeightProxy@Deep2@@QEAAXPEAVMoEWeightsLoader@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoEWeightProxy::Detach(void)" (?Detach@MoEWeightProxy@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: struct Deep2::MoEWeightHandle __cdecl Deep2::MoEWeightProxy::Acquire(int,int)" (?Acquire@MoEWeightProxy@Deep2@@QEAA?AUMoEWeightHandle@2@HH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MedusaDecoder::MedusaDecoder(void)" (??0MedusaDecoder@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MedusaDecoder::~MedusaDecoder(void)" (??1MedusaDecoder@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MedusaDecoder::initialize(struct Deep2::MedusaConfig const &)" (?initialize@MedusaDecoder@Deep2@@QEAA_NAEBUMedusaConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MedusaDecoder::projectHead(unsigned __int64,float const *,float *,unsigned __int64)" (?projectHead@MedusaDecoder@Deep2@@QEAAX_KPEBMPEAM0@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::NUFusedPacker::NUFusedPacker(void)" (??0NUFusedPacker@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::NUFusedPacker::~NUFusedPacker(void)" (??1NUFusedPacker@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::NUFusedPacker::initialize(struct Deep2::NUPackerConfig const &)" (?initialize@NUFusedPacker@Deep2@@QEAA_NAEBUNUPackerConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::WarmupScheduler::WarmupScheduler(void)" (??0WarmupScheduler@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::WarmupScheduler::~WarmupScheduler(void)" (??1WarmupScheduler@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::WarmupScheduler::initialize(struct Deep2::WarmupConfig const &)" (?initialize@WarmupScheduler@Deep2@@QEAA_NAEBUWarmupConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::WarmupScheduler::recordAccess(int,int,float)" (?recordAccess@WarmupScheduler@Deep2@@QEAAXHHM@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: class std::vector<struct Deep2::WarmupPrefetchRequest,class std::allocator<struct Deep2::WarmupPrefetchRequest> > __cdecl Deep2::WarmupScheduler::predictNextExperts(int,int)" (?predictNextExperts@WarmupScheduler@Deep2@@QEAA?AV?$vector@UWarmupPrefetchRequest@Deep2@@V?$allocator@UWarmupPrefetchRequest@Deep2@@@std@@@std@@HH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::CompressedKVCache::CompressedKVCache(void)" (??0CompressedKVCache@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::CompressedKVCache::~CompressedKVCache(void)" (??1CompressedKVCache@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::CompressedKVCache::initialize(struct Deep2::CompressedKVConfig const &)" (?initialize@CompressedKVCache@Deep2@@QEAA_NAEBUCompressedKVConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::NVMeStream::NVMeStream(void)" (??0NVMeStream@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::NVMeStream::~NVMeStream(void)" (??1NVMeStream@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::NVMeStream::initialize(struct Deep2::NVMeStreamConfig const &)" (?initialize@NVMeStream@Deep2@@QEAA_NAEBUNVMeStreamConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::SlidingWindowEngine::SlidingWindowEngine(void)" (??0SlidingWindowEngine@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::SlidingWindowEngine::~SlidingWindowEngine(void)" (??1SlidingWindowEngine@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::SlidingWindowEngine::initialize(struct Deep2::SlidingWindowConfig const &)" (?initialize@SlidingWindowEngine@Deep2@@QEAA_NAEBUSlidingWindowConfig@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ReverseHotpatchEngine::ReverseHotpatchEngine(void)" (??0ReverseHotpatchEngine@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::ReverseHotpatchEngine::~ReverseHotpatchEngine(void)" (??1ReverseHotpatchEngine@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::ReverseHotpatchEngine::ProcessFiles(class std::vector<class std::filesystem::path,class std::allocator<class std::filesystem::path> > const &)" (?ProcessFiles@ReverseHotpatchEngine@Deep2@@QEAA_NAEBV?$vector@Vpath@filesystem@std@@V?$allocator@Vpath@filesystem@std@@@3@@std@@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: class std::vector<struct Deep2::TensorRepair,class std::allocator<struct Deep2::TensorRepair> > const & __cdecl Deep2::ReverseHotpatchEngine::GetRepairs(void)const " (?GetRepairs@ReverseHotpatchEngine@Deep2@@QEBAAEBV?$vector@UTensorRepair@Deep2@@V?$allocator@UTensorRepair@Deep2@@@std@@@std@@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: class std::vector<struct Deep2::TensorCorruption,class std::allocator<struct Deep2::TensorCorruption> > const & __cdecl Deep2::ReverseHotpatchEngine::GetCorruptions(void)const " (?GetCorruptions@ReverseHotpatchEngine@Deep2@@QEBAAEBV?$vector@UTensorCorruption@Deep2@@V?$allocator@UTensorCorruption@Deep2@@@std@@@std@@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseHotpatchEngine::SetVerbose(bool)" (?SetVerbose@ReverseHotpatchEngine@Deep2@@QEAAX_N@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseHotpatchEngine::SetAlignment(unsigned int)" (?SetAlignment@ReverseHotpatchEngine@Deep2@@QEAAXI@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::ReverseHotpatchEngine::SetAllowTruncationRepair(bool)" (?SetAllowTruncationRepair@ReverseHotpatchEngine@Deep2@@QEAAX_N@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: static class Deep2::QuantKernelRegistry & __cdecl Deep2::QuantKernelRegistry::Instance(void)" (?Instance@QuantKernelRegistry@Deep2@@SAAEAV12@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void (__cdecl*__cdecl Deep2::QuantKernelRegistry::GetGEMV(int)const )(unsigned char const * __restrict,float const * __restrict,float * __restrict,unsigned __int64,unsigned __int64)" (?GetGEMV@QuantKernelRegistry@Deep2@@QEBAP6AXPEIBEPEIBMPEIAM_K3@ZH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void (__cdecl*__cdecl Deep2::QuantKernelRegistry::GetDequant(int)const )(unsigned char const * __restrict,float * __restrict,unsigned __int64)" (?GetDequant@QuantKernelRegistry@Deep2@@QEBAP6AXPEIBEPEIAM_K@ZH@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MoEWeightsLoader::MoEWeightsLoader(void)" (??0MoEWeightsLoader@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl Deep2::MoEWeightsLoader::~MoEWeightsLoader(void)" (??1MoEWeightsLoader@Deep2@@QEAA@XZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MoEWeightsLoader::Open(char const *)" (?Open@MoEWeightsLoader@Deep2@@QEAA_NPEBD@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoEWeightsLoader::Close(void)" (?Close@MoEWeightsLoader@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::MoEWeightsLoader::LoadSharedExpert(int,void *,unsigned __int64)" (?LoadSharedExpert@MoEWeightsLoader@Deep2@@QEAA_NHPEAX_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::MoEWeightsLoader::SetMaxCacheSize(unsigned __int64)" (?SetMaxCacheSize@MoEWeightsLoader@Deep2@@QEAAX_K@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::HotPatcher::initialize(void)" (?initialize@HotPatcher@Deep2@@QEAA_NXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl Deep2::HotPatcher::registerKernelReplacement(struct Deep2::KernelReplacement const &,struct Deep2::PatchMetadata const &)" (?registerKernelReplacement@HotPatcher@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUKernelReplacement@2@AEBUPatchMetadata@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl Deep2::HotPatcher::registerConfigOverride(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct Deep2::PatchMetadata const &)" (?registerConfigOverride@HotPatcher@Deep2@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV34@0AEBUPatchMetadata@2@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: struct Deep2::ValidationResult __cdecl Deep2::HotPatcher::validate(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?validate@HotPatcher@Deep2@@QEAA?AUValidationResult@2@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::HotPatcher::apply(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?apply@HotPatcher@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::HotPatcher::rollback(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?rollback@HotPatcher@Deep2@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl Deep2::HotPatcher::emergencyRollback(void)" (?emergencyRollback@HotPatcher@Deep2@@QEAA_NXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl Deep2::HotPatcher::printStatus(void)" (?printStatus@HotPatcher@Deep2@@QEAAXXZ)
+Deep2Engine.cpp.obj : error LNK2001: unresolved external symbol "class Deep2::HotPatcher & __cdecl Deep2::GetHotPatcher(void)" (?GetHotPatcher@Deep2@@YAAEAVHotPatcher@1@XZ)
+bin\test_generation.exe : fatal error LNK1120: 110 unresolved externals
+ninja: build stopped: subcommand failed.

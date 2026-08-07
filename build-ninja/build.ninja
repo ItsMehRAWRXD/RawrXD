@@ -20973,13 +20973,13 @@ build bin\benchmark_dispatch_pmc.exe: CXX_EXECUTABLE_LINKER__benchmark_dispatch_
 #############################################
 # Order-only phony target for test_generation
 
-build cmake_object_order_depends_target_test_generation: phony || .
+build cmake_object_order_depends_target_test_generation: phony || cmake_object_order_depends_target_InferenceEngine cmake_object_order_depends_target_quickjs_static
 
 build CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\tests\test_generation.cpp || cmake_object_order_depends_target_test_generation
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_generation.dir
   OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\tests
   TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
@@ -20990,7 +20990,7 @@ build CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj: CX
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_generation.dir
   OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\adapter
   TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
@@ -21001,7 +21001,51 @@ build CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj: CXX_COMPILER
   CONFIG = Release
   DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
-  INCLUDES = -Id:\rawrxd\include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\deep2\Deep2Bridge.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\deep2\Deep2Bridge.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\deep2\FabricTensorTable.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\deep2\FabricTensorTable.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\deep2\Deep2IDEIntegration.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\deep2\Deep2IDEIntegration.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
+  OBJECT_DIR = CMakeFiles\test_generation.dir
+  OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
+  TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
+  TARGET_PDB = bin\test_generation.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\test_generation.dir
+
+build CMakeFiles\test_generation.dir\src\deep2\InferenceSession.cpp.obj: CXX_COMPILER__test_generation_unscanned_Release D$:\rawrxd\src\deep2\InferenceSession.cpp || cmake_object_order_depends_target_test_generation
+  CONFIG = Release
+  DEFINES = -DNOMINMAX -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -std:c++20 -MT /GS- /sdl-
+  INCLUDES = -Id:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\include -ID:\rawrxd\src\masm -IC:\VulkanSDK\1.4.328.1\Include -external:I"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0
   OBJECT_DIR = CMakeFiles\test_generation.dir
   OBJECT_FILE_DIR = CMakeFiles\test_generation.dir\src\deep2
   TARGET_COMPILE_PDB = CMakeFiles\test_generation.dir\
@@ -21016,11 +21060,11 @@ build CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj: CXX_COMPILER
 #############################################
 # Link the executable bin\test_generation.exe
 
-build bin\test_generation.exe: CXX_EXECUTABLE_LINKER__test_generation_Release CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj
+build bin\test_generation.exe: CXX_EXECUTABLE_LINKER__test_generation_Release CMakeFiles\test_generation.dir\tests\test_generation.cpp.obj CMakeFiles\test_generation.dir\src\adapter\RawrXDEngineAdapter.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Engine.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2Bridge.cpp.obj CMakeFiles\test_generation.dir\src\deep2\FabricTensorTable.cpp.obj CMakeFiles\test_generation.dir\src\deep2\Deep2IDEIntegration.cpp.obj CMakeFiles\test_generation.dir\src\deep2\InferenceSession.cpp.obj | deflate_brutal_masm.obj InferenceEngine.lib quickjs_static.lib || InferenceEngine.lib quickjs_static.lib
   CONFIG = Release
   FLAGS = /DWIN32 /D_WINDOWS /W3 /utf-8 /EHsc /O2 /Ob2 /DNDEBUG -MT
   LINK_FLAGS = /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG
-  LINK_LIBRARIES = Deep2Engine.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
+  LINK_LIBRARIES = deflate_brutal_masm.obj  InferenceEngine.lib  shlwapi.lib  psapi.lib  dbghelp.lib  winhttp.lib  bcrypt.lib  advapi32.lib  crypt32.lib  quickjs_static.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   LINK_PATH = -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64
   OBJECT_DIR = CMakeFiles\test_generation.dir
   POST_BUILD = cd .
