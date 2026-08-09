@@ -1,12 +1,12 @@
-"family","path_count","paths","targets"
-"autonomousagent.cpp","2","src/sovereign/agent/AutonomousAgent.cpp | src/win32app/AutonomousAgent.cpp","src/sovereign/agent/AutonomousAgent.cpp=>SovereignTest_AutonomousAgent | src/win32app/AutonomousAgent.cpp=>RawrXD-Win32IDE"
-"deep2bridge.cpp","2","src/deep2/Deep2Bridge.cpp | src/ide/Deep2Bridge.cpp","src/deep2/Deep2Bridge.cpp=>test_generation | src/ide/Deep2Bridge.cpp=>RawrXD-Win32IDE"
-"deep2engine.cpp","2","src/deep2/Deep2Engine.cpp | src/inference/Deep2Engine.cpp","src/deep2/Deep2Engine.cpp=>Deep2_Production_Bench;test_generation | src/inference/Deep2Engine.cpp=>Deep2Engine_IntegrationTest;RawrXD-Win32IDE"
-"diskrecoveryagent.cpp","2","src/agent/DiskRecoveryAgent.cpp | src/agentic/DiskRecoveryAgent.cpp","src/agent/DiskRecoveryAgent.cpp=>RawrXD-Win32IDE | src/agentic/DiskRecoveryAgent.cpp=>RawrXD-Win32IDE"
-"feature_registry_panel.cpp","2","src/feature_registry_panel.cpp | src/win32app/feature_registry_panel.cpp","src/feature_registry_panel.cpp=>RawrXD-Win32IDE | src/win32app/feature_registry_panel.cpp=>RawrXD-Win32IDE"
-"flash_attention.cpp","2","src/core/flash_attention.cpp | src/kernels/flash_attention.cpp","src/core/flash_attention.cpp=>RawrXD-Win32IDE | src/kernels/flash_attention.cpp=>RawrXD-Benchmark"
-"hotpatcher.cpp","2","src/deep2/HotPatcher.cpp | src/sovereign/patcher/HotPatcher.cpp","src/deep2/HotPatcher.cpp=>Deep2_Production_Bench;RawrXD-Win32IDE | src/sovereign/patcher/HotPatcher.cpp=>SovereignTest_HotPatcher"
-"logger.cpp","2","src/agentic/observability/Logger.cpp | src/logging/Logger.cpp","src/agentic/observability/Logger.cpp=>RawrXD-Win32IDE | src/logging/Logger.cpp=>RawrEngine;rawrxd;RawrXD_Gold;RawrXD-TpsSmoke;RawrXD-Win32IDE;val_051_2_a_real_token"
-"missing_handler_stubs.cpp","2","/src/core/missing_handler_stubs.cpp | src/core/missing_handler_stubs.cpp","/src/core/missing_handler_stubs.cpp=>ssot_stub_lane_objs | src/core/missing_handler_stubs.cpp=>RawrXD_Gold"
-"omegapowershellbridge.cpp","2","/OmegaPowerShellBridge.cpp | src/omega1_modules/OmegaPowerShellBridge.cpp","/OmegaPowerShellBridge.cpp=>Omega1Engine | src/omega1_modules/OmegaPowerShellBridge.cpp=>test_omega1_bridge"
-"toolregistry.cpp","2","src/agentic/ToolRegistry.cpp | src/sovereign/tool/ToolRegistry.cpp","src/agentic/ToolRegistry.cpp=>RawrXD-Win32IDE | src/sovereign/tool/ToolRegistry.cpp=>SovereignTest_AutonomousAgent"
+family,path_count,paths,targets
+autonomousagent.cpp,2,src/sovereign/agent/AutonomousAgent.cpp | src/win32app/AutonomousAgent.cpp,src/sovereign/agent/AutonomousAgent.cpp=>SovereignTest_AutonomousAgent | src/win32app/AutonomousAgent.cpp=>RawrXD-Win32IDE
+deep2bridge.cpp,2,src/deep2/Deep2Bridge.cpp | src/ide/Deep2Bridge.cpp,src/deep2/Deep2Bridge.cpp=>test_generation | src/ide/Deep2Bridge.cpp=>RawrXD-Win32IDE
+deep2engine.cpp,2,src/deep2/Deep2Engine.cpp | src/inference/Deep2Engine.cpp,src/deep2/Deep2Engine.cpp=>Deep2_Production_Bench;test_generation | src/inference/Deep2Engine.cpp=>Deep2Engine_IntegrationTest;RawrXD-Win32IDE
+diskrecoveryagent.cpp,2,src/agent/DiskRecoveryAgent.cpp | src/agentic/DiskRecoveryAgent.cpp,src/agent/DiskRecoveryAgent.cpp=>RawrXD-Win32IDE | src/agentic/DiskRecoveryAgent.cpp=>RawrXD-Win32IDE
+feature_registry_panel.cpp,2,src/feature_registry_panel.cpp | src/win32app/feature_registry_panel.cpp,src/feature_registry_panel.cpp=>RawrXD-Win32IDE | src/win32app/feature_registry_panel.cpp=>RawrXD-Win32IDE
+flash_attention.cpp,2,src/core/flash_attention.cpp | src/kernels/flash_attention.cpp,src/core/flash_attention.cpp=>RawrXD-Win32IDE | src/kernels/flash_attention.cpp=>RawrXD-Benchmark
+hotpatcher.cpp,2,src/deep2/HotPatcher.cpp | src/sovereign/patcher/HotPatcher.cpp,src/deep2/HotPatcher.cpp=>Deep2_Production_Bench;RawrXD-Win32IDE | src/sovereign/patcher/HotPatcher.cpp=>SovereignTest_HotPatcher
+logger.cpp,2,src/agentic/observability/Logger.cpp | src/logging/Logger.cpp,src/agentic/observability/Logger.cpp=>RawrXD-Win32IDE | src/logging/Logger.cpp=>RawrEngine;RawrXD-TpsSmoke;RawrXD-Win32IDE;RawrXD_Gold;rawrxd;val_051_2_a_real_token
+missing_handler_stubs.cpp,2,/src/core/missing_handler_stubs.cpp | src/core/missing_handler_stubs.cpp,/src/core/missing_handler_stubs.cpp=>ssot_stub_lane_objs | src/core/missing_handler_stubs.cpp=>RawrXD_Gold
+omegapowershellbridge.cpp,2,/OmegaPowerShellBridge.cpp | src/omega1_modules/OmegaPowerShellBridge.cpp,/OmegaPowerShellBridge.cpp=>Omega1Engine | src/omega1_modules/OmegaPowerShellBridge.cpp=>test_omega1_bridge
+toolregistry.cpp,2,src/agentic/ToolRegistry.cpp | src/sovereign/tool/ToolRegistry.cpp,src/agentic/ToolRegistry.cpp=>RawrXD-Win32IDE | src/sovereign/tool/ToolRegistry.cpp=>SovereignTest_AutonomousAgent

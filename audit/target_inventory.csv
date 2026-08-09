@@ -1,84 +1,84 @@
-"target","target_type","exclude_from_all","target_family","production","line"
-"address_resolver_native","executable","true","excluded/experimental","false","6844"
-"agentic_orchestrator_smoke_test","executable","true","test","false","6692"
-"BackendOrchestratorShardSmoke","executable","true","test","false","6671"
-"benchmark_dispatch_overhead","executable","true","benchmark","false","7232"
-"benchmark_dispatch_pmc","executable","true","benchmark","false","7378"
-"benchmark_planner_amortization","executable","true","benchmark","false","7255"
-"comprehensive_dual_gpu_test","executable","true","test","false","457,460"
-"Deep2_Batch_Test","executable","true","test","false","5734"
-"Deep2_Production_Bench","executable","true","benchmark","false","5763"
-"Deep2Engine_IntegrationTest","executable","false","test","false","4997"
-"dual_gpu_smoke_test","executable","true","test","false","389,392"
-"Fix4_FlashAttention_Benchmark","executable","true","benchmark","false","6196"
-"Fix5_FusedQuantized_Benchmark","executable","true","benchmark","false","6223"
-"flame_graph_profiler","library","false","supporting production","true","7361"
-"gguf_inspector","executable","true","excluded/experimental","false","440,443"
-"InferenceEngine","library","false","supporting production","true","3394"
-"nevm_determinism_validation","executable","true","test","false","7300"
-"nevm_stress_test","executable","true","test","false","7324"
-"Omega1Engine","library","false","supporting production","true","1889"
-"pmc_profiler","library","false","supporting production","true","7347"
-"q4_preprocessed_avx512","library","false","supporting production","true","7164"
-"quickjs_static","library","false","supporting production","true","5212"
-"RawrEngine","executable","false","shipped/product","true","1967"
-"rawrxd","executable","true","excluded/experimental","false","222,252,6764"
-"RawrXD_Compression","library","false","supporting production","true","1919"
-"RawrXD_DynamicPromptEngine","library","false","supporting production","true","4528"
-"RawrXD_Gold","executable","false","shipped/product","true","2263"
-"RawrXD_LSPServer","executable","false","supporting production","true","6930"
-"RawrXD_MultiWindow_Kernel","library","false","supporting production","true","4486"
-"RawrXD_NanoQuant","library","false","supporting production","true","3220"
-"RawrXD-AutoFixCLI","executable","false","supporting production","true","6051"
-"RawrXD-Benchmark","executable","true","benchmark","false","6083"
-"RawrXD-Crypto","library","false","supporting production","true","5520"
-"RawrXD-FusedBenchmark","executable","true","benchmark","false","6128"
-"RawrXD-Generate","executable","true","excluded/experimental","false","3410"
-"RawrXD-GoldenRecoveryTests","executable","true","test","false","6723"
-"RawrXD-InferenceEngine","executable","true","excluded/experimental","false","3398"
-"RawrXD-InferenceRoutingTest","executable","false","test","false","6020"
-"RawrXD-KVBenchmark","executable","true","benchmark","false","6159"
-"RawrXD-ModelAnalysis","executable","true","excluded/experimental","false","6615"
-"RawrXD-ModelAnalysisLib","library","true","excluded/experimental","false","6594"
-"rawrxd-monaco-gen","executable","false","supporting production","true","3541"
-"RawrXD-SoloIDE","executable","false","supporting production","true","7471"
-"RawrXD-TpsSmoke","executable","true","benchmark","false","6559"
-"RawrXD-Win32IDE","executable","false","shipped/product","true","5079"
-"RawrXDScriptDAPAdapter","executable","false","supporting production","true","6958"
-"SovereignTest_AntiHallucination","executable","true","test","false","5951"
-"SovereignTest_AutonomousAgent","executable","true","test","false","5901"
-"SovereignTest_HotPatcher","executable","true","test","false","5869"
-"SovereignTest_PatchRegistry","executable","true","test","false","5838"
-"SovereignTest_Suite","executable","true","test","false","5674"
-"SovereignTest_VAL038_E2E","executable","true","test","false","5705"
-"ssot_stub_lane_objs","library","false","supporting production","true","5589"
-"stress_memory","executable","true","excluded/experimental","false","7064"
-"stress_target","executable","true","excluded/experimental","false","7056"
-"SwarmSmokeTest","executable","true","test","false","6649"
-"test_autonomous_pipeline","executable","false","test","false","6037"
-"test_generation","executable","false","test","false","7488"
-"test_omega1_bridge","executable","true","test","false","508,512"
-"test_q4_asm_debug","executable","true","test","false","7141"
-"test_q4_cache_alignment","executable","true","test","false","7120"
-"test_q4_fused_pipeline","executable","true","test","false","7099"
-"test_q4_scalar_simd","executable","true","test","false","7185"
-"test_simulator","executable","true","test","false","7077"
-"TestDebugBridgeTelemetry","executable","true","test","false","7009"
-"TestMASMInference","executable","true","test","false","7021"
-"TestSovereignBridge","executable","true","test","false","6987"
-"tree_attention_aligned","executable","true","excluded/experimental","false","6350"
-"tree_attention_bench_simple","executable","true","benchmark","false","6305"
-"tree_attention_fused_sparse","executable","true","excluded/experimental","false","6438"
-"tree_attention_masm_val038","executable","true","excluded/experimental","false","6483"
-"tree_attention_profiled","executable","true","excluded/experimental","false","6328"
-"tree_attention_sparse","executable","true","excluded/experimental","false","6416"
-"tree_attention_tiled","executable","true","excluded/experimental","false","6372"
-"tree_attention_tree_specialized","executable","true","excluded/experimental","false","6460"
-"tree_attention_vectorized","executable","true","excluded/experimental","false","6394"
-"val_051_2_a_real_token","executable","true","excluded/experimental","false","321,337"
-"VAL032_AVX512_Benchmark","executable","true","benchmark","false","6277"
-"VAL032_SpeculativeDecoding_Benchmark","executable","true","benchmark","false","6250"
-"VAL038_FusedAttention_Benchmark","executable","true","benchmark","false","6509"
-"VAL038_Validation_Benchmark","executable","true","benchmark","false","6535"
-"validate_end_to_end","executable","true","excluded/experimental","false","7276"
-"witness_system_test","executable","true","test","false","7214"
+target,target_type,exclude_from_all,target_family,production,line
+address_resolver_native,executable,true,excluded/experimental,false,6844
+agentic_orchestrator_smoke_test,executable,true,test,false,6692
+BackendOrchestratorShardSmoke,executable,true,test,false,6671
+benchmark_dispatch_overhead,executable,true,benchmark,false,7239
+benchmark_dispatch_pmc,executable,true,benchmark,false,7385
+benchmark_planner_amortization,executable,true,benchmark,false,7262
+comprehensive_dual_gpu_test,executable,true,test,false,"457,460"
+Deep2_Batch_Test,executable,true,test,false,5734
+Deep2_Production_Bench,executable,true,benchmark,false,5763
+Deep2Engine_IntegrationTest,executable,false,test,false,4997
+dual_gpu_smoke_test,executable,true,test,false,"389,392"
+Fix4_FlashAttention_Benchmark,executable,true,benchmark,false,6196
+Fix5_FusedQuantized_Benchmark,executable,true,benchmark,false,6223
+flame_graph_profiler,library,false,supporting production,true,7368
+gguf_inspector,executable,true,excluded/experimental,false,"440,443"
+InferenceEngine,library,false,supporting production,true,3394
+nevm_determinism_validation,executable,true,test,false,7307
+nevm_stress_test,executable,true,test,false,7331
+Omega1Engine,library,false,supporting production,true,1889
+pmc_profiler,library,false,supporting production,true,7354
+q4_preprocessed_avx512,library,false,supporting production,true,7171
+quickjs_static,library,false,supporting production,true,5212
+RawrEngine,executable,false,shipped/product,true,1967
+rawrxd,executable,true,excluded/experimental,false,"222,252,6764"
+RawrXD-AutoFixCLI,executable,false,supporting production,true,6051
+RawrXD-Benchmark,executable,true,benchmark,false,6083
+RawrXD-Crypto,library,false,supporting production,true,5520
+RawrXD-FusedBenchmark,executable,true,benchmark,false,6128
+RawrXD-Generate,executable,true,excluded/experimental,false,3410
+RawrXD-GoldenRecoveryTests,executable,true,test,false,6723
+RawrXD-InferenceEngine,executable,true,excluded/experimental,false,3398
+RawrXD-InferenceRoutingTest,executable,false,test,false,6020
+RawrXD-KVBenchmark,executable,true,benchmark,false,6159
+RawrXD-ModelAnalysis,executable,true,excluded/experimental,false,6615
+RawrXD-ModelAnalysisLib,library,true,excluded/experimental,false,6594
+rawrxd-monaco-gen,executable,false,supporting production,true,3541
+RawrXD-SoloIDE,executable,false,supporting production,true,7478
+RawrXD-TpsSmoke,executable,true,benchmark,false,6559
+RawrXD-Win32IDE,executable,false,shipped/product,true,5079
+RawrXD_Compression,library,false,supporting production,true,1919
+RawrXD_DynamicPromptEngine,library,false,supporting production,true,4528
+RawrXD_Gold,executable,false,shipped/product,true,2263
+RawrXD_LSPServer,executable,false,supporting production,true,6930
+RawrXD_MultiWindow_Kernel,library,false,supporting production,true,4486
+RawrXD_NanoQuant,library,false,supporting production,true,3220
+RawrXDScriptDAPAdapter,executable,false,supporting production,true,6958
+SovereignTest_AntiHallucination,executable,true,test,false,5951
+SovereignTest_AutonomousAgent,executable,true,test,false,5901
+SovereignTest_HotPatcher,executable,true,test,false,5869
+SovereignTest_PatchRegistry,executable,true,test,false,5838
+SovereignTest_Suite,executable,true,test,false,5674
+SovereignTest_VAL038_E2E,executable,true,test,false,5705
+ssot_stub_lane_objs,library,false,supporting production,true,5589
+stress_memory,executable,true,excluded/experimental,false,7071
+stress_target,executable,true,excluded/experimental,false,7063
+SwarmSmokeTest,executable,true,test,false,6649
+test_autonomous_pipeline,executable,false,test,false,6037
+test_generation,executable,false,test,false,7495
+test_omega1_bridge,executable,true,test,false,"508,512"
+test_q4_asm_debug,executable,true,test,false,7148
+test_q4_cache_alignment,executable,true,test,false,7127
+test_q4_fused_pipeline,executable,true,test,false,7106
+test_q4_scalar_simd,executable,true,test,false,7192
+test_simulator,executable,true,test,false,7084
+TestDebugBridgeTelemetry,executable,true,test,false,7016
+TestMASMInference,executable,true,test,false,7028
+TestSovereignBridge,executable,true,test,false,6994
+tree_attention_aligned,executable,true,excluded/experimental,false,6350
+tree_attention_bench_simple,executable,true,benchmark,false,6305
+tree_attention_fused_sparse,executable,true,excluded/experimental,false,6438
+tree_attention_masm_val038,executable,true,excluded/experimental,false,6483
+tree_attention_profiled,executable,true,excluded/experimental,false,6328
+tree_attention_sparse,executable,true,excluded/experimental,false,6416
+tree_attention_tiled,executable,true,excluded/experimental,false,6372
+tree_attention_tree_specialized,executable,true,excluded/experimental,false,6460
+tree_attention_vectorized,executable,true,excluded/experimental,false,6394
+VAL032_AVX512_Benchmark,executable,true,benchmark,false,6277
+VAL032_SpeculativeDecoding_Benchmark,executable,true,benchmark,false,6250
+VAL038_FusedAttention_Benchmark,executable,true,benchmark,false,6509
+VAL038_Validation_Benchmark,executable,true,benchmark,false,6535
+val_051_2_a_real_token,executable,true,excluded/experimental,false,"321,337"
+validate_end_to_end,executable,true,excluded/experimental,false,7283
+witness_system_test,executable,true,test,false,7221
