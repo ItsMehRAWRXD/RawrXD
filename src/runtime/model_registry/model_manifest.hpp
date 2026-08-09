@@ -23,14 +23,7 @@ struct ModelManifest {
     bool supports_hip;
 
     // Constructor
-    ModelManifest() : 
-        parameter_count(0), 
-        context_length(0), 
-        file_size(0), 
-        required_vram(0),
-        supports_gpu(false),
-        supports_vulkan(false),
-        supports_hip(false) {}
+    ModelManifest();
 
     // Constructor with parameters
     ModelManifest(
@@ -45,17 +38,7 @@ struct ModelManifest {
         bool supports_gpu,
         bool supports_vulkan,
         bool supports_hip
-    ) : name(name),
-        path(path),
-        architecture(architecture),
-        quantization(quantization),
-        parameter_count(parameter_count),
-        context_length(context_length),
-        file_size(file_size),
-        required_vram(required_vram),
-        supports_gpu(supports_gpu),
-        supports_vulkan(supports_vulkan),
-        supports_hip(supports_hip) {}
+    );
 };
 
 } // namespace runtime

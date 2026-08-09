@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 #include "../model_registry/model_registry.hpp"
 #include "../session/session_manager.hpp"
 #include "../router/model_router.hpp"

@@ -24,12 +24,7 @@ add_library(rawrxd_runtime STATIC
     router/task_classifier.cpp
     router/model_router.cpp
     cli/runtime_cli.cpp
-    main.cpp
-    test_runtime.cpp
-    rawrxd_model_api.cpp
     RuntimeContract.cpp
-    RuntimeIntegration.cpp
-    RuntimeProvider.cpp
     RuntimeTypes.hpp
     CoreTypes.hpp
     LayerVersionRegistry.hpp
@@ -50,4 +45,4 @@ target_include_directories(rawrxd_runtime PRIVATE
 # target_link_libraries(rawxd_runtime PRIVATE ...)
 
 # Set C++ standard
-target_compile_features(rawxd_runtime PRIVATE cxx_std_17)
+target_compile_features(rawrxd_runtime PRIVATE cxx_std_17)

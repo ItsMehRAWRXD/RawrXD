@@ -6976,6 +6976,13 @@ if(RAWRXD_BUILD_DAP_ADAPTER AND EXISTS "${CMAKE_SOURCE_DIR}/src/script/debug/min
     message(STATUS "[DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter")
 endif()
 
+# ============================================================================
+# Runtime Component (Predictive Memory / Placement)
+# ============================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/runtime/CMakeLists.txt")
+    add_subdirectory(src/runtime)
+endif()
+
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)

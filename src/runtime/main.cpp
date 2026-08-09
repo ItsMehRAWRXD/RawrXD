@@ -43,13 +43,13 @@ int main(int argc, char* argv[]) {
             std::string arg = argv[i];
             if (!cli.processCommand(arg)) {
                 std::cerr << "Unknown command: " << arg << std::endl;
-                cli.helpCommand();
+                cli.handleHelpCommand();
                 return 1;
             }
         }
     } else {
         // No arguments, show help
-        cli.helpCommand();
+        cli.handleHelpCommand();
     }
     
     std::cout << "RawrXD Runtime Shutting Down..." << std::endl;

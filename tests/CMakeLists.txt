@@ -515,6 +515,32 @@ if(NOT TARGET test_model_loader_streamer_smoke AND EXISTS "${CMAKE_CURRENT_SOURC
     message(STATUS "  ✓ Added test_model_loader_streamer_smoke")
 endif()
 
+# Predictive memory subsystem deterministic validation.
+# This target intentionally compiles the seven subsystem implementations directly
+# so the compile/link gate is isolated from inference-path wiring.
+if(NOT TARGET test_predictive_memory_subsystem AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_predictive_memory_subsystem.cpp")
+    add_executable(test_predictive_memory_subsystem
+        test_predictive_memory_subsystem.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/PlacementPolicy.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/ResidencyTracker.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/WorkingSetPredictor.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/CapacityManager.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/TransferScheduler.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/TensorPlacementManager.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/PredictiveMemoryManager.cpp
+    )
+    target_include_directories(test_predictive_memory_subsystem PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    set_target_properties(test_predictive_memory_subsystem PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        CXX_STANDARD 20
+    )
+    add_test(NAME test_predictive_memory_subsystem COMMAND test_predictive_memory_subsystem)
+    message(STATUS "  ✓ Added test_predictive_memory_subsystem")
+endif()
+
 # Core Smoke Test (minimal, no dependencies)
 if(NOT TARGET smoke_core AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/smoke_core.cpp")
     add_executable(smoke_core smoke_core.cpp)

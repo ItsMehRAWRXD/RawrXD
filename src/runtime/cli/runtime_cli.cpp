@@ -123,7 +123,7 @@ bool RuntimeCLI::processCommand(const std::string& command) {
         handleSessionTestCommand();
         return true;
     } else if (command == "--help") {
-        helpCommand();
+        handleHelpCommand();
         return true;
     } else {
         std::cout << "Unknown command: " << command << std::endl;
