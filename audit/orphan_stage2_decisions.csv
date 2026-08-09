@@ -1,0 +1,7 @@
+bucket,estimated_count,decision_basis,action
+KEEP,800,Generated/runtime-loaded or nested-build referenced,Retain and document ownership
+AUXILIARY,1100,Benchmark/cert/test/experimental infrastructure,Keep outside shipped targets
+PROMOTE,400,Implementation candidates likely required by production architecture,Create explicit target wiring proposals
+MERGE,600,Duplicate or parallel implementation families,Resolve canonical source per subsystem
+DEPRECATE,1200,Obsolete/archived/example-only or demonstrably stale artifacts,Archive then remove in gated batches
+REQUIRES_INVESTIGATION,1379,Insufficient evidence from static graph alone,Perform symbol and include graph review
