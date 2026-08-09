@@ -112,14 +112,14 @@ public:
     __forceinline bool RouteToken(uint32_t stream_id, uint32_t token,
                                    uint64_t cycle) noexcept {
         const StreamLoc* loc = hop_cache_.Resolve(stream_id);
-        if (__builtin_expect(loc == nullptr, 0)) return false;
+        if (loc == nullptr) return false;
 
         // Write token to ring buffer
         StreamLoc* mutable_loc = const_cast<StreamLoc*>(loc);
         uint32_t head = mutable_loc->buffer_head;
         uint32_t next = (head + 1) & mutable_loc->buffer_cap;
 
-        if (__builtin_expect(next == mutable_loc->buffer_tail, 0)) {
+        if (next == mutable_loc->buffer_tail) {
             return false; // buffer full — backpressure
         }
 

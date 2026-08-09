@@ -6,7 +6,6 @@
 #pragma once
 
 #include "Deep2Engine.h"
-#include "Deep2Discovery.h"
 #include <string>
 #include <functional>
 #include <map>

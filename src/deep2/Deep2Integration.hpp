@@ -10,6 +10,7 @@
 #include <memory>
 #include <functional>
 #include <map>
+#include <cstdint>
 
 namespace Deep2 {
 

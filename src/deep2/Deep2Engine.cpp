@@ -11,7 +11,6 @@
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
 #include "QuantKernelRegistry.hpp"
-#include "QuantKernelRegistryHooks.h"
 #include "MedusaDecoder.hpp"
 #include "NUFusedPacker.hpp"
 #include "WarmupScheduler.hpp"
@@ -20,14 +19,6 @@
 #include "SlidingWindowEngine.h"
 #include "MoEWeightsLoader.hpp"  // Complete type for unique_ptr destructor / Close()
 #include "HotPatcher.hpp"        // The Bottle - Runtime code modification
-#include "EOSShortCircuit.h"
-#include "LogitsSafety.h"
-#include "StreamingYieldController.h"
-#include "KVCachePadder.h"
-#include "RoPECacheOptimizer.h"
-#include "AVXShadowBuffer.h"
-#include "TensorNameHash.h"
-#include "MoEWeightPinner.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -572,26 +563,6 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     } else {
         printf("[Deep2Engine] HotPatcher initialized - The Bottle is ready\n");
     }
-
-    // Batch 1 Blockers: Initialize runtime components
-    // Initialize QuantKernelRegistry hooks
-    QuantKernelRegistryHooks::Instance().InitializeBuiltins();
-    printf("[Deep2Engine] QuantKernelRegistry: %zu dequant, %zu GEMV handlers registered\n",
-           QuantKernelRegistryHooks::Instance().GetDequantCount(),
-           QuantKernelRegistryHooks::Instance().GetGEMVCount());
-
-    // Initialize EOS short-circuit (default EOS token = 2)
-    eosShortCircuit_.SetEOSToken(2);
-    eosShortCircuit_.SetMode(EOSMode::STANDARD);
-    printf("[Deep2Engine] EOS short-circuit initialized (token=2)\n");
-
-    // Initialize streaming yield controller (1 token per yield)
-    yieldController_.SetTokensPerYield(1);
-    printf("[Deep2Engine] Streaming yield controller initialized (1 token/yield)\n");
-
-    // Initialize MoE weight pinner (max 8GB pinned)
-    moeWeightPinner_.SetMaxPinnedBytes(8ULL * 1024 * 1024 * 1024);
-    printf("[Deep2Engine] MoE weight pinner initialized (max 8GB)\n");
 
     initialized = true;
     printf("[Deep2Engine] Initialization complete\n");
@@ -1298,10 +1269,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Compute logits: lm_head * hiddenState
         computeLogits(layerInput, logits);
 
-        // Blocker #25: Constrain logits before sampler injection
-        LogitsSafety::ClampLogits(logits, config.vocabSize);
-        LogitsSafety::ApplyTemperatureSafe(logits, config.vocabSize, 1.0f);
-
         // Sample next token
         int nextToken = sampleToken(logits);
         outputTokens[tokensGenerated] = nextToken;
@@ -1311,11 +1278,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             if (!onToken(nextToken)) {
                 break;
             }
-        }
-
-        // Blocker #24: Streaming yield control
-        if (yieldController_.ShouldYield()) {
-            yieldController_.WaitIfNeeded();
         }
 
         // Embed the new token for next iteration
@@ -1334,10 +1296,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             reverseIntegration_->onTokenGenerated(static_cast<uint64_t>(nextToken), &tokenByte, 1);
         }
 
-        // Blocker #22: EOS short-circuit with proper termination
-        if (eosShortCircuit_.ShouldStop(nextToken, tokensGenerated, maxOutputLen)) {
-            printf("[Deep2Engine] EOS detected at token %zu (tokenId=%d)\n",
-                   tokensGenerated, nextToken);
+        // Check for EOS
+        if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId) {
             break;
         }
     }
@@ -1698,7 +1658,7 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input,
 }
 
 // ============================================================================
-// Compute Logits - Real lm_head projection with AVX alignment safety
+// Compute Logits - Real lm_head projection
 // ============================================================================
 void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
     if (!modelWeights.loaded || !modelWeights.lmHead.data) {
@@ -1707,15 +1667,8 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
         return;
     }
 
-    // Blocker #26: Use AVX shadow buffer for misaligned tensor data
-    const float* alignedHidden = hiddenState;
-    if (!AVXShadowBuffer::Is64ByteAligned(hiddenState)) {
-        alignedHidden = avxShadowBuffer_.GetAlignedShadow(
-            0xFFFFFFFF, hiddenState, config.hiddenDim);
-    }
-
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
-    LinearW(modelWeights.lmHead, alignedHidden, nullptr, logits, config.vocabSize);
+    LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
 }
 
 // ============================================================================

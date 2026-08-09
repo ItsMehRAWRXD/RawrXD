@@ -1,80 +1,806 @@
-RawrXD Decode MicroBench
-model=F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
-ctx=512 n=4 threads=1 runs=1
-[run 1] loading model: F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
-[CPUInferenceEngine] Loading model: F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
-[CPUInferenceEngine] Stage: initialize backend (GPU will be attempted first, with CPU fallback)
-[RawrXD] CPU-only mode (Vulkan disabled)
-[RawrXD] Stage: loader.Load
-[RawrXD] Loading model from: F:\models\Qwen2.5-Coder-32B-Instruct-Q4_K_M.gguf
-[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...
-[RawrXD] Policy bypass interceptor disabled: runtime binary patching is not permitted
-[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)
-[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction
-[RawrXD][BACKEND] backend=cpu-only result=ok reason=cpu fallback verified
-[RawrXD] ⚡ SOVEREIGN APERTURE: Reserved 4096 MB placeholder window (zero commit)
-[VMM] SeLockMemoryPrivilege not held; Large Pages disabled (falling back).
-[RawrXD] Stage: parse_header_metadata
-[RawrXD] ⚡ SOVEREIGN WINDOW 0-4 GB: Mapped 4096 MB at 0000020D858B0000 (2000+ TPS ready)
-[DEBUG] String key: general.architecture, value length: 5
-[DEBUG] String key: general.type, value length: 5
-[DEBUG] String key: general.name, value length: 26
-[DEBUG] String key: general.finetune, value length: 8
-[DEBUG] String key: general.basename, value length: 13
-[DEBUG] String key: general.size_label, value length: 3
-[DEBUG] String key: general.license, value length: 10
-[DEBUG] String key: general.license.link, value length: 72
-[DEBUG] Scalar key: general.base_model.count, type: 4, value: 1
-[DEBUG] String key: general.base_model.0.name, value length: 17
-[DEBUG] String key: general.base_model.0.organization, value length: 4
-[DEBUG] String key: general.base_model.0.repo_url, value length: 45
-[DEBUG] Scalar key: qwen2.block_count, type: 4, value: 64
-[DEBUG] Scalar key: qwen2.context_length, type: 4, value: 32768
-[DEBUG] Scalar key: qwen2.embedding_length, type: 4, value: 5120
-[DEBUG] Scalar key: qwen2.feed_forward_length, type: 4, value: 27648
-[DEBUG] Scalar key: qwen2.attention.head_count, type: 4, value: 40
-[DEBUG] Scalar key: qwen2.attention.head_count_kv, type: 4, value: 8
-[DEBUG] Scalar key: general.file_type, type: 4, value: 15
-[DEBUG] String key: tokenizer.ggml.model, value length: 4
-[DEBUG] String key: tokenizer.ggml.pre, value length: 5
-[DEBUG] tokenizer.ggml.tokens: atype=8, Alen=152064
-[DEBUG] Reserved 152064 for vocab
-[DEBUG] Scalar key: tokenizer.ggml.eos_token_id, type: 4, value: 151645
-[DEBUG] Scalar key: tokenizer.ggml.padding_token_id, type: 4, value: 151643
-[DEBUG] Scalar key: tokenizer.ggml.bos_token_id, type: 4, value: 151643
-[DEBUG] String key: tokenizer.chat_template, value length: 2507
-[DEBUG] Scalar key: general.quantization_version, type: 4, value: 2
-[DEBUG] String key: quantize.imatrix.file, value length: 78
-[DEBUG] String key: quantize.imatrix.dataset, value length: 36
-[DEBUG] Scalar key: quantize.imatrix.entries_count, type: 5, value: 448
-[DEBUG] Scalar key: quantize.imatrix.chunks_count, type: 5, value: 128
-[DEBUG] Fallback: set vocab_size to vocab.size() = 152064
-[DEBUG] Final: vocab_size=152064, vocab.size()=152064
-[RawrXD] Stage: parse_tensor_index tensor_count=771
-[RawrXD] Stage: tensor_materialization mode=lazy tensor_count=771 indexed_storage=18.48 GB
-[RawrXD] Data starts at offset 5979104
-[RawrXD] Stage: build_tensor_lookup_map
-[RawrXD] Model loaded successfully. VRAM used: 0.00 GB
-[RawrXD] Config: dim=5120, layers=64, heads=40, kv_heads=8, vocab=152064, ctx=32768, experts=0, experts_used=0
-[RawrXD] Tensor names in model (771 total):
-  [  0] type=12 dims=5120 1024 blk.16.attn_k.weight
-  [  1] type=0 dims=5120 blk.0.attn_q.bias
-  [  2] type=12 dims=5120 27648 blk.59.ffn_up.weight
-  [  3] type=14 dims=5120 152064 output.weight
-  [  4] type=0 dims=5120 output_norm.weight
-  [  5] type=12 dims=5120 5120 blk.6.attn_output.weight
-  [  6] type=12 dims=5120 27648 blk.10.ffn_gate.weight
-  [  7] type=0 dims=5120 blk.3.attn_q.bias
-  [  8] type=12 dims=5120 152064 token_embd.weight
-  [  9] type=14 dims=27648 5120 blk.22.ffn_down.weight
-  [ 10] type=12 dims=5120 5120 blk.19.attn_output.weight
-  [ 11] type=12 dims=5120 5120 blk.2.attn_output.weight
-  [ 12] type=0 dims=5120 blk.2.ffn_norm.weight
-  [ 13] type=0 dims=5120 blk.19.ffn_norm.weight
-  [ 14] type=0 dims=5120 blk.47.attn_norm.weight
-  [ 15] type=0 dims=1024 blk.2.attn_v.bias
-  ... (755 more)
-[RawrXD] Page pre-touch thread launched (4096 MB in background)
-[RawrXD] Config: dim=5120 layers=64 heads=40 kv_heads=8 vocab=152064 hidden=27648 ctx=2048
-[RawrXD] Stage: tokenizer.Load
-[Tokenizer] Loaded 152064 vocabulary entries from GGUF
+========================================
+Deep2 Production Benchmark
+Real Model: F:\OllamaModels\BigDaddyG-Q2_K-ULTRA.gguf
+========================================
+
+[INFO] CPU Features:
+       AVX2:    YES
+       AVX512:  YES
+
+[1/5] Loading model metadata: F:\OllamaModels\BigDaddyG-Q2_K-ULTRA.gguf
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 8192
+  Num Layers: 80
+  Num Heads: 64
+  Max Seq Len: 4096
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Initializing: 80 layers, 4096 max seq, 64 heads, 128 dim
+[KVCache] Total cache size: 20480.00 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[Deep2Engine] QuantKernelRegistry: 11 dequant, 11 GEMV handlers registered
+[Deep2Engine] EOS short-circuit initialized (token=2)
+[Deep2Engine] Streaming yield controller initialized (1 token/yield)
+[Deep2Engine] MoE weight pinner initialized (max 8GB)
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: F:\OllamaModels\BigDaddyG-Q2_K-ULTRA.gguf
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[GGUF] WARNING: Tensor 'output.weight' offset not 64-byte aligned: 1741024
+[GGUF] WARNING: Tensor 'output_norm.weight' offset not 64-byte aligned: 216781024
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 216813792
+[GGUF] WARNING: Tensor 'blk.0.attn_k.weight' offset not 64-byte aligned: 302829792
+[GGUF] WARNING: Tensor 'blk.0.attn_norm.weight' offset not 64-byte aligned: 305582304
+[GGUF] WARNING: Tensor 'blk.0.attn_output.weight' offset not 64-byte aligned: 305615072
+[GGUF] WARNING: Tensor 'blk.0.attn_q.weight' offset not 64-byte aligned: 334450912
+[GGUF] WARNING: Tensor 'blk.0.attn_v.weight' offset not 64-byte aligned: 356471008
+[GGUF] WARNING: Tensor 'blk.0.ffn_down.weight' offset not 64-byte aligned: 362238176
+[GGUF] WARNING: Tensor 'blk.0.ffn_gate.weight' offset not 64-byte aligned: 463163616
+[GGUF] WARNING: Tensor 'blk.0.ffn_norm.weight' offset not 64-byte aligned: 540233952
+[GGUF] WARNING: Tensor 'blk.0.ffn_up.weight' offset not 64-byte aligned: 540266720
+[GGUF] WARNING: Tensor 'blk.1.attn_k.weight' offset not 64-byte aligned: 617337056
+[GGUF] WARNING: Tensor 'blk.1.attn_norm.weight' offset not 64-byte aligned: 620089568
+[GGUF] WARNING: Tensor 'blk.1.attn_output.weight' offset not 64-byte aligned: 620122336
+[GGUF] WARNING: Tensor 'blk.1.attn_q.weight' offset not 64-byte aligned: 648958176
+[GGUF] WARNING: Tensor 'blk.1.attn_v.weight' offset not 64-byte aligned: 670978272
+[GGUF] WARNING: Tensor 'blk.1.ffn_down.weight' offset not 64-byte aligned: 676745440
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate.weight' offset not 64-byte aligned: 777670880
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 854741216
+[GGUF] WARNING: Tensor 'blk.1.ffn_up.weight' offset not 64-byte aligned: 854773984
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 931844320
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 934596832
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 934629600
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 963465440
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 985485536
+[GGUF] WARNING: Tensor 'blk.2.ffn_down.weight' offset not 64-byte aligned: 991252704
+[GGUF] WARNING: Tensor 'blk.2.ffn_gate.weight' offset not 64-byte aligned: 1092178144
+[GGUF] WARNING: Tensor 'blk.2.ffn_norm.weight' offset not 64-byte aligned: 1169248480
+[GGUF] WARNING: Tensor 'blk.2.ffn_up.weight' offset not 64-byte aligned: 1169281248
+[GGUF] WARNING: Tensor 'blk.3.attn_k.weight' offset not 64-byte aligned: 1246351584
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 1249104096
+[GGUF] WARNING: Tensor 'blk.3.attn_output.weight' offset not 64-byte aligned: 1249136864
+[GGUF] WARNING: Tensor 'blk.3.attn_q.weight' offset not 64-byte aligned: 1277972704
+[GGUF] WARNING: Tensor 'blk.3.attn_v.weight' offset not 64-byte aligned: 1299992800
+[GGUF] WARNING: Tensor 'blk.3.ffn_down.weight' offset not 64-byte aligned: 1305759968
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate.weight' offset not 64-byte aligned: 1406685408
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 1483755744
+[GGUF] WARNING: Tensor 'blk.3.ffn_up.weight' offset not 64-byte aligned: 1483788512
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 1560858848
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 1563611360
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 1563644128
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 1592479968
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 1614500064
+[GGUF] WARNING: Tensor 'blk.4.ffn_down.weight' offset not 64-byte aligned: 1620267232
+[GGUF] WARNING: Tensor 'blk.4.ffn_gate.weight' offset not 64-byte aligned: 1721192672
+[GGUF] WARNING: Tensor 'blk.4.ffn_norm.weight' offset not 64-byte aligned: 1798263008
+[GGUF] WARNING: Tensor 'blk.4.ffn_up.weight' offset not 64-byte aligned: 1798295776
+[GGUF] WARNING: Tensor 'blk.5.attn_k.weight' offset not 64-byte aligned: 1875366112
+[GGUF] WARNING: Tensor 'blk.5.attn_norm.weight' offset not 64-byte aligned: 1878118624
+[GGUF] WARNING: Tensor 'blk.5.attn_output.weight' offset not 64-byte aligned: 1878151392
+[GGUF] WARNING: Tensor 'blk.5.attn_q.weight' offset not 64-byte aligned: 1906987232
+[GGUF] WARNING: Tensor 'blk.5.attn_v.weight' offset not 64-byte aligned: 1929007328
+[GGUF] WARNING: Tensor 'blk.5.ffn_down.weight' offset not 64-byte aligned: 1934774496
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate.weight' offset not 64-byte aligned: 2035699936
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 2112770272
+[GGUF] WARNING: Tensor 'blk.5.ffn_up.weight' offset not 64-byte aligned: 2112803040
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 2189873376
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 2192625888
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 2192658656
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 2221494496
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 2243514592
+[GGUF] WARNING: Tensor 'blk.6.ffn_down.weight' offset not 64-byte aligned: 2249281760
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate.weight' offset not 64-byte aligned: 2350207200
+[GGUF] WARNING: Tensor 'blk.6.ffn_norm.weight' offset not 64-byte aligned: 2427277536
+[GGUF] WARNING: Tensor 'blk.6.ffn_up.weight' offset not 64-byte aligned: 2427310304
+[GGUF] WARNING: Tensor 'blk.7.attn_k.weight' offset not 64-byte aligned: 2504380640
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 2507133152
+[GGUF] WARNING: Tensor 'blk.7.attn_output.weight' offset not 64-byte aligned: 2507165920
+[GGUF] WARNING: Tensor 'blk.7.attn_q.weight' offset not 64-byte aligned: 2536001760
+[GGUF] WARNING: Tensor 'blk.7.attn_v.weight' offset not 64-byte aligned: 2558021856
+[GGUF] WARNING: Tensor 'blk.7.ffn_down.weight' offset not 64-byte aligned: 2563789024
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate.weight' offset not 64-byte aligned: 2664714464
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 2741784800
+[GGUF] WARNING: Tensor 'blk.7.ffn_up.weight' offset not 64-byte aligned: 2741817568
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 2818887904
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 2821640416
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 2821673184
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 2850509024
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 2872529120
+[GGUF] WARNING: Tensor 'blk.8.ffn_down.weight' offset not 64-byte aligned: 2878296288
+[GGUF] WARNING: Tensor 'blk.8.ffn_gate.weight' offset not 64-byte aligned: 2979221728
+[GGUF] WARNING: Tensor 'blk.8.ffn_norm.weight' offset not 64-byte aligned: 3056292064
+[GGUF] WARNING: Tensor 'blk.8.ffn_up.weight' offset not 64-byte aligned: 3056324832
+[GGUF] WARNING: Tensor 'blk.9.attn_k.weight' offset not 64-byte aligned: 3133395168
+[GGUF] WARNING: Tensor 'blk.9.attn_norm.weight' offset not 64-byte aligned: 3136147680
+[GGUF] WARNING: Tensor 'blk.9.attn_output.weight' offset not 64-byte aligned: 3136180448
+[GGUF] WARNING: Tensor 'blk.9.attn_q.weight' offset not 64-byte aligned: 3165016288
+[GGUF] WARNING: Tensor 'blk.9.attn_v.weight' offset not 64-byte aligned: 3187036384
+[GGUF] WARNING: Tensor 'blk.9.ffn_down.weight' offset not 64-byte aligned: 3192803552
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate.weight' offset not 64-byte aligned: 3293728992
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 3370799328
+[GGUF] WARNING: Tensor 'blk.9.ffn_up.weight' offset not 64-byte aligned: 3370832096
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 3447902432
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 3450654944
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 3450687712
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 3479523552
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 3501543648
+[GGUF] WARNING: Tensor 'blk.10.ffn_down.weight' offset not 64-byte aligned: 3507310816
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate.weight' offset not 64-byte aligned: 3608236256
+[GGUF] WARNING: Tensor 'blk.10.ffn_norm.weight' offset not 64-byte aligned: 3685306592
+[GGUF] WARNING: Tensor 'blk.10.ffn_up.weight' offset not 64-byte aligned: 3685339360
+[GGUF] WARNING: Tensor 'blk.11.attn_k.weight' offset not 64-byte aligned: 3762409696
+[GGUF] WARNING: Tensor 'blk.11.attn_norm.weight' offset not 64-byte aligned: 3765162208
+[GGUF] WARNING: Tensor 'blk.11.attn_output.weight' offset not 64-byte aligned: 3765194976
+[GGUF] WARNING: Tensor 'blk.11.attn_q.weight' offset not 64-byte aligned: 3794030816
+[GGUF] WARNING: Tensor 'blk.11.attn_v.weight' offset not 64-byte aligned: 3816050912
+[GGUF] WARNING: Tensor 'blk.11.ffn_down.weight' offset not 64-byte aligned: 3821818080
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate.weight' offset not 64-byte aligned: 3922743520
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 3999813856
+[GGUF] WARNING: Tensor 'blk.11.ffn_up.weight' offset not 64-byte aligned: 3999846624
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 4076916960
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 4079669472
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 4079702240
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 4108538080
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 4130558176
+[GGUF] WARNING: Tensor 'blk.12.ffn_down.weight' offset not 64-byte aligned: 4136325344
+[GGUF] WARNING: Tensor 'blk.12.ffn_gate.weight' offset not 64-byte aligned: 4237250784
+[GGUF] WARNING: Tensor 'blk.12.ffn_norm.weight' offset not 64-byte aligned: 4314321120
+[GGUF] WARNING: Tensor 'blk.12.ffn_up.weight' offset not 64-byte aligned: 4314353888
+[GGUF] WARNING: Tensor 'blk.13.attn_k.weight' offset not 64-byte aligned: 4391424224
+[GGUF] WARNING: Tensor 'blk.13.attn_norm.weight' offset not 64-byte aligned: 4394176736
+[GGUF] WARNING: Tensor 'blk.13.attn_output.weight' offset not 64-byte aligned: 4394209504
+[GGUF] WARNING: Tensor 'blk.13.attn_q.weight' offset not 64-byte aligned: 4423045344
+[GGUF] WARNING: Tensor 'blk.13.attn_v.weight' offset not 64-byte aligned: 4445065440
+[GGUF] WARNING: Tensor 'blk.13.ffn_down.weight' offset not 64-byte aligned: 4450832608
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate.weight' offset not 64-byte aligned: 4551758048
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 4628828384
+[GGUF] WARNING: Tensor 'blk.13.ffn_up.weight' offset not 64-byte aligned: 4628861152
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 4705931488
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 4708684000
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 4708716768
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 4737552608
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 4759572704
+[GGUF] WARNING: Tensor 'blk.14.ffn_down.weight' offset not 64-byte aligned: 4765339872
+[GGUF] WARNING: Tensor 'blk.14.ffn_gate.weight' offset not 64-byte aligned: 4866265312
+[GGUF] WARNING: Tensor 'blk.14.ffn_norm.weight' offset not 64-byte aligned: 4943335648
+[GGUF] WARNING: Tensor 'blk.14.ffn_up.weight' offset not 64-byte aligned: 4943368416
+[GGUF] WARNING: Tensor 'blk.15.attn_k.weight' offset not 64-byte aligned: 5020438752
+[GGUF] WARNING: Tensor 'blk.15.attn_norm.weight' offset not 64-byte aligned: 5023191264
+[GGUF] WARNING: Tensor 'blk.15.attn_output.weight' offset not 64-byte aligned: 5023224032
+[GGUF] WARNING: Tensor 'blk.15.attn_q.weight' offset not 64-byte aligned: 5052059872
+[GGUF] WARNING: Tensor 'blk.15.attn_v.weight' offset not 64-byte aligned: 5074079968
+[GGUF] WARNING: Tensor 'blk.15.ffn_down.weight' offset not 64-byte aligned: 5079847136
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate.weight' offset not 64-byte aligned: 5180772576
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 5257842912
+[GGUF] WARNING: Tensor 'blk.15.ffn_up.weight' offset not 64-byte aligned: 5257875680
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 5334946016
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 5337698528
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 5337731296
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 5366567136
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 5388587232
+[GGUF] WARNING: Tensor 'blk.16.ffn_down.weight' offset not 64-byte aligned: 5394354400
+[GGUF] WARNING: Tensor 'blk.16.ffn_gate.weight' offset not 64-byte aligned: 5495279840
+[GGUF] WARNING: Tensor 'blk.16.ffn_norm.weight' offset not 64-byte aligned: 5572350176
+[GGUF] WARNING: Tensor 'blk.16.ffn_up.weight' offset not 64-byte aligned: 5572382944
+[GGUF] WARNING: Tensor 'blk.17.attn_k.weight' offset not 64-byte aligned: 5649453280
+[GGUF] WARNING: Tensor 'blk.17.attn_norm.weight' offset not 64-byte aligned: 5652205792
+[GGUF] WARNING: Tensor 'blk.17.attn_output.weight' offset not 64-byte aligned: 5652238560
+[GGUF] WARNING: Tensor 'blk.17.attn_q.weight' offset not 64-byte aligned: 5681074400
+[GGUF] WARNING: Tensor 'blk.17.attn_v.weight' offset not 64-byte aligned: 5703094496
+[GGUF] WARNING: Tensor 'blk.17.ffn_down.weight' offset not 64-byte aligned: 5708861664
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate.weight' offset not 64-byte aligned: 5809787104
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 5886857440
+[GGUF] WARNING: Tensor 'blk.17.ffn_up.weight' offset not 64-byte aligned: 5886890208
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 5963960544
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 5966713056
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 5966745824
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 5995581664
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 6017601760
+[GGUF] WARNING: Tensor 'blk.18.ffn_down.weight' offset not 64-byte aligned: 6023368928
+[GGUF] WARNING: Tensor 'blk.18.ffn_gate.weight' offset not 64-byte aligned: 6124294368
+[GGUF] WARNING: Tensor 'blk.18.ffn_norm.weight' offset not 64-byte aligned: 6201364704
+[GGUF] WARNING: Tensor 'blk.18.ffn_up.weight' offset not 64-byte aligned: 6201397472
+[GGUF] WARNING: Tensor 'blk.19.attn_k.weight' offset not 64-byte aligned: 6278467808
+[GGUF] WARNING: Tensor 'blk.19.attn_norm.weight' offset not 64-byte aligned: 6281220320
+[GGUF] WARNING: Tensor 'blk.19.attn_output.weight' offset not 64-byte aligned: 6281253088
+[GGUF] WARNING: Tensor 'blk.19.attn_q.weight' offset not 64-byte aligned: 6310088928
+[GGUF] WARNING: Tensor 'blk.19.attn_v.weight' offset not 64-byte aligned: 6332109024
+[GGUF] WARNING: Tensor 'blk.19.ffn_down.weight' offset not 64-byte aligned: 6337876192
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate.weight' offset not 64-byte aligned: 6438801632
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 6515871968
+[GGUF] WARNING: Tensor 'blk.19.ffn_up.weight' offset not 64-byte aligned: 6515904736
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 6592975072
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 6595727584
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 6595760352
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 6624596192
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 6646616288
+[GGUF] WARNING: Tensor 'blk.20.ffn_down.weight' offset not 64-byte aligned: 6652383456
+[GGUF] WARNING: Tensor 'blk.20.ffn_gate.weight' offset not 64-byte aligned: 6753308896
+[GGUF] WARNING: Tensor 'blk.20.ffn_norm.weight' offset not 64-byte aligned: 6830379232
+[GGUF] WARNING: Tensor 'blk.20.ffn_up.weight' offset not 64-byte aligned: 6830412000
+[GGUF] WARNING: Tensor 'blk.21.attn_k.weight' offset not 64-byte aligned: 6907482336
+[GGUF] WARNING: Tensor 'blk.21.attn_norm.weight' offset not 64-byte aligned: 6910234848
+[GGUF] WARNING: Tensor 'blk.21.attn_output.weight' offset not 64-byte aligned: 6910267616
+[GGUF] WARNING: Tensor 'blk.21.attn_q.weight' offset not 64-byte aligned: 6939103456
+[GGUF] WARNING: Tensor 'blk.21.attn_v.weight' offset not 64-byte aligned: 6961123552
+[GGUF] WARNING: Tensor 'blk.21.ffn_down.weight' offset not 64-byte aligned: 6966890720
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate.weight' offset not 64-byte aligned: 7067816160
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 7144886496
+[GGUF] WARNING: Tensor 'blk.21.ffn_up.weight' offset not 64-byte aligned: 7144919264
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 7221989600
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 7224742112
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 7224774880
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 7253610720
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 7275630816
+[GGUF] WARNING: Tensor 'blk.22.ffn_down.weight' offset not 64-byte aligned: 7281397984
+[GGUF] WARNING: Tensor 'blk.22.ffn_gate.weight' offset not 64-byte aligned: 7382323424
+[GGUF] WARNING: Tensor 'blk.22.ffn_norm.weight' offset not 64-byte aligned: 7459393760
+[GGUF] WARNING: Tensor 'blk.22.ffn_up.weight' offset not 64-byte aligned: 7459426528
+[GGUF] WARNING: Tensor 'blk.23.attn_k.weight' offset not 64-byte aligned: 7536496864
+[GGUF] WARNING: Tensor 'blk.23.attn_norm.weight' offset not 64-byte aligned: 7539249376
+[GGUF] WARNING: Tensor 'blk.23.attn_output.weight' offset not 64-byte aligned: 7539282144
+[GGUF] WARNING: Tensor 'blk.23.attn_q.weight' offset not 64-byte aligned: 7568117984
+[GGUF] WARNING: Tensor 'blk.23.attn_v.weight' offset not 64-byte aligned: 7590138080
+[GGUF] WARNING: Tensor 'blk.23.ffn_down.weight' offset not 64-byte aligned: 7595905248
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate.weight' offset not 64-byte aligned: 7696830688
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 7773901024
+[GGUF] WARNING: Tensor 'blk.23.ffn_up.weight' offset not 64-byte aligned: 7773933792
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 7851004128
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 7853756640
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 7853789408
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 7882625248
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 7904645344
+[GGUF] WARNING: Tensor 'blk.24.ffn_down.weight' offset not 64-byte aligned: 7910412512
+[GGUF] WARNING: Tensor 'blk.24.ffn_gate.weight' offset not 64-byte aligned: 8011337952
+[GGUF] WARNING: Tensor 'blk.24.ffn_norm.weight' offset not 64-byte aligned: 8088408288
+[GGUF] WARNING: Tensor 'blk.24.ffn_up.weight' offset not 64-byte aligned: 8088441056
+[GGUF] WARNING: Tensor 'blk.25.attn_k.weight' offset not 64-byte aligned: 8165511392
+[GGUF] WARNING: Tensor 'blk.25.attn_norm.weight' offset not 64-byte aligned: 8168263904
+[GGUF] WARNING: Tensor 'blk.25.attn_output.weight' offset not 64-byte aligned: 8168296672
+[GGUF] WARNING: Tensor 'blk.25.attn_q.weight' offset not 64-byte aligned: 8197132512
+[GGUF] WARNING: Tensor 'blk.25.attn_v.weight' offset not 64-byte aligned: 8219152608
+[GGUF] WARNING: Tensor 'blk.25.ffn_down.weight' offset not 64-byte aligned: 8224919776
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate.weight' offset not 64-byte aligned: 8325845216
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 8402915552
+[GGUF] WARNING: Tensor 'blk.25.ffn_up.weight' offset not 64-byte aligned: 8402948320
+[GGUF] WARNING: Tensor 'blk.26.attn_k.weight' offset not 64-byte aligned: 8480018656
+[GGUF] WARNING: Tensor 'blk.26.attn_norm.weight' offset not 64-byte aligned: 8482771168
+[GGUF] WARNING: Tensor 'blk.26.attn_output.weight' offset not 64-byte aligned: 8482803936
+[GGUF] WARNING: Tensor 'blk.26.attn_q.weight' offset not 64-byte aligned: 8511639776
+[GGUF] WARNING: Tensor 'blk.26.attn_v.weight' offset not 64-byte aligned: 8533659872
+[GGUF] WARNING: Tensor 'blk.26.ffn_down.weight' offset not 64-byte aligned: 8539427040
+[GGUF] WARNING: Tensor 'blk.26.ffn_gate.weight' offset not 64-byte aligned: 8640352480
+[GGUF] WARNING: Tensor 'blk.26.ffn_norm.weight' offset not 64-byte aligned: 8717422816
+[GGUF] WARNING: Tensor 'blk.26.ffn_up.weight' offset not 64-byte aligned: 8717455584
+[GGUF] WARNING: Tensor 'blk.27.attn_k.weight' offset not 64-byte aligned: 8794525920
+[GGUF] WARNING: Tensor 'blk.27.attn_norm.weight' offset not 64-byte aligned: 8797278432
+[GGUF] WARNING: Tensor 'blk.27.attn_output.weight' offset not 64-byte aligned: 8797311200
+[GGUF] WARNING: Tensor 'blk.27.attn_q.weight' offset not 64-byte aligned: 8826147040
+[GGUF] WARNING: Tensor 'blk.27.attn_v.weight' offset not 64-byte aligned: 8848167136
+[GGUF] WARNING: Tensor 'blk.27.ffn_down.weight' offset not 64-byte aligned: 8853934304
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate.weight' offset not 64-byte aligned: 8954859744
+[GGUF] WARNING: Tensor 'blk.27.ffn_norm.weight' offset not 64-byte aligned: 9031930080
+[GGUF] WARNING: Tensor 'blk.27.ffn_up.weight' offset not 64-byte aligned: 9031962848
+[GGUF] WARNING: Tensor 'blk.28.attn_k.weight' offset not 64-byte aligned: 9109033184
+[GGUF] WARNING: Tensor 'blk.28.attn_norm.weight' offset not 64-byte aligned: 9111785696
+[GGUF] WARNING: Tensor 'blk.28.attn_output.weight' offset not 64-byte aligned: 9111818464
+[GGUF] WARNING: Tensor 'blk.28.attn_q.weight' offset not 64-byte aligned: 9140654304
+[GGUF] WARNING: Tensor 'blk.28.attn_v.weight' offset not 64-byte aligned: 9162674400
+[GGUF] WARNING: Tensor 'blk.28.ffn_down.weight' offset not 64-byte aligned: 9168441568
+[GGUF] WARNING: Tensor 'blk.28.ffn_gate.weight' offset not 64-byte aligned: 9269367008
+[GGUF] WARNING: Tensor 'blk.28.ffn_norm.weight' offset not 64-byte aligned: 9346437344
+[GGUF] WARNING: Tensor 'blk.28.ffn_up.weight' offset not 64-byte aligned: 9346470112
+[GGUF] WARNING: Tensor 'blk.29.attn_k.weight' offset not 64-byte aligned: 9423540448
+[GGUF] WARNING: Tensor 'blk.29.attn_norm.weight' offset not 64-byte aligned: 9426292960
+[GGUF] WARNING: Tensor 'blk.29.attn_output.weight' offset not 64-byte aligned: 9426325728
+[GGUF] WARNING: Tensor 'blk.29.attn_q.weight' offset not 64-byte aligned: 9455161568
+[GGUF] WARNING: Tensor 'blk.29.attn_v.weight' offset not 64-byte aligned: 9477181664
+[GGUF] WARNING: Tensor 'blk.29.ffn_down.weight' offset not 64-byte aligned: 9482948832
+[GGUF] WARNING: Tensor 'blk.29.ffn_gate.weight' offset not 64-byte aligned: 9583874272
+[GGUF] WARNING: Tensor 'blk.29.ffn_norm.weight' offset not 64-byte aligned: 9660944608
+[GGUF] WARNING: Tensor 'blk.29.ffn_up.weight' offset not 64-byte aligned: 9660977376
+[GGUF] WARNING: Tensor 'blk.30.attn_k.weight' offset not 64-byte aligned: 9738047712
+[GGUF] WARNING: Tensor 'blk.30.attn_norm.weight' offset not 64-byte aligned: 9740800224
+[GGUF] WARNING: Tensor 'blk.30.attn_output.weight' offset not 64-byte aligned: 9740832992
+[GGUF] WARNING: Tensor 'blk.30.attn_q.weight' offset not 64-byte aligned: 9769668832
+[GGUF] WARNING: Tensor 'blk.30.attn_v.weight' offset not 64-byte aligned: 9791688928
+[GGUF] WARNING: Tensor 'blk.30.ffn_down.weight' offset not 64-byte aligned: 9797456096
+[GGUF] WARNING: Tensor 'blk.30.ffn_gate.weight' offset not 64-byte aligned: 9898381536
+[GGUF] WARNING: Tensor 'blk.30.ffn_norm.weight' offset not 64-byte aligned: 9975451872
+[GGUF] WARNING: Tensor 'blk.30.ffn_up.weight' offset not 64-byte aligned: 9975484640
+[GGUF] WARNING: Tensor 'blk.31.attn_k.weight' offset not 64-byte aligned: 10052554976
+[GGUF] WARNING: Tensor 'blk.31.attn_norm.weight' offset not 64-byte aligned: 10055307488
+[GGUF] WARNING: Tensor 'blk.31.attn_output.weight' offset not 64-byte aligned: 10055340256
+[GGUF] WARNING: Tensor 'blk.31.attn_q.weight' offset not 64-byte aligned: 10084176096
+[GGUF] WARNING: Tensor 'blk.31.attn_v.weight' offset not 64-byte aligned: 10106196192
+[GGUF] WARNING: Tensor 'blk.31.ffn_down.weight' offset not 64-byte aligned: 10111963360
+[GGUF] WARNING: Tensor 'blk.31.ffn_gate.weight' offset not 64-byte aligned: 10212888800
+[GGUF] WARNING: Tensor 'blk.31.ffn_norm.weight' offset not 64-byte aligned: 10289959136
+[GGUF] WARNING: Tensor 'blk.31.ffn_up.weight' offset not 64-byte aligned: 10289991904
+[GGUF] WARNING: Tensor 'blk.32.attn_k.weight' offset not 64-byte aligned: 10367062240
+[GGUF] WARNING: Tensor 'blk.32.attn_norm.weight' offset not 64-byte aligned: 10369814752
+[GGUF] WARNING: Tensor 'blk.32.attn_output.weight' offset not 64-byte aligned: 10369847520
+[GGUF] WARNING: Tensor 'blk.32.attn_q.weight' offset not 64-byte aligned: 10398683360
+[GGUF] WARNING: Tensor 'blk.32.attn_v.weight' offset not 64-byte aligned: 10420703456
+[GGUF] WARNING: Tensor 'blk.32.ffn_down.weight' offset not 64-byte aligned: 10426470624
+[GGUF] WARNING: Tensor 'blk.32.ffn_gate.weight' offset not 64-byte aligned: 10527396064
+[GGUF] WARNING: Tensor 'blk.32.ffn_norm.weight' offset not 64-byte aligned: 10604466400
+[GGUF] WARNING: Tensor 'blk.32.ffn_up.weight' offset not 64-byte aligned: 10604499168
+[GGUF] WARNING: Tensor 'blk.33.attn_k.weight' offset not 64-byte aligned: 10681569504
+[GGUF] WARNING: Tensor 'blk.33.attn_norm.weight' offset not 64-byte aligned: 10684322016
+[GGUF] WARNING: Tensor 'blk.33.attn_output.weight' offset not 64-byte aligned: 10684354784
+[GGUF] WARNING: Tensor 'blk.33.attn_q.weight' offset not 64-byte aligned: 10713190624
+[GGUF] WARNING: Tensor 'blk.33.attn_v.weight' offset not 64-byte aligned: 10735210720
+[GGUF] WARNING: Tensor 'blk.33.ffn_down.weight' offset not 64-byte aligned: 10740977888
+[GGUF] WARNING: Tensor 'blk.33.ffn_gate.weight' offset not 64-byte aligned: 10841903328
+[GGUF] WARNING: Tensor 'blk.33.ffn_norm.weight' offset not 64-byte aligned: 10918973664
+[GGUF] WARNING: Tensor 'blk.33.ffn_up.weight' offset not 64-byte aligned: 10919006432
+[GGUF] WARNING: Tensor 'blk.34.attn_k.weight' offset not 64-byte aligned: 10996076768
+[GGUF] WARNING: Tensor 'blk.34.attn_norm.weight' offset not 64-byte aligned: 10998829280
+[GGUF] WARNING: Tensor 'blk.34.attn_output.weight' offset not 64-byte aligned: 10998862048
+[GGUF] WARNING: Tensor 'blk.34.attn_q.weight' offset not 64-byte aligned: 11027697888
+[GGUF] WARNING: Tensor 'blk.34.attn_v.weight' offset not 64-byte aligned: 11049717984
+[GGUF] WARNING: Tensor 'blk.34.ffn_down.weight' offset not 64-byte aligned: 11055485152
+[GGUF] WARNING: Tensor 'blk.34.ffn_gate.weight' offset not 64-byte aligned: 11156410592
+[GGUF] WARNING: Tensor 'blk.34.ffn_norm.weight' offset not 64-byte aligned: 11233480928
+[GGUF] WARNING: Tensor 'blk.34.ffn_up.weight' offset not 64-byte aligned: 11233513696
+[GGUF] WARNING: Tensor 'blk.35.attn_k.weight' offset not 64-byte aligned: 11310584032
+[GGUF] WARNING: Tensor 'blk.35.attn_norm.weight' offset not 64-byte aligned: 11313336544
+[GGUF] WARNING: Tensor 'blk.35.attn_output.weight' offset not 64-byte aligned: 11313369312
+[GGUF] WARNING: Tensor 'blk.35.attn_q.weight' offset not 64-byte aligned: 11342205152
+[GGUF] WARNING: Tensor 'blk.35.attn_v.weight' offset not 64-byte aligned: 11364225248
+[GGUF] WARNING: Tensor 'blk.35.ffn_down.weight' offset not 64-byte aligned: 11369992416
+[GGUF] WARNING: Tensor 'blk.35.ffn_gate.weight' offset not 64-byte aligned: 11470917856
+[GGUF] WARNING: Tensor 'blk.35.ffn_norm.weight' offset not 64-byte aligned: 11547988192
+[GGUF] WARNING: Tensor 'blk.35.ffn_up.weight' offset not 64-byte aligned: 11548020960
+[GGUF] WARNING: Tensor 'blk.36.attn_k.weight' offset not 64-byte aligned: 11625091296
+[GGUF] WARNING: Tensor 'blk.36.attn_norm.weight' offset not 64-byte aligned: 11627843808
+[GGUF] WARNING: Tensor 'blk.36.attn_output.weight' offset not 64-byte aligned: 11627876576
+[GGUF] WARNING: Tensor 'blk.36.attn_q.weight' offset not 64-byte aligned: 11656712416
+[GGUF] WARNING: Tensor 'blk.36.attn_v.weight' offset not 64-byte aligned: 11678732512
+[GGUF] WARNING: Tensor 'blk.36.ffn_down.weight' offset not 64-byte aligned: 11684499680
+[GGUF] WARNING: Tensor 'blk.36.ffn_gate.weight' offset not 64-byte aligned: 11785425120
+[GGUF] WARNING: Tensor 'blk.36.ffn_norm.weight' offset not 64-byte aligned: 11862495456
+[GGUF] WARNING: Tensor 'blk.36.ffn_up.weight' offset not 64-byte aligned: 11862528224
+[GGUF] WARNING: Tensor 'blk.37.attn_k.weight' offset not 64-byte aligned: 11939598560
+[GGUF] WARNING: Tensor 'blk.37.attn_norm.weight' offset not 64-byte aligned: 11942351072
+[GGUF] WARNING: Tensor 'blk.37.attn_output.weight' offset not 64-byte aligned: 11942383840
+[GGUF] WARNING: Tensor 'blk.37.attn_q.weight' offset not 64-byte aligned: 11971219680
+[GGUF] WARNING: Tensor 'blk.37.attn_v.weight' offset not 64-byte aligned: 11993239776
+[GGUF] WARNING: Tensor 'blk.37.ffn_down.weight' offset not 64-byte aligned: 11999006944
+[GGUF] WARNING: Tensor 'blk.37.ffn_gate.weight' offset not 64-byte aligned: 12099932384
+[GGUF] WARNING: Tensor 'blk.37.ffn_norm.weight' offset not 64-byte aligned: 12177002720
+[GGUF] WARNING: Tensor 'blk.37.ffn_up.weight' offset not 64-byte aligned: 12177035488
+[GGUF] WARNING: Tensor 'blk.38.attn_k.weight' offset not 64-byte aligned: 12254105824
+[GGUF] WARNING: Tensor 'blk.38.attn_norm.weight' offset not 64-byte aligned: 12256858336
+[GGUF] WARNING: Tensor 'blk.38.attn_output.weight' offset not 64-byte aligned: 12256891104
+[GGUF] WARNING: Tensor 'blk.38.attn_q.weight' offset not 64-byte aligned: 12285726944
+[GGUF] WARNING: Tensor 'blk.38.attn_v.weight' offset not 64-byte aligned: 12307747040
+[GGUF] WARNING: Tensor 'blk.38.ffn_down.weight' offset not 64-byte aligned: 12313514208
+[GGUF] WARNING: Tensor 'blk.38.ffn_gate.weight' offset not 64-byte aligned: 12414439648
+[GGUF] WARNING: Tensor 'blk.38.ffn_norm.weight' offset not 64-byte aligned: 12491509984
+[GGUF] WARNING: Tensor 'blk.38.ffn_up.weight' offset not 64-byte aligned: 12491542752
+[GGUF] WARNING: Tensor 'blk.39.attn_k.weight' offset not 64-byte aligned: 12568613088
+[GGUF] WARNING: Tensor 'blk.39.attn_norm.weight' offset not 64-byte aligned: 12571365600
+[GGUF] WARNING: Tensor 'blk.39.attn_output.weight' offset not 64-byte aligned: 12571398368
+[GGUF] WARNING: Tensor 'blk.39.attn_q.weight' offset not 64-byte aligned: 12600234208
+[GGUF] WARNING: Tensor 'blk.39.attn_v.weight' offset not 64-byte aligned: 12622254304
+[GGUF] WARNING: Tensor 'blk.39.ffn_down.weight' offset not 64-byte aligned: 12628021472
+[GGUF] WARNING: Tensor 'blk.39.ffn_gate.weight' offset not 64-byte aligned: 12728946912
+[GGUF] WARNING: Tensor 'blk.39.ffn_norm.weight' offset not 64-byte aligned: 12806017248
+[GGUF] WARNING: Tensor 'blk.39.ffn_up.weight' offset not 64-byte aligned: 12806050016
+[GGUF] WARNING: Tensor 'blk.40.attn_k.weight' offset not 64-byte aligned: 12883120352
+[GGUF] WARNING: Tensor 'blk.40.attn_norm.weight' offset not 64-byte aligned: 12885872864
+[GGUF] WARNING: Tensor 'blk.40.attn_output.weight' offset not 64-byte aligned: 12885905632
+[GGUF] WARNING: Tensor 'blk.40.attn_q.weight' offset not 64-byte aligned: 12914741472
+[GGUF] WARNING: Tensor 'blk.40.attn_v.weight' offset not 64-byte aligned: 12936761568
+[GGUF] WARNING: Tensor 'blk.40.ffn_down.weight' offset not 64-byte aligned: 12942528736
+[GGUF] WARNING: Tensor 'blk.40.ffn_gate.weight' offset not 64-byte aligned: 13043454176
+[GGUF] WARNING: Tensor 'blk.40.ffn_norm.weight' offset not 64-byte aligned: 13120524512
+[GGUF] WARNING: Tensor 'blk.40.ffn_up.weight' offset not 64-byte aligned: 13120557280
+[GGUF] WARNING: Tensor 'blk.41.attn_k.weight' offset not 64-byte aligned: 13197627616
+[GGUF] WARNING: Tensor 'blk.41.attn_norm.weight' offset not 64-byte aligned: 13200380128
+[GGUF] WARNING: Tensor 'blk.41.attn_output.weight' offset not 64-byte aligned: 13200412896
+[GGUF] WARNING: Tensor 'blk.41.attn_q.weight' offset not 64-byte aligned: 13229248736
+[GGUF] WARNING: Tensor 'blk.41.attn_v.weight' offset not 64-byte aligned: 13251268832
+[GGUF] WARNING: Tensor 'blk.41.ffn_down.weight' offset not 64-byte aligned: 13257036000
+[GGUF] WARNING: Tensor 'blk.41.ffn_gate.weight' offset not 64-byte aligned: 13357961440
+[GGUF] WARNING: Tensor 'blk.41.ffn_norm.weight' offset not 64-byte aligned: 13435031776
+[GGUF] WARNING: Tensor 'blk.41.ffn_up.weight' offset not 64-byte aligned: 13435064544
+[GGUF] WARNING: Tensor 'blk.42.attn_k.weight' offset not 64-byte aligned: 13512134880
+[GGUF] WARNING: Tensor 'blk.42.attn_norm.weight' offset not 64-byte aligned: 13514887392
+[GGUF] WARNING: Tensor 'blk.42.attn_output.weight' offset not 64-byte aligned: 13514920160
+[GGUF] WARNING: Tensor 'blk.42.attn_q.weight' offset not 64-byte aligned: 13543756000
+[GGUF] WARNING: Tensor 'blk.42.attn_v.weight' offset not 64-byte aligned: 13565776096
+[GGUF] WARNING: Tensor 'blk.42.ffn_down.weight' offset not 64-byte aligned: 13571543264
+[GGUF] WARNING: Tensor 'blk.42.ffn_gate.weight' offset not 64-byte aligned: 13672468704
+[GGUF] WARNING: Tensor 'blk.42.ffn_norm.weight' offset not 64-byte aligned: 13749539040
+[GGUF] WARNING: Tensor 'blk.42.ffn_up.weight' offset not 64-byte aligned: 13749571808
+[GGUF] WARNING: Tensor 'blk.43.attn_k.weight' offset not 64-byte aligned: 13826642144
+[GGUF] WARNING: Tensor 'blk.43.attn_norm.weight' offset not 64-byte aligned: 13829394656
+[GGUF] WARNING: Tensor 'blk.43.attn_output.weight' offset not 64-byte aligned: 13829427424
+[GGUF] WARNING: Tensor 'blk.43.attn_q.weight' offset not 64-byte aligned: 13858263264
+[GGUF] WARNING: Tensor 'blk.43.attn_v.weight' offset not 64-byte aligned: 13880283360
+[GGUF] WARNING: Tensor 'blk.43.ffn_down.weight' offset not 64-byte aligned: 13886050528
+[GGUF] WARNING: Tensor 'blk.43.ffn_gate.weight' offset not 64-byte aligned: 13986975968
+[GGUF] WARNING: Tensor 'blk.43.ffn_norm.weight' offset not 64-byte aligned: 14064046304
+[GGUF] WARNING: Tensor 'blk.43.ffn_up.weight' offset not 64-byte aligned: 14064079072
+[GGUF] WARNING: Tensor 'blk.44.attn_k.weight' offset not 64-byte aligned: 14141149408
+[GGUF] WARNING: Tensor 'blk.44.attn_norm.weight' offset not 64-byte aligned: 14143901920
+[GGUF] WARNING: Tensor 'blk.44.attn_output.weight' offset not 64-byte aligned: 14143934688
+[GGUF] WARNING: Tensor 'blk.44.attn_q.weight' offset not 64-byte aligned: 14172770528
+[GGUF] WARNING: Tensor 'blk.44.attn_v.weight' offset not 64-byte aligned: 14194790624
+[GGUF] WARNING: Tensor 'blk.44.ffn_down.weight' offset not 64-byte aligned: 14200557792
+[GGUF] WARNING: Tensor 'blk.44.ffn_gate.weight' offset not 64-byte aligned: 14301483232
+[GGUF] WARNING: Tensor 'blk.44.ffn_norm.weight' offset not 64-byte aligned: 14378553568
+[GGUF] WARNING: Tensor 'blk.44.ffn_up.weight' offset not 64-byte aligned: 14378586336
+[GGUF] WARNING: Tensor 'blk.45.attn_k.weight' offset not 64-byte aligned: 14455656672
+[GGUF] WARNING: Tensor 'blk.45.attn_norm.weight' offset not 64-byte aligned: 14458409184
+[GGUF] WARNING: Tensor 'blk.45.attn_output.weight' offset not 64-byte aligned: 14458441952
+[GGUF] WARNING: Tensor 'blk.45.attn_q.weight' offset not 64-byte aligned: 14487277792
+[GGUF] WARNING: Tensor 'blk.45.attn_v.weight' offset not 64-byte aligned: 14509297888
+[GGUF] WARNING: Tensor 'blk.45.ffn_down.weight' offset not 64-byte aligned: 14515065056
+[GGUF] WARNING: Tensor 'blk.45.ffn_gate.weight' offset not 64-byte aligned: 14615990496
+[GGUF] WARNING: Tensor 'blk.45.ffn_norm.weight' offset not 64-byte aligned: 14693060832
+[GGUF] WARNING: Tensor 'blk.45.ffn_up.weight' offset not 64-byte aligned: 14693093600
+[GGUF] WARNING: Tensor 'blk.46.attn_k.weight' offset not 64-byte aligned: 14770163936
+[GGUF] WARNING: Tensor 'blk.46.attn_norm.weight' offset not 64-byte aligned: 14772916448
+[GGUF] WARNING: Tensor 'blk.46.attn_output.weight' offset not 64-byte aligned: 14772949216
+[GGUF] WARNING: Tensor 'blk.46.attn_q.weight' offset not 64-byte aligned: 14801785056
+[GGUF] WARNING: Tensor 'blk.46.attn_v.weight' offset not 64-byte aligned: 14823805152
+[GGUF] WARNING: Tensor 'blk.46.ffn_down.weight' offset not 64-byte aligned: 14829572320
+[GGUF] WARNING: Tensor 'blk.46.ffn_gate.weight' offset not 64-byte aligned: 14930497760
+[GGUF] WARNING: Tensor 'blk.46.ffn_norm.weight' offset not 64-byte aligned: 15007568096
+[GGUF] WARNING: Tensor 'blk.46.ffn_up.weight' offset not 64-byte aligned: 15007600864
+[GGUF] WARNING: Tensor 'blk.47.attn_k.weight' offset not 64-byte aligned: 15084671200
+[GGUF] WARNING: Tensor 'blk.47.attn_norm.weight' offset not 64-byte aligned: 15087423712
+[GGUF] WARNING: Tensor 'blk.47.attn_output.weight' offset not 64-byte aligned: 15087456480
+[GGUF] WARNING: Tensor 'blk.47.attn_q.weight' offset not 64-byte aligned: 15116292320
+[GGUF] WARNING: Tensor 'blk.47.attn_v.weight' offset not 64-byte aligned: 15138312416
+[GGUF] WARNING: Tensor 'blk.47.ffn_down.weight' offset not 64-byte aligned: 15144079584
+[GGUF] WARNING: Tensor 'blk.47.ffn_gate.weight' offset not 64-byte aligned: 15245005024
+[GGUF] WARNING: Tensor 'blk.47.ffn_norm.weight' offset not 64-byte aligned: 15322075360
+[GGUF] WARNING: Tensor 'blk.47.ffn_up.weight' offset not 64-byte aligned: 15322108128
+[GGUF] WARNING: Tensor 'blk.48.attn_k.weight' offset not 64-byte aligned: 15399178464
+[GGUF] WARNING: Tensor 'blk.48.attn_norm.weight' offset not 64-byte aligned: 15401930976
+[GGUF] WARNING: Tensor 'blk.48.attn_output.weight' offset not 64-byte aligned: 15401963744
+[GGUF] WARNING: Tensor 'blk.48.attn_q.weight' offset not 64-byte aligned: 15430799584
+[GGUF] WARNING: Tensor 'blk.48.attn_v.weight' offset not 64-byte aligned: 15452819680
+[GGUF] WARNING: Tensor 'blk.48.ffn_down.weight' offset not 64-byte aligned: 15458586848
+[GGUF] WARNING: Tensor 'blk.48.ffn_gate.weight' offset not 64-byte aligned: 15559512288
+[GGUF] WARNING: Tensor 'blk.48.ffn_norm.weight' offset not 64-byte aligned: 15636582624
+[GGUF] WARNING: Tensor 'blk.48.ffn_up.weight' offset not 64-byte aligned: 15636615392
+[GGUF] WARNING: Tensor 'blk.49.attn_k.weight' offset not 64-byte aligned: 15713685728
+[GGUF] WARNING: Tensor 'blk.49.attn_norm.weight' offset not 64-byte aligned: 15716438240
+[GGUF] WARNING: Tensor 'blk.49.attn_output.weight' offset not 64-byte aligned: 15716471008
+[GGUF] WARNING: Tensor 'blk.49.attn_q.weight' offset not 64-byte aligned: 15745306848
+[GGUF] WARNING: Tensor 'blk.49.attn_v.weight' offset not 64-byte aligned: 15767326944
+[GGUF] WARNING: Tensor 'blk.49.ffn_down.weight' offset not 64-byte aligned: 15773094112
+[GGUF] WARNING: Tensor 'blk.49.ffn_gate.weight' offset not 64-byte aligned: 15874019552
+[GGUF] WARNING: Tensor 'blk.49.ffn_norm.weight' offset not 64-byte aligned: 15951089888
+[GGUF] WARNING: Tensor 'blk.49.ffn_up.weight' offset not 64-byte aligned: 15951122656
+[GGUF] WARNING: Tensor 'blk.50.attn_k.weight' offset not 64-byte aligned: 16028192992
+[GGUF] WARNING: Tensor 'blk.50.attn_norm.weight' offset not 64-byte aligned: 16030945504
+[GGUF] WARNING: Tensor 'blk.50.attn_output.weight' offset not 64-byte aligned: 16030978272
+[GGUF] WARNING: Tensor 'blk.50.attn_q.weight' offset not 64-byte aligned: 16059814112
+[GGUF] WARNING: Tensor 'blk.50.attn_v.weight' offset not 64-byte aligned: 16081834208
+[GGUF] WARNING: Tensor 'blk.50.ffn_down.weight' offset not 64-byte aligned: 16087601376
+[GGUF] WARNING: Tensor 'blk.50.ffn_gate.weight' offset not 64-byte aligned: 16188526816
+[GGUF] WARNING: Tensor 'blk.50.ffn_norm.weight' offset not 64-byte aligned: 16265597152
+[GGUF] WARNING: Tensor 'blk.50.ffn_up.weight' offset not 64-byte aligned: 16265629920
+[GGUF] WARNING: Tensor 'blk.51.attn_k.weight' offset not 64-byte aligned: 16342700256
+[GGUF] WARNING: Tensor 'blk.51.attn_norm.weight' offset not 64-byte aligned: 16345452768
+[GGUF] WARNING: Tensor 'blk.51.attn_output.weight' offset not 64-byte aligned: 16345485536
+[GGUF] WARNING: Tensor 'blk.51.attn_q.weight' offset not 64-byte aligned: 16374321376
+[GGUF] WARNING: Tensor 'blk.51.attn_v.weight' offset not 64-byte aligned: 16396341472
+[GGUF] WARNING: Tensor 'blk.51.ffn_down.weight' offset not 64-byte aligned: 16402108640
+[GGUF] WARNING: Tensor 'blk.51.ffn_gate.weight' offset not 64-byte aligned: 16503034080
+[GGUF] WARNING: Tensor 'blk.51.ffn_norm.weight' offset not 64-byte aligned: 16580104416
+[GGUF] WARNING: Tensor 'blk.51.ffn_up.weight' offset not 64-byte aligned: 16580137184
+[GGUF] WARNING: Tensor 'blk.52.attn_k.weight' offset not 64-byte aligned: 16657207520
+[GGUF] WARNING: Tensor 'blk.52.attn_norm.weight' offset not 64-byte aligned: 16659960032
+[GGUF] WARNING: Tensor 'blk.52.attn_output.weight' offset not 64-byte aligned: 16659992800
+[GGUF] WARNING: Tensor 'blk.52.attn_q.weight' offset not 64-byte aligned: 16688828640
+[GGUF] WARNING: Tensor 'blk.52.attn_v.weight' offset not 64-byte aligned: 16710848736
+[GGUF] WARNING: Tensor 'blk.52.ffn_down.weight' offset not 64-byte aligned: 16716615904
+[GGUF] WARNING: Tensor 'blk.52.ffn_gate.weight' offset not 64-byte aligned: 16817541344
+[GGUF] WARNING: Tensor 'blk.52.ffn_norm.weight' offset not 64-byte aligned: 16894611680
+[GGUF] WARNING: Tensor 'blk.52.ffn_up.weight' offset not 64-byte aligned: 16894644448
+[GGUF] WARNING: Tensor 'blk.53.attn_k.weight' offset not 64-byte aligned: 16971714784
+[GGUF] WARNING: Tensor 'blk.53.attn_norm.weight' offset not 64-byte aligned: 16974467296
+[GGUF] WARNING: Tensor 'blk.53.attn_output.weight' offset not 64-byte aligned: 16974500064
+[GGUF] WARNING: Tensor 'blk.53.attn_q.weight' offset not 64-byte aligned: 17003335904
+[GGUF] WARNING: Tensor 'blk.53.attn_v.weight' offset not 64-byte aligned: 17025356000
+[GGUF] WARNING: Tensor 'blk.53.ffn_down.weight' offset not 64-byte aligned: 17031123168
+[GGUF] WARNING: Tensor 'blk.53.ffn_gate.weight' offset not 64-byte aligned: 17132048608
+[GGUF] WARNING: Tensor 'blk.53.ffn_norm.weight' offset not 64-byte aligned: 17209118944
+[GGUF] WARNING: Tensor 'blk.53.ffn_up.weight' offset not 64-byte aligned: 17209151712
+[GGUF] WARNING: Tensor 'blk.54.attn_k.weight' offset not 64-byte aligned: 17286222048
+[GGUF] WARNING: Tensor 'blk.54.attn_norm.weight' offset not 64-byte aligned: 17288974560
+[GGUF] WARNING: Tensor 'blk.54.attn_output.weight' offset not 64-byte aligned: 17289007328
+[GGUF] WARNING: Tensor 'blk.54.attn_q.weight' offset not 64-byte aligned: 17317843168
+[GGUF] WARNING: Tensor 'blk.54.attn_v.weight' offset not 64-byte aligned: 17339863264
+[GGUF] WARNING: Tensor 'blk.54.ffn_down.weight' offset not 64-byte aligned: 17345630432
+[GGUF] WARNING: Tensor 'blk.54.ffn_gate.weight' offset not 64-byte aligned: 17446555872
+[GGUF] WARNING: Tensor 'blk.54.ffn_norm.weight' offset not 64-byte aligned: 17523626208
+[GGUF] WARNING: Tensor 'blk.54.ffn_up.weight' offset not 64-byte aligned: 17523658976
+[GGUF] WARNING: Tensor 'blk.55.attn_k.weight' offset not 64-byte aligned: 17600729312
+[GGUF] WARNING: Tensor 'blk.55.attn_norm.weight' offset not 64-byte aligned: 17603481824
+[GGUF] WARNING: Tensor 'blk.55.attn_output.weight' offset not 64-byte aligned: 17603514592
+[GGUF] WARNING: Tensor 'blk.55.attn_q.weight' offset not 64-byte aligned: 17632350432
+[GGUF] WARNING: Tensor 'blk.55.attn_v.weight' offset not 64-byte aligned: 17654370528
+[GGUF] WARNING: Tensor 'blk.55.ffn_down.weight' offset not 64-byte aligned: 17660137696
+[GGUF] WARNING: Tensor 'blk.55.ffn_gate.weight' offset not 64-byte aligned: 17761063136
+[GGUF] WARNING: Tensor 'blk.55.ffn_norm.weight' offset not 64-byte aligned: 17838133472
+[GGUF] WARNING: Tensor 'blk.55.ffn_up.weight' offset not 64-byte aligned: 17838166240
+[GGUF] WARNING: Tensor 'blk.56.attn_k.weight' offset not 64-byte aligned: 17915236576
+[GGUF] WARNING: Tensor 'blk.56.attn_norm.weight' offset not 64-byte aligned: 17917989088
+[GGUF] WARNING: Tensor 'blk.56.attn_output.weight' offset not 64-byte aligned: 17918021856
+[GGUF] WARNING: Tensor 'blk.56.attn_q.weight' offset not 64-byte aligned: 17946857696
+[GGUF] WARNING: Tensor 'blk.56.attn_v.weight' offset not 64-byte aligned: 17968877792
+[GGUF] WARNING: Tensor 'blk.56.ffn_down.weight' offset not 64-byte aligned: 17974644960
+[GGUF] WARNING: Tensor 'blk.56.ffn_gate.weight' offset not 64-byte aligned: 18075570400
+[GGUF] WARNING: Tensor 'blk.56.ffn_norm.weight' offset not 64-byte aligned: 18152640736
+[GGUF] WARNING: Tensor 'blk.56.ffn_up.weight' offset not 64-byte aligned: 18152673504
+[GGUF] WARNING: Tensor 'blk.57.attn_k.weight' offset not 64-byte aligned: 18229743840
+[GGUF] WARNING: Tensor 'blk.57.attn_norm.weight' offset not 64-byte aligned: 18232496352
+[GGUF] WARNING: Tensor 'blk.57.attn_output.weight' offset not 64-byte aligned: 18232529120
+[GGUF] WARNING: Tensor 'blk.57.attn_q.weight' offset not 64-byte aligned: 18261364960
+[GGUF] WARNING: Tensor 'blk.57.attn_v.weight' offset not 64-byte aligned: 18283385056
+[GGUF] WARNING: Tensor 'blk.57.ffn_down.weight' offset not 64-byte aligned: 18289152224
+[GGUF] WARNING: Tensor 'blk.57.ffn_gate.weight' offset not 64-byte aligned: 18390077664
+[GGUF] WARNING: Tensor 'blk.57.ffn_norm.weight' offset not 64-byte aligned: 18467148000
+[GGUF] WARNING: Tensor 'blk.57.ffn_up.weight' offset not 64-byte aligned: 18467180768
+[GGUF] WARNING: Tensor 'blk.58.attn_k.weight' offset not 64-byte aligned: 18544251104
+[GGUF] WARNING: Tensor 'blk.58.attn_norm.weight' offset not 64-byte aligned: 18547003616
+[GGUF] WARNING: Tensor 'blk.58.attn_output.weight' offset not 64-byte aligned: 18547036384
+[GGUF] WARNING: Tensor 'blk.58.attn_q.weight' offset not 64-byte aligned: 18575872224
+[GGUF] WARNING: Tensor 'blk.58.attn_v.weight' offset not 64-byte aligned: 18597892320
+[GGUF] WARNING: Tensor 'blk.58.ffn_down.weight' offset not 64-byte aligned: 18603659488
+[GGUF] WARNING: Tensor 'blk.58.ffn_gate.weight' offset not 64-byte aligned: 18704584928
+[GGUF] WARNING: Tensor 'blk.58.ffn_norm.weight' offset not 64-byte aligned: 18781655264
+[GGUF] WARNING: Tensor 'blk.58.ffn_up.weight' offset not 64-byte aligned: 18781688032
+[GGUF] WARNING: Tensor 'blk.59.attn_k.weight' offset not 64-byte aligned: 18858758368
+[GGUF] WARNING: Tensor 'blk.59.attn_norm.weight' offset not 64-byte aligned: 18861510880
+[GGUF] WARNING: Tensor 'blk.59.attn_output.weight' offset not 64-byte aligned: 18861543648
+[GGUF] WARNING: Tensor 'blk.59.attn_q.weight' offset not 64-byte aligned: 18890379488
+[GGUF] WARNING: Tensor 'blk.59.attn_v.weight' offset not 64-byte aligned: 18912399584
+[GGUF] WARNING: Tensor 'blk.59.ffn_down.weight' offset not 64-byte aligned: 18918166752
+[GGUF] WARNING: Tensor 'blk.59.ffn_gate.weight' offset not 64-byte aligned: 19019092192
+[GGUF] WARNING: Tensor 'blk.59.ffn_norm.weight' offset not 64-byte aligned: 19096162528
+[GGUF] WARNING: Tensor 'blk.59.ffn_up.weight' offset not 64-byte aligned: 19096195296
+[GGUF] WARNING: Tensor 'blk.60.attn_k.weight' offset not 64-byte aligned: 19173265632
+[GGUF] WARNING: Tensor 'blk.60.attn_norm.weight' offset not 64-byte aligned: 19176018144
+[GGUF] WARNING: Tensor 'blk.60.attn_output.weight' offset not 64-byte aligned: 19176050912
+[GGUF] WARNING: Tensor 'blk.60.attn_q.weight' offset not 64-byte aligned: 19204886752
+[GGUF] WARNING: Tensor 'blk.60.attn_v.weight' offset not 64-byte aligned: 19226906848
+[GGUF] WARNING: Tensor 'blk.60.ffn_down.weight' offset not 64-byte aligned: 19232674016
+[GGUF] WARNING: Tensor 'blk.60.ffn_gate.weight' offset not 64-byte aligned: 19333599456
+[GGUF] WARNING: Tensor 'blk.60.ffn_norm.weight' offset not 64-byte aligned: 19410669792
+[GGUF] WARNING: Tensor 'blk.60.ffn_up.weight' offset not 64-byte aligned: 19410702560
+[GGUF] WARNING: Tensor 'blk.61.attn_k.weight' offset not 64-byte aligned: 19487772896
+[GGUF] WARNING: Tensor 'blk.61.attn_norm.weight' offset not 64-byte aligned: 19490525408
+[GGUF] WARNING: Tensor 'blk.61.attn_output.weight' offset not 64-byte aligned: 19490558176
+[GGUF] WARNING: Tensor 'blk.61.attn_q.weight' offset not 64-byte aligned: 19519394016
+[GGUF] WARNING: Tensor 'blk.61.attn_v.weight' offset not 64-byte aligned: 19541414112
+[GGUF] WARNING: Tensor 'blk.61.ffn_down.weight' offset not 64-byte aligned: 19547181280
+[GGUF] WARNING: Tensor 'blk.61.ffn_gate.weight' offset not 64-byte aligned: 19648106720
+[GGUF] WARNING: Tensor 'blk.61.ffn_norm.weight' offset not 64-byte aligned: 19725177056
+[GGUF] WARNING: Tensor 'blk.61.ffn_up.weight' offset not 64-byte aligned: 19725209824
+[GGUF] WARNING: Tensor 'blk.62.attn_k.weight' offset not 64-byte aligned: 19802280160
+[GGUF] WARNING: Tensor 'blk.62.attn_norm.weight' offset not 64-byte aligned: 19805032672
+[GGUF] WARNING: Tensor 'blk.62.attn_output.weight' offset not 64-byte aligned: 19805065440
+[GGUF] WARNING: Tensor 'blk.62.attn_q.weight' offset not 64-byte aligned: 19833901280
+[GGUF] WARNING: Tensor 'blk.62.attn_v.weight' offset not 64-byte aligned: 19855921376
+[GGUF] WARNING: Tensor 'blk.62.ffn_down.weight' offset not 64-byte aligned: 19861688544
+[GGUF] WARNING: Tensor 'blk.62.ffn_gate.weight' offset not 64-byte aligned: 19962613984
+[GGUF] WARNING: Tensor 'blk.62.ffn_norm.weight' offset not 64-byte aligned: 20039684320
+[GGUF] WARNING: Tensor 'blk.62.ffn_up.weight' offset not 64-byte aligned: 20039717088
+[GGUF] WARNING: Tensor 'blk.63.attn_k.weight' offset not 64-byte aligned: 20116787424
+[GGUF] WARNING: Tensor 'blk.63.attn_norm.weight' offset not 64-byte aligned: 20119539936
+[GGUF] WARNING: Tensor 'blk.63.attn_output.weight' offset not 64-byte aligned: 20119572704
+[GGUF] WARNING: Tensor 'blk.63.attn_q.weight' offset not 64-byte aligned: 20148408544
+[GGUF] WARNING: Tensor 'blk.63.attn_v.weight' offset not 64-byte aligned: 20170428640
+[GGUF] WARNING: Tensor 'blk.63.ffn_down.weight' offset not 64-byte aligned: 20176195808
+[GGUF] WARNING: Tensor 'blk.63.ffn_gate.weight' offset not 64-byte aligned: 20277121248
+[GGUF] WARNING: Tensor 'blk.63.ffn_norm.weight' offset not 64-byte aligned: 20354191584
+[GGUF] WARNING: Tensor 'blk.63.ffn_up.weight' offset not 64-byte aligned: 20354224352
+[GGUF] WARNING: Tensor 'blk.64.attn_k.weight' offset not 64-byte aligned: 20431294688
+[GGUF] WARNING: Tensor 'blk.64.attn_norm.weight' offset not 64-byte aligned: 20434047200
+[GGUF] WARNING: Tensor 'blk.64.attn_output.weight' offset not 64-byte aligned: 20434079968
+[GGUF] WARNING: Tensor 'blk.64.attn_q.weight' offset not 64-byte aligned: 20462915808
+[GGUF] WARNING: Tensor 'blk.64.attn_v.weight' offset not 64-byte aligned: 20484935904
+[GGUF] WARNING: Tensor 'blk.64.ffn_down.weight' offset not 64-byte aligned: 20490703072
+[GGUF] WARNING: Tensor 'blk.64.ffn_gate.weight' offset not 64-byte aligned: 20591628512
+[GGUF] WARNING: Tensor 'blk.64.ffn_norm.weight' offset not 64-byte aligned: 20668698848
+[GGUF] WARNING: Tensor 'blk.64.ffn_up.weight' offset not 64-byte aligned: 20668731616
+[GGUF] WARNING: Tensor 'blk.65.attn_k.weight' offset not 64-byte aligned: 20745801952
+[GGUF] WARNING: Tensor 'blk.65.attn_norm.weight' offset not 64-byte aligned: 20748554464
+[GGUF] WARNING: Tensor 'blk.65.attn_output.weight' offset not 64-byte aligned: 20748587232
+[GGUF] WARNING: Tensor 'blk.65.attn_q.weight' offset not 64-byte aligned: 20777423072
+[GGUF] WARNING: Tensor 'blk.65.attn_v.weight' offset not 64-byte aligned: 20799443168
+[GGUF] WARNING: Tensor 'blk.65.ffn_down.weight' offset not 64-byte aligned: 20805210336
+[GGUF] WARNING: Tensor 'blk.65.ffn_gate.weight' offset not 64-byte aligned: 20906135776
+[GGUF] WARNING: Tensor 'blk.65.ffn_norm.weight' offset not 64-byte aligned: 20983206112
+[GGUF] WARNING: Tensor 'blk.65.ffn_up.weight' offset not 64-byte aligned: 20983238880
+[GGUF] WARNING: Tensor 'blk.66.attn_k.weight' offset not 64-byte aligned: 21060309216
+[GGUF] WARNING: Tensor 'blk.66.attn_norm.weight' offset not 64-byte aligned: 21063061728
+[GGUF] WARNING: Tensor 'blk.66.attn_output.weight' offset not 64-byte aligned: 21063094496
+[GGUF] WARNING: Tensor 'blk.66.attn_q.weight' offset not 64-byte aligned: 21091930336
+[GGUF] WARNING: Tensor 'blk.66.attn_v.weight' offset not 64-byte aligned: 21113950432
+[GGUF] WARNING: Tensor 'blk.66.ffn_down.weight' offset not 64-byte aligned: 21119717600
+[GGUF] WARNING: Tensor 'blk.66.ffn_gate.weight' offset not 64-byte aligned: 21220643040
+[GGUF] WARNING: Tensor 'blk.66.ffn_norm.weight' offset not 64-byte aligned: 21297713376
+[GGUF] WARNING: Tensor 'blk.66.ffn_up.weight' offset not 64-byte aligned: 21297746144
+[GGUF] WARNING: Tensor 'blk.67.attn_k.weight' offset not 64-byte aligned: 21374816480
+[GGUF] WARNING: Tensor 'blk.67.attn_norm.weight' offset not 64-byte aligned: 21377568992
+[GGUF] WARNING: Tensor 'blk.67.attn_output.weight' offset not 64-byte aligned: 21377601760
+[GGUF] WARNING: Tensor 'blk.67.attn_q.weight' offset not 64-byte aligned: 21406437600
+[GGUF] WARNING: Tensor 'blk.67.attn_v.weight' offset not 64-byte aligned: 21428457696
+[GGUF] WARNING: Tensor 'blk.67.ffn_down.weight' offset not 64-byte aligned: 21434224864
+[GGUF] WARNING: Tensor 'blk.67.ffn_gate.weight' offset not 64-byte aligned: 21535150304
+[GGUF] WARNING: Tensor 'blk.67.ffn_norm.weight' offset not 64-byte aligned: 21612220640
+[GGUF] WARNING: Tensor 'blk.67.ffn_up.weight' offset not 64-byte aligned: 21612253408
+[GGUF] WARNING: Tensor 'blk.68.attn_k.weight' offset not 64-byte aligned: 21689323744
+[GGUF] WARNING: Tensor 'blk.68.attn_norm.weight' offset not 64-byte aligned: 21692076256
+[GGUF] WARNING: Tensor 'blk.68.attn_output.weight' offset not 64-byte aligned: 21692109024
+[GGUF] WARNING: Tensor 'blk.68.attn_q.weight' offset not 64-byte aligned: 21720944864
+[GGUF] WARNING: Tensor 'blk.68.attn_v.weight' offset not 64-byte aligned: 21742964960
+[GGUF] WARNING: Tensor 'blk.68.ffn_down.weight' offset not 64-byte aligned: 21748732128
+[GGUF] WARNING: Tensor 'blk.68.ffn_gate.weight' offset not 64-byte aligned: 21849657568
+[GGUF] WARNING: Tensor 'blk.68.ffn_norm.weight' offset not 64-byte aligned: 21926727904
+[GGUF] WARNING: Tensor 'blk.68.ffn_up.weight' offset not 64-byte aligned: 21926760672
+[GGUF] WARNING: Tensor 'blk.69.attn_k.weight' offset not 64-byte aligned: 22003831008
+[GGUF] WARNING: Tensor 'blk.69.attn_norm.weight' offset not 64-byte aligned: 22006583520
+[GGUF] WARNING: Tensor 'blk.69.attn_output.weight' offset not 64-byte aligned: 22006616288
+[GGUF] WARNING: Tensor 'blk.69.attn_q.weight' offset not 64-byte aligned: 22035452128
+[GGUF] WARNING: Tensor 'blk.69.attn_v.weight' offset not 64-byte aligned: 22057472224
+[GGUF] WARNING: Tensor 'blk.69.ffn_down.weight' offset not 64-byte aligned: 22063239392
+[GGUF] WARNING: Tensor 'blk.69.ffn_gate.weight' offset not 64-byte aligned: 22164164832
+[GGUF] WARNING: Tensor 'blk.69.ffn_norm.weight' offset not 64-byte aligned: 22241235168
+[GGUF] WARNING: Tensor 'blk.69.ffn_up.weight' offset not 64-byte aligned: 22241267936
+[GGUF] WARNING: Tensor 'blk.70.attn_k.weight' offset not 64-byte aligned: 22318338272
+[GGUF] WARNING: Tensor 'blk.70.attn_norm.weight' offset not 64-byte aligned: 22321090784
+[GGUF] WARNING: Tensor 'blk.70.attn_output.weight' offset not 64-byte aligned: 22321123552
+[GGUF] WARNING: Tensor 'blk.70.attn_q.weight' offset not 64-byte aligned: 22349959392
+[GGUF] WARNING: Tensor 'blk.70.attn_v.weight' offset not 64-byte aligned: 22371979488
+[GGUF] WARNING: Tensor 'blk.70.ffn_down.weight' offset not 64-byte aligned: 22377746656
+[GGUF] WARNING: Tensor 'blk.70.ffn_gate.weight' offset not 64-byte aligned: 22478672096
+[GGUF] WARNING: Tensor 'blk.70.ffn_norm.weight' offset not 64-byte aligned: 22555742432
+[GGUF] WARNING: Tensor 'blk.70.ffn_up.weight' offset not 64-byte aligned: 22555775200
+[GGUF] WARNING: Tensor 'blk.71.attn_k.weight' offset not 64-byte aligned: 22632845536
+[GGUF] WARNING: Tensor 'blk.71.attn_norm.weight' offset not 64-byte aligned: 22635598048
+[GGUF] WARNING: Tensor 'blk.71.attn_output.weight' offset not 64-byte aligned: 22635630816
+[GGUF] WARNING: Tensor 'blk.71.attn_q.weight' offset not 64-byte aligned: 22664466656
+[GGUF] WARNING: Tensor 'blk.71.attn_v.weight' offset not 64-byte aligned: 22686486752
+[GGUF] WARNING: Tensor 'blk.71.ffn_down.weight' offset not 64-byte aligned: 22692253920
+[GGUF] WARNING: Tensor 'blk.71.ffn_gate.weight' offset not 64-byte aligned: 22793179360
+[GGUF] WARNING: Tensor 'blk.71.ffn_norm.weight' offset not 64-byte aligned: 22870249696
+[GGUF] WARNING: Tensor 'blk.71.ffn_up.weight' offset not 64-byte aligned: 22870282464
+[GGUF] WARNING: Tensor 'blk.72.attn_k.weight' offset not 64-byte aligned: 22947352800
+[GGUF] WARNING: Tensor 'blk.72.attn_norm.weight' offset not 64-byte aligned: 22950105312
+[GGUF] WARNING: Tensor 'blk.72.attn_output.weight' offset not 64-byte aligned: 22950138080
+[GGUF] WARNING: Tensor 'blk.72.attn_q.weight' offset not 64-byte aligned: 22978973920
+[GGUF] WARNING: Tensor 'blk.72.attn_v.weight' offset not 64-byte aligned: 23000994016
+[GGUF] WARNING: Tensor 'blk.72.ffn_down.weight' offset not 64-byte aligned: 23006761184
+[GGUF] WARNING: Tensor 'blk.72.ffn_gate.weight' offset not 64-byte aligned: 23107686624
+[GGUF] WARNING: Tensor 'blk.72.ffn_norm.weight' offset not 64-byte aligned: 23184756960
+[GGUF] WARNING: Tensor 'blk.72.ffn_up.weight' offset not 64-byte aligned: 23184789728
+[GGUF] WARNING: Tensor 'blk.73.attn_k.weight' offset not 64-byte aligned: 23261860064
+[GGUF] WARNING: Tensor 'blk.73.attn_norm.weight' offset not 64-byte aligned: 23264612576
+[GGUF] WARNING: Tensor 'blk.73.attn_output.weight' offset not 64-byte aligned: 23264645344
+[GGUF] WARNING: Tensor 'blk.73.attn_q.weight' offset not 64-byte aligned: 23293481184
+[GGUF] WARNING: Tensor 'blk.73.attn_v.weight' offset not 64-byte aligned: 23315501280
+[GGUF] WARNING: Tensor 'blk.73.ffn_down.weight' offset not 64-byte aligned: 23321268448
+[GGUF] WARNING: Tensor 'blk.73.ffn_gate.weight' offset not 64-byte aligned: 23422193888
+[GGUF] WARNING: Tensor 'blk.73.ffn_norm.weight' offset not 64-byte aligned: 23499264224
+[GGUF] WARNING: Tensor 'blk.73.ffn_up.weight' offset not 64-byte aligned: 23499296992
+[GGUF] WARNING: Tensor 'blk.74.attn_k.weight' offset not 64-byte aligned: 23576367328
+[GGUF] WARNING: Tensor 'blk.74.attn_norm.weight' offset not 64-byte aligned: 23579119840
+[GGUF] WARNING: Tensor 'blk.74.attn_output.weight' offset not 64-byte aligned: 23579152608
+[GGUF] WARNING: Tensor 'blk.74.attn_q.weight' offset not 64-byte aligned: 23607988448
+[GGUF] WARNING: Tensor 'blk.74.attn_v.weight' offset not 64-byte aligned: 23630008544
+[GGUF] WARNING: Tensor 'blk.74.ffn_down.weight' offset not 64-byte aligned: 23635775712
+[GGUF] WARNING: Tensor 'blk.74.ffn_gate.weight' offset not 64-byte aligned: 23736701152
+[GGUF] WARNING: Tensor 'blk.74.ffn_norm.weight' offset not 64-byte aligned: 23813771488
+[GGUF] WARNING: Tensor 'blk.74.ffn_up.weight' offset not 64-byte aligned: 23813804256
+[GGUF] WARNING: Tensor 'blk.75.attn_k.weight' offset not 64-byte aligned: 23890874592
+[GGUF] WARNING: Tensor 'blk.75.attn_norm.weight' offset not 64-byte aligned: 23893627104
+[GGUF] WARNING: Tensor 'blk.75.attn_output.weight' offset not 64-byte aligned: 23893659872
+[GGUF] WARNING: Tensor 'blk.75.attn_q.weight' offset not 64-byte aligned: 23922495712
+[GGUF] WARNING: Tensor 'blk.75.attn_v.weight' offset not 64-byte aligned: 23944515808
+[GGUF] WARNING: Tensor 'blk.75.ffn_down.weight' offset not 64-byte aligned: 23950282976
+[GGUF] WARNING: Tensor 'blk.75.ffn_gate.weight' offset not 64-byte aligned: 24051208416
+[GGUF] WARNING: Tensor 'blk.75.ffn_norm.weight' offset not 64-byte aligned: 24128278752
+[GGUF] WARNING: Tensor 'blk.75.ffn_up.weight' offset not 64-byte aligned: 24128311520
+[GGUF] WARNING: Tensor 'blk.76.attn_k.weight' offset not 64-byte aligned: 24205381856
+[GGUF] WARNING: Tensor 'blk.76.attn_norm.weight' offset not 64-byte aligned: 24208134368
+[GGUF] WARNING: Tensor 'blk.76.attn_output.weight' offset not 64-byte aligned: 24208167136
+[GGUF] WARNING: Tensor 'blk.76.attn_q.weight' offset not 64-byte aligned: 24237002976
+[GGUF] WARNING: Tensor 'blk.76.attn_v.weight' offset not 64-byte aligned: 24259023072
+[GGUF] WARNING: Tensor 'blk.76.ffn_down.weight' offset not 64-byte aligned: 24264790240
+[GGUF] WARNING: Tensor 'blk.76.ffn_gate.weight' offset not 64-byte aligned: 24365715680
+[GGUF] WARNING: Tensor 'blk.76.ffn_norm.weight' offset not 64-byte aligned: 24442786016
+[GGUF] WARNING: Tensor 'blk.76.ffn_up.weight' offset not 64-byte aligned: 24442818784
+[GGUF] WARNING: Tensor 'blk.77.attn_k.weight' offset not 64-byte aligned: 24519889120
+[GGUF] WARNING: Tensor 'blk.77.attn_norm.weight' offset not 64-byte aligned: 24522641632
+[GGUF] WARNING: Tensor 'blk.77.attn_output.weight' offset not 64-byte aligned: 24522674400
+[GGUF] WARNING: Tensor 'blk.77.attn_q.weight' offset not 64-byte aligned: 24551510240
+[GGUF] WARNING: Tensor 'blk.77.attn_v.weight' offset not 64-byte aligned: 24573530336
+[GGUF] WARNING: Tensor 'blk.77.ffn_down.weight' offset not 64-byte aligned: 24579297504
+[GGUF] WARNING: Tensor 'blk.77.ffn_gate.weight' offset not 64-byte aligned: 24680222944
+[GGUF] WARNING: Tensor 'blk.77.ffn_norm.weight' offset not 64-byte aligned: 24757293280
+[GGUF] WARNING: Tensor 'blk.77.ffn_up.weight' offset not 64-byte aligned: 24757326048
+[GGUF] WARNING: Tensor 'blk.78.attn_k.weight' offset not 64-byte aligned: 24834396384
+[GGUF] WARNING: Tensor 'blk.78.attn_norm.weight' offset not 64-byte aligned: 24837148896
+[GGUF] WARNING: Tensor 'blk.78.attn_output.weight' offset not 64-byte aligned: 24837181664
+[GGUF] WARNING: Tensor 'blk.78.attn_q.weight' offset not 64-byte aligned: 24866017504
+[GGUF] WARNING: Tensor 'blk.78.attn_v.weight' offset not 64-byte aligned: 24888037600
+[GGUF] WARNING: Tensor 'blk.78.ffn_down.weight' offset not 64-byte aligned: 24893804768
+[GGUF] WARNING: Tensor 'blk.78.ffn_gate.weight' offset not 64-byte aligned: 24994730208
+[GGUF] WARNING: Tensor 'blk.78.ffn_norm.weight' offset not 64-byte aligned: 25071800544
+[GGUF] WARNING: Tensor 'blk.78.ffn_up.weight' offset not 64-byte aligned: 25071833312
+[GGUF] WARNING: Tensor 'blk.79.attn_k.weight' offset not 64-byte aligned: 25148903648
+[GGUF] WARNING: Tensor 'blk.79.attn_norm.weight' offset not 64-byte aligned: 25151656160
+[GGUF] WARNING: Tensor 'blk.79.attn_output.weight' offset not 64-byte aligned: 25151688928
+[GGUF] WARNING: Tensor 'blk.79.attn_q.weight' offset not 64-byte aligned: 25180524768
+[GGUF] WARNING: Tensor 'blk.79.attn_v.weight' offset not 64-byte aligned: 25202544864
+[GGUF] WARNING: Tensor 'blk.79.ffn_down.weight' offset not 64-byte aligned: 25208312032
+[GGUF] WARNING: Tensor 'blk.79.ffn_gate.weight' offset not 64-byte aligned: 25309237472
+[GGUF] WARNING: Tensor 'blk.79.ffn_norm.weight' offset not 64-byte aligned: 25386307808
+[GGUF] WARNING: Tensor 'blk.79.ffn_up.weight' offset not 64-byte aligned: 25386340576
+[KVCache] Initializing: 80 layers, 4096 max seq, 8 heads, 1024 dim
+[KVCache] Total cache size: 20480.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (723 tensors)
+       Model weights loaded successfully
+[ThreadPool] Shutdown complete
+       Model size: 24283 MB
+       Load time: 155394.76 ms
+
+[2/5] Initializing expert dispatch pool (16 threads)...
+       Pool initialized in 2.79 ms
+
+[3/5] Warmup (10 tokens, batch size 64)...
+       Warmup complete in 8.87 ms
+
+[4/5] Benchmarking batch generation (10 tokens, batch=64)...
+       Generated 10 tokens in 0.90 ms
+       Tokens/sec: 11074.20 (Target: 8200)
+       Latency/token: 0.09 ms
+
+[5/5] DUAL MODEL SIMULATION
+       Model A: 16 threads
+       Model B: 16 threads
+       Combined throughput target: 8200 TPS
+
+       Modeled dual-model TPS: 22148.39
+       Efficiency: 270.1%
+========================================
+BENCHMARK RESULTS
+========================================
+Model Size:          24283 MB
+Load Time:           155394.76 ms
+Warmup Time:         8.87 ms
+Generation Time:     0.90 ms
+Tokens/Second:       11074.20
+Latency/Token:       0.09 ms
+Peak Memory:         42551 MB
+========================================
+
+Results exported to: deep2_end_to_end_results.csv

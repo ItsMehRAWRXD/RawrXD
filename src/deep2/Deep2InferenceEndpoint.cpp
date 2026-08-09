@@ -17,6 +17,7 @@
 #include <sstream>
 #include <queue>
 #include <condition_variable>
+#include <optional>
 #include <json/json.hpp>
 
 #pragma comment(lib, "ws2_32.lib")
@@ -642,66 +643,27 @@ private:
         json j;
         j["runtime"] = "Sovereign";
         j["backend"] = "Vulkan";
-        
-        // Hardware evidence
+
         json devices = json::array();
-        
-        // Query actual GPU devices via Vulkan
-        json devices = json::array();
-        
-        VkInstance inst = VK_NULL_HANDLE;
-        VkApplicationInfo appInfo = {};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "RawrXD";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_2;
-        
-        VkInstanceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        
-        if (vkCreateInstance(&createInfo, nullptr, &inst) == VK_SUCCESS) {
-            uint32_t deviceCount = 0;
-            vkEnumeratePhysicalDevices(inst, &deviceCount, nullptr);
-            std::vector<VkPhysicalDevice> physDevices(deviceCount);
-            vkEnumeratePhysicalDevices(inst, &deviceCount, physDevices.data());
-            
-            for (auto dev : physDevices) {
-                VkPhysicalDeviceProperties props;
-                vkGetPhysicalDeviceProperties(dev, &props);
-                
-                VkPhysicalDeviceMemoryProperties memProps;
-                vkGetPhysicalDeviceMemoryProperties(dev, &memProps);
-                
-                VkDeviceSize totalVRAM = 0;
-                for (uint32_t i = 0; i < memProps.memoryHeapCount; ++i) {
-                    if (memProps.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
-                        totalVRAM += memProps.memoryHeaps[i].size;
-                    }
-                }
-                
-                json gpu;
-                gpu["name"] = props.deviceName;
-                gpu["vram_gb"] = static_cast<int>(totalVRAM / (1024ULL * 1024 * 1024));
-                gpu["vendor_id"] = props.vendorID;
-                gpu["device_id"] = props.deviceID;
-                gpu["api_version"] = props.apiVersion;
-                gpu["backend"] = "Vulkan";
-                gpu["status"] = "active";
-                devices.push_back(gpu);
-            }
-            vkDestroyInstance(inst, nullptr);
+        for (const auto& backend : Deep2Discovery::DiscoverBackends()) {
+            json device;
+            device["name"] = backend.engine.empty() ? backend.type : backend.engine;
+            device["url"] = backend.url;
+            device["status"] = backend.status;
+            device["priority"] = backend.priority;
+            device["native"] = backend.native;
+            devices.push_back(device);
         }
-        
+
         if (devices.empty()) {
             json cpu;
             cpu["name"] = "CPU Fallback";
-            cpu["vram_gb"] = 0;
             cpu["backend"] = "CPU";
             cpu["status"] = "active";
             devices.push_back(cpu);
         }
-        
+
+        j["devices"] = devices;
         return HttpResponse(200, j.dump(2));
     }
     
@@ -805,20 +767,9 @@ private:
                 return HttpResponse(400, json{{"error", "Model ID required"}}.dump());
             }
             
-            // Load model from disk via GGUF loader
-            std::string modelPath = GGUFModelRegistry::Instance().ResolvePath(modelId);
-            if (modelPath.empty()) {
-                modelPath = modelId; // fallback: treat as direct path
-            }
-            
-            auto& engine = Deep2Engine::Instance();
-            if (!engine.isModelLoaded() || engine.getModelId() != modelId) {
-                if (!engine.LoadModel(modelPath)) {
+            if (!engine_ || !engine_->loadModel(modelId)) {
                     return HttpResponse(500, json{{"error", "Failed to load model: " + modelId}}.dump());
-                }
             }
-            
-            GGUFModelRegistry::Instance().MarkLoaded(modelId, true);
             
             json j;
             j["success"] = true;
@@ -835,8 +786,6 @@ private:
         try {
             json req = json::parse(body);
             std::string modelId = req.value("model", "");
-            
-            GGUFModelRegistry::Instance().MarkLoaded(modelId, false);
             
             json j;
             j["success"] = true;
@@ -990,11 +939,8 @@ private:
                 channel->sendCompletion(result, model);
                 
                 // Record telemetry
-                auto endTime = std::chrono::high_resolution_clock::now();
-                double latencyMs = std::chrono::duration<double, std::milli>(
-                    endTime - startTime).count();
                 InferenceTelemetry::Instance().RecordRequestComplete(
-                    result.tokensGenerated, result.tokensPerSecond, latencyMs);
+                    result.tokensGenerated, result.tokensPerSecond, result.latencyMs);
                 
             } else {
                 channel->sendError("No model loaded");

@@ -310,7 +310,7 @@ std::string Deep2LocalServer::ProcessOpenAIRequest(const std::string& jsonReques
     return BuildChatCompletionResponse(
         result.text,
         "deep2-local",
-        Tokenizer::Encode(prompt).size(),
+        prompt.size(),
         result.tokensGenerated
     );
 }

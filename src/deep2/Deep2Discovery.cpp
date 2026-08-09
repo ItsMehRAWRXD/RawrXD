@@ -346,7 +346,6 @@ std::vector<ModelInfo> Deep2BackendClient::ListModels() {
                 ModelInfo info;
                 info.id = m.value("name", "");
                 info.name = m.value("model", info.id);
-                info.format = m.value("format", "GGUF");
                 info.quantization = m.value("quantization", "unknown");
                 
                 if (m.contains("details")) {
@@ -421,20 +420,6 @@ std::string Deep2BackendClient::Generate(const std::string& prompt, int maxToken
 void Deep2BackendClient::GenerateStream(const std::string& prompt, int maxTokens,
                                          float temperature,
                                          std::function<void(const std::string&)> onToken) {
-    // SSE streaming with real chunked JSON output
-    std::string ssePayload;
-    for (const auto& chunk : responseChunks) {
-        ssePayload += "data: " + chunk + "\n\n";
-    }
-    ssePayload += "data: [DONE]\n\n";
-    
-    // Send in chunks to avoid blocking
-    const size_t sseChunkSize = 4096;
-    for (size_t offset = 0; offset < ssePayload.size(); offset += sseChunkSize) {
-        size_t len = std::min(sseChunkSize, ssePayload.size() - offset);
-        send(clientSocket, ssePayload.data() + offset, (int)len, 0);
-    }
-    // For now, just call Generate and return the whole response
     std::string response = Generate(prompt, maxTokens, temperature);
     if (!response.empty() && onToken) {
         onToken(response);

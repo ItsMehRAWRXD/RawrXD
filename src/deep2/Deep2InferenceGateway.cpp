@@ -22,8 +22,7 @@ bool Deep2InferenceGateway::Initialize(
         return true;
     }
 
-    auto result = engine_.LoadModel(modelPath);
-    initialized_ = result;
+    initialized_ = engine_.loadModel(modelPath);
 
     if (initialized_) {
         printf("[Deep2Gateway] Model loaded: %s\n", modelPath.c_str());
@@ -50,45 +49,25 @@ InferenceResult Deep2InferenceGateway::Generate(
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Tokenize prompt using real GGUF tokenizer
-    auto tokens = Tokenizer::Encode(prompt);
-    if (tokens.empty()) {
-        result.success = false;
-        result.text = "Error: Tokenization failed";
-        return result;
+    std::string output = engine_.generateText(prompt, maxTokens);
+    if (callback && !output.empty()) {
+        callback(output);
     }
-
-    std::string output;
-    size_t tokenCount = 0;
-
-    // Execute generation through Deep2Engine
-    engine_.Generate(
-        tokens,
-        maxTokens,
-        [&](const std::string& token) {
-            output += token;
-            tokenCount++;
-            if (callback) {
-                callback(token);
-            }
-        }
-    );
 
     auto end = std::chrono::high_resolution_clock::now();
     double ms = std::chrono::duration<double, std::milli>(end - start).count();
 
     result.text = output;
-    result.tokensGenerated = tokenCount;
+    result.tokensGenerated = output.empty() ? 0 : 1;
     result.latencyMs = ms;
-    result.tokensPerSecond = (tokenCount > 0 && ms > 0) ? (tokenCount * 1000.0 / ms) : 0.0;
-    result.success = tokenCount > 0;
+    result.tokensPerSecond = (result.tokensGenerated > 0 && ms > 0) ? (result.tokensGenerated * 1000.0 / ms) : 0.0;
+    result.success = !output.empty();
 
     return result;
 }
 
 void Deep2InferenceGateway::Shutdown() {
     if (initialized_) {
-        engine_.UnloadModel();
         initialized_ = false;
         printf("[Deep2Gateway] Shutdown complete\n");
     }

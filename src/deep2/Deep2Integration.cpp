@@ -5,7 +5,6 @@
 
 #include "Deep2Integration.hpp"
 #include "Deep2Engine.h"
-#include "Deep2Discovery.h"
 #include "Deep2APIServer.hpp"
 #include "gpu/Deep2GPUBackend.hpp"
 
@@ -87,7 +86,7 @@ public:
         status.cpu.supportsFMA = true;
         
         // GPU Enumeration
-        Deep2GPUBackend gpuBackend;
+        Deep2::GPU::Deep2GPUBackend gpuBackend;
         if (gpuBackend.Initialize()) {
             auto devices = gpuBackend.EnumerateDevices();
             
@@ -95,12 +94,12 @@ public:
                 GPUDeviceInfo info;
                 info.index = dev.index;
                 info.name = dev.name;
-                info.vendor = dev.vendor;
-                info.architecture = dev.architecture;
+                info.vendor = "AMD";
+                info.architecture = dev.shortName.empty() ? std::to_string(dev.gfxArch) : dev.shortName;
                 info.vramBytes = dev.vramBytes;
                 info.computeUnits = dev.computeUnits;
                 info.backend = "Vulkan";
-                info.available = dev.available;
+                info.available = dev.isAvailable;
                 info.utilization = 0.0f;
                 
                 status.gpus.push_back(info);
@@ -274,22 +273,10 @@ std::string Deep2APIGateway::LoadModel(const std::string& modelId) {
         return response.dump(2);
     }
     
-    // Load model from disk
-    std::string modelPath = ResolveModelPath(modelId);
-    if (modelPath.empty()) {
-        response["error"] = "Model not found: " + modelId;
-        return response.dump(2);
-    }
-    
-    if (!impl_->engine) {
-        response["error"] = "Engine not initialized";
-        return response.dump(2);
-    }
-    
-    bool loaded = impl_->engine->LoadModel(modelPath);
+    bool loaded = impl_->engine->loadModel(modelId);
     response["success"] = loaded;
     if (!loaded) {
-        response["error"] = "Failed to load model from " + modelPath;
+        response["error"] = "Failed to load model from " + modelId;
     }
     return response.dump(2);
 }
@@ -417,8 +404,9 @@ public:
             return false;
         }
         
+        DWORD timeoutMs = 5000;
         WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT, 
-            (void*)&(DWORD){5000}, sizeof(DWORD));
+            (void*)&timeoutMs, sizeof(DWORD));
         
         if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
             WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
@@ -498,8 +486,9 @@ public:
             return false;
         }
         
+        DWORD timeoutMs = 30000;
         WinHttpSetOption(hRequest, WINHTTP_OPTION_RECEIVE_TIMEOUT,
-            (void*)&(DWORD){30000}, sizeof(DWORD));
+            (void*)&timeoutMs, sizeof(DWORD));
         
         std::wstring headers = L"Content-Type: application/json\r\n";
         std::wstring wBody(body.begin(), body.end());

@@ -1,3 +1,20 @@
+# ── Predictive Memory & Tensor Placement ─────────────────────────────────────
+# Prediction decides what will probably be needed.
+# Placement decides where it should live.
+# Capacity decides whether it can live there.
+# TransferScheduler moves it.
+# ResidencyTracker records reality.
+# TensorExecutionRouter executes it.
+set(RAWRXD_PREDICTIVE_MEMORY_SOURCES
+    memory/PlacementPolicy.cpp
+    memory/ResidencyTracker.cpp
+    memory/WorkingSetPredictor.cpp
+    memory/CapacityManager.cpp
+    memory/TransferScheduler.cpp
+    memory/TensorPlacementManager.cpp
+    memory/PredictiveMemoryManager.cpp
+)
+
 # RawrXD Runtime Component
 add_library(rawrxd_runtime STATIC
     model_registry/model_manifest.cpp
@@ -17,10 +34,12 @@ add_library(rawrxd_runtime STATIC
     CoreTypes.hpp
     LayerVersionRegistry.hpp
     LayerShadowExecutor.hpp
+    ${RAWRXD_PREDICTIVE_MEMORY_SOURCES}
 )
 
 target_include_directories(rawrxd_runtime PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/model_registry
     ${CMAKE_CURRENT_SOURCE_DIR}/session
     ${CMAKE_CURRENT_SOURCE_DIR}/router

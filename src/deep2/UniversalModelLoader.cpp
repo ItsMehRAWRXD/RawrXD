@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <fstream>
 #include <cstdint>
-#include <zlib.h>  // For ZIP decompression
+#include "../compression/zlib_runtime_loader.hpp"  // For ZIP decompression
 
 #ifdef _MSC_VER
     #include <intrin.h>

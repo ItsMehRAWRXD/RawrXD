@@ -21,18 +21,6 @@
 #include "CompressedKVCache.h"
 #include "NVMeStream.h"
 #include "SlidingWindowEngine.h"
-#include "EOSShortCircuit.h"
-#include "StreamingYieldController.h"
-#include "RoPECacheOptimizer.h"
-#include "AVXShadowBuffer.h"
-#include "TensorNameHash.h"
-#include "MoEWeightPinner.h"
-#include "EOSShortCircuit.h"
-#include "StreamingYieldController.h"
-#include "RoPECacheOptimizer.h"
-#include "AVXShadowBuffer.h"
-#include "TensorNameHash.h"
-#include "MoEWeightPinner.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -368,14 +356,6 @@ private:
     // MARS: Dynamic dual-GPU VRAM orchestration
     std::unique_ptr<MARS::MARSController> marsController_;
     bool marsEnabled_ = false;
-    
-    // Batch 1 Blockers: Runtime Operations & Data Path
-    EOSShortCircuit eosShortCircuit_;
-    StreamingYieldController yieldController_;
-    RoPECacheOptimizer ropeCacheOptimizer_;
-    AVXShadowBuffer avxShadowBuffer_;
-    TensorNameHashTable tensorNameHashTable_;
-    MoEWeightPinner moeWeightPinner_;
     
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
