@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <atomic>
 #include <mutex>
+#include <functional>
 
 namespace rawrxd {
 
@@ -67,7 +68,7 @@ public:
             std::memcpy(w.data, src, bytes);
             w.resident = true;
             w.last_used = ++clock_;
-            w.refs = 1;
+            w.refs = 0;  // No active references until acquire()
             
             weights_[name] = std::move(w);
             lru_.push_back(name);
@@ -85,7 +86,7 @@ public:
             it->second.bytes = bytes;
             it->second.resident = true;
             it->second.last_used = ++clock_;
-            it->second.refs = 1;
+            it->second.refs = 0;  // Reset refs on re-commit
             resident_bytes_ += bytes;
             touch_lru(name);
             return true;

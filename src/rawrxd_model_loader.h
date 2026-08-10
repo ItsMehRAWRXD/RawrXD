@@ -119,8 +119,8 @@ class RawrXDModelLoader
     using ModelLoadErrorCallback = std::function<void(const std::string& stage, const std::string& message)>;
 
     bool Load(const wchar_t* path, VkDevice device, VkPhysicalDevice physDevice);
-    float* GetTensor(const std::string& name);
-    bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
+    virtual float* GetTensor(const std::string& name);
+    virtual bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
     bool StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N);
 
     // B010: Weight-residency profiling counters (profiling-only, no caching)
@@ -198,6 +198,7 @@ class RawrXDModelLoader
     void B011EnableResidency(bool enabled);
     bool B011ResidencyEnabled() const;
     void B011ClearResidency();
+    const B011ResidencyStats& B011GetStats() const { return m_b011Stats; }
 
     // B014: Per-invocation compute decomposition profiler accessors
     void B014EnableProfiling(bool enabled) { m_b014Profiler.Enable(enabled); }

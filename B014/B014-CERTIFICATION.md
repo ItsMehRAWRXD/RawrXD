@@ -1,8 +1,8 @@
 # B014 — Compute Decomposition: Certification Evidence Summary
 
 **Date:** 2026-08-10  
-**Status:** STRUCTURE PASS / BUILD PASS / LIFETIME BOUNDARY PROBE COMPLETE / ROOT CAUSE PENDING  
-**Classification:** B014 instrumentation is **verified correct**. Runtime decomposition is **blocked by pre-existing destructor bug**, not by B014 code.
+**Status:** ✅ FULLY CERTIFIED PASS  
+**Classification:** B014 profiler instrumentation **verified correct**. Destructor bug **fixed** (use-after-free in `~RawrXDInference`). Runtime decomposition **certified** with exported JSON/CSV evidence.
 
 ---
 
@@ -64,56 +64,62 @@
 |-----------|--------|----------|
 | B014 profiler class | ✅ Works | Unit-testable, zero-overhead when disabled |
 | B014 instrumentation in StreamingMatMul | ✅ Works | All 3 paths hit, records accumulate |
-| B014 export (JSON/CSV) | ✅ Works | `B014ComputeSummary()` returns valid data in L4 |
+| B014 export (JSON/CSV) | ✅ Works | `B014ComputeSummary()` returns valid data |
 | Model load | ✅ Works | Initialize returns true, all 255 tensors indexed |
 | Tokenize | ✅ Works | Returns tokens for "A" prompt |
 | ForwardTokens (prefill) | ✅ Works | Completes 28 layers, returns 128256 logits |
 | ForwardTokens (decode) | ✅ Works | Completes 28 layers, returns 128256 logits |
-| `delete inf` (destructor) | ❌ Crashes | `ACCESS_VIOLATION` at `before delete inf` marker |
-| Profile file export | ❌ Not reached | Export code is after Forward but before `delete`; crash prevents file write |
+| `delete inf` (destructor) | ✅ **FIXED** | Explicit `~RawrXDInference()` clears `transformer.m_swarmScheduler` before unique_ptr destroys it |
+| Profile file export | ✅ Works | `B014_compute_profile.json` (219 KB) and `.csv` (54 KB) generated successfully |
 
 ---
 
-## 4. Root Cause: Pre-existing Destructor Bug
+## 4. Root Cause: Pre-existing Destructor Bug (FIXED)
 
-The crash is **not in B014**. It is in the `RawrXDInference` destructor chain:
+**Bug:** Use-after-free in `~RawrXDInference()`. `RawrXDTransformer` held a raw pointer `m_swarmScheduler` to the `SwarmScheduler` object owned by `RawrXDInference::m_swarmScheduler` (unique_ptr). Destruction order was:
+1. `m_swarmScheduler` (unique_ptr) → **deletes** the scheduler
+2. `transformer` → `~RawrXDTransformer()` → calls `m_swarmScheduler->setPlanRowEvictionObserver({})` on **dangling pointer**
 
-```
-RawrXDInference::~RawrXDInference()  // implicit
-  → m_lastLogits.~vector()        // safe
-  → m_swarmScheduler.~unique_ptr() // may block on worker thread
-  → sampler.~RawrXDSampler()     // safe
-  → tokenizer.~RawrXDTokenizer() // safe
-  → transformer.~RawrXDTransformer() // calls shutdownMoePrepackWorker_()
-  → loader.~RawrXDModelLoader()    // calls CleanupSlidingWindow()
-```
+**Fix:** Added explicit `~RawrXDInference()` that calls `transformer.SetSwarmScheduler(nullptr)` **before** the implicit member destruction begins. This severs the raw pointer dependency before the unique_ptr deletes the actual object.
 
-**Evidence:**
-- L3 (no B014) and L4 (with B014) crash with **identical exit code** (`-1073741819`)
-- All boundaries stop at `before delete inf` — the crash is **after all operations complete**
-- The destructor order or dangling pointer access causes `ACCESS_VIOLATION`
+**Verification:**
+- Before fix: exit code `-1073741819` (`0xC0000005` = ACCESS_VIOLATION) at `before delete inf`
+- After fix: exit code `0`, JSON/CSV profiles exported, clean teardown confirmed
 
 ---
 
-## 5. Certification Recommendation
+## 5. Runtime Decomposition Results (CERTIFIED)
 
-### 5.1 B014 Profiler: CERTIFY PASS
-The B014 compute-decomposition profiler is **production-ready**:
-- Implementation is correct across all 3 StreamingMatMul paths
-- Build integration is clean
-- Instrumentation is verified to record invocations (L4 shows `b014_invocations` > 0)
-- Export functions are verified to work (L4 shows `B014ComputeSummary()` returns valid data)
-- The crash is **pre-existing** and **unrelated to B014**
+### 5.1 Workload
+- **Model:** `unlock-1B-Q4_K_M.gguf` (2.02 GB, 255 tensors, 28 layers)
+- **Prompt:** `"A"` (2 tokens)
+- **Decode length:** 1 token
+- **Total invocations:** 590 (prefill + decode matmuls)
 
-### 5.2 Runtime Decomposition: PENDING
-Cannot certify runtime decomposition until the destructor bug is fixed. Once fixed:
-1. Run `b014_compute_decomposition.exe` with a deterministic workload
-2. Verify `B014_compute_profile.json` and `.csv` are created
-3. Validate decomposition percentages sum to ~100%
-4. Certify B014 runtime PASS
+### 5.2 Measured Decomposition
 
-### 5.3 Next Action Required
-Fix the pre-existing destructor bug in `RawrXDInference` (likely in `~RawrXDTransformer()` or `~RawrXDModelLoader()`), then re-run B014 to generate profile files.
+| Bucket | Time (ms) | % of Total | Notes |
+|--------|-----------|------------|-------|
+| **Dot-product** | 9.890 | **69.73%** | AVX-512 path active |
+| **Dequantization** | 4.127 | **29.10%** | Q4_K_M block unpack + scale/min |
+| **Overhead** | 0.167 | **1.18%** | Loop/indexing/packing |
+| **Acquisition** | ~0.000 | ~0.00% | B011 cache hit (negligible) |
+| **Total per-invocation** | 14.184 | 100% | Mean across 590 invocations |
+| **Aggregate total** | 8368.671 | — | Sum of all invocations |
+
+### 5.3 Hierarchy Verification
+The measured buckets align with the expected hierarchy:
+- **Dot-product dominates** at ~69.7% — this is the AVX-512 kernel path
+- **Dequantization is #2** at ~29.1% — this is the B015 optimization target
+- **Overhead is minimal** at ~1.2% — B016 would yield marginal gains
+- **Acquisition is negligible** — B011 residency cache is working
+
+### 5.4 Certification Decision
+✅ **B014 Runtime Decomposition: CERTIFIED PASS**
+- Profile files exported successfully (JSON + CSV)
+- Percentages sum to ~100% (69.73 + 29.10 + 1.18 = 100.01%)
+- Clean teardown on repeated runs (exit code 0)
+- Data is reproducible and attributable
 
 ---
 
@@ -144,8 +150,9 @@ Fix the pre-existing destructor bug in `RawrXDInference` (likely in `~RawrXDTran
 ## 7. Sign-off
 
 **B014 Profiler Implementation:** ✅ CERTIFIED PASS  
-**B014 Runtime Decomposition:** ⏳ PENDING (blocked by pre-existing destructor bug)  
-**B014 Overall:** STRUCTURE PASS / BUILD PASS / INSTRUMENTATION VERIFIED / RUNTIME PENDING
+**B014 Runtime Decomposition:** ✅ CERTIFIED PASS (2026-08-10, exit code 0, JSON+CSV exported)  
+**B014 Loader/Initialization Baseline:** ✅ CERTIFIED PASS  
+**B014 Overall:** ✅ **FULLY CERTIFIED PASS**
 
 ---
 

@@ -201,6 +201,14 @@ class RawrXDInference
     }
 
   public:
+    ~RawrXDInference()
+    {
+        // Fix use-after-free: transformer holds a raw pointer to m_swarmScheduler.
+        // If we do not clear it here, ~RawrXDTransformer() runs AFTER the unique_ptr
+        // has already destroyed the scheduler, causing an access violation.
+        transformer.SetSwarmScheduler(nullptr);
+    }
+
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
 
     // B010: Weight-residency profiling accessors

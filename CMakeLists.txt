@@ -8273,6 +8273,221 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
+# B015: WeightResidencyPool Integration Validation
+# ============================================================================
+set(B015_RESIDENCY_VALIDATION_SOURCES
+    tests/b015/b015_residency_validation.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    B014/build/b014_profiler.cpp
+)
+
+add_executable(b015_residency_validation EXCLUDE_FROM_ALL
+    ${B015_RESIDENCY_VALIDATION_SOURCES}
+)
+target_include_directories(b015_residency_validation PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b015_residency_validation PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b015_residency_validation PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b015_residency_validation PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b015_residency_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b015_residency_validation PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b015_residency_validation PRIVATE dxgi)
+    target_compile_definitions(b015_residency_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b015_residency_validation PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b015_residency_validation PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b015_residency_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b015_residency_validation PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b015_residency_validation PRIVATE dxgi)
+else()
+    target_link_libraries(b015_residency_validation PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b015_residency_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b015_residency_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b015_residency_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b015_residency_validation PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b015_residency_validation
+             COMMAND b015_residency_validation)
+endif()
+
+# ============================================================================
+# B015: WeightResidencyPool Micro-Benchmark
+# ============================================================================
+add_executable(b015_pool_microbench EXCLUDE_FROM_ALL
+    tests/b015/b015_pool_microbench.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    B014/build/b014_profiler.cpp
+)
+target_include_directories(b015_pool_microbench PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b015_pool_microbench PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b015_pool_microbench PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b015_pool_microbench PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b015_pool_microbench PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b015_pool_microbench PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b015_pool_microbench PRIVATE dxgi)
+    target_compile_definitions(b015_pool_microbench PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b015_pool_microbench PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b015_pool_microbench PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b015_pool_microbench PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b015_pool_microbench PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b015_pool_microbench PRIVATE dxgi)
+else()
+    target_link_libraries(b015_pool_microbench PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b015_pool_microbench APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b015_pool_microbench APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b015_pool_microbench APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b015_pool_microbench PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
+# B015: WeightResidencyPool Direct Unit Test
+# ============================================================================
+add_executable(b015_pool_direct_test EXCLUDE_FROM_ALL
+    tests/b015/b015_pool_direct_test.cpp
+)
+target_include_directories(b015_pool_direct_test PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b015_pool_direct_test PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b015_pool_direct_test PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b015_pool_direct_test PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b015_pool_direct_test PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b015_pool_direct_test PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b015_pool_direct_test PRIVATE dxgi)
+    target_compile_definitions(b015_pool_direct_test PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b015_pool_direct_test PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b015_pool_direct_test PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b015_pool_direct_test PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b015_pool_direct_test PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b015_pool_direct_test PRIVATE dxgi)
+else()
+    target_link_libraries(b015_pool_direct_test PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b015_pool_direct_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b015_pool_direct_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b015_pool_direct_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b015_pool_direct_test PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
+# B015: AVX-512 Q4_K_M Dequantization Kernel Certification
+# ============================================================================
+set(B015_DEQUANT_SOURCES
+    B015/build/b015_cert_test.cpp
+)
+add_executable(b015_dequant_certification EXCLUDE_FROM_ALL
+    ${B015_DEQUANT_SOURCES}
+)
+target_include_directories(b015_dequant_certification PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/B015/build
+)
+target_compile_features(b015_dequant_certification PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(b015_dequant_certification PRIVATE /arch:AVX512)
+else()
+    target_compile_options(b015_dequant_certification PRIVATE -mavx512f)
+endif()
+target_link_libraries(b015_dequant_certification PRIVATE Threads::Threads)
+if(BUILD_TESTING)
+    add_test(NAME b015_dequant_certification
+             COMMAND b015_dequant_certification)
+endif()
+
+# ============================================================================
 # B010/B011 Fast Experiment — Direct StreamingMatMul residency test
 # ============================================================================
 set(B010B011_FAST_SOURCES
