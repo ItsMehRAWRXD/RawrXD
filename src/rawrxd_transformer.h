@@ -34,6 +34,7 @@
 #include "core/swarm_scheduler.hpp"
 #include "runtime/TensorExecutionRouter.hpp"
 #include "runtime/memory/PredictiveMemoryManager.hpp"
+#include "runtime/memory/WeightResidencyPool.hpp"
 #include "rawrxd_model_loader.h"
 
 /// Subset of swarm plan rows to pin for one layer (MoE: static early, experts after router logits).
@@ -111,6 +112,10 @@ class RawrXDTransformer
         /// After a heatmap snapshot, enqueue up to N resident expert hints per tick (async prepack only).
         bool moe_down_grouped_prepack_hint_from_heatmap = false;
         int moe_down_grouped_prepack_heatmap_max_hints_per_tick = 16;
+        /// Max total bytes for the multi-tensor weight residency pool (0 = disabled).
+        std::uint64_t weight_residency_pool_max_bytes = 0;
+        /// When true, pin layer N+1 weights while computing layer N (prefetch hint).
+        bool weight_residency_prefetch_next_layer = false;
     };
 
     ~RawrXDTransformer();
@@ -181,6 +186,19 @@ class RawrXDTransformer
     [[nodiscard]] std::uint64_t moeMixturePackCacheEvictions() const noexcept;
     /// Entries removed via \ref MoEIntegr::MoEMixturePlanPackCache::invalidateEntriesReferencingPlanRows.
     [[nodiscard]] std::uint64_t moeMixturePackCacheSelectiveRowInvalidations() const noexcept;
+
+    // B015: Weight residency pool telemetry
+    [[nodiscard]] std::uint64_t weightResidencyHits() const noexcept { return m_weightResidencyHits; }
+    [[nodiscard]] std::uint64_t weightResidencyMisses() const noexcept { return m_weightResidencyMisses; }
+    [[nodiscard]] float weightResidencyHitRate() const noexcept
+    {
+        const std::uint64_t total = m_weightResidencyHits + m_weightResidencyMisses;
+        return total > 0 ? (100.0f * static_cast<float>(m_weightResidencyHits) / static_cast<float>(total)) : 0.0f;
+    }
+    [[nodiscard]] std::size_t weightResidencyPoolBytes() const noexcept
+    {
+        return m_weightResidencyPool ? m_weightResidencyPool->resident_bytes() : 0;
+    }
 
     /// O(1) group lookup for the last plan known to the scheduler when SetSwarmScheduler ran (MoE-aware).
     [[nodiscard]] const RawrXD::Swarm::SwarmPlanSliceIndex& swarmPlanSliceIndex() const noexcept
@@ -289,4 +307,9 @@ class RawrXDTransformer
     std::uint64_t m_routerBoundaryMatMulCount = 0;
     std::uint64_t m_layerPredictCount = 0;
     std::uint64_t m_layerPrefetchCount = 0;
+
+    // B015: Multi-tensor weight residency pool
+    std::unique_ptr<rawrxd::WeightResidencyPool> m_weightResidencyPool;
+    std::uint64_t m_weightResidencyHits = 0;
+    std::uint64_t m_weightResidencyMisses = 0;
 };

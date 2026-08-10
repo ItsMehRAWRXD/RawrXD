@@ -424,6 +424,7 @@ RawrXDModelLoader::RawrXDModelLoader()
 
 RawrXDModelLoader::~RawrXDModelLoader()
 {
+    B011ClearResidency();  // Free resident weight buffers before unmapping file views
     CleanupSlidingWindow();
     if (m_mappedView)
     {

@@ -1225,6 +1225,40 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         return false;
     }
 
+    // B015: Check WeightResidencyPool first — fast path for resident dequantized weights
+    if (m_weightResidencyPool)
+    {
+        if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
+        {
+            // Resident weight found — perform direct BLAS-style matmul
+            const float* weightData = resident->data;
+            if (weightData)
+            {
+                // Simple row-major GEMM: output[M] = W[M x K] @ input[K]
+                // where M = outputDim, K = inputDim
+                for (std::size_t m = 0; m < outputDim; ++m)
+                {
+                    float sum = 0.0f;
+                    for (std::size_t k = 0; k < inputDim; ++k)
+                    {
+                        sum += weightData[m * inputDim + k] * input[k];
+                    }
+                    output[m] = sum;
+                }
+                m_weightResidencyPool->release(tensorName);
+                ++m_weightResidencyHits;
+                if (isOutputProjection)
+                {
+                    printf("[MATMUL] output.weight RETURN residency_pool ok=1\n");
+                    std::fflush(stdout);
+                }
+                return true;
+            }
+            m_weightResidencyPool->release(tensorName);
+        }
+        ++m_weightResidencyMisses;
+    }
+
     std::uint64_t canonicalTensorId = 0;
     std::uint64_t tensorStorageBytes = 0;
     const bool hasCanonicalId = loader->GetTensorResidencyInfo(tensorName, canonicalTensorId, tensorStorageBytes);
@@ -1334,6 +1368,18 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         startMoePrepackWorker_();
     }
     installSwarmPlanRowEvictionObserver_();
+
+    // B015: Initialize multi-tensor weight residency pool
+    m_weightResidencyPool.reset();
+    m_weightResidencyHits = 0;
+    m_weightResidencyMisses = 0;
+    if (config.weight_residency_pool_max_bytes > 0)
+    {
+        m_weightResidencyPool = std::make_unique<rawrxd::WeightResidencyPool>(
+            static_cast<std::size_t>(config.weight_residency_pool_max_bytes));
+        printf("[B015] WeightResidencyPool initialized: max_bytes=%llu MB\n",
+               static_cast<unsigned long long>(config.weight_residency_pool_max_bytes / (1024 * 1024)));
+    }
 
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
     printf("[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.\n");
