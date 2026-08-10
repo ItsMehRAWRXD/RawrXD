@@ -79,6 +79,12 @@ void TensorExecutionRouter::advanceLayer(uint32_t layer) {
     pImpl->currentLayer = layer;
 }
 
+// Phase 1 bridge: optional StreamRouterAdapter
+void TensorExecutionRouter::setStreamRouterAdapter(rawrxd::StreamRouterAdapter* adapter) {
+    // TODO: store adapter pointer in Impl
+    (void)adapter;
+}
+
 void TensorExecutionRouter::matmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K) {
     (void)dispatchMatmul(input, weight, output, M, K, MatmulBackendDispatch{});
 }

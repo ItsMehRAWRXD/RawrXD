@@ -244,6 +244,7 @@ if(RAWRXD_BUILD_CLI)
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
+        src/runtime/StreamRouterAdapter.cpp
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp

@@ -19,8 +19,10 @@
 #include <string>
 #include <cstdint>
 #include <functional>
-#include <vector>
+#include <vector>#include "ResidentTensor.hpp"
 
+// Forward declarations
+namespace rawrxd { class StreamRouterAdapter; }
 namespace RawrXD {
 
 // Forward declaration: keeps TensorExecutionRouter tier-agnostic.
@@ -72,6 +74,10 @@ public:
     // Router records accesses and ensures residency; it never places tensors.
     void setMemoryManager(Memory::PredictiveMemoryManager* mgr);
     void advanceLayer(uint32_t layer);
+
+    // Phase 1 bridge: optional StreamRouterAdapter for Deep2 integration.
+    // When set and enabled, dispatchMatmul will attempt StreamRouter first.
+    void setStreamRouterAdapter(rawrxd::StreamRouterAdapter* adapter);
 
 private:
     class Impl;
