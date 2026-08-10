@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -202,6 +203,10 @@ class RawrXDInference
   public:
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
 
+    // B010: Weight-residency profiling accessors
+    RawrXDModelLoader& GetLoader() { return loader; }
+    const RawrXDModelLoader& GetLoader() const { return loader; }
+
     bool Initialize(const wchar_t* modelPath, const char* vocabPath, const char* mergesPath)
     {
         m_lastLoadErrorMessage.clear();
@@ -209,16 +214,30 @@ class RawrXDInference
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
 #if RAWR_VULKAN_AVAILABLE
         VkInstance instance = CreateVulkanInstance();
+        VkPhysicalDevice physDevice = VK_NULL_HANDLE;
+        VkDevice device = VK_NULL_HANDLE;
+
         if (!instance)
-            return false;
-
-        VkPhysicalDevice physDevice = SelectPhysicalDevice(instance);
-        if (!physDevice)
-            return false;
-
-        VkDevice device = CreateLogicalDevice(physDevice);
-        if (!device)
-            return false;
+        {
+            printf("[RawrXD] Vulkan init failed at instance creation; falling back to CPU mode\n");
+        }
+        else
+        {
+            physDevice = SelectPhysicalDevice(instance);
+            if (!physDevice)
+            {
+                printf("[RawrXD] Vulkan init failed at physical device selection; falling back to CPU mode\n");
+            }
+            else
+            {
+                device = CreateLogicalDevice(physDevice);
+                if (!device)
+                {
+                    printf("[RawrXD] Vulkan init failed at logical device creation; falling back to CPU mode\n");
+                    physDevice = VK_NULL_HANDLE;
+                }
+            }
+        }
 #else
         // CPU-only mode — no GPU required
         VkDevice device = VK_NULL_HANDLE;
@@ -394,6 +413,9 @@ class RawrXDInference
     int getHeads() const { return loader.getHeads(); }
     int getKVHeads() const { return loader.getKVHeads(); }
     uint32_t getContextLimit() const { return m_contextLimit; }
+    std::uint64_t getRouterBoundaryMatMulCount() const { return transformer.routerBoundaryMatMulCount(); }
+    std::uint64_t getLayerPredictCount() const { return transformer.layerPredictCount(); }
+    std::uint64_t getLayerPrefetchCount() const { return transformer.layerPrefetchCount(); }
 
     std::vector<uint32_t> Tokenize(const std::string& text)
     {
@@ -445,14 +467,21 @@ class RawrXDInference
                 t %= vocabSize;
         }
 
+        printf("[STREAM] calling Forward() for prefill, tokens=%zu\n", tokens.size());
         auto logits = transformer.Forward(tokens, 0);
+        printf("[STREAM] Forward() returned, logits.size()=%zu\n", logits.size());
         m_lastLogits = logits;
         uint32_t absolutePos = static_cast<uint32_t>(tokens.size());
 
+        printf("[STREAM] entering generation loop, maxTokens=%u\n", maxTokens);
         for (uint32_t i = 0; i < maxTokens; i++)
         {
+            printf("[STREAM] generation iteration %u\n", i);
             if (logits.empty())
+            {
+                printf("[STREAM] logits empty, breaking\n");
                 break;
+            }
 
             bool hasFinite = false;
             for (float v : logits)
@@ -464,9 +493,13 @@ class RawrXDInference
                 }
             }
             if (!hasFinite)
+            {
+                printf("[STREAM] no finite logits, breaking\n");
                 break;
+            }
 
             uint32_t nextToken = sampler.Sample(logits.data(), logits.size(), tokens);
+            printf("[STREAM] candidate token=%u\n", nextToken);
             if (nextToken >= vocabSize)
             {
                 nextToken %= vocabSize;
@@ -479,27 +512,35 @@ class RawrXDInference
             generated.push_back(nextToken);
 
             if (nextToken == 2)
+            {
+                printf("[STREAM] EOS token, breaking\n");
                 break;
+            }
 
             std::vector<uint32_t> nextTokVec = {nextToken};
+            printf("[STREAM] calling Forward() for decode, absolutePos=%u\n", absolutePos);
             logits = transformer.Forward(nextTokVec, absolutePos);
+            printf("[STREAM] Forward() decode returned, logits.size()=%zu\n", logits.size());
             absolutePos++;
             m_lastLogits = logits;
 
             if (callback)
             {
                 const std::string piece = tokenizer.Decode({nextToken});
+                printf("[STREAM] invoking callback token=%u\n", nextToken);
                 try
                 {
                     callback(nextToken, piece);
+                    printf("[STREAM] callback returned\n");
                 }
                 catch (...)
                 {
-                    // Callback failures should not crash inference.
+                    printf("[STREAM] callback threw exception\n");
                 }
             }
         }
 
+        printf("[STREAM] generation loop complete, generated=%zu tokens\n", generated.size());
         return generated;
     }
 

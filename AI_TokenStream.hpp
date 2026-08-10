@@ -55,6 +55,21 @@ enum class StreamMode : uint8_t {
     Adaptive = 2   // Auto-switch based on latency
 };
 
+// ============================================================================
+// B005 — Formal Stream Lifecycle State Machine
+// Enforces deterministic transitions: Idle → Prefilling → Decoding → Terminal
+// ============================================================================
+enum class StreamLifecycleState : uint8_t {
+    Idle       = 0,
+    Loading    = 1,
+    Prefilling = 2,
+    Decoding   = 3,
+    Stopping   = 4,
+    Completed  = 5,
+    Cancelled  = 6,
+    Failed     = 7
+};
+
 struct StreamState {
     std::string  message_id;
     uint32_t     total_tokens;
@@ -67,7 +82,55 @@ struct StreamState {
     bool         completed;
     bool         failed;
     std::string  error_message;
+
+    // B005 lifecycle state machine fields
+    StreamLifecycleState lifecycle_state = StreamLifecycleState::Idle;
+    uint32_t     tokens_generated = 0;
+    uint32_t     max_tokens = 2048;
+    bool         stop_requested = false;
+    uint32_t     callback_count = 0;
+    uint32_t     terminal_event_count = 0;
+    uint32_t     duplicate_token_count = 0;
+    uint32_t     dropped_token_count = 0;
+    uint64_t     stream_start_us = 0;
+    uint64_t     stream_end_us = 0;
 };
+
+// B005 — Lifecycle transition validator
+inline bool CanTransition(StreamLifecycleState from, StreamLifecycleState to) {
+    switch (from) {
+        case StreamLifecycleState::Idle:
+            return to == StreamLifecycleState::Loading || to == StreamLifecycleState::Failed;
+        case StreamLifecycleState::Loading:
+            return to == StreamLifecycleState::Prefilling || to == StreamLifecycleState::Completed || to == StreamLifecycleState::Failed || to == StreamLifecycleState::Cancelled;
+        case StreamLifecycleState::Prefilling:
+            return to == StreamLifecycleState::Decoding || to == StreamLifecycleState::Completed || to == StreamLifecycleState::Failed || to == StreamLifecycleState::Cancelled;
+        case StreamLifecycleState::Decoding:
+            return to == StreamLifecycleState::Stopping || to == StreamLifecycleState::Completed || to == StreamLifecycleState::Cancelled || to == StreamLifecycleState::Failed;
+        case StreamLifecycleState::Stopping:
+            return to == StreamLifecycleState::Completed || to == StreamLifecycleState::Failed;
+        case StreamLifecycleState::Completed:
+        case StreamLifecycleState::Cancelled:
+        case StreamLifecycleState::Failed:
+            return false; // Terminal states are absorbing
+        default:
+            return false;
+    }
+}
+
+inline const char* LifecycleStateToString(StreamLifecycleState s) {
+    switch (s) {
+        case StreamLifecycleState::Idle:       return "Idle";
+        case StreamLifecycleState::Loading:      return "Loading";
+        case StreamLifecycleState::Prefilling:  return "Prefilling";
+        case StreamLifecycleState::Decoding:     return "Decoding";
+        case StreamLifecycleState::Stopping:     return "Stopping";
+        case StreamLifecycleState::Completed:    return "Completed";
+        case StreamLifecycleState::Cancelled:    return "Cancelled";
+        case StreamLifecycleState::Failed:       return "Failed";
+        default:                                 return "Unknown";
+    }
+}
 
 // ============================================================================
 // Circular Token Buffer (O(1) push/pop, fixed-size, no O(n) shifts)
@@ -559,9 +622,193 @@ public:
         current_state_ = StreamState{};
         current_state_.message_id = message_id;
         current_state_.mode = config_.enforce_single_token ? StreamMode::Single : StreamMode::Adaptive;
+        current_state_.lifecycle_state = StreamLifecycleState::Idle;
         sse_parser_.reset();
         buffer_.clear();
         paused_ = false;
+    }
+
+    // ============================================================================
+    // B005 — Formal Stream Lifecycle State Machine Enforcement
+    // ============================================================================
+
+    // Attempt a state transition. Returns true if valid, false if rejected.
+    bool transitionState(StreamLifecycleState newState, const std::string& reason = "") {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        StreamLifecycleState oldState = current_state_.lifecycle_state;
+        if (!CanTransition(oldState, newState)) {
+            // Log invalid transition attempt (debug builds)
+            #ifdef _DEBUG
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                "[B005] INVALID transition: %s -> %s (reason: %s)",
+                LifecycleStateToString(oldState),
+                LifecycleStateToString(newState),
+                reason.c_str());
+            OutputDebugStringA(buf);
+            #endif
+            return false;
+        }
+        current_state_.lifecycle_state = newState;
+        if (newState == StreamLifecycleState::Completed ||
+            newState == StreamLifecycleState::Cancelled ||
+            newState == StreamLifecycleState::Failed) {
+            current_state_.stream_end_us = microsNow();
+            ++current_state_.terminal_event_count;
+        }
+        #ifdef _DEBUG
+        char buf[256];
+        snprintf(buf, sizeof(buf),
+            "[B005] transition: %s -> %s (reason: %s)",
+            LifecycleStateToString(oldState),
+            LifecycleStateToString(newState),
+            reason.c_str());
+        OutputDebugStringA(buf);
+        #endif
+        return true;
+    }
+
+    // Begin a new stream lifecycle
+    bool beginStream(uint32_t max_tokens = 2048) {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        if (current_state_.lifecycle_state != StreamLifecycleState::Idle) {
+            return false; // Already active
+        }
+        current_state_.max_tokens = max_tokens;
+        current_state_.tokens_generated = 0;
+        current_state_.callback_count = 0;
+        current_state_.terminal_event_count = 0;
+        current_state_.duplicate_token_count = 0;
+        current_state_.dropped_token_count = 0;
+        current_state_.stop_requested = false;
+        current_state_.stream_start_us = microsNow();
+        current_state_.stream_end_us = 0;
+        current_state_.lifecycle_state = StreamLifecycleState::Loading;
+        return true;
+    }
+
+    // Signal that prefill is complete and decode has begun
+    bool beginDecoding() {
+        return transitionState(StreamLifecycleState::Decoding, "prefill_complete");
+    }
+
+    // Signal that prefill is starting
+    bool beginPrefilling() {
+        return transitionState(StreamLifecycleState::Prefilling, "model_loaded");
+    }
+
+    // Request graceful stream termination (cancellation)
+    void requestStop() {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        current_state_.stop_requested = true;
+        StreamLifecycleState oldState = current_state_.lifecycle_state;
+        if (oldState == StreamLifecycleState::Decoding ||
+            oldState == StreamLifecycleState::Prefilling) {
+            if (CanTransition(oldState, StreamLifecycleState::Cancelled)) {
+                current_state_.lifecycle_state = StreamLifecycleState::Cancelled;
+                current_state_.stream_end_us = microsNow();
+                ++current_state_.terminal_event_count;
+            }
+        }
+    }
+
+    // Check if generation should continue
+    bool shouldContinue() const {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        if (current_state_.stop_requested) return false;
+        if (current_state_.tokens_generated >= current_state_.max_tokens) {
+            return false; // Will trigger max_tokens termination on next check
+        }
+        StreamLifecycleState s = current_state_.lifecycle_state;
+        return s == StreamLifecycleState::Prefilling || s == StreamLifecycleState::Decoding;
+    }
+
+    // Record a token generation event with deduplication guard
+    void recordTokenGenerated(const std::string& token_value) {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        ++current_state_.tokens_generated;
+        // Simple dedup: check if same as last token (optional enhancement)
+        if (!last_token_value_.empty() && last_token_value_ == token_value) {
+            ++current_state_.duplicate_token_count;
+        }
+        last_token_value_ = token_value;
+    }
+
+    // Record callback invocation
+    void recordCallbackInvoked() {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        ++current_state_.callback_count;
+    }
+
+    // Force terminal state (for errors)
+    bool failStream(const std::string& error) {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        current_state_.failed = true;
+        current_state_.error_message = error;
+        StreamLifecycleState oldState = current_state_.lifecycle_state;
+        bool ok = CanTransition(oldState, StreamLifecycleState::Failed);
+        if (ok) {
+            current_state_.lifecycle_state = StreamLifecycleState::Failed;
+            current_state_.stream_end_us = microsNow();
+            ++current_state_.terminal_event_count;
+        }
+        if (on_complete_) on_complete_(current_state_);
+        return ok;
+    }
+
+    // Complete stream normally (EOS or max_tokens)
+    bool completeStream(const std::string& reason) {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        StreamLifecycleState oldState = current_state_.lifecycle_state;
+        bool ok = CanTransition(oldState, StreamLifecycleState::Completed);
+        if (ok) {
+            current_state_.lifecycle_state = StreamLifecycleState::Completed;
+            current_state_.completed = true;
+            current_state_.stream_end_us = microsNow();
+            ++current_state_.terminal_event_count;
+            if (on_complete_) on_complete_(current_state_);
+        }
+        return ok;
+    }
+
+    // Get B005 certification report as structured string
+    std::string getCertificationReport() const {
+        std::lock_guard<std::mutex> lock(state_mutex_);
+        char buf[512];
+        uint64_t elapsed_us = (current_state_.stream_end_us > current_state_.stream_start_us)
+            ? (current_state_.stream_end_us - current_state_.stream_start_us)
+            : 0;
+        snprintf(buf, sizeof(buf),
+            "STREAM\n"
+            "  id=%s\n"
+            "  state=%s\n"
+            "  tokens=%u\n"
+            "  callbacks=%u\n"
+            "  duplicates=%u\n"
+            "  dropped=%u\n"
+            "  terminal_events=%u\n"
+            "  elapsed_ms=%llu\n"
+            "\nSUMMARY\n"
+            "  tokens_generated=%u\n"
+            "  max_tokens=%u\n"
+            "  stop_requested=%s\n"
+            "  failed=%s\n"
+            "  error=%s\n",
+            current_state_.message_id.c_str(),
+            LifecycleStateToString(current_state_.lifecycle_state),
+            current_state_.total_tokens,
+            current_state_.callback_count,
+            current_state_.duplicate_token_count,
+            current_state_.dropped_token_count,
+            current_state_.terminal_event_count,
+            static_cast<unsigned long long>(elapsed_us / 1000),
+            current_state_.tokens_generated,
+            current_state_.max_tokens,
+            current_state_.stop_requested ? "true" : "false",
+            current_state_.failed ? "true" : "false",
+            current_state_.error_message.c_str()
+        );
+        return std::string(buf);
     }
 
 private:
@@ -585,6 +832,7 @@ private:
     StateCallback on_complete_;
 
     uint64_t last_token_time_us_ = 0;
+    std::string last_token_value_; // B005 deduplication guard
 
     uint64_t microsNow() const {
         using namespace std::chrono;

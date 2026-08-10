@@ -11,6 +11,49 @@
 
 namespace RawrXD {
 
+namespace {
+
+// Some producers emit absolute tensor offsets, others emit offsets relative to
+// the tensor-data base. Accept both encodings and prefer the one that is in-bounds.
+uint64_t ResolveTensorFileOffset(const TensorRef& ref, uint64_t dataBaseOffset, uint64_t fileSize)
+{
+    if (ref.offset <= fileSize && ref.size <= (fileSize - ref.offset))
+    {
+        return ref.offset;
+    }
+
+    const uint64_t relOffset = dataBaseOffset + ref.offset;
+    if (relOffset <= fileSize && ref.size <= (fileSize - relOffset))
+    {
+        return relOffset;
+    }
+
+    return UINT64_MAX;
+}
+
+std::string ResolveCanonicalTensorName(const std::map<std::string, TensorRef>& tensorIndex,
+                                       const std::string& requestedName)
+{
+    if (tensorIndex.find(requestedName) != tensorIndex.end())
+    {
+        return requestedName;
+    }
+
+    // Support tied-embedding models that omit output.weight.
+    if (requestedName == "output.weight")
+    {
+        static const char* kTiedLmHead = "token_embd.weight";
+        if (tensorIndex.find(kTiedLmHead) != tensorIndex.end())
+        {
+            return kTiedLmHead;
+        }
+    }
+
+    return {};
+}
+
+} // namespace
+
 StreamingGGUFLoader::StreamingGGUFLoader()
     : is_open_(false), current_zone_memory_(0), max_zone_memory_mb_(GGUFConstants::DEFAULT_ZONE_MEMORY_MB) {
     std::memset(&header_, 0, sizeof(GGUFHeader));
@@ -515,7 +558,12 @@ int32_t StreamingGGUFLoader::ExtractLayerNumber(const std::string& tensor_name) 
 }
 
 std::string StreamingGGUFLoader::GetZoneForTensor(const std::string& tensor_name) const {
-    auto it = tensor_index_.find(tensor_name);
+    const std::string resolved_name = ResolveCanonicalTensorName(tensor_index_, tensor_name);
+    if (resolved_name.empty()) {
+        return "";
+    }
+
+    auto it = tensor_index_.find(resolved_name);
     if (it != tensor_index_.end()) {
         return it->second.zone_name;
     }
@@ -555,6 +603,12 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
     // Stream from disk
     zone.data.clear();
     zone.data.reserve(zone.total_bytes);
+
+    const uint64_t fileSize = GetTotalFileSize();
+    if (fileSize == 0)
+    {
+        return false;
+    }
     
     uint64_t total_loaded = 0;
 
@@ -569,8 +623,14 @@ bool StreamingGGUFLoader::LoadZone(const std::string& zone_name, uint64_t max_me
         
         const TensorRef& ref = tensor_it->second;
         
-        // Seek to tensor offset in file (Base + Relative Offset)
-        file_.seekg(data_base_offset + ref.offset, std::ios::beg);
+        const uint64_t fileOffset = ResolveTensorFileOffset(ref, data_base_offset, fileSize);
+        if (fileOffset == UINT64_MAX)
+        {
+            return false;
+        }
+
+        file_.clear();
+        file_.seekg(static_cast<std::streamoff>(fileOffset), std::ios::beg);
         
         // Read from disk into zone buffer
         size_t old_size = zone.data.size();
@@ -614,8 +674,13 @@ bool StreamingGGUFLoader::UnloadZone(const std::string& zone_name) {
 }
 
 bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vector<uint8_t>& data) {
+    const std::string resolved_name = ResolveCanonicalTensorName(tensor_index_, tensor_name);
+    if (resolved_name.empty()) {
+        return false;
+    }
+
     // Find which zone this tensor belongs to
-    std::string zone_name = GetTensorZone(tensor_name);
+    std::string zone_name = GetTensorZone(resolved_name);
     if (zone_name.empty()) {
         
         return false;
@@ -631,7 +696,7 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
     // Find tensor in zone
     TensorZoneInfo& zone = zones_[zone_name];
     
-    auto tensor_it = tensor_index_.find(tensor_name);
+    auto tensor_it = tensor_index_.find(resolved_name);
     if (tensor_it == tensor_index_.end()) {
         return false;
     }
@@ -641,7 +706,7 @@ bool StreamingGGUFLoader::GetTensorData(const std::string& tensor_name, std::vec
     // Find offset within zone data
     uint64_t offset_in_zone = 0;
     for (const auto& other_name : zone.tensors) {
-        if (other_name == tensor_name) {
+        if (other_name == resolved_name) {
             break;
         }
         offset_in_zone += tensor_index_[other_name].size;
@@ -887,6 +952,13 @@ bool StreamingGGUFLoader::StreamZoneFromDisk(const std::string& zone_name) {
 
     TensorZoneInfo& zone = zone_it->second;
 
+    const uint64_t fileSize = GetTotalFileSize();
+    if (fileSize == 0)
+    {
+        std::cerr << "[StreamingGGUFLoader] StreamZoneFromDisk: invalid file size" << std::endl;
+        return false;
+    }
+
     // Allocate buffer for the entire zone
     zone.data.clear();
     zone.data.reserve(static_cast<size_t>(zone.total_bytes));
@@ -901,7 +973,17 @@ bool StreamingGGUFLoader::StreamZoneFromDisk(const std::string& zone_name) {
         }
 
         const TensorRef& ref = ref_it->second;
-        file_.seekg(static_cast<std::streamoff>(ref.offset));
+        const uint64_t fileOffset = ResolveTensorFileOffset(ref, data_base_offset, fileSize);
+        if (fileOffset == UINT64_MAX)
+        {
+            std::cerr << "[StreamingGGUFLoader] StreamZoneFromDisk: invalid offset for tensor '"
+                      << tensor_name << "'" << std::endl;
+            zone.data.clear();
+            return false;
+        }
+
+        file_.clear();
+        file_.seekg(static_cast<std::streamoff>(fileOffset));
         if (!file_.good()) {
             std::cerr << "[StreamingGGUFLoader] StreamZoneFromDisk: seek failed for tensor '" 
                       << tensor_name << "' at offset " << ref.offset << std::endl;

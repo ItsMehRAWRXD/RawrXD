@@ -3999,6 +3999,7 @@ src/runtime/memory/CapacityManager.cpp
 src/runtime/memory/PlacementPolicy.cpp
 src/runtime/memory/PredictiveMemoryManager.cpp
 src/runtime/memory/ResidencyTracker.cpp
+src/runtime/memory/RouterPredictiveMemoryBridge.cpp
 src/runtime/memory/TensorPlacementManager.cpp
 src/runtime/memory/TransferScheduler.cpp
 src/runtime/memory/WorkingSetPredictor.cpp
@@ -4021,6 +4022,7 @@ src/runtime/test_inference_engine.cpp
 src/runtime/test_runtime.cpp
 src/runtime/tests/VAL028_SharedMemory_Inference_Certification.cpp
 src/runtime/tests/model_registry_test.cpp
+src/runtime/tests/predictive_memory_test.cpp
 src/runtime/thread_lifecycle_registry.cpp
 src/runtime/tokenizer_runtime.cpp
 src/runtime_masquerade.asm

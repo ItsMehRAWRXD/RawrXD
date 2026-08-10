@@ -140,7 +140,11 @@ bool EnhancedModelLoader::endpointAllowed(const std::string& endpoint) const {
 
 bool EnhancedModelLoader::validateModelFormatAndPermissions(const std::string& modelPath, std::string& reason) const {
     const std::string lower = ToLowerAscii(modelPath);
-    if (!EndsWith(lower, ".gguf") || !HasGgufMagic(modelPath)) {
+    const bool extOk = EndsWith(lower, ".gguf");
+    const bool magicOk = HasGgufMagic(modelPath);
+    printf("[GGUF] EnhancedModelLoader: path=%s ext=%s magic=%s\n",
+           modelPath.c_str(), extOk ? "PASS" : "FAIL", magicOk ? "PASS" : "FAIL");
+    if (!extOk || !magicOk) {
         reason = "Model format rejected: only valid GGUF files are accepted";
         return false;
     }

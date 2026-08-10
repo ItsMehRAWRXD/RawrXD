@@ -830,6 +830,41 @@ RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::pinPlanRowsBatchUn
         }
     }
 
+    std::vector<ModelSliceId> newlyPinned;
+    newlyPinned.reserve(uniqueRows.size());
+
+    for (const std::size_t row : uniqueRows)
+    {
+        const ModelSliceId& id = m_plan[row].id;
+        for (auto& r : m_workingSet.residentsMut())
+        {
+            if (!sliceIdsEqual(r.id, id))
+                continue;
+            if (r.holdCount == 0 && m_backend)
+            {
+                auto pin = m_backend->pinRange(id.modelIndex, r.fileOffsetBytes, r.residentBytes);
+                if (!pin)
+                {
+                    for (const ModelSliceId& pinnedId : newlyPinned)
+                    {
+                        for (auto& pinnedRow : m_workingSet.residentsMut())
+                        {
+                            if (!sliceIdsEqual(pinnedRow.id, pinnedId))
+                                continue;
+                            m_backend->unpinRange(pinnedId.modelIndex, pinnedRow.fileOffsetBytes,
+                                                  pinnedRow.residentBytes);
+                            break;
+                        }
+                    }
+                    rollbackNewAdmits_(newlyAdmitted);
+                    return pin;
+                }
+                newlyPinned.push_back(id);
+            }
+            break;
+        }
+    }
+
     for (const std::size_t row : uniqueRows)
     {
         const ModelSliceId& id = m_plan[row].id;
@@ -940,8 +975,11 @@ void SwarmScheduler::unpinPlanRows(const std::span<const std::size_t> planRowInd
         {
             if (sliceIdsEqual(r.id, id))
             {
+                const bool releaseBackendPin = (r.holdCount == 1);
                 if (r.holdCount > 0)
                     r.holdCount--;
+                if (releaseBackendPin && m_backend)
+                    m_backend->unpinRange(id.modelIndex, r.fileOffsetBytes, r.residentBytes);
                 break;
             }
         }
@@ -1020,13 +1058,6 @@ RawrXD::Swarm::expected<void, SchedulerError> SwarmScheduler::admitOrEvictAndPin
         m_statEvictions.fetch_add(1, std::memory_order_relaxed);
         admit = m_workingSet.tryAdmit(slice.byteSize);
         m_schedCv.notify_all();
-    }
-
-    if (m_backend)
-    {
-        auto pinned = m_backend->pinRange(slice.id.modelIndex, slice.fileOffsetBytes, slice.byteSize);
-        if (!pinned)
-            return pinned;
     }
 
     ResidentSlice rs;

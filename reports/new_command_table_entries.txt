@@ -2,14 +2,11 @@
 // Paste these into COMMAND_TABLE in command_registry.hpp
 // Then implement the handler stubs or map to existing handlers.
 
+    X(210, EDIT_MULTICURSOR_REMOVE        "edit.edit.multicursor.remove", "!edit multicursor remove", BOTH, "EDIT", handleEditMulticursorRemove, CMD_NONE) \\
     X(212, EDIT_TOGGLE_COMMENT            "edit.edit.toggle.comment", "!edit toggle comment", BOTH, "EDIT", handleEditToggleComment, CMD_NONE) \\
     X(308, SEL_SELECT_ALL_OCCURRENCES     "sel.sel.select.all.occurrences", "!sel select all occurrences", BOTH, "SEL", handleSelSelectAllOccurrences, CMD_NONE) \\
-    X(410, VIEW_SOURCE_CONTROL            "view.view.source.control", "!view source control", BOTH, "VIEW", handleViewSourceControl, CMD_NONE) \\
     X(411, VIEW_EXTENSIONS                "view.view.extensions", "!view extensions", BOTH, "VIEW", handleViewExtensions, CMD_NONE) \\
     X(412, VIEW_PROBLEMS                  "view.view.problems", "!view problems", BOTH, "VIEW", handleViewProblems, CMD_NONE) \\
-    X(413, VIEW_OUTPUT                    "view.view.output", "!view output", BOTH, "VIEW", handleViewOutput, CMD_NONE) \\
-    X(416, VIEW_WORD_WRAP                 "view.view.word.wrap", "!view word wrap", BOTH, "VIEW", handleViewWordWrap, CMD_NONE) \\
-    X(417, VIEW_LINE_NUMBERS              "view.view.line.numbers", "!view line numbers", BOTH, "VIEW", handleViewLineNumbers, CMD_NONE) \\
     X(507, RUN_STEP_OUT                   "run.run.step.out", "!run step out", BOTH, "RUN", handleRunStepOut, CMD_NONE) \\
     X(508, RUN_CONTINUE                   "run.run.continue", "!run continue", BOTH, "RUN", handleRunContinue, CMD_NONE) \\
     X(509, RUN_TOGGLE_BREAKPOINT          "run.run.toggle.breakpoint", "!run toggle breakpoint", BOTH, "RUN", handleRunToggleBreakpoint, CMD_NONE) \\
@@ -31,15 +28,307 @@
     X(803, MODEL_INFO                     "model.model.info", "!model info", BOTH, "MODEL", handleModelInfo, CMD_NONE) \\
     X(804, MODEL_RELOAD                   "model.model.reload", "!model reload", BOTH, "MODEL", handleModelReload, CMD_NONE) \\
     X(805, MODEL_SETTINGS                 "model.model.settings", "!model settings", BOTH, "MODEL", handleModelSettings, CMD_NONE) \\
-    X(1040, SOURCEFILE_OPEN_PICKER         "sourcefile.sourcefile.open.picker", "!sourcefile open picker", BOTH, "SOURCEFILE", handleSourcefileOpenPicker, CMD_NONE) \\
+    X(1109, EDIT_GOTO                      "edit.edit.goto", "!edit goto", BOTH, "EDIT", handleEditGoto, CMD_NONE) \\
+    X(1201, BUILD_BUILD                    "build.build.build", "!build build", BOTH, "BUILD", handleBuildBuild, CMD_NONE) \\
+    X(1202, BUILD_REBUILD                  "build.build.rebuild", "!build rebuild", BOTH, "BUILD", handleBuildRebuild, CMD_NONE) \\
+    X(1203, BUILD_RUN                      "build.build.run", "!build run", BOTH, "BUILD", handleBuildRun, CMD_NONE) \\
+    X(1204, BUILD_CLEAN                    "build.build.clean", "!build clean", BOTH, "BUILD", handleBuildClean, CMD_NONE) \\
+    X(1205, BUILD_STOP                     "build.build.stop", "!build stop", BOTH, "BUILD", handleBuildStop, CMD_NONE) \\
+    X(1251, DEBUG_START                    "debug.debug.start", "!debug start", BOTH, "DEBUG", handleDebugStart, CMD_NONE) \\
+    X(1252, DEBUG_ATTACH                   "debug.debug.attach", "!debug attach", BOTH, "DEBUG", handleDebugAttach, CMD_NONE) \\
+    X(1253, DEBUG_STOP                     "debug.debug.stop", "!debug stop", BOTH, "DEBUG", handleDebugStop, CMD_NONE) \\
+    X(1254, DEBUG_BREAKPOINT               "debug.debug.breakpoint", "!debug breakpoint", BOTH, "DEBUG", handleDebugBreakpoint, CMD_NONE) \\
+    X(1255, DEBUG_STEP_OVER                "debug.debug.step.over", "!debug step over", BOTH, "DEBUG", handleDebugStepOver, CMD_NONE) \\
+    X(1256, DEBUG_STEP_INTO                "debug.debug.step.into", "!debug step into", BOTH, "DEBUG", handleDebugStepInto, CMD_NONE) \\
+    X(1257, DEBUG_STEP_OUT                 "debug.debug.step.out", "!debug step out", BOTH, "DEBUG", handleDebugStepOut, CMD_NONE) \\
+    X(1258, DEBUG_CONTINUE                 "debug.debug.continue", "!debug continue", BOTH, "DEBUG", handleDebugContinue, CMD_NONE) \\
+    X(1259, DEBUG_RESTART                  "debug.debug.restart", "!debug restart", BOTH, "DEBUG", handleDebugRestart, CMD_NONE) \\
+    X(1261, ERROR_NEXT                     "error.error.next", "!error next", BOTH, "ERROR", handleErrorNext, CMD_NONE) \\
+    X(1262, ERROR_PREV                     "error.error.prev", "!error prev", BOTH, "ERROR", handleErrorPrev, CMD_NONE) \\
+    X(1263, ERROR_CLEAR                    "error.error.clear", "!error clear", BOTH, "ERROR", handleErrorClear, CMD_NONE) \\
+    X(1301, TOOLS_PE_INSPECTOR             "tools.tools.pe.inspector", "!tools pe inspector", BOTH, "TOOLS", handleToolsPeInspector, CMD_NONE) \\
+    X(1302, TOOLS_INSTR_ENCODER            "tools.tools.instr.encoder", "!tools instr encoder", BOTH, "TOOLS", handleToolsInstrEncoder, CMD_NONE) \\
+    X(1303, TOOLS_EXT_MANAGER              "tools.tools.ext.manager", "!tools ext manager", BOTH, "TOOLS", handleToolsExtManager, CMD_NONE) \\
+    X(1304, TOOLS_OPTIONS                  "tools.tools.options", "!tools options", BOTH, "TOOLS", handleToolsOptions, CMD_NONE) \\
+    X(1305, TOOLS_SOVEREIGN_RUN            "tools.tools.sovereign.run", "!tools sovereign run", BOTH, "TOOLS", handleToolsSovereignRun, CMD_NONE) \\
+    X(1306, TOOLS_VIEW_EVIDENCE            "tools.tools.view.evidence", "!tools view evidence", BOTH, "TOOLS", handleToolsViewEvidence, CMD_NONE) \\
+    X(1307, TOOLS_DEBUG_TELEMETRY          "tools.tools.debug.telemetry", "!tools debug telemetry", BOTH, "TOOLS", handleToolsDebugTelemetry, CMD_NONE) \\
+    X(1401, VIEW_FILEBROWSER               "view.view.filebrowser", "!view filebrowser", BOTH, "VIEW", handleViewFilebrowser, CMD_NONE) \\
+    X(1402, VIEW_OUTPUT                    "view.view.output", "!view output", BOTH, "VIEW", handleViewOutput, CMD_NONE) \\
+    X(1403, VIEW_WIDGET                    "view.view.widget", "!view widget", BOTH, "VIEW", handleViewWidget, CMD_NONE) \\
+    X(1404, VIEW_FULLSCREEN                "view.view.fullscreen", "!view fullscreen", BOTH, "VIEW", handleViewFullscreen, CMD_NONE) \\
+    X(1405, VIEW_DARK_THEME                "view.view.dark.theme", "!view dark theme", BOTH, "VIEW", handleViewDarkTheme, CMD_NONE) \\
+    X(1406, VIEW_LIGHT_THEME               "view.view.light.theme", "!view light theme", BOTH, "VIEW", handleViewLightTheme, CMD_NONE) \\
+    X(1407, VIEW_LINE_NUMBERS              "view.view.line.numbers", "!view line numbers", BOTH, "VIEW", handleViewLineNumbers, CMD_NONE) \\
+    X(1408, VIEW_WORD_WRAP                 "view.view.word.wrap", "!view word wrap", BOTH, "VIEW", handleViewWordWrap, CMD_NONE) \\
+    X(2030, VIEW_FILE_EXPLORER             "view.view.file.explorer", "!view file explorer", BOTH, "VIEW", handleViewFileExplorer, CMD_NONE) \\
+    X(2101, AUDIT_RUN                      "audit.audit.run", "!audit run", BOTH, "AUDIT", handleAuditRun, CMD_NONE) \\
+    X(2102, AUDIT_VIEW_REPORT              "audit.audit.view.report", "!audit view report", BOTH, "AUDIT", handleAuditViewReport, CMD_NONE) \\
+    X(2201, TELEMETRY_VIEW                 "telemetry.telemetry.view", "!telemetry view", BOTH, "TELEMETRY", handleTelemetryView, CMD_NONE) \\
+    X(2202, TELEMETRY_EXPORT               "telemetry.telemetry.export", "!telemetry export", BOTH, "TELEMETRY", handleTelemetryExport, CMD_NONE) \\
+    X(2301, HOTPATCH_APPLY                 "hotpatch.hotpatch.apply", "!hotpatch apply", BOTH, "HOTPATCH", handleHotpatchApply, CMD_NONE) \\
+    X(2302, HOTPATCH_CREATE                "hotpatch.hotpatch.create", "!hotpatch create", BOTH, "HOTPATCH", handleHotpatchCreate, CMD_NONE) \\
+    X(2303, HOTPATCH_STATUS                "hotpatch.hotpatch.status", "!hotpatch status", BOTH, "HOTPATCH", handleHotpatchStatus, CMD_NONE) \\
+    X(2402, AUTONOMY_START                 "autonomy.autonomy.start", "!autonomy start", BOTH, "AUTONOMY", handleAutonomyStart, CMD_NONE) \\
+    X(2403, AUTONOMY_STOP                  "autonomy.autonomy.stop", "!autonomy stop", BOTH, "AUTONOMY", handleAutonomyStop, CMD_NONE) \\
+    X(2404, AUTONOMY_SET_GOAL              "autonomy.autonomy.set.goal", "!autonomy set goal", BOTH, "AUTONOMY", handleAutonomySetGoal, CMD_NONE) \\
+    X(2405, AUTONOMY_STATUS                "autonomy.autonomy.status", "!autonomy status", BOTH, "AUTONOMY", handleAutonomyStatus, CMD_NONE) \\
+    X(2406, AUTONOMY_MEMORY                "autonomy.autonomy.memory", "!autonomy memory", BOTH, "AUTONOMY", handleAutonomyMemory, CMD_NONE) \\
+    X(2501, REVENG_DISASM                  "reveng.reveng.disasm", "!reveng disasm", BOTH, "REVENG", handleRevengDisasm, CMD_NONE) \\
+    X(2502, REVENG_DECOMPILE               "reveng.reveng.decompile", "!reveng decompile", BOTH, "REVENG", handleRevengDecompile, CMD_NONE) \\
+    X(2601, CRUCIBLE_RUN                   "crucible.crucible.run", "!crucible run", BOTH, "CRUCIBLE", handleCrucibleRun, CMD_NONE) \\
+    X(2602, CRUCIBLE_BENCHMARK             "crucible.crucible.benchmark", "!crucible benchmark", BOTH, "CRUCIBLE", handleCrucibleBenchmark, CMD_NONE) \\
+    X(2701, GAP_ANALYZE                    "gap.gap.analyze", "!gap analyze", BOTH, "GAP", handleGapAnalyze, CMD_NONE) \\
+    X(2702, GAP_FIX                        "gap.gap.fix", "!gap fix", BOTH, "GAP", handleGapFix, CMD_NONE) \\
+    X(2801, BUILD_PROJECT                  "build.build.project", "!build project", BOTH, "BUILD", handleBuildProject, CMD_NONE) \\
+    X(2801, FEATURES_ENABLE                "features.features.enable", "!features enable", BOTH, "FEATURES", handleFeaturesEnable, CMD_NONE) \\
+    X(2802, FEATURES_DISABLE               "features.features.disable", "!features disable", BOTH, "FEATURES", handleFeaturesDisable, CMD_NONE) \\
+    X(2901, COMMANDS_PALETTE               "commands.commands.palette", "!commands palette", BOTH, "COMMANDS", handleCommandsPalette, CMD_NONE) \\
+    X(3014, TOOLS_GGUF_INSPECTOR           "tools.tools.gguf.inspector", "!tools gguf inspector", BOTH, "TOOLS", handleToolsGgufInspector, CMD_NONE) \\
+    X(3042, ENT_MULTI_GPU_BALANCE          "ent.ent.multi.gpu.balance", "!ent multi gpu balance", BOTH, "ENT", handleEntMultiGpuBalance, CMD_NONE) \\
+    X(3043, ENT_DYNAMIC_BATCH              "ent.ent.dynamic.batch", "!ent dynamic batch", BOTH, "ENT", handleEntDynamicBatch, CMD_NONE) \\
+    X(3044, ENT_API_KEY_MGMT               "ent.ent.api.key.mgmt", "!ent api key mgmt", BOTH, "ENT", handleEntApiKeyMgmt, CMD_NONE) \\
+    X(3045, ENT_AUDIT_LOGS                 "ent.ent.audit.logs", "!ent audit logs", BOTH, "ENT", handleEntAuditLogs, CMD_NONE) \\
+    X(3046, ENT_RAWR_TUNER                 "ent.ent.rawr.tuner", "!ent rawr tuner", BOTH, "ENT", handleEntRawrTuner, CMD_NONE) \\
+    X(3047, ENT_DUAL_ENGINE                "ent.ent.dual.engine", "!ent dual engine", BOTH, "ENT", handleEntDualEngine, CMD_NONE) \\
+    X(3060, VIEW_COLLABORATION             "view.view.collaboration", "!view collaboration", BOTH, "VIEW", handleViewCollaboration, CMD_NONE) \\
+    X(3301, PLATFORM_EXT_CREATOR           "platform.platform.ext.creator", "!platform ext creator", BOTH, "PLATFORM", handlePlatformExtCreator, CMD_NONE) \\
+    X(3302, PLATFORM_MODEL_CREATOR         "platform.platform.model.creator", "!platform model creator", BOTH, "PLATFORM", handlePlatformModelCreator, CMD_NONE) \\
+    X(3303, PLATFORM_NATIVE_INTEL          "platform.platform.native.intel", "!platform native intel", BOTH, "PLATFORM", handlePlatformNativeIntel, CMD_NONE) \\
+    X(3304, PLATFORM_MASM_LEXER            "platform.platform.masm.lexer", "!platform masm lexer", BOTH, "PLATFORM", handlePlatformMasmLexer, CMD_NONE) \\
+    X(3305, PLATFORM_AST_BRIDGE            "platform.platform.ast.bridge", "!platform ast bridge", BOTH, "PLATFORM", handlePlatformAstBridge, CMD_NONE) \\
+    X(3306, PLATFORM_RT_ENGINE             "platform.platform.rt.engine", "!platform rt engine", BOTH, "PLATFORM", handlePlatformRtEngine, CMD_NONE) \\
+    X(3401, COMPILER_ASSEMBLY              "compiler.compiler.assembly", "!compiler assembly", BOTH, "COMPILER", handleCompilerAssembly, CMD_NONE) \\
+    X(3402, COMPILER_EON                   "compiler.compiler.eon", "!compiler eon", BOTH, "COMPILER", handleCompilerEon, CMD_NONE) \\
+    X(3403, COMPILER_UNIVERSAL             "compiler.compiler.universal", "!compiler universal", BOTH, "COMPILER", handleCompilerUniversal, CMD_NONE) \\
+    X(3404, COMPILER_CROSS                 "compiler.compiler.cross", "!compiler cross", BOTH, "COMPILER", handleCompilerCross, CMD_NONE) \\
+    X(3405, COMPILER_QUANTUM               "compiler.compiler.quantum", "!compiler quantum", BOTH, "COMPILER", handleCompilerQuantum, CMD_NONE) \\
+    X(3410, COMPILER_C                     "compiler.compiler.c", "!compiler c", BOTH, "COMPILER", handleCompilerC, CMD_NONE) \\
+    X(3411, COMPILER_CPP                   "compiler.compiler.cpp", "!compiler cpp", BOTH, "COMPILER", handleCompilerCpp, CMD_NONE) \\
+    X(3412, COMPILER_RUST                  "compiler.compiler.rust", "!compiler rust", BOTH, "COMPILER", handleCompilerRust, CMD_NONE) \\
+    X(3413, COMPILER_ZIG                   "compiler.compiler.zig", "!compiler zig", BOTH, "COMPILER", handleCompilerZig, CMD_NONE) \\
+    X(3414, COMPILER_GO                    "compiler.compiler.go", "!compiler go", BOTH, "COMPILER", handleCompilerGo, CMD_NONE) \\
+    X(3415, COMPILER_SWIFT                 "compiler.compiler.swift", "!compiler swift", BOTH, "COMPILER", handleCompilerSwift, CMD_NONE) \\
+    X(3420, COMPILER_HASKELL               "compiler.compiler.haskell", "!compiler haskell", BOTH, "COMPILER", handleCompilerHaskell, CMD_NONE) \\
+    X(3421, COMPILER_OCAML                 "compiler.compiler.ocaml", "!compiler ocaml", BOTH, "COMPILER", handleCompilerOcaml, CMD_NONE) \\
+    X(3422, COMPILER_ERLANG                "compiler.compiler.erlang", "!compiler erlang", BOTH, "COMPILER", handleCompilerErlang, CMD_NONE) \\
+    X(3423, COMPILER_ELIXIR                "compiler.compiler.elixir", "!compiler elixir", BOTH, "COMPILER", handleCompilerElixir, CMD_NONE) \\
+    X(3424, COMPILER_CLOJURE               "compiler.compiler.clojure", "!compiler clojure", BOTH, "COMPILER", handleCompilerClojure, CMD_NONE) \\
+    X(3425, COMPILER_LISP                  "compiler.compiler.lisp", "!compiler lisp", BOTH, "COMPILER", handleCompilerLisp, CMD_NONE) \\
+    X(3430, COMPILER_JS                    "compiler.compiler.js", "!compiler js", BOTH, "COMPILER", handleCompilerJs, CMD_NONE) \\
+    X(3431, COMPILER_TS                    "compiler.compiler.ts", "!compiler ts", BOTH, "COMPILER", handleCompilerTs, CMD_NONE) \\
+    X(3432, COMPILER_DART                  "compiler.compiler.dart", "!compiler dart", BOTH, "COMPILER", handleCompilerDart, CMD_NONE) \\
+    X(3433, COMPILER_WASM                  "compiler.compiler.wasm", "!compiler wasm", BOTH, "COMPILER", handleCompilerWasm, CMD_NONE) \\
+    X(3440, COMPILER_FORTRAN               "compiler.compiler.fortran", "!compiler fortran", BOTH, "COMPILER", handleCompilerFortran, CMD_NONE) \\
+    X(3441, COMPILER_COBOL                 "compiler.compiler.cobol", "!compiler cobol", BOTH, "COMPILER", handleCompilerCobol, CMD_NONE) \\
+    X(3442, COMPILER_PASCAL                "compiler.compiler.pascal", "!compiler pascal", BOTH, "COMPILER", handleCompilerPascal, CMD_NONE) \\
+    X(3443, COMPILER_DELPHI                "compiler.compiler.delphi", "!compiler delphi", BOTH, "COMPILER", handleCompilerDelphi, CMD_NONE) \\
+    X(3444, COMPILER_VB                    "compiler.compiler.vb", "!compiler vb", BOTH, "COMPILER", handleCompilerVb, CMD_NONE) \\
+    X(3445, COMPILER_ADA                   "compiler.compiler.ada", "!compiler ada", BOTH, "COMPILER", handleCompilerAda, CMD_NONE) \\
+    X(3450, COMPILER_JVM                   "compiler.compiler.jvm", "!compiler jvm", BOTH, "COMPILER", handleCompilerJvm, CMD_NONE) \\
+    X(3451, COMPILER_PYTHON                "compiler.compiler.python", "!compiler python", BOTH, "COMPILER", handleCompilerPython, CMD_NONE) \\
+    X(3452, COMPILER_LUA                   "compiler.compiler.lua", "!compiler lua", BOTH, "COMPILER", handleCompilerLua, CMD_NONE) \\
+    X(3453, COMPILER_RUBY                  "compiler.compiler.ruby", "!compiler ruby", BOTH, "COMPILER", handleCompilerRuby, CMD_NONE) \\
+    X(3454, COMPILER_PERL                  "compiler.compiler.perl", "!compiler perl", BOTH, "COMPILER", handleCompilerPerl, CMD_NONE) \\
+    X(3455, COMPILER_PHP                   "compiler.compiler.php", "!compiler php", BOTH, "COMPILER", handleCompilerPhp, CMD_NONE) \\
+    X(3456, COMPILER_POWERSHELL            "compiler.compiler.powershell", "!compiler powershell", BOTH, "COMPILER", handleCompilerPowershell, CMD_NONE) \\
+    X(3457, COMPILER_JULIA                 "compiler.compiler.julia", "!compiler julia", BOTH, "COMPILER", handleCompilerJulia, CMD_NONE) \\
+    X(3458, COMPILER_MATLAB                "compiler.compiler.matlab", "!compiler matlab", BOTH, "COMPILER", handleCompilerMatlab, CMD_NONE) \\
+    X(3459, COMPILER_R                     "compiler.compiler.r", "!compiler r", BOTH, "COMPILER", handleCompilerR, CMD_NONE) \\
+    X(3460, COMPILER_CRYSTAL               "compiler.compiler.crystal", "!compiler crystal", BOTH, "COMPILER", handleCompilerCrystal, CMD_NONE) \\
+    X(3461, COMPILER_NIM                   "compiler.compiler.nim", "!compiler nim", BOTH, "COMPILER", handleCompilerNim, CMD_NONE) \\
+    X(3462, COMPILER_CARBON                "compiler.compiler.carbon", "!compiler carbon", BOTH, "COMPILER", handleCompilerCarbon, CMD_NONE) \\
+    X(3463, COMPILER_JAI                   "compiler.compiler.jai", "!compiler jai", BOTH, "COMPILER", handleCompilerJai, CMD_NONE) \\
+    X(3464, COMPILER_ODIN                  "compiler.compiler.odin", "!compiler odin", BOTH, "COMPILER", handleCompilerOdin, CMD_NONE) \\
+    X(3465, COMPILER_VALA                  "compiler.compiler.vala", "!compiler vala", BOTH, "COMPILER", handleCompilerVala, CMD_NONE) \\
+    X(3466, COMPILER_KOTLIN                "compiler.compiler.kotlin", "!compiler kotlin", BOTH, "COMPILER", handleCompilerKotlin, CMD_NONE) \\
+    X(3467, COMPILER_SCALA                 "compiler.compiler.scala", "!compiler scala", BOTH, "COMPILER", handleCompilerScala, CMD_NONE) \\
+    X(3468, COMPILER_GROOVY                "compiler.compiler.groovy", "!compiler groovy", BOTH, "COMPILER", handleCompilerGroovy, CMD_NONE) \\
+    X(3469, COMPILER_D                     "compiler.compiler.d", "!compiler d", BOTH, "COMPILER", handleCompilerD, CMD_NONE) \\
+    X(3470, COMPILER_F                     "compiler.compiler.f", "!compiler f", BOTH, "COMPILER", handleCompilerF, CMD_NONE) \\
+    X(3471, COMPILER_SOLIDITY              "compiler.compiler.solidity", "!compiler solidity", BOTH, "COMPILER", handleCompilerSolidity, CMD_NONE) \\
+    X(3472, COMPILER_VYPER                 "compiler.compiler.vyper", "!compiler vyper", BOTH, "COMPILER", handleCompilerVyper, CMD_NONE) \\
+    X(3473, COMPILER_MOVE                  "compiler.compiler.move", "!compiler move", BOTH, "COMPILER", handleCompilerMove, CMD_NONE) \\
+    X(3474, COMPILER_MOTOKO                "compiler.compiler.motoko", "!compiler motoko", BOTH, "COMPILER", handleCompilerMotoko, CMD_NONE) \\
+    X(3475, COMPILER_BASH                  "compiler.compiler.bash", "!compiler bash", BOTH, "COMPILER", handleCompilerBash, CMD_NONE) \\
+    X(3476, COMPILER_LLVM                  "compiler.compiler.llvm", "!compiler llvm", BOTH, "COMPILER", handleCompilerLlvm, CMD_NONE) \\
+    X(3503, REVENG_DECRYPT                 "reveng.reveng.decrypt", "!reveng decrypt", BOTH, "REVENG", handleRevengDecrypt, CMD_NONE) \\
+    X(3504, REVENG_ANALYZE                 "reveng.reveng.analyze", "!reveng analyze", BOTH, "REVENG", handleRevengAnalyze, CMD_NONE) \\
+    X(3505, REVENG_RECOVER                 "reveng.reveng.recover", "!reveng recover", BOTH, "REVENG", handleRevengRecover, CMD_NONE) \\
+    X(3510, REVENG_DUMPBIN                 "reveng.reveng.dumpbin", "!reveng dumpbin", BOTH, "REVENG", handleRevengDumpbin, CMD_NONE) \\
+    X(3511, REVENG_OBJDUMP                 "reveng.reveng.objdump", "!reveng objdump", BOTH, "REVENG", handleRevengObjdump, CMD_NONE) \\
+    X(3512, REVENG_NM                      "reveng.reveng.nm", "!reveng nm", BOTH, "REVENG", handleRevengNm, CMD_NONE) \\
+    X(3513, REVENG_STRINGS                 "reveng.reveng.strings", "!reveng strings", BOTH, "REVENG", handleRevengStrings, CMD_NONE) \\
+    X(3514, REVENG_HEXEDIT                 "reveng.reveng.hexedit", "!reveng hexedit", BOTH, "REVENG", handleRevengHexedit, CMD_NONE) \\
+    X(3520, REVENG_PATCH                   "reveng.reveng.patch", "!reveng patch", BOTH, "REVENG", handleRevengPatch, CMD_NONE) \\
+    X(3521, REVENG_INJECT                  "reveng.reveng.inject", "!reveng inject", BOTH, "REVENG", handleRevengInject, CMD_NONE) \\
+    X(3522, REVENG_UNPACK                  "reveng.reveng.unpack", "!reveng unpack", BOTH, "REVENG", handleRevengUnpack, CMD_NONE) \\
+    X(3523, REVENG_DIFF                    "reveng.reveng.diff", "!reveng diff", BOTH, "REVENG", handleRevengDiff, CMD_NONE) \\
+    X(3524, REVENG_SIGNATURE               "reveng.reveng.signature", "!reveng signature", BOTH, "REVENG", handleRevengSignature, CMD_NONE) \\
+    X(4160, PIPELINE_RUN                   "pipeline.pipeline.run", "!pipeline run", BOTH, "PIPELINE", handlePipelineRun, CMD_NONE) \\
+    X(4161, PIPELINE_AUTONOMY_START        "pipeline.pipeline.autonomy.start", "!pipeline autonomy start", BOTH, "PIPELINE", handlePipelineAutonomyStart, CMD_NONE) \\
+    X(4162, PIPELINE_AUTONOMY_STOP         "pipeline.pipeline.autonomy.stop", "!pipeline autonomy stop", BOTH, "PIPELINE", handlePipelineAutonomyStop, CMD_NONE) \\
+    X(4163, AGENT_AUTONOMOUS_COMMUNICATOR  "agent.agent.autonomous.communicator", "!agent autonomous communicator", BOTH, "AGENT", handleAgentAutonomousCommunicator, CMD_NONE) \\
+    X(4164, TELEMETRY_UNIFIED_CORE         "telemetry.telemetry.unified.core", "!telemetry unified core", BOTH, "TELEMETRY", handleTelemetryUnifiedCore, CMD_NONE) \\
+    X(4204, GGUF_TREE                      "gguf.gguf.tree", "!gguf tree", BOTH, "GGUF", handleGgufTree, CMD_NONE) \\
+    X(4204, AI_MODE_SWARM                  "ai.ai.mode.swarm", "!ai mode swarm", BOTH, "AI", handleAiModeSwarm, CMD_NONE) \\
+    X(4205, GGUF_DETAILS                   "gguf.gguf.details", "!gguf details", BOTH, "GGUF", handleGgufDetails, CMD_NONE) \\
+    X(4205, AI_LOAD_SWARM_DIR              "ai.ai.load.swarm.dir", "!ai load swarm dir", BOTH, "AI", handleAiLoadSwarmDir, CMD_NONE) \\
+    X(4217, AI_CONTEXT_UNLIMITED           "ai.ai.context.unlimited", "!ai context unlimited", BOTH, "AI", handleAiContextUnlimited, CMD_NONE) \\
     X(4217, AI_AGENT_CYCLES_SET            "ai.ai.agent.cycles.set", "!ai agent cycles set", BOTH, "AI", handleAiAgentCyclesSet, CMD_NONE) \\
     X(4218, AI_AGENT_MULTI_ENABLE          "ai.ai.agent.multi.enable", "!ai agent multi enable", BOTH, "AI", handleAiAgentMultiEnable, CMD_NONE) \\
     X(4219, AI_AGENT_MULTI_DISABLE         "ai.ai.agent.multi.disable", "!ai agent multi disable", BOTH, "AI", handleAiAgentMultiDisable, CMD_NONE) \\
     X(4220, ENGINE_UNLOCK_800B             "engine.engine.unlock.800b", "!engine unlock 800b", BOTH, "ENGINE", handleEngineUnlock800B, CMD_NONE) \\
-    X(4220, AI_AGENT_MULTI_STATUS          "ai.ai.agent.multi.status", "!ai agent multi status", BOTH, "AI", handleAiAgentMultiStatus, CMD_NONE) \\
     X(4221, ENGINE_LOAD_800B               "engine.engine.load.800b", "!engine load 800b", BOTH, "ENGINE", handleEngineLoad800B, CMD_NONE) \\
-    X(4221, AI_TITAN_TOGGLE                "ai.ai.titan.toggle", "!ai titan toggle", BOTH, "AI", handleAiTitanToggle, CMD_NONE) \\
-    X(4222, AI_800B_STATUS                 "ai.ai.800b.status", "!ai 800b status", BOTH, "AI", handleAi800BStatus, CMD_NONE) \\
     X(4230, TITAN_TOGGLE                   "titan.titan.toggle", "!titan toggle", BOTH, "TITAN", handleTitanToggle, CMD_NONE) \\
-    X(5199, BACKEND_SWITCH_NATIVEASM       "backend.backend.switch.nativeasm", "!backend switch nativeasm", BOTH, "BACKEND", handleBackendSwitchNativeasm, CMD_NONE) \\
-    X(9824, QW_ALERT_HAPPENINGS            "qw.qw.alert.happenings", "!qw alert happenings", BOTH, "QW", handleQwAlertHappenings, CMD_NONE) \\
+    X(4240, AI_AGENT_MULTI_STATUS          "ai.ai.agent.multi.status", "!ai agent multi status", BOTH, "AI", handleAiAgentMultiStatus, CMD_NONE) \\
+    X(4241, AI_TITAN_TOGGLE                "ai.ai.titan.toggle", "!ai titan toggle", BOTH, "AI", handleAiTitanToggle, CMD_NONE) \\
+    X(4242, AI_800B_STATUS                 "ai.ai.800b.status", "!ai 800b status", BOTH, "AI", handleAi800BStatus, CMD_NONE) \\
+    X(4243, OMEGA_START                    "omega.omega.start", "!omega start", BOTH, "OMEGA", handleOmegaStart, CMD_NONE) \\
+    X(4244, OMEGA_STOP                     "omega.omega.stop", "!omega stop", BOTH, "OMEGA", handleOmegaStop, CMD_NONE) \\
+    X(4245, OMEGA_SUBMIT_TASK              "omega.omega.submit.task", "!omega submit task", BOTH, "OMEGA", handleOmegaSubmitTask, CMD_NONE) \\
+    X(4246, OMEGA_RUN_CYCLE                "omega.omega.run.cycle", "!omega run cycle", BOTH, "OMEGA", handleOmegaRunCycle, CMD_NONE) \\
+    X(4247, OMEGA_SHOW_STATUS              "omega.omega.show.status", "!omega show status", BOTH, "OMEGA", handleOmegaShowStatus, CMD_NONE) \\
+    X(4248, OMEGA_VIEW_PIPELINE            "omega.omega.view.pipeline", "!omega view pipeline", BOTH, "OMEGA", handleOmegaViewPipeline, CMD_NONE) \\
+    X(4250, OMEGA_SET_QUALITY_AUTO         "omega.omega.set.quality.auto", "!omega set quality auto", BOTH, "OMEGA", handleOmegaSetQualityAuto, CMD_NONE) \\
+    X(4251, OMEGA_SET_QUALITY_BALANCE      "omega.omega.set.quality.balance", "!omega set quality balance", BOTH, "OMEGA", handleOmegaSetQualityBalance, CMD_NONE) \\
+    X(4254, OMEGA_WORLD_MODEL              "omega.omega.world.model", "!omega world model", BOTH, "OMEGA", handleOmegaWorldModel, CMD_NONE) \\
+    X(4255, OMEGA_EXPORT_STATS             "omega.omega.export.stats", "!omega export stats", BOTH, "OMEGA", handleOmegaExportStats, CMD_NONE) \\
+    X(4256, OMEGA_DIAGNOSTICS              "omega.omega.diagnostics", "!omega diagnostics", BOTH, "OMEGA", handleOmegaDiagnostics, CMD_NONE) \\
+    X(4257, OMEGA_VERSION                  "omega.omega.version", "!omega version", BOTH, "OMEGA", handleOmegaVersion, CMD_NONE) \\
+    X(4258, OMEGA_HELP                     "omega.omega.help", "!omega help", BOTH, "OMEGA", handleOmegaHelp, CMD_NONE) \\
+    X(4259, OMEGA_ADVANCED_SETTINGS        "omega.omega.advanced.settings", "!omega advanced settings", BOTH, "OMEGA", handleOmegaAdvancedSettings, CMD_NONE) \\
+    X(4260, OMEGA_SHELL_INTEGRATION        "omega.omega.shell.integration", "!omega shell integration", BOTH, "OMEGA", handleOmegaShellIntegration, CMD_NONE) \\
+    X(4261, PLANNING_START                 "planning.planning.start", "!planning start", BOTH, "PLANNING", handlePlanningStart, CMD_NONE) \\
+    X(4262, PLANNING_SHOW_QUEUE            "planning.planning.show.queue", "!planning show queue", BOTH, "PLANNING", handlePlanningShowQueue, CMD_NONE) \\
+    X(4263, PLANNING_APPROVE_STEP          "planning.planning.approve.step", "!planning approve step", BOTH, "PLANNING", handlePlanningApproveStep, CMD_NONE) \\
+    X(4264, PLANNING_REJECT_STEP           "planning.planning.reject.step", "!planning reject step", BOTH, "PLANNING", handlePlanningRejectStep, CMD_NONE) \\
+    X(4265, PLANNING_EXECUTE_STEP          "planning.planning.execute.step", "!planning execute step", BOTH, "PLANNING", handlePlanningExecuteStep, CMD_NONE) \\
+    X(4266, PLANNING_EXECUTE_ALL           "planning.planning.execute.all", "!planning execute all", BOTH, "PLANNING", handlePlanningExecuteAll, CMD_NONE) \\
+    X(4267, PLANNING_ROLLBACK              "planning.planning.rollback", "!planning rollback", BOTH, "PLANNING", handlePlanningRollback, CMD_NONE) \\
+    X(4268, PLANNING_SET_POLICY            "planning.planning.set.policy", "!planning set policy", BOTH, "PLANNING", handlePlanningSetPolicy, CMD_NONE) \\
+    X(4269, PLANNING_VIEW_STATUS           "planning.planning.view.status", "!planning view status", BOTH, "PLANNING", handlePlanningViewStatus, CMD_NONE) \\
+    X(4270, PLANNING_DIAGNOSTICS           "planning.planning.diagnostics", "!planning diagnostics", BOTH, "PLANNING", handlePlanningDiagnostics, CMD_NONE) \\
+    X(4271, KNOWLEDGE_INIT                 "knowledge.knowledge.init", "!knowledge init", BOTH, "KNOWLEDGE", handleKnowledgeInit, CMD_NONE) \\
+    X(4272, KNOWLEDGE_RECORD               "knowledge.knowledge.record", "!knowledge record", BOTH, "KNOWLEDGE", handleKnowledgeRecord, CMD_NONE) \\
+    X(4273, KNOWLEDGE_SEARCH               "knowledge.knowledge.search", "!knowledge search", BOTH, "KNOWLEDGE", handleKnowledgeSearch, CMD_NONE) \\
+    X(4274, KNOWLEDGE_DECISIONS            "knowledge.knowledge.decisions", "!knowledge decisions", BOTH, "KNOWLEDGE", handleKnowledgeDecisions, CMD_NONE) \\
+    X(4275, KNOWLEDGE_PREFERENCES          "knowledge.knowledge.preferences", "!knowledge preferences", BOTH, "KNOWLEDGE", handleKnowledgePreferences, CMD_NONE) \\
+    X(4276, KNOWLEDGE_ARCHAEOLOGY          "knowledge.knowledge.archaeology", "!knowledge archaeology", BOTH, "KNOWLEDGE", handleKnowledgeArchaeology, CMD_NONE) \\
+    X(4277, KNOWLEDGE_GRAPH                "knowledge.knowledge.graph", "!knowledge graph", BOTH, "KNOWLEDGE", handleKnowledgeGraph, CMD_NONE) \\
+    X(4278, KNOWLEDGE_EXPORT               "knowledge.knowledge.export", "!knowledge export", BOTH, "KNOWLEDGE", handleKnowledgeExport, CMD_NONE) \\
+    X(4279, KNOWLEDGE_STATS                "knowledge.knowledge.stats", "!knowledge stats", BOTH, "KNOWLEDGE", handleKnowledgeStats, CMD_NONE) \\
+    X(4280, KNOWLEDGE_FLUSH                "knowledge.knowledge.flush", "!knowledge flush", BOTH, "KNOWLEDGE", handleKnowledgeFlush, CMD_NONE) \\
+    X(4281, FAILURE_DETECT                 "failure.failure.detect", "!failure detect", BOTH, "FAILURE", handleFailureDetect, CMD_NONE) \\
+    X(4282, FAILURE_ANALYZE                "failure.failure.analyze", "!failure analyze", BOTH, "FAILURE", handleFailureAnalyze, CMD_NONE) \\
+    X(4283, FAILURE_SHOW_QUEUE             "failure.failure.show.queue", "!failure show queue", BOTH, "FAILURE", handleFailureShowQueue, CMD_NONE) \\
+    X(4284, FAILURE_SHOW_HISTORY           "failure.failure.show.history", "!failure show history", BOTH, "FAILURE", handleFailureShowHistory, CMD_NONE) \\
+    X(4285, FAILURE_GENERATE_RECOVERY      "failure.failure.generate.recovery", "!failure generate recovery", BOTH, "FAILURE", handleFailureGenerateRecovery, CMD_NONE) \\
+    X(4286, FAILURE_EXECUTE_RECOVERY       "failure.failure.execute.recovery", "!failure execute recovery", BOTH, "FAILURE", handleFailureExecuteRecovery, CMD_NONE) \\
+    X(4287, FAILURE_AUTONOMOUS_HEAL        "failure.failure.autonomous.heal", "!failure autonomous heal", BOTH, "FAILURE", handleFailureAutonomousHeal, CMD_NONE) \\
+    X(4288, FAILURE_VIEW_PATTERNS          "failure.failure.view.patterns", "!failure view patterns", BOTH, "FAILURE", handleFailureViewPatterns, CMD_NONE) \\
+    X(4289, FAILURE_LEARN_PATTERN          "failure.failure.learn.pattern", "!failure learn pattern", BOTH, "FAILURE", handleFailureLearnPattern, CMD_NONE) \\
+    X(4290, FAILURE_STATS                  "failure.failure.stats", "!failure stats", BOTH, "FAILURE", handleFailureStats, CMD_NONE) \\
+    X(4291, FAILURE_SET_POLICY             "failure.failure.set.policy", "!failure set policy", BOTH, "FAILURE", handleFailureSetPolicy, CMD_NONE) \\
+    X(4292, FAILURE_SHOW_HEALTH            "failure.failure.show.health", "!failure show health", BOTH, "FAILURE", handleFailureShowHealth, CMD_NONE) \\
+    X(4293, FAILURE_EXPORT_ANALYSIS        "failure.failure.export.analysis", "!failure export analysis", BOTH, "FAILURE", handleFailureExportAnalysis, CMD_NONE) \\
+    X(4294, FAILURE_CLEAR_HISTORY          "failure.failure.clear.history", "!failure clear history", BOTH, "FAILURE", handleFailureClearHistory, CMD_NONE) \\
+    X(4295, FAILURE_DIAGNOSTICS            "failure.failure.diagnostics", "!failure diagnostics", BOTH, "FAILURE", handleFailureDiagnostics, CMD_NONE) \\
+    X(4320, REVENG_SET_BINARY_FROM_ACTIVE  "reveng.reveng.set.binary.from.active", "!reveng set binary from active", BOTH, "REVENG", handleRevengSetBinaryFromActive, CMD_NONE) \\
+    X(4321, REVENG_SET_BINARY_FROM_DEBUG_TARGET "reveng.reveng.set.binary.from.debug.target", "!reveng set binary from debug target", BOTH, "REVENG", handleRevengSetBinaryFromDebugTarget, CMD_NONE) \\
+    X(4322, REVENG_SET_BINARY_FROM_BUILD_OUTPUT "reveng.reveng.set.binary.from.build.output", "!reveng set binary from build output", BOTH, "REVENG", handleRevengSetBinaryFromBuildOutput, CMD_NONE) \\
+    X(4323, REVENG_DISASM_AT_RIP           "reveng.reveng.disasm.at.rip", "!reveng disasm at rip", BOTH, "REVENG", handleRevengDisasmAtRip, CMD_NONE) \\
+    X(4350, IMPACT_ANALYZE_STAGED          "impact.impact.analyze.staged", "!impact analyze staged", BOTH, "IMPACT", handleImpactAnalyzeStaged, CMD_NONE) \\
+    X(4351, IMPACT_ANALYZE_UNSTAGED        "impact.impact.analyze.unstaged", "!impact analyze unstaged", BOTH, "IMPACT", handleImpactAnalyzeUnstaged, CMD_NONE) \\
+    X(4352, IMPACT_ANALYZE_FILE            "impact.impact.analyze.file", "!impact analyze file", BOTH, "IMPACT", handleImpactAnalyzeFile, CMD_NONE) \\
+    X(4353, IMPACT_SHOW_REPORT             "impact.impact.show.report", "!impact show report", BOTH, "IMPACT", handleImpactShowReport, CMD_NONE) \\
+    X(4354, IMPACT_SHOW_ZONES              "impact.impact.show.zones", "!impact show zones", BOTH, "IMPACT", handleImpactShowZones, CMD_NONE) \\
+    X(4355, IMPACT_RISK_SCORE              "impact.impact.risk.score", "!impact risk score", BOTH, "IMPACT", handleImpactRiskScore, CMD_NONE) \\
+    X(4356, IMPACT_CHECK_COMMIT            "impact.impact.check.commit", "!impact check commit", BOTH, "IMPACT", handleImpactCheckCommit, CMD_NONE) \\
+    X(4357, IMPACT_SET_CONFIG              "impact.impact.set.config", "!impact set config", BOTH, "IMPACT", handleImpactSetConfig, CMD_NONE) \\
+    X(4358, IMPACT_HISTORY                 "impact.impact.history", "!impact history", BOTH, "IMPACT", handleImpactHistory, CMD_NONE) \\
+    X(4359, IMPACT_DIAGNOSTICS             "impact.impact.diagnostics", "!impact diagnostics", BOTH, "IMPACT", handleImpactDiagnostics, CMD_NONE) \\
+    X(4360, IMPACT_EXPORT_JSON             "impact.impact.export.json", "!impact export json", BOTH, "IMPACT", handleImpactExportJson, CMD_NONE) \\
+    X(5076, ROUTER_ENSEMBLE_ENABLE         "router.router.ensemble.enable", "!router ensemble enable", BOTH, "ROUTER", handleRouterEnsembleEnable, CMD_NONE) \\
+    X(5077, ROUTER_ENSEMBLE_DISABLE        "router.router.ensemble.disable", "!router ensemble disable", BOTH, "ROUTER", handleRouterEnsembleDisable, CMD_NONE) \\
+    X(5078, ROUTER_ENSEMBLE_STATUS         "router.router.ensemble.status", "!router ensemble status", BOTH, "ROUTER", handleRouterEnsembleStatus, CMD_NONE) \\
+    X(5101, HYBRID_EXPLAIN_SYMBOL          "hybrid.hybrid.explain.symbol", "!hybrid explain symbol", BOTH, "HYBRID", handleHybridExplainSymbol, CMD_NONE) \\
+    X(5103, HYBRID_STREAM_ANALYZE          "hybrid.hybrid.stream.analyze", "!hybrid stream analyze", BOTH, "HYBRID", handleHybridStreamAnalyze, CMD_NONE) \\
+    X(5104, HYBRID_SEMANTIC_PREFETCH       "hybrid.hybrid.semantic.prefetch", "!hybrid semantic prefetch", BOTH, "HYBRID", handleHybridSemanticPrefetch, CMD_NONE) \\
+    X(5105, HYBRID_CORRECTION_LOOP         "hybrid.hybrid.correction.loop", "!hybrid correction loop", BOTH, "HYBRID", handleHybridCorrectionLoop, CMD_NONE) \\
+    X(5108, MULTI_RESP_SELECT_PREFERRED    "multi.multi.resp.select.preferred", "!multi resp select preferred", BOTH, "MULTI", handleMultiRespSelectPreferred, CMD_NONE) \\
+    X(5112, MULTI_RESP_TOGGLE_TEMPLATE     "multi.multi.resp.toggle.template", "!multi resp toggle template", BOTH, "MULTI", handleMultiRespToggleTemplate, CMD_NONE) \\
+    X(5117, MULTI_RESP_APPLY_PREFERRED     "multi.multi.resp.apply.preferred", "!multi resp apply preferred", BOTH, "MULTI", handleMultiRespApplyPreferred, CMD_NONE) \\
+    X(5131, CONFIDENCE_SET_POLICY          "confidence.confidence.set.policy", "!confidence set policy", BOTH, "CONFIDENCE", handleConfidenceSetPolicy, CMD_NONE) \\
+    X(5155, SWARM_WORKER_DISCONNECT        "swarm.swarm.worker.disconnect", "!swarm worker disconnect", BOTH, "SWARM", handleSwarmWorkerDisconnect, CMD_NONE) \\
+    X(5300, AI_MODEL_REGISTRY              "ai.ai.model.registry", "!ai model registry", BOTH, "AI", handleAiModelRegistry, CMD_NONE) \\
+    X(5301, AI_CHECKPOINT_MGR              "ai.ai.checkpoint.mgr", "!ai checkpoint mgr", BOTH, "AI", handleAiCheckpointMgr, CMD_NONE) \\
+    X(5302, AI_INTERPRET_PANEL             "ai.ai.interpret.panel", "!ai interpret panel", BOTH, "AI", handleAiInterpretPanel, CMD_NONE) \\
+    X(5303, AI_CICD_SETTINGS               "ai.ai.cicd.settings", "!ai cicd settings", BOTH, "AI", handleAiCicdSettings, CMD_NONE) \\
+    X(5304, AI_MULTI_FILE_SEARCH           "ai.ai.multi.file.search", "!ai multi file search", BOTH, "AI", handleAiMultiFileSearch, CMD_NONE) \\
+    X(5305, AI_BENCHMARK_MENU              "ai.ai.benchmark.menu", "!ai benchmark menu", BOTH, "AI", handleAiBenchmarkMenu, CMD_NONE) \\
+    X(5310, VIEW_MONACO_SETTINGS           "view.view.monaco.settings", "!view monaco settings", BOTH, "VIEW", handleViewMonacoSettings, CMD_NONE) \\
+    X(5311, VIEW_THERMAL_DASHBOARD         "view.view.thermal.dashboard", "!view thermal dashboard", BOTH, "VIEW", handleViewThermalDashboard, CMD_NONE) \\
+    X(5320, AGENT_SMOKE_TEST               "agent.agent.smoke.test", "!agent smoke test", BOTH, "AGENT", handleAgentSmokeTest, CMD_NONE) \\
+    X(5321, AGENT_SET_CYCLE_AGENT_COUNTER  "agent.agent.set.cycle.agent.counter", "!agent set cycle agent counter", BOTH, "AGENT", handleAgentSetCycleAgentCounter, CMD_NONE) \\
+    X(6001, AGENTIC_TOGGLE                 "agentic.agentic.toggle", "!agentic toggle", BOTH, "AGENTIC", handleAgenticToggle, CMD_NONE) \\
+    X(6002, AGENTIC_PASSIVE                "agentic.agentic.passive", "!agentic passive", BOTH, "AGENTIC", handleAgenticPassive, CMD_NONE) \\
+    X(6003, AGENTIC_SUGGESTIVE             "agentic.agentic.suggestive", "!agentic suggestive", BOTH, "AGENTIC", handleAgenticSuggestive, CMD_NONE) \\
+    X(6004, AGENTIC_AUTONOMOUS             "agentic.agentic.autonomous", "!agentic autonomous", BOTH, "AGENTIC", handleAgenticAutonomous, CMD_NONE) \\
+    X(6005, SHOW_SUGGESTIONS               "show.show.suggestions", "!show suggestions", BOTH, "SHOW", handleShowSuggestions, CMD_NONE) \\
+    X(6006, APPROVE_ACTION                 "approve.approve.action", "!approve action", BOTH, "APPROVE", handleApproveAction, CMD_NONE) \\
+    X(6007, REJECT_ACTION                  "reject.reject.action", "!reject action", BOTH, "REJECT", handleRejectAction, CMD_NONE) \\
+    X(7057, VIEW_AGENT_PANEL               "view.view.agent.panel", "!view agent panel", BOTH, "VIEW", handleViewAgentPanel, CMD_NONE) \\
+    X(9005, HOTPATCH_BYTE_SEARCH           "hotpatch.hotpatch.byte.search", "!hotpatch byte search", BOTH, "HOTPATCH", handleHotpatchByteSearch, CMD_NONE) \\
+    X(9007, HOTPATCH_SERVER_REMOVE         "hotpatch.hotpatch.server.remove", "!hotpatch server remove", BOTH, "HOTPATCH", handleHotpatchServerRemove, CMD_NONE) \\
+    X(9009, HOTPATCH_PROXY_REWRITE         "hotpatch.hotpatch.proxy.rewrite", "!hotpatch proxy rewrite", BOTH, "HOTPATCH", handleHotpatchProxyRewrite, CMD_NONE) \\
+    X(9010, HOTPATCH_PROXY_TERMINATE       "hotpatch.hotpatch.proxy.terminate", "!hotpatch proxy terminate", BOTH, "HOTPATCH", handleHotpatchProxyTerminate, CMD_NONE) \\
+    X(9011, HOTPATCH_PROXY_VALIDATE        "hotpatch.hotpatch.proxy.validate", "!hotpatch proxy validate", BOTH, "HOTPATCH", handleHotpatchProxyValidate, CMD_NONE) \\
+    X(9015, HOTPATCH_RESET_STATS           "hotpatch.hotpatch.reset.stats", "!hotpatch reset stats", BOTH, "HOTPATCH", handleHotpatchResetStats, CMD_NONE) \\
+    X(9017, HOTPATCH_SHOW_PROXY_STATS      "hotpatch.hotpatch.show.proxy.stats", "!hotpatch show proxy stats", BOTH, "HOTPATCH", handleHotpatchShowProxyStats, CMD_NONE) \\
+    X(9018, HOTPATCH_SET_TARGET_TPS        "hotpatch.hotpatch.set.target.tps", "!hotpatch set target tps", BOTH, "HOTPATCH", handleHotpatchSetTargetTps, CMD_NONE) \\
+    X(9207, LSP_SERVER_EXPORT_SYMBOLS      "lsp.lsp.server.export.symbols", "!lsp server export symbols", BOTH, "LSP", handleLspServerExportSymbols, CMD_NONE) \\
+    X(9550, SECURITY_SCAN_SECRETS          "security.security.scan.secrets", "!security scan secrets", BOTH, "SECURITY", handleSecurityScanSecrets, CMD_NONE) \\
+    X(9551, SECURITY_SCAN_SAST             "security.security.scan.sast", "!security scan sast", BOTH, "SECURITY", handleSecurityScanSast, CMD_NONE) \\
+    X(9552, SECURITY_SCAN_DEPENDENCIES     "security.security.scan.dependencies", "!security scan dependencies", BOTH, "SECURITY", handleSecurityScanDependencies, CMD_NONE) \\
+    X(9553, SECURITY_DASHBOARD             "security.security.dashboard", "!security dashboard", BOTH, "SECURITY", handleSecurityDashboard, CMD_NONE) \\
+    X(9554, SECURITY_EXPORT_SBOM           "security.security.export.sbom", "!security export sbom", BOTH, "SECURITY", handleSecurityExportSbom, CMD_NONE) \\
+    X(9708, VOICE_MODE_CONTINUOUS          "voice.voice.mode.continuous", "!voice mode continuous", BOTH, "VOICE", handleVoiceModeContinuous, CMD_NONE) \\
+    X(9901, TELEMETRY_EXPORT_JSON          "telemetry.telemetry.export.json", "!telemetry export json", BOTH, "TELEMETRY", handleTelemetryExportJson, CMD_NONE) \\
+    X(9902, TELEMETRY_EXPORT_CSV           "telemetry.telemetry.export.csv", "!telemetry export csv", BOTH, "TELEMETRY", handleTelemetryExportCsv, CMD_NONE) \\
+    X(9903, TELEMETRY_SHOW_DASHBOARD       "telemetry.telemetry.show.dashboard", "!telemetry show dashboard", BOTH, "TELEMETRY", handleTelemetryShowDashboard, CMD_NONE) \\
+    X(10003, VSCEXT_API_LIST_PROVIDERS      "vscext.vscext.api.list.providers", "!vscext api list providers", BOTH, "VSCEXT", handleVscextApiListProviders, CMD_NONE) \\
+    X(10008, VSCEXT_API_DEACTIVATE_ALL      "vscext.vscext.api.deactivate.all", "!vscext api deactivate all", BOTH, "VSCEXT", handleVscextApiDeactivateAll, CMD_NONE) \\
+    X(10207, EDITOR_GOTO_WORKSPACE_SYMBOL   "editor.editor.goto.workspace.symbol", "!editor goto workspace symbol", BOTH, "EDITOR", handleEditorGotoWorkspaceSymbol, CMD_NONE) \\
+    X(10208, EDITOR_PEEK_DEFINITION         "editor.editor.peek.definition", "!editor peek definition", BOTH, "EDITOR", handleEditorPeekDefinition, CMD_NONE) \\
+    X(10209, EDITOR_PEEK_REFERENCES         "editor.editor.peek.references", "!editor peek references", BOTH, "EDITOR", handleEditorPeekReferences, CMD_NONE) \\
+    X(10250, VIEW_TOGGLE_BOTTOM_PANEL       "view.view.toggle.bottom.panel", "!view toggle bottom panel", BOTH, "VIEW", handleViewToggleBottomPanel, CMD_NONE) \\
+    X(10251, FILE_QUICK_OPEN                "file.file.quick.open", "!file quick open", BOTH, "FILE", handleFileQuickOpen, CMD_NONE) \\
+    X(10300, VOICE_TOGGLE_LISTENING         "voice.voice.toggle.listening", "!voice toggle listening", BOTH, "VOICE", handleVoiceToggleListening, CMD_NONE) \\
+    X(10301, VOICE_TOGGLE_TTS               "voice.voice.toggle.tts", "!voice toggle tts", BOTH, "VOICE", handleVoiceToggleTts, CMD_NONE) \\
+    X(10302, VOICE_SETTINGS                 "voice.voice.settings", "!voice settings", BOTH, "VOICE", handleVoiceSettings, CMD_NONE) \\
+    X(10303, VOICE_TTS_TEST                 "voice.voice.tts.test", "!voice tts test", BOTH, "VOICE", handleVoiceTtsTest, CMD_NONE) \\
+    X(10400, BUILD_SOLUTION                 "build.build.solution", "!build solution", BOTH, "BUILD", handleBuildSolution, CMD_NONE) \\
+    X(10506, DEBUG_TOGGLE_BREAKPOINT        "debug.debug.toggle.breakpoint", "!debug toggle breakpoint", BOTH, "DEBUG", handleDebugToggleBreakpoint, CMD_NONE) \\
+    X(10507, DEBUG_SHOW_CALLSTACK           "debug.debug.show.callstack", "!debug show callstack", BOTH, "DEBUG", handleDebugShowCallstack, CMD_NONE) \\
+    X(10508, DEBUG_SHOW_VARIABLES           "debug.debug.show.variables", "!debug show variables", BOTH, "DEBUG", handleDebugShowVariables, CMD_NONE) \\
+    X(10509, DEBUG_SHOW_WATCH               "debug.debug.show.watch", "!debug show watch", BOTH, "DEBUG", handleDebugShowWatch, CMD_NONE) \\
+    X(10511, DEBUG_DETACH                   "debug.debug.detach", "!debug detach", BOTH, "DEBUG", handleDebugDetach, CMD_NONE) \\
+    X(12330, ENT_MODEL_COMPARE              "ent.ent.model.compare", "!ent model compare", BOTH, "ENT", handleEntModelCompare, CMD_NONE) \\
+    X(12331, ENT_BATCH_PROCESS              "ent.ent.batch.process", "!ent batch process", BOTH, "ENT", handleEntBatchProcess, CMD_NONE) \\
+    X(12332, ENT_CUSTOM_STOP_SEQ            "ent.ent.custom.stop.seq", "!ent custom stop seq", BOTH, "ENT", handleEntCustomStopSeq, CMD_NONE) \\
+    X(12333, ENT_GRAMMAR_CONSTRAINTS        "ent.ent.grammar.constraints", "!ent grammar constraints", BOTH, "ENT", handleEntGrammarConstraints, CMD_NONE) \\
+    X(12334, ENT_LORA_ADAPTER               "ent.ent.lora.adapter", "!ent lora adapter", BOTH, "ENT", handleEntLoraAdapter, CMD_NONE) \\
+    X(12335, ENT_RESPONSE_CACHE             "ent.ent.response.cache", "!ent response cache", BOTH, "ENT", handleEntResponseCache, CMD_NONE) \\
+    X(12336, ENT_PROMPT_LIBRARY             "ent.ent.prompt.library", "!ent prompt library", BOTH, "ENT", handleEntPromptLibrary, CMD_NONE) \\
+    X(12337, ENT_SESSION_EXPORT_IMPORT      "ent.ent.session.export.import", "!ent session export import", BOTH, "ENT", handleEntSessionExportImport, CMD_NONE) \\
+    X(12338, ENT_MODEL_SHARDING             "ent.ent.model.sharding", "!ent model sharding", BOTH, "ENT", handleEntModelSharding, CMD_NONE) \\
+    X(12339, ENT_TENSOR_PARALLEL            "ent.ent.tensor.parallel", "!ent tensor parallel", BOTH, "ENT", handleEntTensorParallel, CMD_NONE) \\
+    X(12340, ENT_PIPELINE_PARALLEL          "ent.ent.pipeline.parallel", "!ent pipeline parallel", BOTH, "ENT", handleEntPipelineParallel, CMD_NONE) \\
+    X(12341, ENT_CUSTOM_QUANT               "ent.ent.custom.quant", "!ent custom quant", BOTH, "ENT", handleEntCustomQuant, CMD_NONE) \\
+    X(12400, OMEGA_START_AUTONOMOUS         "omega.omega.start.autonomous", "!omega start autonomous", BOTH, "OMEGA", handleOmegaStartAutonomous, CMD_NONE) \\
+    X(12401, OMEGA_SET_GOAL                 "omega.omega.set.goal", "!omega set goal", BOTH, "OMEGA", handleOmegaSetGoal, CMD_NONE) \\
+    X(12402, OMEGA_OBSERVE_PIPELINE         "omega.omega.observe.pipeline", "!omega observe pipeline", BOTH, "OMEGA", handleOmegaObservePipeline, CMD_NONE) \\
+    X(12403, OMEGA_CANCEL_TASK              "omega.omega.cancel.task", "!omega cancel task", BOTH, "OMEGA", handleOmegaCancelTask, CMD_NONE) \\
+    X(12404, OMEGA_SPAWN_AGENT              "omega.omega.spawn.agent", "!omega spawn agent", BOTH, "OMEGA", handleOmegaSpawnAgent, CMD_NONE) \\
+    X(12405, OMEGA_GET_STATS                "omega.omega.get.stats", "!omega get stats", BOTH, "OMEGA", handleOmegaGetStats, CMD_NONE) \\

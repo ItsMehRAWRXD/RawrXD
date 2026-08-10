@@ -1,57 +1,2380 @@
 {
-  "generated": "2026-02-11T07:47:53.958855",
+  "generated": "2026-08-09T18:51:39.761270",
   "summary": {
-    "total_idm_defines": 431,
-    "total_table_entries": 472,
-    "total_handlers": 258,
-    "gui_routable": 446,
-    "cli_accessible": 458,
-    "coverage_pct": 100.0,
-    "is_clean": true
+    "total_idm_defines": 782,
+    "total_table_entries": 493,
+    "total_handlers": 280,
+    "gui_routable": 467,
+    "cli_accessible": 482,
+    "coverage_pct": 57.8,
+    "is_clean": false
   },
   "categories": {
     "File": 20,
-    "Edit": 23,
+    "Edit": 22,
     "View": 17,
     "Git": 5,
     "Theme": 17,
     "Transparency": 9,
     "Help": 6,
-    "Terminal": 11,
-    "Agent": 11,
+    "Terminal": 9,
+    "Agent": 13,
     "SubAgent": 5,
     "Autonomy": 6,
-    "AIMode": 13,
+    "AIMode": 14,
     "AIContext": 7,
-    "ReverseEng": 26,
+    "ReverseEng": 29,
     "Backend": 11,
-    "Router": 21,
+    "Performance": 3,
+    "Router": 18,
     "LSP": 13,
     "ASM": 12,
-    "Hybrid": 12,
-    "MultiResp": 12,
-    "Governor": 4,
+    "Hybrid": 8,
+    "MultiResp": 9,
+    "Governor": 5,
     "Safety": 4,
     "Replay": 4,
-    "Confidence": 2,
-    "Swarm": 25,
+    "Confidence": 1,
+    "Swarm": 24,
     "Debug": 28,
-    "Plugin": 19,
-    "Hotpatch": 17,
+    "Plugin": 17,
+    "Hotpatch": 10,
     "Monaco": 6,
-    "LSPServer": 9,
+    "LSPServer": 8,
     "Editor": 5,
     "PDB": 9,
     "Audit": 7,
     "Gauntlet": 2,
-    "Voice": 17,
+    "Voice": 16,
     "QW": 12,
-    "Telemetry": 6,
-    "Tools": 10,
+    "Telemetry": 4,
+    "Tools": 11,
     "Modules": 3,
-    "CLI": 26
+    "CLI": 26,
+    "GameEngine": 4,
+    "Models": 5,
+    "Disk": 2,
+    "Marketplace": 1,
+    "Embedding": 1,
+    "Vision": 1,
+    "Prompt": 1,
+    "Cosmetic": 13,
+    "Transcendence": 6,
+    "UI": 2,
+    "Security": 2
   },
-  "missing_from_table": [],
+  "missing_from_table": [
+    {
+      "name": "IDM_EDIT_MULTICURSOR_REMOVE",
+      "value": 210,
+      "file": "ide_constants.h",
+      "line": 24,
+      "category": "EDIT"
+    },
+    {
+      "name": "IDM_EDIT_TOGGLE_COMMENT",
+      "value": 212,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 41,
+      "category": "EDIT"
+    },
+    {
+      "name": "IDM_SEL_SELECT_ALL_OCCURRENCES",
+      "value": 308,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 51,
+      "category": "SEL"
+    },
+    {
+      "name": "IDM_VIEW_EXTENSIONS",
+      "value": 411,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 64,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_PROBLEMS",
+      "value": 412,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 65,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_RUN_STEP_OUT",
+      "value": 507,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 79,
+      "category": "RUN"
+    },
+    {
+      "name": "IDM_RUN_CONTINUE",
+      "value": 508,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 80,
+      "category": "RUN"
+    },
+    {
+      "name": "IDM_RUN_TOGGLE_BREAKPOINT",
+      "value": 509,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 81,
+      "category": "RUN"
+    },
+    {
+      "name": "IDM_RUN_CLEAR_BREAKPOINTS",
+      "value": 510,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 82,
+      "category": "RUN"
+    },
+    {
+      "name": "IDM_TERM_SPLIT",
+      "value": 602,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 86,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_CLEAR",
+      "value": 604,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 88,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_KILL",
+      "value": 605,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 89,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_PWSH",
+      "value": 606,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 90,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_CMD",
+      "value": 607,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 91,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_GITBASH",
+      "value": 608,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 92,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_TERM_RUN_FILE",
+      "value": 609,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 93,
+      "category": "TERM"
+    },
+    {
+      "name": "IDM_HELP_WELCOME",
+      "value": 701,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 96,
+      "category": "HELP"
+    },
+    {
+      "name": "IDM_HELP_RELEASE_NOTES",
+      "value": 704,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 99,
+      "category": "HELP"
+    },
+    {
+      "name": "IDM_HELP_CHECK_UPDATES",
+      "value": 705,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 100,
+      "category": "HELP"
+    },
+    {
+      "name": "IDM_HELP_REPORT_ISSUE",
+      "value": 707,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 102,
+      "category": "HELP"
+    },
+    {
+      "name": "IDM_HELP_TIPS_TRICKS",
+      "value": 708,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 103,
+      "category": "HELP"
+    },
+    {
+      "name": "IDM_MODEL_LOAD",
+      "value": 801,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 106,
+      "category": "MODEL"
+    },
+    {
+      "name": "IDM_MODEL_UNLOAD",
+      "value": 802,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 107,
+      "category": "MODEL"
+    },
+    {
+      "name": "IDM_MODEL_INFO",
+      "value": 803,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 108,
+      "category": "MODEL"
+    },
+    {
+      "name": "IDM_MODEL_RELOAD",
+      "value": 804,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 109,
+      "category": "MODEL"
+    },
+    {
+      "name": "IDM_MODEL_SETTINGS",
+      "value": 805,
+      "file": "qtapp/MainWindowSimple.h",
+      "line": 110,
+      "category": "MODEL"
+    },
+    {
+      "name": "IDM_EDIT_GOTO",
+      "value": 1109,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 95,
+      "category": "EDIT"
+    },
+    {
+      "name": "IDM_BUILD_BUILD",
+      "value": 1201,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 98,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_BUILD_REBUILD",
+      "value": 1202,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 99,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_BUILD_RUN",
+      "value": 1203,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 100,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_BUILD_CLEAN",
+      "value": 1204,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 101,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_BUILD_STOP",
+      "value": 1205,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 102,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_DEBUG_START",
+      "value": 1251,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 105,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_ATTACH",
+      "value": 1252,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 106,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_STOP",
+      "value": 1253,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 107,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_BREAKPOINT",
+      "value": 1254,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 108,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_STEP_OVER",
+      "value": 1255,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 109,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_STEP_INTO",
+      "value": 1256,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 110,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_STEP_OUT",
+      "value": 1257,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 111,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_CONTINUE",
+      "value": 1258,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 112,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_RESTART",
+      "value": 1259,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 113,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_ERROR_NEXT",
+      "value": 1261,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 116,
+      "category": "ERROR"
+    },
+    {
+      "name": "IDM_ERROR_PREV",
+      "value": 1262,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 117,
+      "category": "ERROR"
+    },
+    {
+      "name": "IDM_ERROR_CLEAR",
+      "value": 1263,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 118,
+      "category": "ERROR"
+    },
+    {
+      "name": "IDM_TOOLS_PE_INSPECTOR",
+      "value": 1301,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 121,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_INSTR_ENCODER",
+      "value": 1302,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 122,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_EXT_MANAGER",
+      "value": 1303,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 123,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_OPTIONS",
+      "value": 1304,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 124,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_SOVEREIGN_RUN",
+      "value": 1305,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 125,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_VIEW_EVIDENCE",
+      "value": 1306,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 126,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_TOOLS_DEBUG_TELEMETRY",
+      "value": 1307,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 127,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_VIEW_FILEBROWSER",
+      "value": 1401,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 130,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_OUTPUT",
+      "value": 1402,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 131,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_WIDGET",
+      "value": 1403,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 132,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_FULLSCREEN",
+      "value": 1404,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 133,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_DARK_THEME",
+      "value": 1405,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 134,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_LIGHT_THEME",
+      "value": 1406,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 135,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_LINE_NUMBERS",
+      "value": 1407,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 136,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_WORD_WRAP",
+      "value": 1408,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 137,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_FILE_EXPLORER",
+      "value": 2030,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 65,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_AUDIT_RUN",
+      "value": 2101,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 178,
+      "category": "AUDIT"
+    },
+    {
+      "name": "IDM_AUDIT_VIEW_REPORT",
+      "value": 2102,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 179,
+      "category": "AUDIT"
+    },
+    {
+      "name": "IDM_TELEMETRY_VIEW",
+      "value": 2201,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 182,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_TELEMETRY_EXPORT",
+      "value": 2202,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 183,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_HOTPATCH_APPLY",
+      "value": 2301,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 186,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_CREATE",
+      "value": 2302,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 187,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_STATUS",
+      "value": 2303,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 188,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_AUTONOMY_START",
+      "value": 2402,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 192,
+      "category": "AUTONOMY"
+    },
+    {
+      "name": "IDM_AUTONOMY_STOP",
+      "value": 2403,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 193,
+      "category": "AUTONOMY"
+    },
+    {
+      "name": "IDM_AUTONOMY_SET_GOAL",
+      "value": 2404,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 194,
+      "category": "AUTONOMY"
+    },
+    {
+      "name": "IDM_AUTONOMY_STATUS",
+      "value": 2405,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 195,
+      "category": "AUTONOMY"
+    },
+    {
+      "name": "IDM_AUTONOMY_MEMORY",
+      "value": 2406,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 196,
+      "category": "AUTONOMY"
+    },
+    {
+      "name": "IDM_REVENG_DISASM",
+      "value": 2501,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 199,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_DECOMPILE",
+      "value": 2502,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 200,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_CRUCIBLE_RUN",
+      "value": 2601,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 203,
+      "category": "CRUCIBLE"
+    },
+    {
+      "name": "IDM_CRUCIBLE_BENCHMARK",
+      "value": 2602,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 204,
+      "category": "CRUCIBLE"
+    },
+    {
+      "name": "IDM_GAP_ANALYZE",
+      "value": 2701,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 207,
+      "category": "GAP"
+    },
+    {
+      "name": "IDM_GAP_FIX",
+      "value": 2702,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 208,
+      "category": "GAP"
+    },
+    {
+      "name": "IDM_BUILD_PROJECT",
+      "value": 2801,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 25,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_FEATURES_ENABLE",
+      "value": 2801,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 211,
+      "category": "FEATURES"
+    },
+    {
+      "name": "IDM_FEATURES_DISABLE",
+      "value": 2802,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 212,
+      "category": "FEATURES"
+    },
+    {
+      "name": "IDM_COMMANDS_PALETTE",
+      "value": 2901,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 215,
+      "category": "COMMANDS"
+    },
+    {
+      "name": "IDM_TOOLS_GGUF_INSPECTOR",
+      "value": 3014,
+      "file": "win32app/Win32IDE.cpp",
+      "line": 716,
+      "category": "TOOLS"
+    },
+    {
+      "name": "IDM_ENT_MULTI_GPU_BALANCE",
+      "value": 3042,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 252,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_DYNAMIC_BATCH",
+      "value": 3043,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 255,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_API_KEY_MGMT",
+      "value": 3044,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 258,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_AUDIT_LOGS",
+      "value": 3045,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 261,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_RAWR_TUNER",
+      "value": 3046,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 264,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_DUAL_ENGINE",
+      "value": 3047,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 267,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_VIEW_COLLABORATION",
+      "value": 3060,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 67,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_PLATFORM_EXT_CREATOR",
+      "value": 3301,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 234,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_PLATFORM_MODEL_CREATOR",
+      "value": 3302,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 235,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_PLATFORM_NATIVE_INTEL",
+      "value": 3303,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 236,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_PLATFORM_MASM_LEXER",
+      "value": 3304,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 237,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_PLATFORM_AST_BRIDGE",
+      "value": 3305,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 238,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_PLATFORM_RT_ENGINE",
+      "value": 3306,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 239,
+      "category": "PLATFORM"
+    },
+    {
+      "name": "IDM_COMPILER_ASSEMBLY",
+      "value": 3401,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 242,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_EON",
+      "value": 3402,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 243,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_UNIVERSAL",
+      "value": 3403,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 244,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_CROSS",
+      "value": 3404,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 245,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_QUANTUM",
+      "value": 3405,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 246,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_C",
+      "value": 3410,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 247,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_CPP",
+      "value": 3411,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 248,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_RUST",
+      "value": 3412,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 249,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_ZIG",
+      "value": 3413,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 250,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_GO",
+      "value": 3414,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 251,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_SWIFT",
+      "value": 3415,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 252,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_HASKELL",
+      "value": 3420,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 253,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_OCAML",
+      "value": 3421,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 254,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_ERLANG",
+      "value": 3422,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 255,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_ELIXIR",
+      "value": 3423,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 256,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_CLOJURE",
+      "value": 3424,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 257,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_LISP",
+      "value": 3425,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 258,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_JS",
+      "value": 3430,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 259,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_TS",
+      "value": 3431,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 260,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_DART",
+      "value": 3432,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 261,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_WASM",
+      "value": 3433,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 262,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_FORTRAN",
+      "value": 3440,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 263,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_COBOL",
+      "value": 3441,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 264,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_PASCAL",
+      "value": 3442,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 265,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_DELPHI",
+      "value": 3443,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 266,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_VB",
+      "value": 3444,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 267,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_ADA",
+      "value": 3445,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 268,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_JVM",
+      "value": 3450,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 269,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_PYTHON",
+      "value": 3451,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 270,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_LUA",
+      "value": 3452,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 271,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_RUBY",
+      "value": 3453,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 272,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_PERL",
+      "value": 3454,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 273,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_PHP",
+      "value": 3455,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 274,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_POWERSHELL",
+      "value": 3456,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 275,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_JULIA",
+      "value": 3457,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 276,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_MATLAB",
+      "value": 3458,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 277,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_R",
+      "value": 3459,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 278,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_CRYSTAL",
+      "value": 3460,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 279,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_NIM",
+      "value": 3461,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 280,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_CARBON",
+      "value": 3462,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 281,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_JAI",
+      "value": 3463,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 282,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_ODIN",
+      "value": 3464,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 283,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_VALA",
+      "value": 3465,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 284,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_KOTLIN",
+      "value": 3466,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 285,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_SCALA",
+      "value": 3467,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 286,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_GROOVY",
+      "value": 3468,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 287,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_D",
+      "value": 3469,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 288,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_F",
+      "value": 3470,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 289,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_SOLIDITY",
+      "value": 3471,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 290,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_VYPER",
+      "value": 3472,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 291,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_MOVE",
+      "value": 3473,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 292,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_MOTOKO",
+      "value": 3474,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 293,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_BASH",
+      "value": 3475,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 294,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_COMPILER_LLVM",
+      "value": 3476,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 295,
+      "category": "COMPILER"
+    },
+    {
+      "name": "IDM_REVENG_DECRYPT",
+      "value": 3503,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 298,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_ANALYZE",
+      "value": 3504,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 299,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_RECOVER",
+      "value": 3505,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 300,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_DUMPBIN",
+      "value": 3510,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 301,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_OBJDUMP",
+      "value": 3511,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 302,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_NM",
+      "value": 3512,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 303,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_STRINGS",
+      "value": 3513,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 304,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_HEXEDIT",
+      "value": 3514,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 305,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_PATCH",
+      "value": 3520,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 306,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_INJECT",
+      "value": 3521,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 307,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_UNPACK",
+      "value": 3522,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 308,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_DIFF",
+      "value": 3523,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 309,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_SIGNATURE",
+      "value": 3524,
+      "file": "ide/RawrXD_IDE_Win32.h",
+      "line": 310,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_PIPELINE_RUN",
+      "value": 4160,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 138,
+      "category": "PIPELINE"
+    },
+    {
+      "name": "IDM_PIPELINE_AUTONOMY_START",
+      "value": 4161,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 139,
+      "category": "PIPELINE"
+    },
+    {
+      "name": "IDM_PIPELINE_AUTONOMY_STOP",
+      "value": 4162,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 140,
+      "category": "PIPELINE"
+    },
+    {
+      "name": "IDM_AGENT_AUTONOMOUS_COMMUNICATOR",
+      "value": 4163,
+      "file": "win32app/Win32IDE.cpp",
+      "line": 739,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_TELEMETRY_UNIFIED_CORE",
+      "value": 4164,
+      "file": "win32app/Win32IDE.cpp",
+      "line": 740,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_GGUF_TREE",
+      "value": 4204,
+      "file": "win32app/resource.h",
+      "line": 90,
+      "category": "GGUF"
+    },
+    {
+      "name": "IDM_AI_MODE_SWARM",
+      "value": 4204,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 147,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_GGUF_DETAILS",
+      "value": 4205,
+      "file": "win32app/resource.h",
+      "line": 91,
+      "category": "GGUF"
+    },
+    {
+      "name": "IDM_AI_LOAD_SWARM_DIR",
+      "value": 4205,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 148,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_CONTEXT_UNLIMITED",
+      "value": 4217,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 158,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_AGENT_CYCLES_SET",
+      "value": 4217,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 159,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_AGENT_MULTI_ENABLE",
+      "value": 4218,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 160,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_AGENT_MULTI_DISABLE",
+      "value": 4219,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 161,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_ENGINE_UNLOCK_800B",
+      "value": 4220,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 164,
+      "category": "ENGINE"
+    },
+    {
+      "name": "IDM_ENGINE_LOAD_800B",
+      "value": 4221,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 165,
+      "category": "ENGINE"
+    },
+    {
+      "name": "IDM_TITAN_TOGGLE",
+      "value": 4230,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 166,
+      "category": "TITAN"
+    },
+    {
+      "name": "IDM_AI_AGENT_MULTI_STATUS",
+      "value": 4240,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 170,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_TITAN_TOGGLE",
+      "value": 4241,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 171,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_800B_STATUS",
+      "value": 4242,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 172,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_OMEGA_START",
+      "value": 4243,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 176,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_STOP",
+      "value": 4244,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 177,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SUBMIT_TASK",
+      "value": 4245,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 178,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_RUN_CYCLE",
+      "value": 4246,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 179,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SHOW_STATUS",
+      "value": 4247,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 180,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_VIEW_PIPELINE",
+      "value": 4248,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 181,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SET_QUALITY_AUTO",
+      "value": 4250,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 183,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SET_QUALITY_BALANCE",
+      "value": 4251,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 184,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_WORLD_MODEL",
+      "value": 4254,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 187,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_EXPORT_STATS",
+      "value": 4255,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 188,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_DIAGNOSTICS",
+      "value": 4256,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 189,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_VERSION",
+      "value": 4257,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 190,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_HELP",
+      "value": 4258,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 191,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_ADVANCED_SETTINGS",
+      "value": 4259,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 192,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SHELL_INTEGRATION",
+      "value": 4260,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 193,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_PLANNING_START",
+      "value": 4261,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 197,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_SHOW_QUEUE",
+      "value": 4262,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 198,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_APPROVE_STEP",
+      "value": 4263,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 199,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_REJECT_STEP",
+      "value": 4264,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 200,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_EXECUTE_STEP",
+      "value": 4265,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 201,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_EXECUTE_ALL",
+      "value": 4266,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 202,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_ROLLBACK",
+      "value": 4267,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 203,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_SET_POLICY",
+      "value": 4268,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 204,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_VIEW_STATUS",
+      "value": 4269,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 205,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_PLANNING_DIAGNOSTICS",
+      "value": 4270,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 206,
+      "category": "PLANNING"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_INIT",
+      "value": 4271,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 210,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_RECORD",
+      "value": 4272,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 211,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_SEARCH",
+      "value": 4273,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 212,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_DECISIONS",
+      "value": 4274,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 213,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_PREFERENCES",
+      "value": 4275,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 214,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_ARCHAEOLOGY",
+      "value": 4276,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 215,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_GRAPH",
+      "value": 4277,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 216,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_EXPORT",
+      "value": 4278,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 217,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_STATS",
+      "value": 4279,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 218,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_KNOWLEDGE_FLUSH",
+      "value": 4280,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 219,
+      "category": "KNOWLEDGE"
+    },
+    {
+      "name": "IDM_FAILURE_DETECT",
+      "value": 4281,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 223,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_ANALYZE",
+      "value": 4282,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 224,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_SHOW_QUEUE",
+      "value": 4283,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 225,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_SHOW_HISTORY",
+      "value": 4284,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 226,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_GENERATE_RECOVERY",
+      "value": 4285,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 227,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_EXECUTE_RECOVERY",
+      "value": 4286,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 228,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_AUTONOMOUS_HEAL",
+      "value": 4287,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 229,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_VIEW_PATTERNS",
+      "value": 4288,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 230,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_LEARN_PATTERN",
+      "value": 4289,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 231,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_STATS",
+      "value": 4290,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 232,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_SET_POLICY",
+      "value": 4291,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 233,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_SHOW_HEALTH",
+      "value": 4292,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 234,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_EXPORT_ANALYSIS",
+      "value": 4293,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 235,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_CLEAR_HISTORY",
+      "value": 4294,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 236,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_FAILURE_DIAGNOSTICS",
+      "value": 4295,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 237,
+      "category": "FAILURE"
+    },
+    {
+      "name": "IDM_REVENG_SET_BINARY_FROM_ACTIVE",
+      "value": 4320,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 277,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_SET_BINARY_FROM_DEBUG_TARGET",
+      "value": 4321,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 278,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_SET_BINARY_FROM_BUILD_OUTPUT",
+      "value": 4322,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 279,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_REVENG_DISASM_AT_RIP",
+      "value": 4323,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 280,
+      "category": "REVENG"
+    },
+    {
+      "name": "IDM_IMPACT_ANALYZE_STAGED",
+      "value": 4350,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 244,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_ANALYZE_UNSTAGED",
+      "value": 4351,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 245,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_ANALYZE_FILE",
+      "value": 4352,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 246,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_SHOW_REPORT",
+      "value": 4353,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 247,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_SHOW_ZONES",
+      "value": 4354,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 248,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_RISK_SCORE",
+      "value": 4355,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 249,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_CHECK_COMMIT",
+      "value": 4356,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 250,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_SET_CONFIG",
+      "value": 4357,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 251,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_HISTORY",
+      "value": 4358,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 252,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_DIAGNOSTICS",
+      "value": 4359,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 253,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_IMPACT_EXPORT_JSON",
+      "value": 4360,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 254,
+      "category": "IMPACT"
+    },
+    {
+      "name": "IDM_ROUTER_ENSEMBLE_ENABLE",
+      "value": 5076,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 340,
+      "category": "ROUTER"
+    },
+    {
+      "name": "IDM_ROUTER_ENSEMBLE_DISABLE",
+      "value": 5077,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 341,
+      "category": "ROUTER"
+    },
+    {
+      "name": "IDM_ROUTER_ENSEMBLE_STATUS",
+      "value": 5078,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 342,
+      "category": "ROUTER"
+    },
+    {
+      "name": "IDM_HYBRID_EXPLAIN_SYMBOL",
+      "value": 5101,
+      "file": "win32app/Win32IDE.h",
+      "line": 3763,
+      "category": "HYBRID"
+    },
+    {
+      "name": "IDM_HYBRID_STREAM_ANALYZE",
+      "value": 5103,
+      "file": "win32app/Win32IDE.h",
+      "line": 3765,
+      "category": "HYBRID"
+    },
+    {
+      "name": "IDM_HYBRID_SEMANTIC_PREFETCH",
+      "value": 5104,
+      "file": "win32app/Win32IDE.h",
+      "line": 3766,
+      "category": "HYBRID"
+    },
+    {
+      "name": "IDM_HYBRID_CORRECTION_LOOP",
+      "value": 5105,
+      "file": "win32app/Win32IDE.h",
+      "line": 3767,
+      "category": "HYBRID"
+    },
+    {
+      "name": "IDM_MULTI_RESP_SELECT_PREFERRED",
+      "value": 5108,
+      "file": "win32app/Win32IDE.h",
+      "line": 3916,
+      "category": "MULTI"
+    },
+    {
+      "name": "IDM_MULTI_RESP_TOGGLE_TEMPLATE",
+      "value": 5112,
+      "file": "win32app/Win32IDE.h",
+      "line": 3920,
+      "category": "MULTI"
+    },
+    {
+      "name": "IDM_MULTI_RESP_APPLY_PREFERRED",
+      "value": 5117,
+      "file": "win32app/Win32IDE.h",
+      "line": 3925,
+      "category": "MULTI"
+    },
+    {
+      "name": "IDM_CONFIDENCE_SET_POLICY",
+      "value": 5131,
+      "file": "win32app/Win32IDE.h",
+      "line": 3976,
+      "category": "CONFIDENCE"
+    },
+    {
+      "name": "IDM_SWARM_WORKER_DISCONNECT",
+      "value": 5155,
+      "file": "win32app/Win32IDE.h",
+      "line": 4008,
+      "category": "SWARM"
+    },
+    {
+      "name": "IDM_AI_MODEL_REGISTRY",
+      "value": 5300,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 359,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_CHECKPOINT_MGR",
+      "value": 5301,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 360,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_INTERPRET_PANEL",
+      "value": 5302,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 361,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_CICD_SETTINGS",
+      "value": 5303,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 362,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_MULTI_FILE_SEARCH",
+      "value": 5304,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 363,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_AI_BENCHMARK_MENU",
+      "value": 5305,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 364,
+      "category": "AI"
+    },
+    {
+      "name": "IDM_VIEW_MONACO_SETTINGS",
+      "value": 5310,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 365,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_VIEW_THERMAL_DASHBOARD",
+      "value": 5311,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 366,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_AGENT_SMOKE_TEST",
+      "value": 5320,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 367,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENT_SET_CYCLE_AGENT_COUNTER",
+      "value": 5321,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 368,
+      "category": "AGENT"
+    },
+    {
+      "name": "IDM_AGENTIC_TOGGLE",
+      "value": 6001,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 36,
+      "category": "AGENTIC"
+    },
+    {
+      "name": "IDM_AGENTIC_PASSIVE",
+      "value": 6002,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 37,
+      "category": "AGENTIC"
+    },
+    {
+      "name": "IDM_AGENTIC_SUGGESTIVE",
+      "value": 6003,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 38,
+      "category": "AGENTIC"
+    },
+    {
+      "name": "IDM_AGENTIC_AUTONOMOUS",
+      "value": 6004,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 39,
+      "category": "AGENTIC"
+    },
+    {
+      "name": "IDM_SHOW_SUGGESTIONS",
+      "value": 6005,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 40,
+      "category": "SHOW"
+    },
+    {
+      "name": "IDM_APPROVE_ACTION",
+      "value": 6006,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 41,
+      "category": "APPROVE"
+    },
+    {
+      "name": "IDM_REJECT_ACTION",
+      "value": 6007,
+      "file": "agentic/Win32IDE_AgenticIntegration.h",
+      "line": 42,
+      "category": "REJECT"
+    },
+    {
+      "name": "IDM_VIEW_AGENT_PANEL",
+      "value": 7057,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 69,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_HOTPATCH_BYTE_SEARCH",
+      "value": 9005,
+      "file": "win32app/Win32IDE.h",
+      "line": 4264,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_SERVER_REMOVE",
+      "value": 9007,
+      "file": "win32app/Win32IDE.h",
+      "line": 4266,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_PROXY_REWRITE",
+      "value": 9009,
+      "file": "win32app/Win32IDE.h",
+      "line": 4268,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_PROXY_TERMINATE",
+      "value": 9010,
+      "file": "win32app/Win32IDE.h",
+      "line": 4269,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_PROXY_VALIDATE",
+      "value": 9011,
+      "file": "win32app/Win32IDE.h",
+      "line": 4270,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_RESET_STATS",
+      "value": 9015,
+      "file": "win32app/Win32IDE.h",
+      "line": 4274,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_SHOW_PROXY_STATS",
+      "value": 9017,
+      "file": "win32app/Win32IDE.h",
+      "line": 4276,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_HOTPATCH_SET_TARGET_TPS",
+      "value": 9018,
+      "file": "win32app/Win32IDE.h",
+      "line": 4277,
+      "category": "HOTPATCH"
+    },
+    {
+      "name": "IDM_LSP_SERVER_EXPORT_SYMBOLS",
+      "value": 9207,
+      "file": "win32app/Win32IDE.h",
+      "line": 4299,
+      "category": "LSP"
+    },
+    {
+      "name": "IDM_SECURITY_SCAN_SECRETS",
+      "value": 9550,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 406,
+      "category": "SECURITY"
+    },
+    {
+      "name": "IDM_SECURITY_SCAN_SAST",
+      "value": 9551,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 407,
+      "category": "SECURITY"
+    },
+    {
+      "name": "IDM_SECURITY_SCAN_DEPENDENCIES",
+      "value": 9552,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 408,
+      "category": "SECURITY"
+    },
+    {
+      "name": "IDM_SECURITY_DASHBOARD",
+      "value": 9553,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 409,
+      "category": "SECURITY"
+    },
+    {
+      "name": "IDM_SECURITY_EXPORT_SBOM",
+      "value": 9554,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 410,
+      "category": "SECURITY"
+    },
+    {
+      "name": "IDM_VOICE_MODE_CONTINUOUS",
+      "value": 9708,
+      "file": "win32app/Win32IDE.h",
+      "line": 4369,
+      "category": "VOICE"
+    },
+    {
+      "name": "IDM_TELEMETRY_EXPORT_JSON",
+      "value": 9901,
+      "file": "win32app/Win32IDE.h",
+      "line": 4330,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_TELEMETRY_EXPORT_CSV",
+      "value": 9902,
+      "file": "win32app/Win32IDE.h",
+      "line": 4331,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_TELEMETRY_SHOW_DASHBOARD",
+      "value": 9903,
+      "file": "win32app/Win32IDE.h",
+      "line": 4332,
+      "category": "TELEMETRY"
+    },
+    {
+      "name": "IDM_VSCEXT_API_LIST_PROVIDERS",
+      "value": 10003,
+      "file": "modules/vscode_extension_api.h",
+      "line": 1905,
+      "category": "VSCEXT"
+    },
+    {
+      "name": "IDM_VSCEXT_API_DEACTIVATE_ALL",
+      "value": 10008,
+      "file": "modules/vscode_extension_api.h",
+      "line": 1910,
+      "category": "VSCEXT"
+    },
+    {
+      "name": "IDM_EDITOR_GOTO_WORKSPACE_SYMBOL",
+      "value": 10207,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 420,
+      "category": "EDITOR"
+    },
+    {
+      "name": "IDM_EDITOR_PEEK_DEFINITION",
+      "value": 10208,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 421,
+      "category": "EDITOR"
+    },
+    {
+      "name": "IDM_EDITOR_PEEK_REFERENCES",
+      "value": 10209,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 422,
+      "category": "EDITOR"
+    },
+    {
+      "name": "IDM_VIEW_TOGGLE_BOTTOM_PANEL",
+      "value": 10250,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 433,
+      "category": "VIEW"
+    },
+    {
+      "name": "IDM_FILE_QUICK_OPEN",
+      "value": 10251,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 434,
+      "category": "FILE"
+    },
+    {
+      "name": "IDM_VOICE_TOGGLE_LISTENING",
+      "value": 10300,
+      "file": "voice_automation.h",
+      "line": 276,
+      "category": "VOICE"
+    },
+    {
+      "name": "IDM_VOICE_TOGGLE_TTS",
+      "value": 10301,
+      "file": "voice_automation.h",
+      "line": 277,
+      "category": "VOICE"
+    },
+    {
+      "name": "IDM_VOICE_SETTINGS",
+      "value": 10302,
+      "file": "voice_automation.h",
+      "line": 278,
+      "category": "VOICE"
+    },
+    {
+      "name": "IDM_VOICE_TTS_TEST",
+      "value": 10303,
+      "file": "voice_automation.h",
+      "line": 279,
+      "category": "VOICE"
+    },
+    {
+      "name": "IDM_BUILD_SOLUTION",
+      "value": 10400,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 438,
+      "category": "BUILD"
+    },
+    {
+      "name": "IDM_DEBUG_TOGGLE_BREAKPOINT",
+      "value": 10506,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 450,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_SHOW_CALLSTACK",
+      "value": 10507,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 451,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_SHOW_VARIABLES",
+      "value": 10508,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 452,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_SHOW_WATCH",
+      "value": 10509,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 453,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_DEBUG_DETACH",
+      "value": 10511,
+      "file": "win32app/Win32IDE_Commands.h",
+      "line": 455,
+      "category": "DEBUG"
+    },
+    {
+      "name": "IDM_ENT_MODEL_COMPARE",
+      "value": 12330,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 210,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_BATCH_PROCESS",
+      "value": 12331,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 213,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_CUSTOM_STOP_SEQ",
+      "value": 12332,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 216,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_GRAMMAR_CONSTRAINTS",
+      "value": 12333,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 219,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_LORA_ADAPTER",
+      "value": 12334,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 222,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_RESPONSE_CACHE",
+      "value": 12335,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 225,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_PROMPT_LIBRARY",
+      "value": 12336,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 228,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_SESSION_EXPORT_IMPORT",
+      "value": 12337,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 231,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_MODEL_SHARDING",
+      "value": 12338,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 234,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_TENSOR_PARALLEL",
+      "value": 12339,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 237,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_PIPELINE_PARALLEL",
+      "value": 12340,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 240,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_ENT_CUSTOM_QUANT",
+      "value": 12341,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 243,
+      "category": "ENT"
+    },
+    {
+      "name": "IDM_OMEGA_START_AUTONOMOUS",
+      "value": 12400,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 274,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SET_GOAL",
+      "value": 12401,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 277,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_OBSERVE_PIPELINE",
+      "value": 12402,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 280,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_CANCEL_TASK",
+      "value": 12403,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 283,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_SPAWN_AGENT",
+      "value": 12404,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 286,
+      "category": "OMEGA"
+    },
+    {
+      "name": "IDM_OMEGA_GET_STATS",
+      "value": 12405,
+      "file": "win32app/Win32IDE_Commands.cpp",
+      "line": 289,
+      "category": "OMEGA"
+    }
+  ],
   "orphan_handlers": [
     "handleAgentGoal",
     "handleBackendList",
@@ -61,32 +2384,36 @@
     "handleBreakpointList",
     "handleBreakpointRemove",
     "handleConfidence",
+    "handleConfidenceSetPolicy",
     "handleDebugContinue",
     "handleDebugStart",
     "handleDebugStep",
     "handleDebugStop",
     "handleExplain",
     "handleGovernor",
+    "handleGovernorSetPowerLevel",
     "handleHistory",
+    "handleHybridCorrectionLoop",
+    "handleHybridExplainSymbol",
+    "handleHybridSemanticPrefetch",
+    "handleHybridStreamAnalyze",
+    "handleMarketplaceInstall",
+    "handleMultiRespApplyPreferred",
+    "handleMultiRespSelectPreferred",
+    "handleMultiRespToggleTemplate",
     "handleMultiResponse",
     "handlePolicy",
     "handleReplay",
+    "handleRouterEnsembleDisable",
+    "handleRouterEnsembleEnable",
+    "handleRouterEnsembleStatus",
     "handleSafety",
     "handleSwarmDistribute",
     "handleSwarmRebalance",
-    "handleTerminalNew",
     "handleTools"
   ],
   "duplicate_ids": [],
-  "duplicate_aliases": [
-    {
-      "alias": "!decomp_rename",
-      "entries": [
-        "re.decompRename",
-        "decomp.renameVar"
-      ]
-    }
-  ],
+  "duplicate_aliases": [],
   "entries": [
     {
       "id": 1001,
@@ -196,7 +2523,7 @@
       "exposure": "BOTH",
       "category": "File",
       "handler": "handleFileModelFromOllama",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 1033,
@@ -316,7 +2643,7 @@
       "exposure": "BOTH",
       "category": "Edit",
       "handler": "handleEditCopyFormat",
-      "flags": "CMD_REQUIRES_SELECT"
+      "flags": "\\\n      CMD_REQUIRES_SELECT"
     },
     {
       "id": 2014,
@@ -326,7 +2653,7 @@
       "exposure": "BOTH",
       "category": "Edit",
       "handler": "handleEditPastePlain",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 2015,
@@ -336,7 +2663,7 @@
       "exposure": "BOTH",
       "category": "Edit",
       "handler": "handleEditClipboardHist",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 2016,
@@ -426,7 +2753,7 @@
       "exposure": "BOTH",
       "category": "View",
       "handler": "handleViewFloatingPanel",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 2025,
@@ -446,7 +2773,7 @@
       "exposure": "BOTH",
       "category": "View",
       "handler": "handleViewStreamingLoader",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 2027,
@@ -786,7 +3113,7 @@
       "exposure": "BOTH",
       "category": "Transparency",
       "handler": "handleTransToggle",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 4001,
@@ -829,6 +3156,16 @@
       "flags": "CMD_NONE"
     },
     {
+      "id": 4005,
+      "symbol": "TERMINAL_NEW",
+      "canonical": "terminal.new",
+      "cli": "!terminal_new",
+      "exposure": "BOTH",
+      "category": "Terminal",
+      "handler": "handleTerminalNew",
+      "flags": "CMD_NONE"
+    },
+    {
       "id": 4006,
       "symbol": "TERMINAL_KILL",
       "canonical": "terminal.kill",
@@ -856,7 +3193,7 @@
       "exposure": "BOTH",
       "category": "Terminal",
       "handler": "handleTerminalSplitV",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 4009,
@@ -866,7 +3203,7 @@
       "exposure": "BOTH",
       "category": "Terminal",
       "handler": "handleTerminalSplitCode",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 4010,
@@ -939,6 +3276,16 @@
       "flags": "CMD_NONE"
     },
     {
+      "id": 4296,
+      "symbol": "AGENT_AUDIT_DRIVE",
+      "canonical": "agent.auditDrive",
+      "cli": "!audit_drive",
+      "exposure": "BOTH",
+      "category": "Agent",
+      "handler": "handleAgentAuditDrive",
+      "flags": "CMD_ASYNC"
+    },
+    {
       "id": 4106,
       "symbol": "AGENT_MEMORY",
       "canonical": "agent.memory",
@@ -956,7 +3303,7 @@
       "exposure": "BOTH",
       "category": "Agent",
       "handler": "handleAgentMemoryView",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 4108,
@@ -966,7 +3313,7 @@
       "exposure": "BOTH",
       "category": "Agent",
       "handler": "handleAgentMemoryClear",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 4109,
@@ -976,7 +3323,7 @@
       "exposure": "BOTH",
       "category": "Agent",
       "handler": "handleAgentMemoryExport",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 4110,
@@ -1016,7 +3363,7 @@
       "exposure": "BOTH",
       "category": "SubAgent",
       "handler": "handleSubAgentTodoClear",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 4114,
@@ -1036,7 +3383,7 @@
       "exposure": "BOTH",
       "category": "Agent",
       "handler": "handleAgentBoundedLoop",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 4150,
@@ -1216,7 +3563,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREDecisionTree",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 4301,
@@ -1266,7 +3613,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREDetectVulns",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 4306,
@@ -1286,7 +3633,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREExportGhidra",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 4308,
@@ -1326,7 +3673,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleRESSALift",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASM_HOTPATH"
     },
     {
       "id": 4312,
@@ -1336,7 +3683,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleRERecursiveDisasm",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 4313,
@@ -1346,7 +3693,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleRETypeRecovery",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 4314,
@@ -1366,7 +3713,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleRELicenseInfo",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 4316,
@@ -1376,7 +3723,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREDecompilerView",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 4317,
@@ -1386,7 +3733,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREDecompRename",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 4318,
@@ -1396,7 +3743,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleREDecompSync",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 4319,
@@ -1416,7 +3763,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSwitchLocal",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5038,
@@ -1426,7 +3773,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSwitchOllama",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5039,
@@ -1436,7 +3783,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSwitchOpenAI",
-      "flags": "CMD_REQUIRES_NET"
+      "flags": "\\\n      CMD_REQUIRES_NET"
     },
     {
       "id": 5040,
@@ -1446,7 +3793,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSwitchClaude",
-      "flags": "CMD_REQUIRES_NET"
+      "flags": "\\\n      CMD_REQUIRES_NET"
     },
     {
       "id": 5041,
@@ -1456,7 +3803,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSwitchGemini",
-      "flags": "CMD_REQUIRES_NET"
+      "flags": "\\\n      CMD_REQUIRES_NET"
     },
     {
       "id": 5042,
@@ -1476,7 +3823,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendShowSwitcher",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5044,
@@ -1486,7 +3833,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendConfigure",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5045,
@@ -1496,7 +3843,7 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendHealthCheck",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 5046,
@@ -1506,23 +3853,53 @@
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSetApiKey",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5047,
       "symbol": "BACKEND_SAVE_CFG",
       "canonical": "backend.saveConfigs",
-      "cli": "!backend save",
+      "cli": "!backend_save",
       "exposure": "BOTH",
       "category": "Backend",
       "handler": "handleBackendSaveConfigs",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 50600,
+      "symbol": "BEACON_HALF_PULSE",
+      "canonical": "beacon.halfPulse",
+      "cli": "!beacon_half",
+      "exposure": "BOTH",
+      "category": "Performance",
+      "handler": "handleBeaconHalfPulse",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 50601,
+      "symbol": "BEACON_FULL",
+      "canonical": "beacon.full",
+      "cli": "!beacon_full",
+      "exposure": "BOTH",
+      "category": "Performance",
+      "handler": "handleBeaconFullBeacon",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 50602,
+      "symbol": "BEACON_STATUS",
+      "canonical": "beacon.status",
+      "cli": "!beacon_status",
+      "exposure": "BOTH",
+      "category": "Performance",
+      "handler": "handleBeaconStatus",
       "flags": "CMD_NONE"
     },
     {
       "id": 5048,
       "symbol": "ROUTER_ENABLE",
       "canonical": "router.enable",
-      "cli": "!router enable",
+      "cli": "!router_enable",
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterEnable",
@@ -1532,7 +3909,7 @@
       "id": 5049,
       "symbol": "ROUTER_DISABLE",
       "canonical": "router.disable",
-      "cli": "!router disable",
+      "cli": "!router_disable",
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterDisable",
@@ -1542,7 +3919,7 @@
       "id": 5050,
       "symbol": "ROUTER_STATUS",
       "canonical": "router.status",
-      "cli": "!router status",
+      "cli": "!router_status",
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterStatus",
@@ -1576,7 +3953,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterCapabilities",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5054,
@@ -1586,7 +3963,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterFallbacks",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5055,
@@ -1606,7 +3983,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterRoutePrompt",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 5057,
@@ -1616,7 +3993,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterResetStats",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5071,
@@ -1669,36 +4046,6 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 5076,
-      "symbol": "ROUTER_ENSEMBLE_ON",
-      "canonical": "router.ensembleEnable",
-      "cli": "!router ensemble",
-      "exposure": "BOTH",
-      "category": "Router",
-      "handler": "handleRouterEnsembleEnable",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 5077,
-      "symbol": "ROUTER_ENSEMBLE_OFF",
-      "canonical": "router.ensembleDisable",
-      "cli": "!router noensemble",
-      "exposure": "BOTH",
-      "category": "Router",
-      "handler": "handleRouterEnsembleDisable",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 5078,
-      "symbol": "ROUTER_ENSEMBLE_STAT",
-      "canonical": "router.ensembleStatus",
-      "cli": "!router ens_stat",
-      "exposure": "BOTH",
-      "category": "Router",
-      "handler": "handleRouterEnsembleStatus",
-      "flags": "CMD_NONE"
-    },
-    {
       "id": 5079,
       "symbol": "ROUTER_SIMULATE",
       "canonical": "router.simulate",
@@ -1716,7 +4063,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterSimulateLast",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5081,
@@ -1726,7 +4073,7 @@
       "exposure": "BOTH",
       "category": "Router",
       "handler": "handleRouterShowCostStats",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5058,
@@ -1866,7 +4213,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmParse",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASM_HOTPATH"
     },
     {
       "id": 5083,
@@ -1876,7 +4223,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmGoto",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 5084,
@@ -1886,7 +4233,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmFindRefs",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 5085,
@@ -1906,7 +4253,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmInstructionInfo",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 5087,
@@ -1916,7 +4263,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmRegisterInfo",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 5088,
@@ -1926,7 +4273,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmAnalyzeBlock",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 5089,
@@ -1936,7 +4283,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmCallGraph",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 5090,
@@ -1946,7 +4293,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmDataFlow",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 5091,
@@ -1956,7 +4303,7 @@
       "exposure": "BOTH",
       "category": "ASM",
       "handler": "handleAsmDetectConvention",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 5092,
@@ -1986,7 +4333,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridComplete",
-      "flags": "CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
+      "flags": "\\\n      CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
     },
     {
       "id": 5095,
@@ -1996,7 +4343,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridDiagnostics",
-      "flags": "CMD_REQUIRES_LSP"
+      "flags": "\\\n      CMD_REQUIRES_LSP"
     },
     {
       "id": 5096,
@@ -2006,7 +4353,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridSmartRename",
-      "flags": "CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
+      "flags": "\\\n      CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
     },
     {
       "id": 5097,
@@ -2016,7 +4363,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridAnalyzeFile",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 5098,
@@ -2026,7 +4373,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridAutoProfile",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_DEBUG"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_DEBUG"
     },
     {
       "id": 5099,
@@ -2046,17 +4393,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridSymbolUsage",
-      "flags": "CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
-    },
-    {
-      "id": 5101,
-      "symbol": "HYBRID_EXPLAIN_SYMBOL",
-      "canonical": "hybrid.explainSymbol",
-      "cli": "!hybrid explain",
-      "exposure": "BOTH",
-      "category": "Hybrid",
-      "handler": "handleHybridExplainSymbol",
-      "flags": "CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_CARET | CMD_REQUIRES_LSP"
     },
     {
       "id": 5102,
@@ -2066,37 +4403,7 @@
       "exposure": "BOTH",
       "category": "Hybrid",
       "handler": "handleHybridAnnotateDiag",
-      "flags": "CMD_REQUIRES_LSP"
-    },
-    {
-      "id": 5103,
-      "symbol": "HYBRID_STREAM_ANALYZE",
-      "canonical": "hybrid.streamAnalyze",
-      "cli": "!hybrid stream",
-      "exposure": "BOTH",
-      "category": "Hybrid",
-      "handler": "handleHybridStreamAnalyze",
-      "flags": "CMD_ASYNC"
-    },
-    {
-      "id": 5104,
-      "symbol": "HYBRID_SEM_PREFETCH",
-      "canonical": "hybrid.semanticPrefetch",
-      "cli": "!hybrid prefetch",
-      "exposure": "BOTH",
-      "category": "Hybrid",
-      "handler": "handleHybridSemanticPrefetch",
-      "flags": "CMD_ASYNC"
-    },
-    {
-      "id": 5105,
-      "symbol": "HYBRID_CORRECTION_LOOP",
-      "canonical": "hybrid.correctionLoop",
-      "cli": "!hybrid correct",
-      "exposure": "BOTH",
-      "category": "Hybrid",
-      "handler": "handleHybridCorrectionLoop",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_LSP"
     },
     {
       "id": 5106,
@@ -2106,7 +4413,7 @@
       "exposure": "BOTH",
       "category": "MultiResp",
       "handler": "handleMultiRespGenerate",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 5107,
@@ -2116,16 +4423,6 @@
       "exposure": "BOTH",
       "category": "MultiResp",
       "handler": "handleMultiRespSetMax",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 5108,
-      "symbol": "MULTI_SELECT_PREF",
-      "canonical": "multi.selectPreferred",
-      "cli": "!multi select",
-      "exposure": "BOTH",
-      "category": "MultiResp",
-      "handler": "handleMultiRespSelectPreferred",
       "flags": "CMD_NONE"
     },
     {
@@ -2156,17 +4453,7 @@
       "exposure": "BOTH",
       "category": "MultiResp",
       "handler": "handleMultiRespShowTemplates",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 5112,
-      "symbol": "MULTI_TOGGLE_TMPL",
-      "canonical": "multi.toggleTemplate",
-      "cli": "!multi toggle",
-      "exposure": "BOTH",
-      "category": "MultiResp",
-      "handler": "handleMultiRespToggleTemplate",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5113,
@@ -2206,17 +4493,7 @@
       "exposure": "BOTH",
       "category": "MultiResp",
       "handler": "handleMultiRespClearHistory",
-      "flags": "CMD_CONFIRM"
-    },
-    {
-      "id": 5117,
-      "symbol": "MULTI_APPLY_PREF",
-      "canonical": "multi.applyPreferred",
-      "cli": "!multi apply",
-      "exposure": "BOTH",
-      "category": "MultiResp",
-      "handler": "handleMultiRespApplyPreferred",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5118,
@@ -2276,7 +4553,7 @@
       "exposure": "BOTH",
       "category": "Safety",
       "handler": "handleSafetyResetBudget",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5124,
@@ -2286,7 +4563,7 @@
       "exposure": "BOTH",
       "category": "Safety",
       "handler": "handleSafetyRollbackLast",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5125,
@@ -2296,7 +4573,7 @@
       "exposure": "BOTH",
       "category": "Safety",
       "handler": "handleSafetyShowViolations",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5126,
@@ -2336,7 +4613,7 @@
       "exposure": "BOTH",
       "category": "Replay",
       "handler": "handleReplayCheckpoint",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5130,
@@ -2346,17 +4623,7 @@
       "exposure": "BOTH",
       "category": "Confidence",
       "handler": "handleConfidenceStatus",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 5131,
-      "symbol": "CONFIDENCE_POLICY",
-      "canonical": "confidence.setPolicy",
-      "cli": "!confidence policy",
-      "exposure": "BOTH",
-      "category": "Confidence",
-      "handler": "handleConfidenceSetPolicy",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5132,
@@ -2446,7 +4713,7 @@
       "exposure": "BOTH",
       "category": "Swarm",
       "handler": "handleSwarmBlacklist",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5141,
@@ -2456,7 +4723,7 @@
       "exposure": "BOTH",
       "category": "Swarm",
       "handler": "handleSwarmBuildSources",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 5142,
@@ -2506,7 +4773,7 @@
       "exposure": "BOTH",
       "category": "Swarm",
       "handler": "handleSwarmCacheClear",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5147,
@@ -2576,7 +4843,7 @@
       "exposure": "BOTH",
       "category": "Swarm",
       "handler": "handleSwarmWorkerStatus",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5154,
@@ -2586,17 +4853,7 @@
       "exposure": "BOTH",
       "category": "Swarm",
       "handler": "handleSwarmWorkerConnect",
-      "flags": "CMD_ASYNC"
-    },
-    {
-      "id": 5155,
-      "symbol": "SWARM_WORKER_DISCONNECT",
-      "canonical": "swarm.workerDisconnect",
-      "cli": "!swarm wdisconnect",
-      "exposure": "BOTH",
-      "category": "Swarm",
-      "handler": "handleSwarmWorkerDisconnect",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 5156,
@@ -2836,7 +5093,7 @@
       "exposure": "BOTH",
       "category": "Debug",
       "handler": "handleDbgSwitchThread",
-      "flags": "CMD_REQUIRES_DEBUG"
+      "flags": "\\\n      CMD_REQUIRES_DEBUG"
     },
     {
       "id": 5180,
@@ -2856,7 +5113,7 @@
       "exposure": "BOTH",
       "category": "Debug",
       "handler": "handleDbgSetRegister",
-      "flags": "CMD_REQUIRES_DEBUG"
+      "flags": "\\\n      CMD_REQUIRES_DEBUG"
     },
     {
       "id": 5182,
@@ -2866,7 +5123,7 @@
       "exposure": "BOTH",
       "category": "Debug",
       "handler": "handleDbgSearchMemory",
-      "flags": "CMD_REQUIRES_DEBUG | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_DEBUG | CMD_ASYNC"
     },
     {
       "id": 5183,
@@ -2926,7 +5183,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handlePluginUnloadAll",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 5204,
@@ -2966,7 +5223,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handlePluginToggleHotload",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 5208,
@@ -2996,7 +5253,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchMemory",
-      "flags": "CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_ASM_HOTPATH"
     },
     {
       "id": 9003,
@@ -3006,7 +5263,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchMemRevert",
-      "flags": "CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_ASM_HOTPATH"
     },
     {
       "id": 9004,
@@ -3016,17 +5273,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchByte",
-      "flags": "CMD_ASM_HOTPATH"
-    },
-    {
-      "id": 9005,
-      "symbol": "HOTPATCH_BYTE_SEARCH",
-      "canonical": "hotpatch.byteSearch",
-      "cli": "!hotpatch_search",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchByteSearch",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_ASM_HOTPATH"
     },
     {
       "id": 9006,
@@ -3036,17 +5283,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchServer",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9007,
-      "symbol": "HOTPATCH_SRV_REMOVE",
-      "canonical": "hotpatch.serverRemove",
-      "cli": "!hotpatch_srv_rm",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchServerRemove",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9008,
@@ -3056,37 +5293,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchProxyBias",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9009,
-      "symbol": "HOTPATCH_PROXY_REWRITE",
-      "canonical": "hotpatch.proxyRewrite",
-      "cli": "!hotpatch_rewrite",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchProxyRewrite",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9010,
-      "symbol": "HOTPATCH_PROXY_TERM",
-      "canonical": "hotpatch.proxyTerminate",
-      "cli": "!hotpatch_term",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchProxyTerminate",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9011,
-      "symbol": "HOTPATCH_PROXY_VALID",
-      "canonical": "hotpatch.proxyValidate",
-      "cli": "!hotpatch_validate",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchProxyValidate",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9012,
@@ -3096,7 +5303,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchPresetSave",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9013,
@@ -3106,7 +5313,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchPresetLoad",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9014,
@@ -3116,17 +5323,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchEventLog",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9015,
-      "symbol": "HOTPATCH_RESET_STATS",
-      "canonical": "hotpatch.resetStats",
-      "cli": "!hotpatch_reset",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchResetStats",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9016,
@@ -3136,17 +5333,7 @@
       "exposure": "BOTH",
       "category": "Hotpatch",
       "handler": "handleHotpatchToggleAll",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9017,
-      "symbol": "HOTPATCH_PROXY_STATS",
-      "canonical": "hotpatch.proxyStats",
-      "cli": "!hotpatch_pstats",
-      "exposure": "BOTH",
-      "category": "Hotpatch",
-      "handler": "handleHotpatchProxyStats",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9100,
@@ -3166,7 +5353,7 @@
       "exposure": "BOTH",
       "category": "Monaco",
       "handler": "handleMonacoDevtools",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9102,
@@ -3196,7 +5383,7 @@
       "exposure": "GUI_ONLY",
       "category": "Monaco",
       "handler": "handleMonacoZoomOut",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9105,
@@ -3206,7 +5393,7 @@
       "exposure": "BOTH",
       "category": "Monaco",
       "handler": "handleMonacoSyncTheme",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9200,
@@ -3266,7 +5453,7 @@
       "exposure": "BOTH",
       "category": "LSPServer",
       "handler": "handleLspSrvPublishDiag",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9206,
@@ -3279,16 +5466,6 @@
       "flags": "CMD_NONE"
     },
     {
-      "id": 9207,
-      "symbol": "LSPSRV_EXPORT_SYMS",
-      "canonical": "lspServer.exportSyms",
-      "cli": "!lspsrv export",
-      "exposure": "BOTH",
-      "category": "LSPServer",
-      "handler": "handleLspSrvExportSymbols",
-      "flags": "CMD_NONE"
-    },
-    {
       "id": 9208,
       "symbol": "LSPSRV_LAUNCH_STDIO",
       "canonical": "lspServer.launchStdio",
@@ -3296,7 +5473,7 @@
       "exposure": "BOTH",
       "category": "LSPServer",
       "handler": "handleLspSrvLaunchStdio",
-      "flags": "CMD_ASYNC"
+      "flags": "\\\n      CMD_ASYNC"
     },
     {
       "id": 9300,
@@ -3326,7 +5503,7 @@
       "exposure": "BOTH",
       "category": "Editor",
       "handler": "handleEditorMonacoCore",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9303,
@@ -3496,7 +5673,7 @@
       "exposure": "BOTH",
       "category": "Audit",
       "handler": "handleAuditExportReport",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9506,
@@ -3606,16 +5783,6 @@
       "exposure": "BOTH",
       "category": "Voice",
       "handler": "handleVoiceMode",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9708,
-      "symbol": "VOICE_MODE_CONTINUOUS",
-      "canonical": "voice.modeContinuous",
-      "cli": "!voice continuous",
-      "exposure": "BOTH",
-      "category": "Voice",
-      "handler": "handleVoiceModeContinuous",
       "flags": "CMD_NONE"
     },
     {
@@ -3736,7 +5903,7 @@
       "exposure": "BOTH",
       "category": "QW",
       "handler": "handleQwAlertResourceStatus",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9830,
@@ -3756,37 +5923,7 @@
       "exposure": "BOTH",
       "category": "Telemetry",
       "handler": "handleTelemetryToggle",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9901,
-      "symbol": "TELEMETRY_EXPORT_JSON",
-      "canonical": "telemetry.exportJson",
-      "cli": "!telemetry json",
-      "exposure": "BOTH",
-      "category": "Telemetry",
-      "handler": "handleTelemetryExportJson",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9902,
-      "symbol": "TELEMETRY_EXPORT_CSV",
-      "canonical": "telemetry.exportCsv",
-      "cli": "!telemetry csv",
-      "exposure": "BOTH",
-      "category": "Telemetry",
-      "handler": "handleTelemetryExportCsv",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 9903,
-      "symbol": "TELEMETRY_DASHBOARD",
-      "canonical": "telemetry.dashboard",
-      "cli": "!telemetry show",
-      "exposure": "BOTH",
-      "category": "Telemetry",
-      "handler": "handleTelemetryDashboard",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 9904,
@@ -3796,7 +5933,7 @@
       "exposure": "BOTH",
       "category": "Telemetry",
       "handler": "handleTelemetryClear",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_CONFIRM"
     },
     {
       "id": 9905,
@@ -3806,7 +5943,7 @@
       "exposure": "BOTH",
       "category": "Telemetry",
       "handler": "handleTelemetrySnapshot",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 2007,
@@ -3856,7 +5993,7 @@
       "exposure": "GUI_ONLY",
       "category": "Edit",
       "handler": "handleEditPaste",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 3001,
@@ -3866,7 +6003,7 @@
       "exposure": "GUI_ONLY",
       "category": "Terminal",
       "handler": "handleTerminalSplitH",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 3002,
@@ -3876,7 +6013,7 @@
       "exposure": "GUI_ONLY",
       "category": "Terminal",
       "handler": "handleTerminalSplitH",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 3003,
@@ -3886,37 +6023,7 @@
       "exposure": "GUI_ONLY",
       "category": "Terminal",
       "handler": "handleTerminalKill",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 3004,
-      "symbol": "TERMINAL_SPLITH_LEGACY",
-      "canonical": "terminal.splitH.legacy",
-      "cli": "!terminal_sh",
-      "exposure": "GUI_ONLY",
-      "category": "Terminal",
-      "handler": "handleTerminalSplitH",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 3005,
-      "symbol": "TERMINAL_SPLITV_LEGACY",
-      "canonical": "terminal.splitV.legacy",
-      "cli": "!terminal_sv",
-      "exposure": "GUI_ONLY",
-      "category": "Terminal",
-      "handler": "handleTerminalSplitV",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 3006,
-      "symbol": "TERMINAL_CLEARALL_LEG",
-      "canonical": "terminal.clearAll.legacy",
-      "cli": "!terminal_clearall",
-      "exposure": "GUI_ONLY",
-      "category": "Terminal",
-      "handler": "handleTerminalKill",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 3010,
@@ -3956,7 +6063,7 @@
       "exposure": "BOTH",
       "category": "Tools",
       "handler": "handleAnalyze",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 3050,
@@ -3966,7 +6073,7 @@
       "exposure": "BOTH",
       "category": "Modules",
       "handler": "handleViewModuleBrowser",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 3051,
@@ -4076,7 +6183,7 @@
       "exposure": "CLI_ONLY",
       "category": "CLI",
       "handler": "handleHotpatchApply",
-      "flags": "CMD_ASM_HOTPATH"
+      "flags": "\\\n      CMD_ASM_HOTPATH"
     },
     {
       "id": 0,
@@ -4086,7 +6193,7 @@
       "exposure": "CLI_ONLY",
       "category": "CLI",
       "handler": "handleHotpatchCreate",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 0,
@@ -4156,7 +6263,7 @@
       "exposure": "CLI_ONLY",
       "category": "CLI",
       "handler": "handleVoiceTranscribe",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 0,
@@ -4206,7 +6313,7 @@
       "exposure": "CLI_ONLY",
       "category": "CLI",
       "handler": "handleSettingsExport",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 0,
@@ -4216,7 +6323,7 @@
       "exposure": "CLI_ONLY",
       "category": "CLI",
       "handler": "handleSettingsImport",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 0,
@@ -4306,7 +6413,7 @@
       "exposure": "GUI_ONLY",
       "category": "Edit",
       "handler": "handleEditSelectAll",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 209,
@@ -4316,17 +6423,7 @@
       "exposure": "BOTH",
       "category": "Edit",
       "handler": "handleEditMulticursorAdd",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
-    },
-    {
-      "id": 210,
-      "symbol": "EDIT_MULTICURSOR_REM",
-      "canonical": "edit.multicursorRemove",
-      "cli": "!multicursor_rm",
-      "exposure": "BOTH",
-      "category": "Edit",
-      "handler": "handleEditMulticursorRemove",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 211,
@@ -4346,7 +6443,7 @@
       "exposure": "BOTH",
       "category": "View",
       "handler": "handleViewToggleSidebar",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 302,
@@ -4356,7 +6453,7 @@
       "exposure": "BOTH",
       "category": "View",
       "handler": "handleViewToggleTerminal",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 303,
@@ -4376,7 +6473,7 @@
       "exposure": "BOTH",
       "category": "View",
       "handler": "handleViewToggleFullscreen",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 305,
@@ -4416,7 +6513,7 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIInlineComplete",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 402,
@@ -4446,7 +6543,7 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIRefactor",
-      "flags": "CMD_REQUIRES_SELECT | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_SELECT | CMD_ASYNC"
     },
     {
       "id": 405,
@@ -4456,7 +6553,7 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIGenerateTests",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 406,
@@ -4466,7 +6563,7 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIGenerateDocs",
-      "flags": "CMD_REQUIRES_FILE | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
     },
     {
       "id": 407,
@@ -4486,7 +6583,7 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIOptimizeCode",
-      "flags": "CMD_REQUIRES_SELECT | CMD_ASYNC"
+      "flags": "\\\n      CMD_REQUIRES_SELECT | CMD_ASYNC"
     },
     {
       "id": 409,
@@ -4496,6 +6593,16 @@
       "exposure": "BOTH",
       "category": "AIMode",
       "handler": "handleAIModelSelect",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 410,
+      "symbol": "AI_STOP_GENERATION",
+      "canonical": "ai.stopGeneration",
+      "cli": "!ai_stop",
+      "exposure": "BOTH",
+      "category": "AIMode",
+      "handler": "handleAIStopGeneration",
       "flags": "CMD_NONE"
     },
     {
@@ -4582,11 +6689,11 @@
       "id": 8001,
       "symbol": "DECOMP_RENAME_VAR",
       "canonical": "decomp.renameVar",
-      "cli": "!decomp_rename",
+      "cli": "!decomp_rename_var",
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompRenameVar",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 8002,
@@ -4596,7 +6703,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompGotoDef",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 8003,
@@ -4606,7 +6713,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompFindRefs",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 8004,
@@ -4616,7 +6723,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompCopyLine",
-      "flags": "CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_REQUIRES_CARET"
     },
     {
       "id": 8005,
@@ -4626,7 +6733,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompCopyAll",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 8006,
@@ -4636,7 +6743,7 @@
       "exposure": "BOTH",
       "category": "ReverseEng",
       "handler": "handleDecompGotoAddr",
-      "flags": "CMD_REQUIRES_FILE"
+      "flags": "\\\n      CMD_REQUIRES_FILE"
     },
     {
       "id": 10000,
@@ -4666,17 +6773,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handleVscExtListCommands",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 10003,
-      "symbol": "VSCEXT_LIST_PROVIDERS",
-      "canonical": "vscext.listProviders",
-      "cli": "!vscext providers",
-      "exposure": "BOTH",
-      "category": "Plugin",
-      "handler": "handleVscExtListProviders",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10004,
@@ -4686,7 +6783,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handleVscExtDiagnostics",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10005,
@@ -4716,17 +6813,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handleVscExtLoadNative",
-      "flags": "CMD_NONE"
-    },
-    {
-      "id": 10008,
-      "symbol": "VSCEXT_DEACTIVATE_ALL",
-      "canonical": "vscext.deactivateAll",
-      "cli": "!vscext deactivate",
-      "exposure": "BOTH",
-      "category": "Plugin",
-      "handler": "handleVscExtDeactivateAll",
-      "flags": "CMD_CONFIRM"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10009,
@@ -4736,7 +6823,7 @@
       "exposure": "BOTH",
       "category": "Plugin",
       "handler": "handleVscExtExportConfig",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10200,
@@ -4756,7 +6843,7 @@
       "exposure": "BOTH",
       "category": "Voice",
       "handler": "handleVoiceAutoSettings",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10202,
@@ -4796,7 +6883,7 @@
       "exposure": "BOTH",
       "category": "Voice",
       "handler": "handleVoiceAutoRateDown",
-      "flags": "CMD_NONE"
+      "flags": "\\\n      CMD_NONE"
     },
     {
       "id": 10206,
@@ -4806,6 +6893,456 @@
       "exposure": "BOTH",
       "category": "Voice",
       "handler": "handleVoiceAutoStop",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 10619,
+      "symbol": "UNREAL_INIT",
+      "canonical": "unreal.init",
+      "cli": "!unreal_init",
+      "exposure": "BOTH",
+      "category": "GameEngine",
+      "handler": "handleUnrealInit",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 10620,
+      "symbol": "UNREAL_ATTACH",
+      "canonical": "unreal.attach",
+      "cli": "!unreal_attach",
+      "exposure": "BOTH",
+      "category": "GameEngine",
+      "handler": "handleUnrealAttach",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 10621,
+      "symbol": "UNITY_INIT",
+      "canonical": "unity.init",
+      "cli": "!unity_init",
+      "exposure": "BOTH",
+      "category": "GameEngine",
+      "handler": "handleUnityInit",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 10622,
+      "symbol": "UNITY_ATTACH",
+      "canonical": "unity.attach",
+      "cli": "!unity_attach",
+      "exposure": "BOTH",
+      "category": "GameEngine",
+      "handler": "handleUnityAttach",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 8100,
+      "symbol": "REVENG_DISASSEMBLE",
+      "canonical": "reveng.disassemble",
+      "cli": "!reveng_dis",
+      "exposure": "BOTH",
+      "category": "ReverseEng",
+      "handler": "handleRevengDisassemble",
+      "flags": "\\\n      CMD_REQUIRES_FILE"
+    },
+    {
+      "id": 8101,
+      "symbol": "REVENG_DECOMPILE",
+      "canonical": "reveng.decompile",
+      "cli": "!reveng_decomp",
+      "exposure": "BOTH",
+      "category": "ReverseEng",
+      "handler": "handleRevengDecompile",
+      "flags": "\\\n      CMD_REQUIRES_FILE"
+    },
+    {
+      "id": 8102,
+      "symbol": "REVENG_FIND_VULN",
+      "canonical": "reveng.findVulns",
+      "cli": "!reveng_vuln",
+      "exposure": "BOTH",
+      "category": "ReverseEng",
+      "handler": "handleRevengFindVulnerabilities",
+      "flags": "\\\n      CMD_REQUIRES_FILE | CMD_ASYNC"
+    },
+    {
+      "id": 11001,
+      "symbol": "MODEL_LIST",
+      "canonical": "model.list",
+      "cli": "!model_list",
+      "exposure": "BOTH",
+      "category": "Models",
+      "handler": "handleModelList",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11002,
+      "symbol": "MODEL_LOAD",
+      "canonical": "model.load",
+      "cli": "!load_model",
+      "exposure": "BOTH",
+      "category": "Models",
+      "handler": "handleModelLoad",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11003,
+      "symbol": "MODEL_UNLOAD",
+      "canonical": "model.unload",
+      "cli": "!model_unload",
+      "exposure": "BOTH",
+      "category": "Models",
+      "handler": "handleModelUnload",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11004,
+      "symbol": "MODEL_QUANTIZE",
+      "canonical": "model.quantize",
+      "cli": "!model_quantize",
+      "exposure": "BOTH",
+      "category": "Models",
+      "handler": "handleModelQuantize",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 11005,
+      "symbol": "MODEL_FINETUNE",
+      "canonical": "model.finetune",
+      "cli": "!model_finetune",
+      "exposure": "BOTH",
+      "category": "Models",
+      "handler": "handleModelFinetune",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 11100,
+      "symbol": "DISK_LIST_DRIVES",
+      "canonical": "disk.listDrives",
+      "cli": "!disk_drives",
+      "exposure": "BOTH",
+      "category": "Disk",
+      "handler": "handleDiskListDrives",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11101,
+      "symbol": "DISK_SCAN_PARTS",
+      "canonical": "disk.scanPartitions",
+      "cli": "!disk_scan",
+      "exposure": "BOTH",
+      "category": "Disk",
+      "handler": "handleDiskScanPartitions",
+      "flags": "CMD_ASYNC"
+    },
+    {
+      "id": 11200,
+      "symbol": "GOVERNOR_STATUS",
+      "canonical": "governor.status",
+      "cli": "!governor_status",
+      "exposure": "BOTH",
+      "category": "Governor",
+      "handler": "handleGovernorStatus",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 11300,
+      "symbol": "MARKETPLACE_LIST",
+      "canonical": "marketplace.list",
+      "cli": "!marketplace_list",
+      "exposure": "BOTH",
+      "category": "Marketplace",
+      "handler": "handleMarketplaceList",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 11400,
+      "symbol": "EMBEDDING_ENCODE",
+      "canonical": "embedding.encode",
+      "cli": "!embedding_encode",
+      "exposure": "BOTH",
+      "category": "Embedding",
+      "handler": "handleEmbeddingEncode",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 11500,
+      "symbol": "VISION_ANALYZE",
+      "canonical": "vision.analyze",
+      "cli": "!vision_analyze",
+      "exposure": "BOTH",
+      "category": "Vision",
+      "handler": "handleVisionAnalyzeImage",
+      "flags": "\\\n      CMD_REQUIRES_FILE"
+    },
+    {
+      "id": 11600,
+      "symbol": "PROMPT_CLASSIFY",
+      "canonical": "prompt.classify",
+      "cli": "!prompt_classify",
+      "exposure": "BOTH",
+      "category": "Prompt",
+      "handler": "handlePromptClassifyContext",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 12020,
+      "symbol": "T1_BREADCRUMBS",
+      "canonical": "tier1.breadcrumbs",
+      "cli": "!breadcrumbs",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1BreadcrumbsToggle",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 12030,
+      "symbol": "T1_FUZZY_PALETTE",
+      "canonical": "tier1.fuzzyPalette",
+      "cli": "!fuzzy",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1FuzzyPalette",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12040,
+      "symbol": "T1_SETTINGS_GUI",
+      "canonical": "tier1.settingsGUI",
+      "cli": "!settings_gui",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SettingsGUI",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 12050,
+      "symbol": "T1_WELCOME_PAGE",
+      "canonical": "tier1.welcomePage",
+      "cli": "!welcome",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1WelcomePage",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12060,
+      "symbol": "T1_FILE_ICONS",
+      "canonical": "tier1.fileIcons",
+      "cli": "!file_icons",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1FileIconTheme",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12070,
+      "symbol": "T1_TAB_DRAG",
+      "canonical": "tier1.tabDrag",
+      "cli": "!tab_drag",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1TabDragToggle",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12080,
+      "symbol": "T1_SPLIT_VERT",
+      "canonical": "tier1.splitVertical",
+      "cli": "!split_v",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SplitVertical",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12081,
+      "symbol": "T1_SPLIT_HORIZ",
+      "canonical": "tier1.splitHorizontal",
+      "cli": "!split_h",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SplitHorizontal",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 12082,
+      "symbol": "T1_SPLIT_GRID",
+      "canonical": "tier1.splitGrid",
+      "cli": "!split_grid",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SplitGrid",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12083,
+      "symbol": "T1_SPLIT_CLOSE",
+      "canonical": "tier1.splitClose",
+      "cli": "!split_close",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SplitClose",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 12084,
+      "symbol": "T1_SPLIT_FOCUS_NEXT",
+      "canonical": "tier1.splitFocusNext",
+      "cli": "!split_next",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1SplitFocusNext",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 12090,
+      "symbol": "T1_AUTO_UPDATE",
+      "canonical": "tier1.autoUpdate",
+      "cli": "!auto_update",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1AutoUpdateCheck",
+      "flags": "\\\n      CMD_ASYNC"
+    },
+    {
+      "id": 12091,
+      "symbol": "T1_UPDATE_DISMISS",
+      "canonical": "tier1.updateDismiss",
+      "cli": "!update_dismiss",
+      "exposure": "BOTH",
+      "category": "Cosmetic",
+      "handler": "handleTier1UpdateDismiss",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 43002,
+      "symbol": "MESH_BRAIN",
+      "canonical": "transcendence.meshBrain",
+      "cli": "!mesh_brain",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleMeshBrain",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 43003,
+      "symbol": "SPECIATOR_ENGINE",
+      "canonical": "transcendence.speciator",
+      "cli": "!speciator",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleSpeciatorEngine",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 43004,
+      "symbol": "NEURAL_BRIDGE",
+      "canonical": "transcendence.neuralBridge",
+      "cli": "!neural_bridge",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleNeuralBridge",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 43005,
+      "symbol": "SELF_HOST_ENGINE",
+      "canonical": "transcendence.selfHost",
+      "cli": "!self_host",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleSelfHostEngine",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 43010,
+      "symbol": "MCP_HOOKS",
+      "canonical": "transcendence.mcpHooks",
+      "cli": "!mcp_hooks",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleMCPHooks",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 43013,
+      "symbol": "CONSENT_PROMPT",
+      "canonical": "transcendence.consentPrompt",
+      "cli": "!consent",
+      "exposure": "BOTH",
+      "category": "Transcendence",
+      "handler": "HandleConsentPrompt",
+      "flags": "\\\n      CMD_NONE"
+    },
+    {
+      "id": 44014,
+      "symbol": "AUTONOMOUS_AGENT",
+      "canonical": "agent.autonomous",
+      "cli": "!autonomous",
+      "exposure": "BOTH",
+      "category": "Agent",
+      "handler": "HandleAutonomousAgent",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44015,
+      "symbol": "CHAT_MSG_RENDERER",
+      "canonical": "ui.chatRenderer",
+      "cli": "!chat_render",
+      "exposure": "BOTH",
+      "category": "UI",
+      "handler": "HandleChatMessageRenderer",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44016,
+      "symbol": "TOOL_ACTION_STATUS",
+      "canonical": "ui.toolStatus",
+      "cli": "!tool_status",
+      "exposure": "BOTH",
+      "category": "Tools",
+      "handler": "HandleToolActionStatus",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44017,
+      "symbol": "CHAT_PANEL",
+      "canonical": "ui.chatPanel",
+      "cli": "!chat_panel",
+      "exposure": "BOTH",
+      "category": "UI",
+      "handler": "HandleChatPanel",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44018,
+      "symbol": "PERF_TELEMETRY",
+      "canonical": "telemetry.perf",
+      "cli": "!perf_tele",
+      "exposure": "BOTH",
+      "category": "Telemetry",
+      "handler": "HandlePerfTelemetry",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44019,
+      "symbol": "UPDATE_SIGNATURE",
+      "canonical": "security.updateSig",
+      "cli": "!update_sig",
+      "exposure": "BOTH",
+      "category": "Security",
+      "handler": "HandleUpdateSignature",
+      "flags": "CMD_NONE"
+    },
+    {
+      "id": 44020,
+      "symbol": "PLUGIN_SIGNATURE",
+      "canonical": "security.pluginSig",
+      "cli": "!plugin_sig",
+      "exposure": "BOTH",
+      "category": "Security",
+      "handler": "HandlePluginSignature",
       "flags": "CMD_NONE"
     }
   ]

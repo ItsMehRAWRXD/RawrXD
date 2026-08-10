@@ -18,8 +18,8 @@ Scope: static parse of root CMake graph in src-level references from d:/rawrxd/C
 - unique referenced sources: 836
 - duplicate implementation families: 11
 - stub-risk edges (name-based): 24
-- filesystem source files under src/: 6263
-- source files present in tree but unreferenced in root CMake: 5486
+- filesystem source files under src/: 6265
+- source files present in tree but unreferenced in root CMake: 5488
 
 ## Deep2 Slice
 - total deep2 .cpp files scanned: 114

@@ -1,0 +1,51 @@
+{
+  "baseline_version": "1.0.0",
+  "timestamp": "2026-08-09T23:43:00Z",
+  "hardware": {
+    "cpu": "Intel Core i9-14900K (inferred from AVX-512 support)",
+    "ram_gb": 64,
+    "os": "Windows 11"
+  },
+  "model": {
+    "path": "F:\\Franken\\BackwardsUnlock\\1b\\unlock-1B-Q4_K_M.gguf",
+    "size_bytes": 2019377376,
+    "dim": 3072,
+    "layers": 28,
+    "heads": 24,
+    "kv_heads": 8,
+    "vocab": 128256,
+    "quantization": "Q4_K_M"
+  },
+  "prefill": {
+    "prompt_tokens": 3,
+    "layer_executions": 84,
+    "elapsed_ms": 12381.83,
+    "ms_per_layer_exec": 147.4,
+    "architecture": "token_sequential"
+  },
+  "decode": [
+    {
+      "token_index": 1,
+      "layer_executions": 28,
+      "elapsed_ms": 4448.29,
+      "ms_per_layer_exec": 158.9
+    },
+    {
+      "token_index": 2,
+      "layer_executions": 28,
+      "elapsed_ms": 4465.38,
+      "ms_per_layer_exec": 159.5
+    }
+  ],
+  "regression_thresholds": {
+    "max_ms_per_layer_exec": 200.0,
+    "max_prefill_ms": 15000.0,
+    "max_decode_ms": 5000.0
+  },
+  "notes": [
+    "Baseline captures token-sequential prefill architecture",
+    "B009 will implement batched prefill to reduce layer executions from T*L to L",
+    "OpenMP tested and reverted — outer loop M=24 too small for parallelism benefit",
+    "Performance is acceptable for short prompts (3-5 tokens) in IDE copilot use case"
+  ]
+}

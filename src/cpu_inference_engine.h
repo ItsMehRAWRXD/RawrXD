@@ -207,6 +207,47 @@ class CPUInferenceEngine : public InferenceEngine
     // Allow ExecutionScheduler to call private TransformerLayer
     friend class ExecutionScheduler;
 
+    // ============================================================================
+    // B005 — KV Cache Instrumentation Counters (public API for verification)
+    // ============================================================================
+    struct KVCacheCounters {
+        uint64_t cache_create = 0;
+        uint64_t cache_reset = 0;
+        uint64_t cache_write = 0;
+        uint64_t cache_read = 0;
+        uint64_t cache_reuse = 0;
+        uint64_t cache_position = 0;
+        uint64_t cache_tokens = 0;
+        uint64_t full_recompute = 0;
+    };
+
+    void ResetKVCounters() {
+        m_kv_counters = KVCacheCounters{};
+    }
+
+    std::string GetKVReport() const {
+        char buf[512];
+        snprintf(buf, sizeof(buf),
+            "KV:\n"
+            "  cache_create=%llu\n"
+            "  cache_reset=%llu\n"
+            "  cache_write=%llu\n"
+            "  cache_read=%llu\n"
+            "  cache_reuse=%llu\n"
+            "  cache_position=%llu\n"
+            "  cache_tokens=%llu\n"
+            "  full_recompute=%llu\n",
+            static_cast<unsigned long long>(m_kv_counters.cache_create),
+            static_cast<unsigned long long>(m_kv_counters.cache_reset),
+            static_cast<unsigned long long>(m_kv_counters.cache_write),
+            static_cast<unsigned long long>(m_kv_counters.cache_read),
+            static_cast<unsigned long long>(m_kv_counters.cache_reuse),
+            static_cast<unsigned long long>(m_kv_counters.cache_position),
+            static_cast<unsigned long long>(m_kv_counters.cache_tokens),
+            static_cast<unsigned long long>(m_kv_counters.full_recompute));
+        return std::string(buf);
+    }
+
   private:
     struct KVCacheLayer
     {
@@ -296,6 +337,9 @@ class CPUInferenceEngine : public InferenceEngine
     // Execution State
     int m_currentPos = 0;
     std::vector<float> m_lastState;
+
+    // B005 KV instrumentation counters (private storage)
+    KVCacheCounters m_kv_counters{};
 
     // Layer weights
     struct LayerWeights

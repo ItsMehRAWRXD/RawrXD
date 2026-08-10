@@ -43,6 +43,7 @@
 
 #include "rawrxd_orchestrator.hpp"
 #include "runtime/TensorExecutionRouter.hpp"
+#include "runtime/memory/PredictiveMemoryManager.hpp"
 
 // =============================================================================
 // FP CONVERSIONS
@@ -270,14 +271,18 @@ struct Model {
     HotPatchRegistry registry;
     Orchestrator decider;
     TensorExecutionRouter router;
+    RawrXD::Memory::PredictiveMemoryManager memoryManager;
 
     int nl=61, ne=7168, ffd=2048, nv=129280, nexp=256, neu=8;
     int qlr=1536, klr=512;
     float rf=10000, reps=1e-6f;
     bool mla=false, moe=false, shrd=false;
 
-    Model() : decider(&registry, &gguf) {
+    Model()
+        : decider(&registry, &gguf)
+        , memoryManager(RawrXD::Memory::PredictiveMemoryConfig{}) {
         router.InitializeVulkan();
+        router.setMemoryManager(&memoryManager);
     }
 
     bool load(const std::string& path) {
@@ -318,6 +323,12 @@ struct Model {
                 if (dot != std::string::npos) expert = std::stoi(t.name.substr(exp_pos, dot - exp_pos));
             }
             registry.register_tensor(t.name, t.nbytes, exp_bytes, layer, expert);
+
+            // B003: execution path registers canonical router-seam IDs up front.
+            // Current seam uses host address as TensorId until engine-level IDs land.
+            auto tid = static_cast<RawrXD::Memory::TensorId>(
+                reinterpret_cast<uintptr_t>(t.data));
+            memoryManager.registerTensor(tid, t.nbytes);
         }
 
         decider.init_model(nl);
@@ -373,6 +384,11 @@ struct Model {
 
         for (int l = 0; l < nl; l++) {
             std::string p = "blk." + std::to_string(l) + ".";
+
+            // B003 boundary: execution loop owns PMM policy calls.
+            memoryManager.predict(static_cast<uint32_t>(l));
+            memoryManager.prefetch(static_cast<uint32_t>(l));
+            router.advanceLayer(static_cast<uint32_t>(l));
 
             decider.prefetch_layers(l, nl);
             decider.drain_prefetch();

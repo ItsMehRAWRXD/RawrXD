@@ -1,6 +1,8 @@
 #pragma once
 #include <atomic>
+#include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -51,6 +53,7 @@ typedef uint32_t VkFlags;
 struct Tensor
 {
     std::string name;
+  uint64_t tensor_index = 0;
     std::vector<uint64_t> dims;
     uint32_t type;
     uint64_t offset;
@@ -116,6 +119,82 @@ class RawrXDModelLoader
     float* GetTensor(const std::string& name);
     bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
     bool StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N);
+
+    // B010: Weight-residency profiling counters (profiling-only, no caching)
+    struct WeightAccessProfile
+    {
+        std::atomic<std::uint64_t> totalCalls{0};           // Total StreamingMatMul calls
+        std::atomic<std::uint64_t> totalBytesRead{0};       // Sum of rowBytes * rows processed
+        std::atomic<std::uint64_t> totalMapCalls{0};        // StreamingPin constructions (map attempts)
+        std::atomic<std::uint64_t> totalUnmapCalls{0};      // StreamingPin destructions (unmap)
+        std::atomic<std::uint64_t> totalIncidentalMaps{0};  // MapIncidentalWindow calls
+        std::atomic<std::uint64_t> totalAcquisitionNs{0};   // Time in tensor lookup + pin
+        std::atomic<std::uint64_t> totalComputeNs{0};       // Time in dequant + dot product
+        std::atomic<std::uint64_t> uniqueTensorsAcquired{0}; // Unique tensor names loaded
+        std::unordered_map<std::string, std::atomic<std::uint64_t>> perTensorCalls;
+        std::mutex perTensorMutex;
+    };
+    WeightAccessProfile m_weightProfile;
+    void ResetWeightProfile() ;
+    void PrintWeightProfile() const;
+
+    // ============================================================================
+    // B011 — Weight Residency Cache
+    // ============================================================================
+    struct B011ResidencyStats
+    {
+        std::atomic<std::uint64_t> acquisitions{0};
+        std::atomic<std::uint64_t> cacheHits{0};
+        std::atomic<std::uint64_t> cacheMisses{0};
+        std::atomic<std::uint64_t> mapCount{0};
+        std::atomic<std::uint64_t> unmapCount{0};
+        std::atomic<std::uint64_t> bytesRead{0};
+        std::atomic<std::uint64_t> bytesResident{0};
+        std::atomic<std::uint64_t> acquisitionNs{0};
+        std::atomic<std::uint64_t> computeNs{0};
+
+        void Reset()
+        {
+            acquisitions.store(0, std::memory_order_relaxed);
+            cacheHits.store(0, std::memory_order_relaxed);
+            cacheMisses.store(0, std::memory_order_relaxed);
+            mapCount.store(0, std::memory_order_relaxed);
+            unmapCount.store(0, std::memory_order_relaxed);
+            bytesRead.store(0, std::memory_order_relaxed);
+            bytesResident.store(0, std::memory_order_relaxed);
+            acquisitionNs.store(0, std::memory_order_relaxed);
+            computeNs.store(0, std::memory_order_relaxed);
+        }
+    };
+
+    struct B011ResidentWeight
+    {
+        std::shared_ptr<std::vector<uint8_t>> storage;
+        uint64_t fileOffset = 0;
+        uint64_t byteSize = 0;
+        uint64_t modelGeneration = 0;
+        std::atomic<std::uint64_t> lastUse{0};
+    };
+
+    void B011ResetResidencyStats();
+    void B011PrintResidencyStats() const;
+    void B011EnableResidency(bool enabled);
+    bool B011ResidencyEnabled() const;
+    void B011ClearResidency();
+    bool GetTensorResidencyInfo(const std::string& name, std::uint64_t& canonicalId,
+                  std::uint64_t& storageBytes) const
+    {
+      auto it = m_tensors.find(name);
+      if (it == m_tensors.end())
+      {
+        return false;
+      }
+
+      const Tensor& t = it->second;
+      canonicalId = static_cast<std::uint64_t>(t.tensor_index);
+      storageBytes = static_cast<std::uint64_t>(CalculateTensorDataSize(t));
+      return true;
+    }
     void ReleaseTensor(const std::string& name);
     void SetLoadErrorCallback(ModelLoadErrorCallback callback);
     const std::string& GetLastLoadErrorMessage() const;
@@ -130,6 +209,20 @@ class RawrXDModelLoader
     bool HintRange(uint64_t offset, size_t size);
 
   private:
+    // B011: Weight residency cache
+    mutable std::mutex m_b011ResidencyMutex;
+    std::unordered_map<std::string, std::shared_ptr<B011ResidentWeight>> m_b011Residency;
+    B011ResidencyStats m_b011Stats;
+    std::atomic<bool> m_b011ResidencyEnabled{false};
+    std::atomic<std::uint64_t> m_b011ResidencyGeneration{1};
+    std::atomic<std::uint64_t> m_b011ResidencyClock{0};
+
+    std::shared_ptr<B011ResidentWeight> B011AcquireResidentWeight(
+        const std::string& tensorName,
+        const uint8_t* source,
+        size_t bytes,
+        uint64_t fileOffset);
+
     VkDevice m_device;
     VkPhysicalDeviceMemoryProperties m_memProps;
     HANDLE m_file;

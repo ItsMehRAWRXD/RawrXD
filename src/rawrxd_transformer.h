@@ -5,6 +5,7 @@
 #include <memory>
 #include <span>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 // Phase 46: Vulkan support with graceful fallback for dual GPU testing
@@ -31,6 +32,8 @@
 #include "core/moe_down_project_policy.hpp"
 #include "core/moe_plan_row_mixture_pack_cache.hpp"
 #include "core/swarm_scheduler.hpp"
+#include "runtime/TensorExecutionRouter.hpp"
+#include "runtime/memory/PredictiveMemoryManager.hpp"
 #include "rawrxd_model_loader.h"
 
 /// Subset of swarm plan rows to pin for one layer (MoE: static early, experts after router logits).
@@ -114,6 +117,24 @@ class RawrXDTransformer
 
     void Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader);
     std::vector<float> Forward(const std::vector<uint32_t>& tokens, int start_pos);
+
+    // B009: Batched prefill — layer-outer loop for multi-token prompts.
+    // Returns logits for the final token position only (same contract as Forward).
+    std::vector<float> ForwardBatch(const std::vector<uint32_t>& tokens, int start_pos);
+
+    // B004: narrow execution adapter.
+    // All transformer matmul call sites go through this seam.
+    bool ExecuteLayerMatMul(const std::string& tensorName, const float* input, float* output,
+                            std::size_t inputDim, std::size_t outputDim, std::uint32_t layer);
+
+    void SetRouterDispatchForMaterializedWeights(bool enable) noexcept
+    {
+        m_enableRouterDispatchForMaterializedWeights = enable;
+    }
+
+    [[nodiscard]] std::uint64_t routerBoundaryMatMulCount() const noexcept { return m_routerBoundaryMatMulCount; }
+    [[nodiscard]] std::uint64_t layerPredictCount() const noexcept { return m_layerPredictCount; }
+    [[nodiscard]] std::uint64_t layerPrefetchCount() const noexcept { return m_layerPrefetchCount; }
 
     /** Optional: layer forward progress (e.g. "[STEP] Layer …"). Safe to invoke from worker threads. */
     void SetProgressCallback(std::function<void(const std::string&)> cb) { m_layerProgressCb = std::move(cb); }
@@ -259,4 +280,13 @@ class RawrXDTransformer
     std::uint64_t m_moePrepackInserts = 0;
 
     std::unique_ptr<MoEPrepackWorker, MoEPrepackWorkerDeleter> m_moePrepackWorker;
+
+    // B004 execution seam state.
+    RawrXD::TensorExecutionRouter m_execRouter;
+    RawrXD::Memory::PredictiveMemoryManager m_memoryManager;
+    std::unordered_set<RawrXD::Memory::TensorId> m_registeredTensorIds;
+    bool m_enableRouterDispatchForMaterializedWeights = false;
+    std::uint64_t m_routerBoundaryMatMulCount = 0;
+    std::uint64_t m_layerPredictCount = 0;
+    std::uint64_t m_layerPrefetchCount = 0;
 };

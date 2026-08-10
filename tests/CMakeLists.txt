@@ -521,6 +521,7 @@ endif()
 if(NOT TARGET test_predictive_memory_subsystem AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_predictive_memory_subsystem.cpp")
     add_executable(test_predictive_memory_subsystem
         test_predictive_memory_subsystem.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/TensorExecutionRouter.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/PlacementPolicy.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/ResidencyTracker.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/WorkingSetPredictor.cpp
@@ -528,11 +529,13 @@ if(NOT TARGET test_predictive_memory_subsystem AND EXISTS "${CMAKE_CURRENT_SOURC
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/TransferScheduler.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/TensorPlacementManager.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/PredictiveMemoryManager.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/RouterPredictiveMemoryBridge.cpp
     )
     target_include_directories(test_predictive_memory_subsystem PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
     )
+    target_compile_definitions(test_predictive_memory_subsystem PRIVATE RAWRXD_NO_VULKAN)
     set_target_properties(test_predictive_memory_subsystem PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
         CXX_STANDARD 20

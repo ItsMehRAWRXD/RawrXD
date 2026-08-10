@@ -5,6 +5,8 @@
 #include "runtime/memory/TransferScheduler.hpp"
 #include "runtime/memory/TensorPlacementManager.hpp"
 #include "runtime/memory/PredictiveMemoryManager.hpp"
+#include "runtime/memory/RouterPredictiveMemoryBridge.hpp"
+#include "runtime/TensorExecutionRouter.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -210,6 +212,56 @@ bool test_transactional_promote_and_evict_path() {
     return ok;
 }
 
+bool test_router_predictive_memory_integration() {
+    PredictiveMemoryConfig cfg;
+    DeviceMemoryPool pool;
+    pool.device = 0;
+    pool.capacity = 1ull << 20;
+    cfg.vramPools.push_back(pool);
+    cfg.systemRAMBytes = 1ull << 22;
+    cfg.maxConcurrentTransfers = 1;
+    cfg.lookaheadDepth = 2;
+
+    PredictiveMemoryManager mgr(cfg);
+    mgr.setTransferExecutor([](const TransferRequest&) {
+        return true;
+    });
+
+    RawrXD::TensorExecutionRouter router;
+    BindRouterToPredictiveMemory(router, mgr, 0);
+    router.advanceLayer(1);
+
+    std::vector<float> weight(16, 1.0f);
+    std::vector<float> input(4, 2.0f);
+    std::vector<float> output(4, 0.0f);
+
+    RawrXD::TensorHandle wh{};
+    wh.name = "test.layer1.weight";
+    wh.host_ptr = weight.data();
+    wh.device_ptr = nullptr;
+    wh.bytes = weight.size() * sizeof(float);
+
+    const TensorId id = static_cast<TensorId>(reinterpret_cast<uintptr_t>(wh.host_ptr));
+    mgr.registerTensor(id, wh.bytes);
+
+    RawrXD::TensorView in{};
+    in.data = input.data();
+    in.size = input.size();
+
+    RawrXD::TensorView out{};
+    out.data = output.data();
+    out.size = output.size();
+
+    router.matmul(in, wh, out, 4, 4);
+
+    auto res = mgr.residencyTracker().get(id);
+
+    bool ok = true;
+    ok &= check(res.bytes == wh.bytes, "router bridge must register tensor bytes in PMM");
+    ok &= check(res.state == ResidencyState::Resident, "router bridge must ensure tensor residency before execution");
+    return ok;
+}
+
 } // namespace
 
 int main() {
@@ -219,6 +271,7 @@ int main() {
     ok &= test_residency_tracker_concurrent_transitions();
     ok &= test_predictor_determinism();
     ok &= test_transactional_promote_and_evict_path();
+    ok &= test_router_predictive_memory_integration();
 
     if (!ok) {
         std::cerr << "Predictive memory subsystem validation FAILED\n";

@@ -303,7 +303,11 @@ bool AIImplementation::initialize(const LLMConfig& config) {
         const std::string lowerPath = toLowerAscii(modelPath);
 
         // Gate 1: GGUF format — extension + 4-byte header magic 0x46554747
-        if (!endsWith(lowerPath, ".gguf") || !isValidGgufHeader(modelPath)) {
+        const bool extOk2 = endsWith(lowerPath, ".gguf");
+        const bool magicOk2 = isValidGgufHeader(modelPath);
+        printf("[GGUF] AIImplementation: path=%s ext=%s magic=%s\n",
+               modelPath.c_str(), extOk2 ? "PASS" : "FAIL", magicOk2 ? "PASS" : "FAIL");
+        if (!extOk2 || !magicOk2) {
             if (m_logger) m_logger->error("AIImplementation",
                 "[GATE-1] Model format rejected: only valid GGUF files accepted");
             return false;

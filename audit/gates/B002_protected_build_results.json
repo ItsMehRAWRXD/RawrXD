@@ -1,0 +1,44 @@
+[
+  {
+    "target": "RawrXD-Win32IDE",
+    "exitCode": 1,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_RawrXD-Win32IDE.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_RawrXD-Win32IDE.stderr.log"
+  },
+  {
+    "target": "RawrEngine",
+    "exitCode": 2,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_RawrEngine.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_RawrEngine.stderr.log"
+  },
+  {
+    "target": "Deep2_Production_Bench",
+    "exitCode": 2,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_Deep2_Production_Bench.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_Deep2_Production_Bench.stderr.log"
+  },
+  {
+    "target": "VAL038_Validation_Benchmark",
+    "exitCode": 1,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_VAL038_Validation_Benchmark.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_VAL038_Validation_Benchmark.stderr.log"
+  },
+  {
+    "target": "witness_system_test",
+    "exitCode": 2,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_witness_system_test.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_witness_system_test.stderr.log"
+  },
+  {
+    "target": "nevm_determinism_validation",
+    "exitCode": 2,
+    "status": "FAIL",
+    "stdoutLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_nevm_determinism_validation.stdout.log",
+    "stderrLog": "C:\\Users\\HiH8e\\AppData\\Local\\Temp\\rawrxd_b002_gates\\Testing\\build_nevm_determinism_validation.stderr.log"
+  }
+]

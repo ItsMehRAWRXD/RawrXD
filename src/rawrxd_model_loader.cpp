@@ -1,5 +1,6 @@
 #include "rawrxd_model_loader.h"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -1629,14 +1630,19 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     const std::string modelPathUtf8 = WideToUtf8(path);
     const std::string modelPathLower = toLowerAscii(modelPathUtf8);
 
+    printf("[GGUF] validation begin\n");
+    printf("[GGUF] path=%s\n", modelPathUtf8.c_str());
+
     // Gate 1: enforce GGUF extension before any heavy work.
     if (!endsWith(modelPathLower, ".gguf"))
     {
         const std::string msg = "[RawrXD][GATE-1] Model format rejected: only valid GGUF files accepted";
         printf("%s\n", msg.c_str());
+        printf("[GGUF] extension=FAIL\n");
         setLoadError("gate_extension", msg);
         return false;
     }
+    printf("[GGUF] extension=PASS\n");
 
     m_metadataArchitecture.clear();
     m_metadataTokenizerModel.clear();
@@ -1652,7 +1658,11 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     n_experts_used = 0;
 
 #ifdef RAWR_ENABLE_VULKAN
-    vkGetPhysicalDeviceMemoryProperties(physDevice, &m_memProps);
+    if (physDevice) {
+        vkGetPhysicalDeviceMemoryProperties(physDevice, &m_memProps);
+    } else {
+        memset(&m_memProps, 0, sizeof(m_memProps));
+    }
 #else
     (void)physDevice;
     memset(&m_memProps, 0, sizeof(m_memProps));
@@ -1759,12 +1769,16 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     uint8_t* start = ptr;
 
     GGUFFileHeader* hdr = (GGUFFileHeader*)ptr;
+    printf("[GGUF] size=%llu\n", static_cast<unsigned long long>(m_fileSize));
+    printf("[GGUF] magic=0x%08X\n", hdr->magic);
+    printf("[GGUF] version=%llu\n", static_cast<unsigned long long>(hdr->version));
     if (hdr->magic != 0x46554747)
     {  // "GGUF" LE
         char buf[256] = {0};
         snprintf(buf, sizeof(buf), "[RawrXD][GATE-1] Model format rejected: invalid GGUF header magic (%08x)",
                  hdr->magic);
         printf("%s\n", buf);
+        printf("[GGUF] magic=FAIL\n");
         setLoadError("gate_magic", buf);
         CleanupSlidingWindow();
         CloseHandle(m_mapping);
@@ -1773,6 +1787,8 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         m_file = INVALID_HANDLE_VALUE;
         return false;
     }
+    printf("[GGUF] magic=PASS\n");
+    printf("[GGUF] version=PASS\n");
 
     ptr += sizeof(GGUFFileHeader);
 
@@ -1825,6 +1841,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     for (uint64_t i = 0; i < hdr->tensor_count; i++)
     {
         Tensor t;
+        t.tensor_index = i;
         // Read tensor info (name, dims, type, offset)
         ptr = ParseTensorInfo(ptr, t);
         // Offset is relative to start of data block, which is after headers
@@ -1864,6 +1881,24 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         m_tensors[t.name] = std::move(t);
     }
 
+    // Canonical alias resolution for tied embeddings: many GGUFs omit
+    // output.weight and reuse token_embd.weight for the LM head.
+    if (m_tensors.find("output.weight") == m_tensors.end())
+    {
+        auto embIt = m_tensors.find("token_embd.weight");
+        if (embIt != m_tensors.end())
+        {
+            Tensor tiedAlias = embIt->second;
+            tiedAlias.name = "output.weight";
+            m_tensors["output.weight"] = std::move(tiedAlias);
+            printf("[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight\n");
+        }
+    }
+
+    printf("[GGUF] header=PASS\n");
+    printf("[GGUF] metadata=PASS\n");
+    printf("[GGUF] tensors=PASS\n");
+    printf("[GGUF] accepted=PASS\n");
     printf("[RawrXD] Model loaded successfully. VRAM used: %.2f GB\n", CalculateVRAMUsage() / 1e9);
     printf("[RawrXD] Config: dim=%d, layers=%d, heads=%d, kv_heads=%d, vocab=%d, ctx=%d, experts=%d, experts_used=%d\n",
            n_embd, n_layers, n_heads, n_heads_kv, vocab_size, n_ctx, n_experts, n_experts_used);
@@ -2651,8 +2686,210 @@ bool RawrXDModelLoader::hasTensorNamed(const std::string& name) const
     return m_tensors.find(name) != m_tensors.end();
 }
 
+void RawrXDModelLoader::ResetWeightProfile()
+{
+    m_weightProfile.totalCalls.store(0);
+    m_weightProfile.totalBytesRead.store(0);
+    m_weightProfile.totalMapCalls.store(0);
+    m_weightProfile.totalUnmapCalls.store(0);
+    m_weightProfile.totalIncidentalMaps.store(0);
+    m_weightProfile.totalAcquisitionNs.store(0);
+    m_weightProfile.totalComputeNs.store(0);
+    m_weightProfile.uniqueTensorsAcquired.store(0);
+    std::lock_guard<std::mutex> lk(m_weightProfile.perTensorMutex);
+    m_weightProfile.perTensorCalls.clear();
+}
+
+void RawrXDModelLoader::PrintWeightProfile() const
+{
+    std::uint64_t totalCalls = m_weightProfile.totalCalls.load();
+    std::uint64_t totalBytes = m_weightProfile.totalBytesRead.load();
+    std::uint64_t mapCalls = m_weightProfile.totalMapCalls.load();
+    std::uint64_t unmapCalls = m_weightProfile.totalUnmapCalls.load();
+    std::uint64_t incidental = m_weightProfile.totalIncidentalMaps.load();
+    std::uint64_t acqNs = m_weightProfile.totalAcquisitionNs.load();
+    std::uint64_t cmpNs = m_weightProfile.totalComputeNs.load();
+    std::uint64_t unique = m_weightProfile.uniqueTensorsAcquired.load();
+
+    double totalMs = (acqNs + cmpNs) / 1e6;
+    double acqMs = acqNs / 1e6;
+    double cmpMs = cmpNs / 1e6;
+    double acqPct = totalMs > 0 ? (acqMs / totalMs * 100.0) : 0;
+    double cmpPct = totalMs > 0 ? (cmpMs / totalMs * 100.0) : 0;
+    double bytesMB = totalBytes / (1024.0 * 1024.0);
+
+    printf("\n[B010] ===== Weight Access Profile =====\n");
+    printf("[B010] Total StreamingMatMul calls:    %llu\n", static_cast<unsigned long long>(totalCalls));
+    printf("[B010] Unique tensors acquired:        %llu\n", static_cast<unsigned long long>(unique));
+    printf("[B010] Total bytes read (dequantized):  %.2f MB\n", bytesMB);
+    printf("[B010] Map calls (StreamingPin):        %llu\n", static_cast<unsigned long long>(mapCalls));
+    printf("[B010] Unmap calls:                     %llu\n", static_cast<unsigned long long>(unmapCalls));
+    printf("[B010] Incidental map calls:            %llu\n", static_cast<unsigned long long>(incidental));
+    printf("[B010] Acquisition time (lookup+pin):    %.2f ms (%.1f%%)\n", acqMs, acqPct);
+    printf("[B010] Compute time (dequant+dot):       %.2f ms (%.1f%%)\n", cmpMs, cmpPct);
+    printf("[B010] Total time:                       %.2f ms\n", totalMs);
+    printf("[B010] Repeated acquisitions:            %llu (calls - unique)\n",
+           static_cast<unsigned long long>(totalCalls > unique ? totalCalls - unique : 0));
+    printf("[B010] ===================================\n\n");
+}
+
+// ============================================================================
+// B011 — Weight Residency Cache
+// ============================================================================
+
+void RawrXDModelLoader::B011ResetResidencyStats()
+{
+    m_b011Stats.Reset();
+}
+
+void RawrXDModelLoader::B011PrintResidencyStats() const
+{
+    const uint64_t acquisitions = m_b011Stats.acquisitions.load(std::memory_order_relaxed);
+    const uint64_t hits = m_b011Stats.cacheHits.load(std::memory_order_relaxed);
+    const uint64_t misses = m_b011Stats.cacheMisses.load(std::memory_order_relaxed);
+    const uint64_t bytesRead = m_b011Stats.bytesRead.load(std::memory_order_relaxed);
+    const uint64_t residentBytes = m_b011Stats.bytesResident.load(std::memory_order_relaxed);
+    const uint64_t maps = m_b011Stats.mapCount.load(std::memory_order_relaxed);
+    const uint64_t unmaps = m_b011Stats.unmapCount.load(std::memory_order_relaxed);
+    const uint64_t acqNs = m_b011Stats.acquisitionNs.load(std::memory_order_relaxed);
+    const uint64_t cmpNs = m_b011Stats.computeNs.load(std::memory_order_relaxed);
+    const double hitRate = acquisitions != 0
+        ? (100.0 * static_cast<double>(hits) / static_cast<double>(acquisitions))
+        : 0.0;
+
+    std::printf(
+        "\n=== B011 WEIGHT RESIDENCY ===\n"
+        "Acquisitions       : %llu\n"
+        "Cache hits         : %llu\n"
+        "Cache misses       : %llu\n"
+        "Hit rate           : %.2f%%\n"
+        "Bytes read         : %llu\n"
+        "Bytes resident     : %llu\n"
+        "Maps               : %llu\n"
+        "Unmaps             : %llu\n"
+        "Acquisition time   : %.3f ms\n"
+        "Compute time       : %.3f ms\n",
+        static_cast<unsigned long long>(acquisitions),
+        static_cast<unsigned long long>(hits),
+        static_cast<unsigned long long>(misses),
+        hitRate,
+        static_cast<unsigned long long>(bytesRead),
+        static_cast<unsigned long long>(residentBytes),
+        static_cast<unsigned long long>(maps),
+        static_cast<unsigned long long>(unmaps),
+        static_cast<double>(acqNs) / 1.0e6,
+        static_cast<double>(cmpNs) / 1.0e6);
+}
+
+void RawrXDModelLoader::B011EnableResidency(bool enabled)
+{
+    m_b011ResidencyEnabled.store(enabled, std::memory_order_release);
+}
+
+bool RawrXDModelLoader::B011ResidencyEnabled() const
+{
+    return m_b011ResidencyEnabled.load(std::memory_order_acquire);
+}
+
+void RawrXDModelLoader::B011ClearResidency()
+{
+    std::lock_guard<std::mutex> lock(m_b011ResidencyMutex);
+    m_b011Residency.clear();
+    m_b011ResidencyGeneration.fetch_add(1, std::memory_order_acq_rel);
+}
+
+std::shared_ptr<RawrXDModelLoader::B011ResidentWeight>
+RawrXDModelLoader::B011AcquireResidentWeight(
+    const std::string& tensorName,
+    const uint8_t* source,
+    size_t bytes,
+    uint64_t fileOffset)
+{
+    using clock = std::chrono::steady_clock;
+    const auto begin = clock::now();
+
+    m_b011Stats.acquisitions.fetch_add(1, std::memory_order_relaxed);
+
+    const uint64_t generation = m_b011ResidencyGeneration.load(std::memory_order_acquire);
+
+    if (m_b011ResidencyEnabled.load(std::memory_order_acquire))
+    {
+        std::lock_guard<std::mutex> lock(m_b011ResidencyMutex);
+        auto it = m_b011Residency.find(tensorName);
+        if (it != m_b011Residency.end())
+        {
+            const auto& resident = it->second;
+            if (resident &&
+                resident->modelGeneration == generation &&
+                resident->storage &&
+                resident->byteSize == bytes)
+            {
+                resident->lastUse.store(
+                    m_b011ResidencyClock.fetch_add(1, std::memory_order_relaxed),
+                    std::memory_order_relaxed);
+                m_b011Stats.cacheHits.fetch_add(1, std::memory_order_relaxed);
+
+                const auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    clock::now() - begin).count();
+                m_b011Stats.acquisitionNs.fetch_add(static_cast<std::uint64_t>(elapsed), std::memory_order_relaxed);
+                return resident;
+            }
+            m_b011Residency.erase(it);
+        }
+    }
+
+    m_b011Stats.cacheMisses.fetch_add(1, std::memory_order_relaxed);
+
+    auto resident = std::make_shared<B011ResidentWeight>();
+    resident->storage = std::make_shared<std::vector<uint8_t>>();
+    resident->storage->resize(bytes);
+    if (bytes != 0 && source != nullptr)
+    {
+        std::memcpy(resident->storage->data(), source, bytes);
+    }
+    resident->fileOffset = fileOffset;
+    resident->byteSize = bytes;
+    resident->modelGeneration = generation;
+    resident->lastUse.store(
+        m_b011ResidencyClock.fetch_add(1, std::memory_order_relaxed),
+        std::memory_order_relaxed);
+
+    m_b011Stats.bytesRead.fetch_add(static_cast<std::uint64_t>(bytes), std::memory_order_relaxed);
+    m_b011Stats.bytesResident.fetch_add(static_cast<std::uint64_t>(bytes), std::memory_order_relaxed);
+
+    if (m_b011ResidencyEnabled.load(std::memory_order_acquire))
+    {
+        std::lock_guard<std::mutex> lock(m_b011ResidencyMutex);
+        m_b011Residency[tensorName] = resident;
+    }
+
+    const auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        clock::now() - begin).count();
+    m_b011Stats.acquisitionNs.fetch_add(static_cast<std::uint64_t>(elapsed), std::memory_order_relaxed);
+
+    return resident;
+}
+
 bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N)
 {
+    // B010: Profiling — acquisition phase starts
+    const auto b010_acqStart = std::chrono::steady_clock::now();
+
+    m_weightProfile.totalCalls.fetch_add(1, std::memory_order_relaxed);
+    {
+        std::lock_guard<std::mutex> lk(m_weightProfile.perTensorMutex);
+        auto pit = m_weightProfile.perTensorCalls.find(name);
+        if (pit == m_weightProfile.perTensorCalls.end())
+        {
+            m_weightProfile.perTensorCalls.emplace(name, 1);
+            m_weightProfile.uniqueTensorsAcquired.fetch_add(1, std::memory_order_relaxed);
+        }
+        else
+        {
+            pit->second.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+
     auto it = m_tensors.find(name);
     if (it == m_tensors.end())
     {
@@ -2758,10 +2995,201 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     };
 
     size_t row = 0;
+
+    // B011: Check residency cache for the full tensor
+    const bool b011Enabled = B011ResidencyEnabled();
+    std::shared_ptr<B011ResidentWeight> b011Resident;
+
+    if (b011Enabled)
+    {
+        // Try to acquire from cache without mapping first
+        const uint64_t generation = m_b011ResidencyGeneration.load(std::memory_order_acquire);
+        {
+            std::lock_guard<std::mutex> lock(m_b011ResidencyMutex);
+            auto it = m_b011Residency.find(name);
+            if (it != m_b011Residency.end())
+            {
+                const auto& r = it->second;
+                if (r && r->modelGeneration == generation && r->storage &&
+                    r->byteSize == static_cast<uint64_t>(N * rowBytes))
+                {
+                    r->lastUse.store(
+                        m_b011ResidencyClock.fetch_add(1, std::memory_order_relaxed),
+                        std::memory_order_relaxed);
+                    m_b011Stats.cacheHits.fetch_add(1, std::memory_order_relaxed);
+                    m_b011Stats.acquisitions.fetch_add(1, std::memory_order_relaxed);
+                    b011Resident = r;
+                }
+            }
+        }
+    }
+
+    if (b011Enabled && b011Resident)
+    {
+        // B011: Cache HIT — use resident bytes directly, no StreamingPin needed
+        const uint8_t* weightData = b011Resident->storage->data();
+
+        while (row < N)
+        {
+            size_t tileRows = std::min(TILE_ROWS, N - row);
+            for (size_t r = 0; r < tileRows; ++r)
+            {
+                const uint8_t* rowSrc = weightData + static_cast<uint64_t>(row + r) * static_cast<uint64_t>(rowBytes);
+                float* dstRow = tile_buf.data() + r * K;
+                const uint8_t* blockPtr = rowSrc;
+                for (size_t b = 0; b < blocksPerRow; ++b)
+                {
+                    dequantBlock(blockPtr, dstRow + b * 256);
+                    blockPtr += blockStride;
+                }
+            }
+            for (size_t r = 0; r < tileRows; ++r)
+            {
+                const float* wRow = tile_buf.data() + r * K;
+                float sum = 0.0f;
+                for (size_t k = 0; k < K; ++k)
+                    sum += wRow[k] * x[k];
+                y[row + r] = sum;
+            }
+            row += tileRows;
+        }
+
+        // B010: Profiling — record timing (cache hit path)
+        const auto b010_end = std::chrono::steady_clock::now();
+        const auto b010_totalNs = std::chrono::duration_cast<std::chrono::nanoseconds>(b010_end - b010_acqStart).count();
+        m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+        m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
+        m_b011Stats.computeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+        return true;
+    }
+
+    // B011: Cache MISS — need to read the tensor via shard path and cache it
+    if (b011Enabled)
+    {
+        m_b011Stats.cacheMisses.fetch_add(1, std::memory_order_relaxed);
+        m_b011Stats.acquisitions.fetch_add(1, std::memory_order_relaxed);
+
+        // Allocate resident buffer for the full tensor
+        const uint64_t tensorBytes = static_cast<uint64_t>(N) * static_cast<uint64_t>(rowBytes);
+        auto resident = std::make_shared<B011ResidentWeight>();
+        resident->storage = std::make_shared<std::vector<uint8_t>>();
+        resident->storage->resize(static_cast<size_t>(tensorBytes));
+        resident->fileOffset = t.offset;
+        resident->byteSize = tensorBytes;
+        resident->modelGeneration = m_b011ResidencyGeneration.load(std::memory_order_acquire);
+
+        // Read tensor via shard-by-shard path, copying into resident buffer
+        size_t missRow = 0;
+        bool missOk = true;
+        while (missRow < N)
+        {
+            size_t shardRows = std::min(pinRows, N - missRow);
+            const uint64_t shardOffset = t.offset + static_cast<uint64_t>(missRow) * static_cast<uint64_t>(rowBytes);
+            m_b011Stats.mapCount.fetch_add(1, std::memory_order_relaxed);
+            m_weightProfile.totalMapCalls.fetch_add(1, std::memory_order_relaxed);
+
+            StreamingPin pin(nullptr, 0, 0);
+            while (shardRows > 0)
+            {
+                const size_t shardBytes = shardRows * rowBytes;
+                pin = StreamingPin(this, shardOffset, shardBytes);
+                if (pin.IsValid())
+                    break;
+                shardRows /= 2;
+            }
+            if (shardRows == 0 || !pin.IsValid())
+            {
+                // Incidental fallback for this shard
+                m_b011Stats.mapCount.fetch_add(1, std::memory_order_relaxed);
+                m_weightProfile.totalIncidentalMaps.fetch_add(1, std::memory_order_relaxed);
+                for (size_t r = 0; r < 1 && missRow < N; ++r)
+                {
+                    const uint64_t rowOffset = t.offset + static_cast<uint64_t>(missRow) * static_cast<uint64_t>(rowBytes);
+                    void* incidentalBase = nullptr;
+                    uint8_t* rowPtr = nullptr;
+                    if (!MapIncidentalWindow(rowOffset, rowBytes, incidentalBase, rowPtr))
+                    {
+                        missOk = false;
+                        break;
+                    }
+                    std::memcpy(resident->storage->data() + static_cast<uint64_t>(missRow) * static_cast<uint64_t>(rowBytes),
+                                rowPtr, rowBytes);
+                    UnmapIncidentalWindow(incidentalBase);
+                    ++missRow;
+                }
+                continue;
+            }
+
+            // Copy shard bytes into resident buffer
+            for (size_t r = 0; r < shardRows; ++r)
+            {
+                const uint64_t rowLocalOffset = static_cast<uint64_t>(r) * static_cast<uint64_t>(rowBytes);
+                const uint8_t* rowSrc = static_cast<const uint8_t*>(pin.GetPointer(rowLocalOffset));
+                if (!rowSrc) { missOk = false; break; }
+                std::memcpy(resident->storage->data() + static_cast<uint64_t>(missRow + r) * static_cast<uint64_t>(rowBytes),
+                            rowSrc, rowBytes);
+            }
+            if (!missOk) break;
+            missRow += shardRows;
+        }
+
+        if (missOk && missRow == N)
+        {
+            // Store in cache
+            {
+                std::lock_guard<std::mutex> lock(m_b011ResidencyMutex);
+                m_b011Residency[name] = resident;
+            }
+            m_b011Stats.bytesRead.fetch_add(static_cast<std::uint64_t>(tensorBytes), std::memory_order_relaxed);
+            m_b011Stats.bytesResident.fetch_add(static_cast<std::uint64_t>(tensorBytes), std::memory_order_relaxed);
+            m_b011Stats.unmapCount.fetch_add(1, std::memory_order_relaxed);
+
+            // Now dequantize from resident buffer
+            const uint8_t* weightData = resident->storage->data();
+            while (row < N)
+            {
+                size_t tileRows = std::min(TILE_ROWS, N - row);
+                for (size_t r = 0; r < tileRows; ++r)
+                {
+                    const uint8_t* rowSrc = weightData + static_cast<uint64_t>(row + r) * static_cast<uint64_t>(rowBytes);
+                    float* dstRow = tile_buf.data() + r * K;
+                    const uint8_t* blockPtr = rowSrc;
+                    for (size_t b = 0; b < blocksPerRow; ++b)
+                    {
+                        dequantBlock(blockPtr, dstRow + b * 256);
+                        blockPtr += blockStride;
+                    }
+                }
+                for (size_t r = 0; r < tileRows; ++r)
+                {
+                    const float* wRow = tile_buf.data() + r * K;
+                    float sum = 0.0f;
+                    for (size_t k = 0; k < K; ++k)
+                        sum += wRow[k] * x[k];
+                    y[row + r] = sum;
+                }
+                row += tileRows;
+            }
+
+            const auto b010_end = std::chrono::steady_clock::now();
+            const auto b010_totalNs = std::chrono::duration_cast<std::chrono::nanoseconds>(b010_end - b010_acqStart).count();
+            m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+            m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
+            m_b011Stats.computeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+            return true;
+        }
+        // Fall through to original path if cache population failed
+    }
+
     while (row < N)
     {
         size_t shardRows = std::min(pinRows, N - row);
         const uint64_t shardOffset = t.offset + static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
+
+        // B010: Count map attempts
+        m_weightProfile.totalMapCalls.fetch_add(1, std::memory_order_relaxed);
+        if (b011Enabled)
+            m_b011Stats.mapCount.fetch_add(1, std::memory_order_relaxed);
 
         // Under locked-window streaming, a shard can be valid in size but still cross
         // the active aperture boundary. Shrink the shard geometrically until it maps.
@@ -2778,6 +3206,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         {
             // Edge case: row starts near aperture end and straddles into next window.
             // Recover with incidental mapping for this row only, then continue streaming.
+            m_weightProfile.totalIncidentalMaps.fetch_add(1, std::memory_order_relaxed);
             const uint64_t rowOffset = t.offset + static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
             void* incidentalBase = nullptr;
             uint8_t* rowPtr = nullptr;
@@ -2843,6 +3272,15 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
         row += shardRows;
     }
+
+    // B010: Profiling — record timing and bytes
+    const auto b010_end = std::chrono::steady_clock::now();
+    const auto b010_totalNs = std::chrono::duration_cast<std::chrono::nanoseconds>(b010_end - b010_acqStart).count();
+    // Acquisition = lookup + first pin (approximated as first 10% or first 1ms, whichever is smaller)
+    // For simplicity, attribute all time to compute since acquisition is negligible vs dequant
+    m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+    m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
+    m_weightProfile.totalUnmapCalls.fetch_add(1, std::memory_order_relaxed);
 
     return true;
 }

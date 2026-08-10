@@ -245,21 +245,34 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
 
     auto start = std::chrono::high_resolution_clock::now();
     m_currentPos = static_cast<int>(input_tokens.size());
-    printf("[CPUInferenceEngine] GenerateStreaming: input_tokens=%llu max_tokens=%d\n",
+
+    // B005 — Reset KV instrumentation for this generation
+    ResetKVCounters();
+
+    printf("[CPU] GenerateStreaming ENTER  input_tokens=%llu max_tokens=%d\n",
            static_cast<unsigned long long>(input_tokens.size()), max_tokens);
+    printf("[CPU] backend ptr=%p  model_loaded=%d  context_limit=%zu  current_pos=%d\n",
+           (void*)&s_inferenceBackend, s_inferenceBackend.IsInitialized() ? 1 : 0,
+           s_inferenceBackend.getContextLimit(), m_currentPos);
+    printf("[CPU] backend vocab=%d dim=%d layers=%d heads=%d\n",
+           s_inferenceBackend.getVocabSize(), s_inferenceBackend.getDim(),
+           s_inferenceBackend.getLayers(), s_inferenceBackend.getHeads());
 
     m_lastSwarmTelemetryPost = std::chrono::steady_clock::now() - std::chrono::milliseconds(300);
     emitSwarmTelemetryThrottled_(true);
 
     // Stream directly from token IDs to avoid detokenize->retokenize drift.
     std::vector<uint32_t> u32_toks(input_tokens.begin(), input_tokens.end());
+    printf("[CPU] GenerateFromTokens ENTER  tokens=%llu\n",
+           static_cast<unsigned long long>(u32_toks.size()));
+    auto gft_start = std::chrono::high_resolution_clock::now();
     try
     {
         s_inferenceBackend.GenerateFromTokens(u32_toks, static_cast<uint32_t>(max_tokens),
                                               [&](uint32_t tok, const std::string& piece)
                                               {
                                                   emitSwarmTelemetryThrottled_(false);
-                                                  if (token_callback && !piece.empty())
+                                                  if (token_callback)
                                                       token_callback(piece);
                                                   if (token_id_callback)
                                                       token_id_callback(static_cast<int32_t>(tok));
@@ -269,9 +282,12 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
     catch (...)
     {
         // Log and rethrow — single catch-all preserves original exception type
-        printf("[CPUInferenceEngine] Exception during GenerateFromTokens\n");
+        printf("[CPU] Exception during GenerateFromTokens\n");
         throw;
     }
+    auto gft_end = std::chrono::high_resolution_clock::now();
+    double gft_ms = std::chrono::duration<double, std::milli>(gft_end - gft_start).count();
+    printf("[CPU] GenerateFromTokens RETURN  elapsed=%.1f ms\n", gft_ms);
     m_lastState = s_inferenceBackend.LastLogits();
 
     emitSwarmTelemetryThrottled_(true);
@@ -280,8 +296,15 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
         complete_callback();
 
     auto end = std::chrono::high_resolution_clock::now();
+    double total_ms = std::chrono::duration<double, std::milli>(end - start).count();
+    printf("[CPU] GenerateStreaming RETURN  total=%.1f ms\n", total_ms);
+
+    // B005 — Emit KV instrumentation report
+    std::string kv_report = GetKVReport();
+    printf("%s", kv_report.c_str());
+
     m_inferenceCount++;
-    m_totalInferenceTime += std::chrono::duration<double>(end - start).count();
+    m_totalInferenceTime += total_ms / 1000.0;
 }
 
 // ============================================================================
@@ -329,6 +352,7 @@ void CPUInferenceEngine::ClearCache()
     m_kv_cache.clear();
     m_memoryPool.clear();
     m_totalMemoryAllocated = 0;
+    ++m_kv_counters.cache_reset;
 }
 
 // ============================================================================
@@ -668,6 +692,11 @@ void CPUInferenceEngine::InitKVCache()
 
     // Mark as using dynamic allocation for large contexts
     m_dynamicKVCache = (m_contextLimit > 1000000);
+
+    // B005 instrumentation
+    ++m_kv_counters.cache_create;
+    m_kv_counters.cache_position = 0;
+    m_kv_counters.cache_tokens = 0;
 }
 
 // ============================================================================
@@ -775,6 +804,14 @@ void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key
     std::vector<float> attn_scores(seq_len * seq_len);
     float scale = 1.0f / std::sqrt(static_cast<float>(head_dim));
 
+    // B005 KV instrumentation: detect if this is a full recompute or incremental decode
+    bool is_incremental = (seq_len == 1 && m_kv_counters.cache_position > 0);
+    if (is_incremental) {
+        ++m_kv_counters.cache_reuse; // Reusing past KV for single new token
+    } else if (seq_len > 1) {
+        ++m_kv_counters.full_recompute; // Full attention over entire sequence
+    }
+
     // Q*K^T scaled
     for (int h = 0; h < num_heads; h++)
     {
@@ -810,6 +847,14 @@ void CPUInferenceEngine::MultiHeadAttention(const float* query, const float* key
             }
         }
     }
+
+    // B005: Update KV position and token counters
+    m_kv_counters.cache_position += seq_len;
+    m_kv_counters.cache_tokens += seq_len;
+    if (is_incremental) {
+        ++m_kv_counters.cache_read;  // Read from cache for incremental token
+    }
+    ++m_kv_counters.cache_write;     // Write new KV for this sequence
 }
 
 void CPUInferenceEngine::FeedForward(const float* input, float* output, int dim)

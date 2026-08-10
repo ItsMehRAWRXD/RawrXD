@@ -808,6 +808,13 @@ set(SOURCES
     src/cpu_inference_engine.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
     src/complete_server.cpp
@@ -6822,6 +6829,29 @@ else()
     target_link_libraries(rawrxd PRIVATE Threads::Threads)
 endif()
 
+if(TARGET rawrxd_runtime)
+    target_link_libraries(rawrxd PRIVATE rawrxd_runtime)
+else()
+    target_sources(rawrxd PRIVATE
+        src/runtime/TensorExecutionRouter.cpp
+        src/runtime/memory/PlacementPolicy.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+    )
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/runtime
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory
+    )
+    set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+        COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+    message(STATUS "[SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004")
+endif()
+
 set_target_properties(rawrxd PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
@@ -7495,3 +7525,605 @@ endif()
 add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp)
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation)
+
+set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
+    tests/b004_transformer_router_streaming_integration.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+
+function(rawrxd_configure_b004_target target_name)
+    target_include_directories(${target_name} PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/runtime
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory
+    )
+    target_compile_features(${target_name} PRIVATE cxx_std_20)
+    target_link_libraries(${target_name} PRIVATE Threads::Threads dxgi)
+endfunction()
+
+add_executable(b004_transformer_router_streaming_integration EXCLUDE_FROM_ALL
+    ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
+)
+rawrxd_configure_b004_target(b004_transformer_router_streaming_integration)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b004_transformer_router_streaming_integration PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_directories(b004_transformer_router_streaming_integration PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+    target_link_libraries(b004_transformer_router_streaming_integration PRIVATE "${RAWR_VULKAN_LIB}")
+    target_compile_definitions(b004_transformer_router_streaming_integration PRIVATE RAWR_HAS_VULKAN=1 RAWR_VULKAN_AVAILABLE=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b004_transformer_router_streaming_integration PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b004_transformer_router_streaming_integration PRIVATE Vulkan::Vulkan)
+    target_compile_definitions(b004_transformer_router_streaming_integration PRIVATE RAWR_HAS_VULKAN=1)
+endif()
+
+add_executable(b004_transformer_router_streaming_integration_cpu EXCLUDE_FROM_ALL
+    ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
+)
+rawrxd_configure_b004_target(b004_transformer_router_streaming_integration_cpu)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b004_transformer_router_streaming_integration_cpu PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b004_transformer_router_streaming_integration_cpu PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b004_transformer_router_streaming_integration_cpu PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+# ============================================================================
+# B012: Amortization Crossover Experiment
+# ============================================================================
+add_executable(b012_amortization_test EXCLUDE_FROM_ALL
+    B012/build/amortization_test.cpp
+    ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
+)
+rawrxd_configure_b004_target(b012_amortization_test)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b012_amortization_test PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b012_amortization_test PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b012_amortization_test PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+if(BUILD_TESTING)
+    add_test(NAME b004_transformer_router_streaming_integration
+             COMMAND b004_transformer_router_streaming_integration)
+    add_test(NAME b004_transformer_router_streaming_integration_cpu
+             COMMAND b004_transformer_router_streaming_integration_cpu)
+endif()
+
+# ============================================================================
+# B005: Canonical Model Certification
+# ============================================================================
+set(B005_CANONICAL_MODEL_SOURCES
+    tests/b005_canonical_model_certification.cpp
+    src/canonical/gguf_adapter.cpp
+    src/canonical/unified_model_loader.cpp
+)
+
+add_executable(b005_canonical_model_certification EXCLUDE_FROM_ALL
+    ${B005_CANONICAL_MODEL_SOURCES}
+)
+target_include_directories(b005_canonical_model_certification PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/canonical
+)
+target_compile_features(b005_canonical_model_certification PRIVATE cxx_std_20)
+
+if(BUILD_TESTING)
+    add_test(NAME b005_canonical_model_certification
+             COMMAND b005_canonical_model_certification)
+endif()
+
+# ============================================================================
+# B006: KV Cache Verification
+# ============================================================================
+set(B006_KV_CACHE_SOURCES
+    tests/b006_kv_cache_verification.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+
+add_executable(b006_kv_cache_verification EXCLUDE_FROM_ALL
+    ${B006_KV_CACHE_SOURCES}
+)
+target_include_directories(b006_kv_cache_verification PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b006_kv_cache_verification PRIVATE cxx_std_20)
+
+# Vulkan SDK support for b006_kv_cache_verification (shares sources with rawrxd)
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b006_kv_cache_verification PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b006_kv_cache_verification PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b006_kv_cache_verification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b006_kv_cache_verification PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b006_kv_cache_verification PRIVATE dxgi)
+    target_compile_definitions(b006_kv_cache_verification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b006_kv_cache_verification PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b006_kv_cache_verification PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b006_kv_cache_verification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b006_kv_cache_verification PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b006_kv_cache_verification PRIVATE dxgi)
+else()
+    target_link_libraries(b006_kv_cache_verification PRIVATE dxgi)
+endif()
+
+# Add LIBPATH directly using the SDK paths defined at top of file
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b006_kv_cache_verification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b006_kv_cache_verification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b006_kv_cache_verification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+# Use short library names - LIBPATH above provides the paths
+target_link_libraries(b006_kv_cache_verification PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b006_kv_cache_verification
+             COMMAND b006_kv_cache_verification)
+endif()
+
+# ============================================================================
+# B007: Performance Baseline Certification
+# ============================================================================
+set(B007_PERF_BASELINE_SOURCES
+    tests/b007_performance_baseline.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+
+add_executable(b007_performance_baseline EXCLUDE_FROM_ALL
+    ${B007_PERF_BASELINE_SOURCES}
+)
+target_include_directories(b007_performance_baseline PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b007_performance_baseline PRIVATE cxx_std_20)
+# /EHa enables SEH in functions with C++ destructors (required for __try/__except wrappers)
+target_compile_options(b007_performance_baseline PRIVATE "/EHa")
+
+# Vulkan SDK support for b007_performance_baseline
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b007_performance_baseline PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b007_performance_baseline PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b007_performance_baseline PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b007_performance_baseline PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b007_performance_baseline PRIVATE dxgi)
+    target_compile_definitions(b007_performance_baseline PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b007_performance_baseline PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b007_performance_baseline PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b007_performance_baseline PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b007_performance_baseline PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b007_performance_baseline PRIVATE dxgi)
+else()
+    target_link_libraries(b007_performance_baseline PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b007_performance_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b007_performance_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b007_performance_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b007_performance_baseline PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b007_performance_baseline
+             COMMAND b007_performance_baseline)
+endif()
+
+# ============================================================================
+# B008: Build / CI Integration Gate
+# ============================================================================
+set(B008_CI_SOURCES
+    tests/b008_ci_integration.cpp
+)
+
+add_executable(b008_ci_integration EXCLUDE_FROM_ALL
+    ${B008_CI_SOURCES}
+)
+target_include_directories(b008_ci_integration PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b008_ci_integration PRIVATE cxx_std_20)
+
+if(BUILD_TESTING)
+    add_test(NAME b008_ci_integration
+             COMMAND b008_ci_integration)
+endif()
+
+# ============================================================================
+# B010: Weight Residency Profiling Baseline (FROZEN)
+# ============================================================================
+set(B010_RESIDENCY_SOURCES
+    tests/b010/b010_weight_residency_profile.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+
+add_executable(b010_weight_residency_profile EXCLUDE_FROM_ALL
+    ${B010_RESIDENCY_SOURCES}
+)
+target_include_directories(b010_weight_residency_profile PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b010_weight_residency_profile PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b010_weight_residency_profile PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b010_weight_residency_profile PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b010_weight_residency_profile PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b010_weight_residency_profile PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b010_weight_residency_profile PRIVATE dxgi)
+    target_compile_definitions(b010_weight_residency_profile PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b010_weight_residency_profile PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b010_weight_residency_profile PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b010_weight_residency_profile PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b010_weight_residency_profile PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b010_weight_residency_profile PRIVATE dxgi)
+else()
+    target_link_libraries(b010_weight_residency_profile PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b010_weight_residency_profile APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b010_weight_residency_profile APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b010_weight_residency_profile APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b010_weight_residency_profile PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b010_weight_residency_profile
+             COMMAND b010_weight_residency_profile)
+endif()
+
+# ============================================================================
+# B011: Targeted Weight Residency Optimization
+# ============================================================================
+set(B011_RESIDENCY_OPT_SOURCES
+    tests/b011_weight_residency_optimization.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+
+add_executable(b011_weight_residency_optimization EXCLUDE_FROM_ALL
+    ${B011_RESIDENCY_OPT_SOURCES}
+)
+target_include_directories(b011_weight_residency_optimization PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b011_weight_residency_optimization PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b011_weight_residency_optimization PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b011_weight_residency_optimization PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b011_weight_residency_optimization PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b011_weight_residency_optimization PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b011_weight_residency_optimization PRIVATE dxgi)
+    target_compile_definitions(b011_weight_residency_optimization PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b011_weight_residency_optimization PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b011_weight_residency_optimization PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b011_weight_residency_optimization PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b011_weight_residency_optimization PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b011_weight_residency_optimization PRIVATE dxgi)
+else()
+    target_link_libraries(b011_weight_residency_optimization PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b011_weight_residency_optimization APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b011_weight_residency_optimization APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b011_weight_residency_optimization APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b011_weight_residency_optimization PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b011_weight_residency_optimization
+             COMMAND b011_weight_residency_optimization)
+endif()
+
+# ============================================================================
+# B009: Batched Prefill Certification
+# ============================================================================
+set(B009_BATCHED_PREFILL_SOURCES
+    tests/b009/b009_batched_prefill_certification.cpp
+    tests/b009/b009b_batched_gemm.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+
+add_executable(b009_batched_prefill_certification EXCLUDE_FROM_ALL
+    ${B009_BATCHED_PREFILL_SOURCES}
+)
+target_include_directories(b009_batched_prefill_certification PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b009_batched_prefill_certification PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b009_batched_prefill_certification PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b009_batched_prefill_certification PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b009_batched_prefill_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b009_batched_prefill_certification PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b009_batched_prefill_certification PRIVATE dxgi)
+    target_compile_definitions(b009_batched_prefill_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b009_batched_prefill_certification PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b009_batched_prefill_certification PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b009_batched_prefill_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b009_batched_prefill_certification PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b009_batched_prefill_certification PRIVATE dxgi)
+else()
+    target_link_libraries(b009_batched_prefill_certification PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b009_batched_prefill_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b009_batched_prefill_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+
+# ============================================================================
+# B009-A Fast Validation (quick correctness check, {1,3,10} tokens only)
+# ============================================================================
+add_executable(b009a_fast_validation EXCLUDE_FROM_ALL
+    tests/b009/b009a_fast_validation.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+target_include_directories(b009a_fast_validation PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b009a_fast_validation PRIVATE cxx_std_20)
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b009a_fast_validation PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b009a_fast_validation PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b009a_fast_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b009a_fast_validation PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b009a_fast_validation PRIVATE dxgi)
+    target_compile_definitions(b009a_fast_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b009a_fast_validation PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b009a_fast_validation PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b009a_fast_validation PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b009a_fast_validation PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b009a_fast_validation PRIVATE dxgi)
+else()
+    target_link_libraries(b009a_fast_validation PRIVATE dxgi)
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b009a_fast_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b009a_fast_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b009_batched_prefill_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b009_batched_prefill_certification PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+if(BUILD_TESTING)
+    add_test(NAME b009_batched_prefill_certification
+             COMMAND b009_batched_prefill_certification)
+endif()

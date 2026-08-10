@@ -611,8 +611,8 @@ bool RawrXDTransformer::tryPickMoERouterExperts(const std::uint32_t layer, const
         const std::string name = prefix + suf;
         if (!loader->hasTensorNamed(name))
             continue;
-        if (loader->StreamingMatMul(name, ffnNormedHidden, logits.data(), static_cast<std::size_t>(dim),
-                                    static_cast<std::size_t>(nExp)))
+        if (ExecuteLayerMatMul(name, ffnNormedHidden, logits.data(), static_cast<std::size_t>(dim),
+                               static_cast<std::size_t>(nExp), layer))
         {
             routed = true;
             break;
@@ -717,42 +717,48 @@ bool RawrXDTransformer::tryPickMoERouterExperts(const std::uint32_t layer, const
 #ifdef __AVX512F__
 void MatrixMultiply_AVX512(const float* A, const float* B, float* C, uint64_t M, uint64_t K, uint64_t N)
 {
-#pragma omp parallel for collapse(2)
-    for (uint64_t i = 0; i < M; i++)
+    const int64_t Mi = static_cast<int64_t>(M);
+    const int64_t Ni = static_cast<int64_t>(N);
+    const int64_t Ki = static_cast<int64_t>(K);
+#pragma omp parallel for
+    for (int64_t i = 0; i < Mi; i++)
     {
-        for (uint64_t j = 0; j < N; j++)
+        for (int64_t j = 0; j < Ni; j++)
         {
             __m512 sum_vec = _mm512_setzero_ps();
-            uint64_t k = 0;
-            for (; k + 15 < K; k += 16)
+            int64_t k = 0;
+            for (; k + 15 < Ki; k += 16)
             {
-                __m512 a_vec = _mm512_loadu_ps(A + i * K + k);
-                __m512 b_vec = _mm512_loadu_ps(B + j * K + k);
+                __m512 a_vec = _mm512_loadu_ps(A + i * Ki + k);
+                __m512 b_vec = _mm512_loadu_ps(B + j * Ki + k);
                 sum_vec = _mm512_fmadd_ps(a_vec, b_vec, sum_vec);
             }
             float sum = _mm512_reduce_add_ps(sum_vec);
-            for (; k < K; k++)
+            for (; k < Ki; k++)
             {
-                sum += A[i * K + k] * B[j * K + k];
+                sum += A[i * Ki + k] * B[j * Ki + k];
             }
-            C[i * N + j] = sum;
+            C[i * Ni + j] = sum;
         }
     }
 }
 #else
 void MatrixMultiply_AVX512(const float* A, const float* B, float* C, uint64_t M, uint64_t K, uint64_t N)
 {
-#pragma omp parallel for collapse(2)
-    for (uint64_t i = 0; i < M; i++)
+    const int64_t Mi = static_cast<int64_t>(M);
+    const int64_t Ni = static_cast<int64_t>(N);
+    const int64_t Ki = static_cast<int64_t>(K);
+#pragma omp parallel for
+    for (int64_t i = 0; i < Mi; i++)
     {
-        for (uint64_t j = 0; j < N; j++)
+        for (int64_t j = 0; j < Ni; j++)
         {
             float sum = 0.0f;
-            for (uint64_t k = 0; k < K; k++)
+            for (int64_t k = 0; k < Ki; k++)
             {
-                sum += A[i * K + k] * B[j * K + k];
+                sum += A[i * Ki + k] * B[j * Ki + k];
             }
-            C[i * N + j] = sum;
+            C[i * Ni + j] = sum;
         }
     }
 }
@@ -1146,7 +1152,8 @@ namespace
 /// One Mixtral-style expert: try `ffn_gate`/`ffn_up`/`ffn_down` then `w1`/`w3`/`w2` naming.
 [[nodiscard]] bool forwardMoEExpertSwiGLU(RawrXDModelLoader* loader, const std::string& blkPrefix, std::uint32_t expert,
                                           float* xNormed, std::vector<float>& h1, std::vector<float>& h3,
-                                          std::vector<float>& finalFfn, int dim, int hdim)
+                                          std::vector<float>& finalFfn, int dim, int hdim,
+                                          RawrXDTransformer* adapter, std::uint32_t layer)
 {
     if (!loader)
         return false;
@@ -1162,9 +1169,11 @@ namespace
         const std::string d = ep + tri[2];
         if (!loader->hasTensorNamed(g) || !loader->hasTensorNamed(u) || !loader->hasTensorNamed(d))
             continue;
-        if (!loader->StreamingMatMul(g, xNormed, h1.data(), static_cast<size_t>(dim), static_cast<size_t>(hdim)))
+        if (!adapter->ExecuteLayerMatMul(g, xNormed, h1.data(), static_cast<size_t>(dim), static_cast<size_t>(hdim),
+                                         layer))
             continue;
-        if (!loader->StreamingMatMul(u, xNormed, h3.data(), static_cast<size_t>(dim), static_cast<size_t>(hdim)))
+        if (!adapter->ExecuteLayerMatMul(u, xNormed, h3.data(), static_cast<size_t>(dim), static_cast<size_t>(hdim),
+                                         layer))
             continue;
         Silu_AVX512(h1.data(), hdim);
 #ifdef __AVX512F__
@@ -1183,8 +1192,8 @@ namespace
         for (int i = 0; i < hdim; i++)
             h1[i] *= h3[i];
 #endif
-        if (!loader->StreamingMatMul(d, h1.data(), finalFfn.data(), static_cast<size_t>(hdim),
-                                     static_cast<size_t>(dim)))
+        if (!adapter->ExecuteLayerMatMul(d, h1.data(), finalFfn.data(), static_cast<size_t>(hdim),
+                                         static_cast<size_t>(dim), layer))
             continue;
         return true;
     }
@@ -1192,11 +1201,99 @@ namespace
 }
 }  // namespace
 
+bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const float* input, float* output,
+                                           std::size_t inputDim, std::size_t outputDim, std::uint32_t layer)
+{
+    ++m_routerBoundaryMatMulCount;
+
+    const bool isOutputProjection = (tensorName == "output.weight");
+    if (isOutputProjection)
+    {
+        printf("[MATMUL] output.weight ENTER layer=%u in=%zu out=%zu\n", layer, inputDim, outputDim);
+        std::fflush(stdout);
+    }
+
+    if (!loader || !input || !output || inputDim == 0 || outputDim == 0 ||
+        inputDim > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+        outputDim > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+    {
+        if (isOutputProjection)
+        {
+            printf("[MATMUL] output.weight FAIL param_check\n");
+            std::fflush(stdout);
+        }
+        return false;
+    }
+
+    std::uint64_t canonicalTensorId = 0;
+    std::uint64_t tensorStorageBytes = 0;
+    const bool hasCanonicalId = loader->GetTensorResidencyInfo(tensorName, canonicalTensorId, tensorStorageBytes);
+    if (hasCanonicalId && m_registeredTensorIds.insert(canonicalTensorId).second)
+    {
+        m_memoryManager.registerTensor(static_cast<RawrXD::Memory::TensorId>(canonicalTensorId), tensorStorageBytes);
+    }
+
+    RawrXD::TensorHandle weight{};
+    weight.name = tensorName.c_str();
+    weight.host_ptr = nullptr;
+    weight.device_ptr = nullptr;
+    weight.bytes = tensorStorageBytes;
+    weight.has_tensor_id = hasCanonicalId;
+    weight.tensor_id = canonicalTensorId;
+
+    RawrXD::TensorView inView{};
+    inView.data = const_cast<float*>(input);
+    inView.size = inputDim;
+
+    RawrXD::TensorView outView{};
+    outView.data = output;
+    outView.size = outputDim;
+
+    m_execRouter.advanceLayer(layer);
+
+    if (m_enableRouterDispatchForMaterializedWeights)
+    {
+        weight.host_ptr = loader->GetTensor(tensorName);
+        if (weight.host_ptr)
+        {
+            const bool ok = m_execRouter.dispatchMatmul(inView, weight, outView, static_cast<int>(outputDim),
+                                               static_cast<int>(inputDim), RawrXD::TensorExecutionRouter::MatmulBackendDispatch{});
+            if (isOutputProjection)
+            {
+                printf("[MATMUL] output.weight RETURN materialized ok=%d\n", ok ? 1 : 0);
+                std::fflush(stdout);
+            }
+            return ok;
+        }
+    }
+
+    // B004 seam: real production path dispatch stays in loader StreamingMatMul,
+    // but now crosses router for residency and completion accounting.
+    const bool ok = m_execRouter.dispatchMatmul(
+        inView, weight, outView, static_cast<int>(outputDim), static_cast<int>(inputDim),
+        [&tensorName, this](const RawrXD::TensorView& in, const RawrXD::TensorHandle&, RawrXD::TensorView& out,
+                            int M, int K) {
+            return loader->StreamingMatMul(tensorName, in.data, out.data, static_cast<std::size_t>(K),
+                                           static_cast<std::size_t>(M));
+        });
+    if (isOutputProjection)
+    {
+        printf("[MATMUL] output.weight RETURN streaming ok=%d\n", ok ? 1 : 0);
+        std::fflush(stdout);
+    }
+    return ok;
+}
+
 void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader)
 {
     this->device = device;
     this->config = cfg;
     this->loader = loader;
+    m_registeredTensorIds.clear();
+    m_execRouter.setMemoryManager(&m_memoryManager);
+    m_routerBoundaryMatMulCount = 0;
+    m_layerPredictCount = 0;
+    m_layerPrefetchCount = 0;
 
     // Initialize KV Cache — use seq_len if n_ctx wasn't set
     int ctx = config.n_ctx > 0 ? config.n_ctx : (config.seq_len > 0 ? config.seq_len : 2048);
@@ -1450,6 +1547,376 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     std::vector<float> scores(cache_ctx);
     std::vector<uint8_t> score_valid(cache_ctx, 0);
 
+    printf("[Forward] prefill: tokens=%d layers=%d total_layer_execs=%d est_ms=%.0f\n",
+           T, config.n_layers, T * config.n_layers,
+           static_cast<double>(T) * config.n_layers * 130.0);
+    const auto forwardStart = std::chrono::steady_clock::now();
+
+    // B009: Layer-outer batched prefill for T > 1.
+    // Processes all tokens through layer 0, then all through layer 1, etc.
+    // This improves weight locality/reuse (weights stay hot in cache).
+    // Causal attention is valid: token t only attends to positions <= t.
+    // T==1 decode path uses the original token-outer loop below.
+    if (T > 1)
+    {
+        printf("[Forward] B009 layer-outer batched prefill: T=%d layers=%d\n", T, config.n_layers);
+        std::fflush(stdout);
+
+        // Per-token hidden states: x_batch[t * dim .. (t+1)*dim - 1]
+        std::vector<float> x_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+        std::vector<float> residual_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+
+        // 1. Embedding lookup for all tokens
+        for (int t = 0; t < T; t++)
+        {
+            uint32_t token = tokens[t];
+            if (token >= static_cast<uint32_t>(config.vocab_size))
+                token = static_cast<uint32_t>(config.vocab_size - 1);
+
+            float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+            std::string emb_name = "token_embd.weight";
+            bool row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim));
+            if (!row_ok) { emb_name = "model.embed_tokens.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "embeddings.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "input.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "v.token_embd.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "v.embeddings.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "v.input.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "transformer.wte.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "wte.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "word_embeddings.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "embed_tokens.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok) { emb_name = "tok_embeddings.weight"; row_ok = loader->GetTensorRow(emb_name, static_cast<size_t>(token), x_t, static_cast<size_t>(dim)); }
+            if (!row_ok)
+            {
+                printf("[Forward] FATAL: Missing token embedding tensor for token %d\n", t);
+                return {};
+            }
+        }
+
+        // 2. Layer-outer loop: process all tokens through each layer
+        for (int l = 0; l < config.n_layers; l++)
+        {
+            auto layer_t0 = std::chrono::high_resolution_clock::now();
+            m_memoryManager.predict(static_cast<std::uint32_t>(l));
+            m_memoryManager.prefetch(static_cast<std::uint32_t>(l));
+            m_execRouter.advanceLayer(static_cast<std::uint32_t>(l));
+            ++m_layerPredictCount;
+            ++m_layerPrefetchCount;
+
+            std::vector<std::size_t> layerPinnedPlanRows;
+            struct SwarmLayerPinGuard
+            {
+                RawrXD::Swarm::ISwarmScheduler* sched{};
+                std::vector<std::size_t>* rows{};
+                ~SwarmLayerPinGuard()
+                {
+                    if (sched && rows && !rows->empty())
+                    {
+                        sched->unpinPlanRows(std::span<const std::size_t>(rows->data(), rows->size()));
+                        rows->clear();
+                    }
+                }
+            } swarmPinGuard{m_swarmScheduler, &layerPinnedPlanRows};
+
+            const bool moeTwoPhasePin = m_swarmScheduler != nullptr && loader->getExperts() > 0 &&
+                                        swarmLayerHasExpertSlices(static_cast<std::uint32_t>(l));
+
+            if (m_swarmScheduler)
+            {
+                (void)m_swarmScheduler->onLayerComputeStarted(0u, static_cast<std::uint32_t>(l));
+                const SwarmPinLayerParts pinPart =
+                    moeTwoPhasePin ? SwarmPinLayerParts::StaticOnly : SwarmPinLayerParts::Full;
+                if (RawrXD::Swarm::SchedulerError pinErr{};
+                    !pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), nullptr, 0,
+                                                               layerPinnedPlanRows, &pinErr, pinPart, false))
+                {
+                    printf("[Forward] WARN: pinSwarmSlicesForLayer layer %d failed: %s\n", l,
+                           RawrXD::Swarm::schedulerErrorMessage(pinErr));
+                }
+            }
+
+            if ((l % 5) == 0 || l == config.n_layers - 1)
+            {
+                char stepBuf[192];
+                const int n = std::snprintf(stepBuf, sizeof(stepBuf), "[STEP] Layer %d/%d (batched T=%d)\n",
+                                            l + 1, config.n_layers, T);
+                if (n > 0 && static_cast<size_t>(n) < sizeof(stepBuf))
+                {
+                    (void)std::fwrite(stepBuf, 1, static_cast<size_t>(n), stdout);
+                    std::fflush(stdout);
+                    OutputDebugStringA(stepBuf);
+                    if (m_layerProgressCb)
+                        m_layerProgressCb(std::string(stepBuf, static_cast<size_t>(n)));
+                }
+            }
+
+            // --- ATTENTION for all tokens at this layer ---
+            std::string prefix = "blk." + std::to_string(l) + ".";
+            float* attn_norm = loader->GetTensor(prefix + "attn_norm.weight");
+            if (!attn_norm)
+            {
+                printf("[Forward] FATAL: Missing %sattn_norm.weight\n", prefix.c_str());
+                return {};
+            }
+
+            const std::string wq_name = prefix + "attn_q.weight";
+            const std::string wk_name = prefix + "attn_k.weight";
+            const std::string wv_name = prefix + "attn_v.weight";
+            const std::string wo_name = prefix + "attn_output.weight";
+
+            // Process each token through this layer's attention
+            for (int t = 0; t < T; t++)
+            {
+                float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+
+                // Save residual BEFORE RMSNorm (matches original token-outer path)
+                std::memcpy(res_t, x_t, static_cast<size_t>(dim) * sizeof(float));
+                RMSNorm_AVX512(x_t, x_t, attn_norm, dim, config.rms_norm_eps);
+                RAWRXD_VALIDATION_DUMP_RMS_NORM(x_t, dim, l);
+
+                if (!ExecuteLayerMatMul(wq_name, x_t, q.data(), dim, dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
+                    return {};
+                }
+                if (!ExecuteLayerMatMul(wk_name, x_t, k.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wk_name.c_str());
+                    return {};
+                }
+                if (!ExecuteLayerMatMul(wv_name, x_t, v.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wv_name.c_str());
+                    return {};
+                }
+
+                RoPE_AVX512(q.data(), nullptr, current_pos + t, head_dim, n_heads);
+                RoPE_AVX512(k.data(), nullptr, current_pos + t, head_dim, n_kv_heads);
+
+                // KV Cache Update
+                const int64_t abs_pos = current_pos + static_cast<int64_t>(t);
+                const int slot = static_cast<int>(abs_pos % static_cast<int64_t>(cache_ctx));
+                const size_t layer_base =
+                    static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) * static_cast<size_t>(kv_dim);
+                const size_t cache_offset = layer_base + static_cast<size_t>(slot) * static_cast<size_t>(kv_dim);
+                memcpy(kv_cache_k.data() + cache_offset, k.data(), static_cast<size_t>(kv_dim) * sizeof(float));
+                memcpy(kv_cache_v.data() + cache_offset, v.data(), static_cast<size_t>(kv_dim) * sizeof(float));
+                kv_cache_pos[static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) + static_cast<size_t>(slot)] = abs_pos;
+
+                // Multi-head attention with GQA
+                std::fill(att_out.begin(), att_out.end(), 0.0f);
+                const int64_t seq_len_total = abs_pos + 1;
+                const int attn_len = static_cast<int>(std::min<int64_t>(seq_len_total, static_cast<int64_t>(cache_ctx)));
+                const int64_t window_start = seq_len_total - static_cast<int64_t>(attn_len);
+                const float inv_scale = 1.0f / sqrtf(static_cast<float>(head_dim));
+
+                for (int h = 0; h < n_heads; h++)
+                {
+                    const int kv_h = std::min(n_kv_heads - 1, h / heads_per_kv);
+                    const float* q_head = q.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                    int valid_count = 0;
+
+                    for (int p = 0; p < attn_len; p++)
+                    {
+                        const int64_t abs_p = window_start + static_cast<int64_t>(p);
+                        const int p_slot = static_cast<int>(abs_p % static_cast<int64_t>(cache_ctx));
+                        const size_t pos_idx =
+                            static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) + static_cast<size_t>(p_slot);
+                        if (kv_cache_pos[pos_idx] != abs_p)
+                        {
+                            scores[p] = -1e9f;
+                            score_valid[p] = 0;
+                            continue;
+                        }
+                        const size_t k_off = layer_base + static_cast<size_t>(p_slot) * static_cast<size_t>(kv_dim) +
+                                             static_cast<size_t>(kv_h) * static_cast<size_t>(head_dim);
+                        const float* k_past = kv_cache_k.data() + k_off;
+                        float score = DotProduct_AVX512(q_head, k_past, head_dim);
+                        float scaled = std::isfinite(score) ? (score * inv_scale) : -1e9f;
+                        scores[p] = std::max(-80.0f, std::min(80.0f, scaled));
+                        score_valid[p] = 1;
+                        ++valid_count;
+                    }
+                    if (valid_count == 0)
+                    {
+                        float* out_head = att_out.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                        std::fill(out_head, out_head + head_dim, 0.0f);
+                        continue;
+                    }
+
+                    Softmax_AVX512(scores.data(), attn_len);
+                    for (int p = 0; p < attn_len; ++p)
+                    {
+                        if (!std::isfinite(scores[p]))
+                            scores[p] = 0.0f;
+                    }
+
+                    float* out_head = att_out.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                    for (int p = 0; p < attn_len; p++)
+                    {
+                        if (!score_valid[p])
+                            continue;
+                        const int64_t abs_p = window_start + static_cast<int64_t>(p);
+                        const int p_slot = static_cast<int>(abs_p % static_cast<int64_t>(cache_ctx));
+                        const size_t v_off = layer_base + static_cast<size_t>(p_slot) * static_cast<size_t>(kv_dim) +
+                                             static_cast<size_t>(kv_h) * static_cast<size_t>(head_dim);
+                        const float* v_past = kv_cache_v.data() + v_off;
+                        VectorAddScaled_AVX512(out_head, v_past, scores[p], head_dim);
+                    }
+                }
+
+                // Output projection
+                if (!ExecuteLayerMatMul(wo_name, att_out.data(), attn_final.data(), dim, dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wo_name.c_str());
+                    return {};
+                }
+
+                // Residual add: x = residual (pre-attention) + attn_final
+                VectorAdd_AVX512(x_t, res_t, attn_final.data(), dim);
+                for (int i = 0; i < dim; ++i)
+                {
+                    if (!std::isfinite(x_t[i]))
+                        x_t[i] = 0.0f;
+                }
+                RAWRXD_VALIDATION_DUMP_ATTN_OUT(x_t, dim, l);
+            }
+
+            // --- FFN (SwiGLU) for all tokens at this layer ---
+            float* ffn_norm = loader->GetTensor(prefix + "ffn_norm.weight");
+            if (!ffn_norm)
+            {
+                printf("[Forward] FATAL: Missing %sffn_norm.weight\n", prefix.c_str());
+                return {};
+            }
+
+            std::vector<std::uint32_t> moeExpertPick;
+            std::vector<float> moeMixtureWeights;
+            if (moeTwoPhasePin && m_swarmScheduler)
+            {
+                // Use first token's state for expert routing (approximation for batch)
+                float* x_0 = x_batch.data();
+                (void)tryPickMoERouterExperts(static_cast<std::uint32_t>(l), x_0, moeExpertPick,
+                                              moeMixtureWeights);
+                const std::uint32_t* const pickData = moeExpertPick.empty() ? nullptr : moeExpertPick.data();
+                const std::size_t pickCount = moeExpertPick.size();
+                if (RawrXD::Swarm::SchedulerError pinErr{};
+                    !pinSwarmSlicesForLayer(0u, static_cast<std::uint32_t>(l), pickData, pickCount,
+                                                           layerPinnedPlanRows, &pinErr, SwarmPinLayerParts::ExpertsOnly, true))
+                {
+                    printf("[Forward] WARN: pinSwarmSlicesForLayer experts layer %d failed: %s\n", l,
+                           RawrXD::Swarm::schedulerErrorMessage(pinErr));
+                }
+            }
+
+            const std::string w1_name = prefix + "ffn_gate.weight";
+            const std::string w2_name = prefix + "ffn_down.weight";
+            const std::string w3_name = prefix + "ffn_up.weight";
+
+            int hdim = config.hidden_dim;
+            const bool denseFfn = loader->hasTensorNamed(w1_name);
+
+            for (int t = 0; t < T; t++)
+            {
+                float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+
+                std::memcpy(res_t, x_t, static_cast<size_t>(dim) * sizeof(float));
+                RMSNorm_AVX512(x_t, x_t, ffn_norm, dim, config.rms_norm_eps);
+
+                if (denseFfn)
+                {
+                    if (!ExecuteLayerMatMul(w1_name, x_t, h1.data(), dim, hdim, static_cast<std::uint32_t>(l)))
+                    {
+                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w1_name.c_str());
+                        return {};
+                    }
+                    if (!ExecuteLayerMatMul(w3_name, x_t, h3.data(), dim, hdim, static_cast<std::uint32_t>(l)))
+                    {
+                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w3_name.c_str());
+                        return {};
+                    }
+
+                    Silu_AVX512(h1.data(), hdim);
+#ifdef __AVX512F__
+                    {
+                        int i = 0;
+                        for (; i + 15 < hdim; i += 16)
+                        {
+                            __m512 h1v = _mm512_loadu_ps(h1.data() + i);
+                            __m512 h3v = _mm512_loadu_ps(h3.data() + i);
+                            _mm512_storeu_ps(h1.data() + i, _mm512_mul_ps(h1v, h3v));
+                        }
+                        for (; i < hdim; i++)
+                            h1[i] *= h3[i];
+                    }
+#else
+                    for (int i = 0; i < hdim; i++)
+                        h1[i] *= h3[i];
+#endif
+
+                    if (!ExecuteLayerMatMul(w2_name, h1.data(), final_ffn.data(), hdim, dim, static_cast<std::uint32_t>(l)))
+                    {
+                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w2_name.c_str());
+                        return {};
+                    }
+                }
+                else
+                {
+                    // MoE fallback: use first expert
+                    std::uint32_t expertRun = 0;
+                    if (!moeExpertPick.empty())
+                        expertRun = moeExpertPick[0];
+                    if (!forwardMoEExpertSwiGLU(loader, prefix, expertRun, x_t, h1, h3, final_ffn,
+                                                dim, hdim, this, static_cast<std::uint32_t>(l)))
+                    {
+                        printf("[Forward] FATAL: MoE FFN failed blk.%d expert %u\n", l, static_cast<unsigned>(expertRun));
+                        return {};
+                    }
+                }
+
+                VectorAdd_AVX512(x_t, res_t, final_ffn.data(), dim);
+                for (int i = 0; i < dim; ++i)
+                {
+                    if (!std::isfinite(x_t[i]))
+                        x_t[i] = 0.0f;
+                }
+                RAWRXD_VALIDATION_DUMP_FFN(x_t, dim, l);
+            }
+
+            if (m_swarmScheduler)
+            {
+                if (!layerPinnedPlanRows.empty())
+                {
+                    m_swarmScheduler->unpinPlanRows(
+                        std::span<const std::size_t>(layerPinnedPlanRows.data(), layerPinnedPlanRows.size()));
+                    layerPinnedPlanRows.clear();
+                }
+                (void)m_swarmScheduler->onLayerComputeFinished(0u, static_cast<std::uint32_t>(l));
+            }
+            auto layer_t1 = std::chrono::high_resolution_clock::now();
+            double layer_ms = std::chrono::duration<double, std::milli>(layer_t1 - layer_t0).count();
+            if (layer_ms > 100.0)
+            {
+                printf("[CPU] batched layer=%d  %.1f ms  SLOW (T=%d)\n", l, layer_ms, T);
+            }
+        }
+
+        // Copy last token's hidden state to x for output projection
+        std::memcpy(x.data(), x_batch.data() + static_cast<size_t>(T - 1) * static_cast<size_t>(dim),
+                    static_cast<size_t>(dim) * sizeof(float));
+
+        auto batchedEnd = std::chrono::steady_clock::now();
+        double batchedMs = std::chrono::duration<double, std::milli>(batchedEnd - forwardStart).count();
+        printf("[Forward] B009 batched prefill complete: T=%d layers=%d elapsed_ms=%.2f ms_per_layer=%.2f\n",
+               T, config.n_layers, batchedMs, batchedMs / config.n_layers);
+        std::fflush(stdout);
+    }
+    else
+    {
+    // B009: Original token-outer path for T == 1 (decode) — unchanged from B008
     for (int t = 0; t < T; t++)
     {
         if (m_swarmScheduler)
@@ -1536,8 +2003,16 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         }
 
         // 2. Transformer Layers
+        auto layer_start = std::chrono::high_resolution_clock::now();
         for (int l = 0; l < config.n_layers; l++)
         {
+            auto layer_t0 = std::chrono::high_resolution_clock::now();
+            m_memoryManager.predict(static_cast<std::uint32_t>(l));
+            m_memoryManager.prefetch(static_cast<std::uint32_t>(l));
+            m_execRouter.advanceLayer(static_cast<std::uint32_t>(l));
+            ++m_layerPredictCount;
+            ++m_layerPrefetchCount;
+
             std::vector<std::size_t> layerPinnedPlanRows;
             struct SwarmLayerPinGuard
             {
@@ -1607,19 +2082,19 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             const std::string wv_name = prefix + "attn_v.weight";
             const std::string wo_name = prefix + "attn_output.weight";
 
-            if (!loader->StreamingMatMul(wq_name, x.data(), q.data(), dim, dim))
+            if (!ExecuteLayerMatMul(wq_name, x.data(), q.data(), dim, dim, static_cast<std::uint32_t>(l)))
             {
                 printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
                 return {};
             }
 
-            if (!loader->StreamingMatMul(wk_name, x.data(), k.data(), dim, kv_dim))
+            if (!ExecuteLayerMatMul(wk_name, x.data(), k.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
             {
                 printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wk_name.c_str());
                 return {};
             }
 
-            if (!loader->StreamingMatMul(wv_name, x.data(), v.data(), dim, kv_dim))
+            if (!ExecuteLayerMatMul(wv_name, x.data(), v.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
             {
                 printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wv_name.c_str());
                 return {};
@@ -1702,7 +2177,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             }
 
             // Output projection: dim → dim
-            if (!loader->StreamingMatMul(wo_name, att_out.data(), attn_final.data(), dim, dim))
+            if (!ExecuteLayerMatMul(wo_name, att_out.data(), attn_final.data(), dim, dim, static_cast<std::uint32_t>(l)))
             {
                 printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wo_name.c_str());
                 return {};
@@ -1766,14 +2241,14 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             if (denseFfn)
             {
                 // Gate projection (streaming to avoid materializing large weight)
-                if (!loader->StreamingMatMul(w1_name, x.data(), h1.data(), dim, hdim))
+                if (!ExecuteLayerMatMul(w1_name, x.data(), h1.data(), dim, hdim, static_cast<std::uint32_t>(l)))
                 {
                     printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w1_name.c_str());
                     return {};
                 }
 
                 // Up projection (streaming)
-                if (!loader->StreamingMatMul(w3_name, x.data(), h3.data(), dim, hdim))
+                if (!ExecuteLayerMatMul(w3_name, x.data(), h3.data(), dim, hdim, static_cast<std::uint32_t>(l)))
                 {
                     printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w3_name.c_str());
                     return {};
@@ -1799,7 +2274,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 #endif
 
                 // Down projection: hidden_dim → dim (streaming)
-                if (!loader->StreamingMatMul(w2_name, h1.data(), final_ffn.data(), hdim, dim))
+                if (!ExecuteLayerMatMul(w2_name, h1.data(), final_ffn.data(), hdim, dim, static_cast<std::uint32_t>(l)))
                 {
                     printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w2_name.c_str());
                     return {};
@@ -1865,8 +2340,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                         if (w <= 0.f)
                             continue;
                         anyPositiveW = true;
-                        if (!forwardMoEExpertSwiGLU(loader, prefix, moeExpertPick[ii], x.data(), h1, h3, final_ffn, dim,
-                                                    hdim))
+                        if (!forwardMoEExpertSwiGLU(loader, prefix, moeExpertPick[ii], x.data(), h1, h3, final_ffn,
+                                                    dim, hdim, this, static_cast<std::uint32_t>(l)))
                         {
                             printf("[Forward] FATAL: MoE expert FFN failed blk.%d expert %u\n", l,
                                    static_cast<unsigned>(moeExpertPick[ii]));
@@ -1887,7 +2362,8 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     std::uint32_t expertRun = 0;
                     if (!moeExpertPick.empty())
                         expertRun = moeExpertPick[0];
-                    if (!forwardMoEExpertSwiGLU(loader, prefix, expertRun, x.data(), h1, h3, final_ffn, dim, hdim))
+                    if (!forwardMoEExpertSwiGLU(loader, prefix, expertRun, x.data(), h1, h3, final_ffn, dim, hdim,
+                                                this, static_cast<std::uint32_t>(l)))
                     {
                         printf("[Forward] FATAL: MoE FFN has no dense gate.weight and no ffn_experts.* tensors for "
                                "blk.%d expert %u\n",
@@ -1917,10 +2393,21 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 }
                 (void)m_swarmScheduler->onLayerComputeFinished(0u, static_cast<std::uint32_t>(l));
             }
+            auto layer_t1 = std::chrono::high_resolution_clock::now();
+            double layer_ms = std::chrono::duration<double, std::milli>(layer_t1 - layer_t0).count();
+            if (layer_ms > 100.0)
+            {
+                printf("[CPU] token=%d layer=%d  %.1f ms  SLOW\n", t, l, layer_ms);
+            }
         }
+        auto layer_end = std::chrono::high_resolution_clock::now();
+        double total_layer_ms = std::chrono::duration<double, std::milli>(layer_end - layer_start).count();
+        printf("[CPU] token=%d total_layers=%.1f ms\n", t, total_layer_ms);
     }
+    } // end B009 else (T == 1 token-outer path)
 
     // Final norm + output projection
+    printf("[DECODE] final_norm begin\n");
     float* out_norm = loader->GetTensor("output_norm.weight");
     if (!out_norm)
     {
@@ -1928,14 +2415,18 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         return {};
     }
     RMSNorm_AVX512(x.data(), x.data(), out_norm, dim, config.rms_norm_eps);
+    printf("[DECODE] final_norm complete\n");
 
     if (config.vocab_size <= 0)
     {
         printf("[Forward] FATAL: vocab_size=%d\n", config.vocab_size);
         return {};
     }
+    printf("[DECODE] output_projection begin vocab=%d dim=%d\n", config.vocab_size, dim);
+    std::fflush(stdout);
     std::vector<float> logits(config.vocab_size);
-    if (!loader->StreamingMatMul("output.weight", x.data(), logits.data(), dim, config.vocab_size))
+    if (!ExecuteLayerMatMul("output.weight", x.data(), logits.data(), dim, config.vocab_size,
+                            static_cast<std::uint32_t>(std::max(0, config.n_layers))))
     {
         MEMORYSTATUSEX ms2{};
         ms2.dwLength = sizeof(ms2);
@@ -1946,10 +2437,29 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                config.vocab_size, dim, shard_mb, ms2.ullAvailPhys >> 20, ms2.ullAvailVirtual >> 20);
         return {};
     }
+    printf("[DECODE] output_projection complete\n");
+    std::fflush(stdout);
     for (int i = 0; i < config.vocab_size; ++i)
     {
         if (!std::isfinite(logits[i]))
             logits[i] = -std::numeric_limits<float>::max();
+    }
+
+    const auto forwardEnd = std::chrono::steady_clock::now();
+    const double forwardMs = std::chrono::duration<double, std::milli>(forwardEnd - forwardStart).count();
+    printf("[Forward] complete: tokens=%d layers=%d execs=%d elapsed_ms=%.2f "
+           "ms_per_layer_exec=%.3f\n",
+           T, config.n_layers, T * config.n_layers,
+           forwardMs,
+           forwardMs / std::max(1, T * config.n_layers));
+
+    // Memory snapshot after forward completes
+    {
+        MEMORYSTATUSEX ms{};
+        ms.dwLength = sizeof(ms);
+        GlobalMemoryStatusEx(&ms);
+        printf("[MEM] Forward end: avail_phys=%llu MB avail_virt=%llu MB\n",
+               ms.ullAvailPhys >> 20, ms.ullAvailVirtual >> 20);
     }
 
     // Validation hook: Final logits
@@ -1958,5 +2468,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     // Close validation dumping
     RAWRXD_VALIDATION_CLOSE();
 
+    printf("[Forward] returning logits, size=%zu\n", logits.size());
+    std::fflush(stdout);
     return logits;
 }
