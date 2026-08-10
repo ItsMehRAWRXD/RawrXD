@@ -243,6 +243,15 @@ if(RAWRXD_BUILD_CLI)
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
+        src/runtime/TensorExecutionRouter.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+        B014/build/b014_profiler.cpp
         # Agentic components for CLI Ollama testing - TEMPORARILY DISABLED
         # src/agentic/OrchestratorBridge.cpp
         # src/agentic/AgentOllamaClient.cpp
@@ -7605,9 +7614,34 @@ endif()
 # ============================================================================
 # B012: Amortization Crossover Experiment
 # ============================================================================
-add_executable(b012_amortization_test EXCLUDE_FROM_ALL
+set(B012_AMORTIZATION_SOURCES
     B012/build/amortization_test.cpp
-    ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b012_amortization_test EXCLUDE_FROM_ALL
+    ${B012_AMORTIZATION_SOURCES}
 )
 rawrxd_configure_b004_target(b012_amortization_test)
 set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
@@ -7630,6 +7664,251 @@ if(BUILD_TESTING)
              COMMAND b004_transformer_router_streaming_integration)
     add_test(NAME b004_transformer_router_streaming_integration_cpu
              COMMAND b004_transformer_router_streaming_integration_cpu)
+endif()
+
+# ============================================================================
+# B013: Correctness + Long-Run Residency Stability
+# ============================================================================
+set(B013_STABILITY_SOURCES
+    B013/build/stability_test.cpp
+    B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b013_stability_test EXCLUDE_FROM_ALL
+    ${B013_STABILITY_SOURCES}
+)
+rawrxd_configure_b004_target(b013_stability_test)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b013_stability_test PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b013_stability_test PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b013_stability_test PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+# ============================================================================
+# B014: Compute Decomposition Measurement
+# ============================================================================
+set(B014_COMPUTE_SOURCES
+    B014/build/compute_decomposition.cpp
+    B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b014_compute_decomposition EXCLUDE_FROM_ALL
+    ${B014_COMPUTE_SOURCES}
+)
+rawrxd_configure_b004_target(b014_compute_decomposition)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_compute_decomposition PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b014_compute_decomposition PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b014_compute_decomposition PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+# ============================================================================
+# B014-BoundaryProbe: Isolate first failure point
+# ============================================================================
+set(B014_BOUNDARY_SOURCES
+    B014/build/b014_boundary_probe.cpp
+    B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b014_boundary_probe EXCLUDE_FROM_ALL
+    ${B014_BOUNDARY_SOURCES}
+)
+rawrxd_configure_b004_target(b014_boundary_probe)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_boundary_probe PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b014_boundary_probe PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b014_boundary_probe PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+# ============================================================================
+# B014-SingleBoundary: Test one boundary per invocation
+# ============================================================================
+set(B014_SINGLE_SOURCES
+    B014/build/b014_single_boundary.cpp
+    B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b014_single_boundary EXCLUDE_FROM_ALL
+    ${B014_SINGLE_SOURCES}
+)
+rawrxd_configure_b004_target(b014_single_boundary)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_single_boundary PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b014_single_boundary PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b014_single_boundary PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
+endif()
+
+# ============================================================================
+# B014-LifetimeProbe: Pinpoint exact destructor/cleanup failure
+# ============================================================================
+set(B014_LIFETIME_SOURCES
+    B014/build/b014_lifetime_probe.cpp
+    B014/build/b014_profiler.cpp
+    src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+)
+add_executable(b014_lifetime_probe EXCLUDE_FROM_ALL
+    ${B014_LIFETIME_SOURCES}
+)
+rawrxd_configure_b004_target(b014_lifetime_probe)
+set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
+    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_lifetime_probe PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
+if(MSVC)
+    target_compile_options(b014_lifetime_probe PRIVATE
+        /URAWR_ENABLE_VULKAN
+        /URAWR_HAS_VULKAN
+        /URAWR_VULKAN_AVAILABLE)
+else()
+    target_compile_options(b014_lifetime_probe PRIVATE
+        -URAWR_ENABLE_VULKAN
+        -URAWR_HAS_VULKAN
+        -URAWR_VULKAN_AVAILABLE)
 endif()
 
 # ============================================================================
@@ -7994,6 +8273,64 @@ if(BUILD_TESTING)
 endif()
 
 # ============================================================================
+# B010/B011 Fast Experiment — Direct StreamingMatMul residency test
+# ============================================================================
+set(B010B011_FAST_SOURCES
+    tests/b010_b011_fast_experiment.cpp
+    src/rawrxd_model_loader.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/logging/Logger.cpp
+    B014/build/b014_profiler.cpp
+)
+
+add_executable(b010_b011_fast_experiment EXCLUDE_FROM_ALL
+    ${B010B011_FAST_SOURCES}
+)
+target_include_directories(b010_b011_fast_experiment PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b010_b011_fast_experiment PRIVATE cxx_std_20)
+
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b010_b011_fast_experiment PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b010_b011_fast_experiment PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b010_b011_fast_experiment PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b010_b011_fast_experiment PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b010_b011_fast_experiment PRIVATE dxgi)
+    target_compile_definitions(b010_b011_fast_experiment PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b010_b011_fast_experiment PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b010_b011_fast_experiment PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b010_b011_fast_experiment PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b010_b011_fast_experiment PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b010_b011_fast_experiment PRIVATE dxgi)
+else()
+    target_link_libraries(b010_b011_fast_experiment PRIVATE dxgi)
+endif()
+
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b010_b011_fast_experiment APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b010_b011_fast_experiment APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b010_b011_fast_experiment APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+
+target_link_libraries(b010_b011_fast_experiment PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
 # B009: Batched Prefill Certification
 # ============================================================================
 set(B009_BATCHED_PREFILL_SOURCES
@@ -8121,6 +8458,134 @@ endif()
 
 target_link_libraries(b009_batched_prefill_certification PRIVATE
     kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
+# B009-T128 Only Certification (narrowly scoped T=128 correctness check)
+# ============================================================================
+add_executable(b009_t128_certification EXCLUDE_FROM_ALL
+    tests/b009/b009_t128_certification.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+target_include_directories(b009_t128_certification PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b009_t128_certification PRIVATE cxx_std_20)
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b009_t128_certification PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b009_t128_certification PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b009_t128_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b009_t128_certification PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b009_t128_certification PRIVATE dxgi)
+    target_compile_definitions(b009_t128_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b009_t128_certification PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b009_t128_certification PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b009_t128_certification PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b009_t128_certification PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b009_t128_certification PRIVATE dxgi)
+else()
+    target_link_libraries(b009_t128_certification PRIVATE dxgi)
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b009_t128_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b009_t128_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b009_t128_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+target_link_libraries(b009_t128_certification PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
+# B009-T128 Instrumented Hang Diagnosis
+# ============================================================================
+add_executable(b009_t128_instrumented EXCLUDE_FROM_ALL
+    tests/b009/b009_t128_instrumented.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+)
+target_include_directories(b009_t128_instrumented PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+)
+target_compile_features(b009_t128_instrumented PRIVATE cxx_std_20)
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b009_t128_instrumented PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b009_t128_instrumented PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b009_t128_instrumented PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b009_t128_instrumented PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b009_t128_instrumented PRIVATE dxgi)
+    target_compile_definitions(b009_t128_instrumented PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b009_t128_instrumented PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b009_t128_instrumented PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b009_t128_instrumented PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b009_t128_instrumented PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b009_t128_instrumented PRIVATE dxgi)
+else()
+    target_link_libraries(b009_t128_instrumented PRIVATE dxgi)
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b009_t128_instrumented APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b009_t128_instrumented APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b009_t128_instrumented APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+target_link_libraries(b009_t128_instrumented PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32 psapi
 )
 
 if(BUILD_TESTING)

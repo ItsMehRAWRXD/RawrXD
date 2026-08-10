@@ -2710,6 +2710,11 @@ void RawrXDModelLoader::PrintWeightProfile() const
     std::uint64_t acqNs = m_weightProfile.totalAcquisitionNs.load();
     std::uint64_t cmpNs = m_weightProfile.totalComputeNs.load();
     std::uint64_t unique = m_weightProfile.uniqueTensorsAcquired.load();
+    // B013: Fine-grained decomposition
+    std::uint64_t dequantNs = m_weightProfile.totalDequantNs.load();
+    std::uint64_t dotNs = m_weightProfile.totalDotProductNs.load();
+    std::uint64_t loopNs = m_weightProfile.totalLoopOverheadNs.load();
+    std::uint64_t syncNs = m_weightProfile.totalSyncNs.load();
 
     double totalMs = (acqNs + cmpNs) / 1e6;
     double acqMs = acqNs / 1e6;
@@ -2717,6 +2722,10 @@ void RawrXDModelLoader::PrintWeightProfile() const
     double acqPct = totalMs > 0 ? (acqMs / totalMs * 100.0) : 0;
     double cmpPct = totalMs > 0 ? (cmpMs / totalMs * 100.0) : 0;
     double bytesMB = totalBytes / (1024.0 * 1024.0);
+    double dequantMs = dequantNs / 1e6;
+    double dotMs = dotNs / 1e6;
+    double loopMs = loopNs / 1e6;
+    double syncMs = syncNs / 1e6;
 
     printf("\n[B010] ===== Weight Access Profile =====\n");
     printf("[B010] Total StreamingMatMul calls:    %llu\n", static_cast<unsigned long long>(totalCalls));
@@ -2727,6 +2736,11 @@ void RawrXDModelLoader::PrintWeightProfile() const
     printf("[B010] Incidental map calls:            %llu\n", static_cast<unsigned long long>(incidental));
     printf("[B010] Acquisition time (lookup+pin):    %.2f ms (%.1f%%)\n", acqMs, acqPct);
     printf("[B010] Compute time (dequant+dot):       %.2f ms (%.1f%%)\n", cmpMs, cmpPct);
+    // B013: Decomposition
+    printf("[B010]   → Dequantization time:          %.2f ms\n", dequantMs);
+    printf("[B010]   → Dot-product time:             %.2f ms\n", dotMs);
+    printf("[B010]   → Loop/packing overhead:        %.2f ms\n", loopMs);
+    printf("[B010]   → Thread sync/scheduling:       %.2f ms\n", syncMs);
     printf("[B010] Total time:                       %.2f ms\n", totalMs);
     printf("[B010] Repeated acquisitions:            %llu (calls - unique)\n",
            static_cast<unsigned long long>(totalCalls > unique ? totalCalls - unique : 0));
@@ -2753,6 +2767,11 @@ void RawrXDModelLoader::B011PrintResidencyStats() const
     const uint64_t unmaps = m_b011Stats.unmapCount.load(std::memory_order_relaxed);
     const uint64_t acqNs = m_b011Stats.acquisitionNs.load(std::memory_order_relaxed);
     const uint64_t cmpNs = m_b011Stats.computeNs.load(std::memory_order_relaxed);
+    // B013: Fine-grained decomposition
+    const uint64_t dequantNs = m_b011Stats.dequantNs.load(std::memory_order_relaxed);
+    const uint64_t dotNs = m_b011Stats.dotProductNs.load(std::memory_order_relaxed);
+    const uint64_t loopNs = m_b011Stats.loopOverheadNs.load(std::memory_order_relaxed);
+    const uint64_t syncNs = m_b011Stats.syncNs.load(std::memory_order_relaxed);
     const double hitRate = acquisitions != 0
         ? (100.0 * static_cast<double>(hits) / static_cast<double>(acquisitions))
         : 0.0;
@@ -2768,7 +2787,11 @@ void RawrXDModelLoader::B011PrintResidencyStats() const
         "Maps               : %llu\n"
         "Unmaps             : %llu\n"
         "Acquisition time   : %.3f ms\n"
-        "Compute time       : %.3f ms\n",
+        "Compute time       : %.3f ms\n"
+        "  → Dequantization : %.3f ms\n"
+        "  → Dot-product    : %.3f ms\n"
+        "  → Loop overhead  : %.3f ms\n"
+        "  → Thread sync    : %.3f ms\n",
         static_cast<unsigned long long>(acquisitions),
         static_cast<unsigned long long>(hits),
         static_cast<unsigned long long>(misses),
@@ -2778,7 +2801,11 @@ void RawrXDModelLoader::B011PrintResidencyStats() const
         static_cast<unsigned long long>(maps),
         static_cast<unsigned long long>(unmaps),
         static_cast<double>(acqNs) / 1.0e6,
-        static_cast<double>(cmpNs) / 1.0e6);
+        static_cast<double>(cmpNs) / 1.0e6,
+        static_cast<double>(dequantNs) / 1.0e6,
+        static_cast<double>(dotNs) / 1.0e6,
+        static_cast<double>(loopNs) / 1.0e6,
+        static_cast<double>(syncNs) / 1.0e6);
 }
 
 void RawrXDModelLoader::B011EnableResidency(bool enabled)
@@ -3024,35 +3051,68 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         }
     }
 
+    // B014: Begin per-invocation profiling
+    m_b014Profiler.BeginInvocation(name, K, N);
+
     if (b011Enabled && b011Resident)
     {
         // B011: Cache HIT — use resident bytes directly, no StreamingPin needed
+        m_b014Profiler.EndAcquisition();  // B014: acquisition is immediate for cache hit
         const uint8_t* weightData = b011Resident->storage->data();
+
+        // B013: Fine-grained decomposition timers
+        std::uint64_t dequantAccumNs = 0;
+        std::uint64_t dotAccumNs = 0;
+        std::uint64_t loopOverheadAccumNs = 0;
 
         while (row < N)
         {
+            const auto loopStart = std::chrono::steady_clock::now();
             size_t tileRows = std::min(TILE_ROWS, N - row);
+            std::uint64_t iterDequantNs = 0;
+            std::uint64_t iterDotNs = 0;
             for (size_t r = 0; r < tileRows; ++r)
             {
                 const uint8_t* rowSrc = weightData + static_cast<uint64_t>(row + r) * static_cast<uint64_t>(rowBytes);
                 float* dstRow = tile_buf.data() + r * K;
                 const uint8_t* blockPtr = rowSrc;
+                const auto deqStart = std::chrono::steady_clock::now();
                 for (size_t b = 0; b < blocksPerRow; ++b)
                 {
                     dequantBlock(blockPtr, dstRow + b * 256);
                     blockPtr += blockStride;
                 }
+                const auto deqEnd = std::chrono::steady_clock::now();
+                iterDequantNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(deqEnd - deqStart).count());
             }
             for (size_t r = 0; r < tileRows; ++r)
             {
+                const auto dotStart = std::chrono::steady_clock::now();
                 const float* wRow = tile_buf.data() + r * K;
                 float sum = 0.0f;
                 for (size_t k = 0; k < K; ++k)
                     sum += wRow[k] * x[k];
                 y[row + r] = sum;
+                const auto dotEnd = std::chrono::steady_clock::now();
+                iterDotNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(dotEnd - dotStart).count());
             }
+            const auto loopEnd = std::chrono::steady_clock::now();
+            std::uint64_t iterTotalNs = static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(loopEnd - loopStart).count());
+            std::uint64_t iterOverheadNs = (iterTotalNs > iterDequantNs + iterDotNs)
+                ? (iterTotalNs - iterDequantNs - iterDotNs)
+                : 0;
+            dequantAccumNs += iterDequantNs;
+            dotAccumNs += iterDotNs;
+            loopOverheadAccumNs += iterOverheadNs;
             row += tileRows;
         }
+
+        // B014: Record dequantization and dot-product times
+        m_b014Profiler.RecordDequantization(dequantAccumNs);
+        m_b014Profiler.RecordDotProduct(dotAccumNs);
 
         // B010: Profiling — record timing (cache hit path)
         const auto b010_end = std::chrono::steady_clock::now();
@@ -3060,6 +3120,15 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
         m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
         m_b011Stats.computeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+        // B013: Store fine-grained decomposition
+        m_weightProfile.totalDequantNs.fetch_add(dequantAccumNs, std::memory_order_relaxed);
+        m_weightProfile.totalDotProductNs.fetch_add(dotAccumNs, std::memory_order_relaxed);
+        m_weightProfile.totalLoopOverheadNs.fetch_add(loopOverheadAccumNs, std::memory_order_relaxed);
+        m_b011Stats.dequantNs.fetch_add(dequantAccumNs, std::memory_order_relaxed);
+        m_b011Stats.dotProductNs.fetch_add(dotAccumNs, std::memory_order_relaxed);
+        m_b011Stats.loopOverheadNs.fetch_add(loopOverheadAccumNs, std::memory_order_relaxed);
+        // B014: End invocation (cache hit)
+        m_b014Profiler.EndInvocation(true);
         return true;
     }
 
@@ -3117,6 +3186,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                     UnmapIncidentalWindow(incidentalBase);
                     ++missRow;
                 }
+                if (!missOk)
+                    break;
                 continue;
             }
 
@@ -3146,28 +3217,51 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
             // Now dequantize from resident buffer
             const uint8_t* weightData = resident->storage->data();
+            std::uint64_t missDequantAccumNs = 0;
+            std::uint64_t missDotAccumNs = 0;
+            std::uint64_t missLoopOverheadAccumNs = 0;
             while (row < N)
             {
+                const auto loopStart = std::chrono::steady_clock::now();
                 size_t tileRows = std::min(TILE_ROWS, N - row);
+                std::uint64_t iterDequantNs = 0;
+                std::uint64_t iterDotNs = 0;
                 for (size_t r = 0; r < tileRows; ++r)
                 {
                     const uint8_t* rowSrc = weightData + static_cast<uint64_t>(row + r) * static_cast<uint64_t>(rowBytes);
                     float* dstRow = tile_buf.data() + r * K;
                     const uint8_t* blockPtr = rowSrc;
+                    const auto deqStart = std::chrono::steady_clock::now();
                     for (size_t b = 0; b < blocksPerRow; ++b)
                     {
                         dequantBlock(blockPtr, dstRow + b * 256);
                         blockPtr += blockStride;
                     }
+                    const auto deqEnd = std::chrono::steady_clock::now();
+                    iterDequantNs += static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(deqEnd - deqStart).count());
                 }
                 for (size_t r = 0; r < tileRows; ++r)
                 {
+                    const auto dotStart = std::chrono::steady_clock::now();
                     const float* wRow = tile_buf.data() + r * K;
                     float sum = 0.0f;
                     for (size_t k = 0; k < K; ++k)
                         sum += wRow[k] * x[k];
                     y[row + r] = sum;
+                    const auto dotEnd = std::chrono::steady_clock::now();
+                    iterDotNs += static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(dotEnd - dotStart).count());
                 }
+                const auto loopEnd = std::chrono::steady_clock::now();
+                std::uint64_t iterTotalNs = static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(loopEnd - loopStart).count());
+                std::uint64_t iterOverheadNs = (iterTotalNs > iterDequantNs + iterDotNs)
+                    ? (iterTotalNs - iterDequantNs - iterDotNs)
+                    : 0;
+                missDequantAccumNs += iterDequantNs;
+                missDotAccumNs += iterDotNs;
+                missLoopOverheadAccumNs += iterOverheadNs;
                 row += tileRows;
             }
 
@@ -3176,13 +3270,30 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
             m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
             m_b011Stats.computeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
+            m_weightProfile.totalDequantNs.fetch_add(missDequantAccumNs, std::memory_order_relaxed);
+            m_weightProfile.totalDotProductNs.fetch_add(missDotAccumNs, std::memory_order_relaxed);
+            m_weightProfile.totalLoopOverheadNs.fetch_add(missLoopOverheadAccumNs, std::memory_order_relaxed);
+            m_b011Stats.dequantNs.fetch_add(missDequantAccumNs, std::memory_order_relaxed);
+            m_b011Stats.dotProductNs.fetch_add(missDotAccumNs, std::memory_order_relaxed);
+            m_b011Stats.loopOverheadNs.fetch_add(missLoopOverheadAccumNs, std::memory_order_relaxed);
+            // B014: End invocation (cache miss, now resident)
+            m_b014Profiler.RecordDequantization(missDequantAccumNs);
+            m_b014Profiler.RecordDotProduct(missDotAccumNs);
+            m_b014Profiler.EndInvocation(false);
             return true;
         }
         // Fall through to original path if cache population failed
     }
 
+    std::uint64_t fallbackDequantAccumNs = 0;
+    std::uint64_t fallbackDotAccumNs = 0;
+    std::uint64_t fallbackLoopOverheadAccumNs = 0;
+
     while (row < N)
     {
+        const auto loopStart = std::chrono::steady_clock::now();
+        std::uint64_t outerIterDequantNs = 0;
+        std::uint64_t outerIterDotNs = 0;
         size_t shardRows = std::min(pinRows, N - row);
         const uint64_t shardOffset = t.offset + static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
 
@@ -3219,15 +3330,24 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
             float* dstRow = tile_buf.data();
             const uint8_t* blockPtr = rowPtr;
+            const auto deqStart = std::chrono::steady_clock::now();
             for (size_t b = 0; b < blocksPerRow; ++b)
             {
                 dequantBlock(blockPtr, dstRow + b * 256);
                 blockPtr += blockStride;
             }
+            const auto deqEnd = std::chrono::steady_clock::now();
+            outerIterDequantNs += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(deqEnd - deqStart).count());
+
+            const auto dotStart = std::chrono::steady_clock::now();
             float sum = 0.0f;
             for (size_t k = 0; k < K; ++k)
                 sum += dstRow[k] * x[k];
             y[row] = sum;
+            const auto dotEnd = std::chrono::steady_clock::now();
+            outerIterDotNs += static_cast<std::uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(dotEnd - dotStart).count());
 
             UnmapIncidentalWindow(incidentalBase);
             ++row;
@@ -3238,6 +3358,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         while (localRow < shardRows)
         {
             const size_t tileRows = std::min(TILE_ROWS, shardRows - localRow);
+            std::uint64_t iterDequantNs = 0;
+            std::uint64_t iterDotNs = 0;
 
             for (size_t r = 0; r < tileRows; ++r)
             {
@@ -3252,35 +3374,65 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 
                 float* dstRow = tile_buf.data() + r * K;
                 const uint8_t* blockPtr = rowSrc;
+                const auto deqStart = std::chrono::steady_clock::now();
                 for (size_t b = 0; b < blocksPerRow; ++b)
                 {
                     dequantBlock(blockPtr, dstRow + b * 256);
                     blockPtr += blockStride;
                 }
+                const auto deqEnd = std::chrono::steady_clock::now();
+                iterDequantNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(deqEnd - deqStart).count());
             }
 
             for (size_t r = 0; r < tileRows; ++r)
             {
+                const auto dotStart = std::chrono::steady_clock::now();
                 const float* wRow = tile_buf.data() + r * K;
                 float sum = 0.0f;
                 for (size_t k = 0; k < K; ++k)
                     sum += wRow[k] * x[k];
                 y[row + localRow + r] = sum;
+                const auto dotEnd = std::chrono::steady_clock::now();
+                iterDotNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(dotEnd - dotStart).count());
             }
             localRow += tileRows;
+
+            // B013: Accumulate per-inner-loop iteration
+            outerIterDequantNs += iterDequantNs;
+            outerIterDotNs += iterDotNs;
         }
 
+        const auto loopEnd = std::chrono::steady_clock::now();
+        std::uint64_t iterTotalNs = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(loopEnd - loopStart).count());
+        std::uint64_t iterOverheadNs = (iterTotalNs > outerIterDequantNs + outerIterDotNs)
+            ? (iterTotalNs - outerIterDequantNs - outerIterDotNs)
+            : 0;
+        fallbackLoopOverheadAccumNs += iterOverheadNs;
+        fallbackDequantAccumNs += outerIterDequantNs;
+        fallbackDotAccumNs += outerIterDotNs;
         row += shardRows;
     }
 
     // B010: Profiling — record timing and bytes
     const auto b010_end = std::chrono::steady_clock::now();
     const auto b010_totalNs = std::chrono::duration_cast<std::chrono::nanoseconds>(b010_end - b010_acqStart).count();
-    // Acquisition = lookup + first pin (approximated as first 10% or first 1ms, whichever is smaller)
-    // For simplicity, attribute all time to compute since acquisition is negligible vs dequant
     m_weightProfile.totalComputeNs.fetch_add(static_cast<std::uint64_t>(b010_totalNs), std::memory_order_relaxed);
     m_weightProfile.totalBytesRead.fetch_add(static_cast<std::uint64_t>(N * rowBytes), std::memory_order_relaxed);
     m_weightProfile.totalUnmapCalls.fetch_add(1, std::memory_order_relaxed);
+    // B013: Store fine-grained decomposition for fallback path
+    m_weightProfile.totalDequantNs.fetch_add(fallbackDequantAccumNs, std::memory_order_relaxed);
+    m_weightProfile.totalDotProductNs.fetch_add(fallbackDotAccumNs, std::memory_order_relaxed);
+    m_weightProfile.totalLoopOverheadNs.fetch_add(fallbackLoopOverheadAccumNs, std::memory_order_relaxed);
+    m_b011Stats.dequantNs.fetch_add(fallbackDequantAccumNs, std::memory_order_relaxed);
+    m_b011Stats.dotProductNs.fetch_add(fallbackDotAccumNs, std::memory_order_relaxed);
+    m_b011Stats.loopOverheadNs.fetch_add(fallbackLoopOverheadAccumNs, std::memory_order_relaxed);
+    // B014: End invocation (fallback path, no B011)
+    m_b014Profiler.RecordDequantization(fallbackDequantAccumNs);
+    m_b014Profiler.RecordDotProduct(fallbackDotAccumNs);
+    m_b014Profiler.EndInvocation(false);
 
     return true;
 }

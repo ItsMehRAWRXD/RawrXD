@@ -39,6 +39,9 @@
 
 #include <windows.h>
 
+// B014: Per-invocation compute decomposition profiler
+#include "../B014/build/b014_profiler.hpp"
+
 // A few extra Vulkan handle typedefs the loader references that the CPU
 // fallback in vulkan_compute.h may not declare. Guard against real headers.
 #if !RAWR_VULKAN_AVAILABLE
@@ -130,6 +133,11 @@ class RawrXDModelLoader
         std::atomic<std::uint64_t> totalIncidentalMaps{0};  // MapIncidentalWindow calls
         std::atomic<std::uint64_t> totalAcquisitionNs{0};   // Time in tensor lookup + pin
         std::atomic<std::uint64_t> totalComputeNs{0};       // Time in dequant + dot product
+        // B013: Fine-grained compute decomposition
+        std::atomic<std::uint64_t> totalDequantNs{0};       // Time in Q4_K → F32 dequantization only
+        std::atomic<std::uint64_t> totalDotProductNs{0};    // Time in dot-product / GEMM only
+        std::atomic<std::uint64_t> totalLoopOverheadNs{0};  // Time in loop/indexing/packing overhead
+        std::atomic<std::uint64_t> totalSyncNs{0};          // Time in thread sync / scheduling
         std::atomic<std::uint64_t> uniqueTensorsAcquired{0}; // Unique tensor names loaded
         std::unordered_map<std::string, std::atomic<std::uint64_t>> perTensorCalls;
         std::mutex perTensorMutex;
@@ -152,6 +160,11 @@ class RawrXDModelLoader
         std::atomic<std::uint64_t> bytesResident{0};
         std::atomic<std::uint64_t> acquisitionNs{0};
         std::atomic<std::uint64_t> computeNs{0};
+        // B013: Fine-grained compute decomposition (mirrors WeightAccessProfile)
+        std::atomic<std::uint64_t> dequantNs{0};
+        std::atomic<std::uint64_t> dotProductNs{0};
+        std::atomic<std::uint64_t> loopOverheadNs{0};
+        std::atomic<std::uint64_t> syncNs{0};
 
         void Reset()
         {
@@ -164,6 +177,10 @@ class RawrXDModelLoader
             bytesResident.store(0, std::memory_order_relaxed);
             acquisitionNs.store(0, std::memory_order_relaxed);
             computeNs.store(0, std::memory_order_relaxed);
+            dequantNs.store(0, std::memory_order_relaxed);
+            dotProductNs.store(0, std::memory_order_relaxed);
+            loopOverheadNs.store(0, std::memory_order_relaxed);
+            syncNs.store(0, std::memory_order_relaxed);
         }
     };
 
@@ -181,6 +198,14 @@ class RawrXDModelLoader
     void B011EnableResidency(bool enabled);
     bool B011ResidencyEnabled() const;
     void B011ClearResidency();
+
+    // B014: Per-invocation compute decomposition profiler accessors
+    void B014EnableProfiling(bool enabled) { m_b014Profiler.Enable(enabled); }
+    bool B014ProfilingEnabled() const { return m_b014Profiler.IsEnabled(); }
+    void B014ClearProfile() { m_b014Profiler.Clear(); }
+    rawrxd::b014::B014Profiler::Summary B014ComputeSummary() const { return m_b014Profiler.ComputeSummary(); }
+    bool B014ExportProfileJson(const std::string& path) const { return m_b014Profiler.ExportJson(path); }
+    bool B014ExportProfileCsv(const std::string& path) const { return m_b014Profiler.ExportCsv(path); }
     bool GetTensorResidencyInfo(const std::string& name, std::uint64_t& canonicalId,
                   std::uint64_t& storageBytes) const
     {
@@ -222,6 +247,9 @@ class RawrXDModelLoader
         const uint8_t* source,
         size_t bytes,
         uint64_t fileOffset);
+
+    // B014: Per-invocation compute decomposition profiler
+    rawrxd::b014::B014Profiler m_b014Profiler;
 
     VkDevice m_device;
     VkPhysicalDeviceMemoryProperties m_memProps;

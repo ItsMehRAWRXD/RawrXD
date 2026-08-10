@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cmath>
 #include <windows.h>
+#include <psapi.h>
 
 // Forward declarations for AVX-512 helpers used in this TU
 extern void RMSNorm_AVX512(float* out, const float* in, const float* weight, int dim, float eps);
@@ -16,6 +17,27 @@ extern void Softmax_AVX512(float* x, int n);
 extern void VectorAdd_AVX512(float* out, const float* a, const float* b, int n);
 extern void VectorAddScaled_AVX512(float* out, const float* a, float scale, int n);
 extern void Silu_AVX512(float* x, int n);
+
+static void FBFlush(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+    fflush(stdout);
+}
+
+static void FBMetrics(const char* label) {
+    FILETIME ftCreate, ftExit, ftKernel, ftUser;
+    GetProcessTimes(GetCurrentProcess(), &ftCreate, &ftExit, &ftKernel, &ftUser);
+    ULARGE_INTEGER kernelTime, userTime;
+    kernelTime.LowPart = ftKernel.dwLowDateTime; kernelTime.HighPart = ftKernel.dwHighDateTime;
+    userTime.LowPart = ftUser.dwLowDateTime; userTime.HighPart = ftUser.dwHighDateTime;
+    double cpuSec = (kernelTime.QuadPart + userTime.QuadPart) / 10'000'000.0;
+    PROCESS_MEMORY_COUNTERS pmc{}; pmc.cb = sizeof(pmc);
+    GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc));
+    FBFlush("[FB-METRIC] %s | CPU=%.2fs | WS=%.1fMB | PeakWS=%.1fMB\n",
+            label, cpuSec, pmc.WorkingSetSize/(1024.0*1024.0), pmc.PeakWorkingSetSize/(1024.0*1024.0));
+}
 
 std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& tokens, int start_pos)
 {
@@ -108,12 +130,18 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
     std::vector<float> scores(cache_ctx);
     std::vector<uint8_t> score_valid(cache_ctx, 0);
 
+    FBFlush("[ForwardBatch] ENTRY: tokens=%d layers=%d dim=%d heads=%d kv_heads=%d head_dim=%d kv_dim=%d hidden=%d cache_ctx=%d\n",
+            T, config.n_layers, dim, n_heads, n_kv_heads, head_dim, kv_dim, config.hidden_dim, cache_ctx);
+    FBMetrics("forwardbatch_entry");
+
     printf("[ForwardBatch] prefill: tokens=%d layers=%d\n", T, config.n_layers);
     const auto batchStart = std::chrono::steady_clock::now();
 
     for (int l = 0; l < config.n_layers; ++l)
     {
         const std::string prefix = "blk." + std::to_string(l) + ".";
+        FBFlush("[ForwardBatch] LAYER %d/%d START\n", l + 1, config.n_layers);
+        FBMetrics("layer_start");
 
         // --- Attention norm (per-token) ---
         float* attn_norm = loader->GetTensor(prefix + "attn_norm.weight");
@@ -122,6 +150,7 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             printf("[ForwardBatch] FATAL: Missing %sattn_norm.weight\n", prefix.c_str());
             return {};
         }
+        FBFlush("[ForwardBatch] LAYER %d: attn_norm loaded\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* x = hidden.data() + static_cast<size_t>(t) * dim;
@@ -129,8 +158,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             std::memcpy(res_t, x, static_cast<size_t>(dim) * sizeof(float));
             RMSNorm_AVX512(x, x, attn_norm, dim, config.rms_norm_eps);
         }
+        FBFlush("[ForwardBatch] LAYER %d: attn_norm complete (T=%d)\n", l + 1, T);
 
         // --- QKV projections (batched matmul) ---
+        FBFlush("[ForwardBatch] LAYER %d: QKV projections begin\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* x = hidden.data() + static_cast<size_t>(t) * dim;
@@ -149,8 +180,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             RoPE_AVX512(qt, nullptr, current_pos + t, head_dim, n_heads);
             RoPE_AVX512(kt, nullptr, current_pos + t, head_dim, n_kv_heads);
         }
+        FBFlush("[ForwardBatch] LAYER %d: QKV projections complete\n", l + 1);
 
         // --- KV Cache Update (all tokens) ---
+        FBFlush("[ForwardBatch] LAYER %d: KV cache update begin\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             const int64_t abs_pos = current_pos + static_cast<int64_t>(t);
@@ -163,8 +196,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
                    static_cast<size_t>(kv_dim) * sizeof(float));
             kv_cache_pos[static_cast<size_t>(l) * ctx_u + static_cast<size_t>(slot)] = abs_pos;
         }
+        FBFlush("[ForwardBatch] LAYER %d: KV cache update complete\n", l + 1);
 
         // --- Multi-head attention (per-token, causal) ---
+        FBFlush("[ForwardBatch] LAYER %d: Attention begin (T=%d, n_heads=%d)\n", l + 1, T, n_heads);
         for (int t = 0; t < T; ++t)
         {
             const int64_t abs_pos = current_pos + static_cast<int64_t>(t);
@@ -227,8 +262,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
                 }
             }
         }
+        FBFlush("[ForwardBatch] LAYER %d: Attention complete (T=%d)\n", l + 1, T);
 
         // --- Output projection (per-token) ---
+        FBFlush("[ForwardBatch] LAYER %d: Output projection begin\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* out_t = att_out.data() + static_cast<size_t>(t) * dim;
@@ -236,8 +273,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             if (!ExecuteLayerMatMul(prefix + "attn_output.weight", out_t, fin_t, dim, dim, static_cast<uint32_t>(l)))
                 return {};
         }
+        FBFlush("[ForwardBatch] LAYER %d: Output projection complete\n", l + 1);
 
         // --- Residual add ---
+        FBFlush("[ForwardBatch] LAYER %d: Residual add begin\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* x = hidden.data() + static_cast<size_t>(t) * dim;
@@ -247,8 +286,10 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             for (int i = 0; i < dim; ++i)
                 if (!std::isfinite(x[i])) x[i] = 0.0f;
         }
+        FBFlush("[ForwardBatch] LAYER %d: Residual add complete\n", l + 1);
 
         // --- FFN (per-token, dense path only for B009 scaffold) ---
+        FBFlush("[ForwardBatch] LAYER %d: FFN begin\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* x = hidden.data() + static_cast<size_t>(t) * dim;
@@ -285,6 +326,9 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
             for (int i = 0; i < dim; ++i)
                 if (!std::isfinite(x[i])) x[i] = 0.0f;
         }
+        FBFlush("[ForwardBatch] LAYER %d: FFN complete\n", l + 1);
+        FBFlush("[ForwardBatch] LAYER %d/%d COMPLETE\n", l + 1, config.n_layers);
+        FBMetrics("layer_complete");
     }
 
     // -----------------------------------------------------------------------

@@ -1,0 +1,113 @@
+{
+  "b013_version": "0.1.0",
+  "timestamp": "2026-08-10T00:00:00Z",
+  "project": "RawrXD Inference Engine",
+  "parent_baseline": "B012",
+  "parent_cache_experiment": "B011",
+  "scope": "Correctness + Long-Run Residency Stability",
+  "description": "Transition B011 from 'fastest benchmark' to 'production-safe default' by validating correctness, memory safety, and state lifecycle across repeated generations, unload/reload, context reset, and sustained runs.",
+  "experimental_question": "Is B011 residency safe to enable by default for all inference workloads on this platform?",
+  "test_matrix": {
+    "scenarios": [
+      "repeated_generations",
+      "unload_reload",
+      "context_reset",
+      "memory_growth",
+      "equivalence_b010_b011",
+      "sustained_run"
+    ],
+    "prompts": [
+      "Hi",
+      "Hello world, this is a test of context reset behavior"
+    ],
+    "decode_lengths": [
+      4,
+      8,
+      32
+    ],
+    "model": "unlock-1B-Q4_K_M.gguf",
+    "comparisons": [
+      "B010 (no cache)",
+      "B011 (with cache)"
+    ]
+  },
+  "metrics_per_run": [
+    "total_wall_time_ms",
+    "prefill_time_ms",
+    "decode_time_ms",
+    "tokens_generated",
+    "first_token_id",
+    "first_token_consistent_across_generations",
+    "cache_hits",
+    "cache_misses",
+    "hit_rate",
+    "bytes_read",
+    "maps",
+    "unmaps",
+    "resident_bytes",
+    "working_set_before_bytes",
+    "working_set_after_bytes",
+    "working_set_growth_bytes",
+    "working_set_growth_pct",
+    "b010_b011_equivalence"
+  ],
+  "success_criteria": {
+    "repeated_generations": "All 5 generations produce identical first token (determinism). No crash.",
+    "unload_reload": "First token identical across unload/reload cycles. No crash.",
+    "context_reset": "First token identical before/after context reset. No crash.",
+    "memory_growth": "Working set growth < 5% across 10 generations. No monotonic leak.",
+    "equivalence_b010_b011": "B010 and B011 produce identical first token for same prompt. No crash.",
+    "sustained_run": "32-token generation completes without anomaly. Working set delta < 10%."
+  },
+  "gates": {
+    "b013_test_harness": {
+      "status": "PASS",
+      "description": "Test harness compiles and links successfully (b013_stability_test.exe)"
+    },
+    "b013_repeated_generations": {
+      "status": "OVERWRITTEN",
+      "description": "Evidence lost due to single-file overwrite in sweep script. Re-run required."
+    },
+    "b013_unload_reload": {
+      "status": "OVERWRITTEN",
+      "description": "Evidence lost due to single-file overwrite in sweep script. Re-run required."
+    },
+    "b013_context_reset": {
+      "status": "OVERWRITTEN",
+      "description": "Evidence lost due to single-file overwrite in sweep script. Re-run required."
+    },
+    "b013_memory_growth": {
+      "status": "OVERWRITTEN",
+      "description": "Evidence lost due to single-file overwrite in sweep script. Re-run required."
+    },
+    "b013_equivalence": {
+      "status": "OVERWRITTEN",
+      "description": "Evidence lost due to single-file overwrite in sweep script. Re-run required."
+    },
+    "b013_sustained_run": {
+      "status": "CRASHED",
+      "description": "Process terminated abruptly during decode iteration ~34. No completion footer. Investigation required."
+    },
+    "b013_report": {
+      "status": "IN_PROGRESS",
+      "description": "Partial evidence documented. Crash reported honestly. Re-run required after fixing sweep script."
+    }
+  },
+  "artifacts": {
+    "manifest": "B013/manifest.json",
+    "report": "B013/B013-REPORT.md",
+    "test_harness": "B013/build/stability_test.cpp",
+    "raw_results": "B013/performance/b013_raw_results.jsonl",
+    "sweep_script": "B013/build/run_all_scenarios.ps1"
+  },
+  "notes": [
+    "B013 is the gate between 'faster in the controlled benchmark' and 'safe default runtime behavior'",
+    "Evidence boundary from B012: decode lengths 1–32 certified. 64/128/256 excluded.",
+    "B013 must prove determinism, memory safety, and state lifecycle correctness before B011 can be recommended as default",
+    "Working set monitoring uses Windows PROCESS_MEMORY_COUNTERS (GetProcessMemoryInfo)",
+    "Context reset is simulated by re-running generation with same prompt; true KV cache reset requires RawrXDTransformer support",
+    "CRITICAL: run_all_scenarios.ps1 used a single tmp_stdout.txt file, causing scenario overwrite. Only sustained_run output preserved.",
+    "CRITICAL: sustained_run crashed during decode iteration ~34. Process terminated without completion footer. Investigation required.",
+    "B011 residency hit rate observed at 98.27% in overwritten runs — functional but not certified for any specific scenario"
+  ]
+}
