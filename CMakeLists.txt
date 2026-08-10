@@ -8296,6 +8296,8 @@ target_include_directories(b010_b011_fast_experiment PRIVATE
     ${CMAKE_SOURCE_DIR}/include/core
 )
 target_compile_features(b010_b011_fast_experiment PRIVATE cxx_std_20)
+# B014: Enable AVX-512 for dot-product optimization
+target_compile_options(b010_b011_fast_experiment PRIVATE /arch:AVX512)
 
 if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
     target_include_directories(b010_b011_fast_experiment PRIVATE "${RAWR_VULKAN_INCLUDE}")

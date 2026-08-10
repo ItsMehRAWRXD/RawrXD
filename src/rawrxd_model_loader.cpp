@@ -26,6 +26,37 @@
 
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" unsigned int rawr_cpu_has_avx512();
+
+// B014: AVX-512 dot-product inline (self-contained, no transformer dependency)
+#ifdef __AVX512F__
+static float DotProduct_AVX512(const float* a, const float* b, int size)
+{
+    __m512 sum_vec = _mm512_setzero_ps();
+    int i = 0;
+    for (; i + 15 < size; i += 16)
+    {
+        __m512 a_vec = _mm512_loadu_ps(a + i);
+        __m512 b_vec = _mm512_loadu_ps(b + i);
+        sum_vec = _mm512_fmadd_ps(a_vec, b_vec, sum_vec);
+    }
+    float sum = _mm512_reduce_add_ps(sum_vec);
+    for (; i < size; i++)
+    {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+#else
+static float DotProduct_AVX512(const float* a, const float* b, int size)
+{
+    float sum = 0.0f;
+    for (int i = 0; i < size; i++)
+    {
+        sum += a[i] * b[i];
+    }
+    return sum;
+}
+#endif
 // ABI note (Win64): avoid returning small structs from MASM to C++.
 // RawrXD_MapModelView2MB returns requested pointer in RAX and writes either:
 // - base pointer (for UnmapViewOfFile) on success
@@ -3090,9 +3121,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             {
                 const auto dotStart = std::chrono::steady_clock::now();
                 const float* wRow = tile_buf.data() + r * K;
-                float sum = 0.0f;
-                for (size_t k = 0; k < K; ++k)
-                    sum += wRow[k] * x[k];
+                // B014: AVX-512 dot-product (was scalar loop)
+                float sum = DotProduct_AVX512(wRow, x, static_cast<int>(K));
                 y[row + r] = sum;
                 const auto dotEnd = std::chrono::steady_clock::now();
                 iterDotNs += static_cast<std::uint64_t>(
