@@ -3275,9 +3275,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                 {
                     const auto dotStart = std::chrono::steady_clock::now();
                     const float* wRow = tile_buf.data() + r * K;
-                    float sum = 0.0f;
-                    for (size_t k = 0; k < K; ++k)
-                        sum += wRow[k] * x[k];
+                    // B014: AVX-512 dot-product (was scalar loop)
+                    float sum = DotProduct_AVX512(wRow, x, static_cast<int>(K));
                     y[row + r] = sum;
                     const auto dotEnd = std::chrono::steady_clock::now();
                     iterDotNs += static_cast<std::uint64_t>(
@@ -3419,9 +3418,8 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             {
                 const auto dotStart = std::chrono::steady_clock::now();
                 const float* wRow = tile_buf.data() + r * K;
-                float sum = 0.0f;
-                for (size_t k = 0; k < K; ++k)
-                    sum += wRow[k] * x[k];
+                // B014: AVX-512 dot-product (was scalar loop)
+                float sum = DotProduct_AVX512(wRow, x, static_cast<int>(K));
                 y[row + localRow + r] = sum;
                 const auto dotEnd = std::chrono::steady_clock::now();
                 iterDotNs += static_cast<std::uint64_t>(
