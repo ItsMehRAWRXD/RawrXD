@@ -352,4 +352,26 @@ void* gguf_reader_load_tensor(void* handle, const char* name) {
     return nullptr;
 }
 
+// ============================================================================
+// Missing ASM kernel stubs (added for RawrEngine link closure)
+// ============================================================================
+void Sovereign_Q4K_GEMV_AVX2(const uint8_t* weights, const float* input,
+                                float* output, uint32_t n, uint32_t k) {
+    (void)weights; (void)input; (void)output; (void)n; (void)k;
+}
+
+void Deep2_RMSNorm_AVX2(const float* input, float* output, uint32_t n,
+                         float eps) {
+    // Real RMSNorm computation
+    float sum = 0.0f;
+    for (uint32_t i = 0; i < n; ++i) {
+        sum += input[i] * input[i];
+    }
+    float rms = std::sqrt(sum / n + eps);
+    float scale = 1.0f / rms;
+    for (uint32_t i = 0; i < n; ++i) {
+        output[i] = input[i] * scale;
+    }
+}
+
 } // extern "C"

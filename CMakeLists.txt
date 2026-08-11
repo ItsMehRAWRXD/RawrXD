@@ -841,6 +841,9 @@ set(SOURCES
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/TensorPlacementManager.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/StreamRouterAdapter.cpp
+    B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
     src/complete_server.cpp
@@ -857,6 +860,10 @@ set(SOURCES
     src/core/memory_production.cpp
     src/core/link_stubs_production.cpp
     src/vulkan_kernel_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/compression/zlib_runtime_loader.cpp
+    src/deep2/MASMKernelStubs.cpp
     
     src/engine/gguf_core.cpp
     src/engine/inference_kernels.cpp
@@ -3401,6 +3408,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
     src/core/swarm_scheduler.cpp
+    src/core/gguf_swarm_plan_builder.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
@@ -3410,6 +3418,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/RouterPredictiveMemoryBridge.cpp
     src/runtime/GenerationBouncer.cpp
     src/runtime/StreamRouterAdapter.cpp
@@ -3517,14 +3526,14 @@ target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/codec
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
-    ${VULKAN_INCLUDE_DIR}
+    ${RAWR_VULKAN_INCLUDE}
 )
 
 target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
 
 if(WIN32)
     target_link_libraries(InferenceEngine PUBLIC
-        shlwapi psapi dbghelp winhttp bcrypt advapi32 crypt32
+        shlwapi psapi dbghelp winhttp bcrypt advapi32 crypt32 dxgi
     )
 endif()
 
@@ -6968,6 +6977,8 @@ if(NOT TARGET rawrxd)
         src/core/link_stubs.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/logging/Logger.cpp
+        B014/build/b014_profiler.cpp
+        src/runtime/StreamRouterAdapter.cpp
     )
 
 target_include_directories(rawrxd PRIVATE
@@ -7705,7 +7716,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
-add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp)
+add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp)
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation)
 

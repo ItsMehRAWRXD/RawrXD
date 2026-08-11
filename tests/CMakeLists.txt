@@ -58,6 +58,7 @@ if(WIN32)
     list(APPEND RAWRXD_TEST_COMMON_LIBS 
         wintrust    # For WinVerifyTrust
         crypt32     # For ImageEnumerateCertificates
+        imagehlp    # For ImageEnumerateCertificates import
     )
 endif()
 
@@ -128,7 +129,8 @@ endif()
 # LLM Connectivity Test - Uses WinHTTP-based client (no curl dependency)
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
     add_executable(test_llm_connectivity test_llm_connectivity.cpp 
-        ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client.cpp)
+        ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client.cpp
+        ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client_impl.cpp)
     target_include_directories(test_llm_connectivity PRIVATE 
         ${CMAKE_SOURCE_DIR}/include 
         ${CMAKE_SOURCE_DIR}/src 
@@ -229,9 +231,13 @@ endif()
 
 # GGUF Integration Test
 if(NOT TARGET test_gguf_integration AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_gguf_integration.cpp")
-    add_executable(test_gguf_integration test_gguf_integration.cpp)
+    add_executable(test_gguf_integration
+        test_gguf_integration.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/gguf_swarm_plan_builder.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/CapacityManager.cpp
+    )
     target_include_directories(test_gguf_integration PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
-    target_link_libraries(test_gguf_integration PRIVATE ${RAWRXD_TEST_COMMON_LIBS})
+    target_link_libraries(test_gguf_integration PRIVATE ${RAWRXD_TEST_COMMON_LIBS} dxgi)
     # Link against InferenceEngine library if available
     if(TARGET InferenceEngine)
         target_link_libraries(test_gguf_integration PRIVATE InferenceEngine)
@@ -283,8 +289,11 @@ if(NOT TARGET VAL063_InferenceGatewayHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_
         ${CMAKE_SOURCE_DIR}/src/rawrxd_tokenizer.cpp
         ${CMAKE_SOURCE_DIR}/src/rawrxd_transformer.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/TensorExecutionRouter.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/StreamRouterAdapter.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/TransferScheduler.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/PredictiveMemoryManager.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/CapacityManager.cpp
+        ${CMAKE_SOURCE_DIR}/B014/build/b014_profiler.cpp
     )
     target_include_directories(VAL063_InferenceGatewayHarness PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(VAL063_InferenceGatewayHarness PROPERTIES 
@@ -292,8 +301,9 @@ if(NOT TARGET VAL063_InferenceGatewayHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_
         CXX_STANDARD 23
     )
     if(WIN32)
-        target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE kernel32 user32 psapi)
+        target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE kernel32 user32 psapi dxgi)
     endif()
+    target_compile_definitions(VAL063_InferenceGatewayHarness PRIVATE RAWRXD_NO_VULKAN)
     if(TARGET InferenceEngine)
         target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE InferenceEngine)
     endif()
@@ -535,6 +545,7 @@ if(NOT TARGET test_predictive_memory_subsystem AND EXISTS "${CMAKE_CURRENT_SOURC
     add_executable(test_predictive_memory_subsystem
         test_predictive_memory_subsystem.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/TensorExecutionRouter.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/StreamRouterAdapter.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/PlacementPolicy.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/ResidencyTracker.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/WorkingSetPredictor.cpp

@@ -79,7 +79,7 @@ endfunction()
 add_library(telemetry_masm_kernels STATIC)
 
 # Add dummy C++ file to force CMake to use C++ linker
-target_sources(telemetry_masm_kernels PRIVATE masm_kernels_dummy.cpp)
+target_sources(telemetry_masm_kernels PRIVATE masm_kernels_dummy.cpp masm_kernel_stubs.cpp)
 
 # Add MASM source files
 # add_masm_source(telemetry_masm_kernels masm/silu_activation_avx512.asm)  # Old kernel (has errors)

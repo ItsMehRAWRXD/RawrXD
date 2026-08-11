@@ -123,8 +123,6 @@ public:
     size_t headDimSize() const { return 0; }
 };
 
-void AttentionWithCache(const float*, const KVCache&, size_t, size_t, float*, size_t) {}
-
 // ============================================================================
 // GGUFLoader
 // ============================================================================
@@ -361,3 +359,55 @@ public:
 
 } // namespace sampling
 } // namespace rawrxd
+
+// ============================================================================
+// rxd::reverse namespace (for ReverseIntegration.cpp)
+// ============================================================================
+namespace rxd {
+namespace reverse {
+
+struct ReverseModel {};
+struct Match {};
+
+class ReverseEngine {
+public:
+    ReverseEngine(const ReverseModel&) {}
+    ~ReverseEngine() = default;
+    std::vector<Match> Scan(const uint8_t*, uint64_t) { return {}; }
+};
+
+class ReverseModelLoader {
+public:
+    static ReverseModel LoadFromFile(const std::string&) { return {}; }
+};
+
+} // namespace reverse
+} // namespace rxd
+
+// ============================================================================
+// Deep2::DualGPUHook (for ReverseHotpatchEngine.cpp)
+// ============================================================================
+namespace Deep2 {
+
+class DualGPUHook {
+public:
+    void RecoverAll() {}
+};
+
+} // namespace Deep2
+
+// ============================================================================
+// External ASM kernel symbols (for RawrXDInferenceAdapter.cpp)
+// ============================================================================
+extern "C" {
+    void Sovereign_Q4K_GEMV_AVX2() {}
+    void Dequant_Q4_0_AVX2() {}
+    void rmsnorm_forward_avx2() {}
+    void softmax_forward_avx2() {}
+    void silu_activation_avx512() {}
+    void flash_attn_asm_avx2() {}
+    void bpe_encode() {}
+    void* gguf_reader_open(const char*) { return nullptr; }
+    void gguf_reader_close(void*) {}
+    int gguf_reader_num_tensors(void*) { return 0; }
+}

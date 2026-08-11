@@ -44,6 +44,7 @@ add_executable(rawrxd_ceo_cli
     ${CMAKE_SOURCE_DIR}/src/core/unified_hotpatch_manager.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/DiskRecoveryAgent.cpp
     ${CMAKE_SOURCE_DIR}/src/win32app/agentic_bridge_headless.cpp
+        ${CMAKE_SOURCE_DIR}/src/ceo/disk_recovery_stubs.cpp
 )
 
 target_link_libraries(rawrxd_ceo_cli PRIVATE
