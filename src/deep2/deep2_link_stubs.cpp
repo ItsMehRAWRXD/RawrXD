@@ -123,8 +123,6 @@ public:
     size_t headDimSize() const { return 0; }
 };
 
-void AttentionWithCache(const float*, const KVCache&, size_t, size_t, float*, size_t) {}
-
 // ============================================================================
 // GGUFLoader
 // ============================================================================
