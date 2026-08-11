@@ -8480,6 +8480,7 @@ set(B015_RESIDENCY_VALIDATION_SOURCES
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/ResidencyTracker.cpp
