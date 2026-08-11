@@ -6,7 +6,7 @@
 
 #include "mcp_bridge.hpp"
 #include "../../Ship/Logger.hpp"
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 namespace RawrXD::Deep2 {
 

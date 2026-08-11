@@ -19,7 +19,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <winhttp.h>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")

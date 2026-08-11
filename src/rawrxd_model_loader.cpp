@@ -1,4 +1,5 @@
 #include "rawrxd_model_loader.h"
+#include "runtime/memory/WeightResidencyPool.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -2927,6 +2928,151 @@ RawrXDModelLoader::B011AcquireResidentWeight(
     m_b011Stats.acquisitionNs.fetch_add(static_cast<std::uint64_t>(elapsed), std::memory_order_relaxed);
 
     return resident;
+}
+
+// ============================================================================
+// B015 — Materialize fully dequantized FP32 tensor and commit to WeightResidencyPool
+// ============================================================================
+bool RawrXDModelLoader::B015MaterializeDequantizedTensor(const std::string& tensorName)
+{
+    if (!m_b015Pool)
+        return false;
+
+    // Already resident?
+    if (m_b015Pool->acquire(tensorName) != nullptr)
+    {
+        m_b015Pool->release(tensorName);
+        return true;
+    }
+
+    auto it = m_tensors.find(tensorName);
+    if (it == m_tensors.end())
+        return false;
+    const Tensor& t = it->second;
+
+    // Determine quantization parameters
+    size_t blockStride = 0;
+    size_t blockElements = 0;
+    switch (t.type)
+    {
+        case 2:  blockStride = 18;  blockElements = 32;   break; // Q4_0
+        case 10: blockStride = 84;  blockElements = 256;  break; // Q2_K
+        case 11: blockStride = 110; blockElements = 256;  break; // Q3_K
+        case 12: blockStride = 144; blockElements = 256;  break; // Q4_K
+        case 13: blockStride = 176; blockElements = 256;  break; // Q5_K
+        case 14: blockStride = 210; blockElements = 256;  break; // Q6_K
+        default: return false;
+    }
+    if (blockStride == 0 || t.dims.size() < 2)
+        return false;
+
+    const size_t N = t.dims[0];
+    const size_t K = t.dims[1];
+    if (K % blockElements != 0)
+        return false;
+
+    const size_t blocksPerRow = K / blockElements;
+    const size_t rowBytes = blocksPerRow * blockStride;
+    const size_t totalQuantBytes = N * rowBytes;
+    const size_t totalFloatBytes = N * K * sizeof(float);
+
+    // Allocate dequantized buffer
+    std::vector<float> dequantized(N * K);
+
+    // Map and dequantize row-by-row
+    const uint64_t maxFallbackBytes =
+        (m_fileSize > 16ULL * 1024ULL * 1024ULL * 1024ULL)
+            ? (2ULL * 1024ULL * 1024ULL * 1024ULL)
+            : ((m_fileSize > 8ULL * 1024ULL * 1024ULL * 1024ULL)
+                   ? (1ULL * 1024ULL * 1024ULL * 1024ULL)
+                   : (512ULL * 1024ULL * 1024ULL));
+    const uint64_t pinBudget = std::min<uint64_t>(windowSize ? windowSize : maxFallbackBytes, maxFallbackBytes);
+    size_t pinRows = static_cast<size_t>(pinBudget / rowBytes);
+    if (pinRows == 0) pinRows = 1;
+
+    size_t row = 0;
+    while (row < N)
+    {
+        size_t shardRows = std::min(pinRows, N - row);
+        const uint64_t shardOffset = t.offset + static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
+
+        StreamingPin pin(nullptr, 0, 0);
+        while (shardRows > 0)
+        {
+            const size_t shardBytes = shardRows * rowBytes;
+            pin = StreamingPin(this, shardOffset, shardBytes);
+            if (pin.IsValid()) break;
+            shardRows /= 2;
+        }
+        if (shardRows == 0 || !pin.IsValid())
+        {
+            // Incidental fallback for single row
+            const uint64_t rowOffset = t.offset + static_cast<uint64_t>(row) * static_cast<uint64_t>(rowBytes);
+            void* incidentalBase = nullptr;
+            uint8_t* rowPtr = nullptr;
+            if (!MapIncidentalWindow(rowOffset, rowBytes, incidentalBase, rowPtr))
+                return false;
+
+            float* dstRow = dequantized.data() + row * K;
+            const uint8_t* blockPtr = rowPtr;
+            for (size_t b = 0; b < blocksPerRow; ++b)
+            {
+                switch (t.type)
+                {
+                    case 2:  DequantQ4_0_Block(blockPtr, dstRow + b * 32); break;
+                    case 10: DequantQ2K_Block(blockPtr, dstRow + b * 256); break;
+                    case 11: DequantQ3K_Block(blockPtr, dstRow + b * 256); break;
+                    case 12:
+#ifdef RAWR_ENABLE_ASM_KERNELS
+                        Dequant_Q4_K(const_cast<uint8_t*>(blockPtr), dstRow + b * 256);
+#else
+                        std::memset(dstRow + b * 256, 0, 256 * sizeof(float));
+#endif
+                        break;
+                    case 13: DequantQ5K_Block(blockPtr, dstRow + b * 256); break;
+                    case 14: DequantQ6K_Block(blockPtr, dstRow + b * 256); break;
+                }
+                blockPtr += blockStride;
+            }
+            UnmapIncidentalWindow(incidentalBase);
+            ++row;
+            continue;
+        }
+
+        for (size_t r = 0; r < shardRows; ++r)
+        {
+            const uint64_t rowLocalOffset = static_cast<uint64_t>(r) * static_cast<uint64_t>(rowBytes);
+            const uint8_t* rowSrc = static_cast<const uint8_t*>(pin.GetPointer(rowLocalOffset));
+            if (!rowSrc) return false;
+
+            float* dstRow = dequantized.data() + (row + r) * K;
+            const uint8_t* blockPtr = rowSrc;
+            for (size_t b = 0; b < blocksPerRow; ++b)
+            {
+                switch (t.type)
+                {
+                    case 2:  DequantQ4_0_Block(blockPtr, dstRow + b * 32); break;
+                    case 10: DequantQ2K_Block(blockPtr, dstRow + b * 256); break;
+                    case 11: DequantQ3K_Block(blockPtr, dstRow + b * 256); break;
+                    case 12:
+#ifdef RAWR_ENABLE_ASM_KERNELS
+                        Dequant_Q4_K(const_cast<uint8_t*>(blockPtr), dstRow + b * 256);
+#else
+                        std::memset(dstRow + b * 256, 0, 256 * sizeof(float));
+#endif
+                        break;
+                    case 13: DequantQ5K_Block(blockPtr, dstRow + b * 256); break;
+                    case 14: DequantQ6K_Block(blockPtr, dstRow + b * 256); break;
+                }
+                blockPtr += blockStride;
+            }
+        }
+        row += shardRows;
+    }
+
+    // Commit fully dequantized tensor to B015 pool
+    const bool committed = m_b015Pool->commit(tensorName, dequantized.data(), totalFloatBytes);
+    return committed;
 }
 
 bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N)

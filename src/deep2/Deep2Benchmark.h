@@ -26,7 +26,8 @@ enum class BenchmarkPhase : uint8_t {
 // Stream Benchmark Telemetry Structure
 // Native ABI for Deep2 Engine telemetry emission
 // ============================================================================
-struct __attribute__((packed)) StreamBenchmark {
+#pragma pack(push, 1)
+struct StreamBenchmark {
     // Identity
     uint64_t    timestamp_ns;
     uint32_t    model_id_hash;
@@ -77,6 +78,7 @@ struct __attribute__((packed)) StreamBenchmark {
         memset(this, 0, sizeof(*this));
     }
 };
+#pragma pack(pop)
 
 // ============================================================================
 // Endurance Test Result

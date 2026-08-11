@@ -27,6 +27,13 @@ enum class QuantType : uint16_t {
     F8_E4M3 = 3,
     F8_E5M2 = 4,
 
+    // Integer types
+    I32     = 5,
+    I16     = 6,
+    I8      = 7,
+    U8      = 8,
+    I64     = 9,
+
     // GGUF quantizations (treated as compression, not format)
     Q4_0    = 10,
     Q4_1    = 11,

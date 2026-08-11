@@ -8,7 +8,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <math>
+#include <cmath>
 #include <array>
 #include <atomic>
 #include <chrono>
@@ -171,7 +171,7 @@ public:
         uint64_t last_report_time = 0;
     };
 
-    TpsStats GetTpsStats() const noexcept;
+    const TpsStats& GetTpsStats() const noexcept;
     void ResetTpsStats() noexcept;
 
     // VRAM hotpatch: move weights between GPU0/GPU1 mid-inference

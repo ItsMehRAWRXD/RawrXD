@@ -19,6 +19,9 @@
 #include <queue>
 #include <condition_variable>
 
+// CUDA stream handle typedef for non-CUDA builds
+typedef void* cudaStream_t;
+
 // ============================================================================
 // Production API Contract v1.0
 // ============================================================================

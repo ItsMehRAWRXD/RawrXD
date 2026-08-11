@@ -8,6 +8,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -50,16 +51,16 @@ public:
         if (status != ERROR_SUCCESS) return false;
         
         // AMD GPU counters (RX 7800 XT)
-        PdhAddCounter(gpuQuery, 
+        PdhAddCounterA(gpuQuery, 
             "\\GPU Engine(*)\\Utilization Percentage", 
             0, &gpuUtilCounter);
-        PdhAddCounter(gpuQuery,
+        PdhAddCounterA(gpuQuery,
             "\\GPU Adapter Memory(*)\\Dedicated Usage",
             0, &vramUtilCounter);
-        PdhAddCounter(gpuQuery,
+        PdhAddCounterA(gpuQuery,
             "\\AMD GPU(*)\\Temperature",
             0, &gpuTempCounter);
-        PdhAddCounter(gpuQuery,
+        PdhAddCounterA(gpuQuery,
             "\\AMD GPU(*)\\Power",
             0, &gpuPowerCounter);
         
@@ -124,7 +125,8 @@ bool BenchmarkHarness::initialize(const std::string& modelPath) {
     pImpl->tokenizer = std::make_unique<CharTokenizer>();
     
     EngineConfig config;
-    config.modelPath = modelPath;
+    strncpy(config.modelPath, modelPath.c_str(), sizeof(config.modelPath) - 1);
+    config.modelPath[sizeof(config.modelPath) - 1] = '\0';
     
     if (!pImpl->engine->initialize(config)) {
         return false;

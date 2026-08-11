@@ -1256,6 +1256,41 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
             }
             m_weightResidencyPool->release(tensorName);
         }
+
+        // B015-B: Miss — materialize dequantized tensor and commit to pool
+        if (loader && loader->B015GetPool() == nullptr)
+        {
+            loader->B015SetPool(m_weightResidencyPool.get());
+        }
+        if (loader && loader->B015MaterializeDequantizedTensor(tensorName))
+        {
+            // Retry acquire after materialization
+            if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
+            {
+                const float* weightData = resident->data;
+                if (weightData)
+                {
+                    for (std::size_t m = 0; m < outputDim; ++m)
+                    {
+                        float sum = 0.0f;
+                        for (std::size_t k = 0; k < inputDim; ++k)
+                        {
+                            sum += weightData[m * inputDim + k] * input[k];
+                        }
+                        output[m] = sum;
+                    }
+                    m_weightResidencyPool->release(tensorName);
+                    ++m_weightResidencyHits;
+                    if (isOutputProjection)
+                    {
+                        printf("[MATMUL] output.weight RETURN residency_pool_materialized ok=1\n");
+                        std::fflush(stdout);
+                    }
+                    return true;
+                }
+                m_weightResidencyPool->release(tensorName);
+            }
+        }
         ++m_weightResidencyMisses;
     }
 

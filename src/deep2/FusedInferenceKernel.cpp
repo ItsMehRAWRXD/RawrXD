@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
-#include <math>
+#include <cmath>
 #include <chrono>
 #include <algorithm>
 
@@ -188,7 +188,7 @@ bool FusedLayerKernel::ForwardStep(uint32_t token_id, uint32_t seq_pos,
     }
 
     auto end = std::chrono::high_resolution_clock::now();
-    uint64_t cycles = std::chrono::duration<cast<uint64_t>(
+    uint64_t cycles = std::chrono::duration_cast<std::chrono::nanoseconds>(
         end - start).count();
     RecordTokenGenerated(cycles);
 
@@ -264,12 +264,18 @@ void FusedLayerKernel::RecordTokenGenerated(uint64_t cycles) noexcept {
     }
 }
 
-FusedLayerKernel::TpsStats FusedLayerKernel::GetTpsStats() const noexcept {
+const FusedLayerKernel::TpsStats& FusedLayerKernel::GetTpsStats() const noexcept {
     return stats_;
 }
 
 void FusedLayerKernel::ResetTpsStats() noexcept {
-    stats_ = TpsStats{};
+    stats_.tokens_generated.store(0);
+    stats_.tokens_accepted.store(0);
+    stats_.tokens_drafted.store(0);
+    stats_.total_cycles.store(0);
+    stats_.peak_tps = 0.0;
+    stats_.avg_tps = 0.0;
+    stats_.last_report_time = 0;
 }
 
 // ---------------------------------------------------------------------------

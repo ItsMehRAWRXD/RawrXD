@@ -156,6 +156,17 @@ endif()
 # RawrXD - Zero Bloat Horizon (Phase 14.7.3+)
 project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 
+# ============================================================================
+# nlohmann/json via FetchContent (fixes Deep2Discovery.cpp json/json.hpp)
+# ============================================================================
+include(FetchContent)
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 # MSVC 19.51 has a known <ranges> crash at C++23 (/std:c++latest).
 # Pin to C++20 for build stability. std::expected is available via
 # <expected> polyfill or 3rdparty if needed.
@@ -245,6 +256,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/GenerationBouncer.cpp
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
@@ -715,6 +727,8 @@ if(RAWR_HAS_MASM)
         src/masm/rawrxd_math_masm.asm
         src/masm/rawrxd_transformer_masm_fixed.asm
         src/masm/rawrxd_transformer_full.asm
+        # Sovereign ABI bridge — stable C++/MASM execution plane seam
+        src/asm/Sovereign_KernelBridge_MASM.asm
         # src/asm/vision_projection_kernel.asm  # excluded: scaffold/invalid ml64 syntax (__real@*, missing .ENDPROLOG)
         # src/asm/quantum_beaconism_backend.asm        # excluded: MASM build errors (undefined symbols / unwind prolog issues)
         # src/asm/RawrXD_DualEngine_QuantumBeacon.asm  # excluded: MASM build errors (undefined symbols / unwind prolog issues)
@@ -728,6 +742,7 @@ if(RAWR_HAS_MASM)
         src/asm/agentic_deep_thinking_kernels.asm
         # Deep2 MoE kernels (2K TPS path)
         src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
         # Sovereign Puppeteer Architecture - Self-Modification System
         src/sovereign/puppeteer/Puppeteer_CaptureState.asm
@@ -819,6 +834,7 @@ set(SOURCES
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/RawrRuntime.cpp
     src/runtime/memory/PlacementPolicy.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
@@ -1555,6 +1571,7 @@ set(SOURCES
     src/deep2/DeepSeekMoELoader.cpp
     src/deep2/Deep2ExecutionGraph.cpp
     src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
     src/deep2/UniversalModelLoader.cpp
     src/deep2/ModelLoader.cpp
     src/deep2/ModelRegistry.cpp
@@ -1572,6 +1589,9 @@ set(SOURCES
     src/deep2/mars/MARSController.cpp
     src/sampling/advanced_sampler.cpp
     src/deep2/deep2_link_stubs.cpp
+
+    # Sovereign ABI runtime — stable C++/MASM execution plane seam
+    src/runtime/Sovereign_RingTelemetry.cpp
 
 # NOTE: Do not compile unresolved_stubs_all.cpp into production targets.
 # It provides fallback symbol placeholders and can mask real feature gaps.
@@ -2274,8 +2294,18 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 # Add Gold-specific stubs for symbols not provided by ASM files
 list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/link_stubs_gold.cpp
-    src/core/vulkan_kernel_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/compression/zlib_runtime_loader.cpp
+    src/deep2/MASMKernelStubs.cpp
+    B014/build/b014_profiler.cpp
+    src/runtime/StreamRouterAdapter.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/vulkan_kernel_stubs.cpp
 )
+# Remove duplicate stub files that are already in SOURCES or have real implementations
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/core/vulkan_kernel_stubs\\.cpp$")
 
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
@@ -3373,6 +3403,21 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/swarm_scheduler.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/PlacementPolicy.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/runtime/memory/RouterPredictiveMemoryBridge.cpp
+    src/runtime/GenerationBouncer.cpp
+    src/runtime/StreamRouterAdapter.cpp
+    src/runtime/Sovereign_KernelBridge_CPP.cpp
+    src/logging/Logger.cpp
+    src/sampling/advanced_sampler.cpp
+    src/runtime/RawrRuntime.cpp
+    B014/build/b014_profiler.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -5008,6 +5053,126 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/kernels/VulkanComputeKernels.cpp
         src/InferenceProfiler.cpp
         src/BackendOrchestrator.cpp
+        # --- Missing sources causing LNK2001 (added 2026-08-10) ---
+        src/runtime/TensorExecutionRouter.cpp
+        src/runtime/StreamRouterAdapter.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        B014/build/b014_profiler.cpp
+        src/deep2/Deep2Engine.cpp
+        # Deep2 component files required by Deep2Engine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/Deep2Bridge.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/ShardRouterIntegration.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/deep2/InferenceSession.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/ScaleQuality.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/TheDualityExample.cpp
+        src/deep2/Deep2Discovery.cpp
+        src/deep2/Deep2Benchmark.cpp
+        src/deep2/Deep2InferenceEndpoint.cpp
+        src/deep2/Deep2InferenceGateway.cpp
+        src/deep2/Deep2Integration.cpp
+        src/deep2/Deep2LocalServer.cpp
+        src/deep2/Deep2Server_Minimal.cpp
+        src/deep2/Deep2Server_Sovereign.cpp
+        src/deep2/Deep2APIServer.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/GGUFDiagnostics.cpp
+        src/deep2/GGUFLoader_Fixed.cpp
+        src/deep2/GGUFVerifier.cpp
+        src/deep2/IQQuantKernels.cpp
+        src/deep2/MASMKernelStubs.cpp
+        src/deep2/mcp_bridge.cpp
+        src/deep2/gpu/Deep2GPUBackend.cpp
+        src/deep2/MultiGPU/GPUDeviceRegistry.cpp
+        src/deep2/MultiGPU/MultiGPUScheduler.cpp
+        src/deep2/MultiGPU/VRAMAllocator.cpp
+        src/deep2/production/Deep2ProductionRuntime.cpp
+        src/deep2/dump_tensors.cpp
+        src/deep2/deep2_http_gateway.cpp
+        src/deep2/Deep2_Phase0_ProductionTest.cpp
+        src/deep2/Deep2Engine_KernelTest.cpp
+        src/deep2/Deep2Engine_SmokeTest.cpp
+        src/deep2/Deep2Engine_SmokeTest_Minimal.cpp
+        src/deep2/Deep2Engine_ValidationTest.cpp
+        src/deep2/Deep2Engine_FullSmoketest.cpp
+        src/deep2/Deep2_Phase0_SmokeTest.cpp
+        src/deep2/Deep2_Phase1_Smoketest.cpp
+        src/deep2/Deep2_Phase2_MultiGPU_Smoketest.cpp
+        src/deep2/Deep2_Phase3_Smoketest.cpp
+        src/deep2/Deep2_Gateway_Integration_Test.cpp
+        src/deep2/Deep2_Gateway_Runtime_Certification.cpp
+        src/deep2/Deep2_Phase0_ProductionTest.cpp
+        src/deep2/validation/Deep2Validation.cpp
+        src/deep2/certification/Deep2_Cert_Main.cpp
+        src/deep2/tests/numerical/layer_compare.cpp
+        src/deep2/tests/numerical/kernel_test.cpp
+        src/deep2/reverse_integration_standalone_test.cpp
+        src/deep2/HotPatcherSafetyTest.cpp
+        src/deep2/moe_microbench.cpp
+        src/deep2/moe_simple_bench.cpp
+        src/deep2/moe_test.cpp
+        src/deep2/moe_validation_test.cpp
+        src/deep2/router_bench.cpp
+        src/deep2/router_latency_test.cpp
+        src/deep2/test_api_server.cpp
+        src/deep2/test_gguf_fix.cpp
+        src/deep2/test_real_gguf_load.cpp
+        src/deep2/test_real_gguf_validate.cpp
+        src/deep2/test_tool_limit_hotpatch.cpp
+        src/deep2/VAL063_Deep2Certification.cpp
+        src/deep2/VAL038_Benchmark_Harness.cpp
+        src/deep2/deep2_end_to_end_bench.cpp
+        src/deep2/deep2_moe_bench_standalone.cpp
+        src/deep2/deep2_benchmark_main.cpp
+        src/deep2/deep2_server_main.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/ModelRegistry/GGUFModelRegistry.cpp
     )
 
     # Deep2Engine Integration Test
@@ -5415,6 +5580,12 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         pdh
         ${MASM_OBJECTS}
         ${_WIN32IDE_LINKED_MONOLITHIC_OBJS}
+        nlohmann_json::nlohmann_json
+    )
+
+    # Explicit nlohmann/json include for multi-header FetchContent layout
+    target_include_directories(RawrXD-Win32IDE PRIVATE
+        "${nlohmann_json_SOURCE_DIR}/include"
     )
 
     if(NOT MSVC)
@@ -5797,6 +5968,8 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/DualGPUHook.cpp
         src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
         # MARS dual-GPU VRAM orchestration
         src/deep2/mars/VRAMManager.cpp
         src/deep2/mars/TensorHotpatch.cpp
@@ -6578,7 +6751,7 @@ if(WIN32)
         src/llm_adapter/GGUFRunner.cpp
         src/llm_adapter/gguf_k_quants.cpp
         src/llm_adapter/QuantBackend.cpp
-        # REMOVED: src/llm_adapter/ggufrunner_link_fallbacks.cpp - stub file deleted
+        src/llm_adapter/ggufrunner_link_kernels.cpp
         src/core/unified_memory_executor.cpp
         src/core/model_runtime_gate.cpp
         src/runtime_surface/GenerationStopwatch.cpp
@@ -7532,7 +7705,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
-add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp)
+add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp)
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation)
 
@@ -7722,6 +7895,9 @@ endif()
 set(B014_COMPUTE_SOURCES
     B014/build/compute_decomposition.cpp
     B014/build/b014_profiler.cpp
+    B014/build/B014_RingAdapter.cpp
+    src/runtime/Sovereign_RingTelemetry.cpp
+    src/runtime/Sovereign_KernelBridge_CPP.cpp
     src/cpu_inference_engine.cpp
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp

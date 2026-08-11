@@ -107,19 +107,23 @@ struct TensorView {
 enum class QuantType : uint32_t {
     F32     = 0,
     F16     = 1,
-    Q4_0    = 2,
-    Q4_1    = 3,
-    Q5_0    = 6,
-    Q5_1    = 7,
-    Q8_0    = 8,
-    Q8_1    = 9,
-    Q2_K    = 10,
-    Q3_K    = 11,
-    Q4_K    = 12,
-    Q5_K    = 13,
-    Q6_K    = 14,
-    IQ2_XXS = 16,
-    IQ2_XS  = 17,
+    BF16    = 2,   // Added for PyTorch compatibility
+    Q4_0    = 3,
+    Q4_1    = 4,
+    I8      = 5,   // Added for PyTorch compatibility
+    I32     = 6,   // Added for PyTorch compatibility
+    I64     = 7,   // Added for PyTorch compatibility
+    Q5_0    = 8,
+    Q5_1    = 9,
+    Q8_0    = 10,
+    Q8_1    = 11,
+    Q2_K    = 12,
+    Q3_K    = 13,
+    Q4_K    = 14,
+    Q5_K    = 15,
+    Q6_K    = 16,
+    IQ2_XXS = 17,
+    IQ2_XS  = 18,
 };
 
 /// Bytes per block for a given quant type (returns 0 if unknown)

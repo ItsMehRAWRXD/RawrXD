@@ -74,6 +74,7 @@ public:
             lru_.push_back(name);
             lru_pos_[name] = --lru_.end();
             resident_bytes_ += bytes;
+            commits_.fetch_add(1, std::memory_order_relaxed);
             return true;
         } else {
             // Re-commit (update data)
@@ -88,6 +89,7 @@ public:
             it->second.last_used = ++clock_;
             it->second.refs = 0;  // Reset refs on re-commit
             resident_bytes_ += bytes;
+            commits_.fetch_add(1, std::memory_order_relaxed);
             touch_lru(name);
             return true;
         }
@@ -127,6 +129,7 @@ public:
     size_t resident_bytes() const { return resident_bytes_; }
     size_t hits() const { return hits_.load(); }
     size_t misses() const { return misses_.load(); }
+    size_t commits() const { return commits_.load(); }
     float hit_rate() const {
         size_t h = hits_.load(), m = misses_.load();
         return (h + m) > 0 ? (float)h / (float)(h + m) : 0.0f;
@@ -181,7 +184,8 @@ private:
     size_t clock_ = 0;
     std::atomic<size_t> hits_{0};
     std::atomic<size_t> misses_{0};
-    
+    std::atomic<size_t> commits_{0};
+
     std::unordered_map<std::string, ResidentWeight> weights_;
     std::list<std::string> lru_;
     std::unordered_map<std::string, std::list<std::string>::iterator> lru_pos_;

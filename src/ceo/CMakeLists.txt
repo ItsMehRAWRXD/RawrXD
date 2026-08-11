@@ -36,6 +36,14 @@ add_executable(rawrxd_ceo_cli
     ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_AgentLoop.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_ToolRegistry.cpp
     ${CMAKE_SOURCE_DIR}/src/agentic/ToolRegistry.cpp
+    ${CMAKE_SOURCE_DIR}/src/agentic/AdvancedAgentCoordinator.cpp
+    ${CMAKE_SOURCE_DIR}/src/agent/AgentOllamaClient.cpp
+    ${CMAKE_SOURCE_DIR}/src/agent/FIMPromptBuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsystem_api.cpp
+    ${CMAKE_SOURCE_DIR}/src/agentic_observability.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/unified_hotpatch_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/agentic/DiskRecoveryAgent.cpp
+    ${CMAKE_SOURCE_DIR}/src/win32app/agentic_bridge_headless.cpp
 )
 
 target_link_libraries(rawrxd_ceo_cli PRIVATE

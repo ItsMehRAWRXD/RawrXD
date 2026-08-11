@@ -128,11 +128,11 @@ endif()
 # LLM Connectivity Test - Uses WinHTTP-based client (no curl dependency)
 if(NOT TARGET test_llm_connectivity AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test_llm_connectivity.cpp")
     add_executable(test_llm_connectivity test_llm_connectivity.cpp 
-        ${CMAKE_SOURCE_DIR}/src/agent/llm_http_client.cpp)
+        ${CMAKE_SOURCE_DIR}/src/llm_adapter/llm_http_client.cpp)
     target_include_directories(test_llm_connectivity PRIVATE 
         ${CMAKE_SOURCE_DIR}/include 
         ${CMAKE_SOURCE_DIR}/src 
-        ${CMAKE_SOURCE_DIR}/src/agent)
+        ${CMAKE_SOURCE_DIR}/src/llm_adapter)
     set_target_properties(test_llm_connectivity PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" CXX_STANDARD 20)
     if(WIN32)
         target_link_libraries(test_llm_connectivity PRIVATE ws2_32 winhttp)
@@ -275,14 +275,27 @@ endif()
 
 # VAL-063: Inference Gateway Certification Harness
 if(NOT TARGET VAL063_InferenceGatewayHarness AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VAL063_InferenceGatewayHarness.cpp")
-    add_executable(VAL063_InferenceGatewayHarness VAL063_InferenceGatewayHarness.cpp)
+    add_executable(VAL063_InferenceGatewayHarness
+        VAL063_InferenceGatewayHarness.cpp
+        ${CMAKE_SOURCE_DIR}/src/core/swarm_scheduler.cpp
+        ${CMAKE_SOURCE_DIR}/src/rawrxd_model_loader.cpp
+        ${CMAKE_SOURCE_DIR}/src/rawrxd_sampler.cpp
+        ${CMAKE_SOURCE_DIR}/src/rawrxd_tokenizer.cpp
+        ${CMAKE_SOURCE_DIR}/src/rawrxd_transformer.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/TensorExecutionRouter.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/TransferScheduler.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/memory/PredictiveMemoryManager.cpp
+    )
     target_include_directories(VAL063_InferenceGatewayHarness PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
     set_target_properties(VAL063_InferenceGatewayHarness PROPERTIES 
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests" 
-        CXX_STANDARD 20
+        CXX_STANDARD 23
     )
     if(WIN32)
         target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE kernel32 user32 psapi)
+    endif()
+    if(TARGET InferenceEngine)
+        target_link_libraries(VAL063_InferenceGatewayHarness PRIVATE InferenceEngine)
     endif()
     add_test(NAME VAL063_InferenceGatewayHarness COMMAND VAL063_InferenceGatewayHarness)
     set_tests_properties(VAL063_InferenceGatewayHarness PROPERTIES

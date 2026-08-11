@@ -29,7 +29,7 @@
 #include <windows.h>
 #endif
 
-#include "../deep2/Deep2InferenceGateway.h"
+#include "../inference/ultra_fast_inference.h"
 
 // ============================================================================
 // Deep2 Gateway Integration — VAL-063 Certification Path

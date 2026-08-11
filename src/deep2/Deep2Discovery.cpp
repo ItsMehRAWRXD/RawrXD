@@ -12,7 +12,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winhttp.lib")

@@ -12,6 +12,7 @@
 #include <mutex>
 #include <cstdint>
 #include <functional>
+#include <optional>
 
 namespace Deep2 {
 namespace MultiGPU {

@@ -1,814 +1,1157 @@
-// =============================================================================
-// RawRamXD.cpp - Software-Defined AI Memory Fabric Implementation
-// =============================================================================
+#include "RawRamXD_v22.hpp"
 
-#include "RawRamXD.hpp"
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <future>
-
-// Platform-specific includes
+#include <cstdlib>
 #ifdef _WIN32
-#include <windows.h>
-#include <psapi.h>
-#else
-#include <sys/mman.h>
-#include <unistd.h>
+#include <malloc.h>
 #endif
 
 namespace rawramxd {
 
-// =============================================================================
-// Default Residency Engine - AI-Driven Placement Decisions
-// =============================================================================
+// ============================================================================
+// CapacityLedger
+// ============================================================================
 
-class DefaultResidencyEngine : public ResidencyEngine {
-public:
-    DefaultResidencyEngine() : targetTPS_(0.0), aggressiveness_(0.5) {}
-    
-    Tier decidePlacement(const RawRamXDHandle* handle) override {
-        // AI-driven placement based on access pattern and pressure
-        auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-        uint64_t lastAccess = handle->lastAccessTime.load();
-        uint64_t accessCount = handle->accessCount.load();
-        
-        // Calculate recency score (0-1, higher = more recent)
-        double recency = 1.0;
-        if (lastAccess > 0) {
-            double age = (now - lastAccess) / 1e9; // seconds
-            recency = std::exp(-age / 10.0); // 10s half-life
-        }
-        
-        // Calculate frequency score
-        double frequency = std::min(1.0, accessCount / 100.0);
-        
-        // Pattern-based base tier
-        Tier baseTier = Tier::NVMe;
-        switch (handle->pattern) {
-            case AccessPattern::WEIGHTS:
-                baseTier = Tier::RAM; // Weights start in RAM
-                break;
-            case AccessPattern::KV_CACHE:
-                baseTier = Tier::VRAM; // KV cache wants VRAM
-                break;
-            case AccessPattern::ACTIVATIONS:
-                baseTier = Tier::VRAM; // Activations need VRAM
-                break;
-            case AccessPattern::SCRATCH:
-                baseTier = Tier::VRAM; // Scratch in VRAM
-                break;
-            default:
-                baseTier = Tier::RAM;
-        }
-        
-        // Adjust based on access heat
-        double heat = recency * 0.6 + frequency * 0.4;
-        
-        if (heat > 0.8 * aggressiveness_) {
-            // Hot data - promote to VRAM
-            return Tier::VRAM;
-        } else if (heat > 0.4 * aggressiveness_ && baseTier == Tier::NVMe) {
-            // Warm data - keep in RAM
-            return Tier::RAM;
-        }
-        
-        return baseTier;
+CapacityLedger::CapacityLedger(const std::array<size_t, 3>& capacities)
+    : capacities_(capacities) {
+    for (auto& v : used_) {
+        v.store(0, std::memory_order_relaxed);
     }
-    
-    MigrationPriority decideUrgency(const RawRamXDHandle* handle) override {
-        // Critical for KV cache and activations
-        if (handle->pattern == AccessPattern::ACTIVATIONS) {
-            return MigrationPriority::CRITICAL;
-        }
-        if (handle->pattern == AccessPattern::KV_CACHE) {
-            return MigrationPriority::HIGH;
-        }
-        if (handle->accessCount > 10) {
-            return MigrationPriority::NORMAL;
-        }
-        return MigrationPriority::LOW;
-    }
-    
-    bool shouldPrefetch(const RawRamXDHandle* handle) override {
-        // Prefetch weights and frequently accessed data
-        if (handle->pattern == AccessPattern::WEIGHTS) {
-            return handle->accessCount.load() > 0;
-        }
-        return false;
-    }
-    
-    bool shouldEvict(const RawRamXDHandle* handle) override {
-        auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-        uint64_t lastAccess = handle->lastAccessTime.load();
-        
-        if (lastAccess == 0) return false;
-        
-        double age = (now - lastAccess) / 1e9; // seconds
-        
-        // Evict cold data from VRAM
-        if (handle->currentTier == Tier::VRAM && age > 30.0) {
+}
+
+bool CapacityLedger::tryReserve(Tier tier, size_t bytes) noexcept {
+    const size_t i = static_cast<size_t>(tier);
+    if (i >= capacities_.size()) return false;
+
+    size_t current = used_[i].load(std::memory_order_relaxed);
+    for (;;) {
+        if (bytes > capacities_[i] - current) return false;
+        if (used_[i].compare_exchange_weak(
+                current, current + bytes,
+                std::memory_order_acq_rel,
+                std::memory_order_relaxed)) {
             return true;
         }
-        
-        // Evict very cold data from RAM
-        if (handle->currentTier == Tier::RAM && age > 300.0) {
-            return true;
-        }
-        
-        return false;
     }
-    
-    void onMigrationComplete(Handle handle, Tier from, Tier to, double latencyMs) override {
-        // Update running average
-        double oldAvg = avgMigrationTimeMs_.load();
-        double newAvg = oldAvg * 0.9 + latencyMs * 0.1;
-        avgMigrationTimeMs_.store(newAvg);
-    }
-    
-    void onFault(Handle handle, Tier needed) override {
-        faultCount_++;
-    }
-    
-    void onAccess(Handle handle, size_t bytes) override {
-        (void)handle;
-        (void)bytes;
-    }
-    
-    void updatePressure(Tier tier, float pressure) override {
-        pressure_[static_cast<size_t>(tier)] = pressure;
-    }
-    
-    void setTargetTPS(double tps) override {
-        targetTPS_ = tps;
-    }
-    
-    void setAggressiveness(float level) override {
-        aggressiveness_ = std::clamp(level, 0.0f, 1.0f);
-    }
-    
-private:
-    std::atomic<double> avgMigrationTimeMs_{0.0};
-    std::atomic<uint64_t> faultCount_{0};
-    std::atomic<double> targetTPS_{0.0};
-    std::atomic<float> aggressiveness_{0.5f};
-    std::atomic<float> pressure_[4];
-};
+}
 
-// =============================================================================
-// RawRamXD Implementation
-// =============================================================================
+void CapacityLedger::release(Tier tier, size_t bytes) {
+    const size_t i = static_cast<size_t>(tier);
+    if (i >= capacities_.size())
+        throw std::out_of_range("CapacityLedger tier");
 
-class RawRamXDFabric::Impl {
-public:
-    Impl() : nextHandle_(1), running_(false) {}
-    
-    ~Impl() {
-        shutdown();
-    }
-    
-    bool initialize(size_t vramSize, size_t ramSize, size_t nvmeSize) {
-        std::lock_guard<std::mutex> lock(initMutex_);
-        
-        if (running_) {
-            return true;
-        }
-        
-        // Initialize tier capacities
-        tierCapacity_[static_cast<size_t>(Tier::VRAM)] = vramSize;
-        tierCapacity_[static_cast<size_t>(Tier::RAM)] = ramSize;
-        tierCapacity_[static_cast<size_t>(Tier::NVMe)] = nvmeSize;
-        
-        tierUsed_[static_cast<size_t>(Tier::VRAM)] = 0;
-        tierUsed_[static_cast<size_t>(Tier::RAM)] = 0;
-        tierUsed_[static_cast<size_t>(Tier::NVMe)] = 0;
-        
-        // Set default residency engine
-        if (!engine_) {
-            engine_ = std::make_unique<DefaultResidencyEngine>();
-        }
-        
-        // Start scheduler thread
-        running_ = true;
-        schedulerThread_ = std::thread(&Impl::schedulerLoop, this);
-        
-        std::cout << "[RawRamXD] Initialized with:" << std::endl;
-        std::cout << "  VRAM: " << (vramSize / (1024*1024*1024)) << " GB" << std::endl;
-        std::cout << "  RAM: " << (ramSize / (1024*1024*1024)) << " GB" << std::endl;
-        std::cout << "  NVMe: " << (nvmeSize / (1024*1024*1024)) << " GB" << std::endl;
-        
-        return true;
-    }
-    
-    void shutdown() {
-        {
-            std::lock_guard<std::mutex> lock(initMutex_);
-            if (!running_) return;
-            running_ = false;
-        }
-        
-        cv_.notify_all();
-        
-        if (schedulerThread_.joinable()) {
-            schedulerThread_.join();
-        }
-        
-        // Clean up all handles
-        std::lock_guard<std::mutex> lock(handlesMutex_);
-        handles_.clear();
-    }
-    
-    Handle allocate(size_t size, const char* name, AccessPattern pattern) {
-        Handle id = nextHandle_++;
-        
-        auto handle = std::make_unique<RawRamXDHandle>();
-        handle->id = id;
-        handle->vaddr = id << 12; // Page-aligned virtual address
-        handle->size = size;
-        handle->currentTier = Tier::NVMe; // Start in NVMe
-        handle->preferredTier = Tier::RAM;
-        handle->state = ResidencyState::UNMAPPED;
-        handle->pattern = pattern;
-        handle->priority = MigrationPriority::NORMAL;
-        handle->name = name ? name : "unnamed";
-        handle->physicalPtr = nullptr;
-        handle->vramPtr = nullptr;
-        handle->ramPtr = nullptr;
-        handle->nvmeHandle = nullptr;
-        
-        // Allocate in NVMe (backing store)
-        handle->nvmeHandle = allocateInNVMe(size);
-        handle->state = ResidencyState::RESIDENT;
-        handle->currentTier = Tier::NVMe;
-        
-        {
-            std::lock_guard<std::mutex> lock(handlesMutex_);
-            handles_[id] = std::move(handle);
-        }
-        
-        // Update stats
-        stats_.tiers[static_cast<size_t>(Tier::NVMe)].totalBytes += size;
-        stats_.tiers[static_cast<size_t>(Tier::NVMe)].usedBytes += size;
-        
-        return id;
-    }
-    
-    void deallocate(Handle id) {
-        std::unique_lock<std::mutex> lock(handlesMutex_);
-        auto it = handles_.find(id);
-        if (it == handles_.end()) return;
-        
-        auto* handle = it->second.get();
-        
-        // Free from current tier
-        freeFromTier(handle->currentTier, handle);
-        
-        // Update stats
-        stats_.tiers[static_cast<size_t>(handle->currentTier)].usedBytes -= handle->size;
-        
-        handles_.erase(it);
-    }
-    
-    bool ensureInVRAM(Handle id) {
-        auto* handle = resolve(id);
-        if (!handle) return false;
-        
-        // Already in VRAM
-        if (handle->currentTier == Tier::VRAM) {
-            touch(id);
-            return true;
-        }
-        
-        // Trigger migration
-        migrate(id, Tier::VRAM);
-        
-        // Wait for completion (simplified - in production use async)
-        int retries = 1000;
-        while (handle->state == ResidencyState::MIGRATING && retries-- > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        
-        return handle->currentTier == Tier::VRAM;
-    }
-    
-    bool ensureInRAM(Handle id) {
-        auto* handle = resolve(id);
-        if (!handle) return false;
-        
-        if (static_cast<int>(handle->currentTier) <= static_cast<int>(Tier::RAM)) {
-            touch(id);
-            return true;
-        }
-        
-        migrate(id, Tier::RAM);
-        return true;
-    }
-    
-    void touch(Handle id) {
-        auto* handle = resolve(id);
-        if (!handle) return;
-        
-        auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-        handle->lastAccessTime.store(now);
-        handle->accessCount++;
-        
-        // Notify engine
-        if (engine_) {
-            engine->onAccess(id, handle->size);
+    size_t current = used_[i].load(std::memory_order_relaxed);
+    for (;;) {
+        if (bytes > current)
+            throw std::logic_error("CapacityLedger underflow");
+
+        if (used_[i].compare_exchange_weak(
+                current, current - bytes,
+                std::memory_order_acq_rel,
+                std::memory_order_relaxed)) {
+            return;
         }
     }
-    
-    void migrate(Handle id, Tier target) {
-        auto* handle = resolve(id);
-        if (!handle || handle->currentTier == target) return;
-        
-        // Queue migration
-        MigrationRequest req;
-        req.handle = id;
-        req.from = handle->currentTier;
-        req.to = target;
-        req.priority = engine_ ? engine->decideUrgency(handle) : MigrationPriority::NORMAL;
-        
-        {
-            std::lock_guard<std::mutex> lock(queueMutex_);
-            migrationQueue_.push(req);
-        }
-        
-        cv_.notify_one();
+}
+
+size_t CapacityLedger::used(Tier tier) const noexcept {
+    const size_t i = static_cast<size_t>(tier);
+    return i < used_.size()
+        ? used_[i].load(std::memory_order_acquire)
+        : 0;
+}
+
+size_t CapacityLedger::capacity(Tier tier) const noexcept {
+    const size_t i = static_cast<size_t>(tier);
+    return i < capacities_.size() ? capacities_[i] : 0;
+}
+
+// ============================================================================
+// CapacityReservation
+// ============================================================================
+
+CapacityReservation::CapacityReservation(
+    std::shared_ptr<CapacityLedger> ledger,
+    Tier tier,
+    size_t bytes)
+    : ledger_(std::move(ledger)),
+      tier_(tier),
+      bytes_(bytes),
+      committed_(false) {
+    if (ledger_ && !ledger_->tryReserve(tier_, bytes_)) {
+        bytes_ = 0;
     }
-    
-    void prefetch(Handle id) {
-        auto* handle = resolve(id);
-        if (!handle || handle->state != ResidencyState::EVICTED) return;
-        
-        // Queue prefetch
-        MigrationRequest req;
-        req.handle = id;
-        req.from = handle->currentTier;
-        req.to = handle->preferredTier;
-        req.priority = MigrationPriority::PREFETCH;
-        
-        {
-            std::lock_guard<std::mutex> lock(queueMutex_);
-            migrationQueue_.push(req);
-        }
-        
-        cv_.notify_one();
-    }
-    
-    RawRamXDHandle* resolve(Handle id) {
-        std::lock_guard<std::mutex> lock(handlesMutex_);
-        auto it = handles_.find(id);
-        return (it != handles_.end()) ? it->second.get() : nullptr;
-    }
-    
-    Tier currentTier(Handle id) {
-        auto* handle = resolve(id);
-        return handle ? handle->currentTier : Tier::COUNT;
-    }
-    
-    ResidencyState residency(Handle id) {
-        auto* handle = resolve(id);
-        return handle ? handle->state : ResidencyState::UNMAPPED;
-    }
-    
-    bool isResident(Handle id, Tier tier) {
-        auto* handle = resolve(id);
-        return handle && handle->currentTier == tier && 
-               handle->state == ResidencyState::RESIDENT;
-    }
-    
-    RawRamXDStats stats() {
-        return stats_;
-    }
-    
-    void dumpState() {
-        std::lock_guard<std::mutex> lock(handlesMutex_);
-        
-        std::cout << "\n=== RawRamXD State ===" << std::endl;
-        std::cout << "Active handles: " << handles_.size() << std::endl;
-        
-        for (const auto& [id, handle] : handles_) {
-            std::cout << "  [" << id << "] " << handle->name
-                      << " | Tier: " << static_cast<int>(handle->currentTier)
-                      << " | State: " << static_cast<int>(handle->state)
-                      << " | Access: " << handle->accessCount.load()
-                      << std::endl;
-        }
-        
-        std::cout << "\nTier Usage:" << std::endl;
-        for (size_t i = 0; i < static_cast<size_t>(Tier::COUNT); i++) {
-            auto used = tierUsed_[i].load();
-            auto cap = tierCapacity_[i];
-            std::cout << "  Tier " << i << ": " 
-                      << (used / (1024*1024)) << " MB / "
-                      << (cap / (1024*1024)) << " MB"
-                      << std::endl;
+}
+
+CapacityReservation::~CapacityReservation() {
+    if (!committed_ && ledger_ && bytes_ > 0) {
+        try {
+            ledger_->release(tier_, bytes_);
+        } catch (...) {
+            std::terminate();
         }
     }
-    
-    void setResidencyEngine(std::unique_ptr<ResidencyEngine> engine) {
-        engine_ = std::move(engine);
-    }
-    
-    void setPolicy(const std::string& policy) {
-        if (!engine_) return;
-        
-        if (policy == "aggressive") {
-            engine->setAggressiveness(0.9f);
-        } else if (policy == "balanced") {
-            engine->setAggressiveness(0.5f);
-        } else if (policy == "conservative") {
-            engine->setAggressiveness(0.1f);
-        }
-    }
-    
-    void* vramPtr(Handle id) {
-        auto* handle = resolve(id);
-        return (handle && handle->currentTier == Tier::VRAM) ? handle->vramPtr : nullptr;
-    }
-    
-    void* ramPtr(Handle id) {
-        auto* handle = resolve(id);
-        return (handle && static_cast<int>(handle->currentTier) <= static_cast<int>(Tier::RAM)) 
-               ? handle->ramPtr : nullptr;
-    }
-
-private:
-    struct MigrationRequest {
-        Handle handle;
-        Tier from;
-        Tier to;
-        MigrationPriority priority;
-        
-        bool operator<(const MigrationRequest& other) const {
-            return static_cast<int>(priority) > static_cast<int>(other.priority);
-        }
-    };
-    
-    void schedulerLoop() {
-        while (running_) {
-            std::unique_lock<std::mutex> lock(queueMutex_);
-            cv_.wait(lock, [this] { return !migrationQueue_.empty() || !running_; });
-            
-            while (!migrationQueue_.empty()) {
-                auto req = migrationQueue_.top();
-                migrationQueue_.pop();
-                lock.unlock();
-                
-                executeMigration(req);
-                
-                lock.lock();
-            }
-        }
-    }
-    
-    void executeMigration(const MigrationRequest& req) {
-        auto* handle = resolve(req.handle);
-        if (!handle) return;
-        
-        handle->state = ResidencyState::MIGRATING;
-        
-        auto start = std::chrono::steady_clock::now();
-        
-        // Perform actual migration
-        bool success = doMigration(handle, req.from, req.to);
-        
-        auto end = std::chrono::steady_clock::now();
-        double latencyMs = std::chrono::duration<double, std::milli>(end - start).count();
-        
-        if (success) {
-            handle->currentTier = req.to;
-            handle->state = ResidencyState::RESIDENT;
-            
-            // Update stats
-            stats_.migrationsCompleted++;
-            stats_.tiers[static_cast<size_t>(req.from)].migrationOutBytes += handle->size;
-            stats_.tiers[static_cast<size_t>(req.to)].migrationInBytes += handle->size;
-            
-            if (engine_) {
-                engine->onMigrationComplete(req.handle, req.from, req.to, latencyMs);
-            }
-        } else {
-            handle->state = ResidencyState::RESIDENT;
-        }
-    }
-    
-    bool doMigration(RawRamXDHandle* handle, Tier from, Tier to) {
-        // Allocate in target tier
-        void* newPtr = nullptr;
-        switch (to) {
-            case Tier::VRAM:
-                newPtr = allocateInVRAM(handle->size);
-                handle->vramPtr = newPtr;
-                break;
-            case Tier::RAM:
-                newPtr = allocateInRAM(handle->size);
-                handle->ramPtr = newPtr;
-                break;
-            case Tier::NVMe:
-                newPtr = allocateInNVMe(handle->size);
-                handle->nvmeHandle = newPtr;
-                break;
-            default:
-                return false;
-        }
-        
-        if (!newPtr) {
-            return false;
-        }
-        
-        // Copy data (simplified - real implementation uses DMA)
-        void* oldPtr = nullptr;
-        switch (from) {
-            case Tier::VRAM: oldPtr = handle->vramPtr; break;
-            case Tier::RAM: oldPtr = handle->ramPtr; break;
-            case Tier::NVMe: oldPtr = handle->nvmeHandle; break;
-            default: break;
-        }
-        
-        if (oldPtr && newPtr) {
-            std::memcpy(newPtr, oldPtr, handle->size);
-        }
-        
-        // Free from old tier
-        freeFromTier(from, handle);
-        
-        // Update tier usage
-        tierUsed_[static_cast<size_t>(from)] -= handle->size;
-        tierUsed_[static_cast<size_t>(to)] += handle->size;
-        
-        return true;
-    }
-    
-    void* allocateInVRAM(size_t size) {
-        // Platform-specific VRAM allocation
-        #ifdef _WIN32
-        // Use DirectX 12 or CUDA
-        return std::malloc(size); // Placeholder
-        #else
-        return std::malloc(size); // Placeholder
-        #endif
-    }
-    
-    void* allocateInRAM(size_t size) {
-        #ifdef _WIN32
-        return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        #else
-        return std::aligned_alloc(4096, size);
-        #endif
-    }
-    
-    void* allocateInNVMe(size_t size) {
-        // Memory-mapped file or SSD-backed allocation
-        return std::malloc(size); // Placeholder
-    }
-    
-    void freeFromTier(Tier tier, RawRamXDHandle* handle) {
-        switch (tier) {
-            case Tier::VRAM:
-                if (handle->vramPtr) {
-                    std::free(handle->vramPtr);
-                    handle->vramPtr = nullptr;
-                }
-                break;
-            case Tier::RAM:
-                if (handle->ramPtr) {
-                    #ifdef _WIN32
-                    VirtualFree(handle->ramPtr, 0, MEM_RELEASE);
-                    #else
-                    std::free(handle->ramPtr);
-                    #endif
-                    handle->ramPtr = nullptr;
-                }
-                break;
-            case Tier::NVMe:
-                if (handle->nvmeHandle) {
-                    std::free(handle->nvmeHandle);
-                    handle->nvmeHandle = nullptr;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    
-    // Members
-    std::atomic<Handle> nextHandle_;
-    std::unordered_map<Handle, std::unique_ptr<RawRamXDHandle>> handles_;
-    std::mutex handlesMutex_;
-    
-    std::priority_queue<MigrationRequest> migrationQueue_;
-    std::mutex queueMutex_;
-    std::condition_variable cv_;
-    
-    std::thread schedulerThread_;
-    std::atomic<bool> running_;
-    std::mutex initMutex_;
-    
-    std::unique_ptr<ResidencyEngine> engine_;
-    RawRamXDStats stats_;
-    
-    std::atomic<size_t> tierCapacity_[4];
-    std::atomic<size_t> tierUsed_[4];
-};
-
-// =============================================================================
-// Singleton Instance
-// =============================================================================
-
-RawRamXDFabric& RawRamXDFabric::instance() {
-    static RawRamXDFabric instance;
-    return instance;
 }
 
-bool RawRamXDFabric::initialize(size_t vramSize, size_t ramSize, size_t nvmeSize) {
-    if (!impl_) {
-        impl_ = std::make_unique<Impl>();
-    }
-    return impl_>initialize(vramSize, ramSize, nvmeSize);
+CapacityReservation::CapacityReservation(CapacityReservation&& other) noexcept
+    : ledger_(std::move(other.ledger_)),
+      tier_(other.tier_),
+      bytes_(other.bytes_),
+      committed_(other.committed_) {
+    other.committed_ = true;
 }
 
-void RawRamXDFabric::shutdown() {
-    if (impl_) {
-        impl_>shutdown();
-    }
-}
-
-Handle RawRamXDFabric::allocate(size_t size, const char* name, AccessPattern pattern) {
-    return impl_ ? impl_>allocate(size, name, pattern) : 0;
-}
-
-void RawRamXDFabric::deallocate(Handle handle) {
-    if (impl_) impl_>deallocate(handle);
-}
-
-bool RawRamXDFabric::ensureInVRAM(Handle handle) {
-    return impl_ ? impl_>ensureInVRAM(handle) : false;
-}
-
-bool RawRamXDFabric::ensureInRAM(Handle handle) {
-    return impl_ ? impl_>ensureInRAM(handle) : false;
-}
-
-void RawRamXDFabric::touch(Handle handle) {
-    if (impl_) impl_>touch(handle);
-}
-
-void RawRamXDFabric::migrate(Handle handle, Tier target) {
-    if (impl_) impl_>migrate(handle, target);
-}
-
-void RawRamXDFabric::prefetch(Handle handle) {
-    if (impl_) impl_>prefetch(handle);
-}
-
-RawRamXDHandle* RawRamXDFabric::resolve(Handle handle) {
-    return impl_ ? impl_>resolve(handle) : nullptr;
-}
-
-Tier RawRamXDFabric::currentTier(Handle handle) {
-    return impl_ ? impl_>currentTier(handle) : Tier::COUNT;
-}
-
-ResidencyState RawRamXDFabric::residency(Handle handle) {
-    return impl_ ? impl_>residency(handle) : ResidencyState::UNMAPPED;
-}
-
-bool RawRamXDFabric::isResident(Handle handle, Tier tier) {
-    return impl_ ? impl_>isResident(handle, tier) : false;
-}
-
-RawRamXDStats RawRamXDFabric::stats() {
-    return impl_ ? impl_>stats() : RawRamXDStats{};
-}
-
-void RawRamXDFabric::dumpState() {
-    if (impl_) impl_>dumpState();
-}
-
-void RawRamXDFabric::setResidencyEngine(std::unique_ptr<ResidencyEngine> engine) {
-    if (impl_) impl_>setResidencyEngine(std::move(engine));
-}
-
-void RawRamXDFabric::setPolicy(const std::string& policy) {
-    if (impl_) impl_>setPolicy(policy);
-}
-
-void* RawRamXDFabric::vramPtr(Handle handle) {
-    return impl_ ? impl_>vramPtr(handle) : nullptr;
-}
-
-void* RawRamXDFabric::ramPtr(Handle handle) {
-    return impl_ ? impl_>ramPtr(handle) : nullptr;
-}
-
-// =============================================================================
-// C API Implementation
-// =============================================================================
-
-extern "C" {
-
-bool rawramxd_init(uint64_t vram_bytes, uint64_t ram_bytes, uint64_t nvme_bytes) {
-    return RawRamXDFabric::instance().initialize(vram_bytes, ram_bytes, nvme_bytes);
-}
-
-void rawramxd_shutdown() {
-    RawRamXDFabric::instance().shutdown();
-}
-
-uint64_t rawramxd_alloc(size_t size, const char* name, uint8_t pattern) {
-    return RawRamXDFabric::instance().allocate(size, name, 
-        static_cast<AccessPattern>(pattern));
-}
-
-void rawramxd_free(uint64_t handle) {
-    RawRamXDFabric::instance().deallocate(handle);
-}
-
-bool rawramxd_ensure_vram(uint64_t handle) {
-    return RawRamXDFabric::instance().ensureInVRAM(handle);
-}
-
-bool rawramxd_ensure_ram(uint64_t handle) {
-    return RawRamXDFabric::instance().ensureInRAM(handle);
-}
-
-void rawramxd_touch(uint64_t handle) {
-    RawRamXDFabric::instance().touch(handle);
-}
-
-void rawramxd_migrate(uint64_t handle, uint8_t tier) {
-    RawRamXDFabric::instance().migrate(handle, static_cast<Tier>(tier));
-}
-
-void rawramxd_prefetch(uint64_t handle) {
-    RawRamXDFabric::instance().prefetch(handle);
-}
-
-uint8_t rawramxd_current_tier(uint64_t handle) {
-    return static_cast<uint8_t>(RawRamXDFabric::instance().currentTier(handle));
-}
-
-uint8_t rawramxd_residency(uint64_t handle) {
-    return static_cast<uint8_t>(RawRamXDFabric::instance().residency(handle));
-}
-
-void* rawramxd_vram_ptr(uint64_t handle) {
-    return RawRamXDFabric::instance().vramPtr(handle);
-}
-
-void* rawramxd_ram_ptr(uint64_t handle) {
-    return RawRamXDFabric::instance().ramPtr(handle);
-}
-
-void rawramxd_stats(void* stats_out) {
-    if (stats_out) {
-        *static_cast<RawRamXDStats*>(stats_out) = RawRamXDFabric::instance().stats();
-    }
-}
-
-void rawramxd_dump() {
-    RawRamXDFabric::instance().dumpState();
-}
-
-} // extern "C"
-
-// =============================================================================
-// RAII Wrapper Implementation
-// =============================================================================
-
-RawRamXDTensor::RawRamXDTensor(size_t size, const char* name, AccessPattern pattern)
-    : handle_(RawRamXDFabric::instance().allocate(size, name, pattern)) {}
-
-RawRamXDTensor::~RawRamXDTensor() {
-    if (handle_) {
-        RawRamXDFabric::instance().deallocate(handle_);
-    }
-}
-
-RawRamXDTensor::RawRamXDTensor(RawRamXDTensor&& other) noexcept
-    : handle_(other.handle_) {
-    other.handle_ = 0;
-}
-
-RawRamXDTensor& RawRamXDTensor::operator=(RawRamXDTensor&& other) noexcept {
+CapacityReservation& CapacityReservation::operator=(
+    CapacityReservation&& other) noexcept {
     if (this != &other) {
-        if (handle_) {
-            RawRamXDFabric::instance().deallocate(handle_);
+        if (!committed_ && ledger_) {
+            try {
+                ledger_->release(tier_, bytes_);
+            } catch (...) {
+                std::terminate();
+            }
         }
-        handle_ = other.handle_;
-        other.handle_ = 0;
+        ledger_ = std::move(other.ledger_);
+        tier_ = other.tier_;
+        bytes_ = other.bytes_;
+        committed_ = other.committed_;
+        other.committed_ = true;
     }
     return *this;
 }
 
-VRAMResidencyGuard::VRAMResidencyGuard(Handle handle) : handle_(handle) {
-    acquired_ = RawRamXDFabric::instance().ensureInVRAM(handle_);
+void CapacityReservation::commit() noexcept {
+    committed_ = true;
 }
 
-VRAMResidencyGuard::~VRAMResidencyGuard() {
-    // Residency persists after guard - we don't demote automatically
+// ============================================================================
+// PhysicalAllocation
+// ============================================================================
+
+PhysicalAllocation::PhysicalAllocation(
+    std::shared_ptr<TierBackend> backend,
+    AllocationHandle handle,
+    std::shared_ptr<CapacityLedger> ledger) noexcept
+    : backend_(std::move(backend)),
+      handle_(std::move(handle)),
+      ledger_(std::move(ledger)) {}
+
+PhysicalAllocation::~PhysicalAllocation() noexcept {
+    if (backend_) {
+        backend_->release(handle_);
+    }
+    if (ledger_) {
+        try {
+            ledger_->release(handle_.tier, handle_.size);
+        } catch (...) {
+            std::terminate();
+        }
+    }
+}
+
+// ============================================================================
+// RawRamXDTransferEngine (composite router for all tier pairs)
+// ============================================================================
+
+bool RawRamXDTransferEngine::canTransfer(
+    Tier srcTier, Tier dstTier) const noexcept {
+    // All tier pairs are supported; actual capability depends on
+    // whether the backends expose the right handles.
+    if (srcTier == dstTier) return true;
+    return true;
+}
+
+bool RawRamXDTransferEngine::transfer(
+    const PhysicalAllocation& src,
+    PhysicalAllocation& dst,
+    size_t bytes,
+    CopyToken& token) {
+    token = {};
+
+    const Tier srcTier = src.get().tier;
+    const Tier dstTier = dst.get().tier;
+
+    if (srcTier == Tier::NVMe && dstTier == Tier::RAM) {
+        return transferHostToHost(src, dst, bytes);
+    }
+    if (srcTier == Tier::RAM && dstTier == Tier::NVMe) {
+        return transferHostToHost(src, dst, bytes);
+    }
+    if (srcTier == Tier::RAM && dstTier == Tier::VRAM) {
+        return transferHostToDevice(src, dst, bytes, token);
+    }
+    if (srcTier == Tier::VRAM && dstTier == Tier::RAM) {
+        return transferDeviceToHost(src, dst, bytes, token);
+    }
+    if (srcTier == Tier::VRAM && dstTier == Tier::VRAM) {
+        return transferDeviceToDevice(src, dst, bytes, token);
+    }
+    if (srcTier == Tier::NVMe && dstTier == Tier::VRAM) {
+        // Pipeline: NVMe -> RAM -> VRAM
+        // For now, fail-closed until a staging buffer is available.
+        return false;
+    }
+    if (srcTier == Tier::VRAM && dstTier == Tier::NVMe) {
+        // Pipeline: VRAM -> RAM -> NVMe
+        return false;
+    }
+
+    return false;
+}
+
+bool RawRamXDTransferEngine::wait(CopyToken token) {
+    // Synchronous wait: for host-to-host, token is already completed.
+    // For async device transfers, this would block on the timeline value.
+    return token.id != 0 && token.state == TransferState::COMPLETED;
+}
+
+bool RawRamXDTransferEngine::poll(CopyToken token) noexcept {
+    return token.id != 0 && token.state == TransferState::COMPLETED;
+}
+
+bool RawRamXDTransferEngine::transferHostToHost(
+    const PhysicalAllocation& src,
+    PhysicalAllocation& dst,
+    size_t bytes) {
+    if (bytes == 0 ||
+        bytes > src.get().size ||
+        bytes > dst.get().size ||
+        !src.get().hostPtr ||
+        !dst.get().hostPtr) {
+        return false;
+    }
+
+    std::memcpy(dst.get().hostPtr, src.get().hostPtr, bytes);
+    return true;
+}
+
+bool RawRamXDTransferEngine::transferHostToDevice(
+    const PhysicalAllocation& src,
+    PhysicalAllocation& dst,
+    size_t bytes,
+    CopyToken& token) {
+    // Placeholder: real implementation uses Vulkan staging buffer + DMA.
+    // For now, if the VRAM backend exposes a mapped host pointer,
+    // we can memcpy directly. Otherwise, fail closed.
+    if (bytes == 0 ||
+        bytes > src.get().size ||
+        bytes > dst.get().size ||
+        !src.get().hostPtr) {
+        return false;
+    }
+
+    if (dst.get().hostPtr && (dst.get().flags & CAP_MAPPED)) {
+        std::memcpy(dst.get().hostPtr, src.get().hostPtr, bytes);
+        token.id = nextToken_.fetch_add(1, std::memory_order_relaxed);
+        token.timelineValue = nextTimeline_.fetch_add(1, std::memory_order_relaxed);
+        token.state = TransferState::COMPLETED;
+        return true;
+    }
+
+    // Unmapped device memory requires real Vulkan DMA.
+    return false;
+}
+
+bool RawRamXDTransferEngine::transferDeviceToHost(
+    const PhysicalAllocation& src,
+    PhysicalAllocation& dst,
+    size_t bytes,
+    CopyToken& token) {
+    if (bytes == 0 ||
+        bytes > src.get().size ||
+        bytes > dst.get().size ||
+        !dst.get().hostPtr) {
+        return false;
+    }
+
+    if (src.get().hostPtr && (src.get().flags & CAP_MAPPED)) {
+        std::memcpy(dst.get().hostPtr, src.get().hostPtr, bytes);
+        token.id = nextToken_.fetch_add(1, std::memory_order_relaxed);
+        token.timelineValue = nextTimeline_.fetch_add(1, std::memory_order_relaxed);
+        token.state = TransferState::COMPLETED;
+        return true;
+    }
+
+    return false;
+}
+
+bool RawRamXDTransferEngine::transferDeviceToDevice(
+    const PhysicalAllocation& src,
+    PhysicalAllocation& dst,
+    size_t bytes,
+    CopyToken& token) {
+    // Peer copy requires real Vulkan vkCmdCopyBuffer.
+    (void)src;
+    (void)dst;
+    (void)bytes;
+    (void)token;
+    return false;
+}
+
+// ============================================================================
+// LeaseTracker (with underflow protection)
+// ============================================================================
+
+void LeaseTracker::acquire() {
+    active_.fetch_add(1, std::memory_order_acq_rel);
+}
+
+void LeaseTracker::release() noexcept {
+    uint64_t current = active_.load(std::memory_order_acquire);
+    for (;;) {
+        if (current == 0) {
+            std::terminate();
+        }
+        if (active_.compare_exchange_weak(
+                current, current - 1,
+                std::memory_order_acq_rel,
+                std::memory_order_acquire)) {
+            if (current == 1) {
+                std::lock_guard<std::mutex> lock(mutex_);
+                cv_.notify_all();
+            }
+            return;
+        }
+    }
+}
+
+void LeaseTracker::drain() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [&] {
+        return active_.load(std::memory_order_acquire) == 0;
+    });
+}
+
+// ============================================================================
+// MigrationTracker (P0: prevents shutdown race)
+// ============================================================================
+
+void MigrationTracker::acquire() {
+    active_.fetch_add(1, std::memory_order_acq_rel);
+}
+
+void MigrationTracker::release() noexcept {
+    uint64_t current = active_.load(std::memory_order_acquire);
+    for (;;) {
+        if (current == 0) {
+            std::terminate();
+        }
+        if (active_.compare_exchange_weak(
+                current, current - 1,
+                std::memory_order_acq_rel,
+                std::memory_order_acquire)) {
+            if (current == 1) {
+                std::lock_guard<std::mutex> lock(mutex_);
+                cv_.notify_all();
+            }
+            return;
+        }
+    }
+}
+
+void MigrationTracker::drain() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [&] {
+        return active_.load(std::memory_order_acquire) == 0;
+    });
+}
+
+// ============================================================================
+// ResidencyBlock CAS transition (P0: v2.2 state machine)
+// ============================================================================
+
+bool ResidencyBlock::tryTransitionState(
+    ResidencyState expected,
+    ResidencyState desired) noexcept {
+    ResidencyState exp = expected;
+    return state.compare_exchange_strong(
+        exp,
+        desired,
+        std::memory_order_acq_rel,
+        std::memory_order_acquire);
+}
+
+// ============================================================================
+// ResidencyLease (with reclaim callback for retired version cleanup)
+// ============================================================================
+
+ResidencyLease::ResidencyLease(
+    std::shared_ptr<ResidencyBlock> block,
+    std::shared_ptr<ResidencyVersion> version,
+    std::shared_ptr<LeaseTracker> tracker,
+    ReclaimCallback reclaim)
+    : block_(std::move(block)),
+      version_(std::move(version)),
+      tracker_(std::move(tracker)),
+      reclaim_(std::move(reclaim)) {}
+
+ResidencyLease::~ResidencyLease() {
+    reset();
+}
+
+ResidencyLease::ResidencyLease(ResidencyLease&& other) noexcept
+    : block_(std::move(other.block_)),
+      version_(std::move(other.version_)),
+      tracker_(std::move(other.tracker_)),
+      reclaim_(std::move(other.reclaim_)) {}
+
+ResidencyLease& ResidencyLease::operator=(
+    ResidencyLease&& other) noexcept {
+    if (this != &other) {
+        reset();
+        block_ = std::move(other.block_);
+        version_ = std::move(other.version_);
+        tracker_ = std::move(other.tracker_);
+        reclaim_ = std::move(other.reclaim_);
+    }
+    return *this;
+}
+
+void ResidencyLease::reset() noexcept {
+    uint64_t blockId = block_ ? block_->id : 0;
+
+    if (version_) {
+        version_->readerCount.fetch_sub(
+            1, std::memory_order_acq_rel);
+        version_.reset();
+    }
+    if (tracker_) {
+        tracker_->release();
+        tracker_.reset();
+    }
+    block_.reset();
+
+    // P1: trigger retired-version reclamation after lease release
+    if (reclaim_ && blockId != 0) {
+        reclaim_(blockId);
+    }
+}
+
+void ResidencyLease::setReclaimCallback(ReclaimCallback cb) noexcept {
+    reclaim_ = std::move(cb);
+}
+
+void* ResidencyLease::hostPtr() const noexcept {
+    return version_ && version_->allocation
+        ? version_->allocation->get().hostPtr
+        : nullptr;
+}
+
+uint64_t ResidencyLease::deviceAddress() const noexcept {
+    return version_ && version_->allocation
+        ? version_->allocation->get().deviceAddress
+        : 0;
+}
+
+Tier ResidencyLease::tier() const noexcept {
+    return version_ ? version_->tier : Tier::NVMe;
+}
+
+uint64_t ResidencyLease::generation() const noexcept {
+    return version_ ? version_->generation : 0;
+}
+
+uint64_t ResidencyLease::blockId() const noexcept {
+    return block_ ? block_->id : 0;
+}
+
+size_t ResidencyLease::size() const noexcept {
+    return version_ && version_->allocation
+        ? version_->allocation->get().size
+        : 0;
+}
+
+// ============================================================================
+// Backends
+// ============================================================================
+
+NVMeFileBackend::NVMeFileBackend(uint32_t id, uint64_t generation)
+    : id_(id), generation_(generation) {}
+
+AllocationHandle NVMeFileBackend::allocate(size_t bytes) {
+    AllocationHandle h{};
+    h.id = nextId_.fetch_add(1, std::memory_order_relaxed);
+    h.tier = Tier::NVMe;
+    h.backendGeneration = generation_;
+    h.size = bytes;
+    h.hostPtr = std::malloc(bytes);
+    if (h.hostPtr)
+        h.flags = CAP_FILE_BACKED | CAP_HOST_MEMORY;
+    return h;
+}
+
+void NVMeFileBackend::release(const AllocationHandle& h) noexcept {
+    std::free(h.hostPtr);
+}
+
+HostRAMBackend::HostRAMBackend(uint32_t id, uint64_t generation)
+    : id_(id), generation_(generation) {}
+
+AllocationHandle HostRAMBackend::allocate(size_t bytes) {
+    AllocationHandle h{};
+    h.id = nextId_.fetch_add(1, std::memory_order_relaxed);
+    h.tier = Tier::RAM;
+    h.backendGeneration = generation_;
+    h.size = bytes;
+
+#ifdef _WIN32
+    h.hostPtr = _aligned_malloc(bytes, 64);
+#else
+    h.hostPtr = nullptr;
+    if (bytes != 0 && bytes <= std::numeric_limits<size_t>::max() - 63) {
+        void* p = nullptr;
+        if (posix_memalign(&p, 64, bytes) == 0)
+            h.hostPtr = p;
+    }
+#endif
+
+    if (h.hostPtr)
+        h.flags = CAP_HOST_MEMORY | CAP_DMA;
+    return h;
+}
+
+void HostRAMBackend::release(const AllocationHandle& h) noexcept {
+#ifdef _WIN32
+    _aligned_free(h.hostPtr);
+#else
+    std::free(h.hostPtr);
+#endif
+}
+
+VulkanDeviceBackend::VulkanDeviceBackend(
+    uint32_t id,
+    uint64_t generation,
+    void* user,
+    AllocateFn allocateFn,
+    ReleaseFn releaseFn)
+    : id_(id),
+      generation_(generation),
+      user_(user),
+      allocateFn_(allocateFn),
+      releaseFn_(releaseFn) {}
+
+AllocationHandle VulkanDeviceBackend::allocate(size_t bytes) {
+    if (!allocateFn_)
+        return {};
+
+    AllocationHandle h = allocateFn_(user_, bytes);
+    if (h.tier != Tier::VRAM)
+        return {};
+
+    // P1: strict size validation — do not silently normalize
+    if (h.size != bytes)
+        return {};
+
+    if (h.backendGeneration != generation_)
+        h.backendGeneration = generation_;
+    if (h.id == 0)
+        h.id = nextId_.fetch_add(1, std::memory_order_relaxed);
+    return h;
+}
+
+void VulkanDeviceBackend::release(
+    const AllocationHandle& handle) noexcept {
+    if (releaseFn_)
+        releaseFn_(user_, handle);
+}
+
+// ============================================================================
+// RawRamXDFabric
+// ============================================================================
+
+RawRamXDFabric::RawRamXDFabric(
+    std::shared_ptr<CapacityLedger> ledger,
+    std::shared_ptr<TierBackend> nvme,
+    std::shared_ptr<TierBackend> ram,
+    std::shared_ptr<TierBackend> vram,
+    std::shared_ptr<TransferEngine> transfer,
+    size_t blockSize)
+    : ledger_(std::move(ledger)),
+      nvmeBackend_(std::move(nvme)),
+      ramBackend_(std::move(ram)),
+      vramBackend_(std::move(vram)),
+      transferEngine_(std::move(transfer)),
+      leaseTracker_(std::make_shared<LeaseTracker>()),
+      migrationTracker_(std::make_shared<MigrationTracker>()),
+      blockSize_(blockSize) {
+    if (!ledger_ || !nvmeBackend_ || !ramBackend_ ||
+        !vramBackend_ || !transferEngine_ || blockSize_ == 0) {
+        throw std::invalid_argument("RawRamXDFabric invalid dependencies");
+    }
+}
+
+RawRamXDFabric::~RawRamXDFabric() {
+    shutdown();
+}
+
+uint64_t RawRamXDFabric::allocate(
+    size_t size,
+    const char* name,
+    AccessPattern pattern) {
+    if (runtimeState_.load(std::memory_order_acquire) !=
+        RuntimeState::RUNNING)
+        return 0;
+
+    if (size == 0)
+        return 0;
+
+    const uint64_t handleId =
+        nextHandle_.fetch_add(1, std::memory_order_relaxed);
+
+    auto handle = std::make_shared<Handle>();
+    handle->id = handleId;
+    handle->vaddr = handleId << 12;
+    handle->size = size;
+    handle->pattern = pattern;
+    handle->name = name ? name : "unnamed";
+    handle->blockSize = blockSize_;
+
+    const size_t count =
+        (size + blockSize_ - 1) / blockSize_;
+
+    std::vector<std::shared_ptr<ResidencyBlock>> staged;
+    staged.reserve(count);
+
+    try {
+        for (size_t i = 0; i < count; ++i) {
+            const size_t offset = i * blockSize_;
+            const size_t bytes =
+                std::min(blockSize_, size - offset);
+
+            CapacityReservation reservation(
+                ledger_, Tier::NVMe, bytes);
+
+            if (reservation.bytes() == 0)
+                return 0;
+
+            AllocationHandle ah =
+                nvmeBackend_->allocate(bytes);
+
+            if (!ah.hostPtr) {
+                return 0;
+            }
+
+            auto physical =
+                std::make_shared<PhysicalAllocation>(
+                    nvmeBackend_,
+                    std::move(ah),
+                    ledger_);
+
+            auto block =
+                std::make_shared<ResidencyBlock>();
+
+            block->id =
+                nextBlockId_.fetch_add(1, std::memory_order_relaxed);
+            block->tensorId = handleId;
+            block->size = bytes;
+            block->pattern = pattern;
+            block->name = handle->name;
+            block->state.store(
+                ResidencyState::RESIDENT,
+                std::memory_order_release);
+
+            auto version =
+                std::make_shared<ResidencyVersion>();
+
+            version->blockId = block->id;
+            version->generation = 1;
+            version->tier = Tier::NVMe;
+            version->backendId =
+                nvmeBackend_->backendId();
+            version->backendGeneration =
+                nvmeBackend_->backendGeneration();
+            version->allocation = std::move(physical);
+
+            block->activeVersion = std::move(version);
+            staged.push_back(std::move(block));
+
+            reservation.commit();
+        }
+    } catch (...) {
+        return 0;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(blocksMutex_);
+        for (const auto& block : staged)
+            blocks_.emplace(block->id, block);
+    }
+
+    handle->blocks = std::move(staged);
+
+    {
+        std::lock_guard<std::mutex> lock(handlesMutex_);
+        handles_.emplace(handleId, handle);
+    }
+
+    handle->active.store(true, std::memory_order_release);
+
+    return handleId;
+}
+
+ResidencyLease RawRamXDFabric::acquire(
+    uint64_t tensorId,
+    uint32_t blockIndex,
+    Tier targetTier) {
+    if (runtimeState_.load(std::memory_order_acquire) !=
+        RuntimeState::RUNNING)
+        return {};
+
+    auto block =
+        resolveBlockForTensor(tensorId, blockIndex);
+
+    if (!block)
+        return {};
+
+    if (!ensureBlockInTier(block->id, targetTier))
+        return {};
+
+    std::lock_guard<std::mutex> lock(block->blockMutex);
+
+    return pinActiveVersionLocked(block, targetTier);
+}
+
+ResidencyLease RawRamXDFabric::pinActiveVersionLocked(
+    const std::shared_ptr<ResidencyBlock>& block,
+    Tier targetTier) {
+    if (runtimeState_.load(std::memory_order_acquire) !=
+        RuntimeState::RUNNING)
+        return {};
+
+    auto version = block->activeVersion;
+
+    if (!version ||
+        !version->allocation ||
+        version->tier != targetTier ||
+        block->state.load(std::memory_order_acquire) !=
+            ResidencyState::RESIDENT)
+        return {};
+
+    version->readerCount.fetch_add(
+        1, std::memory_order_acq_rel);
+
+    leaseTracker_->acquire();
+
+    // P1: bind reclaim callback so retired versions are cleaned up
+    // when this lease is released
+    auto reclaim = [this](uint64_t blockId) {
+        onLeaseReleased(blockId);
+    };
+
+    return ResidencyLease(
+        block,
+        std::move(version),
+        leaseTracker_,
+        std::move(reclaim));
+}
+
+bool RawRamXDFabric::ensureBlockInTier(
+    uint64_t blockId,
+    Tier targetTier) {
+    auto block = resolveBlock(blockId);
+    if (!block)
+        return false;
+
+    for (;;) {
+        uint64_t sourceGeneration = 0;
+        uint64_t ticket = 0;
+
+        {
+            std::unique_lock<std::mutex> lock(
+                block->blockMutex);
+
+            if (runtimeState_.load(std::memory_order_acquire) !=
+                RuntimeState::RUNNING)
+                return false;
+
+            auto active = block->activeVersion;
+
+            if (active &&
+                active->allocation &&
+                active->tier == targetTier &&
+                block->state.load(std::memory_order_acquire) ==
+                    ResidencyState::RESIDENT) {
+                return true;
+            }
+
+            if (block->state.load(std::memory_order_acquire) ==
+                ResidencyState::MIGRATING) {
+                const uint64_t waitingFor =
+                    block->migrationTicket;
+
+                block->migrationCv.wait(lock, [&] {
+                    return block->state.load(
+                               std::memory_order_acquire) !=
+                               ResidencyState::MIGRATING ||
+                           block->migrationTicket != waitingFor;
+                });
+
+                continue;
+            }
+
+            if (block->state.load(std::memory_order_acquire) ==
+                ResidencyState::FAILED) {
+                if (!block->activeVersion ||
+                    !block->activeVersion->allocation)
+                    return false;
+
+                block->tryTransitionState(
+                    ResidencyState::FAILED,
+                    ResidencyState::RESIDENT);
+            }
+
+            active = block->activeVersion;
+            if (!active || !active->allocation)
+                return false;
+
+            sourceGeneration = active->generation;
+            ticket =
+                nextMigrationTicket_.fetch_add(
+                    1, std::memory_order_relaxed);
+
+            block->migrationTarget = targetTier;
+            block->migrationTicket = ticket;
+
+            if (!block->tryTransitionState(
+                    ResidencyState::RESIDENT,
+                    ResidencyState::MIGRATING)) {
+                // Another thread raced the transition.
+                continue;
+            }
+
+            migrationsStarted_.fetch_add(
+                1, std::memory_order_relaxed);
+        }
+
+        const bool success =
+            performMigration(
+                block,
+                targetTier,
+                sourceGeneration,
+                ticket);
+
+        {
+            std::lock_guard<std::mutex> lock(
+                block->blockMutex);
+
+            if (success) {
+                block->tryTransitionState(
+                    ResidencyState::MIGRATING,
+                    ResidencyState::RESIDENT);
+            } else {
+                if (block->activeVersion &&
+                    block->activeVersion->allocation) {
+                    block->tryTransitionState(
+                        ResidencyState::MIGRATING,
+                        ResidencyState::RESIDENT);
+                } else {
+                    block->tryTransitionState(
+                        ResidencyState::MIGRATING,
+                        ResidencyState::FAILED);
+                }
+            }
+        }
+
+        block->migrationCv.notify_all();
+
+        if (success)
+            return true;
+
+        return false;
+    }
+}
+
+bool RawRamXDFabric::migrate(
+    uint64_t blockId,
+    Tier targetTier) {
+    if (runtimeState_.load(std::memory_order_acquire) !=
+        RuntimeState::RUNNING)
+        return false;
+
+    return ensureBlockInTier(blockId, targetTier);
+}
+
+bool RawRamXDFabric::performMigration(
+    const std::shared_ptr<ResidencyBlock>& block,
+    Tier targetTier,
+    uint64_t sourceGeneration,
+    uint64_t ticket) {
+    // P0: treat migrations as execution epochs
+    migrationTracker_->acquire();
+    struct MigrationGuard {
+        std::shared_ptr<MigrationTracker> t;
+        ~MigrationGuard() { if (t) t->release(); }
+    } guard{migrationTracker_};
+
+    if (runtimeState_.load(std::memory_order_acquire) !=
+        RuntimeState::RUNNING)
+        return false;
+
+    auto targetBackend = backendFor(targetTier);
+    if (!targetBackend)
+        return false;
+
+    const size_t bytes = block->size;
+
+    if (!ledger_->tryReserve(targetTier, bytes))
+        return false;
+
+    CapacityReservation reservation(
+        ledger_, targetTier, bytes);
+
+    AllocationHandle dstHandle =
+        targetBackend->allocate(bytes);
+
+    // P1: strict backend size validation
+    if (dstHandle.size != bytes ||
+        (!dstHandle.hostPtr &&
+         !dstHandle.nativeBuffer)) {
+        return false;
+    }
+
+    auto dstPhysical =
+        std::make_shared<PhysicalAllocation>(
+            targetBackend,
+            std::move(dstHandle),
+            ledger_);
+
+    std::shared_ptr<PhysicalAllocation> srcPhysical;
+    uint32_t srcBackendId = 0;
+    uint64_t srcBackendGeneration = 0;
+
+    {
+        std::lock_guard<std::mutex> lock(
+            block->blockMutex);
+
+        auto current = block->activeVersion;
+
+        // P1: full identity + generation + ticket validation
+        if (!current ||
+            !current->allocation ||
+            current->generation != sourceGeneration ||
+            block->migrationTicket != ticket ||
+            block->state.load(std::memory_order_acquire) !=
+                ResidencyState::MIGRATING) {
+            return false;
+        }
+
+        srcPhysical = current->allocation;
+        srcBackendId = current->backendId;
+        srcBackendGeneration = current->backendGeneration;
+    }
+
+    // P1: validate backend identity matches the physical allocation
+    if (!srcPhysical ||
+        srcPhysical->get().backendId != srcBackendId ||
+        srcPhysical->get().backendGeneration != srcBackendGeneration) {
+        migrationsFailed_.fetch_add(
+            1, std::memory_order_relaxed);
+        return false;
+    }
+
+    if (!transferEngine_->canTransfer(
+            srcPhysical->get().tier,
+            targetTier)) {
+        migrationsFailed_.fetch_add(
+            1, std::memory_order_relaxed);
+        return false;
+    }
+
+    CopyToken token{};
+
+    if (!transferEngine_->transfer(
+            *srcPhysical,
+            *dstPhysical,
+            bytes,
+            token)) {
+        migrationsFailed_.fetch_add(
+            1, std::memory_order_relaxed);
+        return false;
+    }
+
+    if (!transferEngine_->wait(token)) {
+        migrationsFailed_.fetch_add(
+            1, std::memory_order_relaxed);
+        return false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(
+            block->blockMutex);
+
+        auto current = block->activeVersion;
+
+        // P0 + P1: full validation before publication
+        if (!current ||
+            !current->allocation ||
+            current->generation != sourceGeneration ||
+            current->backendId != srcBackendId ||
+            current->backendGeneration != srcBackendGeneration ||
+            block->migrationTicket != ticket ||
+            block->state.load(std::memory_order_acquire) !=
+                ResidencyState::MIGRATING) {
+            migrationsFailed_.fetch_add(
+                1, std::memory_order_relaxed);
+            return false;
+        }
+
+        auto newVersion =
+            std::make_shared<ResidencyVersion>();
+
+        newVersion->blockId = block->id;
+        newVersion->generation =
+            current->generation + 1;
+        newVersion->tier = targetTier;
+        newVersion->backendId =
+            targetBackend->backendId();
+        newVersion->backendGeneration =
+            targetBackend->backendGeneration();
+        newVersion->allocation =
+            std::move(dstPhysical);
+
+        block->retiredVersions.push_back(
+            std::move(block->activeVersion));
+
+        block->activeVersion =
+            std::move(newVersion);
+
+        reclaimRetiredLocked(*block);
+    }
+
+    reservation.commit();
+
+    migrationsCompleted_.fetch_add(
+        1, std::memory_order_relaxed);
+
+    return true;
+}
+
+void RawRamXDFabric::reclaimRetiredLocked(
+    ResidencyBlock& block) {
+    block.retiredVersions.erase(
+        std::remove_if(
+            block.retiredVersions.begin(),
+            block.retiredVersions.end(),
+            [](const std::shared_ptr<ResidencyVersion>& version) {
+                return version &&
+                       version->readerCount.load(
+                           std::memory_order_acquire) == 0;
+            }),
+        block.retiredVersions.end());
+}
+
+void RawRamXDFabric::onLeaseReleased(uint64_t blockId) {
+    auto block = resolveBlock(blockId);
+    if (!block)
+        return;
+
+    std::lock_guard<std::mutex> lock(block->blockMutex);
+    reclaimRetiredLocked(*block);
+}
+
+std::shared_ptr<ResidencyBlock>
+RawRamXDFabric::resolveBlock(uint64_t blockId) const {
+    std::lock_guard<std::mutex> lock(blocksMutex_);
+    auto it = blocks_.find(blockId);
+    return it == blocks_.end() ? nullptr : it->second;
+}
+
+std::shared_ptr<ResidencyBlock>
+RawRamXDFabric::resolveBlockForTensor(
+    uint64_t tensorId,
+    uint32_t blockIndex) const {
+    std::lock_guard<std::mutex> lock(handlesMutex_);
+
+    auto it = handles_.find(tensorId);
+    if (it == handles_.end())
+        return nullptr;
+
+    const auto& handle = it->second;
+    if (!handle->active.load(std::memory_order_acquire) ||
+        blockIndex >= handle->blocks.size())
+        return nullptr;
+
+    return handle->blocks[blockIndex];
+}
+
+std::shared_ptr<TierBackend>
+RawRamXDFabric::backendFor(Tier tier) const {
+    switch (tier) {
+    case Tier::NVMe: return nvmeBackend_;
+    case Tier::RAM:  return ramBackend_;
+    case Tier::VRAM: return vramBackend_;
+    }
+    return nullptr;
+}
+
+void RawRamXDFabric::shutdown() {
+    RuntimeState expected = RuntimeState::RUNNING;
+
+    if (!runtimeState_.compare_exchange_strong(
+            expected,
+            RuntimeState::DRAINING,
+            std::memory_order_acq_rel,
+            std::memory_order_acquire)) {
+        if (expected == RuntimeState::STOPPED)
+            return;
+
+        leaseTracker_->drain();
+        migrationTracker_->drain();
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(handlesMutex_);
+        for (auto& [id, handle] : handles_)
+            handle->active.store(false, std::memory_order_release);
+    }
+
+    // P0: drain both execution leases and in-flight migrations
+    leaseTracker_->drain();
+    migrationTracker_->drain();
+
+    {
+        std::lock_guard<std::mutex> lock(blocksMutex_);
+
+        for (auto& [id, block] : blocks_) {
+            std::lock_guard<std::mutex> blockLock(
+                block->blockMutex);
+
+            block->state.store(
+                ResidencyState::UNMAPPED,
+                std::memory_order_release);
+            block->activeVersion.reset();
+            block->retiredVersions.clear();
+        }
+
+        blocks_.clear();
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(handlesMutex_);
+        handles_.clear();
+    }
+
+    runtimeState_.store(
+        RuntimeState::STOPPED,
+        std::memory_order_release);
+}
+
+RuntimeState RawRamXDFabric::runtimeState() const noexcept {
+    return runtimeState_.load(std::memory_order_acquire);
+}
+
+RawRamXDFabric::Stats RawRamXDFabric::stats() const {
+    Stats s;
+    s.nvmeUsed = ledger_->used(Tier::NVMe);
+    s.ramUsed = ledger_->used(Tier::RAM);
+    s.vramUsed = ledger_->used(Tier::VRAM);
+    s.migrationsStarted =
+        migrationsStarted_.load(std::memory_order_acquire);
+    s.migrationsCompleted =
+        migrationsCompleted_.load(std::memory_order_acquire);
+    s.migrationsFailed =
+        migrationsFailed_.load(std::memory_order_acquire);
+    return s;
 }
 
 } // namespace rawramxd

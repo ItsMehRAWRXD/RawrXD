@@ -13,6 +13,7 @@
 
 #include "TensorExecutionRouter.hpp"
 #include "memory/PredictiveMemoryManager.hpp"
+#include "StreamRouterAdapter.hpp"
 #ifndef RAWRXD_NO_VULKAN
 #include "../backend/vulkan_compute.h"
 #endif
@@ -49,6 +50,9 @@ public:
     // B002: predictive-memory integration (router is a consumer only)
     Memory::PredictiveMemoryManager* memoryManager = nullptr;
     uint32_t currentLayer = 0;
+
+    // B015-B: StreamRouterAdapter for Deep2 bridge
+    rawrxd::StreamRouterAdapter* streamRouterAdapter = nullptr;
 };
 
 TensorExecutionRouter::TensorExecutionRouter() : pImpl(new Impl()) {}
@@ -79,10 +83,9 @@ void TensorExecutionRouter::advanceLayer(uint32_t layer) {
     pImpl->currentLayer = layer;
 }
 
-// Phase 1 bridge: optional StreamRouterAdapter
+// B015-B: Store StreamRouterAdapter pointer for Deep2 bridge dispatch
 void TensorExecutionRouter::setStreamRouterAdapter(rawrxd::StreamRouterAdapter* adapter) {
-    // TODO: store adapter pointer in Impl
-    (void)adapter;
+    pImpl->streamRouterAdapter = adapter;
 }
 
 void TensorExecutionRouter::matmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K) {
@@ -101,6 +104,36 @@ bool TensorExecutionRouter::dispatchMatmul(TensorView& input, TensorHandle& weig
     }
 
     bool dispatched = false;
+
+    // B015-B: Try StreamRouterAdapter first (resident tensor → kernel dispatch)
+    if (!dispatched && pImpl->streamRouterAdapter && pImpl->streamRouterAdapter->IsEnabled()
+        && weight.host_ptr && input.data && output.data) {
+        // Build ResidentTensor from TensorHandle + TensorView
+        rawrxd::ResidentTensor rt{};
+        rt.id = weight.has_tensor_id ? weight.tensor_id : reinterpret_cast<uintptr_t>(weight.host_ptr);
+        rt.data = weight.host_ptr;
+        rt.bytes = weight.bytes;
+        rt.quant = rawrxd::QuantType::F32; // Resident weights are always F32
+        rt.generation = 0; // TODO: wire generation from WeightResidencyPool
+        rt.rows = static_cast<uint32_t>(M);
+        rt.cols = static_cast<uint32_t>(K);
+        rt.scale = 1.0f;
+        rt.zero_point = 0.0f;
+
+        rawrxd::ExecutionRequest req{};
+        req.op = rawrxd::Operation::MatMul;
+        req.weights = &rt;
+        req.input = input.data;
+        req.output = output.data;
+        req.input_dim = static_cast<uint32_t>(K);
+        req.output_dim = static_cast<uint32_t>(M);
+        req.ctx.layer = pImpl->currentLayer;
+        req.ctx.batch_size = 1;
+        req.ctx.use_gpu = false;
+        req.ctx.use_fused = false;
+
+        dispatched = pImpl->streamRouterAdapter->Dispatch(req);
+    }
 
 #ifndef RAWRXD_NO_VULKAN
     if (weight.device_ptr && pImpl->vulkan_ready && input.gpu_buffer && output.gpu_buffer) {

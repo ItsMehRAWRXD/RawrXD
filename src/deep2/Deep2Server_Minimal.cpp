@@ -47,6 +47,7 @@ public:
     
     static std::string str(const std::string& s) { return "\"" + escape(s) + "\""; }
     static std::string num(int n) { return std::to_string(n); }
+    static std::string num(int64_t n) { return std::to_string(n); }
     static std::string num(size_t n) { return std::to_string(n); }
     static std::string num(float f) { return std::to_string(f); }
     static std::string boolean(bool b) { return b ? "true" : "false"; }

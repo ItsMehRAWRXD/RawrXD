@@ -6,7 +6,7 @@
 #include "ScaleQuality.hpp"
 #include <cstdio>
 #include <cstring>
-#include <math>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <numeric>

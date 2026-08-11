@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <dxgi.h>
 #include <vulkan/vulkan.h>
-#include <stdio>
+#include <cstdio>
 #include <algorithm>
 
 #pragma comment(lib, "dxgi.lib")

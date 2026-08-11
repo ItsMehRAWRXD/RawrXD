@@ -47,6 +47,7 @@ public:
     
     static std::string str(const std::string& s) { return "\"" + escape(s) + "\""; }
     static std::string num(int n) { return std::to_string(n); }
+    static std::string num(int64_t n) { return std::to_string(n); }
     static std::string num(size_t n) { return std::to_string(n); }
     static std::string num(float f) { return std::to_string(f); }
     static std::string boolean(bool b) { return b ? "true" : "false"; }
@@ -282,7 +283,7 @@ private:
             {"status", JSONBuilder::str("ok")},
             {"engine", JSONBuilder::str("Deep2")},
             {"version", JSONBuilder::str("1.0.0")},
-            {"timestamp", JSONBuilder::num(time(nullptr))}
+            {"timestamp", JSONBuilder::num(static_cast<int64_t>(time(nullptr)))}
         });
         return httpResponse(200, j);
     }

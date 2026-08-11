@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <math>
+#include <cmath>
 #include <vector>
 #include <array>
 #include <algorithm>

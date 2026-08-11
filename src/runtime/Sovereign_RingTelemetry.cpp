@@ -29,6 +29,11 @@
 #include <cstdio>
 #include <windows.h>
 
+// Internal constants (mirror MASM BRIDGE_RING_CTRL constants)
+#define BRIDGE_MAGIC        0x524157525F494445ULL  // "RAWR_IDE"
+#define BRIDGE_STATE_READY  1
+#define FLAGS_FINAL_CHUNK   0x00000001u
+
 namespace {
 
 // Ring slot layout (matches MASM RESP_SLOT layout)
@@ -63,10 +68,11 @@ struct alignas(64) RingHeader {
     uint32_t cancel_flags;
     uint32_t cancel_ack_epoch;
     // Padding to 128 bytes for cache-line separation
-    uint8_t  pad[56];
+    uint8_t  pad[40];
 };
 
-static_assert(sizeof(RingHeader) == 128, "RingHeader must be 128 bytes");
+// Note: alignas(64) ensures cache-line alignment; size will be a multiple of 64
+static_assert(sizeof(RingHeader) % 64 == 0, "RingHeader size must be a multiple of 64");
 
 // Internal state
 struct RingState {

@@ -47,6 +47,10 @@ struct ModelMetadata {
     uint32_t numKVHeads;
     uint32_t headDim;
 
+    // Legacy aliases for backward compatibility
+    uint32_t hiddenDim;        // alias for hiddenSize
+    uint32_t contextLength;    // alias for maxContextLen
+
     // MoE
     bool     isMoE;
     uint32_t numExperts;
@@ -69,6 +73,7 @@ struct ModelMetadata {
 
     ModelMetadata() : vocabSize(0), hiddenSize(0), numLayers(0),
         numHeads(0), numKVHeads(0), headDim(0),
+        hiddenDim(0), contextLength(0),
         isMoE(false), numExperts(0), numExpertsPerTok(0), moeIntermediateSize(0),
         weightQuant(QuantType::F32), kvQuant(QuantType::F16),
         ropeTheta(10000.0f), ropeScaling(1.0f), rmsNormEps(1e-6f),
@@ -78,9 +83,17 @@ struct ModelMetadata {
 // ============================================================================
 // Tensor Entry (descriptor + raw data reference)
 // ============================================================================
+struct TensorShape {
+    uint32_t dims = 0;
+    uint32_t dim[4] = {0, 0, 0, 0};
+    uint64_t elements = 0;
+};
+
 struct TensorEntry {
     std::string name;
     UniversalTensorDescriptor descriptor;
+    TensorShape shape;
+    QuantType quantType = QuantType::F32;
     uint64_t fileOffset;     // Offset in source file
     uint64_t byteSize;       // Size in bytes
 };

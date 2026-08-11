@@ -42,6 +42,9 @@
 // B014: Per-invocation compute decomposition profiler
 #include "../B014/build/b014_profiler.hpp"
 
+// B015: Multi-tensor weight residency pool (forward-declare to avoid circular deps)
+namespace rawrxd { class WeightResidencyPool; }
+
 // A few extra Vulkan handle typedefs the loader references that the CPU
 // fallback in vulkan_compute.h may not declare. Guard against real headers.
 #if !RAWR_VULKAN_AVAILABLE
@@ -200,6 +203,16 @@ class RawrXDModelLoader
     void B011ClearResidency();
     const B011ResidencyStats& B011GetStats() const { return m_b011Stats; }
 
+    // ============================================================================
+    // B015 — WeightResidencyPool integration (dequantized-FP32 tensor caching)
+    // ============================================================================
+    void B015SetPool(rawrxd::WeightResidencyPool* pool) { m_b015Pool = pool; }
+    rawrxd::WeightResidencyPool* B015GetPool() const { return m_b015Pool; }
+
+    /// Materialize a fully dequantized FP32 tensor and commit it to B015 pool.
+    /// Returns true if the tensor was successfully dequantized and committed.
+    bool B015MaterializeDequantizedTensor(const std::string& tensorName);
+
     // B014: Per-invocation compute decomposition profiler accessors
     void B014EnableProfiling(bool enabled) { m_b014Profiler.Enable(enabled); }
     bool B014ProfilingEnabled() const { return m_b014Profiler.IsEnabled(); }
@@ -251,6 +264,9 @@ class RawrXDModelLoader
 
     // B014: Per-invocation compute decomposition profiler
     rawrxd::b014::B014Profiler m_b014Profiler;
+
+    // B015: External pool pointer (non-owning; owned by RawrXDTransformer)
+    rawrxd::WeightResidencyPool* m_b015Pool = nullptr;
 
     VkDevice m_device;
     VkPhysicalDeviceMemoryProperties m_memProps;

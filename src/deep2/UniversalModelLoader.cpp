@@ -863,7 +863,8 @@ static bool ReadZipCentralDirectory(std::ifstream& file, std::vector<ZipEntry>& 
     auto fileSize = file.tellg();
     
     // Search backwards for end of central directory signature
-    auto searchStart = std::max(static_cast<std::streamoff>(0), fileSize - 65536);
+    std::streamoff fileSizeOff = static_cast<std::streamoff>(fileSize);
+    auto searchStart = std::max(static_cast<std::streamoff>(0), fileSizeOff - static_cast<std::streamoff>(65536));
     file.seekg(searchStart, std::ios::beg);
     
     std::vector<uint8_t> buffer(fileSize - searchStart);
@@ -938,13 +939,19 @@ static bool ReadZipEntryData(std::ifstream& file, const ZipEntry& entry, std::ve
     if (entry.compressionMethod != 0) {
         // Compression method 8 = DEFLATE (zlib)
         if (entry.compressionMethod == 8) {
-            // Decompress using zlib
-            uLongf uncompressedLen = entry.uncompressedSize;
+            // Decompress using zlib runtime loader
+            RawrXD::Compression::ZlibRuntimeLoader zlib;
+            if (!zlib.Load()) {
+                printf("[UniversalModelLoader] zlib not available for decompression\n");
+                return false;
+            }
+            
+            uint32_t uncompressedLen = static_cast<uint32_t>(entry.uncompressedSize);
             std::vector<uint8_t> uncompressed(uncompressedLen);
-            int ret = uncompress(uncompressed.data(), &uncompressedLen,
-                                 data.data(), entry.compressedSize);
-            if (ret != Z_OK) {
-                printf("[UniversalModelLoader] zlib decompression failed: %d\n", ret);
+            bool ok = zlib.Decompress(uncompressed.data(), &uncompressedLen,
+                                     data.data(), static_cast<uint32_t>(entry.compressedSize));
+            if (!ok) {
+                printf("[UniversalModelLoader] zlib decompression failed\n");
                 return false;
             }
             data = std::move(uncompressed);

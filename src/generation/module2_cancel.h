@@ -49,7 +49,7 @@ private:
 
 // --- CancelSource ---
 // Write side. Owns the atomic flag, CV, and mutex.
-// Non-copyable, movable.
+// Non-copyable, NON-MOVABLE — CancelToken holds raw pointers into this object.
 class CancelSource {
 public:
     CancelSource() : flag_(false) {}
@@ -57,19 +57,10 @@ public:
     CancelSource(const CancelSource&) = delete;
     CancelSource& operator=(const CancelSource&) = delete;
 
-    CancelSource(CancelSource&& o)
-        : flag_(o.flag_.load(std::memory_order_relaxed))
-        , cv_(), mtx_() {
-        // Move semantics are limited; we just copy the flag value
-    }
-
-    CancelSource& operator=(CancelSource&& o) {
-        if (this != &o) {
-            requestStop();
-            flag_.store(o.flag_.load(std::memory_order_relaxed), std::memory_order_release);
-        }
-        return *this;
-    }
+    // Deleted move operations — CancelToken contains raw pointers to our members.
+    // Moving would leave existing tokens dangling.
+    CancelSource(CancelSource&&) = delete;
+    CancelSource& operator=(CancelSource&&) = delete;
 
     bool requestStop() {
         bool expected = false;

@@ -35,6 +35,8 @@
 #include "runtime/TensorExecutionRouter.hpp"
 #include "runtime/memory/PredictiveMemoryManager.hpp"
 #include "runtime/memory/WeightResidencyPool.hpp"
+#include "runtime/StreamRouterAdapter.hpp"
+#include "Sovereign_ABI.h"
 #include "rawrxd_model_loader.h"
 
 /// Subset of swarm plan rows to pin for one layer (MoE: static early, experts after router logits).

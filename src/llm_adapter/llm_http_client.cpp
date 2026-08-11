@@ -1,1233 +1,567 @@
-#include "llm_http_client.h"
-#include <curl/curl.h>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <cmath>
-#include <random>
-#include <chrono>
-#include <thread>
+/**
+ * @file llm_http_client.cpp
+ * @brief WinHTTP/curl HTTP client implementation (Qt-free)
+ *
+ * Post-Qt replacement for QNetworkAccessManager.
+ * Three key components:
+ *   1. StlHttpClient — platform HTTP transport (WinHTTP / curl)
+ *   2. HttpChainStep     — single async LLM call with future retention
+ *   3. HttpChainExecutor — sequential step chain with callbacks
+ *
+ * Compatible with both CLI (RawrEngine) and GUI (RawrXD-Win32IDE).
+ * No exceptions in hot paths. Structured PatchResult-style returns.
+ */
+
+#include "llm_http_client.hpp"
 #include <algorithm>
+#include <chrono>
+#include <cstdio>
+#include <cstring>
+#include <thread>
 
-// ============================================================================
-// CURL Helper Callbacks
-// ============================================================================
-
-namespace {
-    struct CurlWriteContext {
-        std::string data;
-        std::function<void(const std::string&)> streamCallback;
-        LLMHttpClient* client = nullptr;
-        LLMBackend backend;
-    };
-
-    // Write callback for response body
-    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-        size_t realsize = size * nmemb;
-        CurlWriteContext* mem = static_cast<CurlWriteContext*>(userp);
-        
-        try {
-            mem->data.append(static_cast<char*>(contents), realsize);
-        } catch (const std::bad_alloc&) {
-            return 0;  // Signal error
-        }
-        
-        return realsize;
-    }
-
-    // Progress callback for monitoring
-    static int ProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow,
-                               curl_off_t ultotal, curl_off_t ulnow) {
-        // Could be used for progress tracking
-        return 0;
-    }
-
-    // Header callback for capturing response headers
-    static size_t HeaderCallback(char* buffer, size_t size, size_t nmemb, void* userp) {
-        size_t realsize = size * nmemb;
-        std::string* headers = static_cast<std::string*>(userp);
-        headers->append(buffer, realsize);
-        return realsize;
-    }
-}
-
-// ============================================================================
-// Constructor and Destructor
-// ============================================================================
-
-LLMHttpClient::LLMHttpClient()
-    : m_backend(LLMBackend::OLLAMA),
-      m_initTime(std::chrono::high_resolution_clock::now()),
-      m_activeConnections(0)
-{
-    // Initialize curl globally (thread-safe after first call)
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-}
-
-LLMHttpClient::~LLMHttpClient() {
-    // Cleanup curl
-    curl_global_cleanup();
-}
-
-// ============================================================================
-// Initialization
-// ============================================================================
-
-bool LLMHttpClient::initialize(
-    LLMBackend backend,
-    const HTTPConfig& config,
-    const AuthCredentials& credentials)
-{
-    m_backend = backend;
-    m_config = config;
-    m_credentials = credentials;
-
-    // Validate base URL
-    if (!isValidURL(config.baseUrl)) {
-        
-        return false;
-    }
-
-    // Initialize connection pool
-    {
-        std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
-        for (int i = 0; i < config.connectionPoolSize; ++i) {
-            // Create WinHTTP session handles for the connection pool
 #ifdef _WIN32
-            HINTERNET hSession = WinHttpOpen(
-                L"RawrXD-LLM-Adapter/1.0",
-                WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-                WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-            if (hSession) {
-                // Set timeouts on the session
-                DWORD timeout = static_cast<DWORD>(config.timeoutMs);
-                WinHttpSetTimeouts(hSession, timeout, timeout, timeout, timeout);
-                m_connectionPool.push(reinterpret_cast<void*>(hSession));
-            } else {
-                m_connectionPool.push(nullptr);
-            }
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+#  include <winhttp.h>
+#  pragma comment(lib, "winhttp.lib")
 #else
-            // POSIX: pool index marker for curl multi handle
-            m_connectionPool.push(reinterpret_cast<void*>(static_cast<uintptr_t>(i + 1)));
+#  include <cstdlib>
+#  include <filesystem>
+#  include <fstream>
 #endif
-        }
+
+// ============================================================================
+// URL parsing helper
+// ============================================================================
+namespace {
+
+struct ParsedUrl {
+    std::wstring host;
+    std::wstring path;
+    uint16_t     port   = 80;
+    bool         isTls  = false;
+};
+
+#ifdef _WIN32
+ParsedUrl parseUrl(const std::string& url) {
+    ParsedUrl p;
+    p.isTls = (url.rfind("https", 0) == 0);
+    p.port  = p.isTls ? 443 : 80;
+
+    size_t schemeEnd = url.find("://");
+    if (schemeEnd == std::string::npos) {
+        p.host = L"localhost";
+        p.path = std::wstring(url.begin(), url.end());
+        return p;
+    }
+    schemeEnd += 3;
+
+    size_t pathStart = url.find('/', schemeEnd);
+    if (pathStart == std::string::npos) pathStart = url.size();
+
+    std::string hostPort(url.begin() + schemeEnd, url.begin() + pathStart);
+    std::string pathStr(url.begin() + pathStart, url.end());
+    if (pathStr.empty()) pathStr = "/";
+
+    // Check for explicit port
+    auto colon = hostPort.find(':');
+    if (colon != std::string::npos) {
+        std::string portStr(hostPort.begin() + colon + 1, hostPort.end());
+        p.port = static_cast<uint16_t>(std::stoi(portStr));
+        hostPort = hostPort.substr(0, colon);
     }
 
+    p.host = std::wstring(hostPort.begin(), hostPort.end());
+    p.path = std::wstring(pathStr.begin(), pathStr.end());
+    return p;
+}
+#endif
 
-    return testConnectivity();
+int64_t nowMs() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+} // anonymous namespace
+
+// ============================================================================
+// StlHttpClient — construction / destruction
+// ============================================================================
+StlHttpClient::StlHttpClient() = default;
+
+StlHttpClient::~StlHttpClient() {
+    cancelAll();
+}
+
+StlHttpClient& StlHttpClient::instance() {
+    static StlHttpClient s_instance;
+    return s_instance;
 }
 
 // ============================================================================
-// Main HTTP Operations
+// StlHttpClient — synchronous send
 // ============================================================================
+HttpResponse StlHttpClient::send(const HttpRequest& req) {
+    m_stats.totalRequests++;
+    m_stats.activeRequests++;
 
-APIResponse LLMHttpClient::makeRequest(const APIRequest& request) {
-    return sendHTTPRequest(request, true);
-}
-
-APIResponse LLMHttpClient::makeStreamingRequest(
-    const APIRequest& request,
-    std::function<void(const StreamChunk&)> chunkCallback)
-{
-    if (!checkRateLimit()) {
-        APIResponse resp;
-        resp.statusCode = 429;
-        resp.statusMessage = "Rate limit exceeded";
-        resp.success = false;
-        resp.error = "Too many requests";
-        return resp;
+    if (onRequestStarted) {
+        onRequestStarted(req.url);
     }
 
-    int64_t startTime = getCurrentTimestampMs();
+    auto resp = platformSend(req);
 
-    CURL* curl = nullptr;
-    {
-        std::lock_guard<std::mutex> lock(m_poolMutex);
-        if (!m_connectionPool.empty()) {
-            curl = static_cast<CURL*>(m_connectionPool.front());
-            m_connectionPool.pop();
-        }
+    m_stats.activeRequests--;
+    m_stats.totalLatencyMs += resp.latencyMs;
+    if (resp.success) m_stats.successCount++;
+    else              m_stats.failCount++;
+
+    if (onRequestCompleted) {
+        onRequestCompleted(resp);
+    }
+    if (!resp.success && onError) {
+        onError(resp.error, true);
     }
 
-    if (!curl) {
-        curl = curl_easy_init();
-    }
-
-    if (!curl) {
-        APIResponse resp;
-        resp.statusCode = 0;
-        resp.success = false;
-        resp.error = "Failed to initialize CURL";
-        return resp;
-    }
-
-    // Reset handle for reuse
-    curl_easy_reset(curl);
-
-    try {
-        std::string fullUrl = m_config.baseUrl + request.endpoint;
-        std::string jsonBody = request.body.dump();
-
-        // Setup CURL options
-        curl_easy_setopt(curl, CURLOPT_URL, fullUrl.c_str());
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)m_config.timeoutMs);
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonBody.c_str());
-
-        // Build headers
-        auto headers = buildDefaultHeaders();
-        auto authHeaders = buildAuthHeaders();
-        headers.insert(authHeaders.begin(), authHeaders.end());
-
-        struct curl_slist* headerList = nullptr;
-        headerList = curl_slist_append(headerList, "Content-Type: application/json");
-        for (const auto& [key, value] : headers) {
-            headerList = curl_slist_append(headerList, (key + ": " + value).c_str());
-        }
-
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
-
-        // Setup streaming
-        CurlWriteContext writeContext;
-        writeContext.client = this;
-        writeContext.backend = m_backend;
-        writeContext.streamCallback = chunkCallback;
-
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeContext);
-
-        // String for response headers
-        std::string responseHeaders;
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
-        curl_easy_setopt(curl, CURLOPT_HEADERDATA, &responseHeaders);
-
-        // SSL options
-        if (!m_config.validateSSL) {
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-        }
-
-        // User agent
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, m_config.userAgent.c_str());
-
-        // Perform request
-        CURLcode res = curl_easy_perform(curl);
-
-        // Get response code
-        long responseCode = 0;
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-
-        int64_t endTime = getCurrentTimestampMs();
-        int64_t latency = endTime - startTime;
-
-        // Parse streaming response
-        APIResponse response;
-        response.statusCode = static_cast<int>(responseCode);
-        response.responseTimeMs = latency;
-        response.receivedAt = endTime;
-
-        if (res == CURLE_OK && responseCode >= 200 && responseCode < 300) {
-            response.success = true;
-            response.rawBody = writeContext.data;
-
-            // Parse streaming chunks
-            if (m_backend == LLMBackend::OLLAMA) {
-                // Ollama sends JSON-per-line
-                std::istringstream stream(writeContext.data);
-                std::string line;
-                while (std::getline(stream, line)) {
-                    if (!line.empty()) {
-                        try {
-                            auto chunk = parseOllamaStreamChunk(line);
-                            if (!chunk.content.empty() || chunk.isComplete) {
-                                chunkCallback(chunk);
-                            }
-                        } catch (const std::exception& e) {
-                            
-                        }
-                    }
-                }
-            } else if (m_backend == LLMBackend::OPENAI) {
-                // OpenAI uses Server-Sent Events (SSE)
-                auto lines = splitSSELines(writeContext.data);
-                for (const auto& line : lines) {
-                    if (!line.empty() && line.substr(0, 6) == "data: ") {
-                        try {
-                            auto chunk = parseOpenAIStreamChunk(line);
-                            if (!chunk.content.empty() || chunk.isComplete) {
-                                chunkCallback(chunk);
-                            }
-                        } catch (const std::exception& e) {
-                            
-                        }
-                    }
-                }
-            } else if (m_backend == LLMBackend::ANTHROPIC) {
-                // Anthropic also uses SSE
-                auto lines = splitSSELines(writeContext.data);
-                for (const auto& line : lines) {
-                    if (!line.empty() && line.substr(0, 6) == "data: ") {
-                        try {
-                            auto chunk = parseAnthropicStreamChunk(line);
-                            if (!chunk.content.empty() || chunk.isComplete) {
-                                chunkCallback(chunk);
-                            }
-                        } catch (const std::exception& e) {
-                            
-                        }
-                    }
-                }
-            }
-        } else {
-            response.success = false;
-            response.error = curl_easy_strerror(res);
-            response.statusMessage = formatErrorMessage(static_cast<int>(responseCode), writeContext.data);
-        }
-
-        // Update statistics
-        {
-            std::lock_guard<std::mutex> lock(m_statsMutex);
-            m_stats.totalRequests++;
-            if (response.success) {
-                m_stats.successfulRequests++;
-            } else {
-                m_stats.failedRequests++;
-            }
-            m_stats.totalLatencyMs += latency;
-        }
-
-        // Cleanup
-        curl_slist_free_all(headerList);
-        
-        {
-            std::lock_guard<std::mutex> lock(m_poolMutex);
-            m_connectionPool.push(curl);
-        }
-
-        return response;
-
-    } catch (const std::exception& e) {
-        {
-            std::lock_guard<std::mutex> lock(m_poolMutex);
-            m_connectionPool.push(curl);
-        }
-        APIResponse resp;
-        resp.statusCode = 0;
-        resp.success = false;
-        resp.error = std::string("Exception: ") + e.what();
-        return resp;
-    }
-}
-
-// ============================================================================
-// Request Building - Ollama
-// ============================================================================
-
-APIRequest LLMHttpClient::buildOllamaCompletionRequest(
-    const std::string& prompt,
-    const json& config)
-{
-    APIRequest req;
-    req.backend = LLMBackend::OLLAMA;
-    req.endpoint = "/api/generate";
-    req.stream = true;
-    req.method = "POST";
-
-    req.body = json{
-        {"model", config.value("model", "llama2")},
-        {"prompt", prompt},
-        {"stream", true}
-    };
-
-    // Add optional parameters
-    if (config.contains("temperature")) {
-        req.body["temperature"] = config["temperature"];
-    }
-    if (config.contains("top_p")) {
-        req.body["top_p"] = config["top_p"];
-    }
-    if (config.contains("top_k")) {
-        req.body["top_k"] = config["top_k"];
-    }
-    if (config.contains("num_predict")) {
-        req.body["num_predict"] = config["num_predict"];
-    }
-    if (config.contains("repeat_penalty")) {
-        req.body["repeat_penalty"] = config["repeat_penalty"];
-    }
-
-    return req;
-}
-
-APIRequest LLMHttpClient::buildOllamaChatRequest(
-    const std::vector<json>& messages,
-    const json& config)
-{
-    APIRequest req;
-    req.backend = LLMBackend::OLLAMA;
-    req.endpoint = "/api/chat";
-    req.stream = true;
-    req.method = "POST";
-
-    req.body = json{
-        {"model", config.value("model", "llama2")},
-        {"messages", messages},
-        {"stream", true}
-    };
-
-    // Add optional parameters
-    if (config.contains("temperature")) {
-        req.body["temperature"] = config["temperature"];
-    }
-    if (config.contains("top_p")) {
-        req.body["top_p"] = config["top_p"];
-    }
-    if (config.contains("top_k")) {
-        req.body["top_k"] = config["top_k"];
-    }
-
-    return req;
-}
-
-// ============================================================================
-// Request Building - OpenAI
-// ============================================================================
-
-APIRequest LLMHttpClient::buildOpenAIChatRequest(
-    const std::vector<json>& messages,
-    const std::string& model,
-    const json& config)
-{
-    APIRequest req;
-    req.backend = LLMBackend::OPENAI;
-    req.endpoint = "/v1/chat/completions";
-    req.stream = config.value("stream", false);
-    req.method = "POST";
-
-    req.body = json{
-        {"model", model},
-        {"messages", messages},
-        {"temperature", config.value("temperature", 0.7)},
-        {"top_p", config.value("top_p", 0.9)},
-        {"max_tokens", config.value("max_tokens", 2048)},
-        {"stream", req.stream}
-    };
-
-    // Add optional tool calling
-    if (config.contains("tools") && !config["tools"].empty()) {
-        req.body["tools"] = config["tools"];
-        req.body["tool_choice"] = config.value("tool_choice", "auto");
-    }
-
-    // Add stop sequences
-    if (config.contains("stop")) {
-        req.body["stop"] = config["stop"];
-    }
-
-    return req;
-}
-
-// ============================================================================
-// Request Building - Anthropic
-// ============================================================================
-
-APIRequest LLMHttpClient::buildAnthropicMessageRequest(
-    const std::vector<json>& messages,
-    const std::string& model,
-    const json& config)
-{
-    APIRequest req;
-    req.backend = LLMBackend::ANTHROPIC;
-    req.endpoint = "/messages";
-    req.stream = config.value("stream", false);
-    req.method = "POST";
-
-    // Anthropic requires system message separately
-    std::string systemMessage = config.value("system", "You are a helpful assistant.");
-
-    req.body = json{
-        {"model", model},
-        {"system", systemMessage},
-        {"messages", messages},
-        {"max_tokens", config.value("max_tokens", 2048)},
-        {"temperature", config.value("temperature", 0.7)},
-        {"stream", req.stream}
-    };
-
-    // Add optional tool definitions
-    if (config.contains("tools") && !config["tools"].empty()) {
-        req.body["tools"] = config["tools"];
-    }
-
-    return req;
-}
-
-// ============================================================================
-// Stream Parsing - Ollama
-// ============================================================================
-
-StreamChunk LLMHttpClient::parseOllamaStreamChunk(const std::string& chunk) {
-    StreamChunk parsed;
-
-    try {
-        auto jsonChunk = json::parse(chunk);
-
-        // Extract content
-        if (jsonChunk.contains("response")) {
-            parsed.content = jsonChunk["response"].get<std::string>();
-        }
-
-        // Check if generation is complete
-        if (jsonChunk.contains("done")) {
-            parsed.isComplete = jsonChunk["done"].get<bool>();
-        }
-
-        // Extract token counts if available
-        if (jsonChunk.contains("eval_count")) {
-            parsed.tokenCount = jsonChunk["eval_count"].get<int>();
-        }
-
-        // Store metadata
-        parsed.metadata = jsonChunk;
-
-    } catch (const std::exception& e) {
-        
-    }
-
-    return parsed;
-}
-
-// ============================================================================
-// Stream Parsing - OpenAI
-// ============================================================================
-
-StreamChunk LLMHttpClient::parseOpenAIStreamChunk(const std::string& line) {
-    StreamChunk parsed;
-
-    try {
-        // SSE format: "data: {json}"
-        if (line.length() > 6 && line.substr(0, 6) == "data: ") {
-            std::string jsonStr = line.substr(6);
-
-            // Check for stream end
-            if (jsonStr == "[DONE]") {
-                parsed.isComplete = true;
-                return parsed;
-            }
-
-            auto jsonChunk = json::parse(jsonStr);
-
-            // OpenAI format: choices[0].delta.content
-            if (jsonChunk.contains("choices") && !jsonChunk["choices"].empty()) {
-                auto choice = jsonChunk["choices"][0];
-                if (choice.contains("delta") && choice["delta"].contains("content")) {
-                    parsed.content = choice["delta"]["content"].get<std::string>();
-                }
-
-                // Check for tool calls
-                if (choice["delta"].contains("tool_calls")) {
-                    parsed.toolCall = choice["delta"]["tool_calls"].dump();
-                }
-            }
-
-            // Check for finish reason
-            if (jsonChunk["choices"][0].contains("finish_reason") &&
-                jsonChunk["choices"][0]["finish_reason"].is_string()) {
-                std::string finishReason = jsonChunk["choices"][0]["finish_reason"];
-                if (finishReason != "null" && finishReason != "none") {
-                    parsed.isComplete = true;
-                }
-            }
-
-            parsed.metadata = jsonChunk;
-        }
-
-    } catch (const std::exception& e) {
-        
-    }
-
-    return parsed;
-}
-
-// ============================================================================
-// Stream Parsing - Anthropic
-// ============================================================================
-
-StreamChunk LLMHttpClient::parseAnthropicStreamChunk(const std::string& line) {
-    StreamChunk parsed;
-
-    try {
-        if (line.length() > 6 && line.substr(0, 6) == "data: ") {
-            std::string jsonStr = line.substr(6);
-            auto jsonChunk = json::parse(jsonStr);
-
-            // Anthropic uses event-based streaming
-            if (jsonChunk.contains("type")) {
-                std::string eventType = jsonChunk["type"].get<std::string>();
-
-                if (eventType == "content_block_delta" && jsonChunk.contains("delta")) {
-                    auto delta = jsonChunk["delta"];
-                    if (delta.contains("type") && delta["type"] == "text_delta") {
-                        parsed.content = delta["text"].get<std::string>();
-                    }
-                } else if (eventType == "message_stop") {
-                    parsed.isComplete = true;
-                } else if (eventType == "message_start" && jsonChunk.contains("message")) {
-                    // Message metadata
-                    auto msg = jsonChunk["message"];
-                    if (msg.contains("usage")) {
-                        parsed.tokenCount = msg["usage"].value("input_tokens", 0);
-                    }
-                }
-            }
-
-            parsed.metadata = jsonChunk;
-        }
-
-    } catch (const std::exception& e) {
-        
-    }
-
-    return parsed;
-}
-
-// ============================================================================
-// Connectivity Testing
-// ============================================================================
-
-bool LLMHttpClient::testConnectivity() {
-    CURL* curl = curl_easy_init();
-    if (!curl) return false;
-
-    try {
-        std::string testUrl = m_config.baseUrl;
-
-        // Add appropriate health check endpoint
-        if (m_backend == LLMBackend::OLLAMA) {
-            testUrl += "/api/tags";
-        } else if (m_backend == LLMBackend::OPENAI) {
-            testUrl += "/v1/models";
-        } else if (m_backend == LLMBackend::ANTHROPIC) {
-            testUrl += "/models";
-        }
-
-        curl_easy_setopt(curl, CURLOPT_URL, testUrl.c_str());
-        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 5000L);
-        curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-
-        // Add auth headers
-        struct curl_slist* headerList = nullptr;
-        auto authHeaders = buildAuthHeaders();
-        for (const auto& [key, value] : authHeaders) {
-            headerList = curl_slist_append(headerList, (key + ": " + value).c_str());
-        }
-        if (headerList) {
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
-        }
-
-        if (!m_config.validateSSL) {
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        }
-
-        CURLcode res = curl_easy_perform(curl);
-        long responseCode = 0;
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-
-        if (headerList) curl_slist_free_all(headerList);
-        curl_easy_cleanup(curl);
-
-        bool connected = (res == CURLE_OK && responseCode >= 200 && responseCode < 300);
-        
-        return connected;
-
-    } catch (const std::exception& e) {
-        curl_easy_cleanup(curl);
-        
-        return false;
-    }
-}
-
-json LLMHttpClient::listAvailableModels() {
-    APIRequest req;
-    req.backend = m_backend;
-    req.method = "GET";
-
-    if (m_backend == LLMBackend::OLLAMA) {
-        req.endpoint = "/api/tags";
-    } else if (m_backend == LLMBackend::OPENAI) {
-        req.endpoint = "/v1/models";
-    } else if (m_backend == LLMBackend::ANTHROPIC) {
-        req.endpoint = "/models";
-    }
-
-    auto response = makeRequest(req);
-    if (response.success && response.statusCode >= 200 && response.statusCode < 300) {
-        return response.body;
-    }
-
-    return json::array();
-}
-
-// ============================================================================
-// Authentication
-// ============================================================================
-
-void LLMHttpClient::setCredentials(const AuthCredentials& credentials) {
-    m_credentials = credentials;
-}
-
-std::map<std::string, std::string> LLMHttpClient::buildAuthHeaders() {
-    std::map<std::string, std::string> headers;
-
-    switch (m_credentials.type) {
-        case AuthType::BEARER_TOKEN:
-            headers["Authorization"] = "Bearer " + m_credentials.token;
-            break;
-
-        case AuthType::API_KEY:
-            if (m_backend == LLMBackend::OPENAI || m_backend == LLMBackend::AZURE_OPENAI) {
-                headers["Authorization"] = "Bearer " + m_credentials.apiKey;
-            } else if (m_backend == LLMBackend::ANTHROPIC) {
-                headers["x-api-key"] = m_credentials.apiKey;
-            } else {
-                headers["X-API-Key"] = m_credentials.apiKey;
-            }
-            break;
-
-        case AuthType::BASIC_AUTH: {
-            std::string auth = m_credentials.username + ":" + m_credentials.password;
-            // Base64 encoding would go here in production
-            headers["Authorization"] = "Basic " + auth;
-            break;
-        }
-
-        case AuthType::OAUTH2:
-            if (!isTokenExpired()) {
-                headers["Authorization"] = "Bearer " + m_credentials.token;
-            } else {
-                if (refreshOAuth2Token()) {
-                    headers["Authorization"] = "Bearer " + m_credentials.token;
-                }
-            }
-            break;
-
-        case AuthType::NONE:
-        default:
-            // No auth needed
-            break;
-    }
-
-    return headers;
-}
-
-// ============================================================================
-// Rate Limiting
-// ============================================================================
-
-void LLMHttpClient::setRateLimit(double requestsPerSecond) {
-    std::lock_guard<std::mutex> lock(m_rateLimitMutex);
-    m_requestsPerSecond = requestsPerSecond;
-    m_tokenBucketTokens = requestsPerSecond;  // Start with full bucket
-}
-
-bool LLMHttpClient::checkRateLimit() {
-    std::lock_guard<std::mutex> lock(m_rateLimitMutex);
-
-    int64_t now = getCurrentTimestampMs();
-    if (m_lastRequestTime == 0) {
-        m_lastRequestTime = now;
-        m_tokenBucketTokens = m_requestsPerSecond;
-    }
-
-    // Token bucket algorithm
-    double timeSinceLastMs = now - m_lastRequestTime;
-    double tokensToAdd = (timeSinceLastMs / 1000.0) * m_requestsPerSecond;
-    m_tokenBucketTokens = std::min(m_tokenBucketTokens + tokensToAdd, m_requestsPerSecond);
-
-    m_lastRequestTime = now;
-
-    if (m_tokenBucketTokens >= 1.0) {
-        m_tokenBucketTokens -= 1.0;
-        return true;
-    }
-
-    return false;
-}
-
-// ============================================================================
-// Internal HTTP Operations
-// ============================================================================
-
-APIResponse LLMHttpClient::sendHTTPRequest(const APIRequest& request, bool retry) {
-    if (!checkRateLimit()) {
-        APIResponse resp;
-        resp.statusCode = 429;
-        resp.statusMessage = "Rate limit exceeded";
-        resp.success = false;
-        resp.error = "Too many requests";
-        return resp;
-    }
-
-    int retryCount = 0;
-    while (retryCount <= m_config.maxRetries) {
-        int64_t startTime = getCurrentTimestampMs();
-
-        CURL* curl = nullptr;
-        {
-             std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
-             if (!m_connectionPool.empty()) {
-                 curl = static_cast<CURL*>(m_connectionPool.front());
-                 m_connectionPool.pop();
-             }
-        }
-        if (!curl) curl = curl_easy_init();
-
-        if (!curl) {
-            APIResponse resp;
-            resp.statusCode = 0;
-            resp.success = false;
-            resp.error = "Failed to initialize CURL";
-            return resp;
-        }
-
-        try {
-            std::string fullUrl = m_config.baseUrl + request.endpoint;
-            std::string jsonBody = request.body.dump();
-
-            // Setup CURL
-            curl_easy_setopt(curl, CURLOPT_URL, fullUrl.c_str());
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (long)m_config.timeoutMs);
-
-            // Set HTTP method
-            if (request.method == "GET") {
-                curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-            } else if (request.method == "POST") {
-                curl_easy_setopt(curl, CURLOPT_POST, 1L);
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonBody.c_str());
-            } else if (request.method == "PUT") {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonBody.c_str());
-            } else if (request.method == "DELETE") {
-                curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
-            }
-
-            // Setup headers
-            struct curl_slist* headerList = nullptr;
-            headerList = curl_slist_append(headerList, "Content-Type: application/json");
-
-            auto defaultHeaders = buildDefaultHeaders();
-            auto authHeaders = buildAuthHeaders();
-
-            for (const auto& [key, value] : defaultHeaders) {
-                headerList = curl_slist_append(headerList, (key + ": " + value).c_str());
-            }
-            for (const auto& [key, value] : authHeaders) {
-                headerList = curl_slist_append(headerList, (key + ": " + value).c_str());
-            }
-
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerList);
-
-            // Response handling
-            CurlWriteContext writeContext;
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeContext);
-
-            // SSL options
-            if (!m_config.validateSSL) {
-                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-                curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-            }
-
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, m_config.userAgent.c_str());
-
-            // Perform request
-            CURLcode res = curl_easy_perform(curl);
-
-            // Get response code
-            long responseCode = 0;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-
-            int64_t endTime = getCurrentTimestampMs();
-            int64_t latency = endTime - startTime;
-
-            // Parse response
-            APIResponse response = parseHTTPResponse(
-                static_cast<int>(responseCode),
-                writeContext.data,
-                latency
-            );
-            response.retryCount = retryCount;
-
-            // Update statistics
-            {
-                std::lock_guard<std::mutex> lock(m_statsMutex);
-                m_stats.totalRequests++;
-                if (response.success) {
-                    m_stats.successfulRequests++;
-                } else {
-                    m_stats.failedRequests++;
-                }
-                m_stats.totalLatencyMs += latency;
-                m_stats.totalRetries += retryCount;
-            }
-
-            // Cleanup
-            curl_slist_free_all(headerList);
-            // Return to pool
-            curl_easy_reset(curl);
-            {
-                 std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
-                 m_connectionPool.push(curl);
-            }
-
-            // Check if we should retry
-            if (!response.success && retry && shouldRetry(static_cast<int>(responseCode), retryCount)) {
-                int delayMs = calculateBackoffDelay(retryCount);
-                
-                std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-                retryCount++;
-                continue;
-            }
-
-            return response;
-
-        } catch (const std::exception& e) {
-            // Return to pool on exception too, unless handle is corrupted? Reset should handle it.
-            if (curl) {
-                curl_easy_reset(curl);
-                std::lock_guard<std::mutex> lock(m_connectionPoolMutex);
-                m_connectionPool.push(curl);
-            }
-            
-            APIResponse resp;
-            resp.statusCode = 0;
-            resp.success = false;
-            resp.error = std::string("Exception: ") + e.what();
-            resp.retryCount = retryCount;
-            return resp;
-        }
-    }
-
-    // All retries exhausted
-    APIResponse resp;
-    resp.statusCode = 0;
-    resp.success = false;
-    resp.error = "All retries exhausted";
-    resp.retryCount = retryCount;
     return resp;
 }
 
+HttpResponse StlHttpClient::postJson(const std::string& url,
+                                      const std::string& jsonBody,
+                                      int timeoutMs) {
+    HttpRequest req;
+    req.method    = "POST";
+    req.url       = url;
+    req.body      = jsonBody;
+    req.timeoutMs = timeoutMs > 0 ? timeoutMs : m_defaultTimeout;
+    return send(req);
+}
+
+HttpResponse StlHttpClient::get(const std::string& url, int timeoutMs) {
+    HttpRequest req;
+    req.method    = "GET";
+    req.url       = url;
+    req.timeoutMs = timeoutMs > 0 ? timeoutMs : m_defaultTimeout;
+    return send(req);
+}
+
 // ============================================================================
-// Helper Methods
+// StlHttpClient — async (future-based)
 // ============================================================================
-
-std::map<std::string, std::string> LLMHttpClient::buildDefaultHeaders() {
-    std::map<std::string, std::string> headers;
-    headers["Content-Type"] = "application/json";
-    headers["Accept"] = "application/json";
-    headers["User-Agent"] = m_config.userAgent;
-
-    if (m_config.enableCompression) {
-        headers["Accept-Encoding"] = "gzip, deflate";
-    }
-
-    return headers;
+std::future<HttpResponse> StlHttpClient::sendAsync(const HttpRequest& req) {
+    // CRITICAL FIX: std::async with launch::async creates a new thread.
+    // The returned future MUST be held alive by the caller.
+    // If the future is destroyed, the destructor blocks until the async
+    // operation completes (C++ standard behavior for std::async futures).
+    // This is the correct behavior — Qt's deleteLater() hid this requirement.
+    return std::async(std::launch::async, [this, req]() -> HttpResponse {
+        return this->send(req);
+    });
 }
 
-APIResponse LLMHttpClient::parseHTTPResponse(
-    int statusCode,
-    const std::string& body,
-    int64_t latencyMs)
-{
-    APIResponse response;
-    response.statusCode = statusCode;
-    response.responseTimeMs = latencyMs;
-    response.receivedAt = getCurrentTimestampMs();
-
-    if (statusCode >= 200 && statusCode < 300) {
-        response.success = true;
-        response.statusMessage = "OK";
-
-        try {
-            response.body = json::parse(body);
-        } catch (const std::exception& e) {
-            response.rawBody = body;
-        }
-    } else {
-        response.success = false;
-        response.rawBody = body;
-
-        switch (statusCode) {
-            case 400:
-                response.statusMessage = "Bad Request";
-                response.error = "Invalid request format or parameters";
-                break;
-            case 401:
-                response.statusMessage = "Unauthorized";
-                response.error = "Authentication failed. Check API key.";
-                break;
-            case 403:
-                response.statusMessage = "Forbidden";
-                response.error = "Access denied";
-                break;
-            case 404:
-                response.statusMessage = "Not Found";
-                response.error = "Endpoint not found";
-                break;
-            case 429:
-                response.statusMessage = "Too Many Requests";
-                response.error = "Rate limit exceeded";
-                break;
-            case 500:
-                response.statusMessage = "Internal Server Error";
-                response.error = "Server error on remote endpoint";
-                break;
-            case 503:
-                response.statusMessage = "Service Unavailable";
-                response.error = "Service temporarily unavailable";
-                break;
-            default:
-                response.statusMessage = "HTTP " + std::to_string(statusCode);
-                response.error = "Unexpected HTTP status code";
-                break;
-        }
-
-        // Try to parse error details from response
-        try {
-            auto errorJson = json::parse(body);
-            if (errorJson.contains("error")) {
-                response.error = errorJson["error"].dump();
-            }
-        } catch (...) {
-            // Body might not be JSON, that's OK
-        }
-    }
-
-    return response;
+std::future<HttpResponse> StlHttpClient::postJsonAsync(const std::string& url,
+                                                        const std::string& jsonBody,
+                                                        int timeoutMs) {
+    HttpRequest req;
+    req.method    = "POST";
+    req.url       = url;
+    req.body      = jsonBody;
+    req.timeoutMs = timeoutMs > 0 ? timeoutMs : m_defaultTimeout;
+    return sendAsync(req);
 }
 
-bool LLMHttpClient::shouldRetry(int statusCode, int retryCount) {
-    if (retryCount >= m_config.maxRetries) {
-        return false;
-    }
-
-    // Retry on server errors and timeout
-    return (statusCode >= 500 || statusCode == 429 || statusCode == 408);
+void StlHttpClient::cancelAll() {
+    m_cancelled.store(true);
 }
 
-int LLMHttpClient::calculateBackoffDelay(int retryCount) {
-    // Exponential backoff: base * (2 ^ retryCount) + jitter
-    int exponentialDelay = m_config.retryDelayMs * (1 << retryCount);
-
-    // Add random jitter (0-50% of delay)
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, exponentialDelay / 2);
-    int jitter = dis(gen);
-
-    return exponentialDelay + jitter;
+void StlHttpClient::resetStats() {
+    m_stats.totalRequests.store(0);
+    m_stats.successCount.store(0);
+    m_stats.failCount.store(0);
+    m_stats.totalLatencyMs.store(0);
+    // Don't reset activeRequests — they may still be in flight
 }
 
-bool LLMHttpClient::isTokenExpired() const {
-    return (m_credentials.tokenExpiresAt > 0 &&
-            m_credentials.tokenExpiresAt < getCurrentTimestampMs());
-}
-
-bool LLMHttpClient::refreshOAuth2Token() {
-    // OAuth2 token refresh via HTTP POST to the token endpoint
-    std::string tokenUrl = m_config.baseUrl;
-    // Derive token endpoint from base URL (strip /v1 or /api, append /oauth/token)
-    size_t apiPos = tokenUrl.rfind("/v1");
-    if (apiPos != std::string::npos) tokenUrl = tokenUrl.substr(0, apiPos);
-    tokenUrl += "/oauth/token";
-
-    std::string postBody = "grant_type=refresh_token"
-                           "&refresh_token=" + m_credentials.refreshToken +
-                           "&client_id=" + m_credentials.clientId;
-    if (!m_credentials.clientSecret.empty()) {
-        postBody += "&client_secret=" + m_credentials.clientSecret;
-    }
-
+// ============================================================================
+// StlHttpClient — platform-specific HTTP implementation
+// ============================================================================
 #ifdef _WIN32
-    // Use WinHTTP for the refresh request
-    URL_COMPONENTSW urlComp = {};
-    wchar_t hostBuf[256] = {};
-    wchar_t pathBuf[1024] = {};
-    urlComp.dwStructSize = sizeof(urlComp);
-    urlComp.lpszHostName = hostBuf;
-    urlComp.dwHostNameLength = 256;
-    urlComp.lpszUrlPath = pathBuf;
-    urlComp.dwUrlPathLength = 1024;
+HttpResponse StlHttpClient::platformSend(const HttpRequest& req) {
+    auto startT = nowMs();
 
-    std::wstring wUrl(tokenUrl.begin(), tokenUrl.end());
-    if (!WinHttpCrackUrl(wUrl.c_str(), 0, 0, &urlComp)) {
-        std::cerr << "[LLMHttpClient] Failed to parse OAuth2 token URL" << std::endl;
-        return false;
+    if (m_cancelled.load()) {
+        return HttpResponse::fail("Cancelled", 0);
     }
 
-    HINTERNET hSession = WinHttpOpen(L"RawrXD-OAuth2/1.0",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-    if (!hSession) return false;
+    auto parsed = parseUrl(req.url);
 
-    bool useSSL = (urlComp.nScheme == INTERNET_SCHEME_HTTPS);
-    INTERNET_PORT port = urlComp.nPort ? urlComp.nPort : (useSSL ? 443 : 80);
-    HINTERNET hConnect = WinHttpConnect(hSession, urlComp.lpszHostName, port, 0);
-    if (!hConnect) { WinHttpCloseHandle(hSession); return false; }
-
-    DWORD flags = useSSL ? WINHTTP_FLAG_SECURE : 0;
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", urlComp.lpszUrlPath,
-        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
-    if (!hRequest) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return false; }
-
-    std::wstring headers = L"Content-Type: application/x-www-form-urlencoded\r\n";
-    BOOL sent = WinHttpSendRequest(hRequest, headers.c_str(), -1,
-        (LPVOID)postBody.c_str(), (DWORD)postBody.size(), (DWORD)postBody.size(), 0);
-    if (!sent || !WinHttpReceiveResponse(hRequest, nullptr)) {
-        WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
-        std::cerr << "[LLMHttpClient] OAuth2 refresh HTTP request failed" << std::endl;
-        return false;
+    // Open session
+    HINTERNET hSession = WinHttpOpen(
+        L"RawrXD-Agent/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+        WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS,
+        0);
+    if (!hSession) {
+        return HttpResponse::fail("WinHttpOpen failed (err=" +
+            std::to_string(GetLastError()) + ")", static_cast<int>(nowMs() - startT));
     }
 
-    // Read response
-    std::string response;
-    char buf[4096];
-    DWORD bytesRead = 0;
-    while (WinHttpReadData(hRequest, buf, sizeof(buf), &bytesRead) && bytesRead > 0) {
-        response.append(buf, bytesRead);
+    // Set timeouts
+    int tms = req.timeoutMs > 0 ? req.timeoutMs : m_defaultTimeout;
+    WinHttpSetTimeouts(hSession, tms, tms, tms, tms);
+
+    // Connect
+    HINTERNET hConnect = WinHttpConnect(hSession, parsed.host.c_str(), parsed.port, 0);
+    if (!hConnect) {
+        DWORD err = GetLastError();
+        WinHttpCloseHandle(hSession);
+        return HttpResponse::fail("WinHttpConnect failed to " +
+            std::string(parsed.host.begin(), parsed.host.end()) + ":" +
+            std::to_string(parsed.port) + " (err=" + std::to_string(err) + ")",
+            static_cast<int>(nowMs() - startT));
     }
+
+    // Open request
+    DWORD flags = parsed.isTls ? WINHTTP_FLAG_SECURE : 0;
+    std::wstring wMethod(req.method.begin(), req.method.end());
+    HINTERNET hRequest = WinHttpOpenRequest(
+        hConnect, wMethod.c_str(), parsed.path.c_str(),
+        nullptr, WINHTTP_NO_REFERER,
+        WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+    if (!hRequest) {
+        DWORD err = GetLastError();
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return HttpResponse::fail("WinHttpOpenRequest failed (err=" +
+            std::to_string(err) + ")", static_cast<int>(nowMs() - startT));
+    }
+
+    // Build headers
+    std::wstring headers = L"Content-Type: application/json\r\n";
+    if (!req.extraHeaderKey.empty()) {
+        std::wstring ek(req.extraHeaderKey.begin(), req.extraHeaderKey.end());
+        std::wstring ev(req.extraHeaderVal.begin(), req.extraHeaderVal.end());
+        headers += ek + L": " + ev + L"\r\n";
+    }
+    if (!req.apiKey.empty()) {
+        std::wstring key(req.apiKey.begin(), req.apiKey.end());
+        headers += L"Authorization: Bearer " + key + L"\r\n";
+    }
+
+    // Send
+    LPVOID bodyData = req.body.empty()
+        ? WINHTTP_NO_REQUEST_DATA
+        : const_cast<char*>(req.body.c_str());
+    DWORD bodyLen = static_cast<DWORD>(req.body.size());
+
+    BOOL sent = WinHttpSendRequest(
+        hRequest,
+        headers.c_str(), static_cast<DWORD>(headers.size()),
+        bodyData, bodyLen, bodyLen, 0);
+
+    if (!sent) {
+        DWORD err = GetLastError();
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return HttpResponse::fail("WinHttpSendRequest failed (err=" +
+            std::to_string(err) + ")", static_cast<int>(nowMs() - startT));
+    }
+
+    // Receive response
+    if (!WinHttpReceiveResponse(hRequest, nullptr)) {
+        DWORD err = GetLastError();
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return HttpResponse::fail("WinHttpReceiveResponse failed (err=" +
+            std::to_string(err) + ")", static_cast<int>(nowMs() - startT));
+    }
+
+    // Read status code
+    DWORD statusCode = 0, statusSize = sizeof(statusCode);
+    WinHttpQueryHeaders(hRequest,
+        WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+        WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusSize,
+        WINHTTP_NO_HEADER_INDEX);
+
+    // Read body
+    std::string responseBody;
+    DWORD bytesAvail = 0;
+    while (WinHttpQueryDataAvailable(hRequest, &bytesAvail) && bytesAvail > 0) {
+        if (m_cancelled.load()) {
+            WinHttpCloseHandle(hRequest);
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return HttpResponse::fail("Cancelled during read",
+                static_cast<int>(nowMs() - startT));
+        }
+
+        size_t pos = responseBody.size();
+        responseBody.resize(pos + bytesAvail);
+        DWORD bytesRead = 0;
+        WinHttpReadData(hRequest, responseBody.data() + pos, bytesAvail, &bytesRead);
+        responseBody.resize(pos + bytesRead);
+    }
+
+    int latency = static_cast<int>(nowMs() - startT);
+
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
 
-    // Parse JSON response for access_token and expires_in
-    auto findJsonString = [&response](const std::string& key) -> std::string {
-        std::string needle = "\"" + key + "\"";
-        size_t pos = response.find(needle);
-        if (pos == std::string::npos) return "";
-        pos = response.find('"', pos + needle.size() + 1);
-        if (pos == std::string::npos) return "";
-        size_t end = response.find('"', pos + 1);
-        return (end != std::string::npos) ? response.substr(pos + 1, end - pos - 1) : "";
-    };
-
-    std::string newToken = findJsonString("access_token");
-    if (newToken.empty()) {
-        std::cerr << "[LLMHttpClient] OAuth2 response missing access_token" << std::endl;
-        return false;
+    // HTTP 2xx is success
+    bool isOk = (statusCode >= 200 && statusCode < 300);
+    if (isOk) {
+        return HttpResponse::ok(static_cast<int>(statusCode), responseBody, latency);
+    } else {
+        HttpResponse resp;
+        resp.success    = false;
+        resp.statusCode = static_cast<int>(statusCode);
+        resp.body       = responseBody;
+        resp.error      = "HTTP " + std::to_string(statusCode);
+        resp.latencyMs  = latency;
+        return resp;
     }
+}
 
-    m_credentials.apiKey = newToken;
-    // Update expiry
-    std::string expiresStr = findJsonString("expires_in");
-    if (!expiresStr.empty()) {
-        m_credentials.tokenExpiresAt = getCurrentTimestampMs() + std::stoll(expiresStr) * 1000;
-    }
-    // Rotate refresh token if provided
-    std::string newRefresh = findJsonString("refresh_token");
-    if (!newRefresh.empty()) {
-        m_credentials.refreshToken = newRefresh;
-    }
-
-    std::cout << "[LLMHttpClient] OAuth2 token refreshed successfully" << std::endl;
-    return true;
 #else
-    // POSIX fallback: use system curl
-    std::string cmd = "curl -s -X POST '" + tokenUrl + "' -d '" + postBody + "'";
-    FILE* pipe = popen(cmd.c_str(), "r");
-    if (!pipe) return false;
-    std::string response;
+// ============================================================================
+// POSIX fallback — shell out to curl
+// ============================================================================
+HttpResponse StlHttpClient::platformSend(const HttpRequest& req) {
+    namespace fs = std::filesystem;
+    auto startT = nowMs();
+
+    if (m_cancelled.load()) {
+        return HttpResponse::fail("Cancelled", 0);
+    }
+
+    // Write body to temp file
+    auto tmpBody = fs::temp_directory_path() / "rawrxd_http_body.json";
+    if (!req.body.empty()) {
+        std::ofstream f(tmpBody, std::ios::trunc);
+        if (!f) return HttpResponse::fail("Failed to write temp body", 0);
+        f << req.body;
+        f.close();
+    }
+
+    std::string cmd = "curl -s -w '\\n%{http_code}' -X " + req.method;
+    cmd += " -H 'Content-Type: application/json'";
+
+    if (!req.apiKey.empty())
+        cmd += " -H 'Authorization: Bearer " + req.apiKey + "'";
+    if (!req.extraHeaderKey.empty())
+        cmd += " -H '" + req.extraHeaderKey + ": " + req.extraHeaderVal + "'";
+
+    if (req.timeoutMs > 0)
+        cmd += " --max-time " + std::to_string(req.timeoutMs / 1000);
+
+    if (!req.body.empty())
+        cmd += " -d @" + tmpBody.string();
+
+    cmd += " '" + req.url + "' 2>/dev/null";
+
+    FILE* p = popen(cmd.c_str(), "r");
+    if (!p) {
+        fs::remove(tmpBody);
+        return HttpResponse::fail("popen failed", static_cast<int>(nowMs() - startT));
+    }
+
+    std::string output;
     char buf[4096];
-    while (fgets(buf, sizeof(buf), pipe)) response += buf;
-    pclose(pipe);
-    // Basic JSON parse for access_token
-    size_t tokPos = response.find("\"access_token\"");
-    if (tokPos == std::string::npos) return false;
-    size_t valStart = response.find('"', tokPos + 15) + 1;
-    size_t valEnd = response.find('"', valStart);
-    if (valStart > 0 && valEnd > valStart) {
-        m_credentials.apiKey = response.substr(valStart, valEnd - valStart);
-        m_credentials.tokenExpiresAt = getCurrentTimestampMs() + 3600 * 1000; // default 1hr
+    while (fgets(buf, sizeof(buf), p)) output += buf;
+    int exitCode = pclose(p);
+    fs::remove(tmpBody);
+
+    int latency = static_cast<int>(nowMs() - startT);
+
+    if (exitCode != 0) {
+        return HttpResponse::fail("curl exit code " + std::to_string(exitCode), latency);
+    }
+
+    // Last line is the HTTP status code
+    size_t lastNL = output.rfind('\n');
+    int statusCode = 200;
+    std::string body = output;
+    if (lastNL != std::string::npos && lastNL > 0) {
+        std::string codeStr = output.substr(lastNL + 1);
+        body = output.substr(0, lastNL);
+        try { statusCode = std::stoi(codeStr); } catch (...) {}
+    }
+
+    bool isOk = (statusCode >= 200 && statusCode < 300);
+    if (isOk) {
+        return HttpResponse::ok(statusCode, body, latency);
+    } else {
+        HttpResponse resp;
+        resp.success    = false;
+        resp.statusCode = statusCode;
+        resp.body       = body;
+        resp.error      = "HTTP " + std::to_string(statusCode);
+        resp.latencyMs  = latency;
+        return resp;
+    }
+}
+#endif
+
+// ============================================================================
+// HttpChainStep — async LLM call with future retention
+// ============================================================================
+HttpChainStep::~HttpChainStep() {
+    // If the future is valid and the step is running, wait for it
+    // This prevents crash from destroying an in-flight async operation
+    if (m_future.valid() && m_state == State::Running) {
+        try {
+            m_future.wait();
+        } catch (...) {
+            // Absorb — we're in destructor
+        }
+    }
+}
+
+void HttpChainStep::start(const std::string& url,
+                       const std::string& jsonBody,
+                       int timeoutMs) {
+    if (m_state == State::Running) {
+        fprintf(stderr, "[WARN] [HttpChainStep:%s] Already running\n", m_name.c_str());
+        return;
+    }
+
+    m_state  = State::Running;
+    m_result = {};
+
+    // CRITICAL: m_future MUST be stored as member to keep the async alive
+    m_future = StlHttpClient::instance().postJsonAsync(url, jsonBody, timeoutMs);
+
+    fprintf(stderr, "[INFO] [HttpChainStep:%s] Started async POST %s\n",
+            m_name.c_str(), url.c_str());
+}
+
+bool HttpChainStep::poll() {
+    if (m_state != State::Running || !m_future.valid()) {
+        return m_state == State::Completed || m_state == State::Failed;
+    }
+
+    auto status = m_future.wait_for(std::chrono::milliseconds(0));
+    if (status == std::future_status::ready) {
+        try {
+            m_result = m_future.get();
+            m_state  = m_result.success ? State::Completed : State::Failed;
+        } catch (const std::exception& e) {
+            m_result = HttpResponse::fail(std::string("Future exception: ") + e.what());
+            m_state  = State::Failed;
+        }
+        fprintf(stderr, "[INFO] [HttpChainStep:%s] %s (%dms)\n",
+                m_name.c_str(),
+                m_state == State::Completed ? "Completed" : "Failed",
+                m_result.latencyMs);
         return true;
     }
     return false;
-#endif
 }
 
-std::vector<std::string> LLMHttpClient::splitSSELines(const std::string& data) {
-    std::vector<std::string> lines;
-    std::istringstream stream(data);
-    std::string line;
+bool HttpChainStep::waitFor(int timeoutMs) {
+    if (m_state != State::Running || !m_future.valid()) {
+        return m_state == State::Completed;
+    }
 
-    while (std::getline(stream, line)) {
-        // Remove carriage return if present
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
+    if (timeoutMs > 0) {
+        auto status = m_future.wait_for(std::chrono::milliseconds(timeoutMs));
+        if (status != std::future_status::ready) {
+            fprintf(stderr, "[WARN] [HttpChainStep:%s] Wait timed out after %dms\n",
+                    m_name.c_str(), timeoutMs);
+            return false;
         }
-        if (!line.empty()) {
-            lines.push_back(line);
-        }
+    } else {
+        m_future.wait();
     }
-
-    return lines;
-}
-
-std::string LLMHttpClient::extractJSONFromSSE(const std::string& line) {
-    if (line.length() > 6 && line.substr(0, 6) == "data: ") {
-        return line.substr(6);
-    }
-    return "";
-}
-
-std::string LLMHttpClient::generateRequestId() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 15);
-
-    std::stringstream ss;
-    ss << std::hex;
-    for (int i = 0; i < 16; ++i) {
-        ss << dis(gen);
-    }
-    return ss.str();
-}
-
-int64_t LLMHttpClient::getCurrentTimestampMs() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
-std::string LLMHttpClient::urlEncode(const std::string& str) {
-    std::ostringstream oss;
-    for (unsigned char c : str) {
-        if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            oss << c;
-        } else {
-            oss << '%' << std::hex << std::setw(2) << std::setfill('0')
-                << static_cast<int>(c);
-        }
-    }
-    return oss.str();
-}
-
-bool LLMHttpClient::isValidURL(const std::string& url) {
-    return url.find("http://") == 0 || url.find("https://") == 0;
-}
-
-std::string LLMHttpClient::formatErrorMessage(int statusCode, const std::string& body) {
-    std::string message = "HTTP " + std::to_string(statusCode);
 
     try {
-        auto json_body = json::parse(body);
-        if (json_body.contains("error")) {
-            message += ": " + json_body["error"].dump();
-        } else if (json_body.contains("message")) {
-            message += ": " + json_body["message"].dump();
+        m_result = m_future.get();
+        m_state  = m_result.success ? State::Completed : State::Failed;
+    } catch (const std::exception& e) {
+        m_result = HttpResponse::fail(std::string("Future exception: ") + e.what());
+        m_state  = State::Failed;
+    }
+    return m_state == State::Completed;
+}
+
+void HttpChainStep::cancel() {
+    m_state = State::Cancelled;
+    // Note: the underlying WinHTTP call may still complete, but result is discarded
+}
+
+// ============================================================================
+// HttpChainExecutor — sequential step chain
+// ============================================================================
+HttpChainExecutor::~HttpChainExecutor() {
+    cancel();
+}
+
+void HttpChainExecutor::addStep(const std::string& name,
+                             const std::string& url,
+                             const std::string& jsonBody,
+                             int timeoutMs) {
+    m_pending.push_back({name, url, jsonBody, timeoutMs});
+}
+
+bool HttpChainExecutor::executeAll(
+    std::function<std::string(const std::string& prevResult, int stepIndex)> bodyBuilder) {
+
+    m_results.clear();
+    m_cancelled.store(false);
+
+    fprintf(stderr, "[INFO] [HttpChainExecutor] Executing %zu steps\n", m_pending.size());
+
+    std::string prevResult;
+
+    for (size_t i = 0; i < m_pending.size(); ++i) {
+        if (m_cancelled.load()) {
+            fprintf(stderr, "[WARN] [HttpChainExecutor] Cancelled at step %zu\n", i);
+            return false;
         }
-    } catch (...) {
-        if (!body.empty() && body.length() < 200) {
-            message += ": " + body;
+
+        auto& step = m_pending[i];
+
+        if (onStepStarted) onStepStarted(static_cast<int>(i), step.name);
+
+        // If bodyBuilder is provided, let it modify the request body
+        // based on previous step's result
+        std::string body = step.jsonBody;
+        if (bodyBuilder && i > 0) {
+            body = bodyBuilder(prevResult, static_cast<int>(i));
+        }
+
+        // Execute via HttpChainStep with future retention
+        HttpChainStep cs(step.name);
+        cs.start(step.url, body, step.timeoutMs);
+
+        // Wait for completion — future stays alive in HttpChainStep member
+        bool ok = cs.waitFor(step.timeoutMs + 5000); // pad timeout for net overhead
+
+        StepResult sr;
+        sr.name     = step.name;
+        sr.response = cs.result();
+        sr.index    = static_cast<int>(i);
+        m_results.push_back(sr);
+
+        if (onStepCompleted) onStepCompleted(static_cast<int>(i), sr);
+
+        if (ok) {
+            prevResult = sr.response.body;
+        } else {
+            fprintf(stderr, "[ERROR] [HttpChainExecutor] Step '%s' failed: %s\n",
+                    step.name.c_str(), sr.response.error.c_str());
+            return false;
         }
     }
 
-    return message;
+    fprintf(stderr, "[INFO] [HttpChainExecutor] All %zu steps completed\n", m_pending.size());
+    return true;
+}
+
+void HttpChainExecutor::cancel() {
+    m_cancelled.store(true);
 }

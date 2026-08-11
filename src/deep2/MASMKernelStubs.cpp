@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstring>
 #include <cstdio>
+#include <vector>
+#include <cmath>
 
 extern "C" {
 
