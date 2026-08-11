@@ -2312,7 +2312,9 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
-list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/core/vulkan_kernel_stubs\\.cpp$")
+# NOTE: vulkan_kernel_stubs.cpp is REQUIRED for RawrXD_Gold because
+# VulkanKernel_DispatchRaw.asm references VulkanKernel_DispatchRaw_Impl
+# which is defined in vulkan_kernel_stubs.cpp. Do NOT exclude it.
 
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
