@@ -57,6 +57,7 @@ struct CommandLineArgs {
     std::string evidenceDir = "validation/runs";
     int benchmarkT = 0;              // B009: override token count for prefill benchmark
     bool benchmarkDouble = false;    // B009-P4: run Forward() twice to measure residency amortization
+    int residencyPoolMB = 0;         // B009-P4: override residency pool size (0 = use default)
     bool verbose = false;
     bool help = false;
 };
@@ -89,6 +90,7 @@ Validation:
 
 Other:
   --verbose             Detailed output
+  --residency-pool-mb N WeightResidencyPool size in MB (default: 4096)
   --help                Show this help
 
 Examples:
@@ -133,6 +135,8 @@ CommandLineArgs parseArgs(int argc, char* argv[]) {
             args.benchmarkT = std::stoi(argv[++i]);
         } else if (arg == "--benchmark-double") {
             args.benchmarkDouble = true;
+        } else if (arg == "--residency-pool-mb" && i + 1 < argc) {
+            args.residencyPoolMB = std::stoi(argv[++i]);
         } else if (arg == "--verbose" || arg == "-v") {
             args.verbose = true;
         }
@@ -331,6 +335,13 @@ int main(int argc, char* argv[]) {
             std::cerr << "  ERROR: Failed to get inference engine\n";
             return 1;
         }
+        // B009-P4: Configure residency pool size before loading model
+        if (args.residencyPoolMB > 0) {
+            size_t bytes = static_cast<size_t>(args.residencyPoolMB) * 1024 * 1024;
+            RawrXDInference::SetResidencyPoolMaxBytes(bytes);
+            std::cout << "  Residency pool: " << args.residencyPoolMB << " MB\n";
+        }
+        
         if (!engine->IsModelLoaded()) {
             std::cout << "  Loading model: " << args.modelPath << "\n";
             if (!engine->LoadModel(args.modelPath)) {
