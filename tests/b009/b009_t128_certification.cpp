@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     cfg.vocab_size = loader.getVocabSize();
     cfg.rope_theta = 10000.0f;
     cfg.rms_norm_eps = 1e-5f;
-    cfg.weight_residency_pool_max_bytes = 512ULL * 1024 * 1024; // 512 MB — enable B015 residency for B009-C batched GEMM
+    cfg.weight_residency_pool_max_bytes = 4ULL * 1024 * 1024 * 1024; // 4096 MB — B009-P4: sufficient for full model residency
 
     if (cfg.dim == 0) cfg.dim = 4096;
     if (cfg.n_layers == 0) cfg.n_layers = 32;
