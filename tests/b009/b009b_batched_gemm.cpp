@@ -1,13 +1,14 @@
 // ============================================================================
-// B009-B Batched GEMM Implementation — STUB (falls back to per-token matmuls)
+// B009-B Batched GEMM Implementation — uses ExecuteLayerMatMulBatch for true batching
 // ============================================================================
 //
 // PURPOSE:
-//   Stub implementation of batched GEMM operations. All functions fall back
-//   to per-token ExecuteLayerMatMul calls, preserving B009-A correctness.
+//   Real implementation of batched GEMM operations. All functions delegate to
+//   RawrXDTransformer::ExecuteLayerMatMulBatch, which acquires the resident
+//   dequantized weight once and reuses it for all T token rows.
 //
-//   When batched kernels are ready, replace these stubs with actual
-//   batched matrix multiplication.
+//   This eliminates the per-token scalar matmul loops and removes the
+//   NegativeSpaceProfiler "SUPERFICIAL BATCHING" red flag.
 //
 // ============================================================================
 
@@ -20,7 +21,7 @@ namespace RawrXD::B009B {
 BatchedGemmTelemetry g_batched_gemm_telemetry{};
 
 // ============================================================================
-// Batched QKV Projection (STUB)
+// Batched QKV Projection
 // ============================================================================
 bool BatchedQKVProjection(
     RawrXDTransformer* transformer,
@@ -32,16 +33,9 @@ bool BatchedQKVProjection(
     const std::string prefix = "blk." + std::to_string(layer) + ".";
     bool ok = true;
 
-    for (int t = 0; t < T; ++t) {
-        const float* xt = hidden + static_cast<size_t>(t) * dim;
-        float* qt = q + static_cast<size_t>(t) * dim;
-        float* kt = k + static_cast<size_t>(t) * kv_dim;
-        float* vt = v + static_cast<size_t>(t) * kv_dim;
-
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "attn_q.weight", xt, qt, dim, dim, layer);
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "attn_k.weight", xt, kt, dim, kv_dim, layer);
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "attn_v.weight", xt, vt, dim, kv_dim, layer);
-    }
+    ok = ok && transformer->ExecuteLayerMatMulBatch(prefix + "attn_q.weight", hidden, q, dim, dim, T, layer);
+    ok = ok && transformer->ExecuteLayerMatMulBatch(prefix + "attn_k.weight", hidden, k, dim, kv_dim, T, layer);
+    ok = ok && transformer->ExecuteLayerMatMulBatch(prefix + "attn_v.weight", hidden, v, dim, kv_dim, T, layer);
 
     if (ok) {
         ++g_batched_gemm_telemetry.batched_qkv_calls;
@@ -52,7 +46,7 @@ bool BatchedQKVProjection(
 }
 
 // ============================================================================
-// Batched FFN Gate+Up (STUB)
+// Batched FFN Gate+Up
 // ============================================================================
 bool BatchedFFNGateUp(
     RawrXDTransformer* transformer,
@@ -64,14 +58,8 @@ bool BatchedFFNGateUp(
     const std::string prefix = "blk." + std::to_string(layer) + ".ffn_";
     bool ok = true;
 
-    for (int t = 0; t < T; ++t) {
-        const float* xt = x + static_cast<size_t>(t) * dim;
-        float* gt = gate + static_cast<size_t>(t) * hidden_dim;
-        float* ut = up + static_cast<size_t>(t) * hidden_dim;
-
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "gate.weight", xt, gt, dim, hidden_dim, layer);
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "up.weight", xt, ut, dim, hidden_dim, layer);
-    }
+    ok = ok && transformer->ExecuteLayerMatMulBatch(prefix + "gate.weight", x, gate, dim, hidden_dim, T, layer);
+    ok = ok && transformer->ExecuteLayerMatMulBatch(prefix + "up.weight", x, up, dim, hidden_dim, T, layer);
 
     if (ok) {
         ++g_batched_gemm_telemetry.batched_ffn_gateup_calls;
@@ -82,7 +70,7 @@ bool BatchedFFNGateUp(
 }
 
 // ============================================================================
-// Batched FFN Down (STUB)
+// Batched FFN Down
 // ============================================================================
 bool BatchedFFNDown(
     RawrXDTransformer* transformer,
@@ -92,14 +80,7 @@ bool BatchedFFNDown(
     if (!transformer || T <= 0 || hidden_dim <= 0) return false;
 
     const std::string prefix = "blk." + std::to_string(layer) + ".ffn_";
-    bool ok = true;
-
-    for (int t = 0; t < T; ++t) {
-        const float* at = activated + static_cast<size_t>(t) * hidden_dim;
-        float* ot = out + static_cast<size_t>(t) * dim;
-
-        ok = ok && transformer->ExecuteLayerMatMul(prefix + "down.weight", at, ot, hidden_dim, dim, layer);
-    }
+    bool ok = transformer->ExecuteLayerMatMulBatch(prefix + "down.weight", activated, out, hidden_dim, dim, T, layer);
 
     if (ok) {
         ++g_batched_gemm_telemetry.batched_ffn_down_calls;

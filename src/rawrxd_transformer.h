@@ -210,6 +210,16 @@ class RawrXDTransformer
         return m_weightResidencyPool ? m_weightResidencyPool->resident_bytes() : 0;
     }
 
+    // B009-P2: Structural batching instrumentation accessors
+    [[nodiscard]] std::uint64_t b009ForwardBatchCalls() const noexcept { return m_b009ForwardBatchCalls.load(); }
+    [[nodiscard]] std::uint64_t b009MatMulCalls() const noexcept { return m_b009MatMulCalls.load(); }
+    [[nodiscard]] std::uint64_t b009BatchedMatMulCalls() const noexcept { return m_b009BatchedMatMulCalls.load(); }
+    [[nodiscard]] std::uint64_t b009WeightLookupCalls() const noexcept { return m_b009WeightLookupCalls.load(); }
+    [[nodiscard]] std::uint64_t b009GGUFMapCalls() const noexcept { return m_b009GGUFMapCalls.load(); }
+    [[nodiscard]] std::uint64_t b009GGUFUnmapCalls() const noexcept { return m_b009GGUFUnmapCalls.load(); }
+    [[nodiscard]] std::uint64_t b009DequantCalls() const noexcept { return m_b009DequantCalls.load(); }
+    [[nodiscard]] std::uint64_t b009AVX512KernelCalls() const noexcept { return m_b009AVX512KernelCalls.load(); }
+
     /// O(1) group lookup for the last plan known to the scheduler when SetSwarmScheduler ran (MoE-aware).
     [[nodiscard]] const RawrXD::Swarm::SwarmPlanSliceIndex& swarmPlanSliceIndex() const noexcept
     {
@@ -330,4 +340,14 @@ class RawrXDTransformer
     // Set true when T==1 (decode) to bypass pool lookup/materialization overhead.
     // Cleared when T>1 (prefill) to retain B015 acceleration.
     bool m_b015DecodeBypass = false;
+
+    // B009-P2: Structural batching instrumentation counters
+    mutable std::atomic<std::uint64_t> m_b009ForwardBatchCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009MatMulCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009BatchedMatMulCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009WeightLookupCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009GGUFMapCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009GGUFUnmapCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009DequantCalls{0};
+    mutable std::atomic<std::uint64_t> m_b009AVX512KernelCalls{0};
 };

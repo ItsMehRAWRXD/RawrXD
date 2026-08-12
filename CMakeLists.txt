@@ -8858,6 +8858,7 @@ target_link_libraries(b009_batched_prefill_certification PRIVATE
 # ============================================================================
 add_executable(b009_t128_certification EXCLUDE_FROM_ALL
     tests/b009/b009_t128_certification.cpp
+    tests/b009/b009b_batched_gemm.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_model_loader.cpp

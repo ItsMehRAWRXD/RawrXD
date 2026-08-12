@@ -3,6 +3,7 @@
 // Layer-outer loop for multi-token prompt processing.
 // ============================================================================
 #include "rawrxd_transformer.h"
+#include "tests/b009/b009b_batched_gemm.h"
 #include <chrono>
 #include <cstdio>
 #include <cmath>
@@ -160,27 +161,19 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
         }
         FBFlush("[ForwardBatch] LAYER %d: attn_norm complete (T=%d)\n", l + 1, T);
 
-        // --- QKV projections (batched matmul) ---
-        FBFlush("[ForwardBatch] LAYER %d: QKV projections begin\n", l + 1);
+        // --- QKV projections (B009-B batched) ---
+        FBFlush("[ForwardBatch] LAYER %d: QKV projections begin (B009-B batched)\n", l + 1);
+        if (!RawrXD::B009B::BatchedQKVProjection(this, hidden.data(), q.data(), k.data(), v.data(), T, dim, kv_dim, static_cast<uint32_t>(l)))
+            return {};
+        // RoPE per token
         for (int t = 0; t < T; ++t)
         {
-            float* x = hidden.data() + static_cast<size_t>(t) * dim;
             float* qt = q.data() + static_cast<size_t>(t) * dim;
             float* kt = k.data() + static_cast<size_t>(t) * kv_dim;
-            float* vt = v.data() + static_cast<size_t>(t) * kv_dim;
-
-            if (!ExecuteLayerMatMul(prefix + "attn_q.weight", x, qt, dim, dim, static_cast<uint32_t>(l)))
-                return {};
-            if (!ExecuteLayerMatMul(prefix + "attn_k.weight", x, kt, dim, kv_dim, static_cast<uint32_t>(l)))
-                return {};
-            if (!ExecuteLayerMatMul(prefix + "attn_v.weight", x, vt, dim, kv_dim, static_cast<uint32_t>(l)))
-                return {};
-
-            // RoPE per token
             RoPE_AVX512(qt, nullptr, current_pos + t, head_dim, n_heads);
             RoPE_AVX512(kt, nullptr, current_pos + t, head_dim, n_kv_heads);
         }
-        FBFlush("[ForwardBatch] LAYER %d: QKV projections complete\n", l + 1);
+        FBFlush("[ForwardBatch] LAYER %d: QKV projections complete (B009-B batched)\n", l + 1);
 
         // --- KV Cache Update (all tokens) ---
         FBFlush("[ForwardBatch] LAYER %d: KV cache update begin\n", l + 1);
@@ -264,16 +257,11 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
         }
         FBFlush("[ForwardBatch] LAYER %d: Attention complete (T=%d)\n", l + 1, T);
 
-        // --- Output projection (per-token) ---
-        FBFlush("[ForwardBatch] LAYER %d: Output projection begin\n", l + 1);
-        for (int t = 0; t < T; ++t)
-        {
-            float* out_t = att_out.data() + static_cast<size_t>(t) * dim;
-            float* fin_t = attn_final.data() + static_cast<size_t>(t) * dim;
-            if (!ExecuteLayerMatMul(prefix + "attn_output.weight", out_t, fin_t, dim, dim, static_cast<uint32_t>(l)))
-                return {};
-        }
-        FBFlush("[ForwardBatch] LAYER %d: Output projection complete\n", l + 1);
+        // --- Output projection (B009-B batched) ---
+        FBFlush("[ForwardBatch] LAYER %d: Output projection begin (B009-B batched)\n", l + 1);
+        if (!ExecuteLayerMatMulBatch(prefix + "attn_output.weight", att_out.data(), attn_final.data(), dim, dim, T, static_cast<uint32_t>(l)))
+            return {};
+        FBFlush("[ForwardBatch] LAYER %d: Output projection complete (B009-B batched)\n", l + 1);
 
         // --- Residual add ---
         FBFlush("[ForwardBatch] LAYER %d: Residual add begin\n", l + 1);
@@ -288,16 +276,11 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
         }
         FBFlush("[ForwardBatch] LAYER %d: Residual add complete\n", l + 1);
 
-        // --- FFN (per-token, dense path only for B009 scaffold) ---
-        FBFlush("[ForwardBatch] LAYER %d: FFN begin\n", l + 1);
+        // --- FFN (B009-B batched) ---
+        FBFlush("[ForwardBatch] LAYER %d: FFN begin (B009-B batched)\n", l + 1);
         for (int t = 0; t < T; ++t)
         {
             float* x = hidden.data() + static_cast<size_t>(t) * dim;
-            float* h1t = h1.data() + static_cast<size_t>(t) * config.hidden_dim;
-            float* h3t = h3.data() + static_cast<size_t>(t) * config.hidden_dim;
-            float* fft = final_ffn.data() + static_cast<size_t>(t) * dim;
-
-            // Save residual before FFN norm
             float* res_t = residual_batch.data() + static_cast<size_t>(t) * dim;
             std::memcpy(res_t, x, static_cast<size_t>(dim) * sizeof(float));
 
@@ -308,24 +291,41 @@ std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& 
                 return {};
             }
             RMSNorm_AVX512(x, x, ffn_norm, dim, config.rms_norm_eps);
+        }
+        FBFlush("[ForwardBatch] LAYER %d: FFN norm complete (T=%d)\n", l + 1, T);
 
-            const std::string ffn_prefix = prefix + "ffn_";
-            if (!ExecuteLayerMatMul(ffn_prefix + "gate.weight", x, h1t, dim, config.hidden_dim, static_cast<uint32_t>(l)))
-                return {};
-            if (!ExecuteLayerMatMul(ffn_prefix + "up.weight", x, h3t, dim, config.hidden_dim, static_cast<uint32_t>(l)))
-                return {};
+        // Batched gate + up
+        if (!RawrXD::B009B::BatchedFFNGateUp(this, hidden.data(), h1.data(), h3.data(), T, dim, config.hidden_dim, static_cast<uint32_t>(l)))
+            return {};
+        FBFlush("[ForwardBatch] LAYER %d: FFN gate+up complete (B009-B batched)\n", l + 1);
 
+        // Per-token SiLU and elementwise multiply
+        for (int t = 0; t < T; ++t)
+        {
+            float* h1t = h1.data() + static_cast<size_t>(t) * config.hidden_dim;
+            float* h3t = h3.data() + static_cast<size_t>(t) * config.hidden_dim;
             Silu_AVX512(h1t, config.hidden_dim);
             for (int i = 0; i < config.hidden_dim; ++i)
                 h1t[i] *= h3t[i];
+        }
+        FBFlush("[ForwardBatch] LAYER %d: FFN SiLU+mul complete (T=%d)\n", l + 1, T);
 
-            if (!ExecuteLayerMatMul(ffn_prefix + "down.weight", h1t, fft, config.hidden_dim, dim, static_cast<uint32_t>(l)))
-                return {};
+        // Batched down
+        if (!RawrXD::B009B::BatchedFFNDown(this, h1.data(), final_ffn.data(), T, config.hidden_dim, dim, static_cast<uint32_t>(l)))
+            return {};
+        FBFlush("[ForwardBatch] LAYER %d: FFN down complete (B009-B batched)\n", l + 1);
 
+        // Per-token residual add
+        for (int t = 0; t < T; ++t)
+        {
+            float* x = hidden.data() + static_cast<size_t>(t) * dim;
+            float* res_t = residual_batch.data() + static_cast<size_t>(t) * dim;
+            float* fft = final_ffn.data() + static_cast<size_t>(t) * dim;
             VectorAdd_AVX512(x, res_t, fft, dim);
             for (int i = 0; i < dim; ++i)
                 if (!std::isfinite(x[i])) x[i] = 0.0f;
         }
+        FBFlush("[ForwardBatch] LAYER %d: FFN residual add complete (T=%d)\n", l + 1, T);
         FBFlush("[ForwardBatch] LAYER %d: FFN complete\n", l + 1);
         FBFlush("[ForwardBatch] LAYER %d/%d COMPLETE\n", l + 1, config.n_layers);
         FBMetrics("layer_complete");

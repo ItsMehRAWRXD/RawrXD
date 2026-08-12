@@ -1093,6 +1093,8 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
                                            std::size_t inputDim, std::size_t outputDim, std::uint32_t layer)
 {
     ++m_routerBoundaryMatMulCount;
+    ++m_b009MatMulCalls;
+    ++m_b009WeightLookupCalls;
 
     // Negative Space Profiler: Track each single-token matmul call
     rawrxd::ProfilerGuard pg;
@@ -1279,6 +1281,9 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
 bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, const float* inputBatch, float* outputBatch,
                                                 std::size_t inputDim, std::size_t outputDim, std::size_t T, std::uint32_t layer)
 {
+    ++m_b009BatchedMatMulCalls;
+    ++m_b009WeightLookupCalls;
+
     if (!loader || !inputBatch || !outputBatch || inputDim == 0 || outputDim == 0 || T == 0)
         return false;
 
@@ -1684,6 +1689,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     // T==1 decode path uses the original token-outer loop below.
     if (T > 1)
     {
+        ++m_b009ForwardBatchCalls;
         printf("[Forward] B009 layer-outer batched prefill: T=%d layers=%d\n", T, config.n_layers);
         std::fflush(stdout);
 
@@ -2649,6 +2655,13 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     printf("[Forward] returning logits, size=%zu\n", logits.size());
     std::fflush(stdout);
+
+    // B009-P2: Structural batching instrumentation report
+    printf("[B009-P2] Structural counters: ForwardBatch=%llu MatMul=%llu BatchedMatMul=%llu WeightLookup=%llu\n",
+           static_cast<unsigned long long>(m_b009ForwardBatchCalls.load()),
+           static_cast<unsigned long long>(m_b009MatMulCalls.load()),
+           static_cast<unsigned long long>(m_b009BatchedMatMulCalls.load()),
+           static_cast<unsigned long long>(m_b009WeightLookupCalls.load()));
 
     // Negative Space Profiler: Emit bottleneck analysis after forward completes
     rawrxd::Profiler_AnalyzeBottlenecks();
