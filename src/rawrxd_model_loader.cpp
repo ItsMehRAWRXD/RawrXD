@@ -1641,6 +1641,10 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     };
 
     m_device = vkDevice;
+    if (m_device == VK_NULL_HANDLE)
+    {
+        m_gpuUploadEnabled = false;
+    }
     m_tensors.clear();
 
     // ============================================================================
