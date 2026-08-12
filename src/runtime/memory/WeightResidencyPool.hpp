@@ -86,7 +86,9 @@ public:
             commits_.fetch_add(1, std::memory_order_relaxed);
             return true;
         } else {
-            // Re-commit (update data)
+            // Re-commit (update data) — fix resident_bytes_ accounting bug:
+            // only add the delta between new and old resident size.
+            size_t old_bytes = it->second.resident ? it->second.bytes : 0;
             if (it->second.data && it->second.bytes != bytes) {
                 RAWRXD_ALIGNED_FREE(it->second.data);
                 it->second.data = (float*)RAWRXD_ALIGNED_ALLOC(64, bytes);
@@ -97,7 +99,7 @@ public:
             it->second.resident = true;
             it->second.last_used = ++clock_;
             it->second.refs = 0;  // Reset refs on re-commit
-            resident_bytes_ += bytes;
+            resident_bytes_ += bytes - old_bytes;
             commits_.fetch_add(1, std::memory_order_relaxed);
             touch_lru(name);
             return true;
