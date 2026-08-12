@@ -75,7 +75,7 @@ public:
         if (cfg.dim == 0) cfg.dim = 4096;
         if (cfg.n_layers == 0) cfg.n_layers = 32;
         if (cfg.n_heads == 0) cfg.n_heads = 32;
-        
+
         transformer.Initialize(device, physDevice, cfg, loader);
         
         // 3. Load Tokenizer

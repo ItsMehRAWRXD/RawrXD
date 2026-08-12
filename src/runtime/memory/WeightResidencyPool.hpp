@@ -12,6 +12,15 @@
 #include <mutex>
 #include <functional>
 
+#ifdef _WIN32
+#include <stdlib.h>
+#define RAWRXD_ALIGNED_ALLOC(align, size) _aligned_malloc(size, align)
+#define RAWRXD_ALIGNED_FREE(ptr) _aligned_free(ptr)
+#else
+#define RAWRXD_ALIGNED_ALLOC(align, size) aligned_alloc(align, size)
+#define RAWRXD_ALIGNED_FREE(ptr) free(ptr)
+#endif
+
 namespace rawrxd {
 
 struct ResidentWeight {
@@ -30,7 +39,7 @@ public:
 
     ~WeightResidencyPool() {
         for (auto& [name, w] : weights_) {
-            if (w.data) aligned_free(w.data);
+            if (w.data) RAWRXD_ALIGNED_FREE(w.data);
         }
     }
 
@@ -63,7 +72,7 @@ public:
             ResidentWeight w;
             w.name = name;
             w.bytes = bytes;
-            w.data = (float*)aligned_alloc(64, bytes);
+            w.data = (float*)RAWRXD_ALIGNED_ALLOC(64, bytes);
             if (!w.data) return false;
             std::memcpy(w.data, src, bytes);
             w.resident = true;
@@ -79,10 +88,10 @@ public:
         } else {
             // Re-commit (update data)
             if (it->second.data && it->second.bytes != bytes) {
-                aligned_free(it->second.data);
-                it->second.data = (float*)aligned_alloc(64, bytes);
+                RAWRXD_ALIGNED_FREE(it->second.data);
+                it->second.data = (float*)RAWRXD_ALIGNED_ALLOC(64, bytes);
             }
-            if (!it->second.data) it->second.data = (float*)aligned_alloc(64, bytes);
+            if (!it->second.data) it->second.data = (float*)RAWRXD_ALIGNED_ALLOC(64, bytes);
             std::memcpy(it->second.data, src, bytes);
             it->second.bytes = bytes;
             it->second.resident = true;
@@ -149,7 +158,7 @@ private:
             auto w_it = weights_.find(*it);
             if (w_it != weights_.end() && w_it->second.refs == 0 && !w_it->second.pinned) {
                 resident_bytes_ -= w_it->second.bytes;
-                aligned_free(w_it->second.data);
+                RAWRXD_ALIGNED_FREE(w_it->second.data);
                 w_it->second.data = nullptr;
                 w_it->second.resident = false;
                 w_it->second.bytes = 0;

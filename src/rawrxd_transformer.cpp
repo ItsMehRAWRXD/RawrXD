@@ -1274,6 +1274,111 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
 }
 
 // ============================================================================
+// B009-P2: AVX-512 true batched GEMM kernel for resident FP32 weights.
+// Computes output[t][m] = sum_k weight[m][k] * input[t][k]
+// for t = 0..T-1, m = 0..outputDim-1.
+// Weight is [outputDim x inputDim], input is [T x inputDim], output is [T x outputDim].
+// Processes 8 token rows simultaneously per output column to maximize weight reuse
+// while staying well within the 32 ZMM register budget (8 accumulators + 2 temps).
+// ============================================================================
+#ifdef __AVX512F__
+static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBatch, const float* weightData,
+                                       std::size_t T, std::size_t inputDim, std::size_t outputDim)
+{
+    const std::size_t K = inputDim;
+    const std::size_t N = outputDim;
+
+    for (std::size_t m = 0; m < N; ++m)
+    {
+        const float* wRow = weightData + m * K;
+        std::size_t t = 0;
+
+        // Process T in chunks of 8 tokens
+        for (; t + 7 < T; t += 8)
+        {
+            __m512 acc0 = _mm512_setzero_ps();
+            __m512 acc1 = _mm512_setzero_ps();
+            __m512 acc2 = _mm512_setzero_ps();
+            __m512 acc3 = _mm512_setzero_ps();
+            __m512 acc4 = _mm512_setzero_ps();
+            __m512 acc5 = _mm512_setzero_ps();
+            __m512 acc6 = _mm512_setzero_ps();
+            __m512 acc7 = _mm512_setzero_ps();
+
+            std::size_t k = 0;
+            for (; k + 15 < K; k += 16)
+            {
+                __m512 w = _mm512_loadu_ps(wRow + k);
+                acc0 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 0) * K + k), acc0);
+                acc1 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 1) * K + k), acc1);
+                acc2 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 2) * K + k), acc2);
+                acc3 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 3) * K + k), acc3);
+                acc4 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 4) * K + k), acc4);
+                acc5 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 5) * K + k), acc5);
+                acc6 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 6) * K + k), acc6);
+                acc7 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 7) * K + k), acc7);
+            }
+
+            float tail0 = 0.0f, tail1 = 0.0f, tail2 = 0.0f, tail3 = 0.0f;
+            float tail4 = 0.0f, tail5 = 0.0f, tail6 = 0.0f, tail7 = 0.0f;
+            for (; k < K; ++k)
+            {
+                float wk = wRow[k];
+                tail0 += wk * inputBatch[(t + 0) * K + k];
+                tail1 += wk * inputBatch[(t + 1) * K + k];
+                tail2 += wk * inputBatch[(t + 2) * K + k];
+                tail3 += wk * inputBatch[(t + 3) * K + k];
+                tail4 += wk * inputBatch[(t + 4) * K + k];
+                tail5 += wk * inputBatch[(t + 5) * K + k];
+                tail6 += wk * inputBatch[(t + 6) * K + k];
+                tail7 += wk * inputBatch[(t + 7) * K + k];
+            }
+
+            outputBatch[(t + 0) * N + m] = _mm512_reduce_add_ps(acc0) + tail0;
+            outputBatch[(t + 1) * N + m] = _mm512_reduce_add_ps(acc1) + tail1;
+            outputBatch[(t + 2) * N + m] = _mm512_reduce_add_ps(acc2) + tail2;
+            outputBatch[(t + 3) * N + m] = _mm512_reduce_add_ps(acc3) + tail3;
+            outputBatch[(t + 4) * N + m] = _mm512_reduce_add_ps(acc4) + tail4;
+            outputBatch[(t + 5) * N + m] = _mm512_reduce_add_ps(acc5) + tail5;
+            outputBatch[(t + 6) * N + m] = _mm512_reduce_add_ps(acc6) + tail6;
+            outputBatch[(t + 7) * N + m] = _mm512_reduce_add_ps(acc7) + tail7;
+        }
+
+        // Scalar tail for remaining tokens (T % 8)
+        for (; t < T; ++t)
+        {
+            float sum = 0.0f;
+            for (std::size_t k = 0; k < K; ++k)
+            {
+                sum += wRow[k] * inputBatch[t * K + k];
+            }
+            outputBatch[t * N + m] = sum;
+        }
+    }
+}
+#else
+static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBatch, const float* weightData,
+                                       std::size_t T, std::size_t inputDim, std::size_t outputDim)
+{
+    // Scalar fallback when AVX-512 is unavailable
+    for (std::size_t t = 0; t < T; ++t)
+    {
+        const float* inRow = inputBatch + t * inputDim;
+        float* outRow = outputBatch + t * outputDim;
+        for (std::size_t m = 0; m < outputDim; ++m)
+        {
+            float sum = 0.0f;
+            for (std::size_t k = 0; k < inputDim; ++k)
+            {
+                sum += weightData[m * inputDim + k] * inRow[k];
+            }
+            outRow[m] = sum;
+        }
+    }
+}
+#endif
+
+// ============================================================================
 // B009-P2: True batched matmul — reuses dequantized weight across T token rows.
 // inputBatch  = [T × inputDim] row-major
 // outputBatch = [T × outputDim] row-major
@@ -1298,25 +1403,12 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
             const float* weightData = resident->data;
             if (weightData)
             {
-                // True batched GEMM: output[T][m] = sum_k weight[m][k] * input[t][k]
-                // Profiler: One call covers all T tokens (true batching)
+                // True batched GEMM via AVX-512: one kernel call covers all T tokens
                 {
                     rawrxd::ProfilerGuard pg;
-                    for (std::size_t t = 0; t < T; ++t)
-                    {
-                        const float* inRow = inputBatch + t * inputDim;
-                        float* outRow = outputBatch + t * outputDim;
-                        for (std::size_t m = 0; m < outputDim; ++m)
-                        {
-                            float sum = 0.0f;
-                            for (std::size_t k = 0; k < inputDim; ++k)
-                            {
-                                sum += weightData[m * inputDim + k] * inRow[k];
-                            }
-                            outRow[m] = sum;
-                        }
-                    }
+                    BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                 }
+                ++m_b009AVX512KernelCalls;
                 m_weightResidencyPool->release(tensorName);
                 ++m_weightResidencyHits;
                 return true;
@@ -1334,24 +1426,12 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                 const float* weightData = resident->data;
                 if (weightData)
                 {
-                    // Profiler: One call covers all T tokens (true batching after materialization)
+                    // True batched GEMM via AVX-512 after materialization
                     {
                         rawrxd::ProfilerGuard pg;
-                        for (std::size_t t = 0; t < T; ++t)
-                        {
-                            const float* inRow = inputBatch + t * inputDim;
-                            float* outRow = outputBatch + t * outputDim;
-                            for (std::size_t m = 0; m < outputDim; ++m)
-                            {
-                                float sum = 0.0f;
-                                for (std::size_t k = 0; k < inputDim; ++k)
-                                {
-                                    sum += weightData[m * inputDim + k] * inRow[k];
-                                }
-                                outRow[m] = sum;
-                            }
-                        }
+                        BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                     }
+                    ++m_b009AVX512KernelCalls;
                     m_weightResidencyPool->release(tensorName);
                     ++m_weightResidencyHits;
                     return true;
@@ -2657,11 +2737,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     std::fflush(stdout);
 
     // B009-P2: Structural batching instrumentation report
-    printf("[B009-P2] Structural counters: ForwardBatch=%llu MatMul=%llu BatchedMatMul=%llu WeightLookup=%llu\n",
+    printf("[B009-P2] Structural counters: ForwardBatch=%llu MatMul=%llu BatchedMatMul=%llu WeightLookup=%llu AVX512Kernels=%llu\n",
            static_cast<unsigned long long>(m_b009ForwardBatchCalls.load()),
            static_cast<unsigned long long>(m_b009MatMulCalls.load()),
            static_cast<unsigned long long>(m_b009BatchedMatMulCalls.load()),
-           static_cast<unsigned long long>(m_b009WeightLookupCalls.load()));
+           static_cast<unsigned long long>(m_b009WeightLookupCalls.load()),
+           static_cast<unsigned long long>(m_b009AVX512KernelCalls.load()));
 
     // Negative Space Profiler: Emit bottleneck analysis after forward completes
     rawrxd::Profiler_AnalyzeBottlenecks();
