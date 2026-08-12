@@ -8872,12 +8872,15 @@ add_executable(b009_t128_certification EXCLUDE_FROM_ALL
     src/core/gguf_swarm_plan_builder.cpp
     src/logging/Logger.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/ResidencyTracker.cpp
     src/runtime/memory/WorkingSetPredictor.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/memory/TensorPlacementManager.cpp
+    src/inference/NegativeSpaceProfiler.cpp
+    B014/build/b014_profiler.cpp
 )
 target_include_directories(b009_t128_certification PRIVATE
     ${CMAKE_SOURCE_DIR}

@@ -3245,7 +3245,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                 const auto deqStart = std::chrono::steady_clock::now();
                 for (size_t b = 0; b < blocksPerRow; ++b)
                 {
-                    dequantBlock(blockPtr, dstRow + b * 256);
+                    dequantBlock(blockPtr, dstRow + b * blockElements);
                     blockPtr += blockStride;
                 }
                 const auto deqEnd = std::chrono::steady_clock::now();
@@ -3399,7 +3399,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                     const auto deqStart = std::chrono::steady_clock::now();
                     for (size_t b = 0; b < blocksPerRow; ++b)
                     {
-                        dequantBlock(blockPtr, dstRow + b * 256);
+                        dequantBlock(blockPtr, dstRow + b * blockElements);
                         blockPtr += blockStride;
                     }
                     const auto deqEnd = std::chrono::steady_clock::now();
@@ -3497,7 +3497,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
             const auto deqStart = std::chrono::steady_clock::now();
             for (size_t b = 0; b < blocksPerRow; ++b)
             {
-                dequantBlock(blockPtr, dstRow + b * 256);
+                dequantBlock(blockPtr, dstRow + b * blockElements);
                 blockPtr += blockStride;
             }
             const auto deqEnd = std::chrono::steady_clock::now();
@@ -3541,7 +3541,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
                 const auto deqStart = std::chrono::steady_clock::now();
                 for (size_t b = 0; b < blocksPerRow; ++b)
                 {
-                    dequantBlock(blockPtr, dstRow + b * 256);
+                    dequantBlock(blockPtr, dstRow + b * blockElements);
                     blockPtr += blockStride;
                 }
                 const auto deqEnd = std::chrono::steady_clock::now();
