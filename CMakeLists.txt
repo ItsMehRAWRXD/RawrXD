@@ -2099,6 +2099,7 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/core/command_handlers_asm.cpp
         src/core/command_handlers_hybrid.cpp
         src/core/command_handlers_comprehensive.cpp
+        src/inference/NegativeSpaceProfiler.cpp
         # src/core/asm_symbols_stub.cpp  # Removed - has compile errors and duplicates symbols
     )
     # rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
@@ -5146,25 +5147,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/production/Deep2ProductionRuntime.cpp
         src/deep2/dump_tensors.cpp
         src/deep2/deep2_http_gateway.cpp
-        src/deep2/Deep2_Phase0_ProductionTest.cpp
         src/deep2/Deep2Engine_KernelTest.cpp
-        src/deep2/Deep2Engine_SmokeTest.cpp
-        src/deep2/Deep2Engine_SmokeTest_Minimal.cpp
-        src/deep2/Deep2Engine_ValidationTest.cpp
-        src/deep2/Deep2Engine_FullSmoketest.cpp
-        src/deep2/Deep2_Phase0_SmokeTest.cpp
-        src/deep2/Deep2_Phase1_Smoketest.cpp
-        src/deep2/Deep2_Phase2_MultiGPU_Smoketest.cpp
-        src/deep2/Deep2_Phase3_Smoketest.cpp
-        src/deep2/Deep2_Gateway_Integration_Test.cpp
-        src/deep2/Deep2_Gateway_Runtime_Certification.cpp
-        src/deep2/Deep2_Phase0_ProductionTest.cpp
-        src/deep2/validation/Deep2Validation.cpp
-        src/deep2/certification/Deep2_Cert_Main.cpp
-        src/deep2/tests/numerical/layer_compare.cpp
-        src/deep2/tests/numerical/kernel_test.cpp
-        src/deep2/reverse_integration_standalone_test.cpp
-        src/deep2/HotPatcherSafetyTest.cpp
         src/deep2/moe_microbench.cpp
         src/deep2/moe_simple_bench.cpp
         src/deep2/moe_test.cpp
@@ -5172,7 +5155,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/router_bench.cpp
         src/deep2/router_latency_test.cpp
         src/deep2/test_api_server.cpp
-        src/deep2/test_gguf_fix.cpp
         src/deep2/test_real_gguf_load.cpp
         src/deep2/test_real_gguf_validate.cpp
         src/deep2/test_tool_limit_hotpatch.cpp
@@ -6981,6 +6963,7 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
+        src/inference/NegativeSpaceProfiler.cpp
     )
 
 target_include_directories(rawrxd PRIVATE

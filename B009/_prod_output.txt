@@ -1,0 +1,14 @@
+
+==================================================
+  x64 HARDWARE BOTTLENECK & BATCHING ANALYSIS
+==================================================
+
+Target: StreamingMatMul
+  [T=32] Calls: 1 | Cycles: 2097606
+    [+] Memory delta is flat (< 1MB).
+        Bottleneck is strictly compute/architectural.
+
+[+] No superficial batching detected.
+    Kernel appears to be truly batched.
+
+Analysis complete.
