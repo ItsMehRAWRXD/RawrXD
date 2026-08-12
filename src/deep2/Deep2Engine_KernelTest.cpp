@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdint>
 #include <immintrin.h>
+#include <intrin.h>
 
 // ============================================================================
 // Kernel Implementations (from Deep2Engine.cpp)

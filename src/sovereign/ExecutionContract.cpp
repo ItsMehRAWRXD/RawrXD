@@ -508,11 +508,20 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
         }
     }
     
-    // Tokenize the prompt
+    // Tokenize the prompt (or use pre-tokenized input if provided)
     auto tokStart = std::chrono::steady_clock::now();
-    std::vector<int32_t> promptTokens = engine->Tokenize(req.prompt);
-    result.timing.tokenizeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now() - tokStart);
+    std::vector<int32_t> promptTokens;
+    if (!req.tokenizedInput.empty()) {
+        for (auto t : req.tokenizedInput) {
+            promptTokens.push_back(static_cast<int32_t>(t));
+        }
+        result.timing.tokenizeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - tokStart);
+    } else {
+        promptTokens = engine->Tokenize(req.prompt);
+        result.timing.tokenizeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - tokStart);
+    }
     result.telemetry.tokensPrompt = static_cast<uint32_t>(promptTokens.size());
     
     if (promptTokens.empty()) {

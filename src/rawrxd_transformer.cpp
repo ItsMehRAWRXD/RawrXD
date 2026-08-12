@@ -2,6 +2,7 @@
 #include "core/moe_expert_accumulation.hpp"
 #include "core/swarm_scheduler.hpp"
 #include "logging/Logger.h"
+#include "inference/NegativeSpaceProfiler.hpp"
 
 // RawrXD validation hooks for llama.cpp parity testing
 #include "../tests/inference_validation/harness/runtime_hooks.hpp"
@@ -89,101 +90,10 @@ void collectMoeMixturePlanRowRefs(const std::uint32_t modelIndex, const std::uin
 }
 }  // namespace
 
-class RawrXDTransformer::MoEPrepackWorker
-{
-  public:
-    MoEPrepackWorker(std::size_t maxDepth, std::uint32_t pollMs, RawrXDTransformer* owner)
-        : m_cap(maxDepth > 0 ? maxDepth : 1u), m_pollMs(pollMs), m_owner(owner)
-    {
-        m_thread = std::thread([this] { threadMain_(); });
-    }
-
-    ~MoEPrepackWorker()
-    {
-        {
-            std::lock_guard<std::mutex> lock(m_mu);
-            m_stop = true;
-        }
-        m_cv.notify_one();
-        if (m_thread.joinable())
-            m_thread.join();
-    }
-
-    [[nodiscard]] bool tryPush(MoEPrepackJob&& job)
-    {
-        {
-            std::lock_guard<std::mutex> lock(m_mu);
-            if (m_q.size() >= m_cap)
-                return false;
-            m_q.push_back(std::move(job));
-        }
-        m_cv.notify_one();
-        return true;
-    }
-
-    [[nodiscard]] std::size_t queueDepthApprox() const
-    {
-        std::lock_guard<std::mutex> lock(m_mu);
-        return m_q.size();
-    }
-
-  private:
-    void threadMain_()
-    {
-        while (true)
-        {
-            MoEPrepackJob job;
-            {
-                std::unique_lock<std::mutex> lk(m_mu);
-                const auto relTime = std::chrono::milliseconds(m_pollMs > 0 ? m_pollMs : 200u);
-                m_cv.wait_for(lk, relTime, [this] { return m_stop || !m_q.empty(); });
-                if (m_stop && m_q.empty())
-                    return;
-                if (m_q.empty())
-                    continue;
-                job = std::move(m_q.front());
-                m_q.pop_front();
-            }
-            if (m_owner)
-                m_owner->handleMoePrepackJob_(std::move(job));
-        }
-    }
-
-    const std::size_t m_cap;
-    const std::uint32_t m_pollMs;
-    RawrXDTransformer* m_owner = nullptr;
-    std::deque<MoEPrepackJob> m_q;
-    mutable std::mutex m_mu;
-    std::condition_variable m_cv;
-    std::thread m_thread;
-    bool m_stop = false;
-};
-
-void RawrXDTransformer::MoEPrepackWorkerDeleter::operator()(MoEPrepackWorker* p) const noexcept
-{
-    delete p;
-}
-
 RawrXDTransformer::~RawrXDTransformer()
 {
-    shutdownMoePrepackWorker_();
     if (m_swarmScheduler)
         m_swarmScheduler->setPlanRowEvictionObserver({});
-}
-
-void RawrXDTransformer::shutdownMoePrepackWorker_()
-{
-    m_moePrepackWorker.reset();
-}
-
-void RawrXDTransformer::startMoePrepackWorker_()
-{
-    if (!config.moe_down_grouped_async_prepack || !m_moeMixturePlanPackCache)
-        return;
-    const std::size_t depth = static_cast<std::size_t>(std::max(1, config.moe_down_grouped_prepack_queue_depth));
-    const std::uint32_t pollMs = config.moe_down_grouped_prepack_thread_poll_ms;
-    m_moePrepackWorker =
-        std::unique_ptr<MoEPrepackWorker, MoEPrepackWorkerDeleter>(new MoEPrepackWorker(depth, pollMs, this));
 }
 
 void RawrXDTransformer::onSwarmPlanRowsEvicted_(std::span<const std::size_t> rows)
@@ -210,40 +120,69 @@ void RawrXDTransformer::installSwarmPlanRowEvictionObserver_()
                                                  { onSwarmPlanRowsEvicted_(planRows); });
 }
 
-void RawrXDTransformer::handleMoePrepackJob_(MoEPrepackJob&& job)
-{
-    if (!loader || !m_moeMixturePlanPackCache)
-        return;
-    if (m_moeMixturePlanPackCache->contains(job.cacheKey))
-        return;
-    if (m_swarmScheduler && !job.planRows.empty())
-    {
-        if (!m_swarmScheduler->arePlanRowsResident(
-                std::span<const std::size_t>(job.planRows.data(), job.planRows.size())))
-        {
-            ++m_moePrepackSkippedNotResident;
-            return;
-        }
-    }
-    const std::span<const std::size_t> pr =
-        job.planRows.empty() ? std::span<const std::size_t>{} : std::span<const std::size_t>(job.planRows);
-    if (tryMoeSyncPackMixtureIntoCache(job.layer, job.blkPrefix, job.expertPick, job.hdim, job.dim, job.cacheKey, pr))
-        ++m_moePrepackInserts;
-}
-
 void RawrXDTransformer::tryEnqueueMoePrepack_(MoEPrepackJob&& job)
 {
-    if (!m_moePrepackWorker)
+    if (!config.moe_down_grouped_async_prepack || !m_moeMixturePlanPackCache)
         return;
-    if (!m_moePrepackWorker->tryPush(std::move(job)))
-        ++m_moePrepackQueueDropped;
+    // Capture plan generation at enqueue time so stale results can be discarded later.
+    job.planGeneration = m_swarmScheduler ? m_swarmScheduler->planGeneration()
+                                          : std::numeric_limits<std::uint64_t>::max();
+    {
+        std::lock_guard<std::mutex> lock(m_moePrepackPendingMu);
+        const std::size_t cap = static_cast<std::size_t>(std::max(1, config.moe_down_grouped_prepack_queue_depth));
+        if (m_moePrepackPending.size() >= cap)
+        {
+            ++m_moePrepackQueueDropped;
+            return;
+        }
+        m_moePrepackPending.push_back(std::move(job));
+    }
 }
 
 std::size_t RawrXDTransformer::moePrepackQueueDepthApprox() const noexcept
 {
-    if (!m_moePrepackWorker)
-        return 0;
-    return m_moePrepackWorker->queueDepthApprox();
+    std::lock_guard<std::mutex> lock(m_moePrepackPendingMu);
+    return m_moePrepackPending.size();
+}
+
+void RawrXDTransformer::processPendingMoEPrepackResults_()
+{
+    if (!m_moeMixturePlanPackCache)
+        return;
+
+    std::deque<MoEPrepackJob> pending;
+    {
+        std::lock_guard<std::mutex> lock(m_moePrepackPendingMu);
+        pending.swap(m_moePrepackPending);
+    }
+
+    const std::uint64_t currentPlanGen = m_swarmScheduler ? m_swarmScheduler->planGeneration()
+                                                          : std::numeric_limits<std::uint64_t>::max();
+
+    for (MoEPrepackJob& job : pending)
+    {
+        // Discard stale results from a previous plan generation.
+        if (job.planGeneration != currentPlanGen)
+        {
+            ++m_moePrepackSkippedNotResident;
+            continue;
+        }
+        if (m_moeMixturePlanPackCache->contains(job.cacheKey))
+            continue;
+        if (m_swarmScheduler && !job.planRows.empty())
+        {
+            if (!m_swarmScheduler->arePlanRowsResident(
+                    std::span<const std::size_t>(job.planRows.data(), job.planRows.size())))
+            {
+                ++m_moePrepackSkippedNotResident;
+                continue;
+            }
+        }
+        const std::span<const std::size_t> pr =
+            job.planRows.empty() ? std::span<const std::size_t>{} : std::span<const std::size_t>(job.planRows);
+        if (tryMoeSyncPackMixtureIntoCache(job.layer, job.blkPrefix, job.expertPick, job.hdim, job.dim, job.cacheKey, pr))
+            ++m_moePrepackInserts;
+    }
 }
 
 std::size_t RawrXDTransformer::moeMixturePackCacheCurrentPackedBytes() const noexcept
@@ -455,7 +394,7 @@ void RawrXDTransformer::maybeSampleMoEReuseFromHeatmap()
     }
 
     if (config.moe_down_enable_grouped_integration && config.moe_down_grouped_async_prepack &&
-        config.moe_down_grouped_prepack_hint_from_heatmap && m_moeMixturePlanPackCache && m_moePrepackWorker)
+        config.moe_down_grouped_prepack_hint_from_heatmap && m_moeMixturePlanPackCache)
     {
         const int maxHints = std::max(0, config.moe_down_grouped_prepack_heatmap_max_hints_per_tick);
         int hints = 0;
@@ -711,57 +650,6 @@ bool RawrXDTransformer::tryPickMoERouterExperts(const std::uint32_t layer, const
 
 #ifdef __AVX512F__
 #include <immintrin.h>
-#endif
-
-// C++ Implementations of Kernels (Ensuring Real Logic Execution)
-#ifdef __AVX512F__
-void MatrixMultiply_AVX512(const float* A, const float* B, float* C, uint64_t M, uint64_t K, uint64_t N)
-{
-    const int64_t Mi = static_cast<int64_t>(M);
-    const int64_t Ni = static_cast<int64_t>(N);
-    const int64_t Ki = static_cast<int64_t>(K);
-#pragma omp parallel for
-    for (int64_t i = 0; i < Mi; i++)
-    {
-        for (int64_t j = 0; j < Ni; j++)
-        {
-            __m512 sum_vec = _mm512_setzero_ps();
-            int64_t k = 0;
-            for (; k + 15 < Ki; k += 16)
-            {
-                __m512 a_vec = _mm512_loadu_ps(A + i * Ki + k);
-                __m512 b_vec = _mm512_loadu_ps(B + j * Ki + k);
-                sum_vec = _mm512_fmadd_ps(a_vec, b_vec, sum_vec);
-            }
-            float sum = _mm512_reduce_add_ps(sum_vec);
-            for (; k < Ki; k++)
-            {
-                sum += A[i * Ki + k] * B[j * Ki + k];
-            }
-            C[i * Ni + j] = sum;
-        }
-    }
-}
-#else
-void MatrixMultiply_AVX512(const float* A, const float* B, float* C, uint64_t M, uint64_t K, uint64_t N)
-{
-    const int64_t Mi = static_cast<int64_t>(M);
-    const int64_t Ni = static_cast<int64_t>(N);
-    const int64_t Ki = static_cast<int64_t>(K);
-#pragma omp parallel for
-    for (int64_t i = 0; i < Mi; i++)
-    {
-        for (int64_t j = 0; j < Ni; j++)
-        {
-            float sum = 0.0f;
-            for (int64_t k = 0; k < Ki; k++)
-            {
-                sum += A[i * Ki + k] * B[j * Ki + k];
-            }
-            C[i * Ni + j] = sum;
-        }
-    }
-}
 #endif
 
 #ifdef __AVX512F__
@@ -1206,27 +1094,47 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
 {
     ++m_routerBoundaryMatMulCount;
 
+    // Negative Space Profiler: Track each single-token matmul call
+    rawrxd::ProfilerGuard pg;
+
     const bool isOutputProjection = (tensorName == "output.weight");
+#ifdef RAWRXD_DEBUG_MATMUL
     if (isOutputProjection)
     {
         printf("[MATMUL] output.weight ENTER layer=%u in=%zu out=%zu\n", layer, inputDim, outputDim);
         std::fflush(stdout);
     }
+#endif
 
     if (!loader || !input || !output || inputDim == 0 || outputDim == 0 ||
         inputDim > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
         outputDim > static_cast<std::size_t>(std::numeric_limits<int>::max()))
     {
+#ifdef RAWRXD_DEBUG_MATMUL
         if (isOutputProjection)
         {
             printf("[MATMUL] output.weight FAIL param_check\n");
             std::fflush(stdout);
         }
+#endif
         return false;
     }
 
-    // B015: Check WeightResidencyPool first — fast path for resident dequantized weights
-    if (m_weightResidencyPool)
+    // B015-P1: Prefill-only residency gate.
+    // T > 1  → B015 residency ON (prefill optimization)
+    // T == 1 → B015 residency OFF (bypass decode overhead)
+    if (m_b015DecodeBypass)
+    {
+        // Decode hotpath: skip residency pool entirely, fall through to direct acquisition
+#ifdef RAWRXD_DEBUG_MATMUL
+        if (isOutputProjection)
+        {
+            printf("[MATMUL] output.weight BYPASS B015 decode path\n");
+            std::fflush(stdout);
+        }
+#endif
+    }
+    else if (m_weightResidencyPool)
     {
         if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
         {
@@ -1236,6 +1144,8 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
             {
                 // Simple row-major GEMM: output[M] = W[M x K] @ input[K]
                 // where M = outputDim, K = inputDim
+                // TODO(B015-P2): benchmark resident-weight GEMM loop ordering separately.
+                // Do not alter this kernel as part of the B009 locality baseline.
                 for (std::size_t m = 0; m < outputDim; ++m)
                 {
                     float sum = 0.0f;
@@ -1247,11 +1157,13 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
                 }
                 m_weightResidencyPool->release(tensorName);
                 ++m_weightResidencyHits;
+#ifdef RAWRXD_DEBUG_MATMUL
                 if (isOutputProjection)
                 {
                     printf("[MATMUL] output.weight RETURN residency_pool ok=1\n");
                     std::fflush(stdout);
                 }
+#endif
                 return true;
             }
             m_weightResidencyPool->release(tensorName);
@@ -1281,11 +1193,13 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
                     }
                     m_weightResidencyPool->release(tensorName);
                     ++m_weightResidencyHits;
+#ifdef RAWRXD_DEBUG_MATMUL
                     if (isOutputProjection)
                     {
                         printf("[MATMUL] output.weight RETURN residency_pool_materialized ok=1\n");
                         std::fflush(stdout);
                     }
+#endif
                     return true;
                 }
                 m_weightResidencyPool->release(tensorName);
@@ -1327,11 +1241,13 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         {
             const bool ok = m_execRouter.dispatchMatmul(inView, weight, outView, static_cast<int>(outputDim),
                                                static_cast<int>(inputDim), RawrXD::TensorExecutionRouter::MatmulBackendDispatch{});
+#ifdef RAWRXD_DEBUG_MATMUL
             if (isOutputProjection)
             {
                 printf("[MATMUL] output.weight RETURN materialized ok=%d\n", ok ? 1 : 0);
                 std::fflush(stdout);
             }
+#endif
             return ok;
         }
     }
@@ -1345,12 +1261,114 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
             return loader->StreamingMatMul(tensorName, in.data, out.data, static_cast<std::size_t>(K),
                                            static_cast<std::size_t>(M));
         });
+#ifdef RAWRXD_DEBUG_MATMUL
     if (isOutputProjection)
     {
         printf("[MATMUL] output.weight RETURN streaming ok=%d\n", ok ? 1 : 0);
         std::fflush(stdout);
     }
+#endif
     return ok;
+}
+
+// ============================================================================
+// B009-P2: True batched matmul — reuses dequantized weight across T token rows.
+// inputBatch  = [T × inputDim] row-major
+// outputBatch = [T × outputDim] row-major
+// ============================================================================
+bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, const float* inputBatch, float* outputBatch,
+                                                std::size_t inputDim, std::size_t outputDim, std::size_t T, std::uint32_t layer)
+{
+    if (!loader || !inputBatch || !outputBatch || inputDim == 0 || outputDim == 0 || T == 0)
+        return false;
+
+    // Negative Space Profiler: Set batch context for this matmul operation
+    rawrxd::BatchContext batchCtx(T);
+
+    // Fast path: try to acquire resident dequantized weight once, then reuse for all T rows
+    if (m_weightResidencyPool)
+    {
+        if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
+        {
+            const float* weightData = resident->data;
+            if (weightData)
+            {
+                // True batched GEMM: output[T][m] = sum_k weight[m][k] * input[t][k]
+                // Profiler: One call covers all T tokens (true batching)
+                {
+                    rawrxd::ProfilerGuard pg;
+                    for (std::size_t t = 0; t < T; ++t)
+                    {
+                        const float* inRow = inputBatch + t * inputDim;
+                        float* outRow = outputBatch + t * outputDim;
+                        for (std::size_t m = 0; m < outputDim; ++m)
+                        {
+                            float sum = 0.0f;
+                            for (std::size_t k = 0; k < inputDim; ++k)
+                            {
+                                sum += weightData[m * inputDim + k] * inRow[k];
+                            }
+                            outRow[m] = sum;
+                        }
+                    }
+                }
+                m_weightResidencyPool->release(tensorName);
+                ++m_weightResidencyHits;
+                return true;
+            }
+            m_weightResidencyPool->release(tensorName);
+        }
+
+        // Miss — materialize dequantized tensor and retry
+        if (loader && loader->B015GetPool() == nullptr)
+            loader->B015SetPool(m_weightResidencyPool.get());
+        if (loader && loader->B015MaterializeDequantizedTensor(tensorName))
+        {
+            if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
+            {
+                const float* weightData = resident->data;
+                if (weightData)
+                {
+                    // Profiler: One call covers all T tokens (true batching after materialization)
+                    {
+                        rawrxd::ProfilerGuard pg;
+                        for (std::size_t t = 0; t < T; ++t)
+                        {
+                            const float* inRow = inputBatch + t * inputDim;
+                            float* outRow = outputBatch + t * outputDim;
+                            for (std::size_t m = 0; m < outputDim; ++m)
+                            {
+                                float sum = 0.0f;
+                                for (std::size_t k = 0; k < inputDim; ++k)
+                                {
+                                    sum += weightData[m * inputDim + k] * inRow[k];
+                                }
+                                outRow[m] = sum;
+                            }
+                        }
+                    }
+                    m_weightResidencyPool->release(tensorName);
+                    ++m_weightResidencyHits;
+                    return true;
+                }
+                m_weightResidencyPool->release(tensorName);
+            }
+        }
+        ++m_weightResidencyMisses;
+    }
+
+    // Fallback: token-serial path (preserves correctness, slower)
+    // B009-P0: Wrap all T calls in ONE ProfilerGuard so the profiler counts it as a single batch operation
+    {
+        rawrxd::ProfilerGuard pg;
+        for (std::size_t t = 0; t < T; ++t)
+        {
+            if (!ExecuteLayerMatMul(tensorName, inputBatch + t * inputDim, outputBatch + t * outputDim,
+                                    inputDim, outputDim, layer))
+                return false;
+        }
+    }
+    return true;
 }
 
 void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice, Config cfg, RawrXDModelLoader* loader)
@@ -1393,14 +1411,16 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     m_moePrepackQueueDropped = 0;
     m_moePrepackSkippedNotResident = 0;
     m_moePrepackInserts = 0;
-    shutdownMoePrepackWorker_();
+    {
+        std::lock_guard<std::mutex> lock(m_moePrepackPendingMu);
+        m_moePrepackPending.clear();
+    }
     m_moeMixturePlanPackCache.reset();
     if (config.moe_down_enable_grouped_integration && config.moe_down_grouped_pack_cache_max_entries > 0)
     {
         const std::size_t cap = static_cast<std::size_t>(std::max(1, config.moe_down_grouped_pack_cache_max_entries));
         const std::size_t byteCap = static_cast<std::size_t>(config.moe_down_grouped_pack_cache_max_bytes);
         m_moeMixturePlanPackCache = std::make_unique<RawrXD::MoEIntegr::MoEMixturePlanPackCache>(cap, byteCap);
-        startMoePrepackWorker_();
     }
     installSwarmPlanRowEvictionObserver_();
 
@@ -1454,6 +1474,13 @@ bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer
 
 std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& tokens, int start_pos)
 {
+    // Negative Space Profiler: Initialize once per process
+    static bool profilerInitialized = false;
+    if (!profilerInitialized) {
+        rawrxd::Profiler_Initialize();
+        profilerInitialized = true;
+    }
+
     if (tokens.empty())
         return {};
 
@@ -1497,6 +1524,23 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     {
         printf("[Forward] WARN: truncating token batch %zu -> %d\n", tokens.size(), T);
     }
+
+    // P0: Forward housekeeping — refresh swarm snapshot, sample heatmap, drain prepack queue.
+    // These must run on the inference thread before any layer computation.
+    refreshSwarmPlanSliceIndex();
+    maybeSampleMoEReuseFromHeatmap();
+    processPendingMoEPrepackResults_();
+
+    // B015-P1: Prefill-only residency gate.
+    // T > 1  → B015 residency ON (prefill optimization)
+    // T == 1 → B015 residency OFF (bypass decode overhead)
+    m_b015DecodeBypass = (T == 1);
+    if (m_b015DecodeBypass && m_weightResidencyPool)
+    {
+        printf("[B015-P1] Decode bypass ACTIVE: T=%d, skipping residency pool for this forward\n", T);
+        std::fflush(stdout);
+    }
+
     int64_t current_pos = static_cast<int64_t>(std::max(0, start_pos));
 
     int n_kv_heads = config.n_kv_heads > 0 ? config.n_kv_heads : n_heads;
@@ -1647,6 +1691,18 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
         std::vector<float> x_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
         std::vector<float> residual_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
 
+        // B009-P0: Batch buffers for attention GEMMs
+        std::vector<float> q_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+        std::vector<float> k_batch(static_cast<size_t>(T) * static_cast<size_t>(kv_dim));
+        std::vector<float> v_batch(static_cast<size_t>(T) * static_cast<size_t>(kv_dim));
+        std::vector<float> att_out_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+        std::vector<float> attn_final_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+
+        // B009-P0: Batch buffers for FFN GEMMs
+        std::vector<float> h1_batch(static_cast<size_t>(T) * static_cast<size_t>(config.hidden_dim));
+        std::vector<float> h3_batch(static_cast<size_t>(T) * static_cast<size_t>(config.hidden_dim));
+        std::vector<float> final_ffn_batch(static_cast<size_t>(T) * static_cast<size_t>(dim));
+
         // 1. Embedding lookup for all tokens
         for (int t = 0; t < T; t++)
         {
@@ -1746,35 +1802,49 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             const std::string wv_name = prefix + "attn_v.weight";
             const std::string wo_name = prefix + "attn_output.weight";
 
-            // Process each token through this layer's attention
+            // B009-P0: Phase 1 — RMSNorm + residual save (still per-token, pointwise)
             for (int t = 0; t < T; t++)
             {
                 float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
                 float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
-
-                // Save residual BEFORE RMSNorm (matches original token-outer path)
                 std::memcpy(res_t, x_t, static_cast<size_t>(dim) * sizeof(float));
                 RMSNorm_AVX512(x_t, x_t, attn_norm, dim, config.rms_norm_eps);
                 RAWRXD_VALIDATION_DUMP_RMS_NORM(x_t, dim, l);
+            }
 
-                if (!ExecuteLayerMatMul(wq_name, x_t, q.data(), dim, dim, static_cast<std::uint32_t>(l)))
-                {
-                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
-                    return {};
-                }
-                if (!ExecuteLayerMatMul(wk_name, x_t, k.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
-                {
-                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wk_name.c_str());
-                    return {};
-                }
-                if (!ExecuteLayerMatMul(wv_name, x_t, v.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
-                {
-                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wv_name.c_str());
-                    return {};
-                }
+            // B009-P0: Phase 2 — Batched Q/K/V projections (largest repeated GEMM family)
+            if (!ExecuteLayerMatMulBatch(wq_name, x_batch.data(), q_batch.data(),
+                                          static_cast<size_t>(dim), static_cast<size_t>(dim),
+                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            {
+                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wq_name.c_str());
+                return {};
+            }
+            if (!ExecuteLayerMatMulBatch(wk_name, x_batch.data(), k_batch.data(),
+                                          static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
+                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            {
+                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wk_name.c_str());
+                return {};
+            }
+            if (!ExecuteLayerMatMulBatch(wv_name, x_batch.data(), v_batch.data(),
+                                          static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
+                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            {
+                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wv_name.c_str());
+                return {};
+            }
 
-                RoPE_AVX512(q.data(), nullptr, current_pos + t, head_dim, n_heads);
-                RoPE_AVX512(k.data(), nullptr, current_pos + t, head_dim, n_kv_heads);
+            // B009-P0: Phase 3-5 — Per-token RoPE, KV cache, attention (causal, can't batch)
+            for (int t = 0; t < T; t++)
+            {
+                float* q_t = q_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* k_t = k_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(kv_dim);
+                float* v_t = v_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(kv_dim);
+                float* att_out_t = att_out_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+
+                RoPE_AVX512(q_t, nullptr, current_pos + t, head_dim, n_heads);
+                RoPE_AVX512(k_t, nullptr, current_pos + t, head_dim, n_kv_heads);
 
                 // KV Cache Update
                 const int64_t abs_pos = current_pos + static_cast<int64_t>(t);
@@ -1782,12 +1852,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 const size_t layer_base =
                     static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) * static_cast<size_t>(kv_dim);
                 const size_t cache_offset = layer_base + static_cast<size_t>(slot) * static_cast<size_t>(kv_dim);
-                memcpy(kv_cache_k.data() + cache_offset, k.data(), static_cast<size_t>(kv_dim) * sizeof(float));
-                memcpy(kv_cache_v.data() + cache_offset, v.data(), static_cast<size_t>(kv_dim) * sizeof(float));
+                memcpy(kv_cache_k.data() + cache_offset, k_t, static_cast<size_t>(kv_dim) * sizeof(float));
+                memcpy(kv_cache_v.data() + cache_offset, v_t, static_cast<size_t>(kv_dim) * sizeof(float));
                 kv_cache_pos[static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) + static_cast<size_t>(slot)] = abs_pos;
 
                 // Multi-head attention with GQA
-                std::fill(att_out.begin(), att_out.end(), 0.0f);
+                std::fill(att_out_t, att_out_t + dim, 0.0f);
                 const int64_t seq_len_total = abs_pos + 1;
                 const int attn_len = static_cast<int>(std::min<int64_t>(seq_len_total, static_cast<int64_t>(cache_ctx)));
                 const int64_t window_start = seq_len_total - static_cast<int64_t>(attn_len);
@@ -1796,7 +1866,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 for (int h = 0; h < n_heads; h++)
                 {
                     const int kv_h = std::min(n_kv_heads - 1, h / heads_per_kv);
-                    const float* q_head = q.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                    const float* q_head = q_t + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
                     int valid_count = 0;
 
                     for (int p = 0; p < attn_len; p++)
@@ -1822,7 +1892,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     }
                     if (valid_count == 0)
                     {
-                        float* out_head = att_out.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                        float* out_head = att_out_t + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
                         std::fill(out_head, out_head + head_dim, 0.0f);
                         continue;
                     }
@@ -1834,7 +1904,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                             scores[p] = 0.0f;
                     }
 
-                    float* out_head = att_out.data() + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
+                    float* out_head = att_out_t + static_cast<size_t>(h) * static_cast<size_t>(head_dim);
                     for (int p = 0; p < attn_len; p++)
                     {
                         if (!score_valid[p])
@@ -1847,16 +1917,24 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                         VectorAddScaled_AVX512(out_head, v_past, scores[p], head_dim);
                     }
                 }
+            }
 
-                // Output projection
-                if (!ExecuteLayerMatMul(wo_name, att_out.data(), attn_final.data(), dim, dim, static_cast<std::uint32_t>(l)))
-                {
-                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wo_name.c_str());
-                    return {};
-                }
+            // B009-P0: Phase 6 — Batched output projection
+            if (!ExecuteLayerMatMulBatch(wo_name, att_out_batch.data(), attn_final_batch.data(),
+                                          static_cast<size_t>(dim), static_cast<size_t>(dim),
+                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            {
+                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wo_name.c_str());
+                return {};
+            }
 
-                // Residual add: x = residual (pre-attention) + attn_final
-                VectorAdd_AVX512(x_t, res_t, attn_final.data(), dim);
+            // B009-P0: Phase 7 — Residual add (per-token)
+            for (int t = 0; t < T; t++)
+            {
+                float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* attn_final_t = attn_final_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                VectorAdd_AVX512(x_t, res_t, attn_final_t, dim);
                 for (int i = 0; i < dim; ++i)
                 {
                     if (!std::isfinite(x_t[i]))
@@ -1899,54 +1977,72 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             int hdim = config.hidden_dim;
             const bool denseFfn = loader->hasTensorNamed(w1_name);
 
+            // B009-P0: Phase 1 — RMSNorm + residual save (per-token)
             for (int t = 0; t < T; t++)
             {
                 float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
                 float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
-
                 std::memcpy(res_t, x_t, static_cast<size_t>(dim) * sizeof(float));
                 RMSNorm_AVX512(x_t, x_t, ffn_norm, dim, config.rms_norm_eps);
+            }
 
-                if (denseFfn)
+            if (denseFfn)
+            {
+                // B009-P0: Phase 2 — Batched gate + up projections
+                if (!ExecuteLayerMatMulBatch(w1_name, x_batch.data(), h1_batch.data(),
+                                              static_cast<size_t>(dim), static_cast<size_t>(hdim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
                 {
-                    if (!ExecuteLayerMatMul(w1_name, x_t, h1.data(), dim, hdim, static_cast<std::uint32_t>(l)))
-                    {
-                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w1_name.c_str());
-                        return {};
-                    }
-                    if (!ExecuteLayerMatMul(w3_name, x_t, h3.data(), dim, hdim, static_cast<std::uint32_t>(l)))
-                    {
-                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w3_name.c_str());
-                        return {};
-                    }
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", w1_name.c_str());
+                    return {};
+                }
+                if (!ExecuteLayerMatMulBatch(w3_name, x_batch.data(), h3_batch.data(),
+                                              static_cast<size_t>(dim), static_cast<size_t>(hdim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", w3_name.c_str());
+                    return {};
+                }
 
-                    Silu_AVX512(h1.data(), hdim);
+                // B009-P0: Phase 3 — Per-token SiLU + elementwise multiply
+                for (int t = 0; t < T; t++)
+                {
+                    float* h1_t = h1_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(hdim);
+                    float* h3_t = h3_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(hdim);
+                    Silu_AVX512(h1_t, hdim);
 #ifdef __AVX512F__
                     {
                         int i = 0;
                         for (; i + 15 < hdim; i += 16)
                         {
-                            __m512 h1v = _mm512_loadu_ps(h1.data() + i);
-                            __m512 h3v = _mm512_loadu_ps(h3.data() + i);
-                            _mm512_storeu_ps(h1.data() + i, _mm512_mul_ps(h1v, h3v));
+                            __m512 h1v = _mm512_loadu_ps(h1_t + i);
+                            __m512 h3v = _mm512_loadu_ps(h3_t + i);
+                            _mm512_storeu_ps(h1_t + i, _mm512_mul_ps(h1v, h3v));
                         }
                         for (; i < hdim; i++)
-                            h1[i] *= h3[i];
+                            h1_t[i] *= h3_t[i];
                     }
 #else
                     for (int i = 0; i < hdim; i++)
-                        h1[i] *= h3[i];
+                        h1_t[i] *= h3_t[i];
 #endif
-
-                    if (!ExecuteLayerMatMul(w2_name, h1.data(), final_ffn.data(), hdim, dim, static_cast<std::uint32_t>(l)))
-                    {
-                        printf("[Forward] FATAL: StreamingMatMul failed for %s\n", w2_name.c_str());
-                        return {};
-                    }
                 }
-                else
+
+                // B009-P0: Phase 4 — Batched down projection
+                if (!ExecuteLayerMatMulBatch(w2_name, h1_batch.data(), final_ffn_batch.data(),
+                                              static_cast<size_t>(hdim), static_cast<size_t>(dim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
                 {
-                    // MoE fallback: use first expert
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", w2_name.c_str());
+                    return {};
+                }
+            }
+            else
+            {
+                // MoE fallback: per-token (not batched)
+                for (int t = 0; t < T; t++)
+                {
+                    float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
                     std::uint32_t expertRun = 0;
                     if (!moeExpertPick.empty())
                         expertRun = moeExpertPick[0];
@@ -1956,9 +2052,19 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                         printf("[Forward] FATAL: MoE FFN failed blk.%d expert %u\n", l, static_cast<unsigned>(expertRun));
                         return {};
                     }
+                    // Copy MoE result into final_ffn_batch for uniform residual path
+                    float* final_ffn_t = final_ffn_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                    std::memcpy(final_ffn_t, final_ffn.data(), static_cast<size_t>(dim) * sizeof(float));
                 }
+            }
 
-                VectorAdd_AVX512(x_t, res_t, final_ffn.data(), dim);
+            // B009-P0: Phase 5 — Residual add (per-token)
+            for (int t = 0; t < T; t++)
+            {
+                float* x_t = x_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* res_t = residual_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                float* final_ffn_t = final_ffn_batch.data() + static_cast<size_t>(t) * static_cast<size_t>(dim);
+                VectorAdd_AVX512(x_t, res_t, final_ffn_t, dim);
                 for (int i = 0; i < dim; ++i)
                 {
                     if (!std::isfinite(x_t[i]))
@@ -2002,8 +2108,6 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     {
         if (m_swarmScheduler)
             m_swarmScheduler->onForwardTokenStepBegin();
-
-        maybeSampleMoEReuseFromHeatmap();
 
         uint32_t token = tokens[t];
 
@@ -2551,5 +2655,19 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     printf("[Forward] returning logits, size=%zu\n", logits.size());
     std::fflush(stdout);
+
+    // Negative Space Profiler: Emit bottleneck analysis after forward completes
+    rawrxd::Profiler_AnalyzeBottlenecks();
+
     return logits;
+}
+
+// ============================================================================
+// B009: ForwardBatch — layer-outer batched prefill for multi-token prompts.
+// Currently delegates to Forward() which already implements the T>1 layer-outer
+// path.  This preserves the B009 baseline while providing the declared API.
+// ============================================================================
+std::vector<float> RawrXDTransformer::ForwardBatch(const std::vector<uint32_t>& tokens, int start_pos)
+{
+    return Forward(tokens, start_pos);
 }

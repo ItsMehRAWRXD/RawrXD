@@ -138,7 +138,7 @@ void Deep2HttpGateway::SetMcpBridge(std::shared_ptr<McpBridge> bridge) {
 }
 
 std::string Deep2HttpGateway::GetUrl() const {
-    return fmt::format("http://127.0.0.1:{}", m_port);
+    return std::format("http://127.0.0.1:{}", m_port);
 }
 
 // ============================================================================
@@ -429,9 +429,9 @@ HttpRequest Deep2HttpGateway::ParseRequest(const std::string& raw) {
 std::string Deep2HttpGateway::FormatResponse(const HttpResponse& response) {
     std::string http;
     
-    http += fmt::format("HTTP/1.1 {} OK\r\n", response.statusCode);
-    http += fmt::format("Content-Type: {}\r\n", response.contentType);
-    http += fmt::format("Content-Length: {}\r\n", response.body.length());
+    http += std::format("HTTP/1.1 {} OK\r\n", response.statusCode);
+    http += std::format("Content-Type: {}\r\n", response.contentType);
+    http += std::format("Content-Length: {}\r\n", response.body.length());
     http += "Access-Control-Allow-Origin: *\r\n";
     http += "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
     http += "Access-Control-Allow-Headers: Content-Type\r\n";

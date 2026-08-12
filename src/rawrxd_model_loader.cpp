@@ -4092,16 +4092,12 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
         ne *= d;
 
     // WORKAROUND: Force eager loading for token_embd.weight to avoid lazy load hang
-    // This is a temporary fix while we debug the lazy loading issue
+    // SAFETY: Only apply to F32 tensors. Non-F32 types (Q4_0, Q4_K, etc.) must go
+    // through the proper dequantization path, not raw memcpy into float buffers.
     bool forceEager = (name == "token_embd.weight" || name.find("embed") != std::string::npos);
 
-    if (t.type == 0 || forceEager)
-    {  // F32 or forced eager
-        if (forceEager && t.type != 0)
-        {
-            printf("[RawrXD] WORKAROUND: Force eager load for %s (type=%u)\n", name.c_str(), t.type);
-        }
-        
+    if (t.type == 0 || (forceEager && t.type == 0))
+    {  // F32 only — never raw-copy quantized data into float buffers
         t.cpuFloatData.resize(ne);
         const size_t byteCount = ne * sizeof(float);
         void* incidentalBase = nullptr;
@@ -4110,11 +4106,13 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
             return nullptr;
         memcpy(t.cpuFloatData.data(), incidentalData, byteCount);
         UnmapIncidentalWindow(incidentalBase);
-        
-        if (forceEager)
-        {
-            printf("[RawrXD] WORKAROUND: Eager load complete for %s (%zu elements)\n", name.c_str(), t.cpuFloatData.size());
-        }
+    }
+    else if (forceEager && t.type != 0)
+    {
+        // Non-F32 embedding tensor: skip unsafe eager load, fall through to
+        // normal lazy/dequant path. This prevents garbage float data crashes.
+        printf("[RawrXD] SKIPPING unsafe eager load for %s (type=%u) — using dequant path\n",
+               name.c_str(), t.type);
     }
     else
     {

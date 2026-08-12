@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
-#include <json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "gguf_loader.h"
 
 namespace Deep2 {
@@ -696,7 +696,7 @@ bool ModelRegistry::ParseGGUFMetadata(const std::string& filePath, ModelManifest
     manifest.numLayers = meta.numLayers;
     manifest.numAttentionHeads = meta.numHeads;
     manifest.numKeyValueHeads = meta.numKeyValueHeads;
-    manifest.contextLength = meta.contextLength > 0 ? meta.contextLength : meta.maxPositionEmbeddings;
+    manifest.contextLength = meta.maxPositionEmbeddings;
     manifest.vocabSize = meta.vocabSize;
 
     // Detect quantization from file name
@@ -718,9 +718,7 @@ bool ModelRegistry::ParseGGUFMetadata(const std::string& filePath, ModelManifest
     }
 
     // Estimate parameter count
-    if (meta.parameterCount > 0) {
-        manifest.parameterCount = meta.parameterCount;
-    } else {
+    {
         // Rough estimate from architecture
         manifest.parameterCount = manifest.fileSizeBytes * 8 / manifest.bitsPerWeight;
     }
@@ -731,9 +729,7 @@ bool ModelRegistry::ParseGGUFMetadata(const std::string& filePath, ModelManifest
     }
 
     // Detect capabilities from metadata
-    if (!meta.chatTemplate.empty()) {
-        manifest.capabilities.push_back("chat");
-    }
+    manifest.capabilities.push_back("inference");
     if (meta.architecture.find("code") != std::string::npos ||
         filename.find("code") != std::string::npos) {
         manifest.capabilities.push_back("code");

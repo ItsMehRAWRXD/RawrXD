@@ -1,8 +1,10 @@
 #pragma once
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <span>
 #include <string>
 #include <unordered_set>
@@ -134,6 +136,12 @@ class RawrXDTransformer
     bool ExecuteLayerMatMul(const std::string& tensorName, const float* input, float* output,
                             std::size_t inputDim, std::size_t outputDim, std::uint32_t layer);
 
+    // B009-P2: True batched matmul — reuses dequantized weight across T token rows.
+    // inputBatch  = [T × inputDim] row-major
+    // outputBatch = [T × outputDim] row-major
+    bool ExecuteLayerMatMulBatch(const std::string& tensorName, const float* inputBatch, float* outputBatch,
+                                 std::size_t inputDim, std::size_t outputDim, std::size_t T, std::uint32_t layer);
+
     void SetRouterDispatchForMaterializedWeights(bool enable) noexcept
     {
         m_enableRouterDispatchForMaterializedWeights = enable;
@@ -253,18 +261,18 @@ class RawrXDTransformer
         int dim = 0;
         std::string cacheKey;
         std::vector<std::size_t> planRows;
+        /// Plan generation at enqueue time; stale results are discarded by the inference thread.
+        std::uint64_t planGeneration = std::numeric_limits<std::uint64_t>::max();
     };
 
-    class MoEPrepackWorker;
-    struct MoEPrepackWorkerDeleter
-    {
-        void operator()(MoEPrepackWorker* p) const noexcept;
-    };
-
-    void handleMoePrepackJob_(MoEPrepackJob&& job);
+    /// Enqueue a prepack request from the inference thread.  The actual packing is deferred
+    /// to processPendingMoEPrepackResults_() which runs exclusively on the inference thread.
     void tryEnqueueMoePrepack_(MoEPrepackJob&& job);
-    void shutdownMoePrepackWorker_();
-    void startMoePrepackWorker_();
+
+    /// Drain the pending-prepack queue and commit results into the MoE cache.
+    /// Must be called from the inference thread (e.g. at the top of Forward()).
+    void processPendingMoEPrepackResults_();
+
     void onSwarmPlanRowsEvicted_(std::span<const std::size_t> rows);
     void installSwarmPlanRowEvictionObserver_();
 
@@ -299,7 +307,10 @@ class RawrXDTransformer
     std::uint64_t m_moePrepackSkippedNotResident = 0;
     std::uint64_t m_moePrepackInserts = 0;
 
-    std::unique_ptr<MoEPrepackWorker, MoEPrepackWorkerDeleter> m_moePrepackWorker;
+    /// Pending MoE prepack jobs queued by the inference thread and drained at the start of Forward().
+    /// Protected by m_moePrepackPendingMu; only the inference thread commits to the cache.
+    std::deque<MoEPrepackJob> m_moePrepackPending;
+    mutable std::mutex m_moePrepackPendingMu;
 
     // B004 execution seam state.
     RawrXD::TensorExecutionRouter m_execRouter;
@@ -314,4 +325,9 @@ class RawrXDTransformer
     std::unique_ptr<rawrxd::WeightResidencyPool> m_weightResidencyPool;
     std::uint64_t m_weightResidencyHits = 0;
     std::uint64_t m_weightResidencyMisses = 0;
+
+    // B015-P1: Prefill-only residency gate.
+    // Set true when T==1 (decode) to bypass pool lookup/materialization overhead.
+    // Cleared when T>1 (prefill) to retain B015 acceleration.
+    bool m_b015DecodeBypass = false;
 };

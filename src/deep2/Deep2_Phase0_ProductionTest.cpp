@@ -5,7 +5,7 @@
 
 #include <cstdio>
 #include <cstring>
-#include <math>
+#include <cmath>
 #include <chrono>
 #include <thread>
 #include <vector>

@@ -54,6 +54,7 @@ struct CommandLineArgs {
     float temperature = 0.7f;
     std::string backend = "auto";
     std::string evidenceDir = "validation/runs";
+    int benchmarkT = 0;              // B009: override token count for prefill benchmark
     bool verbose = false;
     bool help = false;
 };
@@ -126,6 +127,8 @@ CommandLineArgs parseArgs(int argc, char* argv[]) {
             args.backend = argv[++i];
         } else if (arg == "--evidence-dir" && i + 1 < argc) {
             args.evidenceDir = argv[++i];
+        } else if (arg == "--benchmark-t" && i + 1 < argc) {
+            args.benchmarkT = std::stoi(argv[++i]);
         } else if (arg == "--verbose" || arg == "-v") {
             args.verbose = true;
         }
@@ -305,13 +308,21 @@ int main(int argc, char* argv[]) {
     
     std::cout << "  Running execution pipeline...\n\n";
     
+    // B009: If --benchmark-t is set, override tokenizedInput with synthetic tokens
+    if (args.benchmarkT > 0) {
+        req.tokenizedInput.clear();
+        for (int t = 0; t < args.benchmarkT; ++t)
+            req.tokenizedInput.push_back(static_cast<uint32_t>(t % 32000));
+        req.maxTokens = 1;  // Only generate 1 token after prefill
+    }
+
     ExecutionResult result;
     if (req.mode == ExecutionRequest::Mode::VALIDATED) {
         result = RunValidated(req.modelPath, req.prompt, req.evidenceDirectory);
     } else if (req.mode == ExecutionRequest::Mode::AGENTIC) {
         result = RunAgentic(req.modelPath, req.prompt, req.maxAgentIterations);
     } else {
-        result = RunInference(req.modelPath, req.prompt, req.maxTokens);
+        result = SovereignRuntime::instance().execute(req);
     }
     
     // Print results

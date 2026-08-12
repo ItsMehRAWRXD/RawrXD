@@ -111,7 +111,7 @@ std::expected<std::string, McpBridgeError> McpBridge::CallTool(
     int id = m_nextRequestId++;
     std::string request = BuildJsonRpcRequest(
         "tools/call",
-        fmt::format(R"({{"name":"{}","arguments":{}}}")", toolName, params),
+        std::format(R"({{"name":"{}","arguments":{}}}")", toolName, params),
         id
     );
     
@@ -225,7 +225,7 @@ std::expected<std::string, McpBridgeError> McpBridge::SendToMcpRuntime(
             auto& params = req["params"];
             std::string toolName = params.value("name", "");
             
-            response["result"]["content"] = fmt::format("Tool {} executed successfully", toolName);
+            response["result"]["content"] = std::format("Tool {} executed successfully", toolName);
             
         } else {
             response["result"] = json::object();

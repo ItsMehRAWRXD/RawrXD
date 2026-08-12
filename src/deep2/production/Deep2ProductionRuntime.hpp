@@ -66,6 +66,7 @@ struct AcceleratorDevice {
 
 class HardwareRegistry {
 public:
+    HardwareRegistry() = default;
     static HardwareRegistry& instance();
     
     void scanDevices();
@@ -77,7 +78,6 @@ public:
     size_t getAvailableVRAM() const;
     
 private:
-    HardwareRegistry() = default;
     mutable std::mutex mutex_;
     std::vector<AcceleratorDevice> devices_;
 };
@@ -126,6 +126,7 @@ public:
 
 class PhaseManager {
 public:
+    PhaseManager() = default;
     static PhaseManager& instance();
     
     void registerPhase(std::unique_ptr<RuntimePhase> phase);
@@ -140,7 +141,6 @@ public:
     PhaseStatus getPhaseStatus(int phaseId) const;
     
 private:
-    PhaseManager() = default;
     mutable std::mutex mutex_;
     std::map<int, std::unique_ptr<RuntimePhase>> phases_;
 };

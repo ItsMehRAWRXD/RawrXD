@@ -88,6 +88,9 @@ struct ExecutionRequest {
     uint32_t maxAgentIterations = 10;
     std::string agentGoal;  // If empty, uses prompt
     bool enableCodeExecution = false;
+
+    // B009: benchmark override for prefill token count (0 = disabled)
+    int benchmarkT = 0;
     
     // Metadata
     std::string runId;  // Auto-generated if empty
@@ -275,11 +278,13 @@ private:
 // ============================================================================
 inline ExecutionResult RunInference(const std::string& modelPath, 
                                      const std::string& prompt,
-                                     uint32_t maxTokens = 512) {
+                                     uint32_t maxTokens = 512,
+                                     int benchmarkT = 0) {
     ExecutionRequest req;
     req.modelPath = modelPath;
     req.prompt = prompt;
     req.maxTokens = maxTokens;
+    req.benchmarkT = benchmarkT;
     req.mode = ExecutionRequest::Mode::INFERENCE;
     return SovereignRuntime::instance().execute(req);
 }
