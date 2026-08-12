@@ -1830,6 +1830,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     m_b009AttentionTimeNs = 0;
     m_b009DequantTimeNs = 0;
 
+    // B009-P4: Clear per-call GEMM microarchitectural records
+    b009ClearGemmRecords();
+
     // B009: Layer-outer batched prefill for T > 1.
     // Processes all tokens through layer 0, then all through layer 1, etc.
     // This improves weight locality/reuse (weights stay hot in cache).
