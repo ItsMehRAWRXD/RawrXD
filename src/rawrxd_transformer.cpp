@@ -5,7 +5,9 @@
 #include "inference/NegativeSpaceProfiler.hpp"
 
 // RawrXD validation hooks for llama.cpp parity testing
+#ifdef RAWRXD_ENABLE_VALIDATION
 #include "../tests/inference_validation/harness/runtime_hooks.hpp"
+#endif
 
 #include <algorithm>
 #include <array>

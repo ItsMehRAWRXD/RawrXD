@@ -222,6 +222,7 @@ option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units f
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
+option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" OFF)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -332,6 +333,19 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "[rawrxd] Vulkan SDK not found — GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
+endif()
+
+# =============================================================================
+# Validation Instrumentation (llama.cpp parity tensor dumping)
+# =============================================================================
+if(RAWRXD_ENABLE_VALIDATION)
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled")
+    target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
+    )
+else()
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled")
 endif()
 
 # =============================================================================
