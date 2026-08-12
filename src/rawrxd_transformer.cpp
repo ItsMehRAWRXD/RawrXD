@@ -1172,7 +1172,7 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         }
 
         // B015-B: Miss — materialize dequantized tensor and commit to pool
-        if (loader && loader->B015GetPool() == nullptr)
+        if (loader)
         {
             loader->B015SetPool(m_weightResidencyPool.get());
         }
@@ -1423,7 +1423,7 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
 
         // Miss — materialize dequantized tensor and retry
         auto dequantT0 = std::chrono::high_resolution_clock::now();
-        if (loader && loader->B015GetPool() == nullptr)
+        if (loader)
             loader->B015SetPool(m_weightResidencyPool.get());
         bool materialized = loader && loader->B015MaterializeDequantizedTensor(tensorName);
         auto dequantT1 = std::chrono::high_resolution_clock::now();
