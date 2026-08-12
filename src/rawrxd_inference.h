@@ -289,7 +289,8 @@ class RawrXDInference
         cfg.rms_norm_eps = 1e-5f;
 
         // B009-P2: Enable weight residency pool for batched prefill optimization
-        cfg.weight_residency_pool_max_bytes = 512ULL * 1024 * 1024; // 512 MB
+        // B009-P4: Diagnostic 4 GB capacity test (was 512 MB)
+        cfg.weight_residency_pool_max_bytes = 4ULL * 1024 * 1024 * 1024; // 4 GB
 
         printf("[RawrXD] Config: dim=%d layers=%d heads=%d kv_heads=%d vocab=%d hidden=%d ctx=%d\n", cfg.dim,
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
