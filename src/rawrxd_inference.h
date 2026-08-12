@@ -97,6 +97,9 @@ class RawrXDInference
     std::vector<float> m_lastLogits;
     std::string m_lastLoadErrorMessage;
 
+    // B009-P4: Configurable residency pool size (default 4 GB)
+    static size_t s_residencyPoolMaxBytes;
+
     // Helpers
     VkInstance CreateVulkanInstance()
     {
@@ -209,6 +212,10 @@ class RawrXDInference
         transformer.SetSwarmScheduler(nullptr);
     }
 
+    // B009-P4: Configure residency pool size before Initialize()
+    static void SetResidencyPoolMaxBytes(size_t bytes) { s_residencyPoolMaxBytes = bytes; }
+    static size_t GetResidencyPoolMaxBytes() { return s_residencyPoolMaxBytes; }
+
     const std::string& GetLastLoadErrorMessage() const { return m_lastLoadErrorMessage; }
 
     // B010: Weight-residency profiling accessors
@@ -289,8 +296,8 @@ class RawrXDInference
         cfg.rms_norm_eps = 1e-5f;
 
         // B009-P2: Enable weight residency pool for batched prefill optimization
-        // B009-P4: Diagnostic 4 GB capacity test (was 512 MB)
-        cfg.weight_residency_pool_max_bytes = 4ULL * 1024 * 1024 * 1024; // 4 GB
+        // B009-P4: Configurable residency pool size (default 4 GB = 4096 MB)
+        cfg.weight_residency_pool_max_bytes = s_residencyPoolMaxBytes;
 
         printf("[RawrXD] Config: dim=%d layers=%d heads=%d kv_heads=%d vocab=%d hidden=%d ctx=%d\n", cfg.dim,
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
