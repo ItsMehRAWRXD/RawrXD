@@ -143,6 +143,9 @@ class CPUInferenceEngine : public InferenceEngine
     // Matrix-vector operations for GPU dispatch gate
     bool MatVecQ4(const float* matrix, const float* vector, float* output, uint32_t rows, uint32_t cols);
 
+    // B009-P4: Direct Forward() for residency amortization testing
+    std::vector<float> ForwardDirect(const std::vector<uint32_t>& tokens, int startPos = 0);
+
     // Tokenization
     // Functions declared in this section handle conversion between raw text and
     // integer token IDs used by the model. They are used by Eval and

@@ -217,6 +217,16 @@ std::vector<float> CPUInferenceEngine::Eval(const std::vector<int32_t>& input_to
     return m_lastState;
 }
 
+// B009-P4: Direct Forward() for residency amortization testing
+std::vector<float> CPUInferenceEngine::ForwardDirect(const std::vector<uint32_t>& tokens, int startPos)
+{
+    if (!m_modelLoaded)
+        return {};
+    if (tokens.empty())
+        return {};
+    return s_inferenceBackend.ForwardDirect(tokens, startPos);
+}
+
 void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tokens, int max_tokens,
                                            std::function<void(const std::string&)> token_callback,
                                            std::function<void()> complete_callback,

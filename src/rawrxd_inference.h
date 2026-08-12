@@ -555,6 +555,14 @@ class RawrXDInference
         return generated;
     }
 
+    // B009-P4: Direct Forward() for residency amortization testing
+    std::vector<float> ForwardDirect(const std::vector<uint32_t>& tokens, int startPos = 0)
+    {
+        if (!m_initialized)
+            return {};
+        return transformer.Forward(tokens, startPos);
+    }
+
     std::string Generate(const std::string& prompt, uint32_t maxTokens = 512,
                          std::function<void(const std::string&)> callback = nullptr)
     {

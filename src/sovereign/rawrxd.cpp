@@ -34,6 +34,7 @@
 // ============================================================================
 
 #include "sovereign/ExecutionContract.hpp"
+#include "cpu_inference_engine.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -55,6 +56,7 @@ struct CommandLineArgs {
     std::string backend = "auto";
     std::string evidenceDir = "validation/runs";
     int benchmarkT = 0;              // B009: override token count for prefill benchmark
+    bool benchmarkDouble = false;    // B009-P4: run Forward() twice to measure residency amortization
     bool verbose = false;
     bool help = false;
 };
@@ -129,6 +131,8 @@ CommandLineArgs parseArgs(int argc, char* argv[]) {
             args.evidenceDir = argv[++i];
         } else if (arg == "--benchmark-t" && i + 1 < argc) {
             args.benchmarkT = std::stoi(argv[++i]);
+        } else if (arg == "--benchmark-double") {
+            args.benchmarkDouble = true;
         } else if (arg == "--verbose" || arg == "-v") {
             args.verbose = true;
         }
@@ -314,6 +318,62 @@ int main(int argc, char* argv[]) {
         for (int t = 0; t < args.benchmarkT; ++t)
             req.tokenizedInput.push_back(static_cast<uint32_t>(t % 32000));
         req.maxTokens = 1;  // Only generate 1 token after prefill
+    }
+
+    // B009-P4: Double-forward residency amortization test
+    if (args.benchmarkDouble && args.benchmarkT > 0) {
+        printSection("B009-P4: Double Forward Residency Test");
+        std::cout << "  T=" << args.benchmarkT << "\n";
+        
+        // Get the inference engine and load model
+        auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+        if (!engine) {
+            std::cerr << "  ERROR: Failed to get inference engine\n";
+            return 1;
+        }
+        if (!engine->IsModelLoaded()) {
+            std::cout << "  Loading model: " << args.modelPath << "\n";
+            if (!engine->LoadModel(args.modelPath)) {
+                std::cerr << "  ERROR: Failed to load model\n";
+                return 1;
+            }
+            std::cout << "  Model loaded successfully.\n";
+        }
+        
+        // Build synthetic tokens
+        std::vector<uint32_t> tokens;
+        for (int t = 0; t < args.benchmarkT; ++t)
+            tokens.push_back(static_cast<uint32_t>(t % 32000));
+        
+        // Forward #1 (cold start — weights must be materialized)
+        std::cout << "\n  === FORWARD #1 (cold start) ===\n";
+        auto start1 = std::chrono::steady_clock::now();
+        auto logits1 = engine->ForwardDirect(tokens, 0);
+        auto end1 = std::chrono::steady_clock::now();
+        auto ms1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
+        std::cout << "  Forward #1 elapsed: " << ms1 << " ms, logits.size=" << logits1.size() << "\n";
+        
+        // Forward #2 (warm — weights should be resident)
+        std::cout << "\n  === FORWARD #2 (warm) ===\n";
+        auto start2 = std::chrono::steady_clock::now();
+        auto logits2 = engine->ForwardDirect(tokens, 0);
+        auto end2 = std::chrono::steady_clock::now();
+        auto ms2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count();
+        std::cout << "  Forward #2 elapsed: " << ms2 << " ms, logits.size=" << logits2.size() << "\n";
+        
+        double speedup = (ms1 > 0) ? (static_cast<double>(ms1) / static_cast<double>(ms2)) : 1.0;
+        std::cout << "\n  === B009-P4 RESULT ===\n";
+        std::cout << "  Cold: " << ms1 << " ms  |  Warm: " << ms2 << " ms  |  Speedup: " << std::fixed << std::setprecision(2) << speedup << "x\n";
+        
+        if (ms2 < ms1 * 0.5) {
+            std::cout << "  ✓ Residency amortization CONFIRMED (warm < 50% of cold)\n";
+        } else if (ms2 < ms1 * 0.9) {
+            std::cout << "  ✓ Partial residency benefit (warm < 90% of cold)\n";
+        } else {
+            std::cout << "  ✗ Residency NOT amortizing (warm ≈ cold)\n";
+        }
+        
+        return 0;
     }
 
     ExecutionResult result;
