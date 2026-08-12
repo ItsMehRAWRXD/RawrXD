@@ -265,6 +265,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/TransferScheduler.cpp
         src/runtime/memory/PredictiveMemoryManager.cpp
         src/runtime/memory/WorkingSetPredictor.cpp
+        src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
         # Agentic components for CLI Ollama testing - TEMPORARILY DISABLED
         # src/agentic/OrchestratorBridge.cpp
@@ -333,19 +334,19 @@ if(RAWRXD_BUILD_CLI)
         message(STATUS "[rawrxd] Vulkan SDK not found — GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
-endif()
 
-# =============================================================================
-# Validation Instrumentation (llama.cpp parity tensor dumping)
-# =============================================================================
-if(RAWRXD_ENABLE_VALIDATION)
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled")
-    target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
-    target_include_directories(rawrxd PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
-    )
-else()
-    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled")
+    # =============================================================================
+    # Validation Instrumentation (llama.cpp parity tensor dumping)
+    # =============================================================================
+    if(RAWRXD_ENABLE_VALIDATION)
+        message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled")
+        target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
+        target_include_directories(rawrxd PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
+        )
+    else()
+        message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled")
+    endif()
 endif()
 
 # =============================================================================
