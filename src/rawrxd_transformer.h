@@ -366,4 +366,20 @@ class RawrXDTransformer
     mutable std::atomic<std::uint64_t> m_b009ScalarTailRows{0};
     mutable std::atomic<std::uint64_t> m_b009AttentionTimeNs{0};
     mutable std::atomic<std::uint64_t> m_b009DequantTimeNs{0};
+
+    // B009-P4: Per-call GEMM microarchitectural profiler
+    struct GemmCallRecord {
+        uint32_t M = 0, N = 0, K = 0;
+        uint64_t kernel_ns = 0;
+        uint64_t flops = 0;
+        uint64_t bytes_read = 0;
+        double gflops_per_s = 0.0;
+        double arithmetic_intensity = 0.0;
+        const char* classification = nullptr;
+    };
+    mutable std::vector<GemmCallRecord> m_b009GemmCallRecords;
+    mutable std::mutex m_b009GemmRecordsMutex;
+
+    void b009ClearGemmRecords() const;
+    void b009PrintGemmEfficiencyReport() const;
 };

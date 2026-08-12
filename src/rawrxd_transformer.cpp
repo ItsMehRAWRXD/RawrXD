@@ -5,9 +5,8 @@
 #include "inference/NegativeSpaceProfiler.hpp"
 
 // RawrXD validation hooks for llama.cpp parity testing
-#ifdef RAWRXD_ENABLE_VALIDATION
+// Header provides no-op macros when RAWRXD_ENABLE_VALIDATION is not defined
 #include "../tests/inference_validation/harness/runtime_hooks.hpp"
-#endif
 
 #include <algorithm>
 #include <array>
@@ -1412,10 +1411,33 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                     BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                 }
                 auto gemmT1 = std::chrono::high_resolution_clock::now();
+                auto gemmNs = std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count();
                 ++m_b009AVX512KernelCalls;
-                m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count());
+                m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(gemmNs);
                 m_b009AVX512KernelRows += T;
+
+                // B009-P4: Record per-call GEMM microarchitectural metrics
+                {
+                    GemmCallRecord rec;
+                    rec.M = static_cast<uint32_t>(T);
+                    rec.N = static_cast<uint32_t>(outputDim);
+                    rec.K = static_cast<uint32_t>(inputDim);
+                    rec.kernel_ns = static_cast<uint64_t>(gemmNs);
+                    rec.flops = 2ULL * rec.M * rec.N * rec.K;
+                    // Bytes: A[M,K] + B[N,K] + C[M,N] (read+write for C)
+                    rec.bytes_read = static_cast<uint64_t>(rec.M) * rec.K * sizeof(float)
+                                   + static_cast<uint64_t>(rec.N) * rec.K * sizeof(float)
+                                   + static_cast<uint64_t>(rec.M) * rec.N * sizeof(float) * 2;
+                    rec.gflops_per_s = rec.kernel_ns > 0
+                        ? (static_cast<double>(rec.flops) / (static_cast<double>(rec.kernel_ns) / 1e9)) / 1e9
+                        : 0.0;
+                    rec.arithmetic_intensity = rec.bytes_read > 0
+                        ? static_cast<double>(rec.flops) / static_cast<double>(rec.bytes_read)
+                        : 0.0;
+                    std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
+                    m_b009GemmCallRecords.push_back(rec);
+                }
+
                 m_weightResidencyPool->release(tensorName);
                 ++m_weightResidencyHits;
                 return true;
@@ -1446,10 +1468,32 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                         BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                     }
                     auto gemmT1 = std::chrono::high_resolution_clock::now();
+                    auto gemmNs = std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count();
                     ++m_b009AVX512KernelCalls;
-                    m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count());
+                    m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(gemmNs);
                     m_b009AVX512KernelRows += T;
+
+                    // B009-P4: Record per-call GEMM microarchitectural metrics
+                    {
+                        GemmCallRecord rec;
+                        rec.M = static_cast<uint32_t>(T);
+                        rec.N = static_cast<uint32_t>(outputDim);
+                        rec.K = static_cast<uint32_t>(inputDim);
+                        rec.kernel_ns = static_cast<uint64_t>(gemmNs);
+                        rec.flops = 2ULL * rec.M * rec.N * rec.K;
+                        rec.bytes_read = static_cast<uint64_t>(rec.M) * rec.K * sizeof(float)
+                                       + static_cast<uint64_t>(rec.N) * rec.K * sizeof(float)
+                                       + static_cast<uint64_t>(rec.M) * rec.N * sizeof(float) * 2;
+                        rec.gflops_per_s = rec.kernel_ns > 0
+                            ? (static_cast<double>(rec.flops) / (static_cast<double>(rec.kernel_ns) / 1e9)) / 1e9
+                            : 0.0;
+                        rec.arithmetic_intensity = rec.bytes_read > 0
+                            ? static_cast<double>(rec.flops) / static_cast<double>(rec.bytes_read)
+                            : 0.0;
+                        std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
+                        m_b009GemmCallRecords.push_back(rec);
+                    }
+
                     m_weightResidencyPool->release(tensorName);
                     ++m_weightResidencyHits;
                     return true;
@@ -2795,8 +2839,115 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
            static_cast<unsigned long long>(m_b009WeightLookupCalls.load()),
            static_cast<unsigned long long>(m_b009AVX512KernelCalls.load()));
 
+    // B009-P4: GEMM microarchitectural efficiency report
+    b009PrintGemmEfficiencyReport();
+
     // Negative Space Profiler: Emit bottleneck analysis after forward completes
     rawrxd::Profiler_AnalyzeBottlenecks();
 
     return logits;
+}
+
+// ============================================================================
+// B009-P4: GEMM Microarchitectural Efficiency Profiler
+// ============================================================================
+void RawrXDTransformer::b009ClearGemmRecords() const
+{
+    std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
+    m_b009GemmCallRecords.clear();
+}
+
+void RawrXDTransformer::b009PrintGemmEfficiencyReport() const
+{
+    std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
+    if (m_b009GemmCallRecords.empty()) return;
+
+    printf("\n[B009-P4] GEMM Microarchitectural Efficiency Report\n");
+    printf("═══════════════════════════════════════════════════════\n");
+    printf("Total calls: %zu\n", m_b009GemmCallRecords.size());
+
+    // Aggregate by shape
+    struct ShapeKey {
+        uint32_t M, N, K;
+        bool operator==(const ShapeKey& o) const { return M == o.M && N == o.N && K == o.K; }
+    };
+    struct ShapeHash {
+        size_t operator()(const ShapeKey& k) const {
+            return (static_cast<size_t>(k.M) << 32) ^ (static_cast<size_t>(k.N) << 16) ^ k.K;
+        }
+    };
+    struct ShapeAgg {
+        uint64_t calls = 0;
+        uint64_t total_ns = 0;
+        uint64_t total_flops = 0;
+        uint64_t total_bytes = 0;
+        double max_gflops = 0.0;
+        double min_gflops = 1e300;
+    };
+
+    std::unordered_map<ShapeKey, ShapeAgg, ShapeHash> byShape;
+    for (const auto& rec : m_b009GemmCallRecords) {
+        ShapeKey key{rec.M, rec.N, rec.K};
+        auto& agg = byShape[key];
+        agg.calls++;
+        agg.total_ns += rec.kernel_ns;
+        agg.total_flops += rec.flops;
+        agg.total_bytes += rec.bytes_read;
+        agg.max_gflops = std::max(agg.max_gflops, rec.gflops_per_s);
+        agg.min_gflops = std::min(agg.min_gflops, rec.gflops_per_s);
+    }
+
+    // Sort shapes by total time (descending)
+    std::vector<std::pair<ShapeKey, ShapeAgg>> sorted(byShape.begin(), byShape.end());
+    std::sort(sorted.begin(), sorted.end(),
+        [](const auto& a, const auto& b) { return a.second.total_ns > b.second.total_ns; });
+
+    printf("\n%-20s %6s %10s %10s %10s %10s %10s %s\n",
+           "Shape (M×N×K)", "Calls", "Total(ms)", "GFLOP/s", "AI", "Max", "Min", "Class");
+    printf("%-20s %6s %10s %10s %10s %10s %10s %s\n",
+           "", "", "", "", "(F/B)", "GFLOP/s", "GFLOP/s", "");
+    printf("─────────────────────────────────────────────────────────────────────────────────────────\n");
+
+    for (const auto& [shape, agg] : sorted) {
+        double total_ms = agg.total_ns / 1e6;
+        double avg_gflops = (agg.total_flops / (agg.total_ns / 1e9)) / 1e9;
+        double ai = agg.total_flops > 0 && agg.total_bytes > 0
+            ? static_cast<double>(agg.total_flops) / static_cast<double>(agg.total_bytes)
+            : 0.0;
+
+        const char* classification = "UNKNOWN";
+        if (ai < 2.0) classification = "MEMORY_BOUND";
+        else if (ai < 8.0) classification = "BALANCED";
+        else if (avg_gflops < 500.0) classification = "VECTOR_UNDERUTILIZED";
+        else classification = "COMPUTE_BOUND";
+
+        printf("%4u×%4u×%4u    %6llu %10.2f %10.1f %10.2f %10.1f %10.1f %s\n",
+               shape.M, shape.N, shape.K,
+               static_cast<unsigned long long>(agg.calls),
+               total_ms, avg_gflops, ai,
+               agg.max_gflops, agg.min_gflops,
+               classification);
+    }
+
+    // Overall summary
+    uint64_t total_ns = 0, total_flops = 0, total_bytes = 0;
+    for (const auto& rec : m_b009GemmCallRecords) {
+        total_ns += rec.kernel_ns;
+        total_flops += rec.flops;
+        total_bytes += rec.bytes_read;
+    }
+    double overall_gflops = total_flops > 0 && total_ns > 0
+        ? (total_flops / (total_ns / 1e9)) / 1e9
+        : 0.0;
+    double overall_ai = total_flops > 0 && total_bytes > 0
+        ? static_cast<double>(total_flops) / static_cast<double>(total_bytes)
+        : 0.0;
+
+    printf("─────────────────────────────────────────────────────────────────────────────────────────\n");
+    printf("Overall: %10.1f GFLOP/s | AI=%.2f FLOP/byte | Classification: ", overall_gflops, overall_ai);
+    if (overall_ai < 2.0) printf("MEMORY_BOUND\n");
+    else if (overall_ai < 8.0) printf("BALANCED\n");
+    else if (overall_gflops < 500.0) printf("VECTOR_UNDERUTILIZED\n");
+    else printf("COMPUTE_BOUND\n");
+    printf("═════════════════════════════════════════════════════════════════════════════════════════\n\n");
 }
