@@ -3699,7 +3699,7 @@ static SpeculativeSwarmOrchestrator g_swarm_orchestrator;
 void RawrXDModelLoader::UploadToGPU(Tensor& t)
 {
 #ifdef RAWR_ENABLE_VULKAN
-    if (!m_gpuUploadEnabled || t.cpuFloatData.empty())
+    if (!m_gpuUploadEnabled || t.cpuFloatData.empty() || m_device == VK_NULL_HANDLE)
     {
         return;
     }
@@ -4109,10 +4109,32 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
     }
     else if (forceEager && t.type != 0)
     {
-        // Non-F32 embedding tensor: skip unsafe eager load, fall through to
-        // normal lazy/dequant path. This prevents garbage float data crashes.
-        printf("[RawrXD] SKIPPING unsafe eager load for %s (type=%u) — using dequant path\n",
+        // Non-F32 embedding tensor: must go through proper dequantization.
+        // The forceEager flag only skips raw memcpy; it does NOT skip loading.
+        printf("[RawrXD] Dequantizing embedding tensor %s (type=%u) via LoadTensorAsync\n",
                name.c_str(), t.type);
+        try
+        {
+            this->LoadTensorAsync(t);
+            if (t.cpuFloatData.empty())
+            {
+                printf("[RawrXD] ERROR: LoadTensorAsync failed to populate data for %s\n", name.c_str());
+                return nullptr;
+            }
+            printf("[RawrXD] GetTensor loaded: %s (%zu elements)\n", name.c_str(), t.cpuFloatData.size());
+        }
+        catch (const std::bad_alloc&)
+        {
+            printf("[RawrXD] OOM while materializing tensor: %s\n", name.c_str());
+            t.cpuFloatData.clear();
+            return nullptr;
+        }
+        catch (const std::exception& e)
+        {
+            printf("[RawrXD] Exception while materializing tensor: %s - %s\n", name.c_str(), e.what());
+            t.cpuFloatData.clear();
+            return nullptr;
+        }
     }
     else
     {
