@@ -145,5 +145,23 @@ int main(int argc, char** argv) {
     std::printf("PASS: B009-T128 layer-outer ForwardBatch correctness validation\n");
     std::printf("  B008=%.2fms B009=%.2fms max_diff=%.6f max_rel=%.6f\n",
                 b008_ms, b009_ms, max_diff, max_rel_diff);
+
+    // B009-C instrumentation report
+    std::printf("\n[B009-C INSTRUMENTATION]\n");
+    std::printf("  b009BatchedMatMulCalls   = %llu\n", batch_transformer.b009BatchedMatMulCalls());
+    std::printf("  b009WeightLookupCalls    = %llu\n", batch_transformer.b009WeightLookupCalls());
+    std::printf("  b009DequantCalls         = %llu\n", batch_transformer.b009DequantCalls());
+    std::printf("  b009AVX512KernelCalls    = %llu\n", batch_transformer.b009AVX512KernelCalls());
+    std::printf("  b009AVX512KernelTimeNs   = %llu\n", batch_transformer.b009AVX512KernelTimeNs());
+    std::printf("  b009AVX512KernelRows     = %llu\n", batch_transformer.b009AVX512KernelRows());
+    std::printf("  b009ScalarTailTimeNs     = %llu\n", batch_transformer.b009ScalarTailTimeNs());
+    std::printf("  b009ScalarTailRows       = %llu\n", batch_transformer.b009ScalarTailRows());
+    std::printf("  b009DequantTimeNs        = %llu\n", batch_transformer.b009DequantTimeNs());
+    std::printf("  weightResidencyHits      = %llu\n", batch_transformer.weightResidencyHits());
+    std::printf("  weightResidencyMisses    = %llu\n", batch_transformer.weightResidencyMisses());
+
+    // Negative Space Profiler: analyze bottlenecks
+    rawrxd::Profiler_AnalyzeBottlenecks();
+
     return 0;
 }

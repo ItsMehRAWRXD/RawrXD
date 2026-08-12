@@ -1404,11 +1404,16 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
             if (weightData)
             {
                 // True batched GEMM via AVX-512: one kernel call covers all T tokens
+                auto gemmT0 = std::chrono::high_resolution_clock::now();
                 {
                     rawrxd::ProfilerGuard pg;
                     BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                 }
+                auto gemmT1 = std::chrono::high_resolution_clock::now();
                 ++m_b009AVX512KernelCalls;
+                m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count());
+                m_b009AVX512KernelRows += T;
                 m_weightResidencyPool->release(tensorName);
                 ++m_weightResidencyHits;
                 return true;
@@ -1417,9 +1422,15 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
         }
 
         // Miss — materialize dequantized tensor and retry
+        auto dequantT0 = std::chrono::high_resolution_clock::now();
         if (loader && loader->B015GetPool() == nullptr)
             loader->B015SetPool(m_weightResidencyPool.get());
-        if (loader && loader->B015MaterializeDequantizedTensor(tensorName))
+        bool materialized = loader && loader->B015MaterializeDequantizedTensor(tensorName);
+        auto dequantT1 = std::chrono::high_resolution_clock::now();
+        ++m_b009DequantCalls;
+        m_b009DequantTimeNs += static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(dequantT1 - dequantT0).count());
+        if (materialized)
         {
             if (rawrxd::ResidentWeight* resident = m_weightResidencyPool->acquire(tensorName))
             {
@@ -1427,11 +1438,16 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                 if (weightData)
                 {
                     // True batched GEMM via AVX-512 after materialization
+                    auto gemmT0 = std::chrono::high_resolution_clock::now();
                     {
                         rawrxd::ProfilerGuard pg;
                         BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
                     }
+                    auto gemmT1 = std::chrono::high_resolution_clock::now();
                     ++m_b009AVX512KernelCalls;
+                    m_b009AVX512KernelTimeNs += static_cast<std::uint64_t>(
+                        std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count());
+                    m_b009AVX512KernelRows += T;
                     m_weightResidencyPool->release(tensorName);
                     ++m_weightResidencyHits;
                     return true;
@@ -1762,6 +1778,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
            static_cast<double>(T) * config.n_layers * 130.0);
     const auto forwardStart = std::chrono::steady_clock::now();
 
+    // B009-P3: Reset time-attribution counters at start of each Forward() call
+    m_b009AVX512KernelTimeNs = 0;
+    m_b009AVX512KernelRows = 0;
+    m_b009AttentionTimeNs = 0;
+    m_b009DequantTimeNs = 0;
+
     // B009: Layer-outer batched prefill for T > 1.
     // Processes all tokens through layer 0, then all through layer 1, etc.
     // This improves weight locality/reuse (weights stay hot in cache).
@@ -1943,6 +1965,7 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 kv_cache_pos[static_cast<size_t>(l) * static_cast<size_t>(cache_ctx) + static_cast<size_t>(slot)] = abs_pos;
 
                 // Multi-head attention with GQA
+                auto attnT0 = std::chrono::high_resolution_clock::now();
                 std::fill(att_out_t, att_out_t + dim, 0.0f);
                 const int64_t seq_len_total = abs_pos + 1;
                 const int attn_len = static_cast<int>(std::min<int64_t>(seq_len_total, static_cast<int64_t>(cache_ctx)));
@@ -2003,6 +2026,9 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                         VectorAddScaled_AVX512(out_head, v_past, scores[p], head_dim);
                     }
                 }
+                auto attnT1 = std::chrono::high_resolution_clock::now();
+                m_b009AttentionTimeNs += static_cast<std::uint64_t>(
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(attnT1 - attnT0).count());
             }
 
             // B009-P0: Phase 6 — Batched output projection
@@ -2735,6 +2761,29 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
 
     printf("[Forward] returning logits, size=%zu\n", logits.size());
     std::fflush(stdout);
+
+    // B009-P3: Time-attribution report
+    {
+        std::uint64_t gemmTimeNs = m_b009AVX512KernelTimeNs.load();
+        std::uint64_t gemmRows = m_b009AVX512KernelRows.load();
+        std::uint64_t attnTimeNs = m_b009AttentionTimeNs.load();
+        std::uint64_t dequantTimeNs = m_b009DequantTimeNs.load();
+
+        double gemmMs = gemmTimeNs / 1e6;
+        double attnMs = attnTimeNs / 1e6;
+        double dequantMs = dequantTimeNs / 1e6;
+        double totalMs = forwardMs;
+
+        printf("[B009-P3] Time attribution (ms): GEMM=%.2f  Attention=%.2f  Dequant=%.2f  Other=%.2f\n",
+               gemmMs, attnMs, dequantMs, std::max(0.0, totalMs - gemmMs - attnMs - dequantMs));
+
+        if (gemmRows > 0 && totalMs > 0)
+        {
+            double nsPerRow = static_cast<double>(gemmTimeNs) / static_cast<double>(gemmRows);
+            printf("[B009-P3] GEMM efficiency: %.1f ns/row  |  GEMM/Total: %.1f%%  |  Attn/Total: %.1f%%\n",
+                   nsPerRow, 100.0 * gemmMs / totalMs, 100.0 * attnMs / totalMs);
+        }
+    }
 
     // B009-P2: Structural batching instrumentation report
     printf("[B009-P2] Structural counters: ForwardBatch=%llu MatMul=%llu BatchedMatMul=%llu WeightLookup=%llu AVX512Kernels=%llu\n",

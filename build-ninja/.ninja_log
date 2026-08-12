@@ -2195,3 +2195,13 @@
 67	2977	8082641344529550	CMakeFiles/b009_t128_certification.dir/src/rawrxd_model_loader.cpp.obj	773e8f7b357619b2
 52	3661	8082641344380902	CMakeFiles/b009_t128_certification.dir/src/rawrxd_transformer.cpp.obj	8a675442d5fa6256
 3661	3892	8082641380465904	bin/b009_t128_certification.exe	c62031a36d083d73
+43	2003	8082646385712988	CMakeFiles/rawrxd.dir/src/rawrxd_inference.cpp.obj	d2edbaba8d9c10e
+48	2841	8082646385758304	CMakeFiles/rawrxd.dir/src/rawrxd_model_loader.cpp.obj	58fa508bd69eb5b7
+36	3277	8082646385646110	CMakeFiles/rawrxd.dir/src/cpu_inference_engine.cpp.obj	600c539a633303d9
+28	4812	8082646385566405	CMakeFiles/rawrxd.dir/src/sovereign/ExecutionContract.cpp.obj	dc1bdbc199000a7b
+2003	5742	8082646405316499	CMakeFiles/rawrxd.dir/src/rawrxd_transformer.cpp.obj	29a4b656415643db
+5742	5997	8082646442699399	bin/rawrxd.exe	115543f237685a5d
+118	11504	8082650526734984	CMakeFiles/rawrxd.dir/src/rawrxd_transformer.cpp.obj	29a4b656415643db
+11504	11786	8082650639705243	bin/rawrxd.exe	115543f237685a5d
+64	3526	8082654624758171	CMakeFiles/rawrxd.dir/src/rawrxd_transformer.cpp.obj	29a4b656415643db
+3526	3804	8082654659365364	bin/rawrxd.exe	115543f237685a5d

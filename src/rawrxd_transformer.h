@@ -220,6 +220,14 @@ class RawrXDTransformer
     [[nodiscard]] std::uint64_t b009DequantCalls() const noexcept { return m_b009DequantCalls.load(); }
     [[nodiscard]] std::uint64_t b009AVX512KernelCalls() const noexcept { return m_b009AVX512KernelCalls.load(); }
 
+    // B009-P3: Kernel time-attribution accessors
+    [[nodiscard]] std::uint64_t b009AVX512KernelTimeNs() const noexcept { return m_b009AVX512KernelTimeNs.load(); }
+    [[nodiscard]] std::uint64_t b009AVX512KernelRows() const noexcept { return m_b009AVX512KernelRows.load(); }
+    [[nodiscard]] std::uint64_t b009ScalarTailTimeNs() const noexcept { return m_b009ScalarTailTimeNs.load(); }
+    [[nodiscard]] std::uint64_t b009ScalarTailRows() const noexcept { return m_b009ScalarTailRows.load(); }
+    [[nodiscard]] std::uint64_t b009AttentionTimeNs() const noexcept { return m_b009AttentionTimeNs.load(); }
+    [[nodiscard]] std::uint64_t b009DequantTimeNs() const noexcept { return m_b009DequantTimeNs.load(); }
+
     /// O(1) group lookup for the last plan known to the scheduler when SetSwarmScheduler ran (MoE-aware).
     [[nodiscard]] const RawrXD::Swarm::SwarmPlanSliceIndex& swarmPlanSliceIndex() const noexcept
     {
@@ -350,4 +358,12 @@ class RawrXDTransformer
     mutable std::atomic<std::uint64_t> m_b009GGUFUnmapCalls{0};
     mutable std::atomic<std::uint64_t> m_b009DequantCalls{0};
     mutable std::atomic<std::uint64_t> m_b009AVX512KernelCalls{0};
+
+    // B009-P3: Kernel time-attribution counters (nanoseconds)
+    mutable std::atomic<std::uint64_t> m_b009AVX512KernelTimeNs{0};
+    mutable std::atomic<std::uint64_t> m_b009AVX512KernelRows{0};
+    mutable std::atomic<std::uint64_t> m_b009ScalarTailTimeNs{0};
+    mutable std::atomic<std::uint64_t> m_b009ScalarTailRows{0};
+    mutable std::atomic<std::uint64_t> m_b009AttentionTimeNs{0};
+    mutable std::atomic<std::uint64_t> m_b009DequantTimeNs{0};
 };
