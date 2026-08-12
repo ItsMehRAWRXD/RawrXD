@@ -2497,26 +2497,10 @@ void RawrXDModelLoader::DequantChunkQ4_0_AVX512(Tensor& t, void* blocks, size_t 
 
     uint8_t* ptr = (uint8_t*)blocks;
 
-#if defined(__AVX512F__) && defined(__AVX512VPOPCNTDQ__)
-    // [ENHANCEMENT] AVX-512 VPOPCNT Reconstruction
-    // Real-time 0.8-bit weight reconstruction using ZMM registers
-    for (size_t b = 0; b < numBlocks; b += 16)
-    {  // Process 16 blocks per AVX-512 iteration
-        size_t blocks_this_iter = std::min(size_t(16), numBlocks - b);
-
-        // Load and reconstruct using VPOPCNT
-        __m512i reconstructed = avx512_vpopcnt_reconstruct(ptr, blocks_this_iter * 18, 1.0f);
-
-        // Store results
-        _mm512_storeu_ps(&t.cpuFloatData[offset + b * 32], _mm512_castsi512_ps(reconstructed));
-
-        ptr += blocks_this_iter * 18;
-    }
-    printf("[RawrXD] ⚡ AVX-512 VPOPCNT: Reconstructed %zu elements (0.8-bit precision)\n", chunkElements);
-#else
-    // Fallback to standard Q4_0 dequantization
+    // B009-P0: Use correct Q4_0 dequantization. The VPOPCNT demo kernel was
+    // reading past block boundaries (64-byte load vs 18-byte blocks) and
+    // using popcount instead of actual nibble unpacking. Disabled.
     DequantChunkQ4_0(t, blocks, chunkElements, offset);
-#endif
 }
 
 void RawrXDModelLoader::DequantChunkQ4_0(Tensor& t, void* blocks, size_t chunkElements, size_t offset)

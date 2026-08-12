@@ -2246,18 +2246,26 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                     }
                 }
             }
+            printf("[Forward] DEBUG: About to assign residual = x\n");
             residual = x;
+            printf("[Forward] DEBUG: residual = x done\n");
 
             // --- ATTENTION ---
+            printf("[Forward] DEBUG: About to construct prefix string\n");
             std::string prefix = "blk." + std::to_string(l) + ".";
+            printf("[Forward] DEBUG: prefix = '%s'\n", prefix.c_str());
 
+            printf("[Forward] DEBUG: Looking for %sattn_norm.weight\n", prefix.c_str());
             float* attn_norm = loader->GetTensor(prefix + "attn_norm.weight");
+            printf("[Forward] DEBUG: GetTensor returned %p for %sattn_norm.weight\n", (void*)attn_norm, prefix.c_str());
             if (!attn_norm)
             {
                 printf("[Forward] FATAL: Missing %sattn_norm.weight\n", prefix.c_str());
                 return {};
             }
+            printf("[Forward] DEBUG: About to call RMSNorm_AVX512 for layer %d, dim=%d\n", l, dim);
             RMSNorm_AVX512(x.data(), x.data(), attn_norm, dim, config.rms_norm_eps);
+            printf("[Forward] DEBUG: RMSNorm_AVX512 completed for layer %d\n", l);
 
             // Validation hook: RMSNorm output
             RAWRXD_VALIDATION_DUMP_RMS_NORM(x.data(), dim, l);

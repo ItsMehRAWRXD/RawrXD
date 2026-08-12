@@ -864,6 +864,7 @@ set(SOURCES
     src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
     src/deep2/MASMKernelStubs.cpp
+    src/inference/NegativeSpaceProfiler.cpp
     
     src/engine/gguf_core.cpp
     src/engine/inference_kernels.cpp
@@ -3410,6 +3411,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/MemoryPressureGuard.cpp
     src/agentic/ErrorRecoveryManager.cpp
     src/inference/PerformanceMonitor.cpp
+    src/inference/NegativeSpaceProfiler.cpp
     src/core/swarm_scheduler.cpp
     src/core/gguf_swarm_plan_builder.cpp
     src/core/memory_stubs.cpp

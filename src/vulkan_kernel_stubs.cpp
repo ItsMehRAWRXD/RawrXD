@@ -71,4 +71,15 @@ int VulkanKernel_GetStats(void) {
     return 1;
 }
 
+// Implementation for VulkanKernel_DispatchRaw.asm shim
+extern "C" int VulkanKernel_DispatchRaw_Impl(uint64_t shader_uuid,
+                                               uint64_t descriptor_table,
+                                               uint64_t push_constants) {
+    (void)shader_uuid;
+    (void)descriptor_table;
+    (void)push_constants;
+    fprintf(stderr, "[VulkanKernel Stub] DispatchRaw_Impl called\n");
+    return 1;  // success
+}
+
 } // extern "C"
