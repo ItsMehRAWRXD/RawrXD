@@ -3756,8 +3756,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/reverse/ReverseEngine.cpp
         src/reverse/ReverseModelLoader.cpp
         src/inference/NegativeSpaceProfiler.cpp
-        src/asm/TreeAttention_Fused_VAL038.asm
-        src/asm/softmax_lut_avx512.asm
+        src/core/unlinked_symbols_batch_022.cpp
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 

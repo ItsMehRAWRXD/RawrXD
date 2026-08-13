@@ -4,11 +4,13 @@
 ; ============================================================================
 
 OPTION CASEMAP:NONE
-OPTION WIN64:11
+OPTION WIN64:3
 
 ; Constants
 SOFTMAX_LUT_SIZE  EQU 4096
 SOFTMAX_BLOCK     EQU 64
+
+.code
 
 ; ============================================================================
 ; SoftmaxLUT_AVX512 - Fused softmax with exponential LUT

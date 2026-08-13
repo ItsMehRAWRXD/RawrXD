@@ -4,13 +4,15 @@
 ; ============================================================================
 
 OPTION CASEMAP:NONE
-OPTION WIN64:11
+OPTION WIN64:3
 
 ; Constants
 HIDDEN_DIM      EQU 7168
 HEAD_DIM        EQU 128
 NUM_HEADS       EQU 56
 BLOCK_SIZE      EQU 32
+
+.code
 
 ; ============================================================================
 ; TreeAttention_Fused - Fused Q*K^T + Softmax + Attention*V

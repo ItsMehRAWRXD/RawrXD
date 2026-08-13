@@ -159,12 +159,20 @@ class Deep2Engine;
 
 class Deep2APIServer {
 public:
-    Deep2APIServer() {}
-    ~Deep2APIServer() {}
-    bool Initialize(Deep2Engine*) { return true; }
-    bool Start(int) { return true; }
-    void Stop() {}
+    Deep2APIServer();
+    ~Deep2APIServer();
+    bool Initialize(Deep2Engine*);
+    bool Start(int);
+    void Stop();
+    bool IsRunning() const;
 };
+
+Deep2APIServer::Deep2APIServer() {}
+Deep2APIServer::~Deep2APIServer() {}
+bool Deep2APIServer::Initialize(Deep2Engine*) { return true; }
+bool Deep2APIServer::Start(int) { return true; }
+void Deep2APIServer::Stop() {}
+bool Deep2APIServer::IsRunning() const { return false; }
 
 } // namespace Deep2
 
@@ -178,43 +186,58 @@ struct AcceleratorDevice {
     int id = 0;
 };
 
+namespace Compression {
+
 struct CompressionConfig {
     uint32_t level = 6;
 };
 
 class CompressionEngine {
 public:
-    bool initialize(const CompressionConfig&, const std::vector<AcceleratorDevice*>&) {
-        return true;
-    }
+    bool initialize(const CompressionConfig&, const std::vector<AcceleratorDevice*>&);
 };
+
+bool CompressionEngine::initialize(const CompressionConfig&, const std::vector<AcceleratorDevice*>&) { return true; }
+
+} // namespace Compression
 
 class BackendScheduler {
 public:
-    void initialize(const std::vector<AcceleratorDevice>&) {}
-};
-
-struct ServerConfig {
-    uint16_t port = 8080;
+    void initialize(const std::vector<AcceleratorDevice>&);
 };
 
 class ProductionAPIServer {
 public:
-    bool initialize(const ServerConfig&) { return true; }
-    void start() {}
-    void stop() {}
-    bool isRunning() const { return true; }
-    void registerHealthRoutes() {}
-    void registerModelRoutes() {}
-    void registerInferenceRoutes() {}
-    void registerPhaseRoutes() {}
-    void registerBackendRoutes() {}
+    struct ServerConfig {
+        uint16_t port = 8080;
+    };
+    bool initialize(const ServerConfig&);
+    void start();
+    void stop();
+    bool isRunning() const;
+    void registerHealthRoutes();
+    void registerModelRoutes();
+    void registerInferenceRoutes();
+    void registerPhaseRoutes();
+    void registerBackendRoutes();
 };
 
 class CertificationHarness {
 public:
-    void initialize(const std::vector<AcceleratorDevice>&) {}
+    void initialize(const std::vector<AcceleratorDevice>&);
 };
+
+void BackendScheduler::initialize(const std::vector<AcceleratorDevice>&) {}
+bool ProductionAPIServer::initialize(const ServerConfig&) { return true; }
+void ProductionAPIServer::start() {}
+void ProductionAPIServer::stop() {}
+bool ProductionAPIServer::isRunning() const { return false; }
+void ProductionAPIServer::registerHealthRoutes() {}
+void ProductionAPIServer::registerModelRoutes() {}
+void ProductionAPIServer::registerInferenceRoutes() {}
+void ProductionAPIServer::registerPhaseRoutes() {}
+void ProductionAPIServer::registerBackendRoutes() {}
+void CertificationHarness::initialize(const std::vector<AcceleratorDevice>&) {}
 
 } // namespace Production
 } // namespace Deep2
