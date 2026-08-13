@@ -12,6 +12,9 @@
 // Production WindowProc / onCreate / onDestroy / deferred bootstrap live in Win32IDE_Core.cpp. Do not add
 // lifecycle or IPC here expecting the shipped binary to run it; merge into Core if you need this path live.
 
+// Forward declaration for trace logging
+extern void fileTrace(const char* msg);
+
 // Window Management Implementation for Win32IDE
 // Completes the GUI IDE loop by providing the missing Window Procedure and creation logic.
 
