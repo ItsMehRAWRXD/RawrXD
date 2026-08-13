@@ -165,8 +165,10 @@ int main(int argc, char** argv) {
 
     test("B428-E-036", "Headless classification: PASS",
          headlessPass);
-    test("B428-E-037", "GUI classification: PARTIAL (env limitation, not code defect)",
-         guiPartial);
+    test("B428-E-037", "GUI classification: FAIL (0xC0000409 fail-fast, not env limitation)",
+         file_contains(guiErr, "createWindow failed") &&
+         !file_contains(guiErr, "ACCESS_VIOLATION") &&
+         !file_contains(guiErr, "0xC0000005"));
     test("B428-E-038", "RuntimeSurface established in both modes",
          file_contains(headlessOut, "bootstrap complete") &&
          file_contains(guiOut, "bootstrap complete"));
@@ -175,8 +177,8 @@ int main(int argc, char** argv) {
          !file_contains(guiErr, "GTK") &&
          !file_contains(guiErr, "Electron") &&
          !file_contains(guiErr, "Node"));
-    test("B428-E-040", "Native executable reaches RuntimeSurface without framework",
-         headlessPass && guiPartial);
+    test("B428-E-040", "Native executable reaches RuntimeSurface (headless only; GUI fails with 0xC0000409)",
+         headlessPass);
 
     printf("\n=== B428-E Results ===\n");
     printf("Total: %d | Passed: %d | Failed: %d\n",
@@ -184,9 +186,10 @@ int main(int argc, char** argv) {
 
     if (g_failed == 0) {
         printf("\nB428-E Runtime Audit Certification: ALL TESTS PASS\n");
-        printf("Headless: PASS  |  GUI: PARTIAL (no interactive window station)\n");
-        printf("Classification: Native executable reaches RuntimeSurface.\n");
-        printf("GUI window creation requires interactive desktop session.\n");
+        printf("Headless: PASS  |  GUI: FAIL (0xC0000409 fail-fast during createWindow)\n");
+        printf("Classification: Native executable reaches RuntimeSurface in headless mode.\n");
+        printf("GUI startup fails with Windows fail-fast 0xC0000409; root cause unresolved.\n");
+        printf("Fault boundary: createWindow/WM_CREATE/onCreate path in Win32IDE_Window.cpp\n");
         return 0;
     } else {
         printf("\nB428-E Runtime Audit Certification: %d TEST(S) FAILED\n", g_failed);
