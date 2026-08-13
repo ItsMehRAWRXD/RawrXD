@@ -376,6 +376,16 @@ class RawrXDTransformer
         double gflops_per_s = 0.0;
         double arithmetic_intensity = 0.0;
         const char* classification = nullptr;
+        // B016: Kernel internal counters
+        uint64_t vector_fma_count = 0;
+        uint64_t scalar_fma_count = 0;
+        uint64_t vector_loads = 0;
+        uint64_t vector_stores = 0;
+        uint64_t k_loop_iterations = 0;
+        uint64_t scalar_tail_iterations = 0;
+        uint64_t horizontal_reductions = 0;
+        uint64_t token_chunks_8 = 0;
+        uint64_t token_scalar_tail = 0;
     };
     mutable std::vector<GemmCallRecord> m_b009GemmCallRecords;
     mutable std::mutex m_b009GemmRecordsMutex;

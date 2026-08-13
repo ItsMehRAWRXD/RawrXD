@@ -7,6 +7,14 @@
 // RawrXD validation hooks for llama.cpp parity testing
 #ifdef RAWRXD_ENABLE_VALIDATION
 #include "../tests/inference_validation/harness/runtime_hooks.hpp"
+#else
+#define RAWRXD_VALIDATION_INIT(filename) ((void)0)
+#define RAWRXD_VALIDATION_CLOSE() ((void)0)
+#define RAWRXD_VALIDATION_SET_LAYER(layer) ((void)0)
+#define RAWRXD_VALIDATION_DUMP_RMS_NORM(data, n, layer) ((void)0)
+#define RAWRXD_VALIDATION_DUMP_ATTN_OUT(data, n, layer) ((void)0)
+#define RAWRXD_VALIDATION_DUMP_FFN(data, n, layer) ((void)0)
+#define RAWRXD_VALIDATION_DUMP_LOGITS(data, vocab) ((void)0)
 #endif
 
 #include <algorithm>
@@ -1276,6 +1284,21 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
 }
 
 // ============================================================================
+// B016: Kernel instrumentation counters
+// ============================================================================
+struct B016_KernelCounters {
+    uint64_t vector_fma_count = 0;
+    uint64_t scalar_fma_count = 0;
+    uint64_t vector_loads = 0;
+    uint64_t vector_stores = 0;
+    uint64_t k_loop_iterations = 0;
+    uint64_t scalar_tail_iterations = 0;
+    uint64_t horizontal_reductions = 0;
+    uint64_t token_chunks_8 = 0;
+    uint64_t token_scalar_tail = 0;
+};
+
+// ============================================================================
 // B009-P2: AVX-512 true batched GEMM kernel for resident FP32 weights.
 // Computes output[t][m] = sum_k weight[m][k] * input[t][k]
 // for t = 0..T-1, m = 0..outputDim-1.
@@ -1285,7 +1308,8 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
 // ============================================================================
 #ifdef __AVX512F__
 static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBatch, const float* weightData,
-                                       std::size_t T, std::size_t inputDim, std::size_t outputDim)
+                                       std::size_t T, std::size_t inputDim, std::size_t outputDim,
+                                       B016_KernelCounters* counters = nullptr)
 {
     const std::size_t K = inputDim;
     const std::size_t N = outputDim;
@@ -1298,6 +1322,7 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
         // Process T in chunks of 8 tokens
         for (; t + 7 < T; t += 8)
         {
+            if (counters) ++counters->token_chunks_8;
             __m512 acc0 = _mm512_setzero_ps();
             __m512 acc1 = _mm512_setzero_ps();
             __m512 acc2 = _mm512_setzero_ps();
@@ -1310,6 +1335,11 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
             std::size_t k = 0;
             for (; k + 15 < K; k += 16)
             {
+                if (counters) {
+                    ++counters->k_loop_iterations;
+                    counters->vector_fma_count += 8;   // 8 FMAs per k-iteration
+                    counters->vector_loads += 9;       // 1 weight + 8 input loads
+                }
                 __m512 w = _mm512_loadu_ps(wRow + k);
                 acc0 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 0) * K + k), acc0);
                 acc1 = _mm512_fmadd_ps(w, _mm512_loadu_ps(inputBatch + (t + 1) * K + k), acc1);
@@ -1325,6 +1355,10 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
             float tail4 = 0.0f, tail5 = 0.0f, tail6 = 0.0f, tail7 = 0.0f;
             for (; k < K; ++k)
             {
+                if (counters) {
+                    ++counters->scalar_tail_iterations;
+                    counters->scalar_fma_count += 8;
+                }
                 float wk = wRow[k];
                 tail0 += wk * inputBatch[(t + 0) * K + k];
                 tail1 += wk * inputBatch[(t + 1) * K + k];
@@ -1336,6 +1370,10 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
                 tail7 += wk * inputBatch[(t + 7) * K + k];
             }
 
+            if (counters) {
+                counters->horizontal_reductions += 8;
+                counters->vector_stores += 8;
+            }
             outputBatch[(t + 0) * N + m] = _mm512_reduce_add_ps(acc0) + tail0;
             outputBatch[(t + 1) * N + m] = _mm512_reduce_add_ps(acc1) + tail1;
             outputBatch[(t + 2) * N + m] = _mm512_reduce_add_ps(acc2) + tail2;
@@ -1349,9 +1387,11 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
         // Scalar tail for remaining tokens (T % 8)
         for (; t < T; ++t)
         {
+            if (counters) ++counters->token_scalar_tail;
             float sum = 0.0f;
             for (std::size_t k = 0; k < K; ++k)
             {
+                if (counters) ++counters->scalar_fma_count;
                 sum += wRow[k] * inputBatch[t * K + k];
             }
             outputBatch[t * N + m] = sum;
@@ -1360,7 +1400,8 @@ static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBat
 }
 #else
 static void BatchedGemmResident_AVX512(float* outputBatch, const float* inputBatch, const float* weightData,
-                                       std::size_t T, std::size_t inputDim, std::size_t outputDim)
+                                       std::size_t T, std::size_t inputDim, std::size_t outputDim,
+                                       B016_KernelCounters* counters = nullptr)
 {
     // Scalar fallback when AVX-512 is unavailable
     for (std::size_t t = 0; t < T; ++t)
@@ -1406,10 +1447,11 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
             if (weightData)
             {
                 // True batched GEMM via AVX-512: one kernel call covers all T tokens
+                B016_KernelCounters kc{};
                 auto gemmT0 = std::chrono::high_resolution_clock::now();
                 {
                     rawrxd::ProfilerGuard pg;
-                    BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
+                    BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim, &kc);
                 }
                 auto gemmT1 = std::chrono::high_resolution_clock::now();
                 auto gemmNs = std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count();
@@ -1435,6 +1477,15 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                     rec.arithmetic_intensity = rec.bytes_read > 0
                         ? static_cast<double>(rec.flops) / static_cast<double>(rec.bytes_read)
                         : 0.0;
+                    rec.vector_fma_count = kc.vector_fma_count;
+                    rec.scalar_fma_count = kc.scalar_fma_count;
+                    rec.vector_loads = kc.vector_loads;
+                    rec.vector_stores = kc.vector_stores;
+                    rec.k_loop_iterations = kc.k_loop_iterations;
+                    rec.scalar_tail_iterations = kc.scalar_tail_iterations;
+                    rec.horizontal_reductions = kc.horizontal_reductions;
+                    rec.token_chunks_8 = kc.token_chunks_8;
+                    rec.token_scalar_tail = kc.token_scalar_tail;
                     std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
                     m_b009GemmCallRecords.push_back(rec);
                 }
@@ -1463,10 +1514,11 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                 if (weightData)
                 {
                     // True batched GEMM via AVX-512 after materialization
+                    B016_KernelCounters kc{};
                     auto gemmT0 = std::chrono::high_resolution_clock::now();
                     {
                         rawrxd::ProfilerGuard pg;
-                        BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim);
+                        BatchedGemmResident_AVX512(outputBatch, inputBatch, weightData, T, inputDim, outputDim, &kc);
                     }
                     auto gemmT1 = std::chrono::high_resolution_clock::now();
                     auto gemmNs = std::chrono::duration_cast<std::chrono::nanoseconds>(gemmT1 - gemmT0).count();
@@ -1491,6 +1543,15 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
                         rec.arithmetic_intensity = rec.bytes_read > 0
                             ? static_cast<double>(rec.flops) / static_cast<double>(rec.bytes_read)
                             : 0.0;
+                        rec.vector_fma_count = kc.vector_fma_count;
+                        rec.scalar_fma_count = kc.scalar_fma_count;
+                        rec.vector_loads = kc.vector_loads;
+                        rec.vector_stores = kc.vector_stores;
+                        rec.k_loop_iterations = kc.k_loop_iterations;
+                        rec.scalar_tail_iterations = kc.scalar_tail_iterations;
+                        rec.horizontal_reductions = kc.horizontal_reductions;
+                        rec.token_chunks_8 = kc.token_chunks_8;
+                        rec.token_scalar_tail = kc.token_scalar_tail;
                         std::lock_guard<std::mutex> lock(m_b009GemmRecordsMutex);
                         m_b009GemmCallRecords.push_back(rec);
                     }
@@ -2954,4 +3015,32 @@ void RawrXDTransformer::b009PrintGemmEfficiencyReport() const
     else if (overall_gflops < 500.0) printf("VECTOR_UNDERUTILIZED\n");
     else printf("COMPUTE_BOUND\n");
     printf("═════════════════════════════════════════════════════════════════════════════════════════\n\n");
+
+    // B016: Kernel internal counter report
+    {
+        uint64_t total_vec_fma = 0, total_scalar_fma = 0, total_vec_loads = 0, total_vec_stores = 0;
+        uint64_t total_k_iters = 0, total_scalar_tail = 0, total_hred = 0, total_chunks8 = 0, total_tok_tail = 0;
+        for (const auto& rec : m_b009GemmCallRecords) {
+            total_vec_fma += rec.vector_fma_count;
+            total_scalar_fma += rec.scalar_fma_count;
+            total_vec_loads += rec.vector_loads;
+            total_vec_stores += rec.vector_stores;
+            total_k_iters += rec.k_loop_iterations;
+            total_scalar_tail += rec.scalar_tail_iterations;
+            total_hred += rec.horizontal_reductions;
+            total_chunks8 += rec.token_chunks_8;
+            total_tok_tail += rec.token_scalar_tail;
+        }
+        printf("[B016] Kernel Internal Counters (aggregated across %zu calls):\n", m_b009GemmCallRecords.size());
+        printf("  vector_fma_count      = %llu\n", (unsigned long long)total_vec_fma);
+        printf("  scalar_fma_count      = %llu\n", (unsigned long long)total_scalar_fma);
+        printf("  vector_loads          = %llu\n", (unsigned long long)total_vec_loads);
+        printf("  vector_stores         = %llu\n", (unsigned long long)total_vec_stores);
+        printf("  k_loop_iterations     = %llu\n", (unsigned long long)total_k_iters);
+        printf("  scalar_tail_iterations= %llu\n", (unsigned long long)total_scalar_tail);
+        printf("  horizontal_reductions = %llu\n", (unsigned long long)total_hred);
+        printf("  token_chunks_8        = %llu\n", (unsigned long long)total_chunks8);
+        printf("  token_scalar_tail     = %llu\n", (unsigned long long)total_tok_tail);
+        printf("\n");
+    }
 }

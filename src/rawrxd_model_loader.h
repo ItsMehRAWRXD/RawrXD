@@ -115,6 +115,7 @@ class RawrXDModelLoader
         RawrXDModelLoader* m_loader = nullptr;
         void* m_base = nullptr;
         size_t m_size = 0;
+        uint64_t m_offset = 0;
     };
 
     RawrXDModelLoader();
@@ -223,6 +224,7 @@ class RawrXDModelLoader
     bool GetTensorResidencyInfo(const std::string& name, std::uint64_t& canonicalId,
                   std::uint64_t& storageBytes) const
     {
+      std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
       auto it = m_tensors.find(name);
       if (it == m_tensors.end())
       {
@@ -379,11 +381,12 @@ class RawrXDModelLoader
 
   private:
     std::unordered_map<std::string, Tensor> m_tensors;
+    mutable std::recursive_mutex m_tensorMutex;
 
   public:
     // Helpers
-    uint8_t* ParseMetadata(uint8_t* ptr, uint64_t count);
-    uint8_t* ParseTensorInfo(uint8_t* ptr, Tensor& t);
+    uint8_t* ParseMetadata(uint8_t* ptr, uint64_t count, const uint8_t* end);
+    uint8_t* ParseTensorInfo(uint8_t* ptr, Tensor& t, const uint8_t* end);
     [[nodiscard]] size_t CalculateTensorDataSize(const Tensor& t) const;
     void LoadTensorAsync(Tensor& t);
     void DequantAndUploadQ4_0(Tensor& t, void* blocks, size_t N);

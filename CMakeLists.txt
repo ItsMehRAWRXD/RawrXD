@@ -335,18 +335,6 @@ if(RAWRXD_BUILD_CLI)
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 
-    # =============================================================================
-    # Validation Instrumentation (llama.cpp parity tensor dumping)
-    # =============================================================================
-    if(RAWRXD_ENABLE_VALIDATION)
-        message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled")
-        target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
-        target_include_directories(rawrxd PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
-        )
-    else()
-        message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled")
-    endif()
 endif()
 
 # =============================================================================
@@ -7062,6 +7050,20 @@ else()
     message(STATUS "[SovereignRuntime] Skipped - target 'rawrxd' already defined by CLI build")
 endif()
 
+# =============================================================================
+# Validation Instrumentation (llama.cpp parity tensor dumping)
+# Applied to whichever rawrxd target exists (GUI or Sovereign CLI)
+# =============================================================================
+if(RAWRXD_ENABLE_VALIDATION AND TARGET rawrxd)
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled")
+    target_compile_definitions(rawrxd PRIVATE RAWRXD_ENABLE_VALIDATION=1)
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/inference_validation/harness
+    )
+elseif(TARGET rawrxd)
+    message(STATUS "[Validation] RAWRXD_ENABLE_VALIDATION=OFF — runtime tensor dumping disabled")
+endif()
+
 # ============================================================================
 # Native Address Resolver Utility (deterministic, no PowerShell dependency)
 # ============================================================================
@@ -8779,6 +8781,9 @@ target_include_directories(b009_batched_prefill_certification PRIVATE
     ${CMAKE_SOURCE_DIR}/include/core
 )
 target_compile_features(b009_batched_prefill_certification PRIVATE cxx_std_20)
+if(MSVC)
+    target_compile_options(b009_batched_prefill_certification PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/EHsc /W0 /arch:AVX512>)
+endif()
 
 if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
     target_include_directories(b009_batched_prefill_certification PRIVATE "${RAWR_VULKAN_INCLUDE}")
@@ -8936,6 +8941,75 @@ if(DEFINED _MSVC_ROOT)
     set_property(TARGET b009_t128_certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
 endif()
 target_link_libraries(b009_t128_certification PRIVATE
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+)
+
+# ============================================================================
+# B016: GEMM Efficiency Probe (instrumented batched GEMM profiling)
+# ============================================================================
+add_executable(b016_gemm_efficiency_probe EXCLUDE_FROM_ALL
+    tests/b016/b016_gemm_efficiency_probe.cpp
+    tests/b009/b009b_batched_gemm.cpp
+    src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
+    src/rawrxd_model_loader.cpp
+    src/rawrxd_tokenizer.cpp
+    src/rawrxd_sampler.cpp
+    src/gguf_loader.cpp
+    src/gguf_vocab_resolver.cpp
+    src/core/inference_witness.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/logging/Logger.cpp
+    src/runtime/TensorExecutionRouter.cpp
+    src/runtime/StreamRouterAdapter.cpp
+    src/runtime/memory/PredictiveMemoryManager.cpp
+    src/runtime/memory/TransferScheduler.cpp
+    src/runtime/memory/ResidencyTracker.cpp
+    src/runtime/memory/WorkingSetPredictor.cpp
+    src/runtime/memory/CapacityManager.cpp
+    src/runtime/memory/TensorPlacementManager.cpp
+    src/inference/NegativeSpaceProfiler.cpp
+    B014/build/b014_profiler.cpp
+)
+target_include_directories(b016_gemm_efficiency_probe PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/include/core
+    ${CMAKE_SOURCE_DIR}/tests/inference_validation/harness
+)
+target_compile_features(b016_gemm_efficiency_probe PRIVATE cxx_std_20)
+if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+    target_include_directories(b016_gemm_efficiency_probe PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_libraries(b016_gemm_efficiency_probe PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+    target_compile_definitions(b016_gemm_efficiency_probe PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+    target_include_directories(b016_gemm_efficiency_probe PRIVATE ${VULKAN_INCLUDE_DIR})
+    target_link_libraries(b016_gemm_efficiency_probe PRIVATE dxgi)
+    target_compile_definitions(b016_gemm_efficiency_probe PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+    target_include_directories(b016_gemm_efficiency_probe PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(b016_gemm_efficiency_probe PRIVATE Vulkan::Vulkan dxgi)
+    target_compile_definitions(b016_gemm_efficiency_probe PRIVATE RAWR_HAS_VULKAN=1)
+elseif(RAWR_ENABLE_VULKAN)
+    target_compile_definitions(b016_gemm_efficiency_probe PRIVATE RAWR_HAS_VULKAN=0)
+    target_link_libraries(b016_gemm_efficiency_probe PRIVATE dxgi)
+else()
+    target_link_libraries(b016_gemm_efficiency_probe PRIVATE dxgi)
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET b016_gemm_efficiency_probe APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET b016_gemm_efficiency_probe APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET b016_gemm_efficiency_probe APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+target_link_libraries(b016_gemm_efficiency_probe PRIVATE
     kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
 )
 

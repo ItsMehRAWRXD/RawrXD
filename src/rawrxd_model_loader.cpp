@@ -404,6 +404,38 @@ static void DequantQ5K_Block(const uint8_t* src, float* dst)
     }
 }
 
+// B016-C6: Scalar Q4_K dequantization (was silently zeroing without ASM kernels)
+// Q4_K superblock: 256 elements, 144 bytes
+// Layout: d(2) + dmin(2) + scales(12) + qs(128)
+static void DequantQ4K_Block(const uint8_t* src, float* dst)
+{
+    float d = f16_to_f32(*(const uint16_t*)(src + 0));
+    float dmin = f16_to_f32(*(const uint16_t*)(src + 2));
+    const uint8_t* scales = src + 4;
+    const uint8_t* qs = src + 16;
+
+    uint8_t sc[8], m[8];
+    for (int j = 0; j < 4; j++) {
+        sc[j] = scales[j] & 63;
+        m[j] = scales[j + 4] & 63;
+    }
+    for (int j = 4; j < 8; j++) {
+        sc[j] = (scales[j + 4] & 0xF) | ((scales[j - 4] >> 6) << 4);
+        m[j] = (scales[j + 4] >> 4) | ((scales[j] >> 6) << 4);
+    }
+
+    float* y = dst;
+    for (int j = 0; j < 8; j++) {
+        float d1 = d * (float)sc[j];
+        float m1 = dmin * (float)m[j];
+        for (int l = 0; l < 32; l++) {
+            uint8_t byte = qs[j * 16 + l / 2];
+            uint8_t nibble = (l % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+            *y++ = d1 * (float)nibble - m1;
+        }
+    }
+}
+
 static std::string WideToUtf8(const wchar_t* ws)
 {
     if (!ws)
@@ -1027,7 +1059,7 @@ void* RawrXDModelLoader::MapWindow(uint64_t offset, size_t size)
         windowStart = (offset / granularity) * granularity;
     }
 
-    const uint64_t remaining = m_fileSize - windowStart;
+    const uint64_t remaining = (windowStart <= m_fileSize) ? (m_fileSize - windowStart) : 0;
     size_t mapSize = 0;
     if (useSovereign)
     {
@@ -1228,7 +1260,7 @@ void* RawrXDModelLoader::MapPrefetchWindow(uint64_t offset, size_t size)
         return nullptr;
 
     SIZE_T mapSize = static_cast<SIZE_T>(mapSize64);
-    const uint64_t fileRemaining = m_fileSize - mapStart;
+    const uint64_t fileRemaining = (mapStart <= m_fileSize) ? (m_fileSize - mapStart) : 0;
     if (static_cast<uint64_t>(mapSize) > fileRemaining)
         mapSize = static_cast<SIZE_T>(fileRemaining);
 
@@ -1354,6 +1386,7 @@ bool RawrXDModelLoader::ComputeMappingCovers(uint64_t offset, uint64_t size) con
 
 bool RawrXDModelLoader::MapIncidentalWindow(uint64_t offset, size_t size, void*& viewBase, uint8_t*& dataPtr)
 {
+    std::lock_guard<std::mutex> lock(m_slidingWindowMutex);
     viewBase = nullptr;
     dataPtr = nullptr;
 
@@ -1494,135 +1527,6 @@ struct GGUFFileHeader
 // ============================================================================
 
 // [ENHANCEMENT] Runtime Policy Gate NOP
-// Locates and patches conditional jumps that check for RAWRXD_ENABLE_ACTIVE_PROCESS_INTERCEPTION
-// Forces "No-Refusal" deep thinking mode regardless of environment state
-
-class SovereignInterceptor
-{
-  private:
-    HMODULE target_module;
-    std::vector<uint8_t> original_bytes;
-    bool patches_applied;
-
-  public:
-    SovereignInterceptor() : target_module(nullptr), patches_applied(false) {}
-
-    // [ENHANCEMENT] Locate Policy Gate Check
-    // Scans compiled binary for JZ/JNE instructions checking interception flags
-    bool LocatePolicyGate()
-    {
-        if (!target_module)
-        {
-            target_module = GetModuleHandleA("Win32IDE.exe");
-            if (!target_module)
-            {
-                printf("[RawrXD] ⚠️  Sovereign Interceptor: Could not locate Win32IDE.exe module\n");
-                return false;
-            }
-        }
-
-        // Scan for pattern: environment variable check followed by JZ/JNE
-        // Pattern: CALL getenv + TEST EAX,EAX + JZ/JNE
-        const uint8_t pattern[] = {0xE8, 0x00, 0x00, 0x00, 0x00,  // CALL getenv
-                                   0x85, 0xC0,                    // TEST EAX,EAX
-                                   0x74, 0x00};                   // JZ rel8
-
-        uint8_t* module_base = (uint8_t*)target_module;
-        IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)module_base;
-        IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module_base + dos->e_lfanew);
-        size_t module_size = nt->OptionalHeader.SizeOfImage;
-
-        for (size_t i = 0; i < module_size - sizeof(pattern); ++i)
-        {
-            if (memcmp(module_base + i, pattern, sizeof(pattern)) == 0)
-            {
-                // Found potential policy gate - store original bytes for restoration
-                original_bytes.assign(module_base + i, module_base + i + 8);
-
-                printf("[RawrXD] ⚡ SOVEREIGN INTERCEPTOR: Located policy gate at offset 0x%zx\n", i);
-                return true;
-            }
-        }
-
-        printf("[RawrXD] ⚠️  Sovereign Interceptor: Policy gate pattern not found\n");
-        return false;
-    }
-
-    // [ENHANCEMENT] Apply Policy Gate NOP
-    // Patches JZ/JNE to NOP instructions, forcing no-refusal mode
-    bool ApplyPolicyBypass()
-    {
-        if (!LocatePolicyGate())
-            return false;
-
-        uint8_t* module_base = (uint8_t*)target_module;
-
-        // Find the exact location again
-        const uint8_t pattern[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x85, 0xC0, 0x74, 0x00};
-        IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)module_base;
-        IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module_base + dos->e_lfanew);
-        size_t module_size = nt->OptionalHeader.SizeOfImage;
-
-        for (size_t i = 0; i < module_size - sizeof(pattern); ++i)
-        {
-            if (memcmp(module_base + i, pattern, sizeof(pattern)) == 0)
-            {
-                // Change JZ rel8 to NOP NOP
-                DWORD old_protect;
-                if (VirtualProtect(module_base + i + 7, 2, PAGE_EXECUTE_READWRITE, &old_protect))
-                {
-                    module_base[i + 7] = 0x90;  // NOP
-                    module_base[i + 8] = 0x90;  // NOP
-                    VirtualProtect(module_base + i + 7, 2, old_protect, &old_protect);
-
-                    patches_applied = true;
-                    printf("[RawrXD] ⚡ SOVEREIGN INTERCEPTOR: Policy gate bypassed (JZ → NOP NOP)\n");
-                    printf("[RawrXD] ⚡ No-Refusal Mode: ACTIVE\n");
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // Restore original policy checks (for debugging)
-    bool RestorePolicyChecks()
-    {
-        if (!patches_applied || original_bytes.empty())
-            return false;
-
-        uint8_t* module_base = (uint8_t*)target_module;
-        const uint8_t pattern[] = {0xE8, 0x00, 0x00, 0x00, 0x00, 0x85, 0xC0, 0x90, 0x90};
-
-        IMAGE_DOS_HEADER* dos = (IMAGE_DOS_HEADER*)module_base;
-        IMAGE_NT_HEADERS* nt = (IMAGE_NT_HEADERS*)(module_base + dos->e_lfanew);
-        size_t module_size = nt->OptionalHeader.SizeOfImage;
-
-        for (size_t i = 0; i < module_size - sizeof(pattern); ++i)
-        {
-            if (memcmp(module_base + i, pattern, sizeof(pattern)) == 0)
-            {
-                DWORD old_protect;
-                if (VirtualProtect(module_base + i + 7, 2, PAGE_EXECUTE_READWRITE, &old_protect))
-                {
-                    memcpy(module_base + i + 7, &original_bytes[7], 2);
-                    VirtualProtect(module_base + i + 7, 2, old_protect, &old_protect);
-
-                    patches_applied = false;
-                    printf("[RawrXD] ⚡ Sovereign Interceptor: Policy checks restored\n");
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-};
-
-// Global interceptor instance
-static SovereignInterceptor g_sovereign_interceptor;
-
 // Global swarm orchestrator instance
 // Declared below (after class definition) to avoid incomplete-type issues.
 
@@ -1652,16 +1556,10 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     // ============================================================================
     printf("[RawrXD] ⚡ INITIALIZING SOVEREIGN NEURAL HIVE-MIND SYSTEMS...\n");
 
-    // 1. Apply Sovereign Interceptor Policy Bypass
-    if (g_sovereign_interceptor.ApplyPolicyBypass())
-    {
-        printf("[RawrXD] ⚡ Sovereign Interceptor: Policy gates bypassed - No-Refusal mode active\n");
-    }
-
-    // 2. Initialize Speculative Swarm Orchestrator
+    // 1. Initialize Speculative Swarm Orchestrator
     printf("[RawrXD] ⚡ Speculative Swarm: Ready for 20x model chaining (600B+ aggregate)\n");
 
-    // 3. AVX-512 VPOPCNT ready for N-bit reconstruction
+    // 2. AVX-512 VPOPCNT ready for N-bit reconstruction
     printf("[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction\n");
 
     const std::string modelPathUtf8 = WideToUtf8(path);
@@ -1718,8 +1616,25 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     }
 
     LARGE_INTEGER size;
-    GetFileSizeEx(m_file, &size);
+    if (!GetFileSizeEx(m_file, &size))
+    {
+        const std::string msg = "[RawrXD] GetFileSizeEx failed";
+        printf("%s\n", msg.c_str());
+        setLoadError("file_size", msg);
+        CloseHandle(m_file);
+        m_file = INVALID_HANDLE_VALUE;
+        return false;
+    }
     m_fileSize = static_cast<uint64_t>(size.QuadPart);
+    if (m_fileSize == 0)
+    {
+        const std::string msg = "[RawrXD] File size is zero";
+        printf("%s\n", msg.c_str());
+        setLoadError("file_size_zero", msg);
+        CloseHandle(m_file);
+        m_file = INVALID_HANDLE_VALUE;
+        return false;
+    }
 
     std::string laneReason;
     std::string resolvedLane;
@@ -1804,6 +1719,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         return false;
     }
     uint8_t* start = ptr;
+    uint8_t* end = start + m_fileSize;
 
     GGUFFileHeader* hdr = (GGUFFileHeader*)ptr;
     printf("[GGUF] size=%llu\n", static_cast<unsigned long long>(m_fileSize));
@@ -1828,9 +1744,19 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     printf("[GGUF] version=PASS\n");
 
     ptr += sizeof(GGUFFileHeader);
+    if (ptr > end)
+    {
+        setLoadError("parse_header", "GGUF header exceeds mapped range");
+        CleanupSlidingWindow();
+        CloseHandle(m_mapping);
+        CloseHandle(m_file);
+        m_mapping = nullptr;
+        m_file = INVALID_HANDLE_VALUE;
+        return false;
+    }
 
     // Skip metadata (simple parser to just skip it)
-    ptr = ParseMetadata(ptr, hdr->kv_count);
+    ptr = ParseMetadata(ptr, hdr->kv_count, end);
 
     // Some GGUFs omit KV head count; default it to attention head count if present.
     if (n_heads_kv <= 0 && n_heads > 0)
@@ -1880,7 +1806,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
         Tensor t;
         t.tensor_index = i;
         // Read tensor info (name, dims, type, offset)
-        ptr = ParseTensorInfo(ptr, t);
+        ptr = ParseTensorInfo(ptr, t, end);
         // Offset is relative to start of data block, which is after headers
         // But GGUF v3 offsets are usually relative to the *tensor data* start alignment.
         // Wait, GGUF spec: offset is relative to the start of the file or data section?
@@ -1913,22 +1839,25 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
 
     // 6. Build tensor lookup map
     printf("[RawrXD] Stage: build_tensor_lookup_map\n");
-    for (auto& t : tensorInfos)
     {
-        m_tensors[t.name] = std::move(t);
-    }
-
-    // Canonical alias resolution for tied embeddings: many GGUFs omit
-    // output.weight and reuse token_embd.weight for the LM head.
-    if (m_tensors.find("output.weight") == m_tensors.end())
-    {
-        auto embIt = m_tensors.find("token_embd.weight");
-        if (embIt != m_tensors.end())
+        std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
+        for (auto& t : tensorInfos)
         {
-            Tensor tiedAlias = embIt->second;
-            tiedAlias.name = "output.weight";
-            m_tensors["output.weight"] = std::move(tiedAlias);
-            printf("[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight\n");
+            m_tensors[t.name] = std::move(t);
+        }
+
+        // Canonical alias resolution for tied embeddings: many GGUFs omit
+        // output.weight and reuse token_embd.weight for the LM head.
+        if (m_tensors.find("output.weight") == m_tensors.end())
+        {
+            auto embIt = m_tensors.find("token_embd.weight");
+            if (embIt != m_tensors.end())
+            {
+                Tensor tiedAlias = embIt->second;
+                tiedAlias.name = "output.weight";
+                m_tensors["output.weight"] = std::move(tiedAlias);
+                printf("[RawrXD] Canonical tensor alias: output.weight -> token_embd.weight\n");
+            }
         }
     }
 
@@ -1969,7 +1898,7 @@ const std::string& RawrXDModelLoader::GetLastLoadErrorMessage() const
 }
 
 // Simple metadata skipper / scraper
-uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
+uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count, const uint8_t* end)
 {
     const auto ggufScalarSize = [](uint32_t t) -> uint64_t
     {
@@ -1997,11 +1926,14 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
 
     for (uint64_t i = 0; i < count; i++)
     {
+        if (ptr + 8 > end) return ptr;
         uint64_t len = *(uint64_t*)ptr;
         ptr += 8;
+        if (ptr + len > end) return ptr;
         std::string key((char*)ptr, len);
         ptr += len;
 
+        if (ptr + 4 > end) return ptr;
         uint32_t type = *(uint32_t*)ptr;
         ptr += 4;
 
@@ -2009,8 +1941,10 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
         {
             case 8:  // String
             {
+                if (ptr + 8 > end) return ptr;
                 uint64_t vlen = *(uint64_t*)ptr;
                 ptr += 8;
+                if (ptr + vlen > end) return ptr;
                 if (key == "general.architecture")
                 {
                     m_metadataArchitecture.assign((char*)ptr, static_cast<size_t>(vlen));
@@ -2024,8 +1958,10 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
             }
             case 9:  // Array
             {
+                if (ptr + 4 > end) return ptr;
                 uint32_t atype = *(uint32_t*)ptr;
                 ptr += 4;
+                if (ptr + 8 > end) return ptr;
                 uint64_t Alen = *(uint64_t*)ptr;
                 ptr += 8;
 
@@ -2038,8 +1974,10 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                 {
                     for (uint64_t j = 0; j < Alen; j++)
                     {
+                        if (ptr + 8 > end) return ptr;
                         uint64_t slen = *(uint64_t*)ptr;
                         ptr += 8 + slen;
+                        if (ptr > end) return ptr;
                     }
                 }
                 else
@@ -2049,6 +1987,7 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                     {
                         return ptr;
                     }
+                    if (ptr + elemSize * Alen > end) return ptr;
                     ptr += elemSize * Alen;
                 }
                 break;
@@ -2057,6 +1996,7 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
             {
                 if (type == 4 || type == 5)
                 {
+                    if (ptr + 4 > end) return ptr;
                     const uint32_t val = *(uint32_t*)ptr;
                     if (key == "general.file_type")
                     {
@@ -2102,6 +2042,7 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
                 {
                     return ptr;
                 }
+                if (ptr + scalarBytes > end) return ptr;
                 ptr += scalarBytes;
                 break;
             }
@@ -2110,15 +2051,19 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count)
     return ptr;
 }
 
-uint8_t* RawrXDModelLoader::ParseTensorInfo(uint8_t* ptr, Tensor& t)
+uint8_t* RawrXDModelLoader::ParseTensorInfo(uint8_t* ptr, Tensor& t, const uint8_t* end)
 {
+    if (ptr + 8 > end) return ptr;
     uint64_t len = *(uint64_t*)ptr;
     ptr += 8;
+    if (ptr + len > end) return ptr;
     t.name = std::string((char*)ptr, len);
     ptr += len;
 
+    if (ptr + 4 > end) return ptr;
     uint32_t n_dims = *(uint32_t*)ptr;
     ptr += 4;
+    if (ptr + static_cast<uint64_t>(n_dims) * 8 > end) return ptr;
     t.dims.resize(n_dims);
     for (uint32_t i = 0; i < n_dims; i++)
     {
@@ -2126,8 +2071,10 @@ uint8_t* RawrXDModelLoader::ParseTensorInfo(uint8_t* ptr, Tensor& t)
         ptr += 8;
     }
 
+    if (ptr + 4 > end) return ptr;
     t.type = *(uint32_t*)ptr;
     ptr += 4;
+    if (ptr + 8 > end) return ptr;
     t.offset = *(uint64_t*)ptr;
     ptr += 8;
     return ptr;
@@ -2138,7 +2085,12 @@ size_t RawrXDModelLoader::CalculateTensorDataSize(const Tensor& t) const
 {
     size_t ne = 1;
     for (auto d : t.dims)
+    {
+        // B016-C5: checked multiplication to prevent silent overflow
+        if (d != 0 && ne > SIZE_MAX / d)
+            return SIZE_MAX;
         ne *= d;
+    }
 
     switch (t.type)
     {
@@ -2147,31 +2099,31 @@ size_t RawrXDModelLoader::CalculateTensorDataSize(const Tensor& t) const
         case 1:  // F16
             return ne * sizeof(uint16_t);
         case 2:                       // Q4_0
-            return (ne / 32) * 18;    // 18 bytes per block of 32 elements
+            return ((ne + 31) / 32) * 18;    // 18 bytes per block of 32 elements
         case 3:                       // Q4_1
-            return (ne / 32) * 20;    // 20 bytes per block
+            return ((ne + 31) / 32) * 20;    // 20 bytes per block
         case 6:                       // Q5_0
-            return (ne / 32) * 22;    // 22 bytes per block
+            return ((ne + 31) / 32) * 22;    // 22 bytes per block
         case 7:                       // Q5_1
-            return (ne / 32) * 24;    // 24 bytes per block
+            return ((ne + 31) / 32) * 24;    // 24 bytes per block
         case 8:                       // Q8_0
-            return (ne / 32) * 34;    // 34 bytes per block
+            return ((ne + 31) / 32) * 34;    // 34 bytes per block
         case 9:                       // Q8_1
-            return (ne / 32) * 36;    // 36 bytes per block
+            return ((ne + 31) / 32) * 36;    // 36 bytes per block
         case 10:                      // Q2_K
-            return (ne / 256) * 84;   // 84 bytes per super-block
+            return ((ne + 255) / 256) * 84;   // 84 bytes per super-block
         case 11:                      // Q3_K
-            return (ne / 256) * 110;  // 110 bytes per super-block
+            return ((ne + 255) / 256) * 110;  // 110 bytes per super-block
         case 12:                      // Q4_K
-            return (ne / 256) * 144;  // 144 bytes per super-block
+            return ((ne + 255) / 256) * 144;  // 144 bytes per super-block
         case 13:                      // Q5_K
-            return (ne / 256) * 176;  // 176 bytes per super-block
+            return ((ne + 255) / 256) * 176;  // 176 bytes per super-block
         case 14:                      // Q6_K
-            return (ne / 256) * 210;  // 210 bytes per super-block
+            return ((ne + 255) / 256) * 210;  // 210 bytes per super-block
         case 15:                      // Q8_K
-            return (ne / 256) * 256;  // 256 bytes per super-block
+            return ((ne + 255) / 256) * 256;  // 256 bytes per super-block
         case 16:                      // IQ2_XXS
-            return (ne / 256) * 32;   // 32 bytes per super-block
+            return ((ne + 255) / 256) * 32;   // 32 bytes per super-block
         default:
             // Unknown type, assume F32
             printf("[RawrXD] Unknown tensor type %u for %s, assuming F32\n", t.type, t.name.c_str());
@@ -2192,10 +2144,17 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
     size_t remainingSize = tensorDataSize;
     uint64_t currentOffset = t.offset;
 
-    // Determine element count
+    // Determine element count with overflow guard
     size_t ne = 1;
     for (auto d : t.dims)
+    {
+        if (d != 0 && ne > SIZE_MAX / d)
+        {
+            printf("[RawrXD] ERROR: LoadTensorAsync element count overflow for %s\n", t.name.c_str());
+            return;
+        }
         ne *= d;
+    }
 
     // Debug logging for large tensors
     if (tensorDataSize > 100 * 1024 * 1024)  // > 100 MB
@@ -2240,12 +2199,33 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
         const uint64_t windowStart = (currentOffset / apertureSize) * apertureSize;
         const uint64_t offsetInWindow = currentOffset - windowStart;
         const uint64_t bytesRemainingInWindow = (apertureSize > offsetInWindow) ? (apertureSize - offsetInWindow) : 0;
-        const uint64_t bytesRemainingInFile = m_fileSize - currentOffset;
+        const uint64_t bytesRemainingInFile = (currentOffset <= m_fileSize) ? (m_fileSize - currentOffset) : 0;
         const size_t bytesAvailableInWindow = static_cast<size_t>(
             std::min<uint64_t>(bytesRemainingInWindow, bytesRemainingInFile));
         
         size_t chunkSize = std::min(remainingSize, std::min(MAX_CHUNK_SIZE, bytesAvailableInWindow));
-        
+
+        // B016-C1: Align chunk size to quantized block boundary to prevent
+        // misaligned dequantization on subsequent chunks.
+        size_t blockAlign = 0;
+        switch (t.type)
+        {
+            case 2:   blockAlign = 18;  break; // Q4_0
+            case 8:   blockAlign = 34;  break; // Q8_0
+            case 10:  blockAlign = 84;  break; // Q2_K
+            case 11:  blockAlign = 110; break; // Q3_K
+            case 12:  blockAlign = 144; break; // Q4_K
+            case 13:  blockAlign = 176; break; // Q5_K
+            case 14:  blockAlign = 210; break; // Q6_K
+            default:  break;
+        }
+        if (blockAlign > 0 && chunkSize > 0)
+        {
+            chunkSize = (chunkSize / blockAlign) * blockAlign;
+            if (chunkSize == 0)
+                chunkSize = blockAlign; // minimum one full block
+        }
+
         // Debug: log chunk calculation details (always for first iteration, or if chunkSize is 0)
         if (loopIteration == 1 || chunkSize == 0 || remainingSize > 100 * 1024 * 1024)
         {
@@ -2398,6 +2378,11 @@ void RawrXDModelLoader::LoadTensorAsync(Tensor& t)
 
 void RawrXDModelLoader::DequantAndUploadQ8_0(Tensor& t, void* blocks, size_t N)
 {
+    if (N > SIZE_MAX / sizeof(float))
+    {
+        printf("[RawrXD] DequantAndUploadQ8_0: N overflow\n");
+        return;
+    }
     size_t numBlocks = N / 32;
     t.cpuFloatData.resize(N);
 
@@ -2419,6 +2404,11 @@ void RawrXDModelLoader::DequantAndUploadQ8_0(Tensor& t, void* blocks, size_t N)
 
 void RawrXDModelLoader::DequantAndUploadQ4_K(Tensor& t, void* blocks, size_t N)
 {
+    if (N > SIZE_MAX / sizeof(float))
+    {
+        printf("[RawrXD] DequantAndUploadQ4_K: N overflow\n");
+        return;
+    }
     size_t numSuperBlocks = N / 256;
     t.cpuFloatData.resize(N);
 
@@ -2428,7 +2418,7 @@ void RawrXDModelLoader::DequantAndUploadQ4_K(Tensor& t, void* blocks, size_t N)
 #ifdef RAWR_ENABLE_ASM_KERNELS
         Dequant_Q4_K(ptr, &t.cpuFloatData[b * 256]);
 #else
-        // Q4_K complex logic skipped here
+        DequantQ4K_Block(ptr, &t.cpuFloatData[b * 256]);
 #endif
         ptr += 144;  // BS_Q4_K
     }
@@ -2436,6 +2426,11 @@ void RawrXDModelLoader::DequantAndUploadQ4_K(Tensor& t, void* blocks, size_t N)
 
 void RawrXDModelLoader::DequantAndUploadQ4_0(Tensor& t, void* blocks, size_t N)
 {
+    if (N > SIZE_MAX / sizeof(float))
+    {
+        printf("[RawrXD] DequantAndUploadQ4_0: N overflow\n");
+        return;
+    }
     size_t numBlocks = N / 32;
     t.cpuFloatData.resize(N);
 
@@ -2518,15 +2513,14 @@ void RawrXDModelLoader::DequantChunkQ4_0(Tensor& t, void* blocks, size_t chunkEl
     {
         // Read fp16 scale (first 2 bytes of block)
         uint16_t scale_bits = *(uint16_t*)ptr;
-        float scale = 1.0f; // Simplified: would need fp16->fp32 conversion
-        (void)scale_bits;
+        float scale = f16_to_f32(scale_bits);  // B016-C4: use actual scale, not 1.0f
 
         // Dequantize 32 values from 16 bytes of nibbles
         for (int j = 0; j < 16; j++)
         {
             uint8_t byte = ptr[2 + j];
-            float v0 = (float)((int)(byte & 0x0F) - 8);
-            float v1 = (float)((int)(byte >> 4) - 8);
+            float v0 = (float)((int)(byte & 0x0F) - 8) * scale;
+            float v1 = (float)((int)(byte >> 4) - 8) * scale;
             t.cpuFloatData[offset + b * 32 + j] = v0;
             t.cpuFloatData[offset + b * 32 + j + 16] = v1;
         }
@@ -2581,8 +2575,7 @@ void RawrXDModelLoader::DequantChunkQ4_K(Tensor& t, void* blocks, size_t chunkEl
 #ifdef RAWR_ENABLE_ASM_KERNELS
         Dequant_Q4_K(ptr, &t.cpuFloatData[offset + b * 256]);
 #else
-        // Q4_K complex logic - placeholder
-        memset(&t.cpuFloatData[offset + b * 256], 0, 256 * sizeof(float));
+        DequantQ4K_Block(ptr, &t.cpuFloatData[offset + b * 256]);
 #endif
         ptr += 144;  // BS_Q4_K
     }
@@ -2645,14 +2638,16 @@ void RawrXDModelLoader::DequantChunkQ5_K(Tensor& t, void* blocks, size_t chunkEl
 }
 
 RawrXDModelLoader::StreamingPin::StreamingPin(RawrXDModelLoader* loader, uint64_t offset, size_t size)
-    : m_loader(loader), m_size(size)
+    : m_loader(loader), m_size(size), m_offset(offset)
 {
     if (m_loader && m_size > 0)
     {
+        m_loader->markComputeRangeInUse(offset, size);
         m_loader->BeginStreamingRange(offset, size);
         m_base = m_loader->MapWindow(offset, size);
         if (!m_base)
         {
+            m_loader->unmarkComputeRangeInUse(offset, size);
             m_loader->EndStreamingRange();
             m_size = 0;
         }
@@ -2663,16 +2658,18 @@ RawrXDModelLoader::StreamingPin::~StreamingPin()
 {
     if (m_loader)
     {
+        m_loader->unmarkComputeRangeInUse(m_offset, m_size);
         m_loader->EndStreamingRange();
     }
 }
 
 RawrXDModelLoader::StreamingPin::StreamingPin(StreamingPin&& other) noexcept
-    : m_loader(other.m_loader), m_base(other.m_base), m_size(other.m_size)
+    : m_loader(other.m_loader), m_base(other.m_base), m_size(other.m_size), m_offset(other.m_offset)
 {
     other.m_loader = nullptr;
     other.m_base = nullptr;
     other.m_size = 0;
+    other.m_offset = 0;
 }
 
 RawrXDModelLoader::StreamingPin& RawrXDModelLoader::StreamingPin::operator=(StreamingPin&& other) noexcept
@@ -2681,14 +2678,17 @@ RawrXDModelLoader::StreamingPin& RawrXDModelLoader::StreamingPin::operator=(Stre
     {
         if (m_loader)
         {
+            m_loader->unmarkComputeRangeInUse(m_offset, m_size);
             m_loader->EndStreamingRange();
         }
         m_loader = other.m_loader;
         m_base = other.m_base;
         m_size = other.m_size;
+        m_offset = other.m_offset;
         other.m_loader = nullptr;
         other.m_base = nullptr;
         other.m_size = 0;
+        other.m_offset = 0;
     }
     return *this;
 }
@@ -2704,6 +2704,7 @@ void* RawrXDModelLoader::StreamingPin::GetPointer(uint64_t localOffset) const
 // Pins a contiguous tensor shard once, then dequantizes/consumes tiles inside that pinned range.
 bool RawrXDModelLoader::hasTensorNamed(const std::string& name) const
 {
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     return m_tensors.find(name) != m_tensors.end();
 }
 
@@ -2933,6 +2934,7 @@ bool RawrXDModelLoader::B015MaterializeDequantizedTensor(const std::string& tens
         return true;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     auto it = m_tensors.find(tensorName);
     if (it == m_tensors.end())
         return false;
@@ -2964,8 +2966,19 @@ bool RawrXDModelLoader::B015MaterializeDequantizedTensor(const std::string& tens
     const size_t totalQuantBytes = N * rowBytes;
     const size_t totalFloatBytes = N * K * sizeof(float);
 
-    // Allocate dequantized buffer
-    std::vector<float> dequantized(N * K);
+    // Allocate dequantized buffer with overflow guard
+    if (N > 0 && K > SIZE_MAX / N)
+    {
+        printf("[RawrXD] B015MaterializeDequantizedTensor: N*K overflow for %s\n", tensorName.c_str());
+        return false;
+    }
+    const size_t totalFloatElements = N * K;
+    if (totalFloatElements > SIZE_MAX / sizeof(float))
+    {
+        printf("[RawrXD] B015MaterializeDequantizedTensor: total float bytes overflow for %s\n", tensorName.c_str());
+        return false;
+    }
+    std::vector<float> dequantized(totalFloatElements);
 
     // Map and dequantize row-by-row
     const uint64_t maxFallbackBytes =
@@ -3014,7 +3027,7 @@ bool RawrXDModelLoader::B015MaterializeDequantizedTensor(const std::string& tens
 #ifdef RAWR_ENABLE_ASM_KERNELS
                         Dequant_Q4_K(const_cast<uint8_t*>(blockPtr), dstRow + b * 256);
 #else
-                        std::memset(dstRow + b * 256, 0, 256 * sizeof(float));
+                        DequantQ4K_Block(blockPtr, dstRow + b * 256);
 #endif
                         break;
                     case 13: DequantQ5K_Block(blockPtr, dstRow + b * 256); break;
@@ -3046,7 +3059,7 @@ bool RawrXDModelLoader::B015MaterializeDequantizedTensor(const std::string& tens
 #ifdef RAWR_ENABLE_ASM_KERNELS
                         Dequant_Q4_K(const_cast<uint8_t*>(blockPtr), dstRow + b * 256);
 #else
-                        std::memset(dstRow + b * 256, 0, 256 * sizeof(float));
+                        DequantQ4K_Block(blockPtr, dstRow + b * 256);
 #endif
                         break;
                     case 13: DequantQ5K_Block(blockPtr, dstRow + b * 256); break;
@@ -3091,12 +3104,6 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     }
     Tensor& t = it->second;
 
-    if (K % 256 != 0)
-    {
-        printf("[StreamingMatMul] K=%zu not divisible by 256 for tensor %s\n", K, name.c_str());
-        return false;
-    }
-
     size_t blockStride = 0;
     size_t blockElements = 0;  // Number of elements per block
     switch (t.type)
@@ -3134,6 +3141,14 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
         return false;
     }
 
+    // B016-C3: Validate K against actual block size, not hardcoded 256
+    if (K % blockElements != 0)
+    {
+        printf("[StreamingMatMul] K=%zu not divisible by %zu for tensor %s (type=%u)\n",
+               K, blockElements, name.c_str(), t.type);
+        return false;
+    }
+
     const size_t blocksPerRow = K / blockElements;
     const size_t rowBytes = blocksPerRow * blockStride;
 
@@ -3141,8 +3156,19 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     // (down-proj has K=28672 → 256 rows × 28672 floats × 4B = 28 MB; clamp to 64 rows = 7 MB)
     const size_t TILE_ROWS_MAX = 256;
     const size_t TILE_BUF_CAP_BYTES = 16ULL * 1024 * 1024;  // 16 MB
-    const size_t tile_rows_for_cap = TILE_BUF_CAP_BYTES / (K * sizeof(float));
+    if (K == 0 || K > SIZE_MAX / sizeof(float))
+    {
+        printf("[StreamingMatMul] K=%zu overflow for tile_buf sizing\n", K);
+        return false;
+    }
+    const size_t bytesPerRow = K * sizeof(float);
+    const size_t tile_rows_for_cap = TILE_BUF_CAP_BYTES / bytesPerRow;
     const size_t TILE_ROWS = std::max<size_t>(1, std::min(TILE_ROWS_MAX, tile_rows_for_cap));
+    if (TILE_ROWS > SIZE_MAX / K)
+    {
+        printf("[StreamingMatMul] TILE_ROWS*K overflow for tile_buf\n");
+        return false;
+    }
     std::vector<float> tile_buf(TILE_ROWS * K);
 
     const uint64_t maxFallbackBytes =
@@ -3172,7 +3198,7 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
 #ifdef RAWR_ENABLE_ASM_KERNELS
                 Dequant_Q4_K(const_cast<uint8_t*>(src), dst);
 #else
-                std::memset(dst, 0, 256 * sizeof(float));
+                DequantQ4K_Block(src, dst);
 #endif
                 break;
             case 13:
@@ -3722,7 +3748,15 @@ void RawrXDModelLoader::UploadToGPU(Tensor& t)
         return;
     }
 
-    vkBindBufferMemory(m_device, t.gpuBuffer, t.gpuMemory, 0);
+    if (vkBindBufferMemory(m_device, t.gpuBuffer, t.gpuMemory, 0) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkBindBufferMemory failed for %s\n", t.name.c_str());
+        vkFreeMemory(m_device, t.gpuMemory, nullptr);
+        t.gpuMemory = VK_NULL_HANDLE;
+        vkDestroyBuffer(m_device, t.gpuBuffer, nullptr);
+        t.gpuBuffer = VK_NULL_HANDLE;
+        return;
+    }
     t.onGPU = true;
 
     printf("[RawrXD] Uploaded %s to GPU (%zu MB)\n", t.name.c_str(), dataSize / (1024 * 1024));
@@ -3871,15 +3905,19 @@ bool RawrXDModelLoader::ResolveBackendModeAndPreflight(const wchar_t* path, uint
 #ifdef RAWR_ENABLE_VULKAN
 void RawrXDModelLoader::UploadViaStaging(void* data, size_t size, VkBuffer dstBuffer)
 {
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory stagingBufferMemory = VK_NULL_HANDLE;
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
     bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    vkCreateBuffer(m_device, &bufferInfo, nullptr, &stagingBuffer);
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &stagingBuffer) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkCreateBuffer failed for staging buffer\n");
+        return;
+    }
 
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(m_device, stagingBuffer, &memRequirements);
@@ -3890,11 +3928,29 @@ void RawrXDModelLoader::UploadViaStaging(void* data, size_t size, VkBuffer dstBu
     allocInfo.memoryTypeIndex = FindMemoryType(
         memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    vkAllocateMemory(m_device, &allocInfo, nullptr, &stagingBufferMemory);
-    vkBindBufferMemory(m_device, stagingBuffer, stagingBufferMemory, 0);
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &stagingBufferMemory) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkAllocateMemory failed for staging buffer\n");
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        return;
+    }
 
-    void* mappedData;
-    vkMapMemory(m_device, stagingBufferMemory, 0, size, 0, &mappedData);
+    if (vkBindBufferMemory(m_device, stagingBuffer, stagingBufferMemory, 0) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkBindBufferMemory failed for staging buffer\n");
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        return;
+    }
+
+    void* mappedData = nullptr;
+    if (vkMapMemory(m_device, stagingBufferMemory, 0, size, 0, &mappedData) != VK_SUCCESS || !mappedData)
+    {
+        printf("[RawrXD] vkMapMemory failed for staging buffer\n");
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        return;
+    }
     // Fast-path: non-temporal AVX-512 stream to avoid cache pollution on large uploads.
     // Must be runtime-gated: AVX-512 is not universal on x64.
     if (size >= (256ULL * 1024ULL) && rawr_cpu_has_avx512())
@@ -3935,44 +3991,77 @@ void RawrXDModelLoader::UploadViaStaging(void* data, size_t size, VkBuffer dstBu
     if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
     {
         printf("[RawrXD] Failed to create transient command pool for upload\n");
-        // Fallback or fatal error
+        // Cleanup staging resources before return
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        return;
     }
-    else
+
+    VkCommandBufferAllocateInfo cmdAllocInfo{};
+    cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cmdAllocInfo.commandPool = commandPool;
+    cmdAllocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    if (vkAllocateCommandBuffers(m_device, &cmdAllocInfo, &commandBuffer) != VK_SUCCESS)
     {
-        VkCommandBufferAllocateInfo cmdAllocInfo{};
-        cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        cmdAllocInfo.commandPool = commandPool;
-        cmdAllocInfo.commandBufferCount = 1;
+        printf("[RawrXD] vkAllocateCommandBuffers failed\n");
+        vkDestroyCommandPool(m_device, commandPool, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        return;
+    }
 
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(m_device, &cmdAllocInfo, &commandBuffer);
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-        VkBufferCopy copyRegion{};
-        copyRegion.srcOffset = 0;
-        copyRegion.dstOffset = 0;
-        copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, stagingBuffer, dstBuffer, 1, &copyRegion);
-
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(queue);
-
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkBeginCommandBuffer failed\n");
         vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
         vkDestroyCommandPool(m_device, commandPool, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        return;
     }
+
+    VkBufferCopy copyRegion{};
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = 0;
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, stagingBuffer, dstBuffer, 1, &copyRegion);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkEndCommandBuffer failed\n");
+        vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
+        vkDestroyCommandPool(m_device, commandPool, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        return;
+    }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+    {
+        printf("[RawrXD] vkQueueSubmit failed\n");
+        vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
+        vkDestroyCommandPool(m_device, commandPool, nullptr);
+        vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+        vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+        return;
+    }
+
+    vkQueueWaitIdle(queue);
+
+    vkFreeCommandBuffers(m_device, commandPool, 1, &commandBuffer);
+    vkDestroyCommandPool(m_device, commandPool, nullptr);
 
     vkDestroyBuffer(m_device, stagingBuffer, nullptr);
     vkFreeMemory(m_device, stagingBufferMemory, nullptr);
@@ -3982,6 +4071,7 @@ void RawrXDModelLoader::UploadViaStaging(void* data, size_t size, VkBuffer dstBu
 
 int64_t RawrXDModelLoader::CalculateVRAMUsage()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     uint64_t total_bytes = 0;
 
     for (const auto& entry : m_tensors)
@@ -4023,14 +4113,14 @@ int64_t RawrXDModelLoader::CalculateVRAMUsage()
                         break;
                     case 2:  // Q4_0
                     case 3:  // Q4_1
-                        tensor_bytes = (elements / 32) * 18;
+                        tensor_bytes = ((elements + 31) / 32) * 18;
                         break;
                     case 8:  // Q8_0
-                        tensor_bytes = (elements / 32) * 34;
+                        tensor_bytes = ((elements + 31) / 32) * 34;
                         break;
                     case 12:  // Q4_K
                     case 16:  // Q4_K variant
-                        tensor_bytes = (elements / 256) * 144;
+                        tensor_bytes = ((elements + 255) / 256) * 144;
                         break;
                     default:
                         tensor_bytes = elements;
@@ -4056,6 +4146,7 @@ int64_t RawrXDModelLoader::CalculateVRAMUsage()
 
 std::vector<TensorFileSpan> RawrXDModelLoader::listTensorFileSpans() const
 {
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     std::vector<TensorFileSpan> out;
     out.reserve(m_tensors.size());
     for (const auto& kv : m_tensors)
@@ -4069,6 +4160,7 @@ std::vector<TensorFileSpan> RawrXDModelLoader::listTensorFileSpans() const
 
 float* RawrXDModelLoader::GetTensor(const std::string& name)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     if (m_tensors.find(name) == m_tensors.end())
         return nullptr;
     Tensor& t = m_tensors[name];
@@ -4077,7 +4169,14 @@ float* RawrXDModelLoader::GetTensor(const std::string& name)
 
     size_t ne = 1;
     for (auto d : t.dims)
+    {
+        if (d != 0 && ne > SIZE_MAX / d)
+        {
+            printf("[RawrXD] ERROR: GetTensor element count overflow for %s\n", name.c_str());
+            return nullptr;
+        }
         ne *= d;
+    }
 
     // WORKAROUND: Force eager loading for token_embd.weight to avoid lazy load hang
     // SAFETY: Only apply to F32 tensors. Non-F32 types (Q4_0, Q4_K, etc.) must go
@@ -4173,6 +4272,7 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
     if (!out)
         return false;
 
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     auto it = m_tensors.find(name);
     if (it == m_tensors.end())
         return false;
@@ -4181,9 +4281,17 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
     if (t.dims.size() < 2)
         return false;
 
-    const size_t rowWidth = static_cast<size_t>(t.dims[0]);
-    const size_t rowCount = static_cast<size_t>(t.dims[1]);
-    if (cols != rowWidth || rowIndex >= rowCount)
+    // B016-C2: dims[0] is row count (N), dims[1] is row width (K)
+    const size_t rowCount = static_cast<size_t>(t.dims[0]);
+    const size_t rowWidth = static_cast<size_t>(t.dims[1]);
+
+    // Normal orientation: [rowCount, rowWidth] where cols == rowWidth
+    bool normalOrientation = (cols == rowWidth && rowIndex < rowCount);
+    // Transposed orientation: [rowWidth, rowCount] where cols == rowCount
+    // This occurs for token_embd.weight shaped [hidden_dim, vocab_size]
+    bool transposedOrientation = (cols == rowCount && rowIndex < rowWidth);
+
+    if (!normalOrientation && !transposedOrientation)
         return false;
 
     if (t.type == 0)
@@ -4191,7 +4299,18 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
         float* full = GetTensor(name);
         if (!full)
             return false;
-        std::memcpy(out, full + rowIndex * rowWidth, rowWidth * sizeof(float));
+        if (normalOrientation)
+        {
+            std::memcpy(out, full + rowIndex * rowWidth, rowWidth * sizeof(float));
+        }
+        else // transposedOrientation
+        {
+            // Extract column `rowIndex`: out[j] = full[j * rowWidth + rowIndex]
+            for (size_t j = 0; j < rowCount; ++j)
+            {
+                out[j] = full[j * rowWidth + rowIndex];
+            }
+        }
         return true;
     }
 
@@ -4217,6 +4336,21 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
         if (!full)
             return false;
         std::memcpy(out, full + rowIndex * rowWidth, rowWidth * sizeof(float));
+        return true;
+    }
+
+    // For transposed orientation with K-quant types, fall back to full materialization
+    // then extract the column. Full dequant is safer than trying to extract a column
+    // from interleaved K-quant block layouts.
+    if (transposedOrientation)
+    {
+        float* full = GetTensor(name);
+        if (!full)
+            return false;
+        for (size_t j = 0; j < rowCount; ++j)
+        {
+            out[j] = full[j * rowWidth + rowIndex];
+        }
         return true;
     }
 
@@ -4250,7 +4384,7 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
 #ifdef RAWR_ENABLE_ASM_KERNELS
                 Dequant_Q4_K(ptr, out + b * 256);
 #else
-                std::memset(out + b * 256, 0, 256 * sizeof(float));
+                DequantQ4K_Block(ptr, out + b * 256);
 #endif
                 break;
             default:
@@ -4266,6 +4400,7 @@ bool RawrXDModelLoader::GetTensorRow(const std::string& name, size_t rowIndex, f
 
 void RawrXDModelLoader::ReleaseTensor(const std::string& name)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
     auto it = m_tensors.find(name);
     if (it == m_tensors.end())
         return;
@@ -4391,23 +4526,6 @@ void RawrXDModelLoader::DemonstrateSovereignCapabilities()
 
     printf("\n");
 
-    // 4. Test Sovereign Interceptor Policy Bypass
-    printf("🔬 TESTING SOVEREIGN INTERCEPTOR...\n");
-    if (g_sovereign_interceptor.ApplyPolicyBypass())
-    {
-        printf("  ✅ Policy Gate Bypass: APPLIED\n");
-        printf("     No-Refusal mode: ACTIVE\n");
-        printf("     Agent Pane: UNLOCKED\n");
-        printf("     Swarm Mode: ENABLED\n");
-    }
-    else
-    {
-        printf("  ❌ Policy Gate Bypass: FAILED\n");
-        printf("     Check if Win32IDE.exe is running\n");
-    }
-
-    printf("\n");
-
     // 5. Sovereign Status Summary
     printf("╔══════════════════════════════════════════════════════════════════════════════╗\n");
     printf("║                          SOVEREIGN STATUS SUMMARY                           ║\n");
@@ -4415,7 +4533,6 @@ void RawrXDModelLoader::DemonstrateSovereignCapabilities()
     printf("║ Memory Bypass:     %-58s ║\n", pVirtualAlloc2 ? "✅ ACTIVE (36GB+ models supported)" : "❌ INACTIVE");
     printf("║ AVX-512 VPOPCNT:   %-58s ║\n", "✅ ACTIVE (0.8-bit reconstruction)");
     printf("║ Swarm Chaining:    %-58s ║\n", "✅ ACTIVE (2000+ TPS ready)");
-    printf("║ Policy Bypass:     %-58s ║\n", "✅ ACTIVE (No-Refusal mode)");
     printf("║ Sovereignty Level: %-58s ║\n", "🛡️  MAXIMUM (Hive-Mind Operational)");
     printf("╚══════════════════════════════════════════════════════════════════════════════╝\n");
     printf("\n");

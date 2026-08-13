@@ -108,7 +108,22 @@ std::vector<float> B009_BatchedPrefill(
 
 } // namespace
 
+void PrintUsage() {
+    std::printf("Usage: b009_batched_prefill_certification [--quick]\n");
+    std::printf("  --quick   Run only T=1 and T=128 (fast smoke test)\n");
+    std::printf("Environment: RAWRXD_TEST_MODEL=path/to/model.gguf\n");
+}
+
 int main(int argc, char** argv) {
+    // Early-exit for --help before any model loading
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            PrintUsage();
+            return 0;
+        }
+    }
+
     const char* modelEnv = std::getenv("RAWRXD_TEST_MODEL");
     if (!modelEnv || !*modelEnv) {
         std::printf("SKIP: set RAWRXD_TEST_MODEL to run B009 certification\n");
@@ -146,6 +161,10 @@ int main(int argc, char** argv) {
     if (cfg.n_heads == 0) cfg.n_heads = 32;
     if (cfg.n_kv_heads == 0) cfg.n_kv_heads = cfg.n_heads;
 
+    // B015: Enable weight residency pool so batched GEMM can use the AVX-512 fast path.
+    // Without this, ExecuteLayerMatMulBatch falls through to scalar fallback.
+    cfg.weight_residency_pool_max_bytes = 512ULL * 1024 * 1024;
+
     RawrXDTransformer transformer;
     transformer.Initialize(nullptr, nullptr, cfg, &loader);
 
@@ -156,7 +175,10 @@ int main(int argc, char** argv) {
     // ========================================================================
     // Test prompts at different lengths
     // ========================================================================
-    const std::vector<int> prompt_lengths = {1, 3, 10, 32, 128};
+    bool quick_mode = (argc > 1 && std::string(argv[1]) == "--quick");
+    const std::vector<int> prompt_lengths = quick_mode
+        ? std::vector<int>{1, 128}
+        : std::vector<int>{1, 3, 10, 32, 128};
     const std::string base_prompt = "The quick brown fox jumps over the lazy dog. ";
 
     bool all_correctness_passed = true;
@@ -217,7 +239,41 @@ int main(int argc, char** argv) {
         });
 
         // -------------------------------------------------------------------
-        // Differential validation
+        // Execution-success guards before differential comparison
+        // -------------------------------------------------------------------
+        if (logits_b008.empty() && logits_b009.empty()) {
+            std::printf("  FATAL at length=%d: Both B008 and B009 produced empty outputs. "
+                        "Likely embedding lookup failure.\n", plen);
+            Record("B009-FATAL", "both outputs empty", false,
+                   std::string("T=") + std::to_string(plen));
+            all_correctness_passed = false;
+            continue;
+        }
+        if (logits_b008.empty()) {
+            std::printf("  FATAL at length=%d: B008 reference produced empty output.\n", plen);
+            Record("B008-FATAL", "reference output empty", false,
+                   std::string("T=") + std::to_string(plen));
+            all_correctness_passed = false;
+            continue;
+        }
+        if (logits_b009.empty()) {
+            std::printf("  FATAL at length=%d: B009 batched produced empty output.\n", plen);
+            Record("B009-FATAL", "batched output empty", false,
+                   std::string("T=") + std::to_string(plen));
+            all_correctness_passed = false;
+            continue;
+        }
+        if (logits_b008.size() != logits_b009.size()) {
+            std::printf("  FATAL at length=%d: Output size mismatch B008=%zu B009=%zu\n",
+                        plen, logits_b008.size(), logits_b009.size());
+            Record("B009-SIZE", "output size mismatch", false,
+                   std::string("T=") + std::to_string(plen));
+            all_correctness_passed = false;
+            continue;
+        }
+
+        // -------------------------------------------------------------------
+        // Differential validation (only reached if both outputs are valid)
         // -------------------------------------------------------------------
         float max_diff = 0.0f, max_rel_diff = 0.0f;
         bool match = LogitsMatch(logits_b008, logits_b009, max_diff, max_rel_diff);
