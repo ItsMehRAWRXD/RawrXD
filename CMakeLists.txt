@@ -1442,6 +1442,7 @@ set(SOURCES
     # src/core/unlinked_symbols_batch_010.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/core/unlinked_symbols_batch_011.cpp
     src/core/unlinked_symbols_batch_012.cpp
+    # src/core/unlinked_symbols_batch_022.cpp  # moved to WIN32IDE_SOURCES
     # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
     
     # Batch 018-020: AgentOllamaClient, Win32IDE methods, Sovereign subsystem, Camellia256, Watchdog, Performance
@@ -3747,6 +3748,16 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_DecompilerView.cpp
         src/win32app/Win32IDE_NativePipeline.cpp
         src/win32app/Win32IDE_ModelAnatomy.cpp
+        src/sampling/advanced_sampler.cpp
+        src/runtime/RawrRuntime.cpp
+        src/compression/zlib_runtime_loader.cpp
+        src/deep2/Deep2APIServer.cpp
+        src/deep2/production/Deep2ProductionRuntime.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/inference/NegativeSpaceProfiler.cpp
+        src/asm/TreeAttention_Fused_VAL038.asm
+        src/asm/softmax_lut_avx512.asm
         Ship/RawrXD_AutonomousAgenticPipeline.cpp
         Ship/RawrXD_AgentCoordinator.cpp
 

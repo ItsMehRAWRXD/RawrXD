@@ -132,7 +132,7 @@ static void appendStreamerPostLoadCheck(Win32IDE* ide, const std::string& ggufPa
         return;
     }
 
-    const SovereignConfig& cfg = GetSovereignConfig();
+    const SovereignIDEConfig& cfg = GetSovereignConfig();
     RawrXDModelLoader loader;
     loader.SetSilencePrivilegeWarnings(cfg.silence_privilege_warnings);
     loader.SetPrefetchEnabled(cfg.model_prefetch_enabled);

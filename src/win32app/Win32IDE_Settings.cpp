@@ -56,7 +56,7 @@ struct TabState
     bool is_dirty = false;
 };
 
-struct SovereignConfig
+struct SovereignIDEConfig
 {
     std::vector<std::wstring> recent_files;
     std::map<std::wstring, std::wstring> keybindings;
@@ -74,14 +74,14 @@ struct SovereignConfig
 };
 
 // Forward declarations
-bool LoadSettingsSovereign(SovereignConfig& config);
+bool LoadSettingsSovereign(SovereignIDEConfig& config);
 
 // Sovereign Settings Schema
-static SovereignConfig g_sovereign_config;
+static SovereignIDEConfig g_sovereign_config;
 static const std::filesystem::path SETTINGS_FILE = L"RawrXD_Settings.sovereign";
 
 // ZMM Signature Generation (Vector 4 hardware attestation)
-__m512i GenerateZMMSignature(const SovereignConfig& config)
+__m512i GenerateZMMSignature(const SovereignIDEConfig& config)
 {
     // Compute hardware-rooted signature over config data
     // Use AVX-512 to hash critical fields
@@ -110,7 +110,7 @@ __m512i GenerateZMMSignature(const SovereignConfig& config)
 }
 
 // Verify ZMM Signature (tamper detection)
-bool VerifyZMMSignature(const SovereignConfig& config)
+bool VerifyZMMSignature(const SovereignIDEConfig& config)
 {
     __m512i computed = GenerateZMMSignature(config);
     __mmask64 mask = _mm512_cmpeq_epi64_mask(config.zmm_signature, computed);
@@ -118,12 +118,12 @@ bool VerifyZMMSignature(const SovereignConfig& config)
 }
 
 // WSSR Config Recovery (<50ms sovereign restoration)
-void WSSR_ConfigRecovery(SovereignConfig& config)
+void WSSR_ConfigRecovery(SovereignIDEConfig& config)
 {
     OutputDebugStringA("[WSSR_ConfigRecovery] ENTER\n");
     fileTrace("[WSSR_ConfigRecovery] ENTER");
     // Reset to sovereign defaults on corruption
-    config = SovereignConfig();
+    config = SovereignIDEConfig();
     config.zmm_signature = GenerateZMMSignature(config);
     OutputDebugStringA("[WSSR_ConfigRecovery] DONE\n");
     fileTrace("[WSSR_ConfigRecovery] DONE");
@@ -148,7 +148,7 @@ void from_json(const nlohmann::json& j, TabState& ts)
     ts.is_dirty = j.at("is_dirty").get<bool>();
 }
 
-void to_json(nlohmann::json& j, const SovereignConfig& config)
+void to_json(nlohmann::json& j, const SovereignIDEConfig& config)
 {
     j = nlohmann::json::object();
     j["recent_files"] = nlohmann::json::array();
@@ -182,7 +182,7 @@ void to_json(nlohmann::json& j, const SovereignConfig& config)
     }
 }
 
-void from_json(const nlohmann::json& j, SovereignConfig& config)
+void from_json(const nlohmann::json& j, SovereignIDEConfig& config)
 {
     config.recent_files.clear();
     for (const auto& rf : j.at("recent_files"))
@@ -226,7 +226,7 @@ void from_json(const nlohmann::json& j, SovereignConfig& config)
 }
 
 // Persistence with Sovereign Integrity
-bool SaveSettingsSovereign(const SovereignConfig& config)
+bool SaveSettingsSovereign(const SovereignIDEConfig& config)
 {
     OutputDebugStringA("[SaveSettingsSovereign] ENTER\n");
     fileTrace("[SaveSettingsSovereign] ENTER");
@@ -258,7 +258,7 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
         std::filesystem::rename(temp_file, SETTINGS_FILE);
 
         // Verify written signature
-        SovereignConfig verify_config;
+        SovereignIDEConfig verify_config;
         if (!LoadSettingsSovereign(verify_config))
             return false;
 
@@ -270,7 +270,7 @@ bool SaveSettingsSovereign(const SovereignConfig& config)
     }
 }
 
-bool LoadSettingsSovereign(SovereignConfig& config)
+bool LoadSettingsSovereign(SovereignIDEConfig& config)
 {
     OutputDebugStringA("[LoadSettingsSovereign] ENTER\n");
     fileTrace("[LoadSettingsSovereign] ENTER");
@@ -368,7 +368,7 @@ bool LoadSettingsSovereign(SovereignConfig& config)
 }
 
 // Public API
-const SovereignConfig& GetSovereignConfig()
+const SovereignIDEConfig& GetSovereignConfig()
 {
     static bool loaded = false;
     if (!loaded)
@@ -379,7 +379,7 @@ const SovereignConfig& GetSovereignConfig()
     return g_sovereign_config;
 }
 
-bool UpdateSovereignConfig(const SovereignConfig& new_config)
+bool UpdateSovereignConfig(const SovereignIDEConfig& new_config)
 {
     g_sovereign_config = new_config;
     g_sovereign_config.zmm_signature = GenerateZMMSignature(g_sovereign_config);
@@ -458,7 +458,7 @@ void Win32IDE::loadSettings()
 
 void Win32IDE::saveSettings()
 {
-    SovereignConfig config = GetSovereignConfig();
+    SovereignIDEConfig config = GetSovereignConfig();
 
     // Map IDESettings to SovereignConfig (partial)
     config.theme = static_cast<EditorTheme>(m_settings.themeId);

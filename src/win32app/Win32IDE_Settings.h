@@ -23,7 +23,7 @@ struct TabState
     uint32_t cursor_column = 0;
     bool is_dirty = false;
 };
-struct SovereignConfig
+struct SovereignIDEConfig
 {
     // Vector 4 ZMM Signature (512-bit hardware-rooted integrity)
     __m512i zmm_signature;
@@ -50,7 +50,7 @@ struct SovereignConfig
 };
 
 // Public API declarations
-const SovereignConfig& GetSovereignConfig();
-bool UpdateSovereignConfig(const SovereignConfig& new_config);
+const SovereignIDEConfig& GetSovereignConfig();
+bool UpdateSovereignConfig(const SovereignIDEConfig& new_config);
 void HotReloadSettings();
 void SettingsWatchdog();
