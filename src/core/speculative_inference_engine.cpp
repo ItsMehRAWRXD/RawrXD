@@ -269,7 +269,7 @@ void SelfImprovementEngine::adapt_weights(MoEModel& model) {
     
     // Count expert usage from recent feedback
     int expert_usage[MOE_EXPERTS] = {0};
-    int total_samples = std::min((int)feedback_window_.size(), FEEDBACK_WINDOW_SIZE);
+    int total_samples = (std::min)((int)feedback_window_.size(), FEEDBACK_WINDOW_SIZE);
     
     for (int i = 0; i < total_samples; i++) {
         // Determine which experts were active for this sample
@@ -821,7 +821,9 @@ int SpeculativeInferenceEngine::generate(std::vector<int>& output,
     }
     
     double t_end = get_time_ms();
-    total_time_ms_ += (t_end - t_start);
+    double elapsed = t_end - t_start;
+    double current = total_time_ms_.load();
+    while (!total_time_ms_.compare_exchange_weak(current, current + elapsed)) {}
     
     return generated;
 }
@@ -887,7 +889,7 @@ uint64_t SpeculativeInferenceEngine::get_total_tokens_generated() const {
 }
 
 void SpeculativeInferenceEngine::set_gamma(int gamma) {
-    gamma_ = std::max(1, std::min(gamma, GAMMA_MAX));
+    gamma_ = (std::max)(1, (std::min)(gamma, GAMMA_MAX));
 }
 
 int SpeculativeInferenceEngine::get_optimal_gamma() const {
