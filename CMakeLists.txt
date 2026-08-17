@@ -1334,6 +1334,8 @@ set(SOURCES
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
     src/core/rawrxd_linker_closure.cpp
+    # src/infinite/InfinitePerfectionEngine.cpp  # excluded: 100+ compilation errors
+    # src/swarm/SovereignSwarm.cpp  # excluded: large file, use linker stubs instead
     # src/core/rawrxd_subsystem_api_impl.cpp  # excluded: compilation errors, use rawrxd_subsystem_api.cpp instead
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_stubs.cpp
@@ -2198,14 +2200,49 @@ set(RAWR_ENGINE_SOURCES ${SOURCES})
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
     src/core/rawrxd_subsystem_api.cpp
+    src/core/auto_feature_registry.cpp
     src/lsp/RawrXD_LSPServer.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
+    # Swarm files that reference symbols not available in RawrEngine target
+    src/swarm/InfinitePerfectionTelemetry.cpp
+    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
+    src/swarm/TelemetryDashboardServer.cpp
+    src/swarm/IDEIntegration.cpp
+    src/swarm/LearningSimulator.cpp
+    src/agentic_agent_coordinator.cpp
     # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
     src/core/streaming_orchestrator.cpp
     src/core/analyzer_distiller.cpp
     # Remove streaming_inference_engine.cpp - references KernelArbiter and Vulkan APIs not available in RawrEngine
     src/ai/streaming_inference_engine.cpp
     src/ai/speculative_tree_attention_bridge.cpp
+    # Remove unified_command_dispatch.cpp and agentic_transaction.cpp - reference voice command handlers not in RawrEngine
+    src/core/unified_command_dispatch.cpp
+    src/agentic/agentic_transaction.cpp
+    # Remove files referencing SubsystemRegistry (not available in RawrEngine)
+    src/agentic/ToolRegistry.cpp
+    src/core/feature_handlers.cpp
+    src/agentic/AgentOrchestrator.cpp
+    # Remove model_config.cpp - references OllamaClient which is not linked in RawrEngine
+    src/model_config.cpp
+    # Remove LSP providers referencing direct_read (byte_level_hotpatcher.cpp excluded)
+    src/lsp/hotpatch_symbol_provider.cpp
+    src/lsp/gguf_diagnostic_provider.cpp
+    # Remove quantum_agent_orchestrator.cpp - references GPUDispatchGate which has no implementation
+    src/agent/quantum_agent_orchestrator.cpp
+    # Remove unified_hotpatch_manager.cpp - references patch_bytes/search_and_patch_bytes from excluded byte_level_hotpatcher.cpp
+    src/core/unified_hotpatch_manager.cpp
+    # Remove RawrXD_AgentLoop.cpp and DiskRecoveryToolHandler.cpp - reference AgentToolRegistry from excluded ToolRegistry.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/DiskRecoveryToolHandler.cpp
+    # Remove files referencing UnifiedHotpatchManager (unified_hotpatch_manager.cpp excluded above)
+    src/core/iterative_tensor_traversal.cpp
+    src/core/execution_scheduler.cpp
+    src/cli/agentic_decision_tree.cpp
+    src/core/agentic_task_graph.cpp
+    src/core/auto_repair_orchestrator.cpp
+    # Remove cli_autonomy_loop.cpp - references AgenticDecisionTree from excluded agentic_decision_tree.cpp
+    src/cli/cli_autonomy_loop.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -2354,7 +2391,8 @@ list(APPEND RAWR_ENGINE_SOURCES
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
 
     # ═══════════════════════════════════════════════════════════════════
-    # Kimi K2.6 300-Agent Swarm Architecture
+    # Kimi K2.6 300-Agent Swarm Architecture (subset — excluded files
+    # reference symbols not available in RawrEngine target)
     # ═══════════════════════════════════════════════════════════════════
     src/swarm/SwarmOrchestrator.cpp
     src/swarm/KimiSwarmOrchestrator.cpp
@@ -2367,11 +2405,11 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/swarm/DeepContextManager.cpp
     src/swarm/OpenClawBridge.cpp
     src/swarm/LegacyRefactorModule.cpp
-    src/swarm/IDEIntegration.cpp
-    src/swarm/InfinitePerfectionTelemetry.cpp
-    src/swarm/InfinitePerfectionTelemetrySQLite.cpp
-    src/swarm/TelemetryDashboardServer.cpp
-    src/swarm/LearningSimulator.cpp
+    # src/swarm/IDEIntegration.cpp           # excluded: references ReviewerAgents methods not in RawrEngine
+    # src/swarm/InfinitePerfectionTelemetry.cpp    # excluded: references InfinitePerfectionEngine not in RawrEngine
+    # src/swarm/InfinitePerfectionTelemetrySQLite.cpp # excluded: same
+    # src/swarm/TelemetryDashboardServer.cpp       # excluded: same
+    # src/swarm/LearningSimulator.cpp              # excluded: references Sovereign::SelfModelRegistry not in RawrEngine
 )
 
 # =============================================================================

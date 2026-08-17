@@ -1,0 +1,21 @@
+# HELP agentic_observability_total_logs Total number of written logs
+# TYPE agentic_observability_total_logs counter
+agentic_observability_total_logs 3
+# HELP agentic_observability_total_metrics Total number of metrics recorded
+# TYPE agentic_observability_total_metrics counter
+agentic_observability_total_metrics 11
+# HELP test_counter Auto-generated metric for test.counter
+# TYPE test_counter gauge
+test_counter 5
+# HELP test_timing_duration Auto-generated metric for test.timing_duration
+# TYPE test_timing_duration gauge
+test_timing_duration 24
+# HELP test_latency_histogram Auto-generated metric for test.latency_histogram
+# TYPE test_latency_histogram gauge
+test_latency_histogram 22.3
+# HELP test_gauge Auto-generated metric for test.gauge
+# TYPE test_gauge gauge
+test_gauge 42
+# HELP memory_usage_bytes Auto-generated metric for memory_usage_bytes
+# TYPE memory_usage_bytes gauge
+memory_usage_bytes 6.0416e+06

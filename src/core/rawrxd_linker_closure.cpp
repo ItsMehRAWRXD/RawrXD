@@ -493,6 +493,10 @@ namespace swarm {
 // ============================================================================
 // 31. g_HasAVX512F / g_800B_Unlocked
 // ============================================================================
+// Global variables (must be extern "C" for ASM linkage)
+// ============================================================================
 
-bool g_HasAVX512F = false;
-bool g_800B_Unlocked = false;
+extern "C" {
+    bool g_HasAVX512F = false;
+    bool g_800B_Unlocked = false;
+}

@@ -5,6 +5,7 @@
 #include <random>
 #include <cstdio>
 #include <thread>
+#include <atomic>
 #include <cstdlib>
 
 #ifdef _WIN32
@@ -277,7 +278,10 @@ std::string ErrorRecoverySystem::recordError(const std::string& component, Error
     if (m_errorRecordedCb) {
         m_errorRecordedCb(error, m_errorRecordedUd);
     }
-    
+
+    // Update health immediately so getSystemHealth() reflects current state
+    updateSystemHealth();
+
     // Auto-recovery for critical errors — schedule deferred
     if (autoRecoveryEnabled && (severity == ErrorSeverity::Critical || severity == ErrorSeverity::Error)) {
         std::cout << "[ErrorRecoverySystem] Scheduling auto-recovery for " << error.errorId << std::endl;
@@ -1000,11 +1004,13 @@ void ErrorRecoverySystem::clearRecoveredErrors() {
 }
 
 std::string ErrorRecoverySystem::generateErrorId() {
+    static std::atomic<unsigned long long> s_counter{0};
     static std::mt19937 rng(static_cast<unsigned>(
         std::chrono::steady_clock::now().time_since_epoch().count()));
     auto msEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    return "error_" + std::to_string(msEpoch) + "_" + std::to_string(rng() % 10000);
+    unsigned long long seq = s_counter.fetch_add(1, std::memory_order_relaxed);
+    return "error_" + std::to_string(msEpoch) + "_" + std::to_string(seq) + "_" + std::to_string(rng() % 10000);
 }
 
 std::string ErrorRecoverySystem::errorSeverityToString(ErrorSeverity severity) const {

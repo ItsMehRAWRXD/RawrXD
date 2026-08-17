@@ -15,6 +15,8 @@
 #include <chrono>
 #include <memory>
 #include <functional>
+#include <thread>
+#include <atomic>
 #include <nlohmann/json.hpp>
 
 // ---------------------------------------------------------------------------
@@ -83,6 +85,7 @@ public:
     // Log callback
     using LogCallback = void(*)(const LogEntry& entry, void* userData);
     void setLogCallback(LogCallback cb, void* userData = nullptr) {
+        fprintf(stderr, "[DEBUG-AO] setLogCallback: this=%p cb=%p\n", (void*)this, (void*)cb);
         m_logCb = cb; m_logCbData = userData;
     }
 
@@ -199,6 +202,20 @@ public:
     std::string exportMetricsAsCsv() const;
     std::string exportTracesAsJson() const;
     std::string exportLogsAsJson() const;
+    std::string exportMetricsAsPrometheus() const;
+
+    // -----------------------------------------------------------------------
+    // Heartbeat Loop
+    // -----------------------------------------------------------------------
+    void startHeartbeatLoop();
+    void stopHeartbeatLoop();
+
+    // -----------------------------------------------------------------------
+    // Core Agent Metrics Hooks 
+    // -----------------------------------------------------------------------
+    void updateTokensPerSecond(float tps);
+    void updateAgentLoopIterationTime(float ms);
+    void updateMemoryUsage(size_t bytes);
 
     // -----------------------------------------------------------------------
     // Configuration
@@ -242,6 +259,11 @@ private:
 
     // Sampling
     double                  m_samplingRate = 1.0;
+
+    // Heartbeat
+    std::unique_ptr<std::thread> m_heartbeatThread;
+    std::atomic<bool>            m_heartbeatRunning{false};
+    void heartbeatWorker();
 
     // Callbacks
     LogCallback             m_logCb = nullptr;
