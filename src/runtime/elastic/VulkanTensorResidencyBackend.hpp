@@ -17,7 +17,9 @@
     #ifndef VK_VERSION_1_0
     typedef void* VkBuffer;
     typedef void* VkDeviceMemory;
+    #ifndef VK_NULL_HANDLE
     #define VK_NULL_HANDLE nullptr
+    #endif
     #endif
 #endif
 

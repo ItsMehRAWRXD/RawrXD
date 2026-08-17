@@ -546,6 +546,7 @@ if(NOT TARGET test_predictive_memory_subsystem AND EXISTS "${CMAKE_CURRENT_SOURC
         test_predictive_memory_subsystem.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/TensorExecutionRouter.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/StreamRouterAdapter.cpp
+        ${CMAKE_SOURCE_DIR}/src/runtime/Deep2ExecutionTelemetry.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/PlacementPolicy.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/ResidencyTracker.cpp
         ${CMAKE_SOURCE_DIR}/src/runtime/memory/WorkingSetPredictor.cpp
