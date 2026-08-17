@@ -974,6 +974,30 @@ int GGUFLoader::ConvertType(GGMLType ggmlType) {
     return (int)ggmlType;
 }
 
+RawrXD::QuantType GGUFLoader::ConvertGGMLType(GGMLType ggmlType) {
+    switch (ggmlType) {
+        case GGMLType::GGML_TYPE_F32:     return RawrXD::QuantType::F32;
+        case GGMLType::GGML_TYPE_F16:     return RawrXD::QuantType::F16;
+        case GGMLType::GGML_TYPE_Q4_0:    return RawrXD::QuantType::Q4_0;
+        case GGMLType::GGML_TYPE_Q4_1:    return RawrXD::QuantType::Q4_1;
+        case GGMLType::GGML_TYPE_Q5_0:    return RawrXD::QuantType::Q5_0;
+        case GGMLType::GGML_TYPE_Q5_1:    return RawrXD::QuantType::Q5_1;
+        case GGMLType::GGML_TYPE_Q8_0:    return RawrXD::QuantType::Q8_0;
+        case GGMLType::GGML_TYPE_Q8_K:    return RawrXD::QuantType::Q8_1;
+        case GGMLType::GGML_TYPE_Q2_K:    return RawrXD::QuantType::Q2_K;
+        case GGMLType::GGML_TYPE_Q3_K:    return RawrXD::QuantType::Q3_K;
+        case GGMLType::GGML_TYPE_Q4_K:    return RawrXD::QuantType::Q4_K;
+        case GGMLType::GGML_TYPE_Q5_K:    return RawrXD::QuantType::Q5_K;
+        case GGMLType::GGML_TYPE_Q6_K:    return RawrXD::QuantType::Q6_K;
+        case GGMLType::GGML_TYPE_IQ2_XXS: return RawrXD::QuantType::IQ2_XXS;
+        case GGMLType::GGML_TYPE_IQ2_XS:  return RawrXD::QuantType::IQ2_XS;
+        case GGMLType::GGML_TYPE_IQ3_XXS: return RawrXD::QuantType::IQ3_XXS;
+        case GGMLType::GGML_TYPE_IQ4_NL:  return RawrXD::QuantType::IQ4_NL;
+        case GGMLType::GGML_TYPE_IQ4_XS:  return RawrXD::QuantType::IQ4_XS;
+        default:                            return RawrXD::QuantType::UNKNOWN;
+    }
+}
+
 const char* GGUFLoader::GetTypeName(GGMLType type) {
     switch (type) {
         case GGMLType::GGML_TYPE_F32: return "F32";

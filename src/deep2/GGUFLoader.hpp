@@ -250,6 +250,7 @@ public:
     static GGUFLoadResult LoadMetadata(const char* filepath);
     static int ConvertType(GGMLType ggmlType);
     static const char* GetTypeName(GGMLType type);
+    static RawrXD::QuantType ConvertGGMLType(GGMLType ggmlType);
     static size_t CalculateTensorSize(const TensorInfo& tensor);
     static bool ValidateFile(const char* filepath, char* error = nullptr);
     
