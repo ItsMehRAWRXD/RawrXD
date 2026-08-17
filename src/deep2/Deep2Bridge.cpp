@@ -3,6 +3,8 @@
 // ============================================================================
 
 #include "Deep2Bridge.hpp"
+#include "Deep2Engine.h"
+#include "Tokenizer.hpp"
 #include "../runtime/RawrRuntime.hpp"
 #include <cstdio>
 #include <chrono>
@@ -21,11 +23,23 @@ bool Deep2Bridge::Initialize(const EngineConfig& config) {
 
     RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge initializing...");
 
-    // In production, this would:
-    // 1. Initialize Deep2Engine
-    // 2. Detect GPU backends
-    // 3. Allocate KV cache
-    // 4. Warm up thread pool
+    // Create and initialize the real Deep2Engine
+    m_engine = std::make_unique<Deep2::Deep2Engine>();
+
+    Deep2::EngineConfig deep2Cfg;
+    deep2Cfg.hiddenDim = 4096;
+    deep2Cfg.numLayers = 32;
+    deep2Cfg.numHeads = 32;
+    deep2Cfg.vocabSize = 32000;
+    deep2Cfg.maxSeqLen = static_cast<size_t>(config.contextSize);
+    deep2Cfg.useKVCache = config.useKVCache;
+
+    if (!m_engine->initialize(deep2Cfg)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Deep2Engine initialization failed");
+        m_engine.reset();
+        m_status = EngineStatus::Error;
+        return false;
+    }
 
     m_status = EngineStatus::Ready;
     m_sessionId = 1;
@@ -38,6 +52,7 @@ void Deep2Bridge::Shutdown() {
         CancelGeneration();
     }
     UnloadModel();
+    m_engine.reset();
     m_status = EngineStatus::Uninitialized;
     RawrRuntime::Get().Log(LogLevel::Info, "Deep2Bridge shutdown");
 }
@@ -47,10 +62,19 @@ bool Deep2Bridge::LoadModel(const char* path) {
         UnloadModel();
     }
 
+    if (!m_engine) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Cannot load model: engine not initialized");
+        return false;
+    }
+
     m_config.modelPath = path;
     RawrRuntime::Get().Log(LogLevel::Info, "Loading model...");
 
-    // In production: call Deep2Engine::loadWeights() / GGUF loader
+    if (!m_engine->loadModel(path)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Model load failed");
+        return false;
+    }
+
     m_modelLoaded = true;
     RawrRuntime::Get().Log(LogLevel::Info, "Model loaded");
     return true;
@@ -63,33 +87,53 @@ void Deep2Bridge::UnloadModel() {
 }
 
 bool Deep2Bridge::Generate(const char* prompt, TokenCallback onToken, ErrorCallback onError) {
-    if (!m_modelLoaded || m_generating) return false;
+    if (!m_modelLoaded || m_generating || !m_engine) return false;
 
     m_generating = true;
     m_status = EngineStatus::Generating;
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // In production: call Deep2Engine::generate()
-    // For now, simulate token generation
-    const char* testTokens[] = {"Hello", " from", " RawrXD", " Deep2", " engine", "."};
-    for (uint32_t i = 0; i < 6; ++i) {
-        if (!m_generating) break;
-        if (onToken) onToken(testTokens[i], i);
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // Tokenize the prompt
+    std::vector<int> promptTokens = m_engine->tokenize(prompt);
+    if (promptTokens.empty()) {
+        if (onError) onError("Failed to tokenize prompt");
+        m_generating = false;
+        m_status = EngineStatus::Ready;
+        return false;
     }
+
+    // Allocate output buffer
+    const size_t maxOutputLen = 256;
+    std::vector<int> outputTokens(maxOutputLen);
+    Deep2::InferenceStats stats{};
+
+    // Invoke the real Deep2Engine generation
+    size_t generated = m_engine->generate(
+        promptTokens.data(), promptTokens.size(),
+        outputTokens.data(), maxOutputLen,
+        &stats,
+        [&](int tokenId) -> bool {
+            if (!m_generating) return false; // cancelled
+            std::string tokenText = m_engine->detokenize(std::vector<int>{tokenId});
+            if (onToken) onToken(tokenText.c_str(), static_cast<uint32_t>(stats.tokensGenerated));
+            return true;
+        }
+    );
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    m_metrics.totalTokens += 6;
+    m_metrics.totalTokens += generated;
     m_metrics.totalTimeUs += elapsed.count();
-    m_metrics.tokensPerSecond = 6.0 / (elapsed.count() / 1000000.0);
-    m_metrics.avgLatencyMs = (m_metrics.avgLatencyMs + (elapsed.count() / 1000.0 / 6.0)) / 2.0;
+    if (elapsed.count() > 0) {
+        m_metrics.tokensPerSecond = static_cast<double>(generated) / (elapsed.count() / 1000000.0);
+        m_metrics.avgLatencyMs = static_cast<double>(elapsed.count() / 1000.0) / std::max<size_t>(generated, 1);
+    }
 
     m_generating = false;
     m_status = EngineStatus::Ready;
-    return true;
+    return generated > 0;
 }
 
 bool Deep2Bridge::GenerateStream(const char* prompt, TokenCallback onToken, ErrorCallback onError) {

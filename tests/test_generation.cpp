@@ -31,11 +31,14 @@ int main() {
     cfg.contextSize = 2048;
     cfg.temperature = 0.7f;
 
+    // Use a real GGUF model that exists in the repo
+    const char* kModelPath = "gemma3-1b-Q2_K.gguf";
+
     TEST("Bridge initialize", bridge.Initialize(cfg));
     TEST("Bridge status ready", bridge.GetStatus() == rawr::EngineStatus::Ready);
 
     // Test model loading
-    TEST("Bridge load model", bridge.LoadModel("test.gguf"));
+    TEST("Bridge load model", bridge.LoadModel(kModelPath));
     TEST("Bridge model loaded", bridge.IsModelLoaded());
 
     // Test generation
@@ -76,9 +79,18 @@ int main() {
     // Test RawrXDInferenceAdapter
     auto& adapter = rawr::RawrXDInferenceAdapter::Get();
     TEST("Adapter initialize", adapter.Initialize());
+    TEST("Adapter not model loaded after initialize", !adapter.IsModelLoaded());
 
     bool streamed = false;
-    TEST("Adapter generate", adapter.Generate("test prompt",
+    TEST("Adapter generate without model", !adapter.Generate("test prompt",
+        [&](const char*, uint32_t) { streamed = true; }));
+    TEST("Adapter no stream without model", !streamed);
+
+    TEST("Adapter load model", adapter.LoadModel(kModelPath));
+    TEST("Adapter model loaded", adapter.IsModelLoaded());
+
+    streamed = false;
+    TEST("Adapter generate with model", adapter.Generate("test prompt",
         [&](const char*, uint32_t) { streamed = true; }));
     TEST("Adapter streamed tokens", streamed);
 

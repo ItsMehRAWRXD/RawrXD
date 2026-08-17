@@ -9,7 +9,11 @@
 #include <cstdint>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
+
+// Forward declaration for the real engine
+namespace Deep2 { class Deep2Engine; }
 
 namespace rawr {
 
@@ -95,6 +99,9 @@ private:
     bool m_generating = false;
     uint32_t m_sessionId = 0;
     Metrics m_metrics = {};
+
+    // Real Deep2 inference engine instance
+    std::unique_ptr<Deep2::Deep2Engine> m_engine;
 };
 
 } // namespace rawr

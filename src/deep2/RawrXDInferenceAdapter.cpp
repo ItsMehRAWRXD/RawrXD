@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "RawrXDInferenceAdapter.hpp"
+#include "Deep2Bridge.hpp"
 #include "../runtime/RawrRuntime.hpp"
 #include <cstdio>
 #include <chrono>
@@ -19,12 +20,27 @@ RawrXDInferenceAdapter& RawrXDInferenceAdapter::Get() {
 
 bool RawrXDInferenceAdapter::Initialize() {
     RawrRuntime::Get().Log(LogLevel::Info, "InferenceAdapter initializing...");
-    RawrRuntime::Get().Log(LogLevel::Info, "InferenceAdapter ready");
+
+    // Initialize the real Deep2Bridge backend
+    EngineConfig cfg{};
+    cfg.contextSize = 2048;
+    cfg.useKVCache = true;
+    if (!Deep2Bridge::Get().Initialize(cfg)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Deep2Bridge initialization failed");
+        return false;
+    }
+
+    m_modelLoaded = false;
+    m_cancelled = false;
+    m_generating = false;
+
+    RawrRuntime::Get().Log(LogLevel::Info, "InferenceAdapter runtime ready");
     return true;
 }
 
 void RawrXDInferenceAdapter::Shutdown() {
     UnloadModel();
+    Deep2Bridge::Get().Shutdown();
     m_cancelled = false;
     m_generating = false;
 }
@@ -34,70 +50,64 @@ bool RawrXDInferenceAdapter::LoadModel(const char* ggufPath) {
 
     RawrRuntime::Get().Log(LogLevel::Info, "Loading GGUF model...");
 
-    // Open GGUF via MASM reader
-    m_ggufHandle = gguf_reader_open(ggufPath);
-    if (!m_ggufHandle) {
-        RawrRuntime::Get().Log(LogLevel::Error, "Failed to open GGUF file");
+    if (!Deep2Bridge::Get().LoadModel(ggufPath)) {
+        RawrRuntime::Get().Log(LogLevel::Error, "Deep2Bridge failed to load model");
         return false;
     }
 
-    uint32_t numTensors = gguf_reader_num_tensors(m_ggufHandle);
-    RawrRuntime::Get().Log(LogLevel::Info, "GGUF opened");
-
-    // In production: iterate tensors, allocate memory, load weights
     m_modelLoaded = true;
+    RawrRuntime::Get().Log(LogLevel::Info, "Model loaded via Deep2Bridge");
     return true;
 }
 
 void RawrXDInferenceAdapter::UnloadModel() {
-    if (m_ggufHandle) {
-        gguf_reader_close(m_ggufHandle);
-        m_ggufHandle = nullptr;
-    }
+    Deep2Bridge::Get().UnloadModel();
     m_modelLoaded = false;
     m_stats = {};
 }
 
 bool RawrXDInferenceAdapter::Generate(const char* prompt, TokenStreamCallback onToken) {
-    if (!m_modelLoaded || m_generating) return false;
+    if (!m_modelLoaded || m_generating) {
+        RawrRuntime::Get().Log(LogLevel::Warn,
+            "Generate requested without a GGUF model bound to the adapter");
+        return false;
+    }
 
     m_generating = true;
     m_cancelled = false;
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    // Tokenize prompt via MASM BPE
-    uint32_t tokens[2048];
-    uint32_t numTokens = 0;
-    bpe_encode(prompt, tokens, &numTokens, 2048);
+    // Delegate generation to Deep2Bridge, which drives the real Deep2Engine
+    auto& bridge = Deep2Bridge::Get();
+    uint32_t tokenIndex = 0;
+    bool receivedAny = false;
 
-    // Run inference loop
-    // For each token: forward through transformer → sample → decode
-    for (uint32_t i = 0; i < 128 && !m_cancelled; ++i) {
-        // In production: full transformer forward pass
-        // transformer_block_forward(...)
-        // sampler_topk(...)
-        // bpe_decode(...)
-
-        // Simulate token generation
-        const char* sampleTokens[] = {
-            "Hello", " from", " RawrXD", " native", " inference", " engine", "."
-        };
-        if (i < 7 && onToken) {
-            onToken(sampleTokens[i], i);
+    bool ok = bridge.Generate(
+        prompt,
+        [&](const char* token, uint32_t /*index*/) {
+            receivedAny = true;
+            if (onToken) onToken(token, tokenIndex++);
+        },
+        [&](const char* msg) {
+            RawrRuntime::Get().Log(LogLevel::Error, msg);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
-    }
+    );
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-    m_stats.totalTokens += 7;
+    // Pull metrics from the bridge so stats reflect real engine output
+    auto bridgeMetrics = bridge.GetMetrics();
+    m_stats.totalTokens += bridgeMetrics.totalTokens;
     m_stats.totalTimeUs += elapsed.count();
-    m_stats.tokensPerSecond = 7.0 / (elapsed.count() / 1000000.0);
+    if (elapsed.count() > 0) {
+        m_stats.tokensPerSecond = static_cast<double>(bridgeMetrics.totalTokens)
+                                    / (elapsed.count() / 1000000.0);
+    }
 
     m_generating = false;
-    return true;
+    return ok && receivedAny;
 }
 
 // ============================================================================

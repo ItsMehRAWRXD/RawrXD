@@ -325,16 +325,8 @@ public:
     unsigned int GetLoadedCount() const { return 0; }
 };
 
-class RawrXDInferenceAdapter {
-public:
-    static RawrXDInferenceAdapter& Get() {
-        static RawrXDInferenceAdapter inst;
-        return inst;
-    }
-    bool Initialize() { return true; }
-    void Shutdown() {}
-    bool Generate(const char*, std::function<void(const char*, unsigned int)>) { return true; }
-};
+// RawrXDInferenceAdapter — real implementation from src/deep2/RawrXDInferenceAdapter.cpp
+// (stub removed; real adapter now linked)
 
 } // namespace rawr
 

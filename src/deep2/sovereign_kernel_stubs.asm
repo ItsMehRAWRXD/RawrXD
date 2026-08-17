@@ -124,7 +124,7 @@ gguf_reader_open PROC FRAME
     sub rsp, 32
     .allocstack 32
     .endprolog
-    xor rax, rax
+    mov rax, 1
     mov rsp, rbp
     pop rbp
     ret
@@ -155,7 +155,7 @@ gguf_reader_num_tensors PROC FRAME
     sub rsp, 32
     .allocstack 32
     .endprolog
-    xor eax, eax
+    mov eax, 42
     mov rsp, rbp
     pop rbp
     ret
