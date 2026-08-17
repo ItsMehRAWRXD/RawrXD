@@ -732,6 +732,63 @@ if(RAWRXD_BUILD_CLI)
             set_property(TARGET elastic_path_validation_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
         endif()
         message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
+
+        # =====================================================================
+        # fused_qkv_gguf_validation: Full GGUF parse → elastic index → fused
+        # QKV execution gate. Exercises all new code paths.
+        # =====================================================================
+        add_executable(fused_qkv_gguf_validation
+            tests/fused_qkv_gguf_validation.cpp
+        )
+        set_target_properties(fused_qkv_gguf_validation PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+        target_include_directories(fused_qkv_gguf_validation PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/inference
+            ${CMAKE_SOURCE_DIR}/src/engine
+            ${CMAKE_SOURCE_DIR}/src/core
+            ${CMAKE_SOURCE_DIR}/src/codec
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/masm
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        if(MSVC)
+            target_link_directories(fused_qkv_gguf_validation PRIVATE ${_RAWR_MSVC_LIBPATHS})
+            foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+                if(EXISTS "${_rawr_lib}")
+                    target_link_options(fused_qkv_gguf_validation PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+                endif()
+            endforeach()
+        endif()
+        target_link_libraries(fused_qkv_gguf_validation PRIVATE
+            InferenceEngine
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib
+            user32.lib
+            gdi32.lib
+            shell32.lib
+            ole32.lib
+            oleaut32.lib
+            uuid.lib
+            comdlg32.lib
+            advapi32.lib
+            version.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET fused_qkv_gguf_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET fused_qkv_gguf_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET fused_qkv_gguf_validation APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "fused_qkv_gguf_validation: Fused QKV + GGUF validation test configured")
     endif()
 
 endif()
@@ -3826,6 +3883,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
+    src/rawrxd_transformer_forwardbatch.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
     src/gguf_loader.cpp
@@ -3892,6 +3950,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/elastic/ElasticArchitectureDetector.cpp
     src/runtime/elastic/VulkanTensorResidencyBackend.cpp
     src/runtime/gguf_tensor_loader.cpp
+    tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)

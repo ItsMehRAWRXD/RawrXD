@@ -443,6 +443,7 @@ static void test_error_recovery_system() {
 
     TEST(attempt_recovery)
         ErrorRecoverySystem sys;
+        sys.setEndpointSwitchCb([](const std::string&, void*) {}, nullptr);
         std::string id = sys.recordError("Net", ErrorSeverity::Error,
                                           ErrorCategory::Network,
                                           "connection reset");
@@ -607,6 +608,7 @@ static void test_stress() {
 
     TEST(rapid_error_recording_handler)
         AgenticErrorHandler handler;
+        handler.setMaxErrorMemory(2000); // Ensure history retains all 1000 errors
         for (int i = 0; i < 1000; i++) {
             handler.recordError(ErrorType::ExecutionError,
                                 "error_" + std::to_string(i), "Stress");

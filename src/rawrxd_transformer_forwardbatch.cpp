@@ -3,7 +3,7 @@
 // Layer-outer loop for multi-token prompt processing.
 // ============================================================================
 #include "rawrxd_transformer.h"
-#include "tests/b009/b009b_batched_gemm.h"
+#include "../tests/b009/b009b_batched_gemm.h"
 #include <chrono>
 #include <cstdio>
 #include <cmath>

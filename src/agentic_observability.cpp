@@ -80,8 +80,8 @@ void AgenticObservability::log(
     const std::string& message,
     const nlohmann::json& context)
 {
-    // Apply sampling
-    if (SamplingRoll() > m_samplingRate) {
+    // Apply sampling (disabled when rate >= 1.0 for deterministic tests)
+    if (m_samplingRate < 1.0 && SamplingRoll() > m_samplingRate) {
         return;
     }
 

@@ -1849,6 +1849,9 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     m_registeredTensorIds.clear();
     m_execRouter.setMemoryManager(&m_memoryManager);
 
+    // Detect fused QKV (Qwen3.5, Phi-3, etc.)
+    DetectFusedQKV();
+
     // VX01: Initialize Vulkan GEMM dispatcher using inference-owned device
 #if RAWR_VULKAN_AVAILABLE
     if (device != VK_NULL_HANDLE) {
@@ -2069,6 +2072,91 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
             m_elasticEngine.reset();
         }
     }
+}
+
+// ============================================================================
+// Fused QKV Detection & Execution
+// ============================================================================
+void RawrXDTransformer::DetectFusedQKV()
+{
+    if (!loader)
+    {
+        m_modelHasFusedQKV = false;
+        return;
+    }
+    // Check layer 0 for fused QKV tensor
+    const std::string qkv0 = "blk.0.attn_qkv.weight";
+    const bool hasFused = loader->hasTensorNamed(qkv0);
+    const bool hasSeparate = loader->hasTensorNamed("blk.0.attn_q.weight") &&
+                             loader->hasTensorNamed("blk.0.attn_k.weight") &&
+                             loader->hasTensorNamed("blk.0.attn_v.weight");
+    m_modelHasFusedQKV = hasFused && !hasSeparate;
+    if (m_modelHasFusedQKV)
+    {
+        printf("[Transformer] Detected fused QKV model (attn_qkv.weight)\n");
+    }
+    else if (hasFused && hasSeparate)
+    {
+        printf("[Transformer] Model has BOTH fused and separate QKV — using separate (safer)\n");
+        m_modelHasFusedQKV = false;
+    }
+    else
+    {
+        printf("[Transformer] Using separate Q/K/V weights (classic architecture)\n");
+    }
+}
+
+bool RawrXDTransformer::ExecuteFusedQKVLayerMatMul(const std::string& qkvName, const float* input, float* qOut,
+                                                      float* kOut, float* vOut, std::size_t inputDim,
+                                                      std::size_t qDim, std::size_t kvDim, std::uint32_t layer)
+{
+    if (!loader || !input || !qOut || !kOut || !vOut)
+        return false;
+
+    // Combined QKV output: qDim + kvDim + kvDim
+    const std::size_t totalQKVDim = qDim + kvDim + kvDim;
+    std::vector<float> qkvCombined(totalQKVDim);
+
+    if (!ExecuteLayerMatMul(qkvName, input, qkvCombined.data(), inputDim, totalQKVDim, layer))
+    {
+        return false;
+    }
+
+    // Split: Q = [0, qDim), K = [qDim, qDim+kvDim), V = [qDim+kvDim, total)
+    std::memcpy(qOut, qkvCombined.data(), qDim * sizeof(float));
+    std::memcpy(kOut, qkvCombined.data() + qDim, kvDim * sizeof(float));
+    std::memcpy(vOut, qkvCombined.data() + qDim + kvDim, kvDim * sizeof(float));
+    return true;
+}
+
+bool RawrXDTransformer::ExecuteFusedQKVLayerMatMulBatch(const std::string& qkvName, const float* inputBatch,
+                                                         float* qBatchOut, float* kBatchOut, float* vBatchOut,
+                                                         std::size_t inputDim, std::size_t qDim, std::size_t kvDim,
+                                                         std::size_t T, std::uint32_t layer)
+{
+    if (!loader || !inputBatch || !qBatchOut || !kBatchOut || !vBatchOut || T == 0)
+        return false;
+
+    const std::size_t totalQKVDim = qDim + kvDim + kvDim;
+    std::vector<float> qkvCombinedBatch(T * totalQKVDim);
+
+    if (!ExecuteLayerMatMulBatch(qkvName, inputBatch, qkvCombinedBatch.data(), inputDim, totalQKVDim, T, layer))
+    {
+        return false;
+    }
+
+    // Split per token
+    for (std::size_t t = 0; t < T; ++t)
+    {
+        const float* src = qkvCombinedBatch.data() + t * totalQKVDim;
+        float* qDst = qBatchOut + t * qDim;
+        float* kDst = kBatchOut + t * kvDim;
+        float* vDst = vBatchOut + t * kvDim;
+        std::memcpy(qDst, src, qDim * sizeof(float));
+        std::memcpy(kDst, src + qDim, kvDim * sizeof(float));
+        std::memcpy(vDst, src + qDim + kvDim, kvDim * sizeof(float));
+    }
+    return true;
 }
 
 bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer, const std::string& blkPrefix,
@@ -2452,9 +2540,6 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
                 return {};
             }
 
-            const std::string wq_name = prefix + "attn_q.weight";
-            const std::string wk_name = prefix + "attn_k.weight";
-            const std::string wv_name = prefix + "attn_v.weight";
             const std::string wo_name = prefix + "attn_output.weight";
 
             // B009-P0: Phase 1 — RMSNorm + residual save (still per-token, pointwise)
@@ -2468,26 +2553,44 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             }
 
             // B009-P0: Phase 2 — Batched Q/K/V projections (largest repeated GEMM family)
-            if (!ExecuteLayerMatMulBatch(wq_name, x_batch.data(), q_batch.data(),
-                                          static_cast<size_t>(dim), static_cast<size_t>(dim),
-                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            if (m_modelHasFusedQKV)
             {
-                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wq_name.c_str());
-                return {};
+                const std::string wqkv_name = prefix + "attn_qkv.weight";
+                if (!ExecuteFusedQKVLayerMatMulBatch(wqkv_name, x_batch.data(), q_batch.data(), k_batch.data(),
+                                                      v_batch.data(), static_cast<size_t>(dim),
+                                                      static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
+                                                      static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteFusedQKVLayerMatMulBatch failed for %s\n", wqkv_name.c_str());
+                    return {};
+                }
             }
-            if (!ExecuteLayerMatMulBatch(wk_name, x_batch.data(), k_batch.data(),
-                                          static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
-                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+            else
             {
-                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wk_name.c_str());
-                return {};
-            }
-            if (!ExecuteLayerMatMulBatch(wv_name, x_batch.data(), v_batch.data(),
-                                          static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
-                                          static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
-            {
-                printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wv_name.c_str());
-                return {};
+                const std::string wq_name = prefix + "attn_q.weight";
+                const std::string wk_name = prefix + "attn_k.weight";
+                const std::string wv_name = prefix + "attn_v.weight";
+                if (!ExecuteLayerMatMulBatch(wq_name, x_batch.data(), q_batch.data(),
+                                              static_cast<size_t>(dim), static_cast<size_t>(dim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wq_name.c_str());
+                    return {};
+                }
+                if (!ExecuteLayerMatMulBatch(wk_name, x_batch.data(), k_batch.data(),
+                                              static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wk_name.c_str());
+                    return {};
+                }
+                if (!ExecuteLayerMatMulBatch(wv_name, x_batch.data(), v_batch.data(),
+                                              static_cast<size_t>(dim), static_cast<size_t>(kv_dim),
+                                              static_cast<size_t>(T), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteLayerMatMulBatch failed for %s\n", wv_name.c_str());
+                    return {};
+                }
             }
 
             // B009-P0: Phase 3-5 — Per-token RoPE, KV cache, attention (causal, can't batch)
@@ -2921,27 +3024,41 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             // Validation hook: RMSNorm output
             RAWRXD_VALIDATION_DUMP_RMS_NORM(x.data(), dim, l);
 
-            const std::string wq_name = prefix + "attn_q.weight";
-            const std::string wk_name = prefix + "attn_k.weight";
-            const std::string wv_name = prefix + "attn_v.weight";
             const std::string wo_name = prefix + "attn_output.weight";
 
-            if (!ExecuteLayerMatMul(wq_name, x.data(), q.data(), dim, dim, static_cast<std::uint32_t>(l)))
+            if (m_modelHasFusedQKV)
             {
-                printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
-                return {};
+                const std::string wqkv_name = prefix + "attn_qkv.weight";
+                if (!ExecuteFusedQKVLayerMatMul(wqkv_name, x.data(), q.data(), k.data(), v.data(),
+                                                 static_cast<std::size_t>(dim), static_cast<std::size_t>(dim),
+                                                 static_cast<std::size_t>(kv_dim), static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: ExecuteFusedQKVLayerMatMul failed for %s\n", wqkv_name.c_str());
+                    return {};
+                }
             }
-
-            if (!ExecuteLayerMatMul(wk_name, x.data(), k.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
+            else
             {
-                printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wk_name.c_str());
-                return {};
-            }
+                const std::string wq_name = prefix + "attn_q.weight";
+                const std::string wk_name = prefix + "attn_k.weight";
+                const std::string wv_name = prefix + "attn_v.weight";
+                if (!ExecuteLayerMatMul(wq_name, x.data(), q.data(), dim, dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wq_name.c_str());
+                    return {};
+                }
 
-            if (!ExecuteLayerMatMul(wv_name, x.data(), v.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
-            {
-                printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wv_name.c_str());
-                return {};
+                if (!ExecuteLayerMatMul(wk_name, x.data(), k.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wk_name.c_str());
+                    return {};
+                }
+
+                if (!ExecuteLayerMatMul(wv_name, x.data(), v.data(), dim, kv_dim, static_cast<std::uint32_t>(l)))
+                {
+                    printf("[Forward] FATAL: StreamingMatMul failed for %s\n", wv_name.c_str());
+                    return {};
+                }
             }
 
             // RoPE — apply separately for Q (n_heads) and K (n_kv_heads)

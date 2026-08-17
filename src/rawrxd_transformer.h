@@ -442,4 +442,21 @@ class RawrXDTransformer
 
     // B016: Governance orchestrator — hardware-triggered autonomous control plane
     std::unique_ptr<RawrXD::Governance::UnifiedTriggerOrchestrator> m_governanceOrchestrator;
+
+    // Fused QKV detection (models like Qwen3.5, Phi-3 use attn_qkv.weight instead of separate attn_q/k/v)
+    bool m_modelHasFusedQKV = false;
+
+    /// Detect whether the loaded model uses fused QKV weights.
+    void DetectFusedQKV();
+
+    /// Execute fused QKV matmul: one matmul produces combined QKV, then split into q/k/v.
+    /// Returns false if the fused tensor is not found.
+    bool ExecuteFusedQKVLayerMatMul(const std::string& qkvName, const float* input, float* qOut, float* kOut,
+                                      float* vOut, std::size_t inputDim, std::size_t qDim, std::size_t kvDim,
+                                      std::uint32_t layer);
+
+    /// Batched version of fused QKV matmul.
+    bool ExecuteFusedQKVLayerMatMulBatch(const std::string& qkvName, const float* inputBatch, float* qBatchOut,
+                                         float* kBatchOut, float* vBatchOut, std::size_t inputDim, std::size_t qDim,
+                                         std::size_t kvDim, std::size_t T, std::uint32_t layer);
 };
