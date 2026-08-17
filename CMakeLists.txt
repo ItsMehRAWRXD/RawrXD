@@ -2667,6 +2667,7 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/byte_level_hotpatcher\\.cp
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/shadow_page_detour\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/auto_repair_orchestrator\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agent_self_healing_orchestrator\\.cpp$")
+list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/rawrxd_linker_closure\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/camellia256_bridge\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/rawrxd_subsystem_api\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/perf_telemetry\\.cpp$")
