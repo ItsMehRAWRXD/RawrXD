@@ -19,7 +19,29 @@
 #include <string>
 #include <cstdint>
 #include <functional>
-#include <vector>#include "ResidentTensor.hpp"
+#include <vector>
+
+// Vulkan types for InitializeVulkanDispatcher
+#if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
+    #if __has_include(<vulkan/vulkan.h>)
+        #include <vulkan/vulkan.h>
+        #define RAWR_VULKAN_AVAILABLE 1
+    #else
+        #define RAWR_VULKAN_AVAILABLE 0
+    #endif
+#else
+    #define RAWR_VULKAN_AVAILABLE 0
+#endif
+
+#if !RAWR_VULKAN_AVAILABLE
+    #ifndef VK_VERSION_1_0
+    typedef void* VkDevice;
+    typedef void* VkQueue;
+    typedef void* VkCommandPool;
+    #endif
+#endif
+
+#include "ResidentTensor.hpp"
 
 // Forward declarations
 namespace rawrxd { class StreamRouterAdapter; }
@@ -63,6 +85,11 @@ public:
     ~TensorExecutionRouter();
 
     bool InitializeVulkan();
+    bool InitializeVulkanDispatcher(VkDevice device, VkQueue queue, VkCommandPool commandPool,
+                                    const std::string& spirvPath);
+
+    // VX01: Query whether Vulkan GEMM dispatcher is ready
+    bool HasVulkanGemm() const;
 
     void matmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K);
     bool dispatchMatmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K,
@@ -78,6 +105,11 @@ public:
     // Phase 1 bridge: optional StreamRouterAdapter for Deep2 integration.
     // When set and enabled, dispatchMatmul will attempt StreamRouter first.
     void setStreamRouterAdapter(rawrxd::StreamRouterAdapter* adapter);
+
+    // VX01: Staging dispatch — upload CPU input → GPU GEMM → readback to CPU output.
+    // Used when weight is GPU-resident but activations are CPU buffers.
+    bool DispatchGemmWithStaging(const TensorHandle& weight, const float* input, float* output,
+                                 int M, int K);
 
 private:
     class Impl;

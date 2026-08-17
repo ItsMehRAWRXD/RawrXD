@@ -416,10 +416,23 @@ void RawrXDServer::handleRequest(HTTP_REQUEST* req) {
         handleApiDelete(req);
     } else if (path == "/api/ps" || path == "/api/ps/") {
         handleApiPs(req);
-    } else if (path == "/" || path == "/api" || path == "/api/") {
-        // Health / root
-        sendResponse(req, 200, "application/json",
-                     "{\"status\":\"ok\",\"engine\":\"rawrxd\"}");
+    }
+    // OpenAI-compatible API
+    else if (path == "/v1/chat/completions" || path == "/v1/chat/completions/") {
+        handleOpenAIChat(req);
+    } else if (path == "/v1/completions" || path == "/v1/completions/") {
+        handleOpenAICompletions(req);
+    } else if (path == "/v1/models" || path == "/v1/models/") {
+        handleOpenAIModels(req);
+    }
+    // Anthropic-compatible API
+    else if (path == "/v1/messages" || path == "/v1/messages/") {
+        handleAnthropicMessages(req);
+    }
+    // RawrXD native
+    else if (path == "/health" || path == "/health/" ||
+             path == "/" || path == "/api" || path == "/api/") {
+        handleHealth(req);
     } else {
         handleNotFound(req);
     }
@@ -866,6 +879,7 @@ GenerateRequest RawrXDServer::parseGenerateRequest(const std::string& body) cons
 GenerateRequest RawrXDServer::parseChatRequest(const std::string& body) const {
     GenerateRequest r;
     r.model    = jsonread::findString(body, "model");
+    r.system   = jsonread::findString(body, "system");
     r.messages = jsonread::findMessages(body);
     r.stream   = jsonread::findBool(body, "stream", true);
     r.temperature  = jsonread::findFloat(body, "temperature", 0.7f);
@@ -875,6 +889,531 @@ GenerateRequest RawrXDServer::parseChatRequest(const std::string& body) const {
     r.repeat_penalty = jsonread::findFloat(body, "repeat_penalty", 1.1f);
     r.seed         = jsonread::findInt(body, "seed", -1);
     return r;
+}
+
+// ============================================================================
+// Prompt flattening — ChatML for Qwen2.5-Coder
+// ============================================================================
+std::string RawrXDServer::flattenChatMessages(
+    const std::vector<ChatMessage>& msgs,
+    const std::string& system) const {
+    std::string out;
+    out += "<|im_start|>system\n";
+    out += system.empty() ? "You are a helpful assistant." : system;
+    out += "<|im_end|>\n";
+    for (auto& m : msgs) {
+        out += "<|im_start|>" + m.role + "\n" + m.content + "<|im_end|>\n";
+    }
+    out += "<|im_start|>assistant\n";
+    return out;
+}
+
+// ============================================================================
+// GET /v1/models — OpenAI-compatible model listing
+// ============================================================================
+void RawrXDServer::handleOpenAIModels(HTTP_REQUEST* req) {
+    sendResponse(req, 200, "application/json", buildOpenAIModelsJson());
+}
+
+std::string RawrXDServer::buildOpenAIModelsJson() const {
+    auto& models = m_registry.models();
+    std::ostringstream ss;
+    ss << "{\"object\":\"list\",\"data\":[";
+    for (size_t i = 0; i < models.size(); i++) {
+        if (i > 0) ss << ',';
+        ss << "{\"id\":\"" << json::escape(models[i].name) << "\","
+           << "\"object\":\"model\","
+           << "\"created\":0,"
+           << "\"owned_by\":\"rawrxd\"}";
+    }
+    ss << "]}";
+    return ss.str();
+}
+
+// ============================================================================
+// POST /v1/chat/completions — OpenAI Chat Completions
+// ============================================================================
+void RawrXDServer::handleOpenAIChat(HTTP_REQUEST* req) {
+    std::string body = readRequestBody(req);
+    if (body.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"error\":{\"message\":\"empty request body\",\"type\":\"invalid_request_error\"}}");
+        return;
+    }
+
+    auto chatReq = parseChatRequest(body);
+    if (chatReq.messages.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"error\":{\"message\":\"messages is required\",\"type\":\"invalid_request_error\"}}");
+        return;
+    }
+
+    chatReq.prompt = flattenChatMessages(chatReq.messages, chatReq.system);
+
+    // Ensure model loaded
+    {
+        std::lock_guard<std::mutex> lk(m_inferenceMu);
+        if (!m_backend.isLoaded || !m_backend.isLoaded() ||
+            m_currentModel != chatReq.model) {
+            auto* entry = m_registry.find(chatReq.model);
+            if (!entry) {
+                sendResponse(req, 404, "application/json",
+                    "{\"error\":{\"message\":\"model not found\",\"type\":\"invalid_request_error\"}}");
+                return;
+            }
+            if (m_backend.loadModel && !m_backend.loadModel(entry->path)) {
+                sendResponse(req, 500, "application/json",
+                    "{\"error\":{\"message\":\"failed to load model\",\"type\":\"server_error\"}}");
+                return;
+            }
+            m_currentModel = chatReq.model;
+        }
+    }
+
+    if (!chatReq.stream) {
+        std::string fullResp;
+        if (m_backend.generate) {
+            std::lock_guard<std::mutex> lk(m_inferenceMu);
+            fullResp = m_backend.generate(chatReq, [](const std::string&, bool){});
+        }
+        std::string id = "chatcmpl-rawrxd-" + std::to_string(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count());
+        std::string response = json::Obj()
+            .kv("id", id)
+            .kv("object", "chat.completion")
+            .kv("created", static_cast<int64_t>(
+                std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count()))
+            .kv("model", chatReq.model)
+            .kvRaw("choices", std::string("[") + json::Obj()
+                .kv("index", static_cast<int64_t>(0))
+                .kvRaw("message", json::Obj()
+                    .kv("role", "assistant")
+                    .kv("content", fullResp)
+                    .build())
+                .kv("finish_reason", "stop")
+                .build() + "]")
+            .kvRaw("usage", json::Obj()
+                .kv("prompt_tokens", static_cast<int64_t>(0))
+                .kv("completion_tokens", static_cast<int64_t>(0))
+                .kv("total_tokens", static_cast<int64_t>(0))
+                .build())
+            .build();
+        sendResponse(req, 200, "application/json", response);
+        return;
+    }
+
+    // Streaming SSE
+    HTTP_RESPONSE response = {};
+    response.StatusCode = 200;
+    response.pReason = "OK";
+    response.ReasonLength = 2;
+
+    HTTP_KNOWN_HEADER& ct = response.Headers.KnownHeaders[HttpHeaderContentType];
+    ct.pRawValue = "text/event-stream";
+    ct.RawValueLength = 17;
+
+    HTTP_KNOWN_HEADER& cache = response.Headers.KnownHeaders[HttpHeaderCacheControl];
+    cache.pRawValue = "no-cache";
+    cache.RawValueLength = 8;
+
+    HTTP_KNOWN_HEADER& te = response.Headers.KnownHeaders[HttpHeaderTransferEncoding];
+    te.pRawValue = "chunked";
+    te.RawValueLength = 7;
+
+    ULONG ret = HttpSendHttpResponse(m_reqQueue, req->RequestId,
+        HTTP_SEND_RESPONSE_FLAG_MORE_DATA, &response, nullptr, nullptr,
+        nullptr, 0, nullptr, nullptr);
+    if (ret != NO_ERROR) return;
+
+    const HTTP_REQUEST_ID requestId = req->RequestId;
+    const std::string completionId = "chatcmpl-rawrxd-" + std::to_string(
+        static_cast<uint64_t>(requestId));
+
+    if (!m_backend.generate) return;
+
+    std::lock_guard<std::mutex> lk(m_inferenceMu);
+    m_backend.generate(chatReq,
+        [this, requestId, completionId, model = chatReq.model]
+        (const std::string& token, bool done) {
+            std::string data;
+            if (!done) {
+                data = buildOpenAIChatChunk(completionId, model, token, false, "");
+                data = "data: " + data + "\n\n";
+            } else {
+                data = buildOpenAIChatChunk(completionId, model, "", true, "stop");
+                data = "data: " + data + "\n\n";
+            }
+
+            HTTP_DATA_CHUNK chunk = {};
+            chunk.DataChunkType = HttpDataChunkFromMemory;
+            chunk.FromMemory.pBuffer = const_cast<char*>(data.data());
+            chunk.FromMemory.BufferLength = static_cast<ULONG>(data.size());
+
+            ULONG flags = done ? 0 : HTTP_SEND_RESPONSE_FLAG_MORE_DATA;
+            HttpSendResponseEntityBody(m_reqQueue, requestId, flags,
+                1, &chunk, nullptr, nullptr, 0, nullptr, nullptr);
+
+            if (done) {
+                static const char end[] = "data: [DONE]\n\n";
+                HTTP_DATA_CHUNK endChunk = {};
+                endChunk.DataChunkType = HttpDataChunkFromMemory;
+                endChunk.FromMemory.pBuffer = const_cast<char*>(end);
+                endChunk.FromMemory.BufferLength = static_cast<ULONG>(sizeof(end) - 1);
+                HttpSendResponseEntityBody(m_reqQueue, requestId, 0,
+                    1, &endChunk, nullptr, nullptr, 0, nullptr, nullptr);
+            }
+        });
+}
+
+std::string RawrXDServer::buildOpenAIChatChunk(
+    const std::string& id,
+    const std::string& model,
+    const std::string& token,
+    bool done,
+    const std::string& finishReason) const {
+    std::ostringstream choices;
+    choices << "{";
+    choices << "\"index\":0";
+    if (!token.empty()) {
+        choices << ",\"delta\":{\"content\":\"" << json::escape(token) << "\"}";
+    } else {
+        choices << ",\"delta\":{}";
+    }
+    if (done) {
+        choices << ",\"finish_reason\":\"" << json::escape(finishReason.empty() ? "stop" : finishReason) << "\"";
+    } else {
+        choices << ",\"finish_reason\":null";
+    }
+    choices << "}";
+
+    return json::Obj()
+        .kv("id", id)
+        .kv("object", "chat.completion.chunk")
+        .kv("created", static_cast<int64_t>(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count()))
+        .kv("model", model)
+        .kvRaw("choices", choices.str())
+        .build();
+}
+
+std::string RawrXDServer::buildOpenAIChatFinal(
+    const std::string& id,
+    const std::string& model,
+    const std::string& fullText) const {
+    (void)id; (void)model; (void)fullText;
+    return {};
+}
+
+// ============================================================================
+// POST /v1/completions — OpenAI legacy completions
+// ============================================================================
+void RawrXDServer::handleOpenAICompletions(HTTP_REQUEST* req) {
+    std::string body = readRequestBody(req);
+    if (body.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"error\":{\"message\":\"empty request body\",\"type\":\"invalid_request_error\"}}");
+        return;
+    }
+
+    auto genReq = parseGenerateRequest(body);
+    if (genReq.model.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"error\":{\"message\":\"model is required\",\"type\":\"invalid_request_error\"}}");
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lk(m_inferenceMu);
+        if (!m_backend.isLoaded || !m_backend.isLoaded() ||
+            m_currentModel != genReq.model) {
+            auto* entry = m_registry.find(genReq.model);
+            if (!entry) {
+                sendResponse(req, 404, "application/json",
+                    "{\"error\":{\"message\":\"model not found\",\"type\":\"invalid_request_error\"}}");
+                return;
+            }
+            if (m_backend.loadModel && !m_backend.loadModel(entry->path)) {
+                sendResponse(req, 500, "application/json",
+                    "{\"error\":{\"message\":\"failed to load model\",\"type\":\"server_error\"}}");
+                return;
+            }
+            m_currentModel = genReq.model;
+        }
+    }
+
+    if (!genReq.stream) {
+        std::string output;
+        if (m_backend.generate) {
+            std::lock_guard<std::mutex> lk(m_inferenceMu);
+            output = m_backend.generate(genReq, [](const std::string&, bool){});
+        }
+        std::string response = json::Obj()
+            .kv("id", "cmpl-rawrxd-" + std::to_string(static_cast<uint64_t>(req->RequestId)))
+            .kv("object", "text_completion")
+            .kv("created", static_cast<int64_t>(
+                std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count()))
+            .kv("model", genReq.model)
+            .kvRaw("choices", std::string("[") + json::Obj()
+                .kv("index", static_cast<int64_t>(0))
+                .kv("text", output)
+                .kv("finish_reason", "stop")
+                .build() + "]")
+            .build();
+        sendResponse(req, 200, "application/json", response);
+        return;
+    }
+
+    // Streaming SSE
+    HTTP_RESPONSE response = {};
+    response.StatusCode = 200;
+    response.pReason = "OK";
+    response.ReasonLength = 2;
+
+    HTTP_KNOWN_HEADER& ct = response.Headers.KnownHeaders[HttpHeaderContentType];
+    ct.pRawValue = "text/event-stream";
+    ct.RawValueLength = 17;
+
+    HTTP_KNOWN_HEADER& te = response.Headers.KnownHeaders[HttpHeaderTransferEncoding];
+    te.pRawValue = "chunked";
+    te.RawValueLength = 7;
+
+    if (HttpSendHttpResponse(m_reqQueue, req->RequestId,
+            HTTP_SEND_RESPONSE_FLAG_MORE_DATA, &response, nullptr, nullptr,
+            nullptr, 0, nullptr, nullptr) != NO_ERROR) {
+        return;
+    }
+
+    const HTTP_REQUEST_ID requestId = req->RequestId;
+    if (!m_backend.generate) return;
+
+    std::lock_guard<std::mutex> lk(m_inferenceMu);
+    m_backend.generate(genReq,
+        [this, requestId, model = genReq.model]
+        (const std::string& token, bool done) {
+            std::string payload;
+            if (!done) {
+                payload = buildOpenAICompletionChunk(
+                    "cmpl-rawrxd-" + std::to_string(static_cast<uint64_t>(requestId)),
+                    model, token, false);
+            } else {
+                payload = buildOpenAICompletionChunk(
+                    "cmpl-rawrxd-" + std::to_string(static_cast<uint64_t>(requestId)),
+                    model, "", true);
+            }
+            payload = "data: " + payload + "\n\n";
+
+            HTTP_DATA_CHUNK chunk = {};
+            chunk.DataChunkType = HttpDataChunkFromMemory;
+            chunk.FromMemory.pBuffer = const_cast<char*>(payload.data());
+            chunk.FromMemory.BufferLength = static_cast<ULONG>(payload.size());
+
+            HttpSendResponseEntityBody(m_reqQueue, requestId,
+                done ? 0 : HTTP_SEND_RESPONSE_FLAG_MORE_DATA,
+                1, &chunk, nullptr, nullptr, 0, nullptr, nullptr);
+
+            if (done) {
+                static const char end[] = "data: [DONE]\n\n";
+                HTTP_DATA_CHUNK endChunk = {};
+                endChunk.DataChunkType = HttpDataChunkFromMemory;
+                endChunk.FromMemory.pBuffer = const_cast<char*>(end);
+                endChunk.FromMemory.BufferLength = static_cast<ULONG>(sizeof(end) - 1);
+                HttpSendResponseEntityBody(m_reqQueue, requestId, 0,
+                    1, &endChunk, nullptr, nullptr, 0, nullptr, nullptr);
+            }
+        });
+}
+
+std::string RawrXDServer::buildOpenAICompletionChunk(
+    const std::string& id,
+    const std::string& model,
+    const std::string& text,
+    bool done) const {
+    std::ostringstream choices;
+    choices << "{";
+    choices << "\"index\":0";
+    if (!text.empty()) {
+        choices << ",\"text\":\"" << json::escape(text) << "\"";
+    } else {
+        choices << ",\"text\":\"\"";
+    }
+    if (done) {
+        choices << ",\"finish_reason\":\"stop\"";
+    } else {
+        choices << ",\"finish_reason\":null";
+    }
+    choices << "}";
+
+    return json::Obj()
+        .kv("id", id)
+        .kv("object", "text_completion")
+        .kv("created", static_cast<int64_t>(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count()))
+        .kv("model", model)
+        .kvRaw("choices", choices.str())
+        .build();
+}
+
+// ============================================================================
+// POST /v1/messages — Anthropic Messages API
+// ============================================================================
+void RawrXDServer::handleAnthropicMessages(HTTP_REQUEST* req) {
+    std::string body = readRequestBody(req);
+    if (body.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"empty request body\"}}");
+        return;
+    }
+
+    auto chatReq = parseChatRequest(body);
+    if (chatReq.messages.empty()) {
+        sendResponse(req, 400, "application/json",
+            "{\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"messages is required\"}}");
+        return;
+    }
+
+    // Flatten to Anthropic-style prompt
+    std::string prompt;
+    prompt += chatReq.system.empty() ? "" : (chatReq.system + "\n\n");
+    for (auto& m : chatReq.messages) {
+        if (m.role == "user")        prompt += "Human: " + m.content + "\n";
+        else if (m.role == "assistant") prompt += "Assistant: " + m.content + "\n";
+    }
+    prompt += "Assistant: ";
+    chatReq.prompt = prompt;
+
+    {
+        std::lock_guard<std::mutex> lk(m_inferenceMu);
+        if (!m_backend.isLoaded || !m_backend.isLoaded() ||
+            m_currentModel != chatReq.model) {
+            auto* entry = m_registry.find(chatReq.model);
+            if (!entry) {
+                sendResponse(req, 404, "application/json",
+                    "{\"type\":\"error\",\"error\":{\"type\":\"not_found_error\",\"message\":\"model not found\"}}");
+                return;
+            }
+            if (m_backend.loadModel && !m_backend.loadModel(entry->path)) {
+                sendResponse(req, 500, "application/json",
+                    "{\"type\":\"error\",\"error\":{\"type\":\"api_error\",\"message\":\"failed to load model\"}}");
+                return;
+            }
+            m_currentModel = chatReq.model;
+        }
+    }
+
+    // Anthropic only supports streaming
+    HTTP_RESPONSE response = {};
+    response.StatusCode = 200;
+    response.pReason = "OK";
+    response.ReasonLength = 2;
+
+    HTTP_KNOWN_HEADER& ct = response.Headers.KnownHeaders[HttpHeaderContentType];
+    ct.pRawValue = "text/event-stream";
+    ct.RawValueLength = 17;
+
+    HTTP_KNOWN_HEADER& cache = response.Headers.KnownHeaders[HttpHeaderCacheControl];
+    cache.pRawValue = "no-cache";
+    cache.RawValueLength = 8;
+
+    HTTP_KNOWN_HEADER& te = response.Headers.KnownHeaders[HttpHeaderTransferEncoding];
+    te.pRawValue = "chunked";
+    te.RawValueLength = 7;
+
+    ULONG ret = HttpSendHttpResponse(m_reqQueue, req->RequestId,
+        HTTP_SEND_RESPONSE_FLAG_MORE_DATA, &response, nullptr, nullptr,
+        nullptr, 0, nullptr, nullptr);
+    if (ret != NO_ERROR) return;
+
+    const HTTP_REQUEST_ID requestId = req->RequestId;
+    const std::string msgId = "msg_rawrxd_" + std::to_string(
+        static_cast<uint64_t>(requestId));
+
+    // message_start
+    std::string start = buildAnthropicMessageStart(msgId, chatReq.model);
+    HTTP_DATA_CHUNK startChunk = {};
+    startChunk.DataChunkType = HttpDataChunkFromMemory;
+    startChunk.FromMemory.pBuffer = const_cast<char*>(start.data());
+    startChunk.FromMemory.BufferLength = static_cast<ULONG>(start.size());
+    HttpSendResponseEntityBody(m_reqQueue, requestId, HTTP_SEND_RESPONSE_FLAG_MORE_DATA,
+        1, &startChunk, nullptr, nullptr, 0, nullptr, nullptr);
+
+    if (!m_backend.generate) return;
+
+    std::lock_guard<std::mutex> lk(m_inferenceMu);
+    m_backend.generate(chatReq,
+        [this, requestId, msgId](const std::string& token, bool done) {
+            if (!token.empty()) {
+                std::string delta = buildAnthropicContentDelta(msgId, token);
+                HTTP_DATA_CHUNK chunk = {};
+                chunk.DataChunkType = HttpDataChunkFromMemory;
+                chunk.FromMemory.pBuffer = const_cast<char*>(delta.data());
+                chunk.FromMemory.BufferLength = static_cast<ULONG>(delta.size());
+                HttpSendResponseEntityBody(m_reqQueue, requestId, HTTP_SEND_RESPONSE_FLAG_MORE_DATA,
+                    1, &chunk, nullptr, nullptr, 0, nullptr, nullptr);
+            }
+
+            if (done) {
+                std::string stop = buildAnthropicMessageStop(msgId);
+                HTTP_DATA_CHUNK chunk = {};
+                chunk.DataChunkType = HttpDataChunkFromMemory;
+                chunk.FromMemory.pBuffer = const_cast<char*>(stop.data());
+                chunk.FromMemory.BufferLength = static_cast<ULONG>(stop.size());
+                HttpSendResponseEntityBody(m_reqQueue, requestId, 0,
+                    1, &chunk, nullptr, nullptr, 0, nullptr, nullptr);
+            }
+        });
+}
+
+std::string RawrXDServer::buildAnthropicMessageStart(
+    const std::string& msgId,
+    const std::string& model) const {
+    std::ostringstream msg;
+    msg << "{\"id\":\"" << json::escape(msgId) << "\","
+        << "\"type\":\"message\","
+        << "\"role\":\"assistant\","
+        << "\"model\":\"" << json::escape(model) << "\","
+        << "\"content\":[],"
+        << "\"stop_reason\":null,"
+        << "\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}";
+
+    return std::string("event: message_start\ndata: ") +
+        json::Obj().kv("type", "message_start")
+            .kvRaw("message", msg.str())
+            .build() + "\n\n";
+}
+
+std::string RawrXDServer::buildAnthropicContentDelta(
+    const std::string& msgId,
+    const std::string& text) const {
+    (void)msgId;
+    std::ostringstream delta;
+    delta << "{\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\""
+          << json::escape(text) << "\"}}";
+
+    return std::string("event: content_block_delta\ndata: ") +
+        json::Obj()
+            .kv("type", "content_block_delta")
+            .kvRaw("delta", delta.str())
+            .build() + "\n\n";
+}
+
+std::string RawrXDServer::buildAnthropicMessageStop(
+    const std::string& msgId) const {
+    (void)msgId;
+    return std::string("event: message_stop\ndata: ") +
+        json::Obj().kv("type", "message_stop").build() + "\n\n";
+}
+
+// ============================================================================
+// GET /health — RawrXD native health endpoint
+// ============================================================================
+void RawrXDServer::handleHealth(HTTP_REQUEST* req) {
+    sendResponse(req, 200, "application/json",
+        "{\"status\":\"ok\",\"engine\":\"rawrxd\",\"version\":\"1.0\"}");
 }
 
 } // namespace Serve

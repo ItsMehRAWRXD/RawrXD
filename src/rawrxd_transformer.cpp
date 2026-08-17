@@ -3,6 +3,8 @@
 #include "core/swarm_scheduler.hpp"
 #include "logging/Logger.h"
 #include "inference/NegativeSpaceProfiler.hpp"
+#include "runtime/elastic/ElasticEngine.hpp"
+#include "runtime/elastic/VulkanTensorResidencyBackend.hpp"
 
 // RawrXD validation hooks for llama.cpp parity testing
 #ifdef RAWRXD_ENABLE_VALIDATION
@@ -26,12 +28,14 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <mutex>
 #include <span>
 #include <string>
 #include <thread>
+#include <vector>
 #include <windows.h>
 
 namespace
@@ -102,8 +106,145 @@ void collectMoeMixturePlanRowRefs(const std::uint32_t modelIndex, const std::uin
 
 RawrXDTransformer::~RawrXDTransformer()
 {
+    // B016: Stop governance orchestrator before cleanup
+    if (m_governanceOrchestrator) {
+        m_governanceOrchestrator->stop();
+        m_governanceOrchestrator.reset();
+    }
+
     if (m_swarmScheduler)
         m_swarmScheduler->setPlanRowEvictionObserver({});
+
+    // VX01: Clean up persistent GPU activation buffers
+    DestroyGpuActivationBuffers();
+}
+
+// Deep2: Execution telemetry accessors
+std::vector<RawrXD::Deep2::DispatchEvent> RawrXDTransformer::GetDeep2RecentEvents(size_t count) const {
+    return RawrXD::Deep2::ExecutionTelemetryCollector::Instance().GetRecentEvents(count);
+}
+
+std::vector<RawrXD::Deep2::LayerStats> RawrXDTransformer::GetDeep2LayerStats() const {
+    return RawrXD::Deep2::ExecutionTelemetryCollector::Instance().ComputeLayerStats();
+}
+
+void RawrXDTransformer::ResetDeep2Telemetry() const {
+    RawrXD::Deep2::ExecutionTelemetryCollector::Instance().Reset();
+}
+
+// VX01: Initialize persistent GPU buffers for activation vectors (input/output)
+// These are reused across all transformer layers to avoid per-dispatch allocation.
+bool RawrXDTransformer::InitializeGpuActivationBuffers(VkDevice device, VkPhysicalDevice physDevice)
+{
+#if RAWR_VULKAN_AVAILABLE
+    if (m_gpuBuffersInitialized) return true;
+    if (device == VK_NULL_HANDLE || physDevice == VK_NULL_HANDLE) return false;
+
+    // Find memory type that is device-local (prefer) or host-visible (fallback)
+    VkPhysicalDeviceMemoryProperties memProps;
+    vkGetPhysicalDeviceMemoryProperties(physDevice, &memProps);
+
+    uint32_t memTypeDevice = 0xFFFFFFFFu;
+    uint32_t memTypeHost = 0xFFFFFFFFu;
+    for (uint32_t i = 0; i < memProps.memoryTypeCount; ++i) {
+        if ((memProps.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+            memTypeDevice = i;
+        }
+        if ((memProps.memoryTypes[i].propertyFlags & (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+            == (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+            memTypeHost = i;
+        }
+    }
+
+    // Use the largest dimension we expect (max of dim and hidden_dim)
+    const size_t maxDim = static_cast<size_t>(std::max(config.dim, config.hidden_dim));
+    const size_t bufferSize = maxDim * sizeof(float);
+
+    // Create input buffer (host-visible for easy upload)
+    VkBufferCreateInfo bufInfo{};
+    bufInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufInfo.size = bufferSize;
+    bufInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    bufInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(device, &bufInfo, nullptr, &m_gpuInputBuffer) != VK_SUCCESS) {
+        printf("[VX01] Failed to create GPU input buffer\n");
+        return false;
+    }
+
+    VkMemoryRequirements memReq;
+    vkGetBufferMemoryRequirements(device, m_gpuInputBuffer, &memReq);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReq.size;
+    allocInfo.memoryTypeIndex = (memTypeHost != 0xFFFFFFFFu && (memReq.memoryTypeBits & (1u << memTypeHost))) ? memTypeHost : 0;
+
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &m_gpuInputMemory) != VK_SUCCESS) {
+        vkDestroyBuffer(device, m_gpuInputBuffer, nullptr);
+        m_gpuInputBuffer = VK_NULL_HANDLE;
+        printf("[VX01] Failed to allocate GPU input memory\n");
+        return false;
+    }
+    vkBindBufferMemory(device, m_gpuInputBuffer, m_gpuInputMemory, 0);
+
+    // Create output buffer (host-visible for easy readback)
+    if (vkCreateBuffer(device, &bufInfo, nullptr, &m_gpuOutputBuffer) != VK_SUCCESS) {
+        vkFreeMemory(device, m_gpuInputMemory, nullptr);
+        vkDestroyBuffer(device, m_gpuInputBuffer, nullptr);
+        m_gpuInputBuffer = VK_NULL_HANDLE;
+        m_gpuInputMemory = VK_NULL_HANDLE;
+        printf("[VX01] Failed to create GPU output buffer\n");
+        return false;
+    }
+
+    vkGetBufferMemoryRequirements(device, m_gpuOutputBuffer, &memReq);
+    allocInfo.allocationSize = memReq.size;
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &m_gpuOutputMemory) != VK_SUCCESS) {
+        vkDestroyBuffer(device, m_gpuOutputBuffer, nullptr);
+        vkFreeMemory(device, m_gpuInputMemory, nullptr);
+        vkDestroyBuffer(device, m_gpuInputBuffer, nullptr);
+        m_gpuInputBuffer = VK_NULL_HANDLE;
+        m_gpuInputMemory = VK_NULL_HANDLE;
+        m_gpuOutputBuffer = VK_NULL_HANDLE;
+        printf("[VX01] Failed to allocate GPU output memory\n");
+        return false;
+    }
+    vkBindBufferMemory(device, m_gpuOutputBuffer, m_gpuOutputMemory, 0);
+
+    m_gpuBuffersInitialized = true;
+    m_gpuInputBufferSize = bufferSize;
+    m_gpuOutputBufferSize = bufferSize;
+    printf("[VX01] GPU activation buffers initialized: %zu bytes each (maxDim=%zu)\n", bufferSize, maxDim);
+    return true;
+#else
+    (void)device; (void)physDevice;
+    return false;
+#endif
+}
+
+void RawrXDTransformer::DestroyGpuActivationBuffers()
+{
+#if RAWR_VULKAN_AVAILABLE
+    if (device == VK_NULL_HANDLE) return;
+    if (m_gpuOutputBuffer) {
+        vkDestroyBuffer(device, m_gpuOutputBuffer, nullptr);
+        m_gpuOutputBuffer = VK_NULL_HANDLE;
+    }
+    if (m_gpuOutputMemory) {
+        vkFreeMemory(device, m_gpuOutputMemory, nullptr);
+        m_gpuOutputMemory = VK_NULL_HANDLE;
+    }
+    if (m_gpuInputBuffer) {
+        vkDestroyBuffer(device, m_gpuInputBuffer, nullptr);
+        m_gpuInputBuffer = VK_NULL_HANDLE;
+    }
+    if (m_gpuInputMemory) {
+        vkFreeMemory(device, m_gpuInputMemory, nullptr);
+        m_gpuInputMemory = VK_NULL_HANDLE;
+    }
+    m_gpuBuffersInitialized = false;
+#endif
 }
 
 void RawrXDTransformer::onSwarmPlanRowsEvicted_(std::span<const std::size_t> rows)
@@ -1132,6 +1273,22 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         return false;
     }
 
+    // Elastic: Try architecture-adaptive OOC execution first
+    if (m_elasticEngine) {
+        bool elasticOk = m_elasticEngine->ExecuteMatMul(tensorName, input, output,
+                                                           inputDim, outputDim, layer);
+        if (elasticOk) {
+#ifdef RAWRXD_DEBUG_MATMUL
+            if (isOutputProjection) {
+                printf("[MATMUL] output.weight RETURN elastic ok=1\n");
+                std::fflush(stdout);
+            }
+#endif
+            return true;
+        }
+        // Fall through to existing paths if elastic returns false (tensor not indexed, etc.)
+    }
+
     // B015-P1: Prefill-only residency gate.
     // T > 1  → B015 residency ON (prefill optimization)
     // T == 1 → B015 residency OFF (bypass decode overhead)
@@ -1220,6 +1377,42 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         ++m_weightResidencyMisses;
     }
 
+    // ELASTIC: Try architecture-adaptive OOC execution engine first.
+    // If ElasticEngine can index this tensor and route through residency,
+    // it controls the entire acquire → dispatch → release lifecycle.
+    if (m_elasticEngine)
+    {
+        ++m_elasticMatMulCalls;
+        auto elasticT0 = std::chrono::high_resolution_clock::now();
+        bool elasticOk = m_elasticEngine->ExecuteMatMul(tensorName, input, output, inputDim, outputDim, layer);
+        auto elasticT1 = std::chrono::high_resolution_clock::now();
+        auto elasticNs = std::chrono::duration_cast<std::chrono::nanoseconds>(elasticT1 - elasticT0).count();
+
+        if (elasticOk)
+        {
+            ++m_elasticHits;
+            // ElasticEngine handled residency, dispatch, and (optionally) Vulkan GEMM.
+            // Proof instrumentation: emit only for first tensor per layer to avoid log flood.
+            static std::uint32_t s_lastElasticLayer = 0xFFFFFFFFu;
+            static std::string s_lastElasticTensor;
+            if (layer != s_lastElasticLayer || tensorName != s_lastElasticTensor)
+            {
+                s_lastElasticLayer = layer;
+                s_lastElasticTensor = tensorName;
+                printf("[ELASTIC] L%02u acquire %-20s hit  (%.3f ms)\n",
+                       static_cast<unsigned>(layer), tensorName.c_str(), elasticNs / 1e6);
+                std::fflush(stdout);
+            }
+            return true;
+        }
+        else
+        {
+            ++m_elasticMisses;
+            // ElasticEngine could not index this tensor — fall through to legacy path.
+            // This is expected for tensors not yet in the ElasticGGUFIndex.
+        }
+    }
+
     std::uint64_t canonicalTensorId = 0;
     std::uint64_t tensorStorageBytes = 0;
     const bool hasCanonicalId = loader->GetTensorResidencyInfo(tensorName, canonicalTensorId, tensorStorageBytes);
@@ -1228,6 +1421,7 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         m_memoryManager.registerTensor(static_cast<RawrXD::Memory::TensorId>(canonicalTensorId), tensorStorageBytes);
     }
 
+    // VX01: Populate GPU buffer handles when weights are GPU-resident
     RawrXD::TensorHandle weight{};
     weight.name = tensorName.c_str();
     weight.host_ptr = nullptr;
@@ -1236,13 +1430,38 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
     weight.has_tensor_id = hasCanonicalId;
     weight.tensor_id = canonicalTensorId;
 
+    // If loader has this tensor on GPU, wire the device buffer handle
+    if (loader) {
+        weight.device_ptr = loader->GetTensorGPUBuffer(tensorName);
+    }
+
     RawrXD::TensorView inView{};
     inView.data = const_cast<float*>(input);
     inView.size = inputDim;
+    inView.gpu_buffer = nullptr;
 
     RawrXD::TensorView outView{};
     outView.data = output;
     outView.size = outputDim;
+    outView.gpu_buffer = nullptr;
+
+    // VX01: If weight is GPU-resident and we have persistent activation buffers,
+    // wire them for Vulkan GEMM dispatch
+    bool gpuDispatched = false;
+#if RAWR_VULKAN_AVAILABLE
+    if (weight.device_ptr && m_gpuBuffersInitialized &&
+        inputDim * sizeof(float) <= m_gpuInputBufferSize &&
+        outputDim * sizeof(float) <= m_gpuOutputBufferSize) {
+        // Upload input to GPU
+        void* mapped = nullptr;
+        if (vkMapMemory(device, m_gpuInputMemory, 0, inputDim * sizeof(float), 0, &mapped) == VK_SUCCESS) {
+            std::memcpy(mapped, input, inputDim * sizeof(float));
+            vkUnmapMemory(device, m_gpuInputMemory);
+            inView.gpu_buffer = reinterpret_cast<void*>(m_gpuInputBuffer);
+            outView.gpu_buffer = reinterpret_cast<void*>(m_gpuOutputBuffer);
+        }
+    }
+#endif
 
     m_execRouter.advanceLayer(layer);
 
@@ -1258,6 +1477,16 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
             {
                 printf("[MATMUL] output.weight RETURN materialized ok=%d\n", ok ? 1 : 0);
                 std::fflush(stdout);
+            }
+#endif
+            // VX01: If GPU dispatch succeeded, readback output
+#if RAWR_VULKAN_AVAILABLE
+            if (ok && outView.gpu_buffer) {
+                void* mapped = nullptr;
+                if (vkMapMemory(device, m_gpuOutputMemory, 0, outputDim * sizeof(float), 0, &mapped) == VK_SUCCESS) {
+                    std::memcpy(output, mapped, outputDim * sizeof(float));
+                    vkUnmapMemory(device, m_gpuOutputMemory);
+                }
             }
 #endif
             return ok;
@@ -1278,6 +1507,16 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
     {
         printf("[MATMUL] output.weight RETURN streaming ok=%d\n", ok ? 1 : 0);
         std::fflush(stdout);
+    }
+#endif
+    // VX01: If GPU dispatch succeeded, readback output
+#if RAWR_VULKAN_AVAILABLE
+    if (ok && outView.gpu_buffer) {
+        void* mapped = nullptr;
+        if (vkMapMemory(device, m_gpuOutputMemory, 0, outputDim * sizeof(float), 0, &mapped) == VK_SUCCESS) {
+            std::memcpy(output, mapped, outputDim * sizeof(float));
+            vkUnmapMemory(device, m_gpuOutputMemory);
+        }
     }
 #endif
     return ok;
@@ -1587,6 +1826,64 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     this->loader = loader;
     m_registeredTensorIds.clear();
     m_execRouter.setMemoryManager(&m_memoryManager);
+
+    // VX01: Initialize Vulkan GEMM dispatcher using inference-owned device
+#if RAWR_VULKAN_AVAILABLE
+    if (device != VK_NULL_HANDLE) {
+        // Find compute queue family and get queue handle
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(physDevice, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physDevice, &queueFamilyCount, queueFamilies.data());
+        int computeFamily = -1;
+        for (uint32_t i = 0; i < queueFamilyCount; ++i) {
+            if (queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
+                computeFamily = static_cast<int>(i);
+                break;
+            }
+        }
+        if (computeFamily >= 0) {
+            VkQueue queue = VK_NULL_HANDLE;
+            vkGetDeviceQueue(device, static_cast<uint32_t>(computeFamily), 0, &queue);
+
+            // Create a dedicated command pool for the router
+            VkCommandPoolCreateInfo poolInfo{};
+            poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+            poolInfo.queueFamilyIndex = static_cast<uint32_t>(computeFamily);
+            poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+            VkCommandPool cmdPool = VK_NULL_HANDLE;
+            if (vkCreateCommandPool(device, &poolInfo, nullptr, &cmdPool) == VK_SUCCESS) {
+                std::string spirvPath = "gemm_compute.spv";
+                // Try multiple locations for the SPIR-V file
+                std::vector<std::string> tryPaths = {
+                    "gemm_compute.spv",
+                    "..\\..\\gemm_compute.spv",
+                    "..\\gemm_compute.spv",
+                    "d:\\rawrxd\\gemm_compute.spv",
+                    "d:\\rawrxd\\build\\bin\\gemm_compute.spv",
+                    "d:\\rawrxd\\tests\\gemm_compute.spv"
+                };
+                bool spirvFound = false;
+                for (const auto& p : tryPaths) {
+                    std::ifstream test(p, std::ios::binary);
+                    if (test.is_open()) {
+                        spirvPath = p;
+                        spirvFound = true;
+                        break;
+                    }
+                }
+                if (!spirvFound) {
+                    printf("[VX01] SPIR-V not found in any known location\n");
+                } else if (m_execRouter.InitializeVulkanDispatcher(device, queue, cmdPool, spirvPath)) {
+                    printf("[VX01] TensorExecutionRouter Vulkan GEMM dispatcher initialized\n");
+                } else {
+                    printf("[VX01] TensorExecutionRouter Vulkan GEMM dispatcher init failed (SPIR-V not found?)\n");
+                }
+            }
+        }
+    }
+#endif
+
     m_routerBoundaryMatMulCount = 0;
     m_layerPredictCount = 0;
     m_layerPrefetchCount = 0;
@@ -1646,7 +1943,110 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
     }
 
     // Precompute RoPE tables if needed (usually just done on fly in kernels)
+
+    // VX01: Initialize persistent GPU activation buffers for Vulkan GEMM
+#if RAWR_VULKAN_AVAILABLE
+    if (device != VK_NULL_HANDLE && physDevice != VK_NULL_HANDLE) {
+        InitializeGpuActivationBuffers(device, physDevice);
+    }
+#endif
+
     printf("[RawrXD] Transformer Initialized. AVX-512 Kernels Linked.\n");
+
+    // B016: Initialize governance orchestrator — hardware-triggered autonomous control plane
+    {
+        RawrXD::Governance::OrchestratorCallbacks cb;
+        cb.context_tokens = [this]() -> uint64_t {
+            // Return current context token count from KV cache position tracking
+            int ctx = config.n_ctx > 0 ? config.n_ctx : (config.seq_len > 0 ? config.seq_len : 2048);
+            int64_t maxPos = -1;
+            for (size_t i = 0; i < kv_cache_pos.size(); ++i) {
+                if (kv_cache_pos[i] > maxPos) maxPos = kv_cache_pos[i];
+            }
+            return static_cast<uint64_t>(maxPos + 1);
+        };
+        cb.apply_plan = [this](const RawrXD::Governance::RuntimePlan& plan) {
+            printf("[B016] Governance plan applied: tier=%d path=%d ensemble=%s reason=%s\n",
+                   static_cast<int>(plan.effective_tier),
+                   static_cast<int>(plan.instruction_path),
+                   plan.use_ensemble ? "true" : "false",
+                   plan.reason.c_str());
+            // Adjust execution parameters based on tier
+            if (plan.effective_tier == RawrXD::Governance::CapabilityTier::Emergency) {
+                // Emergency: disable GPU dispatch, force CPU scalar
+                m_enableRouterDispatchForMaterializedWeights = false;
+            } else if (plan.effective_tier >= RawrXD::Governance::CapabilityTier::High) {
+                // High tier: enable GPU dispatch if available
+                m_enableRouterDispatchForMaterializedWeights = true;
+            }
+            // Pressure-based KV cache compaction could be triggered here
+            if (plan.pressure.compact_kv) {
+                printf("[B016] KV cache compaction requested (pressure)\n");
+            }
+        };
+        m_governanceOrchestrator = std::make_unique<RawrXD::Governance::UnifiedTriggerOrchestrator>(cb);
+        if (m_governanceOrchestrator->initialize()) {
+            m_governanceOrchestrator->start(std::chrono::milliseconds(2000));
+            printf("[B016] Governance orchestrator initialized and started (2s period)\n");
+        } else {
+            printf("[B016] Governance orchestrator initialization failed\n");
+            m_governanceOrchestrator.reset();
+        }
+    }
+
+    // Elastic: Initialize architecture-adaptive OOC execution engine
+    if (loader) {
+        RawrXD::Elastic::ElasticConfig elasticCfg{};
+        elasticCfg.vram_budget_bytes = 31ULL * 1024 * 1024 * 1024; // 31 GB for R9700
+        elasticCfg.enable_dss = true;
+        elasticCfg.dss_activation_threshold = 1e-4f;
+        elasticCfg.dss_max_acceptable_error = 1e-3f;
+        elasticCfg.dss_min_observations = 100;
+        elasticCfg.dss_max_observations = 10000;
+        elasticCfg.moe_top_k = static_cast<uint32_t>(cfg.moe_pin_top_k > 0 ? cfg.moe_pin_top_k : 2);
+        elasticCfg.enable_prefetch = true;
+
+        m_elasticEngine = std::make_unique<RawrXD::Elastic::ElasticEngine>(elasticCfg);
+
+        // Build GGUF index from loader tensor list
+        auto ggufIndex = std::make_shared<RawrXD::Elastic::ElasticGGUFIndex>(loader->GetModelPath());
+
+        // Wire Vulkan residency backend if GPU is available
+        if (device != VK_NULL_HANDLE && physDevice != VK_NULL_HANDLE) {
+            auto vulkanBackend = std::make_unique<RawrXD::Elastic::VulkanTensorResidencyBackend>(device, physDevice);
+            // Store backend in transformer so it outlives ElasticEngine
+            m_vulkanResidencyBackend = std::move(vulkanBackend);
+        }
+
+        bool elasticOk = m_elasticEngine->Initialize(
+            ggufIndex,
+            &m_execRouter,
+            m_governanceOrchestrator.get(),
+            nullptr, // HardwareGovernor — could wire from governance
+            &m_memoryManager
+        );
+
+        if (elasticOk && m_vulkanResidencyBackend) {
+            auto* resMgr = m_elasticEngine->GetResidencyManager();
+            if (resMgr) {
+                resMgr->SetGpuCallbacks(
+                    m_vulkanResidencyBackend->GetAllocator(),
+                    m_vulkanResidencyBackend->GetDeallocator()
+                );
+                printf("[Elastic] Vulkan tensor residency backend attached. VRAM budget=%llu GB\n",
+                       static_cast<unsigned long long>(elasticCfg.vram_budget_bytes / (1024ULL * 1024 * 1024)));
+            }
+        }
+
+        if (elasticOk) {
+            printf("[Elastic] Engine initialized. Architecture=%d Blocks=%zu\n",
+                   static_cast<int>(m_elasticEngine->GetProfile().type),
+                   m_elasticEngine->GetProfile().blocks.size());
+        } else {
+            printf("[Elastic] Engine initialization failed — falling back to direct loader path.\n");
+            m_elasticEngine.reset();
+        }
+    }
 }
 
 bool RawrXDTransformer::tryMoeSyncPackMixtureIntoCache(const std::uint32_t layer, const std::string& blkPrefix,
@@ -1740,13 +2140,13 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     maybeSampleMoEReuseFromHeatmap();
     processPendingMoEPrepackResults_();
 
-    // B015-P1: Prefill-only residency gate.
-    // T > 1  → B015 residency ON (prefill optimization)
-    // T == 1 → B015 residency OFF (bypass decode overhead)
-    m_b015DecodeBypass = (T == 1);
-    if (m_b015DecodeBypass && m_weightResidencyPool)
+    // B015-P1: Residency gate — ALWAYS use residency pool if available.
+    // Previous decode bypass (T==1) caused repeated 637MB mappings per layer.
+    // Now: residency pool is active for both prefill (T>1) and decode (T==1).
+    m_b015DecodeBypass = false;
+    if (m_weightResidencyPool)
     {
-        printf("[B015-P1] Decode bypass ACTIVE: T=%d, skipping residency pool for this forward\n", T);
+        printf("[B015-P1] Residency pool ACTIVE: T=%d, using pool for this forward\n", T);
         std::fflush(stdout);
     }
 
@@ -1895,6 +2295,14 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
     // B009-P4: Clear per-call GEMM microarchitectural records
     b009ClearGemmRecords();
 
+    // ELASTIC: Reset proof instrumentation for this forward pass
+    m_elasticMatMulCalls = 0;
+    m_elasticHits = 0;
+    m_elasticMisses = 0;
+
+    printf("[ELASTIC] Forward T=%d layers=%d\n", T, config.n_layers);
+    std::fflush(stdout);
+
     // B009: Layer-outer batched prefill for T > 1.
     // Processes all tokens through layer 0, then all through layer 1, etc.
     // This improves weight locality/reuse (weights stay hot in cache).
@@ -1959,6 +2367,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             m_execRouter.advanceLayer(static_cast<std::uint32_t>(l));
             ++m_layerPredictCount;
             ++m_layerPrefetchCount;
+
+            // ELASTIC: Prefetch next layer via ElasticEngine if available
+            if (m_elasticEngine && config.weight_residency_prefetch_next_layer && l + 1 < config.n_layers)
+            {
+                m_elasticEngine->PrefetchLayer(static_cast<std::uint32_t>(l + 1));
+            }
 
             std::vector<std::size_t> layerPinnedPlanRows;
             struct SwarmLayerPinGuard
@@ -2420,6 +2834,12 @@ std::vector<float> RawrXDTransformer::Forward(const std::vector<uint32_t>& token
             m_execRouter.advanceLayer(static_cast<std::uint32_t>(l));
             ++m_layerPredictCount;
             ++m_layerPrefetchCount;
+
+            // ELASTIC: Prefetch next layer via ElasticEngine if available
+            if (m_elasticEngine && config.weight_residency_prefetch_next_layer && l + 1 < config.n_layers)
+            {
+                m_elasticEngine->PrefetchLayer(static_cast<std::uint32_t>(l + 1));
+            }
 
             std::vector<std::size_t> layerPinnedPlanRows;
             struct SwarmLayerPinGuard

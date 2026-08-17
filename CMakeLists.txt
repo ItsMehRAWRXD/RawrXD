@@ -258,6 +258,15 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/TensorExecutionRouter.cpp
         src/runtime/StreamRouterAdapter.cpp
         src/runtime/Sovereign_KernelBridge_CPP.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
         src/runtime/memory/CapacityManager.cpp
         src/runtime/memory/PlacementPolicy.cpp
         src/runtime/memory/ResidencyTracker.cpp
@@ -333,6 +342,327 @@ if(RAWRXD_BUILD_CLI)
     elseif(RAWR_ENABLE_VULKAN)
         message(STATUS "[rawrxd] Vulkan SDK not found — GPU compute uses CPU fallback")
         target_compile_definitions(rawrxd PRIVATE RAWR_HAS_VULKAN=0)
+    endif()
+
+    # =============================================================================
+    # RawrXD Serve — Ollama-compatible HTTP server with shared model runtime
+    # =============================================================================
+    add_executable(rawrxd-serve
+        src/serve/rawrxd_serve_main.cpp
+        src/serve/rawrxd_serve.cpp
+        src/serve/rawrxd_model_registry.cpp
+        src/serve/rawrxd_serve_inference_plugin.cpp
+        src/serve/inference_plugin_backend.cpp
+        src/serve/rawrxd_pipe_server.cpp
+        src/serve/rawrxd_pipe_server_stubs.cpp
+        src/runtime/GenerationBouncer.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
+        src/runtime/TensorExecutionRouter.cpp
+        src/runtime/StreamRouterAdapter.cpp
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+        src/gpu_enforcement.cpp
+    )
+    set_target_properties(rawrxd-serve PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    target_include_directories(rawrxd-serve PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/inference
+        ${CMAKE_SOURCE_DIR}/src/engine
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/codec
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/masm
+        ${CMAKE_SOURCE_DIR}/src/runtime/governance
+        ${RAWR_VULKAN_INCLUDE}
+    )
+    if(MSVC)
+        target_link_directories(rawrxd-serve PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(rawrxd-serve PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    target_link_libraries(rawrxd-serve PRIVATE
+        InferenceEngine
+        httpapi.lib
+        ws2_32.lib
+        kernel32.lib
+        user32.lib
+        gdi32.lib
+        shell32.lib
+        ole32.lib
+        oleaut32.lib
+        uuid.lib
+        comdlg32.lib
+        advapi32.lib
+        version.lib
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET rawrxd-serve APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET rawrxd-serve APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET rawrxd-serve APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "rawrxd-serve: Ollama-compatible HTTP server target configured")
+
+    # =============================================================================
+    # BP1 Triple-Braid Smoke Test
+    # Validates: index build, block addressing, all 3 braid paths,
+    #            decompression (identity/RLE/LZ4-lite), corruption rejection,
+    #            dequantization correctness, workspace bounds, memory stability
+    # =============================================================================
+    add_executable(bp1_smoke_test
+        tests/bp1_smoke_test.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+    )
+    set_target_properties(bp1_smoke_test PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(bp1_smoke_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_link_directories(bp1_smoke_test PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(bp1_smoke_test PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    target_link_libraries(bp1_smoke_test PRIVATE
+        kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib oleaut32.lib
+        uuid.lib comdlg32.lib advapi32.lib version.lib psapi.lib
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET bp1_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET bp1_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET bp1_smoke_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "bp1_smoke_test: BP1 triple-braid smoke test configured")
+
+    # =========================================================================
+    # Vulkan Compute Diagnostic Test
+    # Minimal proof: buffer allocation → transfer → compute fill → readback
+    # =========================================================================
+    if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_SDK_ROOT)
+        add_executable(vulkan_compute_diagnostic
+            tests/vulkan_compute_diagnostic.cpp
+        )
+        set_target_properties(vulkan_compute_diagnostic PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(vulkan_compute_diagnostic PRIVATE
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(vulkan_compute_diagnostic PRIVATE
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_compute_diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_compute_diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_compute_diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_compute_diagnostic: Vulkan compute diagnostic test configured")
+
+        # =====================================================================
+        # Vulkan Tensor Upload + Readback Verification Test
+        # Proves: staging buffer → device-local buffer → readback → verification
+        # =====================================================================
+        add_executable(vulkan_tensor_upload_test
+            tests/vulkan_tensor_upload_test.cpp
+        )
+        set_target_properties(vulkan_tensor_upload_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(vulkan_tensor_upload_test PRIVATE
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(vulkan_tensor_upload_test PRIVATE
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_tensor_upload_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_tensor_upload_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_tensor_upload_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_tensor_upload_test: Vulkan tensor upload test configured")
+
+        # =====================================================================
+        # Vulkan GEMM Verification Test
+        # Proves: compute shader dispatch → GPU GEMM → readback → CPU comparison
+        # =====================================================================
+        add_executable(vulkan_gemm_test
+            tests/vulkan_gemm_test.cpp
+        )
+        set_target_properties(vulkan_gemm_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(vulkan_gemm_test PRIVATE
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(vulkan_gemm_test PRIVATE
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_gemm_test: Vulkan GEMM verification test configured")
+
+        # =====================================================================
+        # Vulkan Real-Dimension GEMM Test
+        # Proves: compute shader dispatch at transformer-scale dimensions
+        #         (e.g. 4096x4096x4096) with no RawrXD dependencies.
+        # =====================================================================
+        add_executable(vulkan_real_gemm_test
+            tests/vulkan_real_gemm_test.cpp
+        )
+        set_target_properties(vulkan_real_gemm_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(vulkan_real_gemm_test PRIVATE
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(vulkan_real_gemm_test PRIVATE
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_real_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_real_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_real_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_real_gemm_test: Real-dimension GEMM test configured")
+
+        # =====================================================================
+        # Vulkan Transformer GEMM Integration Test
+        # Proves: real Qwen GGUF → RawrXDInference → model loader → GPU-resident
+        #         weight → Vulkan GEMM dispatch → verified output.
+        # =====================================================================
+        add_executable(vulkan_transformer_gemm_test
+            tests/vulkan_transformer_gemm_test.cpp
+        )
+        set_target_properties(vulkan_transformer_gemm_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+        target_include_directories(vulkan_transformer_gemm_test PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/inference
+            ${CMAKE_SOURCE_DIR}/src/engine
+            ${CMAKE_SOURCE_DIR}/src/core
+            ${CMAKE_SOURCE_DIR}/src/codec
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/masm
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        if(MSVC)
+            target_link_directories(vulkan_transformer_gemm_test PRIVATE ${_RAWR_MSVC_LIBPATHS})
+            foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+                if(EXISTS "${_rawr_lib}")
+                    target_link_options(vulkan_transformer_gemm_test PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+                endif()
+            endforeach()
+        endif()
+        target_link_libraries(vulkan_transformer_gemm_test PRIVATE
+            InferenceEngine
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib
+            user32.lib
+            gdi32.lib
+            shell32.lib
+            ole32.lib
+            oleaut32.lib
+            uuid.lib
+            comdlg32.lib
+            advapi32.lib
+            version.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_transformer_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_transformer_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_transformer_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_transformer_gemm_test: Transformer GEMM integration test configured")
     endif()
 
 endif()
@@ -1235,6 +1565,7 @@ set(SOURCES
 
     # Phase 46: VulkanKernel — Full GPU Compute Engine (SPIR-V, Flash Attn v2, Fused MLP)
     src/vulkan_compute.cpp
+    src/backend/VulkanGemmDispatcher.cpp
 
     # Phase 46: Live Binary Patcher — Layer 5 Hotpatch (trampolines, code-page swap, RVA reloc)
     src/core/live_binary_patcher.cpp
@@ -3383,6 +3714,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/inference/polymorphic_loader.cpp
     src/inference/ollama_blob_parser.cpp
     src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/rawrxd_tokenizer.cpp
@@ -3421,6 +3753,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/runtime/TensorExecutionRouter.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
+    src/backend/VulkanGemmDispatcher.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/PlacementPolicy.cpp
@@ -3435,6 +3769,19 @@ set(INFERENCE_ENGINE_SOURCES
     src/logging/Logger.cpp
     src/sampling/advanced_sampler.cpp
     src/runtime/RawrRuntime.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticArchitectureDetector.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
     B014/build/b014_profiler.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
@@ -3535,6 +3882,7 @@ target_include_directories(InferenceEngine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/codec
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/masm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/governance
     ${RAWR_VULKAN_INCLUDE}
 )
 
@@ -6986,6 +7334,7 @@ target_include_directories(rawrxd PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/include/sovereign
+    ${CMAKE_SOURCE_DIR}/src/runtime/governance
 )
 
 # Vulkan SDK support for Sovereign Runtime rawrxd target
@@ -7041,8 +7390,7 @@ else()
         ${CMAKE_SOURCE_DIR}/src/runtime
         ${CMAKE_SOURCE_DIR}/src/runtime/memory
     )
-    set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-        COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+    target_compile_definitions(rawrxd PRIVATE RAWRXD_NO_VULKAN)
     message(STATUS "[SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004")
 endif()
 
@@ -7777,8 +8125,7 @@ add_executable(b004_transformer_router_streaming_integration EXCLUDE_FROM_ALL
     ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
 )
 rawrxd_configure_b004_target(b004_transformer_router_streaming_integration)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b004_transformer_router_streaming_integration PRIVATE RAWRXD_NO_VULKAN)
 
 if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
     target_include_directories(b004_transformer_router_streaming_integration PRIVATE "${RAWR_VULKAN_INCLUDE}")
@@ -7795,8 +8142,7 @@ add_executable(b004_transformer_router_streaming_integration_cpu EXCLUDE_FROM_AL
     ${B004_TRANSFORMER_ROUTER_STREAMING_SOURCES}
 )
 rawrxd_configure_b004_target(b004_transformer_router_streaming_integration_cpu)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b004_transformer_router_streaming_integration_cpu PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b004_transformer_router_streaming_integration_cpu PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b004_transformer_router_streaming_integration_cpu PRIVATE
@@ -7843,8 +8189,7 @@ add_executable(b012_amortization_test EXCLUDE_FROM_ALL
     ${B012_AMORTIZATION_SOURCES}
 )
 rawrxd_configure_b004_target(b012_amortization_test)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b012_amortization_test PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b012_amortization_test PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b012_amortization_test PRIVATE
@@ -7899,8 +8244,7 @@ add_executable(b013_stability_test EXCLUDE_FROM_ALL
     ${B013_STABILITY_SOURCES}
 )
 rawrxd_configure_b004_target(b013_stability_test)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b013_stability_test PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b013_stability_test PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b013_stability_test PRIVATE
@@ -7951,8 +8295,7 @@ add_executable(b014_compute_decomposition EXCLUDE_FROM_ALL
     ${B014_COMPUTE_SOURCES}
 )
 rawrxd_configure_b004_target(b014_compute_decomposition)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_compute_decomposition PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b014_compute_decomposition PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b014_compute_decomposition PRIVATE
@@ -8000,8 +8343,7 @@ add_executable(b014_boundary_probe EXCLUDE_FROM_ALL
     ${B014_BOUNDARY_SOURCES}
 )
 rawrxd_configure_b004_target(b014_boundary_probe)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_boundary_probe PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b014_boundary_probe PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b014_boundary_probe PRIVATE
@@ -8049,8 +8391,7 @@ add_executable(b014_single_boundary EXCLUDE_FROM_ALL
     ${B014_SINGLE_SOURCES}
 )
 rawrxd_configure_b004_target(b014_single_boundary)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_single_boundary PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b014_single_boundary PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b014_single_boundary PRIVATE
@@ -8098,8 +8439,7 @@ add_executable(b014_lifetime_probe EXCLUDE_FROM_ALL
     ${B014_LIFETIME_SOURCES}
 )
 rawrxd_configure_b004_target(b014_lifetime_probe)
-set_source_files_properties(src/runtime/TensorExecutionRouter.cpp PROPERTIES
-    COMPILE_DEFINITIONS RAWRXD_NO_VULKAN)
+target_compile_definitions(b014_lifetime_probe PRIVATE RAWRXD_NO_VULKAN)
 target_compile_definitions(b014_lifetime_probe PRIVATE RAWRXD_B004_TEST_FORCE_CPU=1)
 if(MSVC)
     target_compile_options(b014_lifetime_probe PRIVATE

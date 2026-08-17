@@ -892,11 +892,11 @@ bool RawRamXDFabric::performMigration(
 
     const size_t bytes = block->size;
 
-    if (!ledger_->tryReserve(targetTier, bytes))
-        return false;
-
     CapacityReservation reservation(
         ledger_, targetTier, bytes);
+
+    if (reservation.bytes() == 0)
+        return false;
 
     AllocationHandle dstHandle =
         targetBackend->allocate(bytes);

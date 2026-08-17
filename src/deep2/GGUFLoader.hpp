@@ -69,7 +69,7 @@ struct block_iq3_xxs { uint16_t d; uint8_t qs[96]; }; // 98 bytes, 256 elements
 struct block_iq3_s   { uint16_t d; uint8_t scales[8]; uint8_t qs[100]; }; // 110 bytes, 256 elements
 struct block_iq4_nl  { uint16_t d; uint16_t dmin; uint8_t qs[128]; }; // 132 bytes, 256 elements
 struct block_iq4_xs  { uint16_t d; uint8_t scales[6]; uint8_t qs[128]; }; // 136 bytes, 256 elements
-struct block_iq1_s   { uint8_t qs[32]; uint16_t d; }; // 184 bytes
+struct block_iq1_s   { uint8_t qs[32]; uint16_t d; }; // 34 bytes, 32 elements (1-bit weights + scale)
 
 // Block sizes (elements per block)
 constexpr size_t QK4_0 = 32;

@@ -124,7 +124,7 @@ private:
     bool m_ready = false;
     SessionConfig m_config;
     std::atomic<bool> m_cancelled{false};
-    std::unique_ptr<Deep2::Deep2Engine> m_engine;
+    std::unique_ptr<::Deep2::Deep2Engine> m_engine;
 };
 
 // ============================================================================

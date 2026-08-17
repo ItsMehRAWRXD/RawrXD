@@ -114,7 +114,17 @@ public:
      * Get last error.
      */
     const std::string& GetLastError() const { return last_error_; }
-    
+
+    /**
+     * Get the underlying file mapping handle (Windows) or fd (POSIX).
+     * Used by ElasticResidencyManager for sub-range MapViewOfFile.
+     */
+#ifdef _WIN32
+    void* GetMappingHandle() const { return map_handle_; }
+#else
+    int GetMappingHandle() const { return file_fd_; }
+#endif
+
     /**
      * Get quantization info for a type.
      */

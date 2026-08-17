@@ -113,13 +113,25 @@ private:
     void requestLoop();
     void handleRequest(HTTP_REQUEST* req);
 
-    // Route handlers
+    // Route handlers — Ollama compatibility
     void handleApiTags(HTTP_REQUEST* req);
     void handleApiGenerate(HTTP_REQUEST* req);
     void handleApiChat(HTTP_REQUEST* req);
     void handleApiShow(HTTP_REQUEST* req);
     void handleApiDelete(HTTP_REQUEST* req);
     void handleApiPs(HTTP_REQUEST* req);
+
+    // Route handlers — OpenAI wire format
+    void handleOpenAIChat(HTTP_REQUEST* req);
+    void handleOpenAICompletions(HTTP_REQUEST* req);
+    void handleOpenAIModels(HTTP_REQUEST* req);
+
+    // Route handlers — Anthropic wire format
+    void handleAnthropicMessages(HTTP_REQUEST* req);
+
+    // Route handlers — RawrXD native
+    void handleHealth(HTTP_REQUEST* req);
+
     void handleNotFound(HTTP_REQUEST* req);
 
     // HTTP helpers
@@ -127,11 +139,8 @@ private:
     void sendResponse(HTTP_REQUEST* req, int statusCode,
                       const std::string& contentType,
                       const std::string& body);
-    void sendStreamChunk(HTTP_REQUEST* req, HTTP_REQUEST_ID requestId,
-                         const std::string& chunk);
-    void sendStreamEnd(HTTP_REQUEST* req, HTTP_REQUEST_ID requestId);
 
-    // JSON helpers
+    // JSON helpers — Ollama
     std::string buildTagsJson() const;
     std::string buildShowJson(const ModelEntry& entry) const;
     std::string buildPsJson() const;
@@ -143,6 +152,32 @@ private:
                                 bool done) const;
     GenerateRequest parseGenerateRequest(const std::string& body) const;
     GenerateRequest parseChatRequest(const std::string& body) const;
+
+    // JSON helpers — OpenAI
+    std::string buildOpenAIChatChunk(const std::string& id,
+                                      const std::string& model,
+                                      const std::string& token,
+                                      bool done,
+                                      const std::string& finishReason) const;
+    std::string buildOpenAIChatFinal(const std::string& id,
+                                      const std::string& model,
+                                      const std::string& fullText) const;
+    std::string buildOpenAICompletionChunk(const std::string& id,
+                                              const std::string& model,
+                                              const std::string& text,
+                                              bool done) const;
+    std::string buildOpenAIModelsJson() const;
+
+    // JSON helpers — Anthropic
+    std::string buildAnthropicMessageStart(const std::string& msgId,
+                                            const std::string& model) const;
+    std::string buildAnthropicContentDelta(const std::string& msgId,
+                                              const std::string& text) const;
+    std::string buildAnthropicMessageStop(const std::string& msgId) const;
+
+    // Prompt flattening
+    std::string flattenChatMessages(const std::vector<ChatMessage>& msgs,
+                                     const std::string& system) const;
 
     // State
     std::atomic<bool>   m_running{false};

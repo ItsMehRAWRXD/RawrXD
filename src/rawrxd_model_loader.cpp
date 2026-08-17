@@ -1563,6 +1563,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     printf("[RawrXD] ⚡ AVX-512 VPOPCNT: Ready for 0.8-bit weight reconstruction\n");
 
     const std::string modelPathUtf8 = WideToUtf8(path);
+    m_modelPath = modelPathUtf8;
     const std::string modelPathLower = toLowerAscii(modelPathUtf8);
 
     printf("[GGUF] validation begin\n");
@@ -1591,6 +1592,7 @@ bool RawrXDModelLoader::Load(const wchar_t* path, VkDevice vkDevice, VkPhysicalD
     n_ffn = 0;
     n_experts = 0;
     n_experts_used = 0;
+    m_vocabulary.clear();
 
 #ifdef RAWR_ENABLE_VULKAN
     if (physDevice) {
@@ -1976,7 +1978,13 @@ uint8_t* RawrXDModelLoader::ParseMetadata(uint8_t* ptr, uint64_t count, const ui
                     {
                         if (ptr + 8 > end) return ptr;
                         uint64_t slen = *(uint64_t*)ptr;
-                        ptr += 8 + slen;
+                        ptr += 8;
+                        if (ptr + slen > end) return ptr;
+                        if (key == "tokenizer.ggml.tokens")
+                        {
+                            m_vocabulary.emplace_back((char*)ptr, static_cast<size_t>(slen));
+                        }
+                        ptr += slen;
                         if (ptr > end) return ptr;
                     }
                 }
@@ -3790,6 +3798,24 @@ bool RawrXDModelLoader::IsSupportedFileType(uint32_t fileType) const
         18u             // Q6_K
     };
     return allowlisted.count(fileType) > 0;
+}
+
+// VX01: GPU residency query for transformer router integration
+bool RawrXDModelLoader::IsTensorOnGPU(const std::string& name) const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
+    auto it = m_tensors.find(name);
+    return (it != m_tensors.end() && it->second.onGPU && it->second.gpuBuffer != VK_NULL_HANDLE);
+}
+
+void* RawrXDModelLoader::GetTensorGPUBuffer(const std::string& name) const
+{
+    std::lock_guard<std::recursive_mutex> lock(m_tensorMutex);
+    auto it = m_tensors.find(name);
+    if (it != m_tensors.end() && it->second.onGPU && it->second.gpuBuffer != VK_NULL_HANDLE) {
+        return reinterpret_cast<void*>(it->second.gpuBuffer);
+    }
+    return nullptr;
 }
 
 bool RawrXDModelLoader::ResolveBackendModeAndPreflight(const wchar_t* path, uint64_t modelBytes, std::string& lane,

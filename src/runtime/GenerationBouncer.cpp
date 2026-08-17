@@ -1,102 +1,107 @@
-/**
- * @file GenerationBouncer.cpp
- * @brief Unified Generation Pipeline Implementation
- * 
- * Routes all generation requests through canonical 6-stage pipeline:
- *   1. Tokenize (prompt → token IDs)
- *   2. Embed (token IDs → hidden states)
- *   3. Forward (transformer layers)
- *   4. LMHead (hidden → logits)
- *   5. Sample (logits → next token)
- *   6. Decode (token → text, stream)
- * 
- * @copyright RawrXD 2026
- */
-
 #include "GenerationBouncer.hpp"
+#include "shared/SharedModelRuntime.hpp"
+#include "../serve/rawrxd_serve.h"
 #include <future>
 #include <chrono>
-
-// Stub Logger to avoid missing header
-namespace RawrXD {
-    namespace Logging {
-        class Logger {
-        public:
-            static Logger& Instance() {
-                static Logger instance;
-                return instance;
-            }
-            void Info(const char* msg) { (void)msg; }
-            void Error(const char* msg) { (void)msg; }
-        };
-    }
-}
-
 #include <algorithm>
-#include <chrono>
 #include <sstream>
 #include <fstream>
 
 namespace RawrXD {
 
-// Minimal stub implementation - TODO: wire to actual GGUFProvider + LayerRegistry
+// Minimal stub Logger to avoid missing header
+namespace Logging {
+    class Logger {
+    public:
+        static Logger& Instance() {
+            static Logger instance;
+            return instance;
+        }
+        void Info(const char* msg) { (void)msg; }
+        void Error(const char* msg) { (void)msg; }
+    };
+}
+
+using namespace Serve::Shared;
 
 class GenerationBouncer::Impl {
 public:
+    std::unique_ptr<SharedModelRuntime> runtime;
     bool model_loaded = false;
     ModelStats stats;
     std::string model_path;
 
-    Impl() = default;
-    
+    Impl() {
+        runtime = std::make_unique<SharedModelRuntime>();
+    }
+
     bool LoadModel(const std::string& path) {
         model_path = path;
-        // Verify file exists
-        std::ifstream file(path, std::ios::binary);
-        if (!file.good()) {
+
+        if (!runtime->initialize({16ULL * 1024 * 1024 * 1024, 32ULL * 1024 * 1024 * 1024})) {
             return false;
         }
-        
-        // TODO: Wire GGUFProvider::Load(path)
-        // TODO: Wire DeviceMemoryTopology::Allocate()
-        // TODO: Wire LayerRegistry::RegisterLayers()
-        
+
+        if (!runtime->loadModel(path)) {
+            return false;
+        }
+
         model_loaded = true;
         stats.num_parameters = 0;
         stats.num_layers = 0;
         stats.vocab_size = 0;
         stats.context_length = 0;
         stats.model_type = "unknown";
-        
+
         return true;
     }
 
     GenerationResult RunPipeline(const GenerationRequest& req) {
         GenerationResult result;
         auto start_time = std::chrono::high_resolution_clock::now();
-        
-        // Synchronous generation pipeline (no BackendOrchestrator dependency)
-        // Stage 1: Tokenize
-        // Stage 2: Embed
-        // Stage 3: Forward pass through transformer
-        // Stage 4: LMHead projection
-        // Stage 5: Sample next token
-        // Stage 6: Decode to text
-        
-        // For now, return a simulated response based on prompt
-        result.text = "[Generated] " + req.prompt;
+
+        if (!runtime || !runtime->isModelLoaded()) {
+            result.error = "Runtime not initialized";
+            result.success = false;
+            return result;
+        }
+
+        uint64_t seq = runtime->beginSequence();
+        auto cleanup = [&]() {
+            runtime->endSequence(seq);
+        };
+
+        // Build a GenerateRequest compatible with SharedModelRuntime
+        Serve::GenerateRequest genReq;
+        genReq.prompt       = req.prompt;
+        genReq.num_predict  = req.max_tokens;
+        genReq.temperature  = req.temperature;
+        genReq.top_p        = req.top_p;
+        genReq.top_k        = req.top_k;
+        genReq.repeat_penalty = req.repetition_penalty;
+
+        std::string generated = runtime->generate(genReq,
+            [&](const std::string& token, bool done) {
+                if (req.on_token)
+                    req.on_token(token);
+                (void)done;
+            });
+
+        cleanup();
+
+        result.text = std::move(generated);
         result.tokens_generated = static_cast<int>(result.text.length() / 4);
-        
+
         auto end_time = std::chrono::high_resolution_clock::now();
         double elapsed_ms = std::chrono::duration<double, std::milli>(
             end_time - start_time).count();
-        
-        result.tokens_per_second = (elapsed_ms > 0) 
-            ? (result.tokens_generated * 1000.0 / elapsed_ms) 
+
+        result.tokens_per_second = (elapsed_ms > 0)
+            ? (result.tokens_generated * 1000.0 / elapsed_ms)
             : 0.0;
-        result.time_to_first_token_ms = elapsed_ms * 0.1; // Approximate
+        result.time_to_first_token_ms = elapsed_ms * 0.1;
         result.success = true;
-        
+
         return result;
     }
 };
@@ -116,6 +121,10 @@ bool GenerationBouncer::Initialize(const std::string& model_path) {
 }
 
 void GenerationBouncer::Shutdown() {
+    if (pimpl_->runtime) {
+        pimpl_->runtime->unloadModel();
+        pimpl_->runtime->shutdown();
+    }
     pimpl_->model_loaded = false;
 }
 

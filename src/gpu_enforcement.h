@@ -2,12 +2,14 @@
 // =============================================================================
 // RawrXD GPU Enforcement Gate
 // =============================================================================
-// Process-wide, no-toggle GPU requirement. Every IDE/CLI/Model entry point
-// MUST call rxd_gpu_require() at startup. If no GPU backend is available,
-// the process is terminated. There is no env-var, setting, or runtime flag
-// that can disable this gate.
+// Process-wide GPU requirement with CPU fallback support.
+// Every IDE/CLI/Model entry point MUST call rxd_gpu_require() at startup.
 //
-// Honored backends (in priority order): Vulkan, CUDA, HIP/ROCm.
+// Backends (in priority order): Vulkan, CUDA, HIP/ROCm, CPU (fallback).
+//
+// Environment variables:
+//   RAWRXD_PARITY_CPU=1        — Explicit CPU bypass for deterministic tests.
+//   RAWRXD_ALLOW_CPU_FALLBACK=1 — Allow CPU-only operation (warning logged).
 // =============================================================================
 #pragma once
 

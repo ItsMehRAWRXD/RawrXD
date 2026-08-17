@@ -38,6 +38,7 @@
 #include "rawrxd_serve.h"
 #include "rawrxd_serve_inference_plugin.h"
 #include "rawrxd_pipe_server.h"
+#include "inference_plugin_backend.h"
 #include "../core/inference_parity_trace.h"
 #include "../core/parity_cpu_fallback.h"
 
@@ -780,15 +781,41 @@ static int cmdServe(const CliArgs& args)
 {
     printf("Starting RawrXD server...\n");
 
-    std::string pluginMsg;
-    if (RawrXD::Serve::InferencePlugin::tryLoad(pluginMsg))
-    {
-        printf("%s\n", pluginMsg.c_str());
+    // -------------------------------------------------------------------------
+    // SharedModelRuntime + InferencePluginBackend adapter
+    // -------------------------------------------------------------------------
+    // The runtime owns model residency (mmap, tensor directory, tile materialization).
+    // The backend adapter delegates generation to the existing InferencePlugin DLL.
+    // The HTTP server still uses the InferenceBackend struct-of-lambdas contract.
+    // -------------------------------------------------------------------------
+    auto pluginBackend = std::make_shared<RawrXD::Serve::InferencePluginBackend>();
+    auto runtime = std::make_shared<RawrXD::Serve::Shared::SharedModelRuntime>(pluginBackend);
+
+    RawrXD::Serve::Shared::RuntimeCapacity cap{};
+    // Detect system RAM for capacity registration
+    MEMORYSTATUSEX memStatus{};
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        cap.ramBytes = memStatus.ullTotalPhys;
+    } else {
+        cap.ramBytes = 32ull * 1024 * 1024 * 1024; // 32 GB fallback
     }
-    else
-    {
-        printf("%s\n", pluginMsg.c_str());
+    // VRAM: derive from Vulkan probe (already done by rxd::gpu::require())
+    const auto& gpuStatus = rxd::gpu::status();
+    if (gpuStatus.vram_total_bytes > 0) {
+        cap.vramBytes = gpuStatus.vram_total_bytes;
+    } else {
+        cap.vramBytes = 16ull * 1024 * 1024 * 1024; // 16 GB fallback
     }
+
+    if (!runtime->initialize(cap)) {
+        fprintf(stderr, "Failed to initialize SharedModelRuntime\n");
+        return 1;
+    }
+
+    printf("SharedModelRuntime initialized: RAM=%s VRAM=%s\n",
+           humanSize(cap.ramBytes).c_str(),
+           humanSize(cap.vramBytes).c_str());
 
     RawrXD::Serve::ServeConfig cfg;
     cfg.host = args.host;
@@ -802,45 +829,21 @@ static int cmdServe(const CliArgs& args)
     backend.loadModel = [&](const std::string& path) -> bool
     {
         printf("Loading model: %s\n", path.c_str());
-        std::ifstream probe(path, std::ios::binary);
-        if (!probe.good())
-        {
-            fprintf(stderr, "Model path not readable: %s\n", path.c_str());
+
+        if (!runtime->loadModel(path)) {
+            fprintf(stderr, "SharedModelRuntime::loadModel failed: %s\n", path.c_str());
             return false;
         }
-        probe.close();
 
         loadedPath = path;
-        if (RawrXD::Serve::InferencePlugin::hasPlugin())
-        {
-            std::string err;
-            if (!RawrXD::Serve::InferencePlugin::loadModel(path, err))
-            {
-                fprintf(stderr, "%s\n", err.c_str());
-                loadedPath.clear();
-                return false;
-            }
-            modelLoaded = true;
-            return true;
-        }
-
-        char magic[4] = {};
-        std::ifstream f(path, std::ios::binary);
-        f.read(magic, 4);
-        if (f.gcount() != 4 || std::memcmp(magic, "GGUF", 4) != 0)
-        {
-            fprintf(stderr, "Not a GGUF file (expected magic GGUF): %s\n", path.c_str());
-            loadedPath.clear();
-            return false;
-        }
         modelLoaded = true;
-        printf("GGUF header OK. Generation requires RawrXD_ServeInference.dll or RAWRXD_SERVE_INFERENCE_DLL.\n");
+        printf("Model loaded via SharedModelRuntime.\n");
         return true;
     };
 
     backend.unloadModel = [&]()
     {
-        RawrXD::Serve::InferencePlugin::unloadModel();
+        runtime->unloadModel();
         loadedPath.clear();
         modelLoaded = false;
     };
@@ -852,25 +855,8 @@ static int cmdServe(const CliArgs& args)
     backend.generate = [&](const RawrXD::Serve::GenerateRequest& req,
                            RawrXD::Serve::StreamTokenFn onToken) -> std::string
     {
-        std::string err;
-        if (RawrXD::Serve::InferencePlugin::hasPlugin())
-        {
-            RawrXD::Serve::StreamTokenFn traced = [&](const std::string& tok, bool done)
-            {
-                if (!tok.empty())
-                    fprintf(stderr, "[CLI TOKEN] %s\n", tok.c_str());
-                if (done)
-                    fprintf(stderr, "[CLI TOKEN] <done=true>\n");
-                onToken(tok, done);
-            };
-            return RawrXD::Serve::InferencePlugin::generate(req, traced, err);
-        }
-        const std::string msg =
-            std::string("[RawrXD-Serve] No inference plugin loaded. Set RAWRXD_SERVE_INFERENCE_DLL or place "
-                        "RawrXD_ServeInference.dll next to rawrxd.exe. Model: ") +
-            loadedPath + "\nPrompt chars: " + std::to_string(req.prompt.size());
-        onToken(msg, true);
-        return msg;
+        // Both StreamTokenFn aliases are std::function<void(const std::string&, bool)>.
+        return runtime->generate(req, onToken);
     };
 
     RawrXD::Serve::RawrXDServer server;

@@ -123,6 +123,7 @@ class RawrXDModelLoader
     using ModelLoadErrorCallback = std::function<void(const std::string& stage, const std::string& message)>;
 
     bool Load(const wchar_t* path, VkDevice device, VkPhysicalDevice physDevice);
+    const std::string& GetModelPath() const { return m_modelPath; }
     virtual float* GetTensor(const std::string& name);
     virtual bool GetTensorRow(const std::string& name, size_t rowIndex, float* out, size_t cols);
     bool StreamingMatMul(const std::string& name, const float* x, float* y, size_t K, size_t N);
@@ -351,6 +352,10 @@ class RawrXDModelLoader
     std::string m_metadataTokenizerModel;
     uint32_t m_metadataFileType = 0xFFFFFFFFu;  // GGUF file_type identifier
     bool m_gpuUploadEnabled = true;
+    std::string m_modelPath;
+
+    // Vocabulary extracted from tokenizer.ggml.tokens (GGUF-embedded, no external files)
+    std::vector<std::string> m_vocabulary;
     std::string m_lastLoadErrorStage;
     std::string m_lastLoadErrorMessage;
     ModelLoadErrorCallback m_loadErrorCallback;
@@ -378,6 +383,13 @@ class RawrXDModelLoader
     int getExpertsUsedCount() const { return n_experts_used; }
     /// True if \p name appears in the loaded tensor map (does not materialize weights).
     [[nodiscard]] bool hasTensorNamed(const std::string& name) const;
+
+    /// Vocabulary strings extracted from the GGUF (tokenizer.ggml.tokens).
+    [[nodiscard]] const std::vector<std::string>& getVocabulary() const { return m_vocabulary; }
+
+    // VX01: GPU residency query for transformer router integration
+    [[nodiscard]] bool IsTensorOnGPU(const std::string& name) const;
+    [[nodiscard]] void* GetTensorGPUBuffer(const std::string& name) const;
 
   private:
     std::unordered_map<std::string, Tensor> m_tensors;

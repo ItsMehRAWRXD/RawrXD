@@ -15,6 +15,7 @@ namespace rawrxd {
 extern "C" {
     void Profiler_Initialize();
     void Profiler_SetBatchContext(unsigned long long batchSize);
+    unsigned long long Profiler_GetBatchContext();
     unsigned long long Profiler_ReadTsc();
     void Profiler_TrackCall(unsigned long long startCycles);
     void Profiler_AnalyzeBottlenecks();
@@ -33,12 +34,18 @@ private:
     unsigned long long start_;
 };
 
-// --- Batch context setter ---
+// --- Batch context setter --- RAII: restores previous batch size on scope exit ---
 class BatchContext {
 public:
     explicit BatchContext(unsigned long long batchSize) {
+        prev_ = Profiler_GetBatchContext();
         Profiler_SetBatchContext(batchSize);
     }
+    ~BatchContext() {
+        Profiler_SetBatchContext(prev_);
+    }
+private:
+    unsigned long long prev_;
 };
 
 } // namespace rawrxd

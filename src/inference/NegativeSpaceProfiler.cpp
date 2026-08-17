@@ -35,6 +35,11 @@ void Profiler_SetBatchContext(unsigned long long batchSize)
     g_total_cycles.store(0, std::memory_order_relaxed);
 }
 
+unsigned long long Profiler_GetBatchContext()
+{
+    return g_batch_size.load(std::memory_order_relaxed);
+}
+
 unsigned long long Profiler_ReadTsc()
 {
 #if defined(_MSC_VER)

@@ -2,10 +2,10 @@
 /**
  * @file GenerationBouncer.hpp
  * @brief Unified entry point for all generation requests
- * 
+ *
  * Consolidates 28+ generate() paths into single canonical pipeline:
  *   Prompt → Tokenize → Embed → Forward → Sample → Decode → Stream
- * 
+ *
  * @copyright RawrXD 2026
  */
 
@@ -24,6 +24,8 @@ class ModelContext;
 class TransformerForward;
 class Sampler;
 class TokenStreamer;
+
+namespace Serve { namespace Shared { class SharedModelRuntime; } }
 
 /**
  * @brief Generation request parameters
@@ -54,19 +56,19 @@ struct GenerationResult {
 
 /**
  * @brief Unified Generation Bouncer
- * 
+ *
  * Single entry point that routes all generation requests through
  * canonical pipeline. Replaces 28+ fragmented generate() implementations.
- * 
+ *
  * Usage:
  * ```cpp
  * GenerationBouncer bouncer;
  * bouncer.Initialize("model.gguf");
- * 
+ *
  * GenerationRequest req;
  * req.prompt = "Explain quantum computing";
  * req.max_tokens = 100;
- * 
+ *
  * GenerationResult result = bouncer.Generate(req);
  * std::cout << result.text << std::endl;
  * ```

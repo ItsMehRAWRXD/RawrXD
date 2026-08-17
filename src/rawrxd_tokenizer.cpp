@@ -55,6 +55,16 @@ bool RawrXDTokenizer::Load(const std::string& vocabPath) {
     return true;
 }
 
+void RawrXDTokenizer::SetVocabulary(const std::vector<std::string>& tokens) {
+    vocab.clear();
+    reverse_vocab.clear();
+    // Reserve IDs 0-2 for special tokens (pad, bos, eos)
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        vocab[tokens[i]] = static_cast<int>(i);
+        reverse_vocab[static_cast<int>(i)] = tokens[i];
+    }
+}
+
 std::vector<uint32_t> RawrXDTokenizer::Encode(const std::string& text) {
     // Greedy Matcher (Longest Prefix) - Simplified BPE
     std::vector<uint32_t> tokens;

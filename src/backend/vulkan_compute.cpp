@@ -683,6 +683,59 @@ std::expected<void, VulkanError> VulkanCompute::executeAttention(const VulkanBuf
     return {};
 }
 
+std::expected<VkShaderModule, VulkanError> VulkanCompute::createShaderModule(
+    const std::vector<uint32_t>& code)
+{
+    VkShaderModuleCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = code.size() * sizeof(uint32_t);
+    createInfo.pCode = code.data();
+
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    {
+        return std::unexpected(VulkanError::PipelineCreationFailed);
+    }
+    return shaderModule;
+}
+
+std::expected<VkCommandBuffer, VulkanError> VulkanCompute::beginCommandBuffer()
+{
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmdBuffer;
+    if (vkAllocateCommandBuffers(m_device, &allocInfo, &cmdBuffer) != VK_SUCCESS)
+    {
+        return std::unexpected(VulkanError::KernelExecutionFailed);
+    }
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    if (vkBeginCommandBuffer(cmdBuffer, &beginInfo) != VK_SUCCESS)
+    {
+        vkFreeCommandBuffers(m_device, m_commandPool, 1, &cmdBuffer);
+        return std::unexpected(VulkanError::KernelExecutionFailed);
+    }
+
+    return cmdBuffer;
+}
+
+std::expected<void, VulkanError> VulkanCompute::endCommandBuffer(VkCommandBuffer cmdBuffer)
+{
+    if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS)
+    {
+        vkFreeCommandBuffers(m_device, m_commandPool, 1, &cmdBuffer);
+        return std::unexpected(VulkanError::KernelExecutionFailed);
+    }
+    return {};
+}
+
 std::expected<void, VulkanError> VulkanCompute::synchronize()
 {
     if (m_device == VK_NULL_HANDLE)

@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace Deep2 {
 
@@ -151,6 +152,37 @@ struct InferenceStats {
 };
 
 // ============================================================================
+// Native Streaming Generation
+// ============================================================================
+
+struct GenerationOptions {
+    uint32_t maxTokens = 2048;
+
+    float temperature = 0.8f;
+    float topP = 0.95f;
+
+    uint32_t topK = 40;
+
+    float repeatPenalty = 1.0f;
+
+    uint64_t seed = 0;
+};
+
+struct GenerationResult {
+    uint64_t promptTokens = 0;
+    uint64_t generatedTokens = 0;
+
+    double promptTimeMs = 0.0;
+    double generationTimeMs = 0.0;
+
+    bool cancelled = false;
+    bool completed = false;
+};
+
+using TokenCallback =
+    std::function<bool(int32_t tokenId, const std::string& token)>;
+
+// ============================================================================
 // Production Deep2 Engine
 // ============================================================================
 class Deep2Engine {
@@ -181,6 +213,15 @@ public:
                     std::function<bool(int)> onToken = nullptr);
     // Generate text (high-level API)
     std::string generateText(const std::string& prompt, size_t maxTokens = 256);
+
+    // Native streaming generation — token-by-token with cancellation
+    GenerationResult generateStream(
+        const std::string& prompt,
+        const GenerationOptions& options,
+        TokenCallback callback);
+
+    // Dynamic model metadata from GGUF
+    const ModelMetadata& getModelMetadata() const;
 
     // Public bridge for the extern "C" Deep2_Forward C-API to drive a single
     // transformer layer forward pass without exposing internal buffers.

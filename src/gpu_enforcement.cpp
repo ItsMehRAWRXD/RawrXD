@@ -115,6 +115,19 @@ Status                 g_status{};
     std::abort();
 }
 
+// CPU fallback for systems without GPU — logs warning but allows operation.
+// This is used when RAWRXD_ALLOW_CPU_FALLBACK=1 is set.
+void cpu_fallback() {
+    g_status.active       = Backend::None;
+    g_status.device_count = 0;
+    std::snprintf(g_status.device_name, sizeof(g_status.device_name),
+                  "CPU-Fallback (no GPU detected)");
+    g_active.store(true, std::memory_order_release);
+    std::fprintf(stderr,
+        "[RawrXD][GPU] WARNING: No GPU backend detected. "
+        "Running in CPU fallback mode. Performance will be severely limited.\n");
+}
+
 void detect_locked() {
     g_status.active = Backend::None;
     g_status.device_count = 0;
@@ -190,6 +203,16 @@ void detect_locked() {
         g_active.store(true, std::memory_order_release);
         std::fprintf(stderr, "[RawrXD][GPU] HIP locked: %d device(s)\n", hp);
         return;
+    }
+
+    // 4. CPU fallback — opt-in via RAWRXD_ALLOW_CPU_FALLBACK=1 for machines
+    //    without GPU. Logs warning but allows operation. Not for production.
+    {
+        const char* fallback = std::getenv("RAWRXD_ALLOW_CPU_FALLBACK");
+        if (fallback && fallback[0] != '\0' && std::strcmp(fallback, "0") != 0) {
+            cpu_fallback();
+            return;
+        }
     }
 
     fatal_no_gpu();

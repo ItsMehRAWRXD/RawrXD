@@ -35,7 +35,11 @@
 #include "core/moe_plan_row_mixture_pack_cache.hpp"
 #include "core/swarm_scheduler.hpp"
 #include "runtime/TensorExecutionRouter.hpp"
+#include "runtime/Deep2ExecutionTelemetry.hpp"
+#include "runtime/governance/UnifiedTriggerOrchestrator.hpp"
 #include "runtime/memory/PredictiveMemoryManager.hpp"
+#include "runtime/elastic/ElasticEngine.hpp"
+#include "runtime/elastic/VulkanTensorResidencyBackend.hpp"
 #include "runtime/memory/WeightResidencyPool.hpp"
 #include "runtime/StreamRouterAdapter.hpp"
 #include "Sovereign_ABI.h"
@@ -234,6 +238,12 @@ class RawrXDTransformer
         return m_swarmPlanSliceIndex;
     }
 
+    // Deep2: Execution telemetry query — returns recent dispatch events with full metadata
+    // (tensor identity, quantization, residency, backend, timing, arithmetic intensity)
+    [[nodiscard]] std::vector<RawrXD::Deep2::DispatchEvent> GetDeep2RecentEvents(size_t count = 100) const;
+    [[nodiscard]] std::vector<RawrXD::Deep2::LayerStats> GetDeep2LayerStats() const;
+    void ResetDeep2Telemetry() const;
+
   private:
     Config config;
     VkDevice device;
@@ -333,6 +343,10 @@ class RawrXDTransformer
     // B004 execution seam state.
     RawrXD::TensorExecutionRouter m_execRouter;
     RawrXD::Memory::PredictiveMemoryManager m_memoryManager;
+
+    // Elastic: Architecture-adaptive OOC execution engine
+    std::unique_ptr<RawrXD::Elastic::ElasticEngine> m_elasticEngine;
+    std::unique_ptr<RawrXD::Elastic::VulkanTensorResidencyBackend> m_vulkanResidencyBackend;
     std::unordered_set<RawrXD::Memory::TensorId> m_registeredTensorIds;
     bool m_enableRouterDispatchForMaterializedWeights = false;
     std::uint64_t m_routerBoundaryMatMulCount = 0;
@@ -348,6 +362,29 @@ class RawrXDTransformer
     // Set true when T==1 (decode) to bypass pool lookup/materialization overhead.
     // Cleared when T>1 (prefill) to retain B015 acceleration.
     bool m_b015DecodeBypass = false;
+
+    // Elastic Engine proof instrumentation (ELASTIC audit)
+    mutable std::atomic<std::uint64_t> m_elasticMatMulCalls{0};
+    mutable std::atomic<std::uint64_t> m_elasticHits{0};
+    mutable std::atomic<std::uint64_t> m_elasticMisses{0};
+    mutable std::atomic<std::uint64_t> m_elasticPageInBytes{0};
+    mutable std::atomic<std::uint64_t> m_elasticVulkanDispatches{0};
+    mutable std::atomic<std::uint64_t> m_elasticCpuFallbacks{0};
+    mutable std::atomic<std::uint64_t> m_elasticPrefetchHits{0};
+    mutable std::atomic<std::uint64_t> m_elasticEvictions{0};
+
+    // VX01: Persistent GPU activation buffers for Vulkan GEMM dispatch
+    // Reused across all transformer layers to avoid per-dispatch allocation
+    VkBuffer m_gpuInputBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory m_gpuInputMemory = VK_NULL_HANDLE;
+    VkBuffer m_gpuOutputBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory m_gpuOutputMemory = VK_NULL_HANDLE;
+    size_t m_gpuInputBufferSize = 0;
+    size_t m_gpuOutputBufferSize = 0;
+    bool m_gpuBuffersInitialized = false;
+
+    bool InitializeGpuActivationBuffers(VkDevice device, VkPhysicalDevice physDevice);
+    void DestroyGpuActivationBuffers();
 
     // B009-P2: Structural batching instrumentation counters
     mutable std::atomic<std::uint64_t> m_b009ForwardBatchCalls{0};
@@ -392,4 +429,7 @@ class RawrXDTransformer
 
     void b009ClearGemmRecords() const;
     void b009PrintGemmEfficiencyReport() const;
+
+    // B016: Governance orchestrator — hardware-triggered autonomous control plane
+    std::unique_ptr<RawrXD::Governance::UnifiedTriggerOrchestrator> m_governanceOrchestrator;
 };

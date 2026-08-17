@@ -28,6 +28,8 @@
 
 // Vulkan types are now provided by vulkan_compute.h
 // Only define additional Vulkan constants here if not already defined
+// Guard: if real Vulkan headers were already included, do NOT define stubs.
+#ifndef VULKAN_CORE_H_
 #ifndef VK_NULL_HANDLE
 #define VK_NULL_HANDLE 0
 #endif
@@ -56,8 +58,21 @@
 #define VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 0
 #endif
 #ifndef VK_QUEUE_COMPUTE_BIT
-#define VK_QUEUE_COMPUTE_BIT 0
+#define VK_QUEUE_COMPUTE_BIT 0x00000002
 #endif
+#ifndef VK_QUEUE_GRAPHICS_BIT
+#define VK_QUEUE_GRAPHICS_BIT 0x00000001
+#endif
+#ifndef VK_QUEUE_TRANSFER_BIT
+#define VK_QUEUE_TRANSFER_BIT 0x00000004
+#endif
+#ifndef VK_QUEUE_SPARSE_BINDING_BIT
+#define VK_QUEUE_SPARSE_BINDING_BIT 0x00000008
+#endif
+#ifndef VK_QUEUE_PROTECTED_BIT
+#define VK_QUEUE_PROTECTED_BIT 0x00000010
+#endif
+#endif // !VULKAN_CORE_H_
 #include "core/gguf_swarm_plan_builder.hpp"
 #include "rawrxd_model_loader.h"
 #include "rawrxd_sampler.h"
@@ -174,31 +189,61 @@ class RawrXDInference
         {
             if (queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT)
             {
-                computeFamily = i;
+                computeFamily = static_cast<int>(i);
                 break;
             }
+        }
+
+        if (computeFamily < 0)
+        {
+            printf("[RawrXD] Vulkan: No compute queue family found on selected device (families=%u)\n", queueFamilyCount);
+            return VK_NULL_HANDLE;
         }
 
         float queuePriority = 1.0f;
         VkDeviceQueueCreateInfo queueCreateInfo{};
         queueCreateInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
-        queueCreateInfo.queueFamilyIndex = computeFamily;
+        queueCreateInfo.queueFamilyIndex = static_cast<uint32_t>(computeFamily);
         queueCreateInfo.queueCount = 1;
         queueCreateInfo.pQueuePriorities = &queuePriority;
 
+        // Enable required AMD RDNA3 extensions for compute shaders
+        const char* extensions[] = {
+            VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME,
+            VK_KHR_16BIT_STORAGE_EXTENSION_NAME,
+            VK_KHR_8BIT_STORAGE_EXTENSION_NAME,
+        };
+        uint32_t extCount = 3;
+
+        VkPhysicalDeviceShaderFloat16Int8Features float16Int8{};
+        float16Int8.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
+        float16Int8.shaderFloat16 = VK_TRUE;
+        float16Int8.shaderInt8 = VK_TRUE;
+
+        VkPhysicalDevice16BitStorageFeatures storage16{};
+        storage16.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
+        storage16.storageBuffer16BitAccess = VK_TRUE;
+        storage16.pNext = &float16Int8;
+
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = static_cast<VkStructureType>(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
+        createInfo.pNext = &storage16;
         createInfo.pQueueCreateInfos = &queueCreateInfo;
         createInfo.queueCreateInfoCount = 1;
         VkPhysicalDeviceFeatures deviceFeatures{};
         createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.enabledExtensionCount = extCount;
+        createInfo.ppEnabledExtensionNames = extensions;
 
         VkDevice device = VK_NULL_HANDLE;
-        if (vkCreateDevice(physDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+        VkResult result = vkCreateDevice(physDevice, &createInfo, nullptr, &device);
+        if (result != VK_SUCCESS)
         {
-            printf("failed to create logical device!\n");
+            printf("[RawrXD] Vulkan: vkCreateDevice failed with VkResult=%d (computeFamily=%d)\n",
+                   static_cast<int>(result), computeFamily);
             return VK_NULL_HANDLE;
         }
+        printf("[RawrXD] Vulkan: Logical device created successfully (computeFamily=%d)\n", computeFamily);
         return device;
 #endif
     }
@@ -356,7 +401,18 @@ class RawrXDInference
         transformer.SetSwarmScheduler(m_swarmScheduler.get());
 
         printf("[RawrXD] Stage: tokenizer.Load\n");
-        tokenizer.Load(vocabPath);
+        if (vocabPath != nullptr) {
+            tokenizer.Load(vocabPath);
+        } else {
+            printf("[RawrXD] No external vocab file provided; using GGUF-embedded vocabulary or byte-level fallback\n");
+        }
+        const auto& ggufVocab = loader.getVocabulary();
+        if (!ggufVocab.empty()) {
+            printf("[RawrXD] Stage: tokenizer.SetVocabulary (%zu tokens from GGUF)\n", ggufVocab.size());
+            tokenizer.SetVocabulary(ggufVocab);
+        } else {
+            printf("[RawrXD] Warning: no vocabulary found in GGUF; tokenizer will use byte-level fallback\n");
+        }
         m_contextLimit = static_cast<uint32_t>(cfg.n_ctx);
         m_lastLogits.clear();
 

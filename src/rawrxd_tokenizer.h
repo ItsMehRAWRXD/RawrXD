@@ -13,7 +13,10 @@ class RawrXDTokenizer {
 public:
     // Load from generic vocab file
     bool Load(const std::string& vocabPath);
-    
+
+    // Load vocabulary directly from GGUF-extracted strings (sovereign path)
+    void SetVocabulary(const std::vector<std::string>& tokens);
+
     // Encode text to tokens
     std::vector<uint32_t> Encode(const std::string& text);
     
