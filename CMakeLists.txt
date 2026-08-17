@@ -260,6 +260,17 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/Sovereign_KernelBridge_CPP.cpp
         src/runtime/Deep2ExecutionTelemetry.cpp
         src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/gguf_tensor_loader.cpp
+        # Elastic runtime for predictive tensor residency
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        # Shared model runtime
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
         src/runtime/governance/HardwareCapabilityProbe.cpp
         src/runtime/governance/CapabilityTierMatrix.cpp
         src/runtime/governance/HardwareGovernor.cpp
@@ -7326,6 +7337,20 @@ if(NOT TARGET rawrxd)
         src/logging/Logger.cpp
         B014/build/b014_profiler.cpp
         src/runtime/StreamRouterAdapter.cpp
+        src/runtime/gguf_tensor_loader.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
         src/inference/NegativeSpaceProfiler.cpp
     )
 

@@ -24,6 +24,11 @@
     #define RAWR_VULKAN_AVAILABLE 0
 #endif
 
+// Include Vulkan headers first if available to avoid VK_NULL_HANDLE redefinition
+#if RAWR_VULKAN_AVAILABLE
+    #include <vulkan/vulkan.h>
+#endif
+
 #ifndef VK_NULL_HANDLE
 #define VK_NULL_HANDLE 0
 #endif

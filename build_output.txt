@@ -1,140 +1,453 @@
-<<<<<<< HEAD
-**********************************************************************
-** Visual Studio 2026 Developer Command Prompt v18.2.1
-** Copyright (c) 2025 Microsoft Corporation
-**********************************************************************
-[DEBUG:ext\vcvars.bat] Found potential v145 version file: 'Microsoft.VCToolsVersion.VC.14.50.18.0.txt'
-[DEBUG:ext\vcvars.bat] Testing v145 version file: 'Microsoft.VCToolsVersion.VC.14.50.18.0.txt'
-[vcvarsall.bat] Environment initialized for: 'x64'
-Warning: NMake does not support parallel builds. Ignoring parallel build command line option.
-[  0%] Built target quickjs_static
-[  0%] Built target RawrXD_MultiWindow_Kernel
-[  9%] Built target masm_kernels
-[  9%] Built target re_deobfuscator
-[  9%] Built target RawrXD-RE-Library
-[  9%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_DiskRecovery.cpp.obj
-Win32IDE_DiskRecovery.cpp
-[  9%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/win32app/Win32IDE_Plugins.cpp.obj
-Win32IDE_Plugins.cpp
-[  5%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/AgentToolHandlers.cpp.obj
-AgentToolHandlers.cpp
-[  5%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/BoundedAgentLoop.cpp.obj
-BoundedAgentLoop.cpp
-[  5%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/DeterministicReplayEngine.cpp.obj
-DeterministicReplayEngine.cpp
-[  5%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/AgentOrchestrator.cpp.obj
-AgentOrchestrator.cpp
-[  5%] Building CXX object CMakeFiles/RawrXD-Win32IDE.dir/src/agentic/OrchestratorBridge.cpp.obj
-OrchestratorBridge.cpp
-D:\rawrxd\src\agentic\../logging/Logger.h(15): error C2143: syntax error: missing '}' before 'constant'
-D:\rawrxd\src\agentic\../logging/Logger.h(15): error C2059: syntax error: 'constant'
-D:\rawrxd\src\agentic\../logging/Logger.h(17): error C2143: syntax error: missing ';' before '}'
-D:\rawrxd\src\agentic\../logging/Logger.h(20): error C3646: 'level': unknown override specifier
-D:\rawrxd\src\agentic\../logging/Logger.h(20): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-D:\rawrxd\src\agentic\../logging/Logger.h(47): error C2061: syntax error: identifier 'LogLevel'
-D:\rawrxd\src\agentic\../logging/Logger.h(52): error C2061: syntax error: identifier 'LogLevel'
-D:\rawrxd\src\agentic\../logging/Logger.h(75): error C3646: 'minLevel_': unknown override specifier
-D:\rawrxd\src\agentic\../logging/Logger.h(75): error C2059: syntax error: '{'
-D:\rawrxd\src\agentic\../logging/Logger.h(75): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
-D:\rawrxd\src\agentic\../logging/Logger.h(47): error C2065: 'minLevel_': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(47): error C2065: 'level': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(57): error C2653: 'LogLevel': is not a class or namespace name
-D:\rawrxd\src\agentic\../logging/Logger.h(57): error C2065: 'DEBUG': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(60): error C2653: 'LogLevel': is not a class or namespace name
-D:\rawrxd\src\agentic\../logging/Logger.h(60): error C2065: 'INFO': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(63): error C2653: 'LogLevel': is not a class or namespace name
-D:\rawrxd\src\agentic\../logging/Logger.h(63): error C2065: 'WARNING': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(66): error C2589: 'constant': illegal token on right side of '::'
-D:\rawrxd\src\agentic\../logging/Logger.h(66): error C2144: syntax error: '<error>' should be preceded by ')'
-D:\rawrxd\src\agentic\../logging/Logger.h(66): error C2144: syntax error: '<error>' should be preceded by ';'
-D:\rawrxd\src\agentic\../logging/Logger.h(66): error C2059: syntax error: ','
-D:\rawrxd\src\agentic\../logging/Logger.h(66): error C2059: syntax error: ')'
-D:\rawrxd\src\agentic\../logging/Logger.h(69): error C2653: 'LogLevel': is not a class or namespace name
-D:\rawrxd\src\agentic\../logging/Logger.h(69): error C2065: 'CRITICAL': undeclared identifier
-D:\rawrxd\src\agentic\../logging/Logger.h(82): error C2061: syntax error: identifier 'LogLevel'
-D:\rawrxd\src\agentic\../logging/Logger.h(92): error C3646: 'level_': unknown override specifier
-D:\rawrxd\src\agentic\../logging/Logger.h(92): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-D:\rawrxd\src\agentic\../logging/Logger.h(98): error C2059: syntax error: '}'
-D:\rawrxd\src\agentic\../logging/Logger.h(98): error C2143: syntax error: missing ';' before '}'
-D:\rawrxd\src\agentic\../security/InputSanitizer.h(7): error C2039: 'Security': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\../logging/Logger.h(9): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\../security/InputSanitizer.h(7): error C2143: syntax error: missing ';' before '{'
-D:\rawrxd\src\agentic\../security/InputSanitizer.h(7): error C2447: '{': missing function header (old-style formal list?)
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(62): error C2039: 'Logger': is not a member of 'RawrXD::Logging'
-D:\rawrxd\src\agentic\../logging/Logger.h(9): note: see declaration of 'RawrXD::Logging'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(63): error C3083: 'Logger': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(63): error C2039: 'instance': is not a member of 'RawrXD::Logging'
-D:\rawrxd\src\agentic\../logging/Logger.h(9): note: see declaration of 'RawrXD::Logging'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(63): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(110): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(110): error C3083: 'InputSanitizer': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(110): error C2039: 'instance': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(110): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(111): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(111): error C2039: 'SanitizationResult': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(111): error C2065: 'SanitizationResult': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(111): error C2146: syntax error: missing ';' before identifier 'pathSan'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(111): error C2065: 'pathSan': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(112): error C2065: 'pathSan': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(113): error C2065: 'pathSan': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(143): error C2039: 'ValidationResult': is not a member of 'RawrXD::Core::ConfigurationValidator'
-D:\rawrxd\src\agentic\../core/ConfigurationValidator.h(23): note: see declaration of 'RawrXD::Core::ConfigurationValidator'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(143): error C2065: 'ValidationResult': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(143): error C2146: syntax error: missing ';' before identifier 'validation'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(143): error C2065: 'validation': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(151): error C2065: 'validation': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(151): error C2530: 'warn': references must be initialized
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(151): error C3531: 'warn': a symbol whose type contains 'auto' must have an initializer
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(151): error C2143: syntax error: missing ';' before ':'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(151): error C2143: syntax error: missing ';' before ')'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(154): error C2065: 'validation': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(155): error C2065: 'validation': undeclared identifier
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(155): error C2530: 'err': references must be initialized
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(155): error C3531: 'err': a symbol whose type contains 'auto' must have an initializer
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(155): error C2143: syntax error: missing ';' before ':'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(155): error C2143: syntax error: missing ';' before ')'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(182): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(182): error C3083: 'InputSanitizer': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(182): error C2039: 'instance': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(182): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(184): error C3536: 'sanitizedPrompt': cannot be used before it is initialized
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(440): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(440): error C3083: 'InputSanitizer': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(440): error C2039: 'instance': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(440): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(441): error C3536: 'sanitized': cannot be used before it is initialized
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(453): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(453): error C3083: 'InputSanitizer': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(453): error C2039: 'instance': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(453): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(454): error C3536: 'sanitized': cannot be used before it is initialized
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(472): error C3083: 'Security': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(472): error C3083: 'InputSanitizer': the symbol to the left of a '::' must be a type
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(472): error C2039: 'instance': is not a member of 'RawrXD'
-D:\rawrxd\src\agentic\ErrorRecoveryManager.h(60): note: see declaration of 'RawrXD'
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(472): error C3861: 'instance': identifier not found
-D:\rawrxd\src\agentic\OrchestratorBridge.cpp(473): error C3536: 'sanitized': cannot be used before it is initialized
-NMAKE : fatal error U1077: '"C:\Program Files\CMake\bin\cmake.exe" -E cmake_cl_compile_depends --dep-file=CMakeFiles\RawrXD-Win32IDE.dir\src\agentic\OrchestratorBridge.cpp.obj.d --working-dir=D:\rawrxd\build --filter-prefix="Note: including file: " -- C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\cl.exe @C:\Users\HiH8e\AppData\Local\Temp\nm26C.tmp' : return code '0x2'
-Stop.
-NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\nmake.exe -s -f CMakeFiles\RawrXD-Win32IDE.dir\build.make /nologo -SL                 CMakeFiles\RawrXD-Win32IDE.dir\build' : return code '0x2'
-Stop.
-NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\nmake.exe -s -f CMakeFiles\Makefile2 /nologo -SL                 CMakeFiles\RawrXD-Win32IDE.dir\all' : return code '0x2'
-Stop.
-NMAKE : fatal error U1077: 'C:\VS2022Enterprise\VC\Tools\MSVC\14.50.35717\bin\Hostx64\x64\nmake.exe -s -f CMakeFiles\Makefile2 /nologo -LS                 RawrXD-Win32IDE' : return code '0x2'
-Stop.
-=======
-[  2%] Building CXX object CMakeFiles/RawrXD.dir/src/qtapp/RawrXD_MainWindow.cpp.obj
-[  4%] Building CXX object CMakeFiles/RawrXD.dir/src/gui/RawrXD_EditorWindow.cpp.obj
-D:\rawrxd\src\gui\RawrXD_EditorWindow.cpp:5:10: fatal error: ../ai_integration_hub.h: No such file or directory
-    5 | #include "../ai_integration_hub.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-mingw32-make[2]: *** [CMakeFiles\RawrXD.dir\build.make:124: CMakeFiles/RawrXD.dir/src/gui/RawrXD_EditorWindow.cpp.obj] Error 1
-mingw32-make[1]: *** [CMakeFiles\Makefile2:89: CMakeFiles/RawrXD.dir/all] Error 2
-mingw32-make: *** [Makefile:90: all] Error 2
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
+[1/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[2/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[3/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[4/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[5/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[6/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[7/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[8/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[9/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[10/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[11/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[12/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[13/84] Verify SSOT EXT ownership artifacts are consistent
+SSOT ownership verify OK: ext=633 ext_dedicated=53 beacons=633
+[14/84] Building CXX object tests\CMakeFiles\test_gguf_integration.dir\test_gguf_integration.cpp.obj
+d:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[15/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[16/84] Linking CXX executable bin\sovereign_integrated_test.exe
+[17/84] Building CXX object src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\win32app\agentic_bridge_headless.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\deep2\GGUFShardRouter_lanes.hpp(42): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+D:\rawrxd\src\deep2\GGUFShardRouter_lanes.hpp(42): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+D:\rawrxd\src\win32app\agentic_bridge_headless.cpp(24): warning C4099: 'Win32IDE': type name first seen using 'class' now seen using 'struct'
+D:\rawrxd\src\win32app\Win32IDE_AgenticBridge.h(19): note: see declaration of 'Win32IDE'
+[18/84] Linking CXX executable bin\test_agentic_supervisor.exe
+[19/84] Linking CXX executable bin\RawrXD_KeyGen.exe
+[20/84] Building CXX object src\tools\CMakeFiles\bench_cpu.dir\bench_cpu.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[21/84] Building CXX object tests\CMakeFiles\test_ai_completions.dir\test_ai_completions.cpp.obj
+d:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[22/84] Sync + regenerate SSOT beacon ownership artifacts
+Synced D:\rawrxd\src\core\ssot_beacon.symbols.txt from ssot_handlers_ext.cpp (633 symbols)
+Generated D:\rawrxd\src\core\ssot_beacon_table.inc (633 symbols)
+[23/84] Linking CXX executable bin\model_stack_validation.exe; Generating minimal test GGUF file
+Generated minimal GGUF: D:/rawrxd/build-ninja/src/validation/test_model.gguf
+  Vocab size: 256
+  Embed dim: 64
+  Layers: 1
+  Heads: 2
+  Tensors: 11
+  Total parameters: 82,112
+  File size: 333,408 bytes
+[24/84] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[25/84] Building CXX object src\tools\CMakeFiles\real_multi_model_benchmark.dir\real_multi_model_benchmark.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\tools\real_multi_model_benchmark.cpp(39): warning C4101: 'e': unreferenced local variable
+[26/84] Linking CXX executable bin\telemetry_validation.exe
+[27/84] Linking CXX executable bin\abi_integrity_test.exe
+[28/84] Building CXX object tests\CMakeFiles\VAL063_InferenceGatewayHarness.dir\VAL063_InferenceGatewayHarness.cpp.obj
+D:\rawrxd\tests\../src/rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[29/84] Linking CXX executable bin\model_stack_validation_real.exe
+[30/84] Building CXX object src\tools\CMakeFiles\comprehensive_benchmark.dir\__\backend_selector.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[31/84] Linking CXX executable bin\test_masm_linkage.exe
+[32/84] Linking CXX executable bin\zero_assembly_test.exe
+[33/84] Linking CXX executable bin\ab_test_runner.exe
+[34/84] Linking CXX executable bin\kernel_differential_benchmark.exe
+[35/84] Linking CXX executable bin\q4_0_differential_test.exe
+[36/84] Linking CXX executable bin\silu_accuracy_test.exe
+[37/84] Building CXX object src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\RawrXD_AgentLoop.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\agentic\../IDELogger.h(74): warning C4005: 'LOG_TRACE_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(171): note: see previous definition of 'LOG_TRACE_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(75): warning C4005: 'LOG_DEBUG_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(172): note: see previous definition of 'LOG_DEBUG_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(76): warning C4005: 'LOG_INFO_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(173): note: see previous definition of 'LOG_INFO_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(77): warning C4005: 'LOG_WARNING_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(174): note: see previous definition of 'LOG_WARNING_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(78): warning C4005: 'LOG_ERROR_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(175): note: see previous definition of 'LOG_ERROR_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(79): warning C4005: 'LOG_CRITICAL_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(176): note: see previous definition of 'LOG_CRITICAL_FMT'
+[38/84] Building CXX object CMakeFiles\RawrEngine.dir\src\core\ssot_beacon.cpp.obj
+[39/84] Building CXX object tests\CMakeFiles\VAL063_InferenceGatewayHarness.dir\__\src\rawrxd_transformer.cpp.obj
+D:\rawrxd\src\rawrxd_transformer.cpp(760): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(760): warning C4244: 'initializing': conversion from 'double' to 'const float', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2479): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2480): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2926): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2927): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+[40/84] Building CXX object src\tools\CMakeFiles\gguf_api_server.dir\__\gguf_api_server.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\gguf_api_server.cpp(188): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[41/84] Building CXX object CMakeFiles\RawrEngine.dir\src\cpu_inference_engine.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\cpu_inference_engine.cpp(264): warning C4477: 'printf' : format string '%zu' requires an argument of type 'unsigned __int64', but variadic argument 3 has type 'uint32_t'
+D:\rawrxd\src\cpu_inference_engine.cpp(264): note: consider using '%u' in the format string
+D:\rawrxd\src\cpu_inference_engine.cpp(264): note: consider using '%I32u' in the format string
+[42/84] Building CXX object CMakeFiles\RawrEngine.dir\src\core\execution_scheduler.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[43/84] Building CXX object CMakeFiles\RawrEngine.dir\src\rawrxd_transformer.cpp.obj
+D:\rawrxd\src\rawrxd_transformer.cpp(760): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(760): warning C4244: 'initializing': conversion from 'double' to 'const float', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2479): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2480): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2926): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+D:\rawrxd\src\rawrxd_transformer.cpp(2927): warning C4244: 'argument': conversion from 'int64_t' to 'int', possible loss of data
+[44/84] Building CXX object CMakeFiles\RawrEngine.dir\src\win32app\agentic_bridge_headless.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\deep2\GGUFShardRouter_lanes.hpp(42): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+D:\rawrxd\src\deep2\GGUFShardRouter_lanes.hpp(42): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+D:\rawrxd\src\win32app\agentic_bridge_headless.cpp(24): warning C4099: 'Win32IDE': type name first seen using 'class' now seen using 'struct'
+D:\rawrxd\src\win32app\Win32IDE_AgenticBridge.h(19): note: see declaration of 'Win32IDE'
+[45/84] Building CXX object CMakeFiles\RawrEngine.dir\src\main.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\expected(11): warning STL4038: The contents of <expected> are available only with C++23 or later.
+[46/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\cpu_inference_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[47/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\rawrxd_transformer.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[48/84] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\RawrXD_AgentLoop.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\agentic\../IDELogger.h(74): warning C4005: 'LOG_TRACE_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(171): note: see previous definition of 'LOG_TRACE_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(75): warning C4005: 'LOG_DEBUG_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(172): note: see previous definition of 'LOG_DEBUG_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(76): warning C4005: 'LOG_INFO_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(173): note: see previous definition of 'LOG_INFO_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(77): warning C4005: 'LOG_WARNING_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(174): note: see previous definition of 'LOG_WARNING_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(78): warning C4005: 'LOG_ERROR_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(175): note: see previous definition of 'LOG_ERROR_FMT'
+D:\rawrxd\src\agentic\../IDELogger.h(79): warning C4005: 'LOG_CRITICAL_FMT': macro redefinition
+D:\rawrxd\src\win32app\IDELogger.h(176): note: see previous definition of 'LOG_CRITICAL_FMT'
+[49/84] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic_engine.cpp.obj
+D:\rawrxd\src\AppState.h(35): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\rawrxd\src\AppState.h(36): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\rawrxd\src\AppState.h(43): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\rawrxd\src\AppState.h(44): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\agentic_engine.cpp(593): warning C4101: 'e': unreferenced local variable
+[50/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\ssot_beacon.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[51/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\main.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\expected(11): warning STL4038: The contents of <expected> are available only with C++23 or later.
+[52/84] Building CXX object CMakeFiles\RawrEngine.dir\src\subagent_core.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[53/84] Linking CXX static library src\validation\rawr_re_framework.lib
+[54/84] Linking CXX executable bin\q4_0_optimized_bench.exe
+[55/84] Linking CXX executable bin\rawrxd-ceo.exe
+FAILED: [code=4294967295] bin/rawrxd-ceo.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1951 --intdir=src\ceo\CMakeFiles\rawrxd_ceo_cli.dir --rc=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\rc.exe --mt=C:\PROGRA~2\WI3CF2~1\10\bin\100226~1.0\x64\mt.exe --manifests  -- C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\main.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AgentOrchestrator.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AgentToolHandlers.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\RawrXD_AgentLoop.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\RawrXD_ToolRegistry.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\ToolRegistry.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AdvancedAgentCoordinator.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agent\AgentOllamaClient.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agent\FIMPromptBuilder.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\core\rawrxd_subsystem_api.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic_observability.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\core\unified_hotpatch_manager.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\DiskRecoveryAgent.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\win32app\agentic_bridge_headless.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\disk_recovery_stubs.cpp.obj  /out:bin\rawrxd-ceo.exe /implib:src\ceo\rawrxd-ceo.lib /pdb:bin\rawrxd-ceo.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64   -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64   -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64   -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 src\ceo\rawrxd_ceo.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+LINK: command "C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\link.exe /nologo src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\main.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AgentOrchestrator.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AgentToolHandlers.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\RawrXD_AgentLoop.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\RawrXD_ToolRegistry.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\ToolRegistry.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\AdvancedAgentCoordinator.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agent\AgentOllamaClient.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agent\FIMPromptBuilder.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\core\rawrxd_subsystem_api.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic_observability.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\core\unified_hotpatch_manager.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\agentic\DiskRecoveryAgent.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\__\win32app\agentic_bridge_headless.cpp.obj src\ceo\CMakeFiles\rawrxd_ceo_cli.dir\disk_recovery_stubs.cpp.obj /out:bin\rawrxd-ceo.exe /implib:src\ceo\rawrxd-ceo.lib /pdb:bin\rawrxd-ceo.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\x64 -LIBPATH:C:\PROGRA~1\MICROS~4\18\ENTERP~1\VC\Tools\MSVC\1451~1.362\lib\onecore\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\ucrt\x64 -LIBPATH:C:\PROGRA~2\WI3CF2~1\10\Lib\100226~1.0\um\x64 -LIBPATH:D:\rawrxd\Ship\webview2\build\native\x64 src\ceo\rawrxd_ceo.lib kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib /MANIFEST:EMBED,ID=1" failed (exit code 1120) with the following output:
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol DiskRecovery_Cleanup
+
+DiskRecoveryAgent.cpp.obj : error LNK2001: unresolved external symbol DiskRecovery_Cleanup
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol DiskRecovery_GetStats
+
+DiskRecoveryAgent.cpp.obj : error LNK2001: unresolved external symbol DiskRecovery_GetStats
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol AD_ProcessGGUF
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_LoadExecFile
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_InitializeVulkan
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_CreateMemoryArena
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_CreateComputePipelines
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_PrintStatistics
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_InitializeStreaming
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_CreateThreadPool
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_StartDEFLATEThreads
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_InitializePrefetchQueue
+
+rawrxd_subsystem_api.cpp.obj : error LNK2001: unresolved external symbol SO_PrintMetrics
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "struct PatchResult __cdecl apply_memory_patch(void *,unsigned __int64,void const *)" (?apply_memory_patch@@YA?AUPatchResult@@PEAX_KPEBX@Z)
+
+  Hint on symbols that are defined and could potentially match:
+
+    "public: struct UnifiedResult __cdecl UnifiedHotpatchManager::apply_memory_patch(void *,unsigned __int64,void const *)" (?apply_memory_patch@UnifiedHotpatchManager@@QEAA?AUUnifiedResult@@PEAX_KPEBX@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "struct PatchResult __cdecl revert_memory_patch(struct MemoryPatchEntry *)" (?revert_memory_patch@@YA?AUPatchResult@@PEAUMemoryPatchEntry@@@Z)
+
+  Hint on symbols that are defined and could potentially match:
+
+    "public: struct UnifiedResult __cdecl UnifiedHotpatchManager::revert_memory_patch(struct MemoryPatchEntry *)" (?revert_memory_patch@UnifiedHotpatchManager@@QEAA?AUUnifiedResult@@PEAUMemoryPatchEntry@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "struct PatchResult __cdecl apply_memory_patch_tracked(struct MemoryPatchEntry *)" (?apply_memory_patch_tracked@@YA?AUPatchResult@@PEAUMemoryPatchEntry@@@Z)
+
+  Hint on symbols that are defined and could potentially match:
+
+    "public: struct UnifiedResult __cdecl UnifiedHotpatchManager::apply_memory_patch_tracked(struct MemoryPatchEntry *)" (?apply_memory_patch_tracked@UnifiedHotpatchManager@@QEAA?AUUnifiedResult@@PEAUMemoryPatchEntry@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "struct PatchResult __cdecl patch_bytes(char const *,struct BytePatchEnhanced const &)" (?patch_bytes@@YA?AUPatchResult@@PEBDAEBUBytePatchEnhanced@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "struct PatchResult __cdecl search_and_patch_bytes(char const *,class std::vector<unsigned char,class std::allocator<unsigned char> > const &,class std::vector<unsigned char,class std::allocator<unsigned char> > const &)" (?search_and_patch_bytes@@YA?AUPatchResult@@PEBDAEBV?$vector@EV?$allocator@E@std@@@std@@1@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class PTDriverContract & __cdecl PTDriverContract::instance(void)" (?instance@PTDriverContract@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::set_protection(unsigned __int64,unsigned __int64,unsigned int,unsigned int *)" (?set_protection@PTDriverContract@@QEAA?AUPatchResult@@_K0IPEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::arm_watchpoint(unsigned __int64,unsigned __int64,void (__cdecl*)(struct WatchpointEntry const *,unsigned __int64,void *),void *,bool,unsigned int *)" (?arm_watchpoint@PTDriverContract@@QEAA?AUPatchResult@@_K0P6AXPEBUWatchpointEntry@@0PEAX@Z2_NPEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::disarm_watchpoint(unsigned int)" (?disarm_watchpoint@PTDriverContract@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::take_snapshot(unsigned __int64,unsigned __int64,char const *,unsigned int,unsigned int *)" (?take_snapshot@PTDriverContract@@QEAA?AUPatchResult@@_K0PEBDIPEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::restore_snapshot(unsigned int)" (?restore_snapshot@PTDriverContract@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::normalize_address(struct ASLRContext const *,unsigned __int64,unsigned __int64 *)" (?normalize_address@PTDriverContract@@QEAA?AUPatchResult@@PEBUASLRContext@@_KPEA_K@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::allocate_large_arena(unsigned __int64,unsigned __int64,unsigned int *)" (?allocate_large_arena@PTDriverContract@@QEAA?AUPatchResult@@_K0PEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::initialize(void)" (?initialize@PTDriverContract@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl PTDriverContract::shutdown(void)" (?shutdown@PTDriverContract@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PTDriverStats const & __cdecl PTDriverContract::get_stats(void)const " (?get_stats@PTDriverContract@@QEBAAEBUPTDriverStats@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class LiveBinaryPatcher & __cdecl LiveBinaryPatcher::instance(void)" (?instance@LiveBinaryPatcher@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::initialize(unsigned __int64)" (?initialize@LiveBinaryPatcher@@QEAA?AUPatchResult@@_K@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::shutdown(void)" (?shutdown@LiveBinaryPatcher@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::register_function(char const *,unsigned __int64,unsigned int *)" (?register_function@LiveBinaryPatcher@@QEAA?AUPatchResult@@PEBD_KPEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::install_trampoline(unsigned int)" (?install_trampoline@LiveBinaryPatcher@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::revert_trampoline(unsigned int)" (?revert_trampoline@LiveBinaryPatcher@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::swap_implementation(unsigned int,unsigned char const *,unsigned __int64,struct RVARelocation const *,unsigned __int64)" (?swap_implementation@LiveBinaryPatcher@@QEAA?AUPatchResult@@IPEBE_KPEBURVARelocation@@1@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::revert_last_swap(unsigned int)" (?revert_last_swap@LiveBinaryPatcher@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::apply_batch(struct LivePatchUnit const *,unsigned __int64)" (?apply_batch@LiveBinaryPatcher@@QEAA?AUPatchResult@@PEBULivePatchUnit@@_K@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct LiveBinaryPatcherStats const & __cdecl LiveBinaryPatcher::get_stats(void)const " (?get_stats@LiveBinaryPatcher@@QEBAAEBULiveBinaryPatcherStats@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::load_module(char const *,unsigned int *)" (?load_module@LiveBinaryPatcher@@QEAA?AUPatchResult@@PEBDPEAI@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::unload_module(unsigned int)" (?unload_module@LiveBinaryPatcher@@QEAA?AUPatchResult@@I@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl LiveBinaryPatcher::verify_integrity(void)" (?verify_integrity@LiveBinaryPatcher@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class SentinelWatchdog & __cdecl SentinelWatchdog::instance(void)" (?instance@SentinelWatchdog@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SentinelWatchdog::activate(void)" (?activate@SentinelWatchdog@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SentinelWatchdog::deactivate(void)" (?deactivate@SentinelWatchdog@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SentinelWatchdog::updateBaseline(void)" (?updateBaseline@SentinelWatchdog@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl SentinelWatchdog::isActive(void)const " (?isActive@SentinelWatchdog@@QEBA_NXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct SentinelStats __cdecl SentinelWatchdog::getStats(void)const " (?getStats@SentinelWatchdog@@QEBA?AUSentinelStats@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class SelfRepairLoop & __cdecl SelfRepairLoop::instance(void)" (?instance@SelfRepairLoop@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::initialize(void)" (?initialize@SelfRepairLoop@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::shutdown(void)" (?shutdown@SelfRepairLoop@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Crypto::CamelliaResult __cdecl SelfRepairLoop::VerifyAndPatch(void *,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?VerifyAndPatch@SelfRepairLoop@@QEAA?AUCamelliaResult@Crypto@RawrXD@@PEAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::registerDetour(char const *,void *)" (?registerDetour@SelfRepairLoop@@QEAA?AUPatchResult@@PEBDPEAX@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::applyBinaryPatch(char const *,unsigned char const *,unsigned __int64)" (?applyBinaryPatch@SelfRepairLoop@@QEAA?AUPatchResult@@PEBDPEBE_K@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::rollbackDetour(char const *)" (?rollbackDetour@SelfRepairLoop@@QEAA?AUPatchResult@@PEBD@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::rollbackAll(void)" (?rollbackAll@SelfRepairLoop@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl SelfRepairLoop::verifyAllDetours(void)const " (?verifyAllDetours@SelfRepairLoop@@QEBA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct HotpatchKernelStats __cdecl SelfRepairLoop::getKernelStats(void)const " (?getKernelStats@SelfRepairLoop@@QEBA?AUHotpatchKernelStats@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct SnapshotStats __cdecl SelfRepairLoop::getSnapshotStats(void)const " (?getSnapshotStats@SelfRepairLoop@@QEBA?AUSnapshotStats@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: unsigned __int64 __cdecl SelfRepairLoop::getActiveDetourCount(void)const " (?getActiveDetourCount@SelfRepairLoop@@QEBA_KXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Enforce::LicenseEnforcer & __cdecl RawrXD::Enforce::LicenseEnforcer::Instance(void)" (?Instance@LicenseEnforcer@Enforce@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl RawrXD::Enforce::LicenseEnforcer::allow(enum RawrXD::License::FeatureID,char const *)" (?allow@LicenseEnforcer@Enforce@RawrXD@@QEAA_NW4FeatureID@License@3@PEBD@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class AutonomousWorkflowEngine & __cdecl AutonomousWorkflowEngine::instance(void)" (?instance@AutonomousWorkflowEngine@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl AutonomousWorkflowEngine::isRunning(void)const " (?isRunning@AutonomousWorkflowEngine@@QEBA_NXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class WorkspaceReasoningProfileManager & __cdecl WorkspaceReasoningProfileManager::instance(void)" (?instance@WorkspaceReasoningProfileManager@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl WorkspaceReasoningProfileManager::setConfig(struct WorkspaceProfileConfig const &)" (?setConfig@WorkspaceReasoningProfileManager@@QEAAXAEBUWorkspaceProfileConfig@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl WorkspaceReasoningProfileManager::getWorkspaceEntry(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct WorkspaceProfileEntry &)const " (?getWorkspaceEntry@WorkspaceReasoningProfileManager@@QEBA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEAUWorkspaceProfileEntry@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl WorkspaceReasoningProfileManager::loadFromFile(void)" (?loadFromFile@WorkspaceReasoningProfileManager@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class DeterministicSwarmEngine & __cdecl DeterministicSwarmEngine::instance(void)" (?instance@DeterministicSwarmEngine@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl DeterministicSwarmEngine::setSeed(struct SwarmSeed const &)" (?setSeed@DeterministicSwarmEngine@@QEAAXAEBUSwarmSeed@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class ReasoningSchemaRegistry & __cdecl ReasoningSchemaRegistry::instance(void)" (?instance@ReasoningSchemaRegistry@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct SemanticVersion __cdecl ReasoningSchemaRegistry::getCurrentVersion(void)const " (?getCurrentVersion@ReasoningSchemaRegistry@@QEBA?AUSemanticVersion@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class CoTFallbackSystem & __cdecl CoTFallbackSystem::instance(void)" (?instance@CoTFallbackSystem@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl CoTFallbackSystem::disableCoT(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?disableCoT@CoTFallbackSystem@@QEAA?AUPatchResult@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl CoTFallbackSystem::enableCoT(void)" (?enableCoT@CoTFallbackSystem@@QEAA?AUPatchResult@@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl CoTFallbackSystem::isCoTAvailable(void)const " (?isCoTAvailable@CoTFallbackSystem@@QEBA_NXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class InputGuardSlicer & __cdecl InputGuardSlicer::instance(void)" (?instance@InputGuardSlicer@@SAAEAV1@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct PatchResult __cdecl InputGuardSlicer::preflightCheck(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)const " (?preflightCheck@InputGuardSlicer@@QEBA?AUPatchResult@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Agentic::AgenticTaskGraph & __cdecl RawrXD::Agentic::AgenticTaskGraph::instance(void)" (?instance@AgenticTaskGraph@Agentic@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Embeddings::EmbeddingEngine & __cdecl RawrXD::Embeddings::EmbeddingEngine::instance(void)" (?instance@EmbeddingEngine@Embeddings@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Embeddings::EmbedResult __cdecl RawrXD::Embeddings::EmbeddingEngine::loadModel(struct RawrXD::Embeddings::EmbeddingModelConfig const &)" (?loadModel@EmbeddingEngine@Embeddings@RawrXD@@QEAA?AUEmbedResult@23@AEBUEmbeddingModelConfig@23@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Embeddings::EmbedResult __cdecl RawrXD::Embeddings::EmbeddingEngine::indexDirectory(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,struct RawrXD::Embeddings::ChunkingConfig const &)" (?indexDirectory@EmbeddingEngine@Embeddings@RawrXD@@QEAA?AUEmbedResult@23@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBUChunkingConfig@23@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Embeddings::EmbeddingEngine::shutdown(void)" (?shutdown@EmbeddingEngine@Embeddings@RawrXD@@QEAAXXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Vision::VisionEncoder & __cdecl RawrXD::Vision::VisionEncoder::instance(void)" (?instance@VisionEncoder@Vision@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Vision::VisionResult __cdecl RawrXD::Vision::VisionEncoder::loadModel(struct RawrXD::Vision::VisionModelConfig const &)" (?loadModel@VisionEncoder@Vision@RawrXD@@QEAA?AUVisionResult@23@AEBUVisionModelConfig@23@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Vision::VisionEncoder::shutdown(void)" (?shutdown@VisionEncoder@Vision@RawrXD@@QEAAXXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Extensions::ExtensionMarketplace & __cdecl RawrXD::Extensions::ExtensionMarketplace::instance(void)" (?instance@ExtensionMarketplace@Extensions@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Extensions::ExtResult __cdecl RawrXD::Extensions::ExtensionMarketplace::setInstallDirectory(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?setInstallDirectory@ExtensionMarketplace@Extensions@RawrXD@@QEAA?AUExtResult@23@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Extensions::ExtResult __cdecl RawrXD::Extensions::ExtensionMarketplace::setCacheDirectory(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?setCacheDirectory@ExtensionMarketplace@Extensions@RawrXD@@QEAA?AUExtResult@23@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::Extensions::ExtensionMarketplace::shutdown(void)" (?shutdown@ExtensionMarketplace@Extensions@RawrXD@@QEAAXXZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: static class RawrXD::Auth::RBACEngine & __cdecl RawrXD::Auth::RBACEngine::instance(void)" (?instance@RBACEngine@Auth@RawrXD@@SAAEAV123@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Auth::AuthResult __cdecl RawrXD::Auth::RBACEngine::initialize(void)" (?initialize@RBACEngine@Auth@RawrXD@@QEAA?AUAuthResult@23@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Auth::AuthResult __cdecl RawrXD::Auth::RBACEngine::shutdown(void)" (?shutdown@RBACEngine@Auth@RawrXD@@QEAA?AUAuthResult@23@XZ)
+
+unified_hotpatch_manager.cpp.obj : error LNK2001: unresolved external symbol "public: struct RawrXD::Auth::AuthResult __cdecl RawrXD::Auth::RBACEngine::authorize(char const *,enum RawrXD::Auth::Permission,char const *,char const *)" (?authorize@RBACEngine@Auth@RawrXD@@QEAA?AUAuthResult@23@PEBDW4Permission@23@00@Z)
+
+DiskRecoveryAgent.cpp.obj : error LNK2001: unresolved external symbol DiskRecovery_Abort
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: static class std::shared_ptr<class RawrXD::CPUInferenceEngine> __cdecl RawrXD::CPUInferenceEngine::GetSharedInstance(void)" (?GetSharedInstance@CPUInferenceEngine@RawrXD@@SA?AV?$shared_ptr@VCPUInferenceEngine@RawrXD@@@std@@XZ)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl RawrXD::CPUInferenceEngine::SetContextLimit(unsigned __int64)" (?SetContextLimit@CPUInferenceEngine@RawrXD@@QEAAX_K@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl SubAgentManager::SubAgentManager(class AgenticEngine *)" (??0SubAgentManager@@QEAA@PEAVAgenticEngine@@@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: __cdecl SubAgentManager::~SubAgentManager(void)" (??1SubAgentManager@@QEAA@XZ)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl SubAgentManager::spawnSubAgent(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?spawnSubAgent@SubAgentManager@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV23@00@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: void __cdecl SubAgentManager::cancelAll(void)" (?cancelAll@SubAgentManager@@QEAAXXZ)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl SubAgentManager::waitForSubAgent(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,int)" (?waitForSubAgent@SubAgentManager@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl SubAgentManager::getSubAgentResult(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)const " (?getSubAgentResult@SubAgentManager@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV23@@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl SubAgentManager::executeChain(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?executeChain@SubAgentManager@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV23@AEBV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@3@0@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl SubAgentManager::executeSwarm(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > > const &,struct SwarmConfig const &)" (?executeSwarm@SubAgentManager@@QEAA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEBV23@AEBV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@3@AEBUSwarmConfig@@@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > __cdecl SubAgentManager::getStatusSummary(void)const " (?getStatusSummary@SubAgentManager@@QEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: bool __cdecl SubAgentManager::dispatchToolCall(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &)" (?dispatchToolCall@SubAgentManager@@QEAA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0AEAV23@@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "public: static bool __cdecl RawrXD::Deep2ModelLoader::IsShardedModel(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?IsShardedModel@Deep2ModelLoader@RawrXD@@SA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+
+agentic_bridge_headless.cpp.obj : error LNK2001: unresolved external symbol "bool __cdecl RawrXD::Deep2LoadModelForBridge(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &)" (?Deep2LoadModelForBridge@RawrXD@@YA_NAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AEAV23@@Z)
+
+bin\rawrxd-ceo.exe : fatal error LNK1120: 109 unresolved externals
+
+[56/84] Building CXX object CMakeFiles\RawrEngine.dir\src\core\model_bruteforce_engine.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+[57/84] Linking CXX static library InferenceEngine.lib
+memory_stubs.cpp.obj : warning LNK4006: rawr_cpu_has_avx512 already defined in rawr_cpu_features.asm.obj; second definition ignored
+[58/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\agentic_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[59/84] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\AgenticNavigator.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4164): warning C4005: 'IDM_DBG_GO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(425): note: see previous definition of 'IDM_DBG_GO'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4165): warning C4005: 'IDM_DBG_STEP_OVER': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(428): note: see previous definition of 'IDM_DBG_STEP_OVER'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4166): warning C4005: 'IDM_DBG_STEP_INTO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(429): note: see previous definition of 'IDM_DBG_STEP_INTO'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4167): warning C4005: 'IDM_DBG_STEP_OUT': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(430): note: see previous definition of 'IDM_DBG_STEP_OUT'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4168): warning C4005: 'IDM_DBG_BREAK': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(426): note: see previous definition of 'IDM_DBG_BREAK'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4169): warning C4005: 'IDM_DBG_KILL': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(427): note: see previous definition of 'IDM_DBG_KILL'
+D:\rawrxd\src\agentic\AgenticNavigator.cpp(355): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+[60/84] Linking CXX executable bin\TokenEstimatorDemo.exe
+[61/84] Linking CXX executable bin\ValidationRunner.exe
+[62/84] Linking CXX executable bin\test_swarm_integration.exe
+[63/84] Building CXX object CMakeFiles\RawrEngine.dir\src\agent\quantum_agent_orchestrator.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\agent\quantum_agent_orchestrator.cpp(778): warning C4018: '>': signed/unsigned mismatch
+[64/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\subagent_core.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[65/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\inference\gpu_dispatch_gate.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[66/84] Building CXX object CMakeFiles\RawrEngine.dir\src\core\native_debugger_engine.cpp.obj
+D:\rawrxd\src\rawrxd_inference.h(576): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4164): warning C4005: 'IDM_DBG_GO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(425): note: see previous definition of 'IDM_DBG_GO'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4165): warning C4005: 'IDM_DBG_STEP_OVER': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(428): note: see previous definition of 'IDM_DBG_STEP_OVER'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4166): warning C4005: 'IDM_DBG_STEP_INTO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(429): note: see previous definition of 'IDM_DBG_STEP_INTO'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4167): warning C4005: 'IDM_DBG_STEP_OUT': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(430): note: see previous definition of 'IDM_DBG_STEP_OUT'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4168): warning C4005: 'IDM_DBG_BREAK': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(426): note: see previous definition of 'IDM_DBG_BREAK'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4169): warning C4005: 'IDM_DBG_KILL': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(427): note: see previous definition of 'IDM_DBG_KILL'
+[67/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\agentic\AgenticNavigator.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[68/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\win32app\agentic_bridge_headless.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[69/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\agentic\RawrXD_AgentLoop.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[70/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\win32app\Win32IDE_logMessage.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[71/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\core\native_debugger_engine.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+[72/84] Building CXX object CMakeFiles\RawrXD_Gold.dir\src\agent\quantum_agent_orchestrator.cpp.obj
+cl : Command line warning D9025 : overriding '/W3' with '/W0'
+ninja: build stopped: subcommand failed.

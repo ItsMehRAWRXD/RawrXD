@@ -55,7 +55,13 @@ static bool skipValue(const uint8_t* p, uint64_t& cursor, uint32_t type) {
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) { printf("Usage: gguf_type_probe <file.gguf>\n"); return 1; }
+    if (argc < 2) { printf("Usage: gguf_type_probe <file.gguf> [output.txt]\n"); return 1; }
+    FILE* out = stdout;
+    FILE* fileOut = nullptr;
+    if (argc >= 3) {
+        fileOut = fopen(argv[2], "w");
+        if (fileOut) out = fileOut;
+    }
 
 #ifdef _WIN32
     HANDLE h = CreateFileA(argv[1], GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -74,12 +80,12 @@ int main(int argc, char** argv) {
     uint32_t magic = 0, version = 0;
     readU32(base, cursor, magic);
     readU32(base, cursor, version);
-    printf("Magic=0x%08X Version=%u\n", magic, version);
+    fprintf(out, "Magic=0x%08X Version=%u\n", magic, version);
 
     uint64_t tensorCount = 0, metaCount = 0;
     readU64(base, cursor, tensorCount);
     readU64(base, cursor, metaCount);
-    printf("Tensors=%llu Metadata=%llu\n", tensorCount, metaCount);
+    fprintf(out, "Tensors=%llu Metadata=%llu\n", tensorCount, metaCount);
 
     // Skip metadata
     for (uint64_t i = 0; i < metaCount; ++i) {
@@ -92,20 +98,36 @@ int main(int argc, char** argv) {
     uint64_t align = 32;
     uint64_t pad = (align - (cursor % align)) % align;
     cursor += pad;
-    printf("Data offset=%llu\n", cursor);
+    fprintf(out, "Data offset=%llu\n", cursor);
 
-    // Read first 15 tensors
-    for (uint64_t i = 0; i < std::min<uint64_t>(15, tensorCount); ++i) {
+    // Read ALL tensors with shapes
+    fprintf(out, "\n--- All %llu tensors ---\n", tensorCount);
+    fprintf(out, "%-4s %-55s %-10s %-30s %-12s\n", "#", "Name", "Type", "Shape", "Offset");
+    fprintf(out, "---------------------------------------------------------------------------------------------------------------\n");
+    fflush(out);
+    for (uint64_t i = 0; i < tensorCount; ++i) {
         std::string name;
         uint64_t nameLen = 0; readU64(base, cursor, nameLen);
+        if (nameLen > 256) {
+            fprintf(out, "ERROR: nameLen=%llu at tensor %llu\n", nameLen, i);
+            break;
+        }
         name.assign(reinterpret_cast<const char*>(base + cursor), nameLen);
         cursor += nameLen;
         uint32_t nDims = 0; readU32(base, cursor, nDims);
-        for (uint32_t d = 0; d < nDims; ++d) { uint64_t dim = 0; readU64(base, cursor, dim); }
+        std::string shape;
+        for (uint32_t d = 0; d < nDims; ++d) {
+            uint64_t dim = 0; readU64(base, cursor, dim);
+            if (d > 0) shape += "x";
+            shape += std::to_string(dim);
+        }
         uint32_t ggmlType = 0; readU32(base, cursor, ggmlType);
         uint64_t offset = 0; readU64(base, cursor, offset);
-        printf("  %-40s | type=%u\n", name.c_str(), ggmlType);
+        fprintf(out, "%-4llu %-55s %-10u %-30s %-12llu\n", i, name.c_str(), ggmlType, shape.c_str(), offset);
+        if (i % 10 == 0) fflush(out);
     }
+    fprintf(out, "\n--- Done ---\n");
+    fflush(out);
 
     // Count all types
     uint64_t tcursor = cursor;
@@ -118,9 +140,9 @@ int main(int argc, char** argv) {
         uint64_t offset = 0; readU64(base, tcursor, offset);
         if (ggmlType < 64) counts[ggmlType]++;
     }
-    printf("\nType distribution:\n");
+    fprintf(out, "\nType distribution:\n");
     for (int t = 0; t < 64; ++t) {
-        if (counts[t]) printf("  type=%2d : %llu tensors\n", t, counts[t]);
+        if (counts[t]) fprintf(out, "  type=%2d : %llu tensors\n", t, counts[t]);
     }
 
 #ifdef _WIN32

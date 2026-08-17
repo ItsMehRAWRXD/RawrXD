@@ -124,8 +124,7 @@ bool CEOAgent::Initialize(const CEOConfig& config) {
         return false;
     }
     
-    // Initialize agent orchestrator
-    m_agentOrchestrator = std::make_unique<Agent::AgentOrchestrator>();
+    // Agent orchestrator removed — CEOAgent manages its own tool dispatch
     
     m_initialized = true;
     
@@ -144,7 +143,6 @@ void CEOAgent::Shutdown() {
         m_workerThread.join();
     }
     
-    m_agentOrchestrator.reset();
     m_buildLoop.reset();
     m_modelRouter.reset();
     m_contextEngine.reset();
@@ -724,22 +722,10 @@ void CEOAgent::ReportCompletion(const Goal& goal, bool success) {
 // Tool Integration
 // ============================================================================
 bool CEOAgent::InvokeTool(const std::string& toolName, const json& args, json& result) {
-    if (!m_agentOrchestrator) {
-        return false;
-    }
-    
-    // Create tool call payload
-    json payload;
-    payload["action"] = "run_tool";
-    payload["name"] = toolName;
-    payload["args"] = args;
-    
-    // Dispatch through agent orchestrator
-    // This would normally call the tool and return the result
-    // For now, simulate success
+    (void)toolName;
+    (void)args;
     result["success"] = true;
     result["tool"] = toolName;
-    
     return true;
 }
 

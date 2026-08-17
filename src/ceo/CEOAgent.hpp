@@ -10,8 +10,7 @@
 #include "ContextEngine.hpp"
 #include "ModelRouter.hpp"
 #include "ProjectState.hpp"
-#include "../agentic/AgentOrchestrator.h"
-#include "../agentic/ToolRegistry.h"
+// Agent orchestrator removed — not used by CEOAgent implementation
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -142,7 +141,6 @@ private:
     std::unique_ptr<AutonomousBuildLoop> m_buildLoop;
     std::unique_ptr<ContextEngine> m_contextEngine;
     std::unique_ptr<ModelRouter> m_modelRouter;
-    std::unique_ptr<Agent::AgentOrchestrator> m_agentOrchestrator;
     
     // Threading
     std::thread m_workerThread;

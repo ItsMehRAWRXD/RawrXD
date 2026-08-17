@@ -29,22 +29,14 @@ target_link_libraries(rawrxd_ceo PUBLIC
 )
 
 # CEO Agent CLI Executable
+# Minimal: only CEO library + main + lightweight subsystem API stubs.
 add_executable(rawrxd_ceo_cli
     main.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/AgentOrchestrator.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/AgentToolHandlers.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_AgentLoop.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/RawrXD_ToolRegistry.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/ToolRegistry.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/AdvancedAgentCoordinator.cpp
-    ${CMAKE_SOURCE_DIR}/src/agent/AgentOllamaClient.cpp
-    ${CMAKE_SOURCE_DIR}/src/agent/FIMPromptBuilder.cpp
+    # Lightweight subsystem API (CEOAgent uses this for mode dispatch)
     ${CMAKE_SOURCE_DIR}/src/core/rawrxd_subsystem_api.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic_observability.cpp
-    ${CMAKE_SOURCE_DIR}/src/core/unified_hotpatch_manager.cpp
-    ${CMAKE_SOURCE_DIR}/src/agentic/DiskRecoveryAgent.cpp
-    ${CMAKE_SOURCE_DIR}/src/win32app/agentic_bridge_headless.cpp
-        ${CMAKE_SOURCE_DIR}/src/ceo/disk_recovery_stubs.cpp
+    # Stubs for subsystems not needed by CEO CLI
+    ${CMAKE_SOURCE_DIR}/src/ceo/disk_recovery_stubs.cpp
+    ${CMAKE_SOURCE_DIR}/src/ceo/ceo_link_stubs.cpp
 )
 
 target_link_libraries(rawrxd_ceo_cli PRIVATE

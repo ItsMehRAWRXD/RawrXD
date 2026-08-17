@@ -83,8 +83,39 @@ extern "C" {
 
 // ---- Library Module Linkage (C ABI) ----
 // These resolve to MASM .obj when RAWR_HAS_MASM=1, else to stub .cpp
-#include "analyzer_distiller.h"
-#include "streaming_orchestrator.h"
+// (Headers intentionally omitted here to avoid extern "C" linkage conflicts
+//  with the stub definitions below.)
+
+// Stub implementations for analyzer/streaming when not linked with MASM
+extern "C" {
+    int AD_ProcessGGUF(const char* inputPath, const char* outputExecPath) {
+        (void)inputPath; (void)outputExecPath;
+        return 0;
+    }
+
+    int SO_LoadExecFile(const char* filePath) {
+        (void)filePath;
+        return 0;
+    }
+    int SO_InitializeVulkan(void) { return 0; }
+    void* SO_CreateMemoryArena(uint64_t sizeBytes) {
+        (void)sizeBytes;
+        return nullptr;
+    }
+    int SO_CreateComputePipelines(void* operatorTable, uint64_t operatorCount) {
+        (void)operatorTable; (void)operatorCount;
+        return 0;
+    }
+    void SO_PrintStatistics(void) { }
+    int SO_InitializeStreaming(void) { return 0; }
+    int SO_CreateThreadPool(void) { return 0; }
+    int SO_StartDEFLATEThreads(uint32_t threadCount) {
+        (void)threadCount;
+        return 0;
+    }
+    int SO_InitializePrefetchQueue(void) { return 0; }
+    void SO_PrintMetrics(void) { }
+}
 
 // ============================================================
 // Timing Helper

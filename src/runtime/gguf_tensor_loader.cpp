@@ -69,6 +69,21 @@ enum class GGUFValueType : uint32_t {
     FLOAT64 = 12,
 };
 
+// Forward declarations
+static float F16ToF32(uint16_t h);
+static size_t GetTensorSize(uint32_t type, const std::vector<uint64_t>& shape);
+
+// Helper: F16 to F32 conversion
+static float F16ToF32(uint16_t h) {
+    uint32_t sign = (h & 0x8000) << 16;
+    uint32_t exponent = ((h & 0x7C00) + 0x1C000) << 13;
+    uint32_t mantissa = (h & 0x03FF) << 13;
+    uint32_t f32 = sign | exponent | mantissa;
+    float val;
+    std::memcpy(&val, &f32, sizeof(float));
+    return val;
+}
+
 // ============================================================================
 // TensorView Implementation
 // ============================================================================
@@ -599,39 +614,6 @@ std::vector<float> GGUFTensorLoader::Dequantize(
     }
     
     return result;
-}
-
-// Forward declaration
-static float F16ToF32(uint16_t h);
-
-size_t GetTensorSize(uint32_t type, const std::vector<uint64_t>& shape) {
-    uint64_t num_elements = 1;
-    for (auto dim : shape) {
-        num_elements *= dim;
-    }
-    
-    switch (static_cast<GGMLType>(type)) {
-        case GGMLType::F32:  return num_elements * 4;
-        case GGMLType::F16:  return num_elements * 2;
-        case GGMLType::Q4_0: return ((num_elements + 31) / 32) * (2 + 16);  // 32 elements per block
-        case GGMLType::Q4_1: return ((num_elements + 31) / 32) * (2 + 2 + 16);
-        case GGMLType::Q5_0: return ((num_elements + 31) / 32) * (2 + 20);
-        case GGMLType::Q5_1: return ((num_elements + 31) / 32) * (2 + 2 + 20);
-        case GGMLType::Q8_0: return ((num_elements + 31) / 32) * (2 + 32);
-        case GGMLType::Q8_1: return ((num_elements + 31) / 32) * (2 + 2 + 32);
-        default:             return num_elements * 4;  // Assume F32
-    }
-}
-
-// Helper: F16 to F32 conversion
-static float F16ToF32(uint16_t h) {
-    uint32_t sign = (h & 0x8000) << 16;
-    uint32_t exponent = ((h & 0x7C00) + 0x1C000) << 13;
-    uint32_t mantissa = (h & 0x03FF) << 13;
-    uint32_t f32 = sign | exponent | mantissa;
-    float val;
-    std::memcpy(&val, &f32, sizeof(float));
-    return val;
 }
 
 // ============================================================================
