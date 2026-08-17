@@ -1233,6 +1233,7 @@ set(SOURCES
     src/memory_core.cpp
     src/hot_patcher.cpp
     src/cpu_inference_engine.cpp
+    src/rawrxd_inference.cpp
     src/rawrxd_model_loader.cpp
     src/rawrxd_transformer.cpp
     src/runtime/TensorExecutionRouter.cpp
@@ -1245,6 +1246,19 @@ set(SOURCES
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
     B014/build/b014_profiler.cpp
     src/rawrxd_tokenizer.cpp
     src/rawrxd_sampler.cpp
@@ -5691,6 +5705,42 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32ide/Win32IDE_Omega1Integration.cpp
     )
     
+    # ═══════════════════════════════════════════════════════════════
+    # Elastic Engine — Predictive tensor residency + governance
+    # ═══════════════════════════════════════════════════════════════
+    list(APPEND WIN32IDE_SOURCES
+        src/runtime/elastic/ElasticEngine.cpp
+        src/runtime/elastic/ElasticGGUFIndex.cpp
+        src/runtime/elastic/ElasticResidencyManager.cpp
+        src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+        src/runtime/elastic/ElasticDecoder.cpp
+        src/runtime/elastic/ElasticArchitectureDetector.cpp
+        src/runtime/shared/SharedModelRuntime.cpp
+        src/runtime/shared/BP1BraidIndex.cpp
+        src/runtime/shared/BP1BraidStreamer.cpp
+        src/runtime/governance/HardwareCapabilityProbe.cpp
+        src/runtime/governance/CapabilityTierMatrix.cpp
+        src/runtime/governance/HardwareGovernor.cpp
+        src/runtime/governance/PressedStateEngine.cpp
+        src/runtime/governance/Ensemble58Governor.cpp
+        src/runtime/governance/TLSInstructionGate.cpp
+        src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+        src/runtime/memory/CapacityManager.cpp
+        src/runtime/memory/PlacementPolicy.cpp
+        src/runtime/memory/ResidencyTracker.cpp
+        src/runtime/memory/TensorPlacementManager.cpp
+        src/runtime/memory/TransferScheduler.cpp
+        src/runtime/memory/PredictiveMemoryManager.cpp
+        src/runtime/memory/WorkingSetPredictor.cpp
+        src/runtime/Deep2ExecutionTelemetry.cpp
+        src/backend/VulkanGemmDispatcher.cpp
+        src/runtime/gguf_tensor_loader.cpp
+        src/runtime/GenerationBouncer.cpp
+        src/runtime/TensorExecutionRouter.cpp
+        src/runtime/StreamRouterAdapter.cpp
+        src/runtime/Sovereign_KernelBridge_CPP.cpp
+    )
+
     # ═══════════════════════════════════════════════════════════════
     # OMEGA-1 Engine Server - IPC Server for IDE integration
     # ═══════════════════════════════════════════════════════════════
