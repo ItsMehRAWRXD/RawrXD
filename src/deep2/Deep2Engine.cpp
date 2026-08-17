@@ -663,7 +663,39 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.ropeTheta       = meta.ropeTheta > 0 ? meta.ropeTheta : 10000.0f;
     modelWeights.tieEmbeddings   = false;
 
+    // ── Infer vocabSize from tensor shapes when metadata lacks it ────────
+    // Gemma3 GGUFs do not store vocab_size in metadata; derive from
+    // token_embd.weight shape [vocabSize, hiddenDim].
+    if (modelWeights.vocabSize == 0) {
+        for (const auto& t : ggufResult.tensors) {
+            if (t.name == "token_embd.weight" || t.name == "token_embeddings.weight") {
+                if (t.dimensions.size() >= 1) {
+                    modelWeights.vocabSize = static_cast<int>(t.dimensions[0]);
+                    printf("[Deep2Engine] Inferred vocabSize=%d from %s shape\n",
+                           modelWeights.vocabSize, t.name.c_str());
+                }
+                break;
+            }
+        }
+    }
 
+    // ── Sync authoritative model config from GGUF metadata ─────────────
+    // allocateBuffers() reads from config, not modelWeights.  If we do not
+    // sync here, the buffers are sized from stale hardcoded defaults and
+    // the first real generation will AV/segfault.
+    config.hiddenDim     = modelWeights.hiddenDim;
+    config.vocabSize     = modelWeights.vocabSize;
+    config.numLayers     = modelWeights.numLayers;
+    config.numHeads      = modelWeights.numHeads;
+    config.intermediateDim = modelWeights.intermediateDim;
+
+    // Guard: refuse to allocate with invalid dimensions
+    if (config.vocabSize == 0 || config.hiddenDim == 0 || config.numLayers == 0) {
+        printf("[Deep2Engine] ERROR: Invalid model config after load: "
+               "vocabSize=%zu hiddenDim=%zu numLayers=%zu\n",
+               config.vocabSize, config.hiddenDim, config.numLayers);
+        return false;
+    }
 
     // Allocate layer weights
     modelWeights.layers.resize(modelWeights.numLayers);
@@ -1211,6 +1243,24 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
     if (!modelWeights.loaded) {
         printf("[Deep2Engine] ERROR: No model loaded - call loadModel() first\n");
+        return 0;
+    }
+
+    // ── Defensive config validation gate ──────────────────────────────
+    // Reject generation if the runtime config does not match the loaded
+    // model dimensions.  This prevents buffer overruns when the lifecycle
+    // is out of order (e.g. stale hardcoded config vs. real GGUF).
+    if (config.hiddenDim == 0 || config.vocabSize == 0) {
+        printf("[Deep2Engine] ERROR: Invalid config (hiddenDim=%zu vocabSize=%zu)\n",
+               config.hiddenDim, config.vocabSize);
+        return 0;
+    }
+    if (config.hiddenDim != modelWeights.hiddenDim ||
+        config.vocabSize != modelWeights.vocabSize) {
+        printf("[Deep2Engine] ERROR: Config mismatch (config hidden=%zu vocab=%zu) "
+               "vs (model hidden=%zu vocab=%zu)\n",
+               config.hiddenDim, config.vocabSize,
+               modelWeights.hiddenDim, modelWeights.vocabSize);
         return 0;
     }
 

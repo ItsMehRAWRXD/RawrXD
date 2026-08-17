@@ -31,6 +31,7 @@ struct GlobalTensorRef {
     // Shard location
     uint32_t shardId = 0;          // Which GGUF file (0-12)
     uint64_t fileOffset = 0;       // Byte offset within that file's data section
+    uint64_t byteOffset = 0;       // Resolved byte offset (includes expert slicing)
     uint64_t byteSize = 0;         // Total bytes for this tensor
 
     // Tensor metadata
@@ -42,6 +43,7 @@ struct GlobalTensorRef {
     bool isExpertTensor = false;   // true for ffn_*_exps
     uint32_t expertCount = 0;      // e.g. 384
     uint64_t expertStrideBytes = 0;// Byte stride between experts
+    uint32_t expertId = 0;         // Specific expert index (for sliced refs)
 
     // Layer classification
     int32_t layerIndex = -1;       // -1 for global tensors (token_embd, output, etc.)

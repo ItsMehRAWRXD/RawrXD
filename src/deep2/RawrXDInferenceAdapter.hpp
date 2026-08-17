@@ -11,6 +11,9 @@
 #include <functional>
 #include <string>
 
+// Include Deep2Bridge for backend selection enum
+#include "Deep2Bridge.hpp"
+
 namespace rawr {
 
 // ============================================================================
@@ -74,7 +77,7 @@ class RawrXDInferenceAdapter {
 public:
     static RawrXDInferenceAdapter& Get();
 
-    bool Initialize();
+    bool Initialize(InferenceBackend backend = InferenceBackend::Deep2Engine);
     void Shutdown();
 
     // Model lifecycle

@@ -112,6 +112,15 @@ public:
     uint64_t numElements() const { return desc_.numElements(); }
     uint64_t byteSize() const { return desc_.byteSize(); }
 
+    // Return shape dimensions as a vector for shape validation
+    std::vector<uint64_t> dims() const {
+        std::vector<uint64_t> d;
+        for (uint8_t i = 0; i < desc_.numDims; ++i) {
+            d.push_back(desc_.shape[i]);
+        }
+        return d;
+    }
+
     // ------------------------------------------------------------------------
     // Block info for quantized tensors
     // ------------------------------------------------------------------------

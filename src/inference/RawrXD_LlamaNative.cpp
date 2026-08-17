@@ -70,10 +70,12 @@ bool LlamaNativeBridge::Initialize(const wchar_t* dllDir) {
     std::wstring llamaPath = prefix + L"llama.dll";
     hLlama_ = LoadLibraryW(llamaPath.c_str());
     if (!hLlama_) {
-        DWORD err = GetLastError();
+        DWORD err = ::GetLastError();
         std::stringstream ss;
         ss << "Failed to load llama.dll (error " << err << "). "
-           << "Ensure llama.dll is in: " << (dllDir ? "specified directory" : "exe directory");
+           << "Ensure llama.dll is in: ";
+        if (dllDir) ss << "specified directory";
+        else        ss << "exe directory";
         SetError(ss.str().c_str());
         return false;
     }

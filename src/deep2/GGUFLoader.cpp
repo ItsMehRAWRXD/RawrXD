@@ -227,14 +227,22 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
             if (key.substr(0, prefix.size()) == prefix) {
                 std::string subkey = key.substr(prefix.size());
 
-                if (subkey == "vocab_size" || subkey == "embedding_length") {
-                    // Will be set below
+                if (subkey == "vocab_size") {
+                    metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                } else if (subkey == "embedding_length") {
+                    metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
             }
 
             // Common keys (without architecture prefix)
             if (key == "vocab_size" || key.find(".vocab_size") != std::string::npos) {
                 metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+            }
+            // Fallback: Gemma models use general.tokens_count
+            if (key == "general.tokens_count" || key.find(".tokens_count") != std::string::npos) {
+                if (metadata.vocabSize == 0) {
+                    metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
             }
             if (key.find("embedding_length") != std::string::npos) {
                 metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
@@ -688,6 +696,26 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
     }
 
     fclose(fp);
+
+    // Infer vocabSize from tensor shapes if not present in metadata
+    // (Gemma models don't include vocab_size in metadata)
+    if (result.metadata.vocabSize == 0) {
+        for (const auto& t : result.tensors) {
+            // token_embd.weight shape: [vocabSize, hiddenDim]
+            if (t.name.find("token_embd") != std::string::npos ||
+                t.name.find("embed_tokens") != std::string::npos ||
+                t.name.find("tok_embeddings") != std::string::npos) {
+                if (t.dimensions.size() >= 2) {
+                    result.metadata.vocabSize = (uint32_t)t.dimensions[0];
+                    if (options.verbose) {
+                        printf("[GGUF] Inferred vocabSize=%u from tensor '%s' shape[%zu]\n",
+                               result.metadata.vocabSize, t.name.c_str(), t.dimensions.size());
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
     auto endTime = std::chrono::high_resolution_clock::now();
     result.loadTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();

@@ -14,8 +14,17 @@
 
 // Forward declaration for the real engine
 namespace Deep2 { class Deep2Engine; }
+class LlamaNativeBridge;
 
 namespace rawr {
+
+// ============================================================================
+// Inference Backend Selection
+// ============================================================================
+enum class InferenceBackend {
+    Deep2Engine,
+    LlamaNative
+};
 
 // ============================================================================
 // Engine Configuration
@@ -87,9 +96,13 @@ public:
     void ResetSession();
     uint32_t GetSessionId() const { return m_sessionId; }
 
+    // Backend selection
+    void SetBackend(InferenceBackend backend);
+    InferenceBackend GetBackend() const { return m_backend; }
+
 private:
     Deep2Bridge() = default;
-    ~Deep2Bridge() = default;
+    ~Deep2Bridge();
     Deep2Bridge(const Deep2Bridge&) = delete;
     Deep2Bridge& operator=(const Deep2Bridge&) = delete;
 
@@ -100,8 +113,14 @@ private:
     uint32_t m_sessionId = 0;
     Metrics m_metrics = {};
 
+    // Backend selection
+    InferenceBackend m_backend = InferenceBackend::Deep2Engine;
+
     // Real Deep2 inference engine instance
     std::unique_ptr<Deep2::Deep2Engine> m_engine;
+
+    // LlamaNative bridge instance (alternative backend)
+    std::unique_ptr<LlamaNativeBridge> m_llamaBridge;
 };
 
 } // namespace rawr

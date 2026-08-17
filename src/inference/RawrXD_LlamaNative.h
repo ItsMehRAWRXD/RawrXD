@@ -192,7 +192,7 @@ public:
     bool IsInitialized() const { return hLlama_ != nullptr; }
     bool IsModelLoaded() const { return ctx_ != nullptr; }
     const ModelInfo& GetModelInfo() const { return modelInfo_; }
-    const char* GetLastError() const { return lastError_.c_str(); }
+    const char* GetLastErrorMessage() const { return lastError_.c_str(); }
 
 private:
     // DLL handles

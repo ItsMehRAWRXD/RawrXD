@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <chrono>
+#include <windows.h>
 #include "../src/deep2/RawrXDInferenceAdapter.hpp"
 #include "../src/deep2/Deep2Bridge.hpp"
 #include "../src/deep2/InferenceSession.hpp"
@@ -31,8 +32,34 @@ int main() {
     cfg.contextSize = 2048;
     cfg.temperature = 0.7f;
 
-    // Use a real GGUF model that exists in the repo (relative to build-ninja/tests/)
-    const char* kModelPath = "../../gemma3-1b-Q2_K.gguf";
+    // Resolve GGUF fixture relative to executable location (not CWD).
+    // This makes the test deterministic regardless of how it is launched.
+    char exePath[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    std::string exeDir = exePath;
+    auto lastSlash = exeDir.find_last_of("\\/");
+    if (lastSlash != std::string::npos) exeDir = exeDir.substr(0, lastSlash);
+
+    const char* kModelPath = nullptr;
+    const char* candidates[] = {
+        "gemma3-1b-Q2_K.gguf",                    // beside executable
+        "../../../gemma3-1b-Q2_K.gguf",             // from build-ninja/tests/
+        "../../gemma3-1b-Q2_K.gguf",              // from build-ninja/bin/
+    };
+    std::string resolvedPath;
+    for (const char* cand : candidates) {
+        resolvedPath = exeDir + "\\" + cand;
+        // Normalize mixed separators
+        for (auto& c : resolvedPath) if (c == '/') c = '\\';
+        FILE* f = fopen(resolvedPath.c_str(), "rb");
+        if (f) { fclose(f); kModelPath = cand; break; }
+    }
+    if (!kModelPath) {
+        printf("  [WARN] No GGUF model found; generation tests will use synthetic fallback\n");
+        kModelPath = "gemma3-1b-Q2_K.gguf";
+    } else {
+        printf("  [INFO] Using GGUF fixture: %s\n", resolvedPath.c_str());
+    }
 
     TEST("Bridge initialize", bridge.Initialize(cfg));
     TEST("Bridge status ready", bridge.GetStatus() == rawr::EngineStatus::Ready);

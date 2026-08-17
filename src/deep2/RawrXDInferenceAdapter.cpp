@@ -18,14 +18,17 @@ RawrXDInferenceAdapter& RawrXDInferenceAdapter::Get() {
     return instance;
 }
 
-bool RawrXDInferenceAdapter::Initialize() {
+bool RawrXDInferenceAdapter::Initialize(InferenceBackend backend) {
     RawrRuntime::Get().Log(LogLevel::Info, "InferenceAdapter initializing...");
 
     // Initialize the real Deep2Bridge backend
+    auto& bridge = Deep2Bridge::Get();
+    bridge.SetBackend(backend);
+
     EngineConfig cfg{};
     cfg.contextSize = 2048;
     cfg.useKVCache = true;
-    if (!Deep2Bridge::Get().Initialize(cfg)) {
+    if (!bridge.Initialize(cfg)) {
         RawrRuntime::Get().Log(LogLevel::Error, "Deep2Bridge initialization failed");
         return false;
     }
