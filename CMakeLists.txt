@@ -674,6 +674,64 @@ if(RAWRXD_BUILD_CLI)
             set_property(TARGET vulkan_transformer_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
         endif()
         message(STATUS "vulkan_transformer_gemm_test: Transformer GEMM integration test configured")
+
+        # =====================================================================
+        # Elastic Path Validation Test
+        # Proves: ElasticEngine residency path is reached during transformer
+        #         forward pass on a real model.
+        # =====================================================================
+        add_executable(elastic_path_validation_test
+            tests/elastic_path_validation_test.cpp
+        )
+        set_target_properties(elastic_path_validation_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+        )
+        target_include_directories(elastic_path_validation_test PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/src/inference
+            ${CMAKE_SOURCE_DIR}/src/engine
+            ${CMAKE_SOURCE_DIR}/src/core
+            ${CMAKE_SOURCE_DIR}/src/codec
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/src/masm
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        if(MSVC)
+            target_link_directories(elastic_path_validation_test PRIVATE ${_RAWR_MSVC_LIBPATHS})
+            foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+                if(EXISTS "${_rawr_lib}")
+                    target_link_options(elastic_path_validation_test PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+                endif()
+            endforeach()
+        endif()
+        target_link_libraries(elastic_path_validation_test PRIVATE
+            InferenceEngine
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib
+            user32.lib
+            gdi32.lib
+            shell32.lib
+            ole32.lib
+            oleaut32.lib
+            uuid.lib
+            comdlg32.lib
+            advapi32.lib
+            version.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET elastic_path_validation_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET elastic_path_validation_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET elastic_path_validation_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "elastic_path_validation_test: Elastic path validation test configured")
     endif()
 
 endif()
@@ -2657,6 +2715,20 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
     src/vulkan_kernel_stubs.cpp
+    src/runtime/elastic/ElasticEngine.cpp
+    src/runtime/elastic/ElasticGGUFIndex.cpp
+    src/runtime/elastic/ElasticResidencyManager.cpp
+    src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/elastic/ElasticDecoder.cpp
+    src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/runtime/governance/HardwareCapabilityProbe.cpp
+    src/runtime/governance/CapabilityTierMatrix.cpp
+    src/runtime/governance/HardwareGovernor.cpp
+    src/runtime/governance/PressedStateEngine.cpp
+    src/runtime/governance/Ensemble58Governor.cpp
+    src/runtime/governance/TLSInstructionGate.cpp
+    src/runtime/gguf_tensor_loader.cpp
+    src/runtime/Deep2ExecutionTelemetry.cpp
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
@@ -3793,6 +3865,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/elastic/ElasticEngine.cpp
     src/runtime/elastic/ElasticArchitectureDetector.cpp
     src/runtime/elastic/VulkanTensorResidencyBackend.cpp
+    src/runtime/gguf_tensor_loader.cpp
     B014/build/b014_profiler.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)

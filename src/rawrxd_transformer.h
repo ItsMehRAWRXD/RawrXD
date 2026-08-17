@@ -238,6 +238,16 @@ class RawrXDTransformer
         return m_swarmPlanSliceIndex;
     }
 
+    // Elastic Engine proof instrumentation (ELASTIC audit)
+    [[nodiscard]] std::uint64_t GetElasticMatMulCalls() const noexcept { return m_elasticMatMulCalls.load(); }
+    [[nodiscard]] std::uint64_t GetElasticHits() const noexcept { return m_elasticHits.load(); }
+    [[nodiscard]] std::uint64_t GetElasticMisses() const noexcept { return m_elasticMisses.load(); }
+    [[nodiscard]] std::uint64_t GetElasticPageInBytes() const noexcept { return m_elasticPageInBytes.load(); }
+    [[nodiscard]] std::uint64_t GetElasticVulkanDispatches() const noexcept { return m_elasticVulkanDispatches.load(); }
+    [[nodiscard]] std::uint64_t GetElasticCpuFallbacks() const noexcept { return m_elasticCpuFallbacks.load(); }
+    [[nodiscard]] std::uint64_t GetElasticPrefetchHits() const noexcept { return m_elasticPrefetchHits.load(); }
+    [[nodiscard]] std::uint64_t GetElasticEvictions() const noexcept { return m_elasticEvictions.load(); }
+
     // Deep2: Execution telemetry query — returns recent dispatch events with full metadata
     // (tensor identity, quantization, residency, backend, timing, arithmetic intensity)
     [[nodiscard]] std::vector<RawrXD::Deep2::DispatchEvent> GetDeep2RecentEvents(size_t count = 100) const;

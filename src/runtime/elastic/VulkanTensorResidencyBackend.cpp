@@ -4,6 +4,7 @@
 // ============================================================================
 #include "VulkanTensorResidencyBackend.hpp"
 #include <cstdio>
+#include <cstring>
 #include <string>
 
 namespace RawrXD::Elastic {

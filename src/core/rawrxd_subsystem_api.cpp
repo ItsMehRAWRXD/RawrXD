@@ -86,6 +86,9 @@ extern "C" {
 // (Headers intentionally omitted here to avoid extern "C" linkage conflicts
 //  with the stub definitions below.)
 
+// Local constants (mirrors streaming_orchestrator.h values)
+static constexpr uint32_t SO_DEFAULT_THREADS = 8;
+
 // Stub implementations for analyzer/streaming when not linked with MASM
 extern "C" {
     int AD_ProcessGGUF(const char* inputPath, const char* outputExecPath) {

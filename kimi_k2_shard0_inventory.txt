@@ -1,0 +1,5 @@
+GGUF magic: b'GGUF'
+Version: 3
+Tensors: 98
+Metadata: 63
+Tensor info start: 6911104
