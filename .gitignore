@@ -152,3 +152,10 @@ build_smoke_verify2/
 # Large scan/report files (>100MB)
 **/todo-scan-*.json
 **/Powershield_Audit_Report.json
+
+# Ninja build artifacts
+build-ninja/
+**/build-ninja/
+.ninja_deps
+.ninja_log
+
