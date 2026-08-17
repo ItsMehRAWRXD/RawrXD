@@ -18,6 +18,9 @@
 
 namespace Deep2 {
 
+// Forward declaration
+class GlobalTensorIndex;
+
 // ============================================================================
 // MLAWeights — Factorized Multi-head Latent Attention tensors
 //
@@ -50,6 +53,11 @@ struct MLAWeights {
     // Validation: check all required tensors are present
     // =========================================================================
     bool Validate(const KimiK2Config& config, std::string& error) const;
+
+    // =========================================================================
+    // Resolve tensors from a GlobalTensorIndex for a specific layer
+    // =========================================================================
+    bool ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error);
 
     // =========================================================================
     // Tensor presence detection (for architecture auto-detection)

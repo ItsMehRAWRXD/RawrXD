@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "UniversalTensorDescriptor.hpp"
 #include <cstdint>
 #include <cstddef>
 #include <cstdio>

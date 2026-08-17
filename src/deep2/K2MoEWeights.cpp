@@ -3,6 +3,8 @@
 // ============================================================================
 
 #include "K2MoEWeights.hpp"
+#include "K2GlobalTensorIndex.hpp"
+#include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -70,6 +72,92 @@ bool MoEWeights::Validate(const KimiK2Config& config, std::string& error) const 
 
     // Norm
     if (!ffnNorm.data()) { error = "MoEWeights: ffn_norm missing"; return false; }
+
+    return true;
+}
+
+bool MoEWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error) {
+    char gateInpName[64], expProbsBName[64];
+    char gateExpsName[64], upExpsName[64], downExpsName[64];
+    char gateShexpName[64], upShexpName[64], downShexpName[64];
+    char gateName[64], upName[64], downName[64];
+    char normName[64];
+
+    snprintf(gateInpName, sizeof(gateInpName), "blk.%u.ffn_gate_inp.weight", layer);
+    snprintf(expProbsBName, sizeof(expProbsBName), "blk.%u.exp_probs_b.weight", layer);
+    snprintf(gateExpsName, sizeof(gateExpsName), "blk.%u.ffn_gate_exps.weight", layer);
+    snprintf(upExpsName, sizeof(upExpsName), "blk.%u.ffn_up_exps.weight", layer);
+    snprintf(downExpsName, sizeof(downExpsName), "blk.%u.ffn_down_exps.weight", layer);
+    snprintf(gateShexpName, sizeof(gateShexpName), "blk.%u.ffn_gate_shexp.weight", layer);
+    snprintf(upShexpName, sizeof(upShexpName), "blk.%u.ffn_up_shexp.weight", layer);
+    snprintf(downShexpName, sizeof(downShexpName), "blk.%u.ffn_down_shexp.weight", layer);
+    snprintf(gateName, sizeof(gateName), "blk.%u.ffn_gate.weight", layer);
+    snprintf(upName, sizeof(upName), "blk.%u.ffn_up.weight", layer);
+    snprintf(downName, sizeof(downName), "blk.%u.ffn_down.weight", layer);
+    snprintf(normName, sizeof(normName), "blk.%u.ffn_norm.weight", layer);
+
+    auto resolve = [&](const char* name, RawrXD::TensorView& view) -> bool {
+        auto refOpt = index.Find(name);
+        if (!refOpt) return false;
+        const auto& ref = *refOpt;
+
+        RawrXD::UniversalTensorDescriptor desc;
+        desc.numDims = ref.nDims;
+        for (uint8_t i = 0; i < ref.nDims && i < 8; ++i) {
+            desc.shape[i] = ref.shape[i];
+        }
+        desc.layout = RawrXD::TensorLayout::DENSE;
+        desc.role = RawrXD::TensorRole::WEIGHT;
+        desc.memorySpace = RawrXD::UniversalTensorDescriptor::MemorySpace::NVME;
+        desc.data = nullptr;
+
+        switch (ref.ggmlType) {
+            case 0:  desc.quantType = RawrXD::QuantType::F32; break;
+            case 1:  desc.quantType = RawrXD::QuantType::F16; break;
+            case 2:  desc.quantType = RawrXD::QuantType::Q4_0; break;
+            case 3:  desc.quantType = RawrXD::QuantType::Q4_1; break;
+            case 6:  desc.quantType = RawrXD::QuantType::Q5_0; break;
+            case 7:  desc.quantType = RawrXD::QuantType::Q5_1; break;
+            case 8:  desc.quantType = RawrXD::QuantType::Q8_0; break;
+            case 9:  desc.quantType = RawrXD::QuantType::Q8_1; break;
+            case 10: desc.quantType = RawrXD::QuantType::Q2_K; break;
+            case 11: desc.quantType = RawrXD::QuantType::Q3_K; break;
+            case 12: desc.quantType = RawrXD::QuantType::Q4_K; break;
+            case 13: desc.quantType = RawrXD::QuantType::Q5_K; break;
+            case 14: desc.quantType = RawrXD::QuantType::Q6_K; break;
+            case 17: desc.quantType = RawrXD::QuantType::IQ2_XXS; break;
+            case 18: desc.quantType = RawrXD::QuantType::IQ2_XS; break;
+            case 19: desc.quantType = RawrXD::QuantType::IQ3_XXS; break;
+            case 21: desc.quantType = RawrXD::QuantType::IQ4_NL; break;
+            case 24: desc.quantType = RawrXD::QuantType::IQ4_XS; break;
+            default: desc.quantType = RawrXD::QuantType::UNKNOWN; break;
+        }
+
+        view = RawrXD::TensorView::FromBuffer(desc, nullptr, false);
+        return true;
+    };
+
+    // Router (always required for MoE layers)
+    if (!resolve(gateInpName, ffnGateInp)) { error = std::string("MoEWeights: ") + gateInpName + " not found"; return false; }
+    if (!resolve(expProbsBName, expProbsB)) { error = std::string("MoEWeights: ") + expProbsBName + " not found"; return false; }
+
+    // Routed experts
+    if (!resolve(gateExpsName, ffnGateExps)) { error = std::string("MoEWeights: ") + gateExpsName + " not found"; return false; }
+    if (!resolve(upExpsName, ffnUpExps))     { error = std::string("MoEWeights: ") + upExpsName + " not found"; return false; }
+    if (!resolve(downExpsName, ffnDownExps)) { error = std::string("MoEWeights: ") + downExpsName + " not found"; return false; }
+
+    // Shared expert
+    if (!resolve(gateShexpName, ffnGateShexp)) { error = std::string("MoEWeights: ") + gateShexpName + " not found"; return false; }
+    if (!resolve(upShexpName, ffnUpShexp))       { error = std::string("MoEWeights: ") + upShexpName + " not found"; return false; }
+    if (!resolve(downShexpName, ffnDownShexp))   { error = std::string("MoEWeights: ") + downShexpName + " not found"; return false; }
+
+    // Dense FFN (Layer 0 fallback — optional, resolve if present)
+    resolve(gateName, ffnGate);
+    resolve(upName, ffnUp);
+    resolve(downName, ffnDown);
+
+    // Norm
+    if (!resolve(normName, ffnNorm)) { error = std::string("MoEWeights: ") + normName + " not found"; return false; }
 
     return true;
 }

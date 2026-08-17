@@ -3,6 +3,8 @@
 // ============================================================================
 
 #include "K2MLAWeights.hpp"
+#include "K2GlobalTensorIndex.hpp"
+#include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -61,6 +63,79 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
     if (attnO.dims().size() != 2 || attnO.dims()[0] != oRows || attnO.dims()[1] != hiddenDim) {
         error = "MLAWeights: attn_o shape mismatch"; return false;
     }
+
+    return true;
+}
+
+bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error) {
+    // Build layer-scoped tensor names
+    char qAName[64], qANormName[64], qBName[64];
+    char kvAName[64], kvANormName[64], kvBName[64];
+    char oName[64], normName[64];
+
+    snprintf(qAName, sizeof(qAName), "blk.%u.attn_q_a.weight", layer);
+    snprintf(qANormName, sizeof(qANormName), "blk.%u.attn_q_a_norm.weight", layer);
+    snprintf(qBName, sizeof(qBName), "blk.%u.attn_q_b.weight", layer);
+    snprintf(kvAName, sizeof(kvAName), "blk.%u.attn_kv_a_mqa.weight", layer);
+    snprintf(kvANormName, sizeof(kvANormName), "blk.%u.attn_kv_a_norm.weight", layer);
+    snprintf(kvBName, sizeof(kvBName), "blk.%u.attn_kv_b.weight", layer);
+    snprintf(oName, sizeof(oName), "blk.%u.attn_o.weight", layer);
+    snprintf(normName, sizeof(normName), "blk.%u.attn_norm.weight", layer);
+
+    auto resolve = [&](const char* name, RawrXD::TensorView& view) -> bool {
+        auto refOpt = index.Find(name);
+        if (!refOpt) return false;
+        const auto& ref = *refOpt;
+
+        RawrXD::UniversalTensorDescriptor desc;
+        desc.numDims = ref.nDims;
+        for (uint8_t i = 0; i < ref.nDims && i < 8; ++i) {
+            desc.shape[i] = ref.shape[i];
+        }
+        desc.quantType = RawrXD::QuantType::UNKNOWN; // Will be set from ggmlType
+        desc.layout = RawrXD::TensorLayout::DENSE;
+        desc.role = RawrXD::TensorRole::WEIGHT;
+        desc.memorySpace = RawrXD::UniversalTensorDescriptor::MemorySpace::NVME;
+        desc.data = nullptr;
+
+        // Map GGML type to QuantType
+        switch (ref.ggmlType) {
+            case 0:  desc.quantType = RawrXD::QuantType::F32; break;
+            case 1:  desc.quantType = RawrXD::QuantType::F16; break;
+            case 2:  desc.quantType = RawrXD::QuantType::Q4_0; break;
+            case 3:  desc.quantType = RawrXD::QuantType::Q4_1; break;
+            case 6:  desc.quantType = RawrXD::QuantType::Q5_0; break;
+            case 7:  desc.quantType = RawrXD::QuantType::Q5_1; break;
+            case 8:  desc.quantType = RawrXD::QuantType::Q8_0; break;
+            case 9:  desc.quantType = RawrXD::QuantType::Q8_1; break;
+            case 10: desc.quantType = RawrXD::QuantType::Q2_K; break;
+            case 11: desc.quantType = RawrXD::QuantType::Q3_K; break;
+            case 12: desc.quantType = RawrXD::QuantType::Q4_K; break;
+            case 13: desc.quantType = RawrXD::QuantType::Q5_K; break;
+            case 14: desc.quantType = RawrXD::QuantType::Q6_K; break;
+            case 17: desc.quantType = RawrXD::QuantType::IQ2_XXS; break;
+            case 18: desc.quantType = RawrXD::QuantType::IQ2_XS; break;
+            case 19: desc.quantType = RawrXD::QuantType::IQ3_XXS; break;
+            case 20: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ1_S
+            case 21: desc.quantType = RawrXD::QuantType::IQ4_NL; break;
+            case 22: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ3_S
+            case 23: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ2_S
+            case 24: desc.quantType = RawrXD::QuantType::IQ4_XS; break;
+            default: desc.quantType = RawrXD::QuantType::UNKNOWN; break;
+        }
+
+        view = RawrXD::TensorView::FromBuffer(desc, nullptr, false);
+        return true;
+    };
+
+    if (!resolve(qAName, attnQ_a))       { error = std::string("MLAWeights: ") + qAName + " not found in index"; return false; }
+    if (!resolve(qANormName, attnQ_a_norm)) { error = std::string("MLAWeights: ") + qANormName + " not found in index"; return false; }
+    if (!resolve(qBName, attnQ_b))       { error = std::string("MLAWeights: ") + qBName + " not found in index"; return false; }
+    if (!resolve(kvAName, attnKV_a_mqa)) { error = std::string("MLAWeights: ") + kvAName + " not found in index"; return false; }
+    if (!resolve(kvANormName, attnKV_a_norm)) { error = std::string("MLAWeights: ") + kvANormName + " not found in index"; return false; }
+    if (!resolve(kvBName, attnKV_b))     { error = std::string("MLAWeights: ") + kvBName + " not found in index"; return false; }
+    if (!resolve(oName, attnO))          { error = std::string("MLAWeights: ") + oName + " not found in index"; return false; }
+    if (!resolve(normName, attnNorm))    { error = std::string("MLAWeights: ") + normName + " not found in index"; return false; }
 
     return true;
 }

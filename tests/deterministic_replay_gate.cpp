@@ -336,16 +336,17 @@ public:
         uint64_t latencyMs;
     };
     
-    MockGhostTextEngine(MockEditor& ed) : editor(ed), requestCounter(0) {}
+    MockGhostTextEngine(MockEditor& ed) : editor(ed), requestCounter(0), activeGeneration(0) {}
     
     uint32_t requestCompletion(const std::string& context) {
         uint32_t reqId = InterlockedIncrement(reinterpret_cast<LONG*>(&requestCounter));
+        uint32_t gen = ++activeGeneration;
         
         // Simulate async completion
         DWORD threadId;
-        auto* params = new CompletionParams{this, reqId, context, editor.getVersion()};
+        auto* params = new CompletionParams{this, reqId, context, editor.getVersion(), gen};
         HANDLE hThread = CreateThread(nullptr, 0, completionThreadProc, params, 0, &threadId);
-        CloseHandle(hThread);
+        if (hThread) CloseHandle(hThread);
         
         return reqId;
     }
@@ -366,6 +367,8 @@ public:
     void cancelPending() {
         std::lock_guard<std::mutex> lock(completionMutex);
         pendingCompletion.reset();
+        // Increment generation to reject in-flight stale completions
+        ++activeGeneration;
     }
     
 private:
@@ -374,10 +377,12 @@ private:
         uint32_t requestId;
         std::string context;
         uint32_t editorVersion;
+        uint32_t generation;
     };
     
     MockEditor& editor;
     std::atomic<uint32_t> requestCounter;
+    std::atomic<uint32_t> activeGeneration;
     std::optional<Completion> pendingCompletion;
     mutable std::mutex completionMutex;
     
@@ -404,10 +409,12 @@ private:
             comp.confidence = 0.70f;
         }
         
-        // Store completion
+        // Store completion only if generation hasn't been cancelled
         {
             std::lock_guard<std::mutex> lock(params->engine->completionMutex);
-            params->engine->pendingCompletion = comp;
+            if (params->generation == params->engine->activeGeneration.load()) {
+                params->engine->pendingCompletion = comp;
+            }
         }
         
         delete params;

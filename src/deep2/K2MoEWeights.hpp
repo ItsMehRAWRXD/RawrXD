@@ -18,6 +18,9 @@
 
 namespace Deep2 {
 
+// Forward declaration
+class GlobalTensorIndex;
+
 // ============================================================================
 // ExpertSlice — Addressable view into a single expert within a 3D tensor
 //
@@ -90,6 +93,11 @@ struct MoEWeights {
     // Validation
     // =========================================================================
     bool Validate(const KimiK2Config& config, std::string& error) const;
+
+    // =========================================================================
+    // Resolve tensors from a GlobalTensorIndex for a specific layer
+    // =========================================================================
+    bool ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error);
 
     // =========================================================================
     // Architecture detection

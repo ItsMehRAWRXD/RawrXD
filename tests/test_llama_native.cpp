@@ -49,6 +49,27 @@ int main() {
         printf("  [INFO] Using GGUF fixture: %s\n", resolvedPath.c_str());
     }
 
+    // Check if llama.dll is available before attempting initialization
+    std::wstring llamaDllPath = std::wstring(exeDir.begin(), exeDir.end()) + L"\\llama.dll";
+    bool llamaDllAvailable = (GetFileAttributesW(llamaDllPath.c_str()) != INVALID_FILE_ATTRIBUTES);
+    if (!llamaDllAvailable) {
+        // Also check in PATH
+        HMODULE hTest = LoadLibraryW(L"llama.dll");
+        if (hTest) {
+            llamaDllAvailable = true;
+            FreeLibrary(hTest);
+        }
+    }
+
+    if (!llamaDllAvailable) {
+        printf("  [WARN] llama.dll not found. Skipping LlamaNative backend test.\n");
+        printf("         Place llama.dll + ggml.dll in the executable directory to enable.\n");
+        printf("\n========================================\n");
+        printf("  Results: SKIPPED (llama.dll unavailable)\n");
+        printf("========================================\n");
+        return 0;  // Skip, not fail
+    }
+
     // Test Deep2Bridge with LlamaNative backend
     auto& bridge = rawr::Deep2Bridge::Get();
     bridge.SetBackend(rawr::InferenceBackend::LlamaNative);
