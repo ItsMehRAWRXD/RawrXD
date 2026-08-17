@@ -3108,6 +3108,13 @@ bool RawrXDModelLoader::StreamingMatMul(const std::string& name, const float* x,
     if (it == m_tensors.end())
     {
         printf("[StreamingMatMul] Tensor not found: %s\n", name.c_str());
+        printf("[StreamingMatMul] Available tensor names (first 30):\n");
+        int diagCount = 0;
+        for (auto& kv : m_tensors)
+        {
+            if (diagCount++ < 30)
+                printf("  %s\n", kv.first.c_str());
+        }
         return false;
     }
     Tensor& t = it->second;

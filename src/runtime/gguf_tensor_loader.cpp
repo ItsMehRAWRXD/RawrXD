@@ -356,7 +356,7 @@ bool GGUFTensorLoader::ParseHeader() {
     std::memcpy(&metadata_count, ptr, sizeof(metadata_count));
     ptr += sizeof(metadata_count);
     
-    // Skip metadata (simplified - would parse in full implementation)
+    // Skip metadata (proper GGUF value type skipping)
     for (uint64_t i = 0; i < metadata_count && ptr < end; ++i) {
         // Read key length and key
         uint64_t key_len;
@@ -369,8 +369,61 @@ bool GGUFTensorLoader::ParseHeader() {
         ptr += sizeof(value_type);
         
         // Skip value based on type
-        // (simplified - just skip for now)
-        ptr += 8;  // Rough skip
+        switch (value_type) {
+            case 0:  ptr += 1; break;   // UINT8
+            case 1:  ptr += 1; break;   // INT8
+            case 2:  ptr += 2; break;   // UINT16
+            case 3:  ptr += 2; break;   // INT16
+            case 4:  ptr += 4; break;   // UINT32
+            case 5:  ptr += 4; break;   // INT32
+            case 6:  ptr += 4; break;   // FLOAT32
+            case 7:  ptr += 8; break;   // UINT64
+            case 8:  ptr += 8; break;   // INT64
+            case 9:  ptr += 8; break;   // FLOAT64
+            case 10: {                  // BOOL
+                ptr += 1; break;
+            }
+            case 11: {                  // STRING
+                uint64_t str_len;
+                std::memcpy(&str_len, ptr, sizeof(str_len));
+                ptr += sizeof(str_len) + str_len;
+                break;
+            }
+            case 12: {                  // ARRAY
+                uint32_t arr_type;
+                uint64_t arr_len;
+                std::memcpy(&arr_type, ptr, sizeof(arr_type));
+                ptr += sizeof(arr_type);
+                std::memcpy(&arr_len, ptr, sizeof(arr_len));
+                ptr += sizeof(arr_len);
+                // Skip array elements
+                for (uint64_t j = 0; j < arr_len && ptr < end; ++j) {
+                    switch (arr_type) {
+                        case 0:  ptr += 1; break;
+                        case 1:  ptr += 1; break;
+                        case 2:  ptr += 2; break;
+                        case 3:  ptr += 2; break;
+                        case 4:  ptr += 4; break;
+                        case 5:  ptr += 4; break;
+                        case 6:  ptr += 4; break;
+                        case 7:  ptr += 8; break;
+                        case 8:  ptr += 8; break;
+                        case 9:  ptr += 8; break;
+                        case 10: ptr += 1; break;
+                        case 11: {
+                            uint64_t sl;
+                            std::memcpy(&sl, ptr, sizeof(sl));
+                            ptr += sizeof(sl) + sl;
+                            break;
+                        }
+                        default: ptr += 8; break;
+                    }
+                }
+                break;
+            }
+            default:
+                ptr += 8; break;
+        }
     }
     
     // Parse tensor info
@@ -429,6 +482,13 @@ size_t GetTensorSize(uint32_t type, const std::vector<uint64_t>& shape) {
         case GGMLType::Q5_1: return ((num_elements + 31) / 32) * (2 + 2 + 20);
         case GGMLType::Q8_0: return ((num_elements + 31) / 32) * (2 + 32);
         case GGMLType::Q8_1: return ((num_elements + 31) / 32) * (2 + 2 + 32);
+        // K-quants: 256 weights per super-block
+        case GGMLType::Q2_K: return ((num_elements + 255) / 256) * 96;
+        case GGMLType::Q3_K: return ((num_elements + 255) / 256) * 112;
+        case GGMLType::Q4_K: return ((num_elements + 255) / 256) * 144;  // Q4_K_M ≈ 4.5 bpw
+        case GGMLType::Q5_K: return ((num_elements + 255) / 256) * 176;
+        case GGMLType::Q6_K: return ((num_elements + 255) / 256) * 210;
+        case GGMLType::Q8_K: return ((num_elements + 255) / 256) * 292;
         default:             return num_elements * 4;  // Assume F32
     }
 }

@@ -147,6 +147,16 @@ struct ElasticMetrics {
     uint64_t native_moe_active_experts = 0; // Active experts in last MoE dispatch
     uint64_t native_moe_total_experts = 0;  // Total experts available in last MoE dispatch
     double   dss_validation_error = 0.0; // Max |dense - dss| observed
+
+    // Proof instrumentation: ElasticEngine → Transformer forward path telemetry
+    uint64_t elastic_matmul_calls = 0;      // Total ExecuteMatMul calls attempted
+    uint64_t elastic_hits = 0;              // Successful elastic dispatch (residency + router)
+    uint64_t elastic_misses = 0;            // Elastic could not index or dispatch tensor
+    uint64_t elastic_page_in_bytes = 0;     // Total bytes paged in from CPU mmap → GPU
+    uint64_t elastic_vulkan_dispatches = 0; // Router dispatched through Vulkan GEMM
+    uint64_t elastic_cpu_fallbacks = 0;     // Router fell back to CPU matmul
+    uint64_t elastic_prefetch_hits = 0;     // Prefetched layer was actually used
+    uint64_t elastic_evictions = 0;         // Blocks evicted from GPU by residency manager
 };
 
 // ----------------------------------------------------------------------------

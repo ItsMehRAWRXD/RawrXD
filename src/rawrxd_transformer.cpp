@@ -1273,22 +1273,6 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         return false;
     }
 
-    // Elastic: Try architecture-adaptive OOC execution first
-    if (m_elasticEngine) {
-        bool elasticOk = m_elasticEngine->ExecuteMatMul(tensorName, input, output,
-                                                           inputDim, outputDim, layer);
-        if (elasticOk) {
-#ifdef RAWRXD_DEBUG_MATMUL
-            if (isOutputProjection) {
-                printf("[MATMUL] output.weight RETURN elastic ok=1\n");
-                std::fflush(stdout);
-            }
-#endif
-            return true;
-        }
-        // Fall through to existing paths if elastic returns false (tensor not indexed, etc.)
-    }
-
     // B015-P1: Prefill-only residency gate.
     // T > 1  → B015 residency ON (prefill optimization)
     // T == 1 → B015 residency OFF (bypass decode overhead)
@@ -1676,6 +1660,44 @@ bool RawrXDTransformer::ExecuteLayerMatMulBatch(const std::string& tensorName, c
 
     // Negative Space Profiler: Set batch context for this matmul operation
     rawrxd::BatchContext batchCtx(T);
+
+    // ELASTIC: Try architecture-adaptive OOC execution first for batched matmul.
+    // If ElasticEngine can index this tensor, it controls residency → dispatch → release.
+    if (m_elasticEngine)
+    {
+        ++m_elasticMatMulCalls;
+        // ElasticEngine::ExecuteMatMul only handles single-token matmul.
+        // For batched execution, we call it T times (elastic will cache residency per-block).
+        bool allElasticOk = true;
+        auto elasticT0 = std::chrono::high_resolution_clock::now();
+        for (std::size_t t = 0; t < T; ++t)
+        {
+            if (!m_elasticEngine->ExecuteMatMul(tensorName,
+                                                inputBatch + t * inputDim,
+                                                outputBatch + t * outputDim,
+                                                inputDim, outputDim, layer))
+            {
+                allElasticOk = false;
+                break;
+            }
+        }
+        auto elasticT1 = std::chrono::high_resolution_clock::now();
+        auto elasticNs = std::chrono::duration_cast<std::chrono::nanoseconds>(elasticT1 - elasticT0).count();
+
+        if (allElasticOk)
+        {
+            ++m_elasticHits;
+            printf("[ELASTIC] L%02u batch %-24s T=%zu hit  (%.3f ms)\n",
+                   static_cast<unsigned>(layer), tensorName.c_str(), T, elasticNs / 1e6);
+            std::fflush(stdout);
+            return true;
+        }
+        else
+        {
+            ++m_elasticMisses;
+            // Fall through to B015 residency pool path
+        }
+    }
 
     // Fast path: try to acquire resident dequantized weight once, then reuse for all T rows
     if (m_weightResidencyPool)

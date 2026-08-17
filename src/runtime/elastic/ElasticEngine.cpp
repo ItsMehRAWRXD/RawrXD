@@ -252,16 +252,23 @@ bool ElasticEngine::ExecuteMatMul(const std::string& tensor_name,
         return false;
     }
 
+    // Proof instrumentation: track acquisition attempt
+    ++metrics_.elastic_matmul_calls;
+
     // Ensure block is resident (GPU preferred, CPU mmap fallback)
     void* gpu_buf = residency_mgr_->RequireGpuResident(block->block_id);
     const void* cpu_ptr = nullptr;
+    bool page_in_occurred = false;
     if (!gpu_buf) {
         cpu_ptr = residency_mgr_->RequireCpuResident(block->block_id);
         if (!cpu_ptr) {
             printf("[ElasticEngine] ExecuteMatMul FAILED: cannot resident block %u (%s)\n",
                    block->block_id, tensor_name.c_str());
+            ++metrics_.elastic_misses;
             return false;
         }
+        page_in_occurred = true;
+        metrics_.elastic_page_in_bytes += block->byte_size;
     }
 
     // Build TensorHandle for router dispatch
@@ -284,17 +291,45 @@ bool ElasticEngine::ExecuteMatMul(const std::string& tensor_name,
 
     // Advance router layer and dispatch
     router_->advanceLayer(layer_idx);
+    auto dispatchT0 = std::chrono::high_resolution_clock::now();
     bool ok = router_->dispatchMatmul(
         input_view, weight, output_view,
         static_cast<int>(output_dim), static_cast<int>(input_dim),
         RawrXD::TensorExecutionRouter::MatmulBackendDispatch{});
+    auto dispatchT1 = std::chrono::high_resolution_clock::now();
+    auto dispatchNs = std::chrono::duration_cast<std::chrono::nanoseconds>(dispatchT1 - dispatchT0).count();
 
     if (ok) {
+        ++metrics_.elastic_hits;
         ++metrics_.dss_executed_blocks;
+
+        // Track backend used
+        if (gpu_buf) {
+            ++metrics_.elastic_vulkan_dispatches;
+        } else {
+            ++metrics_.elastic_cpu_fallbacks;
+        }
+
+        // Proof instrumentation: emit per-layer, per-tensor summary
+        static std::uint32_t s_lastInstrLayer = 0xFFFFFFFFu;
+        static std::string s_lastInstrTensor;
+        if (layer_idx != s_lastInstrLayer || tensor_name != s_lastInstrTensor) {
+            s_lastInstrLayer = layer_idx;
+            s_lastInstrTensor = tensor_name;
+            const char* residencyStatus = gpu_buf ? "hit" : (page_in_occurred ? "miss->page-in" : "cpu-fallback");
+            printf("[ELASTIC] L%02u acquire %-24s %-16s vulkan=%s cpu=%s (%.3f ms)\n",
+                   static_cast<unsigned>(layer_idx), tensor_name.c_str(), residencyStatus,
+                   gpu_buf ? "yes" : "no", cpu_ptr ? "yes" : "no", dispatchNs / 1e6);
+            std::fflush(stdout);
+        }
+
         // Record telemetry for predictive memory
         if (predictive_mem_) {
             // TODO: map block_id to TensorId and call predictive_mem_->recordCompletion
         }
+    } else {
+        ++metrics_.elastic_misses;
+        ++metrics_.elastic_cpu_fallbacks;
     }
 
     return ok;
