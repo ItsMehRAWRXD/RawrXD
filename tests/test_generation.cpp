@@ -31,8 +31,8 @@ int main() {
     cfg.contextSize = 2048;
     cfg.temperature = 0.7f;
 
-    // Use a real GGUF model that exists in the repo
-    const char* kModelPath = "gemma3-1b-Q2_K.gguf";
+    // Use a real GGUF model that exists in the repo (relative to build-ninja/tests/)
+    const char* kModelPath = "../../gemma3-1b-Q2_K.gguf";
 
     TEST("Bridge initialize", bridge.Initialize(cfg));
     TEST("Bridge status ready", bridge.GetStatus() == rawr::EngineStatus::Ready);
