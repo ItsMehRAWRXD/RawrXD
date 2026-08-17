@@ -214,18 +214,35 @@ bool VulkanTensorResidencyBackend::UploadData(void* opaque_handle, const void* s
         return false;
     }
     std::memcpy(mapped, src_data, static_cast<size_t>(bytes));
+
+    // Flush if memory is not coherent
+    VkPhysicalDeviceMemoryProperties memProps{};
+    vkGetPhysicalDeviceMemoryProperties(m_physDevice, &memProps);
+    if (!(memProps.memoryTypes[stagingMemType].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+        VkMappedMemoryRange flushRange{};
+        flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        flushRange.memory = stagingMemory;
+        flushRange.offset = 0;
+        flushRange.size = VK_WHOLE_SIZE;
+        vkFlushMappedMemoryRanges(m_device, 1, &flushRange);
+    }
+
     vkUnmapMemory(m_device, stagingMemory);
 
-    // TODO: record and submit a vkCmdCopyBuffer command to transfer staging -> device
-    // For now, we require the caller to handle the transfer via command buffer.
-    // This is a structural placeholder — the actual transfer needs a VkQueue/VkCommandPool.
+    // Submit actual GPU transfer
+    bool transferOk = SubmitCopyBuffer(stagingBuffer, handle->buffer, bytes);
 
+    // Clean up staging resources
     vkFreeMemory(m_device, stagingMemory, nullptr);
     vkDestroyBuffer(m_device, stagingBuffer, nullptr);
 
-    printf("[VulkanTensorResidencyBackend] UploadData: %llu bytes staged (transfer not submitted)\n",
-           static_cast<unsigned long long>(bytes));
-    return true; // Data is in staging; transfer pending
+    if (transferOk) {
+        printf("[VulkanTensorResidencyBackend] UploadData: %llu bytes transferred to GPU\n",
+               static_cast<unsigned long long>(bytes));
+    } else {
+        printf("[VulkanTensorResidencyBackend] UploadData: transfer submission FAILED\n");
+    }
+    return transferOk;
 }
 
 VkBuffer VulkanTensorResidencyBackend::GetVkBuffer(void* opaque_handle) {
@@ -244,6 +261,98 @@ ElasticResidencyManager::GpuDeallocator VulkanTensorResidencyBackend::GetDealloc
     return [this](void* h) {
         this->FreeTensor(h);
     };
+}
+
+// ============================================================================
+// SubmitCopyBuffer
+// Records vkCmdCopyBuffer, submits to queue, waits on fence.
+// ============================================================================
+bool VulkanTensorResidencyBackend::SubmitCopyBuffer(VkBuffer src, VkBuffer dst, uint64_t bytes) {
+    if (!m_device || !m_queue || !m_cmdPool) {
+        printf("[VulkanTensorResidencyBackend] SubmitCopyBuffer: missing device/queue/pool\n");
+        return false;
+    }
+
+    // Allocate command buffer
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = m_cmdPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer cmdBuf = VK_NULL_HANDLE;
+    VkResult result = vkAllocateCommandBuffers(m_device, &allocInfo, &cmdBuf);
+    if (result != VK_SUCCESS || cmdBuf == VK_NULL_HANDLE) {
+        printf("[VulkanTensorResidencyBackend] vkAllocateCommandBuffers failed (VkResult=%d)\n", static_cast<int>(result));
+        return false;
+    }
+
+    // Begin recording
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    result = vkBeginCommandBuffer(cmdBuf, &beginInfo);
+    if (result != VK_SUCCESS) {
+        printf("[VulkanTensorResidencyBackend] vkBeginCommandBuffer failed (VkResult=%d)\n", static_cast<int>(result));
+        vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+        return false;
+    }
+
+    // Record copy
+    VkBufferCopy copyRegion{};
+    copyRegion.srcOffset = 0;
+    copyRegion.dstOffset = 0;
+    copyRegion.size = bytes;
+    vkCmdCopyBuffer(cmdBuf, src, dst, 1, &copyRegion);
+
+    // End recording
+    result = vkEndCommandBuffer(cmdBuf);
+    if (result != VK_SUCCESS) {
+        printf("[VulkanTensorResidencyBackend] vkEndCommandBuffer failed (VkResult=%d)\n", static_cast<int>(result));
+        vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+        return false;
+    }
+
+    // Create fence for synchronization
+    VkFenceCreateInfo fenceInfo{};
+    fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    VkFence fence = VK_NULL_HANDLE;
+    result = vkCreateFence(m_device, &fenceInfo, nullptr, &fence);
+    if (result != VK_SUCCESS || fence == VK_NULL_HANDLE) {
+        printf("[VulkanTensorResidencyBackend] vkCreateFence failed (VkResult=%d)\n", static_cast<int>(result));
+        vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+        return false;
+    }
+
+    // Submit
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmdBuf;
+
+    result = vkQueueSubmit(m_queue, 1, &submitInfo, fence);
+    if (result != VK_SUCCESS) {
+        printf("[VulkanTensorResidencyBackend] vkQueueSubmit failed (VkResult=%d)\n", static_cast<int>(result));
+        vkDestroyFence(m_device, fence, nullptr);
+        vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+        return false;
+    }
+
+    // Wait for completion (blocking — acceptable for residency uploads)
+    constexpr uint64_t kFenceTimeoutNs = 10ULL * 1000 * 1000 * 1000; // 10 seconds
+    result = vkWaitForFences(m_device, 1, &fence, VK_TRUE, kFenceTimeoutNs);
+    if (result != VK_SUCCESS) {
+        printf("[VulkanTensorResidencyBackend] vkWaitForFences failed (VkResult=%d)\n", static_cast<int>(result));
+        vkDestroyFence(m_device, fence, nullptr);
+        vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+        return false;
+    }
+
+    // Cleanup
+    vkDestroyFence(m_device, fence, nullptr);
+    vkFreeCommandBuffers(m_device, m_cmdPool, 1, &cmdBuf);
+
+    return true;
 }
 
 } // namespace RawrXD::Elastic
