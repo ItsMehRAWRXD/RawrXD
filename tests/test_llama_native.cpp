@@ -49,21 +49,37 @@ int main() {
         printf("  [INFO] Using GGUF fixture: %s\n", resolvedPath.c_str());
     }
 
-    // Check if llama.dll is available before attempting initialization
-    std::wstring llamaDllPath = std::wstring(exeDir.begin(), exeDir.end()) + L"\\llama.dll";
-    bool llamaDllAvailable = (GetFileAttributesW(llamaDllPath.c_str()) != INVALID_FILE_ATTRIBUTES);
+    // Check if llama.dll is available AND loadable before attempting initialization
+    bool llamaDllAvailable = false;
+    {
+        std::wstring llamaDllPath = std::wstring(exeDir.begin(), exeDir.end()) + L"\\llama.dll";
+        HMODULE hTest = LoadLibraryW(llamaDllPath.c_str());
+        if (hTest) {
+            // Verify critical exports exist
+            auto* pLoad = GetProcAddress(hTest, "llama_load_model_from_file");
+            auto* pTok = GetProcAddress(hTest, "llama_tokenize");
+            auto* pDec = GetProcAddress(hTest, "llama_decode");
+            if (pLoad && pTok && pDec) {
+                llamaDllAvailable = true;
+            }
+            FreeLibrary(hTest);
+        }
+    }
     if (!llamaDllAvailable) {
-        // Also check in PATH
+        // Also try PATH
         HMODULE hTest = LoadLibraryW(L"llama.dll");
         if (hTest) {
-            llamaDllAvailable = true;
+            auto* pLoad = GetProcAddress(hTest, "llama_load_model_from_file");
+            if (pLoad) {
+                llamaDllAvailable = true;
+            }
             FreeLibrary(hTest);
         }
     }
 
     if (!llamaDllAvailable) {
-        printf("  [WARN] llama.dll not found. Skipping LlamaNative backend test.\n");
-        printf("         Place llama.dll + ggml.dll in the executable directory to enable.\n");
+        printf("  [WARN] llama.dll not found or missing required exports. Skipping LlamaNative backend test.\n");
+        printf("         Place a functional llama.dll + ggml.dll in the executable directory to enable.\n");
         printf("\n========================================\n");
         printf("  Results: SKIPPED (llama.dll unavailable)\n");
         printf("========================================\n");
