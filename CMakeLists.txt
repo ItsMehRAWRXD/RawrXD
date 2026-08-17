@@ -1247,6 +1247,7 @@ set(SOURCES
     src/runtime/memory/CapacityManager.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/Deep2ExecutionTelemetry.cpp
+    src/runtime/gguf_tensor_loader.cpp
     src/runtime/elastic/ElasticEngine.cpp
     src/runtime/elastic/ElasticGGUFIndex.cpp
     src/runtime/elastic/ElasticResidencyManager.cpp
@@ -1274,7 +1275,9 @@ set(SOURCES
     src/gguf_vocab_resolver.cpp
     src/compression_interface.cpp
     src/core/memory_production.cpp
-    src/core/link_stubs_production.cpp
+    src/core/rawrxd_subsystem_api.cpp
+    # src/core/rawrxd_subsystem_api_impl.cpp  # excluded: compilation errors, use rawrxd_subsystem_api.cpp instead
+    # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_stubs.cpp
     src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp
@@ -1854,7 +1857,7 @@ set(SOURCES
     src/core/unlinked_symbols_batch_008.cpp
     # src/core/unlinked_symbols_batch_009.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     # src/core/unlinked_symbols_batch_010.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
-    src/core/unlinked_symbols_batch_011.cpp
+    # src/core/unlinked_symbols_batch_011.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/core/unlinked_symbols_batch_012.cpp
     # src/core/unlinked_symbols_batch_022.cpp  # moved to WIN32IDE_SOURCES
     # src/core/unlinked_symbols_batch_013.cpp  # excluded: duplicate symbols with RawrXD_AgenticOrchestrator.asm
@@ -2136,6 +2139,7 @@ endif()
 set(RAWR_ENGINE_SOURCES ${SOURCES})
 list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/core/ssot_validation.cpp
+    src/core/rawrxd_subsystem_api.cpp
     src/lsp/RawrXD_LSPServer.cpp
     src/lsp/lsp_hotpatch_bridge.cpp
     # Remove streaming_orchestrator.cpp and analyzer_distiller.cpp - symbols provided by unlinked_symbols_batch_*.cpp
@@ -2426,6 +2430,13 @@ add_subdirectory(src/ceo)
 # =============================================================================
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
+
+# RawrEngine needs specific ASM kernels for Deep2 and Sovereign Q4K
+set(RAWR_ENGINE_ASM_SOURCES
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+)
+set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
