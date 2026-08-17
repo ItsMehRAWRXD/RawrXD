@@ -217,6 +217,7 @@ struct GGUFLoadResult {
     std::vector<TensorInfo> tensors;
     size_t totalSize = 0;
     double loadTimeMs = 0.0;
+    uint64_t dataOffset = 0;  // Absolute byte offset to tensor data section in file
 
     const TensorInfo* GetTensor(const char* name) const {
         for (const auto& t : tensors) {

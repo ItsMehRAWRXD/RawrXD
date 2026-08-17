@@ -720,6 +720,8 @@ GGUFLoadResult GGUFLoader::Load(const char* filepath, const GGUFLoadOptions& opt
         }
     }
 
+    result.dataOffset = dataOffset;
+
     auto endTime = std::chrono::high_resolution_clock::now();
     result.loadTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
     result.success = true;

@@ -3,6 +3,7 @@
 // ============================================================================
 
 #include "K2GlobalTensorIndex.hpp"
+#include "GGUFLoader.hpp"
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -183,11 +184,52 @@ bool GlobalTensorIndex::ParseShard(uint32_t shardId,
                                     const std::filesystem::path& path,
                                     const KimiK2Config& config,
                                     std::string& error) {
-    // TODO: Implement actual GGUF shard parsing
-    // For now, this is a stub that would be filled with real GGUF parsing logic
-    (void)shardId;
-    (void)path;
     (void)config;
+
+    // Use GGUFLoader to parse metadata + tensor descriptors (no data load)
+    GGUFLoadResult result = GGUFLoader::LoadMetadata(path.string().c_str());
+    if (!result.success) {
+        error = std::string("ParseShard: GGUF load failed for ") + path.string() +
+                ": " + result.error;
+        return false;
+    }
+
+    const uint64_t baseFileOffset = result.dataOffset;
+
+    for (const auto& t : result.tensors) {
+        GlobalTensorRef ref;
+        ref.name = t.name;
+        ref.shardId = shardId;
+        ref.fileOffset = baseFileOffset + t.offset;
+        ref.byteOffset = 0; // No expert slicing at index level
+        ref.byteSize = t.size;
+        ref.ggmlType = static_cast<uint32_t>(t.type);
+        ref.shape = t.dimensions;
+        ref.nDims = static_cast<uint32_t>(t.dimensions.size());
+        ref.layerIndex = ExtractLayerIndex(t.name);
+        ref.role = ClassifyTensorRole(t.name);
+
+        // Detect expert tensors by role
+        if (ref.role == GlobalTensorRef::TensorRole::ExpertGate ||
+            ref.role == GlobalTensorRef::TensorRole::ExpertUp ||
+            ref.role == GlobalTensorRef::TensorRole::ExpertDown) {
+            ref.isExpertTensor = true;
+            // For K2, expert tensors are 3D: [dim0, dim1, numExperts]
+            // The last dimension is the expert count
+            if (ref.shape.size() >= 3) {
+                ref.expertCount = static_cast<uint32_t>(ref.shape.back());
+                // Stride = total bytes / expert count
+                if (ref.expertCount > 0) {
+                    ref.expertStrideBytes = ref.byteSize / ref.expertCount;
+                }
+            }
+        }
+
+        if (ref.IsValid()) {
+            tensors_[ref.name] = std::move(ref);
+        }
+    }
+
     return true;
 }
 
