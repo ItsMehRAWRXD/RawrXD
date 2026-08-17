@@ -1,0 +1,110 @@
+Magic:    b'GGUF'
+Version:  3
+Tensors:  98
+Metadata: 63
+Metadata end:      6911082
+Tensor info start: 6911082
+Tensor info end:   6917260
+Data offset:       6917280
+Tensors parsed:    98
+
+Idx  Name                                          Dims                      Type     RelOff       AbsOff      
+--------------------------------------------------------------------------------------------------------------
+0    output.weight                                 7168x163840               IQ2_XXS  0            6917280     
+1    output_norm.weight                            7168                      F32      963379200    970296480   
+2    token_embd.weight                             7168x163840               Q6_K     963407872    970325152   
+3    blk.0.attn_k_b.weight                         128x512x64                Q2_K     1624010752   1630928032  
+4    blk.0.attn_kv_a_mqa.weight                    7168x576                  Q2_K     1628467200   1635384480  
+5    blk.0.attn_kv_a_norm.weight                   512                       F32      1632854016   1639771296  
+6    blk.0.attn_norm.weight                        7168                      F32      1632856064   1639773344  
+7    blk.0.attn_output.weight                      8192x7168                 Q6_K     1632884736   1639802016  
+8    blk.0.attn_q_a.weight                         7168x1536                 Q6_K     1665914880   1672832160  
+9    blk.0.attn_q_a_norm.weight                    1536                      F32      1672108032   1679025312  
+10   blk.0.attn_q_b.weight                         1536x12288                Q6_K     1672114176   1679031456  
+11   blk.0.attn_v_b.weight                         512x128x64                Q2_K     1682731008   1689648288  
+12   blk.0.ffn_down.weight                         18432x7168                IQ2_XXS  1687187456   1694104736  
+13   blk.0.ffn_gate.weight                         7168x18432                Q6_K     1795567616   1802484896  
+14   blk.0.ffn_norm.weight                         7168                      F32      1869885440   1876802720  
+15   blk.0.ffn_up.weight                           7168x18432                Q6_K     1869914112   1876831392  
+16   blk.1.attn_k_b.weight                         128x512x64                Q2_K     1944231936   1951149216  
+17   blk.1.attn_kv_a_mqa.weight                    7168x576                  Q2_K     1948688384   1955605664  
+18   blk.1.attn_kv_a_norm.weight                   512                       F32      1953075200   1959992480  
+19   blk.1.attn_norm.weight                        7168                      F32      1953077248   1959994528  
+20   blk.1.attn_output.weight                      8192x7168                 Q6_K     1953105920   1960023200  
+21   blk.1.attn_q_a.weight                         7168x1536                 Q6_K     1986136064   1993053344  
+22   blk.1.attn_q_a_norm.weight                    1536                      F32      1992329216   1999246496  
+23   blk.1.attn_q_b.weight                         1536x12288                Q6_K     1992335360   1999252640  
+24   blk.1.attn_v_b.weight                         512x128x64                Q2_K     2002952192   2009869472  
+25   blk.1.exp_probs_b.bias                        384                       F32      2007408640   2014325920  
+26   blk.1.ffn_down_exps.weight                    2048x7168x384             IQ2_XXS  2007410176   2014327456  
+27   blk.1.ffn_down_shexp.weight                   2048x7168                 IQ2_XXS  6631630336   6638547616  
+28   blk.1.ffn_gate_exps.weight                    7168x2048x384             Q6_K     6643672576   6650589856  
+29   blk.1.ffn_gate_inp.weight                     7168x384                  F32      9814566400   9821483680  
+30   blk.1.ffn_gate_shexp.weight                   7168x2048                 Q8_K     9825576448   9832493728  
+31   blk.1.ffn_norm.weight                         7168                      F32      9835668992   9842586272  
+32   blk.1.ffn_up_exps.weight                      7168x2048x384             Q6_K     9835697664   9842614944  
+33   blk.1.ffn_up_shexp.weight                     7168x2048                 Q8_K     13006591488  13013508768 
+34   blk.2.attn_k_b.weight                         128x512x64                Q2_K     13016684032  13023601312 
+35   blk.2.attn_kv_a_mqa.weight                    7168x576                  Q2_K     13021140480  13028057760 
+36   blk.2.attn_kv_a_norm.weight                   512                       F32      13025527296  13032444576 
+37   blk.2.attn_norm.weight                        7168                      F32      13025529344  13032446624 
+38   blk.2.attn_output.weight                      8192x7168                 Q6_K     13025558016  13032475296 
+39   blk.2.attn_q_a.weight                         7168x1536                 Q6_K     13058588160  13065505440 
+40   blk.2.attn_q_a_norm.weight                    1536                      F32      13064781312  13071698592 
+41   blk.2.attn_q_b.weight                         1536x12288                Q6_K     13064787456  13071704736 
+42   blk.2.attn_v_b.weight                         512x128x64                Q2_K     13075404288  13082321568 
+43   blk.2.exp_probs_b.bias                        384                       F32      13079860736  13086778016 
+44   blk.2.ffn_down_exps.weight                    2048x7168x384             IQ2_XXS  13079862272  13086779552 
+45   blk.2.ffn_down_shexp.weight                   2048x7168                 IQ2_XXS  17704082432  17710999712 
+46   blk.2.ffn_gate_exps.weight                    7168x2048x384             Q6_K     17716124672  17723041952 
+47   blk.2.ffn_gate_inp.weight                     7168x384                  F32      20887018496  20893935776 
+48   blk.2.ffn_gate_shexp.weight                   7168x2048                 Q8_K     20898028544  20904945824 
+49   blk.2.ffn_norm.weight                         7168                      F32      20908121088  20915038368 
+50   blk.2.ffn_up_exps.weight                      7168x2048x384             Q6_K     20908149760  20915067040 
+51   blk.2.ffn_up_shexp.weight                     7168x2048                 Q8_K     24079043584  24085960864 
+52   blk.3.attn_k_b.weight                         128x512x64                Q2_K     24089136128  24096053408 
+53   blk.3.attn_kv_a_mqa.weight                    7168x576                  Q2_K     24093592576  24100509856 
+54   blk.3.attn_kv_a_norm.weight                   512                       F32      24097979392  24104896672 
+55   blk.3.attn_norm.weight                        7168                      F32      24097981440  24104898720 
+56   blk.3.attn_output.weight                      8192x7168                 Q6_K     24098010112  24104927392 
+57   blk.3.attn_q_a.weight                         7168x1536                 Q6_K     24131040256  24137957536 
+58   blk.3.attn_q_a_norm.weight                    1536                      F32      24137233408  24144150688 
+59   blk.3.attn_q_b.weight                         1536x12288                Q6_K     24137239552  24144156832 
+60   blk.3.attn_v_b.weight                         512x128x64                Q2_K     24147856384  24154773664 
+61   blk.3.exp_probs_b.bias                        384                       F32      24152312832  24159230112 
+62   blk.3.ffn_down_exps.weight                    2048x7168x384             IQ2_XXS  24152314368  24159231648 
+63   blk.3.ffn_down_shexp.weight                   2048x7168                 IQ2_XXS  28776534528  28783451808 
+64   blk.3.ffn_gate_exps.weight                    7168x2048x384             Q6_K     28788576768  28795494048 
+65   blk.3.ffn_gate_inp.weight                     7168x384                  F32      31959470592  31966387872 
+66   blk.3.ffn_gate_shexp.weight                   7168x2048                 Q8_K     31970480640  31977397920 
+67   blk.3.ffn_norm.weight                         7168                      F32      31980573184  31987490464 
+68   blk.3.ffn_up_exps.weight                      7168x2048x384             Q6_K     31980601856  31987519136 
+69   blk.3.ffn_up_shexp.weight                     7168x2048                 Q8_K     35151495680  35158412960 
+70   blk.4.attn_k_b.weight                         128x512x64                Q2_K     35161588224  35168505504 
+71   blk.4.attn_kv_a_mqa.weight                    7168x576                  Q2_K     35166044672  35172961952 
+72   blk.4.attn_kv_a_norm.weight                   512                       F32      35170431488  35177348768 
+73   blk.4.attn_norm.weight                        7168                      F32      35170433536  35177350816 
+74   blk.4.attn_output.weight                      8192x7168                 Q6_K     35170462208  35177379488 
+75   blk.4.attn_q_a.weight                         7168x1536                 Q6_K     35203492352  35210409632 
+76   blk.4.attn_q_a_norm.weight                    1536                      F32      35209685504  35216602784 
+77   blk.4.attn_q_b.weight                         1536x12288                Q6_K     35209691648  35216608928 
+78   blk.4.attn_v_b.weight                         512x128x64                Q2_K     35220308480  35227225760 
+79   blk.4.exp_probs_b.bias                        384                       F32      35224764928  35231682208 
+80   blk.4.ffn_down_exps.weight                    2048x7168x384             IQ2_XXS  35224766464  35231683744 
+81   blk.4.ffn_down_shexp.weight                   2048x7168                 IQ2_XXS  39848986624  39855903904 
+82   blk.4.ffn_gate_exps.weight                    7168x2048x384             Q6_K     39861028864  39867946144 
+83   blk.4.ffn_gate_inp.weight                     7168x384                  F32      43031922688  43038839968 
+84   blk.4.ffn_gate_shexp.weight                   7168x2048                 Q8_K     43042932736  43049850016 
+85   blk.4.ffn_norm.weight                         7168                      F32      43053025280  43059942560 
+86   blk.4.ffn_up_exps.weight                      7168x2048x384             Q6_K     43053053952  43059971232 
+87   blk.4.ffn_up_shexp.weight                     7168x2048                 Q8_K     46223947776  46230865056 
+88   blk.5.attn_k_b.weight                         128x512x64                Q2_K     46234040320  46240957600 
+89   blk.5.attn_kv_a_mqa.weight                    7168x576                  Q2_K     46238496768  46245414048 
+90   blk.5.attn_kv_a_norm.weight                   512                       F32      46242883584  46249800864 
+91   blk.5.attn_norm.weight                        7168                      F32      46242885632  46249802912 
+92   blk.5.attn_output.weight                      8192x7168                 Q6_K     46242914304  46249831584 
+93   blk.5.attn_q_a.weight                         7168x1536                 Q6_K     46275944448  46282861728 
+94   blk.5.attn_q_a_norm.weight                    1536                      F32      46282137600  46289054880 
+95   blk.5.attn_q_b.weight                         1536x12288                Q6_K     46282143744  46289061024 
+96   blk.5.attn_v_b.weight                         512x128x64                Q2_K     46292760576  46299677856 
+97   blk.5.exp_probs_b.bias                        384                       F32      46297217024  46304134304 

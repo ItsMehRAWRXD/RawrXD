@@ -674,7 +674,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             if (t.name == "token_embd.weight" || t.name == "token_embeddings.weight") {
                 if (t.dimensions.size() >= 1) {
                     modelWeights.vocabSize = static_cast<int>(t.dimensions[0]);
-                    printf("[Deep2Engine] Inferred vocabSize=%d from %s shape\n",
+                    printf("[Deep2Engine] Inferred vocabSize=%zu from %s shape\n",
                            modelWeights.vocabSize, t.name.c_str());
                 }
                 break;

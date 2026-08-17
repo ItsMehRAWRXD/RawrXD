@@ -250,7 +250,10 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
             if (key.find("block_count") != std::string::npos || key.find("n_layer") != std::string::npos) {
                 metadata.numLayers = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
             }
-            if (key.find("attention.head_count") != std::string::npos || key.find("n_head") != std::string::npos) {
+            // Use exact suffix match to avoid "attention.head_count_kv" matching
+            // the "attention.head_count" branch and overwriting numHeads with the KV count.
+            if (key == "attention.head_count" || key.find(".attention.head_count") != std::string::npos ||
+                key == "n_head" || key.find(".n_head") != std::string::npos) {
                 metadata.numHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
             }
             if (key.find("attention.head_count_kv") != std::string::npos || key.find("n_head_kv") != std::string::npos) {

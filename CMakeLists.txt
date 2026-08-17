@@ -8376,8 +8376,49 @@ set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMA
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+add_executable(test_llama_native tests/test_llama_native.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    tests/deep2_link_stubs.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+)
+set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(test_llama_native PRIVATE InferenceEngine)
+add_test(NAME test_llama_native COMMAND test_llama_native WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 # K2-001 Runtime Validation Gate
 add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
+    src/adapter/RawrXDEngineAdapter.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
@@ -8391,7 +8432,29 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
     src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
     src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/reverse/ReverseEngine.cpp

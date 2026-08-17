@@ -63,11 +63,23 @@ static K2ExecutionPath g_path;
 // ── Shard Discovery ──
 static bool DiscoverK2Shards(const fs::path& dir, std::vector<fs::path>& shards) {
     shards.clear();
+    // Support both naming conventions:
+    //   Kimi-K2-Instruct-0905-Q4_K_M-00001-of-00013.gguf (actual)
+    //   kimi-k2-instruct-0905-q4_k_m-00001-of-00013.gguf (canonical)
     for (int i = 1; i <= 13; ++i) {
         char name[256];
+        // Try actual HuggingFace download naming first
+        snprintf(name, sizeof(name),
+                 "Kimi-K2-Instruct-0905-Q4_K_M-%05d-of-00013.gguf", i);
+        fs::path candidate = dir / name;
+        if (fs::exists(candidate)) {
+            shards.push_back(candidate);
+            continue;
+        }
+        // Fallback to lowercase canonical naming
         snprintf(name, sizeof(name),
                  "kimi-k2-instruct-0905-q4_k_m-%05d-of-00013.gguf", i);
-        fs::path candidate = dir / name;
+        candidate = dir / name;
         if (fs::exists(candidate)) {
             shards.push_back(candidate);
         }
