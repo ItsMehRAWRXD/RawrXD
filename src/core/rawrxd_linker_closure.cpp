@@ -237,21 +237,8 @@ int DiskRecovery_GetStats(void*, void*) { return 0; }
 // 16. Patch / Hotpatch
 // ============================================================================
 
-PatchResult patch_bytes(const char*, const BytePatchEnhanced&) {
-    return PatchResult{-1};
-}
-
-PatchResult search_and_patch_bytes(const char*, const std::vector<uint8_t>&, const std::vector<uint8_t>&) {
-    return PatchResult{-1};
-}
-
-PatchResult direct_read(const char*, uint64_t, uint64_t, void*, uint64_t*) {
-    return PatchResult{-1};
-}
-
-ByteSearchResultEnhanced direct_search(const char*, const uint8_t*, uint64_t) {
-    return ByteSearchResultEnhanced{nullptr, 0};
-}
+// patch_bytes, search_and_patch_bytes, direct_read, direct_search
+// defined in command_handlers_comprehensive.cpp — do not duplicate here
 
 // ============================================================================
 // 17. Source Edit
@@ -533,30 +520,4 @@ struct AutonomyLoopConfig { int dummy; };
 struct AutonomyLoopStats { int dummy; };
 enum class AutonomyLoopState { Idle };
 
-class CLIAutonomyLoop {
-public:
-    static CLIAutonomyLoop& instance();
-    void setAgenticEngine(AgenticEngine*);
-    void setSubAgentManager(SubAgentManager*);
-    void start();
-    void stop();
-    void pause();
-    void resume();
-    AutonomyLoopState getState() const;
-    std::string getStatusString() const;
-    std::string getDetailedStatus() const;
-};
-
-CLIAutonomyLoop& CLIAutonomyLoop::instance() {
-    static CLIAutonomyLoop inst;
-    return inst;
-}
-void CLIAutonomyLoop::setAgenticEngine(AgenticEngine*) {}
-void CLIAutonomyLoop::setSubAgentManager(SubAgentManager*) {}
-void CLIAutonomyLoop::start() {}
-void CLIAutonomyLoop::stop() {}
-void CLIAutonomyLoop::pause() {}
-void CLIAutonomyLoop::resume() {}
-AutonomyLoopState CLIAutonomyLoop::getState() const { return AutonomyLoopState::Idle; }
-std::string CLIAutonomyLoop::getStatusString() const { return ""; }
-std::string CLIAutonomyLoop::getDetailedStatus() const { return ""; }
+// CLIAutonomyLoop stubs moved to cli_autonomy_loop_stub.cpp

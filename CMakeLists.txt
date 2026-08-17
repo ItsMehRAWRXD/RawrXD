@@ -2388,6 +2388,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
+    src/core/cli_autonomy_loop_stub.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
 
     # ═══════════════════════════════════════════════════════════════════
