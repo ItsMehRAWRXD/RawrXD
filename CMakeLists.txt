@@ -1276,6 +1276,7 @@ set(SOURCES
     src/compression_interface.cpp
     src/core/memory_production.cpp
     src/core/rawrxd_subsystem_api.cpp
+    src/core/rawrxd_linker_closure.cpp
     # src/core/rawrxd_subsystem_api_impl.cpp  # excluded: compilation errors, use rawrxd_subsystem_api.cpp instead
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_stubs.cpp
@@ -6308,25 +6309,49 @@ if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT RAWRXD_ENABLE_HEAVY_GATES)
 endif()
 if(RAWRXD_ENABLE_HEAVY_GATES)
     if(RAWRXD_HAS_SSOT_STUB_LANE_GUARD)
+        if(TARGET RawrXD-Win32IDE)
+            add_custom_target(self_test_gate
+                COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target ssot_stub_lane_guard
+                COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
+                COMMENT "[CI Gate] Ownership guard + RawrXD-Win32IDE"
+                VERBATIM
+            )
+        else()
+            add_custom_target(self_test_gate
+                COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target ssot_stub_lane_guard
+                COMMENT "[CI Gate] Ownership guard (Win32IDE not enabled)"
+                VERBATIM
+            )
+        endif()
+    else()
+        if(TARGET RawrXD-Win32IDE)
+            add_custom_target(self_test_gate
+                COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
+                COMMENT "[CI Gate] RawrXD-Win32IDE (stub ownership guard disabled)"
+                VERBATIM
+            )
+        else()
+            add_custom_target(self_test_gate
+                COMMAND ${CMAKE_COMMAND} -E echo "[CI Gate] self_test_gate: Win32IDE not enabled, nothing to build"
+                COMMENT "[CI Gate] No-op (Win32IDE not enabled)"
+                VERBATIM
+            )
+        endif()
+    endif()
+else()
+    if(TARGET RawrXD-Win32IDE)
         add_custom_target(self_test_gate
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target ssot_stub_lane_guard
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-            COMMENT "[CI Gate] Ownership guard + RawrXD-Win32IDE"
+            COMMENT "[CI Gate] RawrXD-Win32IDE (heavy gates disabled)"
             VERBATIM
         )
     else()
         add_custom_target(self_test_gate
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-            COMMENT "[CI Gate] RawrXD-Win32IDE (stub ownership guard disabled)"
+            COMMAND ${CMAKE_COMMAND} -E echo "[CI Gate] self_test_gate: Win32IDE not enabled, nothing to build"
+            COMMENT "[CI Gate] No-op (Win32IDE not enabled)"
             VERBATIM
         )
     endif()
-else()
-    add_custom_target(self_test_gate
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-        COMMENT "[CI Gate] RawrXD-Win32IDE (heavy gates disabled)"
-        VERBATIM
-    )
 endif()
 if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     # Only add dependencies for targets that actually exist
