@@ -45,6 +45,8 @@ int main() {
         "gemma3-1b-Q2_K.gguf",                    // beside executable
         "../../../gemma3-1b-Q2_K.gguf",             // from build-ninja/tests/
         "../../gemma3-1b-Q2_K.gguf",              // from build-ninja/bin/
+        "../../../../gemma3-1b-Q2_K.gguf",          // from build-ninja/tests/ (extra depth)
+        "D:/rawrxd/gemma3-1b-Q2_K.gguf",            // absolute fallback
     };
     std::string resolvedPath;
     for (const char* cand : candidates) {
@@ -52,7 +54,7 @@ int main() {
         // Normalize mixed separators
         for (auto& c : resolvedPath) if (c == '/') c = '\\';
         FILE* f = fopen(resolvedPath.c_str(), "rb");
-        if (f) { fclose(f); kModelPath = cand; break; }
+        if (f) { fclose(f); kModelPath = resolvedPath.c_str(); break; }
     }
     if (!kModelPath) {
         printf("  [WARN] No GGUF model found; generation tests will use synthetic fallback\n");

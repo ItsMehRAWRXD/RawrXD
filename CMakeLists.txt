@@ -8376,6 +8376,30 @@ set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMA
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-001 Runtime Validation Gate
+add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
+set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
+add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp

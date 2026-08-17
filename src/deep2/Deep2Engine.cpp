@@ -576,15 +576,18 @@ bool Deep2Engine::allocateBuffers() {
     size_t headDim = hiddenSize / config.numHeads;
     size_t kvHeads = config.numHeads; // Will be updated from model
 
+    // Use model's intermediateDim if available, otherwise fallback to hidden*4
+    size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
+
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
     attentionOutput = alignedAlloc(hiddenSize);
-    ffnOutput       = alignedAlloc(hiddenSize * 4);
+    ffnOutput       = alignedAlloc(ffnDim);
     logits          = alignedAlloc(vocabSize);
     qProj           = alignedAlloc(hiddenSize);
     kProj           = alignedAlloc(hiddenSize);
     vProj           = alignedAlloc(hiddenSize);
-    gateBuf         = alignedAlloc(hiddenSize * 4);
-    upBuf           = alignedAlloc(hiddenSize * 4);
+    gateBuf         = alignedAlloc(ffnDim);
+    upBuf           = alignedAlloc(ffnDim);
 
     return hiddenStates && attentionOutput && ffnOutput && logits &&
            qProj && kProj && vProj && gateBuf && upBuf;
