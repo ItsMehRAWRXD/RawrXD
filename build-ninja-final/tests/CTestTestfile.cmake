@@ -108,7 +108,7 @@ add_test([=[win32ide_high_pressure_ui]=] "pwsh" "-NoProfile" "-ExecutionPolicy" 
 set_tests_properties([=[win32ide_high_pressure_ui]=] PROPERTIES  LABELS "smoke;stress;win32ide;lsp;model" TIMEOUT "300" _BACKTRACE_TRIPLES "D:/src/tests/CMakeLists.txt;986;add_test;D:/src/tests/CMakeLists.txt;0;")
 add_test([=[ollama_stream_routing_env_smoke]=] "pwsh" "-NoProfile" "-ExecutionPolicy" "Bypass" "-File" "D:/src/scripts/Test-OllamaStreamRoutingEnv.ps1")
 set_tests_properties([=[ollama_stream_routing_env_smoke]=] PROPERTIES  LABELS "smoke;agentic;ollama" TIMEOUT "120" _BACKTRACE_TRIPLES "D:/src/tests/CMakeLists.txt;999;add_test;D:/src/tests/CMakeLists.txt;0;")
-add_test([=[production_readiness_expansion_quality_gate]=] "C:/Program Files/CMake/bin/cmake.exe" "-D" "BINARY_DIR=D:/src/build-ninja-final" "-D" "CONFIG=RelWithDebInfo" "-D" "BUILD_TARGET=self_test_gate" "-P" "D:/src/tests/smoke/build_target_with_retry.cmake")
+add_test([=[production_readiness_expansion_quality_gate]=] "C:/Program Files/CMake/bin/cmake.exe" "-D" "BINARY_DIR=D:/src/build-ninja-final" "-D" "CONFIG=Release" "-D" "BUILD_TARGET=self_test_gate" "-P" "D:/src/tests/smoke/build_target_with_retry.cmake")
 set_tests_properties([=[production_readiness_expansion_quality_gate]=] PROPERTIES  LABELS "quality-gate;production;aggregate" TIMEOUT "1800" _BACKTRACE_TRIPLES "D:/src/tests/CMakeLists.txt;1012;add_test;D:/src/tests/CMakeLists.txt;0;")
 add_test([=[test_model_loader_streamer_smoke]=] "D:/src/build-ninja-final/tests/test_model_loader_streamer_smoke.exe")
 set_tests_properties([=[test_model_loader_streamer_smoke]=] PROPERTIES  _BACKTRACE_TRIPLES "D:/src/tests/CMakeLists.txt;1052;add_test;D:/src/tests/CMakeLists.txt;0;")

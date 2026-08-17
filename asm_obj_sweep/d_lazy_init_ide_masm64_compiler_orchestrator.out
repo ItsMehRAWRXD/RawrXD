@@ -1,0 +1,3 @@
+ Assembling: D:\rawrxd\history\runoff\part_0007\d__lazy init ide_masm64_compiler_orchestrator.asm
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_masm64_compiler_orchestrator.asm(287) : warning A6004:procedure argument or local not referenced : exit_code
+D:\rawrxd\history\runoff\part_0007\d__lazy init ide_masm64_compiler_orchestrator.asm(572) : warning A6004:procedure argument or local not referenced : buffer

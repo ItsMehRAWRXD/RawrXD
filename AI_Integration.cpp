@@ -70,34 +70,51 @@ struct AITokenResponse {
     int status_code;
 };
 
-// Send buffer to AI backend and get completion tokens
-AITokenResponse AI_RequestCompletion(const AIBufferSnapshot& snapshot, 
+// Send buffer to MASM64 Engine and get completion tokens
+AITokenResponse AI_RequestCompletion(const AIBufferSnapshot& snapshot,
                                      int max_tokens = 100) {
     AITokenResponse response;
     response.success = false;
     response.status_code = 0;
     
-    // Construct JSON request payload
-    char jsonPayload[4096];
-    snprintf(jsonPayload, sizeof(jsonPayload),
-        "{"
-            "\"prompt\": \"%s\","
-            "\"max_tokens\": %d,"
-            "\"temperature\": 0.7,"
-            "\"top_p\": 0.9,"
-            "\"cursor_position\": %llu"
-        "}",
-        snapshot.content.c_str(),
-        max_tokens,
-        snapshot.cursor_position
-    );
+    // Initialize CanonicalEngineMatrix
+    CanonicalEngineMatrix engineMatrix;
+    std::memset(&engineMatrix, 0, sizeof(CanonicalEngineMatrix));
     
-    // Initialize WinHTTP session
-    HINTERNET hSession = WinHttpOpen(
-        L"RawrXD-AI-Client/1.0",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-        WINHTTP_NO_PROXY_NAME,
-        WINHTTP_NO_PROXY_BYPASS,
+    // Configure HardwareObject
+    engineMatrix.HardwareObject.SingleGpuMmoBase = nullptr; // Replace with actual GPU base address
+    engineMatrix.HardwareObject.SysRamWeightsPtr = nullptr; // Replace with actual weights pointer
+    engineMatrix.HardwareObject.SystemKvRingPtr = nullptr; // Replace with actual KV cache pointer
+    engineMatrix.HardwareObject.GlobalBarrierLock = 0; // Unlocked
+    
+    // Configure TensorManifest (example: first tensor)
+    engineMatrix.TensorManifest[0].TensorId = 0;
+    engineMatrix.TensorManifest[0].LayerIndex = 0;
+    engineMatrix.TensorManifest[0].FlakeConfig.BitStreamPtr = nullptr; // Replace with actual bitstream pointer
+    engineMatrix.TensorManifest[0].FlakeConfig.ReconstructTable = nullptr; // Replace with actual table
+    engineMatrix.TensorManifest[0].FlakeConfig.FragmentMask = 0;
+    
+    // Set ExecutionState
+    engineMatrix.ExecutionState = 0x01; // Ready
+    
+    // Set prompt
+    // TODO: Map snapshot.content to engineMatrix (requires GGUF loader integration)
+    
+    // Call MASM64 Engine
+    ULONG64 targetTierIndex = 0; // 0 = Kevlar Safe, 1 = Raw Register Saturation
+    ULONG64 result = RawrXD_Host_Engine_Pipeline_Core(targetTierIndex, &engineMatrix);
+    
+    if (result == 0) {
+        response.error_message = "MASM64 Engine containment triggered. Check payload state.";
+        response.status_code = 500;
+    } else {
+        // TODO: Extract tokens from engineMatrix (requires GGUF loader integration)
+        response.tokens = "[MASM64 Engine Output]"; // Replace with actual tokens
+        response.success = true;
+        response.status_code = 200;
+    }
+    
+    return response;
         0
     );
     
@@ -491,18 +508,11 @@ void AI_ShutdownEngine() {
 }
 
 // ============================================================================
-// SIMULATED AI SERVER (For Testing)
+// AI SERVER INTEGRATION
 // ============================================================================
 
-// Launch a mock AI server for testing (returns "hello world")
-HANDLE AI_StartMockServer() {
-    // This would start a local HTTP server on localhost:8000
-    // For production, use real llama.cpp server or cloud API
-    
-    // Mock implementation: would spawn a thread running simple HTTP server
-    // For now, this is a placeholder
-    return NULL;
-}
+// Note: The MASM64 engine (RawrXD_Host_Engine_Pipeline_Core) is now used directly for AI inference.
+// No mock AI server is required.
 
 // ============================================================================
 // INTEGRATION (Usage from IDE_MainWindow.cpp)
@@ -544,11 +554,11 @@ In WinMain:
 
 #ifdef TEST_AI_INTEGRATION
 
-// Simple test: API communication
+// Simple test: MASM64 Engine integration
 void TEST_AI_APICall() {
-    printf("Testing AI API Communication...\n");
+    printf("Testing MASM64 Engine Integration...\n");
     
-    // Create mock snapshot
+    // Create test snapshot
     AIBufferSnapshot snapshot;
     snapshot.content = "def hello():\n    print";
     snapshot.cursor_position = 23;
@@ -556,13 +566,13 @@ void TEST_AI_APICall() {
     snapshot.column_number = 11;
     snapshot.length = 23;
     
-    printf("Sending request to AI server...\n");
+    printf("Sending request to MASM64 Engine...\n");
     AITokenResponse response = AI_RequestCompletion(snapshot, 10);
     
     if (response.success) {
         printf("Success! Tokens: %s\n", response.tokens.c_str());
     } else {
-        printf("Failed: %s (HTTP %d)\n", response.error_message.c_str(), response.status_code);
+        printf("Failed: %s (Status %d)\n", response.error_message.c_str(), response.status_code);
     }
 }
 

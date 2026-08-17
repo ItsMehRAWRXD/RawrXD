@@ -1,0 +1,4 @@
+=============================================================================
+RawrXD Phase 15 - Complete Unification Build
+=============================================================================
+ERROR: Visual Studio 2022 not found at C:\VS2022Enterprise\VC\Auxiliary\Build\vcvarsall.bat

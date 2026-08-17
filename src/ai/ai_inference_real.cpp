@@ -766,4 +766,232 @@ InferenceResult RunInferenceReal(const std::string& prompt) {
     return result;
 }
 
+// ============================================================================
+// Exported API for Unified InferenceEngine
+// ============================================================================
+
+void UnloadModelReal() {
+    if (g_model.gguf_ctx) {
+        // TODO: Proper GGUF cleanup
+        g_model.gguf_ctx = nullptr;
+    }
+    if (g_model.backend) {
+        // TODO: Proper backend cleanup
+        g_model.backend = nullptr;
+    }
+    g_model.ctx = nullptr;
+    g_model.buffer = nullptr;
+    g_model.tok_embd = nullptr;
+    g_model.norm_f = nullptr;
+    g_model.output = nullptr;
+    g_model.layer_attn_norm.clear();
+    g_model.layer_wq.clear();
+    g_model.layer_wk.clear();
+    g_model.layer_wv.clear();
+    g_model.layer_wo.clear();
+    g_model.layer_ffn_norm.clear();
+    g_model.layer_ffn_gate.clear();
+    g_model.layer_ffn_up.clear();
+    g_model.layer_ffn_down.clear();
+    g_model.layers_k.clear();
+    g_model.layers_v.clear();
+    g_model.n_layer = 0;
+    g_model.n_embd = 0;
+    g_model.n_vocab = 0;
+    g_model.n_ctx = 0;
+    g_model.n_head = 0;
+    g_model.n_head_kv = 0;
+    g_model.n_ff = 0;
+    g_tokenizer.vocab.clear();
+    g_tokenizer.token_to_id.clear();
+}
+
+bool IsModelLoadedReal() {
+    return g_model.ctx != nullptr && g_model.gguf_ctx != nullptr;
+}
+
+ModelInfoReal GetModelInfoReal() {
+    ModelInfoReal info;
+    info.path = g_model.path;
+    info.vocabSize = static_cast<int>(g_model.n_vocab);
+    info.numLayers = static_cast<int>(g_model.n_layer);
+    info.embeddingDim = static_cast<int>(g_model.n_embd);
+    info.numHeads = static_cast<int>(g_model.n_head);
+    info.contextLength = g_model.n_ctx;
+    // Estimate model size from dimensions
+    if (g_model.n_vocab > 0 && g_model.n_embd > 0 && g_model.n_layer > 0) {
+        size_t embParams = static_cast<size_t>(g_model.n_vocab) * g_model.n_embd;
+        size_t layerParams = static_cast<size_t>(g_model.n_layer) * 4 * g_model.n_embd * g_model.n_embd;
+        info.modelSizeBytes = (embParams + layerParams) * sizeof(float);
+    }
+    return info;
+}
+
+InferenceResult RunInferenceMultiToken(const std::string& prompt, int maxTokens,
+                                        float temperature, float topP, int topK) {
+    InferenceResult result;
+    if (!g_model.ctx) {
+        result.error = "Model not loaded";
+        return result;
+    }
+
+    std::vector<int32_t> tokens = g_tokenizer.tokenize(prompt);
+    int n_past = 0;
+
+    for (int i = 0; i < maxTokens; ++i) {
+        ggml_rxd_cgraph* gf = BuildGraph(g_model, tokens, n_past);
+        if (!gf) {
+            result.error = "Failed to build inference graph";
+            return result;
+        }
+        ggml_rxd_backend_graph_compute(g_model.backend, gf);
+
+        ggml_rxd_tensor* logits = ggml_rxd_graph_node(gf, -1);
+        float* logits_data = static_cast<float*>(ggml_rxd_get_data(logits));
+        int n_vocab = g_model.n_vocab;
+
+        // Get logits for last token
+        std::vector<float> last_logits(n_vocab);
+        std::memcpy(last_logits.data(), logits_data + (tokens.size() - 1) * n_vocab, n_vocab * sizeof(float));
+
+        // Temperature + softmax
+        float max_logit = *std::max_element(last_logits.begin(), last_logits.end());
+        std::vector<float> probs(n_vocab);
+        float sum = 0.0f;
+        for (int v = 0; v < n_vocab; ++v) {
+            probs[v] = std::exp((last_logits[v] - max_logit) / temperature);
+            sum += probs[v];
+        }
+        for (int v = 0; v < n_vocab; ++v) probs[v] /= (sum > 0 ? sum : 1.0f);
+
+        // Top-p + top-k filtering
+        std::vector<std::pair<float, int>> prob_idx;
+        prob_idx.reserve(n_vocab);
+        for (int v = 0; v < n_vocab; ++v) prob_idx.push_back({probs[v], v});
+        std::sort(prob_idx.begin(), prob_idx.end(), std::greater<>());
+
+        int cutoff = n_vocab;
+        float cumsum = 0.0f;
+        for (int v = 0; v < n_vocab; ++v) {
+            cumsum += prob_idx[v].first;
+            if (cumsum > topP) { cutoff = v + 1; break; }
+        }
+        if (topK > 0 && cutoff > topK) cutoff = topK;
+
+        // Sample
+        float r = static_cast<float>(rand()) / RAND_MAX * cumsum;
+        float acc = 0.0f;
+        int next_token = prob_idx[0].second;
+        for (int v = 0; v < cutoff; ++v) {
+            acc += prob_idx[v].first;
+            if (acc >= r) { next_token = prob_idx[v].second; break; }
+        }
+
+        tokens.push_back(next_token);
+        result.tokens.push_back(next_token);
+        result.text += g_tokenizer.decode(next_token);
+
+        if (next_token == g_tokenizer.token_to_id["\u003c/s\u003e"] ||
+            next_token == g_tokenizer.token_to_id["\u003c|endoftext|\u003e"]) {
+            break;
+        }
+
+        n_past = static_cast<int>(tokens.size()) - 1;
+    }
+
+    result.confidence = 1.0f;
+    return result;
+}
+
+std::vector<int> TokenizeReal(const std::string& text) {
+    auto tokens32 = g_tokenizer.tokenize(text);
+    std::vector<int> result;
+    result.reserve(tokens32.size());
+    for (auto t : tokens32) result.push_back(static_cast<int>(t));
+    return result;
+}
+
+std::string DetokenizeReal(const std::vector<int>& tokens) {
+    std::string result;
+    for (int t : tokens) {
+        result += g_tokenizer.decode(t);
+    }
+    return result;
+}
+
+std::string DetokenizeSingleReal(int token) {
+    return g_tokenizer.decode(token);
+}
+
+void GenerateStreamReal(const std::string& prompt, int maxTokens,
+                        float temperature, float topP, int topK,
+                        std::function<bool(const std::string& token, bool finished)> callback) {
+    if (!g_model.ctx || !callback) {
+        if (callback) callback("", true);
+        return;
+    }
+
+    std::vector<int32_t> tokens = g_tokenizer.tokenize(prompt);
+    int n_past = 0;
+
+    for (int i = 0; i < maxTokens; ++i) {
+        ggml_rxd_cgraph* gf = BuildGraph(g_model, tokens, n_past);
+        if (!gf) break;
+        ggml_rxd_backend_graph_compute(g_model.backend, gf);
+
+        ggml_rxd_tensor* logits = ggml_rxd_graph_node(gf, -1);
+        float* logits_data = static_cast<float*>(ggml_rxd_get_data(logits));
+        int n_vocab = g_model.n_vocab;
+
+        std::vector<float> last_logits(n_vocab);
+        std::memcpy(last_logits.data(), logits_data + (tokens.size() - 1) * n_vocab, n_vocab * sizeof(float));
+
+        float max_logit = *std::max_element(last_logits.begin(), last_logits.end());
+        std::vector<float> probs(n_vocab);
+        float sum = 0.0f;
+        for (int v = 0; v < n_vocab; ++v) {
+            probs[v] = std::exp((last_logits[v] - max_logit) / temperature);
+            sum += probs[v];
+        }
+        for (int v = 0; v < n_vocab; ++v) probs[v] /= (sum > 0 ? sum : 1.0f);
+
+        std::vector<std::pair<float, int>> prob_idx;
+        prob_idx.reserve(n_vocab);
+        for (int v = 0; v < n_vocab; ++v) prob_idx.push_back({probs[v], v});
+        std::sort(prob_idx.begin(), prob_idx.end(), std::greater<>());
+
+        int cutoff = n_vocab;
+        float cumsum = 0.0f;
+        for (int v = 0; v < n_vocab; ++v) {
+            cumsum += prob_idx[v].first;
+            if (cumsum > topP) { cutoff = v + 1; break; }
+        }
+        if (topK > 0 && cutoff > topK) cutoff = topK;
+
+        float r = static_cast<float>(rand()) / RAND_MAX * cumsum;
+        float acc = 0.0f;
+        int next_token = prob_idx[0].second;
+        for (int v = 0; v < cutoff; ++v) {
+            acc += prob_idx[v].first;
+            if (acc >= r) { next_token = prob_idx[v].second; break; }
+        }
+
+        tokens.push_back(next_token);
+        std::string token_text = g_tokenizer.decode(next_token);
+
+        bool should_continue = callback(token_text, false);
+        if (!should_continue) break;
+
+        if (next_token == g_tokenizer.token_to_id["\u003c/s\u003e"] ||
+            next_token == g_tokenizer.token_to_id["\u003c|endoftext|\u003e"]) {
+            callback("", true);
+            return;
+        }
+
+        n_past = static_cast<int>(tokens.size()) - 1;
+    }
+
+    callback("", true);
+}
+
 } // namespace RawrXD

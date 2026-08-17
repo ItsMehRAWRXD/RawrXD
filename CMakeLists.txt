@@ -13,8 +13,10 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     # Auto-detect Windows SDK: try D: first, fall back to C:
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
-    else()
+    elseif(EXISTS "C:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
+    else()
+        message(FATAL_ERROR "Windows SDK not found at D:/Program Files (x86)/Windows Kits/10 or C:/Program Files (x86)/Windows Kits/10")
     endif()
     set(_SDK_UCRT_VER "10.0.22621.0")    # Has ucrt
     
@@ -39,13 +41,11 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     elseif(EXISTS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC")
         file(GLOB _MSVC_VERS "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/*")
     else()
-        set(_MSVC_VERS "")
     endif()
     if(_MSVC_VERS)
         list(SORT _MSVC_VERS)
         list(GET _MSVC_VERS -1 _MSVC_ROOT)
     else()
-        set(_MSVC_ROOT "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207")
     endif()
     
     # SDK bin tools (rc.exe, mt.exe)
@@ -176,7 +176,6 @@ project(RawrXD VERSION 14.7.3 LANGUAGES C CXX ASM_MASM)
 if(MSVC)
     set(CMAKE_CXX_STANDARD 23)
 else()
-    set(CMAKE_CXX_STANDARD 20)
 endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -195,7 +194,6 @@ if(MSVC)
         $<$<COMPILE_LANGUAGE:C,CXX>:/sdl->
     )
 else()
-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-O3>)
 endif()
 # Keep LTCG globally, but avoid executable-only/defaultlib overrides here.
 # /NODEFAULTLIB + /ENTRY + /SUBSYSTEM must not leak into DLL targets.
@@ -211,13 +209,8 @@ endif()
 
 option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" ON)
 option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" ON)
-option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units from production targets" OFF)
-option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
-option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
+# NOTE: RAWRXD_ENABLE_MISSING_HANDLER_STUBS removed — always use real handlers.
 if(RAWRXD_BUILD_CLI)
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_BUILD_CLI=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON (rawrxd CLI links compatibility shims).")
-    endif()
     file(GLOB UI_SOURCES "src/ui/*.cpp")
     file(GLOB ASM_SOURCES "src/asm/RawrXD_IPC_Dispatcher.asm" "src/asm/RawrXD_Disasm_Kernel.asm")
 
@@ -460,7 +453,6 @@ if(WIN32 AND MSVC)
     if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
         set(_WIN10_SDK_ROOT "D:/Program Files (x86)/Windows Kits/10")
     else()
-        set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
     endif()
     set(_SDK_VER "10.0.22621.0")
     # Auto-detect MSVC Build Tools root
@@ -475,7 +467,6 @@ if(WIN32 AND MSVC)
         list(SORT _BT_VERS)
         list(GET _BT_VERS -1 _MSVC_BT_ROOT)
     else()
-        set(_MSVC_BT_ROOT "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207")
     endif()
 
     include_directories(SYSTEM
@@ -509,30 +500,6 @@ if(MSVC)
     # that do not assemble cleanly under ml64; Win32IDE uses C++ stubs for now.
     message(STATUS "MASM64 enabled: ASM kernels will be compiled")
 else()
-    set(RAWR_HAS_MASM FALSE)
-    message(STATUS "MASM64 not available (non-MSVC): using C++ fallbacks")
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    if(NOT WIN32)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON requires WIN32 toolchain/targets.")
-    endif()
-    if(NOT MSVC)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON requires MSVC for strict production parity.")
-    endif()
-    if(NOT RAWR_HAS_MASM)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON requires RAWR_HAS_MASM=TRUE.")
-    endif()
-    if(NOT CMAKE_CONFIGURATION_TYPES)
-        if(NOT CMAKE_BUILD_TYPE)
-            message(FATAL_ERROR "[ProductionLane] CMAKE_BUILD_TYPE must be set to Release when RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-        endif()
-        string(TOUPPER "${CMAKE_BUILD_TYPE}" _RAWR_BUILD_TYPE_UPPER)
-        if(NOT _RAWR_BUILD_TYPE_UPPER STREQUAL "RELEASE")
-            message(FATAL_ERROR "[ProductionLane] CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON. Use Release.")
-        endif()
-    else()
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON requires a single-config generator with CMAKE_BUILD_TYPE=Release.")
-    endif()
 endif()
 
 # ASM kernel sources (shared between RawrEngine and Win32IDE)
@@ -654,7 +621,6 @@ if(RAWR_HAS_MASM)
     set_source_files_properties(${ASM_KERNEL_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
     add_compile_definitions(RAWRXD_MASM_CORE_NATIVE_BRIDGE=1)
 else()
-    set(ASM_KERNEL_SOURCES "")
 endif()
 
 # Manual validation target: compile a tiny compute shader to SPIR-V for raw dispatch ABI testing.
@@ -727,7 +693,6 @@ elseif(RAWRXD_GLSLC)
         VERBATIM
     )
 else()
-    message(WARNING "[Sovereign] Neither glslangValidator nor glslc found; rawr_kernel_hooks.spv target will be unavailable.")
 endif()
 
 if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
@@ -801,7 +766,6 @@ elseif(RAWRXD_GLSLC)
         VERBATIM
     )
 else()
-    message(STATUS "[FA8] glslangValidator/glslc not found; flash_attention_fp8_minimal_test.spv will not be auto-regenerated")
 endif()
 
 if(RAWRXD_GLSLANG_VALIDATOR OR RAWRXD_GLSLC)
@@ -1572,17 +1536,7 @@ option(RAWR_REPLACE_MASM_FALLBACKS "Remove MASM-related C++ fallback stubs (and 
 set(RAWR_SSOT_PROVIDER "AUTO" CACHE STRING "SSOT owner for RawrEngine: CORE, EXT, AUTO, STUBS, FEATURES")
 set_property(CACHE RAWR_SSOT_PROVIDER PROPERTY STRINGS CORE EXT AUTO STUBS FEATURES)
 
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
-    message(FATAL_ERROR "[ProductionLane] RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND RAWR_REPLACE_SSOT_HANDLERS)
-    message(FATAL_ERROR "[ProductionLane] RAWR_REPLACE_SSOT_HANDLERS=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND RAWR_REPLACE_MASM_FALLBACKS)
-    message(FATAL_ERROR "[ProductionLane] RAWR_REPLACE_MASM_FALLBACKS=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-endif()
 
-if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
     list(REMOVE_ITEM SOURCES
         src/core/masm_stress_harness.cpp
         src/core/convergence_stress_harness.cpp
@@ -1593,48 +1547,6 @@ if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
         src/test_harness/replay_harness.cpp
         src/test_harness/replay_reporter.cpp
     )
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    if(DEFINED ENV{RAWRXD_EMERGENCY_STUB_LINK})
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_EMERGENCY_STUB_LINK must be unset when RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-    endif()
-    list(REMOVE_ITEM SOURCES
-        src/core/cot_fallback_system.cpp
-        src/core/dml_asm_fallback.cpp
-        src/win32app/agentic_bridge_headless.cpp
-        src/win32app/Win32IDE_logMessage.cpp
-    )
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_stub\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_stubs\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_stub\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-    list(FILTER SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
-    if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-    endif()
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/core/missing_handler_stubs.cpp")
-        file(READ "${CMAKE_SOURCE_DIR}/src/core/missing_handler_stubs.cpp" _RAWR_MISSING_HANDLER_STUBS_SRC)
-        if(_RAWR_MISSING_HANDLER_STUBS_SRC MATCHES "history/reconstructed")
-            message(FATAL_ERROR "[ProductionLane] src/core/missing_handler_stubs.cpp is history-indirected. Promote canonical ownership under src/core before strict production strip builds.")
-        endif()
-    endif()
-endif()
 
 if(RAWR_REPLACE_SSOT_HANDLERS)
     list(REMOVE_ITEM SOURCES
@@ -1660,7 +1572,6 @@ if(RAWR_REPLACE_MASM_FALLBACKS)
         )
         message(STATUS "[ReplacementPass] MASM: promoted memory_patch/byte_search ASM; analyzer/streaming remain on C++ fallbacks pending asm include fixes")
     else()
-        message(WARNING "[ReplacementPass] MASM replacement requested but RAWR_HAS_MASM=FALSE; fallback stubs removed without ASM replacements")
     endif()
 endif()
 
@@ -1680,9 +1591,6 @@ set(_RAWR_VALID_SSOT_PROVIDERS CORE EXT AUTO STUBS FEATURES)
 list(FIND _RAWR_VALID_SSOT_PROVIDERS "${RAWR_SSOT_PROVIDER_UPPER}" _rawwr_ssot_provider_idx)
 if(_rawwr_ssot_provider_idx EQUAL -1)
     message(FATAL_ERROR "Invalid RAWR_SSOT_PROVIDER='${RAWR_SSOT_PROVIDER}'. Valid values: CORE, EXT, AUTO, STUBS, FEATURES")
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
-    message(FATAL_ERROR "[ProductionLane] RAWR_SSOT_PROVIDER=${RAWR_SSOT_PROVIDER_UPPER} is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON. Use RAWR_SSOT_PROVIDER=AUTO.")
 endif()
 
 set(_RAWR_SSOT_CORE 0)
@@ -1740,29 +1648,6 @@ elseif(RAWR_SSOT_PROVIDER_UPPER STREQUAL "FEATURES")
         src/core/ssot_handlers_ext_isolated.cpp
         src/core/ssot_handlers_ext.cpp
     )
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stubs\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-    list(FILTER RAWR_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
 endif()
 
 # RawrEngine requires the core observability/safety singletons and the shared
@@ -1896,8 +1781,6 @@ if(RAWR_ENABLE_SEMANTIC_INDEX)
     add_subdirectory(src/completion)  # Phase 17C.2: CompletionRouter
     set(RAWR_HAS_SEMANTIC_INDEX ON)
 else()
-    message(STATUS "[Phase 17C] Semantic Index integration disabled")
-    set(RAWR_HAS_SEMANTIC_INDEX OFF)
 endif()
 
 # Phase 18A: Feedback Collection Infrastructure
@@ -1906,8 +1789,6 @@ if(RAWR_ENABLE_TELEMETRY)
     add_subdirectory(src/telemetry)
     set(RAWR_HAS_TELEMETRY ON)
 else()
-    message(STATUS "[Phase 18A] Feedback Collection disabled")
-    set(RAWR_HAS_TELEMETRY OFF)
 endif()
 
 # Phase 18B: Adaptive Fusion Engine
@@ -1918,8 +1799,6 @@ if(RAWR_ENABLE_ADAPTIVE_FUSION AND RAWR_ENABLE_TELEMETRY)
     add_subdirectory(src/fusion)
     set(RAWR_HAS_ADAPTIVE_FUSION ON)
 else()
-    message(STATUS "[Phase 18B] Adaptive Fusion Engine disabled (requires telemetry)")
-    set(RAWR_HAS_ADAPTIVE_FUSION OFF)
 endif()
 
 # Phase 18C: LoRA Adapter System
@@ -1930,8 +1809,6 @@ if(RAWR_ENABLE_LORA)
     add_subdirectory(src/lora)
     set(RAWR_HAS_LORA ON)
 else()
-    message(STATUS "[Phase 18C] LoRA Adapter System disabled")
-    set(RAWR_HAS_LORA OFF)
 endif()
 
 # =============================================================================
@@ -1986,14 +1863,13 @@ target_link_libraries(RawrEngine PRIVATE Threads::Threads)
 # Avoid duplicate register_sovereign_engines (real impl in sovereign_engines.cpp)
 target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_SOVEREIGN_ENGINES=1)
 target_compile_definitions(RawrEngine PRIVATE
-    RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+    RAWRXD_STRICT_PRODUCTION_PROFILE=0
     RAWRXD_HEADLESS_ONLY=1
     RAWR_SSOT_CORE=${_RAWR_SSOT_CORE}
     RAWR_SSOT_EXT=${_RAWR_SSOT_EXT}
     RAWR_SSOT_AUTO=${_RAWR_SSOT_AUTO}
     RAWR_SSOT_STUBS=${_RAWR_SSOT_STUBS}
     RAWR_SSOT_FEATURES=${_RAWR_SSOT_FEATURES}
-    RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     # Enable the console entry point in src/main.cpp for RawrEngine.exe.
     RAWRXD_STANDALONE_MAIN=1
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
@@ -2010,9 +1886,7 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/core/native_debugger_symbols.cpp
         src/agentic/AgentOllamaClient.cpp
     )
-    if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         target_sources(RawrEngine PRIVATE src/core/rawr_engine_link_shims.cpp)
-    endif()
 endif()
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
@@ -2053,9 +1927,7 @@ list(APPEND GOLD_UNDERSCORE_SOURCES src/codec/gzip_brutal_inflate.cpp)
 list(APPEND GOLD_UNDERSCORE_SOURCES src/codec/compression.cpp)
 list(APPEND GOLD_UNDERSCORE_SOURCES src/core/layer_offload_manager.cpp)
 list(APPEND GOLD_UNDERSCORE_SOURCES src/core/multi_response_engine.cpp)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(APPEND GOLD_UNDERSCORE_SOURCES src/core/rawr_engine_link_shims.cpp)
-endif()
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
@@ -2066,43 +1938,6 @@ if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     list(APPEND GOLD_UNDERSCORE_SOURCES src/core/ssot_handlers_ext.cpp)
     set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 1)
 else()
-    # Legacy lanes: retain fallback ownership to preserve link closure.
-    list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
-        src/core/auto_feature_registry.cpp
-        src/core/ssot_handlers.cpp
-        src/core/ssot_handlers_ext_runtime_minimal.cpp
-        src/core/ssot_handlers_ext_isolated.cpp
-    )
-    list(APPEND GOLD_UNDERSCORE_SOURCES
-        src/core/auto_feature_impl.cpp
-        src/core/missing_handler_stubs.cpp
-    )
-    set(_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS 0)
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_stubs\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-    list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
-    # Note: rawrxd_native_log_fallback.cpp NOT added - rawrxd_native_log_production.cpp
-    # is already in SOURCES and provides the implementation
 endif()
 # Note: multi_response_engine.cpp provides MultiResponseEngine implementation
 # Keeping it in GOLD_UNDERSCORE_SOURCES for proper linking
@@ -2172,10 +2007,6 @@ target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
 
-if(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
-    target_include_directories(RawrEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
-    target_include_directories(RawrXD_Gold PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
-endif()
 
 target_link_libraries(RawrXD_Gold PRIVATE Threads::Threads)
 
@@ -2196,10 +2027,9 @@ target_include_directories(Test-GGUF-Loader PRIVATE
 target_link_libraries(Test-GGUF-Loader PRIVATE Threads::Threads)
 
 target_compile_definitions(RawrXD_Gold PRIVATE
-    RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+    RAWRXD_STRICT_PRODUCTION_PROFILE=0
     RAWRXD_GOLD_BUILD=1
     RAWR_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS=${_RAWR_GOLD_AUTO_FEATURE_REGISTRY_PROVIDES_HANDLERS}
-    RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
 )
 if(RAWR_HAS_MASM)
@@ -2212,20 +2042,7 @@ if(MSVC)
         $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
     )
     target_link_options(RawrXD_Gold PRIVATE /LARGEADDRESSAWARE:NO)
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        set(_GOLD_MAP_PATH "${CMAKE_BINARY_DIR}/gold/RawrXD_Gold.map")
-        set(_GOLD_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD_Gold.map")
-        target_link_options(RawrXD_Gold PRIVATE
-            "/MAP:${_GOLD_MAP_PATH}"
-            /MAPINFO:EXPORTS
-        )
-        add_custom_command(TARGET RawrXD_Gold POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_GOLD_MAP_PATH}" "${_GOLD_MAP_AUDIT_PATH}"
-            VERBATIM
-        )
-    endif()
 else()
-    target_compile_options(RawrXD_Gold PRIVATE -march=native -O3 -w -mavx2 -mfma -mavx512f -mavx512bw -mavx512dq -mavx512vl -fopenmp)
 endif()
 
 set_target_properties(RawrXD_Gold PROPERTIES
@@ -2569,14 +2386,6 @@ if(MSVC)
         set(ASM_SOCKETRESP_OBJ "${_ASM_SOCKETRESP_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_SocketResponder.obj")
     else()
-        set(ASM_SOCKETRESP_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SocketResponder.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SOCKETRESP_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SOCKETRESP_OBJ} ${ASM_SOCKETRESP_SRC}
-            DEPENDS ${ASM_SOCKETRESP_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SocketResponder.asm (IOCP HTTP: /health /status /models sub-0.5ms)"
-            VERBATIM
-        )
     endif()
 
     # Phase 49: TridentBeacon — MASM64 COM Trident Host + Beacon JS Bridge
@@ -2586,14 +2395,6 @@ if(MSVC)
         set(ASM_TRIDENTBEACON_OBJ "${_ASM_TRIDENTBEACON_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon.obj")
     else()
-        set(ASM_TRIDENTBEACON_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon.obj")
-        add_custom_command(
-            OUTPUT ${ASM_TRIDENTBEACON_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTBEACON_OBJ} ${ASM_TRIDENTBEACON_SRC}
-            DEPENDS ${ASM_TRIDENTBEACON_SRC}
-            COMMENT "[MASM] Assembling RawrXD_TridentBeacon.asm (COM Trident Host, Beacon IDispatch, Ollama Bridge)"
-            VERBATIM
-        )
     endif()
 
     # Phase 49: TridentBeacon GPU — MASM64 GPU Acceleration + WebGL Bridge
@@ -2603,14 +2404,6 @@ if(MSVC)
         set(ASM_TRIDENTGPU_OBJ "${_ASM_TRIDENTGPU_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_TridentBeacon_GPU.obj")
     else()
-        set(ASM_TRIDENTGPU_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_TridentBeacon_GPU.obj")
-        add_custom_command(
-            OUTPUT ${ASM_TRIDENTGPU_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_TRIDENTGPU_OBJ} ${ASM_TRIDENTGPU_SRC}
-            DEPENDS ${ASM_TRIDENTGPU_SRC}
-            COMMENT "[MASM] Assembling RawrXD_TridentBeacon_GPU.asm (IE11 Feature Control, WebGL FBO, OpenGL Bridge)"
-            VERBATIM
-        )
     endif()
 
     # Phase 50: AgenticOrchestrator — VTable Dispatch + SPSC Task Queue
@@ -2624,14 +2417,6 @@ if(MSVC)
         set(ASM_AGENTIC_ORCH_OBJ "${_ASM_AGENTIC_ORCH_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_AgenticOrchestrator.obj (genesis)")
     else()
-        set(ASM_AGENTIC_ORCH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_AgenticOrchestrator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_AGENTIC_ORCH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_AGENTIC_ORCH_OBJ} ${ASM_AGENTIC_ORCH_SRC}
-            DEPENDS ${ASM_AGENTIC_ORCH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)"
-            VERBATIM
-        )
     endif()
 
     # Phase 50: GGUF Vulkan Loader — Memory-Mapped Parser + Staging Buffer
@@ -2645,14 +2430,6 @@ if(MSVC)
         set(ASM_GGUF_VKLOAD_OBJ "${_ASM_GGUF_VKLOAD_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_GGUF_Vulkan_Loader.obj (genesis)")
     else()
-        set(ASM_GGUF_VKLOAD_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_GGUF_Vulkan_Loader.obj")
-        add_custom_command(
-            OUTPUT ${ASM_GGUF_VKLOAD_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_GGUF_VKLOAD_OBJ} ${ASM_GGUF_VKLOAD_SRC}
-            DEPENDS ${ASM_GGUF_VKLOAD_SRC}
-            COMMENT "[MASM] Assembling RawrXD_GGUF_Vulkan_Loader.asm (GGUF v3, FNV-1a, Tensor Staging, GGML Types)"
-            VERBATIM
-        )
     endif()
 
     # Phase 50: LSP-AI Bridge — SymbolIndex ↔ ContextAnalyzer Fusion
@@ -2666,14 +2443,6 @@ if(MSVC)
         set(ASM_LSP_BRIDGE_OBJ "${_ASM_LSP_BRIDGE_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_LSP_AI_Bridge.obj (genesis)")
     else()
-        set(ASM_LSP_BRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_LSP_AI_Bridge.obj")
-        add_custom_command(
-            OUTPUT ${ASM_LSP_BRIDGE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_LSP_BRIDGE_OBJ} ${ASM_LSP_BRIDGE_SRC}
-            DEPENDS ${ASM_LSP_BRIDGE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_LSP_AI_Bridge.asm (Symbol Ranking, Weight Fusion, Kind Boost)"
-            VERBATIM
-        )
     endif()
 
     # Phase 50: Streaming QuadBuffer — HWND Token Rendering + GDI Double-Buffer
@@ -2687,14 +2456,6 @@ if(MSVC)
         set(ASM_STREAM_QBUF_OBJ "${_ASM_STREAM_QBUF_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Streaming_QuadBuffer.obj")
     else()
-        set(ASM_STREAM_QBUF_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Streaming_QuadBuffer.obj")
-        add_custom_command(
-            OUTPUT ${ASM_STREAM_QBUF_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_STREAM_QBUF_OBJ} ${ASM_STREAM_QBUF_SRC}
-            DEPENDS ${ASM_STREAM_QBUF_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Streaming_QuadBuffer.asm (SPSC Ring, GDI BitBlt, 60 FPS Render)"
-            VERBATIM
-        )
     endif()
 
     # Phase 50: SelfPatch Engine — Runtime Code Morphing + CPU Optimization
@@ -2704,14 +2465,6 @@ if(MSVC)
         set(ASM_SPENGINE_OBJ "${_ASM_SPENGINE_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_SelfPatch_Engine.obj")
     else()
-        set(ASM_SPENGINE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfPatch_Engine.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SPENGINE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPENGINE_OBJ} ${ASM_SPENGINE_SRC}
-            DEPENDS ${ASM_SPENGINE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SelfPatch_Engine.asm (Hotpatch Table, Code Caves, CPUID Optimize, Quant Switch)"
-            VERBATIM
-        )
     endif()
 
     # Phase Camellia: Camellia-256 Encryption Engine — MASM x64 CTR-mode workspace encryption
@@ -2725,14 +2478,6 @@ if(MSVC)
         set(ASM_CAMELLIA256_OBJ "${_ASM_CAMELLIA256_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256.obj (genesis)")
     else()
-        set(ASM_CAMELLIA256_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256.obj")
-        add_custom_command(
-            OUTPUT ${ASM_CAMELLIA256_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_OBJ} ${ASM_CAMELLIA256_SRC}
-            DEPENDS ${ASM_CAMELLIA256_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Camellia256.asm (Camellia-256 CTR Encrypt, 24-Round Feistel, HWID Key)"
-            VERBATIM
-        )
     endif()
 
     # Phase Camellia-Auth: Authenticated Encrypt/Decrypt (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
@@ -2746,14 +2491,6 @@ if(MSVC)
         set(ASM_CAMELLIA256_AUTH_OBJ "${_ASM_CAMELLIA256_AUTH_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Camellia256_Auth.obj (genesis)")
     else()
-        set(ASM_CAMELLIA256_AUTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Camellia256_Auth.obj")
-        add_custom_command(
-            OUTPUT ${ASM_CAMELLIA256_AUTH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_CAMELLIA256_AUTH_OBJ} ${ASM_CAMELLIA256_AUTH_SRC}
-            DEPENDS ${ASM_CAMELLIA256_AUTH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)"
-            VERBATIM
-        )
     endif()
 
     # Phase KQ: Q4_K Bare-Metal Dequantization Kernel (AVX2 + AVX-512, CPUID Dispatch)
@@ -2763,14 +2500,6 @@ if(MSVC)
         set(ASM_KQUANT_KERNEL_OBJ "${_ASM_KQUANT_KERNEL_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_KQuant_Kernel.obj")
     else()
-        set(ASM_KQUANT_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_KQuant_Kernel.obj")
-        add_custom_command(
-            OUTPUT ${ASM_KQUANT_KERNEL_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_KQUANT_KERNEL_OBJ} ${ASM_KQUANT_KERNEL_SRC}
-            DEPENDS ${ASM_KQUANT_KERNEL_SRC}
-            COMMENT "[MASM] Assembling RawrXD_KQuant_Kernel.asm (Q4_K AVX2+AVX-512 Dequant, CPUID Dispatch)"
-            VERBATIM
-        )
     endif()
 
     # Phase WD: Agentic Watchdog — .text Section Integrity Verification (HMAC-SHA256)
@@ -2780,14 +2509,6 @@ if(MSVC)
         set(ASM_WATCHDOG_OBJ "${_ASM_WATCHDOG_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Watchdog.obj")
     else()
-        set(ASM_WATCHDOG_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Watchdog.obj")
-        add_custom_command(
-            OUTPUT ${ASM_WATCHDOG_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_WATCHDOG_OBJ} ${ASM_WATCHDOG_SRC}
-            DEPENDS ${ASM_WATCHDOG_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)"
-            VERBATIM
-        )
     endif()
 
     # Phase E: SelfHost Engine — Recursive Self-Compilation
@@ -2801,14 +2522,6 @@ if(MSVC)
         set(ASM_SELFHOST_OBJ "${_ASM_SELFHOST_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_SelfHost_Engine.obj (genesis)")
     else()
-        set(ASM_SELFHOST_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_SelfHost_Engine.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SELFHOST_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SELFHOST_OBJ} ${ASM_SELFHOST_SRC}
-            DEPENDS ${ASM_SELFHOST_SRC}
-            COMMENT "[MASM] Assembling RawrXD_SelfHost_Engine.asm (Self-Compile, uASM, Atomic Swap)"
-            VERBATIM
-        )
     endif()
 
     # Phase F: Hardware Synthesizer — FPGA/ASIC Acceleration
@@ -2818,14 +2531,6 @@ if(MSVC)
         set(ASM_HWSYNTH_OBJ "${_ASM_HWSYNTH_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_HardwareSynthesizer.obj")
     else()
-        set(ASM_HWSYNTH_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_HardwareSynthesizer.obj")
-        add_custom_command(
-            OUTPUT ${ASM_HWSYNTH_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HWSYNTH_OBJ} ${ASM_HWSYNTH_SRC}
-            DEPENDS ${ASM_HWSYNTH_SRC}
-            COMMENT "[MASM] Assembling RawrXD_HardwareSynthesizer.asm (Dataflow, GEMM Spec, Verilog Gen)"
-            VERBATIM
-        )
     endif()
 
     # Phase G: Mesh Brain — Distributed Consciousness P2P Mesh
@@ -2835,14 +2540,6 @@ if(MSVC)
         set(ASM_MESHBRAIN_OBJ "${_ASM_MESHBRAIN_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_MeshBrain.obj")
     else()
-        set(ASM_MESHBRAIN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_MeshBrain.obj")
-        add_custom_command(
-            OUTPUT ${ASM_MESHBRAIN_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_MESHBRAIN_OBJ} ${ASM_MESHBRAIN_SRC}
-            DEPENDS ${ASM_MESHBRAIN_SRC}
-            COMMENT "[MASM] Assembling RawrXD_MeshBrain.asm (CRDT, ZKP, DHT, FedAvg, Gossip)"
-            VERBATIM
-        )
     endif()
 
     # Phase H: Speciator Engine — Metamorphic Evolution
@@ -2852,14 +2549,6 @@ if(MSVC)
         set(ASM_SPECIATOR_OBJ "${_ASM_SPECIATOR_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Speciator.obj")
     else()
-        set(ASM_SPECIATOR_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Speciator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SPECIATOR_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SPECIATOR_OBJ} ${ASM_SPECIATOR_SRC}
-            DEPENDS ${ASM_SPECIATOR_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Speciator.asm (Genome, Crossover, Mutation, Speciation)"
-            VERBATIM
-        )
     endif()
 
     # Phase I: Neural Bridge — Direct Cortex Interface
@@ -2869,14 +2558,6 @@ if(MSVC)
         set(ASM_NEURALBRIDGE_OBJ "${_ASM_NEURALBRIDGE_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_NeuralBridge.obj")
     else()
-        set(ASM_NEURALBRIDGE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_NeuralBridge.obj")
-        add_custom_command(
-            OUTPUT ${ASM_NEURALBRIDGE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NEURALBRIDGE_OBJ} ${ASM_NEURALBRIDGE_SRC}
-            DEPENDS ${ASM_NEURALBRIDGE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_NeuralBridge.asm (EEG FFT, Intent Classify, Phosphene HUD)"
-            VERBATIM
-        )
     endif()
 
     # Phase Ω: Omega Orchestrator — Autonomous Development Pipeline
@@ -2886,14 +2567,6 @@ if(MSVC)
         set(ASM_OMEGA_OBJ "${_ASM_OMEGA_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt RawrXD_OmegaOrchestrator.obj")
     else()
-        set(ASM_OMEGA_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_OmegaOrchestrator.obj")
-        add_custom_command(
-            OUTPUT ${ASM_OMEGA_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_OMEGA_OBJ} ${ASM_OMEGA_SRC}
-            DEPENDS ${ASM_OMEGA_SRC}
-            COMMENT "[MASM] Assembling RawrXD_OmegaOrchestrator.asm (Task DAG, Agents, Pipeline, Self-Improve)"
-            VERBATIM
-        )
     endif()
 
     # Phase ∞: PerfCounters — RDTSC Per-Kernel Cycle Histogram
@@ -2907,14 +2580,6 @@ if(MSVC)
         set(ASM_PERFCOUNTERS_OBJ "${_ASM_PERFCOUNTERS_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_PerfCounters.obj (genesis)")
     else()
-        set(ASM_PERFCOUNTERS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_PerfCounters.obj")
-        add_custom_command(
-            OUTPUT ${ASM_PERFCOUNTERS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PERFCOUNTERS_OBJ} ${ASM_PERFCOUNTERS_SRC}
-            DEPENDS ${ASM_PERFCOUNTERS_SRC}
-            COMMENT "[MASM] Assembling RawrXD_PerfCounters.asm (RDTSC Cycle Histograms, 64 Slots)"
-            VERBATIM
-        )
     endif()
 
     # Prebuilt-only MASM modules: these .asm sources are intentionally excluded from
@@ -2932,14 +2597,6 @@ if(MSVC)
         set(ASM_HOTPATCH_KERNEL_OBJ "${_ASM_HOTPATCH_KERNEL_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Hotpatch_Kernel.obj (genesis)")
     else()
-        set(ASM_HOTPATCH_KERNEL_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Hotpatch_Kernel.obj")
-        add_custom_command(
-            OUTPUT ${ASM_HOTPATCH_KERNEL_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_HOTPATCH_KERNEL_OBJ} ${ASM_HOTPATCH_KERNEL_SRC}
-            DEPENDS ${ASM_HOTPATCH_KERNEL_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Hotpatch_Kernel.asm"
-            VERBATIM
-        )
     endif()
 
     # Phase 14.3: Snapshot kernel (capture/restore/verify/discard)
@@ -2953,14 +2610,6 @@ if(MSVC)
         set(ASM_SNAPSHOT_OBJ "${_ASM_SNAPSHOT_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Snapshot.obj (genesis)")
     else()
-        set(ASM_SNAPSHOT_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Snapshot.obj")
-        add_custom_command(
-            OUTPUT ${ASM_SNAPSHOT_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_SNAPSHOT_OBJ} ${ASM_SNAPSHOT_SRC}
-            DEPENDS ${ASM_SNAPSHOT_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Snapshot.asm"
-            VERBATIM
-        )
     endif()
 
     # Phase 46: Pyre compute kernels (sgemm/gemv/norm/rope)
@@ -2974,14 +2623,6 @@ if(MSVC)
         set(ASM_PYRE_COMPUTE_OBJ "${_ASM_PYRE_COMPUTE_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_Pyre_Compute.obj (genesis)")
     else()
-        set(ASM_PYRE_COMPUTE_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_Pyre_Compute.obj")
-        add_custom_command(
-            OUTPUT ${ASM_PYRE_COMPUTE_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_PYRE_COMPUTE_OBJ} ${ASM_PYRE_COMPUTE_SRC}
-            DEPENDS ${ASM_PYRE_COMPUTE_SRC}
-            COMMENT "[MASM] Assembling RawrXD_Pyre_Compute.asm"
-            VERBATIM
-        )
     endif()
 
     # Phase 49: Copilot gap closer (VecDB/Composer/CRDT/Git context)
@@ -2995,14 +2636,6 @@ if(MSVC)
         set(ASM_COPILOT_GAPCLOSER_OBJ "${_ASM_COPILOT_GAPCLOSER_PREBUILT2}")
         message(STATUS "[MASM] Using prebuilt RawrXD_CopilotGapCloser.obj (genesis)")
     else()
-        set(ASM_COPILOT_GAPCLOSER_OBJ "${CMAKE_CURRENT_BINARY_DIR}/RawrXD_CopilotGapCloser.obj")
-        add_custom_command(
-            OUTPUT ${ASM_COPILOT_GAPCLOSER_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_COPILOT_GAPCLOSER_OBJ} ${ASM_COPILOT_GAPCLOSER_SRC}
-            DEPENDS ${ASM_COPILOT_GAPCLOSER_SRC}
-            COMMENT "[MASM] Assembling RawrXD_CopilotGapCloser.asm"
-            VERBATIM
-        )
     endif()
 
     # NativeSpeed kernels (SIMD fast-paths)
@@ -3012,14 +2645,6 @@ if(MSVC)
         set(ASM_NATIVE_SPEED_KERNELS_OBJ "${_ASM_NATIVE_SPEED_KERNELS_PREBUILT}")
         message(STATUS "[MASM] Using prebuilt native_speed_kernels.obj (genesis)")
     else()
-        set(ASM_NATIVE_SPEED_KERNELS_OBJ "${CMAKE_CURRENT_BINARY_DIR}/native_speed_kernels.obj")
-        add_custom_command(
-            OUTPUT ${ASM_NATIVE_SPEED_KERNELS_OBJ}
-            COMMAND "${CMAKE_ASM_MASM_COMPILER}" /c /Zi /Zd /I "${CMAKE_CURRENT_SOURCE_DIR}/src/asm" /Fo${ASM_NATIVE_SPEED_KERNELS_OBJ} ${ASM_NATIVE_SPEED_KERNELS_SRC}
-            DEPENDS ${ASM_NATIVE_SPEED_KERNELS_SRC}
-            COMMENT "[MASM] Assembling native_speed_kernels.asm"
-            VERBATIM
-        )
     endif()
 
     # Brutal gzip deflate — stored DEFLATE blocks + gzip wrap (deflate_brutal_masm)
@@ -3158,7 +2783,6 @@ if(MSVC)
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
-    message(STATUS "[NanoQuant] DISABLED — enable with -DRAWR_ENABLE_NANOQUANT=ON")
     endif()
 endif()
 
@@ -3186,64 +2810,11 @@ if(Vulkan_FOUND)
     target_link_libraries(RawrXD_Gold PRIVATE Vulkan::Vulkan)
     target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
 else()
-    # Try manual path — D: first, then C:
-    file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
-    if(NOT _VK_SDK_DIRS)
-        file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
-    endif()
-    if(_VK_SDK_DIRS)
-        list(SORT _VK_SDK_DIRS)
-        list(GET _VK_SDK_DIRS -1 _VK_SDK_DIR)
-        message(STATUS "[Vulkan] Manual SDK: ${_VK_SDK_DIR}")
-        target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
-        target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
-        target_link_libraries(RawrEngine PRIVATE vulkan-1)
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
-        if(TARGET InferenceEngine)
-            target_include_directories(InferenceEngine PRIVATE "${_VK_SDK_DIR}/Include")
-            target_link_directories(InferenceEngine PRIVATE "${_VK_SDK_DIR}/Lib")
-            target_link_libraries(InferenceEngine PUBLIC vulkan-1)
-            target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
-        endif()
-        if(TARGET RawrXD-InferenceEngine)
-            target_include_directories(RawrXD-InferenceEngine PRIVATE "${_VK_SDK_DIR}/Include")
-            target_link_directories(RawrXD-InferenceEngine PRIVATE "${_VK_SDK_DIR}/Lib")
-            target_link_libraries(RawrXD-InferenceEngine PRIVATE vulkan-1)
-            target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
-        endif()
-        # Gold target
-        target_include_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Include")
-        target_link_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Lib")
-        target_link_libraries(RawrXD_Gold PRIVATE vulkan-1)
-        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
-    else()
-        message(STATUS "[Vulkan] SDK not found — GPU compute uses CPU fallback")
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
-        if(TARGET InferenceEngine)
-            target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_VULKAN=0)
-        endif()
-        if(TARGET RawrXD-InferenceEngine)
-            target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_HAS_VULKAN=0)
-        endif()
-        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=0)
-    endif()
 endif()
 
 # RawrCodex.asm uses ADDR32 relocations — require /LARGEADDRESSAWARE:NO
 if(MSVC)
     target_link_options(RawrEngine PRIVATE /LARGEADDRESSAWARE:NO)
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        set(_RAWR_ENGINE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrEngine.map")
-        set(_RAWR_ENGINE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrEngine.map")
-        target_link_options(RawrEngine PRIVATE
-            "/MAP:${_RAWR_ENGINE_MAP_PATH}"
-            /MAPINFO:EXPORTS
-        )
-        add_custom_command(TARGET RawrEngine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_ENGINE_MAP_PATH}" "${_RAWR_ENGINE_MAP_AUDIT_PATH}"
-            VERBATIM
-        )
-    endif()
 endif()
 
 if(NOT MSVC)
@@ -3339,36 +2910,11 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/Sovereign_Memory_Manager.cpp
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     list(APPEND INFERENCE_ENGINE_SOURCES src/inference/inference_standalone_link_shims.cpp)
-endif()
 
 # Optional tooling targets
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/tools/tokenizer_roundtrip_test/CMakeLists.txt")
     add_subdirectory(src/tools/tokenizer_roundtrip_test)
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stubs\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-    list(FILTER INFERENCE_ENGINE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
 endif()
 
 set(INFERENCE_ENGINE_LIBRARY_SOURCES ${INFERENCE_ENGINE_SOURCES})
@@ -3517,12 +3063,6 @@ if(NOT MSVC)
         target_link_libraries(RawrXD-Autocomplete PRIVATE rt)
     endif()
 endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    set_target_properties(RawrXD-InferenceEngine PROPERTIES
-        EXCLUDE_FROM_ALL FALSE
-        EXCLUDE_FROM_DEFAULT_BUILD FALSE
-    )
-endif()
 
 # =============================================================================
 # Titan ABI Boundary (MASM Control Plane <-> C++ Inference Plane)
@@ -3636,17 +3176,15 @@ set_target_properties(RawrXD-AgenticBridgeDemo PROPERTIES
 )
 
 target_compile_definitions(InferenceEngine PRIVATE
-    RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+    RAWRXD_STRICT_PRODUCTION_PROFILE=0
     RAWR_STANDALONE_INFERENCE=1
     RAWR_HAS_SOVEREIGN_ENGINES=1
-    RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
     ${_RAWR_ASM_FEATURE_DEFINITIONS}
 )
 target_compile_definitions(RawrXD-InferenceEngine PRIVATE
-    RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+    RAWRXD_STRICT_PRODUCTION_PROFILE=0
     RAWR_STANDALONE_INFERENCE=1
     RAWR_HAS_SOVEREIGN_ENGINES=1
-    RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
 )
 
 target_include_directories(InferenceEngine PUBLIC
@@ -3675,8 +3213,6 @@ elseif(DEFINED _VK_SDK_DIR AND _VK_SDK_DIR)
     target_link_libraries(RawrXD-InferenceEngine PRIVATE vulkan-1)
     target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
 else()
-    target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_VULKAN=0)
-    target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_HAS_VULKAN=0)
 endif()
 
 target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
@@ -3728,7 +3264,6 @@ if(MSVC)
         $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
     )
 else()
-    target_compile_options(InferenceEngine PRIVATE -O3 -w -mavx2 -mfma -mavx512f -mavx512bw -mavx512dq -mavx512vl -march=native)
 endif()
 
 set_target_properties(RawrXD-InferenceEngine PROPERTIES
@@ -3739,18 +3274,6 @@ set_target_properties(RawrXD-InferenceEngine PROPERTIES
 # Telemetry_Kernel.asm uses ADDR32 relocations — require /LARGEADDRESSAWARE:NO
 if(MSVC)
     target_link_options(RawrXD-InferenceEngine PRIVATE /LARGEADDRESSAWARE:NO)
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        set(_RAWR_INFERENCE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrXD-InferenceEngine.map")
-        set(_RAWR_INFERENCE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrXD-InferenceEngine.map")
-        target_link_options(RawrXD-InferenceEngine PRIVATE
-            "/MAP:${_RAWR_INFERENCE_MAP_PATH}"
-            /MAPINFO:EXPORTS
-        )
-        add_custom_command(TARGET RawrXD-InferenceEngine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_INFERENCE_MAP_PATH}" "${_RAWR_INFERENCE_MAP_AUDIT_PATH}"
-            VERBATIM
-        )
-    endif()
 endif()
 
 message(STATUS "[Phase 6] Standalone inference engine target: RawrXD-InferenceEngine")
@@ -3765,10 +3288,9 @@ if(MSVC AND TARGET InferenceEngine)
         RAWRXD_ServeInference_EXPORTS=1
         NOMINMAX
         _CRT_SECURE_NO_WARNINGS
-        RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        RAWRXD_STRICT_PRODUCTION_PROFILE=0
         RAWR_STANDALONE_INFERENCE=1
         RAWR_HAS_SOVEREIGN_ENGINES=1
-        RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
         ${_RAWR_ASM_FEATURE_DEFINITIONS}
     )
     target_compile_options(RawrXD-ServeInference PRIVATE
@@ -3808,10 +3330,8 @@ if(WIN32)
             set(_RAWRXD_OMEGA_HIP_ENABLED ON)
             set(_RAWRXD_OMEGA_HIP_REASON "AUTO matched RDNA3 target (${_RAWRXD_GPU_NAMES})")
         else()
-            set(_RAWRXD_OMEGA_HIP_REASON "AUTO no RDNA3 match (${_RAWRXD_GPU_NAMES})")
         endif()
     else()
-        set(_RAWRXD_OMEGA_HIP_REASON "forced OFF")
     endif()
 
     set(TITAN_ASM_KERNEL src/kernels/k_swap_aperture_win32_v126.asm)
@@ -3892,7 +3412,6 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
 
         message(STATUS "[Titan] GGML bridge lane enabled (live handshake owned by titan_infer_dll.cpp)")
     else()
-        message(STATUS "[Titan] GGML bridge scaffold disabled (set -DRAWR_ENABLE_GGML_LINK=ON to enable opt-in lane)")
     endif()
 
     set_source_files_properties(${_TITAN_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
@@ -3922,10 +3441,8 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
             )
             message(STATUS "[Titan] Omega HIP full kernel set enabled (experimental)")
         else()
-            message(STATUS "[Titan] Omega HIP full kernel set disabled (set -DRAWRXD_ENABLE_OMEGA_HIP_FULL_KERNEL_SET=ON to opt in)")
         endif()
     else()
-        target_compile_definitions(RawrXD_Titan PRIVATE RAWRXD_ENABLE_OMEGA_HIP=0)
     endif()
 
     if(RAWRXD_ENABLE_OMEGA_SINGULARITY_ASM)
@@ -3974,15 +3491,12 @@ set(SCHEDULER_BRIDGE src/render/SchedulerBridge.cpp)
         target_link_libraries(RawrXD_Titan PRIVATE ggml)
         target_compile_definitions(RawrXD_Titan PRIVATE RAWR_ENABLE_GGML_LINK=1 RAWRXD_TITAN_BRIDGE_EXPORTS=1)
     else()
-        target_compile_definitions(RawrXD_Titan PRIVATE RAWR_ENABLE_GGML_LINK=0 RAWRXD_TITAN_BRIDGE_EXPORTS=1)
     endif()
 
     if(RAWRXD_INLINE_DISPATCH)
         target_compile_definitions(RawrXD_Titan PRIVATE RAWRXD_INLINE_DISPATCH=1)
         message(STATUS "[Titan] RAWRXD_INLINE_DISPATCH=1 (Phase 7A inline dispatcher enabled)")
     else()
-        target_compile_definitions(RawrXD_Titan PRIVATE RAWRXD_INLINE_DISPATCH=0)
-        message(STATUS "[Titan] RAWRXD_INLINE_DISPATCH=0 (baseline dispatcher)")
     endif()
 
     message(STATUS "[Titan] RAWRXD_ENABLE_OMEGA_HIP=${RAWRXD_ENABLE_OMEGA_HIP} -> ${_RAWRXD_OMEGA_HIP_ENABLED} (${_RAWRXD_OMEGA_HIP_REASON})")
@@ -4040,7 +3554,6 @@ if(RAWR_HAS_MASM AND WIN32)
     
     message(STATUS "[LSP] RawrXD_LSPClient target added (MASM64 -> bin/RawrXD_LSPClient.exe)")
 else()
-    message(STATUS "[LSP] RawrXD_LSPClient skipped (requires MASM64 + WIN32)")
 endif()
 
 add_executable(rawrxd-monaco-gen
@@ -5081,13 +4594,11 @@ if(WIN32)
         list(APPEND WIN32IDE_SOURCES ${TUBI_ASM})
     endif()
 
-    if(NOT RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
         list(REMOVE_ITEM WIN32IDE_SOURCES
             src/core/masm_stress_harness.cpp
             src/core/convergence_stress_harness.cpp
             src/core/enterprise_stress_tests.cpp
         )
-    endif()
 
     # DbgEng COM interfaces used by the native debugger engine are MSVC/SDK-specific.
     # For non-MSVC toolchains (e.g., MinGW cross-builds), keep the rest of Win32IDE
@@ -5149,7 +4660,6 @@ if(WIN32)
         set(RAWRXD_HAS_MW_KERNEL_FLAG 1)
         message(STATUS "MultiWindow Kernel DLL target enabled")
     else()
-        message(STATUS "MultiWindow Kernel DLL skipped (no MASM)")
     endif()
 
     # =========================================================================
@@ -5161,17 +4671,6 @@ if(WIN32)
         set(PROMPT_ENGINE_ASM src/asm/RawrXD_DynamicPromptEngine.asm)
         set_source_files_properties(${PROMPT_ENGINE_ASM} PROPERTIES LANGUAGE ASM_MASM)
 
-        if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-            add_library(RawrXD_DynamicPromptEngine SHARED
-                ${PROMPT_ENGINE_ASM}
-                src/core/dynamic_prompt_engine_glue.cpp
-            )
-        else()
-            add_library(RawrXD_DynamicPromptEngine SHARED EXCLUDE_FROM_ALL
-                ${PROMPT_ENGINE_ASM}
-                src/core/dynamic_prompt_engine_glue.cpp
-            )
-        endif()
         target_include_directories(RawrXD_DynamicPromptEngine PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/src/core
@@ -5190,21 +4689,6 @@ if(WIN32)
         set(RAWRXD_HAS_PROMPT_ENGINE_FLAG 1)
         message(STATUS "DynamicPromptEngine DLL target enabled (Unity/Unreal compatible)")
     else()
-        message(STATUS "DynamicPromptEngine DLL skipped (no MASM)")
-    endif()
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        if(NOT RAWRXD_HAS_MW_KERNEL_FLAG)
-            message(FATAL_ERROR "[ProductionLane] RawrXD_MultiWindow_Kernel must be enabled when RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-        endif()
-        if(NOT RAWRXD_HAS_PROMPT_ENGINE_FLAG)
-            message(FATAL_ERROR "[ProductionLane] RawrXD_DynamicPromptEngine must be enabled when RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-        endif()
-        if(NOT TARGET RawrXD_MultiWindow_Kernel)
-            message(FATAL_ERROR "[ProductionLane] RawrXD_MultiWindow_Kernel target is required in strict production strip mode.")
-        endif()
-        if(NOT TARGET RawrXD_DynamicPromptEngine)
-            message(FATAL_ERROR "[ProductionLane] RawrXD_DynamicPromptEngine target is required in strict production strip mode.")
-        endif()
     endif()
 
     target_compile_definitions(RawrEngine PRIVATE
@@ -5225,31 +4709,6 @@ if(WIN32)
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
     )
 
-    if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS)
-        list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/core/ssot_handlers.cpp
-            src/core/ssot_handlers_ext_isolated.cpp
-            src/core/ssot_auto_missing_handlers.cpp
-            src/core/ssot_linker_gap_handlers.cpp
-            src/core/win32ide_missing_handlers.cpp
-        )
-        list(APPEND WIN32IDE_SOURCES
-            src/core/ssot_missing_handlers_provider.cpp
-        )
-        message(STATUS "[SSOT] Win32IDE: STUBS lane enabled (excluding ssot_handlers.cpp + ssot_handlers_ext_isolated.cpp; adding ssot_missing_handlers_provider.cpp)")
-    else()
-        list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/core/ssot_auto_missing_handlers.cpp
-            src/core/ssot_linker_gap_handlers.cpp
-        )
-        # Real lane - keep isolated handlers and runtime menu/command handlers.
-        # DO NOT remove ssot_handlers_ext_isolated.cpp - it has working VSCEXT handlers 10000-10009
-        # DO NOT add ssot_handlers_ext.cpp - it has unresolved symbols we haven't fixed
-        # Fallback TUs (below) + rawr_engine_link_shims when linked; no win32_ide_link_stubs.cpp (removed from tree).
-        # only in explicit non-strict MSVC compatibility lanes.
-        message(STATUS "Win32IDE: Real lane - using isolated handlers + runtime handlers")
-    endif()
-
     # AgenticExecutor real implementation now provides these members.
     # Keep the link stub out of Win32IDE to avoid duplicate definitions.
     list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -5257,37 +4716,6 @@ if(WIN32)
         src/core/beacon_link_stub.cpp
     )
 
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/core/subsystem_mode_fallbacks.cpp
-            src/core/model_loader_fallbacks.cpp
-            src/core/rawrxd_native_log_fallback.cpp
-            src/llm_adapter/ggufrunner_link_fallbacks.cpp
-            src/win32app/collab_cursor_fallbacks.cpp
-        )
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_stubs\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_stub\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
-        message(STATUS "[ProductionLane] Win32IDE: stripped ssot/fallback/shim compatibility units")
-    endif()
 
     # Avoid mixing parallel GGUF engine stacks in this lane.
     list(REMOVE_ITEM WIN32IDE_SOURCES
@@ -5302,7 +4730,6 @@ if(WIN32)
         src/context/workspace_context.cpp
         src/orchestration/session_state.cpp
     )
-    if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         if(MSVC)
             # Link closure: rawr_engine_link_shims.cpp + fallbacks (Win32IDE removes rawr_engine.cpp — shims satisfy externals).
             set(_RAWRXD_WIN32IDE_FALLBACK_UNITS
@@ -5320,15 +4747,10 @@ if(WIN32)
                 if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawr_fallback}")
                     list(APPEND WIN32IDE_SOURCES "${_rawr_fallback}")
                 else()
-                    message(WARNING "[Win32IDE] Optional fallback unit missing, skipping: ${_rawr_fallback}")
                 endif()
             endforeach()
         else()
-            message(STATUS "[Win32IDE] Non-MSVC fallback append skipped")
         endif()
-    else()
-        message(STATUS "[ProductionLane] Win32IDE: fallback provider append skipped")
-    endif()
 
     list(APPEND WIN32IDE_SOURCES
         src/win32app/ai_workers_queue.cpp
@@ -5393,8 +4815,6 @@ if(WIN32)
             )
             set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 1)
         else()
-            message(STATUS "[Win32IDE] Sovereign GPU ASM disabled — skipping src/asm/gpu/* (set -DRAWRXD_LINK_GPU_SOVEREIGN_ASM=ON to enable)")
-            set(RAWRXD_HAS_SOVEREIGN_GPU_ASM 0)
         endif()
 
         set_source_files_properties(${WIN32IDE_EXTRA_ASM} PROPERTIES LANGUAGE ASM_MASM)
@@ -5421,56 +4841,15 @@ if(WIN32)
             "The IDE usually will not link unless every ASM symbol is provided elsewhere. "
             "For a normal dev link: -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON or remove that cache entry.")
     endif()
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-    endif()
     if(RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         message(STATUS "[Win32IDE] Agentic stub fallback enabled by RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON")
     else()
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*_stubs\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stubs\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*_stub\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*_stubs\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stubs\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*_stub\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/stub_.*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_(mock|fake)\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*(mock_|fake_).*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/shim_.*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_shims?\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/reverse_engineered_stubs\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/link_stubs_.*\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_link_shims?\\.asm$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.cpp$")
-        list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX ".*/.*_fallback[^/]*\\.asm$")
-
-        list(REMOVE_ITEM WIN32IDE_SOURCES
-            src/win32app/agentic_bridge_headless.cpp
-            src/win32app/Win32IDE_headless_stubs.cpp
-            src/core/ignite_800b.cpp
-            src/stubs.cpp
-            src/core/stubs.cpp
-            src/core/universal_stub.cpp
-            src/core/link_stubs_final.cpp
-            src/core/link_stubs_remaining_classes.cpp
-        )
-        message(STATUS "[Win32IDE] Agentic real lane enforced (stub/link-fallback units removed)")
     endif()
 
     option(RAWRXD_STRICT_AGENTIC_REALITY
         "Fail CMake configure if Win32IDE sources still include stub/link-fallback units"
         ON
     )
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT RAWRXD_STRICT_AGENTIC_REALITY)
-        message(FATAL_ERROR "[ProductionLane] RAWRXD_STRICT_AGENTIC_REALITY=OFF is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-    endif()
     if(RAWRXD_STRICT_AGENTIC_REALITY AND NOT RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         set(_RAWRXD_FORBIDDEN_WIN32IDE_SOURCES "")
         foreach(_rawrxd_src IN LISTS WIN32IDE_SOURCES)
@@ -5520,32 +4899,22 @@ if(WIN32)
             endif()
         endforeach()
         
-        # Enforce: No stubs in production
+        # Enforce: No stubs in production — ALWAYS fail, no escape hatch.
         if(STUB_COUNT GREATER 0)
-            if(NOT DEFINED ENV{RAWRXD_EMERGENCY_STUB_LINK})
-                list(REMOVE_DUPLICATES STUB_VIOLATIONS)
-                list(JOIN STUB_VIOLATIONS "\n  - " STUB_LIST)
-                message(FATAL_ERROR
-                    "\\n===============================================================\\n"
-                    "[PRODUCTION POLICY VIOLATION] ${target_name}\\n"
-                    "Found ${STUB_COUNT} stub/shim/mock files:\\n"
-                    "  - ${STUB_LIST}\\n"
-                    "\\n"
-                    "POLICY: Production builds must NOT link stubs.\\n"
-                    "All functionality must have real implementations.\\n"
-                    "\\n"
-                    "OPTIONS:\\n"
-                    "  1. Implement the missing functionality (preferred)\\n"
-                    "  2. Exclude the feature from build (if not ready)\\n"
-                    "  3. Emergency override: set RAWRXD_EMERGENCY_STUB_LINK=1\\n"
-                    "     WARNING: CI will REJECT builds with this flag set\\n"
-                    "===============================================================\\n"
-                )
-            else()
-                message(WARNING "[EMERGENCY OVERRIDE] Stub files linked to ${target_name} (CI will reject)")
-            endif()
-        else()
-            message(STATUS "✓ ${target_name}: No stub policy violations")
+            list(REMOVE_DUPLICATES STUB_VIOLATIONS)
+            list(JOIN STUB_VIOLATIONS "\n  - " STUB_LIST)
+            message(FATAL_ERROR
+                "\\n===============================================================\\n"
+                "[PRODUCTION POLICY VIOLATION] ${target_name}\\n"
+                "Found ${STUB_COUNT} stub/shim/mock files:\\n"
+                "  - ${STUB_LIST}\\n"
+                "\\n"
+                "POLICY: Production builds must NOT link stubs.\\n"
+                "All functionality must have real implementations.\\n"
+                "\\n"
+                "FIX: Implement the missing functionality. No escape hatches.\\n"
+                "===============================================================\\n"
+            )
         endif()
     endfunction()
     
@@ -5596,9 +4965,6 @@ if(WIN32)
         list(FILTER WIN32IDE_SOURCES EXCLUDE REGEX "(_stubs\\.cpp$|/stubs\\.cpp$|_stub\\.cpp$|/stub_.*\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|_stub\\.asm$|/stub_.*\\.asm$|/shim_.*\\.(cpp|asm)$|missing_handler|link_stubs_.*\\.(cpp|asm)$|_shims?\\.(cpp|asm)$|_link_shims?\\.(cpp|asm)$|_fallback[^/]*\\.(cpp|asm)$|_(mock|fake)\\.(cpp|asm)$|stub_|shim_|mock_|fake_)")
     endif()
     # Keep required MASM bridge provider after broad stub filtering.
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT EXISTS "${CMAKE_SOURCE_DIR}/src/core/ai_agent_masm_stubs.cpp")
-        message(FATAL_ERROR "[ProductionLane] Required MASM bridge provider src/core/ai_agent_masm_stubs.cpp is missing.")
-    endif()
     foreach(_rawrxd_required_provider IN LISTS _RAWRXD_REQUIRED_WIN32IDE_PROVIDER_SOURCES)
         if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawrxd_required_provider}")
             list(REMOVE_ITEM WIN32IDE_SOURCES ${_rawrxd_required_provider})
@@ -5930,9 +5296,6 @@ if(WIN32)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_IDE_PROBE_GATES=1)
         message(STATUS "[Win32IDE] IDE probe gates enabled (RAWRXD_ENABLE_IDE_PROBE_GATES=ON)")
     else()
-        target_sources(RawrXD-Win32IDE PRIVATE src/win32app/Win32IDE_ProbeGatesDisabled.cpp)
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_IDE_PROBE_GATES=0 RAWRXD_DISABLE_IDE_PROBES=1)
-        message(STATUS "[Win32IDE] IDE probe gates disabled — CLI probe flags are no-ops")
     endif()
 
     if(TARGET rawrxd-fa8-minimal-spv)
@@ -5959,18 +5322,12 @@ if(WIN32)
         )
         message(STATUS "[Aperture] AVX-512 kernels enabled (Q4_0 dequantization)")
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE 
-            RAWRXD_APERTURE_KERNELS_ENABLED=0
-            RAWRXD_APERTURE_Q4_0_ENABLED=0
-        )
-        message(STATUS "[Aperture] AVX-512 kernels disabled (using reference C++)")
     endif()
 
     # GPU sovereign ASM link state (UI/runtime detection)
     if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=0)
     endif()
     
     # Failure Mode Firewall — runtime telemetry for stub detection
@@ -5998,18 +5355,11 @@ if(WIN32)
     # =========================================================================
     # PRODUCTION POLICY ENFORCEMENT
     # =========================================================================
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        EnforceNoStubs(RawrEngine)
-        EnforceNoStubs(RawrXD_Gold)
-        EnforceNoStubs(RawrXD-InferenceEngine)
-    endif()
     # Enforce both: (1) No stubs linked, (2) link_stubs_gate.cpp shrinking.
     # Explicit fallback builds may retain compatibility units by design.
     if(RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         message(STATUS "[Win32IDE] Stub policy enforcement relaxed (RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=ON)")
     else()
-        EnforceNoStubs(RawrXD-Win32IDE)
-        EnforceLinkStubsGateSizeLimit()
     endif()
 
     # External infra pack is mirrored into the project tree under D: and wired
@@ -6030,7 +5380,6 @@ if(WIN32)
         endif()
         message(STATUS "[Infra] Win32IDE wired to ${RAWRXD_INFRA_ROOT}")
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_INFRA_AVAILABLE=0)
     endif()
 
     # MAP output for link graph verification
@@ -6057,12 +5406,11 @@ if(WIN32)
 
     # Runtime feature gates for this target's source graph.
     target_compile_definitions(RawrXD-Win32IDE PRIVATE
-        RAWRXD_STRICT_PRODUCTION_PROFILE=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
+        RAWRXD_STRICT_PRODUCTION_PROFILE=0
         RAWR_HAS_SOVEREIGN_ENGINES=0
         RAWR_HAS_RAWR_INFERENCE=0
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-        RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=$<IF:$<BOOL:${RAWRXD_PRODUCTION_STRIP_STUB_SOURCES}>,1,0>
         ${_RAWR_ASM_FEATURE_DEFINITIONS}
         RAWRXD_USE_DEDICATED_CODELENS=1
         RAWRXD_USE_DEDICATED_INLAY=1
@@ -6082,7 +5430,6 @@ if(WIN32)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/quickjs_ng/quickjs.c")
         set(QUICKJS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/quickjs_ng)
     else()
-        set(QUICKJS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/quickjs)
     endif()
     if(EXISTS "${QUICKJS_DIR}/quickjs.c")
         set(QUICKJS_SOURCES
@@ -6121,25 +5468,8 @@ if(WIN32)
                     CONFIG_VERSION="2024.01.13"
                 )
             else()
-                target_compile_definitions(quickjs_static PRIVATE
-                    _CRT_SECURE_NO_WARNINGS
-                    CONFIG_VERSION="2024.01.13"
-                )
             endif()
         else()
-            target_compile_options(quickjs_static PRIVATE -w -O2)
-            if(QUICKJS_HAS_LIBBF)
-                target_compile_definitions(quickjs_static PRIVATE
-                    CONFIG_BIGNUM
-                    CONFIG_VERSION="2024.01.13"
-                    _GNU_SOURCE
-                )
-            else()
-                target_compile_definitions(quickjs_static PRIVATE
-                    CONFIG_VERSION="2024.01.13"
-                    _GNU_SOURCE
-                )
-            endif()
         endif()
         target_link_libraries(RawrXD-Win32IDE PRIVATE quickjs_static)
         if(TARGET RawrEngine)
@@ -6186,29 +5516,6 @@ if(WIN32)
         endif()
         message(STATUS "QuickJS found: JS extension host enabled")
     else()
-        if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-            message(FATAL_ERROR "[ProductionLane] QuickJS not found at ${QUICKJS_DIR} and Win32IDE would require QuickJS stubs; strict production strip requires a real QuickJS provider.")
-        endif()
-        message(STATUS "QuickJS not found at ${QUICKJS_DIR} — JS extension host uses stubs")
-        # Create stub include directory so headers compile
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_QUICKJS_STUB=1)
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_QUICKJS=0)
-        if(TARGET RawrEngine)
-            target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_QUICKJS=0)
-            target_compile_definitions(RawrEngine PRIVATE RAWR_QUICKJS_STUB=1)
-        endif()
-        if(TARGET RawrXD_Gold)
-            target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_QUICKJS=0)
-            target_compile_definitions(RawrXD_Gold PRIVATE RAWR_QUICKJS_STUB=1)
-        endif()
-        if(TARGET InferenceEngine)
-            target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_QUICKJS=0)
-            target_compile_definitions(InferenceEngine PRIVATE RAWR_QUICKJS_STUB=1)
-        endif()
-        if(TARGET RawrXD-InferenceEngine)
-            target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_HAS_QUICKJS=0)
-            target_compile_definitions(RawrXD-InferenceEngine PRIVATE RAWR_QUICKJS_STUB=1)
-        endif()
     endif()
     
     # Link RE library into Win32IDE
@@ -6224,13 +5531,6 @@ if(WIN32)
         target_link_libraries(RawrXD-Win32IDE PRIVATE "${_RAWRXD_SINGULARITY_CORE_LIB}")
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=1)
     else()
-        # In production strip mode, singularity_core is optional - not all MASM is required
-        if(RAWRXD_REQUIRE_SINGULARITY_CORE)
-            message(FATAL_ERROR "singularity_core.lib required but not found at ${_RAWRXD_SINGULARITY_CORE_LIB}. Build/stage MASM core first.")
-        else()
-            message(STATUS "singularity_core.lib not found at ${_RAWRXD_SINGULARITY_CORE_LIB} — Win32IDE links without it (optional MASM layer).")
-        endif()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_SINGULARITY_LINKED=0)
     endif()
 
     # Link MultiWindow Kernel into Win32IDE
@@ -6250,7 +5550,6 @@ if(WIN32)
     if(TARGET RawrXD_Titan)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_TITAN_KERNEL=1)
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_TITAN_KERNEL=0)
     endif()
     
     # Vulkan SDK for Win32IDE
@@ -6264,7 +5563,6 @@ if(WIN32)
         target_link_libraries(RawrXD-Win32IDE PRIVATE vulkan-1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=1 RAWR_ENABLE_VULKAN=1)
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 
     option(RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS
@@ -6292,7 +5590,6 @@ if(WIN32)
             if(EXISTS "${_obj}")
                 list(APPEND _WIN32IDE_LINKED_MONOLITHIC_OBJS "${_obj}")
             else()
-                message(STATUS "Optional Win32IDE link object missing, skipping: ${_obj}")
             endif()
         endforeach()
 
@@ -6302,7 +5599,6 @@ if(WIN32)
             message(STATUS "[Win32IDE] Monolithic ASM objects linked — removing src/core/model_loader_fallbacks.cpp to avoid duplicate symbols")
         endif()
     else()
-        message(STATUS "[Win32IDE] Monolithic ASM obj pack disabled (RAWRXD_LINK_WIN32IDE_MONOLITHIC_OBJS=OFF)")
     endif()
 
     # =========================================================================
@@ -6337,11 +5633,6 @@ if(WIN32)
         )
         message(STATUS "[Phase 17C] Win32IDE linked with FAISS IVFPQ semantic index")
     else()
-        target_compile_definitions(RawrXD-Win32IDE PRIVATE 
-            RAWR_HAS_FAISS=0
-            RAWR_SEMANTIC_INDEX_FAISS_ENABLED=0
-        )
-        message(STATUS "[Phase 17C] Win32IDE linked with HNSW semantic index (FAISS not available)")
     endif()
     
     if(RAWR_SEMANTIC_INDEX_OPENMP_ENABLED)
@@ -6464,7 +5755,6 @@ if(WIN32)
         endforeach()
         message(STATUS "[Win32IDE] GGML DLL staging enabled from ${GGML_BIN_DIR}")
     else()
-        message(STATUS "[Win32IDE] GGML DLL source not found; continuing without runtime staging. Set GGML_BIN_DIR/GGML_SDK_PATH env var or -DGGML_BIN_DIR=<path> to enable staging.")
     endif()
     
     target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -6504,7 +5794,6 @@ if(WIN32)
             $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CONFIG:Debug>>>:/O2>
         )
     else()
-        target_compile_options(RawrXD-Win32IDE PRIVATE -O3 -w -mavx2 -mfma -mavx512f -mavx512bw -mavx512dq -mavx512vl -march=native -fopenmp)
     endif()
 
     set_target_properties(RawrXD-Win32IDE PROPERTIES
@@ -6547,7 +5836,6 @@ endif()
 #   CMake cannot generate an ASM_MASM-only SHARED library for some generators
 #   (missing CMAKE_ASM_MASM_CREATE_SHARED_LIBRARY). Ensure C++ is the linker
 #   language by adding a tiny C++ TU and setting LINKER_LANGUAGE.
-if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypass_impl_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_library(RawrXD-Crypto SHARED
         src/crypto_masm.asm
         src/security/uac_bypass_impl_stub.cpp
@@ -6571,13 +5859,6 @@ if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/security/uac_bypas
         CXX_STANDARD_REQUIRED ON
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
-else()
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        message(STATUS "RawrXD-Crypto skipped in strict production strip mode (uses uac_bypass_impl_stub.cpp)")
-    else()
-        message(STATUS "RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)")
-    endif()
-endif()
 
 # =============================================================================
 # RawrXD-GPUBackend Shared Library (Vulkan Compute)
@@ -6623,7 +5904,6 @@ if(WIN32 AND MSVC AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/backend/gpu_backen
     target_link_libraries(test_gpu_backend PRIVATE kernel32)
     message(STATUS "test_gpu_backend target configured")
 else()
-    message(STATUS "RawrXD-GPUBackend skipped (requires WIN32 + MSVC + Vulkan SDK)")
 endif()
 
 # NOTE:
@@ -6659,89 +5939,27 @@ elseif(RAWR_ASAN AND NOT MSVC)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
     add_link_options(-fsanitize=address)
 endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND RAWR_ASAN)
-    message(FATAL_ERROR "[ProductionLane] RAWR_ASAN=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-endif()
 
-# Build SSOT stub-lane ownership guard only when explicitly enabled.
+# Build SSOT stub-lane ownership guard removed — always use real handlers.
 set(RAWRXD_HAS_SSOT_STUB_LANE_GUARD OFF)
-if(RAWRXD_ENABLE_MISSING_HANDLER_STUBS AND EXISTS "${CMAKE_SOURCE_DIR}/src/core/missing_handler_stubs.cpp")
-    add_library(ssot_stub_lane_objs OBJECT
-        ${CMAKE_SOURCE_DIR}/src/core/missing_handler_stubs.cpp
-        ${CMAKE_SOURCE_DIR}/src/core/ssot_missing_handlers_provider.cpp
-    )
-    target_compile_definitions(ssot_stub_lane_objs PRIVATE
-        RAWRXD_ENABLE_MISSING_HANDLER_STUBS=1
-    )
-    target_include_directories(ssot_stub_lane_objs PRIVATE
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/core
-    )
-
-    add_custom_target(ssot_stub_lane_guard
-        COMMAND powershell -NoProfile -ExecutionPolicy Bypass
-            -File ${CMAKE_SOURCE_DIR}/tools/verify_stub_lane_handler_ownership.ps1
-            -RepoRoot ${CMAKE_SOURCE_DIR}
-            -BuildDir ${CMAKE_BINARY_DIR}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "[CI Gate] Verifying SSOT stub-lane handler ownership"
-        VERBATIM
-    )
-    add_dependencies(ssot_stub_lane_guard ssot_stub_lane_objs)
-    set(RAWRXD_HAS_SSOT_STUB_LANE_GUARD ON)
-else()
-    message(STATUS "[SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).")
-endif()
 
 option(RAWRXD_ENABLE_HEAVY_GATES "Run heavy ownership/compiled-symbol guards as part of self_test_gate" OFF)
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT RAWRXD_ENABLE_HEAVY_GATES)
-    message(FATAL_ERROR "[ProductionLane] RAWRXD_ENABLE_HEAVY_GATES=OFF is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON.")
-endif()
 if(RAWRXD_ENABLE_HEAVY_GATES)
-    if(RAWRXD_HAS_SSOT_STUB_LANE_GUARD)
-        add_custom_target(self_test_gate
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target ssot_stub_lane_guard
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-            COMMENT "[CI Gate] Ownership guard + RawrXD-Win32IDE"
-            VERBATIM
-        )
-    else()
-        add_custom_target(self_test_gate
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-            COMMENT "[CI Gate] RawrXD-Win32IDE (stub ownership guard disabled)"
-            VERBATIM
-        )
-    endif()
-else()
+    # self_test_gate now builds real targets only, no stub lanes.
     add_custom_target(self_test_gate
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target RawrXD-Win32IDE
-        COMMENT "[CI Gate] RawrXD-Win32IDE (heavy gates disabled)"
+        COMMENT "[CI Gate] RawrXD-Win32IDE"
         VERBATIM
     )
-endif()
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    add_dependencies(self_test_gate
-        RawrXD-Win32IDE
-        RawrEngine
-        RawrXD_Gold
-        RawrXD-InferenceEngine
-        RawrXD_MultiWindow_Kernel
-        RawrXD_DynamicPromptEngine
-    )
+else()
 endif()
 
 # CI gate: stress_test — build and note availability
 message(STATUS "[CI] self_test_gate target available (cmake --build . --target self_test_gate)")
 message(STATUS "[CI] RAWR_ASAN=${RAWR_ASAN}")
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-    message(STATUS "[ProductionLane] Strict production profile enabled (stubs/shims/fallbacks stripped; heavy gates required)")
-endif()
 
 
 find_package(Python3 COMPONENTS Interpreter QUIET)
-if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES AND NOT Python3_FOUND)
-    message(FATAL_ERROR "[ProductionLane] Python3 interpreter is required when RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON (validate_registry_strict dependency).")
-endif()
 if(Python3_FOUND)
     add_custom_target(validate_registry
         COMMAND ${Python3_EXECUTABLE} 
@@ -6758,10 +5976,6 @@ if(Python3_FOUND)
         COMMENT "Validating command registry (STRICT — all IDM_* must be in COMMAND_TABLE)..."
         VERBATIM
     )
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        add_dependencies(self_test_gate validate_registry)
-        add_dependencies(self_test_gate validate_registry_strict)
-    endif()
 endif()
 
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
@@ -6920,7 +6134,6 @@ if(WIN32)
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )
 
-    if(EXISTS "${CMAKE_SOURCE_DIR}/src/cpu_inference_engine_autofix_stub.cpp" AND NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         add_executable(RawrXD-AutoFixCLI
             src/app/cli_entrypoint.cpp
             src/agent/quantum_agent_orchestrator.cpp
@@ -6944,11 +6157,6 @@ if(WIN32)
         set_target_properties(RawrXD-AutoFixCLI PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         )
-    elseif(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        message(STATUS "RawrXD-AutoFixCLI skipped in strict production strip mode (uses cpu_inference_engine_autofix_stub.cpp)")
-    else()
-        message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
-    endif()
 
     # ═══════════════════════════════════════════════════════════════════
     # GPU Inference Benchmark — v16.2-GPU-HYBRID Phase C
@@ -6999,7 +6207,6 @@ if(WIN32)
     )
     target_compile_definitions(RawrXD-InferenceBench PRIVATE
         RAWRXD_BENCHMARK=1
-        RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=1
     )
     if(MSVC)
         target_compile_options(RawrXD-InferenceBench PRIVATE 
@@ -7389,7 +6596,6 @@ if(MSVC)
         $<$<NOT:$<CONFIG:Debug>>:/O2>
     )
 else()
-    target_compile_options(RawrXD-MemoryBench PRIVATE -O2 -std=c++20 -Wall -Wextra)
 endif()
 
 target_link_libraries(RawrXD-MemoryBench PRIVATE kernel32)
@@ -7461,7 +6667,6 @@ message(STATUS "[MemoryBench] RawrXD-MemoryBench target registered (cmake --buil
 endif()
 
 # Swarm smoke test (manual)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(SwarmSmokeTest EXCLUDE_FROM_ALL
         src/tests/SwarmSmokeTest.cpp
         src/bridge/Win32SwarmBridge.cpp
@@ -7479,13 +6684,9 @@ if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     if(WIN32)
         target_link_libraries(SwarmSmokeTest PRIVATE user32 gdi32 shell32 ole32 oleaut32 uuid)
     endif()
-else()
-    message(STATUS "SwarmSmokeTest skipped in strict production strip mode (uses swarm_smoke_stubs.cpp)")
-endif()
 
 # InfinitePerfectionEngine Smoke Test (manual)
 # Comprehensive execution verification for all 149 batches (92-256)
-if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
     add_executable(InfinitePerfectionEngine_SmokeTest EXCLUDE_FROM_ALL
         tests/InfinitePerfectionEngine_SmokeTest.cpp
         infinite/InfinitePerfectionEngine.cpp
@@ -7504,9 +6705,6 @@ if(NOT RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         CXX_STANDARD_REQUIRED ON
     )
     message(STATUS "  ✓ Configured InfinitePerfectionEngine_SmokeTest")
-else()
-    message(STATUS "InfinitePerfectionEngine_SmokeTest skipped in strict production strip mode")
-endif()
 
 # Runtime truth probe (manual): validates MCP stdio transport, NL shell scoring,
 # and vector kernel behavior with direct in-process calls.
@@ -7706,7 +6904,6 @@ if(WIN32)
         user32 gdi32 shell32
     )
 else()
-    target_link_libraries(agentic_orchestrator_smoke_test PRIVATE Threads::Threads)
 endif()
 
 message(STATUS "[AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)")
@@ -7733,7 +6930,6 @@ if(WIN32)
         user32 gdi32 shell32
     )
 else()
-    target_link_libraries(intelligent_review_smoke_test PRIVATE Threads::Threads)
 endif()
 
 message(STATUS "[IntelligentReview] Smoke test target: intelligent_review_smoke_test (build with: cmake --build . --target intelligent_review_smoke_test)")
@@ -7763,7 +6959,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_fp8_quantization PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_fp8_quantization PROPERTIES
@@ -7853,7 +7048,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_fp8_verifier PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_fp8_verifier PROPERTIES
@@ -7888,7 +7082,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_fp8_sampling_hook PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_fp8_sampling_hook PROPERTIES
@@ -7933,7 +7126,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_fp8_avx512 PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_fp8_avx512 PROPERTIES
@@ -7968,7 +7160,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_credit_based_flow_control PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_credit_based_flow_control PROPERTIES
@@ -8246,7 +7437,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_fused_fp8_quantizer PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_fused_fp8_quantizer PROPERTIES
@@ -8279,7 +7469,6 @@ if(WIN32)
         user32 gdi32 shell32 ws2_32
     )
 else()
-    target_link_libraries(context_fusion_harness PRIVATE Threads::Threads)
 endif()
 
 message(STATUS "[ContextFusion] Harness target: context_fusion_harness (build with: cmake --build . --target context_fusion_harness)")
@@ -8306,10 +7495,6 @@ if(WIN32)
         user32 gdi32 shell32 ws2_32 crypt32
     )
 else()
-    target_link_libraries(tls_bridge_smoke_test PRIVATE 
-        Threads::Threads
-        ssl crypto
-    )
 endif()
 
 message(STATUS "[TLSBridge] Smoke test target: tls_bridge_smoke_test (build with: cmake --build . --target tls_bridge_smoke_test)")
@@ -8367,7 +7552,6 @@ if(RAWRXD_BUILD_ADDRESS_RESOLVER_NATIVE AND EXISTS "${CMAKE_SOURCE_DIR}/tools/ad
         target_compile_options(address_resolver_native PRIVATE /W3 /EHsc)
         target_link_libraries(address_resolver_native PRIVATE dbghelp)
     else()
-        target_compile_options(address_resolver_native PRIVATE -Wall -Wextra)
     endif()
     set_target_properties(address_resolver_native PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tools
@@ -9118,7 +8302,6 @@ endif()
 if(MSVC)
     target_compile_options(sovereign_super_node PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(sovereign_super_node PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(sovereign_super_node PRIVATE
@@ -9131,7 +8314,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(sovereign_super_node PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(sovereign_super_node PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9155,7 +8337,6 @@ target_compile_features(sovereign_super_node_stress PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(sovereign_super_node_stress PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(sovereign_super_node_stress PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(sovereign_super_node_stress PRIVATE
@@ -9168,7 +8349,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(sovereign_super_node_stress PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(sovereign_super_node_stress PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9191,7 +8371,6 @@ target_compile_features(sovereign_batch_splitter_test PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(sovereign_batch_splitter_test PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(sovereign_batch_splitter_test PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(sovereign_batch_splitter_test PRIVATE
@@ -9204,7 +8383,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(sovereign_batch_splitter_test PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(sovereign_batch_splitter_test PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9229,7 +8407,6 @@ target_compile_features(test_llama_decode PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_llama_decode PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_llama_decode PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_llama_decode PRIVATE
@@ -9242,7 +8419,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_llama_decode PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(test_llama_decode PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9269,7 +8445,6 @@ target_compile_features(rawrxd_http_server PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(rawrxd_http_server PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(rawrxd_http_server PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(rawrxd_http_server PRIVATE
@@ -9282,7 +8457,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(rawrxd_http_server PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(rawrxd_http_server PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9307,7 +8481,6 @@ target_compile_features(test_http_splitter_client PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_http_splitter_client PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_http_splitter_client PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_http_splitter_client PRIVATE
@@ -9319,7 +8492,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_http_splitter_client PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(test_http_splitter_client PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9344,7 +8516,6 @@ target_compile_features(test_e2e_splitter_decoder PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_e2e_splitter_decoder PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_e2e_splitter_decoder PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_e2e_splitter_decoder PRIVATE
@@ -9356,7 +8527,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_e2e_splitter_decoder PRIVATE kernel32 ws2_32)
     else()
-        target_link_libraries(test_e2e_splitter_decoder PRIVATE kernel32 ws2_32 pthread)
     endif()
 endif()
 
@@ -9381,7 +8551,6 @@ target_compile_features(test_production_monitor PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_production_monitor PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_production_monitor PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_production_monitor PRIVATE
@@ -9393,7 +8562,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_production_monitor PRIVATE kernel32 ws2_32 psapi)
     else()
-        target_link_libraries(test_production_monitor PRIVATE kernel32 ws2_32 pthread psapi)
     endif()
 endif()
 
@@ -9418,7 +8586,6 @@ target_compile_features(test_benchmark_suite PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_benchmark_suite PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_benchmark_suite PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_benchmark_suite PRIVATE
@@ -9430,7 +8597,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_benchmark_suite PRIVATE kernel32 ws2_32 psapi)
     else()
-        target_link_libraries(test_benchmark_suite PRIVATE kernel32 ws2_32 pthread psapi)
     endif()
 endif()
 
@@ -9457,7 +8623,6 @@ target_compile_features(test_phase12_final_integration PRIVATE cxx_std_17)
 if(MSVC)
     target_compile_options(test_phase12_final_integration PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/O2> $<$<COMPILE_LANGUAGE:C,CXX>:/arch:AVX2>)
 else()
-    target_compile_options(test_phase12_final_integration PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:-O3> $<$<COMPILE_LANGUAGE:C,CXX>:-mavx2> $<$<COMPILE_LANGUAGE:C,CXX>:-mfma>)
 endif()
 
 target_include_directories(test_phase12_final_integration PRIVATE
@@ -9469,7 +8634,6 @@ if(WIN32)
     if(MSVC)
         target_link_libraries(test_phase12_final_integration PRIVATE kernel32 ws2_32 psapi)
     else()
-        target_link_libraries(test_phase12_final_integration PRIVATE kernel32 ws2_32 pthread psapi)
     endif()
 endif()
 
@@ -9508,7 +8672,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_quantized_real_model PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_quantized_real_model PROPERTIES
@@ -9545,7 +8708,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_full_pipeline PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_full_pipeline PROPERTIES
@@ -9582,7 +8744,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_debug_abort PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_debug_abort PROPERTIES
@@ -9615,7 +8776,6 @@ endif()
 if(WIN32)
     target_link_libraries(benchmark_tps PRIVATE Threads::Threads)
 else()
-    target_link_libraries(benchmark_tps PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(benchmark_tps PROPERTIES
@@ -9648,7 +8808,6 @@ endif()
 if(WIN32)
     target_link_libraries(benchmark_avx2 PRIVATE Threads::Threads)
 else()
-    target_link_libraries(benchmark_avx2 PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(benchmark_avx2 PROPERTIES
@@ -9682,7 +8841,6 @@ if(WIN32)
         Threads::Threads
     )
 else()
-    target_link_libraries(test_quantized_ops PRIVATE Threads::Threads)
 endif()
 
 set_target_properties(test_quantized_ops PROPERTIES

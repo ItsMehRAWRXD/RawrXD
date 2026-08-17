@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <functional>
 #include <optional>
@@ -68,6 +69,24 @@ struct CLIExecutionResult {
         result.metadata = json.value("metadata", nlohmann::json::object());
         result.timestamp = std::chrono::system_clock::now();
         return result;
+    }
+
+    // Factory helpers
+    static CLIExecutionResult Ok(const std::string& cmd, const std::string& out) {
+        CLIExecutionResult r;
+        r.success = true;
+        r.command = cmd;
+        r.output = out;
+        r.timestamp = std::chrono::system_clock::now();
+        return r;
+    }
+    static CLIExecutionResult Error(const std::string& cmd, const std::string& err) {
+        CLIExecutionResult r;
+        r.success = false;
+        r.command = cmd;
+        r.error = err;
+        r.timestamp = std::chrono::system_clock::now();
+        return r;
     }
 };
 

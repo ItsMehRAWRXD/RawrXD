@@ -611,17 +611,152 @@ bool GGUFWeightLoader::DequantizeQ8_0(const void* src, float* dst, size_t num_el
 }
 
 bool GGUFWeightLoader::DequantizeQ4_K(const void* src, float* dst, size_t num_elements) {
-    // Q4_K: K-quant 4-bit
-    // Simplified implementation - full K-quant is complex
-    // For now, just zero out
-    std::fill(dst, dst + num_elements, 0.0f);
+    // Q4_K: K-quant 4-bit with block size 256
+    // Layout per 256-element superblock:
+    //   2 bytes: scale d (F16)
+    //   2 bytes: min dmin (F16)
+    //   12 bytes: 16 group scales (6-bit packed)
+    //   128 bytes: 256 x 4-bit weights
+    // Total: 144 bytes per 256 elements
+    const uint8_t* src_u8 = static_cast<const uint8_t*>(src);
+    constexpr size_t QK_K = 256;
+    constexpr size_t BLOCK_SIZE = 144;  // 2+2+12+128
+    size_t num_blocks = (num_elements + QK_K - 1) / QK_K;
+
+    for (size_t block = 0; block < num_blocks; ++block) {
+        const uint8_t* block_ptr = src_u8 + block * BLOCK_SIZE;
+
+        // Read scale d (F16 -> F32)
+        uint16_t d_h;
+        std::memcpy(&d_h, block_ptr, sizeof(uint16_t));
+        float d;
+        {
+            uint32_t exp = ((d_h & 0x7C00) + 0x1C000) << 13;
+            uint32_t mant = (d_h & 0x03FF) << 13;
+            uint32_t s = (d_h & 0x8000) << 16;
+            uint32_t f32 = s | exp | mant;
+            std::memcpy(&d, &f32, sizeof(float));
+        }
+
+        // Read min dmin (F16 -> F32)
+        uint16_t dmin_h;
+        std::memcpy(&dmin_h, block_ptr + 2, sizeof(uint16_t));
+        float dmin;
+        {
+            uint32_t exp = ((dmin_h & 0x7C00) + 0x1C000) << 13;
+            uint32_t mant = (dmin_h & 0x03FF) << 13;
+            uint32_t s = (dmin_h & 0x8000) << 16;
+            uint32_t f32 = s | exp | mant;
+            std::memcpy(&dmin, &f32, sizeof(float));
+        }
+
+        // Read 16 group scales (6-bit packed into 12 bytes)
+        // Each scale is 6-bit: scales[i] = (packed[i*6/8] >> shift) & 0x3F
+        uint8_t scales[16];
+        for (int i = 0; i < 16; ++i) {
+            int bit_pos = i * 6;
+            int byte_idx = bit_pos / 8;
+            int shift = bit_pos % 8;
+            uint16_t val = block_ptr[4 + byte_idx] | (block_ptr[4 + byte_idx + 1] << 8);
+            scales[i] = static_cast<uint8_t>((val >> shift) & 0x3F);
+        }
+
+        // Read 256 x 4-bit weights from 128 bytes
+        const uint8_t* qs = block_ptr + 16;  // 4 + 12 = 16
+
+        for (size_t i = 0; i < QK_K; ++i) {
+            size_t idx = block * QK_K + i;
+            if (idx >= num_elements) break;
+
+            // Extract 4-bit weight
+            uint8_t byte = qs[i / 2];
+            int8_t weight = (i % 2 == 0) ? (byte & 0x0F) : ((byte >> 4) & 0x0F);
+
+            // Get group scale for this element (16 elements per group)
+            int group = static_cast<int>(i / 16);
+            float scale = d * static_cast<float>(scales[group]) / 63.0f;
+
+            // Dequantize: value = scale * weight + dmin
+            dst[idx] = scale * static_cast<float>(weight) + dmin;
+        }
+    }
+
     return true;
 }
 
 bool GGUFWeightLoader::DequantizeQ6_K(const void* src, float* dst, size_t num_elements) {
-    // Q6_K: K-quant 6-bit
-    // Simplified implementation
-    std::fill(dst, dst + num_elements, 0.0f);
+    // Q6_K: K-quant 6-bit with block size 256
+    // Layout per 256-element superblock:
+    //   2 bytes: scale d (F16)
+    //   2 bytes: min dmin (F16)
+    //   12 bytes: 16 group scales (6-bit packed)
+    //   192 bytes: 256 x 6-bit weights (packed)
+    // Total: 208 bytes per 256 elements
+    const uint8_t* src_u8 = static_cast<const uint8_t*>(src);
+    constexpr size_t QK_K = 256;
+    constexpr size_t BLOCK_SIZE = 208;  // 2+2+12+192
+    size_t num_blocks = (num_elements + QK_K - 1) / QK_K;
+
+    for (size_t block = 0; block < num_blocks; ++block) {
+        const uint8_t* block_ptr = src_u8 + block * BLOCK_SIZE;
+
+        // Read scale d (F16 -> F32)
+        uint16_t d_h;
+        std::memcpy(&d_h, block_ptr, sizeof(uint16_t));
+        float d;
+        {
+            uint32_t exp = ((d_h & 0x7C00) + 0x1C000) << 13;
+            uint32_t mant = (d_h & 0x03FF) << 13;
+            uint32_t s = (d_h & 0x8000) << 16;
+            uint32_t f32 = s | exp | mant;
+            std::memcpy(&d, &f32, sizeof(float));
+        }
+
+        // Read min dmin (F16 -> F32)
+        uint16_t dmin_h;
+        std::memcpy(&dmin_h, block_ptr + 2, sizeof(uint16_t));
+        float dmin;
+        {
+            uint32_t exp = ((dmin_h & 0x7C00) + 0x1C000) << 13;
+            uint32_t mant = (dmin_h & 0x03FF) << 13;
+            uint32_t s = (dmin_h & 0x8000) << 16;
+            uint32_t f32 = s | exp | mant;
+            std::memcpy(&dmin, &f32, sizeof(float));
+        }
+
+        // Read 16 group scales (6-bit packed into 12 bytes)
+        uint8_t scales[16];
+        for (int i = 0; i < 16; ++i) {
+            int bit_pos = i * 6;
+            int byte_idx = bit_pos / 8;
+            int shift = bit_pos % 8;
+            uint16_t val = block_ptr[4 + byte_idx] | (block_ptr[4 + byte_idx + 1] << 8);
+            scales[i] = static_cast<uint8_t>((val >> shift) & 0x3F);
+        }
+
+        // Read 256 x 6-bit weights from 192 bytes
+        const uint8_t* qs = block_ptr + 16;
+
+        for (size_t i = 0; i < QK_K; ++i) {
+            size_t idx = block * QK_K + i;
+            if (idx >= num_elements) break;
+
+            // Extract 6-bit weight
+            int bit_pos = static_cast<int>(i * 6);
+            int byte_idx = bit_pos / 8;
+            int shift = bit_pos % 8;
+            uint16_t val = qs[byte_idx] | (qs[byte_idx + 1] << 8);
+            int8_t weight = static_cast<int8_t>((val >> shift) & 0x3F);
+
+            // Get group scale
+            int group = static_cast<int>(i / 16);
+            float scale = d * static_cast<float>(scales[group]) / 63.0f;
+
+            // Dequantize
+            dst[idx] = scale * static_cast<float>(weight) + dmin;
+        }
+    }
+
     return true;
 }
 

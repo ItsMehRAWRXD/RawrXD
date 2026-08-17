@@ -1416,7 +1416,7 @@ bool WindowManager::RestoreWindow(HWND hwnd) {
 }
 
 bool WindowManager::CloseWindow(HWND hwnd) {
-    return PostMessageW(hwnd, WM_CLOSE, 0, 0) == TRUE;
+    return ::PostMessageW(hwnd, WM_CLOSE, 0, 0) == TRUE;
 }
 
 bool WindowManager::MoveWindow(HWND hwnd, int x, int y, int width, int height) {
@@ -1436,11 +1436,11 @@ bool WindowManager::EnableWindow(HWND hwnd, bool enable) {
 }
 
 LRESULT WindowManager::SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    return SendMessageW(hwnd, msg, wParam, lParam);
+    return ::SendMessageW(hwnd, msg, wParam, lParam);
 }
 
 bool WindowManager::PostMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    return PostMessageW(hwnd, msg, wParam, lParam) == TRUE;
+    return ::PostMessageW(hwnd, msg, wParam, lParam) == TRUE;
 }
 
 HWND WindowManager::GetDesktopWindow() {

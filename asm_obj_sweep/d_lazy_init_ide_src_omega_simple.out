@@ -1,0 +1,79 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(2) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(3) : error A2008:syntax error : .
+
+***********
+ASCII build
+***********
+
+C:\masm32\include\windows.inc(9750) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(10183) : error A2008:syntax error : frame
+C:\masm32\include\windows.inc(16333) : error A2008:syntax error : dword
+C:\masm32\include\windows.inc(18862) : error A2008:syntax error : Frame
+C:\masm32\include\windows.inc(24749) : error A2042:statement too complex
+C:\masm32\include\winextra.inc(11052) : error A2026:constant expected
+C:\masm32\include\winextra.inc(11053) : error A2026:constant expected
+C:\masm32\macros\macros.asm(2704) : error A2044:invalid character in file
+C:\masm32\macros\macros.asm(2706) : error A2044:invalid character in file
+C:\masm32\macros\macros.asm(2853) : error A2044:invalid character in file
+C:\masm32\macros\macros.asm(2857) : error A2044:invalid character in file
+C:\masm32\macros\macros.asm(2872) : error A2044:invalid character in file
+C:\masm32\macros\macros.asm(2876) : error A2044:invalid character in file
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(55) : error A2008:syntax error : StdOut
+ print(2): Macro Called From
+  D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(55): Main Line Code
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(56) : error A2008:syntax error : WriteConsoleA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(58) : error A2008:syntax error : StdOut
+ print(2): Macro Called From
+  D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(58): Main Line Code
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(65) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(79) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(85) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(91) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(95) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(136) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(153) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(154) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(177) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(184) : error A2008:syntax error : wsprintfA
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(185) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(187) : error A2070:invalid instruction operands
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(200) : error A2008:syntax error : offset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(252) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(253) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(270) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(271) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(274) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(292) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(293) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(294) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(297) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(301) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(302) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(303) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(306) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(310) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(311) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(312) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(315) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(326) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(329) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(330) : error A2008:syntax error : invoke
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(331) : error A2008:syntax error : start
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(331) : error A2088:END directive required at end of file
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(68) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(202) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(205) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(219) : error A2006:undefined symbol : start_offset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(220) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(223) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(236) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(239) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(240) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(241) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(245) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(249) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(250) : error A2229:cannot use labels and 32-bit addressing in the same expression
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(256) : error A2081:missing operand after unary operator
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(140) : warning A6004:procedure argument or local not referenced : fname
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_omega_simple.asm(140) : warning A6004:procedure argument or local not referenced : bytes_read

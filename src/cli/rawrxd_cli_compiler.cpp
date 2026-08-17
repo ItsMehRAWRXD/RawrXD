@@ -2013,9 +2013,17 @@ private:
 };
 
 // ============================================================================
-// Entry Point
+// Service Entry Point (Phase 15B: Unified CLI)
 // ============================================================================
-int main(int argc, char* argv[]) {
+#include "cli_entrypoints.hpp"
+
+namespace RawrXD::CLI {
+
+extern "C" int RunCompilerCLI(int argc, char** argv) {
     CLI cli;
     return cli.run(argc, argv);
 }
+
+} // namespace RawrXD::CLI
+
+// (Standalone diagnostic main removed — use src/cli/standalone_compiler.cpp for separate binary)

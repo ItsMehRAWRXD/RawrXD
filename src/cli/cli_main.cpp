@@ -201,8 +201,13 @@ int main(int argc, char* argv[]) {
     // Check for compiler commands first
     if (argc >= 2 && argv[1]) {
         std::string cmd = argv[1];
-        if (cmd == "compiler" || cmd == "compile" || cmd == "build" || cmd == "run") {
+        if (cmd == "compiler" || cmd == "compile" || cmd == "build") {
             return RawrXD::CLI::CompilerCommands::Execute(argc - 1, argv + 1);
+        }
+        // Route `rawrxd run <model> "<prompt>"` to unified run command
+        if (cmd == "run" && argc >= 4) {
+            extern int RawrXD_RunCommand(int argc, char** argv);
+            return RawrXD_RunCommand(argc - 2, argv + 2);
         }
     }
     

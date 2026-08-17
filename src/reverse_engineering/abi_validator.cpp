@@ -496,31 +496,4 @@ bool ABIValidator::CheckShadowSpace(void* func, const char* name) {
 
 } // namespace RawrCodex
 
-// Main entry point
-int main(int argc, char* argv[]) {
-    ABITestConfig config = {
-        .iterations = 1,
-        .verbose = false
-    };
-    
-    // Parse arguments
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--verbose") == 0) {
-            config.verbose = true;
-        }
-        else if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
-            config.iterations = atoi(argv[++i]);
-        }
-        else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            printf("ABI Validator for RawrCodex Multi-Architecture Decoder\n");
-            printf("Usage: %s [options]\n", argv[0]);
-            printf("Options:\n");
-            printf("  -v, --verbose     Enable verbose output\n");
-            printf("  -i <n>            Run n iterations (default: 1)\n");
-            printf("  -h, --help        Show this help\n");
-            return 0;
-        }
-    }
-    
-    return RunABITests(config);
-}
+// (Standalone main removed — use test/abi_test.cpp for diagnostic binary)

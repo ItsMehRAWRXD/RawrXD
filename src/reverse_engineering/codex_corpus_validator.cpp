@@ -215,33 +215,4 @@ void PrintSummary(const std::vector<ValidationResult>& results, size_t passed, s
     }
 }
 
-int main(int argc, char* argv[]) {
-    printf("╔══════════════════════════════════════════════════════════════╗\n");
-    printf("║     RawrCodex Multi-Architecture Decoder Corpus Validator    ║\n");
-    printf("╚══════════════════════════════════════════════════════════════╝\n");
-    
-    std::vector<ValidationResult> results;
-    size_t totalPassed = 0;
-    size_t totalFailed = 0;
-    
-    // Run ARM64 corpus
-    RunCorpusSuite(ARM64_CORPUS, sizeof(ARM64_CORPUS) / sizeof(ARM64_CORPUS[0]),
-                   "ARM64 Instruction Corpus", results, totalPassed, totalFailed);
-    
-    // Run MIPS32 corpus
-    RunCorpusSuite(MIPS32_CORPUS, sizeof(MIPS32_CORPUS) / sizeof(MIPS32_CORPUS[0]),
-                   "MIPS32 Instruction Corpus", results, totalPassed, totalFailed);
-    
-    // Run RISC-V32 corpus
-    RunCorpusSuite(RISCV32_CORPUS, sizeof(RISCV32_CORPUS) / sizeof(RISCV32_CORPUS[0]),
-                   "RISC-V32 Instruction Corpus", results, totalPassed, totalFailed);
-    
-    // Run edge cases
-    RunCorpusSuite(EDGE_CASE_CORPUS, sizeof(EDGE_CASE_CORPUS) / sizeof(EDGE_CASE_CORPUS[0]),
-                   "Edge Cases Corpus", results, totalPassed, totalFailed);
-    
-    // Print summary
-    PrintSummary(results, totalPassed, totalFailed);
-    
-    return (totalFailed > 0) ? 1 : 0;
-}
+// (Standalone main removed — use test/corpus_validator_test.cpp for diagnostic binary)

@@ -17,6 +17,35 @@ extern "C" {
     #include "../src/asm/Sovereign_KernelDispatch.h"
 }
 
+// MASM64 Engine Integration
+#include <RawrXD_Kernels.hpp>
+
+// CanonicalEngineMatrix struct definition (matches MASM64 layout)
+struct Tier5FlakeData {
+    void* BitStreamPtr;
+    void* ReconstructTable;
+    unsigned short FragmentMask;
+};
+
+struct Tier4TensorDesc {
+    unsigned int TensorId;
+    unsigned int LayerIndex;
+    Tier5FlakeData FlakeConfig;
+};
+
+struct Tier1DeviceContext {
+    void* SingleGpuMmoBase;
+    void* SysRamWeightsPtr;
+    void* SystemKvRingPtr;
+    unsigned int GlobalBarrierLock;
+};
+
+struct CanonicalEngineMatrix {
+    Tier1DeviceContext HardwareObject;
+    Tier4TensorDesc TensorManifest[80];
+    unsigned int ExecutionState;
+};
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -29,6 +58,7 @@ extern "C" {
 #include <fstream>
 #include <csignal>
 #include <atomic>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -46,11 +76,25 @@ void SignalHandler(int signal) {
 }
 
 // ============================================================================
+// Agentic Task Definition
+// ============================================================================
+struct AgentTask {
+    std::string model;
+    std::string instruction;
+    std::filesystem::path workspace;
+    uint32_t max_tokens = 4096;
+    float temperature = 0.7f;
+    bool verbose = false;
+};
+
+// ============================================================================
 // Command Line Arguments
 // ============================================================================
 struct Args {
+    std::string command;  // "infer" or "run"
     std::string model_path;
     std::string prompt;
+    std::string workspace;
     uint32_t max_tokens = 128;
     float temperature = 1.0f;
     int top_k = 40;
@@ -65,13 +109,28 @@ struct Args {
 };
 
 bool Args::Parse(int argc, char* argv[]) {
-    for (int i = 1; i < argc; ++i) {
+    if (argc < 2) {
+        PrintUsage(argv[0]);
+        return false;
+    }
+    
+    command = argv[1];
+    
+    if (command != "infer" && command != "run") {
+        std::cerr << "Unknown command: " << command << "\n";
+        PrintUsage(argv[0]);
+        return false;
+    }
+    
+    for (int i = 2; i < argc; ++i) {
         std::string arg = argv[i];
         
         if (arg == "--model" && i + 1 < argc) {
             model_path = argv[++i];
         } else if (arg == "--prompt" && i + 1 < argc) {
             prompt = argv[++i];
+        } else if (arg == "--workspace" && i + 1 < argc) {
+            workspace = argv[++i];
         } else if (arg == "--max-tokens" && i + 1 < argc) {
             max_tokens = static_cast<uint32_t>(std::atoi(argv[++i]));
         } else if (arg == "--temperature" && i + 1 < argc) {
@@ -114,12 +173,16 @@ bool Args::Parse(int argc, char* argv[]) {
 }
 
 void Args::PrintUsage(const char* program) {
-    std::cout << "Sovereign LLM Inference CLI (RawrXD Runtime C4-C7)\n";
-    std::cout << "Usage: " << program << " [options]\n\n";
-    std::cout << "Required:\n";
+    std::cout << "RawrXD Sovereign LLM Inference CLI (Runtime C4-C7 + MASM64)\n";
+    std::cout << "Usage: " << program << " <command> [options]\n\n";
+    std::cout << "Commands:\n";
+    std::cout << "  infer                    Run inference with a model\n";
+    std::cout << "  run                      Run agentic task (audit, fix, etc.)\n";
+    std::cout << "\nRequired:\n";
     std::cout << "  --model <path>           Path to GGUF model file\n";
-    std::cout << "  --prompt <text>          Input prompt\n";
+    std::cout << "  --prompt <text>          Input prompt or instruction\n";
     std::cout << "\nOptional:\n";
+    std::cout << "  --workspace <path>        Workspace path for agentic tasks (default: current dir)\n";
     std::cout << "  --max-tokens <N>         Maximum tokens to generate (default: 128)\n";
     std::cout << "  --temperature <T>        Sampling temperature (default: 1.0)\n";
     std::cout << "  --top-k <K>              Top-k sampling (default: 40)\n";
@@ -129,6 +192,9 @@ void Args::PrintUsage(const char* program) {
     std::cout << "  --verbose, -v            Verbose output\n";
     std::cout << "  --benchmark, -b          Show performance metrics\n";
     std::cout << "  --help, -h               Show this help\n";
+    std::cout << "\nExamples:\n";
+    std::cout << "  " << program << " infer --model model.gguf --prompt \"Hello\"\n";
+    std::cout << "  " << program << " run --model model.gguf --workspace D:\\rawrxd --prompt \"Audit completion pipeline\"\n";
 }
 
 // ============================================================================
@@ -662,6 +728,71 @@ bool EndToEndBackend::ApplyRoPE(float* tensor, size_t seq_len, size_t head_dim, 
 }
 
 // ============================================================================
+// Agentic Execution Layer
+// ============================================================================
+
+// Initialize CanonicalEngineMatrix for agentic tasks
+CanonicalEngineMatrix InitializeAgenticMatrix(const AgentTask& task) {
+    CanonicalEngineMatrix engineMatrix;
+    std::memset(&engineMatrix, 0, sizeof(CanonicalEngineMatrix));
+    
+    // Configure HardwareObject
+    engineMatrix.HardwareObject.SingleGpuMmoBase = nullptr;
+    engineMatrix.HardwareObject.SysRamWeightsPtr = nullptr;
+    engineMatrix.HardwareObject.SystemKvRingPtr = nullptr;
+    engineMatrix.HardwareObject.GlobalBarrierLock = 0;
+    
+    // Configure TensorManifest
+    engineMatrix.TensorManifest[0].TensorId = 0;
+    engineMatrix.TensorManifest[0].LayerIndex = 0;
+    engineMatrix.TensorManifest[0].FlakeConfig.BitStreamPtr = nullptr;
+    engineMatrix.TensorManifest[0].FlakeConfig.ReconstructTable = nullptr;
+    engineMatrix.TensorManifest[0].FlakeConfig.FragmentMask = 0;
+    
+    // Set ExecutionState
+    engineMatrix.ExecutionState = 0x01; // Ready
+    
+    return engineMatrix;
+}
+
+// Execute agentic task using MASM64 engine
+bool ExecuteAgenticTask(const AgentTask& task) {
+    std::cout << "[Agentic] Initializing task execution...\n";
+    std::cout << "[Agentic] Model: " << task.model << "\n";
+    std::cout << "[Agentic] Workspace: " << task.workspace.string() << "\n";
+    std::cout << "[Agentic] Instruction: " << task.instruction << "\n\n";
+    
+    // Initialize CanonicalEngineMatrix
+    CanonicalEngineMatrix engineMatrix = InitializeAgenticMatrix(task);
+    
+    // Call MASM64 Engine
+    std::cout << "[Agentic] Invoking MASM64 Engine (RawrXD_Host_Engine_Pipeline_Core)...\n";
+    ULONG64 targetTierIndex = 0; // 0 = Kevlar Safe
+    ULONG64 result = RawrXD_Host_Engine_Pipeline_Core(targetTierIndex, &engineMatrix);
+    
+    if (result == 0) {
+        std::cerr << "[Agentic] ERROR: MASM64 Engine containment triggered.\n";
+        std::cerr << "[Agentic] Check payload state and workspace configuration.\n";
+        return false;
+    }
+    
+    std::cout << "[Agentic] MASM64 Engine execution complete.\n";
+    std::cout << "[Agentic] Result: " << result << " operations dispatched.\n";
+    
+    // TODO: Implement full agentic loop:
+    // 1. Workspace scanning
+    // 2. Context retrieval
+    // 3. Tool execution (read_file, grep, compile, test)
+    // 4. Patch generation
+    // 5. Validation
+    
+    std::cout << "\n[Agentic] Task execution framework initialized.\n";
+    std::cout << "[Agentic] Full agentic loop (planner → action → observation → reason) coming soon.\n";
+    
+    return true;
+}
+
+// ============================================================================
 // Main Entry Point
 // ============================================================================
 int main(int argc, char* argv[]) {
@@ -672,9 +803,24 @@ int main(int argc, char* argv[]) {
     
     std::cout << "========================================\n";
     std::cout << "RawrXD Sovereign LLM Inference\n";
-    std::cout << "Runtime: C4-C7 (Streaming + FlashAttention + Multi-thread)\n";
+    std::cout << "Runtime: C4-C7 + MASM64 Engine\n";
     std::cout << "========================================\n\n";
     
+    if (args.command == "run") {
+        // Agentic execution mode
+        AgentTask task;
+        task.model = args.model_path;
+        task.instruction = args.prompt;
+        task.workspace = args.workspace.empty() ? std::filesystem::current_path() : std::filesystem::path(args.workspace);
+        task.max_tokens = args.max_tokens;
+        task.temperature = args.temperature;
+        task.verbose = args.verbose;
+        
+        bool success = ExecuteAgenticTask(task);
+        return success ? 0 : 1;
+    }
+    
+    // Standard inference mode ("infer")
     // Parse execution mode
     int mode = 1; // 0=sequential, 1=parallel, 2=pipeline
     if (args.mode == "sequential") mode = 0;

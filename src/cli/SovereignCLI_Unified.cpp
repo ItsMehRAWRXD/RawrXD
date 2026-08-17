@@ -576,7 +576,8 @@ int RegistryDispatch(const char* subsystem, int argc, char** argv, char* output,
     return Sovereign_Dispatch(subsystem, argc, argv, output, output_size);
 }
 
-int main(int argc, char* argv[]) {
+// Service entry point (NOT main - called by CommandBus)
+extern "C" int RunUnifiedCLI(int argc, char* argv[]) {
     // Force console output
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);

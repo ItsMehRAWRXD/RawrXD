@@ -1,0 +1,102 @@
+ Assembling: D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(39) : error A2189:invalid combination with segment alignment : 64
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(130) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(146) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(150) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(190) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(204) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(211) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(237) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(242) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(243) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(244) : error A2008:syntax error : db
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(293) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(330) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(332) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(368) : error A2008:syntax error : bits
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(369) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(417) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(419) : error A2008:syntax error : g_input_filename
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(420) : error A2008:syntax error : g_output_filename
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(421) : error A2008:syntax error : g_current_stage
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(422) : error A2008:syntax error : g_error_code
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(423) : error A2008:syntax error : g_error_line
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(424) : error A2008:syntax error : g_error_column
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(427) : error A2008:syntax error : g_source_buffer
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(428) : error A2008:syntax error : g_source_size
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(429) : error A2008:syntax error : g_source_pos
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(430) : error A2008:syntax error : g_current_line
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(431) : error A2008:syntax error : g_current_column
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(434) : error A2008:syntax error : g_tokens
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(435) : error A2008:syntax error : g_token_count
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(436) : error A2008:syntax error : g_current_token
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(439) : error A2008:syntax error : g_ast_nodes
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(440) : error A2008:syntax error : g_ast_node_count
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(441) : error A2008:syntax error : g_ast_root
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(444) : error A2008:syntax error : g_symbols
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(445) : error A2008:syntax error : g_symbol_count
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(446) : error A2008:syntax error : g_current_section
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(447) : error A2008:syntax error : g_current_offset
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(450) : error A2008:syntax error : g_machine_code
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(451) : error A2008:syntax error : g_machine_code_size
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(452) : error A2008:syntax error : g_relocation_count
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(453) : error A2008:syntax error : g_relocations
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(456) : error A2008:syntax error : g_pe_buffer
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(457) : error A2008:syntax error : g_pe_size
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(458) : error A2008:syntax error : g_entry_point_rva
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(461) : error A2008:syntax error : g_temp_buffer
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(462) : error A2008:syntax error : g_line_buffer
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(463) : error A2008:syntax error : g_identifier_buffer
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(465) : error A2008:syntax error : section
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(466) : error A2008:syntax error : global
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(467) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(468) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(469) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(470) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(471) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(472) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(473) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(474) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(475) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(476) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(477) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(478) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(479) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(480) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(481) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(482) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(483) : error A2008:syntax error : in directive
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(531) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(545) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(560) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(575) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(579) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(583) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(595) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(654) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(661) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(667) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(671) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(675) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(679) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(683) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(687) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(691) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(694) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(726) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(728) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(740) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(748) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(757) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(771) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(779) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(788) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(794) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(795) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(798) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(810) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(820) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(830) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(876) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(879) : error A2008:syntax error : .
+D:\rawrxd\history\runoff\part_0008\d__lazy init ide_src_masm_masm_solo_compiler.asm(918) : fatal error A1012:error count exceeds 100; stopping assembly

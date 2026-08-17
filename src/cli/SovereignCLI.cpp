@@ -1085,37 +1085,4 @@ void parseGlobalOptions(int argc, char* argv[]) {
     }
 }
 
-//==============================================================================
-// Main Entry Point
-//==============================================================================
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        printUsage(argv[0]);
-        return 1;
-    }
-    
-    // Initialize command registry
-    initializeCommands();
-    
-    // Parse global options
-    parseGlobalOptions(argc, argv);
-    
-    const char* command = argv[1];
-    
-    // Handle help specially
-    if (strcmp(command, "help") == 0 || strcmp(command, "--help") == 0 || strcmp(command, "-h") == 0) {
-        printUsage(argv[0]);
-        return 0;
-    }
-    
-    // Look up command
-    auto it = g_commands.find(command);
-    if (it != g_commands.end()) {
-        return it->second.func(argc, argv);
-    }
-    
-    // Unknown command
-    printf("Unknown command: %s\n\n", command);
-    printUsage(argv[0]);
-    return 1;
 }

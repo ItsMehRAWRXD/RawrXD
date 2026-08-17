@@ -583,42 +583,4 @@ bool MalformedInputHandler::TestResilience(DecodeFn decoder, ArchType arch,
 
 } // namespace RawrCodex
 
-// Main entry point
-int main(int argc, char* argv[]) {
-    FuzzingEngine::FuzzConfig config = {
-        .seed = std::chrono::high_resolution_clock::now().time_since_epoch().count(),
-        .iterationCount = 100000,
-        .targetArch = ArchType::ARM_64,
-        .testMalformed = true,
-        .testTruncated = true,
-        .testReserved = true
-    };
-    
-    // Parse arguments
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            config.seed = strtoull(argv[++i], nullptr, 10);
-        }
-        else if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
-            config.iterationCount = strtoull(argv[++i], nullptr, 10);
-        }
-        else if (strcmp(argv[i], "-a") == 0 && i + 1 < argc) {
-            config.targetArch = static_cast<ArchType>(atoi(argv[++i]));
-        }
-        else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            printf("Fuzzing Engine for RawrCodex Multi-Architecture Decoder\n");
-            printf("Usage: %s [options]\n", argv[0]);
-            printf("Options:\n");
-            printf("  -s <seed>    Random seed (default: time-based)\n");
-            printf("  -n <count>   Number of iterations (default: 100000)\n");
-            printf("  -a <arch>    Architecture (1=x64, 4=ARM64, 7=MIPS32, 9=RISCV32)\n");
-            printf("  -h, --help   Show this help\n");
-            return 0;
-        }
-    }
-    
-    FuzzingEngine::FuzzResult result;
-    bool success = FuzzingEngine::Run(config, &result);
-    
-    return success ? 0 : 1;
-}
+// (Standalone main removed — use test/codex_fuzz_test.cpp for diagnostic binary)

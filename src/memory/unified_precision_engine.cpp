@@ -126,9 +126,19 @@ std::vector<PrecisionEngine::LayerDecision> PrecisionEngine::decideBatch(
             case UnifiedMemoryConfig::Precision::ADAPTIVE: precision_ratio = 0.2f; break;
         }
         
-        // Placeholder estimate (would use actual layer size in practice)
+        // Estimate layer bytes based on importance score and layer type
+        // Attention layers are typically ~4x larger than FFN layers per parameter
+        float type_multiplier = 1.0f;
+        if (layers[i].layer_type == "attention") type_multiplier = 4.0f;
+        else if (layers[i].layer_type == "feedforward") type_multiplier = 2.0f;
+        else if (layers[i].layer_type == "embedding") type_multiplier = 1.0f;
+
+        // Weight by importance score (higher importance = more parameters typically)
+        float importance_weight = 0.5f + layers[i].importance_score;
+
         decision.estimated_bytes = static_cast<size_t>(
-            (total_budget / layers.size()) * precision_ratio * compression_ratio
+            (total_budget / layers.size()) * precision_ratio * compression_ratio *
+            type_multiplier * importance_weight
         );
         
         decision.confidence = 1.0f - std::abs(layers[i].importance_score - 0.5f) * 2.0f;

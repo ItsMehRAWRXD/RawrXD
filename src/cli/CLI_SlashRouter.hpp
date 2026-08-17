@@ -32,7 +32,7 @@ struct SlashCommandResult {
     std::string error;
 };
 
-using SlashCommandHandler = std::function<SlashCommandResult(const std::vector<std::string>&, void*)>;
+using SlashCommandHandler = std::function<SlashCommandResult(const std::vector<std::string>&, CLIContext*)>;
 
 // ============================================================================
 // CLI Context - Provides IDE-like interface for commands

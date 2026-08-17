@@ -13,6 +13,11 @@
 namespace RawrXD {
 namespace Runtime {
 
+BSMSymbolResolver& BSMSymbolResolver::instance() {
+    static BSMSymbolResolver s;
+    return s;
+}
+
 // ============================================================================
 // Symbol Resolution Implementation
 // ============================================================================

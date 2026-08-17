@@ -773,7 +773,7 @@ void RegisterCODEXCommands() {
         "codex <subcommand> [options]",
         ExecutionContext::Capability::ANALYSIS,
         CODEXCommands::CODEXMain,
-        false, false, false
+        false, false
     });
     
     // PE Analysis shortcuts

@@ -27,6 +27,11 @@
 using namespace sovereign;
 
 //==============================================================================
+// Agent Task Definition
+//==============================================================================
+#include "AgentTask.hpp"
+
+//==============================================================================
 // CLI Commands
 //==============================================================================
 void printUsage(const char* program) {
@@ -38,6 +43,50 @@ void printUsage(const char* program) {
     printf("  --validate          Validate MASM vs Reference\n");
     printf("  --info              Show system info\n");
     printf("  --help              Show this help\n");
+    printf("  run [model] [instruction]  Run an agentic task\n");
+}
+
+//==============================================================================
+// Parse Agent Task
+//==============================================================================
+AgentTask ParseAgentTask(int argc, char* argv[]) {
+    AgentTask task;
+    
+    if (argc < 4) {
+        fprintf(stderr, "Error: Missing arguments for 'run' command.\n");
+        fprintf(stderr, "Usage: %s run [model] [instruction]\n", argv[0]);
+        exit(1);
+    }
+    
+    task.model = argv[2];
+    task.instruction = argv[3];
+    task.workspace = std::filesystem::current_path(); // Default to current directory
+    
+    // Check for workspace override
+    for (int i = 4; i < argc; i++) {
+        if (strcmp(argv[i], "--workspace") == 0 && i + 1 < argc) {
+            task.workspace = argv[i + 1];
+            i++; // Skip next argument
+        }
+    }
+    
+    return task;
+}
+
+//==============================================================================
+// Execute Agent Task
+//==============================================================================
+void ExecuteAgentTask(const AgentTask& task) {
+    printf("Executing Agent Task:\n");
+    printf("  Model: %s\n", task.model.c_str());
+    printf("  Instruction: %s\n", task.instruction.c_str());
+    printf("  Workspace: %s\n", task.workspace.string().c_str());
+    
+    // TODO: Implement agentic execution loop
+    // 1. Initialize Workspace Intelligence Layer
+    // 2. Build Context for the Instruction
+    // 3. Run Agent Loop (Plan → Action → Observation → Repeat)
+    // 4. Generate Audit Report
 }
 
 void showSystemInfo() {

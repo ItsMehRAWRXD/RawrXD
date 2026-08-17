@@ -11,6 +11,36 @@
 #include <string.h>
 #include <stdlib.h>
 
+// MASM64 Engine Integration
+#include <RawrXD_Kernels.hpp>
+#include <cstring>
+
+// Define CanonicalEngineMatrix struct to match MASM64 layout
+struct Tier5FlakeData {
+    void* BitStreamPtr;
+    void* ReconstructTable;
+    unsigned short FragmentMask;
+};
+
+struct Tier4TensorDesc {
+    unsigned int TensorId;
+    unsigned int LayerIndex;
+    Tier5FlakeData FlakeConfig;
+};
+
+struct Tier1DeviceContext {
+    void* SingleGpuMmoBase;
+    void* SysRamWeightsPtr;
+    void* SystemKvRingPtr;
+    unsigned int GlobalBarrierLock;
+};
+
+struct CanonicalEngineMatrix {
+    Tier1DeviceContext HardwareObject;
+    Tier4TensorDesc TensorManifest[80];
+    unsigned int ExecutionState;
+};
+
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
@@ -54,30 +84,43 @@ void SetStatusText(const char* text) {
 }
 
 // ============================================================================
-// Simulate token streaming
+// Call MASM64 Engine for Token Streaming
 // ============================================================================
-void SimulateTokenStreaming() {
-    LogMessage("[ML] Starting token streaming simulation...");
+void InvokeMASM64Engine() {
+    LogMessage("[ML] Invoking MASM64 Engine for token streaming...");
     SetStatusText("Streaming...");
     
-    const char* tokens[] = {
-        "```cpp\n",
-        "// Auto-generated code\n",
-        "void process() {\n",
-        "    for (int i = 0; i < 10; i++) {\n",
-        "        printf(\"Value: %d\\n\", i);\n",
-        "    }\n",
-        "}\n",
-        "```\n"
-    };
+    // Initialize CanonicalEngineMatrix
+    CanonicalEngineMatrix engineMatrix;
+    std::memset(&engineMatrix, 0, sizeof(CanonicalEngineMatrix));
     
-    for (int i = 0; i < sizeof(tokens) / sizeof(tokens[0]); i++) {
-        LogMessage(tokens[i]);
-        Sleep(100);  // Simulate token delay
+    // Configure HardwareObject
+    engineMatrix.HardwareObject.SingleGpuMmoBase = nullptr; // Replace with actual GPU base address
+    engineMatrix.HardwareObject.SysRamWeightsPtr = nullptr; // Replace with actual weights pointer
+    engineMatrix.HardwareObject.SystemKvRingPtr = nullptr; // Replace with actual KV cache pointer
+    engineMatrix.HardwareObject.GlobalBarrierLock = 0; // Unlocked
+    
+    // Configure TensorManifest (example: first tensor)
+    engineMatrix.TensorManifest[0].TensorId = 0;
+    engineMatrix.TensorManifest[0].LayerIndex = 0;
+    engineMatrix.TensorManifest[0].FlakeConfig.BitStreamPtr = nullptr; // Replace with actual bitstream pointer
+    engineMatrix.TensorManifest[0].FlakeConfig.ReconstructTable = nullptr; // Replace with actual table
+    engineMatrix.TensorManifest[0].FlakeConfig.FragmentMask = 0;
+    
+    // Set ExecutionState
+    engineMatrix.ExecutionState = 0x01; // Ready
+    
+    // Call MASM64 Engine
+    ULONG64 targetTierIndex = 0; // 0 = Kevlar Safe, 1 = Raw Register Saturation
+    ULONG64 result = RawrXD_Host_Engine_Pipeline_Core(targetTierIndex, &engineMatrix);
+    
+    if (result == 0) {
+        LogMessage("[ML] MASM64 Engine containment triggered. Check payload state.");
+        SetStatusText("Error: Engine containment");
+    } else {
+        LogMessage("[ML] MASM64 Engine token streaming complete");
+        SetStatusText("Ready");
     }
-    
-    LogMessage("[ML] Token streaming complete");
-    SetStatusText("Ready");
 }
 
 // ============================================================================
@@ -99,8 +142,8 @@ void OnExecuteClick() {
     snprintf(msg, sizeof(msg), "[USER] %s\r\n", prompt);
     LogMessage(msg);
     
-    // Simulate async token streaming
-    SimulateTokenStreaming();
+    // Call MASM64 Engine for token streaming
+    InvokeMASM64Engine();
 }
 
 // ============================================================================

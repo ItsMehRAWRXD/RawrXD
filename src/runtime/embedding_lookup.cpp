@@ -121,41 +121,59 @@ bool EmbeddingLookup::LoadWeightsFromModel(const model::ModelContext& model) {
     // Determine if tensor is transposed
     bool is_transposed = (dim0 == embedding_dim_ && dim1 == vocab_size_);
     
-    // Load tensor data based on type
-    // Note: In a real implementation, we'd mmap the file and read directly
-    // For now, we assume the data is accessible
-    
-    // Get tensor data from model file
-    // This is a simplified version - real implementation would read from GGUF
-    const void* tensor_data = nullptr;  // Would be mapped from file
-    size_t tensor_size = tensor->size;
-    
-    // For now, create synthetic weights for testing
-    // In production, this would read from the GGUF file at tensor->offset
-    weight_data_.resize(vocab_size_ * embedding_dim_);
-    
-    // Initialize with random-ish values for testing
-    // Real implementation would read actual weights from file
-    for (size_t i = 0; i < weight_data_.size(); ++i) {
-        // Simple hash-based initialization for deterministic testing
-        uint32_t hash = static_cast<uint32_t>(i * 0x9e3779b9);
-        weight_data_[i] = (static_cast<float>(hash % 1000) / 1000.0f) - 0.5f;
-        weight_data_[i] *= 0.02f;  // Scale like typical embeddings
+    // Load tensor data from model file using ModelContext
+    auto tensor_data = model.LoadTensorData(*tensor);
+    if (tensor_data.empty()) {
+        last_error_ = "Failed to load tensor data from GGUF file";
+        return false;
     }
-    
-    // Store transpose flag for lookup
-    // Note: This would be used when reading actual tensor data
-    (void)is_transposed;  // Suppress unused warning for now
-    
-    // TODO: Implement actual GGUF tensor reading
-    // switch (tensor->type) {
-    //     case 0: return LoadF32Weights(tensor_data, tensor_size);
-    //     case 1: return LoadF16Weights(tensor_data, tensor_size);
-    //     case 2: return LoadQ4_0Weights(tensor_data, tensor_size);
-    //     case 8: return LoadQ8_0Weights(tensor_data, tensor_size);
-    //     default: ...
-    // }
-    
+
+    weight_data_.resize(vocab_size_ * embedding_dim_);
+
+    // Handle different tensor types
+    switch (tensor->type) {
+        case 0:  // F32
+            if (!LoadF32Weights(tensor_data.data(), tensor_data.size())) {
+                return false;
+            }
+            break;
+        case 1:  // F16
+            if (!LoadF16Weights(tensor_data.data(), tensor_data.size())) {
+                return false;
+            }
+            break;
+        case 2:  // Q4_0
+            if (!LoadQ4_0Weights(tensor_data.data(), tensor_data.size())) {
+                return false;
+            }
+            break;
+        case 3:  // Q4_1
+            if (!LoadQ4_1Weights(tensor_data.data(), tensor_data.size())) {
+                return false;
+            }
+            break;
+        case 8:  // Q8_0
+            if (!LoadQ8_0Weights(tensor_data.data(), tensor_data.size())) {
+                return false;
+            }
+            break;
+        default:
+            last_error_ = "Unsupported tensor type: " + tensor->GetTypeName();
+            return false;
+    }
+
+    // Handle transposed layout if needed
+    if (is_transposed) {
+        // Transpose from [embedding_dim, vocab_size] to [vocab_size, embedding_dim]
+        std::vector<float> transposed(vocab_size_ * embedding_dim_);
+        for (int v = 0; v < vocab_size_; ++v) {
+            for (int e = 0; e < embedding_dim_; ++e) {
+                transposed[v * embedding_dim_ + e] = weight_data_[e * vocab_size_ + v];
+            }
+        }
+        weight_data_ = std::move(transposed);
+    }
+
     return true;
 }
 
@@ -258,6 +276,54 @@ bool EmbeddingLookup::LoadQ4_0Weights(const void* data, size_t size) {
     return true;
 }
 
+bool EmbeddingLookup::LoadQ4_1Weights(const void* data, size_t size) {
+    // Q4_1: 4-bit quantized with block size 32 + min offset
+    // Each block: 2 bytes scale (F16) + 2 bytes min (F16) + 16 bytes weights
+    block_size_ = 32;
+    size_t elements_per_block = block_size_;
+    size_t num_blocks = (static_cast<size_t>(vocab_size_) * embedding_dim_ +
+                         elements_per_block - 1) / elements_per_block;
+
+    size_t expected_bytes = num_blocks * (2 * sizeof(uint16_t) + elements_per_block / 2);
+
+    if (size != expected_bytes) {
+        last_error_ = "Q4_1 weight size mismatch: expected " +
+                      std::to_string(expected_bytes) + ", got " +
+                      std::to_string(size);
+        return false;
+    }
+
+    // Store quantized data
+    quantized_data_.resize(size);
+    std::memcpy(quantized_data_.data(), data, size);
+
+    // Extract scales and mins
+    quantization_scales_.resize(num_blocks * 2);  // scale + min pairs
+    const uint8_t* src = static_cast<const uint8_t*>(data);
+
+    for (size_t i = 0; i < num_blocks; ++i) {
+        size_t block_offset = i * (2 * sizeof(uint16_t) + elements_per_block / 2);
+
+        // Read F16 scale
+        uint16_t scale_h;
+        std::memcpy(&scale_h, src + block_offset, sizeof(uint16_t));
+        uint32_t exp_s = ((scale_h & 0x7C00) + 0x1C000) << 13;
+        uint32_t mant_s = (scale_h & 0x03FF) << 13;
+        uint32_t f32_s = ((scale_h & 0x8000) << 16) | exp_s | mant_s;
+        std::memcpy(&quantization_scales_[i * 2], &f32_s, sizeof(float));
+
+        // Read F16 min
+        uint16_t min_h;
+        std::memcpy(&min_h, src + block_offset + sizeof(uint16_t), sizeof(uint16_t));
+        uint32_t exp_m = ((min_h & 0x7C00) + 0x1C000) << 13;
+        uint32_t mant_m = (min_h & 0x03FF) << 13;
+        uint32_t f32_m = ((min_h & 0x8000) << 16) | exp_m | mant_m;
+        std::memcpy(&quantization_scales_[i * 2 + 1], &f32_m, sizeof(float));
+    }
+
+    return true;
+}
+
 bool EmbeddingLookup::LoadQ8_0Weights(const void* data, size_t size) {
     // Q8_0: 8-bit quantized with block size 32
     // Each block: 2 bytes scale (F16) + 32 bytes weights
@@ -302,24 +368,45 @@ float EmbeddingLookup::DequantizeValue(size_t index) const {
     if (quantized_data_.empty()) {
         return weight_data_[index];
     }
-    
+
     size_t block_idx = index / block_size_;
     size_t offset_in_block = index % block_size_;
+
+    // Determine format from quantization_scales_ size
+    bool is_q4_1 = (quantization_scales_.size() > block_idx &&
+                    quantization_scales_.size() == ((weight_data_.size() + block_size_ - 1) / block_size_) * 2);
+
+    if (is_q4_1) {
+        // Q4_1: scale + min
+        float scale = quantization_scales_[block_idx * 2];
+        float min_val = quantization_scales_[block_idx * 2 + 1];
+        size_t block_offset = block_idx * (2 * sizeof(uint16_t) + block_size_ / 2);
+        size_t byte_idx = offset_in_block / 2;
+        uint8_t byte = quantized_data_[block_offset + 2 * sizeof(uint16_t) + byte_idx];
+
+        int8_t value = (offset_in_block % 2 == 0) ?
+                       static_cast<int8_t>(byte & 0x0F) :
+                       static_cast<int8_t>((byte >> 4) & 0x0F);
+        // Sign extend 4-bit to 8-bit
+        if (value & 0x08) value |= 0xF0;
+
+        return scale * static_cast<float>(value) + min_val;
+    }
+
     float scale = quantization_scales_[block_idx];
-    
+
     if (quantized_data_.size() == weight_data_.size() / 2) {
         // Q4_0: 4-bit
         size_t block_offset = block_idx * (sizeof(uint16_t) + block_size_ / 2);
         size_t byte_idx = offset_in_block / 2;
         uint8_t byte = quantized_data_[block_offset + sizeof(uint16_t) + byte_idx];
-        
-        int8_t value = (offset_in_block % 2 == 0) ? 
-                       static_cast<int8_t>(byte & 0x0F) : 
+
+        int8_t value = (offset_in_block % 2 == 0) ?
+                       static_cast<int8_t>(byte & 0x0F) :
                        static_cast<int8_t>((byte >> 4) & 0x0F);
-        
         // Sign extend 4-bit to 8-bit
         if (value & 0x08) value |= 0xF0;
-        
+
         return scale * static_cast<float>(value);
     } else {
         // Q8_0: 8-bit

@@ -1,45 +1,58 @@
 #pragma once
 #include "RawrXD_Win32_Foundation.h"
 #include <vector>
+#include <string>
+#include <cstdint>
 
 namespace RawrXD {
 
 enum class TokenType {
-    Default,
+    EndOfFile,
+    Identifier,
     Keyword,
-    Instruction, // For MASM
-    Register,    // For MASM
     Number,
     String,
-    Comment,
     Operator,
-    Preprocessor,
-    Label,
-    Directive,
-    Type,
-    Function,
-    Variable
+    Punctuation,
+    Comment,
+    Unknown
 };
 
 struct Token {
     TokenType type;
-    int start;  // Relative to start of text chunk/line
-    int length;
+    const char* start;
+    size_t length;
+    size_t line;
+    size_t column;
 };
 
 class Lexer {
 public:
+    Lexer(const char* source, size_t length);
+    
+    Token NextToken();
+    Token PeekToken() const;
+    
+    size_t GetLine() const { return line_; }
+    size_t GetColumn() const { return column_; }
+    size_t GetPosition() const { return position_; }
+    bool AtEnd() const { return position_ >= length_; }
+    
+    // Virtual interface for editor integration
+    virtual void lex(const std::wstring& text, std::vector<Token>& outTokens);
+    
     virtual ~Lexer() = default;
     
-    // Lex a single line or chunk of text logic
-    // We assume line-based lexing for now for simplicity in the editor
-    virtual void lex(const std::wstring& text, std::vector<Token>& outTokens) = 0;
+private:
+    void SkipWhitespaceAndComments();
+    void Advance(size_t count = 1);
+    void SkipLine();
     
-    // For stateful lexing (multiline comments), we would need state input/output
-    virtual int lexStateful(const std::wstring& text, int startState, std::vector<Token>& outTokens) {
-        lex(text, outTokens);
-        return 0; // Default state
-    }
+    const char* source_;
+    size_t length_;
+    size_t position_;
+    size_t line_;
+    size_t column_;
 };
 
 } // namespace RawrXD

@@ -397,28 +397,6 @@ void PrintUsage(const char* prog) {
     std::cout << "\n";
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        PrintUsage(argv[0]);
-        return 1;
-    }
-    
-    std::string command = argv[1];
-    
-    // Initialize inference engine
-    UnifiedInferenceEngine engine;
-    UnifiedInferenceEngine::Config cfg;
-    cfg.vocab_size = 32000;
-    cfg.draft_width = 4;
-    
-    auto t0 = std::chrono::high_resolution_clock::now();
-    if (!engine.Initialize(cfg)) {
-        std::cerr << "Failed to initialize inference engine\n";
-        return 1;
-    }
-    auto t1 = std::chrono::high_resolution_clock::now();
-    double init_ms = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000.0;
-    
     // Initialize compiler registry
     CompilerRegistry registry;
     

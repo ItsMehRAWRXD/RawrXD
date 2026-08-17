@@ -132,6 +132,7 @@ private:
     bool LoadF32Weights(const void* data, size_t size);
     bool LoadF16Weights(const void* data, size_t size);
     bool LoadQ4_0Weights(const void* data, size_t size);
+    bool LoadQ4_1Weights(const void* data, size_t size);
     bool LoadQ8_0Weights(const void* data, size_t size);
     
     float DequantizeValue(size_t index) const;

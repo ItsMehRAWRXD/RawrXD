@@ -195,49 +195,7 @@ void PrintStats(const FuzzStats& stats) {
     printf("\n[SUCCESS] Fuzzing completed!\n");
 }
 
-int main(int argc, char* argv[]) {
-    printf("=== RawrCodex Multi-Architecture Decoder Fuzzing Harness ===\n\n");
-    
-    // Parse arguments
-    uint64_t iterations = 10000;
-    bool verbose = false;
-    bool edgeCases = true;
-    bool truncated = true;
-    
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
-            iterations = strtoull(argv[++i], nullptr, 10);
-        } else if (strcmp(argv[i], "-v") == 0) {
-            verbose = true;
-        } else if (strcmp(argv[i], "--no-edge") == 0) {
-            edgeCases = false;
-        } else if (strcmp(argv[i], "--no-truncated") == 0) {
-            truncated = false;
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-            printf("Usage: %s [options]\n", argv[0]);
-            printf("Options:\n");
-            printf("  -i N          Number of iterations (default: 10000)\n");
-            printf("  -v            Verbose output\n");
-            printf("  --no-edge     Skip edge case testing\n");
-            printf("  --no-truncated Skip truncated instruction testing\n");
-            printf("  -h, --help    Show this help\n");
-            return 0;
-        }
-    }
-    
-    printf("Configuration:\n");
-    printf("  Iterations: %llu\n", iterations);
-    printf("  Verbose: %s\n", verbose ? "yes" : "no");
-    printf("  Edge cases: %s\n", edgeCases ? "yes" : "no");
-    printf("  Truncated: %s\n", truncated ? "yes" : "no");
-    printf("\n");
-    
-    // Initialize RNG
-    std::mt19937 rng(static_cast<unsigned>(time(nullptr)));
-    
-    FuzzStats stats;
-    
-    // Run main fuzzing loop
+// (Standalone main removed — use test/fuzz_harness_test.cpp for diagnostic binary)
     printf("Running main fuzzing loop...\n");
     for (uint64_t i = 0; i < iterations; i++) {
         // Pick random architecture

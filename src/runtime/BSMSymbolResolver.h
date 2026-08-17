@@ -1,6 +1,7 @@
 #pragma once
-// BSMSymbolResolver — Binary Symbol Map resolver stub
+// BSMSymbolResolver — Binary Symbol Map resolver
 // Provides symbol lookup for the hot-patching and RE bridge subsystems.
+// Real implementation is in BSMSymbolResolver.cpp (DbgHelp + PE exports).
 
 #include <string>
 #include <cstdint>
@@ -20,37 +21,18 @@ class BSMSymbolResolver {
 public:
     BSMSymbolResolver() = default;
 
-    static BSMSymbolResolver& instance() {
-        static BSMSymbolResolver s;
-        return s;
-    }
+    static BSMSymbolResolver& instance();
 
-    bool LoadFromModule(const std::string& modulePath) {
-        m_modulePath = modulePath;
-        return true;
-    }
-
-    void* resolveSync(const std::string& name) {
-        (void)name;
-        return nullptr;
-    }
-
-    bool ResolveByName(const std::string& name, BSMSymbol& out) const {
-        (void)name; (void)out;
-        return false;
-    }
-
-    bool ResolveByAddress(uint64_t addr, BSMSymbol& out) const {
-        (void)addr; (void)out;
-        return false;
-    }
-
-    std::vector<BSMSymbol> EnumerateExports() const { return {}; }
-
+    bool LoadFromModule(const std::string& modulePath);
+    void* resolveSync(const std::string& name);
+    bool ResolveByName(const std::string& name, BSMSymbol& out) const;
+    bool ResolveByAddress(uint64_t addr, BSMSymbol& out) const;
+    std::vector<BSMSymbol> EnumerateExports() const;
     const std::string& GetModulePath() const { return m_modulePath; }
 
 private:
     std::string m_modulePath;
+    std::vector<BSMSymbol> m_symbols;
 };
 
 } // namespace Runtime

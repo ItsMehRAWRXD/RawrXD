@@ -79,6 +79,15 @@ void __cdecl RMSNorm_Fused(
     float eps
 );
 
+/// RawrXD Host Engine Pipeline Core — 15-Tier MASM64 Execution Engine
+/// @param targetTierIndex   0 = Kevlar pipeline, 1 = Raw pipeline
+/// @param payloadStateContext  Pointer to CanonicalEngineMatrix state
+/// @return 1 = all 15 tiers passed, 0 = containment triggered
+ULONG64 __cdecl RawrXD_Host_Engine_Pipeline_Core(
+    ULONG64 targetTierIndex,
+    void* payloadStateContext
+);
+
 #ifdef __cplusplus
 }
 #endif

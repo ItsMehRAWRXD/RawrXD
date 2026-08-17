@@ -294,21 +294,4 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #endif // _WIN32
 
-// Main entry point
-int main(int argc, char* argv[]) {
-    // Check for GUI mode
-    for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "--gui") == 0) {
-#ifdef _WIN32
-            // Launch GUI
-            return WinMain(GetModuleHandle(nullptr), nullptr, "", SW_SHOW);
-#else
-            fprintf(stderr, "GUI mode only supported on Windows\n");
-            return 1;
-#endif
-        }
-    }
-    
-    // CLI mode
-    return CLI::Run(argc, argv);
-}
+// (Standalone main removed — use test/ide_integration_test.cpp for diagnostic binary)

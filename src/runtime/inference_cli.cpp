@@ -417,6 +417,6 @@ int main(int argc, char* argv[]) {
         const auto& telemetry = pipeline.GetLastTelemetry();
         std::cout << "\n" << telemetry.Summary() << std::endl;
     }
-    
-    return 0;
+
+    return pipeline.IsInitialized() ? 0 : 1;
 }

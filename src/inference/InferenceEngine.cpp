@@ -10,6 +10,9 @@
 
 #include "InferenceEngine.h"
 
+// Real inference implementation
+#include "../ai/ai_inference_real.h"
+
 // GGML headers - using RawrXD's modified GGML
 extern "C" {
 #include "../../3rdparty/ggml/include/ggml.h"
@@ -122,10 +125,6 @@ private:
     std::string m_lastError;
     
     // Internal Methods
-    bool InitializeGGML();
-    bool LoadGGUF(const std::string& path);
-    std::vector<float> ForwardPass(const std::vector<int>& tokens);
-    int SampleToken(const std::vector<float>& logits, const GenerationParams& params);
     void UpdateMetrics(const std::chrono::steady_clock::time_point& start,
                        int tokensGenerated, int promptTokens);
 };
@@ -170,62 +169,78 @@ InferenceEngineImpl::~InferenceEngineImpl() {
 
 bool InferenceEngineImpl::LoadModel(const std::string& path) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
+
     if (m_model) {
         UnloadModel();
     }
-    
-    if (!InitializeGGML()) {
-        m_lastError = "Failed to initialize GGML";
-        return false;
-    }
-    
-    if (!LoadGGUF(path)) {
+
+    // Delegate to real GGML-based inference implementation
+    if (!RawrXD::LoadModelReal(path.c_str())) {
         m_lastError = "Failed to load GGUF model: " + path;
         return false;
     }
-    
-    // Initialize tokenizer from model vocab
-    // TODO: Load actual tokenizer from GGUF
-    for (int i = 0; i < 32000; ++i) {
-        m_idToToken[i] = "token_" + std::to_string(i);
-        m_tokenToId[m_idToToken[i]] = i;
+
+    // Mark as loaded
+    m_model = reinterpret_cast<ggml_model*>(1);  // Non-null sentinel
+    m_config.modelPath = path;
+
+    // Sync vocab from real tokenizer
+    auto info = RawrXD::GetModelInfoReal();
+    m_vocab.clear();
+    m_tokenToId.clear();
+    m_idToToken.clear();
+    for (int i = 0; i < info.vocabSize; ++i) {
+        std::string token_text = RawrXD::DetokenizeSingleReal(i);
+        m_vocab.push_back(token_text);
+        m_tokenToId[token_text] = i;
+        m_idToToken[i] = token_text;
     }
-    
+    if (m_vocab.empty()) {
+        // Fallback: create minimal vocab
+        for (int i = 0; i < 32000; ++i) {
+            m_idToToken[i] = "token_" + std::to_string(i);
+            m_tokenToId[m_idToToken[i]] = i;
+        }
+    }
+
     return true;
 }
 
 void InferenceEngineImpl::UnloadModel() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
-    // Stub: GGML cleanup - would free backend and context here
-    // For now, just clear state
+
+    RawrXD::UnloadModelReal();
     m_backend = nullptr;
     m_ctx = nullptr;
     m_model = nullptr;
     m_contextTokens.clear();
+    m_vocab.clear();
+    m_tokenToId.clear();
+    m_idToToken.clear();
 }
 
 bool InferenceEngineImpl::IsModelLoaded() const {
     std::lock_guard<std::mutex> lock(m_mutex);
-    return m_model != nullptr;
+    return m_model != nullptr && RawrXD::IsModelLoadedReal();
 }
 
 ModelInfo InferenceEngineImpl::GetModelInfo() const {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
+
+    auto realInfo = RawrXD::GetModelInfoReal();
     ModelInfo info;
-    info.path = m_config.modelPath;
-    info.architecture = "unknown";
+    info.path = m_config.modelPath.empty() ? realInfo.path : m_config.modelPath;
+    info.architecture = realInfo.architecture.empty() ? "llama" : realInfo.architecture;
     info.quantization = "unknown";
-    info.vocabSize = static_cast<int>(m_vocab.size());
-    info.numLayers = 0;
-    info.embeddingDim = 0;
-    info.numHeads = 0;
-    info.contextLength = static_cast<int>(m_maxContextLength);
+    info.vocabSize = realInfo.vocabSize > 0 ? realInfo.vocabSize : static_cast<int>(m_vocab.size());
+    info.numLayers = realInfo.numLayers;
+    info.embeddingDim = realInfo.embeddingDim;
+    info.numHeads = realInfo.numHeads;
+    info.contextLength = realInfo.contextLength > 0 ? realInfo.contextLength : static_cast<int>(m_maxContextLength);
+    info.modelSize = realInfo.modelSizeBytes;
     info.hasTokenizer = !m_vocab.empty();
     info.hasGGMLFormat = m_model != nullptr;
-    
+
     return info;
 }
 
@@ -235,81 +250,95 @@ ModelInfo InferenceEngineImpl::GetModelInfo() const {
 
 GenerationResult InferenceEngineImpl::Generate(const std::string& prompt,
                                                 const GenerationParams& params) {
-    return GenerateStreaming(prompt, params, 
-        [](const TokenInfo&) { return true; });
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    if (!m_model || !RawrXD::IsModelLoadedReal()) {
+        return GenerationResult{.success = false, .errorMessage = "No model loaded"};
+    }
+
+    auto startTime = std::chrono::steady_clock::now();
+
+    // Delegate to real multi-token inference
+    auto result = RawrXD::RunInferenceMultiToken(prompt, params.maxTokens,
+                                                   params.temperature, params.topP, params.topK);
+
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+    GenerationResult genResult;
+    if (result.error.empty()) {
+        genResult.success = true;
+        genResult.text = result.text;
+        genResult.tokensGenerated = static_cast<int>(result.tokens.size());
+        genResult.promptTokens = static_cast<int>(RawrXD::TokenizeReal(prompt).size());
+        genResult.stoppedEOS = true;
+        genResult.isComplete = true;
+
+        for (int tokenId : result.tokens) {
+            TokenInfo ti;
+            ti.id = tokenId;
+            ti.text = RawrXD::DetokenizeSingleReal(tokenId);
+            ti.logprob = 0.0f;
+            ti.isSpecial = (tokenId == m_bosToken || tokenId == m_eosToken);
+            genResult.tokens.push_back(ti);
+        }
+    } else {
+        genResult.success = false;
+        genResult.errorMessage = result.error;
+    }
+
+    UpdateMetrics(startTime, genResult.tokensGenerated, genResult.promptTokens);
+    return genResult;
 }
 
 GenerationResult InferenceEngineImpl::GenerateStreaming(
     const std::string& prompt,
     const GenerationParams& params,
     std::function<bool(const TokenInfo&)> callback) {
-    
+
     std::lock_guard<std::mutex> lock(m_mutex);
-    
-    if (!m_model) {
+
+    if (!m_model || !RawrXD::IsModelLoadedReal()) {
         return GenerationResult{.success = false, .errorMessage = "No model loaded"};
     }
-    
+
     m_isGenerating = true;
     m_cancelled = false;
-    
+
     auto startTime = std::chrono::steady_clock::now();
-    
-    // Tokenize prompt
-    std::vector<int> promptTokens = Tokenize(prompt, true, false);
-    int promptTokenCount = static_cast<int>(promptTokens.size());
-    
-    // Add to context
-    m_contextTokens.insert(m_contextTokens.end(), promptTokens.begin(), promptTokens.end());
-    
-    // Generate tokens
+
+    int promptTokenCount = static_cast<int>(RawrXD::TokenizeReal(prompt).size());
     std::vector<int> generatedTokens;
     std::string generatedText;
-    
-    for (int i = 0; i < params.maxTokens && !m_cancelled; ++i) {
-        // Forward pass
-        std::vector<float> logits = ForwardPass(m_contextTokens);
-        
-        if (logits.empty()) {
-            break;
-        }
-        
-        // Sample next token
-        int nextToken = SampleToken(logits, params);
-        
-        if (nextToken == m_eosToken) {
-            break;
-        }
-        
-        // Check stop sequences
-        // TODO: Implement stop sequence checking
-        
-        // Add to context and results
-        m_contextTokens.push_back(nextToken);
-        generatedTokens.push_back(nextToken);
-        
-        TokenInfo tokenInfo;
-        tokenInfo.id = nextToken;
-        tokenInfo.text = Detokenize(nextToken);
-        tokenInfo.logprob = 0.0f; // TODO: Calculate actual logprob
-        tokenInfo.isSpecial = (nextToken == m_bosToken || nextToken == m_eosToken);
-        
-        generatedText += tokenInfo.text;
-        
-        // Call callback
-        if (callback && !callback(tokenInfo)) {
-            break;
-        }
-        
-        // Progress callback
-        if (m_progressCallback) {
-            m_progressCallback(static_cast<float>(i) / params.maxTokens);
-        }
-    }
-    
+
+    // Use real streaming generation
+    RawrXD::GenerateStreamReal(prompt, params.maxTokens,
+                               params.temperature, params.topP, params.topK,
+        [&callback, &generatedTokens, &generatedText, &m_cancelled = m_cancelled,
+         &m_bosToken = m_bosToken, &m_eosToken = m_eosToken, this]
+        (const std::string& token_text, bool finished) -> bool {
+            if (finished) return true;
+            if (m_cancelled) return false;
+
+            // We don't have token IDs in the stream callback, so we use a placeholder
+            int tokenId = static_cast<int>(generatedTokens.size()) + 100000;  // Placeholder ID
+            generatedTokens.push_back(tokenId);
+            generatedText += token_text;
+
+            TokenInfo tokenInfo;
+            tokenInfo.id = tokenId;
+            tokenInfo.text = token_text;
+            tokenInfo.logprob = 0.0f;
+            tokenInfo.isSpecial = false;
+
+            if (callback) {
+                return callback(tokenInfo);
+            }
+            return true;
+        });
+
     m_isGenerating = false;
-    
-    // Build result
+
     GenerationResult result;
     result.success = true;
     result.text = generatedText;
@@ -318,9 +347,8 @@ GenerationResult InferenceEngineImpl::GenerateStreaming(
     result.stoppedEOS = !m_cancelled && generatedTokens.size() < params.maxTokens;
     result.stoppedLimit = generatedTokens.size() >= params.maxTokens;
     result.isComplete = true;
-    
+
     UpdateMetrics(startTime, result.tokensGenerated, promptTokenCount);
-    
     return result;
 }
 
@@ -346,56 +374,38 @@ std::vector<int> InferenceEngineImpl::Tokenize(const std::string& text) {
     return Tokenize(text, false, false);
 }
 
-std::vector<int> InferenceEngineImpl::Tokenize(const std::string& text, 
-                                                bool addBOS, 
+std::vector<int> InferenceEngineImpl::Tokenize(const std::string& text,
+                                                bool addBOS,
                                                 bool addEOS) {
     std::vector<int> tokens;
-    
+
     if (addBOS) {
         tokens.push_back(m_bosToken);
     }
-    
-    // Simple word-based tokenization (placeholder)
-    // TODO: Implement proper BPE/SentencePiece tokenization
-    std::istringstream iss(text);
-    std::string word;
-    while (iss >> word) {
-        auto it = m_tokenToId.find(word);
-        if (it != m_tokenToId.end()) {
-            tokens.push_back(it->second);
-        } else {
-            // Unknown token
-            tokens.push_back(m_tokenToId["<unk>"]);
-        }
-    }
-    
+
+    // Delegate to real tokenizer
+    auto realTokens = RawrXD::TokenizeReal(text);
+    tokens.insert(tokens.end(), realTokens.begin(), realTokens.end());
+
     if (addEOS) {
         tokens.push_back(m_eosToken);
     }
-    
+
     return tokens;
 }
 
 std::string InferenceEngineImpl::Detokenize(const std::vector<int>& tokens) {
-    std::string result;
-    for (int token : tokens) {
-        result += Detokenize(token);
-    }
-    return result;
+    return RawrXD::DetokenizeReal(tokens);
 }
 
 std::string InferenceEngineImpl::Detokenize(int token) {
-    auto it = m_idToToken.find(token);
-    if (it != m_idToToken.end()) {
-        return it->second + " ";
-    }
-    return "<unk> ";
+    return RawrXD::DetokenizeSingleReal(token);
 }
 
 TokenInfo InferenceEngineImpl::GetTokenInfo(int tokenId) {
     TokenInfo info;
     info.id = tokenId;
-    info.text = Detokenize(tokenId);
+    info.text = RawrXD::DetokenizeSingleReal(tokenId);
     info.logprob = 0.0f;
     info.isSpecial = (tokenId == m_bosToken || tokenId == m_eosToken || tokenId == m_padToken);
     return info;
@@ -480,15 +490,13 @@ bool InferenceEngineImpl::IsGenerating() const {
 
 bool InferenceEngineImpl::Warmup() {
     std::lock_guard<std::mutex> lock(m_mutex);
-    if (!m_model) {
+    if (!m_model || !RawrXD::IsModelLoadedReal()) {
         return false;
     }
-    
-    // Perform a dummy forward pass to warm up caches
-    std::vector<int> dummyTokens = {m_bosToken};
-    ForwardPass(dummyTokens);
-    
-    return true;
+
+    // Warm up by running a single-token inference
+    auto result = RawrXD::RunInferenceReal("hello");
+    return result.error.empty();
 }
 
 ggml_context* InferenceEngineImpl::GetGGMLContext() {
@@ -499,96 +507,8 @@ ggml_context* InferenceEngineImpl::GetGGMLContext() {
 // Internal Methods
 // ============================================================================
 
-bool InferenceEngineImpl::InitializeGGML() {
-    // Stub: GGML initialization
-    // In real implementation, would initialize GGML backend and context
-    // For now, just return success
-    return true;
-}
-
-bool InferenceEngineImpl::LoadGGUF(const std::string& path) {
-    // TODO: Implement actual GGUF loading
-    // For now, create a dummy model
-    m_config.modelPath = path;
-    
-    // Placeholder: In real implementation, use gguf_init_from_file
-    // struct gguf_context* ctx = gguf_init_from_file(path.c_str(), {});
-    // ... load tensors, vocab, etc.
-    
-    return true;
-}
-
-std::vector<float> InferenceEngineImpl::ForwardPass(const std::vector<int>& tokens) {
-    // TODO: Implement actual transformer forward pass
-    // This is a placeholder that returns dummy logits
-    
-    std::vector<float> logits(32000, 0.0f);
-    
-    // Simple dummy implementation
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-    
-    for (auto& val : logits) {
-        val = dist(gen);
-    }
-    
-    return logits;
-}
-
-int InferenceEngineImpl::SampleToken(const std::vector<float>& logits,
-                                      const GenerationParams& params) {
-    if (logits.empty()) {
-        return m_eosToken;
-    }
-    
-    // Apply temperature
-    std::vector<float> scaledLogits = logits;
-    if (params.temperature > 0.0f && params.temperature != 1.0f) {
-        for (auto& logit : scaledLogits) {
-            logit /= params.temperature;
-        }
-    }
-    
-    // Softmax
-    float maxLogit = *std::max_element(scaledLogits.begin(), scaledLogits.end());
-    float sum = 0.0f;
-    for (auto& logit : scaledLogits) {
-        logit = std::exp(logit - maxLogit);
-        sum += logit;
-    }
-    for (auto& logit : scaledLogits) {
-        logit /= sum;
-    }
-    
-    // Top-k sampling
-    if (params.topK > 0 && params.topK < static_cast<int>(scaledLogits.size())) {
-        std::vector<std::pair<float, int>> indexedLogits;
-        for (int i = 0; i < static_cast<int>(scaledLogits.size()); ++i) {
-            indexedLogits.push_back({scaledLogits[i], i});
-        }
-        std::partial_sort(indexedLogits.begin(), 
-                         indexedLogits.begin() + params.topK,
-                         indexedLogits.end(),
-                         std::greater<std::pair<float, int>>());
-        
-        // Sample from top-k
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::vector<double> weights;
-        for (int i = 0; i < params.topK; ++i) {
-            weights.push_back(indexedLogits[i].first);
-        }
-        std::discrete_distribution<int> dist(weights.begin(), weights.end());
-        return indexedLogits[dist(gen)].second;
-    }
-    
-    // Greedy sampling (argmax)
-    return std::max_element(scaledLogits.begin(), scaledLogits.end()) - scaledLogits.begin();
-}
-
 void InferenceEngineImpl::UpdateMetrics(const std::chrono::steady_clock::time_point& start,
-                                        int tokensGenerated, 
+                                        int tokensGenerated,
                                         int promptTokens) {
     auto endTime = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - start).count();
