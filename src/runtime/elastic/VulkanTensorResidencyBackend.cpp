@@ -216,8 +216,6 @@ bool VulkanTensorResidencyBackend::UploadData(void* opaque_handle, const void* s
     std::memcpy(mapped, src_data, static_cast<size_t>(bytes));
 
     // Flush if memory is not coherent
-    VkPhysicalDeviceMemoryProperties memProps{};
-    vkGetPhysicalDeviceMemoryProperties(m_physDevice, &memProps);
     if (!(memProps.memoryTypes[stagingMemType].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
         VkMappedMemoryRange flushRange{};
         flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
