@@ -500,3 +500,63 @@ extern "C" {
     bool g_HasAVX512F = false;
     bool g_800B_Unlocked = false;
 }
+
+// ============================================================================
+// 32. CLIAutonomyLoop / AgenticDecisionTree / AgenticEngine / SubAgentManager
+// ============================================================================
+
+struct DecisionOutcome { bool success; };
+struct TreeContext { int dummy; };
+struct DecisionTreeStats { int dummy; };
+
+class AgenticEngine {};
+class SubAgentManager {};
+
+class AgenticDecisionTree {
+public:
+    static AgenticDecisionTree& instance() {
+        static AgenticDecisionTree inst;
+        return inst;
+    }
+    void setAgenticEngine(AgenticEngine*) {}
+    void setSubAgentManager(SubAgentManager*) {}
+    DecisionOutcome evaluate(TreeContext&) { return DecisionOutcome{false}; }
+    bool runSSALiftWithAnomalyDetection(TreeContext&) { return false; }
+    const DecisionTreeStats& getStats() const {
+        static DecisionTreeStats s{};
+        return s;
+    }
+    void setGlobalConfidenceThreshold(float) {}
+};
+
+struct AutonomyLoopConfig { int dummy; };
+struct AutonomyLoopStats { int dummy; };
+enum class AutonomyLoopState { Idle };
+
+class CLIAutonomyLoop {
+public:
+    static CLIAutonomyLoop& instance();
+    void setAgenticEngine(AgenticEngine*);
+    void setSubAgentManager(SubAgentManager*);
+    void start();
+    void stop();
+    void pause();
+    void resume();
+    AutonomyLoopState getState() const;
+    std::string getStatusString() const;
+    std::string getDetailedStatus() const;
+};
+
+CLIAutonomyLoop& CLIAutonomyLoop::instance() {
+    static CLIAutonomyLoop inst;
+    return inst;
+}
+void CLIAutonomyLoop::setAgenticEngine(AgenticEngine*) {}
+void CLIAutonomyLoop::setSubAgentManager(SubAgentManager*) {}
+void CLIAutonomyLoop::start() {}
+void CLIAutonomyLoop::stop() {}
+void CLIAutonomyLoop::pause() {}
+void CLIAutonomyLoop::resume() {}
+AutonomyLoopState CLIAutonomyLoop::getState() const { return AutonomyLoopState::Idle; }
+std::string CLIAutonomyLoop::getStatusString() const { return ""; }
+std::string CLIAutonomyLoop::getDetailedStatus() const { return ""; }

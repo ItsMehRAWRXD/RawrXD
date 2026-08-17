@@ -9,7 +9,7 @@ agentic_observability_total_metrics 11
 test_counter 5
 # HELP test_timing_duration Auto-generated metric for test.timing_duration
 # TYPE test_timing_duration gauge
-test_timing_duration 24
+test_timing_duration 25
 # HELP test_latency_histogram Auto-generated metric for test.latency_histogram
 # TYPE test_latency_histogram gauge
 test_latency_histogram 22.3
@@ -18,4 +18,4 @@ test_latency_histogram 22.3
 test_gauge 42
 # HELP memory_usage_bytes Auto-generated metric for memory_usage_bytes
 # TYPE memory_usage_bytes gauge
-memory_usage_bytes 6.0416e+06
+memory_usage_bytes 6.36109e+06

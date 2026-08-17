@@ -85,7 +85,6 @@ public:
     // Log callback
     using LogCallback = void(*)(const LogEntry& entry, void* userData);
     void setLogCallback(LogCallback cb, void* userData = nullptr) {
-        fprintf(stderr, "[DEBUG-AO] setLogCallback: this=%p cb=%p\n", (void*)this, (void*)cb);
         m_logCb = cb; m_logCbData = userData;
     }
 

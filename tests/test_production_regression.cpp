@@ -79,14 +79,11 @@ static void test_observability() {
 
     TEST(log_callback_fires)
         auto& obs = AgenticObservability::instance();
-        obs.setSamplingRate(1.0);  // Ensure deterministic 100% capture
         obs.setLogCallback([](const AgenticObservability::LogEntry& entry, void*) {
             lastLogLevel = std::to_string(static_cast<int>(entry.level));
             lastLogComponent = entry.component;
             lastLogMsg = entry.message;
         }, nullptr);
-        lastLogMsg.clear();  // Reset from any prior test state
-        lastLogComponent.clear();
         obs.logInfo("TestComponent", "hello regression test");
         ASSERT_TRUE(lastLogMsg == "hello regression test");
         ASSERT_TRUE(lastLogComponent == "TestComponent");
