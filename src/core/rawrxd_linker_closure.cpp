@@ -375,7 +375,12 @@ namespace Sovereign {
 // ============================================================================
 
 enum class SubsystemId { Default };
-struct SubsystemParams { int mode; };
+struct SubsystemParams {
+    SubsystemId id;
+    union {
+        int mode;
+    };
+};
 struct SubsystemResult { int status; };
 
 class SubsystemRegistry {
