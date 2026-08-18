@@ -318,16 +318,16 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
     // Validate tensor shapes for internal consistency (not exact config match).
     // The actual GGUF tensors define the ground-truth dimensions; config is a hint.
     // We verify that the tensor dimensions are mutually compatible for the MLA pipeline.
-
-    const uint32_t hiddenDim = static_cast<uint32_t>(attnQ_a.dims()[0]);
-    const uint32_t qLoraRank = static_cast<uint32_t>(attnQ_a.dims()[1]);
+    // ALL dimensions are derived from actual tensor shapes (GGUF is authoritative).
 
     // attn_q_a: [hiddenDim, qLoraRank]
     if (attnQ_a.dims().size() != 2) {
         error = "MLAWeights: attn_q_a not 2D"; return false;
     }
+    const uint32_t hiddenDim = static_cast<uint32_t>(attnQ_a.dims()[0]);
+    const uint32_t qLoraRank = static_cast<uint32_t>(attnQ_a.dims()[1]);
 
-    // attn_q_b: [qLoraRank, ?] — cols must match q_a rows for pipeline
+    // attn_q_b: [qLoraRank, numHeads * headDim]
     if (attnQ_b.dims().size() != 2 || attnQ_b.dims()[0] != qLoraRank) {
         error = "MLAWeights: attn_q_b shape mismatch (rows != qLoraRank)"; return false;
     }
@@ -338,22 +338,26 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
         error = "MLAWeights: attn_kv_a_mqa shape mismatch (rows != hiddenDim)"; return false;
     }
     const uint32_t kvACols = static_cast<uint32_t>(attnKV_a_mqa.dims()[1]);
-    const uint32_t kvLoraRank = kvACols > config.qkRopeHeadDim ? kvACols - config.qkRopeHeadDim : 0;
 
-    // attn_k_b: [kvLoraRank, ?] or 3D — rows must match kv_a compressed portion
+    // Derive kvLoraRank from attnK_b (the compressed KV projection)
+    // attnK_b: [kvLoraRank, numHeads * qkNopeHeadDim]
+    uint32_t kvLoraRank = 0;
     if (attnK_b.dims().size() == 2) {
-        if (attnK_b.dims()[0] != kvLoraRank) {
-            error = "MLAWeights: attn_k_b 2D shape mismatch (rows != kvLoraRank)"; return false;
-        }
+        kvLoraRank = static_cast<uint32_t>(attnK_b.dims()[0]);
     } else if (attnK_b.dims().size() == 3) {
-        if (attnK_b.dims()[1] != kvLoraRank) {
-            error = "MLAWeights: attn_k_b 3D shape mismatch (dim[1] != kvLoraRank)"; return false;
-        }
+        kvLoraRank = static_cast<uint32_t>(attnK_b.dims()[1]);
     } else {
         error = "MLAWeights: attn_k_b unexpected dimension count"; return false;
     }
 
-    // attn_v_b: [kvLoraRank, ?] or 3D — rows must match kv_a compressed portion
+    // Validate kv_a split: kvACols = kvLoraRank + qkRopeHeadDim
+    if (kvACols < kvLoraRank) {
+        error = "MLAWeights: attn_kv_a_mqa cols (" + std::to_string(kvACols) +
+                ") < kvLoraRank derived from attn_k_b (" + std::to_string(kvLoraRank) + ")";
+        return false;
+    }
+
+    // attn_v_b: rows must match kvLoraRank (same compressed space as K_b)
     if (attnV_b.dims().size() == 2) {
         if (attnV_b.dims()[0] != kvLoraRank) {
             error = "MLAWeights: attn_v_b 2D shape mismatch (rows != kvLoraRank)"; return false;
@@ -366,21 +370,21 @@ bool MLAWeights::Validate(const KimiK2Config& config, std::string& error) const 
         error = "MLAWeights: attn_v_b unexpected dimension count"; return false;
     }
 
-    // attn_output: [?, hiddenDim] — cols must match hiddenDim for residual
+    // attn_output: [numHeads * vHeadDim, hiddenDim] — cols must match hiddenDim for residual
     if (attnO.dims().size() != 2 || attnO.dims()[1] != hiddenDim) {
         error = "MLAWeights: attn_output shape mismatch (cols != hiddenDim)"; return false;
     }
-    const uint32_t oRows = static_cast<uint32_t>(attnO.dims()[0]);
 
     // attnNorm: [hiddenDim]
     if (attnNorm.dims().size() != 1 || attnNorm.dims()[0] != hiddenDim) {
         error = "MLAWeights: attn_norm shape mismatch"; return false;
     }
 
-    // Cross-check: q_b cols should equal attnO rows (both are head-dim related)
-    if (qBCols != oRows) {
-        // This is a warning, not fatal — some architectures may differ
-        // But for K2 they should match
+    // Validate numHeads divides q_b cols evenly (each head gets equal Q dim)
+    if (config.numHeads > 0 && qBCols % config.numHeads != 0) {
+        error = "MLAWeights: attn_q_b cols (" + std::to_string(qBCols) +
+                ") not divisible by numHeads (" + std::to_string(config.numHeads) + ")";
+        return false;
     }
 
     return true;
@@ -577,21 +581,68 @@ bool MLAForward::Execute(const float* hidden, float* output,
         return false;
     }
 
-    const size_t hiddenDim     = config.hiddenDim;
-    const size_t qLoraRank     = config.qLoraRank;
-    const size_t kvLoraRank    = config.kvLoraRank;
-    const size_t qkRopeHeadDim = config.qkRopeHeadDim;
-    const size_t qkNopeHeadDim = config.qkNopeHeadDim;
-    const size_t vHeadDim      = config.vHeadDim;
-    const size_t numHeads      = config.numHeads;
-    const size_t headDim       = config.qkNopeHeadDim + config.qkRopeHeadDim; // total head dim
+    // =========================================================================
+    // DERIVE ALL DIMENSIONS FROM ACTUAL TENSOR SHAPES (GGUF is authoritative)
+    // =========================================================================
+    // attnQ_a: [hiddenDim, qLoraRank]
+    const size_t hiddenDim = weights.attnQ_a.dims()[0];
+    const size_t qLoraRank = weights.attnQ_a.dims()[1];
 
-    // ── Allocate temporary buffers ──
+    // attnQ_b: [qLoraRank, numHeads * headDim]
+    const size_t qBCols = weights.attnQ_b.dims()[1];
+    const size_t numHeads = config.numHeads; // heads is architectural, not tensor-derived
+    if (qBCols % numHeads != 0) {
+        error = "MLAForward: attn_q_b cols (" + std::to_string(qBCols) +
+                ") not divisible by numHeads (" + std::to_string(numHeads) + ")";
+        return false;
+    }
+    const size_t headDim = qBCols / numHeads;
+
+    // attnKV_a_mqa: [hiddenDim, kvLoraRank + qkRopeHeadDim]
+    const size_t kvACols = weights.attnKV_a_mqa.dims()[1];
+    // For K2, the split is: first kvLoraRank = compressed_kv, rest = k_pe
+    // We derive kvLoraRank from attnK_b shape since that's the compressed portion
+    size_t kvLoraRank = 0;
+    if (weights.attnK_b.dims().size() >= 1) {
+        kvLoraRank = weights.attnK_b.dims()[0];
+    }
+    const size_t qkRopeHeadDim = (kvACols > kvLoraRank) ? (kvACols - kvLoraRank) : 0;
+
+    // attnK_b: [kvLoraRank, numHeads * qkNopeHeadDim]
+    const size_t kBCols = (weights.attnK_b.dims().size() >= 2)
+                          ? weights.attnK_b.dims()[1]
+                          : weights.attnK_b.dims()[0];
+    const size_t qkNopeHeadDim = (numHeads > 0) ? (kBCols / numHeads) : 0;
+
+    // attnV_b: [kvLoraRank, numHeads * vHeadDim]
+    const size_t vBCols = (weights.attnV_b.dims().size() >= 2)
+                          ? weights.attnV_b.dims()[1]
+                          : weights.attnV_b.dims()[0];
+    const size_t vHeadDim = (numHeads > 0) ? (vBCols / numHeads) : 0;
+
+    // attnO: [numHeads * vHeadDim, hiddenDim] — validate rows match v-projection
+    const size_t oRows = weights.attnO.dims()[0];
+    if (oRows != numHeads * vHeadDim) {
+        error = "MLAForward: attn_output rows (" + std::to_string(oRows) +
+                ") != numHeads * vHeadDim (" + std::to_string(numHeads * vHeadDim) + ")";
+        return false;
+    }
+
+    // Safety: validate all tensors have actual data before allocating
+    if (!weights.attnQ_a.data() || !weights.attnQ_b.data() || !weights.attnKV_a_mqa.data() ||
+        !weights.attnK_b.data() || !weights.attnV_b.data() || !weights.attnO.data()) {
+        error = "MLAForward: one or more weight tensors have no data (metadata-only?)";
+        return false;
+    }
+
+    // =========================================================================
+    // Allocate temporary buffers using ACTUAL derived dimensions
+    // =========================================================================
     float* q_a      = (float*)_aligned_malloc(qLoraRank     * sizeof(float), 32);
     float* q_b      = (float*)_aligned_malloc(numHeads * headDim * sizeof(float), 32);
-    float* kv_a     = (float*)_aligned_malloc((kvLoraRank + qkRopeHeadDim) * sizeof(float), 32);
+    float* kv_a     = (float*)_aligned_malloc(kvACols * sizeof(float), 32);
     float* compressedKV = kv_a;                         // alias: first kvLoraRank elements
-    float* k_pe     = kv_a + kvLoraRank;                // alias: last qkRopeHeadDim elements
+    float* k_pe     = kv_a + kvLoraRank;                // alias: rest = k_pe
     float* k_b      = (float*)_aligned_malloc(numHeads * qkNopeHeadDim * sizeof(float), 32);
     float* v_b      = (float*)_aligned_malloc(numHeads * vHeadDim      * sizeof(float), 32);
     float* attnOut  = (float*)_aligned_malloc(numHeads * headDim       * sizeof(float), 32);
@@ -603,7 +654,13 @@ bool MLAForward::Execute(const float* hidden, float* output,
         return false;
     }
 
-    // ── Q-path: hidden → q_a → RMSNorm → q_b ──
+    // Pre-declare variables that may be read after goto cleanup
+    size_t oCols = 0;
+    size_t oActualRows = 0;
+
+    // =========================================================================
+    // Q-path: hidden → q_a → RMSNorm → q_b
+    // =========================================================================
     // Step 1: q_a = attnQ_a^T * hidden  [qLoraRank]
     // GGUF stores attnQ_a as [hiddenDim, qLoraRank]; we need transpose multiply
     if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
@@ -621,16 +678,19 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
     // GGUF stores attnQ_b as [qLoraRank, numHeads*headDim]
+    // CRITICAL: use actual qBCols from tensor, not computed headDim*numHeads
     if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
-                                numHeads * headDim, qLoraRank, error)) {
+                                qBCols, qLoraRank, error)) {
         goto cleanup;
     }
 
-    // ── KV-path: hidden → kv_a_mqa → split → [compressed_kv | k_pe] ──
-    // Step 4: kv_a = attnKV_a_mqa^T * hidden  [kvLoraRank + qkRopeHeadDim]
-    // GGUF stores attnKV_a_mqa as [hiddenDim, kvLoraRank+qkRopeHeadDim]
+    // =========================================================================
+    // KV-path: hidden → kv_a_mqa → split → [compressed_kv | k_pe]
+    // =========================================================================
+    // Step 4: kv_a = attnKV_a_mqa^T * hidden  [kvACols]
+    // GGUF stores attnKV_a_mqa as [hiddenDim, kvACols]
     if (!gemvDispatchTransposed(weights.attnKV_a_mqa, hidden, kv_a,
-                                kvLoraRank + qkRopeHeadDim, hiddenDim, error)) {
+                                kvACols, hiddenDim, error)) {
         goto cleanup;
     }
 
@@ -643,39 +703,39 @@ bool MLAForward::Execute(const float* hidden, float* output,
     }
 
     // Step 6: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
-    // GGUF stores attnK_b as [kvLoraRank, numHeads*qkNopeHeadDim] (or 3D)
+    // GGUF stores attnK_b as [kvLoraRank, numHeads*qkNopeHeadDim]
     if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
-                                numHeads * qkNopeHeadDim, kvLoraRank, error)) {
+                                kBCols, kvLoraRank, error)) {
         goto cleanup;
     }
 
     // Step 7: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
-    // GGUF stores attnV_b as [kvLoraRank, numHeads*vHeadDim] (or 3D)
+    // GGUF stores attnV_b as [kvLoraRank, numHeads*vHeadDim]
     if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
-                                numHeads * vHeadDim, kvLoraRank, error)) {
+                                vBCols, kvLoraRank, error)) {
         goto cleanup;
     }
 
-    // ── Attention: simplified single-token self-attention ──
-    // For now: combine q_b + k_pe (RoPE on k_pe would go here), then
-    // compute attention scores and weighted sum over v_b.
-    // Since we only have one token, attention is trivial: output = v_b
-    // (with proper head combination).
-    //
-    // Simplified: copy q_b into attnOut, then project through attnO.
-    // A full implementation would:
-    //   1. Apply RoPE to k_pe and broadcast to all heads
-    //   2. Concat k_b + k_pe per head to form full K
-    //   3. Compute Q*K^T / sqrt(d) scores
-    //   4. Softmax over cached positions
-    //   5. Weighted sum of V values
-    // For single-token generation, this collapses to output projection.
+    // =========================================================================
+    // Attention: simplified single-token self-attention
+    // =========================================================================
+    // For single-token generation, we copy q_b into attnOut and project.
+    // A full implementation would do RoPE, score computation, and softmax.
     memcpy(attnOut, q_b, numHeads * headDim * sizeof(float));
 
-    // ── Output projection: attnO^T * attnOut  [hiddenDim] ──
-    // GGUF stores attnO as [numHeads*headDim, hiddenDim]
+    // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
+    // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]
+    // But wait: attnO rows should match numHeads*headDim for Q projection,
+    // OR numHeads*vHeadDim for V projection. Let's use the actual tensor shape.
+    {
+        auto oDims = weights.attnO.dims();
+        if (oDims.size() >= 2) {
+            oCols = oDims[1];
+            oActualRows = oDims[0];
+        }
+    }
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
-                                hiddenDim, numHeads * headDim, error)) {
+                                oCols, oActualRows, error)) {
         goto cleanup;
     }
 

@@ -1038,6 +1038,51 @@ if(WIN32)
     message(STATUS "OMEGA-1 Bridge Test Harness configured")
 endif()
 
+# =============================================================================
+# K2 Router Injection Smoke Test
+# Validates per-layer MoE router weight injection from real K2 GGUF tensors.
+# Must pass before generation wiring.
+# =============================================================================
+if(WIN32)
+    add_executable(Deep2Engine_RouterSmokeTest
+        src/deep2/Deep2Engine_RouterSmokeTest.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/MoERouter.cpp
+    )
+    set_target_properties(Deep2Engine_RouterSmokeTest PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(Deep2Engine_RouterSmokeTest PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_link_directories(Deep2Engine_RouterSmokeTest PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(Deep2Engine_RouterSmokeTest PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET Deep2Engine_RouterSmokeTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET Deep2Engine_RouterSmokeTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET Deep2Engine_RouterSmokeTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(Deep2Engine_RouterSmokeTest PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "K2 Router Injection Smoke Test configured")
+endif()
+
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -8634,6 +8679,19 @@ add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
 set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
 add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-003B: Native GEMV Validation Against Real K2 Q4_K Weights
+# Must pass after K2-003A (Q4_K decoder certified) before full layer execution
+add_executable(k2_003b_native_gemv_validation tests/k2_003b_native_gemv_validation.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_003b_native_gemv_validation PRIVATE InferenceEngine)
+add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp

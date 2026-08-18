@@ -16,7 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <math>
+#include <cmath>
 #include <vector>
 #include <string>
 #include "GGUFLoader.hpp"
