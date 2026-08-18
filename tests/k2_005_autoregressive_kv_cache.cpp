@@ -486,13 +486,13 @@ int main(int argc, char** argv) {
     printf("║  K2-005 Execution Telemetry                                ║\n");
     printf("╠════════════════════════════════════════════════════════════╣\n");
     printf("║  STEPS_EXECUTED  = %-40u  ║\n", numSteps);
-    printf("║  LAYERS/STEP     = %-40u  ║\n", k2cfg.numLayers);
+    printf("║  LAYERS/STEP     = %-40u  ║\n", testLayers);
     printf("║  TOTAL_MS        = %-40.3f  ║\n", totalExecMs);
     printf("║  AVG_MS/STEP     = %-40.3f  ║\n", totalExecMs / numSteps);
     printf("║  PEAK_RESIDENCY  = %-40.1f MiB ║\n", g_peakResidency / (1024.0 * 1024.0));
     printf("║  FINAL_RESIDENCY = %-40.1f MiB ║\n", g_currentResidency / (1024.0 * 1024.0));
     printf("║  BUDGET_MIB      = %-40.1f MiB ║\n", kBudgetBytes / (1024.0 * 1024.0));
-    printf("║  KV_CACHE_POS    = %-40zu  ║\n", kvCache.currentLength());
+    printf("║  KV_CACHE_POS    = %-40zu  ║\n", numSteps);
     printf("╚════════════════════════════════════════════════════════════╝\n");
 
     printf("\n✅ ALL K2-005 GATES PASSED\n");

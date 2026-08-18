@@ -434,7 +434,7 @@ bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
             case 12: desc.quantType = RawrXD::QuantType::Q4_K;    desc.blockSize = 256; desc.blockSizeBytes = 144; break;
             case 13: desc.quantType = RawrXD::QuantType::Q5_K;    desc.blockSize = 256; desc.blockSizeBytes = 176; break;
             case 14: desc.quantType = RawrXD::QuantType::Q6_K;    desc.blockSize = 256; desc.blockSizeBytes = 210; break;
-            case 15: desc.quantType = RawrXD::QuantType::Q8_K;    desc.blockSize = 256; desc.blockSizeBytes = 292; break;
+            case 15: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 256; desc.blockSizeBytes = 292; break; // Q8_K not yet supported
             case 16: desc.quantType = RawrXD::QuantType::IQ2_XXS; desc.blockSize = 256; desc.blockSizeBytes = 98; break;
             case 17: desc.quantType = RawrXD::QuantType::IQ2_XS;  desc.blockSize = 256; desc.blockSizeBytes = 104; break;
             case 18: desc.quantType = RawrXD::QuantType::IQ3_XXS; desc.blockSize = 256; desc.blockSizeBytes = 122; break;
