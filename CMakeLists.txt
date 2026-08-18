@@ -4033,6 +4033,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/governance/Ensemble58Governor.cpp
     src/runtime/governance/TLSInstructionGate.cpp
     src/runtime/governance/UnifiedTriggerOrchestrator.cpp
+    src/deep2/K2TimeLimitedServing.cpp
     src/runtime/elastic/ElasticGGUFIndex.cpp
     src/runtime/elastic/ElasticResidencyManager.cpp
     src/runtime/elastic/ElasticDecoder.cpp
@@ -8840,6 +8841,14 @@ add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_sem
 set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_008_end_to_end_semantic_generation PRIVATE InferenceEngine)
 add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_semantic_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-TLS: Time-Limited Serving Smoke Test
+# Proves scheduler-level inference budget primitives work correctly.
+add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
+    src/deep2/K2TimeLimitedServing.cpp)
+set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
+add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
