@@ -8693,6 +8693,19 @@ set_target_properties(k2_003b_native_gemv_validation PROPERTIES RUNTIME_OUTPUT_D
 target_link_libraries(k2_003b_native_gemv_validation PRIVATE InferenceEngine)
 add_test(NAME k2_003b_native_gemv_validation COMMAND k2_003b_native_gemv_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-003C: Single-Layer Forward with Real K2 Weights (Bounded)
+# Proves one complete transformer layer executes on real Q4_K weights
+add_executable(k2_003c_single_layer_forward tests/k2_003c_single_layer_forward.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_003c_single_layer_forward PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_003c_single_layer_forward PRIVATE InferenceEngine)
+add_test(NAME k2_003c_single_layer_forward COMMAND k2_003c_single_layer_forward WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 # K2-004: Bounded Multi-Layer Prefill
 add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
     src/deep2/K2GlobalTensorIndex.cpp

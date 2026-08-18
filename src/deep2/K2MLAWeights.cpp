@@ -188,38 +188,46 @@ static void gemvQ4K(const void* weights, const float* input,
 
 // ============================================================================
 // Standalone Q4_K GEMV^T (transposed weights)
-//   weights is [cols, rows] in memory, each "column" has blocksPerCol blocks
+//   weights is [cols, rows] in memory (row-major Q4_K blocks)
 //   output[rows] = weights^T[rows, cols] * input[cols]
 //   where weights^T[r,c] = weights[c,r]
+//
+// CORRECTNESS FIX: Q4_K block layout is row-major. For transposed access
+// we need weights[c,r] which scatters across blocks. The safe approach:
+//   1. Dequantize entire matrix to temporary FP32 buffer
+//   2. Run gemvF32Transposed on the dequantized buffer
+//   3. Free temporary buffer
+// This stays under 256 MiB budget because we process one tensor at a time.
 // ============================================================================
 static void gemvQ4KTransposed(const void* weights, const float* input,
                               float* output, size_t rows, size_t cols) {
-    size_t blocksPerCol = (rows + 255) / 256;
-    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
-    float* dequantBuf = (float*)_aligned_malloc(256 * sizeof(float), 32);
-    if (!dequantBuf) return;
+    // Step 1: Dequantize entire [cols, rows] matrix to temporary FP32 buffer
+    size_t totalElems = cols * rows;
+    float* dequantMatrix = (float*)_aligned_malloc(totalElems * sizeof(float), 32);
+    if (!dequantMatrix) return;
 
-    // For transposed Q4_K, we dequantize column-by-column
-    for (size_t r = 0; r < rows; ++r) {
-        output[r] = 0.0f;
-    }
+    size_t blocksPerRow = (rows + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
+    float blockBuf[256];
 
     for (size_t c = 0; c < cols; ++c) {
-        // Each "column" in the transposed view is a row in the original
-        // But since the original is [cols, rows], column c is stored as row c
-        size_t blocksPerRowOrig = (rows + 255) / 256;
-        const Q4_K_Block* colBlocks =
-            (const Q4_K_Block*)((const uint8_t*)weights + c * blocksPerRowOrig * kBlockSize);
-
-        for (size_t r = 0; r < rows; ++r) {
-            size_t blockIdx = r / 256;
-            size_t elemInBlock = r % 256;
-            const Q4_K_Block* block = &colBlocks[blockIdx];
-            dequantizeQ4KBlock(block, dequantBuf);
-            output[r] += dequantBuf[elemInBlock] * input[c];
+        const Q4_K_Block* rowBlocks =
+            (const Q4_K_Block*)((const uint8_t*)weights + c * blocksPerRow * kBlockSize);
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            dequantizeQ4KBlock(&rowBlocks[b], blockBuf);
+            size_t base = c * rows + b * 256;
+            size_t elemsInBlock = std::min(size_t(256), rows - b * 256);
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                dequantMatrix[base + i] = blockBuf[i];
+            }
         }
     }
-    _aligned_free(dequantBuf);
+
+    // Step 2: Run transposed GEMV on dequantized buffer
+    gemvF32Transposed(dequantMatrix, input, output, rows, cols);
+
+    // Step 3: Free temporary buffer
+    _aligned_free(dequantMatrix);
 }
 
 // ============================================================================
