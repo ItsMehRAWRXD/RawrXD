@@ -317,11 +317,16 @@ static void test_gate4_reference_dot_product() {
     float dequant[256];
     dequantizeQ4KBlock(&blk, dequant);
 
-    // Expected: d=2.0, sc=3, min=0 → scale=6.0
-    // Each quant q → 6.0 * q
+    // Build expected using the SAME interleaving that dequantizeQ4KBlock uses:
+    // For sub-block j, bytes qs[j*16 + k] pack (lo=quants[j*32+2k], hi=quants[j*32+2k+1])
+    // out[j*32 + k]      = scale * lo
+    // out[j*32 + k + 16] = scale * hi
     float expected[256];
-    for (int i = 0; i < 256; ++i) {
-        expected[i] = 6.0f * quants[i];
+    for (int j = 0; j < 8; ++j) {
+        for (int k = 0; k < 16; ++k) {
+            expected[j * 32 + k]       = 6.0f * quants[j * 32 + 2 * k];
+            expected[j * 32 + k + 16]  = 6.0f * quants[j * 32 + 2 * k + 1];
+        }
     }
 
     bool ok = true;

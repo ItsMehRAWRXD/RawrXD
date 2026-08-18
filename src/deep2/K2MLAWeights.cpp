@@ -56,10 +56,13 @@ static_assert(sizeof(Q4_K_Block) == 144, "Q4_K_Block must be 144 bytes");
 
 static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
                                      uint8_t& sc, uint8_t& m) {
-    int idx = j / 2;
-    int shift = (j % 2) * 4;
-    sc = (scales[idx] >> shift) & 0x3F;
-    m  = (scales[idx + 6] >> shift) & 0x3F;
+    if (j < 4) {
+        sc = scales[j] & 63;
+        m  = scales[j + 4] & 63;
+    } else {
+        sc = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+        m  = (scales[j + 4] >> 4)      | ((scales[j]   >> 6) << 4);
+    }
 }
 
 static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
@@ -108,7 +111,44 @@ static void gemvF32(const float* weights, const float* input,
 }
 
 // ============================================================================
+// Standalone FP32 GEMV^T (transposed weights)
+//   weights is [cols, rows] in memory (row-major), but logically [rows, cols]
+//   output[rows] = weights^T[rows, cols] * input[cols]
+//   where weights^T[r,c] = weights[c,r]
+// ============================================================================
+static void gemvF32Transposed(const float* weights, const float* input,
+                              float* output, size_t rows, size_t cols) {
+    for (size_t r = 0; r < rows; ++r) {
+        float sum = 0.0f;
+        size_t c = 0;
+        __m256 acc = _mm256_setzero_ps();
+        for (; c + 8 <= cols; c += 8) {
+            // weights is stored as [cols, rows], so weights[c,r] is at weights[c*rows + r]
+            __m256 w = _mm256_set_ps(
+                weights[(c+7)*rows + r], weights[(c+6)*rows + r],
+                weights[(c+5)*rows + r], weights[(c+4)*rows + r],
+                weights[(c+3)*rows + r], weights[(c+2)*rows + r],
+                weights[(c+1)*rows + r], weights[(c+0)*rows + r]
+            );
+            __m256 x = _mm256_loadu_ps(input + c);
+            acc = _mm256_fmadd_ps(w, x, acc);
+        }
+        __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+        __m128 lo128 = _mm256_castps256_ps128(acc);
+        __m128 sum128 = _mm_add_ps(lo128, hi128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        sum = _mm_cvtss_f32(sum128);
+        for (; c < cols; ++c) {
+            sum += weights[c * rows + r] * input[c];
+        }
+        output[r] = sum;
+    }
+}
+
+// ============================================================================
 // Standalone Q4_K GEMV (dequantize-on-the-fly)
+//   weights is [rows, cols] row-major, each row has blocksPerRow Q4_K blocks
 // ============================================================================
 static void gemvQ4K(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -147,6 +187,42 @@ static void gemvQ4K(const void* weights, const float* input,
 }
 
 // ============================================================================
+// Standalone Q4_K GEMV^T (transposed weights)
+//   weights is [cols, rows] in memory, each "column" has blocksPerCol blocks
+//   output[rows] = weights^T[rows, cols] * input[cols]
+//   where weights^T[r,c] = weights[c,r]
+// ============================================================================
+static void gemvQ4KTransposed(const void* weights, const float* input,
+                              float* output, size_t rows, size_t cols) {
+    size_t blocksPerCol = (rows + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(Q4_K_Block);
+    float* dequantBuf = (float*)_aligned_malloc(256 * sizeof(float), 32);
+    if (!dequantBuf) return;
+
+    // For transposed Q4_K, we dequantize column-by-column
+    for (size_t r = 0; r < rows; ++r) {
+        output[r] = 0.0f;
+    }
+
+    for (size_t c = 0; c < cols; ++c) {
+        // Each "column" in the transposed view is a row in the original
+        // But since the original is [cols, rows], column c is stored as row c
+        size_t blocksPerRowOrig = (rows + 255) / 256;
+        const Q4_K_Block* colBlocks =
+            (const Q4_K_Block*)((const uint8_t*)weights + c * blocksPerRowOrig * kBlockSize);
+
+        for (size_t r = 0; r < rows; ++r) {
+            size_t blockIdx = r / 256;
+            size_t elemInBlock = r % 256;
+            const Q4_K_Block* block = &colBlocks[blockIdx];
+            dequantizeQ4KBlock(block, dequantBuf);
+            output[r] += dequantBuf[elemInBlock] * input[c];
+        }
+    }
+    _aligned_free(dequantBuf);
+}
+
+// ============================================================================
 // GEMV dispatch for TensorView
 // ============================================================================
 static bool gemvDispatch(const RawrXD::TensorView& weightView,
@@ -175,6 +251,40 @@ static bool gemvDispatch(const RawrXD::TensorView& weightView,
         return true;
     }
     error = "gemvDispatch: unsupported quant type";
+    return false;
+}
+
+// ============================================================================
+// GEMV dispatch for TRANSPOSED TensorView
+//   weightView is [cols, rows] in memory, but logically [rows, cols]
+//   output[rows] = weightView^T * input[cols]
+// ============================================================================
+static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
+                                   const float* input, float* output,
+                                   size_t rows, size_t cols,
+                                   std::string& error) {
+    if (!weightView.data()) {
+        error = "gemvDispatchTransposed: weightView has no data";
+        return false;
+    }
+    auto qt = weightView.quantType();
+    if (qt == RawrXD::QuantType::F32) {
+        const float* w = weightView.asF32();
+        if (!w) { error = "gemvDispatchTransposed: F32 weight data is null"; return false; }
+        gemvF32Transposed(w, input, output, rows, cols);
+        return true;
+    }
+    if (qt == RawrXD::QuantType::Q4_K) {
+        gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
+        return true;
+    }
+    // Fallback: try F32 anyway
+    const float* w = weightView.asF32();
+    if (w) {
+        gemvF32Transposed(w, input, output, rows, cols);
+        return true;
+    }
+    error = "gemvDispatchTransposed: unsupported quant type";
     return false;
 }
 
@@ -495,8 +605,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // ── Q-path: hidden → q_a → RMSNorm → q_b ──
     // Step 1: q_a = attnQ_a^T * hidden  [qLoraRank]
-    if (!gemvDispatch(weights.attnQ_a, hidden, q_a,
-                      qLoraRank, hiddenDim, error)) {
+    // GGUF stores attnQ_a as [hiddenDim, qLoraRank]; we need transpose multiply
+    if (!gemvDispatchTransposed(weights.attnQ_a, hidden, q_a,
+                                qLoraRank, hiddenDim, error)) {
         goto cleanup;
     }
 
@@ -509,15 +620,17 @@ bool MLAForward::Execute(const float* hidden, float* output,
     }
 
     // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
-    if (!gemvDispatch(weights.attnQ_b, q_a, q_b,
-                      numHeads * headDim, qLoraRank, error)) {
+    // GGUF stores attnQ_b as [qLoraRank, numHeads*headDim]
+    if (!gemvDispatchTransposed(weights.attnQ_b, q_a, q_b,
+                                numHeads * headDim, qLoraRank, error)) {
         goto cleanup;
     }
 
     // ── KV-path: hidden → kv_a_mqa → split → [compressed_kv | k_pe] ──
     // Step 4: kv_a = attnKV_a_mqa^T * hidden  [kvLoraRank + qkRopeHeadDim]
-    if (!gemvDispatch(weights.attnKV_a_mqa, hidden, kv_a,
-                      kvLoraRank + qkRopeHeadDim, hiddenDim, error)) {
+    // GGUF stores attnKV_a_mqa as [hiddenDim, kvLoraRank+qkRopeHeadDim]
+    if (!gemvDispatchTransposed(weights.attnKV_a_mqa, hidden, kv_a,
+                                kvLoraRank + qkRopeHeadDim, hiddenDim, error)) {
         goto cleanup;
     }
 
@@ -530,14 +643,16 @@ bool MLAForward::Execute(const float* hidden, float* output,
     }
 
     // Step 6: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
-    if (!gemvDispatch(weights.attnK_b, compressedKV, k_b,
-                      numHeads * qkNopeHeadDim, kvLoraRank, error)) {
+    // GGUF stores attnK_b as [kvLoraRank, numHeads*qkNopeHeadDim] (or 3D)
+    if (!gemvDispatchTransposed(weights.attnK_b, compressedKV, k_b,
+                                numHeads * qkNopeHeadDim, kvLoraRank, error)) {
         goto cleanup;
     }
 
     // Step 7: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
-    if (!gemvDispatch(weights.attnV_b, compressedKV, v_b,
-                      numHeads * vHeadDim, kvLoraRank, error)) {
+    // GGUF stores attnV_b as [kvLoraRank, numHeads*vHeadDim] (or 3D)
+    if (!gemvDispatchTransposed(weights.attnV_b, compressedKV, v_b,
+                                numHeads * vHeadDim, kvLoraRank, error)) {
         goto cleanup;
     }
 
@@ -558,8 +673,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
     memcpy(attnOut, q_b, numHeads * headDim * sizeof(float));
 
     // ── Output projection: attnO^T * attnOut  [hiddenDim] ──
-    if (!gemvDispatch(weights.attnO, attnOut, output,
-                      hiddenDim, numHeads * headDim, error)) {
+    // GGUF stores attnO as [numHeads*headDim, hiddenDim]
+    if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
+                                hiddenDim, numHeads * headDim, error)) {
         goto cleanup;
     }
 

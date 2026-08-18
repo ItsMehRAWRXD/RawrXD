@@ -102,10 +102,13 @@ static float fp16ToFloat(uint16_t h) {
 
 static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
                                        uint8_t& sc, uint8_t& m) {
-    int idx = j / 2;
-    int shift = (j % 2) * 4;
-    sc = (scales[idx] >> shift) & 0x3F;
-    m  = (scales[idx + 6] >> shift) & 0x3F;
+    if (j < 4) {
+        sc = scales[j] & 63;
+        m  = scales[j + 4] & 63;
+    } else {
+        sc = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+        m  = (scales[j + 4] >> 4)      | ((scales[j]   >> 6) << 4);
+    }
 }
 
 static void dequantizeQ4KBlock(const block_q4_K* block, float* out) {
@@ -166,9 +169,15 @@ static void q4kGEMV(const void* weights, const float* input,
             (const block_q4_K*)((const uint8_t*)weights + r * numBlocks * blockSize);
         float sum = 0.0f;
         for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
             dequantizeQ4KBlock(&rowBlocks[b], dequantBuf);
             __m256 acc = _mm256_setzero_ps();
-            for (size_t i = 0; i < 256; i += 8) {
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
                 __m256 w = _mm256_load_ps(dequantBuf + i);
                 __m256 x = _mm256_loadu_ps(input + b * 256 + i);
                 acc = _mm256_fmadd_ps(w, x, acc);
@@ -179,6 +188,9 @@ static void q4kGEMV(const void* weights, const float* input,
             sum128 = _mm_hadd_ps(sum128, sum128);
             sum128 = _mm_hadd_ps(sum128, sum128);
             sum += _mm_cvtss_f32(sum128);
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 256 + i];
+            }
         }
         output[r] = sum;
     }

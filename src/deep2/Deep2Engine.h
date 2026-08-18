@@ -399,7 +399,7 @@ private:
     ModelWeights modelWeights;
     
     // MoE infrastructure (real, not stubbed)
-    std::unique_ptr<MoERouter> moeRouter_;
+    std::vector<std::unique_ptr<MoERouter>> moeRouters_;  // per-layer router
     std::unique_ptr<MoELayer> moeLayer_;
     std::unique_ptr<MoEWeightsLoader> moeWeightsLoader_;
     std::unique_ptr<MoEWeightProxy> moeWeightProxy_;

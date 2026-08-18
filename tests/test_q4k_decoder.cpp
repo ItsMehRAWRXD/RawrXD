@@ -58,10 +58,13 @@ static inline float fp16ToFloat(uint16_t h) {
 
 static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
                                        uint8_t& sc, uint8_t& m) {
-    int idx = j / 2;
-    int shift = (j % 2) * 4;
-    sc = (scales[idx] >> shift) & 0x3F;
-    m  = (scales[idx + 6] >> shift) & 0x3F;
+    if (j < 4) {
+        sc = scales[j] & 63;
+        m  = scales[j + 4] & 63;
+    } else {
+        sc = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+        m  = (scales[j + 4] >> 4)      | ((scales[j]   >> 6) << 4);
+    }
 }
 
 static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {

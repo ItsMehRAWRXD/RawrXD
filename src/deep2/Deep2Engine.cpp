@@ -558,7 +558,7 @@ Deep2Engine::~Deep2Engine() {
     if (moeWeightsLoader_) moeWeightsLoader_->Close();
     moeWeightsLoader_.reset();
     moeLayer_.reset();
-    moeRouter_.reset();
+    moeRouters_.clear();
     moeInitialized_ = false;
 
     // MARS cleanup
@@ -1058,8 +1058,31 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
                 moeConfig_.hiddenDim          = meta.hiddenSize;
 
-                moeRouter_ = std::make_unique<MoERouter>();
-                moeRouter_->Initialize(moeConfig_);
+                // Create per-layer routers and inject weights
+                moeRouters_.clear();
+                moeRouters_.resize(modelWeights.numLayers);
+                for (size_t layerIdx = 0; layerIdx < modelWeights.numLayers; ++layerIdx) {
+                    auto router = std::make_unique<MoERouter>();
+                    router->Initialize(moeConfig_);
+                    const auto& lw = modelWeights.layers[layerIdx];
+                    if (lw.moeRouter.data && lw.moeRouter.type == (int)GGMLType::GGML_TYPE_F32) {
+                        router->SetRouterWeights(
+                            (const float*)lw.moeRouter.data,
+                            lw.moeRouter.rows,
+                            lw.moeRouter.cols);
+                    } else if (lw.moeRouter.data) {
+                        // Dequantize to FP32 for router weights
+                        size_t rows = lw.moeRouter.rows;
+                        size_t cols = lw.moeRouter.cols;
+                        std::vector<float> dequant(rows * cols);
+                        // TODO: handle quantized router weights via registry
+                        // For now, skip if not FP32
+                        printf("[Deep2Engine] WARNING: Layer %zu router weights not FP32 (type=%d), skipping injection\n",
+                               layerIdx, lw.moeRouter.type);
+                    }
+                    moeRouters_[layerIdx] = std::move(router);
+                }
+                printf("[Deep2Engine] Injected router weights for %zu layers\n", moeRouters_.size());
 
                 moeWeightProxy_ = std::make_unique<MoEWeightProxy>();
                 moeWeightProxy_->Attach(moeWeightsLoader_.get());
@@ -1076,8 +1099,16 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
             moeConfig_.hiddenDim          = meta.hiddenSize;
 
-            moeRouter_ = std::make_unique<MoERouter>();
-            moeRouter_->Initialize(moeConfig_);
+            // Create per-layer routers for multi-shard (weights loaded on-demand)
+            moeRouters_.clear();
+            moeRouters_.resize(modelWeights.numLayers);
+            for (size_t layerIdx = 0; layerIdx < modelWeights.numLayers; ++layerIdx) {
+                auto router = std::make_unique<MoERouter>();
+                router->Initialize(moeConfig_);
+                moeRouters_[layerIdx] = std::move(router);
+            }
+            printf("[Deep2Engine] Created %zu per-layer routers (multi-shard)\n", moeRouters_.size());
+
             moeInitialized_ = true;
         }
     }
@@ -1098,7 +1129,7 @@ void Deep2Engine::unloadModel() {
     if (moeWeightsLoader_) moeWeightsLoader_->Close();
     moeWeightsLoader_.reset();
     moeLayer_.reset();
-    moeRouter_.reset();
+    moeRouters_.clear();
     moeInitialized_ = false;
 
     // Clear model weights (tensor data is owned by GGUFLoader mmap; just clear refs)
@@ -1500,9 +1531,11 @@ void Deep2Engine::reset() {
         kvCache->reset();
     }
     // Sampler reset is optional - not all samplers maintain state
-    if (moeRouter_) {
-        moeRouter_->ResetStats();
-        moeRouter_->ResetExpertLoads();
+    for (auto& router : moeRouters_) {
+        if (router) {
+            router->ResetStats();
+            router->ResetExpertLoads();
+        }
     }
 }
 
@@ -1911,13 +1944,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     }
 
     // --- Routed experts ---
-    if (!moeRouter_ || !moeWeightProxy_) {
+    if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_) {
         // MoE not initialized - shared expert output is still valid
         return;
     }
 
-    // Route the token through the router
-    TokenRoute route = moeRouter_->Route(input);
+    // Route the token through the per-layer router
+    TokenRoute route = moeRouters_[layer]->Route(input);
 
     // Execute each selected expert
     // gateBuf/upBuf are used as temps inside computeExpertFFN
