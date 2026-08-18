@@ -8765,6 +8765,20 @@ set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTP
 target_link_libraries(k2_004_bounded_multi_layer_prefill PRIVATE InferenceEngine)
 add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_layer_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-005: Bounded Autoregressive Decode with KV Cache
+# Proves KV cache correctly stores/retrieves K/V across decode steps
+add_executable(k2_005_autoregressive_kv_cache tests/k2_005_autoregressive_kv_cache.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_005_autoregressive_kv_cache PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_005_autoregressive_kv_cache PRIVATE InferenceEngine)
+add_test(NAME k2_005_autoregressive_kv_cache COMMAND k2_005_autoregressive_kv_cache WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp

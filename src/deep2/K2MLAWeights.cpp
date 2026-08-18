@@ -431,30 +431,38 @@ bool MLAWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
         desc.memorySpace = RawrXD::UniversalTensorDescriptor::MemorySpace::NVME;
         desc.data = nullptr;
 
-        // Map GGML type to QuantType
+        // Map GGML type to QuantType (must match ggml.h enum ggml_type)
         switch (ref.ggmlType) {
-            case 0:  desc.quantType = RawrXD::QuantType::F32; break;
-            case 1:  desc.quantType = RawrXD::QuantType::F16; break;
-            case 2:  desc.quantType = RawrXD::QuantType::Q4_0; break;
-            case 3:  desc.quantType = RawrXD::QuantType::Q4_1; break;
-            case 6:  desc.quantType = RawrXD::QuantType::Q5_0; break;
-            case 7:  desc.quantType = RawrXD::QuantType::Q5_1; break;
-            case 8:  desc.quantType = RawrXD::QuantType::Q8_0; break;
-            case 9:  desc.quantType = RawrXD::QuantType::Q8_1; break;
-            case 10: desc.quantType = RawrXD::QuantType::Q2_K; break;
-            case 11: desc.quantType = RawrXD::QuantType::Q3_K; break;
-            case 12: desc.quantType = RawrXD::QuantType::Q4_K; break;
-            case 13: desc.quantType = RawrXD::QuantType::Q5_K; break;
-            case 14: desc.quantType = RawrXD::QuantType::Q6_K; break;
-            case 17: desc.quantType = RawrXD::QuantType::IQ2_XXS; break;
-            case 18: desc.quantType = RawrXD::QuantType::IQ2_XS; break;
-            case 19: desc.quantType = RawrXD::QuantType::IQ3_XXS; break;
-            case 20: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ1_S
-            case 21: desc.quantType = RawrXD::QuantType::IQ4_NL; break;
-            case 22: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ3_S
-            case 23: desc.quantType = RawrXD::QuantType::UNKNOWN; break; // IQ2_S
-            case 24: desc.quantType = RawrXD::QuantType::IQ4_XS; break;
-            default: desc.quantType = RawrXD::QuantType::UNKNOWN; break;
+            case 0:  desc.quantType = RawrXD::QuantType::F32;     desc.blockSize = 1;   desc.blockSizeBytes = 4; break;
+            case 1:  desc.quantType = RawrXD::QuantType::F16;     desc.blockSize = 1;   desc.blockSizeBytes = 2; break;
+            case 2:  desc.quantType = RawrXD::QuantType::Q4_0;    desc.blockSize = 32;  desc.blockSizeBytes = 18; break;
+            case 3:  desc.quantType = RawrXD::QuantType::Q4_1;    desc.blockSize = 32;  desc.blockSizeBytes = 20; break;
+            case 6:  desc.quantType = RawrXD::QuantType::Q5_0;    desc.blockSize = 32;  desc.blockSizeBytes = 22; break;
+            case 7:  desc.quantType = RawrXD::QuantType::Q5_1;    desc.blockSize = 32;  desc.blockSizeBytes = 24; break;
+            case 8:  desc.quantType = RawrXD::QuantType::Q8_0;    desc.blockSize = 32;  desc.blockSizeBytes = 34; break;
+            case 9:  desc.quantType = RawrXD::QuantType::Q8_1;    desc.blockSize = 32;  desc.blockSizeBytes = 36; break;
+            case 10: desc.quantType = RawrXD::QuantType::Q2_K;    desc.blockSize = 256; desc.blockSizeBytes = 96; break;
+            case 11: desc.quantType = RawrXD::QuantType::Q3_K;    desc.blockSize = 256; desc.blockSizeBytes = 144; break;
+            case 12: desc.quantType = RawrXD::QuantType::Q4_K;    desc.blockSize = 256; desc.blockSizeBytes = 144; break;
+            case 13: desc.quantType = RawrXD::QuantType::Q5_K;    desc.blockSize = 256; desc.blockSizeBytes = 176; break;
+            case 14: desc.quantType = RawrXD::QuantType::Q6_K;    desc.blockSize = 256; desc.blockSizeBytes = 210; break;
+            case 15: desc.quantType = RawrXD::QuantType::Q8_K;    desc.blockSize = 256; desc.blockSizeBytes = 292; break;
+            case 16: desc.quantType = RawrXD::QuantType::IQ2_XXS; desc.blockSize = 256; desc.blockSizeBytes = 98; break;
+            case 17: desc.quantType = RawrXD::QuantType::IQ2_XS;  desc.blockSize = 256; desc.blockSizeBytes = 104; break;
+            case 18: desc.quantType = RawrXD::QuantType::IQ3_XXS; desc.blockSize = 256; desc.blockSizeBytes = 122; break;
+            case 19: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 256; desc.blockSizeBytes = 154; break; // IQ1_S
+            case 20: desc.quantType = RawrXD::QuantType::IQ4_NL;  desc.blockSize = 32;  desc.blockSizeBytes = 18; break;
+            case 21: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 256; desc.blockSizeBytes = 166; break; // IQ3_S
+            case 22: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 256; desc.blockSizeBytes = 154; break; // IQ2_S
+            case 23: desc.quantType = RawrXD::QuantType::IQ4_XS;  desc.blockSize = 256; desc.blockSizeBytes = 136; break;
+            case 24: desc.quantType = RawrXD::QuantType::I8;      desc.blockSize = 1;   desc.blockSizeBytes = 1; break;
+            case 25: desc.quantType = RawrXD::QuantType::I16;     desc.blockSize = 1;   desc.blockSizeBytes = 2; break;
+            case 26: desc.quantType = RawrXD::QuantType::I32;     desc.blockSize = 1;   desc.blockSizeBytes = 4; break;
+            case 27: desc.quantType = RawrXD::QuantType::I64;     desc.blockSize = 1;   desc.blockSizeBytes = 8; break;
+            case 28: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 1;   desc.blockSizeBytes = 8; break; // F64
+            case 29: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 256; desc.blockSizeBytes = 160; break; // IQ1_M
+            case 30: desc.quantType = RawrXD::QuantType::BF16;    desc.blockSize = 1;   desc.blockSizeBytes = 2; break;
+            default: desc.quantType = RawrXD::QuantType::UNKNOWN; desc.blockSize = 1;   desc.blockSizeBytes = 4; break;
         }
 
         view = RawrXD::TensorView::FromBuffer(desc, nullptr, false);
