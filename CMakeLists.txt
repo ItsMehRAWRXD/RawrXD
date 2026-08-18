@@ -8793,6 +8793,25 @@ set_target_properties(k2_006_bounded_token_generation PROPERTIES RUNTIME_OUTPUT_
 target_link_libraries(k2_006_bounded_token_generation PRIVATE InferenceEngine)
 add_test(NAME k2_006_bounded_token_generation COMMAND k2_006_bounded_token_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-007: Real Output Projection (Q4_K streamed)
+# Proves output.weight can be streamed row-by-row to produce logits
+# without unbounded allocation. Independent of K2-006 synthetic baseline.
+add_executable(k2_007_real_output_projection tests/k2_007_real_output_projection.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_007_real_output_projection PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_007_real_output_projection PRIVATE InferenceEngine)
+add_test(NAME k2_007_real_output_projection COMMAND k2_007_real_output_projection WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-007A: GGUF Tokenizer Metadata Extraction
+# Proves tokenizer.ggml.* arrays are readable from GGUF without external deps.
+add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
+set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp
