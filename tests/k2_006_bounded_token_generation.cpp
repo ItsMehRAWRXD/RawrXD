@@ -195,6 +195,7 @@ struct K2DecodeAdapter {
     uint32_t testLayers = 4;
     size_t hiddenDim = 7168;
     size_t vocabSize = 163840;
+    size_t kvCacheSizeTracked = 0;  // for residency tracking cleanup
 
     // Global tensors (loaded once)
     std::vector<uint8_t> outputNormPayload;
@@ -215,12 +216,12 @@ struct K2DecodeAdapter {
         kvCfg.headDim = cfg->qkNopeHeadDim + cfg->qkRopeHeadDim;
         kvCfg.batchSize = 1;
 
-        size_t kvCacheSize = kvCfg.totalSize();
+        kvCacheSizeTracked = kvCfg.totalSize();
         if (!kvCache.initialize(kvCfg)) {
             error = "KV cache initialization failed";
             return false;
         }
-        TrackAlloc(kvCacheSize);
+        TrackAlloc(kvCacheSizeTracked);
 
         // Load output norm only (token_embd and output.weight are ~630 MiB each
         // and not needed while embedToken/projectLogits are synthetic)
@@ -247,16 +248,28 @@ struct K2DecodeAdapter {
     }
 
     // Output projection: logits = outputWeight^T * hidden
-    // For now, synthetic: produce vocabSize logits from hidden state
+    // For now, synthetic: produce vocabSize logits from hidden state.
+    // Uses a fast reduced-dimension projection (O(vocabSize) not O(vocabSize*hiddenDim))
+    // so the test completes in seconds instead of minutes.
     void projectLogits(const float* hidden, float* logits) {
         // TODO: wire actual Q4_K output projection
-        // Synthetic: each logit is a dot product with a deterministic vector
+        // Fast synthetic: derive a small feature vector from hidden, then project.
+        constexpr size_t kFeatures = 256;
+        float features[kFeatures];
+        for (size_t f = 0; f < kFeatures; ++f) {
+            // Strided sampling + simple hash mix
+            size_t idx = (f * 7919ull) % hiddenDim;
+            features[f] = hidden[idx] * std::sin(float(f) * 0.1f);
+        }
+        // Scalar energy from features (deterministic, fast)
+        float energy = 0.0f;
+        for (size_t f = 0; f < kFeatures; ++f) {
+            energy += features[f] * std::sin(float(f + 1) * 0.05f);
+        }
+        // Per-vocab logits: energy + small vocab-specific perturbation
         for (size_t v = 0; v < vocabSize; ++v) {
-            float sum = 0.0f;
-            for (size_t i = 0; i < hiddenDim; ++i) {
-                sum += hidden[i] * std::sin(float(v * hiddenDim + i) * 0.001f);
-            }
-            logits[v] = sum;
+            float perturb = std::sin(float(v) * 0.01f + energy) * 0.5f;
+            logits[v] = energy + perturb;
         }
     }
 
