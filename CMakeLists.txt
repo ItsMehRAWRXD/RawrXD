@@ -8842,6 +8842,13 @@ set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_O
 target_link_libraries(k2_008_end_to_end_semantic_generation PRIVATE InferenceEngine)
 add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_semantic_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-008A: UTF-8 Safe Tokenizer Detokenization Regression Gate
+# Proves token bytes survive UTF-8 round-trip unchanged.
+add_executable(k2_008a_utf8_safe_detokenization tests/k2_008a_utf8_safe_detokenization.cpp)
+set_target_properties(k2_008a_utf8_safe_detokenization PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_008a_utf8_safe_detokenization PRIVATE InferenceEngine)
+add_test(NAME k2_008a_utf8_safe_detokenization COMMAND k2_008a_utf8_safe_detokenization WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
 add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
