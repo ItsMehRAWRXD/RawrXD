@@ -1,0 +1,60 @@
+╔════════════════════════════════════════════════════════════╗
+║  K2-003 Native Deep2 Layer Execution                       ║
+║  Budget: 256 MiB   Scope: blk.0 attention Q-path            ║
+╚════════════════════════════════════════════════════════════╝
+
+[INFO] Shard directory: F:\OllamaModels\Kimi-K2-Instruct-0905-GGUF\Q4_K_M
+
+── Gate 1: Shard Discovery ──
+       Found 13 shard(s)
+
+── Gate 2: Tensor Index Build ──
+  [PASS] Gate: Index built
+       Total tensors indexed: 1096
+
+── Gate 3: Layer-0 Tensor Resolution ──
+  [PASS] Gate: MLA resolved
+       attn_q_a:     shape=[7168, 1536]
+       attn_q_b:     shape=[1536, 12288]
+       attn_output:  shape=[8192, 7168]
+
+── Gate 4: Tensor Payload Streaming ──
+  [PASS] Gate: Load attn_q_a
+  [PASS] Gate: Load attn_q_b
+  [PASS] Gate: Load attn_output
+       Loaded: 49840128 bytes (q_a=6193152, q_b=10616832, output=33030144)
+  [PASS] Gate: Within budget
+
+── Gate 5: Deep2 Q4_K GEMV Execution ──
+       Dequantized q_a: 7168 x 1536 -> 44040192 bytes FP32
+       GEMV executed: 1536 outputs in 39.728 ms
+  [PASS] Gate: GEMV executed
+
+── Gate 6: Output Dimensions ──
+  [PASS] Gate: Output size == qLoraRank
+       Output size: 1536 (expected 1536)
+
+── Gate 7: Output Finiteness ──
+  [PASS] Gate: All outputs finite
+       min=-5.2063 max=4.9529 mean=0.0662
+
+── Gate 8: Determinism ──
+  [PASS] Gate: Deterministic within tolerance
+       Max diff between runs: 0.000000e+00
+
+── Gate 9: Residency Baseline ──
+       All tensor buffers released
+  [PASS] Gate: Residency released
+
+╔════════════════════════════════════════════════════════════╗
+║  K2-003 Execution Telemetry                                ║
+╠════════════════════════════════════════════════════════════╣
+║  PEAK_RESIDENT      = 93880320                                 ║
+║  BUDGET_BYTES       = 268435456                                ║
+║  TENSORS_LOADED     = 0                                        ║
+║  DEQUANT_BYTES      = 44040192                                 ║
+║  GEMV_TIME_MS       = 39.728                                   ║
+╚════════════════════════════════════════════════════════════╝
+
+✅ ALL K2-003 EXECUTION GATES PASSED
+   K2 tensor payloads successfully dequantized and executed.
