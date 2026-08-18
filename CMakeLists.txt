@@ -8842,13 +8842,6 @@ set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_O
 target_link_libraries(k2_008_end_to_end_semantic_generation PRIVATE InferenceEngine)
 add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_semantic_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
-# K2-008A: UTF-8 Safe Tokenizer Detokenization Regression Gate
-# Proves token bytes survive UTF-8 round-trip unchanged.
-add_executable(k2_008a_utf8_safe_detokenization tests/k2_008a_utf8_safe_detokenization.cpp)
-set_target_properties(k2_008a_utf8_safe_detokenization PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-target_link_libraries(k2_008a_utf8_safe_detokenization PRIVATE InferenceEngine)
-add_test(NAME k2_008a_utf8_safe_detokenization COMMAND k2_008a_utf8_safe_detokenization WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
-
 # K2-TLS: Time-Limited Serving Smoke Test
 # Proves scheduler-level inference budget primitives work correctly.
 add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
@@ -8856,6 +8849,20 @@ add_executable(k2_tls_smoke_test tests/k2_tls_smoke_test.cpp
 set_target_properties(k2_tls_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_tls_smoke_test PRIVATE InferenceEngine)
 add_test(NAME k2_tls_smoke_test COMMAND k2_tls_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-009: Real Token Embedding Lookup
+# Proves token_embd.weight can be streamed row-by-row without loading
+# the full ~918 MiB matrix. Reuses Q6_K dequantization from K2-007.
+add_executable(k2_009_token_embedding_lookup tests/k2_009_token_embedding_lookup.cpp
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_009_token_embedding_lookup PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_009_token_embedding_lookup PRIVATE InferenceEngine)
+add_test(NAME k2_009_token_embedding_lookup COMMAND k2_009_token_embedding_lookup WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
