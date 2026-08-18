@@ -100,7 +100,11 @@ int main(int argc, char** argv) {
     printf("\n── Gate 1: Shard Discovery ──\n");
     std::vector<fs::path> shards;
     bool found = DiscoverK2Shards(shardDir, shards);
-    GATE("At least one K2 shard found", found, 1);
+    if (!found) {
+        printf("       [SKIP] No K2 shards found in %s\n", shardDir.string().c_str());
+        printf("       To run this test, point to a directory containing K2 GGUF shards.\n");
+        return 0;  // Skip, not fail
+    }
     printf("       Found %zu shard(s)\n", shards.size());
 
     // ═══════════════════════════════════════════════════════════════

@@ -116,6 +116,11 @@ struct ModelWeights {
     size_t qkNopeHeadDim  = 0;
     size_t qkRopeHeadDim  = 0;
     size_t vHeadDim       = 0;
+    size_t keyLength      = 0;
+    size_t valueLength    = 0;
+    size_t keyLengthMla   = 0;
+    size_t valueLengthMla = 0;
+    size_t ropeDimensionCount = 0;
     bool   useMLA         = false;
 
     float  ropeTheta      = 10000.0f;

@@ -619,12 +619,10 @@ static void gemv_q4_k_avx2(
             // Process 8 sub-blocks of 32 weights each
             for (int sb = 0; sb < 8; ++sb) {
                 // Extract 6-bit scale and min for this sub-block from scales[12]
-                int scaleIdx = sb / 2;
-                int shift = (sb % 2) * 4;
-                uint8_t scale = (blk.scales[scaleIdx] >> shift) & 0x3F;
-                uint8_t min   = (blk.scales[scaleIdx + 6] >> shift) & 0x3F;
-                float s = d * scale;
-                float m = dmin * min;
+                uint8_t scale_u8, min_u8;
+                get_scale_min_k4(sb, blk.scales, scale_u8, min_u8);
+                float s = d * scale_u8;
+                float m = dmin * min_u8;
                 __m256 sVec = _mm256_set1_ps(s);
                 __m256 mVec = _mm256_set1_ps(m);
                 

@@ -5772,6 +5772,26 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         target_link_libraries(Deep2Engine_IntegrationTest PRIVATE vulkan-1)
     endif()
 
+    # ============================================================================
+    # DeepSeek2 Metadata Regression Test (K2-001)
+    # Loads real K2 GGUF metadata-only and asserts ground-truth values.
+    # Must pass before K2-002 bounded tensor execution.
+    # ============================================================================
+    add_executable(Deep2Engine_MetadataRegressionTest
+        src/deep2/Deep2Engine_MetadataRegressionTest.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    target_include_directories(Deep2Engine_MetadataRegressionTest PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_compile_features(Deep2Engine_MetadataRegressionTest PRIVATE cxx_std_17)
+    set_target_properties(Deep2Engine_MetadataRegressionTest PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    message(STATUS "Deep2Engine Metadata Regression Test configured")
+
     # ── SDMA GPU Scheduler (C++ replacement for MASM) ───────────────────────
     # Replaced broken MASM syntax with portable C++ implementations
     # sdma_scheduler: GPU DMA event loop, burst coalescing, TSC-based scheduling
