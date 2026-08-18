@@ -537,12 +537,13 @@ uint64_t MLAWeights::ResolveAndLoad(const GlobalTensorIndex& index, uint32_t lay
 // ============================================================================
 // ReleaseAll — free all aligned tensor buffers
 // ============================================================================
+// CRITICAL: TensorView destructor already frees data when ownsData_ is true.
+// Do NOT call _aligned_free manually here — that causes double-free heap corruption.
+// Just reset the view to empty; the destructor handles cleanup.
+// ============================================================================
 void MLAWeights::ReleaseAll() {
     auto release = [](RawrXD::TensorView& view) {
-        if (view.data()) {
-            _aligned_free(view.data());
-            view = RawrXD::TensorView(); // Reset to empty
-        }
+        view = RawrXD::TensorView(); // Destructor frees if ownsData_
     };
     release(attnQ_a);
     release(attnQ_a_norm);
@@ -655,8 +656,10 @@ bool MLAForward::Execute(const float* hidden, float* output,
     }
 
     // Pre-declare variables that may be read after goto cleanup
-    size_t oCols = 0;
-    size_t oActualRows = 0;
+    // attnO GGUF shape: [oRows, hiddenDim]
+    // Transposed GEMV: output[hiddenDim] = attnO^T * attnOut[oRows]
+    const size_t oActualRows = oRows;                     // logical cols = oRows
+    const size_t oCols       = hiddenDim;                 // logical rows = hiddenDim
 
     // =========================================================================
     // Q-path: hidden → q_a → RMSNorm → q_b
