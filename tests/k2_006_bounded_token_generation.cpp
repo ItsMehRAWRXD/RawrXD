@@ -286,7 +286,11 @@ struct K2DecodeAdapter {
     void shutdown() {
         TrackFree(outputNormPayload.size());
         outputNormPayload.clear();
-        // KV cache freed on destruction
+        // KV cache freed on destruction — also update residency tracker
+        if (kvCacheSizeTracked > 0) {
+            TrackFree(kvCacheSizeTracked);
+            kvCacheSizeTracked = 0;
+        }
     }
 };
 

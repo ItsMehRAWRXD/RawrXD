@@ -650,40 +650,31 @@ bool MLAForward::Execute(const float* hidden, float* output,
                          class K2KVCache* kvCache,
                          uint32_t layerIdx,
                          uint32_t position) {
-    fprintf(stderr, "[Execute] entry\n");
     if (!hidden || !output) {
         error = "MLAForward: null input/output pointer";
         return false;
     }
 
-    fprintf(stderr, "[Execute] validating...\n");
     if (!weights.Validate(config, error)) {
         return false;
     }
-    fprintf(stderr, "[Execute] validate ok\n");
 
     // =========================================================================
     // DERIVE ALL DIMENSIONS FROM ACTUAL TENSOR SHAPES (GGUF is authoritative)
     // =========================================================================
-    fprintf(stderr, "[Execute] deriving dims from attnQ_a...\n");
     // attnQ_a: [hiddenDim, qLoraRank]
     const size_t hiddenDim = weights.attnQ_a.dims()[0];
     const size_t qLoraRank = weights.attnQ_a.dims()[1];
-    fprintf(stderr, "[Execute] hiddenDim=%zu qLoraRank=%zu\n", hiddenDim, qLoraRank);
 
     // attnQ_b: [qLoraRank, numHeads * headDim]
-    fprintf(stderr, "[Execute] deriving qBCols...\n");
     const size_t qBCols = weights.attnQ_b.dims()[1];
-    fprintf(stderr, "[Execute] qBCols=%zu\n", qBCols);
     const size_t numHeads = config.numHeads; // heads is architectural, not tensor-derived
-    fprintf(stderr, "[Execute] numHeads=%zu\n", numHeads);
     if (qBCols % numHeads != 0) {
         error = "MLAForward: attn_q_b cols (" + std::to_string(qBCols) +
                 ") not divisible by numHeads (" + std::to_string(numHeads) + ")";
         return false;
     }
     const size_t headDim = qBCols / numHeads;
-    fprintf(stderr, "[Execute] headDim=%zu\n", headDim);
 
     // attnKV_a_mqa: [hiddenDim, kvLoraRank + qkRopeHeadDim]
     const size_t kvACols = weights.attnKV_a_mqa.dims()[1];
