@@ -315,9 +315,15 @@ int main(int argc, char** argv) {
     // ═══════════════════════════════════════════════════════════════
     printf("\n── Gate 3: KV Cache Initialization ──\n");
     Deep2::KVCache kvCache;
+    // Use reduced dimensions to stay within 256 MiB budget
+    // Full K2: 61 layers * 128 seq * 128 heads * 192 dim * 4 bytes * 2 = 1464 MiB
+    // Test:    4 layers * 16 seq  * 128 heads * 192 dim * 4 bytes * 2 = 12 MiB
+    uint32_t testLayers = 4;
+    uint32_t testMaxSeq = 16;
+
     Deep2::KVCacheConfig kvCfg;
-    kvCfg.numLayers = k2cfg.numLayers;
-    kvCfg.maxSeqLen = 128;  // Small for testing
+    kvCfg.numLayers = testLayers;
+    kvCfg.maxSeqLen = testMaxSeq;
     kvCfg.numHeads = k2cfg.numHeads;
     kvCfg.headDim = k2cfg.qkNopeHeadDim + k2cfg.qkRopeHeadDim; // 192
     kvCfg.batchSize = 1;
@@ -356,9 +362,9 @@ int main(int argc, char** argv) {
         float* in  = (step % 2 == 0) ? hiddenA.data() : hiddenB.data();
         float* out = (step % 2 == 0) ? hiddenB.data() : hiddenA.data();
 
-        // Run all layers for this step
+        // Run testLayers for this step
         double stepMs = 0.0;
-        for (uint32_t layer = 0; layer < k2cfg.numLayers; ++layer) {
+        for (uint32_t layer = 0; layer < testLayers; ++layer) {
             std::vector<float> layerOut(hiddenDim);
             std::string execErr;
             double layerMs = 0.0;
@@ -437,10 +443,10 @@ int main(int argc, char** argv) {
         std::vector<float> out2(hiddenDim);
         std::vector<float> scratch2(hiddenDim);
 
-        // Run step 0 twice
+        // Run step 0 twice (using testLayers)
         std::string err;
         double ms1 = 0.0, ms2 = 0.0;
-        for (uint32_t layer = 0; layer < k2cfg.numLayers; ++layer) {
+        for (uint32_t layer = 0; layer < testLayers; ++layer) {
             bool ok1 = ExecuteLayerWithCache(layer, index, k2cfg,
                                                (layer == 0) ? hiddenCopy.data() : out1.data(),
                                                out1.data(), scratch2.data(),
@@ -450,7 +456,7 @@ int main(int argc, char** argv) {
 
         kvCache.reset();
         for (size_t i = 0; i < hiddenDim; ++i) hiddenCopy[i] = std::sin(float(i) * 0.01f) * 0.1f;
-        for (uint32_t layer = 0; layer < k2cfg.numLayers; ++layer) {
+        for (uint32_t layer = 0; layer < testLayers; ++layer) {
             bool ok2 = ExecuteLayerWithCache(layer, index, k2cfg,
                                                (layer == 0) ? hiddenCopy.data() : out2.data(),
                                                out2.data(), scratch2.data(),
