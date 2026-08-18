@@ -38,7 +38,9 @@ static std::vector<std::string> DiscoverShards(const std::string& firstShardPath
     std::string stem = p.stem().string();
 
     // Extract the shard pattern: everything before "-00001-of-00013"
-    size_t shardPos = stem.rfind("-000");
+    // Use find() not rfind() — we want the FIRST "-000" (the shard number),
+    // not the last one (which would be in "-00013").
+    size_t shardPos = stem.find("-000");
     if (shardPos == std::string::npos) {
         // Single-file model
         shards.push_back(firstShardPath);
@@ -352,6 +354,7 @@ static bool RunRouterSmokeTest(const char* firstShardPath) {
         moeConfig.hiddenDim        = hiddenDim;
         moeConfig.expertDim        = meta.moeIntermediateSize > 0 ? meta.moeIntermediateSize : 2048;
         moeConfig.useSharedExpert  = meta.numSharedExperts > 0;
+        moeConfig.useLoadBalancing = false;  // DISABLE noise for deterministic validation
 
         MoERouter router;
         router.Initialize(moeConfig);
