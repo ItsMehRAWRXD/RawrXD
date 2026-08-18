@@ -8812,6 +8812,35 @@ add_executable(k2_007a_tokenizer_metadata tests/k2_007a_tokenizer_metadata.cpp)
 set_target_properties(k2_007a_tokenizer_metadata PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 add_test(NAME k2_007a_tokenizer_metadata COMMAND k2_007a_tokenizer_metadata WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-007B: Projection → Logits Interface
+# Narrow integration gate: proves real output projection produces a valid
+# logits vector consumable by deterministic argmax. Reuses K2-007 streaming.
+add_executable(k2_007b_projection_logits_interface tests/k2_007b_projection_logits_interface.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_007b_projection_logits_interface PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_007b_projection_logits_interface PRIVATE InferenceEngine)
+add_test(NAME k2_007b_projection_logits_interface COMMAND k2_007b_projection_logits_interface WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-008: End-to-End Semantic Generation
+# Proves tokenizer + real output projection communicate end-to-end:
+# text → tokens → real K2 inference → logits → argmax → token → text.
+# Independent of K2-006 synthetic baseline.
+add_executable(k2_008_end_to_end_semantic_generation tests/k2_008_end_to_end_semantic_generation.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/KVCache.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_008_end_to_end_semantic_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_008_end_to_end_semantic_generation PRIVATE InferenceEngine)
+add_test(NAME k2_008_end_to_end_semantic_generation COMMAND k2_008_end_to_end_semantic_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp
