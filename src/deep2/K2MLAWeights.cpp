@@ -725,15 +725,7 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // Step 8: Output projection: attnO^T * attnOut  [hiddenDim]
     // GGUF stores attnO as [numHeads*vHeadDim, hiddenDim]
-    // But wait: attnO rows should match numHeads*headDim for Q projection,
-    // OR numHeads*vHeadDim for V projection. Let's use the actual tensor shape.
-    {
-        auto oDims = weights.attnO.dims();
-        if (oDims.size() >= 2) {
-            oCols = oDims[1];
-            oActualRows = oDims[0];
-        }
-    }
+    // Use actual tensor shape (already pre-fetched into oCols / oActualRows)
     if (!gemvDispatchTransposed(weights.attnO, attnOut, output,
                                 oCols, oActualRows, error)) {
         goto cleanup;
