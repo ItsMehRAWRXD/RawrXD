@@ -8752,6 +8752,19 @@ set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
 add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
+# K2-004B: Bounded Multi-Layer Prefill (stream one layer at a time)
+# Proves scalability from 003C single-layer to multi-layer with bounded memory
+add_executable(k2_004_bounded_multi_layer_prefill tests/k2_004_bounded_multi_layer_prefill.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(k2_004_bounded_multi_layer_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_004_bounded_multi_layer_prefill PRIVATE InferenceEngine)
+add_test(NAME k2_004_bounded_multi_layer_prefill COMMAND k2_004_bounded_multi_layer_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp
     src/cpu_inference_engine.cpp

@@ -270,6 +270,9 @@ static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
         return false;
     }
     auto qt = weightView.quantType();
+    uint64_t byteSize = weightView.byteSize();
+    fprintf(stderr, "[GEMV^T] rows=%zu cols=%zu quant=%d byteSize=%llu\n",
+            rows, cols, (int)qt, (unsigned long long)byteSize);
     if (qt == RawrXD::QuantType::F32) {
         const float* w = weightView.asF32();
         if (!w) { error = "gemvDispatchTransposed: F32 weight data is null"; return false; }
@@ -277,6 +280,10 @@ static bool gemvDispatchTransposed(const RawrXD::TensorView& weightView,
         return true;
     }
     if (qt == RawrXD::QuantType::Q4_K) {
+        size_t blocksPerRow = (rows + 255) / 256;
+        size_t expectedBytes = cols * blocksPerRow * sizeof(Q4_K_Block);
+        fprintf(stderr, "[GEMV^T] Q4_K blocksPerRow=%zu expected=%zu\n",
+                blocksPerRow, expectedBytes);
         gemvQ4KTransposed(weightView.data(), input, output, rows, cols);
         return true;
     }
