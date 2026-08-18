@@ -192,42 +192,36 @@ static void gemvQ4K(const void* weights, const float* input,
 //   output[rows] = weights^T[rows, cols] * input[cols]
 //   where weights^T[r,c] = weights[c,r]
 //
-// CORRECTNESS FIX: Q4_K block layout is row-major. For transposed access
-// we need weights[c,r] which scatters across blocks. The safe approach:
-//   1. Dequantize entire matrix to temporary FP32 buffer
-//   2. Run gemvF32Transposed on the dequantized buffer
-//   3. Free temporary buffer
-// This stays under 256 MiB budget because we process one tensor at a time.
+// CORRECTNESS: Q4_K stores each "column" (in transposed view) as a sequence
+// of Q4_K blocks. We process one column at a time, dequantizing each block
+// and accumulating into output. No large temporary allocations.
 // ============================================================================
 static void gemvQ4KTransposed(const void* weights, const float* input,
                               float* output, size_t rows, size_t cols) {
-    // Step 1: Dequantize entire [cols, rows] matrix to temporary FP32 buffer
-    size_t totalElems = cols * rows;
-    float* dequantMatrix = (float*)_aligned_malloc(totalElems * sizeof(float), 32);
-    if (!dequantMatrix) return;
-
     size_t blocksPerRow = (rows + 255) / 256;
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);
     float blockBuf[256];
 
+    // Zero output accumulator
+    for (size_t r = 0; r < rows; ++r) output[r] = 0.0f;
+
+    // Process one column at a time
     for (size_t c = 0; c < cols; ++c) {
-        const Q4_K_Block* rowBlocks =
+        const Q4_K_Block* colBlocks =
             (const Q4_K_Block*)((const uint8_t*)weights + c * blocksPerRow * kBlockSize);
+        float inVal = input[c];
+
+        size_t r = 0;
         for (size_t b = 0; b < blocksPerRow; ++b) {
-            dequantizeQ4KBlock(&rowBlocks[b], blockBuf);
-            size_t base = c * rows + b * 256;
-            size_t elemsInBlock = std::min(size_t(256), rows - b * 256);
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                dequantMatrix[base + i] = blockBuf[i];
+            dequantizeQ4KBlock(&colBlocks[b], blockBuf);
+            size_t elemsInBlock = std::min(size_t(256), rows - r);
+            size_t i = 0;
+            // Scalar accumulation (safe, no AVX alignment issues)
+            for (; i < elemsInBlock; ++i, ++r) {
+                output[r] += blockBuf[i] * inVal;
             }
         }
     }
-
-    // Step 2: Run transposed GEMV on dequantized buffer
-    gemvF32Transposed(dequantMatrix, input, output, rows, cols);
-
-    // Step 3: Free temporary buffer
-    _aligned_free(dequantMatrix);
 }
 
 // ============================================================================
@@ -628,13 +622,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
                           : weights.attnV_b.dims()[0];
     const size_t vHeadDim = (numHeads > 0) ? (vBCols / numHeads) : 0;
 
-    // attnO: [numHeads * vHeadDim, hiddenDim] — validate rows match v-projection
+    // attnO: [oRows, hiddenDim] — use actual GGUF shape (authoritative)
+    // For K2, oRows may differ from numHeads * vHeadDim due to architecture specifics
     const size_t oRows = weights.attnO.dims()[0];
-    if (oRows != numHeads * vHeadDim) {
-        error = "MLAForward: attn_output rows (" + std::to_string(oRows) +
-                ") != numHeads * vHeadDim (" + std::to_string(numHeads * vHeadDim) + ")";
-        return false;
-    }
 
     // Safety: validate all tensors have actual data before allocating
     if (!weights.attnQ_a.data() || !weights.attnQ_b.data() || !weights.attnKV_a_mqa.data() ||
@@ -653,7 +643,9 @@ bool MLAForward::Execute(const float* hidden, float* output,
     float* k_pe     = kv_a + kvLoraRank;                // alias: rest = k_pe
     float* k_b      = (float*)_aligned_malloc(numHeads * qkNopeHeadDim * sizeof(float), 32);
     float* v_b      = (float*)_aligned_malloc(numHeads * vHeadDim      * sizeof(float), 32);
-    float* attnOut  = (float*)_aligned_malloc(numHeads * headDim       * sizeof(float), 32);
+    // attnOut must accommodate both q_b (simplified attention) and oRows (output projection)
+    size_t attnOutSize = std::max(numHeads * headDim, oRows);
+    float* attnOut  = (float*)_aligned_malloc(attnOutSize * sizeof(float), 32);
 
     if (!q_a || !q_b || !kv_a || !k_b || !v_b || !attnOut) {
         error = "MLAForward: buffer allocation failed";

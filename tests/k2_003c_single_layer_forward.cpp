@@ -312,11 +312,11 @@ int main(int argc, char** argv) {
     auto t1 = std::chrono::high_resolution_clock::now();
     double execMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
-    GATE("MLAForward executed", execOk, 4);
-    printf("       Execution time: %.3f ms\n", execMs);
     if (!execOk) {
         printf("       Error: %s\n", execErr.c_str());
     }
+    GATE("MLAForward executed", execOk, 4);
+    printf("       Execution time: %.3f ms\n", execMs);
 
     // Residual add: output = hidden + mlaOut
     std::vector<float> finalOut(hiddenDim);
