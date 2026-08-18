@@ -2,8 +2,13 @@
  * @file q4_k_m_gemm_fused.h
  * @brief Q4_K_M (K-quant) mixed-precision fused GEMM kernels
  *
- * Q4_K_M uses 6-bit for important weights, 4-bit for others.
- * Higher compression than Q4_0 with better precision retention.
+ * ⚠️  DEPRECATED / BROKEN — This file contains an INCORRECT Q4_K_M_Block
+ *    definition (272 bytes) that does NOT match the GGUF Q4_K spec (144 bytes).
+ *    The struct here uses FP32 scale/min + 256-byte quants, which is wrong.
+ *    Correct GGUF Q4_K: d(F16) + dmin(F16) + scales[12] + qs[128] = 144 bytes.
+ *
+ *    DO NOT USE for real model inference. Kept for reference only.
+ *    Use src/deep2/Deep2Engine.cpp Q4_K_Block (144 bytes) for production.
  *
  * @copyright RawrXD 2026
  */

@@ -21,10 +21,13 @@
 #include "CompressedKVCache.h"
 #include "NVMeStream.h"
 #include "SlidingWindowEngine.h"
+#include "K2GlobalTensorIndex.hpp"
+#include "TensorResidencyCache.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 #include <functional>
+#include <filesystem>
 
 namespace Deep2 {
 
@@ -48,12 +51,26 @@ struct WeightTensor {
 // Per-Layer Weights - Real transformer layer weight set
 // ============================================================================
 struct LayerWeights {
-    // Attention
+    // Standard Multi-Head Attention (MHA / GQA)
     WeightTensor wq;          // [hiddenDim, hiddenDim]
     WeightTensor wk;          // [kvDim, hiddenDim]
     WeightTensor wv;          // [kvDim, hiddenDim]
     WeightTensor wo;          // [hiddenDim, hiddenDim]
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
+
+    // MLA (Multi-Latent Attention) — K2 factorized attention
+    // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
+    WeightTensor attnQ_a;        // [qLoraRank, hiddenDim]
+    WeightTensor attnQ_a_norm;   // [qLoraRank] RMSNorm weights
+    WeightTensor attnQ_b;        // [numHeads * headDim, qLoraRank]
+    // KV-path: hidden → kv_a_mqa (GEMV) → split → [compressed_kv | k_pe]
+    //          → RMSNorm → kv_b (GEMV) → k_b / v_b
+    WeightTensor attnKV_a_mqa;   // [kvLoraRank + qkRopeHeadDim, hiddenDim]
+    WeightTensor attnKV_a_norm;  // [kvLoraRank] RMSNorm weights
+    WeightTensor attnK_b;        // [numHeads * qkNopeHeadDim, kvLoraRank]
+    WeightTensor attnV_b;        // [numHeads * vHeadDim, kvLoraRank]
+    WeightTensor attnO;          // [hiddenDim, numHeads * headDim]
+    bool         useMLA = false; // true when MLA tensors are populated
 
     // FFN
     WeightTensor wGate;       // [intermediateDim, hiddenDim]
@@ -92,6 +109,15 @@ struct ModelWeights {
     size_t numExperts     = 0;
     size_t numExpertsPerToken = 0;
     size_t numSharedExperts = 0;
+
+    // MLA (K2) architecture fields
+    size_t qLoraRank      = 0;
+    size_t kvLoraRank     = 0;
+    size_t qkNopeHeadDim  = 0;
+    size_t qkRopeHeadDim  = 0;
+    size_t vHeadDim       = 0;
+    bool   useMLA         = false;
+
     float  ropeTheta      = 10000.0f;
     float  ropeScaling    = 1.0f;
     float  normEps        = 1e-6f;
@@ -112,6 +138,14 @@ struct EngineConfig {
     size_t headDim = 128;
     size_t vocabSize = 32000;
     size_t intermediateDim = 11008;
+
+    // MLA (K2) architecture fields
+    size_t qLoraRank = 0;
+    size_t kvLoraRank = 0;
+    size_t qkNopeHeadDim = 0;
+    size_t qkRopeHeadDim = 0;
+    size_t vHeadDim = 0;
+    bool   useMLA = false;
     
     // Inference settings
     size_t maxSeqLen = 2048;
@@ -230,6 +264,9 @@ public:
     }
     // Reset state for new conversation
     void reset();
+    
+    // Unload model and free weight memory
+    void unloadModel();
     
     // Get engine info
     bool isInitialized() const { return initialized; }
@@ -401,6 +438,12 @@ private:
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
     
+    // Multi-shard support (K2-002+)
+    std::unique_ptr<GlobalTensorIndex> globalIndex_;
+    std::unique_ptr<gguf_shard_cache::TensorResidencyCache> residencyCache_;
+    std::filesystem::path modelDir_;
+    bool isMultiShard_ = false;
+    
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;
     
@@ -418,6 +461,13 @@ private:
     float* vProj = nullptr;
     float* gateBuf = nullptr;
     float* upBuf = nullptr;
+
+    // MLA (K2) buffers
+    float* mlaQ_a = nullptr;      // [qLoraRank]
+    float* mlaKV_a = nullptr;     // [kvLoraRank + qkRopeHeadDim]
+    float* mlaQ_b = nullptr;      // [numHeads * headDim]
+    float* mlaK_b = nullptr;      // [numHeads * qkNopeHeadDim]
+    float* mlaV_b = nullptr;      // [numHeads * vHeadDim]
     
     bool initialized = false;
     

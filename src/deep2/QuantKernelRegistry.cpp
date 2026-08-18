@@ -263,18 +263,24 @@ static void gemv_q4_k_scalar(
             const block_q4_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
             float dmin = f16_to_f32(blk.dmin);
+            size_t elemsInBlock = (b == blocksPerRow - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
             // 8 sub-blocks of 32 weights each
             for (int sb = 0; sb < 8; ++sb) {
-                uint8_t scale = (blk.scales[sb] & 0x3F);
-                uint8_t min   = (blk.scales[sb + 8] & 0x3F);
-                float s = d * (scale - 8.0f) / 8.0f;
-                float m = dmin * (min - 8.0f) / 8.0f;
+                uint8_t scale, min;
+                get_scale_min_k4(sb, blk.scales, scale, min);
+                float s = d * scale;
+                float m = dmin * min;
                 float blockAcc = 0.0f;
                 for (int i = 0; i < 32; ++i) {
                     int idx = sb * 32 + i;
+                    if ((size_t)idx >= elemsInBlock) break;
                     uint8_t byte = blk.qs[idx / 2];
                     float q = (idx % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
-                    blockAcc += (s * q + m) * x[b * 256 + idx];
+                    blockAcc += (s * q - m) * x[b * 256 + idx];
                 }
                 acc += blockAcc;
             }
@@ -591,7 +597,7 @@ static void gemv_q8_0_avx2(
 
 // --- Q4_K GEMV (AVX2) ---
 // block_q4_K: 256 weights in 4-bit, with super-block scales
-// Layout: float d, dmin; uint8_t scales[12]; uint8_t qs[128+128];
+// Layout: uint16_t d, dmin; uint8_t scales[12]; uint8_t qs[128];
 static void gemv_q4_k_avx2(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -600,7 +606,6 @@ static void gemv_q4_k_avx2(
 ) {
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
     size_t blocksPerRow = (cols + 255) / 256;
-    const __m256i lowMask = _mm256_set1_epi8(0x0F);
 
     for (size_t r = 0; r < rows; ++r) {
         float rowAcc = 0.0f;
@@ -613,11 +618,13 @@ static void gemv_q4_k_avx2(
             
             // Process 8 sub-blocks of 32 weights each
             for (int sb = 0; sb < 8; ++sb) {
-                // Extract scale and min for this sub-block
-                uint8_t scale = (blk.scales[sb] & 0x3F);
-                uint8_t min   = (blk.scales[sb + 8] & 0x3F);
-                float s = d * (scale - 8.0f) / 8.0f;
-                float m = dmin * (min - 8.0f) / 8.0f;
+                // Extract 6-bit scale and min for this sub-block from scales[12]
+                int scaleIdx = sb / 2;
+                int shift = (sb % 2) * 4;
+                uint8_t scale = (blk.scales[scaleIdx] >> shift) & 0x3F;
+                uint8_t min   = (blk.scales[scaleIdx + 6] >> shift) & 0x3F;
+                float s = d * scale;
+                float m = dmin * min;
                 __m256 sVec = _mm256_set1_ps(s);
                 __m256 mVec = _mm256_set1_ps(m);
                 
@@ -635,7 +642,7 @@ static void gemv_q4_k_avx2(
                 __m256i i32_lo = _mm256_cvtepu8_epi32(lowNibbles);
                 __m256 wv_lo = _mm256_cvtepi32_ps(i32_lo);
                 __m256 xv_lo = _mm256_loadu_ps(x + b * 256 + sb * 32);
-                __m256 dequant_lo = _mm256_add_ps(_mm256_mul_ps(wv_lo, sVec), mVec);
+                __m256 dequant_lo = _mm256_sub_ps(_mm256_mul_ps(wv_lo, sVec), mVec);
                 rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo, xv_lo, 0xF1)));
                 
                 // Process second 8 low nibbles
@@ -643,14 +650,14 @@ static void gemv_q4_k_avx2(
                 __m256i i32_lo2 = _mm256_cvtepu8_epi32(lowNibbles_hi);
                 __m256 wv_lo2 = _mm256_cvtepi32_ps(i32_lo2);
                 __m256 xv_lo2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 8);
-                __m256 dequant_lo2 = _mm256_add_ps(_mm256_mul_ps(wv_lo2, sVec), mVec);
+                __m256 dequant_lo2 = _mm256_sub_ps(_mm256_mul_ps(wv_lo2, sVec), mVec);
                 rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo2, xv_lo2, 0xF1)));
                 
                 // Process first 8 high nibbles
                 __m256i i32_hi = _mm256_cvtepu8_epi32(highNibbles);
                 __m256 wv_hi = _mm256_cvtepi32_ps(i32_hi);
                 __m256 xv_hi = _mm256_loadu_ps(x + b * 256 + sb * 32 + 16);
-                __m256 dequant_hi = _mm256_add_ps(_mm256_mul_ps(wv_hi, sVec), mVec);
+                __m256 dequant_hi = _mm256_sub_ps(_mm256_mul_ps(wv_hi, sVec), mVec);
                 rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi, xv_hi, 0xF1)));
                 
                 // Process second 8 high nibbles
@@ -658,7 +665,7 @@ static void gemv_q4_k_avx2(
                 __m256i i32_hi2 = _mm256_cvtepu8_epi32(highNibbles_hi);
                 __m256 wv_hi2 = _mm256_cvtepi32_ps(i32_hi2);
                 __m256 xv_hi2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 24);
-                __m256 dequant_hi2 = _mm256_add_ps(_mm256_mul_ps(wv_hi2, sVec), mVec);
+                __m256 dequant_hi2 = _mm256_sub_ps(_mm256_mul_ps(wv_hi2, sVec), mVec);
                 rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi2, xv_hi2, 0xF1)));
             }
         }
@@ -699,17 +706,19 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
         float d = f16_to_f32(blocks[b].d);
         float dmin = f16_to_f32(blocks[b].dmin);
         for (int sb = 0; sb < 8; ++sb) {
-            uint8_t scale = (blocks[b].scales[sb] & 0x3F);
-            uint8_t min   = (blocks[b].scales[sb + 8] & 0x3F);
-            float s = d * (scale - 8.0f) / 8.0f;
-            float m = dmin * (min - 8.0f) / 8.0f;
+            int scaleIdx = sb / 2;
+            int shift = (sb % 2) * 4;
+            uint8_t scale = (blocks[b].scales[scaleIdx] >> shift) & 0x3F;
+            uint8_t min   = (blocks[b].scales[scaleIdx + 6] >> shift) & 0x3F;
+            float s = d * scale;
+            float m = dmin * min;
             for (int i = 0; i < 32; ++i) {
                 int idx = sb * 32 + i;
                 size_t globalIdx = b * 256 + idx;
                 if (globalIdx >= n) return;
                 uint8_t byte = blocks[b].qs[idx / 2];
                 float q = (idx % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
-                dst[globalIdx] = s * q + m;
+                dst[globalIdx] = s * q - m;
             }
         }
     }

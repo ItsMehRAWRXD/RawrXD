@@ -82,7 +82,9 @@ constexpr size_t QK8_1 = 32;
 constexpr size_t QK_K  = 256;
 constexpr size_t QK4_NL = 32;
 
-// Q4_K_M block (alias for q4_K)
+// Q4_K_M block (DEPRECATED — use block_q4_K from GGUF spec, 144 bytes)
+// Kept for backward compatibility with legacy test code only.
+// New code should use block_q4_K directly.
 struct alignas(32) Q4_K_M_Block {
     uint16_t scales[32];
     uint16_t mins[32];
@@ -187,6 +189,16 @@ struct ModelMetadata {
     uint32_t moeIntermediateSize = 0;
     float ropeScaling = 1.0f;
 
+    // MLA / DeepSeek2 metadata (real, parsed from GGUF)
+    uint32_t leadingDenseBlockCount = 0;
+    uint32_t qLoraRank = 0;
+    uint32_t kvLoraRank = 0;
+    uint32_t keyLength = 0;
+    uint32_t valueLength = 0;
+    uint32_t keyLengthMla = 0;
+    uint32_t valueLengthMla = 0;
+    uint32_t ropeDimensionCount = 0;
+
     void Print() const {
         printf("[GGUF] Architecture: %s\n", architecture.c_str());
         printf("[GGUF] Vocab: %u, Hidden: %u, Layers: %u, Heads: %u\n",
@@ -197,6 +209,15 @@ struct ModelMetadata {
             printf("[GGUF] MoE: experts=%u topK=%u shared=%u moeInter=%u\n",
                    numExperts, numExpertsPerToken, numSharedExperts,
                    moeIntermediateSize);
+        }
+        if (qLoraRank > 0 || kvLoraRank > 0) {
+            printf("[GGUF] MLA: qLoraRank=%u kvLoraRank=%u keyLength=%u valueLength=%u\n",
+                   qLoraRank, kvLoraRank, keyLength, valueLength);
+            printf("[GGUF] MLA: keyLengthMla=%u valueLengthMla=%u ropeDim=%u\n",
+                   keyLengthMla, valueLengthMla, ropeDimensionCount);
+        }
+        if (leadingDenseBlockCount > 0) {
+            printf("[GGUF] Leading dense blocks: %u\n", leadingDenseBlockCount);
         }
     }
 };

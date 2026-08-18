@@ -2,7 +2,10 @@
  * @file q4_k_m_vs_q4_0_bench.cpp
  * @brief Head-to-head benchmark: Q4_K_M vs Q4_0 vs FP32
  *
- * The ultimate compression showdown: 6.4:1 vs 6.7:1 vs 1:1
+ * ⚠️  DEPRECATED / BROKEN — Uses the INCORRECT Q4_K_M_Block from
+ *    kernels/q4_k_m_gemm_fused.h (272 bytes, not the GGUF spec 144 bytes).
+ *    This benchmark compares against a fictional format, not real GGUF Q4_K.
+ *    DO NOT USE for production model inference.
  *
  * @copyright RawrXD 2026
  */

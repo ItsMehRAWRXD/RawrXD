@@ -220,75 +220,156 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
         } else if (key == "tokenizer.ggml.model" || key == "tokenizer.model") {
             // Tokenizer model type
         } else {
-            // Architecture-specific keys
+            // Architecture-specific keys (e.g. deepseek2.block_count)
             std::string arch = metadata.architecture;
-            std::string prefix = arch + ".";
+            if (!arch.empty()) {
+                std::string prefix = arch + ".";
+                if (key.substr(0, prefix.size()) == prefix) {
+                    std::string subkey = key.substr(prefix.size());
 
-            if (key.substr(0, prefix.size()) == prefix) {
-                std::string subkey = key.substr(prefix.size());
+                    if (subkey == "vocab_size") {
+                        metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "embedding_length") {
+                        metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "block_count") {
+                        metadata.numLayers = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.head_count") {
+                        metadata.numHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.head_count_kv") {
+                        metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "feed_forward_length") {
+                        metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "rms_norm_eps") {
+                        metadata.rmsNormEps = (float)atof(valueStr.c_str());
+                    } else if (subkey == "rope.freq_base") {
+                        metadata.ropeTheta = (float)atof(valueStr.c_str());
+                    } else if (subkey == "context_length") {
+                        metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "expert_count") {
+                        metadata.numExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "expert_used_count") {
+                        metadata.numExpertsPerToken = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "shared_expert_count") {
+                        metadata.numSharedExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "expert_feed_forward_length") {
+                        metadata.moeIntermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "rope.scaling.factor") {
+                        metadata.ropeScaling = (float)atof(valueStr.c_str());
+                    } else if (subkey == "leading_dense_block_count") {
+                        metadata.leadingDenseBlockCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.q_lora_rank") {
+                        metadata.qLoraRank = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.kv_lora_rank") {
+                        metadata.kvLoraRank = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.key_length") {
+                        metadata.keyLength = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.value_length") {
+                        metadata.valueLength = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.key_length_mla") {
+                        metadata.keyLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "attention.value_length_mla") {
+                        metadata.valueLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "rope.dimension_count") {
+                        metadata.ropeDimensionCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    } else if (subkey == "expert_shared_count") {
+                        metadata.numSharedExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    }
+                }
+            }
 
-                if (subkey == "vocab_size") {
+            // Common keys (without architecture prefix).
+            // Skip keys that start with the architecture prefix — those were handled
+            // above with exact subkey matching to avoid substring collisions like
+            // "leading_dense_block_count" overwriting "block_count".
+            bool hasArchPrefix = false;
+            if (!metadata.architecture.empty()) {
+                std::string prefix = metadata.architecture + ".";
+                if (key.size() >= prefix.size() &&
+                    key.substr(0, prefix.size()) == prefix) {
+                    hasArchPrefix = true;
+                }
+            }
+
+            if (!hasArchPrefix) {
+                if (key == "vocab_size" || key.find(".vocab_size") != std::string::npos) {
                     metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-                } else if (subkey == "embedding_length") {
+                }
+                // Fallback: Gemma models use general.tokens_count
+                if (key == "general.tokens_count" || key.find(".tokens_count") != std::string::npos) {
+                    if (metadata.vocabSize == 0) {
+                        metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                    }
+                }
+                if (key.find("embedding_length") != std::string::npos) {
                     metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-            }
-
-            // Common keys (without architecture prefix)
-            if (key == "vocab_size" || key.find(".vocab_size") != std::string::npos) {
-                metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            // Fallback: Gemma models use general.tokens_count
-            if (key == "general.tokens_count" || key.find(".tokens_count") != std::string::npos) {
-                if (metadata.vocabSize == 0) {
-                    metadata.vocabSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                if (key == "block_count" || key.find(".block_count") != std::string::npos ||
+                    key == "n_layer" || key.find(".n_layer") != std::string::npos) {
+                    metadata.numLayers = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-            }
-            if (key.find("embedding_length") != std::string::npos) {
-                metadata.hiddenSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("block_count") != std::string::npos || key.find("n_layer") != std::string::npos) {
-                metadata.numLayers = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            // Use exact suffix match to avoid "attention.head_count_kv" matching
-            // the "attention.head_count" branch and overwriting numHeads with the KV count.
-            if (key == "attention.head_count" || key.find(".attention.head_count") != std::string::npos ||
-                key == "n_head" || key.find(".n_head") != std::string::npos) {
-                metadata.numHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("attention.head_count_kv") != std::string::npos || key.find("n_head_kv") != std::string::npos) {
-                metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("feed_forward_length") != std::string::npos || key.find("intermediate_size") != std::string::npos) {
-                metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("rms_norm_eps") != std::string::npos || key.find("layer_norm_eps") != std::string::npos) {
-                metadata.rmsNormEps = (float)atof(valueStr.c_str());
-            }
-            if (key.find("rope.dimension_count") != std::string::npos) {
-                // rope dims
-            }
-            if (key.find("rope.freq_base") != std::string::npos) {
-                metadata.ropeTheta = (float)atof(valueStr.c_str());
-            }
-            if (key.find("context_length") != std::string::npos || key.find("max_position_embeddings") != std::string::npos) {
-                metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            // MoE metadata (real parsing - no stubs)
-            if (key.find("expert_count") != std::string::npos || key.find("num_experts") != std::string::npos) {
-                metadata.numExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("expert_used_count") != std::string::npos || key.find("num_experts_per_tok") != std::string::npos || key.find("moE.topk") != std::string::npos) {
-                metadata.numExpertsPerToken = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("shared_expert_count") != std::string::npos || key.find("num_shared_experts") != std::string::npos) {
-                metadata.numSharedExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("expert_feed_forward_length") != std::string::npos || key.find("moe_intermediate_size") != std::string::npos) {
-                metadata.moeIntermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-            }
-            if (key.find("rope.scaling.factor") != std::string::npos) {
-                metadata.ropeScaling = (float)atof(valueStr.c_str());
+                if (key == "attention.head_count" ||
+                    (key.size() > 22 && key.substr(key.size() - 23) == ".attention.head_count") ||
+                    key == "n_head" ||
+                    (key.size() > 7 && key.substr(key.size() - 8) == ".n_head")) {
+                    metadata.numHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.head_count_kv") != std::string::npos || key.find("n_head_kv") != std::string::npos) {
+                    metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("feed_forward_length") != std::string::npos || key.find("intermediate_size") != std::string::npos) {
+                    metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("rms_norm_eps") != std::string::npos || key.find("layer_norm_eps") != std::string::npos) {
+                    metadata.rmsNormEps = (float)atof(valueStr.c_str());
+                }
+                if (key.find("rope.dimension_count") != std::string::npos) {
+                    metadata.ropeDimensionCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("rope.freq_base") != std::string::npos) {
+                    metadata.ropeTheta = (float)atof(valueStr.c_str());
+                }
+                if (key.find("context_length") != std::string::npos || key.find("max_position_embeddings") != std::string::npos) {
+                    metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                // MoE metadata (real parsing - no stubs)
+                if (key.find("expert_count") != std::string::npos || key.find("num_experts") != std::string::npos) {
+                    metadata.numExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("expert_used_count") != std::string::npos || key.find("num_experts_per_tok") != std::string::npos || key.find("moE.topk") != std::string::npos) {
+                    metadata.numExpertsPerToken = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("shared_expert_count") != std::string::npos ||
+                    key.find("expert_shared_count") != std::string::npos ||
+                    key.find("num_shared_experts") != std::string::npos) {
+                    metadata.numSharedExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("expert_feed_forward_length") != std::string::npos || key.find("moe_intermediate_size") != std::string::npos) {
+                    metadata.moeIntermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("rope.scaling.factor") != std::string::npos) {
+                    metadata.ropeScaling = (float)atof(valueStr.c_str());
+                }
+                if (key.find("leading_dense_block_count") != std::string::npos) {
+                    metadata.leadingDenseBlockCount = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.q_lora_rank") != std::string::npos) {
+                    metadata.qLoraRank = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.kv_lora_rank") != std::string::npos) {
+                    metadata.kvLoraRank = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.key_length") != std::string::npos && key.find("key_length_mla") == std::string::npos) {
+                    metadata.keyLength = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.value_length") != std::string::npos && key.find("value_length_mla") == std::string::npos) {
+                    metadata.valueLength = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.key_length_mla") != std::string::npos) {
+                    metadata.keyLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
+                if (key.find("attention.value_length_mla") != std::string::npos) {
+                    metadata.valueLengthMla = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
+                }
             }
         }
     }

@@ -52,12 +52,18 @@ bool Deep2Bridge::Initialize(const EngineConfig& config) {
     m_engine = std::make_unique<Deep2::Deep2Engine>();
 
     Deep2::EngineConfig deep2Cfg;
-    deep2Cfg.hiddenDim = 4096;
-    deep2Cfg.numLayers = 32;
-    deep2Cfg.numHeads = 32;
-    deep2Cfg.vocabSize = 32000;
-    deep2Cfg.maxSeqLen = static_cast<size_t>(config.contextSize);
-    deep2Cfg.useKVCache = config.useKVCache;
+    deep2Cfg.hiddenDim      = config.hiddenDim;
+    deep2Cfg.numLayers      = config.numLayers;
+    deep2Cfg.numHeads       = config.numHeads;
+    deep2Cfg.numKVHeads     = config.numKVHeads;
+    deep2Cfg.headDim        = config.headDim;
+    deep2Cfg.vocabSize      = config.vocabSize;
+    deep2Cfg.intermediateDim= config.intermediateDim;
+    deep2Cfg.maxSeqLen      = static_cast<size_t>(config.contextSize);
+    deep2Cfg.useKVCache     = config.useKVCache;
+    deep2Cfg.normEps        = config.normEps;
+    deep2Cfg.ropeTheta      = config.ropeTheta;
+    deep2Cfg.ropeScaling    = config.ropeScaling;
 
     if (!m_engine->initialize(deep2Cfg)) {
         RawrRuntime::Get().Log(LogLevel::Error, "Deep2Engine initialization failed");
@@ -128,6 +134,8 @@ void Deep2Bridge::UnloadModel() {
     if (!m_modelLoaded) return;
     if (m_backend == InferenceBackend::LlamaNative && m_llamaBridge) {
         m_llamaBridge->UnloadModel();
+    } else if (m_engine) {
+        m_engine->unloadModel();
     }
     m_modelLoaded = false;
     RawrRuntime::Get().Log(LogLevel::Info, "Model unloaded");

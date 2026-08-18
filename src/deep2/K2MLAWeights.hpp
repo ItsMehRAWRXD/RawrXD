@@ -40,8 +40,8 @@ struct MLAWeights {
     RawrXD::TensorView attnKV_a_mqa;      // [hiddenDim, kvLoraRank + qkRopeHeadDim]
                                           //   = [hiddenDim, 576] for K2 0905
     RawrXD::TensorView attnKV_a_norm;     // [kvLoraRank]                — RMSNorm scale (applied to compressed_kv only)
-    RawrXD::TensorView attnKV_b;          // [kvLoraRank, numHeads * (qkNopeHeadDim + vHeadDim)]
-                                          //   Produces both K_nope and V
+    RawrXD::TensorView attnK_b;           // [kvLoraRank, numHeads * qkNopeHeadDim] — K_nope projection
+    RawrXD::TensorView attnV_b;           // [kvLoraRank, numHeads * vHeadDim]     — V projection
 
     // --- Attention output ---
     RawrXD::TensorView attnO;             // [numHeads * vHeadDim, hiddenDim]
@@ -58,6 +58,20 @@ struct MLAWeights {
     // Resolve tensors from a GlobalTensorIndex for a specific layer
     // =========================================================================
     bool ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t layer, std::string& error);
+
+    // =========================================================================
+    // Resolve AND load actual tensor data from shards into TensorViews.
+    // This is what Execute() needs — metadata-only views will fail.
+    // Returns total bytes loaded. On failure, error is set and returns 0.
+    // =========================================================================
+    uint64_t ResolveAndLoad(const GlobalTensorIndex& index, uint32_t layer,
+                            std::string& error);
+
+    // =========================================================================
+    // Release all loaded tensor data (free aligned buffers).
+    // Call after Execute() to stay under budget.
+    // =========================================================================
+    void ReleaseAll();
 
     // =========================================================================
     // Tensor presence detection (for architecture auto-detection)

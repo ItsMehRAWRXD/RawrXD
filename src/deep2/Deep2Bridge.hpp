@@ -40,6 +40,19 @@ struct EngineConfig {
     float topP = 0.95f;
     bool useKVCache = true;
     bool useGPU = true;
+
+    // Model architecture (must be populated for K2 and non-default models)
+    size_t hiddenDim = 4096;
+    size_t numLayers = 32;
+    size_t numHeads = 32;
+    size_t numKVHeads = 32;
+    size_t headDim = 128;
+    size_t vocabSize = 32000;
+    size_t intermediateDim = 11008;
+    bool   useMLA = false;      // true = use MLA factorized attention (K2)
+    float  normEps = 1e-6f;
+    float  ropeTheta = 10000.0f;
+    float  ropeScaling = 1.0f;
 };
 
 // ============================================================================

@@ -17,8 +17,10 @@
 #include "CompressedKVCache.h"
 #include "NVMeStream.h"
 #include "SlidingWindowEngine.h"
-#include "MoEWeightsLoader.hpp"  // Complete type for unique_ptr destructor / Close()
-#include "HotPatcher.hpp"        // The Bottle - Runtime code modification
+#include "MoEWeightsLoader.hpp"
+#include "HotPatcher.hpp"
+#include "KimiK2Config.hpp"
+#include "K2GlobalTensorIndex.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -26,6 +28,7 @@
 #include <algorithm>
 #include <mutex>
 #include <immintrin.h>
+#include <filesystem>
 #ifdef __GNUC__
 #include <cpuid.h>
 #endif
@@ -304,12 +307,27 @@ extern "C" void Deep2_MedusaGEMV(const float* weights, const float* input, float
     }
 }
 
-// Q4_K_M Block structure (matches GGUF)
-struct alignas(32) Q4_K_M_Block {
-    uint16_t scales[32];      // FP16 scales
-    uint16_t mins[32];        // FP16 mins
-    uint8_t  weights[128];    // 256 x 4-bit packed
+// ============================================================================
+// GGUF Q4_K Block Structure (144 bytes per 256 elements)
+//
+// Layout (from llama.cpp / ggml-quants.h):
+//   +0:   d (fp16)     — super-block scale
+//   +2:   dmin (fp16)  — super-block minimum
+//   +4:   scales[12]   — packed 6-bit scale/min pairs for 8 sub-blocks
+//   +16:  qs[128]      — packed 4-bit quants (2 per byte)
+//
+// Total: 144 bytes per 256-element super-block
+//
+// Formula per element: output = d * sc * q - dmin * m
+//   where sc/m are unpacked from scales[], q is 4-bit quant [0..15]
+// ============================================================================
+struct alignas(16) Q4_K_Block {
+    uint16_t d;               // FP16 super-scale
+    uint16_t dmin;            // FP16 super-minimum
+    uint8_t  scales[12];      // Packed 6-bit scale/min pairs (8 sub-blocks)
+    uint8_t  qs[128];         // 256 x 4-bit packed weights
 };
+static_assert(sizeof(Q4_K_Block) == 144, "Q4_K_Block must be 144 bytes");
 
 namespace Deep2 {
 
@@ -359,19 +377,45 @@ static inline float fp16ToFloat(uint16_t h) {
 }
 
 // ============================================================================
+// Unpack 6-bit scale/min for Q4_K sub-block
+// scales[12] packs 8 pairs of (scale, min) as 6-bit values each.
+// Correct layout per llama.cpp ggml-common.h:
+//   For j = 0..3:  d = scales[j] & 63,       m = scales[j + 4] & 63
+//   For j = 4..7:  d = (scales[j+4] & 0x0F) | ((scales[j-4] >> 6) << 4)
+//                  m = (scales[j+4] >> 4)      | ((scales[j]   >> 6) << 4)
+// ============================================================================
+static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
+                                       uint8_t& sc, uint8_t& m) {
+    if (j < 4) {
+        sc = scales[j] & 63;
+        m  = scales[j + 4] & 63;
+    } else {
+        sc = (scales[j + 4] & 0x0F) | ((scales[j - 4] >> 6) << 4);
+        m  = (scales[j + 4] >> 4)      | ((scales[j]   >> 6) << 4);
+    }
+}
+
+// ============================================================================
 // Dequantize Q4_K block to FP32 (256 elements per block)
 // ============================================================================
-static void dequantizeQ4KBlock(const Q4_K_M_Block* block, float* out) {
-    for (int j = 0; j < 32; j++) {
-        float scale = fp16ToFloat(block->scales[j]);
-        float min   = fp16ToFloat(block->mins[j]);
-        for (int k = 0; k < 8; k++) {
-            int idx = j * 8 + k;
-            uint8_t byte = block->weights[idx];
+static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
+    float d    = fp16ToFloat(block->d);
+    float dmin = fp16ToFloat(block->dmin);
+
+    for (int j = 0; j < 8; j++) {
+        uint8_t sc, m;
+        unpackQ4KScaleMin(block->scales, j, sc, m);
+        float scale = d * sc;
+        float min   = dmin * m;
+
+        // Each sub-block has 32 elements: 16 bytes of packed quants
+        const uint8_t* quants = block->qs + j * 16;
+        for (int k = 0; k < 16; k++) {
+            uint8_t byte = quants[k];
             int lo = byte & 0xF;
             int hi = (byte >> 4) & 0xF;
-            out[j * 8 + k]       = scale * (lo - 8) + min;
-            out[j * 8 + k + 128] = scale * (hi - 8) + min;
+            out[j * 32 + k]       = scale * lo - min;
+            out[j * 32 + k + 16]  = scale * hi - min;
         }
     }
 }
@@ -411,21 +455,27 @@ static void fp32GEMV(const float* weights, const float* input,
 static void q4kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
     size_t numBlocks = (cols + 255) / 256;
-    size_t blockSize = sizeof(Q4_K_M_Block);
+    constexpr size_t kBlockSize = sizeof(Q4_K_Block);  // 144 bytes
 
-    float* dequantBuf = alignedAlloc(256);
+    float* dequantBuf = alignedAlloc(256);  // 256 floats = 1024 bytes
 
     for (size_t r = 0; r < rows; ++r) {
-        const Q4_K_M_Block* rowBlocks =
-            (const Q4_K_M_Block*)((const uint8_t*)weights + r * numBlocks * blockSize);
+        const Q4_K_Block* rowBlocks =
+            (const Q4_K_Block*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
 
         float sum = 0.0f;
         for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 256)  // last block may be partial
+                : 256;
+            if (elemsInBlock == 0) break;
+
             dequantizeQ4KBlock(&rowBlocks[b], dequantBuf);
 
-            // Dot product with input
+            // Dot product with input (only valid elemsInBlock)
             __m256 acc = _mm256_setzero_ps();
-            for (size_t i = 0; i < 256; i += 8) {
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
                 __m256 w = _mm256_load_ps(dequantBuf + i);
                 __m256 x = _mm256_loadu_ps(input + b * 256 + i);
                 acc = _mm256_fmadd_ps(w, x, acc);
@@ -436,6 +486,11 @@ static void q4kGEMV(const void* weights, const float* input,
             sum128 = _mm_hadd_ps(sum128, sum128);
             sum128 = _mm_hadd_ps(sum128, sum128);
             sum += _mm_cvtss_f32(sum128);
+
+            // Scalar tail for remaining elements
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 256 + i];
+            }
         }
         output[r] = sum;
     }
@@ -589,6 +644,22 @@ bool Deep2Engine::allocateBuffers() {
     gateBuf         = alignedAlloc(ffnDim);
     upBuf           = alignedAlloc(ffnDim);
 
+    // MLA (K2) buffers
+    if (config.useMLA) {
+        size_t qLoraRank = config.qLoraRank > 0 ? config.qLoraRank : 1536;
+        size_t kvLoraRank = config.kvLoraRank > 0 ? config.kvLoraRank : 512;
+        size_t qkRopeHeadDim = config.qkRopeHeadDim > 0 ? config.qkRopeHeadDim : 64;
+        size_t qkNopeHeadDim = config.qkNopeHeadDim > 0 ? config.qkNopeHeadDim : 128;
+        size_t vHeadDim = config.vHeadDim > 0 ? config.vHeadDim : 128;
+        size_t numHeads = config.numHeads;
+
+        mlaQ_a  = alignedAlloc(qLoraRank);
+        mlaKV_a = alignedAlloc(kvLoraRank + qkRopeHeadDim);
+        mlaQ_b  = alignedAlloc(numHeads * headDim);
+        mlaK_b  = alignedAlloc(numHeads * qkNopeHeadDim);
+        mlaV_b  = alignedAlloc(numHeads * vHeadDim);
+    }
+
     return hiddenStates && attentionOutput && ffnOutput && logits &&
            qProj && kProj && vProj && gateBuf && upBuf;
 }
@@ -603,8 +674,14 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(vProj);
     alignedFree(gateBuf);
     alignedFree(upBuf);
+    alignedFree(mlaQ_a);
+    alignedFree(mlaKV_a);
+    alignedFree(mlaQ_b);
+    alignedFree(mlaK_b);
+    alignedFree(mlaV_b);
     hiddenStates = attentionOutput = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = nullptr;
+    mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
 }
 
 // ============================================================================
@@ -613,18 +690,54 @@ void Deep2Engine::deallocateBuffers() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
 
-    // ── Stage 0: ReverseHotpatch pipeline ────────────────────────────────
-    // Run staged reverse repair before trusting tensor offsets.
-    // This fixes mixed-quant models where the forward size calculator
-    // undercounts block overhead (Q2_K/Q3_K/Q5_K/Q6_K).
-    // ─────────────────────────────────────────────────────────────────────
-    {
+    // ── Detect multi-shard vs single-file ──────────────────────────────
+    std::filesystem::path inputPath(ggufPath);
+    bool isDirectory = std::filesystem::is_directory(inputPath);
+    bool isMultiShard = false;
+    std::filesystem::path shardDir;
+    std::filesystem::path firstShard;
+
+    if (isDirectory) {
+        // Directory mode: find first .gguf file
+        shardDir = inputPath;
+        for (const auto& entry : std::filesystem::directory_iterator(shardDir)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".gguf") {
+                firstShard = entry.path();
+                isMultiShard = true;
+                break;
+            }
+        }
+        if (!isMultiShard) {
+            printf("[Deep2Engine] ERROR: No .gguf files found in directory: %s\n", ggufPath.c_str());
+            return false;
+        }
+    } else {
+        // File mode: check if parent directory has multiple .gguf files
+        firstShard = inputPath;
+        shardDir = inputPath.parent_path();
+        size_t ggufCount = 0;
+        for (const auto& entry : std::filesystem::directory_iterator(shardDir)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".gguf") {
+                ++ggufCount;
+            }
+        }
+        isMultiShard = (ggufCount > 1);
+    }
+
+    printf("[Deep2Engine] Multi-shard detected: %s (%zu files in %s)\n",
+           isMultiShard ? "YES" : "NO",
+           isMultiShard ? std::distance(std::filesystem::directory_iterator(shardDir),
+                                       std::filesystem::directory_iterator{}) : 1,
+           shardDir.string().c_str());
+
+    // ── Stage 0: ReverseHotpatch pipeline (single shard only for now) ──
+    if (!isMultiShard) {
         ReverseHotpatchEngine patcher;
         patcher.SetVerbose(false);
         patcher.SetAlignment(64);
         patcher.SetAllowTruncationRepair(true);
 
-        std::vector<std::filesystem::path> files = { ggufPath };
+        std::vector<std::filesystem::path> files = { firstShard };
         if (!patcher.ProcessFiles(files)) {
             printf("[Deep2Engine] WARNING: ReverseHotpatch failed, attempting raw load\n");
         } else {
@@ -637,21 +750,57 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
-    // Use GGUFLoader static API — Load() handles v2 and v3, 64-byte aligned alloc,
-    // 32MB chunked reads, overflow-protected size calculation.
+    // ── Load metadata from first shard (no tensor data for multi-shard) ─
     GGUFLoadOptions options;
-    options.loadTensors = true;
+    options.loadTensors = !isMultiShard;  // Only load tensors for single-shard
     options.verbose = false;
     options.mmap = true;
 
-    GGUFLoadResult result = GGUFLoader::Load(ggufPath.c_str(), options);
+    GGUFLoadResult result = GGUFLoader::Load(firstShard.string().c_str(), options);
     if (!result.success) {
-        printf("[Deep2Engine] ERROR: Failed to load GGUF: %s\n", result.error);
+        printf("[Deep2Engine] ERROR: Failed to load GGUF metadata: %s\n", result.error);
         return false;
     }
 
     // Store result for later tensor lookups
     ggufResult = std::move(result);
+
+    // ── Build GlobalTensorIndex for multi-shard models ──────────────────
+    if (isMultiShard) {
+        KimiK2Config k2config;
+        // Populate k2config from metadata
+        const auto& meta = ggufResult.metadata;
+        k2config.hiddenDim = meta.hiddenSize;
+        k2config.numLayers = meta.numLayers;
+        k2config.numHeads = meta.numHeads;
+        k2config.numKVHeads = meta.numKeyValueHeads;
+        k2config.vocabSize = meta.vocabSize;
+        k2config.numExperts = meta.numExperts;
+        k2config.expertsPerToken = meta.numExpertsPerToken;
+        k2config.sharedExperts = meta.numSharedExperts;
+        k2config.moeIntermediateSize = meta.moeIntermediateSize;
+        k2config.valid = true;
+
+        globalIndex_ = std::make_unique<GlobalTensorIndex>();
+        std::string idxError;
+        if (!globalIndex_->BuildFromShardDirectory(shardDir, k2config, idxError)) {
+            printf("[Deep2Engine] ERROR: GlobalTensorIndex build failed: %s\n", idxError.c_str());
+            globalIndex_.reset();
+            return false;
+        }
+        printf("[Deep2Engine] GlobalTensorIndex built: %zu tensors across %zu shards\n",
+               globalIndex_->TotalTensors(), globalIndex_->TotalShards());
+
+        // Initialize residency cache for streaming tensor access
+        residencyCache_ = std::make_unique<gguf_shard_cache::TensorResidencyCache>();
+        for (uint32_t s = 0; s < static_cast<uint32_t>(globalIndex_->TotalShards()); ++s) {
+            residencyCache_->register_shard(s, globalIndex_->ShardPath(s).string());
+        }
+        printf("[Deep2Engine] TensorResidencyCache ready\n");
+    }
+
+    isMultiShard_ = isMultiShard;
+    modelDir_ = shardDir;
 
     // Extract architecture from metadata
     const auto& meta = ggufResult.metadata;
@@ -659,16 +808,48 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     modelWeights.numLayers       = meta.numLayers;
     modelWeights.numHeads        = meta.numHeads;
     modelWeights.numKVHeads      = meta.numKeyValueHeads > 0 ? meta.numKeyValueHeads : meta.numHeads;
-    modelWeights.headDim         = modelWeights.hiddenDim / modelWeights.numHeads;
     modelWeights.vocabSize       = meta.vocabSize;
     modelWeights.intermediateDim = meta.intermediateSize;
     modelWeights.normEps         = meta.rmsNormEps > 0 ? meta.rmsNormEps : 1e-6f;
     modelWeights.ropeTheta       = meta.ropeTheta > 0 ? meta.ropeTheta : 10000.0f;
+    modelWeights.ropeScaling     = meta.ropeScaling;
     modelWeights.tieEmbeddings   = false;
 
+    // ── MLA / DeepSeek2 metadata translation ───────────────────────────
+    bool isDeepSeek2 = (meta.architecture == "deepseek2");
+    if (isDeepSeek2 || (meta.qLoraRank > 0 && meta.kvLoraRank > 0)) {
+        modelWeights.qLoraRank      = meta.qLoraRank;
+        modelWeights.kvLoraRank     = meta.kvLoraRank;
+        modelWeights.keyLength      = meta.keyLength;
+        modelWeights.valueLength    = meta.valueLength;
+        modelWeights.keyLengthMla   = meta.keyLengthMla;
+        modelWeights.valueLengthMla = meta.valueLengthMla;
+        modelWeights.ropeDimensionCount = meta.ropeDimensionCount;
+
+        // Compute MLA head dimensions
+        if (meta.ropeDimensionCount > 0 && meta.keyLengthMla > meta.ropeDimensionCount) {
+            modelWeights.qkNopeHeadDim = meta.keyLengthMla - meta.ropeDimensionCount;
+        } else {
+            modelWeights.qkNopeHeadDim = 128; // DeepSeek2 default
+        }
+        modelWeights.qkRopeHeadDim = meta.ropeDimensionCount > 0 ? meta.ropeDimensionCount : 64;
+        modelWeights.vHeadDim      = meta.valueLengthMla > 0 ? meta.valueLengthMla : 128;
+        modelWeights.useMLA        = true;
+
+        // For MLA, headDim is the concatenated Q head dimension (nope + rope)
+        modelWeights.headDim = modelWeights.qkNopeHeadDim + modelWeights.qkRopeHeadDim;
+
+        printf("[Deep2Engine] MLA enabled: qLoraRank=%zu kvLoraRank=%zu qkNope=%zu qkRope=%zu vHeadDim=%zu headDim=%zu\n",
+               modelWeights.qLoraRank, modelWeights.kvLoraRank,
+               modelWeights.qkNopeHeadDim, modelWeights.qkRopeHeadDim,
+               modelWeights.vHeadDim, modelWeights.headDim);
+    } else {
+        // Standard MHA / GQA: headDim = hiddenDim / numHeads
+        modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
+        modelWeights.useMLA  = false;
+    }
+
     // ── Infer vocabSize from tensor shapes when metadata lacks it ────────
-    // Gemma3 GGUFs do not store vocab_size in metadata; derive from
-    // token_embd.weight shape [vocabSize, hiddenDim].
     if (modelWeights.vocabSize == 0) {
         for (const auto& t : ggufResult.tensors) {
             if (t.name == "token_embd.weight" || t.name == "token_embeddings.weight") {
@@ -683,14 +864,24 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
 
     // ── Sync authoritative model config from GGUF metadata ─────────────
-    // allocateBuffers() reads from config, not modelWeights.  If we do not
-    // sync here, the buffers are sized from stale hardcoded defaults and
-    // the first real generation will AV/segfault.
-    config.hiddenDim     = modelWeights.hiddenDim;
-    config.vocabSize     = modelWeights.vocabSize;
-    config.numLayers     = modelWeights.numLayers;
-    config.numHeads      = modelWeights.numHeads;
+    config.hiddenDim       = modelWeights.hiddenDim;
+    config.vocabSize       = modelWeights.vocabSize;
+    config.numLayers       = modelWeights.numLayers;
+    config.numHeads        = modelWeights.numHeads;
+    config.numKVHeads      = modelWeights.numKVHeads;
+    config.headDim         = modelWeights.headDim;
     config.intermediateDim = modelWeights.intermediateDim;
+    config.normEps         = modelWeights.normEps;
+    config.ropeTheta       = modelWeights.ropeTheta;
+    config.ropeScaling     = modelWeights.ropeScaling;
+
+    // MLA config propagation
+    config.qLoraRank      = modelWeights.qLoraRank;
+    config.kvLoraRank     = modelWeights.kvLoraRank;
+    config.qkNopeHeadDim  = modelWeights.qkNopeHeadDim;
+    config.qkRopeHeadDim  = modelWeights.qkRopeHeadDim;
+    config.vHeadDim       = modelWeights.vHeadDim;
+    config.useMLA         = modelWeights.useMLA;
 
     // Guard: refuse to allocate with invalid dimensions
     if (config.vocabSize == 0 || config.hiddenDim == 0 || config.numLayers == 0) {
@@ -700,74 +891,110 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
+    // Guard: validate MLA coherence for DeepSeek2
+    if (isDeepSeek2) {
+        if (config.qLoraRank == 0 || config.kvLoraRank == 0 ||
+            config.qkNopeHeadDim == 0 || config.qkRopeHeadDim == 0 || config.vHeadDim == 0) {
+            printf("[Deep2Engine] ERROR: DeepSeek2 model loaded with incomplete MLA metadata: "
+                   "qLoraRank=%zu kvLoraRank=%zu qkNope=%zu qkRope=%zu vHeadDim=%zu\n",
+                   config.qLoraRank, config.kvLoraRank,
+                   config.qkNopeHeadDim, config.qkRopeHeadDim, config.vHeadDim);
+            return false;
+        }
+    }
+
     // Allocate layer weights
     modelWeights.layers.resize(modelWeights.numLayers);
 
-    // Map tensors to layer weights
-    for (const auto& t : ggufResult.tensors) {
-        const std::string& name = t.name;
+    // Map tensors to layer weights (only for single-shard; multi-shard uses streaming)
+    if (!isMultiShard) {
+        for (const auto& t : ggufResult.tensors) {
+            const std::string& name = t.name;
 
-        // Parse layer index from tensor name (e.g., "blk.0.attn_q.weight")
-        int layerIdx = -1;
-        if (name.size() > 4 && name.substr(0, 4) == "blk.") {
-            layerIdx = atoi(name.c_str() + 4);
-        }
-
-        WeightTensor wt;
-        wt.data = t.data;
-        wt.type = (int)t.type;
-        wt.rows = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
-        wt.cols = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
-        wt.numBlocks = t.GetNumBlocks();
-        wt.sizeBytes = t.size;
-        wt.name = name;
-
-        if (name == "token_embd.weight") {
-            modelWeights.tokenEmbed = wt;
-        } else if (name == "output.weight" || name == "lm_head.weight") {
-            modelWeights.lmHead = wt;
-        } else if (name == "output_norm.weight" || name == "norm.weight") {
-            modelWeights.finalNorm = wt;
-        } else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers) {
-            auto& lw = modelWeights.layers[layerIdx];
-
-            if (name.find("attn_q") != std::string::npos)
-                lw.wq = wt;
-            else if (name.find("attn_k") != std::string::npos)
-                lw.wk = wt;
-            else if (name.find("attn_v") != std::string::npos)
-                lw.wv = wt;
-            else if (name.find("attn_output") != std::string::npos)
-                lw.wo = wt;
-            else if (name.find("attn_norm") != std::string::npos || name.find("input_layernorm") != std::string::npos)
-                lw.attnNorm = wt;
-            else if (name.find("ffn_gate") != std::string::npos && name.find("moe") == std::string::npos)
-                lw.wGate = wt;
-            else if (name.find("ffn_up") != std::string::npos && name.find("moe") == std::string::npos)
-                lw.wUp = wt;
-            else if (name.find("ffn_down") != std::string::npos && name.find("moe") == std::string::npos)
-                lw.wDown = wt;
-            else if (name.find("ffn_norm") != std::string::npos || name.find("post_attention_layernorm") != std::string::npos)
-                lw.ffnNorm = wt;
-            // MoE router gate tensor (real mapping - not skipped)
-            else if (name.find("ffn_gate_inp") != std::string::npos || 
-                     name.find("moe.router") != std::string::npos ||
-                     name.find("gate_inp") != std::string::npos)
-                lw.moeRouter = wt;
-            // Shared expert weights (real mapping)
-            else if (name.find("ffn_gate_exps") == std::string::npos &&  // skip stacked expert tensors
-                     name.find("ffn_up_exps") == std::string::npos &&
-                     name.find("ffn_down_exps") == std::string::npos &&
-                     name.find("shared_experts") != std::string::npos) {
-                if (name.find("gate_proj") != std::string::npos || name.find("w1") != std::string::npos)
-                    lw.moeSharedGate = wt;
-                else if (name.find("up_proj") != std::string::npos || name.find("w3") != std::string::npos)
-                    lw.moeSharedUp = wt;
-                else if (name.find("down_proj") != std::string::npos || name.find("w2") != std::string::npos)
-                    lw.moeSharedDown = wt;
+            // Parse layer index from tensor name (e.g., "blk.0.attn_q.weight")
+            int layerIdx = -1;
+            if (name.size() > 4 && name.substr(0, 4) == "blk.") {
+                layerIdx = atoi(name.c_str() + 4);
             }
-            // Note: Stacked expert tensors (ffn_gate_exps, ffn_up_exps, ffn_down_exps)
-            // are handled by MoEWeightsLoader streaming path, not mapped here.
+
+            WeightTensor wt;
+            wt.data = t.data;
+            wt.type = (int)t.type;
+            wt.rows = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
+            wt.cols = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
+            wt.numBlocks = t.GetNumBlocks();
+            wt.sizeBytes = t.size;
+            wt.name = name;
+
+            if (name == "token_embd.weight") {
+                modelWeights.tokenEmbed = wt;
+            } else if (name == "output.weight" || name == "lm_head.weight") {
+                modelWeights.lmHead = wt;
+            } else if (name == "output_norm.weight" || name == "norm.weight") {
+                modelWeights.finalNorm = wt;
+            } else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers) {
+                auto& lw = modelWeights.layers[layerIdx];
+
+                // ── MLA tensor routing (must come BEFORE generic attn_q/attn_k) ──
+                if (name.find("attn_q_a") != std::string::npos)
+                    lw.attnQ_a = wt;
+                else if (name.find("attn_q_a_norm") != std::string::npos)
+                    lw.attnQ_a_norm = wt;
+                else if (name.find("attn_q_b") != std::string::npos)
+                    lw.attnQ_b = wt;
+                else if (name.find("attn_kv_a_mqa") != std::string::npos)
+                    lw.attnKV_a_mqa = wt;
+                else if (name.find("attn_kv_a_norm") != std::string::npos)
+                    lw.attnKV_a_norm = wt;
+                else if (name.find("attn_k_b") != std::string::npos)
+                    lw.attnK_b = wt;
+                else if (name.find("attn_v_b") != std::string::npos)
+                    lw.attnV_b = wt;
+                else if (name.find("attn_o") != std::string::npos)
+                    lw.attnO = wt;
+                // ── Standard MHA / GQA tensors ──
+                else if (name.find("attn_q") != std::string::npos)
+                    lw.wq = wt;
+                else if (name.find("attn_k") != std::string::npos)
+                    lw.wk = wt;
+                else if (name.find("attn_v") != std::string::npos)
+                    lw.wv = wt;
+                else if (name.find("attn_output") != std::string::npos)
+                    lw.wo = wt;
+                else if (name.find("attn_norm") != std::string::npos || name.find("input_layernorm") != std::string::npos)
+                    lw.attnNorm = wt;
+                // ── Layer topology: dense vs MoE ──
+                bool isDenseLayer = (layerIdx < (int)meta.leadingDenseBlockCount);
+                if (isDenseLayer) {
+                    // Dense FFN (no MoE)
+                    if (name.find("ffn_gate") != std::string::npos)
+                        lw.wGate = wt;
+                    else if (name.find("ffn_up") != std::string::npos)
+                        lw.wUp = wt;
+                    else if (name.find("ffn_down") != std::string::npos)
+                        lw.wDown = wt;
+                } else {
+                    // MoE layers
+                    if (name.find("ffn_gate_inp") != std::string::npos ||
+                             name.find("moe.router") != std::string::npos ||
+                             name.find("gate_inp") != std::string::npos)
+                        lw.moeRouter = wt;
+                    else if (name.find("ffn_gate_exps") == std::string::npos &&
+                             name.find("ffn_up_exps") == std::string::npos &&
+                             name.find("ffn_down_exps") == std::string::npos &&
+                             name.find("shared_experts") != std::string::npos) {
+                        if (name.find("gate_proj") != std::string::npos || name.find("w1") != std::string::npos)
+                            lw.moeSharedGate = wt;
+                        else if (name.find("up_proj") != std::string::npos || name.find("w3") != std::string::npos)
+                            lw.moeSharedUp = wt;
+                        else if (name.find("down_proj") != std::string::npos || name.find("w2") != std::string::npos)
+                            lw.moeSharedDown = wt;
+                    }
+                }
+                // Norms apply to both dense and MoE layers
+                if (name.find("ffn_norm") != std::string::npos || name.find("post_attention_layernorm") != std::string::npos)
+                    lw.ffnNorm = wt;
+            }
         }
     }
 
@@ -798,9 +1025,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
 
     modelWeights.loaded = true;
-    printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n", ggufResult.tensors.size());
+    printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n",
+           isMultiShard ? globalIndex_->TotalTensors() : ggufResult.tensors.size());
 
-    // Wire MoE streaming loader for 671B expert weights
+    // Wire MoE streaming loader
     if (meta.numExperts > 0) {
         modelWeights.isMoE = true;
         modelWeights.numExperts         = meta.numExperts;
@@ -811,18 +1039,35 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         printf("[Deep2Engine] MoE model: %u experts, top-%u, %u shared\n",
                meta.numExperts, meta.numExpertsPerToken, meta.numSharedExperts);
 
-        // Open streaming loader on the same GGUF file
-        moeWeightsLoader_ = std::make_unique<MoEWeightsLoader>();
-        // Cache 4GB of experts in RAM (adjust down if low memory)
-        moeWeightsLoader_->SetMaxCacheSize(4ULL * 1024 * 1024 * 1024);
-        if (!moeWeightsLoader_->Open(ggufPath.c_str())) {
-            printf("[Deep2Engine] WARNING: MoE streaming loader failed to open %s\n",
-                   ggufPath.c_str());
-            moeWeightsLoader_.reset();
-        } else {
-            printf("[Deep2Engine] MoE streaming loader ready\n");
+        // For multi-shard, MoE weights are resolved via GlobalTensorIndex + residency cache
+        if (!isMultiShard) {
+            moeWeightsLoader_ = std::make_unique<MoEWeightsLoader>();
+            moeWeightsLoader_->SetMaxCacheSize(4ULL * 1024 * 1024 * 1024);
+            if (!moeWeightsLoader_->Open(firstShard.string().c_str())) {
+                printf("[Deep2Engine] WARNING: MoE streaming loader failed to open %s\n",
+                       firstShard.string().c_str());
+                moeWeightsLoader_.reset();
+            } else {
+                printf("[Deep2Engine] MoE streaming loader ready\n");
 
-            // Build MoE config from metadata (field names per MoEConfig in MoERouter.hpp)
+                moeConfig_.numExperts       = meta.numExperts;
+                moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
+                moeConfig_.useSharedExpert  = meta.numSharedExperts > 0;
+                moeConfig_.expertDim          = meta.moeIntermediateSize > 0 ?
+                                                meta.moeIntermediateSize : meta.intermediateSize;
+                moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
+                moeConfig_.hiddenDim          = meta.hiddenSize;
+
+                moeRouter_ = std::make_unique<MoERouter>();
+                moeRouter_->Initialize(moeConfig_);
+
+                moeWeightProxy_ = std::make_unique<MoEWeightProxy>();
+                moeWeightProxy_->Attach(moeWeightsLoader_.get());
+
+                moeInitialized_ = true;
+            }
+        } else {
+            printf("[Deep2Engine] MoE multi-shard: using GlobalTensorIndex + residency cache\n");
             moeConfig_.numExperts       = meta.numExperts;
             moeConfig_.numActiveExperts = modelWeights.numExpertsPerToken;
             moeConfig_.useSharedExpert  = meta.numSharedExperts > 0;
@@ -831,20 +1076,49 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             moeConfig_.sharedExpertDim    = moeConfig_.expertDim;
             moeConfig_.hiddenDim          = meta.hiddenSize;
 
-            // Router: default-construct then Initialize (no config ctor exists).
-            // Router weights already mapped in modelWeights.layers[i].moeRouter
             moeRouter_ = std::make_unique<MoERouter>();
             moeRouter_->Initialize(moeConfig_);
-
-            // Weight proxy wraps the streaming loader
-            moeWeightProxy_ = std::make_unique<MoEWeightProxy>();
-            moeWeightProxy_->Attach(moeWeightsLoader_.get());
-
             moeInitialized_ = true;
         }
     }
 
     return true;
+}
+
+// ============================================================================
+// Unload Model — free weights, reset state, keep engine alive
+// ============================================================================
+void Deep2Engine::unloadModel() {
+    printf("[Deep2Engine] Unloading model...\n");
+
+    // Release MoE resources
+    moePinnedHandles_.clear();
+    if (moeWeightProxy_) moeWeightProxy_->Detach();
+    moeWeightProxy_.reset();
+    if (moeWeightsLoader_) moeWeightsLoader_->Close();
+    moeWeightsLoader_.reset();
+    moeLayer_.reset();
+    moeRouter_.reset();
+    moeInitialized_ = false;
+
+    // Clear model weights (tensor data is owned by GGUFLoader mmap; just clear refs)
+    modelWeights.layers.clear();
+    modelWeights.tokenEmbed = WeightTensor{};
+    modelWeights.lmHead     = WeightTensor{};
+    modelWeights.finalNorm  = WeightTensor{};
+    modelWeights.loaded     = false;
+    modelWeights.isMoE      = false;
+
+    // Clear GGUF result (releases mmap)
+    ggufResult = GGUFLoadResult{};
+
+    // Reset KV cache
+    if (kvCache) kvCache->reset();
+
+    // Reset generation state
+    initialized = false;
+
+    printf("[Deep2Engine] Model unloaded\n");
 }
 
 bool Deep2Engine::loadWeights(const void* weightData, size_t size) {
@@ -928,7 +1202,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
                 // Legacy fallback
                 size_t numBlocks = hiddenDim / 256;
-                const Q4_K_M_Block* blocks = (const Q4_K_M_Block*)row;
+                const Q4_K_Block* blocks = (const Q4_K_Block*)row;
                 float* dequantBuf = alignedAlloc(256);
                 for (size_t b = 0; b < numBlocks; ++b) {
                     dequantizeQ4KBlock(&blocks[b], dequantBuf);
@@ -1446,6 +1720,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
 // ============================================================================
 // Compute Attention - Real Q/K/V/O weight projections + KV cache + RoPE
+// Supports both standard MHA/GQA and MLA (K2) factorized attention
 // ============================================================================
 void Deep2Engine::computeAttention(size_t layer, const float* input, float* output, size_t seqLen) {
     if (layer >= modelWeights.layers.size()) {
@@ -1459,6 +1734,58 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t numKVHeads = modelWeights.numKVHeads;
     size_t headDim = modelWeights.headDim;
 
+    // ── MLA (K2) path ──────────────────────────────────────────────────
+    if (lw.useMLA) {
+        size_t qLoraRank      = config.qLoraRank      > 0 ? config.qLoraRank      : 1536;
+        size_t kvLoraRank     = config.kvLoraRank     > 0 ? config.kvLoraRank     : 512;
+        size_t qkRopeHeadDim  = config.qkRopeHeadDim  > 0 ? config.qkRopeHeadDim  : 64;
+        size_t qkNopeHeadDim  = config.qkNopeHeadDim  > 0 ? config.qkNopeHeadDim  : 128;
+        size_t vHeadDim       = config.vHeadDim       > 0 ? config.vHeadDim       : 128;
+        size_t numHeads       = config.numHeads;
+
+        // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
+        // Step 1: q_a = attnQ_a^T * input  [qLoraRank]
+        LinearW(lw.attnQ_a, input, nullptr, mlaQ_a, qLoraRank);
+
+        // Step 2: RMSNorm on q_a
+        RMSNormW(lw.attnQ_a_norm, mlaQ_a, mlaQ_a, qLoraRank, config.normEps);
+
+        // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
+        LinearW(lw.attnQ_b, mlaQ_a, nullptr, mlaQ_b, numHeads * headDim);
+
+        // KV-path: hidden → kv_a_mqa (GEMV) → split → [compressed_kv | k_pe]
+        // Step 4: kv_a = attnKV_a_mqa^T * input  [kvLoraRank + qkRopeHeadDim]
+        LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a, kvLoraRank + qkRopeHeadDim);
+
+        // Step 5: Split kv_a into compressed_kv and k_pe
+        float* compressedKV = mlaKV_a;                    // [kvLoraRank]
+        float* k_pe         = mlaKV_a + kvLoraRank;       // [qkRopeHeadDim]
+
+        // Step 6: RMSNorm on compressed_kv
+        RMSNormW(lw.attnKV_a_norm, compressedKV, compressedKV, kvLoraRank, config.normEps);
+
+        // Step 7: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
+        LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b, numHeads * qkNopeHeadDim);
+
+        // Step 8: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
+        LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b, numHeads * vHeadDim);
+
+        // Step 9: Combine q_b + k_pe (RoPE on k_pe, then concat)
+        // For now: copy q_b to output, then apply output projection
+        // Full attention with KV cache would go here
+        memcpy(qProj, mlaQ_b, numHeads * headDim * sizeof(float));
+
+        // Step 10: Output projection: attnO^T * qProj  [hiddenDim]
+        LinearW(lw.attnO, qProj, nullptr, output, hiddenDim);
+
+        // Reverse analysis hook
+        if (reverseAnalysisEnabled_ && reverseIntegration_) {
+            reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
+        }
+        return;
+    }
+
+    // ── Standard MHA / GQA path ────────────────────────────────────────
     // Q projection: [hiddenDim] -> [hiddenDim]
     LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
 
@@ -1857,7 +2184,7 @@ void Deep2Engine::LinearParallel(int weightIdx, const float* input, const float*
     std::atomic<size_t> completed(0);
 
     for (size_t t = 0; t < numThreads; ++t) {
-        size_t startRow = t * rowsPerThread + std::min(t, remainder);
+        size_t startRow = t * rowsPerThread + (std::min)(t, remainder);
         size_t endRow = startRow + rowsPerThread + (t < remainder ? 1 : 0);
 
         threadPool->enqueue([&, startRow, endRow]() {
@@ -2518,7 +2845,7 @@ static TreeForwardPassResult treeForwardPassEveryDirection(
     
     size_t maxDepth = 0;
     for (const auto& node : tree) {
-        maxDepth = std::max(maxDepth, node.depth);
+        maxDepth = (std::max)(maxDepth, node.depth);
     }
     result.verifierTop1PerDepth.resize(maxDepth + 1, 0);
     

@@ -8453,8 +8453,10 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
     src/deep2/mars/VRAMManager.cpp
     src/deep2/HotPatcher.cpp
     src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_deep2_kernels.asm
     src/inference/RawrXD_LlamaNative.cpp
-    tests/deep2_link_stubs.cpp
     src/core/memory_stubs.cpp
     src/core/link_stubs.cpp
     src/reverse/ReverseEngine.cpp
@@ -8462,6 +8464,202 @@ add_executable(k2_runtime_validation tests/k2_runtime_validation.cpp
 set_target_properties(k2_runtime_validation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(k2_runtime_validation PRIVATE InferenceEngine)
 add_test(NAME k2_runtime_validation COMMAND k2_runtime_validation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# Q4_K Block Decoder Verification Test
+# Must pass before Q4_K GEMV is re-enabled in K2-003 Gate 6b
+add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp)
+set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(test_q4k_decoder PRIVATE InferenceEngine)
+add_test(NAME test_q4k_decoder COMMAND test_q4k_decoder WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-002 Native Deep2 Runtime Smoke Test
+# Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency
+add_executable(k2_native_smoke_test tests/k2_native_smoke_test.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_deep2_kernels.asm
+    src/inference/RawrXD_LlamaNative.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
+set_target_properties(k2_native_smoke_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_native_smoke_test PRIVATE InferenceEngine)
+add_test(NAME k2_native_smoke_test COMMAND k2_native_smoke_test WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-002: Bounded Tensor Streaming Validation
+add_executable(k2_002_tensor_streaming tests/k2_002_tensor_streaming.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
+set_target_properties(k2_002_tensor_streaming PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_002_tensor_streaming PRIVATE InferenceEngine)
+add_test(NAME k2_002_tensor_streaming COMMAND k2_002_tensor_streaming WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-003: Native Deep2 Layer Execution
+add_executable(k2_003_layer_execution tests/k2_003_layer_execution.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
+set_target_properties(k2_003_layer_execution PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_003_layer_execution PRIVATE InferenceEngine)
+add_test(NAME k2_003_layer_execution COMMAND k2_003_layer_execution WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# K2-004: Bounded Multi-Layer Prefill
+add_executable(k2_004_bounded_prefill tests/k2_004_bounded_prefill.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/inference/RawrXD_LlamaNative.cpp
+    tests/deep2_link_stubs.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp)
+set_target_properties(k2_004_bounded_prefill PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+target_link_libraries(k2_004_bounded_prefill PRIVATE InferenceEngine)
+add_test(NAME k2_004_bounded_prefill COMMAND k2_004_bounded_prefill WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 set(B004_TRANSFORMER_ROUTER_STREAMING_SOURCES
     tests/b004_transformer_router_streaming_integration.cpp

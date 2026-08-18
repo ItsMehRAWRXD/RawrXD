@@ -54,24 +54,35 @@ ExpertSlice MoEWeights::GetExpertDown(uint32_t expertId, const KimiK2Config& con
 }
 
 bool MoEWeights::Validate(const KimiK2Config& config, std::string& error) const {
-    // Router tensors
-    if (!ffnGateInp.data()) { error = "MoEWeights: ffn_gate_inp missing"; return false; }
-    if (!expProbsB.data()) { error = "MoEWeights: exp_probs_b missing"; return false; }
+    // Detect layer type: dense FFN (layer 0) vs MoE (layers 1+)
+    const bool isDenseLayer = !ffnGate.dims().empty() || !ffnUp.dims().empty() || !ffnDown.dims().empty();
+    const bool isMoELayer = !ffnGateInp.dims().empty();
 
-    // Expert tensors (for MoE layers)
-    if (config.numExperts > 0) {
-        if (!ffnGateExps.data()) { error = "MoEWeights: ffn_gate_exps missing"; return false; }
-        if (!ffnUpExps.data()) { error = "MoEWeights: ffn_up_exps missing"; return false; }
-        if (!ffnDownExps.data()) { error = "MoEWeights: ffn_down_exps missing"; return false; }
+    if (!isDenseLayer && !isMoELayer) {
+        error = "MoEWeights: layer has neither dense FFN nor MoE tensors";
+        return false;
     }
 
-    // Shared expert
-    if (!ffnGateShexp.data()) { error = "MoEWeights: ffn_gate_shexp missing"; return false; }
-    if (!ffnUpShexp.data()) { error = "MoEWeights: ffn_up_shexp missing"; return false; }
-    if (!ffnDownShexp.data()) { error = "MoEWeights: ffn_down_shexp missing"; return false; }
+    // Router tensors (required for MoE layers only)
+    if (isMoELayer) {
+        if (ffnGateInp.dims().empty()) { error = "MoEWeights: ffn_gate_inp missing"; return false; }
+        if (expProbsB.dims().empty()) { error = "MoEWeights: exp_probs_b missing"; return false; }
 
-    // Norm
-    if (!ffnNorm.data()) { error = "MoEWeights: ffn_norm missing"; return false; }
+        // Expert tensors
+        if (ffnGateExps.dims().empty()) { error = "MoEWeights: ffn_gate_exps missing"; return false; }
+        if (ffnUpExps.dims().empty()) { error = "MoEWeights: ffn_up_exps missing"; return false; }
+        if (ffnDownExps.dims().empty()) { error = "MoEWeights: ffn_down_exps missing"; return false; }
+    }
+
+    // Shared expert (required for MoE layers, optional for dense layer 0)
+    if (isMoELayer) {
+        if (ffnGateShexp.dims().empty()) { error = "MoEWeights: ffn_gate_shexp missing"; return false; }
+        if (ffnUpShexp.dims().empty()) { error = "MoEWeights: ffn_up_shexp missing"; return false; }
+        if (ffnDownShexp.dims().empty()) { error = "MoEWeights: ffn_down_shexp missing"; return false; }
+    }
+
+    // Norm (always present)
+    if (ffnNorm.dims().empty()) { error = "MoEWeights: ffn_norm missing"; return false; }
 
     return true;
 }
@@ -84,7 +95,7 @@ bool MoEWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
     char normName[64];
 
     snprintf(gateInpName, sizeof(gateInpName), "blk.%u.ffn_gate_inp.weight", layer);
-    snprintf(expProbsBName, sizeof(expProbsBName), "blk.%u.exp_probs_b.weight", layer);
+    snprintf(expProbsBName, sizeof(expProbsBName), "blk.%u.exp_probs_b.bias", layer);
     snprintf(gateExpsName, sizeof(gateExpsName), "blk.%u.ffn_gate_exps.weight", layer);
     snprintf(upExpsName, sizeof(upExpsName), "blk.%u.ffn_up_exps.weight", layer);
     snprintf(downExpsName, sizeof(downExpsName), "blk.%u.ffn_down_exps.weight", layer);
@@ -137,26 +148,32 @@ bool MoEWeights::ResolveFromTensorIndex(const GlobalTensorIndex& index, uint32_t
         return true;
     };
 
-    // Router (always required for MoE layers)
-    if (!resolve(gateInpName, ffnGateInp)) { error = std::string("MoEWeights: ") + gateInpName + " not found"; return false; }
-    if (!resolve(expProbsBName, expProbsB)) { error = std::string("MoEWeights: ") + expProbsBName + " not found"; return false; }
+    // Layer 0 uses dense FFN (no router, no routed experts)
+    // Layers 1+ use MoE (router + routed experts + shared expert)
+    bool hasDenseFFN = false;
+    if (layer == 0) {
+        hasDenseFFN = resolve(gateName, ffnGate) && resolve(upName, ffnUp) && resolve(downName, ffnDown);
+    }
 
-    // Routed experts
-    if (!resolve(gateExpsName, ffnGateExps)) { error = std::string("MoEWeights: ") + gateExpsName + " not found"; return false; }
-    if (!resolve(upExpsName, ffnUpExps))     { error = std::string("MoEWeights: ") + upExpsName + " not found"; return false; }
-    if (!resolve(downExpsName, ffnDownExps)) { error = std::string("MoEWeights: ") + downExpsName + " not found"; return false; }
+    if (!hasDenseFFN) {
+        // Router (required for MoE layers)
+        if (!resolve(gateInpName, ffnGateInp)) { error = std::string("MoEWeights: ") + gateInpName + " not found"; return false; }
+        if (!resolve(expProbsBName, expProbsB)) { error = std::string("MoEWeights: ") + expProbsBName + " not found"; return false; }
 
-    // Shared expert
-    if (!resolve(gateShexpName, ffnGateShexp)) { error = std::string("MoEWeights: ") + gateShexpName + " not found"; return false; }
-    if (!resolve(upShexpName, ffnUpShexp))       { error = std::string("MoEWeights: ") + upShexpName + " not found"; return false; }
-    if (!resolve(downShexpName, ffnDownShexp))   { error = std::string("MoEWeights: ") + downShexpName + " not found"; return false; }
+        // Routed experts
+        if (!resolve(gateExpsName, ffnGateExps)) { error = std::string("MoEWeights: ") + gateExpsName + " not found"; return false; }
+        if (!resolve(upExpsName, ffnUpExps))     { error = std::string("MoEWeights: ") + upExpsName + " not found"; return false; }
+        if (!resolve(downExpsName, ffnDownExps)) { error = std::string("MoEWeights: ") + downExpsName + " not found"; return false; }
+    }
 
-    // Dense FFN (Layer 0 fallback — optional, resolve if present)
-    resolve(gateName, ffnGate);
-    resolve(upName, ffnUp);
-    resolve(downName, ffnDown);
+    // Shared expert (present for MoE layers, optional for dense layer 0)
+    if (layer > 0 || !hasDenseFFN) {
+        if (!resolve(gateShexpName, ffnGateShexp)) { error = std::string("MoEWeights: ") + gateShexpName + " not found"; return false; }
+        if (!resolve(upShexpName, ffnUpShexp))       { error = std::string("MoEWeights: ") + upShexpName + " not found"; return false; }
+        if (!resolve(downShexpName, ffnDownShexp))   { error = std::string("MoEWeights: ") + downShexpName + " not found"; return false; }
+    }
 
-    // Norm
+    // Norm (always present)
     if (!resolve(normName, ffnNorm)) { error = std::string("MoEWeights: ") + normName + " not found"; return false; }
 
     return true;

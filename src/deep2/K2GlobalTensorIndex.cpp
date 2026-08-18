@@ -240,8 +240,9 @@ GlobalTensorRef::TensorRole GlobalTensorIndex::ClassifyTensorRole(const std::str
     if (name.find("attn_q_a") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionQ;
     if (name.find("attn_q_b") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionQ;
     if (name.find("attn_kv_a") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionKV;
-    if (name.find("attn_kv_b") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionKV;
-    if (name.find("attn_o") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionO;
+    if (name.find("attn_v_b") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionKV;
+    if (name.find("attn_k_b") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionKV;
+    if (name.find("attn_output") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionO;
     if (name.find("attn_norm") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionNorm;
     if (name.find("attn_q_a_norm") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionNorm;
     if (name.find("attn_kv_a_norm") != std::string::npos) return GlobalTensorRef::TensorRole::AttentionNorm;

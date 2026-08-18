@@ -2,6 +2,10 @@
  * @file q4_k_m_gemm_fused.cpp
  * @brief Q4_K_M mixed-precision fused GEMM implementation
  *
+ * ⚠️  DEPRECATED / BROKEN — See q4_k_m_gemm_fused.h for details.
+ *    This implementation uses an INCORRECT 272-byte Q4_K_M_Block.
+ *    DO NOT USE for real model inference.
+ *
  * @copyright RawrXD 2026
  */
 
