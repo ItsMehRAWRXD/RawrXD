@@ -4,6 +4,7 @@
 
 #include "K2MLAWeights.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "K2KVCache.hpp"
 #include "UniversalTensorDescriptor.hpp"
 #include <algorithm>
 #include <cmath>
@@ -196,32 +197,74 @@ static void gemvQ4K(const void* weights, const float* input,
 // of Q4_K blocks. We process one column at a time, dequantizing each block
 // and accumulating into output. No large temporary allocations.
 // ============================================================================
+// ============================================================================
+// Reference Q4_K GEMV^T — dequantize one stored row at a time
+//
+// Stored tensor layout: [cols, rows] row-major, each stored row has
+// blocksPerStoredRow Q4_K blocks covering 'rows' elements.
+//
+// For each stored row c (0..cols-1):
+//   Dequantize all blocks in that row to a temporary F32 buffer
+//   For each output element r (0..rows-1):
+//     output[r] += temp[r] * input[c]
+//
+// Temp memory: rows * sizeof(float) — small and safe.
+// ============================================================================
 static void gemvQ4KTransposed(const void* weights, const float* input,
                               float* output, size_t rows, size_t cols) {
-    size_t blocksPerRow = (rows + 255) / 256;
+    size_t blocksPerStoredRow = (rows + 255) / 256;
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);
-    float blockBuf[256];
+
+    // Allocate temp buffer for one dequantized stored row
+    float* rowBuf = (float*)_aligned_malloc(rows * sizeof(float), 32);
+    if (!rowBuf) return;
 
     // Zero output accumulator
     for (size_t r = 0; r < rows; ++r) output[r] = 0.0f;
 
-    // Process one column at a time
+    const uint8_t* base = (const uint8_t*)weights;
+
     for (size_t c = 0; c < cols; ++c) {
-        const Q4_K_Block* colBlocks =
-            (const Q4_K_Block*)((const uint8_t*)weights + c * blocksPerRow * kBlockSize);
+        const uint8_t* rowPtr = base + c * blocksPerStoredRow * kBlockSize;
         float inVal = input[c];
 
+        // Dequantize this stored row into rowBuf
         size_t r = 0;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            dequantizeQ4KBlock(&colBlocks[b], blockBuf);
-            size_t elemsInBlock = std::min(size_t(256), rows - r);
-            size_t i = 0;
-            // Scalar accumulation (safe, no AVX alignment issues)
-            for (; i < elemsInBlock; ++i, ++r) {
-                output[r] += blockBuf[i] * inVal;
+        for (size_t b = 0; b < blocksPerStoredRow && r < rows; ++b) {
+            const Q4_K_Block* block = (const Q4_K_Block*)(rowPtr + b * kBlockSize);
+            float d    = fp16ToFloat(block->d);
+            float dmin = fp16ToFloat(block->dmin);
+            for (int j = 0; j < 8 && r < rows; ++j) {
+                uint8_t sc, m;
+                unpackQ4KScaleMin(block->scales, j, sc, m);
+                float scale = d * sc;
+                float min   = dmin * m;
+                const uint8_t* quants = block->qs + j * 16;
+                for (int k = 0; k < 16 && r < rows; ++k) {
+                    uint8_t byte = quants[k];
+                    int lo = byte & 0xF;
+                    int hi = (byte >> 4) & 0xF;
+                    rowBuf[r++] = scale * lo - min;
+                    if (r < rows) rowBuf[r++] = scale * hi - min;
+                }
             }
         }
+
+        // Accumulate: output[r] += rowBuf[r] * input[c]
+        size_t r2 = 0;
+        for (; r2 + 8 <= rows; r2 += 8) {
+            __m256 v = _mm256_loadu_ps(rowBuf + r2);
+            __m256 a = _mm256_loadu_ps(output + r2);
+            __m256 s = _mm256_set1_ps(inVal);
+            a = _mm256_fmadd_ps(v, s, a);
+            _mm256_storeu_ps(output + r2, a);
+        }
+        for (; r2 < rows; ++r2) {
+            output[r2] += rowBuf[r2] * inVal;
+        }
     }
+
+    _aligned_free(rowBuf);
 }
 
 // ============================================================================
@@ -294,6 +337,32 @@ static void rmsNorm(const float* input, const float* weight,
     for (size_t i = 0; i < n; ++i) ss += input[i] * input[i];
     float invRms = 1.0f / std::sqrt(ss / static_cast<float>(n) + eps);
     for (size_t i = 0; i < n; ++i) output[i] = input[i] * invRms * weight[i];
+}
+
+// ============================================================================
+// RMSNorm with TensorView weight (handles F16 and F32 norm weights)
+// ============================================================================
+static void rmsNormTensorView(const float* input, const RawrXD::TensorView& weightView,
+                              float* output, size_t n, float eps) {
+    float ss = 0.0f;
+    for (size_t i = 0; i < n; ++i) ss += input[i] * input[i];
+    float invRms = 1.0f / std::sqrt(ss / static_cast<float>(n) + eps);
+
+    auto qt = weightView.quantType();
+    if (qt == RawrXD::QuantType::F32) {
+        const float* w = weightView.asF32();
+        for (size_t i = 0; i < n; ++i) output[i] = input[i] * invRms * w[i];
+    } else if (qt == RawrXD::QuantType::F16) {
+        const uint16_t* w = reinterpret_cast<const uint16_t*>(weightView.data());
+        for (size_t i = 0; i < n; ++i) {
+            float wf = fp16ToFloat(w[i]);
+            output[i] = input[i] * invRms * wf;
+        }
+    } else {
+        // Fallback: treat as F32 anyway (may read garbage for unsupported types)
+        const float* w = weightView.asF32();
+        for (size_t i = 0; i < n; ++i) output[i] = input[i] * invRms * w[i];
+    }
 }
 
 // ============================================================================
@@ -577,32 +646,44 @@ bool MLAWeights::DetectMLA(const std::string& tensorName) {
 bool MLAForward::Execute(const float* hidden, float* output,
                          const MLAWeights& weights,
                          const KimiK2Config& config,
-                         std::string& error) {
+                         std::string& error,
+                         class K2KVCache* kvCache,
+                         uint32_t layerIdx,
+                         uint32_t position) {
+    fprintf(stderr, "[Execute] entry\n");
     if (!hidden || !output) {
         error = "MLAForward: null input/output pointer";
         return false;
     }
 
+    fprintf(stderr, "[Execute] validating...\n");
     if (!weights.Validate(config, error)) {
         return false;
     }
+    fprintf(stderr, "[Execute] validate ok\n");
 
     // =========================================================================
     // DERIVE ALL DIMENSIONS FROM ACTUAL TENSOR SHAPES (GGUF is authoritative)
     // =========================================================================
+    fprintf(stderr, "[Execute] deriving dims from attnQ_a...\n");
     // attnQ_a: [hiddenDim, qLoraRank]
     const size_t hiddenDim = weights.attnQ_a.dims()[0];
     const size_t qLoraRank = weights.attnQ_a.dims()[1];
+    fprintf(stderr, "[Execute] hiddenDim=%zu qLoraRank=%zu\n", hiddenDim, qLoraRank);
 
     // attnQ_b: [qLoraRank, numHeads * headDim]
+    fprintf(stderr, "[Execute] deriving qBCols...\n");
     const size_t qBCols = weights.attnQ_b.dims()[1];
+    fprintf(stderr, "[Execute] qBCols=%zu\n", qBCols);
     const size_t numHeads = config.numHeads; // heads is architectural, not tensor-derived
+    fprintf(stderr, "[Execute] numHeads=%zu\n", numHeads);
     if (qBCols % numHeads != 0) {
         error = "MLAForward: attn_q_b cols (" + std::to_string(qBCols) +
                 ") not divisible by numHeads (" + std::to_string(numHeads) + ")";
         return false;
     }
     const size_t headDim = qBCols / numHeads;
+    fprintf(stderr, "[Execute] headDim=%zu\n", headDim);
 
     // attnKV_a_mqa: [hiddenDim, kvLoraRank + qkRopeHeadDim]
     const size_t kvACols = weights.attnKV_a_mqa.dims()[1];
@@ -676,9 +757,8 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // Step 2: RMSNorm on q_a
     {
-        const float* normW = weights.attnQ_a_norm.asF32();
-        if (normW) {
-            rmsNorm(q_a, normW, q_a, qLoraRank, config.normRmsEps);
+        if (weights.attnQ_a_norm.data()) {
+            rmsNormTensorView(q_a, weights.attnQ_a_norm, q_a, qLoraRank, config.normRmsEps);
         }
     }
 
@@ -702,9 +782,8 @@ bool MLAForward::Execute(const float* hidden, float* output,
 
     // Step 5: RMSNorm on compressed_kv only
     {
-        const float* normW = weights.attnKV_a_norm.asF32();
-        if (normW) {
-            rmsNorm(compressedKV, normW, compressedKV, kvLoraRank, config.normRmsEps);
+        if (weights.attnKV_a_norm.data()) {
+            rmsNormTensorView(compressedKV, weights.attnKV_a_norm, compressedKV, kvLoraRank, config.normRmsEps);
         }
     }
 

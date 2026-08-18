@@ -101,10 +101,14 @@ struct MLAWeights {
 // ============================================================================
 struct MLAForward {
     // Forward pass — returns false on error with message in error
+    // K2-005: kvCache is optional for prefill; required for autoregressive decode
     bool Execute(const float* hidden, float* output,
                  const MLAWeights& weights,
                  const KimiK2Config& config,
-                 std::string& error);
+                 std::string& error,
+                 class K2KVCache* kvCache = nullptr,
+                 uint32_t layerIdx = 0,
+                 uint32_t position = 0);
 
     // Standalone test: compare against deterministic reference fixture
     // Used for K2-003 validation gate

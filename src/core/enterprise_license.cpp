@@ -42,6 +42,20 @@
 #include <windows.h>
 #endif
 
+// ---------------------------------------------------------------------------
+// Optional-defense stub for Shield_InitializeDefense
+// If RawrXD_License_Shield.obj (MASM) is not linked, this provides a safe
+// fallback that returns 0 (tamper detected), preventing execute-at-null.
+// The alternatename pragma is ignored when the real symbol is present.
+// ---------------------------------------------------------------------------
+#ifdef _WIN32
+#pragma comment(linker, "/alternatename:Shield_InitializeDefense=Shield_InitializeDefense_Stub")
+#endif
+
+extern "C" int32_t Shield_InitializeDefense_Stub() {
+    return 0; // Defense unavailable — treat as tamper detected
+}
+
 namespace RawrXD
 {
 

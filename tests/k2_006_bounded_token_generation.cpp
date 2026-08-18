@@ -197,11 +197,7 @@ struct K2DecodeAdapter {
     size_t vocabSize = 163840;
 
     // Global tensors (loaded once)
-    std::vector<uint8_t> tokenEmbdPayload;
-    std::vector<uint8_t> outputWeightPayload;
     std::vector<uint8_t> outputNormPayload;
-    RawrXD::TensorView tokenEmbd;
-    RawrXD::TensorView outputWeight;
     RawrXD::TensorView outputNorm;
 
     bool initialize(Deep2::GlobalTensorIndex* idx, Deep2::KimiK2Config* cfg,
@@ -226,19 +222,14 @@ struct K2DecodeAdapter {
         }
         TrackAlloc(kvCacheSize);
 
-        // Load global tensors (token embedding, output projection, output norm)
-        if (!LoadTensorPayload(*index, "token_embd.weight", tokenEmbdPayload, error))
-            return false;
-        if (!LoadTensorPayload(*index, "output.weight", outputWeightPayload, error))
-            return false;
+        // Load output norm only (token_embd and output.weight are ~630 MiB each
+        // and not needed while embedToken/projectLogits are synthetic)
         if (!LoadTensorPayload(*index, "output_norm.weight", outputNormPayload, error))
             return false;
 
-        tokenEmbd  = MakeTensorView(tokenEmbdPayload, *index, "token_embd.weight", RawrXD::QuantType::Q4_K);
-        outputWeight = MakeTensorView(outputWeightPayload, *index, "output.weight", RawrXD::QuantType::Q4_K);
-        outputNorm   = MakeTensorView(outputNormPayload, *index, "output_norm.weight", RawrXD::QuantType::F32);
+        outputNorm = MakeTensorView(outputNormPayload, *index, "output_norm.weight", RawrXD::QuantType::F32);
 
-        uint64_t globalBytes = tokenEmbdPayload.size() + outputWeightPayload.size() + outputNormPayload.size();
+        uint64_t globalBytes = outputNormPayload.size();
         TrackAlloc(globalBytes);
 
         return true;
@@ -280,8 +271,8 @@ struct K2DecodeAdapter {
     bool decode(int32_t token, float* hidden, float* logits, std::string& error);
 
     void shutdown() {
-        TrackFree(tokenEmbdPayload.size() + outputWeightPayload.size() + outputNormPayload.size());
-        tokenEmbdPayload.clear(); outputWeightPayload.clear(); outputNormPayload.clear();
+        TrackFree(outputNormPayload.size());
+        outputNormPayload.clear();
         // KV cache freed on destruction
     }
 };
