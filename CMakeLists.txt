@@ -812,6 +812,7 @@ endif()
 if(WIN32)
     add_executable(val_051_2_a_real_token
         tests/val_051_2_a_real_token.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
     )
     target_link_libraries(val_051_2_a_real_token PRIVATE InferenceEngine)
     set_target_properties(val_051_2_a_real_token PROPERTIES 
@@ -824,6 +825,7 @@ if(WIN32)
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
         ${CMAKE_SOURCE_DIR}/include/core
     )
     # Vulkan SDK support for val_051_2_a_real_token (shares sources with rawrxd)
@@ -860,6 +862,61 @@ if(WIN32)
         kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
     )
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
+
+    # =====================================================================
+    # validate_val051_evidence — Evidence JSON validator for VAL-051.2.A
+    # =====================================================================
+    add_executable(validate_val051_evidence
+        tests/validate_val051_evidence.cpp
+    )
+    set_target_properties(validate_val051_evidence PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET validate_val051_evidence APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET validate_val051_evidence APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET validate_val051_evidence APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "validate_val051_evidence: VAL-051.2.A evidence validator configured")
+
+    # =====================================================================
+    # test_gguf_tokenizer_bounds — Fuzz-style bounds validation for ParseGGUF
+    # =====================================================================
+    add_executable(test_gguf_tokenizer_bounds
+        tests/test_gguf_tokenizer_bounds.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    set_target_properties(test_gguf_tokenizer_bounds PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(test_gguf_tokenizer_bounds PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+    )
+    target_link_libraries(test_gguf_tokenizer_bounds PRIVATE
+        kernel32 user32
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_gguf_tokenizer_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_gguf_tokenizer_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_gguf_tokenizer_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
 endif()
 
 # =============================================================================
@@ -6657,26 +6714,25 @@ if(BUILD_DEEP2_BATCH_TEST)
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Deep2_Production_Bench — Production TPS Benchmark
-# Tests: ThreadPool + KVCache + Full Transformer Stack + All Quantization Kernels
+# test_generate_one_token — Minimal Codestral One-Token Validation Gate
 # ═══════════════════════════════════════════════════════════════════════════════
-option(BUILD_DEEP2_PRODUCTION_BENCH "Build Deep2 production TPS benchmark" ON)
-if(BUILD_DEEP2_PRODUCTION_BENCH)
-    add_executable(Deep2_Production_Bench EXCLUDE_FROM_ALL
-        # Core engine (verified working)
-        src/deep2/deep2_end_to_end_bench.cpp
+option(BUILD_DEEP2_TOKEN_GATE "Build minimal one-token generation gate" ON)
+if(BUILD_DEEP2_TOKEN_GATE)
+    add_executable(test_generate_one_token
+        src/deep2/test_generate_one_token.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
         src/deep2/Deep2Engine.cpp
         src/deep2/K2GlobalTensorIndex.cpp
         src/deep2/GGUFLoader.cpp
         src/deep2/ThreadPool.cpp
         src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
         src/deep2/MoERouter.cpp
         src/deep2/MoEWeightProxy.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/TensorHop.cpp
         src/deep2/MoEArchitectureParser.cpp
-        src/deep2/QuantKernelRegistry.cpp
         src/deep2/Deep2ExecutionGraph.cpp
         src/deep2/ReverseHotpatchEngine.cpp
         src/deep2/ReverseIntegration.cpp
@@ -6685,24 +6741,12 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/StreamEngine.cpp
         src/deep2/StreamRouter.cpp
         src/deep2/FusedInferenceKernel.cpp
-        # MARS dual-GPU VRAM orchestration
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        # VAL-000 Components
-        src/deep2/ReverseIntegration.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
         src/deep2/MedusaDecoder.cpp
         src/deep2/WarmupScheduler.cpp
         src/deep2/NUFusedPacker.cpp
         src/deep2/CompressedKVCache.cpp
         src/deep2/NVMeStream.cpp
         src/deep2/SlidingWindowEngine.cpp
-        # Sampling
-        src/sampling/advanced_sampler.cpp
-        # The Bottle + The Antidote + TrailBrake (Safe Runtime Patching)
         src/deep2/HotPatcher.cpp
         src/deep2/HotPatcherSafety.cpp
         src/deep2/AntiPatcher.cpp
@@ -6711,27 +6755,34 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         src/deep2/BottleTTL.cpp
         src/deep2/GoalSystem.cpp
         src/deep2/CPUFrequency.cpp
-        # ASM kernels - Deep2 production kernels
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
-        target_compile_options(Deep2_Production_Bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+        target_compile_options(test_generate_one_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
-    target_include_directories(Deep2_Production_Bench PRIVATE
+    target_include_directories(test_generate_one_token PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
         ${CMAKE_SOURCE_DIR}/include
     )
-    target_link_libraries(Deep2_Production_Bench PRIVATE
+    target_link_libraries(test_generate_one_token PRIVATE
         kernel32
         user32
     )
-    set_target_properties(Deep2_Production_Bench PROPERTIES
+    set_target_properties(test_generate_one_token PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-        OUTPUT_NAME Deep2_Production_Bench
+        OUTPUT_NAME test_generate_one_token
     )
-    message(STATUS "[Deep2] Production TPS benchmark: Deep2_Production_Bench (+ quantization kernels)")
+    message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════

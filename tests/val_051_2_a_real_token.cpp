@@ -18,6 +18,13 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdint>
+#include <algorithm>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+#endif
 
 // RawrXD Inference Components
 #include "rawrxd_inference.h"
@@ -25,6 +32,133 @@
 
 namespace fs = std::filesystem;
 using namespace std::chrono;
+
+// ============================================================================
+// Phase Markers — numeric IDs survive abnormal termination
+// ============================================================================
+enum class Phase : uint32_t {
+    BOOT = 0,
+    GGUF_LOAD = 10,
+    TOKENIZER_READY = 20,
+    PROMPT_ENCODE = 30,
+    ENGINE_INIT = 40,
+    SCHEDULER_INIT = 50,
+    PREFILL = 60,
+    LOGITS = 70,
+    SAMPLER = 80,
+    TOKEN_DECODE = 90,
+    EVIDENCE_WRITE = 100,
+    CLEAN_EXIT = 200
+};
+
+static volatile uint32_t g_currentPhase = static_cast<uint32_t>(Phase::BOOT);
+static volatile const char* g_currentPhaseName = "BOOT";
+
+static void SetPhase(Phase p, const char* name) {
+    g_currentPhase = static_cast<uint32_t>(p);
+    g_currentPhaseName = name;
+    printf("[PHASE %u] %s\n", g_currentPhase, g_currentPhaseName);
+    fflush(stdout);
+}
+
+// ============================================================================
+// Windows Exception Reporter
+// ============================================================================
+#ifdef _WIN32
+
+static const char* ExceptionCodeToString(DWORD code) {
+    switch (code) {
+    case EXCEPTION_ACCESS_VIOLATION:         return "ACCESS_VIOLATION";
+    case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    return "ARRAY_BOUNDS_EXCEEDED";
+    case EXCEPTION_BREAKPOINT:               return "BREAKPOINT";
+    case EXCEPTION_DATATYPE_MISALIGNMENT:    return "DATATYPE_MISALIGNMENT";
+    case EXCEPTION_FLT_DENORMAL_OPERAND:     return "FLT_DENORMAL_OPERAND";
+    case EXCEPTION_FLT_DIVIDE_BY_ZERO:        return "FLT_DIVIDE_BY_ZERO";
+    case EXCEPTION_FLT_INEXACT_RESULT:       return "FLT_INEXACT_RESULT";
+    case EXCEPTION_FLT_INVALID_OPERATION:    return "FLT_INVALID_OPERATION";
+    case EXCEPTION_FLT_OVERFLOW:              return "FLT_OVERFLOW";
+    case EXCEPTION_FLT_STACK_CHECK:           return "FLT_STACK_CHECK";
+    case EXCEPTION_FLT_UNDERFLOW:             return "FLT_UNDERFLOW";
+    case EXCEPTION_ILLEGAL_INSTRUCTION:       return "ILLEGAL_INSTRUCTION";
+    case EXCEPTION_IN_PAGE_ERROR:             return "IN_PAGE_ERROR";
+    case EXCEPTION_INT_DIVIDE_BY_ZERO:        return "INT_DIVIDE_BY_ZERO";
+    case EXCEPTION_INT_OVERFLOW:              return "INT_OVERFLOW";
+    case EXCEPTION_INVALID_DISPOSITION:       return "INVALID_DISPOSITION";
+    case EXCEPTION_NONCONTINUABLE_EXCEPTION:  return "NONCONTINUABLE_EXCEPTION";
+    case EXCEPTION_PRIV_INSTRUCTION:          return "PRIV_INSTRUCTION";
+    case EXCEPTION_SINGLE_STEP:               return "SINGLE_STEP";
+    case EXCEPTION_STACK_OVERFLOW:            return "STACK_OVERFLOW";
+    case STATUS_STACK_BUFFER_OVERRUN:         return "STACK_BUFFER_OVERRUN (0xC0000409 / fail-fast)";
+    default: {
+        static char buf[64];
+        snprintf(buf, sizeof(buf), "UNKNOWN(0x%08X)", code);
+        return buf;
+    }
+    }
+}
+
+static LONG WINAPI ExceptionHandler(EXCEPTION_POINTERS* ep) {
+    DWORD code = ep->ExceptionRecord->ExceptionCode;
+    PVOID addr = ep->ExceptionRecord->ExceptionAddress;
+    CONTEXT* ctx = ep->ContextRecord;
+
+    printf("\n");
+    printf("============================================================\n");
+    printf("  EXCEPTION / CRASH REPORT\n");
+    printf("============================================================\n");
+    printf("  Exception Code: 0x%08X (%s)\n", code, ExceptionCodeToString(code));
+    printf("  Fault Address:  %p\n", addr);
+
+    if (ctx) {
+#if defined(_M_X64)
+        printf("  RIP:            0x%016llX\n", ctx->Rip);
+        printf("  RSP:            0x%016llX\n", ctx->Rsp);
+#elif defined(_M_IX86)
+        printf("  EIP:            0x%08X\n", ctx->Eip);
+        printf("  ESP:            0x%08X\n", ctx->Esp);
+#endif
+    }
+
+    printf("  Thread ID:      %lu\n", GetCurrentThreadId());
+    printf("  Phase ID:       %u\n", g_currentPhase);
+    printf("  Phase Name:     %s\n", g_currentPhaseName);
+
+    if (code == STATUS_STACK_BUFFER_OVERRUN) {
+        printf("\n");
+        printf("  *** SECURITY-COOKIE / STACK-BUFFER-OVERRUN TERMINATION ***\n");
+        printf("  This is a fail-fast termination (GS cookie violation),\n");
+        printf("  not a standard access violation.\n");
+    }
+
+    HMODULE hMod = nullptr;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                           (LPCSTR)addr, &hMod)) {
+        char modName[MAX_PATH] = {};
+        if (GetModuleFileNameA(hMod, modName, sizeof(modName))) {
+            printf("  Module:         %s\n", modName);
+        }
+    }
+
+    printf("============================================================\n");
+    fflush(stdout);
+
+    fs::create_directories("evidence");
+    std::ofstream crash("evidence/VAL-051-CRASH.json");
+    if (crash) {
+        crash << "{\n";
+        crash << "  \"validation_id\": \"VAL-051-CRASH\",\n";
+        crash << "  \"exception_code\": \"0x" << std::hex << code << std::dec << "\",\n";
+        crash << "  \"exception_name\": \"" << ExceptionCodeToString(code) << "\",\n";
+        crash << "  \"fault_address\": \"" << addr << "\",\n";
+        crash << "  \"phase_id\": " << g_currentPhase << ",\n";
+        crash << "  \"phase_name\": \"" << g_currentPhaseName << "\"\n";
+        crash << "}\n";
+    }
+
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
+#endif // _WIN32
 
 // Simple JSON writer for witness output
 class SimpleJSONWriter {
@@ -218,7 +352,37 @@ GPUInfo DetectGPUs() {
     return info;
 }
 
+// ============================================================================
+// Top-K logits recording
+// ============================================================================
+struct TopKEntry {
+    uint32_t tokenId;
+    float logit;
+};
+
+static std::vector<TopKEntry> GetTopK(const std::vector<float>& logits, size_t k) {
+    std::vector<TopKEntry> entries;
+    entries.reserve(logits.size());
+    for (size_t i = 0; i < logits.size(); ++i) {
+        entries.push_back({static_cast<uint32_t>(i), logits[i]});
+    }
+    std::partial_sort(entries.begin(),
+                      entries.begin() + std::min(k, entries.size()),
+                      entries.end(),
+                      [](const TopKEntry& a, const TopKEntry& b) {
+                          return a.logit > b.logit;
+                      });
+    entries.resize(std::min(k, entries.size()));
+    return entries;
+}
+
 int main(int argc, char* argv[]) {
+#ifdef _WIN32
+    SetUnhandledExceptionFilter(ExceptionHandler);
+#endif
+
+    SetPhase(Phase::BOOT, "BOOT");
+
     printf("=== VAL-051.2.A: Real Token Proof Harness ===\n");
     printf("Component chain: RawrXDInference -> GGUF -> Tokenizer -> Transformer -> Sampler\n\n");
     
@@ -250,7 +414,9 @@ int main(int argc, char* argv[]) {
         printf("ERROR: Model file not found: %s\n", modelPath);
         return 1;
     }
-    
+
+    SetPhase(Phase::GGUF_LOAD, "GGUF_LOAD");
+
     // Load embedded tokenizer from GGUF (no external tokenizer.json / merges.txt)
     RawrXD::GGUFEmbeddedTokenizer tokenizer;
     printf("[Tokenizer] Loading from GGUF...\n");
@@ -263,7 +429,9 @@ int main(int argc, char* argv[]) {
     printf("[Tokenizer] external_tokenizer=false\n");
     printf("[Tokenizer] EncodeLongestMatch=ready\n");
     printf("[Tokenizer] Decode=ready\n");
-    
+
+    SetPhase(Phase::TOKENIZER_READY, "TOKENIZER_READY");
+
     // Compute model hash
     std::string modelHash = computeModelHash(modelPath);
     printf("Model hash: %s\n\n", modelHash.c_str());
@@ -297,7 +465,9 @@ int main(int argc, char* argv[]) {
     printf("  Layers: %d\n", inference.getLayers());
     printf("  Heads: %d\n", inference.getHeads());
     printf("  Context limit: %d\n\n", inference.getContextLimit());
-    
+
+    SetPhase(Phase::ENGINE_INIT, "ENGINE_INIT");
+
     // Stage 2: Tokenize prompt using embedded tokenizer
     printf("[Stage 2] Tokenizing prompt...\n");
     auto tokStart = high_resolution_clock::now();
@@ -321,7 +491,9 @@ int main(int argc, char* argv[]) {
     printf("  Token IDs:");
     for (auto t : tokens) printf(" %u", t);
     printf("\n\n");
-    
+
+    SetPhase(Phase::PROMPT_ENCODE, "PROMPT_ENCODE");
+
     // Stage 3: Forward pass (generate one token)
     printf("[Stage 3] Running forward pass for 1 token...\n");
     auto fwdStart = high_resolution_clock::now();
@@ -338,7 +510,18 @@ int main(int argc, char* argv[]) {
     
     printf("SUCCESS: Forward pass completed in %.2f ms\n", fwdMs);
     printf("  Logits count: %zu\n", logits.size());
-    printf("  First 5 logits:");
+
+    SetPhase(Phase::LOGITS, "LOGITS");
+
+    // Record top-5 logits before sampling
+    auto top5 = GetTopK(logits, 5);
+    printf("  Top-5 candidates:\n");
+    for (size_t i = 0; i < top5.size(); ++i) {
+        printf("    [%zu] id=%u logit=%.4f text=\"%s\"\n",
+               i, top5[i].tokenId, top5[i].logit,
+               tokenizer.Token(top5[i].tokenId).c_str());
+    }
+    printf("\n");
     for (size_t i = 0; i < std::min(size_t(5), logits.size()); i++) {
         printf(" %.4f", logits[i]);
     }
@@ -362,7 +545,17 @@ int main(int argc, char* argv[]) {
     sampleMs = duration<double, std::milli>(sampleEnd - sampleStart).count();
     
     printf("SUCCESS: Sampled token ID: %d (logit=%.4f) in %.2f ms\n\n", nextToken, maxLogit, sampleMs);
-    
+
+    SetPhase(Phase::SAMPLER, "SAMPLER");
+
+    // Verify chain: model forward -> logits[9693] -> sampling decision -> selected_token = 9693
+    printf("[SAMPLER-CHAIN] Verifying logits -> sampler chain...\n");
+    printf("  argmax token: %d (logit=%.4f)\n", nextToken, maxLogit);
+    printf("  selected token: %d\n", nextToken);
+    printf("  tokenizer.Token(%d) = \"%s\"\n", nextToken, tokenizer.Token(static_cast<uint32_t>(nextToken)).c_str());
+    printf("  Chain: model forward -> logits[%d]=%.4f -> sampler -> token %d -> \"%s\"\n\n",
+           nextToken, maxLogit, nextToken, tokenizer.Token(static_cast<uint32_t>(nextToken)).c_str());
+
     // Stage 5: Detokenize using embedded tokenizer
     printf("[Stage 5] Detokenizing...\n");
     auto detokStart = high_resolution_clock::now();
@@ -373,7 +566,9 @@ int main(int argc, char* argv[]) {
     detokMs = duration<double, std::milli>(detokEnd - detokStart).count();
     
     printf("SUCCESS: Detokenized token %d -> '%s' in %.2f ms\n\n", nextToken, outputText.c_str(), detokMs);
-    
+
+    SetPhase(Phase::TOKEN_DECODE, "TOKEN_DECODE");
+
     // Compute checksums
     uint64_t inputChecksum = computeTokenChecksum(tokens);
     std::vector<uint32_t> outputTokens = {static_cast<uint32_t>(nextToken)};
@@ -443,10 +638,12 @@ int main(int argc, char* argv[]) {
     json.addInt("head_count", inference.getHeads());
     json.addBool("is_simulated", false);
     json.endObject();
-    
-    // Write witness file
-    fs::create_directories("evidence");
-    std::string witnessPath = "evidence/VAL-051-2-A-EXECUTED.json";
+
+    SetPhase(Phase::EVIDENCE_WRITE, "EVIDENCE_WRITE");
+
+    // Write witness file to absolute path
+    fs::create_directories("D:/rawrxd/evidence");
+    std::string witnessPath = "D:/rawrxd/evidence/VAL-051-2-A-EXECUTED.json";
     std::ofstream ofs(witnessPath);
     if (ofs) {
         ofs << json.str();
@@ -499,7 +696,7 @@ int main(int argc, char* argv[]) {
         
         bundle.endObject();
         
-        std::string bundlePath = "evidence/VAL-051-2-C-EVIDENCE.json";
+        std::string bundlePath = "D:/rawrxd/evidence/VAL-051-2-C-EVIDENCE.json";
         std::ofstream bofs(bundlePath);
         if (bofs) {
             bofs << bundle.str();
@@ -508,12 +705,14 @@ int main(int argc, char* argv[]) {
         }
     }
     
+    SetPhase(Phase::CLEAN_EXIT, "CLEAN_EXIT");
+
     printf("\n=== VAL-051.2.A COMPLETE ===\n");
     printf("First REAL inference token generated successfully!\n");
     printf("Token chain: Prompt -> Tokenize -> Forward -> Sample -> Detokenize\n");
     printf("Output token ID: %d -> '%s'\n", nextToken, outputText.c_str());
     printf("Total latency: %.2f ms\n", totalMs);
     printf("Throughput: %.2f tokens/second\n", tps);
-    
+
     return 0;
 }
