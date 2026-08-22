@@ -377,19 +377,14 @@ bool GGUFTensorLoader::ParseHeader() {
             case 4:  ptr += 4; break;   // UINT32
             case 5:  ptr += 4; break;   // INT32
             case 6:  ptr += 4; break;   // FLOAT32
-            case 7:  ptr += 8; break;   // UINT64
-            case 8:  ptr += 8; break;   // INT64
-            case 9:  ptr += 8; break;   // FLOAT64
-            case 10: {                  // BOOL
-                ptr += 1; break;
-            }
-            case 11: {                  // STRING
+            case 7:  ptr += 1; break;   // BOOL
+            case 8: {                   // STRING
                 uint64_t str_len;
                 std::memcpy(&str_len, ptr, sizeof(str_len));
                 ptr += sizeof(str_len) + str_len;
                 break;
             }
-            case 12: {                  // ARRAY
+            case 9: {                   // ARRAY
                 uint32_t arr_type;
                 uint64_t arr_len;
                 std::memcpy(&arr_type, ptr, sizeof(arr_type));
@@ -406,11 +401,11 @@ bool GGUFTensorLoader::ParseHeader() {
                         case 4:  ptr += 4; break;
                         case 5:  ptr += 4; break;
                         case 6:  ptr += 4; break;
-                        case 7:  ptr += 8; break;
-                        case 8:  ptr += 8; break;
-                        case 9:  ptr += 8; break;
-                        case 10: ptr += 1; break;
-                        case 11: {
+                        case 7:  ptr += 8; break;   // UINT64
+                        case 8:  ptr += 8; break;   // INT64
+                        case 9:  ptr += 8; break;   // FLOAT64
+                        case 10: ptr += 1; break;   // BOOL
+                        case 11: {                   // STRING
                             uint64_t sl;
                             std::memcpy(&sl, ptr, sizeof(sl));
                             ptr += sizeof(sl) + sl;
@@ -421,6 +416,9 @@ bool GGUFTensorLoader::ParseHeader() {
                 }
                 break;
             }
+            case 10: ptr += 8; break;   // UINT64
+            case 11: ptr += 8; break;   // INT64
+            case 12: ptr += 8; break;   // FLOAT64
             default:
                 ptr += 8; break;
         }
