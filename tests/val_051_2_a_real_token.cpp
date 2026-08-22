@@ -21,6 +21,7 @@
 
 // RawrXD Inference Components
 #include "rawrxd_inference.h"
+#include "tokenizer/gguf_embedded_tokenizer.hpp"
 
 namespace fs = std::filesystem;
 using namespace std::chrono;
@@ -30,8 +31,8 @@ class SimpleJSONWriter {
     std::string json;
     bool first = true;
 public:
-    void beginObject() { json += "{"; first = true; }
-    void endObject() { json += "}"; }
+    void beginObject() { if (!first) json += ","; json += "{"; first = true; }
+    void endObject() { json += "}"; first = false; }
     void beginArray(const char* key) { 
         if (!first) json += ",";
         json += "\""; json += key; json += "\":[";
@@ -241,25 +242,27 @@ int main(int argc, char* argv[]) {
         modelPath = argv[1];
     }
     
-    // Tokenizer paths (same directory as model)
-    fs::path modelDir = fs::path(modelPath).parent_path();
-    std::string vocabPath = (modelDir / "tokenizer.json").string();
-    std::string mergesPath = (modelDir / "merges.txt").string();
-    
-    // Fallback to current directory
-    if (!fs::exists(vocabPath)) vocabPath = "tokenizer.json";
-    if (!fs::exists(mergesPath)) mergesPath = "merges.txt";
-    
     printf("Model: %s\n", modelPath);
     printf("Model exists: %s\n", fs::exists(modelPath) ? "yes" : "no");
-    printf("Vocab: %s (exists=%s)\n", vocabPath.c_str(), fs::exists(vocabPath) ? "yes" : "no");
-    printf("Merges: %s (exists=%s)\n\n", mergesPath.c_str(), fs::exists(mergesPath) ? "yes" : "no");
     
     // Check model exists
     if (!fs::exists(modelPath)) {
         printf("ERROR: Model file not found: %s\n", modelPath);
         return 1;
     }
+    
+    // Load embedded tokenizer from GGUF (no external tokenizer.json / merges.txt)
+    RawrXD::GGUFEmbeddedTokenizer tokenizer;
+    printf("[Tokenizer] Loading from GGUF...\n");
+    if (!tokenizer.LoadFromGGUF(modelPath)) {
+        printf("[FAIL] Failed to load embedded tokenizer from GGUF\n");
+        return 1;
+    }
+    printf("[Tokenizer] source=GGUF\n");
+    printf("[Tokenizer] vocab=%zu\n", tokenizer.VocabSize());
+    printf("[Tokenizer] external_tokenizer=false\n");
+    printf("[Tokenizer] EncodeLongestMatch=ready\n");
+    printf("[Tokenizer] Decode=ready\n");
     
     // Compute model hash
     std::string modelHash = computeModelHash(modelPath);
@@ -277,7 +280,7 @@ int main(int argc, char* argv[]) {
     // Convert model path to wchar_t for RawrXDInference
     std::wstring wModelPath(modelPath, modelPath + strlen(modelPath));
     
-    bool initialized = inference.Initialize(wModelPath.c_str(), vocabPath.c_str(), mergesPath.c_str());
+    bool initialized = inference.Initialize(wModelPath.c_str(), nullptr, nullptr);
     
     auto initEnd = high_resolution_clock::now();
     initMs = duration<double, std::milli>(initEnd - initStart).count();
@@ -295,12 +298,16 @@ int main(int argc, char* argv[]) {
     printf("  Heads: %d\n", inference.getHeads());
     printf("  Context limit: %d\n\n", inference.getContextLimit());
     
-    // Stage 2: Tokenize prompt
+    // Stage 2: Tokenize prompt using embedded tokenizer
     printf("[Stage 2] Tokenizing prompt...\n");
     auto tokStart = high_resolution_clock::now();
     
     const char* prompt = "Hello";
-    std::vector<uint32_t> tokens = inference.Tokenize(prompt);
+    std::vector<uint32_t> tokens;
+    if (!tokenizer.EncodeLongestMatch(prompt, tokens)) {
+        printf("FAILED: EncodeLongestMatch failed\n");
+        return 1;
+    }
     
     auto tokEnd = high_resolution_clock::now();
     tokMs = duration<double, std::milli>(tokEnd - tokStart).count();
@@ -356,12 +363,11 @@ int main(int argc, char* argv[]) {
     
     printf("SUCCESS: Sampled token ID: %d (logit=%.4f) in %.2f ms\n\n", nextToken, maxLogit, sampleMs);
     
-    // Stage 5: Detokenize
+    // Stage 5: Detokenize using embedded tokenizer
     printf("[Stage 5] Detokenizing...\n");
     auto detokStart = high_resolution_clock::now();
     
-    std::vector<uint32_t> outputTokens = {static_cast<uint32_t>(nextToken)};
-    std::string outputText = inference.Detokenize(outputTokens);
+    std::string outputText = tokenizer.Token(static_cast<uint32_t>(nextToken));
     
     auto detokEnd = high_resolution_clock::now();
     detokMs = duration<double, std::milli>(detokEnd - detokStart).count();
@@ -370,6 +376,7 @@ int main(int argc, char* argv[]) {
     
     // Compute checksums
     uint64_t inputChecksum = computeTokenChecksum(tokens);
+    std::vector<uint32_t> outputTokens = {static_cast<uint32_t>(nextToken)};
     uint64_t outputChecksum = computeTokenChecksum(outputTokens);
     
     // Build VAL-051-2-A witness
