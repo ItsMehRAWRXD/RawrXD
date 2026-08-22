@@ -1,7 +1,7 @@
 // ============================================================================
 // Deep2Engine.cpp - Production Inference Engine Implementation
 // Real weight loading, real attention, real FFN, real sampling
-// NO STUBS, NO DUMMIES, NO HARDCODED VALUESg87
+// NO STUBS, NO DUMMIES, NO HARDCODED VALUES
 // ============================================================================
 
 #include "Deep2Engine.h"
@@ -21,6 +21,7 @@
 #include "HotPatcher.hpp"
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
+#include "ResidencyCounters.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -619,6 +620,9 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
         printf("[Deep2Engine] HotPatcher initialized - The Bottle is ready\n");
     }
 
+    // Initialize QuantKernelRegistry (quantization dispatch table)
+    Deep2::QuantKernelRegistry::Instance().Initialize();
+
     initialized = true;
     printf("[Deep2Engine] Initialization complete\n");
     return true;
@@ -712,16 +716,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             return false;
         }
     } else {
-        // File mode: check if parent directory has multiple .gguf files
+        // File mode: single file path provided — do NOT scan parent directory
         firstShard = inputPath;
         shardDir = inputPath.parent_path();
-        size_t ggufCount = 0;
-        for (const auto& entry : std::filesystem::directory_iterator(shardDir)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".gguf") {
-                ++ggufCount;
-            }
-        }
-        isMultiShard = (ggufCount > 1);
+        isMultiShard = false;
     }
 
     printf("[Deep2Engine] Multi-shard detected: %s (%zu files in %s)\n",
@@ -903,6 +901,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
+    // ── Initialize tokenizer from GGUF vocabulary ────────────────────────
+    if (!meta.vocab.empty()) {
+        tokenizer = std::make_unique<BPETokenizer>();
+        auto* bpe = static_cast<BPETokenizer*>(tokenizer.get());
+        if (bpe->LoadVocab(meta.vocab)) {
+            printf("[Deep2Engine] Tokenizer loaded: %zu tokens from GGUF\n", meta.vocab.size());
+        } else {
+            printf("[Deep2Engine] WARNING: Failed to load tokenizer vocab, using fallback\n");
+            tokenizer.reset();
+        }
+    } else {
+        printf("[Deep2Engine] WARNING: No tokenizer vocabulary in GGUF, using byte-level fallback\n");
+    }
+
     // Allocate layer weights
     modelWeights.layers.resize(modelWeights.numLayers);
 
@@ -935,11 +947,20 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             } else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers) {
                 auto& lw = modelWeights.layers[layerIdx];
 
-                // ── MLA tensor routing (must come BEFORE generic attn_q/attn_k) ──
-                if (name.find("attn_q_a") != std::string::npos)
-                    lw.attnQ_a = wt;
+                // ── Standard MHA / GQA tensors (check BEFORE MLA to avoid substring matches) ──
+                if (name.find("attn_output") != std::string::npos)
+                    lw.wo = wt;
+                else if (name.find("attn_q") != std::string::npos)
+                    lw.wq = wt;
+                else if (name.find("attn_k") != std::string::npos)
+                    lw.wk = wt;
+                else if (name.find("attn_v") != std::string::npos)
+                    lw.wv = wt;
+                // ── MLA tensor routing (checked AFTER standard to avoid substring conflicts) ──
                 else if (name.find("attn_q_a_norm") != std::string::npos)
                     lw.attnQ_a_norm = wt;
+                else if (name.find("attn_q_a") != std::string::npos)
+                    lw.attnQ_a = wt;
                 else if (name.find("attn_q_b") != std::string::npos)
                     lw.attnQ_b = wt;
                 else if (name.find("attn_kv_a_mqa") != std::string::npos)
@@ -952,19 +973,13 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     lw.attnV_b = wt;
                 else if (name.find("attn_o") != std::string::npos)
                     lw.attnO = wt;
-                // ── Standard MHA / GQA tensors ──
-                else if (name.find("attn_q") != std::string::npos)
-                    lw.wq = wt;
-                else if (name.find("attn_k") != std::string::npos)
-                    lw.wk = wt;
-                else if (name.find("attn_v") != std::string::npos)
-                    lw.wv = wt;
-                else if (name.find("attn_output") != std::string::npos)
-                    lw.wo = wt;
                 else if (name.find("attn_norm") != std::string::npos || name.find("input_layernorm") != std::string::npos)
                     lw.attnNorm = wt;
                 // ── Layer topology: dense vs MoE ──
-                bool isDenseLayer = (layerIdx < (int)meta.leadingDenseBlockCount);
+                // If numExperts == 0, this is a dense model: ALL layers use dense FFN.
+                // If numExperts > 0, leadingDenseBlockCount layers are dense, rest are MoE.
+                bool isDenseLayer = (meta.numExperts == 0) ||
+                                    (layerIdx < (int)meta.leadingDenseBlockCount);
                 if (isDenseLayer) {
                     // Dense FFN (no MoE)
                     if (name.find("ffn_gate") != std::string::npos)
@@ -1194,6 +1209,15 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         // No model loaded - this is an error, not a dummy
         memset(output, 0, config.hiddenDim * sizeof(float));
         return;
+    }
+
+    // ── Diagnostic: print token embed info once ────────────────────────
+    static bool printedEmbedInfo = false;
+    if (!printedEmbedInfo) {
+        printf("[Deep2Engine] embedToken: type=%d vocabSize=%zu hiddenDim=%zu data=%p\n",
+               modelWeights.tokenEmbed.type, modelWeights.vocabSize,
+               modelWeights.hiddenDim, modelWeights.tokenEmbed.data);
+        printedEmbedInfo = true;
     }
 
     // tokenEmbed is [vocabSize, hiddenDim]
@@ -1491,8 +1515,6 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     size_t rows = wt.rows;
 
     // --- Quant-agnostic dispatch via QuantKernelRegistry ---
-    // Resolves the correct GEMV kernel once via function pointer; zero branches
-    // in the hot path.  Falls back to direct calls only if registry is empty.
     auto& reg = Deep2::QuantKernelRegistry::Instance();
     auto kernel = reg.GetGEMV(wt.type);
     if (kernel) {
@@ -1540,6 +1562,78 @@ void Deep2Engine::reset() {
 }
 
 // ============================================================================
+// Model Metadata Access
+// ============================================================================
+const ModelMetadata& Deep2Engine::getModelMetadata() const {
+    return ggufResult.metadata;
+}
+
+// ============================================================================
+// B3-FIX: Autoregressive State Integrity Gate — Diagnostic Helpers
+// ============================================================================
+namespace {
+
+static double B3_L2Norm(const float* v, size_t n)
+{
+    double sum = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        if (!std::isfinite(static_cast<double>(v[i])))
+            return -1.0;
+        sum += static_cast<double>(v[i]) * static_cast<double>(v[i]);
+    }
+    return std::sqrt(sum);
+}
+
+static float B3_MinValue(const float* v, size_t n)
+{
+    if (n == 0) return 0.0f;
+    float x = v[0];
+    for (size_t i = 1; i < n; ++i)
+        if (v[i] < x) x = v[i];
+    return x;
+}
+
+static float B3_MaxValue(const float* v, size_t n)
+{
+    if (n == 0) return 0.0f;
+    float x = v[0];
+    for (size_t i = 1; i < n; ++i)
+        if (v[i] > x) x = v[i];
+    return x;
+}
+
+static size_t B3_CountNonFinite(const float* v, size_t n)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < n; ++i) {
+        if (!std::isfinite(static_cast<double>(v[i])))
+            ++count;
+    }
+    return count;
+}
+
+static void B3_TraceState(const char* phase, size_t pos, const float* state, size_t n)
+{
+    const double norm = B3_L2Norm(state, n);
+    printf("[B3_STATE] phase=%s pos=%zu size=%zu norm=%.9e min=%.9e max=%.9e nonfinite=%zu\n",
+           phase, pos, n, norm,
+           static_cast<double>(B3_MinValue(state, n)),
+           static_cast<double>(B3_MaxValue(state, n)),
+           B3_CountNonFinite(state, n));
+}
+
+static void B3_TraceLogits(const char* phase, size_t pos, const float* logits, size_t n)
+{
+    printf("[B3_LOGITS] phase=%s pos=%zu size=%zu min=%.9e max=%.9e nonfinite=%zu\n",
+           phase, pos, n,
+           static_cast<double>(B3_MinValue(logits, n)),
+           static_cast<double>(B3_MaxValue(logits, n)),
+           B3_CountNonFinite(logits, n));
+}
+
+} // namespace
+
+// ============================================================================
 // Generate - Real implementation with weight projections
 // ============================================================================
 size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
@@ -1574,6 +1668,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         return 0;
     }
 
+    // ── VAL-051.7: Reset residency counters ──────────────────────────
+    ResidencyCounters::Reset();
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
     // Process prompt tokens (prefill)
@@ -1581,6 +1678,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
         embedToken(promptTokens[t], h);
+
+        // ── B3: Trace prompt embedding ─────────────────────────────────
+        B3_TraceState("PROMPT_EMBED", t, h, config.hiddenDim);
 
         // Forward through all layers
         float* layerInput = h;
@@ -1601,6 +1701,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             memcpy(h, layerInput, config.hiddenDim * sizeof(float));
         }
 
+        // ── B3: Trace after final layer for prompt ────────────────────
+        B3_TraceState("PROMPT_FINAL", t, h, config.hiddenDim);
+
         // Advance KV cache
         if (kvCache) {
             kvCache->advance();
@@ -1613,21 +1716,57 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     // Generate tokens (decode)
     for (size_t t = 0; t < maxOutputLen; ++t) {
         // Use the last hidden state as input
-        float* h = hiddenStates;
+        // For first decode step: use last prompt token's hidden state
+        // For subsequent steps: use hiddenStates[0] (overwritten with latest token)
+        float* h = (t == 0 && promptLen > 0)
+            ? hiddenStates + (promptLen - 1) * config.hiddenDim
+            : hiddenStates;
+
+        // ── B3: Trace input token ──────────────────────────────────────
+        printf("[B3_INPUT] pos=%zu token=%d input_ptr=%p\n",
+               currentPos, (t == 0 && promptLen > 0) ? promptTokens[promptLen - 1] : (int)outputTokens[tokensGenerated - 1], (void*)h);
+
+        // ── VAL-051.7: Forward timing ─────────────────────────────────
+        ResidencyCounters::BeginForward();
 
         // Forward through all layers
         float* layerInput = h;
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            ResidencyCounters::BeginLayer();
             forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
+            ResidencyCounters::EndLayer();
             float* temp = layerInput;
             layerInput = layerOutput;
             layerOutput = temp;
         }
 
+        ResidencyCounters::EndForward();
+
+        // ── B3: Trace after final layer ───────────────────────────────
+        B3_TraceState("FINAL_LAYER", currentPos, layerInput, config.hiddenDim);
+
         // Compute logits: lm_head * hiddenState
         computeLogits(layerInput, logits);
+
+        // ── B3: Trace logits ──────────────────────────────────────────
+        B3_TraceLogits("LOGITS", currentPos, logits, config.vocabSize);
+
+        // Hard gate: reject invalid hidden state
+        const double stateNorm = B3_L2Norm(layerInput, config.hiddenDim);
+        if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
+            fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
+                    currentPos, stateNorm);
+            return tokensGenerated;
+        }
+
+        // Hard gate: reject invalid logits
+        if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0) {
+            fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n",
+                    currentPos, config.vocabSize);
+            return tokensGenerated;
+        }
 
         // Sample next token
         int nextToken = sampleToken(logits);
@@ -1642,6 +1781,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         // Embed the new token for next iteration
         embedToken(nextToken, hiddenStates);
+
+        // ── B3: Trace after embedding ───────────────────────────────────
+        B3_TraceState("EMBED", currentPos + 1, hiddenStates, config.hiddenDim);
 
         // Advance KV cache
         if (kvCache) {
@@ -1677,6 +1819,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     printf("[Deep2Engine] Generation complete: %zu tokens in %.2f ms (%.2f TPS)\n",
            tokensGenerated, totalMs, totalMs > 0 ? tokensGenerated / (totalMs / 1000.0) : 0.0);
 
+    // ── VAL-051.7: Print residency counters ─────────────────────────
+    ResidencyCounters::Print();
+
     return tokensGenerated;
 }
 
@@ -1706,6 +1851,16 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     const auto& lw = modelWeights.layers[layer];
     size_t hiddenDim = config.hiddenDim;
 
+    // ── Diagnostic: print layer weight info for layer 0 ────────────────
+    static bool printedLayerInfo = false;
+    if (!printedLayerInfo && layer == 0) {
+        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p\n",
+               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data);
+        printf("[Deep2Engine] Layer 0 weights: attnNorm.data=%p ffnNorm.data=%p\n",
+               lw.attnNorm.data, lw.ffnNorm.data);
+        printedLayerInfo = true;
+    }
+
     // MARS: Place layer weights on GPU before compute
     if (marsEnabled_ && marsController_) {
         uint64_t layerId = 1000ULL + layer;
@@ -1721,17 +1876,21 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // 1. Attention RMSNorm
     RMSNormW(lw.attnNorm, input, attentionOutput, hiddenDim, modelWeights.normEps);
+    if (layer == 0) B3_TraceState("LAYER0_ATTN_NORM", layer, attentionOutput, hiddenDim);
 
     // 2. Attention with real Q/K/V/O projections
     computeAttention(layer, attentionOutput, output, seqLen);
+    if (layer == 0) B3_TraceState("LAYER0_ATTN_OUT", layer, output, hiddenDim);
 
     // 3. Residual connection
     for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += input[i];
     }
+    if (layer == 0) B3_TraceState("LAYER0_ATTN_RESID", layer, output, hiddenDim);
 
     // 4. FFN RMSNorm
     RMSNormW(lw.ffnNorm, output, attentionOutput, hiddenDim, modelWeights.normEps);
+    if (layer == 0) B3_TraceState("LAYER0_FFN_NORM", layer, attentionOutput, hiddenDim);
 
     // 5. FFN (SwiGLU) with real weight projections
     if (modelWeights.isMoE && modelWeights.numExperts > 0) {
@@ -1739,11 +1898,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     } else {
         computeFFN(layer, attentionOutput, ffnOutput);
     }
+    if (layer == 0) B3_TraceState("LAYER0_FFN_OUT", layer, ffnOutput, hiddenDim);
 
     // 6. Residual connection
     for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += ffnOutput[i];
     }
+    if (layer == 0) B3_TraceState("LAYER0_FINAL", layer, output, hiddenDim);
 
     // Reverse analysis hook: layer processed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
@@ -2080,6 +2241,18 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
         return;
     }
 
+    // ── Diagnostic: verify hidden state and weights ────────────────────
+    float hiddenNorm = 0.0f;
+    for (size_t i = 0; i < config.hiddenDim; ++i) {
+        hiddenNorm += hiddenState[i] * hiddenState[i];
+    }
+    hiddenNorm = std::sqrt(hiddenNorm);
+    printf("[Deep2Engine] computeLogits: hiddenState norm=%.6f (dim=%zu)\n",
+           hiddenNorm, config.hiddenDim);
+    printf("[Deep2Engine] computeLogits: lmHead type=%d rows=%zu cols=%zu data=%p\n",
+           modelWeights.lmHead.type, modelWeights.lmHead.rows,
+           modelWeights.lmHead.cols, modelWeights.lmHead.data);
+
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
 }
@@ -2088,10 +2261,29 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 // Sample Token - Real sampling using ISampler
 // ============================================================================
 int Deep2Engine::sampleToken(const float* logits) {
+    // ── Diagnostic: print top-10 logits before sampling ────────────────
+    {
+        std::vector<std::pair<float, int>> scored;
+        scored.reserve(config.vocabSize);
+        for (size_t i = 0; i < config.vocabSize; ++i) {
+            scored.push_back({logits[i], (int)i});
+        }
+        std::partial_sort(scored.begin(), scored.begin() + 10, scored.end(),
+                          [](const auto& a, const auto& b) { return a.first > b.first; });
+        printf("[Deep2Engine] Top-10 logits:\n");
+        for (int i = 0; i < 10; ++i) {
+            std::string tokText;
+            if (tokenizer) tokText = tokenizer->Decode(scored[i].second);
+            printf("  [%2d] id=%5d logit=%12.6f text='%s'\n",
+                   i, scored[i].second, scored[i].first, tokText.c_str());
+        }
+    }
+
     if (sampler) {
         std::vector<float> logitsVec(logits, logits + config.vocabSize);
         int token = sampler->Sample(logitsVec);
         sampler->AcceptToken(token);
+        printf("[Deep2Engine] Sampler selected token: %d\n", token);
         return token;
     }
 
@@ -2104,6 +2296,7 @@ int Deep2Engine::sampleToken(const float* logits) {
             maxIdx = (int)i;
         }
     }
+    printf("[Deep2Engine] Greedy argmax token: %d (logit=%.6f)\n", maxIdx, maxVal);
     return maxIdx;
 }
 
