@@ -7,8 +7,16 @@ option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)"
 # Force Windows SDK version BEFORE any project() or compiler checks
 # This MUST be set before project() to affect the VS generator
 if(WIN32)
-    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
-    set(CMAKE_SYSTEM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version" FORCE)
+    # Auto-detect available Windows SDK version
+    if(EXISTS "C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/windows.h")
+        set(_RAWR_SDK_VER "10.0.26100.0")
+    elseif(EXISTS "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/windows.h")
+        set(_RAWR_SDK_VER "10.0.22621.0")
+    else()
+        set(_RAWR_SDK_VER "10.0.22621.0")
+    endif()
+    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "${_RAWR_SDK_VER}" CACHE STRING "Windows SDK version for VS generator" FORCE)
+    set(CMAKE_SYSTEM_VERSION "${_RAWR_SDK_VER}" CACHE STRING "Windows SDK version" FORCE)
 endif()
 
 # =============================================================================
@@ -27,16 +35,15 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     else()
         set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
     endif()
-    set(_SDK_UCRT_VER "10.0.22621.0")    # Has ucrt
-    
-    # Force use of 22621.0 since 26100.0 is not registered properly for MSBuild
-    set(_SDK_UM_VER "10.0.22621.0")
-    
-    # Fallback: if 10.0.26100.0 doesn't exist for um, try 10.0.22621.0 for everything
-    if(NOT EXISTS "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um/windows.h")
-        set(_SDK_UM_VER "${_SDK_UCRT_VER}")
+    # Auto-detect available Windows SDK version
+    if(EXISTS "${_WIN10_SDK_ROOT}/Include/10.0.26100.0/um/windows.h")
+        set(_SDK_UM_VER "10.0.26100.0")
+    else()
+        set(_SDK_UM_VER "10.0.22621.0")
     endif()
-    if(NOT EXISTS "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt")
+    if(EXISTS "${_WIN10_SDK_ROOT}/Include/10.0.22621.0/ucrt")
+        set(_SDK_UCRT_VER "10.0.22621.0")
+    else()
         set(_SDK_UCRT_VER "${_SDK_UM_VER}")
     endif()
 
@@ -72,8 +79,12 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
         message(FATAL_ERROR "[SDK Fix] Could not find a valid MSVC installation with cl.exe. Please install Visual Studio Build Tools or run from a Developer Command Prompt.")
     endif()
     
-    # SDK bin tools (rc.exe, mt.exe)
-    set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UCRT_VER}/x64")
+    # SDK bin tools (rc.exe, mt.exe) — use the version that actually has the bin directory
+    if(EXISTS "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
+        set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UM_VER}/x64")
+    else()
+        set(_SDK_BIN "${_WIN10_SDK_ROOT}/bin/${_SDK_UCRT_VER}/x64")
+    endif()
     
     # Build INCLUDE and LIB environment strings
     set(ENV{INCLUDE} "${_MSVC_ROOT}/include;${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt;${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/shared;${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um")
@@ -211,7 +222,7 @@ if(MSVC)
 endif()
 
 # WebView2 and WIL are expected under this optional local SDK path.
-set(RAWRXD_LOCAL_WIN32_SDK_DIR "d:/rawrxd/include")
+set(RAWRXD_LOCAL_WIN32_SDK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 if(EXISTS "${RAWRXD_LOCAL_WIN32_SDK_DIR}")
     include_directories("${RAWRXD_LOCAL_WIN32_SDK_DIR}")
 endif()
@@ -801,24 +812,13 @@ endif()
 if(WIN32)
     add_executable(val_051_2_a_real_token
         tests/val_051_2_a_real_token.cpp
-        src/rawrxd_inference.cpp
-        src/rawrxd_model_loader.cpp
-        src/rawrxd_tokenizer.cpp
-        src/rawrxd_transformer.cpp
-        src/rawrxd_sampler.cpp
-        src/gguf_loader.cpp
-        src/gguf_vocab_resolver.cpp
-        src/core/inference_witness.cpp
-        src/core/swarm_scheduler.cpp
-        src/core/memory_stubs.cpp
-        src/core/link_stubs.cpp
-        src/core/gguf_swarm_plan_builder.cpp
-        src/logging/Logger.cpp
     )
+    target_link_libraries(val_051_2_a_real_token PRIVATE InferenceEngine)
     set_target_properties(val_051_2_a_real_token PROPERTIES 
         EXCLUDE_FROM_ALL TRUE 
         EXCLUDE_FROM_DEFAULT_BUILD TRUE
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
     target_include_directories(val_051_2_a_real_token PRIVATE
         ${CMAKE_SOURCE_DIR}
@@ -1115,7 +1115,16 @@ if(WIN32 AND MSVC)
     else()
         set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
     endif()
-    set(_SDK_VER "10.0.22621.0")
+    if(NOT DEFINED _RAWR_SDK_VER)
+        if(EXISTS "${_WIN10_SDK_ROOT}/Include/10.0.26100.0/um/windows.h")
+            set(_RAWR_SDK_VER "10.0.26100.0")
+        elseif(EXISTS "${_WIN10_SDK_ROOT}/Include/10.0.22621.0/um/windows.h")
+            set(_RAWR_SDK_VER "10.0.22621.0")
+        else()
+            set(_RAWR_SDK_VER "10.0.26100.0")
+        endif()
+    endif()
+    set(_SDK_VER "${_RAWR_SDK_VER}")
     # Auto-detect MSVC Build Tools root
     if(DEFINED _MSVC_ROOT AND EXISTS "${_MSVC_ROOT}")
         set(_MSVC_BT_ROOT "${_MSVC_ROOT}")
@@ -2087,6 +2096,7 @@ set(SOURCES
     src/deep2/StreamEngine.cpp
     src/deep2/ShardRouterIntegration.cpp
     src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/Deep2ModelRuntime.cpp
     src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
     src/deep2/KimiK2Config.cpp
@@ -2640,6 +2650,7 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/src/swarm
     ${CMAKE_CURRENT_SOURCE_DIR}/src/omega1_modules
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
@@ -4476,6 +4487,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_019.cpp
         src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
+        src/ANSIParser.cpp  # ADDED: Real ANSIParser implementation (replaces stub in unlinked_symbols_batch_021.cpp)
         src/core/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
 
         # ASM link stubs for missing symbols
@@ -5136,7 +5148,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/StreamEngine.cpp
         src/deep2/ShardRouterIntegration.cpp
         src/deep2/Deep2IDEIntegration.cpp
-        src/deep2/FabricTensorTable.cpp
+        src/deep2/Deep2ModelRuntime.cpp
         src/deep2/FabricTensorTable.cpp
     )
 
@@ -5984,6 +5996,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/masm"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/sovereign_autonomy"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/runtime"
     )
     if(EXISTS "${RAWRXD_INFRA_ROOT}/Headers")
         target_include_directories(RawrXD-Win32IDE PRIVATE
@@ -6653,6 +6666,7 @@ if(BUILD_DEEP2_PRODUCTION_BENCH)
         # Core engine (verified working)
         src/deep2/deep2_end_to_end_bench.cpp
         src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
         src/deep2/GGUFLoader.cpp
         src/deep2/ThreadPool.cpp
         src/deep2/KVCache.cpp

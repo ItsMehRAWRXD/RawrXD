@@ -25,6 +25,24 @@ public:
         std::vector<uint64_t> dims;
     };
 
+    // Metadata extracted from GGUF header (first shard)
+    struct ModelMetadata {
+        uint32_t layer_count = 0;
+        uint32_t hidden_size = 0;
+        uint32_t head_count = 0;
+        uint32_t head_count_kv = 0;
+        uint32_t context_length = 0;
+        uint32_t ffn_dim = 0;
+        uint32_t expert_count = 0;
+        uint32_t expert_used_count = 0;
+        uint32_t vocab_size = 0;
+        float    rope_theta = 10000.0f;
+        float    norm_eps = 1e-6f;
+        std::string architecture;
+        std::string model_name;
+        bool     has_metadata = false;
+    };
+
     void add_shard(std::filesystem::path p) {
         shards_.push_back({std::move(p), 0, 0});
     }
@@ -75,6 +93,9 @@ public:
     size_t tensor_count() const { return tensors_.size(); }
     size_t shard_count() const { return shards_.size(); }
 
+    // Get metadata extracted from first shard (populated after scan())
+    const ModelMetadata& metadata() const { return metadata_; }
+
 private:
     struct Shard {
         std::filesystem::path path;
@@ -89,6 +110,7 @@ private:
 
     std::vector<Shard> shards_;
     std::unordered_map<std::string, TensorLocation> tensors_;
+    ModelMetadata metadata_;
 
     static uint32_t read_u32(std::istream& f) {
         uint32_t v = 0;
@@ -119,7 +141,8 @@ private:
         std::istream& f,
         uint32_t type,
         const std::string& key,
-        uint32_t& alignment
+        uint32_t& alignment,
+        ModelMetadata* meta = nullptr
     ) {
         switch (type) {
             case 0: case 1: case 7:
@@ -131,27 +154,76 @@ private:
             case 4: {
                 uint32_t v = read_u32(f);
                 if (key == "general.alignment") alignment = v;
+                if (meta) {
+                    // Support both llama.* and deepseek2.* prefixes
+                    if (key == "llama.block_count" || key == "deepseek2.block_count")
+                        meta->layer_count = v;
+                    else if (key == "llama.embedding_length" || key == "deepseek2.embedding_length")
+                        meta->hidden_size = v;
+                    else if (key == "llama.attention.head_count" || key == "deepseek2.attention.head_count")
+                        meta->head_count = v;
+                    else if (key == "llama.attention.head_count_kv" || key == "deepseek2.attention.head_count_kv")
+                        meta->head_count_kv = v;
+                    else if (key == "llama.context_length" || key == "deepseek2.context_length")
+                        meta->context_length = v;
+                    else if (key == "llama.feed_forward_length" || key == "deepseek2.feed_forward_length")
+                        meta->ffn_dim = v;
+                    else if (key == "llama.expert_count" || key == "deepseek2.expert_count")
+                        meta->expert_count = v;
+                    else if (key == "llama.expert_used_count" || key == "deepseek2.expert_used_count")
+                        meta->expert_used_count = v;
+                    else if (key == "general.vocab_size" || key == "deepseek2.vocab_size")
+                        meta->vocab_size = v;
+                }
                 break;
             }
             case 5:
-            case 6:
                 f.ignore(4);
                 break;
-            case 8:
-                read_str(f);
+            case 6: {
+                // GGUF type 6 = float32
+                uint32_t bits = 0;
+                f.read(reinterpret_cast<char*>(&bits), sizeof(bits));
+                if (meta) {
+                    if (key == "llama.rope.freq_base" || key == "deepseek2.rope.freq_base") {
+                        std::memcpy(&meta->rope_theta, &bits, sizeof(float));
+                    } else if (key == "llama.attention.layer_norm_rms_epsilon" ||
+                               key == "deepseek2.attention.layer_norm_rms_epsilon") {
+                        std::memcpy(&meta->norm_eps, &bits, sizeof(float));
+                    }
+                }
                 break;
+            }
+            case 8: {
+                std::string s = read_str(f);
+                if (meta) {
+                    if (key == "general.architecture") meta->architecture = s;
+                    else if (key == "general.name") meta->model_name = s;
+                }
+                break;
+            }
             case 9: {
                 uint32_t elem_type = read_u32(f);
                 uint64_t n = read_u64(f);
                 std::string dummy;
                 for (uint64_t i = 0; i < n; ++i) {
-                    skip_or_capture_value(f, elem_type, dummy, alignment);
+                    skip_or_capture_value(f, elem_type, dummy, alignment, meta);
                 }
                 break;
             }
-            case 10: case 11: case 12:
-                f.ignore(8);
+            case 10: case 11: case 12: {
+                uint64_t v = 0;
+                f.read(reinterpret_cast<char*>(&v), sizeof(v));
+                if (meta) {
+                    if (key == "llama.rope.freq_base") meta->rope_theta = static_cast<float>(v);
+                    else if (key == "llama.attention.layer_norm_rms_epsilon") {
+                        // GGUF stores as float32 (type 10), read as uint32 bits
+                        uint32_t bits = static_cast<uint32_t>(v);
+                        std::memcpy(&meta->norm_eps, &bits, sizeof(float));
+                    }
+                }
                 break;
+            }
             default:
                 throw std::runtime_error("unknown GGUF metadata value type");
         }
@@ -186,13 +258,22 @@ private:
 
         uint32_t alignment = 32;
 
+        // Only capture metadata from first shard (all shards have identical metadata)
+        ModelMetadata* meta_ptr = (idx == 0) ? &metadata_ : nullptr;
+        if (meta_ptr) {
+            meta_ptr->has_metadata = false;  // reset before parsing
+        }
+
         for (uint64_t i = 0; i < n_kv; ++i) {
             std::string key = read_str(f);
             uint32_t type = read_u32(f);
-            skip_or_capture_value(f, type, key, alignment);
+            skip_or_capture_value(f, type, key, alignment, meta_ptr);
         }
 
         if (alignment == 0) alignment = 32;
+        if (meta_ptr && meta_ptr->layer_count > 0) {
+            meta_ptr->has_metadata = true;
+        }
 
         std::vector<TensorLocation> tmp;
         tmp.reserve(n_tensors);

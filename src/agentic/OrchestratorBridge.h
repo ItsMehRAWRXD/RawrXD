@@ -1,11 +1,14 @@
 // =============================================================================
-// OrchestratorBridge.h — Minimal Wiring Layer for CLI Ollama Testing
+// OrchestratorBridge.h — Agent Runtime Bridge (IModelRuntime-backed)
+// =============================================================================
+// Replaces direct Ollama dependency with the authoritative IModelRuntime
+// contract. Supports Deep2 (local), Ollama (remote), and future backends.
 // =============================================================================
 #pragma once
 
-#include "AgentOllamaClient.h"
 #include "AgentToolHandlers.h"
 #include "PredictionProvider.h"
+#include "../runtime/IModelRuntime.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,19 +17,26 @@ namespace RawrXD {
 namespace Agent {
 
 // ---------------------------------------------------------------------------
-// OrchestratorBridge — Minimal for CLI Ollama testing
+// OrchestratorBridge — Agent entry point, backend-agnostic
 // ---------------------------------------------------------------------------
 class OrchestratorBridge {
 public:
     static OrchestratorBridge& Instance();
 
-    // ---- Initialization (call during CLI startup) ----
+    // ---- Initialization ----
+    // Creates a Deep2ModelRuntime by default. Pass backend="ollama" for
+    // legacy Ollama compatibility.
     bool Initialize(const std::string& workingDir,
-                    const std::string& ollamaUrl = "http://localhost:11434");
+                    const std::string& backend = "deep2",
+                    const std::string& modelPath = "");
 
     bool IsInitialized() const { return m_initialized; }
 
-    // ---- Agent Execution - Simplified for CLI ----
+    // ---- Runtime access (for advanced callers) ----
+    Runtime::IModelRuntime* GetRuntime() const { return m_runtime.get(); }
+    void SetRuntime(std::unique_ptr<Runtime::IModelRuntime> runtime);
+
+    // ---- Agent Execution ----
     std::string RunAgent(const std::string& userPrompt);
     void RunAgentAsync(const std::string& userPrompt);
 
@@ -47,16 +57,23 @@ public:
     ~OrchestratorBridge() = default;
 
 private:
-    bool EnsureClientReady();
+    bool EnsureRuntimeReady();
     void RefreshAvailableModels();
     void ApplyConfig();
     std::string SelectPreferredModel(bool preferCoder) const;
 
+    // Build a GenerationRequest from agent context
+    Runtime::GenerationRequest BuildGenerationRequest(
+        const std::string& prompt) const;
+    Runtime::FIMRequest BuildFIMRequest(
+        const Prediction::PredictionContext& ctx) const;
+
 public:
     bool m_initialized = false;
     std::string m_workingDir;
-    std::unique_ptr<AgentOllamaClient> m_ollamaClient;
-    OllamaConfig m_ollamaConfig;
+    std::string m_backendName = "deep2";
+    std::string m_modelPath;
+    std::unique_ptr<Runtime::IModelRuntime> m_runtime;
     int m_maxSteps = 8;
     std::vector<std::string> m_availableModels;
 };

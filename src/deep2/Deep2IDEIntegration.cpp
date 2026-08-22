@@ -121,9 +121,10 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadSingleFile(const std::string&
         return result;
     }
 
-    // Create router and add single shard
+    // Create router, add shard, and scan
     s_router = std::make_unique<GGUFShardRouter>();
     s_router->add_shard(path);
+    s_router->scan();
 
     // Build fabric
     s_fabric = std::make_unique<FabricTensorTable>();
@@ -159,11 +160,12 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
         return result;
     }
 
-    // Create router and add all shards
+    // Create router, add all shards, and scan
     s_router = std::make_unique<GGUFShardRouter>();
     for (const auto& shard : shards) {
         s_router->add_shard(shard);
     }
+    s_router->scan();
 
     // Build fabric
     s_fabric = std::make_unique<FabricTensorTable>();
@@ -182,15 +184,24 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
         result.totalFileBytes += fs::file_size(shard);
     }
 
-    // Try to extract layer count from tensor names
-    uint32_t maxLayer = 0;
-    for (const auto& [name, loc] : s_router->tensors()) {
-        if (name.size() > 4 && name.substr(0, 4) == "blk.") {
-            int layer = std::atoi(name.c_str() + 4);
-            if (layer > (int)maxLayer) maxLayer = layer;
+    // Extract metadata from GGUF header (first shard)
+    const auto& meta = s_router->metadata();
+    if (meta.has_metadata) {
+        result.numLayers = meta.layer_count;
+        result.numExperts = meta.expert_count;
+        // Store additional metadata for downstream consumers
+        s_lastResult = result;  // Will be overwritten below, but keeps metadata accessible
+    } else {
+        // Fallback: extract layer count from tensor names
+        uint32_t maxLayer = 0;
+        for (const auto& [name, loc] : s_router->tensors()) {
+            if (name.size() > 4 && name.substr(0, 4) == "blk.") {
+                int layer = std::atoi(name.c_str() + 4);
+                if (layer > (int)maxLayer) maxLayer = layer;
+            }
         }
+        result.numLayers = maxLayer + 1;
     }
-    result.numLayers = maxLayer + 1;
 
     return result;
 }
@@ -240,19 +251,36 @@ bool Deep2InferenceSession::Initialize(const Deep2ModelLoader::LoadResult& model
     
     m_engine = std::make_unique<Deep2Engine>();
     EngineConfig engineCfg;
+    
+    // Propagate actual K2 metadata from loader result (Gate 7 fix)
+    // If metadata was extracted from GGUF header, use it; otherwise keep defaults
+    if (model.numLayers > 0) {
+        engineCfg.numLayers = model.numLayers;
+    }
+    if (model.numExperts > 0) {
+        // K2 uses MoE; experts are handled by the MoE router, not EngineConfig directly
+        // but we can store this for validation
+    }
+    
+    // Try to get richer metadata from the router if available
+    auto* router = Deep2ModelLoader::GetRouter();
+    if (router && router->metadata().has_metadata) {
+        const auto& meta = router->metadata();
+        if (meta.hidden_size > 0)   engineCfg.hiddenDim = meta.hidden_size;
+        if (meta.head_count > 0)   engineCfg.numHeads = meta.head_count;
+        if (meta.head_count_kv > 0) engineCfg.numKVHeads = meta.head_count_kv;
+        if (meta.ffn_dim > 0)      engineCfg.intermediateDim = meta.ffn_dim;
+        if (meta.vocab_size > 0)   engineCfg.vocabSize = meta.vocab_size;
+        if (meta.context_length > 0) engineCfg.maxSeqLen = meta.context_length;
+    }
+    
     engineCfg.useKVCache = true;
     engineCfg.useRoPE = true;
     engineCfg.useThreadPool = true;
     
-    // Use the model path stored from loader if available, or we might need it passed down
-    // Since Deep2ModelLoader::Load was called, the path was used to create s_router/s_fabric
     if (!m_engine->initialize(engineCfg)) {
         return false;
     }
-    
-    // Actually load the model into the engine - we need a way to pass the path here
-    // But since the loader keeps GGUFShardRouter in static state, we might just 
-    // rely on m_engine->loadModel to be called elsewhere or we reconstruct the path
 
     m_ready = true;
     return true;
@@ -369,6 +397,26 @@ std::string Deep2GetModelStatusJSON() {
     auto* fabric = Deep2ModelLoader::GetFabric();
     if (fabric) {
         j["fabric_entries"] = fabric->size();
+    }
+
+    // Add GGUF metadata if available (Gate 7 certification)
+    const auto& meta = router->metadata();
+    if (meta.has_metadata) {
+        json metaJson;
+        metaJson["layer_count"] = meta.layer_count;
+        metaJson["hidden_size"] = meta.hidden_size;
+        metaJson["head_count"] = meta.head_count;
+        metaJson["head_count_kv"] = meta.head_count_kv;
+        metaJson["context_length"] = meta.context_length;
+        metaJson["ffn_dim"] = meta.ffn_dim;
+        metaJson["expert_count"] = meta.expert_count;
+        metaJson["expert_used_count"] = meta.expert_used_count;
+        metaJson["vocab_size"] = meta.vocab_size;
+        metaJson["rope_theta"] = meta.rope_theta;
+        metaJson["norm_eps"] = meta.norm_eps;
+        metaJson["architecture"] = meta.architecture;
+        metaJson["model_name"] = meta.model_name;
+        j["metadata"] = metaJson;
     }
 
     return j.dump();
