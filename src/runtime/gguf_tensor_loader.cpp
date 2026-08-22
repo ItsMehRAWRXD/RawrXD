@@ -465,6 +465,18 @@ bool GGUFTensorLoader::ParseHeader() {
     return true;
 }
 
+// Public overload for adversarial testing (B33+)
+bool GGUFTensorLoader::ParseHeader(const uint8_t* data, size_t len) {
+    // Temporarily set internal state from buffer
+    file_data_ = const_cast<void*>(static_cast<const void*>(data));
+    file_size_ = len;
+    bool result = ParseHeader();
+    // Reset to avoid double-free (caller owns the buffer)
+    file_data_ = nullptr;
+    file_size_ = 0;
+    return result;
+}
+
 size_t GetTensorSize(uint32_t type, const std::vector<uint64_t>& shape) {
     uint64_t num_elements = 1;
     for (auto dim : shape) {

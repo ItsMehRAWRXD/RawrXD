@@ -116,6 +116,12 @@ public:
     const std::string& GetLastError() const { return last_error_; }
 
     /**
+     * Parse header from raw buffer (for adversarial testing).
+     * Returns true if header is structurally valid.
+     */
+    bool ParseHeader(const uint8_t* data, size_t len);
+
+    /**
      * Get the underlying file mapping handle (Windows) or fd (POSIX).
      * Used by ElasticResidencyManager for sub-range MapViewOfFile.
      */

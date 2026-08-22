@@ -967,6 +967,31 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
     message(STATUS "test_parseheader_fuzz: B32 deterministic fuzz matrix configured")
 endif()
 
+# =====================================================================
+# test_gguf_metadata_bounds — B33 GGUF Metadata Bounds Gate
+# =====================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
+    add_executable(test_gguf_metadata_bounds
+        tests/test_gguf_metadata_bounds.cpp
+    )
+    set_target_properties(test_gguf_metadata_bounds PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_gguf_metadata_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_gguf_metadata_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_gguf_metadata_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "test_gguf_metadata_bounds: B33 metadata bounds gate configured")
+endif()
+
 # =============================================================================
 # Dual GPU Smoke Test
 # Validates both GPUs are detected and usable
