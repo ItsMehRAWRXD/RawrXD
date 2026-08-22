@@ -917,6 +917,54 @@ if(WIN32)
         set_property(TARGET test_gguf_tokenizer_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
     endif()
     message(STATUS "test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured")
+
+    # =====================================================================
+    # test_parseheader_bounds — Adversarial ParseHeader bounds validation
+    # =====================================================================
+    add_executable(test_parseheader_bounds
+        tests/test_parseheader_bounds.cpp
+    )
+    set_target_properties(test_parseheader_bounds PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_parseheader_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_parseheader_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_parseheader_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "test_parseheader_bounds: ParseHeader adversarial bounds validation configured")
+endif()
+
+# =====================================================================
+# test_parseheader_fuzz — B32 Deterministic ParseHeader Fuzz Matrix
+# =====================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_parseheader_fuzz.cpp")
+    add_executable(test_parseheader_fuzz
+        tests/test_parseheader_fuzz.cpp
+    )
+    set_target_properties(test_parseheader_fuzz PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_parseheader_fuzz APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_parseheader_fuzz APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_parseheader_fuzz APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "test_parseheader_fuzz: B32 deterministic fuzz matrix configured")
 endif()
 
 # =============================================================================
@@ -6783,6 +6831,75 @@ if(BUILD_DEEP2_TOKEN_GATE)
         OUTPUT_NAME test_generate_one_token
     )
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
+endif()
+
+# test_val_051_3_multi_token — VAL-051.3: 4-Token Autoregressive Generation Gate
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" ON)
+if(BUILD_VAL_051_3)
+    add_executable(test_val_051_3_multi_token
+        src/deep2/test_val_051_3_multi_token.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+    )
+    if(MSVC)
+        target_compile_options(test_val_051_3_multi_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_val_051_3_multi_token PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(test_val_051_3_multi_token PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(test_val_051_3_multi_token PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_val_051_3_multi_token
+    )
+    message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════
