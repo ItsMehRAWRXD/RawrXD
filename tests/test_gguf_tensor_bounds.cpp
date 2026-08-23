@@ -311,7 +311,21 @@ static Buffer make_count_times_record_overflow() {
     return b;
 }
 
-// ── Deterministic mutation fixtures ────────────────────────────────────────
+// ── Case definition ──────────────────────────────────────────────────────
+struct Case {
+    std::string name;
+    Buffer buffer;
+    bool expect_valid;
+    
+    Case() = default;
+    Case(const Case&) = default;
+    Case(Case&&) = default;
+    Case& operator=(const Case&) = default;
+    Case& operator=(Case&&) = default;
+    Case(std::string n, Buffer b, bool e)
+        : name(std::move(n)), buffer(std::move(b)), expect_valid(e) {}
+};
+
 static std::vector<Case> make_deterministic_mutations() {
     std::vector<Case> mutations;
 
@@ -445,21 +459,6 @@ static std::vector<Case> make_deterministic_mutations() {
 
     return mutations;
 }
-
-// ── Case definition ──────────────────────────────────────────────────────
-struct Case {
-    std::string name;
-    Buffer buffer;
-    bool expect_valid;
-    
-    Case() = default;
-    Case(const Case&) = default;
-    Case(Case&&) = default;
-    Case& operator=(const Case&) = default;
-    Case& operator=(Case&&) = default;
-    Case(std::string n, Buffer b, bool e)
-        : name(std::move(n)), buffer(std::move(b)), expect_valid(e) {}
-};
 
 static std::vector<Case> build_cases() {
     std::vector<Case> cases;

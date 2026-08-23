@@ -1,0 +1,9 @@
+{
+  "batch": "B34",
+  "gate": "tensor-offset-bounds",
+  "cases": 46,
+  "pass": 46,
+  "fail": 0,
+  "result": "PASS",
+  "exit_code": 0
+}
