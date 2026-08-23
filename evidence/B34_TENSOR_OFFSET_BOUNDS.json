@@ -1,9 +1,26 @@
-{
-  "batch": "B34",
-  "gate": "tensor-offset-bounds",
-  "cases": 46,
-  "pass": 46,
-  "fail": 0,
+﻿{
+  "gate": "B34",
+  "name": "GGUF Tensor/Offset Bounds Gate",
+  "timestamp": "2026-08-22T00:00:00Z",
   "result": "PASS",
-  "exit_code": 0
+  "cases_total": 46,
+  "cases_pass": 46,
+  "cases_fail": 0,
+  "exit_code": 0,
+  "positive_controls": 6,
+  "adversarial_cases": 40,
+  "parser_hardening": [
+    "tensor_count_sanity_cap",
+    "metadata_count_sanity_cap",
+    "per_tensor_bounds_checking",
+    "dimension_count_limit_64",
+    "zero_dimension_rejection",
+    "type_validation_0_29",
+    "offset_oob_rejection",
+    "size_exceeds_file_rejection",
+    "4_byte_alignment_check",
+    "tensor_overlap_detection"
+  ],
+  "commit": "6bc6898e1",
+  "branch": "main"
 }

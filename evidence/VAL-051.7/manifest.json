@@ -1,0 +1,79 @@
+{
+  "program": "VAL-051.7",
+  "title": "Persistent Residency / Remap Elimination",
+  "version": "1.0",
+  "date": "2026-08-22",
+  "gitHead": "fe8b0364fc0f2af4697d8407c0c8d2deb9ab1154",
+  "gates": {
+    "0": { "name": "Program Infrastructure", "status": "PASS", "evidence": "baseline/git.txt" },
+    "1": { "name": "B3 Golden Failure", "status": "PASS", "evidence": "baseline/b3_failure.stdout" },
+    "2": { "name": "Continuation Mode", "status": "PASS", "evidence": "src/deep2/Deep2Engine.cpp" },
+    "3": { "name": "ResidencyCounters", "status": "PASS", "evidence": "src/deep2/ResidencyCounters.hpp" },
+    "4": { "name": "Deterministic Baseline", "status": "PASS", "evidence": "src/deep2/VAL0517BaselineFixture.hpp" },
+    "5": { "name": "Residency Ownership Contract", "status": "PASS", "evidence": "residency/ownership_contract.md" },
+    "6": { "name": "Tensor Residency Fixture", "status": "PASS", "evidence": "src/deep2/tests/test_val_051_7_tensor_residency.cpp" },
+    "7": { "name": "ResidencyLease", "status": "PASS", "evidence": "src/deep2/ResidencyLease.hpp" },
+    "8": { "name": "Bounded Window", "status": "PASS", "evidence": "residency/bounded_window.md" },
+    "9": { "name": "Central API", "status": "PASS", "evidence": "residency/central_api.md" },
+    "10": { "name": "Deterministic Eviction", "status": "PASS", "evidence": "residency/eviction_policy.md" },
+    "11": { "name": "Remap Correctness", "status": "PASS", "evidence": "residency/remap_correctness.md" },
+    "12": { "name": "Layer Integration", "status": "PASS", "evidence": "integration/layer_integration.md" },
+    "13": { "name": "Forward Accounting", "status": "PASS", "evidence": "integration/forward_accounting.md" },
+    "14": { "name": "Position Integrity", "status": "PASS", "evidence": "integration/position_integrity.md" },
+    "15": { "name": "Failure Classification", "status": "PASS", "evidence": "integration/failure_classification.md" },
+    "16": { "name": "Restore Hard Gate", "status": "PENDING", "evidence": "integration/restore_hard_gate.md" },
+    "17": { "name": "A/B Matrix", "status": "PENDING", "evidence": "ab/ab_matrix.md" },
+    "18": { "name": "Stress Matrix", "status": "PENDING", "evidence": "stress/stress_matrix.md" },
+    "19": { "name": "Certification Harness", "status": "PENDING", "evidence": "certification/certification_harness.md" }
+  },
+  "extras": {
+    "A": { "name": "Thread/Concurrency", "status": "PASS", "evidence": "residency/thread_contract.md" },
+    "B": { "name": "Error-Path Correctness", "status": "PASS", "evidence": "residency/error_path_correctness.md" },
+    "C": { "name": "GGUF Integrity", "status": "PASS", "evidence": "residency/gguf_integrity.md" },
+    "D": { "name": "Quantization Correctness", "status": "PASS", "evidence": "residency/quantization_correctness.md" },
+    "E": { "name": "Cache Integrity", "status": "PASS", "evidence": "residency/cache_integrity.md" },
+    "F": { "name": "Sampler Integrity", "status": "PASS", "evidence": "residency/sampler_integrity.md" },
+    "G": { "name": "Teardown Integrity", "status": "PASS", "evidence": "residency/teardown_integrity.md" }
+  },
+  "files": {
+    "headers": [
+      "src/deep2/ResidencyCounters.hpp",
+      "src/deep2/ResidencyLease.hpp",
+      "src/deep2/ResidencyManager.hpp",
+      "src/deep2/VAL0517BaselineFixture.hpp"
+    ],
+    "sources": [
+      "src/deep2/ResidencyLease.cpp",
+      "src/deep2/ResidencyManager.cpp",
+      "src/deep2/VAL0517BaselineFixture.cpp"
+    ],
+    "tests": [
+      "src/deep2/tests/test_val_051_7_tensor_residency.cpp"
+    ],
+    "evidence": [
+      "evidence/VAL-051.7/baseline/git.txt",
+      "evidence/VAL-051.7/baseline/executable.sha256",
+      "evidence/VAL-051.7/baseline/b3_failure.stdout",
+      "evidence/VAL-051.7/residency/ownership_contract.md",
+      "evidence/VAL-051.7/residency/bounded_window.md",
+      "evidence/VAL-051.7/residency/central_api.md",
+      "evidence/VAL-051.7/residency/eviction_policy.md",
+      "evidence/VAL-051.7/residency/remap_correctness.md",
+      "evidence/VAL-051.7/residency/thread_contract.md",
+      "evidence/VAL-051.7/residency/error_path_correctness.md",
+      "evidence/VAL-051.7/residency/gguf_integrity.md",
+      "evidence/VAL-051.7/residency/quantization_correctness.md",
+      "evidence/VAL-051.7/residency/cache_integrity.md",
+      "evidence/VAL-051.7/residency/sampler_integrity.md",
+      "evidence/VAL-051.7/residency/teardown_integrity.md",
+      "evidence/VAL-051.7/integration/layer_integration.md",
+      "evidence/VAL-051.7/integration/forward_accounting.md",
+      "evidence/VAL-051.7/integration/position_integrity.md",
+      "evidence/VAL-051.7/integration/failure_classification.md",
+      "evidence/VAL-051.7/integration/restore_hard_gate.md",
+      "evidence/VAL-051.7/ab/ab_matrix.md",
+      "evidence/VAL-051.7/stress/stress_matrix.md",
+      "evidence/VAL-051.7/certification/certification_harness.md"
+    ]
+  }
+}
