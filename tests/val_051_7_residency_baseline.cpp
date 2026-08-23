@@ -493,6 +493,8 @@ int executeGate(const char* model_path)
     return gate.pass ? 0 : 1;
 }
 
+} // namespace
+
 // ============================================================================
 // main
 // ============================================================================
@@ -507,5 +509,3 @@ int main(int argc, char* argv[])
     std::cout << "\nEXIT_CODE=" << result << "\n";
     return result;
 }
-
-} // namespace
