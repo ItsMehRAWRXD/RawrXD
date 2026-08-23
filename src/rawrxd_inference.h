@@ -348,6 +348,7 @@ class RawrXDInference
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
         printf("[RawrXD] Stage: transformer.Initialize\n");
         transformer.Initialize(device, physDevice, cfg, &loader);
+        transformer.Initialize(device, physDevice, cfg, &loader);
 
         m_swarmScheduler = RawrXD::Swarm::makeSwarmSchedulerWithLoader(&loader);
         RawrXD::Swarm::SchedulerConfig swarmCfg;

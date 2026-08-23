@@ -118,7 +118,6 @@ void Win32IDE::createActivityBar(HWND hwndParent)
 {
     m_hwndActivityBar = CreateWindowExA(0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 0, 0, ACTIVITY_BAR_WIDTH,
                                         600, hwndParent, nullptr, m_hInstance, nullptr);
-
     SetWindowLongPtrA(m_hwndActivityBar, GWLP_USERDATA, (LONG_PTR)this);
     SetWindowLongPtrA(m_hwndActivityBar, GWLP_WNDPROC, (LONG_PTR)ActivityBarProc);
 
@@ -327,7 +326,6 @@ void Win32IDE::createPrimarySidebar(HWND hwndParent)
     if (m_hwndExplorerToolbar)
         ShowWindow(m_hwndExplorerToolbar, SW_SHOW);
 
-    appendToOutput("Primary Sidebar initialized\n", "Output", OutputSeverity::Info);
     appendToOutput("[System] File Explorer: View > File Explorer (Ctrl+Shift+E) or Activity Bar > Files\n", "Output",
                    OutputSeverity::Info);
     appendToOutput("[System] Agent Chat: View > AI Chat (Ctrl+Alt+B) or View > Agent Chat or Activity Bar > Chat\n",
@@ -867,6 +865,7 @@ void Win32IDE::createExplorerView(HWND hwndParent)
 
     // ESP:m_hwndExplorerTree — File Explorer TreeView (IDC_EXPLORER_TREE 6010)
     appendToOutput("Creating Explorer TreeView control\n", "Output", OutputSeverity::Debug);
+
     m_hwndExplorerTree =
         CreateWindowExA(WS_EX_CLIENTEDGE, WC_TREEVIEWA, RAWRXD_IDE_LABEL_FILE_EXPLORER,
                         WS_CHILD | TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_SHOWSELALWAYS, 0, 30,
@@ -880,7 +879,6 @@ void Win32IDE::createExplorerView(HWND hwndParent)
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_USERDATA, (LONG_PTR)this);
     SetWindowLongPtrA(m_hwndExplorerTree, GWLP_WNDPROC, (LONG_PTR)ExplorerTreeProc);
 
-    // LOGGING AS REQUESTED
     char buf[256];
     sprintf_s(buf, "ExplorerTree HWND created: %p (SidebarContent: %p)", m_hwndExplorerTree, m_hwndSidebarContent);
     LOG_INFO(std::string(buf));
@@ -1386,6 +1384,7 @@ LRESULT CALLBACK Win32IDE::ExplorerTreeProc(HWND hwnd, UINT uMsg, WPARAM wParam,
 
 void Win32IDE::createSearchView(HWND hwndParent)
 {
+    OutputDebugStringA("[B428-TRACE] createSearchView: START\n");
     // Search input
     m_hwndSearchInput =
         CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 5, 10, SIDEBAR_DEFAULT_WIDTH - 10, 25,
@@ -1422,6 +1421,7 @@ void Win32IDE::createSearchView(HWND hwndParent)
     m_searchInProgress = false;
 
     appendToOutput("Search view created with regex/case options\n", "Output", OutputSeverity::Info);
+    OutputDebugStringA("[B428-TRACE] createSearchView: END\n");
 }
 
 void Win32IDE::performWorkspaceSearch(const std::string& query, bool useRegex, bool caseSensitive, bool wholeWord)
@@ -1688,6 +1688,7 @@ void Win32IDE::clearSearchResults()
 
 void Win32IDE::createSourceControlView(HWND hwndParent)
 {
+    OutputDebugStringA("[B428-TRACE] createSourceControlView: START\n");
     // Toolbar
     m_hwndSCMToolbar = CreateWindowExA(0, "STATIC", "", WS_CHILD | SS_OWNERDRAW, 0, 0, SIDEBAR_DEFAULT_WIDTH, 35,
                                        hwndParent, nullptr, m_hInstance, nullptr);
@@ -1732,6 +1733,7 @@ void Win32IDE::createSourceControlView(HWND hwndParent)
     ListView_InsertColumn(m_hwndSCMFileList, 1, &col);
 
     appendToOutput("Source Control view created with Git integration\n", "Output", OutputSeverity::Info);
+    OutputDebugStringA("[B428-TRACE] createSourceControlView: END\n");
 }
 
 void Win32IDE::refreshSourceControlView()
@@ -1851,6 +1853,7 @@ void Win32IDE::showSCMContextMenu(POINT pt)
 
 void Win32IDE::createRunDebugView(HWND hwndParent)
 {
+    OutputDebugStringA("[B428-TRACE] createRunDebugView: START\n");
     // Toolbar
     m_hwndDebugToolbar = CreateWindowExA(0, "STATIC", "", WS_CHILD | SS_OWNERDRAW, 0, 0, SIDEBAR_DEFAULT_WIDTH, 35,
                                          hwndParent, nullptr, m_hInstance, nullptr);
@@ -1890,6 +1893,7 @@ void Win32IDE::createRunDebugView(HWND hwndParent)
     m_debuggingActive = false;
 
     appendToOutput("Run and Debug view created\n", "Output", OutputSeverity::Info);
+    OutputDebugStringA("[B428-TRACE] createRunDebugView: END\n");
 }
 
 void Win32IDE::createLaunchConfiguration()
@@ -2297,6 +2301,7 @@ void Win32IDE::updateDebugVariables()
 
 void Win32IDE::createExtensionsView(HWND hwndParent)
 {
+    OutputDebugStringA("[B428-TRACE] createExtensionsView: START\n");
     // Search box
     m_hwndExtensionSearch =
         CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | ES_AUTOHSCROLL, 5, 10, SIDEBAR_DEFAULT_WIDTH - 10, 25,
@@ -2329,6 +2334,7 @@ void Win32IDE::createExtensionsView(HWND hwndParent)
     ListView_InsertColumn(m_hwndExtensionsList, 1, &col);
 
     appendToOutput("Extensions view created\n", "Output", OutputSeverity::Info);
+    OutputDebugStringA("[B428-TRACE] createExtensionsView: END\n");
 }
 
 void Win32IDE::searchExtensions(const std::string& query)

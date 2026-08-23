@@ -86,8 +86,10 @@ private:
 
 } // namespace GGUF
 
-// Aliases for compatibility
+// Aliases for compatibility — guarded to avoid conflict with include/gguf_loader.h
+#ifndef RAWRXD_GGUF_USING_ALIASES_DEFINED
 using IGGUFLoader = GGUF::IGGUFLoader;
 using TensorInfo = GGUF::TensorInfo;
 using GGUFMetadata = GGUF::ModelMetadata;
 using ModelMetadata = GGUF::ModelMetadata;
+#endif

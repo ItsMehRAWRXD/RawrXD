@@ -199,6 +199,9 @@ struct ModelMetadata {
     uint32_t valueLengthMla = 0;
     uint32_t ropeDimensionCount = 0;
 
+    // Tokenizer vocabulary (extracted from tokenizer.ggml.tokens)
+    std::vector<std::string> vocab;
+
     void Print() const {
         printf("[GGUF] Architecture: %s\n", architecture.c_str());
         printf("[GGUF] Vocab: %u, Hidden: %u, Layers: %u, Heads: %u\n",

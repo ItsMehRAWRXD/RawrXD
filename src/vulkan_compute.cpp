@@ -1,4 +1,7 @@
 #include "vulkan_compute.h"
+
+#if !defined(RAWR_HAS_VULKAN) || RAWR_HAS_VULKAN
+
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
@@ -252,3 +255,5 @@ bool VulkanCompute::CreateCommandPool() {
     
     return vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool_) == VK_SUCCESS;
 }
+
+#endif // RAWR_HAS_VULKAN

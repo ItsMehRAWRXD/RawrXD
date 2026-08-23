@@ -2877,6 +2877,7 @@ void Win32IDE::addOutputTab(const std::string& name)
 {
     if (m_outputWindows.find(name) != m_outputWindows.end())
         return;
+
     RECT client{};
     GetClientRect(m_hwndMain, &client);
     int tabBarHeight = 24;
@@ -2896,9 +2897,7 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
 
     std::string target = tabName.empty() ? m_activeOutputTab : tabName;
     if (m_outputWindows.find(target) == m_outputWindows.end())
-    {
         addOutputTab(target);
-    }
 
     // Add timestamp for Errors and Debug tabs
     std::string timestampedText = text;
@@ -2920,17 +2919,11 @@ void Win32IDE::appendToOutput(const std::string& text, const std::string& tabNam
     } else {
         // Apply color formatting based on tab type (legacy path)
         if (target == "Errors")
-        {
             formatOutput(timestampedText, RGB(220, 50, 50), "Errors");  // Red
-        }
         else if (target == "Debug")
-        {
             formatOutput(timestampedText, RGB(200, 180, 50), "Debug");  // Yellow
-        }
         else
-        {
             appendText(hwnd, timestampedText);
-        }
     }
 }
 

@@ -68,7 +68,7 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     
     mov r9, rsi         ; hidden ptr
     mov r10, rdi        ; gate_up weight ptr for this row
-    add r10, r8, 18     ; Q4_K block size
+    lea r10, [r10 + r8 + 18]       ; Q4_K block size offset
     
     xor r11, r11        ; j = 0
 @dot_loop:
@@ -152,7 +152,7 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
     
     mov r9, rcx         ; activated ptr
     mov r10, rbx        ; down weight ptr
-    add r10, r8, 18     ; offset to this row
+    lea r10, [r10 + r8 + 18]       ; offset to this row
     
     xor r11, r11        ; j = 0
 @down_dot_loop:

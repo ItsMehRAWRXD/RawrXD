@@ -132,6 +132,12 @@ public:
 #endif
 
     /**
+     * Get tensor offset by name (for bounds validation testing).
+     * Returns 0 if tensor not found.
+     */
+    uint64_t GetTensorOffset(const std::string& name) const;
+
+    /**
      * Get quantization info for a type.
      */
     static QuantizationInfo GetQuantizationInfo(uint32_t type);

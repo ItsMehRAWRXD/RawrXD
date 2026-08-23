@@ -23,12 +23,13 @@ cmake_minimum_required(VERSION 3.20)
 # ============================================================================
 
 # Find ml64.exe (Microsoft Macro Assembler for x64)
-# Use explicit path from user memory
-set(ML64_EXE "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
-
-# Verify ml64.exe exists
-if(NOT EXISTS "${ML64_EXE}")
-    message(FATAL_ERROR "ml64.exe not found at ${ML64_EXE}. Please verify Visual Studio 2022 installation.")
+# Prefer CMake-detected assembler, fall back to explicit path
+if(CMAKE_ASM_MASM_COMPILER AND EXISTS "${CMAKE_ASM_MASM_COMPILER}")
+    set(ML64_EXE "${CMAKE_ASM_MASM_COMPILER}")
+elseif(EXISTS "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
+    set(ML64_EXE "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
+else()
+    message(FATAL_ERROR "ml64.exe not found. Please verify Visual Studio 2022 installation or set CMAKE_ASM_MASM_COMPILER.")
 endif()
 
 message(STATUS "[MASM] Found ml64.exe: ${ML64_EXE}")

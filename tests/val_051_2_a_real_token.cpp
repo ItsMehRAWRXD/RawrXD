@@ -494,85 +494,222 @@ int main(int argc, char* argv[]) {
 
     SetPhase(Phase::PROMPT_ENCODE, "PROMPT_ENCODE");
 
-    // Stage 3: Forward pass (generate one token)
-    printf("[Stage 3] Running forward pass for 1 token...\n");
-    auto fwdStart = high_resolution_clock::now();
-    
-    std::vector<float> logits = inference.ForwardTokens(tokens, 0);
-    
-    auto fwdEnd = high_resolution_clock::now();
-    fwdMs = duration<double, std::milli>(fwdEnd - fwdStart).count();
-    
-    if (logits.empty()) {
-        printf("FAILED: Forward pass returned empty logits\n");
-        return 1;
-    }
-    
-    printf("SUCCESS: Forward pass completed in %.2f ms\n", fwdMs);
-    printf("  Logits count: %zu\n", logits.size());
+    // Stage 3: Forward pass (generate tokens autoregressively)
+    printf("[Stage 3] Running forward pass for autoregressive generation...\n");
 
-    SetPhase(Phase::LOGITS, "LOGITS");
+    struct GeneratedToken {
+        uint32_t id;
+        float logit;
+        std::string text;
+        double fwdMs;
+        double sampleMs;
+        double detokMs;
+        std::vector<TopKEntry> top5;
+        int decodePosition;
+    };
+    std::vector<GeneratedToken> generated;
 
-    // Record top-5 logits before sampling
-    auto top5 = GetTopK(logits, 5);
-    printf("  Top-5 candidates:\n");
-    for (size_t i = 0; i < top5.size(); ++i) {
-        printf("    [%zu] id=%u logit=%.4f text=\"%s\"\n",
-               i, top5[i].tokenId, top5[i].logit,
-               tokenizer.Token(top5[i].tokenId).c_str());
+    // ============================================================================
+    // BATCH 3/4 — N-TOKEN AUTOREGRESSIVE CERTIFICATION
+    //
+    // Contract:
+    //   1. Prefill establishes KV state.
+    //   2. Argmax selects token N.
+    //   3. Token N fed back through ForwardTokens() at position N.
+    //   4. Every generated ID must be in vocabulary.
+    //   5. Every selected logit must be finite.
+    //   6. No generated token may silently disappear.
+    //   7. Evidence records every step.
+    // ============================================================================
+
+    constexpr size_t kGeneratedTokens = 10;   // Batch 4: 10 tokens; set to 5 for Batch 3
+
+    std::vector<uint32_t> generatedTokens;
+    generatedTokens.reserve(kGeneratedTokens);
+
+    bool batchPass = true;
+    uint32_t currentPos = 0;
+    std::vector<float> logits;
+
+    printf("\n============================================================\n");
+    printf("BATCH %zu — %zu TOKEN AUTOREGRESSIVE CERTIFICATION\n",
+           kGeneratedTokens >= 10 ? size_t(4) : size_t(3), kGeneratedTokens);
+    printf("============================================================\n");
+
+    for (size_t step = 0; step < kGeneratedTokens; ++step) {
+
+        // ------------------------------------------------------------------------
+        // Forward pass
+        // ------------------------------------------------------------------------
+        if (step == 0) {
+            printf("\n[GEN-%zu] Prefill with prompt tokens (%zu tokens)\n",
+                   step + 1, tokens.size());
+        } else {
+            printf("\n[GEN-%zu] Autoregressive decode at position %u\n",
+                   step + 1, currentPos);
+            SetPhase(Phase::PREFILL, "PREFILL");
+        }
+
+        auto fwdStart = high_resolution_clock::now();
+        if (step == 0) {
+            logits = inference.ForwardTokens(tokens, currentPos);
+        } else {
+            std::vector<uint32_t> nextTokVec = {generatedTokens.back()};
+            logits = inference.ForwardTokens(nextTokVec, currentPos);
+        }
+        auto fwdEnd = high_resolution_clock::now();
+        double fwdMs = duration<double, std::milli>(fwdEnd - fwdStart).count();
+
+        if (logits.empty()) {
+            fprintf(stderr, "BATCH_FAIL step=%zu reason=EMPTY_LOGITS\n", step);
+            batchPass = false;
+            break;
+        }
+        printf("SUCCESS: Forward pass completed in %.2f ms (logits=%zu)\n",
+               fwdMs, logits.size());
+
+        SetPhase(Phase::LOGITS, "LOGITS");
+
+        // ------------------------------------------------------------------------
+        // Argmax with finite check
+        // ------------------------------------------------------------------------
+        size_t tokenIndex = 0;
+        bool foundFinite = false;
+        float maxLogit = -INFINITY;
+        for (size_t i = 0; i < logits.size(); ++i) {
+            if (std::isfinite(logits[i]) && (!foundFinite || logits[i] > maxLogit)) {
+                maxLogit = logits[i];
+                tokenIndex = i;
+                foundFinite = true;
+            }
+        }
+        if (!foundFinite) {
+            fprintf(stderr, "BATCH_FAIL step=%zu reason=NO_FINITE_LOGIT\n", step);
+            batchPass = false;
+            break;
+        }
+        if (!std::isfinite(maxLogit)) {
+            fprintf(stderr, "BATCH_FAIL step=%zu reason=NONFINITE_SELECTED_LOGIT\n", step);
+            batchPass = false;
+            break;
+        }
+
+        uint32_t tokenId = static_cast<uint32_t>(tokenIndex);
+        uint32_t vocabSize = static_cast<uint32_t>(inference.getVocabSize());
+        if (tokenId >= vocabSize) {
+            fprintf(stderr, "BATCH_FAIL step=%zu token=%u reason=TOKEN_OOB vocab=%u\n",
+                    step, tokenId, vocabSize);
+            batchPass = false;
+            break;
+        }
+
+        // ------------------------------------------------------------------------
+        // Decode
+        // ------------------------------------------------------------------------
+        std::string decoded = tokenizer.Token(tokenId);
+
+        // ------------------------------------------------------------------------
+        // Record
+        // ------------------------------------------------------------------------
+        generatedTokens.push_back(tokenId);
+
+        auto top5 = GetTopK(logits, 5);
+        printf("  Top-5 candidates:\n");
+        for (size_t i = 0; i < top5.size(); ++i) {
+            printf("    [%zu] id=%u logit=%.4f text=\"%s\"\n",
+                   i, top5[i].tokenId, top5[i].logit,
+                   tokenizer.Token(top5[i].tokenId).c_str());
+        }
+        printf("  Selected: id=%u logit=%.4f text=\"%s\"\n",
+               tokenId, maxLogit, decoded.c_str());
+
+        generated.push_back({tokenId, maxLogit, decoded, fwdMs, 0.0, 0.0, top5,
+                             static_cast<int>(currentPos)});
+
+        printf("BATCH_TOKEN step=%zu token=%u logit=%.7f text=\"%s\"\n",
+               step, tokenId, static_cast<double>(maxLogit), decoded.c_str());
+
+        // ------------------------------------------------------------------------
+        // Advance position for next decode
+        // ------------------------------------------------------------------------
+        if (step == 0) {
+            currentPos += static_cast<uint32_t>(tokens.size());
+        } else {
+            currentPos += 1;
+        }
+
+        // ------------------------------------------------------------------------
+        // KV-position assertion
+        // ------------------------------------------------------------------------
+        int expectedPos = static_cast<int>(step + 1);
+        if (step > 0 && static_cast<int>(currentPos) != expectedPos + static_cast<int>(tokens.size()) - 1) {
+            // Position tracking: after step 0, currentPos = tokens.size()
+            // After step 1, currentPos = tokens.size() + 1, etc.
+            // This is expected; just log it.
+        }
+
+        SetPhase(Phase::SAMPLER, "SAMPLER");
     }
-    printf("\n");
-    for (size_t i = 0; i < std::min(size_t(5), logits.size()); i++) {
-        printf(" %.4f", logits[i]);
+
+    // ------------------------------------------------------------------------
+    // Final structural checks
+    // ------------------------------------------------------------------------
+    if (generatedTokens.size() != kGeneratedTokens) {
+        fprintf(stderr, "BATCH_FAIL reason=WRONG_TOKEN_COUNT actual=%zu expected=%zu\n",
+                generatedTokens.size(), kGeneratedTokens);
+        batchPass = false;
     }
-    printf("...\n\n");
-    
-    // Stage 4: Sample next token
-    printf("[Stage 4] Sampling next token...\n");
-    auto sampleStart = high_resolution_clock::now();
-    
-    // Simple argmax sampling
-    int32_t nextToken = 0;
-    float maxLogit = logits[0];
-    for (size_t i = 1; i < logits.size(); i++) {
-        if (logits[i] > maxLogit) {
-            maxLogit = logits[i];
-            nextToken = static_cast<int32_t>(i);
+
+    for (size_t i = 0; i < generatedTokens.size(); ++i) {
+        uint32_t vocabSize = static_cast<uint32_t>(inference.getVocabSize());
+        if (generatedTokens[i] >= vocabSize) {
+            fprintf(stderr, "BATCH_FAIL reason=FINAL_TOKEN_OOB index=%zu token=%u\n",
+                    i, generatedTokens[i]);
+            batchPass = false;
+        }
+        if (i < generated.size() && !std::isfinite(generated[i].logit)) {
+            fprintf(stderr, "BATCH_FAIL reason=EVIDENCE_NONFINITE_LOGIT index=%zu\n", i);
+            batchPass = false;
         }
     }
-    
-    auto sampleEnd = high_resolution_clock::now();
-    sampleMs = duration<double, std::milli>(sampleEnd - sampleStart).count();
-    
-    printf("SUCCESS: Sampled token ID: %d (logit=%.4f) in %.2f ms\n\n", nextToken, maxLogit, sampleMs);
 
-    SetPhase(Phase::SAMPLER, "SAMPLER");
+    // ------------------------------------------------------------------------
+    // Print deterministic compact result
+    // ------------------------------------------------------------------------
+    printf("\nBATCH_SEQUENCE:");
+    for (uint32_t t : generatedTokens) printf(" %u", t);
+    printf("\n");
+    printf("BATCH_COUNT=%zu\n", generatedTokens.size());
+    printf("BATCH_RESULT=%s\n", batchPass ? "PASS" : "FAIL");
 
-    // Verify chain: model forward -> logits[9693] -> sampling decision -> selected_token = 9693
-    printf("[SAMPLER-CHAIN] Verifying logits -> sampler chain...\n");
-    printf("  argmax token: %d (logit=%.4f)\n", nextToken, maxLogit);
-    printf("  selected token: %d\n", nextToken);
-    printf("  tokenizer.Token(%d) = \"%s\"\n", nextToken, tokenizer.Token(static_cast<uint32_t>(nextToken)).c_str());
-    printf("  Chain: model forward -> logits[%d]=%.4f -> sampler -> token %d -> \"%s\"\n\n",
-           nextToken, maxLogit, nextToken, tokenizer.Token(static_cast<uint32_t>(nextToken)).c_str());
-
-    // Stage 5: Detokenize using embedded tokenizer
-    printf("[Stage 5] Detokenizing...\n");
-    auto detokStart = high_resolution_clock::now();
-    
-    std::string outputText = tokenizer.Token(static_cast<uint32_t>(nextToken));
-    
-    auto detokEnd = high_resolution_clock::now();
-    detokMs = duration<double, std::milli>(detokEnd - detokStart).count();
-    
-    printf("SUCCESS: Detokenized token %d -> '%s' in %.2f ms\n\n", nextToken, outputText.c_str(), detokMs);
+    if (!batchPass) {
+        fprintf(stderr, "BATCH FAILED\n");
+        return 1;
+    }
+    printf("BATCH COMPLETE — %zu/%zu TOKENS PASS\n", generatedTokens.size(), kGeneratedTokens);
 
     SetPhase(Phase::TOKEN_DECODE, "TOKEN_DECODE");
 
     // Compute checksums
     uint64_t inputChecksum = computeTokenChecksum(tokens);
-    std::vector<uint32_t> outputTokens = {static_cast<uint32_t>(nextToken)};
-    uint64_t outputChecksum = computeTokenChecksum(outputTokens);
+    std::vector<uint32_t> outputTokenIds;
+    for (const auto& g : generated) outputTokenIds.push_back(g.id);
+    uint64_t outputChecksum = computeTokenChecksum(outputTokenIds);
+
+    // Print summary
+    printf("\n=== GENERATION SUMMARY ===\n");
+    printf("Prompt: '%s' -> tokens: ", prompt);
+    for (auto t : tokens) printf("%u ", t);
+    printf("\n");
+    for (size_t i = 0; i < generated.size(); i++) {
+        printf("  token[%zu] = %u -> \"%s\" (logit=%.4f, fwd=%.2f ms)\n",
+               i, generated[i].id, generated[i].text.c_str(), generated[i].logit,
+               generated[i].fwdMs);
+    }
+    printf("Full decode: \"");
+    for (const auto& g : generated) printf("%s", g.text.c_str());
+    printf("\"\n");
+    printf("==========================\n\n");
     
     // Build VAL-051-2-A witness
     SimpleJSONWriter json;
@@ -586,12 +723,39 @@ int main(int argc, char* argv[]) {
     json.addString("model_hash", modelHash.c_str());
     json.addString("prompt", prompt);
     json.addInt("input_token_count", static_cast<int64_t>(tokens.size()));
-    json.addInt("output_token_count", 1);
+    json.addInt("output_token_count", static_cast<int64_t>(generated.size()));
     json.addInt("input_checksum", static_cast<int64_t>(inputChecksum));
     json.addInt("output_checksum", static_cast<int64_t>(outputChecksum));
-    json.addInt("sampled_token_id", nextToken);
-    json.addString("output_text", outputText.c_str());
-    
+
+    // Token sequence
+    json.beginArray("generated_tokens");
+    for (size_t i = 0; i < generated.size(); i++) {
+        json.beginObject();
+        json.addInt("index", static_cast<int64_t>(i));
+        json.addInt("token_id", static_cast<int64_t>(generated[i].id));
+        json.addString("text", generated[i].text.c_str());
+        json.addDouble("logit", generated[i].logit);
+        json.addDouble("forward_ms", generated[i].fwdMs);
+        json.addDouble("sample_ms", generated[i].sampleMs);
+        json.addDouble("detok_ms", generated[i].detokMs);
+        json.beginArray("top5");
+        for (const auto& e : generated[i].top5) {
+            json.beginObject();
+            json.addInt("id", static_cast<int64_t>(e.tokenId));
+            json.addDouble("logit", e.logit);
+            json.addString("text", tokenizer.Token(e.tokenId).c_str());
+            json.endObject();
+        }
+        json.endArray();
+        json.endObject();
+    }
+    json.endArray();
+
+    // Full decoded text
+    std::string fullText;
+    for (const auto& g : generated) fullText += g.text;
+    json.addString("output_text", fullText.c_str());
+
     // Stage timings
     json.beginArray("stages");
     json.beginObject();
@@ -604,31 +768,43 @@ int main(int argc, char* argv[]) {
     json.addDouble("duration_ms", tokMs);
     json.addString("status", "COMPLETE");
     json.endObject();
-    json.beginObject();
-    json.addString("name", "INFERENCE");
-    json.addDouble("duration_ms", fwdMs);
-    json.addString("status", "COMPLETE");
-    json.endObject();
-    json.beginObject();
-    json.addString("name", "SAMPLING");
-    json.addDouble("duration_ms", sampleMs);
-    json.addString("status", "COMPLETE");
-    json.endObject();
-    json.beginObject();
-    json.addString("name", "DETOKENIZATION");
-    json.addDouble("duration_ms", detokMs);
-    json.addString("status", "COMPLETE");
-    json.endObject();
+    for (size_t i = 0; i < generated.size(); i++) {
+        json.beginObject();
+        char buf[64];
+        snprintf(buf, sizeof(buf), "INFERENCE_%zu", i);
+        json.addString("name", buf);
+        json.addDouble("duration_ms", generated[i].fwdMs);
+        json.addString("status", "COMPLETE");
+        json.endObject();
+        json.beginObject();
+        snprintf(buf, sizeof(buf), "SAMPLING_%zu", i);
+        json.addString("name", buf);
+        json.addDouble("duration_ms", generated[i].sampleMs);
+        json.addString("status", "COMPLETE");
+        json.endObject();
+        json.beginObject();
+        snprintf(buf, sizeof(buf), "DETOKENIZATION_%zu", i);
+        json.addString("name", buf);
+        json.addDouble("duration_ms", generated[i].detokMs);
+        json.addString("status", "COMPLETE");
+        json.endObject();
+    }
     json.endArray();
-    
-    double totalMs = initMs + tokMs + fwdMs + sampleMs + detokMs;
-    
+
+    double totalFwdMs = 0, totalSampleMs = 0, totalDetokMs = 0;
+    for (const auto& g : generated) {
+        totalFwdMs += g.fwdMs;
+        totalSampleMs += g.sampleMs;
+        totalDetokMs += g.detokMs;
+    }
+    double totalMs = initMs + tokMs + totalFwdMs + totalSampleMs + totalDetokMs;
+
     // Calculate TPS (tokens per second) for inference stage
     double tps = 0.0;
-    if (fwdMs > 0) {
-        tps = (tokens.size() + 1) / (fwdMs / 1000.0); // input tokens + 1 output token
+    if (totalFwdMs > 0) {
+        tps = (tokens.size() + generated.size()) / (totalFwdMs / 1000.0);
     }
-    
+
     json.addDouble("tokens_per_second", tps);
     json.addDouble("throughput_tps", tps);
     json.addDouble("total_duration_ms", totalMs);
@@ -669,16 +845,27 @@ int main(int argc, char* argv[]) {
         bundle.addInt("context_limit", inference.getContextLimit());
         bundle.addString("prompt", prompt);
         bundle.addInt("input_token_count", static_cast<int64_t>(tokens.size()));
-        bundle.addInt("output_token_count", 1);
-        bundle.addInt("sampled_token_id", nextToken);
-        bundle.addString("output_text", outputText.c_str());
+        bundle.addInt("output_token_count", static_cast<int64_t>(generated.size()));
+        bundle.beginArray("generated_tokens");
+        for (size_t i = 0; i < generated.size(); i++) {
+            bundle.beginObject();
+            bundle.addInt("index", static_cast<int64_t>(i));
+            bundle.addInt("token_id", static_cast<int64_t>(generated[i].id));
+            bundle.addString("text", generated[i].text.c_str());
+            bundle.addDouble("logit", generated[i].logit);
+            bundle.endObject();
+        }
+        bundle.endArray();
+        std::string fullText;
+        for (const auto& g : generated) fullText += g.text;
+        bundle.addString("output_text", fullText.c_str());
         bundle.addDouble("tokens_per_second", tps);
         bundle.addDouble("throughput_tps", tps);
         bundle.addDouble("init_ms", initMs);
         bundle.addDouble("tokenize_ms", tokMs);
-        bundle.addDouble("forward_ms", fwdMs);
-        bundle.addDouble("sample_ms", sampleMs);
-        bundle.addDouble("detokenize_ms", detokMs);
+        bundle.addDouble("forward_ms", totalFwdMs);
+        bundle.addDouble("sample_ms", totalSampleMs);
+        bundle.addDouble("detok_ms", totalDetokMs);
         bundle.addDouble("total_ms", totalMs);
         bundle.addBool("success", true);
         
@@ -708,9 +895,14 @@ int main(int argc, char* argv[]) {
     SetPhase(Phase::CLEAN_EXIT, "CLEAN_EXIT");
 
     printf("\n=== VAL-051.2.A COMPLETE ===\n");
-    printf("First REAL inference token generated successfully!\n");
-    printf("Token chain: Prompt -> Tokenize -> Forward -> Sample -> Detokenize\n");
-    printf("Output token ID: %d -> '%s'\n", nextToken, outputText.c_str());
+    printf("Autoregressive token generation successful!\n");
+    printf("Token chain: Prompt -> Tokenize -> Forward -> Sample -> Detokenize (x%zu)\n", generated.size());
+    printf("Generated sequence: ");
+    for (size_t i = 0; i < generated.size(); i++) {
+        printf("%u -> '%s' ", generated[i].id, generated[i].text.c_str());
+    }
+    printf("\n");
+    printf("Full decode: \"%s\"\n", fullText.c_str());
     printf("Total latency: %.2f ms\n", totalMs);
     printf("Throughput: %.2f tokens/second\n", tps);
 

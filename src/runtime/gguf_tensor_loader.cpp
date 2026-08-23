@@ -539,6 +539,15 @@ std::vector<std::string> GGUFTensorLoader::ListTensors() const {
     return names;
 }
 
+uint64_t GGUFTensorLoader::GetTensorOffset(const std::string& name) const {
+    for (const auto& meta : tensors_) {
+        if (meta.name == name) {
+            return meta.offset;
+        }
+    }
+    return 0;
+}
+
 std::vector<float> GGUFTensorLoader::GetTensorF32(const std::string& name, bool* success) const {
     auto view = GetTensor(name);
     if (!view.IsValid()) {

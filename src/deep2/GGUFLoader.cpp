@@ -170,25 +170,37 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
             case GGUFValueType::ARRAY: {
                 uint32_t elemType = ReadUint32(fp);
                 uint64_t arrCount = ReadUint64(fp);
-                // Skip array data
-                for (uint64_t j = 0; j < arrCount; ++j) {
-                    switch ((GGUFValueType)elemType) {
-                        case GGUFValueType::UINT8: ReadUint8(fp); break;
-                        case GGUFValueType::INT8: ReadInt8(fp); break;
-                        case GGUFValueType::UINT16: ReadUint16(fp); break;
-                        case GGUFValueType::INT16: ReadInt16(fp); break;
-                        case GGUFValueType::UINT32: ReadUint32(fp); break;
-                        case GGUFValueType::INT32: ReadInt32(fp); break;
-                        case GGUFValueType::FLOAT32: ReadFloat32(fp); break;
-                        case GGUFValueType::BOOL: ReadBool(fp); break;
-                        case GGUFValueType::STRING: ReadString(fp); break;
-                        case GGUFValueType::UINT64: ReadUint64(fp); break;
-                        case GGUFValueType::INT64: { int64_t v; fread(&v, 1, 8, fp); break; }
-                        case GGUFValueType::FLOAT64: ReadFloat64(fp); break;
-                        default: ReadUint32(fp); break;
+                // Capture tokenizer vocabulary from GGUF metadata
+                bool isTokenizerTokens = (key == "tokenizer.ggml.tokens" ||
+                                           key == "tokenizer.ggml.vocab");
+                if (isTokenizerTokens && elemType == (uint32_t)GGUFValueType::STRING) {
+                    metadata.vocab.reserve(arrCount);
+                    for (uint64_t j = 0; j < arrCount; ++j) {
+                        std::string token = ReadString(fp);
+                        metadata.vocab.push_back(token);
                     }
+                    valueStr = "[vocab:" + std::to_string(arrCount) + "]";
+                } else {
+                    // Skip array data
+                    for (uint64_t j = 0; j < arrCount; ++j) {
+                        switch ((GGUFValueType)elemType) {
+                            case GGUFValueType::UINT8: ReadUint8(fp); break;
+                            case GGUFValueType::INT8: ReadInt8(fp); break;
+                            case GGUFValueType::UINT16: ReadUint16(fp); break;
+                            case GGUFValueType::INT16: ReadInt16(fp); break;
+                            case GGUFValueType::UINT32: ReadUint32(fp); break;
+                            case GGUFValueType::INT32: ReadInt32(fp); break;
+                            case GGUFValueType::FLOAT32: ReadFloat32(fp); break;
+                            case GGUFValueType::BOOL: ReadBool(fp); break;
+                            case GGUFValueType::STRING: ReadString(fp); break;
+                            case GGUFValueType::UINT64: ReadUint64(fp); break;
+                            case GGUFValueType::INT64: { int64_t v; fread(&v, 1, 8, fp); break; }
+                            case GGUFValueType::FLOAT64: ReadFloat64(fp); break;
+                            default: ReadUint32(fp); break;
+                        }
+                    }
+                    valueStr = "[array:" + std::to_string(arrCount) + "]";
                 }
-                valueStr = "[array:" + std::to_string(arrCount) + "]";
                 break;
             }
             case GGUFValueType::UINT64: {

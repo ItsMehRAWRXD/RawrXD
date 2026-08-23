@@ -8,6 +8,7 @@ message(STATUS "[RawrXD] Vulkan detection fix — Phase 4A")
 set(_VULKAN_CANDIDATES
     "$ENV{VULKAN_SDK}"
     "$ENV{VULKAN_SDK}/Include"
+    "C:/VulkanSDK/1.4.357.0/Include"
     "C:/VulkanSDK/1.4.328.1/Include"
     "C:/VulkanSDK/1.3.296.0/Include"
     "C:/VulkanSDK/1.3.290.0/Include"
@@ -38,6 +39,7 @@ endforeach()
 # ─── 2. Find Vulkan library ─────────────────────────────────────────
 set(_VULKAN_LIB_CANDIDATES
     "$ENV{VULKAN_SDK}/Lib/vulkan-1.lib"
+    "C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib"
     "C:/VulkanSDK/1.4.328.1/Lib/vulkan-1.lib"
     "C:/VulkanSDK/1.3.296.0/Lib/vulkan-1.lib"
     "C:/VulkanSDK/1.3.290.0/Lib/vulkan-1.lib"

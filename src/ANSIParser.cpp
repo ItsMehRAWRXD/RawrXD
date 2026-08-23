@@ -301,8 +301,9 @@ bool ANSIParser::ApplyToCharFormat(const ANSIAttributes& attrs, CHARFORMAT2& cf)
     cf.dwMask = CFM_COLOR | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE;
     
     // Text color
+    ANSIParser parser;  // Need instance for non-static ANSIToRGB
     if (attrs.foreground >= 0) {
-        cf.crTextColor = ANSIToRGB(attrs.foreground);
+        cf.crTextColor = parser.ANSIToRGB(attrs.foreground);
     } else {
         cf.crTextColor = GetDefaultForeground();
     }
@@ -412,7 +413,7 @@ void SetRichEditANSIText(HWND hwndRichEdit, const std::string& ansiText) {
     }
     
     // Clear existing content
-    SetWindowText(hwndRichEdit, "");
+    SetWindowTextA(hwndRichEdit, "");
     
     // Append with ANSI formatting
     AppendANSIToRichEdit(hwndRichEdit, ansiText);

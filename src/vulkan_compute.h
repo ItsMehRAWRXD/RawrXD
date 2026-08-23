@@ -1,5 +1,7 @@
 #pragma once
 
+#if !defined(RAWR_HAS_VULKAN) || RAWR_HAS_VULKAN
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -46,3 +48,5 @@ public:
     VkQueue GetComputeQueue() const { return computeQueue_; }
     uint32_t GetQueueFamilyIndex() const { return queueFamilyIndex_; }
 };
+
+#endif // RAWR_HAS_VULKAN

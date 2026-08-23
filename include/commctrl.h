@@ -11,4 +11,6 @@
 #define CALLBACK __stdcall
 #endif
 
-#include "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22621.0/um/commctrl.h"
+// MSVC doesn't support #include_next. Use a relative path that resolves
+// from any SDK subdirectory (ucrt/shared/um/winrt) to the real um/commctrl.h.
+#include <../um/commctrl.h>

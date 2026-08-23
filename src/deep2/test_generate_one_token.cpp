@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstring>
 #include "Deep2Engine.h"
+#include "gguf_embedded_tokenizer.hpp"
 
 using namespace Deep2;
 
@@ -12,6 +13,19 @@ int main(int argc, char** argv) {
 
     printf("[TEST] Token Generation Test\n");
     printf("[TEST] Model: %s\n", modelPath);
+
+    // Load embedded tokenizer from GGUF
+    RawrXD::GGUFEmbeddedTokenizer tokenizer;
+    printf("[Tokenizer] Loading from GGUF...\n");
+    if (!tokenizer.LoadFromGGUF(modelPath)) {
+        printf("[FAIL] Failed to load embedded tokenizer from GGUF\n");
+        return 1;
+    }
+    printf("[Tokenizer] source=GGUF\n");
+    printf("[Tokenizer] vocab=%zu\n", tokenizer.VocabSize());
+    printf("[Tokenizer] external_tokenizer=false\n");
+    printf("[Tokenizer] EncodeLongestMatch=ready\n");
+    printf("[Tokenizer] Decode=ready\n");
 
     Deep2Engine engine;
     EngineConfig cfg;
@@ -44,11 +58,23 @@ int main(int argc, char** argv) {
            engine.getModelWeights().numLayers,
            engine.getModelWeights().vocabSize);
 
-    // Tokenize a simple prompt
+    // Tokenize a simple prompt using embedded tokenizer
     std::string prompt = "Hello";
     printf("[TEST] Tokenizing prompt: '%s'\n", prompt.c_str());
-    std::vector<int> tokens = engine.tokenize(prompt);
-    printf("[PASS] Tokenized to %zu tokens\n", tokens.size());
+    std::vector<uint32_t> promptTokens;
+    if (!tokenizer.EncodeLongestMatch(prompt, promptTokens)) {
+        printf("[FAIL] EncodeLongestMatch failed\n");
+        return 1;
+    }
+    printf("[PASS] Tokenized to %zu tokens\n", promptTokens.size());
+    for (size_t i = 0; i < promptTokens.size(); ++i) {
+        printf("  token[%zu]=%u text=\"%s\"\n", i, promptTokens[i],
+               tokenizer.Token(promptTokens[i]).c_str());
+    }
+
+    // Convert to int vector for engine
+    std::vector<int> tokens;
+    for (auto t : promptTokens) tokens.push_back(static_cast<int>(t));
 
     // Generate ONE token
     printf("[TEST] Generating 1 token...\n");
@@ -62,9 +88,8 @@ int main(int argc, char** argv) {
 
     printf("[PASS] Generated token ID: %d\n", outputTokens[0]);
 
-    // Detokenize
-    std::vector<int> singleToken = {outputTokens[0]};
-    std::string text = engine.detokenize(singleToken);
+    // Detokenize using embedded tokenizer
+    std::string text = tokenizer.Token(static_cast<uint32_t>(outputTokens[0]));
     printf("[PASS] Detokenized: '%s'\n", text.c_str());
 
     printf("\n=== TOKEN GENERATION SUCCESS ===\n");

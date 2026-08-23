@@ -4,7 +4,9 @@
 #include "../../include/plugin_signature.h"
 #include "../../include/ui/chat_panel.h"
 #include "../../include/update_signature.h"
+#if RAWR_HAS_VULKAN
 #include "../vulkan_compute.h"
+#endif
 #include "../agentic/ErrorRecoveryManager.h"
 #include "../core/ConfigurationValidator.h"
 #include "../inference/PerformanceMonitor.h"
@@ -122,6 +124,7 @@ CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
 }
 
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
+#if RAWR_HAS_VULKAN
     VulkanCompute compute;
     if (!compute.Initialize()) {
         return errorResult(ctx, "Vulkan renderer initialization failed");
@@ -129,6 +132,9 @@ CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
     const std::string message = std::string("Vulkan renderer initialized");
     compute.Cleanup();
     return okResult(ctx, message);
+#else
+    return okResult(ctx, "Vulkan renderer not available (CPU fallback)");
+#endif
 }
 
 CommandResult HandleOSExplorerInterceptor(const CommandContext& ctx) {

@@ -45,6 +45,9 @@ extern "C" void ShutdownAICompletion();
 #include <commctrl.h>
 #include <richedit.h>
 
+// Forward declaration for B428Trace (defined in Win32IDE_Sidebar.cpp)
+extern void B428Trace(const char* msg);
+
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
 #endif
@@ -2382,64 +2385,88 @@ void Win32IDE::onCreate(HWND hwnd)
     fileTrace("[onCreate] createTabBar DEFERRED to onCreateChildren");
     OutputDebugStringA("[onCreate] createTabBar DEFERRED to onCreateChildren\n");
     
+    B428Trace("onCreate: before createBreadcrumbBar");
     fileTrace("[Core] onCreate_before_createBreadcrumbBar");
     OutputDebugStringA("[onCreate] createBreadcrumbBar...\n");
     logStackUsage("onCreate before createBreadcrumbBar");
     createBreadcrumbBar(hwnd);  // ESP:IDC_BREADCRUMB_BAR — symbol path bar
+    B428Trace("onCreate: after createBreadcrumbBar");
     fileTrace("[Core] onCreate_after_createBreadcrumbBar");
     logStackUsage("onCreate after createBreadcrumbBar");
     
+    B428Trace("onCreate: before createLineNumberGutter");
     fileTrace("[Core] onCreate_before_createLineNumberGutter");
     OutputDebugStringA("[onCreate] createLineNumberGutter...\n");
     logStackUsage("onCreate before createLineNumberGutter");
     createLineNumberGutter(hwnd);
+    B428Trace("onCreate: after createLineNumberGutter");
     fileTrace("[Core] onCreate_after_createLineNumberGutter");
     logStackUsage("onCreate after createLineNumberGutter");
     
+    B428Trace("onCreate: before createEditor");
     fileTrace("[Core] onCreate_before_createEditor");
     OutputDebugStringA("[onCreate] createEditor...\n");
     logStackUsage("onCreate before createEditor");
     createEditor(hwnd);
+    B428Trace("onCreate: after createEditor");
+    B428Trace("onCreate: before createAnnotationOverlay");
     createAnnotationOverlay(hwnd);
+    B428Trace("onCreate: after createAnnotationOverlay");
     fileTrace("[Core] onCreate_after_createEditor");
     
+    B428Trace("onCreate: before createTerminal");
     fileTrace("[Core] onCreate_before_createTerminal");
     OutputDebugStringA("[onCreate] createTerminal...\n");
     logStackUsage("onCreate before createTerminal");
     createTerminal(hwnd);
+    B428Trace("onCreate: after createTerminal");
     fileTrace("[Core] onCreate_after_createTerminal");
     
+    B428Trace("onCreate: before createEnhancedStatusBar");
     fileTrace("[Core] onCreate_before_createEnhancedStatusBar");
     OutputDebugStringA("[onCreate] createEnhancedStatusBar...\n");
     logStackUsage("onCreate before createEnhancedStatusBar");
     createEnhancedStatusBar(hwnd);
+    B428Trace("onCreate: after createEnhancedStatusBar");
     fileTrace("[Core] onCreate_after_createEnhancedStatusBar");
 
     // DEFERRED: OutputTabs, PowerShellPanel, ChatPanel creation moved to WM_APP_INIT_CHILDREN
     // to prevent stack overflow. These panels are created after WM_CREATE completes.
     // See onCreateChildren() for the deferred creation.
+    B428Trace("onCreate: before EXIT markers");
     fileTrace("[Core] onCreate_EXIT");
     logStackUsage("onCreate - deferred panels will be created via WM_APP_INIT_CHILDREN");
 
+    B428Trace("onCreate: before SetPropA");
     if (m_hwndMain)
     {
         SetPropA(m_hwndMain, "RawrXD.IDE.Label", (HANDLE)RAWRXD_IDE_LABEL_MAIN_WINDOW);
         if (m_interpretabilityPanel)
             m_interpretabilityPanel->setParent(m_hwndMain);
     }
+    B428Trace("onCreate: after SetPropA");
 
+    B428Trace("onCreate: before LOG_INFO");
     LOG_INFO("onCreate complete — all panels created");
     OutputDebugStringA("[onCreate] all panels created OK\n");
+    B428Trace("onCreate: after LOG_INFO");
 
+    B428Trace("onCreate: before initSyntaxColorizer");
     OutputDebugStringA("[onCreate] initSyntaxColorizer...\n");
     initSyntaxColorizer();
+    B428Trace("onCreate: after initSyntaxColorizer");
 
+    B428Trace("onCreate: before initGhostText");
     OutputDebugStringA("[onCreate] initGhostText...\n");
     initGhostText();
+    B428Trace("onCreate: after initGhostText");
 
+    B428Trace("onCreate: before restoreSession");
     OutputDebugStringA("[onCreate] restoreSession...\n");
     restoreSession();
+    B428Trace("onCreate: after restoreSession");
 
+    B428Trace("onCreate: before HWND audit");
     {
         char buf[512];
         sprintf_s(buf,
@@ -2448,9 +2475,14 @@ void Win32IDE::onCreate(HWND hwnd)
                   m_hwndMain, m_hwndEditor, m_hwndSidebar, m_hwndExplorerTree, m_hwndOutputTabs, m_hwndPowerShellPanel);
         LOG_INFO(std::string(buf));
     }
+    B428Trace("onCreate: after HWND audit");
 
     // Apply dark theme immediately (lightweight — just sets color values + SendMessage)
+    B428Trace("onCreate: before populateBuiltinThemes");
     populateBuiltinThemes();  // Register all 16 built-in themes
+    B428Trace("onCreate: after populateBuiltinThemes");
+    
+    B428Trace("onCreate: before theme setup");
     m_currentTheme.backgroundColor = RGB(30, 30, 30);
     m_currentTheme.textColor = RGB(212, 212, 212);
     m_currentTheme.selectionColor = RGB(38, 79, 120);
@@ -2458,32 +2490,47 @@ void Win32IDE::onCreate(HWND hwnd)
     if (m_backgroundBrush)
         DeleteObject(m_backgroundBrush);
     m_backgroundBrush = CreateSolidBrush(RGB(30, 30, 30));
+    B428Trace("onCreate: before applyTheme");
     applyTheme();
+    B428Trace("onCreate: after applyTheme");
 
     // Update status bar with initial state (12-part enhanced bar: Line/Col, Encoding, Language, etc.)
+    B428Trace("onCreate: before statusBar update");
     if (m_hwndStatusBar)
     {
         updateEnhancedStatusBar();
         m_contextUsage.maxTokens = m_settings.aiContextWindow;
         updateContextWindowDisplay();
     }
+    B428Trace("onCreate: after statusBar update");
 
     // Initialize backend manager and LLM router at startup so Ollama/cloud can be used
     // without requiring a local GGUF to be loaded first (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
+    B428Trace("onCreate: before initBackendManager");
     initBackendManager();
+    B428Trace("onCreate: after initBackendManager");
+    
+    B428Trace("onCreate: before initLLMRouter");
     initLLMRouter();
+    B428Trace("onCreate: after initLLMRouter");
 
     // Force initial layout so all child windows are sized before first paint
+    B428Trace("onCreate: before GetClientRect/PostMessage");
     RECT rc;
     GetClientRect(hwnd, &rc);
     PostMessage(hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+    B428Trace("onCreate: after GetClientRect/PostMessage");
 
     // Defer heavy UI creation to prevent stack overflow in onCreate
     // WM_APP_INIT_CHILDREN (WM_APP + 99) will handle creation of panels that can be deferred
+    B428Trace("onCreate: before PostMessage WM_APP+99");
     PostMessage(hwnd, WM_APP + 99, 0, 0);
+    B428Trace("onCreate: after PostMessage WM_APP+99");
     
     // Defer heavy init to after window is fully created
+    B428Trace("onCreate: before PostMessage WM_APP+100");
     PostMessage(hwnd, WM_APP + 100, 0, 0);
+    B428Trace("onCreate: after PostMessage WM_APP+100 — onCreate COMPLETE");
 }
 
 // ============================================================================
