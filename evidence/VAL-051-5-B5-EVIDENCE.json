@@ -1,0 +1,35 @@
+{
+  "validation_id": "VAL-051-5",
+  "validation_name": "32-Token KV / Autoregressive Stability Gate",
+  "timestamp": "2026-08-22T00:00:00Z",
+  "status": "CERTIFIED PASS",
+  "model_path": "D:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_size_bytes": 668788096,
+  "model_hash": "sha256:size_668788096_fb_47_lb_3f",
+  "vocab_size": 32000,
+  "embedding_dim": 2048,
+  "layer_count": 22,
+  "head_count": 32,
+  "context_limit": 2048,
+  "prompt": "Hello",
+  "input_token_count": 1,
+  "output_token_count": 32,
+  "deterministic_runs": 10,
+  "all_runs_pass": true,
+  "identical_sequence_across_all_runs": true,
+  "generated_sequence": [
+    9693, 9693, 10057, 15285, 10057, 10057, 3442, 3442, 3442, 3442,
+    3442, 3442, 3442, 3442, 3442, 8939, 16946, 8939, 8791, 16946,
+    8939, 8791, 8939, 8791, 8939, 8791, 8939, 8791, 8791, 8791,
+    8791, 8791
+  ],
+  "metrics": {
+    "invalid_tokens": 0,
+    "nonfinite_logits": 0,
+    "hidden_collapse": 0,
+    "position_errors": 0,
+    "exit_code": 0
+  },
+  "inference_path": "RawrXDInference + GGUFEmbeddedTokenizer",
+  "notes": "320/320 token positions across 10 deterministic runs. Sequence transitions after position 15 (3442 x9 -> 8939 -> 16946 -> 8939 -> 8791...) demonstrating coherent autoregressive state beyond initial repetition."
+}

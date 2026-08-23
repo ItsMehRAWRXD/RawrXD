@@ -864,6 +864,112 @@ if(WIN32)
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
     # =====================================================================
+    # VAL-051.5: 32-Token KV / Autoregressive Stability Gate
+    # =====================================================================
+    add_executable(val_051_5_32_token_kv_stability
+        tests/val_051_5_32_token_kv_stability.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(val_051_5_32_token_kv_stability PRIVATE InferenceEngine)
+    set_target_properties(val_051_5_32_token_kv_stability PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(val_051_5_32_token_kv_stability PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(val_051_5_32_token_kv_stability PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(val_051_5_32_token_kv_stability PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(val_051_5_32_token_kv_stability PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(val_051_5_32_token_kv_stability PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(val_051_5_32_token_kv_stability PRIVATE dxgi)
+        target_compile_definitions(val_051_5_32_token_kv_stability PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(val_051_5_32_token_kv_stability PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(val_051_5_32_token_kv_stability PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(val_051_5_32_token_kv_stability PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(val_051_5_32_token_kv_stability PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(val_051_5_32_token_kv_stability PRIVATE dxgi)
+    else()
+        target_link_libraries(val_051_5_32_token_kv_stability PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET val_051_5_32_token_kv_stability APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET val_051_5_32_token_kv_stability APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET val_051_5_32_token_kv_stability APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(val_051_5_32_token_kv_stability PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "VAL-051.5: 32-Token KV Stability Gate configured")
+
+    # =====================================================================
+    # VAL-051.6: 15-Token Autoregressive / KV Stability Gate
+    # =====================================================================
+    add_executable(val_051_6_15_token_kv
+        tests/val_051_6_15_token_kv.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(val_051_6_15_token_kv PRIVATE InferenceEngine)
+    set_target_properties(val_051_6_15_token_kv PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(val_051_6_15_token_kv PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(val_051_6_15_token_kv PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(val_051_6_15_token_kv PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(val_051_6_15_token_kv PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(val_051_6_15_token_kv PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(val_051_6_15_token_kv PRIVATE dxgi)
+        target_compile_definitions(val_051_6_15_token_kv PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(val_051_6_15_token_kv PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(val_051_6_15_token_kv PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(val_051_6_15_token_kv PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(val_051_6_15_token_kv PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(val_051_6_15_token_kv PRIVATE dxgi)
+    else()
+        target_link_libraries(val_051_6_15_token_kv PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET val_051_6_15_token_kv APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET val_051_6_15_token_kv APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET val_051_6_15_token_kv APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(val_051_6_15_token_kv PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "VAL-051.6: 15-Token KV Stability Gate configured")
+
+    # =====================================================================
     # validate_val051_evidence — Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
@@ -6925,6 +7031,76 @@ if(BUILD_VAL_051_3)
         OUTPUT_NAME test_val_051_3_multi_token
     )
     message(STATUS "[Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_fifteen_token — VAL-051.5: 15-Token KV Stability Gate
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" ON)
+if(BUILD_VAL_051_5)
+    add_executable(val_051_5_fifteen_token
+        tests/val_051_5_fifteen_token.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_fifteen_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_fifteen_token PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_fifteen_token PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_fifteen_token PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_fifteen_token
+    )
+    message(STATUS "[Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token")
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════
