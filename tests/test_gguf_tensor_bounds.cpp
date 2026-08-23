@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include <utility>
 
 #include "runtime/gguf_tensor_loader.hpp"
 
@@ -305,30 +306,280 @@ static Buffer make_count_times_record_overflow() {
 }
 
 // ── Deterministic mutation fixtures ────────────────────────────────────────
-static std::vector<Buffer> make_deterministic_mutations() {
-    std::vector<Buffer> mutations;
-    for (int i = 0; i < 17; ++i) {
-        Buffer b;
-        put_header(b, 1, 0);
-        put_string(b, std::string("tensor_") + std::to_string(i));
-        b.put<u32>(static_cast<u32>(i % 7 + 1));
-        for (int d = 0; d < i % 7 + 1; ++d) {
-            b.put<u64>(i == 16 ? std::numeric_limits<u64>::max() : static_cast<u64>(d + 1));
-        }
-        b.put<u32>(i == 15 ? 0xffffffffu : GGML_TYPE_F32);
-        b.put<u64>(i >= 8 ? std::numeric_limits<u64>::max() - static_cast<u64>(i) : static_cast<u64>(i * 3));
-        b.zeros(32);
-        mutations.push_back(std::move(b));
+static std::vector<Case> make_deterministic_mutations() {
+    std::vector<Case> mutations;
+
+    // 0: truncated dimensions (claim 3, provide 1)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_truncated_dims");
+        b.put<u32>(3); b.put<u64>(1); b.zeros(8);
+        mutations.push_back({"mut_truncated_dims", std::move(b), false});
     }
+    // 1: zero dimension
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_zero_dim");
+        b.put<u32>(2); b.put<u64>(0); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_zero_dim", std::move(b), false});
+    }
+    // 2: invalid type
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_invalid_type");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(0xDEADBEEFu); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_invalid_type", std::move(b), false});
+    }
+    // 3: offset past EOF
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_offset_eof");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(256); b.zeros(32);
+        mutations.push_back({"mut_offset_eof", std::move(b), false});
+    }
+    // 4: huge dimension causing size overflow
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_dim_overflow");
+        b.put<u32>(2); b.put<u64>(0xFFFFFFFFFFFFFFFFULL); b.put<u64>(2);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_dim_overflow", std::move(b), false});
+    }
+    // 5: 65 dims (exceeds max)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_65_dims");
+        b.put<u32>(65); b.zeros(64);
+        mutations.push_back({"mut_65_dims", std::move(b), false});
+    }
+    // 6: type 255
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_type_255");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(255); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_type_255", std::move(b), false});
+    }
+    // 7: unaligned offset
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_unaligned");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(7); b.zeros(32);
+        mutations.push_back({"mut_unaligned", std::move(b), false});
+    }
+    // 8: tensor size exceeds file
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_size_eof");
+        b.put<u32>(2); b.put<u64>(100); b.put<u64>(100);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(16);
+        mutations.push_back({"mut_size_eof", std::move(b), false});
+    }
+    // 9: truncated at name length
+    {
+        Buffer b; put_header(b, 1, 0);
+        b.put<u64>(1024); b.zeros(8);
+        mutations.push_back({"mut_trunc_name", std::move(b), false});
+    }
+    // 10: truncated at type
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_trunc_type");
+        b.put<u32>(1); b.put<u64>(4); b.zeros(4);
+        mutations.push_back({"mut_trunc_type", std::move(b), false});
+    }
+    // 11: truncated at offset
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_trunc_offset");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.zeros(4);
+        mutations.push_back({"mut_trunc_offset", std::move(b), false});
+    }
+    // 12: negative offset (wraps to max)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_neg_offset");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0xFFFFFFFFFFFFFFFFULL); b.zeros(32);
+        mutations.push_back({"mut_neg_offset", std::move(b), false});
+    }
+    // 13: overlap with self (two tensors overlapping)
+    {
+        Buffer b; put_header(b, 2, 0);
+        put_tensor(b, "a", 1, {4}, GGML_TYPE_F32, 0);
+        put_tensor(b, "b", 1, {4}, GGML_TYPE_F32, 8);
+        b.zeros(32);
+        mutations.push_back({"mut_overlap", std::move(b), false});
+    }
+    // 14: huge tensor count
+    {
+        Buffer b; put_header(b, 0x100000000ULL, 0);
+        b.zeros(64);
+        mutations.push_back({"mut_huge_count", std::move(b), false});
+    }
+    // 15: Q4_0 with huge dims causing size overflow
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_q4_overflow");
+        b.put<u32>(2); b.put<u64>(0xFFFFFFFFULL); b.put<u64>(0xFFFFFFFFULL);
+        b.put<u32>(GGML_TYPE_Q4_0); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_q4_overflow", std::move(b), false});
+    }
+    // 16: metadata count too large
+    {
+        Buffer b; put_header(b, 0, 0xFFFFFFFFFFFFFFFFULL);
+        b.zeros(64);
+        mutations.push_back({"mut_huge_metadata", std::move(b), false});
+    }
+
     return mutations;
 }
 
 // ── Case definition ──────────────────────────────────────────────────────
 struct Case {
-    const char* name;
+    std::string name;
     Buffer buffer;
     bool expect_valid;
 };
+
+static std::vector<Case> make_deterministic_mutations() {
+    std::vector<Case> mutations;
+
+    // 0: truncated dimensions (claim 3, provide 1)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_truncated_dims");
+        b.put<u32>(3); b.put<u64>(1); b.zeros(8);
+        mutations.push_back({"mut_truncated_dims", std::move(b), false});
+    }
+    // 1: zero dimension
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_zero_dim");
+        b.put<u32>(2); b.put<u64>(0); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_zero_dim", std::move(b), false});
+    }
+    // 2: invalid type
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_invalid_type");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(0xDEADBEEFu); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_invalid_type", std::move(b), false});
+    }
+    // 3: offset past EOF
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_offset_eof");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(256); b.zeros(32);
+        mutations.push_back({"mut_offset_eof", std::move(b), false});
+    }
+    // 4: huge dimension causing size overflow
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_dim_overflow");
+        b.put<u32>(2); b.put<u64>(0xFFFFFFFFFFFFFFFFULL); b.put<u64>(2);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_dim_overflow", std::move(b), false});
+    }
+    // 5: 65 dims (exceeds max)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_65_dims");
+        b.put<u32>(65); b.zeros(64);
+        mutations.push_back({"mut_65_dims", std::move(b), false});
+    }
+    // 6: type 255
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_type_255");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(255); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_type_255", std::move(b), false});
+    }
+    // 7: unaligned offset
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_unaligned");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(7); b.zeros(32);
+        mutations.push_back({"mut_unaligned", std::move(b), false});
+    }
+    // 8: tensor size exceeds file
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_size_eof");
+        b.put<u32>(2); b.put<u64>(100); b.put<u64>(100);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0); b.zeros(16);
+        mutations.push_back({"mut_size_eof", std::move(b), false});
+    }
+    // 9: truncated at name length
+    {
+        Buffer b; put_header(b, 1, 0);
+        b.put<u64>(1024); b.zeros(8);
+        mutations.push_back({"mut_trunc_name", std::move(b), false});
+    }
+    // 10: truncated at type
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_trunc_type");
+        b.put<u32>(1); b.put<u64>(4); b.zeros(4);
+        mutations.push_back({"mut_trunc_type", std::move(b), false});
+    }
+    // 11: truncated at offset
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_trunc_offset");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.zeros(4);
+        mutations.push_back({"mut_trunc_offset", std::move(b), false});
+    }
+    // 12: negative offset (wraps to max)
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_neg_offset");
+        b.put<u32>(1); b.put<u64>(4);
+        b.put<u32>(GGML_TYPE_F32); b.put<u64>(0xFFFFFFFFFFFFFFFFULL); b.zeros(32);
+        mutations.push_back({"mut_neg_offset", std::move(b), false});
+    }
+    // 13: overlap with self (two tensors overlapping)
+    {
+        Buffer b; put_header(b, 2, 0);
+        put_tensor(b, "a", 1, {4}, GGML_TYPE_F32, 0);
+        put_tensor(b, "b", 1, {4}, GGML_TYPE_F32, 8);
+        b.zeros(32);
+        mutations.push_back({"mut_overlap", std::move(b), false});
+    }
+    // 14: huge tensor count
+    {
+        Buffer b; put_header(b, 0x100000000ULL, 0);
+        b.zeros(64);
+        mutations.push_back({"mut_huge_count", std::move(b), false});
+    }
+    // 15: Q4_0 with huge dims causing size overflow
+    {
+        Buffer b; put_header(b, 1, 0);
+        put_string(b, "mut_q4_overflow");
+        b.put<u32>(2); b.put<u64>(0xFFFFFFFFULL); b.put<u64>(0xFFFFFFFFULL);
+        b.put<u32>(GGML_TYPE_Q4_0); b.put<u64>(0); b.zeros(32);
+        mutations.push_back({"mut_q4_overflow", std::move(b), false});
+    }
+    // 16: metadata count too large
+    {
+        Buffer b; put_header(b, 0, 0xFFFFFFFFFFFFFFFFULL);
+        b.zeros(64);
+        mutations.push_back({"mut_huge_metadata", std::move(b), false});
+    }
+
+    return mutations;
+}
 
 static std::vector<Case> build_cases() {
     std::vector<Case> cases;
@@ -388,9 +639,8 @@ static std::vector<Case> build_cases() {
 
     // Deterministic mutations (17)
     auto mutations = make_deterministic_mutations();
-    for (size_t i = 0; i < mutations.size(); ++i) {
-        std::string name = "tensor_deterministic_mutation_" + std::to_string(i);
-        cases.push_back({name.c_str(), std::move(mutations[i]), false});
+    for (auto& m : mutations) {
+        cases.push_back({m.name, std::move(m.buffer), m.expect_valid});
     }
 
     return cases;
@@ -424,7 +674,7 @@ int main() {
         std::printf(
             "[%03zu] %-40s expected=%s actual=%s %s\n",
             i + 1,
-            c.name,
+            c.name.c_str(),
             c.expect_valid ? "VALID" : "REJECT",
             actual ? "VALID" : "REJECT",
             ok ? "PASS" : "FAIL"

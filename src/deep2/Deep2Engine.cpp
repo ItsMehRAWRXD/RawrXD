@@ -4,6 +4,12 @@
 // NO STUBS, NO DUMMIES, NO HARDCODED VALUES
 // ============================================================================
 
+// VAL-051.7: Temporary diagnostic continuation mode for baseline capture.
+// Define this to keep B3 diagnostics active while allowing generation to
+// continue past invalid hidden states so ResidencyCounters can be captured.
+// Must be removed before production certification.
+#define B3_CONTINUE_FOR_RESIDENCY_BASELINE
+
 #include "Deep2Engine.h"
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
@@ -1758,14 +1764,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
                     currentPos, stateNorm);
+#ifdef B3_CONTINUE_FOR_RESIDENCY_BASELINE
+            fprintf(stderr, "[B3_CONTINUE] continuing for residency baseline capture\n");
+#else
             return tokensGenerated;
+#endif
         }
 
         // Hard gate: reject invalid logits
         if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0) {
             fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n",
                     currentPos, config.vocabSize);
+#ifdef B3_CONTINUE_FOR_RESIDENCY_BASELINE
+            fprintf(stderr, "[B3_CONTINUE] continuing for residency baseline capture\n");
+#else
             return tokensGenerated;
+#endif
         }
 
         // Sample next token

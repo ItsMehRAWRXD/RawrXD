@@ -25,6 +25,7 @@
 #include <memory>
 #include <optional>
 #include <functional>
+#include "ResidencyCounters.hpp"
 
 #if defined(_WIN32)
   #ifndef WIN32_LEAN_AND_MEAN
@@ -194,6 +195,10 @@ public:
         auto lru_it = lru_.insert(lru_.begin(), key);
         auto ins = map_.emplace(key, std::move(m));
         ins.first->second.lru_it = lru_it;
+
+        // Notify residency counters
+        Deep2::ResidencyCounters::OnAcquire(map_len);
+
         return &ins.first->second;
     }
 
@@ -202,7 +207,12 @@ public:
     void release(Mapping* m) {
         if (!m) return;
         std::lock_guard<std::mutex> lk(m_);
-        if (m->refcount > 0) m->refcount--;
+        if (m->refcount > 0) {
+            m->refcount--;
+            if (m->refcount == 0) {
+                Deep2::ResidencyCounters::OnRelease(m->map_len);
+            }
+        }
     }
 
     // Force unmap everything.
@@ -263,6 +273,7 @@ private:
             lru_.splice(lru_.begin(), lru_, --lru_.end());
             return;
         }
+        Deep2::ResidencyCounters::OnEvict(it->second.map_len);
         unmap(it->second);
         map_.erase(it);
         lru_.pop_back();

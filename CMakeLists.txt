@@ -970,6 +970,60 @@ if(WIN32)
     message(STATUS "VAL-051.6: 15-Token KV Stability Gate configured")
 
     # =====================================================================
+    # VAL-051.7: Residency Baseline / Fixture Gate
+    # =====================================================================
+    add_executable(val_051_7_residency_baseline
+        tests/val_051_7_residency_baseline.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(val_051_7_residency_baseline PRIVATE InferenceEngine)
+    set_target_properties(val_051_7_residency_baseline PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(val_051_7_residency_baseline PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include/core
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(val_051_7_residency_baseline PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(val_051_7_residency_baseline PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(val_051_7_residency_baseline PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(val_051_7_residency_baseline PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(val_051_7_residency_baseline PRIVATE dxgi)
+        target_compile_definitions(val_051_7_residency_baseline PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(val_051_7_residency_baseline PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(val_051_7_residency_baseline PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(val_051_7_residency_baseline PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(val_051_7_residency_baseline PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(val_051_7_residency_baseline PRIVATE dxgi)
+    else()
+        target_link_libraries(val_051_7_residency_baseline PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET val_051_7_residency_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET val_051_7_residency_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET val_051_7_residency_baseline APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(val_051_7_residency_baseline PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
+
+    # =====================================================================
     # validate_val051_evidence — Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
@@ -1096,6 +1150,37 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_metadata_bounds.cpp")
         set_property(TARGET test_gguf_metadata_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
     endif()
     message(STATUS "test_gguf_metadata_bounds: B33 metadata bounds gate configured")
+endif()
+
+# =====================================================================
+# test_gguf_tensor_bounds — B34 GGUF Tensor/Offset Bounds Gate
+# =====================================================================
+if(EXISTS "${CMAKE_SOURCE_DIR}/tests/test_gguf_tensor_bounds.cpp")
+    add_executable(test_gguf_tensor_bounds
+        tests/test_gguf_tensor_bounds.cpp
+        src/runtime/gguf_tensor_loader.cpp
+    )
+    set_target_properties(test_gguf_tensor_bounds PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(test_gguf_tensor_bounds PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/model
+    )
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET test_gguf_tensor_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET test_gguf_tensor_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET test_gguf_tensor_bounds APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    message(STATUS "test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured")
 endif()
 
 # =============================================================================

@@ -350,12 +350,26 @@ bool GGUFTensorLoader::ParseHeader() {
     uint64_t tensor_count;
     std::memcpy(&tensor_count, ptr, sizeof(tensor_count));
     ptr += sizeof(tensor_count);
-    
+
+    // Sanity cap: tensor_count must fit within remaining buffer
+    // Minimum tensor record: name_len(8) + name(0) + n_dims(4) + type(4) + offset(8) = 24 bytes
+    if (tensor_count > static_cast<uint64_t>((end - ptr) / 24 + 1)) {
+        last_error_ = "Tensor count exceeds buffer capacity";
+        return false;
+    }
+
     // Metadata count (skip for now)
     uint64_t metadata_count;
     std::memcpy(&metadata_count, ptr, sizeof(metadata_count));
     ptr += sizeof(metadata_count);
-    
+
+    // Sanity cap: metadata_count must fit within remaining buffer
+    // Minimum metadata record: key_len(8) + key(0) + type(4) + value(1) = 13 bytes
+    if (metadata_count > static_cast<uint64_t>((end - ptr) / 13 + 1)) {
+        last_error_ = "Metadata count exceeds buffer capacity";
+        return false;
+    }
+
     // Skip metadata (proper GGUF value type skipping)
     for (uint64_t i = 0; i < metadata_count && ptr < end; ++i) {
         // Read key length and key
@@ -426,42 +440,109 @@ bool GGUFTensorLoader::ParseHeader() {
     
     // Parse tensor info
     tensors_.reserve(tensor_count);
-    
-    for (uint64_t i = 0; i < tensor_count && ptr < end; ++i) {
+
+    for (uint64_t i = 0; i < tensor_count; ++i) {
         TensorMetadata meta;
-        
-        // Name
+
+        // Name length
+        if (static_cast<size_t>(end - ptr) < sizeof(uint64_t)) {
+            last_error_ = "Tensor name length truncated";
+            return false;
+        }
         uint64_t name_len;
         std::memcpy(&name_len, ptr, sizeof(name_len));
         ptr += sizeof(name_len);
-        meta.name = std::string(reinterpret_cast<const char*>(ptr), name_len);
+
+        if (name_len > static_cast<uint64_t>(end - ptr)) {
+            last_error_ = "Tensor name exceeds buffer";
+            return false;
+        }
+        meta.name = std::string(reinterpret_cast<const char*>(ptr), static_cast<size_t>(name_len));
         ptr += name_len;
-        
-        // Dimensions
+
+        // Dimensions count
+        if (static_cast<size_t>(end - ptr) < sizeof(uint32_t)) {
+            last_error_ = "Tensor dimension count truncated";
+            return false;
+        }
         uint32_t n_dims;
         std::memcpy(&n_dims, ptr, sizeof(n_dims));
         ptr += sizeof(n_dims);
-        
+
+        if (n_dims > 64) {
+            last_error_ = "Tensor dimension count too large: " + std::to_string(n_dims);
+            return false;
+        }
+
+        // Dimension sizes
+        if (static_cast<size_t>(end - ptr) < static_cast<size_t>(n_dims) * sizeof(uint64_t)) {
+            last_error_ = "Tensor dimensions truncated";
+            return false;
+        }
         meta.shape.resize(n_dims);
         for (uint32_t d = 0; d < n_dims; ++d) {
             std::memcpy(&meta.shape[d], ptr, sizeof(uint64_t));
             ptr += sizeof(uint64_t);
+            if (meta.shape[d] == 0) {
+                last_error_ = "Tensor dimension zero";
+                return false;
+            }
         }
-        
+
         // Type
+        if (static_cast<size_t>(end - ptr) < sizeof(uint32_t)) {
+            last_error_ = "Tensor type truncated";
+            return false;
+        }
         std::memcpy(&meta.type, ptr, sizeof(meta.type));
         ptr += sizeof(meta.type);
-        
+
+        // Validate type is known (GGML types 0-29 are defined)
+        if (meta.type > 29) {
+            last_error_ = "Invalid tensor type: " + std::to_string(meta.type);
+            return false;
+        }
+
         // Offset
+        if (static_cast<size_t>(end - ptr) < sizeof(uint64_t)) {
+            last_error_ = "Tensor offset truncated";
+            return false;
+        }
         std::memcpy(&meta.offset, ptr, sizeof(meta.offset));
         ptr += sizeof(meta.offset);
-        
+
         // Calculate size
         meta.size = GetTensorSize(meta.type, meta.shape);
-        
+
+        // Validate offset + size <= file_size_ (no overflow)
+        if (meta.offset > file_size_) {
+            last_error_ = "Tensor offset past EOF";
+            return false;
+        }
+        if (meta.size > file_size_ - meta.offset) {
+            last_error_ = "Tensor size exceeds file bounds";
+            return false;
+        }
+
+        // Validate alignment: offset must be 4-byte aligned
+        if ((meta.offset & 3) != 0) {
+            last_error_ = "Tensor offset not aligned";
+            return false;
+        }
+
+        // Validate no overlap with previously parsed tensors
+        for (const auto& existing : tensors_) {
+            uint64_t existing_end = existing.offset + existing.size;
+            uint64_t new_end = meta.offset + meta.size;
+            if (meta.offset < existing_end && existing.offset < new_end) {
+                last_error_ = "Tensor overlap detected";
+                return false;
+            }
+        }
+
         tensors_.push_back(std::move(meta));
     }
-    
+
     return true;
 }
 
