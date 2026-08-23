@@ -38,10 +38,10 @@ struct Buffer {
     std::vector<u8> data;
 
     Buffer() = default;
-    Buffer(const Buffer&) = default;
-    Buffer(Buffer&&) = default;
-    Buffer& operator=(const Buffer&) = default;
-    Buffer& operator=(Buffer&&) = default;
+    Buffer(const Buffer& other) : data(other.data) {}
+    Buffer(Buffer&& other) noexcept : data(std::move(other.data)) {}
+    Buffer& operator=(const Buffer& other) { data = other.data; return *this; }
+    Buffer& operator=(Buffer&& other) noexcept { data = std::move(other.data); return *this; }
 
     template <typename T>
     void put(T value) {
@@ -453,6 +453,10 @@ struct Case {
     bool expect_valid;
     
     Case() = default;
+    Case(const Case&) = default;
+    Case(Case&&) = default;
+    Case& operator=(const Case&) = default;
+    Case& operator=(Case&&) = default;
     Case(std::string n, Buffer b, bool e)
         : name(std::move(n)), buffer(std::move(b)), expect_valid(e) {}
 };
@@ -516,7 +520,7 @@ static std::vector<Case> build_cases() {
     // Deterministic mutations (17)
     auto mutations = make_deterministic_mutations();
     for (auto& m : mutations) {
-        cases.push_back(m);
+        cases.push_back(std::move(m));
     }
 
     return cases;
