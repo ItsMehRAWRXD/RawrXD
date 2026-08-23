@@ -519,8 +519,8 @@ static std::vector<Case> build_cases() {
 
     // Deterministic mutations (17)
     auto mutations = make_deterministic_mutations();
-    for (auto& m : mutations) {
-        cases.push_back(std::move(m));
+    for (const auto& m : mutations) {
+        cases.push_back(m);
     }
 
     return cases;
