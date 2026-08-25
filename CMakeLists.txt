@@ -9809,6 +9809,7 @@ message(STATUS "[GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build 
 if(NOT TARGET rawrxd)
     add_executable(rawrxd
         src/sovereign/rawrxd.cpp
+        src/sovereign/SovereignRuntime.cpp
         src/sovereign/ExecutionContract.cpp
         src/sovereign/Deep2InferenceWrapper.cpp
         src/cpu_inference_engine.cpp
