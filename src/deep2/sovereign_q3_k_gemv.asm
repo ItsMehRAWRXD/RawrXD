@@ -48,8 +48,10 @@ ScaleLoop:
     imul r8d, 256
 
     ; Load 6 bytes for 16x 3-bit values
-    mov eax, dword ptr [rbx + 32 + r15*6]
-    mov edx, dword ptr [rbx + 32 + r15*6 + 4]
+    mov r11d, r15d
+    imul r11d, 6
+    mov eax, dword ptr [rbx + 32 + r11]
+    mov edx, dword ptr [rbx + 32 + r11 + 4]
 
     xor r9d, r9d
 UnpackLoop:
@@ -66,7 +68,8 @@ UnpackLoop:
     add r10d, r9d
     shl r10d, 2
     add r10, rsi
-    vfmaddss xmm2, xmm1, dword ptr [r10], dword ptr [rdi + r14*4]
+    vmovss xmm3, dword ptr [r10]
+    vfmaddss xmm2, xmm1, xmm3, dword ptr [rdi + r14*4]
     movss dword ptr [rdi + r14*4], xmm2
 
     shr eax, 3

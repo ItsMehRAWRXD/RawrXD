@@ -5,6 +5,7 @@
 // ============================================================================
 #include "cpu_inference_engine.h"
 #include "rawrxd_inference.h"
+#include "deep2/GGUFLoader.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -1141,39 +1142,146 @@ void DequantizeQ8_0(const uint8_t* quantized, float* output, int size)
 
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    (void)quantized;
-    // CRITICAL: K-quant dequantization is not implemented in the facade.
-    // Any production path reaching here will produce all-zero weights.
-    // The canonical implementation lives in RawrXDInference.
-    std::memset(output, 0, static_cast<size_t>(num_elements) * sizeof(float));
+    using namespace Deep2;
+    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(quantized);
+    int numBlocks = num_elements / 256;
+    for (int b = 0; b < numBlocks; ++b) {
+        float d    = F16ToF32(blocks[b].d);
+        float dmin = F16ToF32(blocks[b].dmin);
+        for (int sb = 0; sb < 8; ++sb) {
+            uint8_t sc = blocks[b].scales[sb];
+            uint8_t scale = (sb < 4) ? (sc & 63) : ((sc & 0x0F) | ((blocks[b].scales[sb - 4] >> 6) << 4));
+            uint8_t min   = (sb < 4) ? (blocks[b].scales[sb + 4] & 63) : ((blocks[b].scales[sb] >> 4) | ((blocks[b].scales[sb - 4] >> 6) << 4));
+            float s = d * scale;
+            float m = dmin * min;
+            for (int i = 0; i < 32; ++i) {
+                int idx = sb * 32 + i;
+                uint8_t byte = blocks[b].qs[idx / 2];
+                float q = (idx % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+                output[b * 256 + idx] = s * q - m;
+            }
+        }
+    }
 }
 
 void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    (void)quantized;
-    // CRITICAL: K-quant dequantization is not implemented in the facade.
-    std::memset(output, 0, static_cast<size_t>(num_elements) * sizeof(float));
+    using namespace Deep2;
+    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(quantized);
+    int numBlocks = num_elements / 256;
+    for (int b = 0; b < numBlocks; ++b) {
+        float d    = F16ToF32(blocks[b].d);
+        float dmin = F16ToF32(blocks[b].dmin);
+        for (int sb = 0; sb < 8; ++sb) {
+            uint8_t sc = blocks[b].scales[sb];
+            uint8_t scale = (sb < 4) ? (sc & 63) : ((sc & 0x0F) | ((blocks[b].scales[sb - 4] >> 6) << 4));
+            uint8_t min   = (sb < 4) ? (blocks[b].scales[sb + 4] & 63) : ((blocks[b].scales[sb] >> 4) | ((blocks[b].scales[sb - 4] >> 6) << 4));
+            float s = d * scale;
+            float m = dmin * min;
+            for (int i = 0; i < 32; ++i) {
+                int idx = sb * 32 + i;
+                int qsIdx = idx / 2;
+                int qsShift = (idx % 2) * 4;
+                uint8_t low4 = (blocks[b].qs[qsIdx] >> qsShift) & 0x0F;
+                int qhIdx = idx / 8;
+                int qhShift = idx % 8;
+                uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
+                uint8_t q = low4 | (high1 << 4);
+                output[b * 256 + idx] = s * q - m;
+            }
+        }
+    }
 }
 
 void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    (void)quantized;
-    // CRITICAL: K-quant dequantization is not implemented in the facade.
-    std::memset(output, 0, static_cast<size_t>(num_elements) * sizeof(float));
+    using namespace Deep2;
+    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(quantized);
+    int numBlocks = num_elements / 256;
+    for (int b = 0; b < numBlocks; ++b) {
+        float d = F16ToF32(blocks[b].d);
+        for (int i = 0; i < 256; ++i) {
+            int qlIdx = i / 2;
+            int qlShift = (i % 2) * 4;
+            uint8_t low4 = (blocks[b].ql[qlIdx] >> qlShift) & 0x0F;
+            int qhIdx = i / 4;
+            int qhShift = (i % 4) * 2;
+            uint8_t high2 = (blocks[b].qh[qhIdx] >> qhShift) & 0x03;
+            int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
+            int scaleIdx = i / 16;
+            output[b * 256 + i] = d * (float)blocks[b].scales[scaleIdx] * (float)q;
+        }
+    }
 }
 
 void DequantizeQ2_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    (void)quantized;
-    // CRITICAL: K-quant dequantization is not implemented in the facade.
-    std::memset(output, 0, static_cast<size_t>(num_elements) * sizeof(float));
+    using namespace Deep2;
+    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(quantized);
+    int numBlocks = num_elements / 256;
+    for (int b = 0; b < numBlocks; ++b) {
+        float d    = F16ToF32(blocks[b].d);
+        float dmin = F16ToF32(blocks[b].dmin);
+        for (int chunk = 0; chunk < 2; ++chunk) {
+            for (int subBlock = 0; subBlock < 4; ++subBlock) {
+                for (int group = 0; group < 2; ++group) {
+                    int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                    uint8_t sc = blocks[b].scales[scaleIdx];
+                    float dl = d * (float)(sc & 0x0F);
+                    float ml = dmin * (float)(sc >> 4);
+                    for (int pos = 0; pos < 16; ++pos) {
+                        int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
+                        int qsIdx = chunk * 32 + group * 16 + pos;
+                        int qsShift = subBlock * 2;
+                        int q = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+                        output[b * 256 + i] = dl * (float)q - ml;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void DequantizeQ3_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    (void)quantized;
-    // CRITICAL: K-quant dequantization is not implemented in the facade.
-    std::memset(output, 0, static_cast<size_t>(num_elements) * sizeof(float));
+    using namespace Deep2;
+    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(quantized);
+    int numBlocks = num_elements / 256;
+    for (int b = 0; b < numBlocks; ++b) {
+        float d = F16ToF32(blocks[b].d);
+
+        // Unpack 16 6-bit scale values from scales[0..11] using exact GGML interleaving
+        uint32_t aux[4];
+        memcpy(aux, blocks[b].scales, 12);
+        uint32_t tmp = aux[2];
+        aux[2] = ((aux[0] >> 4) & 0x0F0F0F0F) | (((tmp >> 4) & 0x03030303) << 4);
+        aux[3] = ((aux[1] >> 4) & 0x0F0F0F0F) | (((tmp >> 6) & 0x03030303) << 4);
+        aux[0] = (aux[0] & 0x0F0F0F0F) | (((tmp >> 0) & 0x03030303) << 4);
+        aux[1] = (aux[1] & 0x0F0F0F0F) | (((tmp >> 2) & 0x03030303) << 4);
+        const int8_t* scales = (const int8_t*)aux;
+
+        for (int i = 0; i < 256; ++i) {
+            int chunk    = i / 128;
+            int subBlock = (i % 128) / 32;
+            int posInSub = i % 32;
+            int qsIdx    = chunk * 32 + posInSub;
+            int qsShift  = subBlock * 2;
+            int lo       = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+
+            // hmask: each byte covers 8 elements at the same position across subBlocks
+            int group       = posInSub / 16;       // 0 or 1
+            int l           = posInSub % 16;       // 0..15
+            int hmIdx       = l + group * 16;    // 0..31
+            int hmShift     = subBlock;             // 0..3 (m resets each chunk)
+            int hmaskBit    = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
+
+            int q        = lo - (hmaskBit ? 0 : 4);
+            // Each sub-block has 2 scales (one per 16-element half)
+            int scaleIdx = chunk * 8 + subBlock * 2 + group;
+            float dl     = d * (float)(scales[scaleIdx] - 32);
+            output[b * 256 + i] = dl * (float)q;
+        }
+    }
 }
 
 void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)

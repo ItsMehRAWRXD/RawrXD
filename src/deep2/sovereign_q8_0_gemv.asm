@@ -57,7 +57,8 @@ QuantLoop:
     shl eax, 2
     add rax, rsi
 
-    vfmaddss xmm2, xmm1, dword ptr [rax], dword ptr [rdi + r14*4]
+    vmovss xmm3, dword ptr [rax]
+    vfmaddss xmm2, xmm1, xmm3, dword ptr [rdi + r14*4]
     movss dword ptr [rdi + r14*4], xmm2
 
     inc r15

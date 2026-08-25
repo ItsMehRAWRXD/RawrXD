@@ -1,118 +1,98 @@
 // ============================================================================
-// ToroidalKVCache.hpp — Infinite-Context Ring Buffer (Production Candidate)
-// Two-span API for correct zero-copy attention across wraparound
+// ToroidalKVCache.hpp — Infinite-Context Ring Buffer KV-Cache
+// The tokamak vacuum vessel: tokens circulate forever, no wall strikes
 // ============================================================================
 
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
+#include <cstddef>
 #include <vector>
+#include <memory>
 #include <cstring>
-#include <limits>
+#include <algorithm>
 
 namespace rawrxd {
 
 // ============================================================================
-// PlasmaToken — Metadata for a cached token
+// PlasmaToken — A token with thermal properties (confidence = temperature)
 // ============================================================================
 struct PlasmaToken {
-    uint64_t seq_pos = 0;
-    float    temperature = 0.0f;
-    float    entropy = 0.0f;
-    bool     fused = false;
+    uint32_t token_id = 0;
+    float    temperature = 0.0f;      // confidence = thermal energy
+    float    entropy = 0.0f;            // disorder = plasma turbulence
+    uint64_t seq_pos = 0;               // absolute position in torus
+    bool     fused = false;             // true if this token passed divertor
+    uint32_t beam_injection_count = 0;  // how many neutral beams hit before fusion
 };
 
 // ============================================================================
-// KVCacheSpan — One contiguous physical segment of the logical sequence
-// ============================================================================
-struct KVCacheSpan {
-    const float* keys   = nullptr;   // Pointer to key data
-    const float* values = nullptr;   // Pointer to value data
-    size_t       count  = 0;         // Number of tokens in this span
-    size_t       physical_slot = 0;  // Starting physical slot index
-};
-
-// ============================================================================
-// ToroidalKVCache — Ring-buffer KV storage with explicit logical mapping
-//
-// Physical layout: [max_tokens][layers][num_heads][head_dim]
-// Logical mapping:  physical_slot = seq_pos % max_tokens
-//
-// The cache exposes at most two contiguous spans for any token range,
-// allowing zero-copy attention even across the ring-buffer wrap.
+// ToroidalKVCache — Ring buffer that never allocates after init
+// Tokens circulate through the torus. Old tokens are overwritten, not freed.
+// This eliminates the O(n²) KV-cache decay that kills long-context TPS.
 // ============================================================================
 class ToroidalKVCache {
 public:
-    // Constructor validates all dimensions; throws std::invalid_argument on zero
+    // head_dim: dimension of each attention head (e.g., 128)
+    // num_heads: number of attention heads (e.g., 32)
+    // max_tokens: torus circumference (e.g., 131072 = 128K context)
+    // layers: number of transformer layers
     ToroidalKVCache(size_t head_dim, size_t num_heads, size_t max_tokens, size_t layers);
+    ~ToroidalKVCache() = default;
 
-    // Inject a new token's K/V data for all layers.
-    // Returns false on null input.
+    // Disable copy (the torus is a singular physical object)
+    ToroidalKVCache(const ToroidalKVCache&) = delete;
+    ToroidalKVCache& operator=(const ToroidalKVCache&) = delete;
+
+    // ------------------------------------------------------------------------
+    // Plasma injection: write a new token's K/V into the torus
+    // Overwrites the oldest token if torus is full (infinite context)
+    // ------------------------------------------------------------------------
     bool injectToken(const PlasmaToken& token,
-                     const float* key_data,
-                     const float* value_data);
+                     const float* key_data,   // [num_heads * head_dim]
+                     const float* value_data); // [num_heads * head_dim]
 
-    // Query a logical token range [start_seq, end_seq).
-    // Returns at most two spans covering the logical sequence.
-    // Returns false if the range is empty or outside the cache window.
+    // ------------------------------------------------------------------------
+    // Magnetic field query: retrieve K/V for attention computation
+    // Returns pointers into the torus — no copy, no allocation
+    // ------------------------------------------------------------------------
     bool queryTokenRange(uint64_t start_seq, uint64_t end_seq,
-                         KVCacheSpan& out_span0,
-                         KVCacheSpan& out_span1) const;
+                         const float*& out_keys,
+                         const float*& out_values,
+                         size_t& out_count) const;
 
-    // Mark specific sequence positions as diverted (impurity ejected).
-    // Silently ignores out-of-range positions.
+    // ------------------------------------------------------------------------
+    // Divertor sweep: remove tokens that failed SM0-DSP clash detection
+    // This is not "deletion" — it's magnetic pumping. The slot is marked
+    // as available for re-injection.
+    // ------------------------------------------------------------------------
     bool divertTokens(const uint64_t* seq_positions, size_t count);
 
-    // Plasma diagnostics — iterate logical tokens, not physical slots
-    float plasmaTemperature() const;
-    float plasmaTurbulence() const;
+    // ------------------------------------------------------------------------
+    // Torus state
+    // ------------------------------------------------------------------------
+    size_t tokenCount() const { return token_count_; }
+    size_t maxTokens() const { return max_tokens_; }
+    uint64_t writeHead() const { return write_head_; }
+    bool isFull() const { return token_count_ >= max_tokens_; }
 
-    // O(1) context reset: invalidate all state without zeroing memory
+    // Thermal diagnostics: average temperature of plasma in torus
+    float plasmaTemperature() const;
+    float plasmaTurbulence() const;  // stddev of entropy
+
+    // Magnetic reconnection: shift the torus to align with a new prompt
+    // This is O(1): just reset the write head and token count.
     void magneticReconnection();
 
-    // Total bytes allocated (keys + values + metadata)
+    // ------------------------------------------------------------------------
+    // Memory layout: contiguous block, cache-friendly
+    // keys_  : [max_tokens][layers][num_heads][head_dim] float
+    // values_: [max_tokens][layers][num_heads][head_dim] float
+    // tokens_: [max_tokens] PlasmaToken
+    // ------------------------------------------------------------------------
     size_t memoryBytes() const;
 
-    // Sequence bookkeeping
-    uint64_t oldestSequence() const;
-    uint64_t newestSequence() const;
-    bool     contains(uint64_t seq) const;
-    size_t   physicalSlot(uint64_t seq) const;
-
-    // Cache dimensions
-    size_t headDim()      const { return head_dim_; }
-    size_t numHeads()     const { return num_heads_; }
-    size_t maxTokens()    const { return max_tokens_; }
-    size_t layers()       const { return layers_; }
-    size_t tokenCount()   const { return token_count_; }
-    uint64_t writeHead()  const { return write_head_; }
-
-    // ------------------------------------------------------------------------
-    // Kernel surface expansion — AVX2/AVX-512 batch operations
-    // ------------------------------------------------------------------------
-
-    /// Inject multiple tokens in one call with vectorized memory ops.
-    /// Returns number of tokens successfully injected.
-    size_t injectTokenBatch(const PlasmaToken* tokens,
-                            const float* key_data,
-                            const float* value_data,
-                            size_t count);
-
-    /// Vectorized plasma temperature over a sub-range [start_seq, end_seq).
-    float plasmaTemperatureRange(uint64_t start_seq, uint64_t end_seq) const;
-
-    /// Vectorized plasma turbulence over a sub-range [start_seq, end_seq).
-    float plasmaTurbulenceRange(uint64_t start_seq, uint64_t end_seq) const;
-
 private:
-    // Physical slot access
-    float*       keySlot(size_t slot);
-    float*       valueSlot(size_t slot);
-    const float* keySlot(size_t slot) const;
-    const float* valueSlot(size_t slot) const;
-    size_t       slotIndex(uint64_t seq) const;
-
     size_t head_dim_;
     size_t num_heads_;
     size_t max_tokens_;
@@ -121,12 +101,28 @@ private:
     size_t layer_stride_;   // token_stride_
     size_t slot_stride_;    // layers_ * layer_stride_
 
-    uint64_t write_head_ = 0;
-    size_t   token_count_ = 0;
+    // The torus itself — one contiguous allocation
+    std::vector<float> keys_;     // torus K buffer
+    std::vector<float> values_;   // torus V buffer
+    std::vector<PlasmaToken> tokens_; // metadata ring
 
-    std::vector<float>       keys_;
-    std::vector<float>       values_;
-    std::vector<PlasmaToken> tokens_;
+    uint64_t write_head_ = 0;   // next slot to write (modulo max_tokens)
+    size_t token_count_ = 0;    // how many slots are occupied
+
+    // Internal: get slot index from absolute seq_pos
+    size_t slotIndex(uint64_t seq_pos) const {
+        // seq_pos maps to torus via modulo
+        // But we also support wrap-around: seq_pos may be < write_head_ - max_tokens_
+        if (seq_pos > write_head_) return static_cast<size_t>(seq_pos % max_tokens_);
+        uint64_t offset = write_head_ - token_count_;
+        if (seq_pos < offset) return static_cast<size_t>((seq_pos + max_tokens_) % max_tokens_);
+        return static_cast<size_t>(seq_pos % max_tokens_);
+    }
+
+    float* keySlot(size_t slot) { return keys_.data() + slot * slot_stride_; }
+    float* valueSlot(size_t slot) { return values_.data() + slot * slot_stride_; }
+    const float* keySlot(size_t slot) const { return keys_.data() + slot * slot_stride_; }
+    const float* valueSlot(size_t slot) const { return values_.data() + slot * slot_stride_; }
 };
 
 } // namespace rawrxd

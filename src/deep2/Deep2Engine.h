@@ -9,10 +9,9 @@
 #include "ReverseIntegration.hpp"
 #include "mars/MARSController.hpp"
 #include "ThreadPool.h"
-#include "IKVCacheBackend.hpp"
 #include "KVCache.h"
-#include "Chamber.hpp"
 #include "GGUFLoader.hpp"
+#include "BP16Streamer.hpp"
 #include "Tokenizer.hpp"
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
@@ -26,11 +25,18 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
+#include "ProductionProfiler.hpp"
+// Sovereign Engine components (Dragon Lore)
+#include "Chamber.hpp"
+#include "ToroidalKVCache.hpp"
+#include "PlasmaGovernor.hpp"
+#include "SovereignOutOfCoreRuntime.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 #include <functional>
 #include <filesystem>
+#include <unordered_map>
 
 namespace Deep2 {
 
@@ -48,6 +54,9 @@ struct WeightTensor {
     size_t      numBlocks = 0;        // For quantized types
     size_t      sizeBytes = 0;        // Total bytes
     std::string name;                 // Tensor name from GGUF
+
+    // BP16 / external mapping support
+    bool        mapped    = false;    // true if data is externally owned (do not free)
 };
 
 // ============================================================================
@@ -59,6 +68,7 @@ struct LayerWeights {
     WeightTensor wk;          // [kvDim, hiddenDim]
     WeightTensor wv;          // [kvDim, hiddenDim]
     WeightTensor wo;          // [hiddenDim, hiddenDim]
+    WeightTensor wqkv;        // [hiddenDim + 2*kvDim, hiddenDim] fused QKV (Phi-3, etc.)
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
 
     // MLA (Multi-Latent Attention) — K2 factorized attention
@@ -237,7 +247,10 @@ public:
     
     // Load model from GGUF file
     bool loadModel(const std::string& ggufPath);
-    
+
+    // Load model from BP16 file (exact weight extraction, no dequantization)
+    bool loadModelFromBP16(const std::string& bp16Path);
+
     // Load model weights (legacy API - from memory buffer)
     bool loadWeights(const void* weightData, size_t weightSize);
     
@@ -289,7 +302,35 @@ public:
     // Performance tuning
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);
-    
+
+    // Production profiler (Batch 1)
+    void enableProfiling(bool enable);
+    bool isProfilingEnabled() const { return profilingEnabled_; }
+    const std::vector<TokenProfile>& getProfileHistory() const { return profileHistory_; }
+    bool saveProfileJSON(const std::string& path) const;
+    std::string getProfileJSONSummary() const;
+
+    // Sovereign Engine: Chamber (SM0-DSP) integration
+    void enableChamber(bool enable);
+    bool isChamberEnabled() const { return chamberEnabled_; }
+    rawrxd::ChamberResult evaluateChamber(const float* hidden_state, size_t dim);
+    rawrxd::FormulaRoute routePrimitive(uint64_t context_hash);
+
+    // Sovereign Engine: ToroidalKVCache (infinite context)
+    void enableToroidalKV(bool enable, size_t maxTokens = 131072);
+    bool isToroidalKVEnabled() const { return toroidalKVEnabled_; }
+
+    // Sovereign Engine: PlasmaGovernor (thermal safety)
+    void enablePlasmaGovernor(bool enable);
+    bool isPlasmaGovernorEnabled() const { return plasmaGovernorEnabled_; }
+    void updateThermalState(const rawrxd::ThermalState& state);
+    float currentThrottle() const;
+
+    // Sovereign Engine: OutOfCoreRuntime dual-backend orchestrator
+    void enableSovereignRuntime(bool enable);
+    bool isSovereignRuntimeEnabled() const { return sovereignRuntimeEnabled_; }
+    rawrxd::SovereignOutOfCoreRuntime* getSovereignRuntime() const;
+
     // VAL-000 Phase 3: Advanced feature control
     void enableMedusa(bool enable);
     void enableNUPacking(bool enable);
@@ -395,9 +436,7 @@ public:
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
-    std::unique_ptr<IKVCacheBackend> kvCacheBackend_;
-    std::unique_ptr<KVCache> kvCache;  // Legacy cache (kept for fallback / debugging)
-    std::unique_ptr<rawrxd::Chamber> chamber_;
+    std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
     
     // Real model weights
@@ -444,6 +483,7 @@ private:
     // MARS: Dynamic dual-GPU VRAM orchestration
     std::unique_ptr<MARS::MARSController> marsController_;
     bool marsEnabled_ = false;
+    std::unordered_map<size_t, MARS::VRAMLease*> marsLayerLeases_; // layer -> lease
     
     // GGUF load result (kept for tensor lookup)
     GGUFLoadResult ggufResult;
@@ -457,10 +497,29 @@ private:
     // VAL-051.7: Bounded-window tensor residency manager
     std::unique_ptr<ResidencyManager> residencyManager_;
     bool residencyEnabled_ = false;
-    
+
+    // BP16 streaming support (zero-copy mapped weight access)
+    std::unique_ptr<BP16Streamer> bp16Streamer_;
+    bool bp16Enabled_ = false;
+
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;
-    
+
+    // Production profiler (Batch 1: 1-token decode instrumentation)
+    std::unique_ptr<ProductionProfiler> profiler_;
+    std::vector<TokenProfile> profileHistory_;
+    bool profilingEnabled_ = false;
+
+    // Sovereign Engine components (Dragon Lore)
+    std::unique_ptr<rawrxd::Chamber> chamber_;              // SM0-DSP clash detector
+    std::unique_ptr<rawrxd::ToroidalKVCache> toroidalKV_;    // Infinite-context ring buffer
+    std::unique_ptr<rawrxd::PlasmaGovernor> plasmaGovernor_; // R9700 thermal safety
+    std::unique_ptr<rawrxd::SovereignOutOfCoreRuntime> sovereignRuntime_; // Dual-backend orchestrator
+    bool chamberEnabled_ = false;
+    bool toroidalKVEnabled_ = false;
+    bool plasmaGovernorEnabled_ = false;
+    bool sovereignRuntimeEnabled_ = false;
+
     // Weight tensors (legacy registration system)
     float* weights = nullptr;
     size_t weightSize = 0;

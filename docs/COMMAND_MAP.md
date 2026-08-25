@@ -1,6 +1,6 @@
 # Command Map
 
-Proof baseline: runtime-exit
+Proof baseline: RAWRXD_SMOKE_CHAT
 
 | cmdId | canonical | handler | category | enabled | attempts | proof note |
 |---:|---|---|---|---|---:|---|
@@ -74,10 +74,10 @@ Proof baseline: runtime-exit
 | 3206 | view.transparency40 | handleTrans40 | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3210 | view.transparencySet | handleTransCustom | Transparency | yes | 0 | Registry wired + unified dispatch path |
 | 3211 | view.transparencyToggle | handleTransToggle | Transparency | yes | 0 | Registry wired + unified dispatch path |
-| 4001 | help.about | handleHelpAbout | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4002 | help.cmdref | handleHelpCmdRef | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4003 | help.psdocs | handleHelpPsDocs | Help | yes | 0 | Registry wired + unified dispatch path |
-| 4004 | help.search | handleHelpSearch | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7901 | help.cmdref | handleHelpCmdRef | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7902 | help.psdocs | handleHelpPsDocs | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7903 | help.search | handleHelpSearch | Help | yes | 0 | Registry wired + unified dispatch path |
+| 7904 | help.about | handleHelpAbout | Help | yes | 0 | Registry wired + unified dispatch path |
 | 4005 | terminal.new | handleTerminalNew | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4006 | terminal.kill | handleTerminalKill | Terminal | yes | 0 | Registry wired + unified dispatch path |
 | 4007 | terminal.splitH | handleTerminalSplitH | Terminal | yes | 0 | Registry wired + unified dispatch path |
@@ -90,7 +90,6 @@ Proof baseline: runtime-exit
 | 4103 | agent.viewTools | handleAgentViewTools | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4104 | agent.viewStatus | handleAgentViewStatus | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4105 | agent.stop | handleAgentStop | Agent | yes | 0 | Registry wired + unified dispatch path |
-| 4296 | agent.auditDrive | handleAgentAuditDrive | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4106 | agent.memory | handleAgentMemory | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4107 | agent.memoryView | handleAgentMemoryView | Agent | yes | 0 | Registry wired + unified dispatch path |
 | 4108 | agent.memoryClear | handleAgentMemoryClear | Agent | yes | 0 | Registry wired + unified dispatch path |
@@ -107,6 +106,10 @@ Proof baseline: runtime-exit
 | 4153 | autonomy.goal | handleAutonomyGoal | Autonomy | yes | 0 | Registry wired + unified dispatch path |
 | 4154 | autonomy.status | handleAutonomyStatus | Autonomy | yes | 0 | Registry wired + unified dispatch path |
 | 4155 | autonomy.memory | handleAutonomyMemory | Autonomy | yes | 0 | Registry wired + unified dispatch path |
+| 4164 | planOrchestrator.start | handlePlanOrchestratorStart | PlanOrchestrator | yes | 0 | Registry wired + unified dispatch path |
+| 4165 | planOrchestrator.stop | handlePlanOrchestratorStop | PlanOrchestrator | yes | 0 | Registry wired + unified dispatch path |
+| 4166 | planOrchestrator.status | handlePlanOrchestratorViewStatus | PlanOrchestrator | yes | 0 | Registry wired + unified dispatch path |
+| 4167 | planOrchestrator.viewPlan | handlePlanOrchestratorViewPlan | PlanOrchestrator | yes | 0 | Registry wired + unified dispatch path |
 | 4200 | ai.maxMode | handleAIMaxMode | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 4201 | ai.deepThinking | handleAIDeepThinking | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 4202 | ai.deepResearch | handleAIDeepResearch | AIMode | yes | 0 | Registry wired + unified dispatch path |
@@ -145,34 +148,35 @@ Proof baseline: runtime-exit
 | 5041 | backend.switchGemini | handleBackendSwitchGemini | Backend | yes | 0 | Registry wired + unified dispatch path |
 | 5042 | backend.status | handleBackendShowStatus | Backend | yes | 0 | Registry wired + unified dispatch path |
 | 5043 | backend.switcher | handleBackendShowSwitcher | Backend | yes | 0 | Registry wired + unified dispatch path |
+| 5048 | beacon.halfPulse | handleBeaconHalfPulse | Performance | yes | 0 | Registry wired + unified dispatch path |
+| 5049 | beacon.full | handleBeaconFullBeacon | Performance | yes | 0 | Registry wired + unified dispatch path |
+| 5050 | beacon.status | handleBeaconStatus | Performance | yes | 0 | Registry wired + unified dispatch path |
 | 5044 | backend.configure | handleBackendConfigure | Backend | yes | 0 | Registry wired + unified dispatch path |
 | 5045 | backend.healthCheck | handleBackendHealthCheck | Backend | yes | 0 | Registry wired + unified dispatch path |
 | 5046 | backend.setApiKey | handleBackendSetApiKey | Backend | yes | 0 | Registry wired + unified dispatch path |
 | 5047 | backend.saveConfigs | handleBackendSaveConfigs | Backend | yes | 0 | Registry wired + unified dispatch path |
-| 50600 | beacon.halfPulse | handleBeaconHalfPulse | Performance | yes | 0 | Registry wired + unified dispatch path |
-| 50601 | beacon.full | handleBeaconFullBeacon | Performance | yes | 0 | Registry wired + unified dispatch path |
-| 50602 | beacon.status | handleBeaconStatus | Performance | yes | 0 | Registry wired + unified dispatch path |
-| 5048 | router.enable | handleRouterEnable | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5049 | router.disable | handleRouterDisable | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5050 | router.status | handleRouterStatus | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5051 | router.decision | handleRouterDecision | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5052 | router.setPolicy | handleRouterSetPolicy | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5053 | router.capabilities | handleRouterCapabilities | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5054 | router.fallbacks | handleRouterFallbacks | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5055 | router.saveConfig | handleRouterSaveConfig | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5056 | router.routePrompt | handleRouterRoutePrompt | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5057 | router.resetStats | handleRouterResetStats | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5071 | router.whyBackend | handleRouterWhyBackend | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5072 | router.pinTask | handleRouterPinTask | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5073 | router.unpinTask | handleRouterUnpinTask | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5074 | router.showPins | handleRouterShowPins | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5075 | router.heatmap | handleRouterShowHeatmap | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5076 | router.ensembleEnable | handleRouterEnsembleEnable | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5077 | router.ensembleDisable | handleRouterEnsembleDisable | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5078 | router.ensembleStatus | handleRouterEnsembleStatus | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5079 | router.simulate | handleRouterSimulate | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5080 | router.simulateLast | handleRouterSimulateLast | Router | yes | 0 | Registry wired + unified dispatch path |
-| 5081 | router.costStats | handleRouterShowCostStats | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6101 | router.enable | handleRouterEnable | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6102 | router.disable | handleRouterDisable | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6103 | router.status | handleRouterStatus | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6104 | router.decision | handleRouterDecision | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6105 | router.setPolicy | handleRouterSetPolicy | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6106 | router.capabilities | handleRouterCapabilities | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6107 | router.fallbacks | handleRouterFallbacks | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6108 | router.saveConfig | handleRouterSaveConfig | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6109 | router.routePrompt | handleRouterRoutePrompt | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6110 | router.resetStats | handleRouterResetStats | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6111 | router.whyBackend | handleRouterWhyBackend | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6112 | router.pinTask | handleRouterPinTask | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6113 | router.unpinTask | handleRouterUnpinTask | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6114 | router.showPins | handleRouterShowPins | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6115 | router.heatmap | handleRouterShowHeatmap | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6116 | router.ensembleEnable | handleRouterEnsembleEnable | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6117 | router.ensembleDisable | handleRouterEnsembleDisable | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6118 | router.ensembleStatus | handleRouterEnsembleStatus | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6119 | router.simulate | handleRouterSimulate | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6120 | router.simulateLast | handleRouterSimulateLast | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6121 | router.costStats | handleRouterShowCostStats | Router | yes | 0 | Registry wired + unified dispatch path |
+| 6130 | moe.benchmark | handleRouterStatus | Performance | yes | 0 | Registry wired + unified dispatch path |
 | 5058 | lsp.startAll | handleLspStartAll | LSP | yes | 0 | Registry wired + unified dispatch path |
 | 5059 | lsp.stopAll | handleLspStopAll | LSP | yes | 0 | Registry wired + unified dispatch path |
 | 5060 | lsp.status | handleLspStatus | LSP | yes | 0 | Registry wired + unified dispatch path |
@@ -353,16 +357,6 @@ Proof baseline: runtime-exit
 | 9506 | audit.quickStats | handleAuditQuickStats | Audit | yes | 0 | Registry wired + unified dispatch path |
 | 9600 | gauntlet.run | handleGauntletRun | Gauntlet | yes | 0 | Registry wired + unified dispatch path |
 | 9601 | gauntlet.export | handleGauntletExport | Gauntlet | yes | 0 | Registry wired + unified dispatch path |
-| 9700 | voice.record | handleVoiceRecord | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9701 | voice.ptt | handleVoicePTT | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9702 | voice.speak | handleVoiceSpeak | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9703 | voice.joinRoom | handleVoiceJoinRoom | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9704 | voice.devices | handleVoiceDevices | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9705 | voice.metrics | handleVoiceMetrics | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9706 | voice.togglePanel | handleVoiceStatus | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9707 | voice.modePtt | handleVoiceMode | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9708 | voice.modeContinuous | handleVoiceModeContinuous | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 9709 | voice.modeDisabled | handleVoiceModeDisabled | Voice | yes | 0 | Registry wired + unified dispatch path |
 | 9800 | qw.shortcutEditor | handleQwShortcutEditor | QW | yes | 0 | Registry wired + unified dispatch path |
 | 9801 | qw.shortcutReset | handleQwShortcutReset | QW | yes | 0 | Registry wired + unified dispatch path |
 | 9810 | qw.backupCreate | handleQwBackupCreate | QW | yes | 0 | Registry wired + unified dispatch path |
@@ -414,8 +408,6 @@ Proof baseline: runtime-exit
 | 0 | cli.aiEngine | handleAIEngineSelect | CLI | yes | 0 | Registry wired + unified dispatch path |
 | 0 | cli.autonomyRate | handleAutonomyRate | CLI | yes | 0 | Registry wired + unified dispatch path |
 | 0 | cli.autonomyRun | handleAutonomyRun | CLI | yes | 0 | Registry wired + unified dispatch path |
-| 0 | cli.voiceInit | handleVoiceInit | CLI | yes | 0 | Registry wired + unified dispatch path |
-| 0 | cli.voiceTranscribe | handleVoiceTranscribe | CLI | yes | 0 | Registry wired + unified dispatch path |
 | 0 | cli.serverStart | handleServerStart | CLI | yes | 0 | Registry wired + unified dispatch path |
 | 0 | cli.serverStop | handleServerStop | CLI | yes | 0 | Registry wired + unified dispatch path |
 | 0 | cli.serverStatus | handleServerStatus | CLI | yes | 0 | Registry wired + unified dispatch path |
@@ -450,13 +442,13 @@ Proof baseline: runtime-exit
 | 407 | ai.fixErrors | handleAIFixErrors | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 408 | ai.optimizeCode | handleAIOptimizeCode | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 409 | ai.modelSelect | handleAIModelSelect | AIMode | yes | 0 | Registry wired + unified dispatch path |
-| 410 | ai.stopGeneration | handleAIStopGeneration | AIMode | yes | 0 | Registry wired + unified dispatch path |
 | 501 | tools.commandPalette | handleToolsCommandPalette | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 502 | tools.settings | handleToolsSettings | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 503 | tools.extensions | handleToolsExtensions | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 504 | tools.terminal | handleToolsTerminal | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 505 | tools.build | handleToolsBuild | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 506 | tools.debug | handleToolsDebug | Tools | yes | 0 | Registry wired + unified dispatch path |
+| 507 | tools.killBuildLocks | handleToolsKillBuildLocks | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 601 | help.docs | handleHelpDocs | Help | yes | 0 | Registry wired + unified dispatch path |
 | 603 | help.shortcuts | handleHelpShortcuts | Help | yes | 0 | Registry wired + unified dispatch path |
 | 8001 | decomp.renameVar | handleDecompRenameVar | ReverseEng | yes | 0 | Registry wired + unified dispatch path |
@@ -475,13 +467,6 @@ Proof baseline: runtime-exit
 | 10007 | vscext.loadNative | handleVscExtLoadNative | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10008 | vscext.deactivateAll | handleVscExtDeactivateAll | Plugin | yes | 0 | Registry wired + unified dispatch path |
 | 10009 | vscext.exportConfig | handleVscExtExportConfig | Plugin | yes | 0 | Registry wired + unified dispatch path |
-| 10200 | voice.autoToggle | handleVoiceAutoToggle | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10201 | voice.autoSettings | handleVoiceAutoSettings | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10202 | voice.autoNextVoice | handleVoiceAutoNextVoice | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10203 | voice.autoPrevVoice | handleVoiceAutoPrevVoice | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10204 | voice.autoRateUp | handleVoiceAutoRateUp | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10205 | voice.autoRateDown | handleVoiceAutoRateDown | Voice | yes | 0 | Registry wired + unified dispatch path |
-| 10206 | voice.autoStop | handleVoiceAutoStop | Voice | yes | 0 | Registry wired + unified dispatch path |
 | 10619 | unreal.init | handleUnrealInit | GameEngine | yes | 0 | Registry wired + unified dispatch path |
 | 10620 | unreal.attach | handleUnrealAttach | GameEngine | yes | 0 | Registry wired + unified dispatch path |
 | 10621 | unity.init | handleUnityInit | GameEngine | yes | 0 | Registry wired + unified dispatch path |

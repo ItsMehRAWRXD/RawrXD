@@ -5,6 +5,9 @@
 
 OPTION CASEMAP:NONE
 
+.DATA
+    ScaleFactor REAL4 448.0
+
 .CODE
 
 Deep2_FP8_GEMV PROC FRAME
@@ -38,7 +41,10 @@ ColLoop:
     jae StoreResult
 
     ; Load FP8 weight (int8), convert to FP32
-    movsx ecx, byte ptr [rbx + r14 * r13 + r15]
+    mov r11d, r14d
+    imul r11d, r13d
+    add r11d, r15d
+    movsx ecx, byte ptr [rbx + r11]
     vcvtsi2ss xmm1, xmm1, ecx
 
     ; FP8 scale factor (E4M3: max 448)
@@ -68,10 +74,6 @@ Done:
     pop rsi
     pop rbx
     ret
-
-    .data
-ScaleFactor dd 0.002232143f  ; 1/448
-    .code
 
 Deep2_FP8_GEMV ENDP
 

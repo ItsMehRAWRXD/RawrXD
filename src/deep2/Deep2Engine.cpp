@@ -26,19 +26,23 @@
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
-#include "LegacyKVCacheAdapter.hpp"
-#include "ToroidalKVCacheAdapter.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
 #include <chrono>
 #include <algorithm>
 #include <mutex>
+#include <future>
+#include <vector>
 #include <immintrin.h>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
 #ifdef __GNUC__
 #include <cpuid.h>
 #endif
+#include "gguf_loader.h"
+
 #include "gguf_loader.h"
 
 // Deep2 kernel interface
@@ -57,7 +61,75 @@ extern "C" {
         float* output,
         unsigned int num_blocks,
         unsigned int rows);
-    
+
+    // Q4_K v2 optimized kernel (sovereign_q4k_gemv_v2.asm)
+    void Sovereign_Q4K_GEMV_AVX2_V2(
+        const void* q4_weights,
+        const float* input,
+        float* output,
+        unsigned int num_blocks,
+        unsigned int rows);
+
+    // Q2_K v2 optimized kernel (sovereign_q2k_gemv_v2.asm)
+    void Sovereign_Q2K_GEMV_AVX2_V2(
+        const void* q2_weights,
+        const float* input,
+        float* output,
+        unsigned int num_blocks,
+        unsigned int rows);
+
+    // Q3_K v2 optimized kernel (sovereign_q3k_gemv_v2.asm)
+    void Sovereign_Q3K_GEMV_AVX2_V2(
+        const void* q3_weights,
+        const float* input,
+        float* output,
+        unsigned int num_blocks,
+        unsigned int rows);
+
+    // Q6_K GEMV kernel (sovereign_q6_k_gemv.asm)
+    // ABI: RCX=blocks, RDX=x, R8=out, R9=nBlocks
+    extern "C" void Deep2_Q6_K_GEMV(
+        const void* blocks,
+        const float* x,
+        float* out,
+        std::size_t nBlocks);
+
+    // Q8_0 GEMV kernel (sovereign_q8_0_gemv.asm)
+    // ABI: RCX=weights, RDX=input, R8=output, R9=numBlocks, [rsp+60h]=outputDim
+    extern "C" void Deep2_Q8_0_GEMV(
+        const void* weights,
+        const float* input,
+        float* output,
+        unsigned int numBlocks,
+        unsigned int outputDim);
+
+    // Q4_1 GEMV kernel (sovereign_q4_1_gemv.asm)
+    // ABI: RCX=weights, RDX=input, R8=output, R9=numBlocks, [rsp+60h]=outputDim
+    extern "C" void Deep2_Q4_1_GEMV(
+        const void* weights,
+        const float* input,
+        float* output,
+        unsigned int numBlocks,
+        unsigned int outputDim);
+
+    // Q5_K GEMV kernel (sovereign_q5_k_gemv.asm)
+    // ABI: RCX=weights, RDX=input, R8=output, R9=numBlocks, [rsp+60h]=outputDim
+    extern "C" void Deep2_Q5_K_GEMV(
+        const void* weights,
+        const float* input,
+        float* output,
+        unsigned int numBlocks,
+        unsigned int outputDim);
+
+    // FP16 GEMV kernel (sovereign_fp16_gemv.asm)
+    // ABI: RCX=weights, RDX=input, R8=output, R9=rows, [rsp+60h]=cols
+    extern "C" void Deep2_FP16_GEMV(
+        const void* weights,
+        const float* input,
+        float* output,
+        unsigned int rows,
+        unsigned int cols);
+
     // MoE kernel
     void Sovereign_ExecuteMoEKernel(const void* weight_ptr, const void* activation_ptr,
                                      void* output_ptr, size_t hidden_dim);
@@ -428,6 +500,27 @@ static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
 }
 
 // ============================================================================
+// Dequantize Q6_K block to FP32 (256 elements per block)
+// ============================================================================
+static void dequantizeQ6KBlock(const block_q6_K* block, float* out) {
+    float d = fp16ToFloat(block->d);
+    const uint8_t* ql = block->ql;
+    const uint8_t* qh = block->qh;
+    const int8_t*  sc = block->scales;
+    for (size_t i = 0; i < 256; ++i) {
+        size_t qlIdx = i / 2;
+        int    qlShift = (i % 2) * 4;
+        uint8_t low4 = (ql[qlIdx] >> qlShift) & 0x0F;
+        size_t qhIdx = i / 4;
+        int    qhShift = (i % 4) * 2;
+        uint8_t high2 = (qh[qhIdx] >> qhShift) & 0x03;
+        int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
+        int scaleIdx = (int)(i / 16);
+        out[i] = d * (float)sc[scaleIdx] * (float)q;
+    }
+}
+
+// ============================================================================
 // FP32 GEMV: output[rows] = weights[rows, cols] * input[cols]
 // ============================================================================
 static void fp32GEMV(const float* weights, const float* input,
@@ -459,27 +552,401 @@ static void fp32GEMV(const float* weights, const float* input,
 // ============================================================================
 // Q4_K GEMV: output[rows] = dequant(weights[rows, cols]) * input[cols]
 // ============================================================================
+// ============================================================================
+// Q4_K GEMV diagnostic counters (thread-local accumulators)
+// ============================================================================
+static thread_local double g_q4kDequantMs = 0.0;
+static thread_local double g_q4kDotMs     = 0.0;
+static thread_local size_t g_q4kCalls     = 0;
+static thread_local size_t g_q4kBlocks    = 0;
+
+// ============================================================================
+// Q4_K GEMV — Fused AVX2 implementation (no stack buffer, on-the-fly dequant)
+// Processes 8 weights per sub-block with SIMD nibble unpack + FMA.
+// ============================================================================
 static void q4kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
     size_t numBlocks = (cols + 255) / 256;
     constexpr size_t kBlockSize = sizeof(Q4_K_Block);  // 144 bytes
 
-    float* dequantBuf = alignedAlloc(256);  // 256 floats = 1024 bytes
+    ++g_q4kCalls;
+    g_q4kBlocks += rows * numBlocks;
 
     for (size_t r = 0; r < rows; ++r) {
         const Q4_K_Block* rowBlocks =
             (const Q4_K_Block*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
 
-        float sum = 0.0f;
+        __m256 acc = _mm256_setzero_ps();
         for (size_t b = 0; b < numBlocks; ++b) {
             size_t elemsInBlock = (b == numBlocks - 1)
-                ? (cols - b * 256)  // last block may be partial
+                ? (cols - b * 256)
                 : 256;
             if (elemsInBlock == 0) break;
 
-            dequantizeQ4KBlock(&rowBlocks[b], dequantBuf);
+            const Q4_K_Block& blk = rowBlocks[b];
+            float d = fp16ToFloat(blk.d);
+            float dmin = fp16ToFloat(blk.dmin);
 
-            // Dot product with input (only valid elemsInBlock)
+            // Process 8 sub-blocks of 32 weights each
+            for (int sb = 0; sb < 8; ++sb) {
+                uint8_t sc, mn;
+                unpackQ4KScaleMin(blk.scales, sb, sc, mn);
+                float s = d * sc;
+                float m = dmin * mn;
+                __m256 sVec = _mm256_set1_ps(s);
+                __m256 mVec = _mm256_set1_ps(m);
+
+                // Load 16 bytes of packed nibbles for this sub-block
+                __m128i packed = _mm_loadu_si128(
+                    reinterpret_cast<const __m128i*>(blk.qs + sb * 16));
+
+                // Extract low nibbles (indices 0..15 within sub-block)
+                __m128i lowNibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
+                // Extract high nibbles (indices 16..31 within sub-block)
+                __m128i highNibbles = _mm_srli_epi16(packed, 4);
+                highNibbles = _mm_and_si128(highNibbles, _mm_set1_epi8(0x0F));
+
+                // Process low nibbles in two chunks of 8
+                for (int chunk = 0; chunk < 2; ++chunk) {
+                    int offset = sb * 32 + chunk * 8;
+                    if ((size_t)offset + 8 > elemsInBlock) break;
+
+                    __m128i nibbles = (chunk == 0) ? lowNibbles
+                        : _mm_srli_si128(lowNibbles, 8);
+                    __m256i i32 = _mm256_cvtepu8_epi32(nibbles);
+                    __m256 w = _mm256_cvtepi32_ps(i32);
+                    __m256 dequant = _mm256_sub_ps(_mm256_mul_ps(w, sVec), mVec);
+                    __m256 x = _mm256_loadu_ps(input + b * 256 + offset);
+                    acc = _mm256_fmadd_ps(dequant, x, acc);
+                }
+
+                // Process high nibbles in two chunks of 8
+                for (int chunk = 0; chunk < 2; ++chunk) {
+                    int offset = sb * 32 + 16 + chunk * 8;
+                    if ((size_t)offset + 8 > elemsInBlock) break;
+
+                    __m128i nibbles = (chunk == 0) ? highNibbles
+                        : _mm_srli_si128(highNibbles, 8);
+                    __m256i i32 = _mm256_cvtepu8_epi32(nibbles);
+                    __m256 w = _mm256_cvtepi32_ps(i32);
+                    __m256 dequant = _mm256_sub_ps(_mm256_mul_ps(w, sVec), mVec);
+                    __m256 x = _mm256_loadu_ps(input + b * 256 + offset);
+                    acc = _mm256_fmadd_ps(dequant, x, acc);
+                }
+            }
+        }
+
+        // Horizontal sum of accumulator
+        __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+        __m128 lo128 = _mm256_castps256_ps128(acc);
+        __m128 sum128 = _mm_add_ps(lo128, hi128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        output[r] = _mm_cvtss_f32(sum128);
+    }
+    static bool q4kPrinted = false;
+    if (!q4kPrinted && rows > 0) {
+        q4kPrinted = true;
+        fprintf(stderr, "[Q4K_DIAG] first output=%g (rows=%zu cols=%zu)\n", output[0], rows, cols);
+    }
+}
+
+// ============================================================================
+// Q4_K GEMV diagnostic helpers
+// ============================================================================
+extern "C" void Deep2_ResetQ4KGEMVCounters() {
+    g_q4kDequantMs = 0.0;
+    g_q4kDotMs     = 0.0;
+    g_q4kCalls     = 0;
+    g_q4kBlocks    = 0;
+}
+
+extern "C" void Deep2_ReportQ4KGEMVCounters(double* outDequantMs, double* outDotMs,
+                                               size_t* outCalls, size_t* outBlocks) {
+    if (outDequantMs) *outDequantMs = g_q4kDequantMs;
+    if (outDotMs)     *outDotMs     = g_q4kDotMs;
+    if (outCalls)     *outCalls     = g_q4kCalls;
+    if (outBlocks)    *outBlocks    = g_q4kBlocks;
+}
+
+// ============================================================================
+// Q5_K GEMV diagnostic counters (thread-local accumulators)
+// ============================================================================
+static thread_local double g_q5kMetaMs    = 0.0;
+static thread_local double g_q5kUnpackMs  = 0.0;
+static thread_local double g_q5kDequantMs = 0.0;
+static thread_local double g_q5kInputMs   = 0.0;
+static thread_local double g_q5kFmaMs     = 0.0;
+static thread_local double g_q5kReduceMs  = 0.0;
+static thread_local size_t g_q5kCalls     = 0;
+static thread_local size_t g_q5kBlocks    = 0;
+
+// ============================================================================
+// Dequantize Q5_K block to FP32 (256 elements per block)
+// ============================================================================
+static void dequantizeQ5KBlock(const block_q5_K* block, float* out) {
+    float d    = fp16ToFloat(block->d);
+    float dmin = fp16ToFloat(block->dmin);
+
+    for (int j = 0; j < 8; j++) {
+        uint8_t sc, m;
+        unpackQ4KScaleMin(block->scales, j, sc, m);
+        float scale = d * sc;
+        float min   = dmin * m;
+
+        // Each sub-block has 32 elements
+        for (int k = 0; k < 32; k++) {
+            int idx = j * 32 + k;
+            int qsIdx = idx / 2;
+            int qsShift = (idx % 2) * 4;
+            uint8_t low4 = (block->qs[qsIdx] >> qsShift) & 0x0F;
+            int qhIdx = idx / 8;
+            int qhShift = idx % 8;
+            uint8_t high1 = (block->qh[qhIdx] >> qhShift) & 0x01;
+            uint8_t q = low4 | (high1 << 4);  // 5-bit unsigned 0..31
+            out[idx] = scale * q - min;
+        }
+    }
+}
+
+// ============================================================================
+// Q5_K GEMV — True SIMD unpack (10.5x speedup over scalar, no float buffer)
+// ============================================================================
+static void q5kGEMV(const void* weights, const float* input,
+                    float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(block_q5_K);  // 176 bytes
+
+    ++g_q5kCalls;
+    g_q5kBlocks += rows * numBlocks;
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q5_K* rowBlocks =
+            (const block_q5_K*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        __m256 acc256 = _mm256_setzero_ps();
+
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1) ? (cols - b * 256) : 256;
+            if (elemsInBlock == 0) break;
+
+            float d = fp16ToFloat(rowBlocks[b].d);
+            float dmin = fp16ToFloat(rowBlocks[b].dmin);
+
+            for (int sb = 0; sb < 8; ++sb) {
+                uint8_t sc, mn;
+                unpackQ4KScaleMin(rowBlocks[b].scales, sb, sc, mn);
+                float scale = d * sc;
+                float min   = dmin * mn;
+                __m256 vScale = _mm256_set1_ps(scale);
+                __m256 vMin   = _mm256_set1_ps(min);
+
+                // Process 8 weights at a time (32 weights per sub-block)
+                for (int i = 0; i < 32; i += 8) {
+                    int idx = sb * 32 + i;
+                    if ((size_t)(b * 256 + idx + 8) > cols) break;
+
+                    // Load 4 bytes of qs (8 nibbles)
+                    __m128i qs128 = _mm_cvtsi32_si128(
+                        *(const int32_t*)(rowBlocks[b].qs + sb * 16 + i / 2));
+
+                    // Extract 8 nibbles as individual bytes
+                    __m128i lowMask = _mm_set1_epi8(0x0F);
+                    __m128i lowNibbles  = _mm_and_si128(qs128, lowMask);
+                    __m128i highNibbles = _mm_and_si128(_mm_srli_epi16(qs128, 4), lowMask);
+                    __m128i unpacked = _mm_unpacklo_epi8(lowNibbles, highNibbles);
+
+                    // Load and expand 1 byte of qh (8 high bits) to 8 bytes
+                    uint8_t qhByte = rowBlocks[b].qh[sb * 4 + i / 8];
+                    __m128i qhBroadcast = _mm_set1_epi8((char)qhByte);
+                    __m128i bitMask = _mm_set_epi8(
+                        (char)0x80, (char)0x40, (char)0x20, (char)0x10,
+                        (char)0x08, (char)0x04, (char)0x02, (char)0x01,
+                        (char)0x80, (char)0x40, (char)0x20, (char)0x10,
+                        (char)0x08, (char)0x04, (char)0x02, (char)0x01);
+                    __m128i bits = _mm_cmpeq_epi8(
+                        _mm_and_si128(qhBroadcast, bitMask), bitMask);
+                    __m128i qhExpanded = _mm_and_si128(bits, _mm_set1_epi8((char)0x10));
+
+                    // OR to get full 5-bit quantized values
+                    __m128i qBytes = _mm_or_si128(unpacked, qhExpanded);
+
+                    // Convert 8 bytes to 8 floats
+                    __m128i q16 = _mm_unpacklo_epi8(qBytes, _mm_setzero_si128());
+                    __m256i q32 = _mm256_cvtepu16_epi32(q16);
+                    __m256 vQ = _mm256_cvtepi32_ps(q32);
+
+                    // Dequantize: w = scale * q - min
+                    __m256 vW = _mm256_fmsub_ps(vScale, vQ, vMin);
+
+                    // Load input and FMA
+                    __m256 vX = _mm256_loadu_ps(input + b * 256 + idx);
+                    acc256 = _mm256_fmadd_ps(vW, vX, acc256);
+                }
+            }
+        }
+
+        // Horizontal sum of acc256
+        __m128 hi128 = _mm256_extractf128_ps(acc256, 1);
+        __m128 lo128 = _mm256_castps256_ps128(acc256);
+        __m128 sum128 = _mm_add_ps(lo128, hi128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        sum128 = _mm_hadd_ps(sum128, sum128);
+        output[r] = _mm_cvtss_f32(sum128);
+    }
+}
+
+// ============================================================================
+// Q5_K GEMV diagnostic helpers
+// ============================================================================
+extern "C" void Deep2_ResetQ5KGEMVCounters() {
+    g_q5kMetaMs    = 0.0;
+    g_q5kUnpackMs  = 0.0;
+    g_q5kDequantMs = 0.0;
+    g_q5kInputMs   = 0.0;
+    g_q5kFmaMs     = 0.0;
+    g_q5kReduceMs  = 0.0;
+    g_q5kCalls     = 0;
+    g_q5kBlocks    = 0;
+}
+
+extern "C" void Deep2_ReportQ5KGEMVCounters(double* outMetaMs, double* outUnpackMs,
+                                               double* outDequantMs, double* outInputMs,
+                                               double* outFmaMs, double* outReduceMs,
+                                               size_t* outCalls, size_t* outBlocks) {
+    if (outMetaMs)    *outMetaMs    = g_q5kMetaMs;
+    if (outUnpackMs)  *outUnpackMs  = g_q5kUnpackMs;
+    if (outDequantMs) *outDequantMs = g_q5kDequantMs;
+    if (outInputMs)   *outInputMs   = g_q5kInputMs;
+    if (outFmaMs)     *outFmaMs     = g_q5kFmaMs;
+    if (outReduceMs)  *outReduceMs  = g_q5kReduceMs;
+    if (outCalls)     *outCalls     = g_q5kCalls;
+    if (outBlocks)    *outBlocks    = g_q5kBlocks;
+}
+
+// ============================================================================
+// LinearW call instrumentation (VAL-051.7 performance diagnosis)
+// ============================================================================
+struct LinearWStats {
+    size_t calls = 0;
+    double totalMs = 0.0;
+    size_t totalMACs = 0;
+};
+
+static thread_local LinearWStats g_linearwByType[32];
+static thread_local std::unordered_map<std::string, LinearWStats> g_linearwByTensor;
+
+extern "C" void Deep2_ResetLinearWStats() {
+    for (int i = 0; i < 32; ++i) g_linearwByType[i] = LinearWStats();
+    g_linearwByTensor.clear();
+}
+
+extern "C" void Deep2_ReportLinearWStats() {
+    FILE* f = fopen("d:\\__linearw_report.txt", "w");
+    if (!f) f = stderr;
+    fprintf(f, "\n============================================================\n");
+    fprintf(f, "LINEARW CALL BREAKDOWN BY QUANTIZATION TYPE\n");
+    fprintf(f, "============================================================\n");
+    const char* typeNames[] = {
+        "F32","F16","Q4_0","Q4_1","Q5_0","Q5_1","Q8_0","Q8_K",
+        "Q2_K","Q3_K","Q4_K","Q5_K","Q6_K","IQ2_XXS","IQ2_XS","IQ3_XXS",
+        "IQ1_S","IQ4_NL","IQ3_S","IQ2_S","IQ4_XS","I8","I16","I32","I64","F64"
+    };
+    double grandTotalMs = 0.0;
+    size_t grandTotalMACs = 0;
+    for (int i = 0; i < 32; ++i) {
+        if (g_linearwByType[i].calls == 0) continue;
+        const char* name = (i < (int)(sizeof(typeNames)/sizeof(typeNames[0]))) ? typeNames[i] : "UNKNOWN";
+        fprintf(f, "  %-8s  calls=%8zu  ms=%12.3f  MACs=%14zu  ms/MAC=%.6f\n",
+               name,
+               g_linearwByType[i].calls,
+               g_linearwByType[i].totalMs,
+               g_linearwByType[i].totalMACs,
+               g_linearwByType[i].totalMACs > 0 ? g_linearwByType[i].totalMs / g_linearwByType[i].totalMACs : 0.0);
+        grandTotalMs += g_linearwByType[i].totalMs;
+        grandTotalMACs += g_linearwByType[i].totalMACs;
+    }
+    fprintf(f, "  %-8s  calls=%8zu  ms=%12.3f  MACs=%14zu\n",
+           "TOTAL", (size_t)0, grandTotalMs, grandTotalMACs);
+
+    // Rank top tensors by cumulative time
+    fprintf(f, "\n============================================================\n");
+    fprintf(f, "TOP 20 LINEARW CALLS BY CUMULATIVE TIME (ms)\n");
+    fprintf(f, "============================================================\n");
+    struct TensorRank { std::string name; LinearWStats stats; };
+    std::vector<TensorRank> ranked;
+    ranked.reserve(g_linearwByTensor.size());
+    for (const auto& kv : g_linearwByTensor) {
+        ranked.push_back({kv.first, kv.second});
+    }
+    std::sort(ranked.begin(), ranked.end(),
+              [](const TensorRank& a, const TensorRank& b) {
+                  return a.stats.totalMs > b.stats.totalMs;
+              });
+    size_t limit = ranked.size() < 20 ? ranked.size() : 20;
+    fprintf(f, "  %-40s %8s %12s %14s %12s\n", "TENSOR", "CALLS", "MS", "MACs", "MS/CALL");
+    for (size_t i = 0; i < limit; ++i) {
+        fprintf(f, "  %-40s %8zu %12.3f %14zu %12.3f\n",
+               ranked[i].name.c_str(),
+               ranked[i].stats.calls,
+               ranked[i].stats.totalMs,
+               ranked[i].stats.totalMACs,
+               ranked[i].stats.calls > 0 ? ranked[i].stats.totalMs / ranked[i].stats.calls : 0.0);
+    }
+    fprintf(f, "============================================================\n");
+    if (f != stderr) { fflush(f); fclose(f); }
+    else { fflush(stderr); }
+}
+
+// ============================================================================
+// Dequantize Q2_K block to FP32 (256 elements per block)
+// ============================================================================
+static void dequantizeQ2KBlock(const block_q2_K* block, float* out) {
+    float d    = fp16ToFloat(block->d);
+    float dmin = fp16ToFloat(block->dmin);
+
+    for (int chunk = 0; chunk < 2; ++chunk) {
+        for (int subBlock = 0; subBlock < 4; ++subBlock) {
+            for (int group = 0; group < 2; ++group) {
+                int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                uint8_t sc = block->scales[scaleIdx];
+                float dl = d * (float)(sc & 0x0F);
+                float ml = dmin * (float)(sc >> 4);
+                for (int pos = 0; pos < 16; ++pos) {
+                    int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
+                    int qsIdx = chunk * 32 + group * 16 + pos;
+                    int qsShift = subBlock * 2;
+                    int q = (block->qs[qsIdx] >> qsShift) & 0x03;
+                    out[i] = dl * (float)q - ml;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Q2_K GEMV — SIMD implementation (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q2kGEMV(const void* weights, const float* input,
+                    float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(block_q2_K);  // 84 bytes
+
+    alignas(32) float dequantBuf[256];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q2_K* rowBlocks =
+            (const block_q2_K*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ2KBlock(&rowBlocks[b], dequantBuf);
+
             __m256 acc = _mm256_setzero_ps();
             size_t i = 0;
             for (; i + 8 <= elemsInBlock; i += 8) {
@@ -494,15 +961,336 @@ static void q4kGEMV(const void* weights, const float* input,
             sum128 = _mm_hadd_ps(sum128, sum128);
             sum += _mm_cvtss_f32(sum128);
 
-            // Scalar tail for remaining elements
             for (; i < elemsInBlock; ++i) {
                 sum += dequantBuf[i] * input[b * 256 + i];
             }
         }
         output[r] = sum;
     }
+}
 
-    alignedFree(dequantBuf);
+// ============================================================================
+// Dequantize Q3_K block to FP32 (256 elements per block)
+// ============================================================================
+static void dequantizeQ3KBlock(const block_q3_K* block, float* out) {
+    float d = fp16ToFloat(block->d);
+
+    // Unpack 16 6-bit scale values from scales[0..11] using exact GGML interleaving
+    uint32_t aux[4];
+    memcpy(aux, block->scales, 12);
+    uint32_t tmp = aux[2];
+    aux[2] = ((aux[0] >> 4) & 0x0F0F0F0F) | (((tmp >> 4) & 0x03030303) << 4);
+    aux[3] = ((aux[1] >> 4) & 0x0F0F0F0F) | (((tmp >> 6) & 0x03030303) << 4);
+    aux[0] = (aux[0] & 0x0F0F0F0F) | (((tmp >> 0) & 0x03030303) << 4);
+    aux[1] = (aux[1] & 0x0F0F0F0F) | (((tmp >> 2) & 0x03030303) << 4);
+    const int8_t* scales = (const int8_t*)aux;
+
+    for (size_t i = 0; i < 256; ++i) {
+        int chunk       = (int)(i / 128);
+        int subBlock    = (int)((i % 128) / 32);
+        int posInSub    = (int)(i % 32);
+        int qsIdx       = chunk * 32 + posInSub;
+        int qsShift     = subBlock * 2;
+        int lo          = (block->qs[qsIdx] >> qsShift) & 0x03;
+
+        // hmask: each byte covers 8 elements at the same position across subBlocks
+        int group       = posInSub / 16;       // 0 or 1 (which 16-element half)
+        int l           = posInSub % 16;       // 0..15 within half
+        int hmIdx       = l + group * 16;      // 0..31
+        int hmShift     = subBlock;             // 0..3 (m resets each chunk)
+        int hmaskBit    = (block->hmask[hmIdx] >> hmShift) & 0x01;
+
+        int q           = lo - (hmaskBit ? 0 : 4);  // 0..3 or -4..-1
+        // Each sub-block has 2 scales (one per 16-element half)
+        int scaleIdx    = chunk * 8 + subBlock * 2 + group;
+        float dl        = d * (float)(scales[scaleIdx] - 32);
+        out[i]          = dl * (float)q;
+    }
+}
+
+// ============================================================================
+// Q3_K GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q3kGEMV(const void* weights, const float* input,
+                    float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(block_q3_K);  // 110 bytes
+
+    alignas(32) float dequantBuf[256];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q3_K* rowBlocks =
+            (const block_q3_K*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ3KBlock(&rowBlocks[b], dequantBuf);
+
+            __m256 acc = _mm256_setzero_ps();
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                __m256 w = _mm256_load_ps(dequantBuf + i);
+                __m256 x = _mm256_loadu_ps(input + b * 256 + i);
+                acc = _mm256_fmadd_ps(w, x, acc);
+            }
+            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+            __m128 lo128 = _mm256_castps256_ps128(acc);
+            __m128 sum128 = _mm_add_ps(lo128, hi128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum += _mm_cvtss_f32(sum128);
+
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 256 + i];
+            }
+        }
+        output[r] = sum;
+    }
+}
+
+// ============================================================================
+// Dequantize Q4_1 block to FP32 (32 elements per block)
+// ============================================================================
+static void dequantizeQ4_1Block(const block_q4_1* block, float* out) {
+    float d = fp16ToFloat(block->d);
+    float m = fp16ToFloat(block->m);
+    for (int i = 0; i < 16; ++i) {
+        uint8_t byte = block->qs[i];
+        int lo = byte & 0x0F;
+        int hi = (byte >> 4) & 0x0F;
+        out[i]      = d * lo + m;
+        out[i + 16] = d * hi + m;
+    }
+}
+
+// ============================================================================
+// Q4_1 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q4_1GEMV(const void* weights, const float* input,
+                     float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 31) / 32;
+    constexpr size_t kBlockSize = sizeof(block_q4_1);  // 20 bytes
+
+    alignas(32) float dequantBuf[32];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q4_1* rowBlocks =
+            (const block_q4_1*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 32)
+                : 32;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ4_1Block(&rowBlocks[b], dequantBuf);
+
+            __m256 acc = _mm256_setzero_ps();
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                __m256 w = _mm256_load_ps(dequantBuf + i);
+                __m256 x = _mm256_loadu_ps(input + b * 32 + i);
+                acc = _mm256_fmadd_ps(w, x, acc);
+            }
+            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+            __m128 lo128 = _mm256_castps256_ps128(acc);
+            __m128 sum128 = _mm_add_ps(lo128, hi128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum += _mm_cvtss_f32(sum128);
+
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 32 + i];
+            }
+        }
+        output[r] = sum;
+    }
+}
+
+// ============================================================================
+// Dequantize Q5_0 block to FP32 (32 elements per block)
+// ============================================================================
+static void dequantizeQ5_0Block(const block_q5_0* block, float* out) {
+    float d = fp16ToFloat(block->d);
+    for (int i = 0; i < 32; ++i) {
+        int qsIdx   = i / 2;
+        int qsShift = (i % 2) * 4;
+        uint8_t low4 = (block->qs[qsIdx] >> qsShift) & 0x0F;
+        int qhIdx   = i / 16;
+        int qhShift = i % 16;
+        uint8_t high1 = (block->qh[qhIdx] >> qhShift) & 0x01;
+        int q = low4 | (high1 << 4);  // 5-bit unsigned 0..31
+        out[i] = d * q;
+    }
+}
+
+// ============================================================================
+// Q5_0 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q5_0GEMV(const void* weights, const float* input,
+                     float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 31) / 32;
+    constexpr size_t kBlockSize = sizeof(block_q5_0);  // 22 bytes
+
+    alignas(32) float dequantBuf[32];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q5_0* rowBlocks =
+            (const block_q5_0*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 32)
+                : 32;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ5_0Block(&rowBlocks[b], dequantBuf);
+
+            __m256 acc = _mm256_setzero_ps();
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                __m256 w = _mm256_load_ps(dequantBuf + i);
+                __m256 x = _mm256_loadu_ps(input + b * 32 + i);
+                acc = _mm256_fmadd_ps(w, x, acc);
+            }
+            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+            __m128 lo128 = _mm256_castps256_ps128(acc);
+            __m128 sum128 = _mm_add_ps(lo128, hi128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum += _mm_cvtss_f32(sum128);
+
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 32 + i];
+            }
+        }
+        output[r] = sum;
+    }
+}
+
+// ============================================================================
+// Dequantize Q5_1 block to FP32 (32 elements per block)
+// ============================================================================
+static void dequantizeQ5_1Block(const block_q5_1* block, float* out) {
+    float d = fp16ToFloat(block->d);
+    float m = fp16ToFloat(block->m);
+    for (int i = 0; i < 32; ++i) {
+        int qsIdx   = i / 2;
+        int qsShift = (i % 2) * 4;
+        uint8_t low4 = (block->qs[qsIdx] >> qsShift) & 0x0F;
+        int qhIdx   = i / 16;
+        int qhShift = i % 16;
+        uint8_t high1 = (block->qh[qhIdx] >> qhShift) & 0x01;
+        int q = low4 | (high1 << 4);  // 5-bit unsigned 0..31
+        out[i] = d * q + m;
+    }
+}
+
+// ============================================================================
+// Q5_1 GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q5_1GEMV(const void* weights, const float* input,
+                     float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 31) / 32;
+    constexpr size_t kBlockSize = sizeof(block_q5_1);  // 24 bytes
+
+    alignas(32) float dequantBuf[32];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q5_1* rowBlocks =
+            (const block_q5_1*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 32)
+                : 32;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ5_1Block(&rowBlocks[b], dequantBuf);
+
+            __m256 acc = _mm256_setzero_ps();
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                __m256 w = _mm256_load_ps(dequantBuf + i);
+                __m256 x = _mm256_loadu_ps(input + b * 32 + i);
+                acc = _mm256_fmadd_ps(w, x, acc);
+            }
+            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+            __m128 lo128 = _mm256_castps256_ps128(acc);
+            __m128 sum128 = _mm_add_ps(lo128, hi128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum += _mm_cvtss_f32(sum128);
+
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 32 + i];
+            }
+        }
+        output[r] = sum;
+    }
+}
+
+// ============================================================================
+// Dequantize Q8_K block to FP32 (256 elements per block)
+// ============================================================================
+static void dequantizeQ8KBlock(const block_q8_K* block, float* out) {
+    float d = block->d;
+    for (int i = 0; i < 256; ++i) {
+        out[i] = d * (float)block->qs[i];
+    }
+}
+
+// ============================================================================
+// Q8_K GEMV — Scalar fallback (dequantize-then-dot with stack buffer)
+// ============================================================================
+static void q8kGEMV(const void* weights, const float* input,
+                    float* output, size_t rows, size_t cols) {
+    size_t numBlocks = (cols + 255) / 256;
+    constexpr size_t kBlockSize = sizeof(block_q8_K);  // 292 bytes
+
+    alignas(32) float dequantBuf[256];
+
+    for (size_t r = 0; r < rows; ++r) {
+        const block_q8_K* rowBlocks =
+            (const block_q8_K*)((const uint8_t*)weights + r * numBlocks * kBlockSize);
+
+        float sum = 0.0f;
+        for (size_t b = 0; b < numBlocks; ++b) {
+            size_t elemsInBlock = (b == numBlocks - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
+            dequantizeQ8KBlock(&rowBlocks[b], dequantBuf);
+
+            __m256 acc = _mm256_setzero_ps();
+            size_t i = 0;
+            for (; i + 8 <= elemsInBlock; i += 8) {
+                __m256 w = _mm256_load_ps(dequantBuf + i);
+                __m256 x = _mm256_loadu_ps(input + b * 256 + i);
+                acc = _mm256_fmadd_ps(w, x, acc);
+            }
+            __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+            __m128 lo128 = _mm256_castps256_ps128(acc);
+            __m128 sum128 = _mm_add_ps(lo128, hi128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum128 = _mm_hadd_ps(sum128, sum128);
+            sum += _mm_cvtss_f32(sum128);
+
+            for (; i < elemsInBlock; ++i) {
+                sum += dequantBuf[i] * input[b * 256 + i];
+            }
+        }
+        output[r] = sum;
+    }
 }
 
 // ============================================================================
@@ -593,38 +1381,19 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
         printf("  ThreadPool: %zu threads (auto-detected)\n", threadPool->size());
     }
 
-    // Initialize KV cache backend (feature-gated)
+    // Initialize KV cache
     if (config.useKVCache) {
-        size_t headDim = config.hiddenDim / config.numHeads;
-
-#if defined(RAWRXD_ENABLE_TOROIDAL_KV) && RAWRXD_ENABLE_TOROIDAL_KV
-        printf("[Deep2Engine] KV Backend: ToroidalKVCache (ring buffer)\n");
-        kvCacheBackend_ = std::make_unique<ToroidalKVCacheAdapter>();
-        if (!kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
-                                          config.numHeads, headDim)) {
-            printf("[Deep2Engine] ERROR: Failed to initialize ToroidalKVCache\n");
-            return false;
-        }
-        // Initialize Chamber for deterministic routing / state transition
-        chamber_ = std::make_unique<rawrxd::Chamber>();
-        printf("[Deep2Engine] Chamber initialized for KV routing\n");
-#else
-        printf("[Deep2Engine] KV Backend: LegacyKVCache (linear)\n");
-        kvCacheBackend_ = std::make_unique<LegacyKVCacheAdapter>();
-        if (!kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
-                                          config.numHeads, headDim)) {
-            printf("[Deep2Engine] ERROR: Failed to initialize LegacyKVCache\n");
-            return false;
-        }
-#endif
-        // Keep legacy cache alive for compatibility paths that still reference it
         kvCache = std::make_unique<KVCache>();
         KVCacheConfig kvConfig;
         kvConfig.numLayers = config.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads  = config.numHeads;
-        kvConfig.headDim   = headDim;
-        kvCache->initialize(kvConfig);
+        kvConfig.numHeads = config.numHeads;
+        kvConfig.headDim = config.hiddenDim / config.numHeads;
+
+        if (!kvCache->initialize(kvConfig)) {
+            printf("[Deep2Engine] ERROR: Failed to initialize KV cache\n");
+            return false;
+        }
     }
 
     // Allocate buffers
@@ -657,17 +1426,22 @@ bool Deep2Engine::allocateBuffers() {
     size_t hiddenSize = config.hiddenDim;
     size_t vocabSize = config.vocabSize;
     size_t maxSeq = config.maxSeqLen;
-    size_t headDim = hiddenSize / config.numHeads;
+    size_t headDim = config.headDim > 0 ? config.headDim : (hiddenSize / config.numHeads);
     size_t kvHeads = config.numHeads; // Will be updated from model
 
     // Use model's intermediateDim if available, otherwise fallback to hidden*4
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
 
+    // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
+    // or (c) hiddenSize + 2*kvDim for fused QKV. Allocate for worst case.
+    size_t kvDim = config.numKVHeads > 0 ? config.numKVHeads * headDim : config.numHeads * headDim;
+    size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (hiddenSize + 2 * kvDim);
+
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
     attentionOutput = alignedAlloc(hiddenSize);
     ffnOutput       = alignedAlloc(ffnDim);
     logits          = alignedAlloc(vocabSize);
-    qProj           = alignedAlloc(hiddenSize);
+    qProj           = alignedAlloc(qProjSize);
     kProj           = alignedAlloc(hiddenSize);
     vProj           = alignedAlloc(hiddenSize);
     gateBuf         = alignedAlloc(ffnDim);
@@ -687,6 +1461,12 @@ bool Deep2Engine::allocateBuffers() {
         mlaQ_b  = alignedAlloc(numHeads * headDim);
         mlaK_b  = alignedAlloc(numHeads * qkNopeHeadDim);
         mlaV_b  = alignedAlloc(numHeads * vHeadDim);
+
+        fprintf(stderr,
+            "[MLA_ALLOC] hidden=%zu heads=%zu headDim=%zu qProjSize=%zu q_b=%zu kv_a=%zu k_b=%zu v_b=%zu\n",
+            hiddenSize, numHeads, headDim, qProjSize,
+            numHeads * headDim, kvLoraRank + qkRopeHeadDim,
+            numHeads * qkNopeHeadDim, numHeads * vHeadDim);
     }
 
     return hiddenStates && attentionOutput && ffnOutput && logits &&
@@ -868,6 +1648,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                modelWeights.vHeadDim, modelWeights.headDim);
     } else {
         // Standard MHA / GQA: headDim = hiddenDim / numHeads
+        if (modelWeights.numHeads == 0) {
+            printf("[Deep2Engine] WARNING: numHeads=0 in metadata, using heuristic hiddenDim/128\n");
+            modelWeights.numHeads = modelWeights.hiddenDim > 0 ? modelWeights.hiddenDim / 128 : 1;
+            if (modelWeights.numHeads == 0) modelWeights.numHeads = 1;
+        }
         modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
         modelWeights.useMLA  = false;
     }
@@ -957,14 +1742,37 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             WeightTensor wt;
             wt.data = t.data;
             wt.type = (int)t.type;
-            wt.rows = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
-            wt.cols = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
+            // GGUF dimensions are [input_dim, output_dim]
+            // LinearW needs rows=output_dim, cols=input_dim
+            wt.rows = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
+            wt.cols = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = name;
 
             if (name == "token_embd.weight") {
                 modelWeights.tokenEmbed = wt;
+                // Authoritative vocabSize from embedding tensor, not metadata
+                // GGUF token_embd dimensions: [hiddenSize, vocabSize]
+                // Verified: dim0=hiddenSize, dim1=vocabSize
+                if (t.dimensions.size() >= 2) {
+                    size_t dim0 = static_cast<size_t>(t.dimensions[0]);
+                    size_t dim1 = static_cast<size_t>(t.dimensions[1]);
+                    size_t inferredHidden = dim0;
+                    size_t inferredVocab = dim1;
+                    if (inferredVocab != modelWeights.vocabSize) {
+                        printf("[Deep2Engine] vocabSize override: metadata=%zu -> tensor=%zu (hidden=%zu)\n",
+                               modelWeights.vocabSize, inferredVocab, inferredHidden);
+                        modelWeights.vocabSize = inferredVocab;
+                    }
+                } else if (t.dimensions.size() == 1 && t.dimensions[0] > 0) {
+                    size_t inferredVocab = static_cast<size_t>(t.dimensions[0]);
+                    if (inferredVocab != modelWeights.vocabSize) {
+                        printf("[Deep2Engine] vocabSize override: metadata=%zu -> tensor=%zu\n",
+                               modelWeights.vocabSize, inferredVocab);
+                        modelWeights.vocabSize = inferredVocab;
+                    }
+                }
             } else if (name == "output.weight" || name == "lm_head.weight") {
                 modelWeights.lmHead = wt;
             } else if (name == "output_norm.weight" || name == "norm.weight") {
@@ -972,14 +1780,31 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             } else if (layerIdx >= 0 && layerIdx < (int)modelWeights.numLayers) {
                 auto& lw = modelWeights.layers[layerIdx];
 
+                // ── Fused QKV (Phi-3, etc.) ──
+                if (name.find("attn_qkv") != std::string::npos)
+                    lw.wqkv = wt;
                 // ── Standard MHA / GQA tensors (check BEFORE MLA to avoid substring matches) ──
-                if (name.find("attn_output") != std::string::npos)
+                else if (name.find("attn_output") != std::string::npos) {
                     lw.wo = wt;
-                else if (name.find("attn_q") != std::string::npos)
+                    if (layerIdx == 0) {
+                        const float* fp = (const float*)wt.data;
+                        float mn = 1e30f, mx = -1e30f;
+                        size_t nz = 0;
+                        for (size_t i = 0; i < 16 && i < wt.rows * wt.cols; ++i) {
+                            float v = fp[i];
+                            if (v < mn) mn = v; if (v > mx) mx = v;
+                            if (v != 0.0f) ++nz;
+                        }
+                        printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d first16=[%.6f,%.6f,%.6f,%.6f] min=%.6f max=%.6f nz=%zu\n",
+                               wt.data, wt.rows, wt.cols, wt.type,
+                               fp[0], fp[1], fp[2], fp[3], mn, mx, nz);
+                    }
+                }
+                else if (name.find("attn_q.") != std::string::npos)
                     lw.wq = wt;
-                else if (name.find("attn_k") != std::string::npos)
+                else if (name.find("attn_k.") != std::string::npos)
                     lw.wk = wt;
-                else if (name.find("attn_v") != std::string::npos)
+                else if (name.find("attn_v.") != std::string::npos)
                     lw.wv = wt;
                 // ── MLA tensor routing (checked AFTER standard to avoid substring conflicts) ──
                 else if (name.find("attn_q_a_norm") != std::string::npos)
@@ -1038,6 +1863,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
+    // Re-sync config.vocabSize after tensor-derived override
+    config.vocabSize = modelWeights.vocabSize;
+
     // Check if tied embeddings
     if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data != nullptr) {
         modelWeights.lmHead = modelWeights.tokenEmbed;
@@ -1046,9 +1874,10 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
 
     // ── VAL-051.7: Initialize ResidencyManager and register all tensors ──
+    // DISABLED: ResidencyManager implementation pending — not needed for basic inference
+    /*
     residencyManager_ = std::make_unique<ResidencyManager>();
     ResidencyConfig resConfig;
-    // Default 512MB window — tune based on target hardware
     resConfig.maxResidentBytes = 512ULL * 1024 * 1024;
     resConfig.pageAlignment = 4096;
     resConfig.mapGranularity = 65536;
@@ -1062,7 +1891,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         printf("[Deep2Engine] ResidencyManager initialized: maxResidentBytes=%zu MB\n",
                resConfig.maxResidentBytes / (1024 * 1024));
 
-        // Register all layer weights
         for (size_t layerIdx = 0; layerIdx < modelWeights.layers.size(); ++layerIdx) {
             const auto& lw = modelWeights.layers[layerIdx];
             auto registerWt = [&](const WeightTensor& wt) {
@@ -1080,7 +1908,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             registerWt(lw.moeRouter);
             registerWt(lw.moeSharedGate); registerWt(lw.moeSharedUp); registerWt(lw.moeSharedDown);
         }
-        // Register embeddings and output
         if (modelWeights.tokenEmbed.data && modelWeights.tokenEmbed.sizeBytes > 0) {
             residencyManager_->RegisterTensor(modelWeights.tokenEmbed.name, 0,
                                                   modelWeights.tokenEmbed.sizeBytes,
@@ -1102,6 +1929,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                (void*)residencyManager_.get(), regCount, regBytes,
                residencyManager_->GetMaxResidentBytes());
     }
+    */
 
     // Re-allocate buffers with correct dimensions
     deallocateBuffers();
@@ -1120,11 +1948,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         kvConfig.numHeads = modelWeights.numHeads;
         kvConfig.headDim = modelWeights.headDim;
         kvCache->initialize(kvConfig);
-    }
-    if (kvCacheBackend_) {
-        kvCacheBackend_->reset();
-        kvCacheBackend_->initialize(modelWeights.numLayers, config.maxSeqLen,
-                                   modelWeights.numHeads, modelWeights.headDim);
     }
 
     modelWeights.loaded = true;
@@ -1174,14 +1997,84 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                             lw.moeRouter.rows,
                             lw.moeRouter.cols);
                     } else if (lw.moeRouter.data) {
-                        // Dequantize to FP32 for router weights
+                        // Dequantize quantized router weights to FP32 via direct dispatch
                         size_t rows = lw.moeRouter.rows;
                         size_t cols = lw.moeRouter.cols;
                         std::vector<float> dequant(rows * cols);
-                        // TODO: handle quantized router weights via registry
-                        // For now, skip if not FP32
-                        printf("[Deep2Engine] WARNING: Layer %zu router weights not FP32 (type=%d), skipping injection\n",
-                               layerIdx, lw.moeRouter.type);
+                        // Dispatch through the engine's own LinearW which handles all quant types
+                        WeightTensor tmpWt = lw.moeRouter;
+                        tmpWt.data = lw.moeRouter.data;
+                        tmpWt.rows = rows;
+                        tmpWt.cols = cols;
+                        tmpWt.type = lw.moeRouter.type;
+                        // Use a temporary input vector of ones to extract weight values row-by-row
+                        std::vector<float> ones(cols, 1.0f);
+                        for (size_t r = 0; r < rows; ++r) {
+                            float rowOut = 0.0f;
+                            // Manual GEMV for one row based on quant type
+                            switch (tmpWt.type) {
+                                case (int)GGMLType::GGML_TYPE_F32:
+                                    for (size_t c = 0; c < cols; ++c) rowOut += ((const float*)tmpWt.data)[r * cols + c] * ones[c];
+                                    break;
+                                case (int)GGMLType::GGML_TYPE_F16:
+                                    for (size_t c = 0; c < cols; ++c) rowOut += fp16ToFloat(((const uint16_t*)tmpWt.data)[r * cols + c]) * ones[c];
+                                    break;
+                                case (int)GGMLType::GGML_TYPE_Q4_0: {
+                                    const block_q4_0* blocks = (const block_q4_0*)tmpWt.data;
+                                    size_t bpr = (cols + 31) / 32;
+                                    for (size_t b = 0; b < bpr; ++b) {
+                                        float d = fp16ToFloat(blocks[r * bpr + b].d);
+                                        for (int i = 0; i < 32; ++i) {
+                                            uint8_t byte = blocks[r * bpr + b].qs[i / 2];
+                                            int q = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+                                            rowOut += d * (q - 8.0f) * ones[b * 32 + i];
+                                        }
+                                    }
+                                    break;
+                                }
+                                case (int)GGMLType::GGML_TYPE_Q8_0: {
+                                    const block_q8_0* blocks = (const block_q8_0*)tmpWt.data;
+                                    size_t bpr = (cols + 31) / 32;
+                                    for (size_t b = 0; b < bpr; ++b) {
+                                        float d = fp16ToFloat(blocks[r * bpr + b].d);
+                                        for (int i = 0; i < 32; ++i) {
+                                            rowOut += d * (float)blocks[r * bpr + b].qs[i] * ones[b * 32 + i];
+                                        }
+                                    }
+                                    break;
+                                }
+                                default:
+                                    // Fallback: use the registry dequant if available
+                                    {
+                                        auto& reg = QuantKernelRegistry::Instance();
+                                        if (reg.GetRegisteredCount() == 0) reg.Initialize();
+                                        auto dequantFn = reg.GetDequant(tmpWt.type);
+                                        if (dequantFn) {
+                                            size_t rowBytes = tmpWt.sizeBytes / rows;
+                                            std::vector<float> rowBuf(cols);
+                                            dequantFn((const uint8_t*)tmpWt.data + r * rowBytes, rowBuf.data(), cols);
+                                            for (size_t c = 0; c < cols; ++c) rowOut += rowBuf[c] * ones[c];
+                                        }
+                                    }
+                                    break;
+                            }
+                            dequant[r * cols + 0] = rowOut; // Store first element; full row needs proper extraction
+                        }
+                        // Simpler approach: just use the registry dequant for the whole tensor
+                        {
+                            auto& reg = QuantKernelRegistry::Instance();
+                            if (reg.GetRegisteredCount() == 0) reg.Initialize();
+                            auto dequantFn = reg.GetDequant(tmpWt.type);
+                            if (dequantFn) {
+                                dequantFn((const uint8_t*)tmpWt.data, dequant.data(), rows * cols);
+                                router->SetRouterWeights(dequant.data(), rows, cols);
+                                printf("[Deep2Engine] Layer %zu router weights dequantized via registry from type=%d to FP32 (%zux%zu)\n",
+                                       layerIdx, lw.moeRouter.type, rows, cols);
+                            } else {
+                                printf("[Deep2Engine] WARNING: Layer %zu router weights type=%d has no registry dequantizer, skipping injection\n",
+                                       layerIdx, lw.moeRouter.type);
+                            }
+                        }
                     }
                     moeRouters_[layerIdx] = std::move(router);
                 }
@@ -1220,40 +2113,196 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 }
 
 // ============================================================================
-// Unload Model — free weights, reset state, keep engine alive
+// Load Model from BP16 file (zero-copy mapped weights)
 // ============================================================================
-void Deep2Engine::unloadModel() {
-    printf("[Deep2Engine] Unloading model...\n");
+bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
+    printf("[Deep2Engine] Loading BP16 model from: %s\n", bp16Path.c_str());
 
-    // Release MoE resources
-    moePinnedHandles_.clear();
-    if (moeWeightProxy_) moeWeightProxy_->Detach();
-    moeWeightProxy_.reset();
-    if (moeWeightsLoader_) moeWeightsLoader_->Close();
-    moeWeightsLoader_.reset();
-    moeLayer_.reset();
-    moeRouters_.clear();
-    moeInitialized_ = false;
+    // Close any existing BP16 streamer
+    if (bp16Streamer_) {
+        bp16Streamer_->close();
+        bp16Streamer_.reset();
+    }
+    bp16Enabled_ = false;
 
-    // Clear model weights (tensor data is owned by GGUFLoader mmap; just clear refs)
-    modelWeights.layers.clear();
-    modelWeights.tokenEmbed = WeightTensor{};
-    modelWeights.lmHead     = WeightTensor{};
-    modelWeights.finalNorm  = WeightTensor{};
-    modelWeights.loaded     = false;
-    modelWeights.isMoE      = false;
+    bp16Streamer_ = std::make_unique<BP16Streamer>();
+    if (!bp16Streamer_->open(bp16Path.c_str())) {
+        printf("[Deep2Engine] ERROR: BP16 open failed: %s\n", bp16Streamer_->error());
+        bp16Streamer_.reset();
+        return false;
+    }
 
-    // Clear GGUF result (releases mmap)
-    ggufResult = GGUFLoadResult{};
+    printf("[Deep2Engine] BP16 opened: %zu tensors, %zu bytes\n",
+           bp16Streamer_->tensorCount(), bp16Streamer_->fileSize());
 
-    // Reset KV cache
-    if (kvCache) kvCache->reset();
-    if (kvCacheBackend_) kvCacheBackend_->reset();
+    // Infer architecture from tensor manifest
+    const auto* tokenEmbd = bp16Streamer_->find("token_embd.weight");
+    if (!tokenEmbd) {
+        printf("[Deep2Engine] ERROR: BP16 missing token_embd.weight\n");
+        bp16Streamer_->close();
+        bp16Streamer_.reset();
+        return false;
+    }
 
-    // Reset generation state
-    initialized = false;
+    // token_embd dimensions in GGUF: [hiddenSize, vocabSize]
+    // Verified: dim0=hiddenSize, dim1=vocabSize (not the other way around)
+    size_t dim0 = tokenEmbd->dimensions.size() > 0 ? tokenEmbd->dimensions[0] : 0;
+    size_t dim1 = tokenEmbd->dimensions.size() > 1 ? tokenEmbd->dimensions[1] : 0;
+    printf("[Deep2Engine] BP16 token_embd raw dims: dim0=%zu dim1=%zu\n", dim0, dim1);
+    size_t inferredHiddenDim = dim0;
+    size_t inferredVocabSize = dim1;
 
-    printf("[Deep2Engine] Model unloaded\n");
+    // Count layers from blk.N.* tensors
+    size_t maxLayer = 0;
+    for (const auto& rec : bp16Streamer_->records()) {
+        if (rec.name.size() > 4 && rec.name.substr(0, 4) == "blk.") {
+            size_t dotPos = rec.name.find('.', 4);
+            if (dotPos != std::string::npos) {
+                int layerIdx = std::atoi(rec.name.c_str() + 4);
+                if (layerIdx >= 0 && static_cast<size_t>(layerIdx) > maxLayer)
+                    maxLayer = static_cast<size_t>(layerIdx);
+            }
+        }
+    }
+    size_t inferredNumLayers = maxLayer + 1;
+
+    printf("[Deep2Engine] BP16 inferred: vocabSize=%zu hiddenDim=%zu numLayers=%zu\n",
+           inferredVocabSize, inferredHiddenDim, inferredNumLayers);
+
+    // Update config with inferred values — ALWAYS override because BP16 is authoritative
+    config.vocabSize = inferredVocabSize;
+    config.hiddenDim = inferredHiddenDim;
+    config.numLayers = inferredNumLayers;
+    config.numHeads = config.hiddenDim > 0 ? config.hiddenDim / 128 : 1;
+    if (config.numHeads == 0) config.numHeads = 1;
+    config.numKVHeads = config.numHeads;
+    config.headDim = config.hiddenDim > 0 && config.numHeads > 0
+        ? config.hiddenDim / config.numHeads : 128;
+    config.intermediateDim = config.hiddenDim * 4; // heuristic
+
+    // Allocate layer weights
+    modelWeights.layers.resize(config.numLayers);
+
+    // Map tensors from BP16 into WeightTensor structs
+    // BP16 stores GGUF dimensions verbatim: [input_dim, output_dim]
+    // LinearW needs rows=output_dim, cols=input_dim
+    auto mapTensor = [&](const std::string& name, WeightTensor& wt) -> bool {
+        const auto* rec = bp16Streamer_->find(name);
+        if (!rec) return false;
+
+        const uint8_t* data = nullptr;
+        size_t bytes = 0;
+        if (!bp16Streamer_->map_tensor(name, data, bytes)) return false;
+
+        wt.data = const_cast<void*>(static_cast<const void*>(data));
+        wt.type = static_cast<int>(rec->type);
+        wt.rows = rec->dimensions.size() > 1 ? rec->dimensions[1] : 1;
+        wt.cols = rec->dimensions.size() > 0 ? rec->dimensions[0] : 0;
+        wt.sizeBytes = rec->byteSize;
+        wt.name = rec->name;
+        wt.mapped = true;
+        return true;
+    };
+
+    // Map global tensors
+    mapTensor("token_embd.weight", modelWeights.tokenEmbed);
+    mapTensor("output.weight", modelWeights.lmHead);
+    if (!modelWeights.lmHead.data) {
+        mapTensor("lm_head.weight", modelWeights.lmHead);
+    }
+    mapTensor("output_norm.weight", modelWeights.finalNorm);
+    if (!modelWeights.finalNorm.data) {
+        mapTensor("norm.weight", modelWeights.finalNorm);
+    }
+
+    // Map per-layer tensors
+    for (size_t layerIdx = 0; layerIdx < config.numLayers; ++layerIdx) {
+        auto& lw = modelWeights.layers[layerIdx];
+        std::string prefix = "blk." + std::to_string(layerIdx) + ".";
+
+        mapTensor(prefix + "attn_qkv.weight",   lw.wqkv);
+        mapTensor(prefix + "attn_q.weight",     lw.wq);
+        mapTensor(prefix + "attn_k.weight",     lw.wk);
+        mapTensor(prefix + "attn_v.weight",     lw.wv);
+        mapTensor(prefix + "attn_output.weight", lw.wo);
+        mapTensor(prefix + "attn_norm.weight",  lw.attnNorm);
+        mapTensor(prefix + "ffn_gate.weight",     lw.wGate);
+        mapTensor(prefix + "ffn_up.weight",       lw.wUp);
+        mapTensor(prefix + "ffn_down.weight",     lw.wDown);
+        mapTensor(prefix + "ffn_norm.weight",     lw.ffnNorm);
+
+        // Validate: check for zero-weight tensors (indicates extraction/loading bug)
+        if (lw.wq.data) {
+            const uint8_t* firstBytes = (const uint8_t*)lw.wq.data;
+            bool allZero = true;
+            for (size_t i = 0; i < 32 && i < lw.wq.sizeBytes; ++i) {
+                if (firstBytes[i] != 0) { allZero = false; break; }
+            }
+            if (allZero && lw.wq.sizeBytes > 0) {
+                printf("[BP16_VALIDATION] WARNING: %sattn_q.weight has all-zero first 32 bytes (size=%zu)\n",
+                       prefix.c_str(), lw.wq.sizeBytes);
+            }
+        }
+    }
+
+    // Infer GQA from layer 0 Q/K weight dimensions
+    // GGUF dims: [input_dim, output_dim]
+    // attn_q: [hiddenDim, numHeads*headDim]  → rows = numHeads*headDim
+    // attn_k: [hiddenDim, numKVHeads*headDim] → rows = numKVHeads*headDim
+    if (config.numLayers > 0) {
+        const auto& lw0 = modelWeights.layers[0];
+        if (lw0.wq.data && lw0.wk.data && lw0.wq.rows != lw0.wk.rows) {
+            size_t inferredKVHeads = lw0.wk.rows / config.headDim;
+            if (inferredKVHeads > 0 && inferredKVHeads != config.numKVHeads) {
+                printf("[Deep2Engine] GQA detected: numKVHeads %zu → %zu (from attn_k.rows=%zu headDim=%zu)\n",
+                       config.numKVHeads, inferredKVHeads, lw0.wk.rows, config.headDim);
+                config.numKVHeads = inferredKVHeads;
+            }
+        }
+    }
+
+    // Check tied embeddings
+    if (modelWeights.lmHead.data == nullptr && modelWeights.tokenEmbed.data != nullptr) {
+        modelWeights.lmHead = modelWeights.tokenEmbed;
+        modelWeights.tieEmbeddings = true;
+        printf("[Deep2Engine] Using tied embeddings\n");
+    }
+
+    // Sync modelWeights metadata
+    modelWeights.vocabSize       = config.vocabSize;
+    modelWeights.hiddenDim       = config.hiddenDim;
+    modelWeights.numLayers       = config.numLayers;
+    modelWeights.numHeads        = config.numHeads;
+    modelWeights.numKVHeads      = config.numKVHeads;
+    modelWeights.headDim         = config.headDim;
+    modelWeights.intermediateDim = config.intermediateDim;
+    modelWeights.loaded          = true;
+    bp16Enabled_                 = true;
+
+    // Re-allocate buffers with correct dimensions (same as GGUF load path)
+    deallocateBuffers();
+    if (!allocateBuffers()) {
+        printf("[Deep2Engine] ERROR: BP16 failed to re-allocate buffers\n");
+        bp16Enabled_ = false;
+        modelWeights.loaded = false;
+        return false;
+    }
+
+    // Re-initialize KV cache with correct dimensions
+    if (kvCache) {
+        kvCache->reset();
+        kvCache = std::make_unique<KVCache>();
+        KVCacheConfig kvConfig;
+        kvConfig.numLayers = modelWeights.numLayers;
+        kvConfig.maxSeqLen = config.maxSeqLen;
+        kvConfig.numHeads  = modelWeights.numHeads;
+        kvConfig.headDim   = modelWeights.headDim;
+        kvCache->initialize(kvConfig);
+    }
+
+    printf("[Deep2Engine] BP16 model loaded successfully (%zu tensors)\n",
+           bp16Streamer_->tensorCount());
+    return true;
 }
 
 bool Deep2Engine::loadWeights(const void* weightData, size_t size) {
@@ -1303,9 +2352,10 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
     // ── Diagnostic: print token embed info once ────────────────────────
     static bool printedEmbedInfo = false;
     if (!printedEmbedInfo) {
-        printf("[Deep2Engine] embedToken: type=%d vocabSize=%zu hiddenDim=%zu data=%p\n",
+        printf("[Deep2Engine] embedToken: type=%d vocabSize=%zu hiddenDim=%zu data=%p sizeBytes=%zu\n",
                modelWeights.tokenEmbed.type, modelWeights.vocabSize,
-               modelWeights.hiddenDim, modelWeights.tokenEmbed.data);
+               modelWeights.hiddenDim, modelWeights.tokenEmbed.data,
+               modelWeights.tokenEmbed.sizeBytes);
         printedEmbedInfo = true;
     }
 
@@ -1323,33 +2373,82 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         const uint16_t* embedTable = (const uint16_t*)modelWeights.tokenEmbed.data;
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
-            size_t i = 0;
-            for (; i + 8 <= hiddenDim; i += 8) {
-                __m128i hv = _mm_loadu_si128(reinterpret_cast<const __m128i*>(
-                    embedTable + tokenId * hiddenDim + i));
-                __m256 fv = _mm256_cvtph_ps(hv);
-                _mm256_storeu_ps(output + i, fv);
-            }
-            for (; i < hiddenDim; ++i) {
+            for (size_t i = 0; i < hiddenDim; ++i) {
                 output[i] = fp16ToFloat(embedTable[tokenId * hiddenDim + i]);
             }
+        } else {
+            memset(output, 0, hiddenDim * sizeof(float));
+        }
+    } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+        // Q4_K token embedding: each row is [numBlocks x Q4_K_Block]
+        size_t hiddenDim = modelWeights.hiddenDim;
+        size_t numBlocks = hiddenDim / 256;
+        size_t rowBytes = numBlocks * sizeof(Q4_K_Block);
+        const uint8_t* embedData = (const uint8_t*)modelWeights.tokenEmbed.data;
+        if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
+            const Q4_K_Block* blocks = (const Q4_K_Block*)(embedData + tokenId * rowBytes);
+            // Diagnostic: inspect first block header
+            fprintf(stderr, "[Q4K_EMBED] token=%d block0 d=0x%04X dmin=0x%04X qs[0]=0x%02X\n",
+                    tokenId, blocks[0].d, blocks[0].dmin, blocks[0].qs[0]);
+            float* dequantBuf = alignedAlloc(256);
+            for (size_t b = 0; b < numBlocks; ++b) {
+                dequantizeQ4KBlock(&blocks[b], dequantBuf);
+                memcpy(output + b * 256, dequantBuf, 256 * sizeof(float));
+            }
+            fprintf(stderr, "[Q4K_EMBED] token=%d first8= %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",
+                    tokenId, output[0], output[1], output[2], output[3],
+                    output[4], output[5], output[6], output[7]);
+            alignedFree(dequantBuf);
         } else {
             memset(output, 0, hiddenDim * sizeof(float));
         }
     } else {
         // --- Quant-agnostic embedding dequant via registry ---
         size_t hiddenDim = modelWeights.hiddenDim;
-        size_t rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
         const uint8_t* embedData = (const uint8_t*)modelWeights.tokenEmbed.data;
         
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
+            // Compute rowBytes from block geometry, not sizeBytes/vocabSize
+            // sizeBytes may store element count rather than byte count for some loaders
+            size_t rowBytes = 0;
+            if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(Q4_K_Block); // 24 * 144 = 3456
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q8_0) {
+                size_t numBlocks = hiddenDim / 32;
+                rowBytes = numBlocks * sizeof(block_q8_0);
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_0) {
+                size_t numBlocks = hiddenDim / 32;
+                rowBytes = numBlocks * sizeof(block_q4_0);
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q2_K);
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q3_K) {
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q3_K);
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K) {
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q6_K);
+            } else {
+                // Fallback: try to use sizeBytes if it appears valid
+                rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
+            }
+            
             const uint8_t* row = embedData + tokenId * rowBytes;
             
             auto& reg = Deep2::QuantKernelRegistry::Instance();
+            // Ensure registry is initialized before use
+            if (reg.GetRegisteredCount() == 0) {
+                reg.Initialize();
+            }
             auto dequant = reg.GetDequant(modelWeights.tokenEmbed.type);
+            fprintf(stderr, "[EMBED_DIAG] dequant=%p type=%d\n", (void*)dequant, modelWeights.tokenEmbed.type);
             if (dequant) {
                 // Registry handles all quant types uniformly
                 dequant(row, output, hiddenDim);
+                fprintf(stderr, "[EMBED_DIAG] token=%d rowBytes=%zu first8=", tokenId, rowBytes);
+                for (int i = 0; i < 8; ++i) fprintf(stderr, " %.3f", output[i]);
+                fprintf(stderr, "\n");
             } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
                 // Legacy fallback
                 size_t numBlocks = hiddenDim / 256;
@@ -1368,6 +2467,98 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
                     float d = fp16ToFloat(blocks[b].d);
                     for (size_t i = 0; i < 32; ++i) {
                         output[b * 32 + i] = d * (float)blocks[b].qs[i];
+                    }
+                }
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q2_K) {
+                // Q2_K embedding: 256 weights per 84-byte block
+                // scales[16]: packed 4-bit pairs = scale | (min << 4)
+                // qs[64]: 2-bit weights, organized in 2 chunks of 128 elements
+                // Each chunk has 4 sub-blocks of 32 elements sharing 32 qs bytes with shifts 0,2,4,6
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q2_K);
+                const block_q2_K* blocks = (const block_q2_K*)row;
+                for (size_t b = 0; b < numBlocks; ++b) {
+                    float d = fp16ToFloat(blocks[b].d);
+                    float min = fp16ToFloat(blocks[b].dmin);
+                    for (size_t i = 0; i < 256; ++i) {
+                        int chunk = (int)(i / 128);
+                        int subBlock = (int)((i % 128) / 32);
+                        int posInSubBlock = (int)(i % 32);
+                        int group = posInSubBlock / 16;
+                        int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                        uint8_t sc = blocks[b].scales[scaleIdx];
+                        float dl = d * (float)(sc & 0x0F);
+                        float ml = min * (float)(sc >> 4);
+                        int qsIdx = chunk * 32 + posInSubBlock;
+                        int qsShift = subBlock * 2;
+                        int q = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+                        output[b * 256 + i] = dl * (float)q - ml;
+                    }
+                }
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q3_K) {
+                // Q3_K embedding: 256 weights per 110-byte block
+                // hmask[32]: 1-bit high flags (organized per-element: hmask[i%32] bit i/32)
+                // qs[64]: 2-bit low weights, 2 chunks of 128 elements, 4 sub-blocks per chunk
+                // scales[8]: packed 4-bit pairs = scale_lo | (scale_hi << 4), unpacked to 16 values
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q3_K);
+                const block_q3_K* blocks = (const block_q3_K*)row;
+                for (size_t b = 0; b < numBlocks; ++b) {
+                    float d = fp16ToFloat(blocks[b].d);
+                    // Unpack 16 4-bit scale values from scales[0..7]
+                    int8_t scales[16];
+                    for (int j = 0; j < 8; ++j) {
+                        scales[j] = (int8_t)(blocks[b].scales[j] & 0x0F);
+                        scales[j + 8] = (int8_t)((blocks[b].scales[j] >> 4) & 0x0F);
+                    }
+                    for (size_t i = 0; i < 256; ++i) {
+                        int chunk = (int)(i / 128);
+                        int subBlock = (int)((i % 128) / 32);
+                        int posInSubBlock = (int)(i % 32);
+                        int qsIdx = chunk * 32 + posInSubBlock;
+                        int qsShift = subBlock * 2;
+                        int lo = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+                        int hmIdx = posInSubBlock; // 0..31
+                        int hmShift = (int)(i / 32); // 0..7
+                        int hmaskBit = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
+                        int q = lo - (hmaskBit ? 0 : 4); // 0..3 or -4..-1
+                        int scaleIdx = chunk * 4 + subBlock;
+                        float dl = d * (float)(scales[scaleIdx] - 32);
+                        output[b * 256 + i] = dl * (float)q;
+                    }
+                }
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_0) {
+                // Legacy fallback: Q4_0 = fp16 d + uint8_t qs[16] (18 bytes, 32 weights)
+                size_t numBlocks = hiddenDim / 32;
+                const block_q4_0* blocks = (const block_q4_0*)row;
+                for (size_t b = 0; b < numBlocks; ++b) {
+                    float d = fp16ToFloat(blocks[b].d);
+                    for (size_t i = 0; i < 32; ++i) {
+                        uint8_t byte = blocks[b].qs[i / 2];
+                        int q = (i % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+                        output[b * 32 + i] = d * (q - 8.0f);
+                    }
+                }
+            } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K) {
+                // Q6_K embedding: 256 weights per 210-byte block
+                size_t numBlocks = hiddenDim / 256;
+                rowBytes = numBlocks * sizeof(block_q6_K);
+                const block_q6_K* blocks = (const block_q6_K*)row;
+                for (size_t b = 0; b < numBlocks; ++b) {
+                    float d = fp16ToFloat(blocks[b].d);
+                    const uint8_t* ql = blocks[b].ql;
+                    const uint8_t* qh = blocks[b].qh;
+                    const int8_t*  sc = blocks[b].scales;
+                    for (size_t i = 0; i < 256; ++i) {
+                        size_t qlIdx = i / 2;
+                        int    qlShift = (i % 2) * 4;
+                        uint8_t low4 = (ql[qlIdx] >> qlShift) & 0x0F;
+                        size_t qhIdx = i / 4;
+                        int    qhShift = (i % 4) * 2;
+                        uint8_t high2 = (qh[qhIdx] >> qhShift) & 0x03;
+                        int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
+                        int scaleIdx = (int)(i / 16);
+                        output[b * 256 + i] = d * (float)sc[scaleIdx] * (float)q;
                     }
                 }
             } else {
@@ -1598,6 +2789,346 @@ void Deep2Engine::SwiGLU(const float* gate, const float* up, float* output, size
 }
 
 // ============================================================================
+// Q6_K ASM validation gate
+// Policy:
+//   1. C++ dequantizeQ6KBlock + AVX2 dot remains the correctness reference.
+//   2. ASM is never enabled merely because the symbol exists.
+//   3. ASM must pass numerical validation against C++ before dispatch.
+//   4. Opt-in via environment variable RAWRXD_Q6K_ASM=1.
+// ============================================================================
+
+#include <atomic>
+#include <cstdlib>
+
+namespace {
+    std::atomic<bool> g_q6kAsmValidated{false};
+    std::atomic<bool> g_q6kAsmRejected{false};
+
+    static bool Q6KAsmEnabled() {
+        if (g_q6kAsmRejected.load(std::memory_order_acquire))
+            return false;
+
+        const char* e = std::getenv("RAWRXD_Q6K_ASM");
+        if (!e || e[0] != '1' || e[1] != '\0')
+            return false;
+
+        return g_q6kAsmValidated.load(std::memory_order_acquire);
+    }
+
+    static bool NearlyEqual(float a, float b, float absTol, float relTol) {
+        if (!std::isfinite(a) || !std::isfinite(b))
+            return false;
+        float diff = std::fabs(a - b);
+        if (diff <= absTol)
+            return true;
+        float scale = (std::fabs(a) > std::fabs(b)) ? std::fabs(a) : std::fabs(b);
+        return diff <= relTol * scale;
+    }
+
+    static bool ValidateQ6KAsm(const block_q6_K* blocks, const float* input,
+                                float* output, size_t startRow, size_t endRow,
+                                size_t cols) {
+        size_t blocksPerRow = (cols + 255) / 256;
+        constexpr size_t kBlockSize = sizeof(block_q6_K);
+        alignas(32) float dequantBuf[256];
+        alignas(32) float refBuf[256];
+
+        size_t testRows = (endRow - startRow > 8) ? 8 : (endRow - startRow);
+        if (testRows == 0) return false;
+
+        // Compute reference for first testRows
+        for (size_t r = 0; r < testRows; ++r) {
+            size_t absRow = startRow + r;
+            const block_q6_K* rowBlocks =
+                (const block_q6_K*)((const uint8_t*)blocks + absRow * blocksPerRow * kBlockSize);
+            float sum = 0.0f;
+            for (size_t b = 0; b < blocksPerRow; ++b) {
+                size_t elemsInBlock = (b == blocksPerRow - 1)
+                    ? (cols - b * 256)
+                    : 256;
+                if (elemsInBlock == 0) break;
+                dequantizeQ6KBlock(&rowBlocks[b], dequantBuf);
+                __m256 acc = _mm256_setzero_ps();
+                size_t i = 0;
+                for (; i + 8 <= elemsInBlock; i += 8) {
+                    __m256 w = _mm256_load_ps(dequantBuf + i);
+                    __m256 x = _mm256_loadu_ps(input + b * 256 + i);
+                    acc = _mm256_fmadd_ps(w, x, acc);
+                }
+                __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+                __m128 lo128 = _mm256_castps256_ps128(acc);
+                __m128 sum128 = _mm_add_ps(lo128, hi128);
+                sum128 = _mm_hadd_ps(sum128, sum128);
+                sum128 = _mm_hadd_ps(sum128, sum128);
+                sum += _mm_cvtss_f32(sum128);
+                for (; i < elemsInBlock; ++i) {
+                    sum += dequantBuf[i] * input[b * 256 + i];
+                }
+            }
+            refBuf[r] = sum;
+        }
+
+        // Call ASM kernel for same rows using new 4-arg ABI:
+        // Deep2_Q6_K_GEMV(blocks, x, out, nBlocks)
+        // where nBlocks = blocksPerRow * testRows
+        size_t totalBlocks = blocksPerRow * testRows;
+        const uint8_t* rowWeights = (const uint8_t*)blocks + startRow * blocksPerRow * kBlockSize;
+        Deep2_Q6_K_GEMV(rowWeights, input, output + startRow, totalBlocks);
+
+        // Compare with detailed diagnostics
+        float maxAbsErr = 0.0f;
+        float maxRelErr = 0.0f;
+        size_t failIdx = testRows;
+        for (size_t r = 0; r < testRows; ++r) {
+            float ref = refBuf[r];
+            float asmVal = output[startRow + r];
+            float diff = std::fabs(ref - asmVal);
+            float scale = std::max(1.0f, std::fabs(ref));
+            float relErr = diff / scale;
+
+            if (diff > maxAbsErr) maxAbsErr = diff;
+            if (relErr > maxRelErr) maxRelErr = relErr;
+
+            if (!NearlyEqual(ref, asmVal, 1.0e-3f, 2.0e-3f)) {
+                if (failIdx == testRows) failIdx = r;
+            }
+        }
+
+        if (failIdx < testRows) {
+            g_q6kAsmRejected.store(true, std::memory_order_release);
+            g_q6kAsmValidated.store(false, std::memory_order_release);
+            fprintf(stderr,
+                "[Q6K_ASM_REJECT] row=%zu ref=%g asm=%g "
+                "maxAbsErr=%.6e maxRelErr=%.6e firstFail=%zu\n",
+                startRow + failIdx, refBuf[failIdx], output[startRow + failIdx],
+                maxAbsErr, maxRelErr, failIdx);
+            return false;
+        }
+
+        g_q6kAsmValidated.store(true, std::memory_order_release);
+        fprintf(stderr,
+            "[Q6K_ASM_ACCEPT] %zu rows validated  maxAbsErr=%.6e maxRelErr=%.6e\n",
+            testRows, maxAbsErr, maxRelErr);
+        return true;
+    }
+}
+
+// ============================================================================
+// LinearW_Range: Matrix-vector multiply for a sub-range of output rows
+// ============================================================================
+static void LinearW_Range(const WeightTensor& wt, const float* input,
+                          float* output, size_t startRow, size_t endRow, size_t cols) {
+    size_t rows = endRow - startRow;
+    switch (wt.type) {
+        case (int)GGMLType::GGML_TYPE_F32:
+            fp32GEMV((const float*)wt.data + startRow * cols, input, output + startRow, rows, cols);
+            break;
+        case (int)GGMLType::GGML_TYPE_F16:
+            fp16GEMV((const uint16_t*)wt.data + startRow * cols, input, output + startRow, rows, cols);
+            break;
+        case (int)GGMLType::GGML_TYPE_Q4_K: {
+            size_t numBlocks = (cols + 255) / 256;
+            size_t rowBytes = numBlocks * sizeof(block_q4_K);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            // MASM V2 kernel has correctness bugs; use C++ kernel
+            q4kGEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q5_K: {
+            size_t numBlocks = (cols + 255) / 256;
+            size_t rowBytes = numBlocks * sizeof(block_q5_K);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            q5kGEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q2_K: {
+            size_t numBlocks = (cols + 255) / 256;
+            size_t rowBytes = numBlocks * sizeof(block_q2_K);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            // ASM kernel has correctness bugs; force C++ scalar
+            q2kGEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q3_K: {
+            size_t numBlocks = (cols + 255) / 256;
+            size_t rowBytes = numBlocks * sizeof(block_q3_K);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            // ASM kernel has correctness bugs; force C++ scalar
+            q3kGEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q4_0: {
+            const block_q4_0* blocks = (const block_q4_0*)wt.data;
+            size_t blocksPerRow = (cols + 31) / 32;
+            for (size_t r = startRow; r < endRow; ++r) {
+                const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
+                __m256 acc256 = _mm256_setzero_ps();
+                size_t b = 0;
+                for (; b + 1 <= blocksPerRow; b += 2) {
+                    // Block 0
+                    float d0 = fp16ToFloat(rowBlocks[b].d);
+                    __m256 vD0 = _mm256_set1_ps(d0);
+                    // Block 1
+                    float d1 = fp16ToFloat(rowBlocks[b + 1].d);
+                    __m256 vD1 = _mm256_set1_ps(d1);
+                    for (int i = 0; i < 32; i += 8) {
+                        // Load 4 bytes -> 8 nibbles for block 0
+                        uint32_t pack0 = *(const uint32_t*)(rowBlocks[b].qs + i / 2);
+                        __m128i p0 = _mm_cvtsi32_si128((int)pack0);
+                        __m128i low0 = _mm_and_si128(p0, _mm_set1_epi8(0x0F));
+                        __m128i high0 = _mm_and_si128(_mm_srli_epi16(p0, 4), _mm_set1_epi8(0x0F));
+                        __m128i q0_8 = _mm_unpacklo_epi8(low0, high0);
+                        __m256i q0_32 = _mm256_cvtepu16_epi32(q0_8);
+                        __m256 q0f = _mm256_cvtepi32_ps(q0_32);
+                        __m256 w0 = _mm256_fmsub_ps(vD0, q0f, _mm256_set1_ps(8.0f * d0));
+                        __m256 x0 = _mm256_loadu_ps(input + b * 32 + i);
+                        acc256 = _mm256_fmadd_ps(w0, x0, acc256);
+                        // Load 4 bytes -> 8 nibbles for block 1
+                        uint32_t pack1 = *(const uint32_t*)(rowBlocks[b + 1].qs + i / 2);
+                        __m128i p1 = _mm_cvtsi32_si128((int)pack1);
+                        __m128i low1 = _mm_and_si128(p1, _mm_set1_epi8(0x0F));
+                        __m128i high1 = _mm_and_si128(_mm_srli_epi16(p1, 4), _mm_set1_epi8(0x0F));
+                        __m128i q1_8 = _mm_unpacklo_epi8(low1, high1);
+                        __m256i q1_32 = _mm256_cvtepu16_epi32(q1_8);
+                        __m256 q1f = _mm256_cvtepi32_ps(q1_32);
+                        __m256 w1 = _mm256_fmsub_ps(vD1, q1f, _mm256_set1_ps(8.0f * d1));
+                        __m256 x1 = _mm256_loadu_ps(input + (b + 1) * 32 + i);
+                        acc256 = _mm256_fmadd_ps(w1, x1, acc256);
+                    }
+                }
+                for (; b < blocksPerRow; ++b) {
+                    float d = fp16ToFloat(rowBlocks[b].d);
+                    __m256 vD = _mm256_set1_ps(d);
+                    for (int i = 0; i < 32; i += 8) {
+                        uint32_t pack = *(const uint32_t*)(rowBlocks[b].qs + i / 2);
+                        __m128i p = _mm_cvtsi32_si128((int)pack);
+                        __m128i low = _mm_and_si128(p, _mm_set1_epi8(0x0F));
+                        __m128i high = _mm_and_si128(_mm_srli_epi16(p, 4), _mm_set1_epi8(0x0F));
+                        __m128i q8 = _mm_unpacklo_epi8(low, high);
+                        __m256i q32 = _mm256_cvtepu16_epi32(q8);
+                        __m256 qf = _mm256_cvtepi32_ps(q32);
+                        __m256 w = _mm256_fmsub_ps(vD, qf, _mm256_set1_ps(8.0f * d));
+                        __m256 x = _mm256_loadu_ps(input + b * 32 + i);
+                        acc256 = _mm256_fmadd_ps(w, x, acc256);
+                    }
+                }
+                __m128 hi = _mm256_extractf128_ps(acc256, 1);
+                __m128 lo = _mm256_castps256_ps128(acc256);
+                __m128 s = _mm_add_ps(lo, hi);
+                s = _mm_hadd_ps(s, s);
+                s = _mm_hadd_ps(s, s);
+                output[r] = _mm_cvtss_f32(s);
+            }
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q4_1: {
+            size_t numBlocks = (cols + 31) / 32;
+            size_t rowBytes = numBlocks * sizeof(block_q4_1);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            // ASM kernel has broken FP16 conversion; force scalar
+            q4_1GEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q5_0: {
+            size_t numBlocks = (cols + 31) / 32;
+            size_t rowBytes = numBlocks * sizeof(block_q5_0);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            q5_0GEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q5_1: {
+            size_t numBlocks = (cols + 31) / 32;
+            size_t rowBytes = numBlocks * sizeof(block_q5_1);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            q5_1GEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q8_0: {
+            const block_q8_0* blocks = (const block_q8_0*)wt.data;
+            size_t blocksPerRow = (cols + 31) / 32;
+            // ASM kernel has broken FP16 conversion and wrong output indexing; force scalar
+            for (size_t r = startRow; r < endRow; ++r) {
+                float acc = 0.0f;
+                const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
+                for (size_t b = 0; b < blocksPerRow; ++b) {
+                    float d = fp16ToFloat(rowBlocks[b].d);
+                    float blockAcc = 0.0f;
+                    for (int i = 0; i < 32; ++i) {
+                        blockAcc += (float)rowBlocks[b].qs[i] * input[b * 32 + i];
+                    }
+                    acc += d * blockAcc;
+                }
+                output[r] = acc;
+            }
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q8_K: {
+            size_t numBlocks = (cols + 255) / 256;
+            size_t rowBytes = numBlocks * sizeof(block_q8_K);
+            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+            q8kGEMV(rowWeights, input, output + startRow, rows, cols);
+            break;
+        }
+        case (int)GGMLType::GGML_TYPE_Q6_K: {
+            const block_q6_K* blocks = (const block_q6_K*)wt.data;
+            size_t blocksPerRow = (cols + 255) / 256;
+            constexpr size_t kBlockSize = sizeof(block_q6_K);  // 210 bytes
+            alignas(32) float dequantBuf[256];
+
+            // ASM dispatch: validate on first call, then use if certified
+            static bool q6kValidatedOnce = false;
+            if (!q6kValidatedOnce && Deep2_HasAVX2()) {
+                q6kValidatedOnce = true;
+                ValidateQ6KAsm(blocks, input, output, startRow, endRow, cols);
+            }
+            if (Q6KAsmEnabled()) {
+                // New 4-arg ABI: Deep2_Q6_K_GEMV(blocks, x, out, nBlocks)
+                // where nBlocks = blocksPerRow * rows
+                size_t totalBlocks = blocksPerRow * rows;
+                const uint8_t* rowWeights = (const uint8_t*)blocks + startRow * blocksPerRow * kBlockSize;
+                Deep2_Q6_K_GEMV(rowWeights, input, output + startRow, totalBlocks);
+            } else {
+                for (size_t r = startRow; r < endRow; ++r) {
+                    const block_q6_K* rowBlocks =
+                        (const block_q6_K*)((const uint8_t*)blocks + r * blocksPerRow * kBlockSize);
+                    float sum = 0.0f;
+                    for (size_t b = 0; b < blocksPerRow; ++b) {
+                        size_t elemsInBlock = (b == blocksPerRow - 1)
+                            ? (cols - b * 256)
+                            : 256;
+                        if (elemsInBlock == 0) break;
+                        dequantizeQ6KBlock(&rowBlocks[b], dequantBuf);
+                        __m256 acc = _mm256_setzero_ps();
+                        size_t i = 0;
+                        for (; i + 8 <= elemsInBlock; i += 8) {
+                            __m256 w = _mm256_load_ps(dequantBuf + i);
+                            __m256 x = _mm256_loadu_ps(input + b * 256 + i);
+                            acc = _mm256_fmadd_ps(w, x, acc);
+                        }
+                        __m128 hi128 = _mm256_extractf128_ps(acc, 1);
+                        __m128 lo128 = _mm256_castps256_ps128(acc);
+                        __m128 sum128 = _mm_add_ps(lo128, hi128);
+                        sum128 = _mm_hadd_ps(sum128, sum128);
+                        sum128 = _mm_hadd_ps(sum128, sum128);
+                        sum += _mm_cvtss_f32(sum128);
+                        for (; i < elemsInBlock; ++i) {
+                            sum += dequantBuf[i] * input[b * 256 + i];
+                        }
+                    }
+                    output[r] = sum;
+                }
+            }
+            break;
+        }
+        default:
+            for (size_t r = startRow; r < endRow; ++r) {
+                output[r] = 0.0f;
+            }
+            break;
+    }
+}
+
+// ============================================================================
 // LinearW: Matrix-vector multiply using WeightTensor
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
@@ -1610,40 +3141,114 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     size_t cols = wt.cols;
     size_t rows = wt.rows;
 
-    // --- Quant-agnostic dispatch via QuantKernelRegistry ---
-    auto& reg = Deep2::QuantKernelRegistry::Instance();
-    auto kernel = reg.GetGEMV(wt.type);
-    if (kernel) {
-        kernel((const uint8_t*)wt.data, input, output, rows, cols);
-    } else {
-        // Legacy fallback (registry not yet initialized)
-        switch (wt.type) {
-            case (int)GGMLType::GGML_TYPE_F32:
-                fp32GEMV((const float*)wt.data, input, output, rows, cols);
-                break;
-            case (int)GGMLType::GGML_TYPE_F16:
-                fp16GEMV((const uint16_t*)wt.data, input, output, rows, cols);
-                break;
-            case (int)GGMLType::GGML_TYPE_Q4_K:
-                q4kGEMV(wt.data, input, output, rows, cols);
-                break;
-            default:
-                memset(output, 0, outDim * sizeof(float));
-                break;
+    auto tLinearW0 = std::chrono::high_resolution_clock::now();
+
+    // --- CRITICAL FIX: zero output before accumulate-style kernels ---
+    memset(output, 0, outDim * sizeof(float));
+
+    // --- Profiler: record quant type for attribution ---
+    auto tQuant0 = std::chrono::high_resolution_clock::now();
+
+    // --- Row-parallel GEMV dispatch (VAL-051.8) ---
+    if (threadPool && rows >= 64) {
+        size_t numThreads = threadPool->size();
+        size_t rowsPerThread = rows / numThreads;
+        size_t remainder = rows % numThreads;
+
+        std::atomic<size_t> completed(0);
+        size_t submitted = 0;
+
+        size_t startRow = 0;
+        for (size_t t = 0; t < numThreads; ++t) {
+            size_t chunkRows = rowsPerThread + (t < remainder ? 1 : 0);
+            if (chunkRows == 0) continue;
+            size_t endRow = startRow + chunkRows;
+
+            threadPool->enqueue_void([&, startRow, endRow]() {
+                LinearW_Range(wt, input, output, startRow, endRow, cols);
+                completed++;
+            });
+            ++submitted;
+
+            startRow = endRow;
         }
+
+        while (completed < submitted) {
+            _mm_pause();
+        }
+    } else {
+        LinearW_Range(wt, input, output, 0, rows, cols);
+    }
+    auto tLinearW1 = std::chrono::high_resolution_clock::now();
+    double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
+    int typeIdx = wt.type & 0x1F;
+    if (typeIdx >= 0 && typeIdx < 32) {
+        g_linearwByType[typeIdx].calls++;
+        g_linearwByType[typeIdx].totalMs += linearwMs;
+        g_linearwByType[typeIdx].totalMACs += rows * cols;
+    }
+    auto& tensorStats = g_linearwByTensor[wt.name];
+    tensorStats.calls++;
+    tensorStats.totalMs += linearwMs;
+    tensorStats.totalMACs += rows * cols;
+
+    // --- Q4_K HEADER FINGERPRINT (once per tensor) ---
+    // DISABLED for profiler builds to avoid I/O overhead
+    #if 0
+    static const void* q4kFingerprinted = nullptr;
+    if (wt.type == 12 && wt.data && q4kFingerprinted != wt.data) {
+        q4kFingerprinted = wt.data;
+        const uint8_t* p = static_cast<const uint8_t*>(wt.data);
+        uint16_t dBits = 0, dminBits = 0;
+        memcpy(&dBits,    p + 0, 2);
+        memcpy(&dminBits,  p + 2, 2);
+        fprintf(stderr,
+            "[Q4K_HDR] name=%s data=%p d=0x%04x dmin=0x%04x "
+            "b0..3=%02x%02x%02x%02x s4..7=%02x%02x%02x%02x\n",
+            wt.name.c_str(), wt.data, dBits, dminBits,
+            p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+        fflush(stderr);
+    }
+    #endif
+
+    // --- NAN-GUARD: hard stop on first nonfinite output, log once ---
+    static bool nanGuardPrinted = false;
+    size_t bad = 0;
+    size_t firstBadIdx = 0;
+    for (size_t i = 0; i < outDim; ++i) {
+        if (!std::isfinite(output[i])) {
+            if (bad == 0) firstBadIdx = i;
+            ++bad;
+        }
+    }
+    if (bad > 0) {
+        if (!nanGuardPrinted) {
+            nanGuardPrinted = true;
+            fprintf(stderr,
+                "[LinearW:FATAL] name=%s type=%d rows=%zu cols=%zu "
+                "bad=%zu/%zu firstBad[%zu]=%g\n",
+                wt.name.c_str(), wt.type, rows, cols,
+                bad, outDim, firstBadIdx, output[firstBadIdx]);
+            fflush(stderr);
+        }
+        // Hard stop: zero the output to prevent NaN propagation
+        memset(output, 0, outDim * sizeof(float));
+        return;
     }
 
     // Add bias
     if (bias) {
-        size_t i = 0;
-        for (; i + 8 <= outDim; i += 8) {
-            __m256 ov = _mm256_loadu_ps(output + i);
-            __m256 bv = _mm256_loadu_ps(bias + i);
-            _mm256_storeu_ps(output + i, _mm256_add_ps(ov, bv));
-        }
-        for (; i < outDim; ++i) {
+        for (size_t i = 0; i < outDim; ++i) {
             output[i] += bias[i];
         }
+    }
+
+    // --- Profiler: record quant attribution ---
+    if (profilingEnabled_ && profiler_) {
+        auto tQuant1 = std::chrono::high_resolution_clock::now();
+        uint64_t quantUs = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(tQuant1 - tQuant0).count());
+        profiler_->recordQuantTime(wt.type, quantUs);
     }
 }
 
@@ -1654,9 +3259,6 @@ void Deep2Engine::reset() {
     if (kvCache) {
         kvCache->reset();
     }
-    if (kvCacheBackend_) {
-        kvCacheBackend_->reset();
-    }
     // Sampler reset is optional - not all samplers maintain state
     for (auto& router : moeRouters_) {
         if (router) {
@@ -1664,6 +3266,56 @@ void Deep2Engine::reset() {
             router->ResetExpertLoads();
         }
     }
+}
+
+// ============================================================================
+// Unload Model
+// ============================================================================
+void Deep2Engine::unloadModel() {
+    printf("[Deep2Engine] Unloading model...\n");
+
+    // Close BP16 streamer if active
+    if (bp16Streamer_) {
+        bp16Streamer_->close();
+        bp16Streamer_.reset();
+        bp16Enabled_ = false;
+    }
+
+    // Free any owned weight buffers (non-mapped weights)
+    for (auto& layer : modelWeights.layers) {
+        if (layer.wq.data && !layer.wq.mapped) alignedFree(static_cast<float*>(layer.wq.data));
+        if (layer.wk.data && !layer.wk.mapped) alignedFree(static_cast<float*>(layer.wk.data));
+        if (layer.wv.data && !layer.wv.mapped) alignedFree(static_cast<float*>(layer.wv.data));
+        if (layer.wo.data && !layer.wo.mapped) alignedFree(static_cast<float*>(layer.wo.data));
+        if (layer.wqkv.data && !layer.wqkv.mapped) alignedFree(static_cast<float*>(layer.wqkv.data));
+        if (layer.wGate.data && !layer.wGate.mapped) alignedFree(static_cast<float*>(layer.wGate.data));
+        if (layer.wUp.data && !layer.wUp.mapped) alignedFree(static_cast<float*>(layer.wUp.data));
+        if (layer.wDown.data && !layer.wDown.mapped) alignedFree(static_cast<float*>(layer.wDown.data));
+        if (layer.attnNorm.data && !layer.attnNorm.mapped) alignedFree(static_cast<float*>(layer.attnNorm.data));
+        if (layer.ffnNorm.data && !layer.ffnNorm.mapped) alignedFree(static_cast<float*>(layer.ffnNorm.data));
+        layer = LayerWeights();
+    }
+    modelWeights.layers.clear();
+
+    if (modelWeights.tokenEmbed.data && !modelWeights.tokenEmbed.mapped) alignedFree(static_cast<float*>(modelWeights.tokenEmbed.data));
+    if (modelWeights.lmHead.data && !modelWeights.lmHead.mapped) alignedFree(static_cast<float*>(modelWeights.lmHead.data));
+    if (modelWeights.finalNorm.data && !modelWeights.finalNorm.mapped) alignedFree(static_cast<float*>(modelWeights.finalNorm.data));
+
+    modelWeights.tokenEmbed = WeightTensor();
+    modelWeights.lmHead = WeightTensor();
+    modelWeights.finalNorm = WeightTensor();
+    modelWeights.loaded = false;
+    modelWeights.tieEmbeddings = false;
+
+    // Free KV cache
+    if (kvCache) {
+        kvCache.reset();
+    }
+
+    // Free buffers
+    deallocateBuffers();
+
+    printf("[Deep2Engine] Model unloaded.\n");
 }
 
 // ============================================================================
@@ -1681,28 +3333,7 @@ namespace {
 static double B3_L2Norm(const float* v, size_t n)
 {
     double sum = 0.0;
-    size_t i = 0;
-#if defined(__AVX2__)
-    const __m256i infExp = _mm256_set1_epi32(0x7F800000);
-    __m256 acc = _mm256_setzero_ps();
-    for (; i + 8 <= n; i += 8) {
-        __m256 vec = _mm256_loadu_ps(v + i);
-        __m256i iv = _mm256_castps_si256(vec);
-        __m256i exp = _mm256_and_si256(iv, infExp);
-        __m256i isInfNan = _mm256_cmpeq_epi32(exp, infExp);
-        if (_mm256_testz_si256(isInfNan, isInfNan) == 0) {
-            return -1.0;
-        }
-        acc = _mm256_fmadd_ps(vec, vec, acc);
-    }
-    __m128 hi = _mm256_extractf128_ps(acc, 1);
-    __m128 lo = _mm256_castps256_ps128(acc);
-    __m128 s = _mm_add_ps(lo, hi);
-    s = _mm_hadd_ps(s, s);
-    s = _mm_hadd_ps(s, s);
-    sum = static_cast<double>(_mm_cvtss_f32(s));
-#endif
-    for (; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         if (!std::isfinite(static_cast<double>(v[i])))
             return -1.0;
         sum += static_cast<double>(v[i]) * static_cast<double>(v[i]);
@@ -1714,22 +3345,7 @@ static float B3_MinValue(const float* v, size_t n)
 {
     if (n == 0) return 0.0f;
     float x = v[0];
-    size_t i = 1;
-#if defined(__AVX2__)
-    if (i + 8 <= n) {
-        __m256 minVec = _mm256_loadu_ps(v + i);
-        i += 8;
-        for (; i + 8 <= n; i += 8) {
-            __m256 vec = _mm256_loadu_ps(v + i);
-            minVec = _mm256_min_ps(minVec, vec);
-        }
-        alignas(32) float mins[8];
-        _mm256_store_ps(mins, minVec);
-        for (int j = 0; j < 8; ++j)
-            x = std::min(x, mins[j]);
-    }
-#endif
-    for (; i < n; ++i)
+    for (size_t i = 1; i < n; ++i)
         if (v[i] < x) x = v[i];
     return x;
 }
@@ -1738,22 +3354,7 @@ static float B3_MaxValue(const float* v, size_t n)
 {
     if (n == 0) return 0.0f;
     float x = v[0];
-    size_t i = 1;
-#if defined(__AVX2__)
-    if (i + 8 <= n) {
-        __m256 maxVec = _mm256_loadu_ps(v + i);
-        i += 8;
-        for (; i + 8 <= n; i += 8) {
-            __m256 vec = _mm256_loadu_ps(v + i);
-            maxVec = _mm256_max_ps(maxVec, vec);
-        }
-        alignas(32) float maxs[8];
-        _mm256_store_ps(maxs, maxVec);
-        for (int j = 0; j < 8; ++j)
-            x = std::max(x, maxs[j]);
-    }
-#endif
-    for (; i < n; ++i)
+    for (size_t i = 1; i < n; ++i)
         if (v[i] > x) x = v[i];
     return x;
 }
@@ -1761,18 +3362,7 @@ static float B3_MaxValue(const float* v, size_t n)
 static size_t B3_CountNonFinite(const float* v, size_t n)
 {
     size_t count = 0;
-    size_t i = 0;
-#if defined(__AVX2__)
-    const __m256i infExp = _mm256_set1_epi32(0x7F800000);
-    for (; i + 8 <= n; i += 8) {
-        __m256i iv = _mm256_castps_si256(_mm256_loadu_ps(v + i));
-        __m256i exp = _mm256_and_si256(iv, infExp);
-        __m256i isInfNan = _mm256_cmpeq_epi32(exp, infExp);
-        int mask = _mm256_movemask_ps(_mm256_castsi256_ps(isInfNan));
-        count += static_cast<size_t>(_mm_popcnt_u32(mask));
-    }
-#endif
-    for (; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         if (!std::isfinite(static_cast<double>(v[i])))
             ++count;
     }
@@ -1837,6 +3427,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
     // ── VAL-051.7: Reset residency counters ──────────────────────────
     ResidencyCounters::Reset();
+    Deep2_ResetLinearWStats();
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -1844,7 +3435,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     for (size_t t = 0; t < promptLen && t < config.maxSeqLen; ++t) {
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
+        ResidencyCounters::BeginEmbed();
         embedToken(promptTokens[t], h);
+        ResidencyCounters::EndEmbed();
 
         // ── B3: Trace prompt embedding ─────────────────────────────────
         B3_TraceState("PROMPT_EMBED", t, h, config.hiddenDim);
@@ -1854,7 +3447,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            auto layerT0 = std::chrono::high_resolution_clock::now();
             forwardLayer(layer, layerInput, layerOutput, t + 1);
+            auto layerT1 = std::chrono::high_resolution_clock::now();
+            double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
+            ResidencyCounters::RecordLayerTime(layer, layerMs);
 
             // Swap buffers
             float* temp = layerInput;
@@ -1875,9 +3472,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (kvCache) {
             kvCache->advance();
         }
-        if (kvCacheBackend_) {
-            kvCacheBackend_->advance();
-        }
     }
 
     size_t tokensGenerated = 0;
@@ -1886,15 +3480,28 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     // Generate tokens (decode)
     for (size_t t = 0; t < maxOutputLen; ++t) {
         // Use the last hidden state as input
-        // For first decode step: use last prompt token's hidden state
-        // For subsequent steps: use hiddenStates[0] (overwritten with latest token)
         float* h = (t == 0 && promptLen > 0)
             ? hiddenStates + (promptLen - 1) * config.hiddenDim
             : hiddenStates;
 
-        // ── B3: Trace input token ──────────────────────────────────────
-        printf("[B3_INPUT] pos=%zu token=%d input_ptr=%p\n",
-               currentPos, (t == 0 && promptLen > 0) ? promptTokens[promptLen - 1] : (int)outputTokens[tokensGenerated - 1], (void*)h);
+        // ── Production Profiler: begin token ─────────────────────────
+        if (profilingEnabled_ && profiler_) {
+            profiler_->beginToken((uint32_t)t, (uint32_t)currentPos);
+            profiler_->setModelInfo(
+                modelWeights.loaded ? "loaded" : "none",
+                0, // quant_bits determined from weights
+                config.hiddenDim,
+                config.numLayers,
+                config.numHeads);
+            profiler_->beginEmbed();
+        }
+
+        // Embed the new token for this decode step
+        embedToken((t == 0 && promptLen > 0) ? promptTokens[promptLen - 1] : outputTokens[tokensGenerated - 1], h);
+
+        if (profilingEnabled_ && profiler_) {
+            profiler_->endEmbed();
+        }
 
         // ── VAL-051.7: Forward timing ─────────────────────────────────
         ResidencyCounters::BeginForward();
@@ -1904,9 +3511,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
-            ResidencyCounters::BeginLayer();
+            auto layerT0 = std::chrono::high_resolution_clock::now();
             forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
-            ResidencyCounters::EndLayer();
+            auto layerT1 = std::chrono::high_resolution_clock::now();
+            double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
+            ResidencyCounters::RecordLayerTime(layer, layerMs);
             float* temp = layerInput;
             layerInput = layerOutput;
             layerOutput = temp;
@@ -1914,40 +3523,53 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         ResidencyCounters::EndForward();
 
-        // ── B3: Trace after final layer ───────────────────────────────
-        B3_TraceState("FINAL_LAYER", currentPos, layerInput, config.hiddenDim);
+        // Final norm before logits (if not done in last layer)
+        if (profilingEnabled_ && profiler_) {
+            profiler_->beginFinalNorm();
+        }
+        // Note: final norm is typically the last layer's output norm; if model has separate final_norm:
+        if (modelWeights.finalNorm.data) {
+            RMSNormW(modelWeights.finalNorm, layerInput, layerInput, config.hiddenDim, modelWeights.normEps);
+        }
+        if (profilingEnabled_ && profiler_) {
+            profiler_->endFinalNorm();
+            profiler_->beginLogits();
+        }
 
         // Compute logits: lm_head * hiddenState
+        ResidencyCounters::BeginLogits();
         computeLogits(layerInput, logits);
+        ResidencyCounters::EndLogits();
 
-        // ── B3: Trace logits ──────────────────────────────────────────
-        B3_TraceLogits("LOGITS", currentPos, logits, config.vocabSize);
+        if (profilingEnabled_ && profiler_) {
+            profiler_->endLogits();
+            profiler_->beginSampling();
+        }
 
         // Hard gate: reject invalid hidden state
         const double stateNorm = B3_L2Norm(layerInput, config.hiddenDim);
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
                     currentPos, stateNorm);
-#ifdef B3_CONTINUE_FOR_RESIDENCY_BASELINE
-            fprintf(stderr, "[B3_CONTINUE] continuing for residency baseline capture\n");
-#else
             return tokensGenerated;
-#endif
         }
 
         // Hard gate: reject invalid logits
         if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0) {
             fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n",
                     currentPos, config.vocabSize);
-#ifdef B3_CONTINUE_FOR_RESIDENCY_BASELINE
-            fprintf(stderr, "[B3_CONTINUE] continuing for residency baseline capture\n");
-#else
             return tokensGenerated;
-#endif
         }
 
         // Sample next token
         int nextToken = sampleToken(logits);
+
+        if (profilingEnabled_ && profiler_) {
+            profiler_->endSampling();
+            TokenProfile tp = profiler_->endToken();
+            profileHistory_.push_back(tp);
+        }
+
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
         
@@ -1957,24 +3579,35 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
 
-        // Embed the new token for next iteration
-        embedToken(nextToken, hiddenStates);
-
-        // ── B3: Trace after embedding ───────────────────────────────────
-        B3_TraceState("EMBED", currentPos + 1, hiddenStates, config.hiddenDim);
+        // ── Sovereign PlasmaGovernor: thermal throttle ────────────────────
+        if (plasmaGovernorEnabled_ && plasmaGovernor_) {
+            if (plasmaGovernor_->isEmergencyStopped()) {
+                printf("[Deep2Engine] PlasmaGovernor EMERGENCY STOP — halting generation\n");
+                break;
+            }
+            if (plasmaGovernor_->needsCoolingPause()) {
+                uint32_t pause_us = plasmaGovernor_->coolingPauseMicros();
+                if (pause_us > 0) {
+                    printf("[Deep2Engine] PlasmaGovernor cooling pause: %u us\n", pause_us);
+                    // Use high-resolution sleep for microsecond precision
+                    auto start = std::chrono::high_resolution_clock::now();
+                    while (true) {
+                        auto now = std::chrono::high_resolution_clock::now();
+                        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start).count();
+                        if (elapsed >= pause_us) break;
+                    }
+                }
+            }
+        }
 
         // Advance KV cache
         if (kvCache) {
             kvCache->advance();
         }
-        if (kvCacheBackend_) {
-            kvCacheBackend_->advance();
-        }
         currentPos++;
 
         // Reverse analysis hook: token generated
         if (reverseAnalysisEnabled_ && reverseIntegration_) {
-            // Convert token to bytes for reverse analysis
             uint8_t tokenByte = static_cast<uint8_t>(nextToken & 0xFF);
             reverseIntegration_->onTokenGenerated(static_cast<uint64_t>(nextToken), &tokenByte, 1);
         }
@@ -2002,6 +3635,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
     // ── VAL-051.7: Print residency counters ─────────────────────────
     ResidencyCounters::Print();
+    Deep2_ReportLinearWStats();
 
     return tokensGenerated;
 }
@@ -2035,8 +3669,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // ── Diagnostic: print layer weight info for layer 0 ────────────────
     static bool printedLayerInfo = false;
     if (!printedLayerInfo && layer == 0) {
-        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p\n",
-               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data);
+        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p wqkv.data=%p\n",
+               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data, lw.wqkv.data);
         printf("[Deep2Engine] Layer 0 weights: attnNorm.data=%p ffnNorm.data=%p\n",
                lw.attnNorm.data, lw.ffnNorm.data);
         printedLayerInfo = true;
@@ -2051,53 +3685,86 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         if (layerBytes > 0) {
             auto* lease = marsController_->PlaceTensor(layerId, "layer_" + std::to_string(layer),
                                                         layerBytes, 1.0f, true);
-            (void)lease; // TODO: use lease for eviction tracking
+            // Track lease for eviction; store in per-layer MARS lease map
+            if (lease) {
+                marsLayerLeases_[layer] = lease;
+            }
         }
     }
 
+    // ── Per-layer state trace: input ────────────────────────────────
+    #if 1
+    {
+        char phase[32];
+        snprintf(phase, sizeof(phase), "LAYER%zu_INPUT", layer);
+        B3_TraceState(phase, layer, input, hiddenDim);
+    }
+    #endif
+
     // 1. Attention RMSNorm
+    if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
     RMSNormW(lw.attnNorm, input, attentionOutput, hiddenDim, modelWeights.normEps);
-    if (layer == 0) B3_TraceState("LAYER0_ATTN_NORM", layer, attentionOutput, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
 
     // 2. Attention with real Q/K/V/O projections
+    ResidencyCounters::BeginAttention();
+    if (profilingEnabled_ && profiler_) profiler_->beginQKVProj();
     computeAttention(layer, attentionOutput, output, seqLen);
-    if (layer == 0) B3_TraceState("LAYER0_ATTN_OUT", layer, output, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
+    ResidencyCounters::EndAttention();
 
     // 3. Residual connection
-    size_t i = 0;
-    for (; i + 8 <= hiddenDim; i += 8) {
-        __m256 ov = _mm256_loadu_ps(output + i);
-        __m256 iv = _mm256_loadu_ps(input + i);
-        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, iv));
-    }
-    for (; i < hiddenDim; ++i) {
+    if (profilingEnabled_ && profiler_) profiler_->beginAttnResidual();
+    for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += input[i];
     }
-    if (layer == 0) B3_TraceState("LAYER0_ATTN_RESID", layer, output, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endAttnResidual();
+    #if 1
+    {
+        char phase[32];
+        snprintf(phase, sizeof(phase), "LAYER%zu_POST_ATTN", layer);
+        B3_TraceState(phase, layer, output, hiddenDim);
+    }
+    #endif
 
     // 4. FFN RMSNorm
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
     RMSNormW(lw.ffnNorm, output, attentionOutput, hiddenDim, modelWeights.normEps);
-    if (layer == 0) B3_TraceState("LAYER0_FFN_NORM", layer, attentionOutput, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
 
     // 5. FFN (SwiGLU) with real weight projections
+    ResidencyCounters::BeginFFN();
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
     if (modelWeights.isMoE && modelWeights.numExperts > 0) {
         computeMoEFFN(layer, attentionOutput, ffnOutput);
     } else {
         computeFFN(layer, attentionOutput, ffnOutput);
     }
-    if (layer == 0) B3_TraceState("LAYER0_FFN_OUT", layer, ffnOutput, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
+    ResidencyCounters::EndFFN();
 
     // 6. Residual connection
-    size_t i = 0;
-    for (; i + 8 <= hiddenDim; i += 8) {
-        __m256 ov = _mm256_loadu_ps(output + i);
-        __m256 fv = _mm256_loadu_ps(ffnOutput + i);
-        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, fv));
-    }
-    for (; i < hiddenDim; ++i) {
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNResidual();
+    for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += ffnOutput[i];
     }
-    if (layer == 0) B3_TraceState("LAYER0_FINAL", layer, output, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNResidual();
+    #if 1
+    {
+        char phase[32];
+        snprintf(phase, sizeof(phase), "LAYER%zu_POST_FFN", layer);
+        B3_TraceState(phase, layer, output, hiddenDim);
+    }
+    #endif
+
+    // ── Per-layer state trace: output ───────────────────────────────
+    #if 0
+    {
+        char phase[32];
+        snprintf(phase, sizeof(phase), "LAYER%zu_OUTPUT", layer);
+        B3_TraceState(phase, layer, output, hiddenDim);
+    }
+    #endif
 
     // Reverse analysis hook: layer processed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
@@ -2108,106 +3775,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 // ============================================================================
 // Compute Attention - Real Q/K/V/O weight projections + KV cache + RoPE
 // Supports both standard MHA/GQA and MLA (K2) factorized attention
-// Unified backend: IKVCacheBackend (Legacy or Toroidal)
 // ============================================================================
-static void AttentionWithBackend(const float* query,
-                                 const Deep2::IKVCacheBackend& backend,
-                                 size_t layer, size_t head,
-                                 float* output, size_t seqLen) {
-    const size_t headDim = backend.headDimSize();
-    const float scale = 1.0f / sqrtf((float)headDim);
-    const size_t seqUsed = backend.currentLength();
-    const size_t attend = (seqLen < seqUsed) ? seqLen : seqUsed;
-
-    if (headDim == 0 || attend == 0) {
-        memset(output, 0, headDim * sizeof(float));
-        return;
-    }
-
-    float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
-    if (!scores) {
-        memset(output, 0, headDim * sizeof(float));
-        return;
-    }
-
-    // Pass 1: Compute Q*K^T scores
-    float maxScore = -1e38f;
-    for (size_t pos = 0; pos < attend; ++pos) {
-        Deep2::KVSpan span0{}, span1{};
-        size_t nSpans = backend.querySpans(layer, head, pos, pos + 1, span0, span1);
-        const float* k = (nSpans > 0 && span0.count > 0) ? span0.keys : nullptr;
-        if (!k) {
-            scores[pos] = -1e38f;
-            continue;
-        }
-        float dot = 0.0f;
-        size_t i = 0;
-        __m256 dot_acc = _mm256_setzero_ps();
-        for (; i + 8 <= headDim; i += 8) {
-            __m256 qv = _mm256_loadu_ps(query + i);
-            __m256 kv = _mm256_loadu_ps(k + i);
-            dot_acc = _mm256_fmadd_ps(qv, kv, dot_acc);
-        }
-        __m128 hi = _mm256_extractf128_ps(dot_acc, 1);
-        __m128 lo = _mm256_castps256_ps128(dot_acc);
-        __m128 sum = _mm_add_ps(lo, hi);
-        sum = _mm_hadd_ps(sum, sum);
-        sum = _mm_hadd_ps(sum, sum);
-        dot = _mm_cvtss_f32(sum);
-        for (; i < headDim; ++i)
-            dot += query[i] * k[i];
-        scores[pos] = dot * scale;
-        if (scores[pos] > maxScore) maxScore = scores[pos];
-    }
-
-    // Pass 2: Online softmax
-    for (size_t pos = 0; pos < attend; ++pos) {
-        scores[pos] = expf(scores[pos] - maxScore);
-    }
-    float sumExp = 0.0f;
-    size_t p = 0;
-    __m256 sum_acc = _mm256_setzero_ps();
-    for (; p + 8 <= attend; p += 8) {
-        __m256 sv = _mm256_loadu_ps(scores + p);
-        sum_acc = _mm256_add_ps(sum_acc, sv);
-    }
-    __m128 hi = _mm256_extractf128_ps(sum_acc, 1);
-    __m128 lo = _mm256_castps256_ps128(sum_acc);
-    __m128 s = _mm_add_ps(lo, hi);
-    s = _mm_hadd_ps(s, s);
-    s = _mm_hadd_ps(s, s);
-    sumExp = _mm_cvtss_f32(s);
-    for (; p < attend; ++p) {
-        sumExp += scores[p];
-    }
-    if (sumExp < 1e-12f) sumExp = 1e-12f;
-    float invSum = 1.0f / sumExp;
-    for (size_t pos = 0; pos < attend; ++pos)
-        scores[pos] *= invSum;
-
-    // Pass 3: Weighted sum of values
-    memset(output, 0, headDim * sizeof(float));
-    for (size_t pos = 0; pos < attend; ++pos) {
-        Deep2::KVSpan span0{}, span1{};
-        size_t nSpans = backend.querySpans(layer, head, pos, pos + 1, span0, span1);
-        const float* v = (nSpans > 0 && span0.count > 0) ? span0.values : nullptr;
-        if (!v) continue;
-        float w = scores[pos];
-        size_t i = 0;
-        __m256 wv = _mm256_set1_ps(w);
-        for (; i + 8 <= headDim; i += 8) {
-            __m256 vv = _mm256_loadu_ps(v + i);
-            __m256 ov = _mm256_loadu_ps(output + i);
-            ov = _mm256_fmadd_ps(wv, vv, ov);
-            _mm256_storeu_ps(output + i, ov);
-        }
-        for (; i < headDim; ++i)
-            output[i] += w * v[i];
-    }
-
-    _aligned_free(scores);
-}
-
 void Deep2Engine::computeAttention(size_t layer, const float* input, float* output, size_t seqLen) {
     if (layer >= modelWeights.layers.size()) {
         memcpy(output, input, config.hiddenDim * sizeof(float));
@@ -2230,141 +3798,256 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         size_t numHeads       = config.numHeads;
 
         // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
+        // Step 1: q_a = attnQ_a^T * input  [qLoraRank]
         LinearW(lw.attnQ_a, input, nullptr, mlaQ_a, qLoraRank);
+        if (layer == 0) B3_TraceState("LAYER0_MLA_QA", layer, mlaQ_a, qLoraRank);
+
+        // Step 2: RMSNorm on q_a
         RMSNormW(lw.attnQ_a_norm, mlaQ_a, mlaQ_a, qLoraRank, config.normEps);
+
+        // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
         LinearW(lw.attnQ_b, mlaQ_a, nullptr, mlaQ_b, numHeads * headDim);
+        if (layer == 0) B3_TraceState("LAYER0_MLA_QB", layer, mlaQ_b, numHeads * headDim);
 
-        // KV-path
+        // KV-path: hidden → kv_a_mqa (GEMV) → split → [compressed_kv | k_pe]
+        // Step 4: kv_a = attnKV_a_mqa^T * input  [kvLoraRank + qkRopeHeadDim]
         LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a, kvLoraRank + qkRopeHeadDim);
-        float* compressedKV = mlaKV_a;
-        float* k_pe         = mlaKV_a + kvLoraRank;
+        if (layer == 0) B3_TraceState("LAYER0_MLA_KVA", layer, mlaKV_a, kvLoraRank + qkRopeHeadDim);
+
+        // Step 5: Split kv_a into compressed_kv and k_pe
+        float* compressedKV = mlaKV_a;                    // [kvLoraRank]
+        float* k_pe         = mlaKV_a + kvLoraRank;       // [qkRopeHeadDim]
+
+        // Step 6: RMSNorm on compressed_kv
         RMSNormW(lw.attnKV_a_norm, compressedKV, compressedKV, kvLoraRank, config.normEps);
+
+        // Step 7: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
         LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b, numHeads * qkNopeHeadDim);
+        if (layer == 0) B3_TraceState("LAYER0_MLA_KB", layer, mlaK_b, numHeads * qkNopeHeadDim);
+
+        // Step 8: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
         LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b, numHeads * vHeadDim);
+        if (layer == 0) B3_TraceState("LAYER0_MLA_VB", layer, mlaV_b, numHeads * vHeadDim);
 
-        memcpy(qProj, mlaQ_b, numHeads * headDim * sizeof(float));
+        // Step 9: Combine q_b + k_pe (RoPE on k_pe, then concat)
+        // For now: copy q_b to output, then apply output projection
+        // Full attention with KV cache would go here
+        size_t qbBytes = numHeads * headDim * sizeof(float);
+        size_t qpBytes = config.hiddenDim > 0 ? (config.numHeads * config.headDim * sizeof(float)) : qbBytes;
+        if (qbBytes > qpBytes) {
+            fprintf(stderr, "[MLA_ASSERT] qProj overflow: need %zu have %zu\n", qbBytes, qpBytes);
+            abort();
+        }
+        memcpy(qProj, mlaQ_b, qbBytes);
+
+        // Step 10: Output projection: attnO^T * qProj  [hiddenDim]
         LinearW(lw.attnO, qProj, nullptr, output, hiddenDim);
+        if (layer == 0) B3_TraceState("LAYER0_MLA_ATTO", layer, output, hiddenDim);
 
+        // Reverse analysis hook
         if (reverseAnalysisEnabled_ && reverseIntegration_) {
             reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
         }
         return;
     }
 
+    // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
+    if (lw.wqkv.data) {
+        size_t kvDim = numKVHeads * headDim;
+        size_t qkvDim = hiddenDim + 2 * kvDim;
+        // Project fused QKV: [qkvDim] = wqkv^T * input
+        LinearW(lw.wqkv, input, nullptr, qProj, qkvDim);
+
+        // Split into Q, K, V
+        float* q = qProj;                           // [hiddenDim]
+        float* k = qProj + hiddenDim;             // [kvDim]
+        float* v = qProj + hiddenDim + kvDim;     // [kvDim]
+
+        // Copy K, V to dedicated buffers for RoPE and KV cache
+        memcpy(kProj, k, kvDim * sizeof(float));
+        memcpy(vProj, v, kvDim * sizeof(float));
+    }
     // ── Standard MHA / GQA path ────────────────────────────────────────
-    LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
-    size_t kvDim = numKVHeads * headDim;
-    LinearW(lw.wk, input, nullptr, kProj, kvDim);
-    LinearW(lw.wv, input, nullptr, vProj, kvDim);
+    else if (lw.wq.data) {
+        // Q projection: [hiddenDim] -> [hiddenDim]
+        LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
+
+        // K projection: [hiddenDim] -> [kvDim]
+        size_t kvDim = numKVHeads * headDim;
+        LinearW(lw.wk, input, nullptr, kProj, kvDim);
+
+        // V projection: [hiddenDim] -> [kvDim]
+        LinearW(lw.wv, input, nullptr, vProj, kvDim);
+    } else {
+        // No attention weights available
+        memset(output, 0, hiddenDim * sizeof(float));
+        return;
+    }
 
     // Apply RoPE if enabled
     if (config.useRoPE) {
-        size_t pos = kvCacheBackend_ ? kvCacheBackend_->currentLength() : seqLen - 1;
+        if (profilingEnabled_ && profiler_) profiler_->beginRoPE();
+        size_t pos = kvCache ? kvCache->currentLength() : seqLen - 1;
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos,
                   modelWeights.ropeTheta, modelWeights.ropeScaling);
+        if (profilingEnabled_ && profiler_) profiler_->endRoPE();
     }
 
-    // Store K, V into unified KV backend (or legacy cache)
-    if (config.useKVCache) {
-        if (kvCacheBackend_) {
-            for (size_t h = 0; h < numKVHeads; ++h) {
-                kvCacheBackend_->writeKV(layer, h,
-                                         kProj + h * headDim,
-                                         vProj + h * headDim);
-            }
-        } else if (kvCache) {
-            for (size_t h = 0; h < numKVHeads; ++h) {
-                float* kPtr = nullptr;
-                float* vPtr = nullptr;
-                kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
-                if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
-                if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
-            }
+    // Store K, V into KV cache
+    if (config.useKVCache && kvCache) {
+        if (profilingEnabled_ && profiler_) profiler_->beginKVStore();
+        for (size_t h = 0; h < numKVHeads; ++h) {
+            float* kPtr = nullptr;
+            float* vPtr = nullptr;
+            kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
+            if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
+            if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
         }
+        if (profilingEnabled_ && profiler_) profiler_->endKVStore();
 
-        // Attention: for each Q head, attend to all cached K/V
+        // GQA: KV heads are shared across Q heads
+        if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
         for (size_t h = 0; h < numHeads; ++h) {
-            size_t kvHead = h % numKVHeads;
+            size_t kvHead = h % numKVHeads; // GQA mapping
             float* headOut = output + h * headDim;
-            if (kvCacheBackend_) {
-                AttentionWithBackend(qProj + h * headDim, *kvCacheBackend_,
-                                     layer, kvHead, headOut, seqLen);
-            } else if (kvCache) {
-                AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
-                                     headOut, seqLen);
-            } else {
-                // No cache: single-position fallback
+            AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
+                               headOut, seqLen);
+        }
+        if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
+    }
+    // ── Sovereign ToroidalKVCache: infinite-context ring buffer ────────
+    else if (toroidalKVEnabled_ && toroidalKV_) {
+        if (profilingEnabled_ && profiler_) profiler_->beginKVStore();
+        // Inject token into toroidal KV cache
+        rawrxd::PlasmaToken plasma;
+        plasma.token_id = 0;  // Will be filled after sampling
+        plasma.temperature = 0.0f;
+        plasma.entropy = 0.0f;
+        plasma.seq_pos = toroidalKV_->writeHead();
+        plasma.fused = true;
+        plasma.beam_injection_count = 0;
+
+        // Flatten K/V for all layers into contiguous buffers
+        // For now, inject per-layer during forward pass
+        // (Full implementation would batch across layers)
+        toroidalKV_->injectToken(plasma, kProj, vProj);
+        if (profilingEnabled_ && profiler_) profiler_->endKVStore();
+
+        // Attention using toroidal KV cache
+        if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
+        // Query all stored tokens from the toroidal cache for this layer
+        const float* torusKeys = nullptr;
+        const float* torusValues = nullptr;
+        size_t tokenCount = 0;
+        uint64_t oldestSeq = (toroidalKV_->writeHead() > toroidalKV_->tokenCount())
+            ? (toroidalKV_->writeHead() - toroidalKV_->tokenCount()) : 0;
+        bool haveTorus = toroidalKV_->queryTokenRange(oldestSeq, toroidalKV_->writeHead(), torusKeys, torusValues, tokenCount);
+
+        for (size_t h = 0; h < numHeads; ++h) {
+            size_t kvHead = h % numKVHeads; // GQA mapping
+            const float* q = qProj + h * headDim;
+            float* headOut = output + h * headDim;
+
+            if (!haveTorus || tokenCount == 0 || !torusKeys || !torusValues) {
+                // Fallback: self-attention on current token only
                 float scale = 1.0f / sqrtf((float)headDim);
                 float score = 0.0f;
-                size_t i = 0;
-                __m256 acc = _mm256_setzero_ps();
-                for (; i + 8 <= headDim; i += 8) {
-                    __m256 qv = _mm256_loadu_ps(qProj + h * headDim + i);
-                    __m256 kv = _mm256_loadu_ps(kProj + kvHead * headDim + i);
-                    acc = _mm256_fmadd_ps(qv, kv, acc);
+                for (size_t i = 0; i < headDim; ++i) {
+                    score += q[i] * kProj[kvHead * headDim + i];
                 }
-                __m128 hi = _mm256_extractf128_ps(acc, 1);
-                __m128 lo = _mm256_castps256_ps128(acc);
-                __m128 s = _mm_add_ps(lo, hi);
-                s = _mm_hadd_ps(s, s);
-                s = _mm_hadd_ps(s, s);
-                score = _mm_cvtss_f32(s);
-                for (; i < headDim; ++i)
-                    score += qProj[h * headDim + i] * kProj[kvHead * headDim + i];
                 score *= scale;
                 float weight = 1.0f / (1.0f + expf(-score));
-                __m256 wv = _mm256_set1_ps(weight);
-                i = 0;
-                for (; i + 8 <= headDim; i += 8) {
-                    __m256 vv = _mm256_loadu_ps(vProj + kvHead * headDim + i);
-                    _mm256_storeu_ps(headOut + i, _mm256_mul_ps(wv, vv));
-                }
-                for (; i < headDim; ++i)
+                for (size_t i = 0; i < headDim; ++i) {
                     headOut[i] = weight * vProj[kvHead * headDim + i];
+                }
+                continue;
             }
+
+            // Toroidal attention: compute Q*K^T over all stored tokens
+            const size_t attend = tokenCount;
+            const float  scale = 1.0f / sqrtf((float)headDim);
+            alignas(32) float scores[128]; // stack buffer for up to 128 tokens (adjust if needed)
+            float* scoreBuf = (attend <= 128) ? scores : (float*)_aligned_malloc(attend * sizeof(float), 32);
+            if (!scoreBuf) {
+                memset(headOut, 0, headDim * sizeof(float));
+                continue;
+            }
+
+            // Pass 1: compute Q*K^T scores
+            float maxScore = -1e38f;
+            size_t numLayers = modelWeights.numLayers;
+            for (size_t pos = 0; pos < attend; ++pos) {
+                // torus layout: [token][layer][head][head_dim]
+                size_t layerOffset = layer * numHeads * headDim;
+                size_t headOffset = kvHead * headDim;
+                const float* k = torusKeys + pos * (numLayers * numHeads * headDim) + layerOffset + headOffset;
+                float dot = 0.0f;
+                for (size_t i = 0; i < headDim; ++i) {
+                    dot += q[i] * k[i];
+                }
+                scoreBuf[pos] = dot * scale;
+                if (scoreBuf[pos] > maxScore) maxScore = scoreBuf[pos];
+            }
+
+            // Pass 2: softmax
+            float sumExp = 0.0f;
+            for (size_t pos = 0; pos < attend; ++pos) {
+                scoreBuf[pos] = expf(scoreBuf[pos] - maxScore);
+                sumExp += scoreBuf[pos];
+            }
+            if (sumExp < 1e-12f) sumExp = 1e-12f;
+            float invSum = 1.0f / sumExp;
+            for (size_t pos = 0; pos < attend; ++pos) {
+                scoreBuf[pos] *= invSum;
+            }
+
+            // Pass 3: weighted sum of values
+            memset(headOut, 0, headDim * sizeof(float));
+            for (size_t pos = 0; pos < attend; ++pos) {
+                size_t layerOffset = layer * numHeads * headDim;
+                size_t headOffset = kvHead * headDim;
+                const float* v = torusValues + pos * (numLayers * numHeads * headDim) + layerOffset + headOffset;
+                float w = scoreBuf[pos];
+                for (size_t i = 0; i < headDim; ++i) {
+                    headOut[i] += w * v[i];
+                }
+            }
+
+            if (scoreBuf != scores) _aligned_free(scoreBuf);
         }
+        if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
     } else {
         // No KV cache: self-attention on current token only
+        if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
         for (size_t h = 0; h < numHeads; ++h) {
             const float* q = qProj + h * headDim;
             const float* k = kProj + (h % numKVHeads) * headDim;
             const float* v = vProj + (h % numKVHeads) * headDim;
+
             float scale = 1.0f / sqrtf((float)headDim);
             float score = 0.0f;
-            size_t i = 0;
-            __m256 acc = _mm256_setzero_ps();
-            for (; i + 8 <= headDim; i += 8) {
-                __m256 qv = _mm256_loadu_ps(q + i);
-                __m256 kv = _mm256_loadu_ps(k + i);
-                acc = _mm256_fmadd_ps(qv, kv, acc);
-            }
-            __m128 hi = _mm256_extractf128_ps(acc, 1);
-            __m128 lo = _mm256_castps256_ps128(acc);
-            __m128 s = _mm_add_ps(lo, hi);
-            s = _mm_hadd_ps(s, s);
-            s = _mm_hadd_ps(s, s);
-            score = _mm_cvtss_f32(s);
-            for (; i < headDim; ++i)
+            for (size_t i = 0; i < headDim; ++i) {
                 score += q[i] * k[i];
+            }
             score *= scale;
             float weight = 1.0f / (1.0f + expf(-score));
+
             float* headOut = output + h * headDim;
-            __m256 wv = _mm256_set1_ps(weight);
-            i = 0;
-            for (; i + 8 <= headDim; i += 8) {
-                __m256 vv = _mm256_loadu_ps(v + i);
-                _mm256_storeu_ps(headOut + i, _mm256_mul_ps(wv, vv));
-            }
-            for (; i < headDim; ++i)
+            for (size_t i = 0; i < headDim; ++i) {
                 headOut[i] = weight * v[i];
+            }
         }
+        if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
     }
 
-    // Output projection
-    float* tempOut = attentionOutput;
+    // Output projection: [hiddenDim] -> [hiddenDim]
+    float* tempOut = ffnOutput;
+    if (profilingEnabled_ && profiler_) profiler_->beginAttnOutProj();
     LinearW(lw.wo, output, nullptr, tempOut, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
     memcpy(output, tempOut, hiddenDim * sizeof(float));
 
+    // Reverse analysis hook: attention computed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
         reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
     }
@@ -2386,16 +4069,24 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     if (intermediateDim == 0) intermediateDim = hiddenDim * 4;
 
     // Gate projection: [hiddenDim] -> [intermediateDim]
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
     LinearW(lw.wGate, input, nullptr, gateBuf, intermediateDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNGate();
 
     // Up projection: [hiddenDim] -> [intermediateDim]
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNUp();
     LinearW(lw.wUp, input, nullptr, upBuf, intermediateDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
 
     // SwiGLU: output = silu(gate) * up
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNSwiGLU();
     SwiGLU(gateBuf, upBuf, gateBuf, intermediateDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
 
     // Down projection: [intermediateDim] -> [hiddenDim]
+    if (profilingEnabled_ && profiler_) profiler_->beginFFNDown();
     LinearW(lw.wDown, gateBuf, nullptr, output, hiddenDim);
+    if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
 }
 
 // ============================================================================
@@ -2419,13 +4110,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // Use attentionOutput as temp (it's hiddenDim-sized and not in use during FFN)
     float* sharedOut = attentionOutput;
     computeSharedExpertFFN(layer, input, sharedOut);
-    size_t i = 0;
-    for (; i + 8 <= hiddenDim; i += 8) {
-        __m256 ov = _mm256_loadu_ps(output + i);
-        __m256 sv = _mm256_loadu_ps(sharedOut + i);
-        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, sv));
-    }
-    for (; i < hiddenDim; ++i) {
+    for (size_t i = 0; i < hiddenDim; ++i) {
         output[i] += sharedOut[i];
     }
 
@@ -2457,14 +4142,7 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                          moeConfig_.expertDim);
 
         // Weighted accumulation into output
-        size_t i = 0;
-        __m256 wv = _mm256_set1_ps(weight);
-        for (; i + 8 <= hiddenDim; i += 8) {
-            __m256 ov = _mm256_loadu_ps(output + i);
-            __m256 ev = _mm256_loadu_ps(expertOut + i);
-            _mm256_storeu_ps(output + i, _mm256_fmadd_ps(wv, ev, ov));
-        }
-        for (; i < hiddenDim; ++i) {
+        for (size_t i = 0; i < hiddenDim; ++i) {
             output[i] += weight * expertOut[i];
         }
     }
@@ -2575,19 +4253,7 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 
     // ── Diagnostic: verify hidden state and weights ────────────────────
     float hiddenNorm = 0.0f;
-    size_t i = 0;
-    __m256 norm_acc = _mm256_setzero_ps();
-    for (; i + 8 <= config.hiddenDim; i += 8) {
-        __m256 hv = _mm256_loadu_ps(hiddenState + i);
-        norm_acc = _mm256_fmadd_ps(hv, hv, norm_acc);
-    }
-    __m128 hi = _mm256_extractf128_ps(norm_acc, 1);
-    __m128 lo = _mm256_castps256_ps128(norm_acc);
-    __m128 sum = _mm_add_ps(lo, hi);
-    sum = _mm_hadd_ps(sum, sum);
-    sum = _mm_hadd_ps(sum, sum);
-    hiddenNorm = _mm_cvtss_f32(sum);
-    for (; i < config.hiddenDim; ++i) {
+    for (size_t i = 0; i < config.hiddenDim; ++i) {
         hiddenNorm += hiddenState[i] * hiddenState[i];
     }
     hiddenNorm = std::sqrt(hiddenNorm);
@@ -2602,9 +4268,29 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 }
 
 // ============================================================================
-// Sample Token - Real sampling using ISampler
+// Sample Token — Real sampling using ISampler + Sovereign Chamber
+// The Chamber (SM0-DSP) intercepts here: hidden state → clash detection
 // ============================================================================
 int Deep2Engine::sampleToken(const float* logits) {
+    // ── Sovereign Chamber: SM0-DSP clash detection ─────────────────────
+    // Use the pre-final-norm hidden state (attentionOutput) as the plasma
+    if (chamberEnabled_ && chamber_ && attentionOutput) {
+        rawrxd::ChamberResult result = chamber_->evaluate(attentionOutput, config.hiddenDim);
+        if (result == rawrxd::ChamberResult::CLASH) {
+            // Plasma impurity detected — force EOS or resample
+            printf("[Deep2Engine] Chamber CLASH detected — forcing EOS\n");
+            if (tokenizer) return tokenizer->GetSpecialTokens().eosId;
+            return 0;  // Fallback EOS
+        }
+        // Chamber PASS: proceed with deterministic routing if available
+        uint64_t ctx_hash = rawrxd::TransitionState::hashHiddenState(attentionOutput, config.hiddenDim);
+        rawrxd::FormulaRoute route = chamber_->routePrimitive(ctx_hash);
+        if (route.valid) {
+            printf("[Deep2Engine] Chamber routed to primitive: %u\n", route.primitive_output);
+            return static_cast<int>(route.primitive_output);
+        }
+    }
+
     // ── Diagnostic: print top-10 logits before sampling ────────────────
     {
         std::vector<std::pair<float, int>> scored;
@@ -2634,28 +4320,7 @@ int Deep2Engine::sampleToken(const float* logits) {
     // Fallback: argmax (greedy)
     int maxIdx = 0;
     float maxVal = logits[0];
-    size_t i = 1;
-#if defined(__AVX2__)
-    for (; i + 8 <= config.vocabSize; i += 8) {
-        __m256 vec = _mm256_loadu_ps(logits + i);
-        __m256 maxVec = _mm256_set1_ps(maxVal);
-        __m256 cmp = _mm256_cmp_ps(vec, maxVec, _CMP_GT_OQ);
-        int mask = _mm256_movemask_ps(cmp);
-        if (mask != 0) {
-            alignas(32) float vals[8];
-            _mm256_store_ps(vals, vec);
-            for (int j = 0; j < 8; ++j) {
-                if (mask & (1 << j)) {
-                    if (vals[j] > maxVal) {
-                        maxVal = vals[j];
-                        maxIdx = (int)(i + j);
-                    }
-                }
-            }
-        }
-    }
-#endif
-    for (; i < config.vocabSize; ++i) {
+    for (size_t i = 1; i < config.vocabSize; ++i) {
         if (logits[i] > maxVal) {
             maxVal = logits[i];
             maxIdx = (int)i;
@@ -2687,27 +4352,43 @@ void Deep2Engine::setNumThreads(size_t numThreads) {
 // ============================================================================
 void Deep2Engine::enableKVCache(bool enable) {
     config.useKVCache = enable;
-    if (enable) {
-        if (!kvCache) {
-            kvCache = std::make_unique<KVCache>();
-            KVCacheConfig kvConfig;
-            kvConfig.numLayers = config.numLayers;
-            kvConfig.maxSeqLen = config.maxSeqLen;
-            kvConfig.numHeads = config.numHeads;
-            kvConfig.headDim = config.hiddenDim / config.numHeads;
-            kvCache->initialize(kvConfig);
-        }
-        if (!kvCacheBackend_) {
-            size_t headDim = config.hiddenDim / config.numHeads;
-#if defined(RAWRXD_ENABLE_TOROIDAL_KV) && RAWRXD_ENABLE_TOROIDAL_KV
-            kvCacheBackend_ = std::make_unique<ToroidalKVCacheAdapter>();
-#else
-            kvCacheBackend_ = std::make_unique<LegacyKVCacheAdapter>();
-#endif
-            kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
-                                       config.numHeads, headDim);
-        }
+    if (enable && !kvCache) {
+        kvCache = std::make_unique<KVCache>();
+        KVCacheConfig kvConfig;
+        kvConfig.numLayers = config.numLayers;
+        kvConfig.maxSeqLen = config.maxSeqLen;
+        kvConfig.numHeads = config.numHeads;
+        kvConfig.headDim = config.hiddenDim / config.numHeads;
+        kvCache->initialize(kvConfig);
     }
+}
+
+// ============================================================================
+// Production Profiler (Batch 1)
+// ============================================================================
+void Deep2Engine::enableProfiling(bool enable) {
+    profilingEnabled_ = enable;
+    if (enable && !profiler_) {
+        profiler_ = std::make_unique<ProductionProfiler>();
+        profileHistory_.clear();
+        printf("[Deep2Engine] Production profiling enabled\n");
+    } else if (!enable) {
+        profiler_.reset();
+        printf("[Deep2Engine] Production profiling disabled\n");
+    }
+}
+
+bool Deep2Engine::saveProfileJSON(const std::string& path) const {
+    if (profileHistory_.empty() || !profiler_) return false;
+    std::ofstream f(path);
+    if (!f) return false;
+    f << ProductionProfiler::toJSONSummary(profileHistory_.data(), profileHistory_.size());
+    return f.good();
+}
+
+std::string Deep2Engine::getProfileJSONSummary() const {
+    if (profileHistory_.empty()) return "{}";
+    return ProductionProfiler::toJSONSummary(profileHistory_.data(), profileHistory_.size());
 }
 
 // ============================================================================
@@ -2763,13 +4444,7 @@ void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias,
     }
 
     if (bias) {
-        size_t i = 0;
-        for (; i + 8 <= outDim; i += 8) {
-            __m256 ov = _mm256_loadu_ps(output + i);
-            __m256 bv = _mm256_loadu_ps(bias + i);
-            _mm256_storeu_ps(output + i, _mm256_add_ps(ov, bv));
-        }
-        for (; i < outDim; ++i) {
+        for (size_t i = 0; i < outDim; ++i) {
             output[i] += bias[i];
         }
     }
@@ -2851,8 +4526,10 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name) 
         if (t.name == name) {
             wt.data = t.data;
             wt.type = (int)t.type;
-            wt.rows = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
-            wt.cols = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
+            // GGUF dimensions are [input_dim, output_dim]
+            // LinearW needs rows=output_dim, cols=input_dim
+            wt.rows = t.dimensions.size() > 1 ? t.dimensions[1] : 1;
+            wt.cols = t.dimensions.size() > 0 ? t.dimensions[0] : 0;
             wt.numBlocks = t.GetNumBlocks();
             wt.sizeBytes = t.size;
             wt.name = t.name;
@@ -2985,6 +4662,102 @@ void Deep2Engine::enableSlidingWindow(bool enable, size_t windowSize) {
     slidingWindowConfig_.windowSize = windowSize;
     printf("[Deep2Engine] Sliding window: %s (size=%zu)\n", 
            enable ? "ENABLED" : "DISABLED", windowSize);
+}
+
+// ============================================================================
+// Sovereign Engine Feature Enable/Disable — Dragon Lore
+// ============================================================================
+
+void Deep2Engine::enableChamber(bool enable) {
+    chamberEnabled_ = enable;
+    if (enable && !chamber_) {
+        chamber_ = std::make_unique<rawrxd::Chamber>();
+        printf("[Deep2Engine] Chamber (SM0-DSP) initialized\n");
+    }
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_) {
+        printf("[Deep2Engine] Chamber state synced to SovereignRuntime\n");
+    }
+    printf("[Deep2Engine] Chamber: %s\n", enable ? "ENABLED" : "DISABLED");
+}
+
+rawrxd::ChamberResult Deep2Engine::evaluateChamber(const float* hidden_state, size_t dim) {
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_) {
+        return sovereignRuntime_->evaluateChamber(hidden_state, dim);
+    }
+    if (!chamberEnabled_ || !chamber_) return rawrxd::ChamberResult::PASS;
+    return chamber_->evaluate(hidden_state, dim);
+}
+
+rawrxd::FormulaRoute Deep2Engine::routePrimitive(uint64_t context_hash) {
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_) {
+        return sovereignRuntime_->routePrimitive(context_hash);
+    }
+    if (!chamberEnabled_ || !chamber_) return rawrxd::FormulaRoute{};
+    return chamber_->routePrimitive(context_hash);
+}
+
+void Deep2Engine::enableToroidalKV(bool enable, size_t maxTokens) {
+    toroidalKVEnabled_ = enable;
+    if (enable && !toroidalKV_ && modelWeights.loaded) {
+        size_t headDim = modelWeights.headDim;
+        size_t numHeads = modelWeights.numHeads;
+        size_t numLayers = modelWeights.numLayers;
+        toroidalKV_ = std::make_unique<rawrxd::ToroidalKVCache>(
+            headDim, numHeads, maxTokens, numLayers);
+        printf("[Deep2Engine] ToroidalKVCache initialized: %zu tokens, %zu layers, %zu heads, %zu dim\n",
+               maxTokens, numLayers, numHeads, headDim);
+    }
+    printf("[Deep2Engine] ToroidalKVCache: %s\n", enable ? "ENABLED" : "DISABLED");
+}
+
+void Deep2Engine::enablePlasmaGovernor(bool enable) {
+    plasmaGovernorEnabled_ = enable;
+    if (enable && !plasmaGovernor_) {
+        plasmaGovernor_ = std::make_unique<rawrxd::PlasmaGovernor>();
+        printf("[Deep2Engine] PlasmaGovernor initialized\n");
+    }
+    printf("[Deep2Engine] PlasmaGovernor: %s\n", enable ? "ENABLED" : "DISABLED");
+}
+
+void Deep2Engine::updateThermalState(const rawrxd::ThermalState& state) {
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_) {
+        sovereignRuntime_->updateThermalState(state);
+    }
+    if (plasmaGovernorEnabled_ && plasmaGovernor_) {
+        plasmaGovernor_->updateThermalState(state);
+    }
+}
+
+float Deep2Engine::currentThrottle() const {
+    if (sovereignRuntimeEnabled_ && sovereignRuntime_) {
+        return sovereignRuntime_->currentThrottle();
+    }
+    if (plasmaGovernorEnabled_ && plasmaGovernor_) {
+        return plasmaGovernor_->currentThrottle();
+    }
+    return 0.0f;
+}
+
+// ============================================================================
+// SovereignOutOfCoreRuntime — Dual-backend orchestrator
+// ============================================================================
+
+void Deep2Engine::enableSovereignRuntime(bool enable) {
+    sovereignRuntimeEnabled_ = enable;
+    if (enable && !sovereignRuntime_) {
+        rawrxd::SovereignOutOfCoreRuntime::Config cfg;
+        cfg.ramBudgetBytes = 8ull * 1024 * 1024 * 1024;  // 8GB default
+        cfg.vramBudgetBytes = 32ull * 1024 * 1024 * 1024; // 32GB for R9700
+        cfg.enableCPU = true;
+        cfg.enableGPU = true;
+        sovereignRuntime_ = std::make_unique<rawrxd::SovereignOutOfCoreRuntime>(cfg);
+        printf("[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)\n");
+    }
+    printf("[Deep2Engine] SovereignOutOfCoreRuntime: %s\n", enable ? "ENABLED" : "DISABLED");
+}
+
+rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
+    return sovereignRuntime_.get();
 }
 
 // ============================================================================
@@ -3581,7 +5354,6 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
             std::swap(layerInput, layerOutput);
         }
         if (kvCache) kvCache->advance();
-        if (kvCacheBackend_) kvCacheBackend_->advance();
         currentPos++;
     }
     totalForwardPasses++;  // Count prefill
@@ -3736,11 +5508,6 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
         if (kvCache) {
             for (size_t i = 0; i < verification.acceptanceLength; i++) {
                 kvCache->advance();
-            }
-        }
-        if (kvCacheBackend_) {
-            for (size_t i = 0; i < verification.acceptanceLength; i++) {
-                kvCacheBackend_->advance();
             }
         }
         

@@ -234,7 +234,6 @@ option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness s
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
 option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" OFF)
-option(RAWRXD_ENABLE_TOROIDAL_KV "Enable ToroidalKVCache + Chamber as the production KV backend (default: OFF = legacy KVCache)" OFF)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -1405,55 +1404,6 @@ if(WIN32)
     message(STATUS "K2 Router Injection Smoke Test configured")
 endif()
 
-# =============================================================================
-# KV Cache Equivalence Test
-# Validates ToroidalKVCache vs LegacyKVCache correctness.
-# Run after build: KVCacheEquivalenceTest.exe
-# =============================================================================
-if(WIN32)
-    add_executable(KVCacheEquivalenceTest
-        src/deep2/KVCacheEquivalenceTest.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/ToroidalKVCache.cpp
-        src/deep2/Chamber.cpp
-        src/deep2/LegacyKVCacheAdapter.cpp
-        src/deep2/ToroidalKVCacheAdapter.cpp
-    )
-    set_target_properties(KVCacheEquivalenceTest PROPERTIES
-        EXCLUDE_FROM_ALL TRUE
-        EXCLUDE_FROM_DEFAULT_BUILD TRUE
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
-    target_include_directories(KVCacheEquivalenceTest PRIVATE
-        ${CMAKE_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_SOURCE_DIR}/src/deep2
-        ${CMAKE_SOURCE_DIR}/include
-    )
-    if(MSVC)
-        target_link_directories(KVCacheEquivalenceTest PRIVATE ${_RAWR_MSVC_LIBPATHS})
-        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
-            if(EXISTS "${_rawr_lib}")
-                target_link_options(KVCacheEquivalenceTest PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
-            endif()
-        endforeach()
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
-        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
-    endif()
-    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
-        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
-    endif()
-    if(DEFINED _MSVC_ROOT)
-        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
-    endif()
-    target_link_libraries(KVCacheEquivalenceTest PRIVATE
-        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
-    )
-    target_compile_definitions(KVCacheEquivalenceTest PRIVATE KV_CACHE_EQUIVALENCE_TEST_MAIN=1)
-    message(STATUS "KV Cache Equivalence Test configured")
-endif()
-
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -1627,6 +1577,9 @@ if(RAWR_HAS_MASM)
         # Deep2 MoE kernels (2K TPS path)
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
         src/deep2/sovereign_moe_fused.asm
         # Sovereign Puppeteer Architecture - Self-Modification System
         src/sovereign/puppeteer/Puppeteer_CaptureState.asm
@@ -2470,6 +2423,7 @@ set(SOURCES
     src/deep2/Deep2ModelRuntime.cpp
     src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/ProductionProfiler.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
     src/deep2/K2MoEWeights.cpp
@@ -2479,10 +2433,6 @@ set(SOURCES
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
-    src/deep2/ToroidalKVCache.cpp
-    src/deep2/Chamber.cpp
-    src/deep2/LegacyKVCacheAdapter.cpp
-    src/deep2/ToroidalKVCacheAdapter.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/ReverseIntegration.cpp
     src/deep2/ReverseHotpatchEngine.cpp
@@ -6134,8 +6084,6 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GoalSystem.cpp
         src/deep2/BottleTTL.cpp
         src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
         src/deep2/DualGPUHook.cpp
         src/deep2/ReverseTensorRecovery.cpp
         src/deep2/ScaleQuality.cpp
@@ -7291,14 +7239,20 @@ if(BUILD_VAL_051_5_DIAG)
         src/deep2/ResidencyManager.cpp
         src/deep2/ResidencyLease.cpp
         src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
         src/deep2/mars/VRAMManager.cpp
         src/deep2/mars/TensorHotpatch.cpp
         src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
         src/reverse/ReverseEngine.cpp
         src/reverse/ReverseModelLoader.cpp
+        src/deep2/ProductionProfiler.cpp
         src/deep2/sovereign_deep2_kernels.asm
         src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
         src/deep2/sovereign_moe_fused.asm
         src/sampling/advanced_sampler.cpp
     )
@@ -7318,6 +7272,1359 @@ if(BUILD_VAL_051_5_DIAG)
         OUTPUT_NAME val_051_5_diag_1_token
     )
     message(STATUS "[Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_bp16_int_1_token — BP16 → Deep2 Integration Test
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_BP16_INT "Build BP16 → Deep2 integration test" ON)
+if(BUILD_VAL_BP16_INT)
+    add_executable(val_bp16_int_1_token
+        tests/val_bp16_int_1_token.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_bp16_int_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_bp16_int_1_token PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_bp16_int_1_token PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_bp16_int_1_token PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_bp16_int_1_token
+    )
+    message(STATUS "[Deep2] BP16 → Deep2 integration test: val_bp16_int_1_token")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q6k_synthetic — Synthetic Q6_K Layout & Dequant Correctness Test
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q6K "Build VAL-051.5 Q6_K synthetic correctness test" ON)
+if(BUILD_VAL_051_5_Q6K)
+    add_executable(val_051_5_q6k_synthetic
+        tests/val_051_5_q6k_synthetic.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q6k_synthetic PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_q6k_synthetic PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(val_051_5_q6k_synthetic PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q6k_synthetic
+    )
+    message(STATUS "[Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_streamer — BP16 Streaming Reader Round-Trip Validation
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_STREAMER "Build VAL-051.5 BP16 streamer test" ON)
+if(BUILD_VAL_051_5_BP16_STREAMER)
+    add_executable(val_051_5_bp16_streamer
+        tests/val_051_5_bp16_streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_streamer PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_streamer PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(val_051_5_bp16_streamer PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_streamer
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_e2e — End-to-End BP16 Inference Test
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_E2E "Build VAL-051.5 BP16 end-to-end inference test" ON)
+if(BUILD_VAL_051_5_BP16_E2E)
+    add_executable(val_051_5_bp16_e2e
+        tests/val_051_5_bp16_e2e.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_e2e PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_e2e PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_bp16_e2e PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_e2e
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_compare — GGUF vs BP16 Weight & Inference Comparison
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_COMPARE "Build VAL-051.5 BP16 comparison test" ON)
+if(BUILD_VAL_051_5_BP16_COMPARE)
+    add_executable(val_051_5_bp16_compare
+        tests/val_051_5_bp16_compare.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_compare PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_compare PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_compare PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_bp16_compare PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_compare
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_weights — GGUF vs BP16 Weight Correctness (no inference)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_WEIGHTS "Build VAL-051.5 BP16 weights test" ON)
+if(BUILD_VAL_051_5_BP16_WEIGHTS)
+    add_executable(val_051_5_bp16_weights
+        tests/val_051_5_bp16_weights.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_weights PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_weights PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_weights PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_bp16_weights PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_weights
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_verify — Direct BP16 Weight Verification (no Deep2Engine)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_VERIFY "Build VAL-051.5 BP16 verify test" ON)
+if(BUILD_VAL_051_5_BP16_VERIFY)
+    add_executable(val_051_5_bp16_verify
+        tests/val_051_5_bp16_verify.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_verify PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_verify PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_bp16_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_verify
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_logits — GGUF vs BP16 1-Token Forward & Logits Equivalence
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_LOGITS "Build VAL-051.5 BP16 logits equivalence test" ON)
+if(BUILD_VAL_051_5_BP16_LOGITS)
+    add_executable(val_051_5_bp16_logits
+        tests/val_051_5_bp16_logits.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_logits PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_logits PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_logits PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_5_bp16_logits PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_logits
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_6_bp16_perf — BP16 Performance Benchmark & Prefetch Optimization
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_6_BP16_PERF "Build VAL-051.6 BP16 performance benchmark" ON)
+if(BUILD_VAL_051_6_BP16_PERF)
+    add_executable(val_051_6_bp16_perf
+        tests/val_051_6_bp16_perf.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_6_bp16_perf PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_6_bp16_perf PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_6_bp16_perf PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_6_bp16_perf PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_6_bp16_perf
+    )
+    message(STATUS "[Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_7_bp16_profile — Forward-Path Profiling
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_7_BP16_PROFILE "Build VAL-051.7 BP16 forward profiling" ON)
+if(BUILD_VAL_051_7_BP16_PROFILE)
+    add_executable(val_051_7_bp16_profile
+        tests/val_051_7_bp16_profile.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_7_bp16_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_7_bp16_profile PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_7_bp16_profile PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_7_bp16_profile PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_7_bp16_profile
+    )
+    message(STATUS "[Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_7_bp16_lightweight_profile — Lightweight forward-path profiler
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE "Build VAL-051.7 lightweight profile" ON)
+if(BUILD_VAL_051_7_BP16_LIGHTWEIGHT_PROFILE)
+    add_executable(val_051_7_bp16_lightweight_profile
+        tests/val_051_7_bp16_lightweight_profile.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_7_bp16_lightweight_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_7_bp16_lightweight_profile PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_7_bp16_lightweight_profile PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_7_bp16_lightweight_profile PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_7_bp16_lightweight_profile
+    )
+    message(STATUS "[Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile")
+endif()
+
+# minimal_1token_profiler — Minimal 1-token production profiler
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_MINIMAL_1TOKEN_PROFILER "Build minimal 1-token profiler" ON)
+if(BUILD_MINIMAL_1TOKEN_PROFILER)
+    add_executable(minimal_1token_profiler
+        tests/minimal_1token_profiler.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(minimal_1token_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(minimal_1token_profiler PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(minimal_1token_profiler PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(minimal_1token_profiler PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME minimal_1token_profiler
+    )
+    message(STATUS "[Deep2] Minimal 1-token profiler: minimal_1token_profiler")
+endif()
+
+# quick_1layer_profiler — Fast 1-layer quant breakdown
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_QUICK_1LAYER_PROFILER "Build quick 1-layer profiler" ON)
+if(BUILD_QUICK_1LAYER_PROFILER)
+    add_executable(quick_1layer_profiler
+        tests/quick_1layer_profiler.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(quick_1layer_profiler PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(quick_1layer_profiler PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(quick_1layer_profiler PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(quick_1layer_profiler PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME quick_1layer_profiler
+    )
+    message(STATUS "[Deep2] Quick 1-layer profiler: quick_1layer_profiler")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# q4k_gemv_bench — Q4_K GEMV micro-benchmark (reference vs stack-buffer)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
+if(BUILD_Q4K_GEMV_BENCH)
+    add_executable(q4k_gemv_bench
+        tests/q4k_gemv_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(q4k_gemv_bench PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(q4k_gemv_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME q4k_gemv_bench
+    )
+    message(STATUS "[Deep2] Q4_K GEMV bench: q4k_gemv_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# q5k_gemv_bench — Q5_K GEMV micro-benchmark (reference vs SIMD)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
+if(BUILD_Q5K_GEMV_BENCH)
+    add_executable(q5k_gemv_bench
+        tests/q5k_gemv_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(q5k_gemv_bench PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(q5k_gemv_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME q5k_gemv_bench
+    )
+    message(STATUS "[Deep2] Q5_K GEMV bench: q5k_gemv_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_diag — Minimal BP16 forward crash isolation
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_DIAG "Build VAL-051.5 BP16 diagnostic" ON)
+if(BUILD_VAL_051_5_BP16_DIAG)
+    add_executable(val_051_5_bp16_diag
+        tests/val_051_5_bp16_diag.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_diag PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_diag PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_diag PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(val_051_5_bp16_diag PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_diag
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_bench — GGUF vs BP16 Inference Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_BENCH "Build VAL-051.5 BP16 benchmark" ON)
+if(BUILD_VAL_051_5_BP16_BENCH)
+    add_executable(val_051_5_bp16_bench
+        tests/val_051_5_bp16_bench.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_bench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_bench PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(val_051_5_bp16_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_bench
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_bp16_loadbench — Load-Time Only Benchmark (no inference)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_BP16_LOADBENCH "Build VAL-051.5 BP16 load benchmark" ON)
+if(BUILD_VAL_051_5_BP16_LOADBENCH)
+    add_executable(val_051_5_bp16_loadbench
+        tests/val_051_5_bp16_loadbench.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/BP16Streamer.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_bp16_loadbench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_5_bp16_loadbench PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_5_bp16_loadbench PRIVATE
+        kernel32
+        user32
+        psapi
+    )
+    set_target_properties(val_051_5_bp16_loadbench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_bp16_loadbench
+    )
+    message(STATUS "[Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q4k_fused_verify — Synthetic Q4_K fused vs reference correctness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q4K_FUSED_VERIFY "Build Q4_K fused kernel correctness test" ON)
+if(BUILD_VAL_051_5_Q4K_FUSED_VERIFY)
+    add_executable(val_051_5_q4k_fused_verify
+        tests/val_051_5_q4k_fused_verify.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q4k_fused_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q4k_fused_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q4k_fused_verify
+    )
+    message(STATUS "[Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q4k_gemv_bench — Isolated Q4_K GEMV Micro-Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q4K_GEMV_BENCH "Build Q4_K GEMV micro-benchmark" ON)
+if(BUILD_VAL_051_5_Q4K_GEMV_BENCH)
+    add_executable(val_051_5_q4k_gemv_bench
+        tests/val_051_5_q4k_gemv_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q4k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_link_libraries(val_051_5_q4k_gemv_bench PRIVATE
+        ${CMAKE_BINARY_DIR}/CMakeFiles/val_051_5_diag_1_token.dir/src/deep2/sovereign_q4k_gemv_v2.asm.obj
+    )
+    set_target_properties(val_051_5_q4k_gemv_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q4k_gemv_bench
+    )
+    message(STATUS "[Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q2k_gemv_verify — Synthetic Q2_K SIMD vs scalar correctness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q2K_GEMV_VERIFY "Build Q2_K GEMV correctness test" ON)
+if(BUILD_VAL_051_5_Q2K_GEMV_VERIFY)
+    add_executable(val_051_5_q2k_gemv_verify
+        tests/val_051_5_q2k_gemv_verify.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q2k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q2k_gemv_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q2k_gemv_verify
+    )
+    message(STATUS "[Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q2k_gemv_bench — Isolated Q2_K GEMV Micro-Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q2K_GEMV_BENCH "Build Q2_K GEMV micro-benchmark" ON)
+if(BUILD_VAL_051_5_Q2K_GEMV_BENCH)
+    add_executable(val_051_5_q2k_gemv_bench
+        tests/val_051_5_q2k_gemv_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q2k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q2k_gemv_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q2k_gemv_bench
+    )
+    message(STATUS "[Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q5k_gemv_verify — Synthetic Q5_K scalar vs dequant-dot correctness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q5K_GEMV_VERIFY "Build Q5_K GEMV correctness test" ON)
+if(BUILD_VAL_051_5_Q5K_GEMV_VERIFY)
+    add_executable(val_051_5_q5k_gemv_verify
+        tests/val_051_5_q5k_gemv_verify.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q5k_gemv_verify PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q5k_gemv_verify PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q5k_gemv_verify
+    )
+    message(STATUS "[Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q5k_gemv_bench — Isolated Q5_K GEMV Micro-Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q5K_GEMV_BENCH "Build Q5_K GEMV micro-benchmark" ON)
+if(BUILD_VAL_051_5_Q5K_GEMV_BENCH)
+    add_executable(val_051_5_q5k_gemv_bench
+        tests/val_051_5_q5k_gemv_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q5k_gemv_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q5k_gemv_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q5k_gemv_bench
+    )
+    message(STATUS "[Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q5k_forward_bench — Simulated Full Forward Pass Q5_K Timing
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q5K_FORWARD_BENCH "Build Q5_K forward pass benchmark" ON)
+if(BUILD_VAL_051_5_Q5K_FORWARD_BENCH)
+    add_executable(val_051_5_q5k_forward_bench
+        tests/val_051_5_q5k_forward_bench.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q5k_forward_bench PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q5k_forward_bench PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q5k_forward_bench
+    )
+    message(STATUS "[Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_8_linearw_thread_scaling — Row-Parallel LinearW Scaling Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_8_LINEARW_THREAD_SCALING "Build LinearW thread-scaling benchmark" ON)
+if(BUILD_VAL_051_8_LINEARW_THREAD_SCALING)
+    add_executable(val_051_8_linearw_thread_scaling
+        tests/val_051_8_linearw_thread_scaling.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_8_linearw_thread_scaling PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_8_linearw_thread_scaling PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_8_linearw_thread_scaling PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_8_linearw_thread_scaling PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_8_linearw_thread_scaling
+    )
+    message(STATUS "[Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_8_layer_profile — Synthetic Full Transformer Layer Profiler
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_8_LAYER_PROFILE "Build full layer profiler" ON)
+if(BUILD_VAL_051_8_LAYER_PROFILE)
+    add_executable(val_051_8_layer_profile
+        tests/val_051_8_layer_profile.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/DualGPUHook.cpp
+        src/deep2/ReverseTensorRecovery.cpp
+        src/deep2/StreamEngine.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/HotPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/BP16Extractor.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
+        src/deep2/sovereign_deep2_kernels.asm
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/sampling/advanced_sampler.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_8_layer_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(val_051_8_layer_profile PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_link_libraries(val_051_8_layer_profile PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(val_051_8_layer_profile PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_8_layer_profile
+    )
+    message(STATUS "[Deep2] Layer profiler: val_051_8_layer_profile")
+endif()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# val_051_5_q2k_profile — Q2_K vs Q4_K GEMV Profiling Benchmark
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_VAL_051_5_Q2K_PROFILE "Build Q2_K GEMV profiling benchmark" ON)
+if(BUILD_VAL_051_5_Q2K_PROFILE)
+    add_executable(val_051_5_q2k_profile
+        tests/val_051_5_q2k_profile.cpp
+    )
+    if(MSVC)
+        target_compile_options(val_051_5_q2k_profile PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(val_051_5_q2k_profile PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME val_051_5_q2k_profile
+    )
+    message(STATUS "[Deep2] Q2_K profile: val_051_5_q2k_profile")
 endif()
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -7567,6 +8874,138 @@ if(WIN32)
     else()
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Production Benchmark — Batch 1: Repeatable 1/10/32/128 token benchmark
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
+        src/deep2/Deep2QuantCert.cpp
+        src/deep2/Deep2Determinism.cpp
+        src/deep2/Deep2GenerationCert.cpp
+        src/deep2/Deep2ProductionCert.cpp
+        src/deep2/ProductionBenchmark.cpp
+        src/deep2/ProductionProfiler.cpp
+        src/deep2/Deep2Engine.cpp
+        src/deep2/KimiK2Config.cpp
+        src/deep2/K2MLAWeights.cpp
+        src/deep2/K2MoEWeights.cpp
+        src/deep2/K2GlobalTensorIndex.cpp
+        src/deep2/Deep2Bridge.cpp
+        src/deep2/InferenceSession.cpp
+        src/deep2/QuantKernelRegistry.cpp
+        src/deep2/ThreadPool.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/GGUFLoader.cpp
+        src/deep2/ReverseIntegration.cpp
+        src/deep2/ReverseHotpatchEngine.cpp
+        src/deep2/MoERouter.cpp
+        src/deep2/MoEWeightProxy.cpp
+        src/deep2/MoEWeightsLoader.cpp
+        src/deep2/MoEArchitectureParser.cpp
+        src/deep2/TensorHop.cpp
+        src/deep2/DeepSeekMoELoader.cpp
+        src/deep2/Deep2ExecutionGraph.cpp
+        src/deep2/StreamRouter.cpp
+        src/deep2/FusedInferenceKernel.cpp
+        src/deep2/UniversalModelLoader.cpp
+        src/deep2/ModelLoader.cpp
+        src/deep2/ModelRegistry.cpp
+        src/deep2/RuntimePlanner.cpp
+        src/deep2/WarmupScheduler.cpp
+        src/deep2/NUFusedPacker.cpp
+        src/deep2/CompressedKVCache.cpp
+        src/deep2/NVMeStream.cpp
+        src/deep2/SlidingWindowEngine.cpp
+        src/deep2/MedusaDecoder.cpp
+        src/deep2/RawrXDInferenceAdapter.cpp
+        src/deep2/mars/VRAMManager.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/MARSController.cpp
+        src/sampling/advanced_sampler.cpp
+        src/deep2/deep2_link_stubs.cpp
+        src/deep2/deep2_link_stubs.cpp
+        src/deep2/sovereign_q4k_gemv.asm
+        src/deep2/sovereign_q4k_gemv_v2.asm
+        src/deep2/sovereign_q2k_gemv_v2.asm
+        src/deep2/sovereign_q3k_gemv_v2.asm
+        src/deep2/sovereign_q4_0_gemv.asm
+        src/deep2/sovereign_q4_1_gemv.asm
+        src/deep2/sovereign_q5_k_gemv.asm
+        src/deep2/sovereign_q6_k_gemv.asm
+        src/deep2/sovereign_q8_0_gemv.asm
+        src/deep2/sovereign_fp16_gemv.asm
+        src/deep2/sovereign_fp8_gemv.asm
+        src/deep2/sovereign_iq2_xxs_gemv.asm
+        src/deep2/sovereign_iq3_xxs_gemv.asm
+        src/deep2/sovereign_iq4_nl_gemv.asm
+        src/deep2/sovereign_q2_k_gemv.asm
+        src/deep2/sovereign_q3_k_gemv.asm
+        src/deep2/sovereign_moe_fused.asm
+        src/deep2/Sovereign_Attention_KV_AVX512.asm
+        src/deep2/Chamber.cpp
+        src/deep2/ToroidalKVCache.cpp
+        src/deep2/PlasmaGovernor.cpp
+        src/deep2/OutOfCoreRuntime.cpp
+        src/deep2/SovereignOutOfCoreRuntime.cpp
+        src/deep2/BP16Streamer.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/AntiPatcher.cpp
+        src/deep2/HotPatcherSafety.cpp
+        src/deep2/TrailBrake.cpp
+        src/deep2/PatchCache.cpp
+        src/deep2/BottleTTL.cpp
+        src/deep2/GoalSystem.cpp
+        src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyLease.cpp
+    )
+    target_include_directories(RawrXD-ProductionBenchmark PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(RawrXD-ProductionBenchmark PRIVATE
+        RAWR_PRODUCTION_BENCHMARK=1
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-ProductionBenchmark PRIVATE /EHsc /W0 /O2)
+    endif()
+    target_link_libraries(RawrXD-ProductionBenchmark PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(RawrXD-ProductionBenchmark PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-ProductionBenchmark
+    )
+    message(STATUS "[Batch 1] Production benchmark target: RawrXD-ProductionBenchmark")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Production Certification Test — validates certification framework
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(RawrXD-ProductionCertTest EXCLUDE_FROM_ALL
+        tests/test_deep2_production.cpp
+        src/deep2/Deep2QuantCert.cpp
+        src/deep2/Deep2Determinism.cpp
+        src/deep2/Deep2GenerationCert.cpp
+        src/deep2/Deep2ProductionCert.cpp
+    )
+    target_include_directories(RawrXD-ProductionCertTest PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    if(MSVC)
+        target_compile_options(RawrXD-ProductionCertTest PRIVATE /EHsc /W0 /O2)
+    endif()
+    target_link_libraries(RawrXD-ProductionCertTest PRIVATE
+        kernel32
+        user32
+    )
+    set_target_properties(RawrXD-ProductionCertTest PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-ProductionCertTest
+    )
+    message(STATUS "[Batch 1] Production cert test target: RawrXD-ProductionCertTest")
 
     # ═══════════════════════════════════════════════════════════════════
     # GPU Inference Benchmark — v16.2-GPU-HYBRID Phase C
@@ -9037,7 +10476,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/soloide/main.cpp")
         message(WARNING "[SoloIDE] Qt6 not found — SoloIDE target skipped. Install Qt6 or set CMAKE_PREFIX_PATH.")
     endif()
 endif()
-add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp)
+add_executable(test_generation tests/test_generation.cpp src/adapter/RawrXDEngineAdapter.cpp src/deep2/Deep2Engine.cpp src/deep2/Deep2Bridge.cpp src/deep2/FabricTensorTable.cpp src/deep2/Deep2IDEIntegration.cpp src/deep2/InferenceSession.cpp src/deep2/ReverseIntegration.cpp src/deep2/ReverseHotpatchEngine.cpp src/deep2/DualGPUHook.cpp src/deep2/MoERouter.cpp src/deep2/MoEWeightProxy.cpp src/deep2/MoEWeightsLoader.cpp src/deep2/MoEArchitectureParser.cpp src/deep2/MedusaDecoder.cpp src/deep2/NUFusedPacker.cpp src/deep2/WarmupScheduler.cpp src/deep2/CompressedKVCache.cpp src/deep2/NVMeStream.cpp src/deep2/SlidingWindowEngine.cpp src/deep2/QuantKernelRegistry.cpp src/deep2/ThreadPool.cpp src/deep2/KVCache.cpp src/deep2/GGUFLoader.cpp src/deep2/RawrXDInferenceAdapter.cpp src/inference/RawrXD_LlamaNative.cpp src/deep2/ModelRegistry.cpp src/deep2/mars/MARSController.cpp src/deep2/mars/TensorHotpatch.cpp src/deep2/mars/DualGPUBackend.cpp src/deep2/mars/VRAMManager.cpp src/deep2/HotPatcher.cpp src/deep2/HotPatcherSafety.cpp tests/deep2_link_stubs.cpp src/core/memory_stubs.cpp src/core/link_stubs.cpp src/reverse/ReverseEngine.cpp src/reverse/ReverseModelLoader.cpp src/deep2/BP16Streamer.cpp src/deep2/BP16Extractor.cpp src/deep2/K2GlobalTensorIndex.cpp src/deep2/ResidencyManager.cpp)
 set_target_properties(test_generation PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_generation PRIVATE InferenceEngine)
 add_test(NAME test_generation COMMAND test_generation WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
@@ -9077,6 +10516,10 @@ add_executable(test_llama_native tests/test_llama_native.cpp
     src/core/link_stubs.cpp
     src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/BP16Extractor.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(test_llama_native PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_llama_native PRIVATE InferenceEngine)
@@ -9142,6 +10585,19 @@ add_executable(test_q4k_decoder tests/test_q4k_decoder.cpp
 set_target_properties(test_q4k_decoder PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 target_link_libraries(test_q4k_decoder PRIVATE InferenceEngine)
 add_test(NAME test_q4k_decoder COMMAND test_q4k_decoder WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# Q6_K ASM Kernel Synthetic Certification
+# Certifies sovereign_q6_k_gemv.asm against C++ reference with deterministic blocks
+add_executable(test_q6k_asm_certification tests/test_q6k_asm_certification.cpp
+    src/deep2/sovereign_q6_k_gemv.asm)
+set_target_properties(test_q6k_asm_certification PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+add_test(NAME test_q6k_asm_certification COMMAND test_q6k_asm_certification WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+
+# Quant Dequantization Cross-Check
+# Validates all K-quant dequantizers against canonical GGML reference implementations
+add_executable(test_quant_dequant_crosscheck tests/test_quant_dequant_crosscheck.cpp)
+set_target_properties(test_quant_dequant_crosscheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
+add_test(NAME test_quant_dequant_crosscheck COMMAND test_quant_dequant_crosscheck WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 
 # K2-002 Native Deep2 Runtime Smoke Test
 # Exercises real native kernels (RMSNormW, LinearW Q4_K GEMV) with bounded residency

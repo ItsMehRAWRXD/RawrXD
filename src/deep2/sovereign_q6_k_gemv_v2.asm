@@ -180,15 +180,14 @@ q6k_weight_loop:
     ; shift = (i & 3) * 2
     mov     eax, r10d
     shr     eax, 2                  ; qhIdx = i / 4
-    movzx   eax, byte ptr [r12+128+rax] ; eax = qh[qhIdx]
+    movzx   ecx, byte ptr [r12+128+rax] ; ecx = qh[qhIdx]
     mov     edx, r10d
     and     edx, 3
-    shl     edx, 1                  ; edx = shift
-    mov     cl, dl                  ; x64 variable shift requires CL
-    shr     eax, cl
-    and     eax, 3                  ; eax = high2
-    shl     eax, 4
-    or      ebx, eax                ; ebx = q = low4 | (high2 << 4)
+    shl     edx, 1                  ; shift = (i & 3) * 2
+    shr     ecx, edx
+    and     ecx, 3                  ; ecx = high2
+    shl     ecx, 4
+    or      ebx, ecx                ; ebx = q = low4 | (high2 << 4)
 
     ; --- Compute weight value = d * scale * (q - 32) ---
     sub     ebx, 32

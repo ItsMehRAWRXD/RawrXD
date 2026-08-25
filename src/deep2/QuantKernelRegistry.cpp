@@ -56,10 +56,10 @@ void QuantKernelRegistry::ProbeCPU() {
     DEEP2_CPUID(1, eax, ebx, ecx, edx);
     cpu_.fma  = (ecx & (1 << 12)) != 0;
     cpu_.f16c = (ecx & (1 << 29)) != 0;
-    cpu_.avx2 = (ebx & (1 << 5)) != 0;
 
     // AVX-512 requires leaf 7 subleaf 0
     DEEP2_CPUIDEX(7, 0, eax, ebx, ecx, edx);
+    cpu_.avx2     = (ebx & (1 << 5)) != 0;
     cpu_.avx512f  = (ebx & (1 << 16)) != 0;
     cpu_.avx512dq = (ebx & (1 << 17)) != 0;
     cpu_.avx512bw = (ebx & (1 << 30)) != 0;
@@ -235,133 +235,11 @@ static void gemv_q8_0_scalar(
         float acc = 0.0f;
         const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q8_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
             float blockAcc = 0.0f;
             for (int i = 0; i < 32; ++i) {
-                blockAcc += (float)blk.qs[i] * x[b * 32 + i];
+                blockAcc += (float)rowBlocks[b].qs[i] * x[b * 32 + i];
             }
-            acc += d * blockAcc;
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q4_0 GEMV (scalar) ---
-static void gemv_q4_0_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float blockAcc = 0.0f;
-            for (int i = 0; i < 32; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                blockAcc += q * x[b * 32 + i];
-            }
-            acc += d * blockAcc;
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q4_1 GEMV (scalar) ---
-static void gemv_q4_1_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q4_1* blocks = reinterpret_cast<const block_q4_1*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q4_1* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_1& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float m = f16_to_f32(blk.m);
-            float blockAcc = 0.0f;
-            float xSum = 0.0f;
-            for (int i = 0; i < 32; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                blockAcc += q * x[b * 32 + i];
-                xSum += x[b * 32 + i];
-            }
-            acc += d * blockAcc + m * xSum;
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q5_0 GEMV (scalar) ---
-static void gemv_q5_0_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q5_0* blocks = reinterpret_cast<const block_q5_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q5_0* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q5_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float blockAcc = 0.0f;
-            for (int i = 0; i < 32; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                uint8_t qh_byte = blk.qh[i / 8];
-                uint8_t qh_bit = (qh_byte >> (i % 8)) & 1;
-                q += (float)(qh_bit << 4);
-                blockAcc += q * x[b * 32 + i];
-            }
-            acc += d * blockAcc;
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q5_1 GEMV (scalar) ---
-static void gemv_q5_1_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q5_1* blocks = reinterpret_cast<const block_q5_1*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q5_1* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q5_1& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float m = f16_to_f32(blk.m);
-            float blockAcc = 0.0f;
-            float xSum = 0.0f;
-            for (int i = 0; i < 32; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                uint8_t qh_byte = blk.qh[i / 8];
-                uint8_t qh_bit = (qh_byte >> (i % 8)) & 1;
-                q += (float)(qh_bit << 4);
-                blockAcc += q * x[b * 32 + i];
-                xSum += x[b * 32 + i];
-            }
-            acc += d * blockAcc + m * xSum;
+            acc += f16_to_f32(rowBlocks[b].d) * blockAcc;
         }
         y[r] += acc;
     }
@@ -413,10 +291,6 @@ static void gemv_q4_k_scalar(
 
 // --- Q6_K GEMV (scalar) ---
 // block_q6_K defined in GGUFLoader.hpp
-// Layout: ql[128] (low 4 bits), qh[64] (high 2 bits), scales[16], d (fp16)
-// 256 weights per block, split into two 128-element chunks.
-// Each chunk processes 32 iterations of l, extracting 4 values per iteration.
-// Correctness verified against llama.cpp dequantize_row_q6_K.
 
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
@@ -432,36 +306,17 @@ static void gemv_q6_k_scalar(
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q6_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
-            const uint8_t* ql = blk.ql;
-            const uint8_t* qh = blk.qh;
-            const int8_t* sc = blk.scales;
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - b * 256) : 256;
-            if (elemsInBlock == 0) break;
-
-            // Two 128-element chunks per block
-            for (int chunk = 0; chunk < 2; ++chunk) {
-                size_t chunkBase = chunk * 128;
-                if (chunkBase >= elemsInBlock) break;
-                for (int l = 0; l < 32; ++l) {
-                    size_t pos = base + chunkBase + l;
-                    int is = l / 16;  // 0 or 1 within chunk
-                    int q1 = ((ql[l +  0] & 0x0F) | (((qh[l] >> 0) & 3) << 4)) - 32;
-                    int q2 = ((ql[l + 32] & 0x0F) | (((qh[l] >> 2) & 3) << 4)) - 32;
-                    int q3 = ((ql[l +  0] >> 4)       | (((qh[l] >> 4) & 3) << 4)) - 32;
-                    int q4 = ((ql[l + 32] >> 4)       | (((qh[l] >> 6) & 3) << 4)) - 32;
-                    if (pos +  0 < base + elemsInBlock)
-                        acc += d * (float)sc[is + 0] * (float)q1 * x[pos +  0];
-                    if (pos + 32 < base + elemsInBlock)
-                        acc += d * (float)sc[is + 2] * (float)q2 * x[pos + 32];
-                    if (pos + 64 < base + elemsInBlock)
-                        acc += d * (float)sc[is + 4] * (float)q3 * x[pos + 64];
-                    if (pos + 96 < base + elemsInBlock)
-                        acc += d * (float)sc[is + 6] * (float)q4 * x[pos + 96];
+            for (int sb = 0; sb < 16; ++sb) {
+                float s = (float)blk.scales[sb];
+                float blockAcc = 0.0f;
+                for (int i = 0; i < 16; ++i) {
+                    int idx = sb * 16 + i;
+                    uint8_t lo = blk.ql[idx];
+                    uint8_t hi = blk.qh[idx / 2];
+                    int q = (lo | (((hi >> (idx % 2 * 4)) & 0x0C) << 4)) - 32;
+                    blockAcc += (float)q * x[b * 256 + idx];
                 }
-                ql += 64;
-                qh += 32;
-                sc += 8;
+                acc += d * s * blockAcc;
             }
         }
         y[r] += acc;
@@ -612,8 +467,7 @@ static void gemv_q8_0_avx512(
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q8_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            __m512 dVec = _mm512_set1_ps(d);
+            __m512 dVec = _mm512_set1_ps(f16_to_f32(blk.d));
 
             // Load 32 int8 weights and convert to float
             __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
@@ -708,8 +562,7 @@ static void gemv_q8_0_avx2(
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q8_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            __m256 dVec = _mm256_set1_ps(d);
+            __m256 dVec = _mm256_set1_ps(f16_to_f32(blk.d));
 
             // Load 32 int8 weights
             __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
@@ -839,7 +692,7 @@ static void dequant_q8_0(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         for (int i = 0; i < 32; ++i) {
             size_t idx = b * 32 + i;
-            if (idx < n) dst[idx] = blocks[b].d * (float)blocks[b].qs[i];
+            if (idx < n) dst[idx] = f16_to_f32(blocks[b].d) * (float)blocks[b].qs[i];
         }
     }
 }
@@ -851,141 +704,110 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
         float d = f16_to_f32(blocks[b].d);
         float dmin = f16_to_f32(blocks[b].dmin);
         for (int sb = 0; sb < 8; ++sb) {
-            int scaleIdx = sb / 2;
-            int shift = (sb % 2) * 4;
-            uint8_t scale = (blocks[b].scales[scaleIdx] >> shift) & 0x3F;
-            uint8_t min   = (blocks[b].scales[scaleIdx + 6] >> shift) & 0x3F;
+            uint8_t sc, m;
+            get_scale_min_k4(sb, blocks[b].scales, sc, m);
+            float scale = d * sc;
+            float min   = dmin * m;
+            const uint8_t* quants = blocks[b].qs + sb * 16;
+            for (int k = 0; k < 16; ++k) {
+                uint8_t byte = quants[k];
+                int lo = byte & 0x0F;
+                int hi = (byte >> 4) & 0x0F;
+                int idx0 = sb * 32 + k;
+                int idx1 = sb * 32 + k + 16;
+                size_t g0 = b * 256 + idx0;
+                size_t g1 = b * 256 + idx1;
+                if (g0 < n) dst[g0] = scale * lo - min;
+                if (g1 < n) dst[g1] = scale * hi - min;
+            }
+        }
+    }
+}
+
+
+static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d    = f16_to_f32(blocks[b].d);
+        float dmin = f16_to_f32(blocks[b].dmin);
+        for (int chunk = 0; chunk < 2; ++chunk) {
+            for (int subBlock = 0; subBlock < 4; ++subBlock) {
+                for (int group = 0; group < 2; ++group) {
+                    int scaleIdx = chunk * 8 + subBlock * 2 + group;
+                    uint8_t sc = blocks[b].scales[scaleIdx];
+                    float dl = d * (float)(sc & 0x0F);
+                    float ml = dmin * (float)(sc >> 4);
+                    for (int pos = 0; pos < 16; ++pos) {
+                        int i = chunk * 128 + subBlock * 32 + group * 16 + pos;
+                        size_t globalIdx = b * 256 + i;
+                        if (globalIdx >= n) return;
+                        int qsIdx = chunk * 32 + group * 16 + pos;
+                        int qsShift = subBlock * 2;
+                        int q = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+                        dst[globalIdx] = dl * (float)q - ml;
+                    }
+                }
+            }
+        }
+    }
+}
+static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        int8_t scales[16];
+        for (int j = 0; j < 8; ++j) {
+            scales[j]     = (int8_t)(blocks[b].scales[j] & 0x0F);
+            scales[j + 8] = (int8_t)((blocks[b].scales[j] >> 4) & 0x0F);
+        }
+        for (size_t i = 0; i < 256; ++i) {
+            size_t globalIdx = b * 256 + i;
+            if (globalIdx >= n) return;
+            int chunk    = (int)(i / 128);
+            int subBlock = (int)((i % 128) / 32);
+            int posInSub = (int)(i % 32);
+            int qsIdx    = chunk * 32 + posInSub;
+            int qsShift  = subBlock * 2;
+            int lo       = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
+            int hmIdx    = posInSub;
+            int hmShift  = (int)(i / 32);
+            int hmaskBit = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
+            int q        = lo - (hmaskBit ? 0 : 4);
+            int scaleIdx = chunk * 4 + subBlock;
+            float dl     = d * (float)(scales[scaleIdx] - 32);
+            dst[globalIdx] = dl * (float)q;
+        }
+    }
+}
+static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        float dmin = f16_to_f32(blocks[b].dmin);
+        for (int sb = 0; sb < 8; ++sb) {
+            uint8_t scale, min;
+            get_scale_min_k4(sb, blocks[b].scales, scale, min);
             float s = d * scale;
             float m = dmin * min;
             for (int i = 0; i < 32; ++i) {
                 int idx = sb * 32 + i;
                 size_t globalIdx = b * 256 + idx;
                 if (globalIdx >= n) return;
-                uint8_t byte = blocks[b].qs[idx / 2];
-                float q = (idx % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
+                int qsIdx = idx / 2;
+                int qsShift = (idx % 2) * 4;
+                uint8_t low4 = (blocks[b].qs[qsIdx] >> qsShift) & 0x0F;
+                int qhIdx = idx / 8;
+                int qhShift = idx % 8;
+                uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
+                uint8_t q = low4 | (high1 << 4);
                 dst[globalIdx] = s * q - m;
             }
         }
     }
 }
-
-
-// --- Q2_K dequant ---
-static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        float min = f16_to_f32(blocks[b].dmin);
-        const uint8_t* q = blocks[b].qs;
-        int is = 0;
-        for (size_t n_off = 0; n_off < 256; n_off += 128) {
-            int shift = 0;
-            for (int j = 0; j < 4; ++j) {
-                uint8_t sc = blocks[b].scales[is++];
-                float dl = d * (sc & 0x0F);
-                float ml = min * (sc >> 4);
-                for (int l = 0; l < 16; ++l) {
-                    size_t idx = b * 256 + n_off + j * 32 + l;
-                    if (idx >= n) return;
-                    dst[idx] = dl * ((int8_t)((q[l] >> shift) & 3)) - ml;
-                }
-                sc = blocks[b].scales[is++];
-                dl = d * (sc & 0x0F);
-                ml = min * (sc >> 4);
-                for (int l = 0; l < 16; ++l) {
-                    size_t idx = b * 256 + n_off + j * 32 + 16 + l;
-                    if (idx >= n) return;
-                    dst[idx] = dl * ((int8_t)((q[l + 16] >> shift) & 3)) - ml;
-                }
-                shift += 2;
-            }
-            q += 32;
-        }
-    }
-}
-
-// --- Q3_K dequant ---
-static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    const uint32_t kmask1 = 0x03030303;
-    const uint32_t kmask2 = 0x0f0f0f0f;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d_all = f16_to_f32(blocks[b].d);
-        const uint8_t* q = blocks[b].qs;
-        const uint8_t* hm = blocks[b].hmask;
-        uint32_t aux[4];
-        memcpy(aux, blocks[b].scales, 12);
-        uint32_t tmp = aux[2];
-        aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
-        aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
-        aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
-        aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
-        const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
-        uint8_t m = 1;
-        int is = 0;
-        for (size_t n_off = 0; n_off < 256; n_off += 128) {
-            int shift = 0;
-            for (int j = 0; j < 4; ++j) {
-                float dl = d_all * (scales[is++] - 32);
-                for (int l = 0; l < 16; ++l) {
-                    size_t idx = b * 256 + n_off + j * 32 + l;
-                    if (idx >= n) return;
-                    int qv = ((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4);
-                    dst[idx] = dl * qv;
-                }
-                dl = d_all * (scales[is++] - 32);
-                for (int l = 0; l < 16; ++l) {
-                    size_t idx = b * 256 + n_off + j * 32 + 16 + l;
-                    if (idx >= n) return;
-                    int qv = ((q[l + 16] >> shift) & 3) - ((hm[l + 16] & m) ? 0 : 4);
-                    dst[idx] = dl * qv;
-                }
-                shift += 2;
-                m <<= 1;
-            }
-            q += 32;
-        }
-    }
-}
-
-// --- Q5_K dequant ---
-static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        float d = f16_to_f32(blocks[b].d);
-        float min = f16_to_f32(blocks[b].dmin);
-        const uint8_t* ql = blocks[b].qs;
-        const uint8_t* qh = blocks[b].qh;
-        int is = 0;
-        uint8_t u1 = 1, u2 = 2;
-        for (size_t j = 0; j < 256; j += 64) {
-            uint8_t sc, mm;
-            get_scale_min_k4(is + 0, blocks[b].scales, sc, mm);
-            float d1 = d * sc; float m1 = min * mm;
-            get_scale_min_k4(is + 1, blocks[b].scales, sc, mm);
-            float d2 = d * sc; float m2 = min * mm;
-            for (int l = 0; l < 32; ++l) {
-                size_t idx = b * 256 + j + l;
-                if (idx >= n) return;
-                int qv = (ql[l] & 0x0F) + (qh[l] & u1 ? 16 : 0);
-                dst[idx] = d1 * qv - m1;
-            }
-            for (int l = 0; l < 32; ++l) {
-                size_t idx = b * 256 + j + 32 + l;
-                if (idx >= n) return;
-                int qv = (ql[l] >> 4) + (qh[l] & u2 ? 16 : 0);
-                dst[idx] = d2 * qv - m2;
-            }
-            ql += 32; is += 2;
-            u1 <<= 2; u2 <<= 2;
-        }
-    }
-}
-
-// --- Q6_K dequant ---
 static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(src);
     size_t numBlocks = (n + 255) / 256;
@@ -993,151 +815,25 @@ static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
         float d = f16_to_f32(blocks[b].d);
         const uint8_t* ql = blocks[b].ql;
         const uint8_t* qh = blocks[b].qh;
-        const int8_t* sc = blocks[b].scales;
-        for (size_t n_off = 0; n_off < 256; n_off += 128) {
-            for (int l = 0; l < 32; ++l) {
-                int is = l / 16;
-                int q1 = ((ql[l +  0] & 0x0F) | (((qh[l] >> 0) & 3) << 4)) - 32;
-                int q2 = ((ql[l + 32] & 0x0F) | (((qh[l] >> 2) & 3) << 4)) - 32;
-                int q3 = ((ql[l +  0] >> 4)       | (((qh[l] >> 4) & 3) << 4)) - 32;
-                int q4 = ((ql[l + 32] >> 4)       | (((qh[l] >> 6) & 3) << 4)) - 32;
-                size_t idx = b * 256 + n_off + l;
-                if (idx +  0 < n) dst[idx +  0] = d * sc[is + 0] * q1;
-                if (idx + 32 < n) dst[idx + 32] = d * sc[is + 2] * q2;
-                if (idx + 64 < n) dst[idx + 64] = d * sc[is + 4] * q3;
-                if (idx + 96 < n) dst[idx + 96] = d * sc[is + 6] * q4;
-            }
-            ql += 64; qh += 32; sc += 8;
+        const int8_t*  sc = blocks[b].scales;
+        for (size_t idx = 0; idx < 256; ++idx) {
+            size_t globalIdx = b * 256 + idx;
+            if (globalIdx >= n) return;
+            size_t qlIdx = idx / 2;
+            int    qlShift = (idx % 2) * 4;
+            uint8_t low4 = (ql[qlIdx] >> qlShift) & 0x0F;
+            size_t qhIdx = idx / 4;
+            int    qhShift = (idx % 4) * 2;
+            uint8_t high2 = (qh[qhIdx] >> qhShift) & 0x03;
+            int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
+            int scaleIdx = (int)(idx / 16);
+            dst[globalIdx] = d * (float)sc[scaleIdx] * (float)q;
         }
     }
 }
 
-// --- Q8_K dequant ---
-static void dequant_q8_k(const uint8_t* src, float* dst, size_t n) {
-    const block_q8_K* blocks = reinterpret_cast<const block_q8_K*>(src);
-    size_t numBlocks = (n + 255) / 256;
-    for (size_t b = 0; b < numBlocks; ++b) {
-        for (int j = 0; j < 256; ++j) {
-            size_t idx = b * 256 + j;
-            if (idx >= n) return;
-            dst[idx] = blocks[b].d * (float)blocks[b].qs[j];
-        }
-    }
-}
-
-// --- Q2_K GEMV (scalar) ---
-static void gemv_q2_k_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q2_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q2_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float min = f16_to_f32(blk.dmin);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            const uint8_t* q = blk.qs;
-            int is = 0;
-            for (size_t n = 0; n < elemsInBlock; n += 128) {
-                int shift = 0;
-                size_t chunkElems = (n + 128 <= elemsInBlock) ? 128 : (elemsInBlock - n);
-                for (int j = 0; j < 4; ++j) {
-                    uint8_t sc = blk.scales[is++];
-                    float dl = d * (sc & 0x0F);
-                    float ml = min * (sc >> 4);
-                    for (int l = 0; l < 16; ++l) {
-                        size_t idx = base + n + j * 32 + l;
-                        if (idx >= cols) break;
-                        int qv = (q[l] >> shift) & 3;
-                        acc += (dl * qv - ml) * x[idx];
-                    }
-                    sc = blk.scales[is++];
-                    dl = d * (sc & 0x0F);
-                    ml = min * (sc >> 4);
-                    for (int l = 0; l < 16; ++l) {
-                        size_t idx = base + n + j * 32 + 16 + l;
-                        if (idx >= cols) break;
-                        int qv = (q[l + 16] >> shift) & 3;
-                        acc += (dl * qv - ml) * x[idx];
-                    }
-                    shift += 2;
-                }
-                q += 32;
-            }
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q3_K GEMV (scalar) ---
-static void gemv_q3_k_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    const uint32_t kmask1 = 0x03030303;
-    const uint32_t kmask2 = 0x0f0f0f0f;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q3_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q3_K& blk = rowBlocks[b];
-            float d_all = f16_to_f32(blk.d);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            const uint8_t* q = blk.qs;
-            const uint8_t* hm = blk.hmask;
-            uint32_t aux[4];
-            memcpy(aux, blk.scales, 12);
-            uint32_t tmp = aux[2];
-            aux[2] = ((aux[0] >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
-            aux[3] = ((aux[1] >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
-            aux[0] = (aux[0] & kmask2) | (((tmp >> 0) & kmask1) << 4);
-            aux[1] = (aux[1] & kmask2) | (((tmp >> 2) & kmask1) << 4);
-            const int8_t* scales = reinterpret_cast<const int8_t*>(aux);
-            uint8_t m = 1;
-            int is = 0;
-            for (size_t n = 0; n < elemsInBlock; n += 128) {
-                int shift = 0;
-                size_t chunkElems = (n + 128 <= elemsInBlock) ? 128 : (elemsInBlock - n);
-                for (int j = 0; j < 4; ++j) {
-                    float dl = d_all * (scales[is++] - 32);
-                    for (int l = 0; l < 16; ++l) {
-                        size_t idx = base + n + j * 32 + l;
-                        if (idx >= cols) break;
-                        int qv = ((q[l] >> shift) & 3) - ((hm[l] & m) ? 0 : 4);
-                        acc += dl * qv * x[idx];
-                    }
-                    dl = d_all * (scales[is++] - 32);
-                    for (int l = 0; l < 16; ++l) {
-                        size_t idx = base + n + j * 32 + 16 + l;
-                        if (idx >= cols) break;
-                        int qv = ((q[l + 16] >> shift) & 3) - ((hm[l + 16] & m) ? 0 : 4);
-                        acc += dl * qv * x[idx];
-                    }
-                    shift += 2;
-                    m <<= 1;
-                }
-                q += 32;
-            }
-        }
-        y[r] += acc;
-    }
-}
-
-// --- Q5_K GEMV (scalar) ---
+static void gemv_q2_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
+static void gemv_q3_k_scalar(const uint8_t* w, const float* x, float* y, size_t rows, size_t cols) {}
 static void gemv_q5_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -1152,60 +848,31 @@ static void gemv_q5_k_scalar(
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q5_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
-            float min = f16_to_f32(blk.dmin);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
+            float dmin = f16_to_f32(blk.dmin);
+            size_t elemsInBlock = (b == blocksPerRow - 1)
+                ? (cols - b * 256)
+                : 256;
             if (elemsInBlock == 0) break;
-            const uint8_t* ql = blk.qs;
-            const uint8_t* qh = blk.qh;
-            int is = 0;
-            uint8_t u1 = 1, u2 = 2;
-            for (size_t j = 0; j < elemsInBlock; j += 64) {
-                uint8_t sc, mm;
-                get_scale_min_k4(is + 0, blk.scales, sc, mm);
-                float d1 = d * sc; float m1 = min * mm;
-                get_scale_min_k4(is + 1, blk.scales, sc, mm);
-                float d2 = d * sc; float m2 = min * mm;
-                size_t count = (j + 32 <= elemsInBlock) ? 32 : (elemsInBlock - j);
-                for (size_t l = 0; l < count; ++l) {
-                    size_t idx = base + j + l;
-                    int qv = (ql[l] & 0x0F) + (qh[l] & u1 ? 16 : 0);
-                    acc += (d1 * qv - m1) * x[idx];
-                }
-                count = (j + 64 <= elemsInBlock) ? 32 : (elemsInBlock - j - 32);
-                for (size_t l = 0; l < count; ++l) {
-                    size_t idx = base + j + 32 + l;
-                    int qv = (ql[l] >> 4) + (qh[l] & u2 ? 16 : 0);
-                    acc += (d2 * qv - m2) * x[idx];
-                }
-                ql += 32; is += 2;
-                u1 <<= 2; u2 <<= 2;
-            }
-        }
-        y[r] += acc;
-    }
-}
 
-// --- Q8_K GEMV (scalar) ---
-static void gemv_q8_k_scalar(
-    const uint8_t* RESTRICT w,
-    const float*  RESTRICT x,
-    float*        RESTRICT y,
-    size_t rows, size_t cols
-) {
-    const block_q8_K* blocks = reinterpret_cast<const block_q8_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q8_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q8_K& blk = rowBlocks[b];
-            float d = blk.d;
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                acc += d * (float)blk.qs[i] * x[base + i];
+            for (int sb = 0; sb < 8; ++sb) {
+                uint8_t scale, min;
+                get_scale_min_k4(sb, blk.scales, scale, min);
+                float s = d * scale;
+                float m = dmin * min;
+                float blockAcc = 0.0f;
+                for (int i = 0; i < 32; ++i) {
+                    int idx = sb * 32 + i;
+                    if ((size_t)idx >= elemsInBlock) break;
+                    int qsIdx = idx / 2;
+                    int qsShift = (idx % 2) * 4;
+                    uint8_t low4 = (blk.qs[qsIdx] >> qsShift) & 0x0F;
+                    int qhIdx = idx / 8;
+                    int qhShift = idx % 8;
+                    uint8_t high1 = (blk.qh[qhIdx] >> qhShift) & 0x01;
+                    uint8_t q = low4 | (high1 << 4);
+                    blockAcc += (s * q - m) * x[b * 256 + idx];
+                }
+                acc += blockAcc;
             }
         }
         y[r] += acc;
@@ -1262,30 +929,14 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_avx2);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
-
-    // --- Q2_K ---
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_avx2);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
-
-    // --- Q3_K ---
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_avx2);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    // B35-FIX: AVX-512/AVX2 Q4_K kernels are broken stubs; force scalar
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_avx2);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
+    // B35-FIX: AVX-512/AVX2 Q5_K kernels are broken stubs; force scalar
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
@@ -1294,32 +945,26 @@ void QuantKernelRegistry::RegisterBuiltins() {
     else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx2);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
-    // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1) ---
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q4_0, dequant_q4_0);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
-
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_1));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q4_1, dequant_q4_1);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
-
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_0));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q5_0, dequant_q5_0);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_0, gemv_q5_0_scalar);
-
-    RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_1));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q5_1, dequant_q5_1);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_1, gemv_q5_1_scalar);
-
-    // --- IQ types fallback ---
+    // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1): scalar fallback ---
+    // These formats are deprecated in favor of K-quants but kept for compatibility
+    // AVX-512 optimized kernels can be added here when needed
+    for (int t = (int)GGMLType::GGML_TYPE_Q4_0; t <= (int)GGMLType::GGML_TYPE_Q5_1; ++t) {
+        RegisterGeometry(t, GetBlockGeometryForType(t));
+        // Use Q8_0 scalar as fallback; type-specific kernels registered on-demand
+        RegisterGEMV(t, gemv_q8_0_scalar);
+    }
+    // IQ types fallback
+    for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
+        RegisterGeometry(t, GetBlockGeometryForType(t));
+        RegisterGEMV(t, gemv_q4_k_scalar); // IQ fallback
+    }
     for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
         RegisterGEMV(t, gemv_q4_k_scalar); // IQ fallback
     }
     // Q8_K
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_K));
-    RegisterDequant((int)GGMLType::GGML_TYPE_Q8_K, dequant_q8_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_k_scalar);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_K, gemv_q8_0_scalar);
 }
 
 void QuantKernelRegistry::Initialize() {

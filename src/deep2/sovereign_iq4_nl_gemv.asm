@@ -60,7 +60,8 @@ QuantLoop:
     shl r10d, 1
     shl r10d, 2
     add r10, rsi
-    vfmaddss xmm2, xmm1, dword ptr [r10], dword ptr [rdi + r14*4]
+    vmovss xmm3, dword ptr [r10]
+    vfmaddss xmm2, xmm1, xmm3, dword ptr [rdi + r14*4]
     movss dword ptr [rdi + r14*4], xmm2
 
     ; High nibble
@@ -71,8 +72,12 @@ QuantLoop:
     movss xmm1, dword ptr [r10 + rcx*4]
     vmulss xmm1, xmm1, xmm0
 
-    add r10, rsi, 4
-    vfmaddss xmm2, xmm1, dword ptr [r10], dword ptr [rdi + r14*4]
+    add r10d, r15d
+    shl r10d, 1
+    shl r10d, 2
+    add r10, rsi
+    vmovss xmm3, dword ptr [r10]
+    vfmaddss xmm2, xmm1, xmm3, dword ptr [rdi + r14*4]
     movss dword ptr [rdi + r14*4], xmm2
 
     inc r15

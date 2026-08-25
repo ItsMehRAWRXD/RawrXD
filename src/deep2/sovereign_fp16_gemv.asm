@@ -38,7 +38,9 @@ ColLoop:
     jae StoreResult
 
     ; Load FP16 weight, convert to FP32
-    movzx eax, word ptr [rbx + r14*2 + r15*2]
+    mov r11d, r14d
+    add r11d, r15d
+    movzx eax, word ptr [rbx + r11*2]
     movd xmm1, eax
     punpcklwd xmm1, xmm1
     pslld xmm1, 16

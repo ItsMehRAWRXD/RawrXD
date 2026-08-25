@@ -66,7 +66,8 @@ InnerLoop:
     shl r10d, 2
     add r10, rsi
 
-    vfmaddss xmm2, xmm1, dword ptr [r10], dword ptr [rdi + r14*4]
+    vmovss xmm3, dword ptr [r10]
+    vfmaddss xmm2, xmm1, xmm3, dword ptr [rdi + r14*4]
     movss dword ptr [rdi + r14*4], xmm2
 
     shr eax, 2
