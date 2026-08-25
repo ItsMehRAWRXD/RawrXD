@@ -10760,6 +10760,7 @@ target_link_libraries(b009_t128_instrumented PRIVATE
 # ============================================================================
 add_executable(certification_harness EXCLUDE_FROM_ALL
     certification/CertificationHarness.cpp
+    src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/Deep2Engine.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/GGUFLoader.cpp
@@ -10802,54 +10803,14 @@ add_executable(certification_harness EXCLUDE_FROM_ALL
     src/reverse/ReverseModelLoader.cpp
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4k_gemv_v2.asm
+    src/deep2/sovereign_q2k_gemv_v2.asm
+    src/deep2/sovereign_q3k_gemv_v2.asm
     src/deep2/sovereign_moe_fused.asm
     src/sampling/advanced_sampler.cpp
-    src/tokenizer/gguf_embedded_tokenizer.cpp
     src/deep2/ProductionProfiler.cpp
-    src/deep2/KimiK2Config.cpp
-    src/deep2/K2MLAWeights.cpp
-    src/deep2/K2MoEWeights.cpp
-    src/deep2/K2TokenEmbedding.cpp
-    src/deep2/K2TimeLimitedServing.cpp
-    src/deep2/Deep2Bridge.cpp
-    src/deep2/InferenceSession.cpp
-    src/deep2/Deep2ModelRuntime.cpp
-    src/deep2/Deep2IDEIntegration.cpp
-    src/deep2/Deep2Integration.cpp
-    src/deep2/Deep2InferenceEndpoint.cpp
-    src/deep2/Deep2InferenceGateway.cpp
-    src/deep2/Deep2LocalServer.cpp
-    src/deep2/Deep2Discovery.cpp
-    src/deep2/Deep2Server_Minimal.cpp
-    src/deep2/Deep2Server_Sovereign.cpp
-    src/deep2/Deep2APIServer.cpp
-    src/deep2/Deep2Benchmark.cpp
-    src/deep2/RawrXDTokenizer.cpp
-    src/deep2/RawrXDSampler.cpp
-    src/deep2/RawrXDTransformer.cpp
-    src/deep2/RawrXDInferenceAdapter.cpp
-    src/deep2/ModelLoader.cpp
-    src/deep2/ModelRegistry.cpp
-    src/deep2/RuntimePlanner.cpp
-    src/deep2/UniversalModelLoader.cpp
-    src/deep2/ResidencyManager.cpp
-    src/deep2/ResidencyLease.cpp
-    src/deep2/ScaleQuality.cpp
-    src/deep2/OutOfCoreRuntime.cpp
-    src/deep2/RawrXDConversationRuntime.cpp
-    src/deep2/MASMKernelStubs.cpp
-    src/deep2/IQQuantKernels.cpp
-    src/deep2/GGUFDiagnostics.cpp
-    src/deep2/GGUFVerifier.cpp
-    src/deep2/GGUFLoader_Fixed.cpp
-    src/deep2/BP16Extractor.cpp
     src/deep2/BP16Streamer.cpp
-    src/deep2/deep2_link_stubs.cpp
-    src/core/swarm_scheduler.cpp
-    src/core/gguf_swarm_plan_builder.cpp
-    src/core/memory_stubs.cpp
-    src/core/link_stubs.cpp
-    src/logging/Logger.cpp
+    src/deep2/ResidencyManager.cpp
 )
 set_target_properties(certification_harness PROPERTIES
     EXCLUDE_FROM_ALL TRUE
