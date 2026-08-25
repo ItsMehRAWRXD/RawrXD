@@ -1721,6 +1721,7 @@ set(SOURCES
     src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
     src/deep2/MASMKernelStubs.cpp
+    src/deep2/IQQuantKernels.cpp
     src/inference/NegativeSpaceProfiler.cpp
     
     src/engine/gguf_core.cpp
@@ -2783,6 +2784,7 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/deep2/BP16Streamer.cpp
     src/deep2/ResidencyManager.cpp
     src/deep2/ToroidalKVCache.cpp
+    src/deep2/IQQuantKernels.cpp
     src/vulkan_compute.cpp
 
     # ═══════════════════════════════════════════════════════════════════
@@ -3228,8 +3230,15 @@ list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
 # Add Gold stub implementations for excluded files
 # REMOVED: src/gold_stubs/gold_link_stubs.cpp - stub file deleted
 # Add Gold-specific stubs for symbols not provided by ASM files
+# NOTE: gold_link_closure.cpp is the comprehensive stub file that covers
+# SovereignInferenceClient, VSCodeExtensionAPI, find_pattern_asm, sampler
+# kernels, mesh/speciator/neural/watchdog/perf ASM stubs, and more.
+# link_symbols_impl.cpp covers MemoryPressureGuard, InferenceAutopatchController,
+# ExtensionAPIBridge, LockFreeAgentCoordinator, and KV aperture globals.
 list(APPEND GOLD_UNDERSCORE_SOURCES
-    src/core/link_stubs_gold.cpp
+    src/core/gold_link_closure.cpp
+    src/core/link_symbols_impl.cpp
+    # REMOVED: src/core/link_stubs_gold.cpp - superseded by gold_link_closure.cpp + link_symbols_impl.cpp
     src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
@@ -4400,6 +4409,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/GGUFLoader.cpp
     src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
+    src/deep2/IQQuantKernels.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
     src/deep2/MoERouter.cpp

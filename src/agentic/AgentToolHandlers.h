@@ -76,6 +76,7 @@ public:
 
     // ---- Schema generation (OpenAI function-calling format) ----
     static nlohmann::json GetAllSchemas();
+    static nlohmann::json GetSchema(const std::string& toolName);
     static std::string GetSystemPrompt(const std::string& cwd,
                                         const std::vector<std::string>& openFiles);
 

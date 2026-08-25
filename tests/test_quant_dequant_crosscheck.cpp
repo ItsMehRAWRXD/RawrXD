@@ -71,6 +71,36 @@ struct block_q6_K {
     uint16_t d;
 };
 
+struct block_q4_0 {
+    uint16_t d;
+    uint8_t  qs[16];
+};
+
+struct block_q4_1 {
+    uint16_t d;
+    uint16_t m;
+    uint8_t  qs[16];
+};
+
+struct block_q5_0 {
+    uint16_t d;
+    uint8_t  qh[4];
+    uint8_t  qs[16];
+};
+
+struct block_q5_1 {
+    uint16_t d;
+    uint16_t m;
+    uint8_t  qh[4];
+    uint8_t  qs[16];
+};
+
+struct block_q8_K {
+    float    d;
+    int8_t   qs[256];
+    int16_t  bsums[16];
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(block_q8_0) == 34,  "block_q8_0 must be 34 bytes");
@@ -79,6 +109,11 @@ static_assert(sizeof(block_q3_K) == 110, "block_q3_K must be 110 bytes");
 static_assert(sizeof(block_q4_K) == 144, "block_q4_K must be 144 bytes");
 static_assert(sizeof(block_q5_K) == 176, "block_q5_K must be 176 bytes");
 static_assert(sizeof(block_q6_K) == 210, "block_q6_K must be 210 bytes");
+static_assert(sizeof(block_q4_0) == 18,  "block_q4_0 must be 18 bytes");
+static_assert(sizeof(block_q4_1) == 20,  "block_q4_1 must be 20 bytes");
+static_assert(sizeof(block_q5_0) == 22,  "block_q5_0 must be 22 bytes");
+static_assert(sizeof(block_q5_1) == 24,  "block_q5_1 must be 24 bytes");
+static_assert(sizeof(block_q8_K) == 292, "block_q8_K must be 292 bytes");
 
 // ============================================================================
 // FP16 -> FP32 conversion (exact, no approximations)
@@ -383,6 +418,147 @@ static void rawrxd_dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+// --- Q4_0 reference ---
+static void ref_dequant_q4_0(const block_q4_0* block, float* out) {
+    float d = fp16_to_fp32(block->d);
+    for (int i = 0; i < 32; ++i) {
+        uint8_t byte = block->qs[i / 2];
+        float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+        out[i] = d * q;
+    }
+}
+
+static void rawrxd_dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
+    const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(src);
+    size_t numBlocks = (n + 31) / 32;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = fp16_to_fp32(blocks[b].d);
+        for (int i = 0; i < 32; ++i) {
+            size_t idx = b * 32 + i;
+            if (idx >= n) return;
+            uint8_t byte = blocks[b].qs[i / 2];
+            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+            dst[idx] = d * q;
+        }
+    }
+}
+
+// --- Q4_1 reference ---
+static void ref_dequant_q4_1(const block_q4_1* block, float* out) {
+    float d = fp16_to_fp32(block->d);
+    float m = fp16_to_fp32(block->m);
+    for (int i = 0; i < 32; ++i) {
+        uint8_t byte = block->qs[i / 2];
+        float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+        out[i] = d * q - m;
+    }
+}
+
+static void rawrxd_dequant_q4_1(const uint8_t* src, float* dst, size_t n) {
+    const block_q4_1* blocks = reinterpret_cast<const block_q4_1*>(src);
+    size_t numBlocks = (n + 31) / 32;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = fp16_to_fp32(blocks[b].d);
+        float m = fp16_to_fp32(blocks[b].m);
+        for (int i = 0; i < 32; ++i) {
+            size_t idx = b * 32 + i;
+            if (idx >= n) return;
+            uint8_t byte = blocks[b].qs[i / 2];
+            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+            dst[idx] = d * q - m;
+        }
+    }
+}
+
+// --- Q5_0 reference ---
+static void ref_dequant_q5_0(const block_q5_0* block, float* out) {
+    float d = fp16_to_fp32(block->d);
+    for (int i = 0; i < 32; ++i) {
+        uint8_t low4 = block->qs[i / 2];
+        float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
+        int qhIdx = i / 8;
+        int qhShift = i % 8;
+        uint8_t high1 = (block->qh[qhIdx] >> qhShift) & 0x01;
+        float q = q_low + (float)(high1 << 4);
+        out[i] = d * q;
+    }
+}
+
+static void rawrxd_dequant_q5_0(const uint8_t* src, float* dst, size_t n) {
+    const block_q5_0* blocks = reinterpret_cast<const block_q5_0*>(src);
+    size_t numBlocks = (n + 31) / 32;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = fp16_to_fp32(blocks[b].d);
+        for (int i = 0; i < 32; ++i) {
+            size_t idx = b * 32 + i;
+            if (idx >= n) return;
+            uint8_t low4 = blocks[b].qs[i / 2];
+            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
+            int qhIdx = i / 8;
+            int qhShift = i % 8;
+            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
+            float q = q_low + (float)(high1 << 4);
+            dst[idx] = d * q;
+        }
+    }
+}
+
+// --- Q5_1 reference ---
+static void ref_dequant_q5_1(const block_q5_1* block, float* out) {
+    float d = fp16_to_fp32(block->d);
+    float m = fp16_to_fp32(block->m);
+    for (int i = 0; i < 32; ++i) {
+        uint8_t low4 = block->qs[i / 2];
+        float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
+        int qhIdx = i / 8;
+        int qhShift = i % 8;
+        uint8_t high1 = (block->qh[qhIdx] >> qhShift) & 0x01;
+        float q = q_low + (float)(high1 << 4);
+        out[i] = d * q - m;
+    }
+}
+
+static void rawrxd_dequant_q5_1(const uint8_t* src, float* dst, size_t n) {
+    const block_q5_1* blocks = reinterpret_cast<const block_q5_1*>(src);
+    size_t numBlocks = (n + 31) / 32;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = fp16_to_fp32(blocks[b].d);
+        float m = fp16_to_fp32(blocks[b].m);
+        for (int i = 0; i < 32; ++i) {
+            size_t idx = b * 32 + i;
+            if (idx >= n) return;
+            uint8_t low4 = blocks[b].qs[i / 2];
+            float q_low = (i % 2 == 0) ? (float)(low4 & 0x0F) : (float)(low4 >> 4);
+            int qhIdx = i / 8;
+            int qhShift = i % 8;
+            uint8_t high1 = (blocks[b].qh[qhIdx] >> qhShift) & 0x01;
+            float q = q_low + (float)(high1 << 4);
+            dst[idx] = d * q - m;
+        }
+    }
+}
+
+// --- Q8_K reference ---
+static void ref_dequant_q8_k(const block_q8_K* block, float* out) {
+    float d = block->d;
+    for (int i = 0; i < 256; ++i) {
+        out[i] = d * (float)block->qs[i];
+    }
+}
+
+static void rawrxd_dequant_q8_k(const uint8_t* src, float* dst, size_t n) {
+    const block_q8_K* blocks = reinterpret_cast<const block_q8_K*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = blocks[b].d;
+        for (int i = 0; i < 256; ++i) {
+            size_t idx = b * 256 + i;
+            if (idx >= n) return;
+            dst[idx] = d * (float)blocks[b].qs[i];
+        }
+    }
+}
+
 // ============================================================================
 // Synthetic block generators
 // ============================================================================
@@ -464,6 +640,52 @@ static void generate_q6_k_block(block_q6_K* block) {
         block->scales[i] = (int8_t)(rng() % 256 - 128);
     }
     block->d = random_fp16();
+}
+
+static void generate_q4_0_block(block_q4_0* block) {
+    block->d = random_fp16();
+    for (int i = 0; i < 16; ++i) {
+        block->qs[i] = (uint8_t)(rng() % 256);
+    }
+}
+
+static void generate_q4_1_block(block_q4_1* block) {
+    block->d = random_fp16();
+    block->m = random_fp16();
+    for (int i = 0; i < 16; ++i) {
+        block->qs[i] = (uint8_t)(rng() % 256);
+    }
+}
+
+static void generate_q5_0_block(block_q5_0* block) {
+    block->d = random_fp16();
+    for (int i = 0; i < 4; ++i) {
+        block->qh[i] = (uint8_t)(rng() % 256);
+    }
+    for (int i = 0; i < 16; ++i) {
+        block->qs[i] = (uint8_t)(rng() % 256);
+    }
+}
+
+static void generate_q5_1_block(block_q5_1* block) {
+    block->d = random_fp16();
+    block->m = random_fp16();
+    for (int i = 0; i < 4; ++i) {
+        block->qh[i] = (uint8_t)(rng() % 256);
+    }
+    for (int i = 0; i < 16; ++i) {
+        block->qs[i] = (uint8_t)(rng() % 256);
+    }
+}
+
+static void generate_q8_k_block(block_q8_K* block) {
+    block->d = fp16_to_fp32(random_fp16());
+    for (int i = 0; i < 256; ++i) {
+        block->qs[i] = (int8_t)(rng() % 256 - 128);
+    }
+    for (int i = 0; i < 16; ++i) {
+        block->bsums[i] = (int16_t)(rng() % 65536 - 32768);
+    }
 }
 
 // ============================================================================
@@ -612,6 +834,46 @@ int main() {
     {
         QuantTest<block_q6_K, 210, 256> test = {
             "Q6_K", generate_q6_k_block, ref_dequant_q6_k, rawrxd_dequant_q6_k
+        };
+        allPassed &= run_crosscheck(test, 16);
+    }
+
+    // Q4_0
+    {
+        QuantTest<block_q4_0, 18, 32> test = {
+            "Q4_0", generate_q4_0_block, ref_dequant_q4_0, rawrxd_dequant_q4_0
+        };
+        allPassed &= run_crosscheck(test, 16);
+    }
+
+    // Q4_1
+    {
+        QuantTest<block_q4_1, 20, 32> test = {
+            "Q4_1", generate_q4_1_block, ref_dequant_q4_1, rawrxd_dequant_q4_1
+        };
+        allPassed &= run_crosscheck(test, 16);
+    }
+
+    // Q5_0
+    {
+        QuantTest<block_q5_0, 22, 32> test = {
+            "Q5_0", generate_q5_0_block, ref_dequant_q5_0, rawrxd_dequant_q5_0
+        };
+        allPassed &= run_crosscheck(test, 16);
+    }
+
+    // Q5_1
+    {
+        QuantTest<block_q5_1, 24, 32> test = {
+            "Q5_1", generate_q5_1_block, ref_dequant_q5_1, rawrxd_dequant_q5_1
+        };
+        allPassed &= run_crosscheck(test, 16);
+    }
+
+    // Q8_K
+    {
+        QuantTest<block_q8_K, 292, 256> test = {
+            "Q8_K", generate_q8_k_block, ref_dequant_q8_k, rawrxd_dequant_q8_k
         };
         allPassed &= run_crosscheck(test, 16);
     }

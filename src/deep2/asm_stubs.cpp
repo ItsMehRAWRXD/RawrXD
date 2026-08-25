@@ -21,4 +21,12 @@ void silu_activation_avx512(const float* /*input*/, float* /*output*/, size_t /*
 void Dequant_Q4_0_AVX2(const uint8_t* /*weights*/, const float* /*input*/, float* /*output*/,
                        size_t /*outDim*/, size_t /*inDim*/) {}
 
+// Flash Attention stub
+void flash_attn_asm_avx2(const float* /*Q*/, const float* /*K*/, const float* /*V",
+                         float* /*O*/, uint32_t /*seqLen*/, uint32_t /*headDim*/, float /*scale*/) {}
+
 } // extern "C"
+
+namespace Deep2 {
+void RegisterIQKernels() {}
+}

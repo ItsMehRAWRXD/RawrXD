@@ -1578,6 +1578,18 @@ json AgentToolHandlers::GetAllSchemas() {
     return tools;
 }
 
+nlohmann::json AgentToolHandlers::GetSchema(const std::string& toolName) {
+    json all = GetAllSchemas();
+    for (const auto& tool : all) {
+        if (tool.contains("function") && tool["function"].contains("name")) {
+            if (tool["function"]["name"] == toolName) {
+                return tool;
+            }
+        }
+    }
+    return nullptr;
+}
+
 std::string AgentToolHandlers::GetSystemPrompt(const std::string& cwd,
                                                 const std::vector<std::string>& openFiles) {
     std::string filesStr;
