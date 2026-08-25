@@ -16,6 +16,10 @@
 #include <memory>
 #include <optional>
 
+namespace Deep2 {
+    class Deep2Engine;
+}
+
 namespace rawrxd {
 namespace certify {
 
@@ -433,18 +437,18 @@ private:
     bool RunSingleScenario(const BenchmarkScenario& scenario, ScenarioResult& out);
 
     // Measurement
-    MetricEvidence MeasureDecodeTPS(class Deep2::Deep2Engine& engine,
+    MetricEvidence MeasureDecodeTPS(Deep2::Deep2Engine& engine,
                                      const BenchmarkScenario& scenario,
                                      bool use_gpu);
-    MetricEvidence MeasureTTFT(class Deep2::Deep2Engine& engine,
+    MetricEvidence MeasureTTFT(Deep2::Deep2Engine& engine,
                                 const BenchmarkScenario& scenario);
-    TTFTDecomposition DecomposeTTFT(class Deep2::Deep2Engine& engine,
+    TTFTDecomposition DecomposeTTFT(Deep2::Deep2Engine& engine,
                                     const BenchmarkScenario& scenario);
-    MemoryEvidence MeasureMemory(class Deep2::Deep2Engine& engine);
+    MemoryEvidence MeasureMemory(Deep2::Deep2Engine& engine);
     std::optional<ThermalEvidence> MeasureThermal();
 
     // Correctness
-    bool VerifyCorrectness(class Deep2::Deep2Engine& engine,
+    bool VerifyCorrectness(Deep2::Deep2Engine& engine,
                            const BenchmarkScenario& scenario,
                            const std::vector<int>& reference_tokens);
 
@@ -458,9 +462,9 @@ private:
     uint32_t ScanBinaryForStubSymbols(const std::string& binary_path);
     uint32_t RuntimeExerciseSubsystems();
 
-    // System
-    double SampleRAMUsedGB();
-    double SampleVRAMUsedGB();
+    // System (implemented as static helpers in .cpp)
+    // double SampleRAMUsedGB();
+    // double SampleVRAMUsedGB();
 };
 
 // ============================================================================

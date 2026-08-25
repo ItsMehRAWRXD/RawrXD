@@ -10755,6 +10755,137 @@ target_link_libraries(b009_t128_instrumented PRIVATE
     kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32 psapi
 )
 
+# ============================================================================
+# Certification Harness — Adversarial Evidence-Producing Benchmark Suite
+# ============================================================================
+add_executable(certification_harness EXCLUDE_FROM_ALL
+    certification/CertificationHarness.cpp
+    src/deep2/Deep2Engine.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/TrailBrake.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_moe_fused.asm
+    src/sampling/advanced_sampler.cpp
+    src/tokenizer/gguf_embedded_tokenizer.cpp
+    src/deep2/ProductionProfiler.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2TimeLimitedServing.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/Deep2ModelRuntime.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/Deep2Integration.cpp
+    src/deep2/Deep2InferenceEndpoint.cpp
+    src/deep2/Deep2InferenceGateway.cpp
+    src/deep2/Deep2LocalServer.cpp
+    src/deep2/Deep2Discovery.cpp
+    src/deep2/Deep2Server_Minimal.cpp
+    src/deep2/Deep2Server_Sovereign.cpp
+    src/deep2/Deep2APIServer.cpp
+    src/deep2/Deep2Benchmark.cpp
+    src/deep2/RawrXDTokenizer.cpp
+    src/deep2/RawrXDSampler.cpp
+    src/deep2/RawrXDTransformer.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/ResidencyLease.cpp
+    src/deep2/ScaleQuality.cpp
+    src/deep2/OutOfCoreRuntime.cpp
+    src/deep2/RawrXDConversationRuntime.cpp
+    src/deep2/MASMKernelStubs.cpp
+    src/deep2/IQQuantKernels.cpp
+    src/deep2/GGUFDiagnostics.cpp
+    src/deep2/GGUFVerifier.cpp
+    src/deep2/GGUFLoader_Fixed.cpp
+    src/deep2/BP16Extractor.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/deep2_link_stubs.cpp
+    src/core/swarm_scheduler.cpp
+    src/core/gguf_swarm_plan_builder.cpp
+    src/core/memory_stubs.cpp
+    src/core/link_stubs.cpp
+    src/logging/Logger.cpp
+)
+set_target_properties(certification_harness PROPERTIES
+    EXCLUDE_FROM_ALL TRUE
+    EXCLUDE_FROM_DEFAULT_BUILD TRUE
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+)
+target_include_directories(certification_harness PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/certification
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/deep2
+    ${CMAKE_SOURCE_DIR}/src/inference
+    ${CMAKE_SOURCE_DIR}/src/engine
+    ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/codec
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src/masm
+    ${CMAKE_SOURCE_DIR}/src/runtime/governance
+    ${RAWR_VULKAN_INCLUDE}
+)
+target_link_libraries(certification_harness PRIVATE
+    Threads::Threads
+    kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32 psapi
+)
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+    set_property(TARGET certification_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+endif()
+if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+    set_property(TARGET certification_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+endif()
+if(DEFINED _MSVC_ROOT)
+    set_property(TARGET certification_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+endif()
+message(STATUS "certification_harness: Adversarial evidence-producing certification suite configured")
+
 if(BUILD_TESTING)
     add_test(NAME b009_batched_prefill_certification
              COMMAND b009_batched_prefill_certification)

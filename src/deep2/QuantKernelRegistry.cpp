@@ -235,11 +235,13 @@ static void gemv_q8_0_scalar(
         float acc = 0.0f;
         const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
         for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q8_0& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
             float blockAcc = 0.0f;
             for (int i = 0; i < 32; ++i) {
-                blockAcc += (float)rowBlocks[b].qs[i] * x[b * 32 + i];
+                blockAcc += (float)blk.qs[i] * x[b * 32 + i];
             }
-            acc += rowBlocks[b].d * blockAcc;
+            acc += d * blockAcc;
         }
         y[r] += acc;
     }
@@ -490,7 +492,8 @@ static void gemv_q8_0_avx512(
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q8_0& blk = rowBlocks[b];
-            __m512 dVec = _mm512_set1_ps(blk.d);
+            float d = f16_to_f32(blk.d);
+            __m512 dVec = _mm512_set1_ps(d);
 
             // Load 32 int8 weights and convert to float
             __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));
@@ -585,7 +588,8 @@ static void gemv_q8_0_avx2(
 
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q8_0& blk = rowBlocks[b];
-            __m256 dVec = _mm256_set1_ps(blk.d);
+            float d = f16_to_f32(blk.d);
+            __m256 dVec = _mm256_set1_ps(d);
 
             // Load 32 int8 weights
             __m256i qs = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(blk.qs));

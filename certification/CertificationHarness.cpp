@@ -29,6 +29,8 @@
 namespace rawrxd {
 namespace certify {
 
+using Deep2::Deep2Engine;
+
 using namespace Deep2;
 
 // ============================================================================
@@ -1020,7 +1022,7 @@ bool CertificationHarness::ExportHTML(const std::string& path) const {
         out << "<td>" << std::fixed << std::setprecision(1) << r.decode_tps.value << "</td>";
         out << "<td>" << std::setprecision(2) << r.ttft_ms.value << " ms</td>";
         out << "<td>" << (r.correctness.generated_sequence_match ? "YES" : "NO") << "</td>";
-        out << "<td class='" << (r.passed ? "pass">PASS" : "fail">FAIL") << "</td></tr>\n";
+        out << "<td class='" << (r.passed ? "pass" : "fail") << "'>" << (r.passed ? "PASS" : "FAIL") << "</td></tr>\n";
     }
     out << "</table>\n";
 
@@ -1028,7 +1030,7 @@ bool CertificationHarness::ExportHTML(const std::string& path) const {
     out << "<tr><th>Gate</th><th>Points</th><th>Status</th></tr>\n";
     auto gate_html = [&](const char* name, bool pass, int pts) {
         out << "<tr><td>" << name << "</td><td>" << pts << "</td>";
-        out << "<td class='" << (pass ? "pass">PASS" : "fail">FAIL") << "</td></tr>\n";
+        out << "<td class='" << (pass ? "pass" : "fail") << "'>" << (pass ? "PASS" : "FAIL") << "</td></tr>\n";
     };
     gate_html("Correctness", report_.gates.correctness, 20);
     gate_html("Zero Stubs", report_.gates.zero_stubs, 5);
@@ -1127,3 +1129,8 @@ int RunCertificationCLI(int argc, char** argv) {
 
 } // namespace certify
 } // namespace rawrxd
+
+// Standalone CLI entry point
+int main(int argc, char** argv) {
+    return rawrxd::certify::RunCertificationCLI(argc, argv);
+}
