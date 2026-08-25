@@ -201,6 +201,12 @@ struct ModelMetadata {
 
     // Tokenizer vocabulary (extracted from tokenizer.ggml.tokens)
     std::vector<std::string> vocab;
+    
+    // Chat template for instruction-tuned models (e.g. Llama-3, Qwen, etc.)
+    std::string chatTemplate;
+    std::string bosToken = "<s>";
+    std::string eosToken = "</s>";
+    std::string unkToken = "<unk>";
 
     void Print() const {
         printf("[GGUF] Architecture: %s\n", architecture.c_str());

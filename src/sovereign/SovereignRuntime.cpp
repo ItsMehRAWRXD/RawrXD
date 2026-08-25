@@ -221,18 +221,34 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
         auto tokens = engine.tokenize(req.prompt);
         result.telemetry.tokensPrompt = (uint32_t)tokens.size();
         
-        // Generate
-        std::vector<uint32_t> outputTokens;
-        Deep2::GenerationStats stats;
-        size_t generated = engine.generateText(tokens, outputTokens, req.maxTokens, &stats);
-        
-        result.telemetry.tokensGenerated = (uint32_t)generated;
-        result.timing.tokensPerSecond = stats.tokensPerSecond;
-        
-        // Detokenize
-        if (!outputTokens.empty()) {
-            result.generatedText = engine.detokenize(outputTokens);
+        // Generate with chat template support for instruction-tuned models
+        std::string response;
+        const Deep2::ModelMetadata& meta = engine.getModelMetadata();
+        if (!meta.chatTemplate.empty() || req.mode == ExecutionRequest::Mode::AGENTIC) {
+            // Use chat formatting for agentic mode or models with chat templates
+            std::string systemPrompt = "You are RawrXD, a helpful AI assistant.";
+            if (req.mode == ExecutionRequest::Mode::AGENTIC && !req.agentGoal.empty()) {
+                systemPrompt = req.agentGoal;
+            }
+            response = engine.generateChat(req.prompt, systemPrompt, req.maxTokens);
+        } else {
+            // Standard text generation
+            std::vector<int> outputTokens(req.maxTokens);
+            Deep2::InferenceStats stats;
+            size_t generated = engine.generate(tokens.data(), tokens.size(), 
+                                               outputTokens.data(), req.maxTokens, &stats);
+            
+            result.telemetry.tokensGenerated = (uint32_t)generated;
+            result.timing.tokensPerSecond = stats.tokensPerSecond;
+            
+            if (generated > 0) {
+                std::vector<int> usedTokens(outputTokens.begin(), outputTokens.begin() + generated);
+                response = engine.detokenize(usedTokens);
+            }
         }
+        
+        result.generatedText = response;
+        result.telemetry.tokensGenerated = (uint32_t)engine.getModelMetadata().vocabSize; // Approximate
         
     } catch (const std::exception& e) {
         result.status = ExecutionResult::Status::FAILED_RUNTIME;

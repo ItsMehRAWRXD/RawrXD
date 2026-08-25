@@ -343,7 +343,18 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                 if (key.find("context_length") != std::string::npos || key.find("max_position_embeddings") != std::string::npos) {
                     metadata.maxPositionEmbeddings = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                // MoE metadata (real parsing - no stubs)
+                if (key.find("chat_template") != std::string::npos) {
+                    metadata.chatTemplate = valueStr;
+                }
+                if (key.find("bos_token") != std::string::npos) {
+                    metadata.bosToken = valueStr;
+                }
+                if (key.find("eos_token") != std::string::npos) {
+                    metadata.eosToken = valueStr;
+                }
+                if (key.find("unk_token") != std::string::npos) {
+                    metadata.unkToken = valueStr;
+                }
                 if (key.find("expert_count") != std::string::npos || key.find("num_experts") != std::string::npos) {
                     metadata.numExperts = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }

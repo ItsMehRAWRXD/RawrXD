@@ -3630,6 +3630,60 @@ std::string Deep2Engine::generateText(const std::string& prompt, size_t maxToken
     return detokenize(outputTokens);
 }
 
+std::string Deep2Engine::generateChat(const std::string& userMessage,
+                                        const std::string& systemPrompt,
+                                        size_t maxTokens) {
+    // Build formatted prompt using chat template
+    std::string formattedPrompt;
+    
+    const ModelMetadata& meta = modelWeights.metadata;
+    
+    if (!meta.chatTemplate.empty()) {
+        // Use the model's native chat template
+        formattedPrompt = meta.chatTemplate;
+        // Replace template placeholders
+        size_t sysPos = formattedPrompt.find("{{system_prompt}}");
+        if (sysPos != std::string::npos) {
+            std::string sys = systemPrompt.empty() ? "You are a helpful assistant." : systemPrompt;
+            formattedPrompt.replace(sysPos, 17, sys);
+        }
+        size_t userPos = formattedPrompt.find("{{user_message}}");
+        if (userPos != std::string::npos) {
+            formattedPrompt.replace(userPos, 16, userMessage);
+        }
+        // Handle common template formats
+        size_t contentPos = formattedPrompt.find("{{content}}");
+        if (contentPos != std::string::npos) {
+            formattedPrompt.replace(contentPos, 11, userMessage);
+        }
+    } else {
+        // Default Llama-3 / Qwen format
+        if (!systemPrompt.empty()) {
+            formattedPrompt = "<|system|>\n" + systemPrompt + "\n<|user|>\n" + userMessage + "\n<|assistant|>\n";
+        } else {
+            formattedPrompt = "<|user|>\n" + userMessage + "\n<|assistant|>\n";
+        }
+    }
+    
+    // Generate with the formatted prompt
+    std::vector<int> promptTokens = tokenize(formattedPrompt);
+    std::vector<int> outputTokens(maxTokens);
+    
+    size_t generated = generate(promptTokens.data(), promptTokens.size(),
+                                 outputTokens.data(), maxTokens);
+    
+    outputTokens.resize(generated);
+    std::string response = detokenize(outputTokens);
+    
+    // Trim any trailing template tokens from response
+    size_t eosPos = response.find(meta.eosToken);
+    if (eosPos != std::string::npos) {
+        response = response.substr(0, eosPos);
+    }
+    
+    return response;
+}
+
 // ============================================================================
 // Forward Layer - Real transformer layer with weight projections
 // ============================================================================

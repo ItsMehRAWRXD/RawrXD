@@ -270,6 +270,11 @@ public:
                     std::function<bool(int)> onToken = nullptr);
     // Generate text (high-level API)
     std::string generateText(const std::string& prompt, size_t maxTokens = 256);
+    
+    // Generate text with chat template formatting (for instruction-tuned models)
+    std::string generateChat(const std::string& userMessage, 
+                             const std::string& systemPrompt = "",
+                             size_t maxTokens = 256);
 
     // Native streaming generation — token-by-token with cancellation
     GenerationResult generateStream(
