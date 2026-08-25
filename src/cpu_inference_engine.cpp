@@ -261,7 +261,7 @@ void CPUInferenceEngine::GenerateStreaming(const std::vector<int32_t>& input_tok
 
     printf("[CPU] GenerateStreaming ENTER  input_tokens=%llu max_tokens=%d\n",
            static_cast<unsigned long long>(input_tokens.size()), max_tokens);
-    printf("[CPU] backend ptr=%p  model_loaded=%d  context_limit=%zu  current_pos=%d\n",
+    printf("[CPU] backend ptr=%p  model_loaded=%d  context_limit=%u  current_pos=%d\n",
            (void*)&s_inferenceBackend, s_inferenceBackend.IsInitialized() ? 1 : 0,
            s_inferenceBackend.getContextLimit(), m_currentPos);
     printf("[CPU] backend vocab=%d dim=%d layers=%d heads=%d\n",

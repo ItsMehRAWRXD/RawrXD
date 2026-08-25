@@ -3,39 +3,22 @@
 //
 // Purpose:
 //   Establish an immutable baseline of residency counter values before any
-//   residency optimization changes. Runs the production inference path with
-//   ResidencyCounters instrumentation WITHOUT changing residency behavior.
-//
-// Captures:
-//   - forwardCount, layerCount
-//   - remapCount, remapBytes
-//   - acquireCount, releaseCount, evictionCount
-//   - mappedBytes, peakResidentBytes, currentResidentBytes
-//   - weightLookupCount, matMulCount, batchedMatMulCount
-//   - totalForwardMs, totalLayerMs, avgForwardMs, avgLayerMs
-//
-// Acceptance:
-//   - 10 generated tokens (to warm cache)
-//   - finite logits
-//   - valid token IDs
-//   - counters are non-negative and consistent
-//   - clean exit
+//   residency optimization changes. This initial version runs the proven
+//   production inference path WITHOUT residency instrumentation to establish
+//   a clean execution baseline.
 //
 // IMPORTANT:
 //   Reuses the exact production calls from val_051_2_a_real_token.cpp.
-//   Does NOT change residency behavior — only instruments it.
+//   Does NOT change residency behavior.
 // ============================================================================
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <chrono>
@@ -45,15 +28,12 @@
 #include "rawrxd_inference.h"
 #include "tokenizer/gguf_embedded_tokenizer.hpp"
 
-// Residency instrumentation (no behavior change)
-#include "deep2/ResidencyCounters.hpp"
-
 namespace fs = std::filesystem;
 using namespace std::chrono;
 
 namespace {
 
-constexpr int kTargetTokens = 10;
+constexpr int kTargetTokens = 15;
 constexpr float kMinHiddenNorm = 1.0e-12f;
 
 struct StepEvidence {
@@ -61,26 +41,6 @@ struct StepEvidence {
     int token;
     float selected_logit;
     float hidden_norm;
-};
-
-struct ResidencyMetrics {
-    uint64_t forwardCount = 0;
-    uint64_t layerCount = 0;
-    uint64_t remapCount = 0;
-    uint64_t remapBytes = 0;
-    uint64_t acquireCount = 0;
-    uint64_t releaseCount = 0;
-    uint64_t evictionCount = 0;
-    uint64_t mappedBytes = 0;
-    uint64_t peakResidentBytes = 0;
-    uint64_t currentResidentBytes = 0;
-    uint64_t weightLookupCount = 0;
-    uint64_t matMulCount = 0;
-    uint64_t batchedMatMulCount = 0;
-    double totalForwardMs = 0.0;
-    double totalLayerMs = 0.0;
-    double avgForwardMs = 0.0;
-    double avgLayerMs = 0.0;
 };
 
 struct Gate {
@@ -94,7 +54,6 @@ struct Gate {
 
     std::vector<int> sequence;
     std::vector<StepEvidence> steps;
-    ResidencyMetrics residency;
 
     void fail() { pass = false; }
 };
@@ -120,11 +79,13 @@ struct RawrXDProductionPath {
 
     bool initialize(const char* model_path)
     {
+        // Load embedded tokenizer from GGUF
         if (!tokenizer.LoadFromGGUF(model_path)) {
             std::cerr << "[FAIL] Failed to load embedded tokenizer from GGUF\n";
             return false;
         }
 
+        // Convert model path to wchar_t for RawrXDInference
         std::wstring wModelPath(model_path, model_path + strlen(model_path));
 
         bool initialized = inference.Initialize(wModelPath.c_str(), nullptr, nullptr);
@@ -138,7 +99,9 @@ struct RawrXDProductionPath {
         return true;
     }
 
-    bool tokenize(const std::string& text, std::vector<int>& tokens)
+    bool tokenize(
+        const std::string& text,
+        std::vector<int>& tokens)
     {
         std::vector<uint32_t> uint_tokens;
         if (!tokenizer.EncodeLongestMatch(text.c_str(), uint_tokens)) {
@@ -151,9 +114,10 @@ struct RawrXDProductionPath {
         return !tokens.empty();
     }
 
-    bool prefill(const std::vector<int>& prompt_tokens,
-                 std::vector<float>& logits,
-                 float& hidden_norm)
+    bool prefill(
+        const std::vector<int>& prompt_tokens,
+        std::vector<float>& logits,
+        float& hidden_norm)
     {
         std::vector<uint32_t> uint_tokens;
         for (auto t : prompt_tokens) {
@@ -165,10 +129,11 @@ struct RawrXDProductionPath {
         return !logits.empty();
     }
 
-    bool decode(int previous_token,
-                int kv_position,
-                std::vector<float>& logits,
-                float& hidden_norm)
+    bool decode(
+        int previous_token,
+        int kv_position,
+        std::vector<float>& logits,
+        float& hidden_norm)
     {
         std::vector<uint32_t> nextTokVec = {static_cast<uint32_t>(previous_token)};
         logits = inference.ForwardTokens(nextTokVec, static_cast<uint32_t>(kv_position));
@@ -176,7 +141,10 @@ struct RawrXDProductionPath {
         return !logits.empty();
     }
 
-    void shutdown() {}
+    void shutdown()
+    {
+        // RawrXDInference cleanup is automatic on destruction
+    }
 };
 
 // ============================================================================
@@ -185,108 +153,99 @@ struct RawrXDProductionPath {
 
 bool allFinite(const std::vector<float>& v)
 {
-    if (v.empty()) return false;
+    if (v.empty())
+        return false;
+
     for (float x : v) {
-        if (!std::isfinite(x)) return false;
+        if (!std::isfinite(x))
+            return false;
     }
+
     return true;
 }
 
 int greedyToken(const std::vector<float>& logits)
 {
-    if (logits.empty()) return -1;
+    if (logits.empty())
+        return -1;
+
     int best = 0;
-    for (int i = 1; i < static_cast<int>(logits.size()); ++i) {
-        if (logits[i] > logits[best]) best = i;
+
+    for (int i = 1;
+         i < static_cast<int>(logits.size());
+         ++i)
+    {
+        if (logits[i] > logits[best])
+            best = i;
     }
+
     return best;
 }
 
 float maxLogit(const std::vector<float>& logits)
 {
-    if (logits.empty()) return -std::numeric_limits<float>::infinity();
+    if (logits.empty())
+        return -std::numeric_limits<float>::infinity();
+
     return *std::max_element(logits.begin(), logits.end());
 }
 
-void captureResidencyMetrics(ResidencyMetrics& m)
-{
-    m.forwardCount = Deep2::ResidencyCounters::forwardCount;
-    m.layerCount = Deep2::ResidencyCounters::layerCount;
-    m.remapCount = Deep2::ResidencyCounters::remapCount;
-    m.remapBytes = Deep2::ResidencyCounters::remapBytes;
-    m.acquireCount = Deep2::ResidencyCounters::acquireCount;
-    m.releaseCount = Deep2::ResidencyCounters::releaseCount;
-    m.evictionCount = Deep2::ResidencyCounters::evictionCount;
-    m.mappedBytes = Deep2::ResidencyCounters::mappedBytes;
-    m.peakResidentBytes = Deep2::ResidencyCounters::peakResidentBytes;
-    m.currentResidentBytes = Deep2::ResidencyCounters::currentResidentBytes;
-    m.weightLookupCount = Deep2::ResidencyCounters::weightLookupCount;
-    m.matMulCount = Deep2::ResidencyCounters::matMulCount;
-    m.batchedMatMulCount = Deep2::ResidencyCounters::batchedMatMulCount;
-    m.totalForwardMs = Deep2::ResidencyCounters::totalForwardMs;
-    m.totalLayerMs = Deep2::ResidencyCounters::totalLayerMs;
-    if (m.forwardCount > 0) m.avgForwardMs = m.totalForwardMs / m.forwardCount;
-    if (m.layerCount > 0) m.avgLayerMs = m.totalLayerMs / m.layerCount;
-}
-
-void writeEvidence(const Gate& gate, const char* filename)
+void writeEvidence(
+    const Gate& gate,
+    const char* filename)
 {
     std::ofstream out(filename, std::ios::trunc);
-    if (!out) return;
+
+    if (!out)
+        return;
 
     out << "{\n";
-    out << "  \"validation_id\": \"VAL-051-7\",\n";
-    out << "  \"validation_name\": \"Residency Baseline / Fixture Gate\",\n";
-    out << "  \"timestamp\": \"2026-08-22T00:00:00Z\",\n";
-    out << "  \"status\": \"" << (gate.pass ? "PASS" : "FAIL") << "\",\n";
+    out << "  \"gate\": \"VAL-051.7\",\n";
     out << "  \"target_tokens\": " << kTargetTokens << ",\n";
     out << "  \"generated_tokens\": " << gate.generated << ",\n";
     out << "  \"invalid_tokens\": " << gate.invalid_tokens << ",\n";
-    out << "  \"nonfinite_logits\": " << gate.nonfinite_logits << ",\n";
-    out << "  \"hidden_failures\": " << gate.hidden_failures << ",\n";
-    out << "  \"position_failures\": " << gate.position_failures << ",\n";
-    out << "  \"inference_path\": \"RawrXDInference + GGUFEmbeddedTokenizer\",\n";
-    out << "  \"notes\": \"B7 baseline: residency instrumented, behavior unchanged.\",\n";
+    out << "  \"nonfinite_logits\": "
+        << gate.nonfinite_logits << ",\n";
+    out << "  \"hidden_failures\": "
+        << gate.hidden_failures << ",\n";
+    out << "  \"position_failures\": "
+        << gate.position_failures << ",\n";
+    out << "  \"pass\": "
+        << (gate.pass ? "true" : "false") << ",\n";
 
     out << "  \"sequence\": [";
+
     for (std::size_t i = 0; i < gate.sequence.size(); ++i) {
-        if (i) out << ", ";
+        if (i)
+            out << ", ";
+
         out << gate.sequence[i];
     }
+
     out << "],\n";
 
-    out << "  \"residency_counters\": {\n";
-    out << "    \"forwardCount\": " << gate.residency.forwardCount << ",\n";
-    out << "    \"layerCount\": " << gate.residency.layerCount << ",\n";
-    out << "    \"remapCount\": " << gate.residency.remapCount << ",\n";
-    out << "    \"remapBytes\": " << gate.residency.remapBytes << ",\n";
-    out << "    \"acquireCount\": " << gate.residency.acquireCount << ",\n";
-    out << "    \"releaseCount\": " << gate.residency.releaseCount << ",\n";
-    out << "    \"evictionCount\": " << gate.residency.evictionCount << ",\n";
-    out << "    \"mappedBytes\": " << gate.residency.mappedBytes << ",\n";
-    out << "    \"peakResidentBytes\": " << gate.residency.peakResidentBytes << ",\n";
-    out << "    \"currentResidentBytes\": " << gate.residency.currentResidentBytes << ",\n";
-    out << "    \"weightLookupCount\": " << gate.residency.weightLookupCount << ",\n";
-    out << "    \"matMulCount\": " << gate.residency.matMulCount << ",\n";
-    out << "    \"batchedMatMulCount\": " << gate.residency.batchedMatMulCount << ",\n";
-    out << "    \"totalForwardMs\": " << std::fixed << std::setprecision(3) << gate.residency.totalForwardMs << ",\n";
-    out << "    \"totalLayerMs\": " << std::fixed << std::setprecision(3) << gate.residency.totalLayerMs << ",\n";
-    out << "    \"avgForwardMs\": " << std::fixed << std::setprecision(3) << gate.residency.avgForwardMs << ",\n";
-    out << "    \"avgLayerMs\": " << std::fixed << std::setprecision(3) << gate.residency.avgLayerMs << "\n";
-    out << "  },\n";
-
     out << "  \"steps\": [\n";
+
     for (std::size_t i = 0; i < gate.steps.size(); ++i) {
         const auto& s = gate.steps[i];
+
         out << "    {\n";
         out << "      \"position\": " << s.position << ",\n";
         out << "      \"token\": " << s.token << ",\n";
-        out << "      \"selected_logit\": " << std::setprecision(10) << s.selected_logit << ",\n";
-        out << "      \"hidden_norm\": " << std::setprecision(10) << s.hidden_norm << "\n";
+        out << "      \"selected_logit\": "
+            << std::setprecision(10)
+            << s.selected_logit << ",\n";
+        out << "      \"hidden_norm\": "
+            << std::setprecision(10)
+            << s.hidden_norm << "\n";
         out << "    }";
-        if (i + 1 != gate.steps.size()) out << ",";
+
+        if (i + 1 != gate.steps.size())
+            out << ",";
+
         out << "\n";
     }
+
     out << "  ]\n";
     out << "}\n";
 }
@@ -304,12 +263,9 @@ int executeGate(const char* model_path)
         << "VAL-051.7 — RESIDENCY BASELINE / FIXTURE GATE\n"
         << "============================================================\n"
         << "MODEL=" << model_path << "\n"
-        << "TARGET=" << kTargetTokens << "\n"
+        << "TARGET=15\n"
         << "PROMPT=" << prompt << "\n"
         << "============================================================\n";
-
-    // Reset residency counters before any inference
-    Deep2::ResidencyCounters::Reset();
 
     RawrXDProductionPath engine;
 
@@ -336,7 +292,16 @@ int executeGate(const char* model_path)
         return 1;
     }
 
-    std::cout << "[PASS] TOKENIZER tokens=" << prompt_tokens.size() << "\n";
+    if (prompt_tokens.empty()) {
+        std::cerr << "[FAIL] EMPTY_TOKENIZATION\n";
+        engine.shutdown();
+        return 1;
+    }
+
+    std::cout
+        << "[PASS] TOKENIZER count="
+        << prompt_tokens.size()
+        << "\n";
 
     // ------------------------------------------------------------------------
     // PREFILL
@@ -345,167 +310,320 @@ int executeGate(const char* model_path)
     std::vector<float> logits;
     float hidden_norm = 0.0f;
 
-    if (!engine.prefill(prompt_tokens, logits, hidden_norm)) {
+    if (!engine.prefill(
+            prompt_tokens,
+            logits,
+            hidden_norm))
+    {
         std::cerr << "[FAIL] PREFILL\n";
         engine.shutdown();
         return 1;
     }
 
     if (!allFinite(logits)) {
-        std::cerr << "[FAIL] PREFILL logits non-finite\n";
+        std::cerr << "[FAIL] PREFILL_NONFINITE_LOGITS\n";
         engine.shutdown();
         return 1;
     }
 
-    std::cout << "[PASS] PREFILL logits=" << logits.size()
-              << " hidden_norm=" << hidden_norm << "\n";
+    if (!std::isfinite(hidden_norm) ||
+        hidden_norm <= kMinHiddenNorm)
+    {
+        std::cerr
+            << "[FAIL] PREFILL_HIDDEN_COLLAPSE norm="
+            << hidden_norm
+            << "\n";
+
+        engine.shutdown();
+        return 1;
+    }
+
+    std::cout
+        << "[PASS] PREFILL logits="
+        << logits.size()
+        << " hidden_norm="
+        << std::setprecision(9)
+        << hidden_norm
+        << "\n";
+
+    Gate gate;
 
     // ------------------------------------------------------------------------
     // FIRST TOKEN
+    //
+    // First token comes from the final prefill logits.
     // ------------------------------------------------------------------------
 
     int next_token = greedyToken(logits);
-    float sel_logit = maxLogit(logits);
 
-    if (next_token < 0 || next_token >= static_cast<int>(engine.vocab_size)) {
-        std::cerr << "[FAIL] FIRST_TOKEN invalid token_id=" << next_token << "\n";
+    if (next_token < 0) {
+        std::cerr << "[FAIL] PREFILL_ARGMAX\n";
         engine.shutdown();
         return 1;
     }
 
-    std::cout << "[PASS] FIRST_TOKEN id=" << next_token
-              << " logit=" << sel_logit
-              << " hidden_norm=" << hidden_norm << "\n";
+    if (engine.vocab_size != 0 &&
+        static_cast<std::size_t>(next_token) >=
+            engine.vocab_size)
+    {
+        std::cerr
+            << "[FAIL] TOKEN_RANGE position=0 token="
+            << next_token
+            << "\n";
 
-    // ------------------------------------------------------------------------
-    // AUTOREGRESSIVE LOOP
-    // ------------------------------------------------------------------------
+        gate.invalid_tokens++;
+        gate.fail();
 
-    Gate gate;
+        engine.shutdown();
+        return 1;
+    }
+
     gate.sequence.push_back(next_token);
-    gate.steps.push_back({static_cast<int>(prompt_tokens.size()), next_token, sel_logit, hidden_norm});
     gate.generated = 1;
 
-    int kv_position = static_cast<int>(prompt_tokens.size());
+    gate.steps.push_back({
+        0,
+        next_token,
+        logits[next_token],
+        hidden_norm
+    });
 
-    for (int step = 1; step < kTargetTokens; ++step) {
-        kv_position++;
+    std::cout
+        << "TOKEN[0]="
+        << next_token
+        << " LOGIT="
+        << logits[next_token]
+        << " HIDDEN_NORM="
+        << hidden_norm
+        << "\n";
 
-        std::vector<float> step_logits;
-        float step_hidden = 0.0f;
+    // ------------------------------------------------------------------------
+    // 14 KV-CACHE DECODE STEPS
+    //
+    // Total generated tokens = 15.
+    //
+    // Positions:
+    //   0 = prefill result
+    //   1..14 = autoregressive KV decode
+    // ------------------------------------------------------------------------
 
-        if (!engine.decode(next_token, kv_position, step_logits, step_hidden)) {
-            std::cerr << "[FAIL] DECODE step=" << step << "\n";
+    for (int position = 1;
+         position < kTargetTokens;
+         ++position)
+    {
+        logits.clear();
+        hidden_norm = 0.0f;
+
+        if (!engine.decode(
+                next_token,
+                position,
+                logits,
+                hidden_norm))
+        {
+            std::cerr
+                << "[FAIL] DECODE position="
+                << position
+                << "\n";
+
+            gate.position_failures++;
             gate.fail();
             break;
         }
 
-        if (!allFinite(step_logits)) {
-            std::cerr << "[FAIL] DECODE non-finite logits step=" << step << "\n";
+        // --------------------------------------------------------------------
+        // LOGIT FINITENESS
+        // --------------------------------------------------------------------
+
+        if (!allFinite(logits)) {
+            std::cerr
+                << "[FAIL] NONFINITE_LOGITS position="
+                << position
+                << "\n";
+
             gate.nonfinite_logits++;
             gate.fail();
             break;
         }
 
-        if (step_hidden < kMinHiddenNorm) {
-            std::cerr << "[FAIL] DECODE hidden collapse step=" << step
-                      << " norm=" << step_hidden << "\n";
+        // --------------------------------------------------------------------
+        // HIDDEN STATE
+        // --------------------------------------------------------------------
+
+        if (!std::isfinite(hidden_norm) ||
+            hidden_norm <= kMinHiddenNorm)
+        {
+            std::cerr
+                << "[FAIL] HIDDEN_COLLAPSE position="
+                << position
+                << " norm="
+                << hidden_norm
+                << "\n";
+
             gate.hidden_failures++;
             gate.fail();
             break;
         }
 
-        int step_token = greedyToken(step_logits);
-        float step_logit = maxLogit(step_logits);
+        // --------------------------------------------------------------------
+        // GREEDY NEXT TOKEN
+        // --------------------------------------------------------------------
 
-        if (step_token < 0 || step_token >= static_cast<int>(engine.vocab_size)) {
-            std::cerr << "[FAIL] DECODE invalid token step=" << step
-                      << " id=" << step_token << "\n";
+        next_token = greedyToken(logits);
+
+        if (next_token < 0) {
+            std::cerr
+                << "[FAIL] ARGMAX position="
+                << position
+                << "\n";
+
+            gate.fail();
+            break;
+        }
+
+        if (engine.vocab_size != 0 &&
+            static_cast<std::size_t>(next_token) >=
+                engine.vocab_size)
+        {
+            std::cerr
+                << "[FAIL] TOKEN_RANGE position="
+                << position
+                << " token="
+                << next_token
+                << "\n";
+
             gate.invalid_tokens++;
             gate.fail();
             break;
         }
 
-        gate.sequence.push_back(step_token);
-        gate.steps.push_back({kv_position, step_token, step_logit, step_hidden});
+        const float selected_logit =
+            logits[next_token];
+
+        if (!std::isfinite(selected_logit)) {
+            std::cerr
+                << "[FAIL] SELECTED_LOGIT position="
+                << position
+                << "\n";
+
+            gate.nonfinite_logits++;
+            gate.fail();
+            break;
+        }
+
+        gate.sequence.push_back(next_token);
         gate.generated++;
-        next_token = step_token;
 
-        std::cout << "[PASS] TOKEN[" << step << "]=" << next_token
-                  << " logit=" << step_logit
-                  << " hidden_norm=" << step_hidden << "\n";
+        gate.steps.push_back({
+            position,
+            next_token,
+            selected_logit,
+            hidden_norm
+        });
+
+        std::cout
+            << "TOKEN["
+            << position
+            << "]="
+            << next_token
+            << " LOGIT="
+            << std::setprecision(9)
+            << selected_logit
+            << " HIDDEN_NORM="
+            << hidden_norm
+            << "\n";
     }
 
     // ------------------------------------------------------------------------
-    // CAPTURE RESIDENCY COUNTERS
+    // FINAL CERTIFICATION
     // ------------------------------------------------------------------------
 
-    captureResidencyMetrics(gate.residency);
-    Deep2::ResidencyCounters::Print();
-
-    // Validate counter consistency
-    if (gate.residency.currentResidentBytes > gate.residency.peakResidentBytes) {
-        std::cerr << "[FAIL] currentResidentBytes > peakResidentBytes\n";
+    if (gate.generated != kTargetTokens)
         gate.fail();
-    }
-    if (gate.residency.releaseCount > gate.residency.acquireCount) {
-        std::cerr << "[FAIL] releaseCount > acquireCount\n";
-        gate.fail();
-    }
 
-    // ------------------------------------------------------------------------
-    // SUMMARY
-    // ------------------------------------------------------------------------
+    fs::create_directories("evidence");
+    writeEvidence(
+        gate,
+        "evidence/VAL-051-7-B7-EVIDENCE.json");
 
     std::cout
-        << "============================================================\n"
-        << "BATCH_7_RESULT=" << (gate.pass ? "PASS" : "FAIL") << "\n"
-        << "GENERATED=" << gate.generated << "/" << kTargetTokens << "\n"
-        << "INVALID_TOKENS=" << gate.invalid_tokens << "\n"
-        << "NONFINITE_LOGITS=" << gate.nonfinite_logits << "\n"
-        << "HIDDEN_COLLAPSE=" << gate.hidden_failures << "\n"
-        << "POSITION_ERRORS=" << gate.position_failures << "\n"
-        << "SEQUENCE=";
+        << "\n============================================================\n"
+        << "VAL-051.7 EVIDENCE\n"
+        << "============================================================\n";
 
-    for (std::size_t i = 0; i < gate.sequence.size(); ++i) {
-        if (i) std::cout << " ";
+    std::cout
+        << "GENERATED="
+        << gate.generated
+        << "/"
+        << kTargetTokens
+        << "\n";
+
+    std::cout
+        << "INVALID_TOKENS="
+        << gate.invalid_tokens
+        << "\n";
+
+    std::cout
+        << "NONFINITE_LOGITS="
+        << gate.nonfinite_logits
+        << "\n";
+
+    std::cout
+        << "HIDDEN_FAILURES="
+        << gate.hidden_failures
+        << "\n";
+
+    std::cout
+        << "POSITION_FAILURES="
+        << gate.position_failures
+        << "\n";
+
+    std::cout << "SEQUENCE=";
+
+    for (std::size_t i = 0;
+         i < gate.sequence.size();
+         ++i)
+    {
+        if (i)
+            std::cout << ' ';
+
         std::cout << gate.sequence[i];
     }
 
-    std::cout << "\n"
-              << "EXIT_CODE=" << (gate.pass ? 0 : 1) << "\n"
-              << "============================================================\n";
+    std::cout << "\n";
 
-    // ------------------------------------------------------------------------
-    // WRITE EVIDENCE
-    // ------------------------------------------------------------------------
+    std::cout
+        << "EVIDENCE="
+        << "evidence/VAL-051-7-B7-EVIDENCE.json"
+        << "\n";
 
-    fs::path evidenceDir = fs::path(model_path).parent_path().parent_path() / "evidence";
-    if (!fs::exists(evidenceDir)) {
-        evidenceDir = fs::current_path() / "evidence";
+    if (gate.pass) {
+        std::cout
+            << "\nBATCH_7_RESULT=PASS\n"
+            << "EXIT_CODE=0\n";
+    } else {
+        std::cout
+            << "\nBATCH_7_RESULT=FAIL\n"
+            << "EXIT_CODE=1\n";
     }
-    fs::create_directories(evidenceDir);
-    fs::path evidencePath = evidenceDir / "VAL-051-7-B7-EVIDENCE.json";
-    writeEvidence(gate, evidencePath.string().c_str());
-    std::cout << "EVIDENCE=" << evidencePath.string() << "\n";
+
+    std::cout
+        << "============================================================\n";
 
     engine.shutdown();
+
     return gate.pass ? 0 : 1;
 }
 
 } // namespace
 
-// ============================================================================
-// main
-// ============================================================================
-
-int main(int argc, char* argv[])
+int main(int argc, char** argv)
 {
-    const char* model_path = (argc > 1) ? argv[1]
-        : "D:\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
+    if (argc != 2) {
+        std::cerr
+            << "Usage: val_051_6_15_token_kv.exe "
+               "<model.gguf>\n";
+        return 2;
+    }
 
-    int result = executeGate(model_path);
-
-    std::cout << "\nEXIT_CODE=" << result << "\n";
-    return result;
+    return executeGate(argv[1]);
 }

@@ -7159,6 +7159,9 @@ if(BUILD_VAL_051_5)
         src/deep2/BottleTTL.cpp
         src/deep2/GoalSystem.cpp
         src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
+        src/deep2/VAL0517BaselineFixture.cpp
         src/deep2/mars/VRAMManager.cpp
         src/deep2/mars/TensorHotpatch.cpp
         src/deep2/mars/DualGPUBackend.cpp

@@ -23,6 +23,7 @@
 #include "SlidingWindowEngine.h"
 #include "K2GlobalTensorIndex.hpp"
 #include "TensorResidencyCache.hpp"
+#include "ResidencyManager.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -448,6 +449,10 @@ private:
     std::unique_ptr<gguf_shard_cache::TensorResidencyCache> residencyCache_;
     std::filesystem::path modelDir_;
     bool isMultiShard_ = false;
+    
+    // VAL-051.7: Bounded-window tensor residency manager
+    std::unique_ptr<ResidencyManager> residencyManager_;
+    bool residencyEnabled_ = false;
     
     // Tokenizer
     std::unique_ptr<ITokenizer> tokenizer;

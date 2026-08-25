@@ -17,6 +17,11 @@
     #ifndef VK_VERSION_1_0
     typedef void* VkBuffer;
     typedef void* VkDeviceMemory;
+    typedef void* VkPhysicalDevice;
+    typedef void* VkDevice;
+    typedef void* VkQueue;
+    typedef void* VkCommandPool;
+    typedef uint32_t VkMemoryPropertyFlags;
     #ifndef VK_NULL_HANDLE
     #define VK_NULL_HANDLE nullptr
     #endif
