@@ -738,11 +738,6 @@ void* find_pattern_asm(const void* base, size_t len, const uint8_t* pattern, siz
     return nullptr;
 }
 
-void* asm_snapshot_get_stats() {
-    static uint64_t stats[4] = {0, 0, 0, 0};
-    return stats;
-}
-
 } // extern "C"
 
 // ============================================================================
@@ -1122,24 +1117,7 @@ public:
     unsigned int coolingPauseMicros() const { return 0; }
 };
 
-class SovereignOutOfCoreRuntime {
-public:
-    struct Config {};
-    Config cfg;
-    SovereignOutOfCoreRuntime(const Config& c);
-    ~SovereignOutOfCoreRuntime();
-    ChamberResult evaluateChamber(const float*, size_t);
-    FormulaRoute routePrimitive(size_t);
-    void updateThermalState(const ThermalState&);
-    float currentThrottle() const;
-};
-
-SovereignOutOfCoreRuntime::SovereignOutOfCoreRuntime(const Config& c) : cfg(c) {}
-SovereignOutOfCoreRuntime::~SovereignOutOfCoreRuntime() = default;
-ChamberResult SovereignOutOfCoreRuntime::evaluateChamber(const float*, size_t) { return ChamberResult::Ok; }
-FormulaRoute SovereignOutOfCoreRuntime::routePrimitive(size_t) { return FormulaRoute{}; }
-void SovereignOutOfCoreRuntime::updateThermalState(const ThermalState&) {}
-float SovereignOutOfCoreRuntime::currentThrottle() const { return 1.0f; }
+// REMOVED: SovereignOutOfCoreRuntime stub - now provided by src/deep2/SovereignOutOfCoreRuntime.cpp
 
 } // namespace rawrxd
 

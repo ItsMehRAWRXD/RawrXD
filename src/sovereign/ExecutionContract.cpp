@@ -5,7 +5,7 @@
 // VAL-051.2.B: Real inference integration ENABLED
 // swarm_scheduler.hpp dependency resolved - include path fixed in rawrxd_inference.h
 
-#include "ExecutionContract.hpp"
+#include "sovereign/ExecutionContract.hpp"
 #include "cpu_inference_engine.h"  // VAL-051.2.B: Real inference facade
 #include "Deep2InferenceWrapper.hpp" // Phase A: isolated Deep2Engine wrapper
 #include <iostream>

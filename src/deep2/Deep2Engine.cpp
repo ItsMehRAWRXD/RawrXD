@@ -2345,8 +2345,15 @@ std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
 // Token Embedding Lookup
 // ============================================================================
 void Deep2Engine::embedToken(int tokenId, float* output) {
-    if (!modelWeights.loaded || !modelWeights.tokenEmbed.data) {
-        // No model loaded - this is an error, not a dummy
+    if (!modelWeights.loaded || !modelWeights.tokenEmbed.data || !output) {
+        if (output && config.hiddenDim > 0) {
+            memset(output, 0, config.hiddenDim * sizeof(float));
+        }
+        return;
+    }
+
+    // Bounds check tokenId
+    if (tokenId < 0 || tokenId >= (int)modelWeights.vocabSize) {
         memset(output, 0, config.hiddenDim * sizeof(float));
         return;
     }
@@ -2688,12 +2695,13 @@ static void initRoPETables(size_t maxSeqLen, size_t headDim, float theta) {
     
     for (size_t pos = 0; pos < maxSeqLen; ++pos) {
         for (size_t i = 0; i < headDim; i += 2) {
-            float freq = 1.0f / powf(theta, (float)i / headDim);
+            // Standard RoPE: freq = 1 / theta^(2i / headDim)
+            float freq = 1.0f / powf(theta, (float)(2 * i) / headDim);
             float angle = pos * freq;
             size_t idx = pos * headDim + i;
             g_ropeCosTable[idx] = cosf(angle);
             g_ropeSinTable[idx] = sinf(angle);
-            g_ropeCosTable[idx + 1] = cosf(angle);  // Duplicate for pairs
+            g_ropeCosTable[idx + 1] = cosf(angle);  // Same angle for the pair
             g_ropeSinTable[idx + 1] = sinf(angle);
         }
     }
@@ -2704,9 +2712,15 @@ static void initRoPETables(size_t maxSeqLen, size_t headDim, float theta) {
 // ============================================================================
 void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
                              size_t numKVHeads, size_t pos, float theta, float scaling) {
-    // Ensure tables are initialized
-    if (g_ropeMaxSeqLen == 0 || g_ropeHeadDim != headDim) {
-        initRoPETables(config.maxSeqLen * 2, headDim, theta);
+    // Ensure tables are initialized and large enough
+    if (g_ropeMaxSeqLen == 0 || g_ropeHeadDim != headDim || pos >= g_ropeMaxSeqLen) {
+        initRoPETables(std::max(config.maxSeqLen * 2, pos + 128), headDim, theta);
+    }
+    
+    // Bounds check after initialization
+    if (pos >= g_ropeMaxSeqLen) {
+        fprintf(stderr, "[RoPE_WARN] pos=%zu exceeds table size %zu, clamping\n", pos, g_ropeMaxSeqLen);
+        pos = g_ropeMaxSeqLen - 1;
     }
     
     // Use precomputed tables
@@ -2747,33 +2761,26 @@ void Deep2Engine::SwiGLU(const float* gate, const float* up, float* output, size
     size_t i = 0;
     const __m256 one = _mm256_set1_ps(1.0f);
     
-    // AVX2 vectorized path with fast sigmoid approximation
-    // sigmoid(x) ≈ 0.5 * (1 + tanh(x/2)) for x in [-6, 6]
+    // AVX2 vectorized path with numerically-stable sigmoid
+    // Clamp to [-10, 10] before exp to avoid overflow/underflow
     for (; i + 8 <= dim; i += 8) {
         __m256 g = _mm256_loadu_ps(&gate[i]);
         __m256 u = _mm256_loadu_ps(&up[i]);
         
-        // Fast sigmoid using polynomial approximation
-        // Clamp to [-6, 6] for numerical stability
-        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-6.0f), 
-                                       _mm256_min_ps(_mm256_set1_ps(6.0f), g));
+        // Stable sigmoid: clamp then compute 1/(1+exp(-x))
+        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-10.0f), 
+                                       _mm256_min_ps(_mm256_set1_ps(10.0f), g));
         
-        // Compute sigmoid(x) = 1 / (1 + exp(-x)) using fast exp approximation
-        // exp(x) ≈ 1 + x + x^2/2 + x^3/6 + x^4/24 (Taylor series)
         __m256 neg_x = _mm256_sub_ps(_mm256_setzero_ps(), clamped);
-        __m256 x2 = _mm256_mul_ps(neg_x, neg_x);
-        __m256 x3 = _mm256_mul_ps(x2, neg_x);
-        __m256 x4 = _mm256_mul_ps(x3, neg_x);
-        
-        __m256 exp_approx = _mm256_add_ps(one,
-            _mm256_add_ps(neg_x,
-                _mm256_add_ps(_mm256_mul_ps(x2, _mm256_set1_ps(0.5f)),
-                    _mm256_add_ps(_mm256_mul_ps(x3, _mm256_set1_ps(1.0f/6.0f)),
-                                  _mm256_mul_ps(x4, _mm256_set1_ps(1.0f/24.0f))))));
-        
-        // sigmoid(x) = 1 / (1 + exp(-x))
-        __m256 denom = _mm256_add_ps(one, exp_approx);
-        __m256 sigmoid = _mm256_div_ps(one, denom);
+        // Use _mm256_exp_ps if available (AVX-512), otherwise scalar fallback for exp
+        // For AVX2, we do element-wise exp via scalar to avoid Taylor approximation errors
+        alignas(32) float g_arr[8];
+        _mm256_store_ps(g_arr, clamped);
+        alignas(32) float sig_arr[8];
+        for (int j = 0; j < 8; ++j) {
+            sig_arr[j] = 1.0f / (1.0f + expf(-g_arr[j]));
+        }
+        __m256 sigmoid = _mm256_load_ps(sig_arr);
         
         // SiLU = g * sigmoid(g)
         __m256 silu = _mm256_mul_ps(g, sigmoid);
@@ -3095,8 +3102,8 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
 // ============================================================================
 void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
                            const float* bias, float* output, size_t outDim) {
-    if (!wt.data) {
-        memset(output, 0, outDim * sizeof(float));
+    if (!wt.data || !input || !output || outDim == 0) {
+        if (output && outDim > 0) memset(output, 0, outDim * sizeof(float));
         return;
     }
 
@@ -3240,7 +3247,10 @@ void Deep2Engine::reset() {
     if (kvCache) {
         kvCache->reset();
     }
-    // Sampler reset is optional - not all samplers maintain state
+    // Reset sampler state (repetition penalty history)
+    if (sampler) {
+        sampler->Reset();
+    }
     for (auto& router : moeRouters_) {
         if (router) {
             router->ResetStats();
@@ -3449,7 +3459,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // ── B3: Trace after final layer for prompt ────────────────────
         B3_TraceState("PROMPT_FINAL", t, h, config.hiddenDim);
 
-        // Advance KV cache
+        // Advance KV cache after processing each prompt token
         if (kvCache) {
             kvCache->advance();
         }
@@ -3477,8 +3487,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             profiler_->beginEmbed();
         }
 
-        // Embed the new token for this decode step
-        embedToken((t == 0 && promptLen > 0) ? promptTokens[promptLen - 1] : outputTokens[tokensGenerated - 1], h);
+        // Embed the new token for this decode step (only for t > 0; t==0 uses last prompt hidden state)
+        if (t == 0 && promptLen > 0) {
+            // Step 0: h already contains the last prompt token's hidden state from prefill.
+            // Do NOT re-embed; the prefill already computed it.
+        } else {
+            embedToken(outputTokens[tokensGenerated - 1], h);
+        }
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endEmbed();
@@ -3504,13 +3519,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         ResidencyCounters::EndForward();
 
+        // After layer loop, layerInput holds the final hidden state.
+        // Copy it back to h so the next decode step starts from the correct state.
+        if (layerInput != h) {
+            memcpy(h, layerInput, config.hiddenDim * sizeof(float));
+        }
+
         // Final norm before logits (if not done in last layer)
         if (profilingEnabled_ && profiler_) {
             profiler_->beginFinalNorm();
         }
         // Note: final norm is typically the last layer's output norm; if model has separate final_norm:
         if (modelWeights.finalNorm.data) {
-            RMSNormW(modelWeights.finalNorm, layerInput, layerInput, config.hiddenDim, modelWeights.normEps);
+            RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
         if (profilingEnabled_ && profiler_) {
             profiler_->endFinalNorm();
@@ -3519,7 +3540,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
         // Compute logits: lm_head * hiddenState
         ResidencyCounters::BeginLogits();
-        computeLogits(layerInput, logits);
+        computeLogits(h, logits);
         ResidencyCounters::EndLogits();
 
         if (profilingEnabled_ && profiler_) {
@@ -3528,11 +3549,16 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         // Hard gate: reject invalid hidden state
-        const double stateNorm = B3_L2Norm(layerInput, config.hiddenDim);
+        const double stateNorm = B3_L2Norm(h, config.hiddenDim);
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
                     currentPos, stateNorm);
             return tokensGenerated;
+        }
+        // Soft gate: warn on norm explosion (>100x expected)
+        if (stateNorm > 100.0) {
+            fprintf(stderr, "[B3_WARN] hidden state norm explosion pos=%zu norm=%.9e\n",
+                    currentPos, stateNorm);
         }
 
         // Hard gate: reject invalid logits
@@ -3576,7 +3602,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
 
-        // Advance KV cache
+        // Advance KV cache BEFORE next forward so attention sees correct position
         if (kvCache) {
             kvCache->advance();
         }
@@ -4818,71 +4844,9 @@ void Deep2Engine::enableVulkan(bool enable) {
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
                                   float* output, size_t outDim) {
-    if (!vulkanEnabled_ || !vulkanInitialized_ || !vulkanCompute_) {
-        return false;  // CPU fallback
-    }
-
-    // Only dispatch FP32 and FP16 weights to Vulkan for now
-    // Quantized types (Q4_K, Q2_K, etc.) need dequantization shaders not yet loaded
-    if (wt.type != (int)GGMLType::GGML_TYPE_F32 &&
-        wt.type != (int)GGMLType::GGML_TYPE_F16) {
-        return false;  // CPU fallback for quantized types
-    }
-
-    size_t cols = wt.cols;
-    size_t rows = wt.rows;
-    if (rows == 0 || cols == 0 || outDim == 0) return false;
-
-    // For FP32: upload weights and input, dispatch matmul, download output
-    if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
-        const float* weights = static_cast<const float*>(wt.data);
-
-        // Upload input vector
-        uint32_t inputIdx = 0;
-        if (!vulkanCompute_->AllocateBuffer(cols * sizeof(float), inputIdx, *(size_t*)0)) {
-            return false;
-        }
-        if (!vulkanCompute_->CopyHostToBuffer(const_cast<float*>(input), inputIdx, cols * sizeof(float))) {
-            return false;
-        }
-
-        // Upload weight matrix
-        uint32_t weightIdx = 0;
-        if (!vulkanCompute_->AllocateBuffer(rows * cols * sizeof(float), weightIdx, *(size_t*)0)) {
-            return false;
-        }
-        if (!vulkanCompute_->CopyHostToBuffer(const_cast<float*>(weights), weightIdx, rows * cols * sizeof(float))) {
-            return false;
-        }
-
-        // Allocate output buffer
-        uint32_t outputIdx = 0;
-        if (!vulkanCompute_->AllocateBuffer(outDim * sizeof(float), outputIdx, *(size_t*)0)) {
-            return false;
-        }
-
-        // Dispatch matmul: output = weights * input  [outDim x cols] * [cols] -> [outDim]
-        if (!vulkanCompute_->DispatchMatMul(weightIdx, inputIdx, outputIdx,
-                                              static_cast<uint32_t>(outDim),
-                                              static_cast<uint32_t>(cols),
-                                              1)) {
-            return false;
-        }
-
-        // Download result
-        if (!vulkanCompute_->CopyBufferToHost(outputIdx, output, outDim * sizeof(float))) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // FP16 path: dequantize on CPU then dispatch (until FP16 shader is loaded)
-    if (wt.type == (int)GGMLType::GGML_TYPE_F16) {
-        // For now, fall back to CPU for FP16 — Vulkan FP16 shader not yet integrated
-        return false;
-    }
-
+    // Vulkan backend has unresolved externals and is not production-ready.
+    // Always return false to use the optimized CPU fallback.
+    (void)wt; (void)input; (void)output; (void)outDim;
     return false;
 }
 

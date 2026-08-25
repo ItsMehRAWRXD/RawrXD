@@ -54,14 +54,13 @@ extern "C" VkInstance Vulkan_CreateInstance(
         .apiVersion = VK_API_VERSION_1_3
     };
     
-    VkInstanceCreateInfo instance_info = {
-        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pApplicationInfo = &app_info,
-        .enabledExtensionCount = 0,
-        .ppEnabledExtensionNames = nullptr,
-        .enabledLayerCount = 0,
-        .ppEnabledLayerNames = nullptr
-    };
+    VkInstanceCreateInfo instance_info = {};
+    instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instance_info.pApplicationInfo = &app_info;
+    instance_info.enabledExtensionCount = 0;
+    instance_info.ppEnabledExtensionNames = nullptr;
+    instance_info.enabledLayerCount = 0;
+    instance_info.ppEnabledLayerNames = nullptr;
     
     VkInstance instance = nullptr;
     VkResult result = vkCreateInstance(&instance_info, nullptr, &instance);

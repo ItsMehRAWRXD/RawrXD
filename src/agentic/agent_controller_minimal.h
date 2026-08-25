@@ -25,11 +25,8 @@
 #include <vector>
 
 
-// Forward declarations for JSON support
-namespace nlohmann
-{
-class json;
-}
+// Include JSON instead of forward-declaring (avoids ambiguous symbol with nlohmann::json_abi_v3_11_2::json)
+#include <nlohmann/json.hpp>
 
 // Forward declaration for inference engine
 namespace RawrXD

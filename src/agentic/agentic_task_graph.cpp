@@ -1,5 +1,5 @@
 // AgenticTaskGraph Implementation
-#include "../../include/agentic_task_graph.h"
+#include "../core/agentic_task_graph.hpp"
 
 namespace RawrXD {
 namespace Agentic {

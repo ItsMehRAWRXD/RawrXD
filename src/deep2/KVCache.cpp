@@ -208,8 +208,9 @@ void AttentionWithCache(const float* query,
 
     const size_t headDim  = cache.headDimSize();
     const float  scale    = 1.0f / sqrtf((float)headDim);
-    const size_t seqUsed  = cache.currentLength();
-    const size_t attend   = (seqLen < seqUsed) ? seqLen : seqUsed;
+    // Use seqLen (the number of positions to attend to, including current)
+    // rather than seqUsed (cache.currentLength) which may lag by one.
+    const size_t attend   = seqLen;
 
     if (headDim == 0 || attend == 0) {
         memset(output, 0, headDim * sizeof(float));

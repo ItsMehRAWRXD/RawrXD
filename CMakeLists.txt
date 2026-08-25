@@ -243,8 +243,9 @@ if(RAWRXD_BUILD_CLI)
     file(GLOB ASM_SOURCES "src/asm/RawrXD_IPC_Dispatcher.asm" "src/asm/RawrXD_Disasm_Kernel.asm")
 
     add_executable(rawrxd
-        src/ui/entry_point.cpp
-        src/ui/RawrXD_MainLoop.cpp
+        # Headless entry point (replaces GUI entry_point.cpp + RawrXD_MainLoop.cpp)
+        src/win32app/cli_main_headless.cpp
+        src/win32app/HeadlessIDE.cpp
         src/asm/RawrXD_IPC_Dispatcher.asm
         src/asm/RawrXD_Disasm_Kernel.asm
         src/asm/rawr_cpu_features.asm
@@ -263,6 +264,13 @@ if(RAWRXD_BUILD_CLI)
         src/core/link_stubs.cpp
         src/core/gguf_swarm_plan_builder.cpp
         src/core/inference_witness.cpp
+        src/core/execution_governor.cpp
+        src/core/agent_safety_contract.cpp
+        src/core/deterministic_replay.cpp
+        src/core/confidence_gate.cpp
+        src/core/universal_model_hotpatcher.cpp
+        src/core/instructions_provider.cpp
+        src/core/enterprise_license.cpp
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
@@ -298,11 +306,28 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic components for CLI Ollama testing - TEMPORARILY DISABLED
-        # src/agentic/OrchestratorBridge.cpp
-        # src/agentic/AgentOllamaClient.cpp
+        # Agentic stack — 101% IDE parity (Batch 1 wiring)
+        src/win32app/Win32IDE_AgenticBridge.cpp
+        src/win32app/Win32IDE_Autonomy.cpp
+        src/win32app/Win32IDE_SubAgent.cpp
+        src/agentic_engine.cpp
+        src/agent_history.cpp
+        src/agent_policy.cpp
+        src/agent_explainability.cpp
+        src/cli/swarm_orchestrator.cpp
+        src/full_agentic_ide/AgenticIOCPBridge.cpp
+        src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
+        src/full_agentic_ide/FullAgenticIDE.cpp
+        # Agentic components for CLI Ollama testing
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
+        src/agentic/AgentOllamaClient.cpp
+        # HeadlessIDE dependencies
+        src/streaming_gguf_loader.cpp
+        src/model_source_resolver.cpp
+        src/modules/engine_manager.cpp
+        src/modules/codex_ultimate.cpp
+        src/deep2/Deep2IDEIntegration.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
@@ -3149,6 +3174,15 @@ list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/memory_production\\.cpp$")
 # Exclude unified_command_dispatch.cpp and agentic_transaction.cpp - they need many command handlers
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/unified_command_dispatch\\.cpp$")
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/agentic_transaction\\.cpp$")
+# Fix: Case-sensitive regex misses mixed-case files — use explicit REMOVE_ITEM
+list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
+    src/agentic/AgenticDeepThinkingEngine.cpp
+    src/agentic/DeterministicReplayEngine.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/DiskRecoveryToolHandler.cpp
+    src/agentic_agent_coordinator.cpp
+    src/model_config.cpp
+)
 if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "AUTO")
     # Production lane: prefer full handlers over stub providers.
     list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
@@ -3261,6 +3295,13 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/runtime/governance/TLSInstructionGate.cpp
     src/runtime/gguf_tensor_loader.cpp
     src/runtime/Deep2ExecutionTelemetry.cpp
+    # Real Deep2 implementations (not stubs)
+    src/deep2/BP16Streamer.cpp
+    src/deep2/Chamber.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/ToroidalKVCache.cpp
 )
 # Remove duplicate stub files that are already in SOURCES or have real implementations
 list(FILTER GOLD_UNDERSCORE_SOURCES EXCLUDE REGEX ".*/deep2_link_stubs\\.cpp$")
@@ -3394,7 +3435,7 @@ target_sources(RawrXD_Gold PRIVATE
     src/agentic/ErrorRecoveryManager.cpp
     # Link closure for unified/ssot lanes: implementations live outside main SOURCES or were stripped.
     tests/gguf_link_impl.cpp
-    src/core/rawrengine_command_handlers.cpp
+    # REMOVED: src/core/rawrengine_command_handlers.cpp - references UpdateSignatureVerifier, PerfTelemetry (unresolved)
     src/agent/quantum_dynamic_time_manager_impl.cpp
     src/core/native_gguf_loader_link_impl.cpp
     src/agentic/AdvancedAgentCoordinator.cpp
@@ -3411,7 +3452,7 @@ target_sources(RawrXD_Gold PRIVATE
     src/core/hardware_synthesizer.cpp
     # src/ui/entry_point.cpp  # Removed - conflicts with minimal_gold_main.cpp
     src/ui/webview2_bridge.cpp
-    src/ui/RawrXD_MainLoop.cpp
+    # REMOVED: src/ui/RawrXD_MainLoop.cpp - references AgentSelfHealingOrchestrator (unresolved)
     src/ui/debugger_core.cpp
     src/inference/gpu_dispatch_gate.cpp
     src/gguf_d3d12_bridge.cpp
@@ -4469,6 +4510,88 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
     src/deep2/deep2_link_stubs.cpp
+    # ═══════════════════════════════════════════════════════════════════
+    # Agentic Core — minimal verified set (add more after individual validation)
+    # ═══════════════════════════════════════════════════════════════════
+    src/agentic/ErrorRecoveryManager.cpp
+    src/agentic/BoundedAgentLoop.cpp
+    src/agentic/OrchestratorBridge.cpp
+    src/agentic/ToolRegistry.cpp
+    src/agentic/AgentOrchestrator.cpp
+    src/agentic/AgentOllamaClient.cpp
+    src/agentic/AgentToolHandlers.cpp
+    src/agentic/RawrXD_AgentLoop.cpp
+    src/agentic/RawrXD_AutonomousFlow.cpp
+    src/agentic/RawrXD_AutonomousCoordinator_Final.cpp
+    # src/agentic/RawrXD_AgentHost.cpp  # excluded: missing include/RawrXD_AgentHost.h
+    src/agentic/RawrXD_RewardModel.cpp
+    src/agentic/RawrXD_SymbolHealer.cpp
+    src/agentic/RawrXD_ToolRegistry.cpp
+    src/agentic/DeterministicReplayEngine.cpp
+    src/agentic/DiffEngine.cpp
+    # src/agentic/DirectFIM.cpp  # excluded: missing json.hpp
+    src/agentic/FIMPromptBuilder.cpp
+    src/agentic/GGMLAgenticEngine.cpp
+    src/agentic/GgmlEngine.cpp
+    # src/agentic/gguf_types.cpp  # excluded: GGUF_Tensor.name mismatch
+    src/agentic/GGUFLoader.cpp
+    src/agentic/KnowledgeGraph.cpp
+    src/agentic/chain_of_thought.cpp
+    src/agentic/change_impact_analyzer.cpp
+    src/agentic/context_assembler.cpp
+    src/agentic/context_mention_parser.cpp
+    src/agentic/RepositoryIndexer.cpp
+    src/agentic/RobustOllamaParser.cpp
+    src/agentic/SelfImprovement.cpp
+    src/agentic/slash_command_parser.cpp
+    src/agentic/SubAgentManager.cpp
+    src/agentic/task_executor.cpp
+    src/agentic/task_graph.cpp
+    src/agentic/task_scheduler.cpp
+    src/agentic/NativeInferenceClient.cpp
+    src/agentic/SovereignStandaloneClient.cpp
+    src/agentic/SovereignAssembler.cpp
+    # src/agentic/SovereignAssembler_HotPatch.cpp  # excluded: redefinition, missing iostream
+    src/agentic/SovereignCodeGenerator.cpp
+    src/agentic/Titan_Sovereign_Bridge.cpp
+    src/agentic/Phase3_Agent_Kernel_Bridge.cpp
+    src/agentic/BackendEmissionService.cpp
+    src/agentic/ExecPipeline.cpp
+    src/agentic/StreamingResultChannel.cpp
+    src/agentic/streaming_command_handler.cpp
+    src/agentic/ToolDispatcher.cpp
+    src/agentic/ToolDispatchTable.cpp
+    src/agentic/tool_call_parser.cpp
+    src/agentic/tool_executor.cpp
+    src/agentic/tool_registry.cpp
+    src/agentic/vulkan_compute_real.cpp
+    # ═══════════════════════════════════════════════════════════════════
+    # Sovereign Runtime — verified .cpp files only
+    # ═══════════════════════════════════════════════════════════════════
+    src/sovereign/SovereignRuntime.cpp
+    src/sovereign/ExecutionContract.cpp
+    src/sovereign/SovereignCoreWrapper.cpp
+    # src/sovereign/SovereignDenseEngine.cpp  # excluded: sqrtf/expf/__asm issues
+    src/sovereign/SovereignEventBus.cpp
+    src/sovereign/SovereignCheckpoint.cpp
+    src/sovereign/SovereignVCS.cpp
+    src/sovereign/SovereignWatchdog.cpp
+    src/sovereign/Deep2InferenceWrapper.cpp
+    # src/sovereign/AgenticEngineSovereignHook.cpp  # excluded: missing <mutex> include
+    src/sovereign/IDE_Lifecycle_Hook.cpp
+    src/sovereign/RawrXD_SovereignStatusPanel.cpp
+    src/sovereign/IntegrityChecker.cpp
+    # src/sovereign/HealthReport.cpp  # excluded: time ternary operator issue
+    # src/sovereign/AutoRepair.cpp  # excluded: missing ModelRegistry.hpp
+    src/sovereign/AutoRepairEngine.cpp
+    # src/sovereign/CrashRecovery.cpp  # excluded: missing KVCache.hpp
+    # src/sovereign/StressTester.cpp  # excluded: missing KVCache.hpp
+    # src/sovereign/Profiler.cpp  # excluded: missing Telemetry.hpp
+    # src/sovereign/DistributedKV.cpp  # excluded: references undefined Beaconism, Fabric
+    # src/sovereign/ExpertSharding.cpp  # excluded: references undefined Beaconism, Fabric
+    # src/sovereign/Beaconism.cpp  # excluded: duplicate Reset definition
+    src/sovereign/rawr_transport_strict.cpp
+    # src/sovereign/verify_integration.cpp  # excluded: unknown header issues
     # MASM GEMV kernels
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm

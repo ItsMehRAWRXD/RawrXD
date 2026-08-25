@@ -12,9 +12,9 @@ extern "C" {
         OutputDebugStringA("\n");
     }
     
-    // Hotpatch stubs
-    int find_pattern_asm(const char* data, unsigned char* pattern, size_t len) { return -1; }
-    int asm_apply_memory_patch(void* addr, void* data, size_t len) { return 0; }
+    // Hotpatch stubs - REMOVED: now provided by gold_link_closure.cpp
+    // int find_pattern_asm(const char* data, unsigned char* pattern, size_t len) { return -1; }
+    // int asm_apply_memory_patch(void* addr, void* data, size_t len) { return 0; }
 }
 
 // Main entry point

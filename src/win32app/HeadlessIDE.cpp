@@ -50,6 +50,17 @@
 #include <unordered_map>
 #include "gguf_loader.h"
 
+#include <winhttp.h>
+
+// ============================================================================
+// Minimal ConversationManager definition (Fix #14)
+// ============================================================================
+class HeadlessIDE::ConversationManager {
+public:
+    ConversationManager() = default;
+    ~ConversationManager() = default;
+};
+
 // ============================================================================
 // Production Hardening — Batch 1 Fixes
 // ============================================================================
@@ -2853,7 +2864,7 @@ std::string HeadlessIDE::performCloudInference(const std::string& endpoint, cons
         });
     } else if (endpoint.find("googleapis") != std::string::npos) {
         payload["contents"] = nlohmann::json::array({
-            {{"role", "user"}, {"parts", {{"text", prompt}}}}}
+            {{"role", "user"}, {"parts", {{"text", prompt}}}}
         });
     }
 

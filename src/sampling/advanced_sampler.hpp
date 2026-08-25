@@ -160,21 +160,47 @@ public:
     virtual std::string getDescription() const = 0;
     
     // Reset sampler state for new conversation
-    virtual void Reset() {}
+    virtual void Reset() {
+        tokenHistory_.clear();
+    }
     
     // Sample from logits directly (convenience method)
+    // Applies repetition penalties before softmax
     virtual int Sample(const std::vector<float>& logits) {
+        std::vector<float> modified = logits;
+        applyPenalties(modified);
         SamplingContext ctx;
-        ctx.vocab_size = static_cast<int>(logits.size());
-        auto probs = softmax(logits);
+        ctx.vocab_size = static_cast<int>(modified.size());
+        ctx.tokens = tokenHistory_;
+        auto probs = softmax(modified);
         auto result = sample(probs, ctx);
         return result.selected_token;
     }
     
-    // Accept a token (for speculative decoding)
-    virtual void AcceptToken(int token) {}
+    // Accept a token (for speculative decoding and repetition tracking)
+    virtual void AcceptToken(int token) {
+        tokenHistory_.push_back(token);
+        if (tokenHistory_.size() > 1024) {
+            tokenHistory_.erase(tokenHistory_.begin());
+        }
+    }
     
 protected:
+    std::vector<int> tokenHistory_;
+    
+    // Apply repetition penalty to logits based on token history
+    virtual void applyPenalties(std::vector<float>& logits) {
+        if (tokenHistory_.empty() || logits.empty()) return;
+        size_t window = std::min(tokenHistory_.size(), size_t(64));
+        std::unordered_set<int> recent(tokenHistory_.end() - window, tokenHistory_.end());
+        for (int tok : recent) {
+            if (tok >= 0 && tok < (int)logits.size()) {
+                if (logits[tok] > 0) logits[tok] /= 1.1f;
+                else logits[tok] *= 1.1f;
+            }
+        }
+    }
+    
     // Helper for subclasses
     static std::vector<float> softmax(const std::vector<float>& logits);
 };
@@ -184,6 +210,21 @@ protected:
  */
 class GreedySampler : public ISampler {
 public:
+    // Override Sample to apply penalties before argmax
+    int Sample(const std::vector<float>& logits) override {
+        std::vector<float> modified = logits;
+        applyPenalties(modified);
+        int maxIdx = 0;
+        float maxVal = modified[0];
+        for (size_t i = 1; i < modified.size(); ++i) {
+            if (modified[i] > maxVal) {
+                maxVal = modified[i];
+                maxIdx = (int)i;
+            }
+        }
+        return maxIdx;
+    }
+    
     SamplingResult sample(const std::vector<float>& probabilities,
                            const SamplingContext& context) override;
     std::string getName() const override { return "Greedy"; }
@@ -212,17 +253,32 @@ class TopKSampler : public ISampler {
 public:
     TopKSampler(int k = 40, float temperature = 0.8f)
         : k_(k), temperature_(temperature) {}
-    
+
+    // Override Sample to apply penalties and temperature BEFORE softmax
+    int Sample(const std::vector<float>& logits) override {
+        std::vector<float> scaled = logits;
+        applyPenalties(scaled);
+        if (temperature_ != 1.0f && temperature_ > 0.0f) {
+            for (auto& v : scaled) v /= temperature_;
+        }
+        auto probs = softmax(scaled);
+        SamplingContext ctx;
+        ctx.vocab_size = static_cast<int>(probs.size());
+        ctx.top_k = k_;
+        auto result = sample(probs, ctx);
+        return result.selected_token;
+    }
+
     SamplingResult sample(const std::vector<float>& probabilities,
                            const SamplingContext& context) override;
     std::string getName() const override { return "Top-K"; }
     std::string getDescription() const override {
         return "Samples from top k most likely tokens";
     }
-    
+
     void setK(int k) { k_ = k; }
     void setTemperature(float temp) { temperature_ = temp; }
-    
+
 private:
     int k_;
     float temperature_;
@@ -233,12 +289,34 @@ private:
  */
 class TopPSampler : public ISampler {
 public:
+    TopPSampler(float temperature = 0.8f, float top_p = 0.95f)
+        : temperature_(temperature), top_p_(top_p) {}
+    
+    // Override Sample to apply penalties and temperature BEFORE softmax
+    int Sample(const std::vector<float>& logits) override {
+        std::vector<float> scaled = logits;
+        applyPenalties(scaled);
+        if (temperature_ != 1.0f && temperature_ > 0.0f) {
+            for (auto& v : scaled) v /= temperature_;
+        }
+        auto probs = softmax(scaled);
+        SamplingContext ctx;
+        ctx.vocab_size = static_cast<int>(probs.size());
+        ctx.top_p = top_p_;
+        auto result = sample(probs, ctx);
+        return result.selected_token;
+    }
+    
     SamplingResult sample(const std::vector<float>& probabilities,
                            const SamplingContext& context) override;
     std::string getName() const override { return "Top-P (Nucleus)"; }
     std::string getDescription() const override {
         return "Samples from smallest set of tokens with cumulative probability >= p";
     }
+
+private:
+    float temperature_ = 0.8f;
+    float top_p_ = 0.95f;
 };
 
 /**

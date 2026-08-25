@@ -5,6 +5,7 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <chrono>
 
 namespace RawrXD {
 namespace Agentic {
