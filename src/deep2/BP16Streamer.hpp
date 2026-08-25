@@ -11,24 +11,15 @@
 #include <string>
 #include <vector>
 
-// Minimal GGML type enum subset for BP16 records
-enum class GGMLType : int {
-    GGML_TYPE_F32  = 0,
-    GGML_TYPE_F16  = 1,
-    GGML_TYPE_Q4_0 = 2,
-    GGML_TYPE_Q5_0 = 3,
-    GGML_TYPE_Q8_0 = 8,
-    GGML_TYPE_Q4_K = 12,
-    GGML_TYPE_Q5_K = 13,
-    GGML_TYPE_Q6_K = 14,
-};
+// Use Deep2::GGMLType from GGUFLoader.hpp — forward declare only
+namespace Deep2 { enum class GGMLType : uint32_t; }
 
 class BP16Streamer {
 public:
     struct Record {
         std::string name;
         std::vector<size_t> dimensions;
-        GGMLType type = GGMLType::GGML_TYPE_F32;
+        Deep2::GGMLType type = static_cast<Deep2::GGMLType>(0);
     };
 
     BP16Streamer() = default;
