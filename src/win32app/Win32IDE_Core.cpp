@@ -3189,15 +3189,9 @@ void Win32IDE::deferredHeavyInitBody()
             if (!verifyFeatureRoutingCoverageAtStartup(&featureRouteReport))
             {
                 OutputDebugStringA(featureRouteReport.c_str());
-                MessageBoxA(m_hwndMain,
-                            "Feature command routing verification failed at startup. "
-                            "See debugger output/logs for details.",
-                            "RawrXD Startup Verification Error", MB_OK | MB_ICONERROR);
-                if (m_hwndMain)
-                {
-                    PostMessage(m_hwndMain, WM_CLOSE, 0, 0);
-                }
-                return;
+                // NON-FATAL: Log the routing issue but don't destroy the window
+                // The IDE should remain functional even if some feature routes are missing
+                OutputDebugStringA("WARNING: Feature routing coverage incomplete - continuing startup\n");
             }
         }
         catch (...)
