@@ -110,11 +110,11 @@ void TensorExecutionRouter::setStreamRouterAdapter(rawrxd::StreamRouterAdapter* 
     pImpl->streamRouterAdapter = adapter;
 }
 
-void TensorExecutionRouter::matmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K) {
+void TensorExecutionRouter::matmul(RuntimeTensorView& input, TensorHandle& weight, RuntimeTensorView& output, int M, int K) {
     (void)dispatchMatmul(input, weight, output, M, K, MatmulBackendDispatch{});
 }
 
-bool TensorExecutionRouter::dispatchMatmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K,
+bool TensorExecutionRouter::dispatchMatmul(RuntimeTensorView& input, TensorHandle& weight, RuntimeTensorView& output, int M, int K,
                                            const MatmulBackendDispatch& backendDispatch) {
     // B002: ensure tensor residency before dispatch.
     // Prefer canonical TensorId from model metadata. Fallback to host pointer seam.

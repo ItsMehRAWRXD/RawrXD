@@ -58,7 +58,56 @@ bool VulkanCompute::Initialize() {
 }
 
 void VulkanCompute::Cleanup() {
-    // Minimal cleanup stub
+    // Proper cleanup of Vulkan resources
+    if (device_) {
+        vkDeviceWaitIdle(device_);
+        
+        // Free staging buffer
+        if (staging_buffer_) {
+            vkDestroyBuffer(device_, staging_buffer_, nullptr);
+            staging_buffer_ = nullptr;
+        }
+        if (staging_memory_) {
+            vkFreeMemory(device_, staging_memory_, nullptr);
+            staging_memory_ = nullptr;
+        }
+        
+        // Free descriptor pools
+        if (matmul_descriptor_pool_) {
+            vkDestroyDescriptorPool(device_, matmul_descriptor_pool_, nullptr);
+            matmul_descriptor_pool_ = nullptr;
+        }
+        if (descriptor_pool_) {
+            vkDestroyDescriptorPool(device_, descriptor_pool_, nullptr);
+            descriptor_pool_ = nullptr;
+        }
+        
+        // Free descriptor set layouts
+        if (matmul_descriptor_set_layout_) {
+            vkDestroyDescriptorSetLayout(device_, matmul_descriptor_set_layout_, nullptr);
+            matmul_descriptor_set_layout_ = nullptr;
+        }
+        
+        // Free command pool
+        if (command_pool_) {
+            vkDestroyCommandPool(device_, command_pool_, nullptr);
+            command_pool_ = nullptr;
+        }
+        
+        // Destroy device
+        vkDestroyDevice(device_, nullptr);
+        device_ = nullptr;
+    }
+    
+    // Destroy instance
+    if (instance_) {
+        vkDestroyInstance(instance_, nullptr);
+        instance_ = nullptr;
+    }
+    
+    physical_device_ = nullptr;
+    compute_queue_ = nullptr;
+    kv_cache_allocated_ = false;
 }
 
 bool VulkanCompute::LoadShader(const std::string& name, const std::string& spirv_path) {

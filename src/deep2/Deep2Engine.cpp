@@ -3636,7 +3636,7 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
     // Build formatted prompt using chat template
     std::string formattedPrompt;
     
-    const ModelMetadata& meta = modelWeights.metadata;
+    const ModelMetadata& meta = ggufResult.metadata;
     
     if (!meta.chatTemplate.empty()) {
         // Use the model's native chat template

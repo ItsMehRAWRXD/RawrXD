@@ -941,10 +941,7 @@ void CPUInferenceEngine::TransformerLayer(const float* input, float* output, int
         // Simple self-attention simulation (simplified)
         // In full implementation, this would use loaded Q/K/V weights
         // For now, apply a learned identity-like transformation
-        if (layer_idx >= 0 && layer_idx < (int)m_transformerLayers.size()) {
-            // Apply layer-specific transformation if weights available
-            // This is where real attention computation would go
-        }
+        // TODO: Add m_transformerLayers member and real attention computation
     }
     
     // Apply FFN (feed-forward network)

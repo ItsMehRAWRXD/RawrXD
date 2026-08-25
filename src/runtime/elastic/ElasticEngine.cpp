@@ -1,10 +1,12 @@
 #include "ElasticEngine.hpp"
 #include "../gguf_tensor_loader.hpp"
+#include "../../kernels/attention_contracts.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>
 
 namespace RawrXD::Elastic {
+    using rawrxd::attention::TensorView;
 
 // ============================================================================
 // Construction / Destruction
@@ -163,11 +165,11 @@ void ElasticEngine::ForwardLayerDense(uint32_t layer_idx,
             weight.is_quantized = (block->ggml_type > 1);
             weight.quant_kind = block->ggml_type;
 
-            RawrXD::TensorView input_view{};
+            RawrXD::RuntimeTensorView input_view{};
             input_view.data = const_cast<float*>(input_activations + start_idx);
             input_view.size = end_idx - start_idx;
 
-            RawrXD::TensorView output_view{};
+            RawrXD::RuntimeTensorView output_view{};
             output_view.data = output_buffer + start_idx;
             output_view.size = end_idx - start_idx;
 
@@ -219,11 +221,11 @@ void ElasticEngine::ForwardLayerMoE(uint32_t layer_idx,
         weight.is_quantized = (expert->ggml_type > 1);
         weight.quant_kind = expert->ggml_type;
 
-        RawrXD::TensorView input_view{};
+        RawrXD::RuntimeTensorView input_view{};
         input_view.data = const_cast<float*>(input_activations);
         input_view.size = hidden_dim;
 
-        RawrXD::TensorView output_view{};
+        RawrXD::RuntimeTensorView output_view{};
         output_view.data = output_buffer;
         output_view.size = hidden_dim;
 
@@ -281,11 +283,11 @@ bool ElasticEngine::ExecuteMatMul(const std::string& tensor_name,
     weight.is_quantized = (block->ggml_type > 1);
     weight.quant_kind = block->ggml_type;
 
-    RawrXD::TensorView input_view{};
+    RawrXD::RuntimeTensorView input_view{};
     input_view.data = const_cast<float*>(input);
     input_view.size = input_dim;
 
-    RawrXD::TensorView output_view{};
+    RawrXD::RuntimeTensorView output_view{};
     output_view.data = output;
     output_view.size = output_dim;
 

@@ -1347,9 +1347,40 @@ bool HeadlessIDE::probeBackendHealth(AIBackendType type) {
         case AIBackendType::OpenAI:
         case AIBackendType::Claude:
         case AIBackendType::Gemini:
-            // Cloud backends: check if API key is configured
-            // (API key management is in BackendState singleton)
-            return false; // Not yet configured in headless mode
+            // Fix #15: Cloud backends - check API key from environment/config
+            {
+                const char* envKey = nullptr;
+                if (type == AIBackendType::OpenAI) envKey = std::getenv("OPENAI_API_KEY");
+                else if (type == AIBackendType::Claude) envKey = std::getenv("ANTHROPIC_API_KEY");
+                else if (type == AIBackendType::Gemini) envKey = std::getenv("GEMINI_API_KEY");
+                
+                // Also check config file
+                std::string configKey;
+                if (!envKey || strlen(envKey) == 0) {
+                    std::ifstream cfg("api_keys.json");
+                    if (cfg) {
+                        try {
+                            auto j = nlohmann::json::parse(cfg);
+                            std::string keyName;
+                            if (type == AIBackendType::OpenAI) keyName = "openai";
+                            else if (type == AIBackendType::Claude) keyName = "claude";
+                            else keyName = "gemini";
+                            configKey = j.value(keyName, "");
+                        } catch (...) {}
+                    }
+                }
+                
+                bool hasKey = (envKey && strlen(envKey) > 0) || !configKey.empty();
+                if (hasKey) {
+                    m_outputSink->appendOutput(
+                        (std::string("Cloud backend ") + 
+                         (type == AIBackendType::OpenAI ? "OpenAI" :
+                          type == AIBackendType::Claude ? "Claude" : "Gemini") +
+                         " API key configured").c_str(),
+                        OutputSeverity::Info);
+                }
+                return hasKey;
+            }
 
         default:
             return false;
@@ -1404,6 +1435,31 @@ std::string HeadlessIDE::routeInferenceRequest(const std::string& prompt) {
                 ("Ollama inference failed: " + result.error_message).c_str(),
                 OutputSeverity::Warning);
             // Fall through to engine manager path
+        }
+    } else if (m_activeBackend == AIBackendType::OpenAI) {
+        // Fix #15: Cloud backend - OpenAI
+        const char* apiKey = std::getenv("OPENAI_API_KEY");
+        if (apiKey && strlen(apiKey) > 0) {
+            // Simple HTTP POST to OpenAI API
+            std::string apiResponse = performCloudInference("https://api.openai.com/v1/chat/completions", 
+                apiKey, prompt, "gpt-4o");
+            if (!apiResponse.empty()) return apiResponse;
+        }
+    } else if (m_activeBackend == AIBackendType::Claude) {
+        // Fix #15: Cloud backend - Claude
+        const char* apiKey = std::getenv("ANTHROPIC_API_KEY");
+        if (apiKey && strlen(apiKey) > 0) {
+            std::string apiResponse = performCloudInference("https://api.anthropic.com/v1/messages",
+                apiKey, prompt, "claude-3-5-sonnet-20241022");
+            if (!apiResponse.empty()) return apiResponse;
+        }
+    } else if (m_activeBackend == AIBackendType::Gemini) {
+        // Fix #15: Cloud backend - Gemini
+        const char* apiKey = std::getenv("GEMINI_API_KEY");
+        if (apiKey && strlen(apiKey) > 0) {
+            std::string apiResponse = performCloudInference("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+                apiKey, prompt, "");
+            if (!apiResponse.empty()) return apiResponse;
         }
     }
 
@@ -2732,5 +2788,129 @@ void HeadlessIDE::shutdownAll() {
     }
 
     m_outputSink->flush();
+}
+
+// ============================================================================
+// Cloud Backend Helpers (Fix #15)
+// ============================================================================
+std::string HeadlessIDE::performCloudInference(const std::string& endpoint, const std::string& apiKey,
+                                                const std::string& prompt, const std::string& model) {
+    // Simple WinHTTP-based cloud inference
+    HINTERNET hSession = WinHttpOpen(L"RawrXD-Headless/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                      WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return "";
+
+    // Parse URL
+    std::string host, path;
+    bool isHttps = false;
+    if (endpoint.substr(0, 8) == "https://") {
+        isHttps = true;
+        size_t hostEnd = endpoint.find('/', 8);
+        host = endpoint.substr(8, hostEnd - 8);
+        path = (hostEnd != std::string::npos) ? endpoint.substr(hostEnd) : "/";
+    } else if (endpoint.substr(0, 7) == "http://") {
+        size_t hostEnd = endpoint.find('/', 7);
+        host = endpoint.substr(7, hostEnd - 7);
+        path = (hostEnd != std::string::npos) ? endpoint.substr(hostEnd) : "/";
+    }
+
+    if (host.empty()) {
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    std::wstring whost(host.begin(), host.end());
+    HINTERNET hConnect = WinHttpConnect(hSession, whost.c_str(), isHttps ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    std::wstring wpath(path.begin(), path.end());
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", wpath.c_str(), NULL,
+                                             WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES,
+                                             isHttps ? WINHTTP_FLAG_SECURE : 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    // Build JSON payload
+    nlohmann::json payload;
+    if (endpoint.find("openai") != std::string::npos) {
+        payload["model"] = model;
+        payload["messages"] = nlohmann::json::array({
+            {{"role", "user"}, {"content", prompt}}
+        });
+        payload["max_tokens"] = m_config.maxTokens;
+        payload["temperature"] = m_config.temperature;
+    } else if (endpoint.find("anthropic") != std::string::npos) {
+        payload["model"] = model;
+        payload["max_tokens"] = m_config.maxTokens;
+        payload["messages"] = nlohmann::json::array({
+            {{"role", "user"}, {"content", prompt}}
+        });
+    } else if (endpoint.find("googleapis") != std::string::npos) {
+        payload["contents"] = nlohmann::json::array({
+            {{"role", "user"}, {"parts", {{"text", prompt}}}}}
+        });
+    }
+
+    std::string body = payload.dump();
+    std::string authHeader = "Authorization: Bearer " + apiKey;
+    std::wstring wAuth(authHeader.begin(), authHeader.end());
+
+    WinHttpAddRequestHeaders(hRequest, L"Content-Type: application/json", (ULONG)-1L, WINHTTP_ADDREQ_FLAG_ADD);
+    WinHttpAddRequestHeaders(hRequest, wAuth.c_str(), (ULONG)-1L, WINHTTP_ADDREQ_FLAG_ADD);
+
+    BOOL sent = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                   (LPVOID)body.c_str(), (DWORD)body.length(), (DWORD)body.length(), 0);
+    if (!sent) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return "";
+    }
+
+    WinHttpReceiveResponse(hRequest, NULL);
+
+    // Read response
+    std::string response;
+    DWORD bytesRead = 0;
+    char buffer[8192];
+    do {
+        bytesRead = 0;
+        if (WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
+            response.append(buffer, bytesRead);
+        }
+    } while (bytesRead > 0);
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    // Parse response
+    try {
+        auto j = nlohmann::json::parse(response);
+        if (endpoint.find("openai") != std::string::npos) {
+            if (j.contains("choices") && !j["choices"].empty()) {
+                return j["choices"][0]["message"]["content"].get<std::string>();
+            }
+        } else if (endpoint.find("anthropic") != std::string::npos) {
+            if (j.contains("content") && !j["content"].empty()) {
+                return j["content"][0]["text"].get<std::string>();
+            }
+        } else if (endpoint.find("googleapis") != std::string::npos) {
+            if (j.contains("candidates") && !j["candidates"].empty()) {
+                return j["candidates"][0]["content"]["parts"][0]["text"].get<std::string>();
+            }
+        }
+    } catch (...) {
+        // Return raw response if parsing fails
+        return response;
+    }
+
+    return "";
 }
 

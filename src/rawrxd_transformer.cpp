@@ -5,6 +5,9 @@
 #include "inference/NegativeSpaceProfiler.hpp"
 #include "runtime/elastic/ElasticEngine.hpp"
 #include "runtime/elastic/VulkanTensorResidencyBackend.hpp"
+#include "../kernels/attention_contracts.h"
+
+using rawrxd::attention::TensorView;
 
 // RawrXD validation hooks for llama.cpp parity testing
 #ifdef RAWRXD_ENABLE_VALIDATION
@@ -1419,12 +1422,12 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
         weight.device_ptr = loader->GetTensorGPUBuffer(tensorName);
     }
 
-    RawrXD::TensorView inView{};
+    RawrXD::RuntimeTensorView inView{};
     inView.data = const_cast<float*>(input);
     inView.size = inputDim;
     inView.gpu_buffer = nullptr;
 
-    RawrXD::TensorView outView{};
+    RawrXD::RuntimeTensorView outView{};
     outView.data = output;
     outView.size = outputDim;
     outView.gpu_buffer = nullptr;
@@ -1481,7 +1484,7 @@ bool RawrXDTransformer::ExecuteLayerMatMul(const std::string& tensorName, const 
     // but now crosses router for residency and completion accounting.
     const bool ok = m_execRouter.dispatchMatmul(
         inView, weight, outView, static_cast<int>(outputDim), static_cast<int>(inputDim),
-        [&tensorName, this](const RawrXD::TensorView& in, const RawrXD::TensorHandle&, RawrXD::TensorView& out,
+        [&tensorName, this](const RawrXD::RuntimeTensorView& in, const RawrXD::TensorHandle&, RawrXD::RuntimeTensorView& out,
                             int M, int K) {
             return loader->StreamingMatMul(tensorName, in.data, out.data, static_cast<std::size_t>(K),
                                            static_cast<std::size_t>(M));

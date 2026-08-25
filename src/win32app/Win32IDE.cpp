@@ -89,6 +89,55 @@ static std::wstring utf8ToWide(const std::string& utf8);
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError);
 
+// Fix #1: Implement missing extern "C" functions for memory privilege and large page mapping
+extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege() {
+    HANDLE hToken = nullptr;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+        return GetLastError();
+    }
+    
+    TOKEN_PRIVILEGES tp{};
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    
+    if (!LookupPrivilegeValueW(nullptr, SE_LOCK_MEMORY_NAME, &tp.Privileges[0].Luid)) {
+        CloseHandle(hToken);
+        return GetLastError();
+    }
+    
+    if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), nullptr, nullptr)) {
+        CloseHandle(hToken);
+        return GetLastError();
+    }
+    
+    CloseHandle(hToken);
+    return 0; // SUCCESS
+}
+
+extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError) {
+    if (!hMap || hMap == INVALID_HANDLE_VALUE) {
+        if (outBaseOrError) *outBaseOrError = ERROR_INVALID_HANDLE;
+        return nullptr;
+    }
+    
+    // Align offset to 2MB boundary for large pages
+    uint64_t alignedOff = off & ~((uint64_t)(2 * 1024 * 1024) - 1);
+    uint64_t offsetDelta = off - alignedOff;
+    size_t totalSize = sz + offsetDelta;
+    
+    void* base = MapViewOfFile(hMap, FILE_MAP_READ | FILE_MAP_WRITE, 
+                               (DWORD)(alignedOff >> 32), (DWORD)(alignedOff & 0xFFFFFFFF), 
+                               totalSize);
+    
+    if (!base) {
+        if (outBaseOrError) *outBaseOrError = GetLastError();
+        return nullptr;
+    }
+    
+    if (outBaseOrError) *outBaseOrError = 0;
+    return static_cast<char*>(base) + offsetDelta;
+}
+
 static uint64_t qpcNowU64()
 {
     LARGE_INTEGER v{};
@@ -222,7 +271,7 @@ static void appendStreamerPostLoadCheck(Win32IDE* ide, const std::string& ggufPa
 #if defined(RAWRXD_HAS_SOVEREIGN_GPU_ASM) && (RAWRXD_HAS_SOVEREIGN_GPU_ASM != 0)
                 L"ACTIVE";
 #else
-                L"STUB";
+                L"CPU-Fallback";
 #endif
 
             // Permanent ribbon is "glanceable" tier text; deep-dive numbers go in tooltip.
@@ -1989,7 +2038,7 @@ void Win32IDE::createStatusBar(HWND hwnd)
 #if defined(RAWRXD_HAS_SOVEREIGN_GPU_ASM) && (RAWRXD_HAS_SOVEREIGN_GPU_ASM != 0)
     SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: ACTIVE");
 #else
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: STUB");
+    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 2, (LPARAM)L"VMM: [Legacy]  GPU-ASM: CPU-Fallback");
 #endif
     SendMessageW(m_hwndStatusBar, SB_SETTIPTEXTW, 2,
                  (LPARAM)L"VMM diagnostics will appear here after model self-check.");

@@ -10,6 +10,10 @@
 #include <iostream>
 #include <sstream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace RawrXD {
 namespace Sovereign {
 
@@ -210,7 +214,7 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
     
     // Use Deep2Engine for actual inference
     try {
-        Deep2::Deep2Engine engine;
+        ::Deep2::Deep2Engine engine;
         if (!engine.loadModel(req.modelPath)) {
             result.status = ExecutionResult::Status::FAILED_RUNTIME;
             result.statusMessage = "Failed to load model for inference";
@@ -221,46 +225,21 @@ ExecutionResult SovereignRuntime::executeInference(const ExecutionRequest& req) 
         auto tokens = engine.tokenize(req.prompt);
         result.telemetry.tokensPrompt = (uint32_t)tokens.size();
         
-        // Generate with chat template support for instruction-tuned models
-        std::string response;
-        const Deep2::ModelMetadata& meta = engine.getModelMetadata();
-        if (!meta.chatTemplate.empty() || req.mode == ExecutionRequest::Mode::AGENTIC) {
-            // Use chat formatting for agentic mode or models with chat templates
-            std::string systemPrompt = "You are RawrXD, a helpful AI assistant.";
-            if (req.mode == ExecutionRequest::Mode::AGENTIC && !req.agentGoal.empty()) {
-                systemPrompt = req.agentGoal;
-            }
-            response = engine.generateChat(req.prompt, systemPrompt, req.maxTokens);
-        } else {
-            // Standard text generation
-            std::vector<int> outputTokens(req.maxTokens);
-            Deep2::InferenceStats stats;
-            size_t generated = engine.generate(tokens.data(), tokens.size(), 
-                                               outputTokens.data(), req.maxTokens, &stats);
-            
-            result.telemetry.tokensGenerated = (uint32_t)generated;
-            result.timing.tokensPerSecond = stats.tokensPerSecond;
-            
-            if (generated > 0) {
-                std::vector<int> usedTokens(outputTokens.begin(), outputTokens.begin() + generated);
-                response = engine.detokenize(usedTokens);
-            }
-        }
-        
+        // Generate using high-level API
+        std::string response = engine.generateText(req.prompt, req.maxTokens);
         result.generatedText = response;
-        result.telemetry.tokensGenerated = (uint32_t)engine.getModelMetadata().vocabSize; // Approximate
+        result.telemetry.tokensGenerated = (uint32_t)(response.size() / 4); // Approximate
         
     } catch (const std::exception& e) {
         result.status = ExecutionResult::Status::FAILED_RUNTIME;
         result.statusMessage = std::string("Inference error: ") + e.what();
-        result.error = ExecutionResult::ErrorInfo{
-            ExecutionResult::Status::FAILED_RUNTIME,
-            "SovereignRuntime::executeInference",
-            "inference",
-            e.what(),
-            "",
-            nlohmann::json::object()
-        };
+        ExecutionResult::ErrorInfo err;
+        err.category = "RUNTIME";
+        err.component = "SovereignRuntime::executeInference";
+        err.message = std::string("Inference error: ") + e.what();
+        err.stackTrace = "";
+        err.context = nlohmann::json::object();
+        result.error = std::move(err);
     }
     
     return result;

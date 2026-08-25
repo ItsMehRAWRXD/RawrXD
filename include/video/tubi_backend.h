@@ -1,6 +1,5 @@
 #pragma once
 
-#include <expected>
 #include <filesystem>
 #include <string>
 
@@ -48,6 +47,6 @@ struct TubiRenderResult
     bool mp4Created = false;
 };
 
-std::expected<TubiRenderResult, std::string> renderVideoClip(const TubiRenderRequest& request);
+TubiRenderResult renderVideoClip(const TubiRenderRequest& request);
 
 }  // namespace rawrxd::video

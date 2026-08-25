@@ -270,6 +270,10 @@ public:
     std::string getModelsOllamaJson() const;
     std::string getEngineCapabilitiesJson() const;
 
+    // ---- Cloud backend helpers (Fix #15) ----
+    std::string performCloudInference(const std::string& endpoint, const std::string& apiKey,
+                                      const std::string& prompt, const std::string& model);
+
     // ---- Diagnostics ----
     std::string getFullStatusDump() const;
     std::string getVersionString() const;

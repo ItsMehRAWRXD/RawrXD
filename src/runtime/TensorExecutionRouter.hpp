@@ -64,7 +64,7 @@ struct TensorHandle {
     uint32_t quant_kind;
 };
 
-struct TensorView {
+struct RuntimeTensorView {
     float* data;
     size_t size;
     void* gpu_buffer = nullptr;
@@ -79,7 +79,7 @@ struct NanoQuantMetadata {
 
 class TensorExecutionRouter {
 public:
-    using MatmulBackendDispatch = std::function<bool(const TensorView&, const TensorHandle&, TensorView&, int, int)>;
+    using MatmulBackendDispatch = std::function<bool(const RuntimeTensorView&, const TensorHandle&, RuntimeTensorView&, int, int)>;
 
     TensorExecutionRouter();
     ~TensorExecutionRouter();
@@ -91,8 +91,8 @@ public:
     // VX01: Query whether Vulkan GEMM dispatcher is ready
     bool HasVulkanGemm() const;
 
-    void matmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K);
-    bool dispatchMatmul(TensorView& input, TensorHandle& weight, TensorView& output, int M, int K,
+    void matmul(RuntimeTensorView& input, TensorHandle& weight, RuntimeTensorView& output, int M, int K);
+    bool dispatchMatmul(RuntimeTensorView& input, TensorHandle& weight, RuntimeTensorView& output, int M, int K,
                         const MatmulBackendDispatch& backendDispatch);
     void cpu_matmul(const float* W, const float* A, float* C, int M, int K);
     void snapshot_telemetry(int layer, const std::string& layer_name);

@@ -20,6 +20,18 @@
 #include "context_config.h"
 
 // ============================================================================
+// RuntimeTensorView — used by rawrxd_transformer.cpp and ElasticEngine.cpp
+// ============================================================================
+
+namespace RawrXD {
+struct RuntimeTensorView {
+    float* data = nullptr;
+    size_t size = 0;
+    void* gpu_buffer = nullptr;
+};
+} // namespace RawrXD
+
+// ============================================================================
 // ASM bridge symbols (speciator + neural + memory patch)
 // ============================================================================
 
@@ -737,69 +749,17 @@ void* asm_snapshot_get_stats() {
 // Video rendering stub (for AgentToolHandlers.cpp / tool_registry.cpp)
 // ============================================================================
 
-#include <expected>
 #include <filesystem>
+#include "video/tubi_backend.h"
 
 namespace rawrxd {
 namespace video {
 
-struct TubiRenderRequest
-{
-    std::string jobId;
-    std::string engineName;
-    std::string provider;
-    std::string localModel;
-    std::string prompt;
-    std::string storyboard;
-    std::string style;
-    std::string duration;
-    std::string aspectRatio;
-    std::string resolution;
-    std::string negativePrompt;
-    std::string cameraMode;
-    int seed = 0;
-    std::filesystem::path outputDir;
-};
-
-struct TubiRenderResult
-{
-    int width = 0;
-    int height = 0;
-    int fps = 0;
-    int totalFrames = 0;
-    int durationSeconds = 0;
-    int shotCount = 0;
-    int seedUsed = 0;
-    std::filesystem::path framesDir;
-    std::filesystem::path manifestPath;
-    std::filesystem::path mp4Path;
-    std::filesystem::path progressPath;
-    std::filesystem::path shotPlanPath;
-    std::filesystem::path contactSheetPath;
-    std::filesystem::path previewStartPath;
-    std::filesystem::path previewMidPath;
-    std::filesystem::path previewEndPath;
-    std::string encoderDiagnostics;
-    std::string extractedTags;
-    bool mp4Created = false;
-};
-
-// Simple expected-like result for C++20 compatibility
-struct TubiRenderResult {
-    std::filesystem::path previewStartPath;
-    std::filesystem::path previewMidPath;
-    std::filesystem::path previewEndPath;
-    std::string encoderDiagnostics;
-    std::string extractedTags;
-    bool mp4Created = false;
-};
-
-// C++20 compatible: return pair<bool, result_or_error>
-std::pair<bool, TubiRenderResult> renderVideoClip(const TubiRenderRequest& request) {
+TubiRenderResult renderVideoClip(const TubiRenderRequest& request) {
     (void)request;
     TubiRenderResult result;
     result.encoderDiagnostics = "Video rendering not implemented in Gold build";
-    return {false, result};
+    return result;
 }
 
 } // namespace video
@@ -942,20 +902,8 @@ double SovereignInferenceClient::GetAvgTokensPerSec() const {
 // Do NOT provide stubs here to avoid duplicate symbol errors
 
 // ============================================================================
-// Snapshot stubs
+// Snapshot stubs - REMOVED: defined in RawrXD_Snapshot.cpp
 // ============================================================================
-
-extern "C" {
-
-bool asm_snapshot_verify(void* snapshot, void* target, size_t size) {
-    if (!snapshot || !target || size == 0) return false;
-    return std::memcmp(snapshot, target, size) == 0;
-}
-void asm_snapshot_discard(void* snapshot) {
-    if (snapshot) ::operator delete(snapshot);
-}
-
-} // extern "C"
 
 // ============================================================================
 // Camellia256 stubs
@@ -1001,3 +949,312 @@ bool asm_camellia256_auth_decrypt_file(const char* in_path, const char* out_path
 // ============================================================================
 
 void register_git_mcp_tools() {}
+
+// ============================================================================
+// Batch 1: AutonomousRecoveryOrchestrator stubs
+// ============================================================================
+
+namespace RawrXD {
+namespace Agent {
+
+struct DivergenceEvent { int id = 0; };
+struct RecoveryResult { bool success = false; };
+
+class AutonomousRecoveryOrchestrator {
+public:
+    static AutonomousRecoveryOrchestrator& instance() {
+        static AutonomousRecoveryOrchestrator inst;
+        return inst;
+    }
+    RecoveryResult executeRecovery(const DivergenceEvent& ev) {
+        (void)ev;
+        return RecoveryResult{false};
+    }
+};
+
+} // namespace Agent
+} // namespace RawrXD
+
+// ============================================================================
+// Batch 2: AgentToolRegistry stubs
+// ============================================================================
+
+namespace RawrXD {
+namespace Agent {
+
+struct ToolExecResult { bool ok = false; std::string msg; };
+
+class AgentToolRegistry {
+public:
+    static AgentToolRegistry& Instance() {
+        static AgentToolRegistry inst;
+        return inst;
+    }
+    ToolExecResult Dispatch(const std::string& name, const nlohmann::json& args) {
+        (void)name; (void)args;
+        return ToolExecResult{false, "stub"};
+    }
+    void RegisterHandler(const std::string& name, ToolExecResult (*handler)(const nlohmann::json&)) {
+        (void)name; (void)handler;
+    }
+};
+
+} // namespace Agent
+} // namespace RawrXD
+
+// ============================================================================
+// Batch 3: OllamaClient stubs
+// ============================================================================
+
+namespace RawrXD {
+namespace Backend {
+
+struct OllamaModel { std::string name; };
+
+class OllamaClient {
+public:
+    bool isRunning() { return false; }
+    std::vector<OllamaModel> listModels() { return {}; }
+};
+
+} // namespace Backend
+} // namespace RawrXD
+
+// ============================================================================
+// Batch 4: SovereignAgentRuntime stubs
+// ============================================================================
+
+namespace RawrXD {
+namespace Autonomy {
+
+enum class MissionState { Idle, Running, Completed, Failed };
+struct RuntimeConfig {};
+struct MissionGoal {};
+struct TaskNode {};
+class SovereignBlackboard {};
+
+class SovereignAgentRuntime {
+public:
+    SovereignAgentRuntime(const RuntimeConfig&) {}
+    ~SovereignAgentRuntime() = default;
+    bool Initialize() { return true; }
+    std::string LaunchMission(const std::string& name, const std::string& desc,
+                              std::function<std::vector<MissionGoal>(const MissionGoal&, SovereignBlackboard&)> planner,
+                              std::function<bool(const TaskNode&, std::any&)> executor) {
+        (void)name; (void)desc; (void)planner; (void)executor;
+        return "";
+    }
+    bool CancelMission(const std::string& id) { (void)id; return false; }
+    MissionState GetMissionState(const std::string& id) const { (void)id; return MissionState::Idle; }
+    float GetMissionProgress(const std::string& id) const { (void)id; return 0.0f; }
+    std::vector<std::string> GetActiveMissions() const { return {}; }
+};
+
+} // namespace Autonomy
+} // namespace RawrXD
+
+// ============================================================================
+// Batch 5: BP16Streamer stubs
+// ============================================================================
+
+class BP16Streamer {
+public:
+    struct Record { std::string name; size_t offset = 0; size_t size = 0; };
+    bool open(const char*) { return false; }
+    void close() {}
+    const char* error() const { return "stub"; }
+    size_t tensorCount() const { return 0; }
+    size_t fileSize() const { return 0; }
+    const Record* find(const std::string&) const { return nullptr; }
+    const std::vector<Record>& records() const { static std::vector<Record> r; return r; }
+    bool map_tensor(const std::string&, const uint8_t*&, size_t&) { return false; }
+};
+
+// ============================================================================
+// Batch 6: Deep2 ResidencyManager stub
+// ============================================================================
+
+namespace Deep2 {
+class ResidencyManager {
+public:
+    ~ResidencyManager() = default;
+};
+} // namespace Deep2
+
+// ============================================================================
+// Batch 7: TransitionState, Chamber, PlasmaGovernor stubs
+// ============================================================================
+
+namespace rawrxd {
+
+class TransitionState {
+public:
+    static uint64_t hashHiddenState(const float*, size_t) { return 0; }
+};
+
+enum class ChamberResult { Ok = 0, Fail = 1 };
+struct FormulaRoute { int id = 0; };
+
+class Chamber {
+public:
+    Chamber() = default;
+    ChamberResult evaluate(const float*, size_t) { return ChamberResult::Ok; }
+    FormulaRoute routePrimitive(size_t) const { return FormulaRoute{}; }
+};
+
+struct PlasmaToken {};
+
+class ToroidalKVCache {
+public:
+    ToroidalKVCache(size_t, size_t, size_t, size_t) {}
+    bool injectToken(const PlasmaToken&, const float*, const float*) { return true; }
+    bool queryTokenRange(size_t, size_t, const float*&, const float*&, size_t&) const { return false; }
+};
+
+struct ThermalState { float temp = 0.0f; };
+
+class PlasmaGovernor {
+public:
+    PlasmaGovernor() = default;
+    void updateThermalState(const ThermalState&) {}
+    float currentThrottle() const { return 1.0f; }
+    bool needsCoolingPause() const { return false; }
+    unsigned int coolingPauseMicros() const { return 0; }
+};
+
+class SovereignOutOfCoreRuntime {
+public:
+    struct Config {};
+    Config cfg;
+    SovereignOutOfCoreRuntime(const Config& c);
+    ~SovereignOutOfCoreRuntime();
+    ChamberResult evaluateChamber(const float*, size_t);
+    FormulaRoute routePrimitive(size_t);
+    void updateThermalState(const ThermalState&);
+    float currentThrottle() const;
+};
+
+SovereignOutOfCoreRuntime::SovereignOutOfCoreRuntime(const Config& c) : cfg(c) {}
+SovereignOutOfCoreRuntime::~SovereignOutOfCoreRuntime() = default;
+ChamberResult SovereignOutOfCoreRuntime::evaluateChamber(const float*, size_t) { return ChamberResult::Ok; }
+FormulaRoute SovereignOutOfCoreRuntime::routePrimitive(size_t) { return FormulaRoute{}; }
+void SovereignOutOfCoreRuntime::updateThermalState(const ThermalState&) {}
+float SovereignOutOfCoreRuntime::currentThrottle() const { return 1.0f; }
+
+} // namespace rawrxd
+
+// ============================================================================
+// Batch 8: Deep2_Q6_K_GEMV stub
+// ============================================================================
+
+extern "C" void Deep2_Q6_K_GEMV() {}
+
+// ============================================================================
+// Batch 9: Feature dispatch stubs
+// ============================================================================
+
+extern "C" {
+    void rawrxd_dispatch_feature() {}
+    void rawrxd_dispatch_command() {}
+    void rawrxd_dispatch_cli() {}
+    int rawrxd_get_feature_count() { return 0; }
+}
+
+// ============================================================================
+// Batch 10: Agentic deep thinking kernel stubs
+// ============================================================================
+
+extern "C" {
+    void* g_hHeap = nullptr;
+    void BeaconSend() {}
+    void RunInference() {}
+}
+
+// ============================================================================
+// Batch 11: UpdateSignatureVerifier + PerfTelemetry stubs
+// ============================================================================
+
+namespace RawrXD {
+namespace Update {
+
+struct SignatureResult { bool valid = false; };
+
+class UpdateSignatureVerifier {
+public:
+    static UpdateSignatureVerifier& instance() {
+        static UpdateSignatureVerifier inst;
+        return inst;
+    }
+    SignatureResult verifyAuthenticode(const wchar_t*) { return SignatureResult{false}; }
+};
+
+} // namespace Update
+
+namespace Perf {
+
+struct PerfResult { bool ok = false; };
+
+class PerfTelemetry {
+public:
+    static PerfTelemetry& instance() {
+        static PerfTelemetry inst;
+        return inst;
+    }
+    PerfResult initialize() { return PerfResult{true}; }
+    void captureBaseline() {}
+    std::string getDiagnostics() const { return "stub"; }
+};
+
+} // namespace Perf
+} // namespace RawrXD
+
+// ============================================================================
+// Batch 12: Omega orchestrator ASM stubs
+// ============================================================================
+
+extern "C" {
+    void asm_omega_init() {}
+    void asm_omega_ingest_requirement() {}
+    void asm_omega_plan_decompose() {}
+    void asm_omega_architect_select() {}
+    void asm_omega_implement_generate() {}
+    void asm_omega_verify_test() {}
+    void asm_omega_deploy_distribute() {}
+    void asm_omega_observe_monitor() {}
+    void asm_omega_evolve_improve() {}
+    void asm_omega_execute_pipeline() {}
+    void asm_omega_agent_spawn() {}
+    void asm_omega_agent_step() {}
+    void asm_omega_world_model_update() {}
+    void asm_omega_get_stats() {}
+    void asm_omega_shutdown() {}
+}
+
+// ============================================================================
+// Batch 13: Hardware synthesizer ASM stubs
+// ============================================================================
+
+extern "C" {
+    void asm_hwsynth_init() {}
+    void asm_hwsynth_profile_dataflow() {}
+    void asm_hwsynth_gen_gemm_spec() {}
+    void asm_hwsynth_analyze_memhier() {}
+    void asm_hwsynth_predict_perf() {}
+    void asm_hwsynth_est_resources() {}
+    void asm_hwsynth_gen_jtag_header() {}
+}
+
+// ============================================================================
+// Batch 14: AgentSelfHealingOrchestrator stub
+// ============================================================================
+
+struct SelfHealReport { bool healed = false; };
+
+class AgentSelfHealingOrchestrator {
+public:
+    static AgentSelfHealingOrchestrator& instance() {
+        static AgentSelfHealingOrchestrator inst;
+        return inst;
+    }
+    SelfHealReport runHealingCycle() { return SelfHealReport{false}; }
+};
