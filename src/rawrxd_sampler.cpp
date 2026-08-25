@@ -7,7 +7,47 @@ extern "C" void SoftMax_AVX512(float* x, int size);
 
 RawrXDSampler::RawrXDSampler() : rng(std::random_device{}()) {}
 
+void RawrXDSampler::SetConfig(float temperature_, float topP_, int topK_, float repeatPenalty_, uint32_t seed_) {
+    temperature = temperature_;
+    top_p = topP_;
+    top_k = topK_;
+    repeatPenalty = repeatPenalty_;
+    seed = seed_;
+    if (seed != 0) {
+        rng.seed(seed);
+    }
+}
+
+void RawrXDSampler::SetDeterministic(bool deterministic_) {
+    deterministic = deterministic_;
+}
+
 uint32_t RawrXDSampler::Sample(float* logits, int vocab_size, const std::vector<uint32_t>& history) {
+    // Deterministic mode: pure argmax, skip all sampling
+    if (deterministic) {
+        int bestIdx = 0;
+        float bestLogit = logits[0];
+        for (int i = 1; i < vocab_size; ++i) {
+            if (logits[i] > bestLogit) {
+                bestLogit = logits[i];
+                bestIdx = i;
+            }
+        }
+        return static_cast<uint32_t>(bestIdx);
+    }
+
+    // 0. Apply repetition penalty
+    if (repeatPenalty != 1.0f) {
+        for (uint32_t token : history) {
+            if (token >= static_cast<uint32_t>(vocab_size)) continue;
+            if (logits[token] > 0.0f) {
+                logits[token] /= repeatPenalty;
+            } else {
+                logits[token] *= repeatPenalty;
+            }
+        }
+    }
+
     // 1. Temperature scaling
     if (temperature > 0.0f && temperature != 1.0f) {
         float inv_temp = 1.0f / temperature;

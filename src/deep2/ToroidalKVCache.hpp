@@ -96,9 +96,6 @@ private:
     const float* valueSlot(size_t slot) const;
     size_t       slotIndex(uint64_t seq) const;
 
-    // Logical token iteration helper
-    void forEachLogicalToken(auto&& callback) const;
-
     size_t head_dim_;
     size_t num_heads_;
     size_t max_tokens_;

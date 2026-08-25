@@ -493,6 +493,16 @@ class RawrXDInference
     std::uint64_t getLayerPredictCount() const { return transformer.layerPredictCount(); }
     std::uint64_t getLayerPrefetchCount() const { return transformer.layerPrefetchCount(); }
 
+    void SetSamplerConfig(float temperature, float topP, int topK, float repeatPenalty, uint32_t seed)
+    {
+        sampler.SetConfig(temperature, topP, topK, repeatPenalty, seed);
+    }
+
+    void SetDeterministic(bool deterministic)
+    {
+        sampler.SetDeterministic(deterministic);
+    }
+
     std::vector<uint32_t> Tokenize(const std::string& text)
     {
         if (!m_initialized)

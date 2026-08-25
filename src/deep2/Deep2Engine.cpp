@@ -26,6 +26,8 @@
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
+#include "LegacyKVCacheAdapter.hpp"
+#include "ToroidalKVCacheAdapter.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -591,19 +593,38 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
         printf("  ThreadPool: %zu threads (auto-detected)\n", threadPool->size());
     }
 
-    // Initialize KV cache
+    // Initialize KV cache backend (feature-gated)
     if (config.useKVCache) {
+        size_t headDim = config.hiddenDim / config.numHeads;
+
+#if defined(RAWRXD_ENABLE_TOROIDAL_KV) && RAWRXD_ENABLE_TOROIDAL_KV
+        printf("[Deep2Engine] KV Backend: ToroidalKVCache (ring buffer)\n");
+        kvCacheBackend_ = std::make_unique<ToroidalKVCacheAdapter>();
+        if (!kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
+                                          config.numHeads, headDim)) {
+            printf("[Deep2Engine] ERROR: Failed to initialize ToroidalKVCache\n");
+            return false;
+        }
+        // Initialize Chamber for deterministic routing / state transition
+        chamber_ = std::make_unique<rawrxd::Chamber>();
+        printf("[Deep2Engine] Chamber initialized for KV routing\n");
+#else
+        printf("[Deep2Engine] KV Backend: LegacyKVCache (linear)\n");
+        kvCacheBackend_ = std::make_unique<LegacyKVCacheAdapter>();
+        if (!kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
+                                          config.numHeads, headDim)) {
+            printf("[Deep2Engine] ERROR: Failed to initialize LegacyKVCache\n");
+            return false;
+        }
+#endif
+        // Keep legacy cache alive for compatibility paths that still reference it
         kvCache = std::make_unique<KVCache>();
         KVCacheConfig kvConfig;
         kvConfig.numLayers = config.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads = config.numHeads;
-        kvConfig.headDim = config.hiddenDim / config.numHeads;
-
-        if (!kvCache->initialize(kvConfig)) {
-            printf("[Deep2Engine] ERROR: Failed to initialize KV cache\n");
-            return false;
-        }
+        kvConfig.numHeads  = config.numHeads;
+        kvConfig.headDim   = headDim;
+        kvCache->initialize(kvConfig);
     }
 
     // Allocate buffers
@@ -1100,6 +1121,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         kvConfig.headDim = modelWeights.headDim;
         kvCache->initialize(kvConfig);
     }
+    if (kvCacheBackend_) {
+        kvCacheBackend_->reset();
+        kvCacheBackend_->initialize(modelWeights.numLayers, config.maxSeqLen,
+                                   modelWeights.numHeads, modelWeights.headDim);
+    }
 
     modelWeights.loaded = true;
     printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n",
@@ -1222,6 +1248,7 @@ void Deep2Engine::unloadModel() {
 
     // Reset KV cache
     if (kvCache) kvCache->reset();
+    if (kvCacheBackend_) kvCacheBackend_->reset();
 
     // Reset generation state
     initialized = false;
@@ -1614,6 +1641,9 @@ void Deep2Engine::reset() {
     if (kvCache) {
         kvCache->reset();
     }
+    if (kvCacheBackend_) {
+        kvCacheBackend_->reset();
+    }
     // Sampler reset is optional - not all samplers maintain state
     for (auto& router : moeRouters_) {
         if (router) {
@@ -1770,6 +1800,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (kvCache) {
             kvCache->advance();
         }
+        if (kvCacheBackend_) {
+            kvCacheBackend_->advance();
+        }
     }
 
     size_t tokensGenerated = 0;
@@ -1858,6 +1891,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Advance KV cache
         if (kvCache) {
             kvCache->advance();
+        }
+        if (kvCacheBackend_) {
+            kvCacheBackend_->advance();
         }
         currentPos++;
 
@@ -1985,7 +2021,71 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 // ============================================================================
 // Compute Attention - Real Q/K/V/O weight projections + KV cache + RoPE
 // Supports both standard MHA/GQA and MLA (K2) factorized attention
+// Unified backend: IKVCacheBackend (Legacy or Toroidal)
 // ============================================================================
+static void AttentionWithBackend(const float* query,
+                                 const Deep2::IKVCacheBackend& backend,
+                                 size_t layer, size_t head,
+                                 float* output, size_t seqLen) {
+    const size_t headDim = backend.headDimSize();
+    const float scale = 1.0f / sqrtf((float)headDim);
+    const size_t seqUsed = backend.currentLength();
+    const size_t attend = (seqLen < seqUsed) ? seqLen : seqUsed;
+
+    if (headDim == 0 || attend == 0) {
+        memset(output, 0, headDim * sizeof(float));
+        return;
+    }
+
+    float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
+    if (!scores) {
+        memset(output, 0, headDim * sizeof(float));
+        return;
+    }
+
+    // Pass 1: Compute Q*K^T scores
+    float maxScore = -1e38f;
+    for (size_t pos = 0; pos < attend; ++pos) {
+        Deep2::KVSpan span0{}, span1{};
+        size_t nSpans = backend.querySpans(layer, head, pos, pos + 1, span0, span1);
+        const float* k = (nSpans > 0 && span0.count > 0) ? span0.keys : nullptr;
+        if (!k) {
+            scores[pos] = -1e38f;
+            continue;
+        }
+        float dot = 0.0f;
+        for (size_t i = 0; i < headDim; ++i)
+            dot += query[i] * k[i];
+        scores[pos] = dot * scale;
+        if (scores[pos] > maxScore) maxScore = scores[pos];
+    }
+
+    // Pass 2: Online softmax
+    float sumExp = 0.0f;
+    for (size_t pos = 0; pos < attend; ++pos) {
+        scores[pos] = expf(scores[pos] - maxScore);
+        sumExp += scores[pos];
+    }
+    if (sumExp < 1e-12f) sumExp = 1e-12f;
+    float invSum = 1.0f / sumExp;
+    for (size_t pos = 0; pos < attend; ++pos)
+        scores[pos] *= invSum;
+
+    // Pass 3: Weighted sum of values
+    memset(output, 0, headDim * sizeof(float));
+    for (size_t pos = 0; pos < attend; ++pos) {
+        Deep2::KVSpan span0{}, span1{};
+        size_t nSpans = backend.querySpans(layer, head, pos, pos + 1, span0, span1);
+        const float* v = (nSpans > 0 && span0.count > 0) ? span0.values : nullptr;
+        if (!v) continue;
+        float w = scores[pos];
+        for (size_t i = 0; i < headDim; ++i)
+            output[i] += w * v[i];
+    }
+
+    _aligned_free(scores);
+}
+
 void Deep2Engine::computeAttention(size_t layer, const float* input, float* output, size_t seqLen) {
     if (layer >= modelWeights.layers.size()) {
         memcpy(output, input, config.hiddenDim * sizeof(float));
@@ -2008,41 +2108,21 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         size_t numHeads       = config.numHeads;
 
         // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
-        // Step 1: q_a = attnQ_a^T * input  [qLoraRank]
         LinearW(lw.attnQ_a, input, nullptr, mlaQ_a, qLoraRank);
-
-        // Step 2: RMSNorm on q_a
         RMSNormW(lw.attnQ_a_norm, mlaQ_a, mlaQ_a, qLoraRank, config.normEps);
-
-        // Step 3: q_b = attnQ_b^T * q_a  [numHeads * headDim]
         LinearW(lw.attnQ_b, mlaQ_a, nullptr, mlaQ_b, numHeads * headDim);
 
-        // KV-path: hidden → kv_a_mqa (GEMV) → split → [compressed_kv | k_pe]
-        // Step 4: kv_a = attnKV_a_mqa^T * input  [kvLoraRank + qkRopeHeadDim]
+        // KV-path
         LinearW(lw.attnKV_a_mqa, input, nullptr, mlaKV_a, kvLoraRank + qkRopeHeadDim);
-
-        // Step 5: Split kv_a into compressed_kv and k_pe
-        float* compressedKV = mlaKV_a;                    // [kvLoraRank]
-        float* k_pe         = mlaKV_a + kvLoraRank;       // [qkRopeHeadDim]
-
-        // Step 6: RMSNorm on compressed_kv
+        float* compressedKV = mlaKV_a;
+        float* k_pe         = mlaKV_a + kvLoraRank;
         RMSNormW(lw.attnKV_a_norm, compressedKV, compressedKV, kvLoraRank, config.normEps);
-
-        // Step 7: k_b = attnK_b^T * compressed_kv  [numHeads * qkNopeHeadDim]
         LinearW(lw.attnK_b, compressedKV, nullptr, mlaK_b, numHeads * qkNopeHeadDim);
-
-        // Step 8: v_b = attnV_b^T * compressed_kv  [numHeads * vHeadDim]
         LinearW(lw.attnV_b, compressedKV, nullptr, mlaV_b, numHeads * vHeadDim);
 
-        // Step 9: Combine q_b + k_pe (RoPE on k_pe, then concat)
-        // For now: copy q_b to output, then apply output projection
-        // Full attention with KV cache would go here
         memcpy(qProj, mlaQ_b, numHeads * headDim * sizeof(float));
-
-        // Step 10: Output projection: attnO^T * qProj  [hiddenDim]
         LinearW(lw.attnO, qProj, nullptr, output, hiddenDim);
 
-        // Reverse analysis hook
         if (reverseAnalysisEnabled_ && reverseIntegration_) {
             reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
         }
@@ -2050,72 +2130,81 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // ── Standard MHA / GQA path ────────────────────────────────────────
-    // Q projection: [hiddenDim] -> [hiddenDim]
     LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
-
-    // K projection: [hiddenDim] -> [kvDim] where kvDim = numKVHeads * headDim
     size_t kvDim = numKVHeads * headDim;
     LinearW(lw.wk, input, nullptr, kProj, kvDim);
-
-    // V projection: [hiddenDim] -> [kvDim]
     LinearW(lw.wv, input, nullptr, vProj, kvDim);
 
     // Apply RoPE if enabled
     if (config.useRoPE) {
-        size_t pos = kvCache ? kvCache->currentLength() : seqLen - 1;
+        size_t pos = kvCacheBackend_ ? kvCacheBackend_->currentLength() : seqLen - 1;
         applyRoPE(qProj, kProj, headDim, numHeads, numKVHeads, pos,
                   modelWeights.ropeTheta, modelWeights.ropeScaling);
     }
 
-    // Store K, V into KV cache
-    if (config.useKVCache && kvCache) {
-        for (size_t h = 0; h < numKVHeads; ++h) {
-            float* kPtr = nullptr;
-            float* vPtr = nullptr;
-            kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
-            if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
-            if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
+    // Store K, V into unified KV backend (or legacy cache)
+    if (config.useKVCache) {
+        if (kvCacheBackend_) {
+            for (size_t h = 0; h < numKVHeads; ++h) {
+                kvCacheBackend_->writeKV(layer, h,
+                                         kProj + h * headDim,
+                                         vProj + h * headDim);
+            }
+        } else if (kvCache) {
+            for (size_t h = 0; h < numKVHeads; ++h) {
+                float* kPtr = nullptr;
+                float* vPtr = nullptr;
+                kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
+                if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
+                if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
+            }
         }
 
-        // GQA: KV heads are shared across Q heads
-        // Attend: for each Q head, attend to all cached K/V
+        // Attention: for each Q head, attend to all cached K/V
         for (size_t h = 0; h < numHeads; ++h) {
-            size_t kvHead = h % numKVHeads; // GQA mapping
+            size_t kvHead = h % numKVHeads;
             float* headOut = output + h * headDim;
-            AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
-                               headOut, seqLen);
+            if (kvCacheBackend_) {
+                AttentionWithBackend(qProj + h * headDim, *kvCacheBackend_,
+                                     layer, kvHead, headOut, seqLen);
+            } else if (kvCache) {
+                AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
+                                     headOut, seqLen);
+            } else {
+                // No cache: single-position fallback
+                float scale = 1.0f / sqrtf((float)headDim);
+                float score = 0.0f;
+                for (size_t i = 0; i < headDim; ++i)
+                    score += qProj[h * headDim + i] * kProj[kvHead * headDim + i];
+                score *= scale;
+                float weight = 1.0f / (1.0f + expf(-score));
+                for (size_t i = 0; i < headDim; ++i)
+                    headOut[i] = weight * vProj[kvHead * headDim + i];
+            }
         }
     } else {
         // No KV cache: self-attention on current token only
-        // For single-token generation, this is just Q*K^T * V for current position
         for (size_t h = 0; h < numHeads; ++h) {
             const float* q = qProj + h * headDim;
             const float* k = kProj + (h % numKVHeads) * headDim;
             const float* v = vProj + (h % numKVHeads) * headDim;
-
-            // Single position attention: output = V * softmax(Q*K^T / sqrt(d))
             float scale = 1.0f / sqrtf((float)headDim);
             float score = 0.0f;
-            for (size_t i = 0; i < headDim; ++i) {
+            for (size_t i = 0; i < headDim; ++i)
                 score += q[i] * k[i];
-            }
             score *= scale;
-            float weight = 1.0f / (1.0f + expf(-score)); // sigmoid as softmax for 1 position
-
+            float weight = 1.0f / (1.0f + expf(-score));
             float* headOut = output + h * headDim;
-            for (size_t i = 0; i < headDim; ++i) {
+            for (size_t i = 0; i < headDim; ++i)
                 headOut[i] = weight * v[i];
-            }
         }
     }
 
-    // Output projection: [hiddenDim] -> [hiddenDim]
-    // Use attentionOutput as temp, then project to output
+    // Output projection
     float* tempOut = attentionOutput;
     LinearW(lw.wo, output, nullptr, tempOut, hiddenDim);
     memcpy(output, tempOut, hiddenDim * sizeof(float));
 
-    // Reverse analysis hook: attention computed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
         reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
     }
@@ -2392,14 +2481,26 @@ void Deep2Engine::setNumThreads(size_t numThreads) {
 // ============================================================================
 void Deep2Engine::enableKVCache(bool enable) {
     config.useKVCache = enable;
-    if (enable && !kvCache) {
-        kvCache = std::make_unique<KVCache>();
-        KVCacheConfig kvConfig;
-        kvConfig.numLayers = config.numLayers;
-        kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads = config.numHeads;
-        kvConfig.headDim = config.hiddenDim / config.numHeads;
-        kvCache->initialize(kvConfig);
+    if (enable) {
+        if (!kvCache) {
+            kvCache = std::make_unique<KVCache>();
+            KVCacheConfig kvConfig;
+            kvConfig.numLayers = config.numLayers;
+            kvConfig.maxSeqLen = config.maxSeqLen;
+            kvConfig.numHeads = config.numHeads;
+            kvConfig.headDim = config.hiddenDim / config.numHeads;
+            kvCache->initialize(kvConfig);
+        }
+        if (!kvCacheBackend_) {
+            size_t headDim = config.hiddenDim / config.numHeads;
+#if defined(RAWRXD_ENABLE_TOROIDAL_KV) && RAWRXD_ENABLE_TOROIDAL_KV
+            kvCacheBackend_ = std::make_unique<ToroidalKVCacheAdapter>();
+#else
+            kvCacheBackend_ = std::make_unique<LegacyKVCacheAdapter>();
+#endif
+            kvCacheBackend_->initialize(config.numLayers, config.maxSeqLen,
+                                       config.numHeads, headDim);
+        }
     }
 }
 
@@ -3268,6 +3369,7 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
             std::swap(layerInput, layerOutput);
         }
         if (kvCache) kvCache->advance();
+        if (kvCacheBackend_) kvCacheBackend_->advance();
         currentPos++;
     }
     totalForwardPasses++;  // Count prefill
@@ -3422,6 +3524,11 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
         if (kvCache) {
             for (size_t i = 0; i < verification.acceptanceLength; i++) {
                 kvCache->advance();
+            }
+        }
+        if (kvCacheBackend_) {
+            for (size_t i = 0; i < verification.acceptanceLength; i++) {
+                kvCacheBackend_->advance();
             }
         }
         

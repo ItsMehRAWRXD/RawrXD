@@ -165,6 +165,10 @@ class CPUInferenceEngine : public InferenceEngine
     bool IsDeepThinking() const override { return m_deepThinking; }
     bool IsDeepResearch() const override { return m_deepResearch; }
 
+    // Sampling configuration
+    void SetSamplerConfig(float temperature, float topP, int topK, float repeatPenalty, uint32_t seed);
+    void SetDeterministic(bool deterministic);
+
     // Swarm Mode: Chain multiple models for enhanced reasoning
     void SetSwarmMode(bool enabled, int chainDepth = 5);
     bool IsSwarmMode() const { return m_swarmMode; }

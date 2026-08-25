@@ -9,7 +9,9 @@
 #include "ReverseIntegration.hpp"
 #include "mars/MARSController.hpp"
 #include "ThreadPool.h"
+#include "IKVCacheBackend.hpp"
 #include "KVCache.h"
+#include "Chamber.hpp"
 #include "GGUFLoader.hpp"
 #include "Tokenizer.hpp"
 #include "../sampling/advanced_sampler.hpp"
@@ -393,7 +395,9 @@ public:
 private:
     EngineConfig config;
     std::unique_ptr<ThreadPool> threadPool;
-    std::unique_ptr<KVCache> kvCache;
+    std::unique_ptr<IKVCacheBackend> kvCacheBackend_;
+    std::unique_ptr<KVCache> kvCache;  // Legacy cache (kept for fallback / debugging)
+    std::unique_ptr<rawrxd::Chamber> chamber_;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
     
     // Real model weights

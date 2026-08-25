@@ -234,6 +234,7 @@ option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness s
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
 option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" OFF)
+option(RAWRXD_ENABLE_TOROIDAL_KV "Enable ToroidalKVCache + Chamber as the production KV backend (default: OFF = legacy KVCache)" OFF)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -1404,6 +1405,55 @@ if(WIN32)
     message(STATUS "K2 Router Injection Smoke Test configured")
 endif()
 
+# =============================================================================
+# KV Cache Equivalence Test
+# Validates ToroidalKVCache vs LegacyKVCache correctness.
+# Run after build: KVCacheEquivalenceTest.exe
+# =============================================================================
+if(WIN32)
+    add_executable(KVCacheEquivalenceTest
+        src/deep2/KVCacheEquivalenceTest.cpp
+        src/deep2/KVCache.cpp
+        src/deep2/ToroidalKVCache.cpp
+        src/deep2/Chamber.cpp
+        src/deep2/LegacyKVCacheAdapter.cpp
+        src/deep2/ToroidalKVCacheAdapter.cpp
+    )
+    set_target_properties(KVCacheEquivalenceTest PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(KVCacheEquivalenceTest PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_link_directories(KVCacheEquivalenceTest PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(KVCacheEquivalenceTest PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET KVCacheEquivalenceTest APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(KVCacheEquivalenceTest PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    target_compile_definitions(KVCacheEquivalenceTest PRIVATE KV_CACHE_EQUIVALENCE_TEST_MAIN=1)
+    message(STATUS "KV Cache Equivalence Test configured")
+endif()
+
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -2431,6 +2481,8 @@ set(SOURCES
     src/deep2/KVCache.cpp
     src/deep2/ToroidalKVCache.cpp
     src/deep2/Chamber.cpp
+    src/deep2/LegacyKVCacheAdapter.cpp
+    src/deep2/ToroidalKVCacheAdapter.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/ReverseIntegration.cpp
     src/deep2/ReverseHotpatchEngine.cpp

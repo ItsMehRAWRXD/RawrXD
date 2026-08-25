@@ -12,9 +12,15 @@ public:
     RawrXDSampler();
     uint32_t Sample(float* logits, int vocab_size, const std::vector<uint32_t>& history);
 
+    void SetConfig(float temperature_, float topP_, int topK_, float repeatPenalty_, uint32_t seed_);
+    void SetDeterministic(bool deterministic_);
+
 private:
     float temperature = 0.7f;
     float top_p = 0.9f;
     int top_k = 40;
+    float repeatPenalty = 1.1f;
+    uint32_t seed = 0;
+    bool deterministic = false;
 };
 

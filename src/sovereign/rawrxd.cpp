@@ -53,6 +53,11 @@ struct CommandLineArgs {
     std::string mode = "inference";  // inference, agentic, validate
     uint32_t maxTokens = 512;
     float temperature = 0.7f;
+    float topP = 0.9f;
+    uint32_t topK = 40;
+    float repeatPenalty = 1.1f;
+    uint32_t seed = 0;
+    bool deterministic = false;
     std::string backend = "auto";
     std::string evidenceDir = "validation/runs";
     int benchmarkT = 0;              // B009: override token count for prefill benchmark
@@ -81,6 +86,9 @@ Generation Parameters:
   --temperature T       Sampling temperature (default: 0.7)
   --top-p P             Nucleus sampling (default: 0.9)
   --top-k K             Top-k sampling (default: 40)
+  --repeat-penalty R    Repetition penalty (default: 1.1)
+  --seed S              RNG seed for deterministic sampling (default: 0 = random)
+  --deterministic       Greedy argmax mode (ignores temperature/top-p/top-k)
 
 Backend:
   --backend NAME        Backend: auto, cpu_avx2, cpu_avx512, vulkan_amd
@@ -123,10 +131,15 @@ CommandLineArgs parseArgs(int argc, char* argv[]) {
         } else if (arg == "--temperature" && i + 1 < argc) {
             args.temperature = std::stof(argv[++i]);
         } else if (arg == "--top-p" && i + 1 < argc) {
-            // Parse but not stored in simple version
-            ++i;
+            args.topP = std::stof(argv[++i]);
         } else if (arg == "--top-k" && i + 1 < argc) {
-            ++i;
+            args.topK = static_cast<uint32_t>(std::stoul(argv[++i]));
+        } else if (arg == "--repeat-penalty" && i + 1 < argc) {
+            args.repeatPenalty = std::stof(argv[++i]);
+        } else if (arg == "--seed" && i + 1 < argc) {
+            args.seed = static_cast<uint32_t>(std::stoul(argv[++i]));
+        } else if (arg == "--deterministic") {
+            args.deterministic = true;
         } else if (arg == "--backend" && i + 1 < argc) {
             args.backend = argv[++i];
         } else if (arg == "--evidence-dir" && i + 1 < argc) {
@@ -274,6 +287,11 @@ int main(int argc, char* argv[]) {
     req.prompt = args.prompt;
     req.maxTokens = args.maxTokens;
     req.temperature = args.temperature;
+    req.topP = args.topP;
+    req.topK = args.topK;
+    req.repeatPenalty = args.repeatPenalty;
+    req.seed = args.seed;
+    req.deterministic = args.deterministic;
     
     // Set mode
     if (args.mode == "agentic") {

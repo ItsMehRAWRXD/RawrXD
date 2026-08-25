@@ -344,6 +344,19 @@ void CPUInferenceEngine::SetDeepResearch(bool enabled)
 }
 
 // ============================================================================
+// Sampling configuration
+// ============================================================================
+void CPUInferenceEngine::SetSamplerConfig(float temperature, float topP, int topK, float repeatPenalty, uint32_t seed)
+{
+    InferenceBackend().SetSamplerConfig(temperature, topP, topK, repeatPenalty, seed);
+}
+
+void CPUInferenceEngine::SetDeterministic(bool deterministic)
+{
+    InferenceBackend().SetDeterministic(deterministic);
+}
+
+// ============================================================================
 // Swarm Mode setters
 // ============================================================================
 void CPUInferenceEngine::SetSwarmMode(bool enabled, int chainDepth)

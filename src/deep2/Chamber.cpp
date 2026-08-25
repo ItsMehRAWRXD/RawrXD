@@ -209,13 +209,6 @@ float Chamber::dotProductSIMD(const float* a, const float* b, size_t dim) const 
     return result;
 }
 
-bool Chamber::mirrorResident() const {
-    // Mirror is a fixed-size array inside the Chamber object.
-    // It has object lifetime and requires no separate allocation.
-    // This function is a semantic invariant marker.
-    return true;  // By construction, mirror_vector_ is inline
-}
-
 float Chamber::clashRate() const {
     uint64_t passes = pass_count_.load(std::memory_order_relaxed);
     uint64_t clashes = clash_count_.load(std::memory_order_relaxed);

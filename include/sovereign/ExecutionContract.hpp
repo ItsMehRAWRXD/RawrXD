@@ -56,6 +56,8 @@ struct ExecutionRequest {
     float topP = 0.9f;
     uint32_t topK = 40;
     float repeatPenalty = 1.1f;
+    uint32_t seed = 0;               // 0 = random (non-deterministic)
+    bool deterministic = false;      // true = greedy argmax, ignores temperature/topP/topK
     
     // Backend selection
     enum class Backend {
