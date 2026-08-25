@@ -4,3 +4,19 @@
 [23:47:29.199] PID=23032 INIT_0_WINMAIN_ENTRY_REACHED
 [SMOKE] start model=D:\rawrxd\gemma3-1b-Q2_K.gguf  max_tokens=128 timeout_ms=120000
 [SMOKE] trace_path=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json
+[SMOKE] post-embedding checkpoint reached (model loaded). load_only=0 cpu_only=0 skip_gpu=0
+[RawrXD][GPU] Loaded ggml-vulkan.dll for Vulkan backend detection
+ggml_vulkan: Found 2 Vulkan devices:
+ggml_vulkan: 0 = AMD Radeon AI PRO R9700 (AMD proprietary driver) | uma: 0 | fp16: 1 | bf16: 1 | warp size: 64 | shared memory: 32768 | int dot: 1 | matrix cores: KHR_coopmat
+ggml_vulkan: 1 = AMD Radeon(TM) Graphics (AMD proprietary driver) | uma: 1 | fp16: 1 | bf16: 0 | warp size: 32 | shared memory: 32768 | int dot: 1 | matrix cores: none
+[RawrXD][GPU] Vulkan locked: AMD Radeon AI PRO R9700 (31704 MiB free / 32624 MiB total) across 2 device(s)
+[PIPELINE MODE] gpu
+[PIPELINE ACTIVE] runLocalInferencePipeline entered
+[PIPELINE TRACE] wrote trace JSON
+
+[PIPELINE_END] completed=1 tokens=0
+[PIPELINE DONE] runLocalInferencePipeline ok
+
+[PIPELINE_END] completed=1 tokens=0
+
+[chat-smoke-headless] PASS: no-window chat path completed; trace=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json bytes=669
