@@ -9055,6 +9055,7 @@ if(WIN32)
         src/deep2/GoalSystem.cpp
         src/deep2/CPUFrequency.cpp
         src/deep2/ResidencyLease.cpp
+        src/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
         ${CMAKE_SOURCE_DIR}/src
