@@ -63,14 +63,13 @@ bool ToroidalKVCache::injectToken(const PlasmaToken& token,
 }
 
 bool ToroidalKVCache::queryTokenRange(uint64_t start_seq, uint64_t end_seq,
-                                      const float*& out_keys,
-                                      const float*& out_values,
-                                      size_t& out_count) const
+                                      KVCacheSpan& span0,
+                                      KVCacheSpan& span1) const
 {
+    span0 = KVCacheSpan{};
+    span1 = KVCacheSpan{};
+
     if (start_seq >= end_seq || token_count_ == 0) {
-        out_keys = nullptr;
-        out_values = nullptr;
-        out_count = 0;
         return false;
     }
 
@@ -79,18 +78,57 @@ bool ToroidalKVCache::queryTokenRange(uint64_t start_seq, uint64_t end_seq,
     if (start_seq < oldest_seq) start_seq = oldest_seq;
     if (end_seq > write_head_) end_seq = write_head_;
 
-    out_count = static_cast<size_t>(end_seq - start_seq);
-    if (out_count == 0) {
-        out_keys = nullptr;
-        out_values = nullptr;
+    size_t total_count = static_cast<size_t>(end_seq - start_seq);
+    if (total_count == 0) {
         return false;
     }
 
-    // Return pointer to first slot's key data
     size_t first_slot = slotIndex(start_seq);
-    out_keys = keySlot(first_slot);
-    out_values = valueSlot(first_slot);
+    size_t last_slot  = slotIndex(end_seq - 1);
 
+    // If the range does not wrap, return a single span
+    if (first_slot <= last_slot) {
+        span0.keys   = keySlot(first_slot);
+        span0.values = valueSlot(first_slot);
+        span0.count  = total_count;
+        span0.physical_slot = first_slot;
+        return true;
+    }
+
+    // Range wraps around the ring buffer: split into two spans
+    size_t span0_count = max_tokens_ - first_slot;
+    size_t span1_count = total_count - span0_count;
+
+    span0.keys   = keySlot(first_slot);
+    span0.values = valueSlot(first_slot);
+    span0.count  = span0_count;
+    span0.physical_slot = first_slot;
+
+    span1.keys   = keySlot(0);
+    span1.values = valueSlot(0);
+    span1.count  = span1_count;
+    span1.physical_slot = 0;
+
+    return true;
+}
+
+bool ToroidalKVCache::queryTokenRange(uint64_t start_seq, uint64_t end_seq,
+                                      const float*& out_keys,
+                                      const float*& out_values,
+                                      size_t& out_count) const
+{
+    KVCacheSpan s0{}, s1{};
+    if (!queryTokenRange(start_seq, end_seq, s0, s1)) {
+        out_keys = nullptr;
+        out_values = nullptr;
+        out_count = 0;
+        return false;
+    }
+
+    // Legacy single-span: only return the first span (caller must handle wrap manually)
+    out_keys   = s0.keys;
+    out_values = s0.values;
+    out_count  = s0.count;
     return true;
 }
 

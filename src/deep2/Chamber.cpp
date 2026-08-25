@@ -40,12 +40,9 @@ uint64_t TransitionState::hashHiddenState(const float* hidden_state, size_t dim)
 // ============================================================================
 // Chamber — Construction / Init
 // ============================================================================
-Chamber::Chamber() : clash_threshold_(DEFAULT_CLASH_THRESHOLD) {
+Chamber::Chamber() : clash_threshold_(DEFAULT_CLASH_THRESHOLD), routing_table_(ROUTE_TABLE_SIZE) {
     std::memset(mirror_vector_, 0, sizeof(mirror_vector_));
-    // All routes default to invalid
-    for (auto& route : routing_table_) {
-        route = FormulaRoute{};
-    }
+    // All routes default to invalid (vector default-constructs FormulaRoute{})
 }
 
 bool Chamber::initMirror(const float* weights, size_t count) {
@@ -72,7 +69,7 @@ ChamberResult Chamber::evaluate(const float* hidden_state, size_t dim) {
 
     if (!mirror_initialized_) {
         ++pass_count_;
-        return ChamberResult::PASS;
+        return ChamberResult::NOT_READY;
     }
 
     float alignment = dotProductSIMD(hidden_state, mirror_vector_, std::min(dim, MIRROR_DIM));
@@ -121,6 +118,11 @@ FormulaRoute Chamber::routePrimitive(uint64_t context_hash) const {
 
 bool Chamber::populateRoutingTable(const FormulaRoute* routes, size_t count) {
     if (!routes || count == 0) return false;
+
+    // Reject if load factor would be exceeded
+    if (count > static_cast<size_t>(LOAD_FACTOR_MAX * ROUTE_TABLE_SIZE)) {
+        return false;
+    }
 
     // Clear existing
     for (auto& route : routing_table_) {

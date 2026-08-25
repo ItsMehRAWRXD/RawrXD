@@ -15,6 +15,16 @@
 namespace rawrxd {
 
 // ============================================================================
+// KVCacheSpan — Descriptor for a contiguous physical span of K/V data
+// ============================================================================
+struct KVCacheSpan {
+    const float* keys   = nullptr;
+    const float* values = nullptr;
+    size_t       count  = 0;
+    size_t       physical_slot = 0;
+};
+
+// ============================================================================
 // PlasmaToken — A token with thermal properties (confidence = temperature)
 // ============================================================================
 struct PlasmaToken {
@@ -54,8 +64,14 @@ public:
 
     // ------------------------------------------------------------------------
     // Magnetic field query: retrieve K/V for attention computation
-    // Returns pointers into the torus — no copy, no allocation
+    // Returns pointers into the torus — no copy, no allocation.
+    // May return up to 2 spans if the range wraps around the ring buffer.
     // ------------------------------------------------------------------------
+    bool queryTokenRange(uint64_t start_seq, uint64_t end_seq,
+                         KVCacheSpan& span0,
+                         KVCacheSpan& span1) const;
+
+    // Legacy single-span query (kept for backward compatibility)
     bool queryTokenRange(uint64_t start_seq, uint64_t end_seq,
                          const float*& out_keys,
                          const float*& out_values,
@@ -74,6 +90,9 @@ public:
     size_t tokenCount() const { return token_count_; }
     size_t maxTokens() const { return max_tokens_; }
     uint64_t writeHead() const { return write_head_; }
+    uint64_t oldestSequence() const {
+        return (write_head_ > token_count_) ? (write_head_ - token_count_) : 0;
+    }
     bool isFull() const { return token_count_ >= max_tokens_; }
 
     // Thermal diagnostics: average temperature of plasma in torus

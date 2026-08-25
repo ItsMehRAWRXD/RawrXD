@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <array>
+#include <vector>
 #include <atomic>
 #include <cstring>
 #include <cmath>
@@ -41,6 +42,7 @@ struct Primitive {
 struct FormulaRoute {
     uint64_t    context_hash = 0;       // deterministic key
     uint32_t    primitive_output = 0;   // fixed token_id value
+    uint32_t    route_id = 0;           // opaque route identifier for tests/telemetry
     bool        valid = false;          // route exists in table
 };
 
@@ -61,8 +63,9 @@ struct alignas(64) TransitionState {
 // ChamberResult — Binary pass/collapse (no probability mass)
 // ============================================================================
 enum class ChamberResult : uint8_t {
-    PASS  = 0,   // ~99% fast path
-    CLASH = 1,   // ~1% prediction miss → forced resample or eos
+    PASS      = 0,   // ~99% fast path
+    CLASH     = 1,   // ~1% prediction miss → forced resample or eos
+    NOT_READY = 2,   // mirror not initialized — engine must wait
 };
 
 // ============================================================================
@@ -73,6 +76,7 @@ class Chamber {
 public:
     static constexpr size_t MIRROR_DIM = 4096;
     static constexpr float DEFAULT_CLASH_THRESHOLD = 0.85f;
+    static constexpr float LOAD_FACTOR_MAX = 0.70f;  // reject inserts above this load
 
     Chamber();
     ~Chamber() = default;
@@ -94,6 +98,9 @@ public:
     // SM0-DSP phase detector (dot product SIMD)
     float dotProductSIMD(const float* a, const float* b, size_t dim) const;
 
+    // Mirror initialization state
+    bool mirrorInitialized() const { return mirror_initialized_; }
+
     // Mirror storage is inline and cache-line aligned.
     // Does not guarantee hardware cache residency.
     bool mirrorResident() const;
@@ -110,6 +117,10 @@ public:
     }
     float clashThreshold() const { return clash_threshold_; }
 
+    // Routing table: sparse hash → FormulaRoute
+    // For production: use flat array with modulo masking for O(1)
+    static constexpr size_t ROUTE_TABLE_SIZE = 65536;  // 64K entries
+
 private:
     alignas(64) float mirror_vector_[MIRROR_DIM];
     float clash_threshold_ = DEFAULT_CLASH_THRESHOLD;
@@ -117,10 +128,8 @@ private:
     std::atomic<uint64_t> clash_count_{0};
     bool mirror_initialized_ = false;
 
-    // Routing table: sparse hash → FormulaRoute
-    // For production: use flat array with modulo masking for O(1)
-    static constexpr size_t ROUTE_TABLE_SIZE = 65536;  // 64K entries
-    std::array<FormulaRoute, ROUTE_TABLE_SIZE> routing_table_;
+    // Routing table: heap-allocated to avoid 1.5MB stack blow on Windows
+    std::vector<FormulaRoute> routing_table_;
 };
 
 // ============================================================================

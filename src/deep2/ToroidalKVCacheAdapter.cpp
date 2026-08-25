@@ -124,7 +124,7 @@ size_t ToroidalKVCacheAdapter::memoryBytes() const {
 }
 
 bool ToroidalKVCacheAdapter::isFull() const {
-    return cache_ ? (cache_->tokenCount() >= maxSeqLen_) : false;
+    return cache_ ? cache_->isFull() : false;
 }
 
 } // namespace Deep2
