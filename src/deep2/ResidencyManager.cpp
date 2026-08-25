@@ -104,10 +104,23 @@ bool ResidencyManager::RegisterTensor(const std::string& name,
     src.fileOffset = fileOffset;
     src.tensorBytes = tensorBytes;
     src.sourceData = sourceData;
-    sources_[name] = src;
+    sources_[name] = std::move(src);
 
-    printf("[ResidencyManager] Registered tensor '%s': offset=%zu, bytes=%zu\n",
-           name.c_str(), fileOffset, tensorBytes);
+    // Instrumentation: compute cumulative registered bytes
+    size_t registeredBytes = 0;
+    for (const auto& kv : sources_) {
+        registeredBytes += kv.second.tensorBytes;
+    }
+
+    bool isFirst = (sources_.size() == 1);
+    bool isLast = (sources_.size() % 100 == 0) || (sources_.size() > 500 && sources_.size() < 510);
+
+    if (isFirst || isLast) {
+        printf("[ResidencyManager] this=%p  Registered '%s': offset=%zu bytes=%zu  |  "
+               "registry_size=%zu  registeredBytes=%zu  maxResidentBytes=%zu\n",
+               (void*)this, name.c_str(), fileOffset, tensorBytes,
+               sources_.size(), registeredBytes, config_.maxResidentBytes);
+    }
     return true;
 }
 
@@ -389,6 +402,20 @@ size_t ResidencyManager::GetActiveLeaseCount() const {
         count += kv.second.leaseCount;
     }
     return count;
+}
+
+size_t ResidencyManager::GetRegisteredTensorCount() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return sources_.size();
+}
+
+size_t ResidencyManager::GetRegisteredBytes() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    size_t bytes = 0;
+    for (const auto& kv : sources_) {
+        bytes += kv.second.tensorBytes;
+    }
+    return bytes;
 }
 
 TensorResidencyState ResidencyManager::GetTensorState(const std::string& name) const {

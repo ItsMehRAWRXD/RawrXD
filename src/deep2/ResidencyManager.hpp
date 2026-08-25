@@ -140,6 +140,8 @@ public:
     uint64_t GetTotalEvictions() const { return totalEvictions_; }
     uint64_t GetTotalRemaps() const { return totalRemaps_; }
     size_t GetActiveLeaseCount() const;
+    size_t GetRegisteredTensorCount() const;
+    size_t GetRegisteredBytes() const;
     TensorResidencyState GetTensorState(const std::string& name) const;
 
     // ── Diagnostics ──────────────────────────────────────────────────

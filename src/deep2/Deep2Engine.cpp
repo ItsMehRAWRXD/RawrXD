@@ -1075,8 +1075,11 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                                                   modelWeights.finalNorm.sizeBytes,
                                                   modelWeights.finalNorm.data);
         }
-        printf("[Deep2Engine] ResidencyManager: registered %zu tensors\n",
-               residencyManager_ ? 0 : 0);  // TODO: add count API
+        size_t regCount = residencyManager_->GetRegisteredTensorCount();
+        size_t regBytes = residencyManager_->GetRegisteredBytes();
+        printf("[Deep2Engine] ResidencyManager: this=%p  registered=%zu tensors  bytes=%zu  max=%zu\n",
+               (void*)residencyManager_.get(), regCount, regBytes,
+               residencyManager_->GetMaxResidentBytes());
     }
 
     // Re-allocate buffers with correct dimensions

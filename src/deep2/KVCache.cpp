@@ -51,9 +51,16 @@ bool KVCache::initialize(const KVCacheConfig& cfg) {
     size_t cacheSize = config.numLayers * config.maxSeqLen * 
                        config.numHeads * config.headDim;
     
-    printf("[KVCache] Initializing: %zu layers, %zu max seq, %zu heads, %zu dim\n",
+    size_t kBytes = cacheSize * sizeof(float);
+    size_t vBytes = cacheSize * sizeof(float);
+    size_t totalBytes = kBytes + vBytes;
+    printf("[KVCache] Initializing: layers=%zu maxSeqLen=%zu numHeads=%zu headDim=%zu\n",
            config.numLayers, config.maxSeqLen, config.numHeads, config.headDim);
-    printf("[KVCache] Total cache size: %.2f MB\n", cacheSize * 2 * sizeof(float) / (1024.0 * 1024.0));
+    printf("[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)\n");
+    printf("[KVCache]        = %zu * %zu * %zu * %zu * 2 * %zu\n",
+           config.numLayers, config.maxSeqLen, config.numHeads, config.headDim, sizeof(float));
+    printf("[KVCache]        = %zu bytes (K=%zu + V=%zu)\n", totalBytes, kBytes, vBytes);
+    printf("[KVCache] Total cache size: %.2f MB\n", totalBytes / (1024.0 * 1024.0));
     
     // Allocate K and V caches
     kCache = alignedAlloc(cacheSize);

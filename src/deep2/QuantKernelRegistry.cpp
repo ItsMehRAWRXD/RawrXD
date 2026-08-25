@@ -291,6 +291,10 @@ static void gemv_q4_k_scalar(
 
 // --- Q6_K GEMV (scalar) ---
 // block_q6_K defined in GGUFLoader.hpp
+// Layout: ql[128] (low 4 bits), qh[64] (high 2 bits), scales[16], d (fp16)
+// 256 weights per block, split into two 128-element chunks.
+// Each chunk processes 32 iterations of l, extracting 4 values per iteration.
+// Correctness verified against llama.cpp dequantize_row_q6_K.
 
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
@@ -306,17 +310,36 @@ static void gemv_q6_k_scalar(
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q6_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
-            for (int sb = 0; sb < 16; ++sb) {
-                float s = (float)blk.scales[sb];
-                float blockAcc = 0.0f;
-                for (int i = 0; i < 16; ++i) {
-                    int idx = sb * 16 + i;
-                    uint8_t lo = blk.ql[idx];
-                    uint8_t hi = blk.qh[idx / 2];
-                    int q = (lo | (((hi >> (idx % 2 * 4)) & 0x0C) << 4)) - 32;
-                    blockAcc += (float)q * x[b * 256 + idx];
+            const uint8_t* ql = blk.ql;
+            const uint8_t* qh = blk.qh;
+            const int8_t* sc = blk.scales;
+            size_t base = b * 256;
+            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - b * 256) : 256;
+            if (elemsInBlock == 0) break;
+
+            // Two 128-element chunks per block
+            for (int chunk = 0; chunk < 2; ++chunk) {
+                size_t chunkBase = chunk * 128;
+                if (chunkBase >= elemsInBlock) break;
+                for (int l = 0; l < 32; ++l) {
+                    size_t pos = base + chunkBase + l;
+                    int is = l / 16;  // 0 or 1 within chunk
+                    int q1 = ((ql[l +  0] & 0x0F) | (((qh[l] >> 0) & 3) << 4)) - 32;
+                    int q2 = ((ql[l + 32] & 0x0F) | (((qh[l] >> 2) & 3) << 4)) - 32;
+                    int q3 = ((ql[l +  0] >> 4)       | (((qh[l] >> 4) & 3) << 4)) - 32;
+                    int q4 = ((ql[l + 32] >> 4)       | (((qh[l] >> 6) & 3) << 4)) - 32;
+                    if (pos +  0 < base + elemsInBlock)
+                        acc += d * (float)sc[is + 0] * (float)q1 * x[pos +  0];
+                    if (pos + 32 < base + elemsInBlock)
+                        acc += d * (float)sc[is + 2] * (float)q2 * x[pos + 32];
+                    if (pos + 64 < base + elemsInBlock)
+                        acc += d * (float)sc[is + 4] * (float)q3 * x[pos + 64];
+                    if (pos + 96 < base + elemsInBlock)
+                        acc += d * (float)sc[is + 6] * (float)q4 * x[pos + 96];
                 }
-                acc += d * s * blockAcc;
+                ql += 64;
+                qh += 32;
+                sc += 8;
             }
         }
         y[r] += acc;
