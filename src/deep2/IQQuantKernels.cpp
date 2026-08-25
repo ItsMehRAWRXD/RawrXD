@@ -25,7 +25,6 @@
 #include <immintrin.h>
 #include <cstring>
 #include <cstdint>
-#include "gguf_loader.h"
 
 #ifdef _MSC_VER
 #define __restrict__ __restrict

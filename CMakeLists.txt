@@ -9058,6 +9058,10 @@ if(WIN32)
         src/deep2/ResidencyLease.cpp
         src/deep2/LlamaNativeBridge.cpp
         src/deep2/RawrRuntime.cpp
+        src/deep2/ZlibRuntimeLoader.cpp
+        src/deep2/DualGPUHook.cpp
+        src/reverse/ReverseEngine.cpp
+        src/reverse/ReverseModelLoader.cpp
         src/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
