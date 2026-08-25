@@ -161,9 +161,9 @@ static bool testMultiTokenPrefill() {
     TEST_ASSERT(ts0.count == TOKENS, "toroidal span count");
 
     for (size_t t = 0; t < TOKENS; ++t) {
-        TEST_ASSERT(arraysNearEqual(ls0.keys   + t * D, ts0.keys   + t * D, D),
+        TEST_ASSERT(arraysNearEqual(ls0.keys   + t * ls0.stride, ts0.keys   + t * ts0.stride, D),
                     "prefill keys mismatch");
-        TEST_ASSERT(arraysNearEqual(ls0.values + t * D, ts0.values + t * D, D),
+        TEST_ASSERT(arraysNearEqual(ls0.values + t * ls0.stride, ts0.values + t * ts0.stride, D),
                     "prefill values mismatch");
     }
 
@@ -334,24 +334,32 @@ static bool testLongSequenceEquivalence() {
             size_t toroTotal   = ts0.count + ts1.count;
             TEST_ASSERT(legacyTotal == toroTotal, "total token count mismatch");
 
-            // Compare flattened
+            // Compare flattened with correct stride
             std::vector<float> legacyK(legacyTotal * D), legacyV(legacyTotal * D);
             std::vector<float> toroK(toroTotal * D),   toroV(toroTotal * D);
             if (ls0.count > 0) {
-                memcpy(legacyK.data(), ls0.keys, ls0.count * D * sizeof(float));
-                memcpy(legacyV.data(), ls0.values, ls0.count * D * sizeof(float));
+                for (size_t i = 0; i < ls0.count; ++i) {
+                    memcpy(legacyK.data() + i * D, ls0.keys   + i * ls0.stride, D * sizeof(float));
+                    memcpy(legacyV.data() + i * D, ls0.values + i * ls0.stride, D * sizeof(float));
+                }
             }
             if (ls1.count > 0) {
-                memcpy(legacyK.data() + ls0.count * D, ls1.keys, ls1.count * D * sizeof(float));
-                memcpy(legacyV.data() + ls0.count * D, ls1.values, ls1.count * D * sizeof(float));
+                for (size_t i = 0; i < ls1.count; ++i) {
+                    memcpy(legacyK.data() + (ls0.count + i) * D, ls1.keys   + i * ls1.stride, D * sizeof(float));
+                    memcpy(legacyV.data() + (ls0.count + i) * D, ls1.values + i * ls1.stride, D * sizeof(float));
+                }
             }
             if (ts0.count > 0) {
-                memcpy(toroK.data(), ts0.keys, ts0.count * D * sizeof(float));
-                memcpy(toroV.data(), ts0.values, ts0.count * D * sizeof(float));
+                for (size_t i = 0; i < ts0.count; ++i) {
+                    memcpy(toroK.data() + i * D, ts0.keys   + i * ts0.stride, D * sizeof(float));
+                    memcpy(toroV.data() + i * D, ts0.values + i * ts0.stride, D * sizeof(float));
+                }
             }
             if (ts1.count > 0) {
-                memcpy(toroK.data() + ts0.count * D, ts1.keys, ts1.count * D * sizeof(float));
-                memcpy(toroV.data() + ts0.count * D, ts1.values, ts1.count * D * sizeof(float));
+                for (size_t i = 0; i < ts1.count; ++i) {
+                    memcpy(toroK.data() + (ts0.count + i) * D, ts1.keys   + i * ts1.stride, D * sizeof(float));
+                    memcpy(toroV.data() + (ts0.count + i) * D, ts1.values + i * ts1.stride, D * sizeof(float));
+                }
             }
 
             char msg[128];

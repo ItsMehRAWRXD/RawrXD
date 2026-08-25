@@ -1323,7 +1323,14 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         const uint16_t* embedTable = (const uint16_t*)modelWeights.tokenEmbed.data;
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
-            for (size_t i = 0; i < hiddenDim; ++i) {
+            size_t i = 0;
+            for (; i + 8 <= hiddenDim; i += 8) {
+                __m128i hv = _mm_loadu_si128(reinterpret_cast<const __m128i*>(
+                    embedTable + tokenId * hiddenDim + i));
+                __m256 fv = _mm256_cvtph_ps(hv);
+                _mm256_storeu_ps(output + i, fv);
+            }
+            for (; i < hiddenDim; ++i) {
                 output[i] = fp16ToFloat(embedTable[tokenId * hiddenDim + i]);
             }
         } else {
@@ -1628,7 +1635,13 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
 
     // Add bias
     if (bias) {
-        for (size_t i = 0; i < outDim; ++i) {
+        size_t i = 0;
+        for (; i + 8 <= outDim; i += 8) {
+            __m256 ov = _mm256_loadu_ps(output + i);
+            __m256 bv = _mm256_loadu_ps(bias + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(ov, bv));
+        }
+        for (; i < outDim; ++i) {
             output[i] += bias[i];
         }
     }
@@ -1668,7 +1681,28 @@ namespace {
 static double B3_L2Norm(const float* v, size_t n)
 {
     double sum = 0.0;
-    for (size_t i = 0; i < n; ++i) {
+    size_t i = 0;
+#if defined(__AVX2__)
+    const __m256i infExp = _mm256_set1_epi32(0x7F800000);
+    __m256 acc = _mm256_setzero_ps();
+    for (; i + 8 <= n; i += 8) {
+        __m256 vec = _mm256_loadu_ps(v + i);
+        __m256i iv = _mm256_castps_si256(vec);
+        __m256i exp = _mm256_and_si256(iv, infExp);
+        __m256i isInfNan = _mm256_cmpeq_epi32(exp, infExp);
+        if (_mm256_testz_si256(isInfNan, isInfNan) == 0) {
+            return -1.0;
+        }
+        acc = _mm256_fmadd_ps(vec, vec, acc);
+    }
+    __m128 hi = _mm256_extractf128_ps(acc, 1);
+    __m128 lo = _mm256_castps256_ps128(acc);
+    __m128 s = _mm_add_ps(lo, hi);
+    s = _mm_hadd_ps(s, s);
+    s = _mm_hadd_ps(s, s);
+    sum = static_cast<double>(_mm_cvtss_f32(s));
+#endif
+    for (; i < n; ++i) {
         if (!std::isfinite(static_cast<double>(v[i])))
             return -1.0;
         sum += static_cast<double>(v[i]) * static_cast<double>(v[i]);
@@ -1680,7 +1714,22 @@ static float B3_MinValue(const float* v, size_t n)
 {
     if (n == 0) return 0.0f;
     float x = v[0];
-    for (size_t i = 1; i < n; ++i)
+    size_t i = 1;
+#if defined(__AVX2__)
+    if (i + 8 <= n) {
+        __m256 minVec = _mm256_loadu_ps(v + i);
+        i += 8;
+        for (; i + 8 <= n; i += 8) {
+            __m256 vec = _mm256_loadu_ps(v + i);
+            minVec = _mm256_min_ps(minVec, vec);
+        }
+        alignas(32) float mins[8];
+        _mm256_store_ps(mins, minVec);
+        for (int j = 0; j < 8; ++j)
+            x = std::min(x, mins[j]);
+    }
+#endif
+    for (; i < n; ++i)
         if (v[i] < x) x = v[i];
     return x;
 }
@@ -1689,7 +1738,22 @@ static float B3_MaxValue(const float* v, size_t n)
 {
     if (n == 0) return 0.0f;
     float x = v[0];
-    for (size_t i = 1; i < n; ++i)
+    size_t i = 1;
+#if defined(__AVX2__)
+    if (i + 8 <= n) {
+        __m256 maxVec = _mm256_loadu_ps(v + i);
+        i += 8;
+        for (; i + 8 <= n; i += 8) {
+            __m256 vec = _mm256_loadu_ps(v + i);
+            maxVec = _mm256_max_ps(maxVec, vec);
+        }
+        alignas(32) float maxs[8];
+        _mm256_store_ps(maxs, maxVec);
+        for (int j = 0; j < 8; ++j)
+            x = std::max(x, maxs[j]);
+    }
+#endif
+    for (; i < n; ++i)
         if (v[i] > x) x = v[i];
     return x;
 }
@@ -1697,7 +1761,18 @@ static float B3_MaxValue(const float* v, size_t n)
 static size_t B3_CountNonFinite(const float* v, size_t n)
 {
     size_t count = 0;
-    for (size_t i = 0; i < n; ++i) {
+    size_t i = 0;
+#if defined(__AVX2__)
+    const __m256i infExp = _mm256_set1_epi32(0x7F800000);
+    for (; i + 8 <= n; i += 8) {
+        __m256i iv = _mm256_castps_si256(_mm256_loadu_ps(v + i));
+        __m256i exp = _mm256_and_si256(iv, infExp);
+        __m256i isInfNan = _mm256_cmpeq_epi32(exp, infExp);
+        int mask = _mm256_movemask_ps(_mm256_castsi256_ps(isInfNan));
+        count += static_cast<size_t>(_mm_popcnt_u32(mask));
+    }
+#endif
+    for (; i < n; ++i) {
         if (!std::isfinite(static_cast<double>(v[i])))
             ++count;
     }
@@ -1989,7 +2064,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (layer == 0) B3_TraceState("LAYER0_ATTN_OUT", layer, output, hiddenDim);
 
     // 3. Residual connection
-    for (size_t i = 0; i < hiddenDim; ++i) {
+    size_t i = 0;
+    for (; i + 8 <= hiddenDim; i += 8) {
+        __m256 ov = _mm256_loadu_ps(output + i);
+        __m256 iv = _mm256_loadu_ps(input + i);
+        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, iv));
+    }
+    for (; i < hiddenDim; ++i) {
         output[i] += input[i];
     }
     if (layer == 0) B3_TraceState("LAYER0_ATTN_RESID", layer, output, hiddenDim);
@@ -2007,7 +2088,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (layer == 0) B3_TraceState("LAYER0_FFN_OUT", layer, ffnOutput, hiddenDim);
 
     // 6. Residual connection
-    for (size_t i = 0; i < hiddenDim; ++i) {
+    size_t i = 0;
+    for (; i + 8 <= hiddenDim; i += 8) {
+        __m256 ov = _mm256_loadu_ps(output + i);
+        __m256 fv = _mm256_loadu_ps(ffnOutput + i);
+        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, fv));
+    }
+    for (; i < hiddenDim; ++i) {
         output[i] += ffnOutput[i];
     }
     if (layer == 0) B3_TraceState("LAYER0_FINAL", layer, output, hiddenDim);
@@ -2054,17 +2141,44 @@ static void AttentionWithBackend(const float* query,
             continue;
         }
         float dot = 0.0f;
-        for (size_t i = 0; i < headDim; ++i)
+        size_t i = 0;
+        __m256 dot_acc = _mm256_setzero_ps();
+        for (; i + 8 <= headDim; i += 8) {
+            __m256 qv = _mm256_loadu_ps(query + i);
+            __m256 kv = _mm256_loadu_ps(k + i);
+            dot_acc = _mm256_fmadd_ps(qv, kv, dot_acc);
+        }
+        __m128 hi = _mm256_extractf128_ps(dot_acc, 1);
+        __m128 lo = _mm256_castps256_ps128(dot_acc);
+        __m128 sum = _mm_add_ps(lo, hi);
+        sum = _mm_hadd_ps(sum, sum);
+        sum = _mm_hadd_ps(sum, sum);
+        dot = _mm_cvtss_f32(sum);
+        for (; i < headDim; ++i)
             dot += query[i] * k[i];
         scores[pos] = dot * scale;
         if (scores[pos] > maxScore) maxScore = scores[pos];
     }
 
     // Pass 2: Online softmax
-    float sumExp = 0.0f;
     for (size_t pos = 0; pos < attend; ++pos) {
         scores[pos] = expf(scores[pos] - maxScore);
-        sumExp += scores[pos];
+    }
+    float sumExp = 0.0f;
+    size_t p = 0;
+    __m256 sum_acc = _mm256_setzero_ps();
+    for (; p + 8 <= attend; p += 8) {
+        __m256 sv = _mm256_loadu_ps(scores + p);
+        sum_acc = _mm256_add_ps(sum_acc, sv);
+    }
+    __m128 hi = _mm256_extractf128_ps(sum_acc, 1);
+    __m128 lo = _mm256_castps256_ps128(sum_acc);
+    __m128 s = _mm_add_ps(lo, hi);
+    s = _mm_hadd_ps(s, s);
+    s = _mm_hadd_ps(s, s);
+    sumExp = _mm_cvtss_f32(s);
+    for (; p < attend; ++p) {
+        sumExp += scores[p];
     }
     if (sumExp < 1e-12f) sumExp = 1e-12f;
     float invSum = 1.0f / sumExp;
@@ -2079,7 +2193,15 @@ static void AttentionWithBackend(const float* query,
         const float* v = (nSpans > 0 && span0.count > 0) ? span0.values : nullptr;
         if (!v) continue;
         float w = scores[pos];
-        for (size_t i = 0; i < headDim; ++i)
+        size_t i = 0;
+        __m256 wv = _mm256_set1_ps(w);
+        for (; i + 8 <= headDim; i += 8) {
+            __m256 vv = _mm256_loadu_ps(v + i);
+            __m256 ov = _mm256_loadu_ps(output + i);
+            ov = _mm256_fmadd_ps(wv, vv, ov);
+            _mm256_storeu_ps(output + i, ov);
+        }
+        for (; i < headDim; ++i)
             output[i] += w * v[i];
     }
 
@@ -2174,11 +2296,30 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 // No cache: single-position fallback
                 float scale = 1.0f / sqrtf((float)headDim);
                 float score = 0.0f;
-                for (size_t i = 0; i < headDim; ++i)
+                size_t i = 0;
+                __m256 acc = _mm256_setzero_ps();
+                for (; i + 8 <= headDim; i += 8) {
+                    __m256 qv = _mm256_loadu_ps(qProj + h * headDim + i);
+                    __m256 kv = _mm256_loadu_ps(kProj + kvHead * headDim + i);
+                    acc = _mm256_fmadd_ps(qv, kv, acc);
+                }
+                __m128 hi = _mm256_extractf128_ps(acc, 1);
+                __m128 lo = _mm256_castps256_ps128(acc);
+                __m128 s = _mm_add_ps(lo, hi);
+                s = _mm_hadd_ps(s, s);
+                s = _mm_hadd_ps(s, s);
+                score = _mm_cvtss_f32(s);
+                for (; i < headDim; ++i)
                     score += qProj[h * headDim + i] * kProj[kvHead * headDim + i];
                 score *= scale;
                 float weight = 1.0f / (1.0f + expf(-score));
-                for (size_t i = 0; i < headDim; ++i)
+                __m256 wv = _mm256_set1_ps(weight);
+                i = 0;
+                for (; i + 8 <= headDim; i += 8) {
+                    __m256 vv = _mm256_loadu_ps(vProj + kvHead * headDim + i);
+                    _mm256_storeu_ps(headOut + i, _mm256_mul_ps(wv, vv));
+                }
+                for (; i < headDim; ++i)
                     headOut[i] = weight * vProj[kvHead * headDim + i];
             }
         }
@@ -2190,12 +2331,31 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             const float* v = vProj + (h % numKVHeads) * headDim;
             float scale = 1.0f / sqrtf((float)headDim);
             float score = 0.0f;
-            for (size_t i = 0; i < headDim; ++i)
+            size_t i = 0;
+            __m256 acc = _mm256_setzero_ps();
+            for (; i + 8 <= headDim; i += 8) {
+                __m256 qv = _mm256_loadu_ps(q + i);
+                __m256 kv = _mm256_loadu_ps(k + i);
+                acc = _mm256_fmadd_ps(qv, kv, acc);
+            }
+            __m128 hi = _mm256_extractf128_ps(acc, 1);
+            __m128 lo = _mm256_castps256_ps128(acc);
+            __m128 s = _mm_add_ps(lo, hi);
+            s = _mm_hadd_ps(s, s);
+            s = _mm_hadd_ps(s, s);
+            score = _mm_cvtss_f32(s);
+            for (; i < headDim; ++i)
                 score += q[i] * k[i];
             score *= scale;
             float weight = 1.0f / (1.0f + expf(-score));
             float* headOut = output + h * headDim;
-            for (size_t i = 0; i < headDim; ++i)
+            __m256 wv = _mm256_set1_ps(weight);
+            i = 0;
+            for (; i + 8 <= headDim; i += 8) {
+                __m256 vv = _mm256_loadu_ps(v + i);
+                _mm256_storeu_ps(headOut + i, _mm256_mul_ps(wv, vv));
+            }
+            for (; i < headDim; ++i)
                 headOut[i] = weight * v[i];
         }
     }
@@ -2259,7 +2419,13 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // Use attentionOutput as temp (it's hiddenDim-sized and not in use during FFN)
     float* sharedOut = attentionOutput;
     computeSharedExpertFFN(layer, input, sharedOut);
-    for (size_t i = 0; i < hiddenDim; ++i) {
+    size_t i = 0;
+    for (; i + 8 <= hiddenDim; i += 8) {
+        __m256 ov = _mm256_loadu_ps(output + i);
+        __m256 sv = _mm256_loadu_ps(sharedOut + i);
+        _mm256_storeu_ps(output + i, _mm256_add_ps(ov, sv));
+    }
+    for (; i < hiddenDim; ++i) {
         output[i] += sharedOut[i];
     }
 
@@ -2291,7 +2457,14 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
                          moeConfig_.expertDim);
 
         // Weighted accumulation into output
-        for (size_t i = 0; i < hiddenDim; ++i) {
+        size_t i = 0;
+        __m256 wv = _mm256_set1_ps(weight);
+        for (; i + 8 <= hiddenDim; i += 8) {
+            __m256 ov = _mm256_loadu_ps(output + i);
+            __m256 ev = _mm256_loadu_ps(expertOut + i);
+            _mm256_storeu_ps(output + i, _mm256_fmadd_ps(wv, ev, ov));
+        }
+        for (; i < hiddenDim; ++i) {
             output[i] += weight * expertOut[i];
         }
     }
@@ -2402,7 +2575,19 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
 
     // ── Diagnostic: verify hidden state and weights ────────────────────
     float hiddenNorm = 0.0f;
-    for (size_t i = 0; i < config.hiddenDim; ++i) {
+    size_t i = 0;
+    __m256 norm_acc = _mm256_setzero_ps();
+    for (; i + 8 <= config.hiddenDim; i += 8) {
+        __m256 hv = _mm256_loadu_ps(hiddenState + i);
+        norm_acc = _mm256_fmadd_ps(hv, hv, norm_acc);
+    }
+    __m128 hi = _mm256_extractf128_ps(norm_acc, 1);
+    __m128 lo = _mm256_castps256_ps128(norm_acc);
+    __m128 sum = _mm_add_ps(lo, hi);
+    sum = _mm_hadd_ps(sum, sum);
+    sum = _mm_hadd_ps(sum, sum);
+    hiddenNorm = _mm_cvtss_f32(sum);
+    for (; i < config.hiddenDim; ++i) {
         hiddenNorm += hiddenState[i] * hiddenState[i];
     }
     hiddenNorm = std::sqrt(hiddenNorm);
@@ -2449,7 +2634,28 @@ int Deep2Engine::sampleToken(const float* logits) {
     // Fallback: argmax (greedy)
     int maxIdx = 0;
     float maxVal = logits[0];
-    for (size_t i = 1; i < config.vocabSize; ++i) {
+    size_t i = 1;
+#if defined(__AVX2__)
+    for (; i + 8 <= config.vocabSize; i += 8) {
+        __m256 vec = _mm256_loadu_ps(logits + i);
+        __m256 maxVec = _mm256_set1_ps(maxVal);
+        __m256 cmp = _mm256_cmp_ps(vec, maxVec, _CMP_GT_OQ);
+        int mask = _mm256_movemask_ps(cmp);
+        if (mask != 0) {
+            alignas(32) float vals[8];
+            _mm256_store_ps(vals, vec);
+            for (int j = 0; j < 8; ++j) {
+                if (mask & (1 << j)) {
+                    if (vals[j] > maxVal) {
+                        maxVal = vals[j];
+                        maxIdx = (int)(i + j);
+                    }
+                }
+            }
+        }
+    }
+#endif
+    for (; i < config.vocabSize; ++i) {
         if (logits[i] > maxVal) {
             maxVal = logits[i];
             maxIdx = (int)i;
@@ -2557,7 +2763,13 @@ void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias,
     }
 
     if (bias) {
-        for (size_t i = 0; i < outDim; ++i) {
+        size_t i = 0;
+        for (; i + 8 <= outDim; i += 8) {
+            __m256 ov = _mm256_loadu_ps(output + i);
+            __m256 bv = _mm256_loadu_ps(bias + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(ov, bv));
+        }
+        for (; i < outDim; ++i) {
             output[i] += bias[i];
         }
     }

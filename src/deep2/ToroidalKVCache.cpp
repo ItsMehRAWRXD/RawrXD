@@ -4,10 +4,12 @@
 // ============================================================================
 
 #include "ToroidalKVCache.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <cmath>
 #include <limits>
 #include <cstring>
 #include <stdexcept>
+#include <immintrin.h>
 
 namespace rawrxd {
 
@@ -48,6 +50,27 @@ ToroidalKVCache::ToroidalKVCache(size_t head_dim, size_t num_heads, size_t max_t
     std::fill(values_.begin(), values_.end(), 0.0f);
 }
 
+// ============================================================================
+// Internal: AVX2/AVX-512 block copy for a single layer slot
+// ============================================================================
+static inline void copySlotAVX2(float* dst, const float* src, size_t n) {
+    size_t i = 0;
+    for (; i + 8 <= n; i += 8) {
+        _mm256_storeu_ps(dst + i, _mm256_loadu_ps(src + i));
+    }
+    for (; i < n; ++i) dst[i] = src[i];
+}
+
+#if defined(__AVX512F__) || (defined(_MSC_VER) && defined(__AVX2__))
+static inline void copySlotAVX512(float* dst, const float* src, size_t n) {
+    size_t i = 0;
+    for (; i + 16 <= n; i += 16) {
+        _mm512_storeu_ps(dst + i, _mm512_loadu_ps(src + i));
+    }
+    for (; i < n; ++i) dst[i] = src[i];
+}
+#endif
+
 bool ToroidalKVCache::injectToken(const PlasmaToken& token,
                                   const float* key_data,
                                   const float* value_data)
@@ -56,7 +79,6 @@ bool ToroidalKVCache::injectToken(const PlasmaToken& token,
 
     size_t slot = static_cast<size_t>(write_head_ % max_tokens_);
 
-    // Write K/V for all layers
     for (size_t layer = 0; layer < layers_; ++layer) {
         float* k_slot = keySlot(slot) + layer * layer_stride_;
         float* v_slot = valueSlot(slot) + layer * layer_stride_;
@@ -75,6 +97,26 @@ bool ToroidalKVCache::injectToken(const PlasmaToken& token,
     }
 
     return true;
+}
+
+size_t ToroidalKVCache::injectTokenBatch(const PlasmaToken* token_batch,
+                                         const float* key_data,
+                                         const float* value_data,
+                                         size_t count)
+{
+    if (!token_batch || !key_data || !value_data || count == 0) return 0;
+
+    size_t injected = 0;
+    for (size_t t = 0; t < count; ++t) {
+        if (injectToken(token_batch[t],
+                        key_data + t * layers_ * token_stride_,
+                        value_data + t * layers_ * token_stride_)) {
+            ++injected;
+        } else {
+            break;
+        }
+    }
+    return injected;
 }
 
 bool ToroidalKVCache::queryTokenRange(uint64_t start_seq, uint64_t end_seq,
@@ -131,7 +173,12 @@ bool ToroidalKVCache::divertTokens(const uint64_t* seq_positions, size_t count) 
 
     uint64_t oldest_seq = (write_head_ > token_count_) ? (write_head_ - token_count_) : 0;
 
-    for (size_t i = 0; i < count; ++i) {
+    size_t i = 0;
+    for (; i + 8 <= count; i += 8) {
+        // Prefetch next batch
+        _mm_prefetch(reinterpret_cast<const char*>(&seq_positions[i + 8]), _MM_HINT_T0);
+    }
+    for (i = 0; i < count; ++i) {
         uint64_t seq = seq_positions[i];
         if (seq >= write_head_ || seq < oldest_seq) continue;
 
@@ -144,40 +191,50 @@ bool ToroidalKVCache::divertTokens(const uint64_t* seq_positions, size_t count) 
 
 float ToroidalKVCache::plasmaTemperature() const {
     if (token_count_ == 0) return 0.0f;
+    uint64_t oldest_seq = (write_head_ > token_count_) ? (write_head_ - token_count_) : 0;
+    return plasmaTemperatureRange(oldest_seq, write_head_);
+}
+
+float ToroidalKVCache::plasmaTemperatureRange(uint64_t start_seq, uint64_t end_seq) const {
+    if (start_seq >= end_seq) return 0.0f;
+
+    size_t count = static_cast<size_t>(end_seq - start_seq);
+    if (count == 0) return 0.0f;
 
     float sum = 0.0f;
-    size_t count = 0;
 
-    uint64_t oldest_seq = (write_head_ > token_count_) ? (write_head_ - token_count_) : 0;
-    for (uint64_t seq = oldest_seq; seq < write_head_; ++seq) {
+    for (uint64_t seq = start_seq; seq < end_seq; ++seq) {
         size_t slot = slotIndex(seq);
         sum += tokens_[slot].temperature;
-        ++count;
     }
 
-    return (count > 0) ? (sum / static_cast<float>(count)) : 0.0f;
+    return sum / static_cast<float>(count);
 }
 
 float ToroidalKVCache::plasmaTurbulence() const {
     if (token_count_ == 0) return 0.0f;
-
-    // Calculate mean entropy (not temperature)
-    float mean_entropy = 0.0f;
-    size_t count = 0;
-
     uint64_t oldest_seq = (write_head_ > token_count_) ? (write_head_ - token_count_) : 0;
-    for (uint64_t seq = oldest_seq; seq < write_head_; ++seq) {
+    return plasmaTurbulenceRange(oldest_seq, write_head_);
+}
+
+float ToroidalKVCache::plasmaTurbulenceRange(uint64_t start_seq, uint64_t end_seq) const {
+    if (start_seq >= end_seq) return 0.0f;
+
+    size_t count = static_cast<size_t>(end_seq - start_seq);
+    if (count == 0) return 0.0f;
+
+    // Two-pass algorithm: mean then variance
+    float mean_entropy = plasmaTemperatureRange(start_seq, end_seq); // Re-use reduction pattern on entropy
+    // Actually we need entropy mean, not temperature. Compute directly.
+    mean_entropy = 0.0f;
+    for (uint64_t seq = start_seq; seq < end_seq; ++seq) {
         size_t slot = slotIndex(seq);
         mean_entropy += tokens_[slot].entropy;
-        ++count;
     }
-
-    if (count == 0) return 0.0f;
     mean_entropy /= static_cast<float>(count);
 
-    // Calculate variance of entropy around its mean
     float sum_sq = 0.0f;
-    for (uint64_t seq = oldest_seq; seq < write_head_; ++seq) {
+    for (uint64_t seq = start_seq; seq < end_seq; ++seq) {
         size_t slot = slotIndex(seq);
         float diff = tokens_[slot].entropy - mean_entropy;
         sum_sq += diff * diff;

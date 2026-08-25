@@ -247,6 +247,126 @@ static void gemv_q8_0_scalar(
     }
 }
 
+// --- Q4_0 GEMV (scalar) ---
+static void gemv_q4_0_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(w);
+    size_t blocksPerRow = (cols + 31) / 32;
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q4_0& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float blockAcc = 0.0f;
+            for (int i = 0; i < 32; ++i) {
+                uint8_t byte = blk.qs[i / 2];
+                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+                blockAcc += q * x[b * 32 + i];
+            }
+            acc += d * blockAcc;
+        }
+        y[r] += acc;
+    }
+}
+
+// --- Q4_1 GEMV (scalar) ---
+static void gemv_q4_1_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q4_1* blocks = reinterpret_cast<const block_q4_1*>(w);
+    size_t blocksPerRow = (cols + 31) / 32;
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const block_q4_1* rowBlocks = blocks + r * blocksPerRow;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q4_1& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float m = f16_to_f32(blk.m);
+            float blockAcc = 0.0f;
+            float xSum = 0.0f;
+            for (int i = 0; i < 32; ++i) {
+                uint8_t byte = blk.qs[i / 2];
+                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+                blockAcc += q * x[b * 32 + i];
+                xSum += x[b * 32 + i];
+            }
+            acc += d * blockAcc + m * xSum;
+        }
+        y[r] += acc;
+    }
+}
+
+// --- Q5_0 GEMV (scalar) ---
+static void gemv_q5_0_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q5_0* blocks = reinterpret_cast<const block_q5_0*>(w);
+    size_t blocksPerRow = (cols + 31) / 32;
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const block_q5_0* rowBlocks = blocks + r * blocksPerRow;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q5_0& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float blockAcc = 0.0f;
+            for (int i = 0; i < 32; ++i) {
+                uint8_t byte = blk.qs[i / 2];
+                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+                uint8_t qh_byte = blk.qh[i / 8];
+                uint8_t qh_bit = (qh_byte >> (i % 8)) & 1;
+                q += (float)(qh_bit << 4);
+                blockAcc += q * x[b * 32 + i];
+            }
+            acc += d * blockAcc;
+        }
+        y[r] += acc;
+    }
+}
+
+// --- Q5_1 GEMV (scalar) ---
+static void gemv_q5_1_scalar(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q5_1* blocks = reinterpret_cast<const block_q5_1*>(w);
+    size_t blocksPerRow = (cols + 31) / 32;
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const block_q5_1* rowBlocks = blocks + r * blocksPerRow;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q5_1& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float m = f16_to_f32(blk.m);
+            float blockAcc = 0.0f;
+            float xSum = 0.0f;
+            for (int i = 0; i < 32; ++i) {
+                uint8_t byte = blk.qs[i / 2];
+                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+                uint8_t qh_byte = blk.qh[i / 8];
+                uint8_t qh_bit = (qh_byte >> (i % 8)) & 1;
+                q += (float)(qh_bit << 4);
+                blockAcc += q * x[b * 32 + i];
+                xSum += x[b * 32 + i];
+            }
+            acc += d * blockAcc + m * xSum;
+        }
+        y[r] += acc;
+    }
+}
+
 // --- Q4_K GEMV (scalar) ---
 // block_q4_K defined in GGUFLoader.hpp
 
@@ -1174,19 +1294,24 @@ void QuantKernelRegistry::RegisterBuiltins() {
     else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx2);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
-    // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1): scalar fallback ---
-    // These formats are deprecated in favor of K-quants but kept for compatibility
-    // AVX-512 optimized kernels can be added here when needed
-    for (int t = (int)GGMLType::GGML_TYPE_Q4_0; t <= (int)GGMLType::GGML_TYPE_Q5_1; ++t) {
-        RegisterGeometry(t, GetBlockGeometryForType(t));
-        // Use Q8_0 scalar as fallback; type-specific kernels registered on-demand
-        RegisterGEMV(t, gemv_q8_0_scalar);
-    }
-    // IQ types fallback
-    for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
-        RegisterGeometry(t, GetBlockGeometryForType(t));
-        RegisterGEMV(t, gemv_q4_k_scalar); // IQ fallback
-    }
+    // --- Legacy GGML quant types (Q4_0, Q4_1, Q5_0, Q5_1) ---
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q4_0, dequant_q4_0);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
+
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_1));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q4_1, dequant_q4_1);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
+
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_0));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q5_0, dequant_q5_0);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_0, gemv_q5_0_scalar);
+
+    RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_1));
+    RegisterDequant((int)GGMLType::GGML_TYPE_Q5_1, dequant_q5_1);
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_1, gemv_q5_1_scalar);
+
+    // --- IQ types fallback ---
     for (int t = (int)GGMLType::GGML_TYPE_IQ2_XXS; t <= (int)GGMLType::GGML_TYPE_IQ4_XS; ++t) {
         RegisterGeometry(t, GetBlockGeometryForType(t));
         RegisterGEMV(t, gemv_q4_k_scalar); // IQ fallback

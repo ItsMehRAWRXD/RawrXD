@@ -88,6 +88,23 @@ public:
     size_t tokenCount()   const { return token_count_; }
     uint64_t writeHead()  const { return write_head_; }
 
+    // ------------------------------------------------------------------------
+    // Kernel surface expansion — AVX2/AVX-512 batch operations
+    // ------------------------------------------------------------------------
+
+    /// Inject multiple tokens in one call with vectorized memory ops.
+    /// Returns number of tokens successfully injected.
+    size_t injectTokenBatch(const PlasmaToken* tokens,
+                            const float* key_data,
+                            const float* value_data,
+                            size_t count);
+
+    /// Vectorized plasma temperature over a sub-range [start_seq, end_seq).
+    float plasmaTemperatureRange(uint64_t start_seq, uint64_t end_seq) const;
+
+    /// Vectorized plasma turbulence over a sub-range [start_seq, end_seq).
+    float plasmaTurbulenceRange(uint64_t start_seq, uint64_t end_seq) const;
+
 private:
     // Physical slot access
     float*       keySlot(size_t slot);

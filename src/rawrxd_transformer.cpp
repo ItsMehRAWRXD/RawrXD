@@ -2034,7 +2034,14 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         m_elasticEngine = std::make_unique<RawrXD::Elastic::ElasticEngine>(elasticCfg);
 
         // Build GGUF index from loader tensor list
-        auto ggufIndex = std::make_shared<RawrXD::Elastic::ElasticGGUFIndex>(loader->GetModelPath());
+        std::shared_ptr<RawrXD::Elastic::ElasticGGUFIndex> ggufIndex;
+        try {
+            ggufIndex = std::make_shared<RawrXD::Elastic::ElasticGGUFIndex>(loader->GetModelPath());
+        } catch (const std::exception& e) {
+            printf("[Elastic] GGUF index creation failed: %s — falling back to direct loader path.\n", e.what());
+            m_elasticEngine.reset();
+            return;
+        }
 
         // Wire Vulkan residency backend if GPU is available
         if (device != VK_NULL_HANDLE && physDevice != VK_NULL_HANDLE) {

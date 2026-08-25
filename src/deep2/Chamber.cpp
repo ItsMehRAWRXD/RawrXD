@@ -26,7 +26,17 @@ uint64_t TransitionState::hashHiddenState(const float* hidden_state, size_t dim)
     constexpr uint64_t FNV_PRIME        = 0x100000001B3ULL;
 
     uint64_t hash = FNV_OFFSET_BASIS;
-    for (size_t i = 0; i < dim; ++i) {
+    size_t i = 0;
+    // Process 2 floats (8 bytes) at a time using 64-bit loads
+    for (; i + 2 <= dim; i += 2) {
+        uint64_t bits;
+        std::memcpy(&bits, &hidden_state[i], sizeof(uint64_t));
+        for (unsigned byte = 0; byte < 8; ++byte) {
+            hash ^= static_cast<uint8_t>(bits >> (byte * 8));
+            hash *= FNV_PRIME;
+        }
+    }
+    for (; i < dim; ++i) {
         uint32_t bits;
         static_assert(sizeof(bits) == sizeof(float), "float size mismatch");
         std::memcpy(&bits, &hidden_state[i], sizeof(float));
