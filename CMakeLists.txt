@@ -6080,6 +6080,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/GoalSystem.cpp
         src/deep2/BottleTTL.cpp
         src/deep2/CPUFrequency.cpp
+        src/deep2/ResidencyManager.cpp
+        src/deep2/ResidencyLease.cpp
         src/deep2/DualGPUHook.cpp
         src/deep2/ReverseTensorRecovery.cpp
         src/deep2/ScaleQuality.cpp

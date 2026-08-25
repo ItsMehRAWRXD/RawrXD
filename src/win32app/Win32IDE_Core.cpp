@@ -45,8 +45,11 @@ extern "C" void ShutdownAICompletion();
 #include <commctrl.h>
 #include <richedit.h>
 
-// Forward declaration for B428Trace (defined in Win32IDE_Sidebar.cpp)
-extern void B428Trace(const char* msg);
+// B428Trace — lightweight no-op trace (was extern, now defined here to avoid LNK2001)
+static void B428Trace(const char* msg) {
+    (void)msg;
+    // No-op: reserved for future telemetry
+}
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
