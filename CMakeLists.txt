@@ -9048,6 +9048,7 @@ if(WIN32)
         src/deep2/BP16Streamer.cpp
         src/deep2/ResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
+        src/deep2/HotPatcher.cpp
         src/deep2/HotPatcherSafety.cpp
         src/deep2/TrailBrake.cpp
         src/deep2/PatchCache.cpp
@@ -9055,6 +9056,8 @@ if(WIN32)
         src/deep2/GoalSystem.cpp
         src/deep2/CPUFrequency.cpp
         src/deep2/ResidencyLease.cpp
+        src/deep2/LlamaNativeBridge.cpp
+        src/deep2/RawrRuntime.cpp
         src/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
