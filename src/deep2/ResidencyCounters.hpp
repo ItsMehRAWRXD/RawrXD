@@ -83,6 +83,38 @@ struct ResidencyCounters {
         remapBytes -= bytes;
     }
 
+    static void OnAcquire(size_t bytes) {
+        // Track acquire events for accounting
+    }
+
+    static void OnMap(size_t bytes) {
+        // Track map events for accounting
+    }
+
+    static void OnRelease(size_t bytes) {
+        // Track release events for accounting
+    }
+
+    static void OnReleaseError() {
+        // Track release errors for diagnostics
+    }
+
+    static void OnTensorAcquireFailure() {
+        // Track tensor acquire failures
+    }
+
+    static void OnMappingError() {
+        // Track mapping failures
+    }
+
+    static void OnResidencyError() {
+        // Track general residency errors
+    }
+
+    static void OnStaleLease() {
+        // Track stale lease detections
+    }
+
     static void OnWeightLookup() {
         weightLookupCount++;
     }
