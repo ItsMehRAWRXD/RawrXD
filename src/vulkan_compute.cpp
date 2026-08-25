@@ -40,6 +40,16 @@ VulkanCompute::~VulkanCompute() {
 }
 
 bool VulkanCompute::Initialize() {
+    // Check if Vulkan is available at runtime
+    #ifdef _WIN32
+    HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
+    if (!vulkanDll) {
+        printf("[VulkanCompute] Vulkan runtime not available (vulkan-1.dll not found)\n");
+        return false;
+    }
+    FreeLibrary(vulkanDll);
+    #endif
+    
     if (!CreateInstance()) return false;
     if (!SelectPhysicalDevice()) return false;
     if (!CreateLogicalDevice()) return false;

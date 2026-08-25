@@ -122,6 +122,28 @@ struct HeadlessConfig {
 };
 
 // ============================================================================
+// Conversation session (Fix #14)
+// ============================================================================
+struct ConversationSession {
+    std::string id;
+    std::vector<std::pair<std::string, std::string>> messages; // role, content
+    std::chrono::steady_clock::time_point lastActivity;
+    size_t messageCount = 0;
+};
+
+class ConversationManager {
+public:
+    std::string createSession();
+    void addMessage(const std::string& sessionId, const std::string& role, const std::string& content);
+    std::vector<std::pair<std::string, std::string>> getMessages(const std::string& sessionId);
+    void pruneInactive(double maxAgeSeconds);
+private:
+    std::mutex mutex_;
+    std::unordered_map<std::string, ConversationSession> sessions_;
+    std::atomic<uint64_t> nextId_{1};
+};
+
+// ============================================================================
 // HeadlessIDE — the headless surface class
 // ============================================================================
 class HeadlessIDE {
@@ -297,6 +319,16 @@ private:
     void serverLoop();
     void handleClient(SOCKET clientFd);
 
+    // ---- Thread-safe output sink wrapper (Fix #14) ----
+    void safeAppendOutput(const char* msg, OutputSeverity severity);
+    void safeOnAgentStarted(const char* agent, const char* prompt);
+    void safeOnAgentCompleted(const char* agent, const char* result, int durationMs);
+    void safeOnAgentFailed(const char* agent, const char* reason);
+    void safeOnStreamStart(const char* stream);
+    void safeOnStreamEnd(const char* stream, bool ok);
+    void safeOnStreamingToken(const char* token, size_t len, StreamTokenOrigin origin);
+    void safeOnStatusUpdate(const char* subsystem, const char* status);
+
     // ---- Shutdown ----
     void shutdownAll();
 
@@ -348,6 +380,10 @@ private:
     std::unique_ptr<AgenticEngine>     m_agenticEngine;
     std::unique_ptr<SubAgentManager>   m_subAgentManager;
 
+    // Fix #14: Conversation manager for HTTP endpoints
+    class ConversationManager;
+    std::unique_ptr<ConversationManager> m_conversationManager;
+
     // Failure detection counters
     uint64_t                          m_failureDetections = 0;
     uint64_t                          m_failureRetries    = 0;
@@ -386,9 +422,17 @@ private:
     bool                              m_expQuantumOrchActivated   = false;
     bool                              m_expQuantumMissingActivated = false;
 
+    // Fix #14: Output sink thread safety
+    mutable std::mutex                m_outputSinkMutex;
+
     // Session
     std::string                       m_sessionId;
     uint64_t                          m_startEpochMs    = 0;
+
+    // Fix #6: Thread pool for client handling
+    std::vector<std::thread>          m_threadPool;
+    std::mutex                        m_threadPoolMutex;
+    size_t                            m_maxThreads = 64;
 
     // Version
     static constexpr const char*      VERSION = "20.0.0-headless-enterprise";

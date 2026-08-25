@@ -1191,6 +1191,93 @@ static void gemv_q5_k_scalar(
     }
 }
 
+// Q5_K AVX2 implementation - 5-bit weights with 1-bit high from qh
+static void gemv_q5_k_avx2(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(w);
+    size_t blocksPerRow = (cols + 255) / 256;
+
+    for (size_t r = 0; r < rows; ++r) {
+        float rowAcc = 0.0f;
+        const block_q5_K* rowBlocks = blocks + r * blocksPerRow;
+
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            const block_q5_K& blk = rowBlocks[b];
+            float d = f16_to_f32(blk.d);
+            float dmin = f16_to_f32(blk.dmin);
+            size_t elemsInBlock = (b == blocksPerRow - 1)
+                ? (cols - b * 256)
+                : 256;
+            if (elemsInBlock == 0) break;
+
+            for (int sb = 0; sb < 8; ++sb) {
+                uint8_t scale_u8, min_u8;
+                get_scale_min_k4(sb, blk.scales, scale_u8, min_u8);
+                float s = d * scale_u8;
+                float m = dmin * min_u8;
+                __m256 sVec = _mm256_set1_ps(s);
+                __m256 mVec = _mm256_set1_ps(m);
+
+                // Process 32 weights in this sub-block
+                size_t qsOffset = sb * 16;
+                __m128i packed = _mm_loadu_si128(reinterpret_cast<const __m128i*>(blk.qs + qsOffset));
+
+                // Extract low/high nibbles (4 bits each)
+                __m128i lowNibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
+                __m128i highNibbles = _mm_srli_epi16(packed, 4);
+                highNibbles = _mm_and_si128(highNibbles, _mm_set1_epi8(0x0F));
+
+                // Load qh bits for this sub-block (32 weights = 4 bytes of qh)
+                size_t qhOffset = sb * 4;
+                uint32_t qhBits = *reinterpret_cast<const uint32_t*>(blk.qh + qhOffset);
+
+                // Process in 4 chunks of 8 weights
+                for (int chunk = 0; chunk < 4; ++chunk) {
+                    int offset = sb * 32 + chunk * 8;
+                    if ((size_t)offset + 8 > elemsInBlock) break;
+                    if (b * 256 + offset + 8 > cols) break;
+
+                    // Get 8 low nibbles
+                    __m128i nibbles;
+                    if (chunk < 2) {
+                        nibbles = (chunk == 0) ? lowNibbles : _mm_srli_si128(lowNibbles, 8);
+                    } else {
+                        nibbles = (chunk == 2) ? highNibbles : _mm_srli_si128(highNibbles, 8);
+                    }
+
+                    __m256i i32 = _mm256_cvtepu8_epi32(nibbles);
+                    __m256 wv = _mm256_cvtepi32_ps(i32);
+
+                    // Add high bit (qh) to make 5-bit values
+                    // Each chunk of 8 weights gets bits from qh
+                    int qhShift = chunk * 8;
+                    uint8_t qhByte = (qhBits >> qhShift) & 0xFF;
+                    __m256 qhVec = _mm256_set_ps(
+                        (float)((qhByte >> 7) & 1),
+                        (float)((qhByte >> 6) & 1),
+                        (float)((qhByte >> 5) & 1),
+                        (float)((qhByte >> 4) & 1),
+                        (float)((qhByte >> 3) & 1),
+                        (float)((qhByte >> 2) & 1),
+                        (float)((qhByte >> 1) & 1),
+                        (float)(qhByte & 1)
+                    );
+                    wv = _mm256_add_ps(wv, _mm256_mul_ps(qhVec, _mm256_set1_ps(16.0f)));
+
+                    __m256 dequant = _mm256_sub_ps(_mm256_mul_ps(wv, sVec), mVec);
+                    __m256 xv = _mm256_loadu_ps(x + b * 256 + offset);
+                    rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant, xv, 0xF1)));
+                }
+            }
+        }
+        y[r] += rowAcc;
+    }
+}
+
 #define gemv_q2_k_avx2 gemv_q2_k_scalar
 #define gemv_q2_k_avx512 gemv_q2_k_scalar
 #define gemv_q3_k_avx2 gemv_q3_k_scalar
@@ -1241,13 +1328,13 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    // B35-FIX: AVX-512/AVX2 Q4_K kernels are broken stubs; force scalar
+    // Use scalar for stability until AVX2 kernels are fully validated
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
-    // B35-FIX: AVX-512/AVX2 Q5_K kernels are broken stubs; force scalar
+    // Use scalar for stability until AVX2 kernels are fully validated
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---

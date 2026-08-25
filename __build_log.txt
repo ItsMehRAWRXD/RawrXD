@@ -1,0 +1,270 @@
+﻿[1/105] Verify SSOT EXT ownership artifacts are consistent
+SSOT ownership verify OK: ext=633 ext_dedicated=53 beacons=633
+[2/105] Sync + regenerate SSOT beacon ownership artifacts
+Synced D:\rawrxd\src\core\ssot_beacon.symbols.txt from ssot_handlers_ext.cpp (633 symbols)
+Generated D:\rawrxd\src\core\ssot_beacon_table.inc (633 symbols)
+[3/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\ssot_beacon.cpp.obj
+[4/105] Building CXX object CMakeFiles\RawrEngine.dir\src\compression\zlib_runtime_loader.cpp.obj
+[5/105] Building CXX object CMakeFiles\RawrEngine.dir\src\rawrxd_sampler.cpp.obj
+[6/105] Building CXX object CMakeFiles\RawrEngine.dir\src\vulkan_compute.cpp.obj
+[7/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\DualGPUHook.cpp.obj
+[8/105] Building CXX object CMakeFiles\RawrEngine.dir\src\rawrxd_inference.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[9/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ProductionProfiler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[10/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\FabricTensorTable.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[11/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\KimiK2Config.cpp.obj
+[12/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Deep2ModelRuntime.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[13/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\KVCache.cpp.obj
+[14/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\K2MLAWeights.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[15/105] Building CXX object CMakeFiles\RawrEngine.dir\src\win32app\agentic_bridge_headless.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[16/105] Building CXX object CMakeFiles\RawrEngine.dir\src\cpu_inference_engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[17/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic_engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[18/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\K2MoEWeights.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[19/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\InferenceSession.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[20/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\deep2\QuantKernelRegistry.cpp(1355): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+[21/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\K2GlobalTensorIndex.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[22/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\model_bruteforce_engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[23/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ThreadPool.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[24/105] Building CXX object CMakeFiles\RawrEngine.dir\src\subagent_core.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[25/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\MoERouter.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(551): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(551): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\deep2\MoERouter.cpp(233): note: see reference to class template instantiation 'std::basic_ofstream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\fstream(177): note: see reference to class template instantiation 'std::basic_ostream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(543): note: while compiling class template member function 'std::basic_ostream<char,std::char_traits<char>> &std::basic_ostream<char,std::char_traits<char>>::write(const _Elem *,std::streamsize)'
+        with
+        [
+            _Elem=char
+        ]
+D:\rawrxd\src\deep2\MoERouter.cpp(236): note: see the first reference to 'std::basic_ostream<char,std::char_traits<char>>::write' in 'Deep2::MoERouter::Save'
+[26/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Deep2IDEIntegration.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[27/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\AgenticNavigator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4164): warning C4005: 'IDM_DBG_GO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(425): note: see previous definition of 'IDM_DBG_GO'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4165): warning C4005: 'IDM_DBG_STEP_OVER': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(428): note: see previous definition of 'IDM_DBG_STEP_OVER'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4166): warning C4005: 'IDM_DBG_STEP_INTO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(429): note: see previous definition of 'IDM_DBG_STEP_INTO'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4167): warning C4005: 'IDM_DBG_STEP_OUT': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(430): note: see previous definition of 'IDM_DBG_STEP_OUT'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4168): warning C4005: 'IDM_DBG_BREAK': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(426): note: see previous definition of 'IDM_DBG_BREAK'
+D:\rawrxd\src\agentic\../win32app/Win32IDE.h(4169): warning C4005: 'IDM_DBG_KILL': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(427): note: see previous definition of 'IDM_DBG_KILL'
+[28/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Deep2Bridge.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[29/105] Building CXX object CMakeFiles\RawrEngine.dir\src\rawrxd_transformer.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[30/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ReverseIntegration.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[31/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Deep2Engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[32/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\MoEWeightProxy.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[33/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ReverseHotpatchEngine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[34/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\TensorHop.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[35/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\MoEArchitectureParser.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[36/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\GGUFLoader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[37/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\MoEWeightsLoader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[38/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\FusedInferenceKernel.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[39/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ModelRegistry.cpp.obj
+[40/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\RuntimePlanner.cpp.obj
+[41/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\UniversalModelLoader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(700): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(700): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\deep2\UniversalModelLoader.cpp(222): note: see reference to class template instantiation 'std::basic_ifstream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\fstream(23): note: see reference to class template instantiation 'std::basic_istream<char,std::char_traits<char>>' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\istream(696): note: while compiling class template member function 'std::fpos<_Mbstatet> std::basic_istream<char,std::char_traits<char>>::tellg(void)'
+D:\rawrxd\src\deep2\UniversalModelLoader.cpp(863): note: see the first reference to 'std::basic_istream<char,std::char_traits<char>>::tellg' in 'RawrXD::ReadZipCentralDirectory'
+[42/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\NUFusedPacker.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1224): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1224): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\deep2\NUFusedPacker.cpp(495): note: see reference to function template instantiation 'std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>> std::vector<_Ty,std::allocator<_Ty>>::insert<uint8_t*,0>(std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,_Iter,_Iter)' being compiled
+        with
+        [
+            _Ty=uint8_t,
+            _Iter=uint8_t *
+        ]
+D:\rawrxd\src\deep2\NUFusedPacker.cpp(495): note: see the first reference to 'std::vector<uint8_t,std::allocator<uint8_t>>::insert' in 'Deep2::NUFusedPacker::packMultiNibble'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1282): note: see reference to function template instantiation 'void std::vector<uint8_t,std::allocator<uint8_t>>::_Insert_counted_range<_Iter>(std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,_Iter,const unsigned __int64)' being compiled
+        with
+        [
+            _Iter=uint8_t *,
+            _Ty=uint8_t
+        ]
+[43/105] Building CXX object CMakeFiles\RawrEngine.dir\src\main.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\expected(11): warning STL4038: The contents of <expected> are available only with C++23 or later.
+[44/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\CompressedKVCache.cpp.obj
+[45/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ModelLoader.cpp.obj
+[46/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\MedusaDecoder.cpp.obj
+[47/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[48/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\RawrXDInferenceAdapter.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[49/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\mars\TensorHotpatch.cpp.obj
+[50/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\StreamRouter.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[51/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[52/105] Building CXX object CMakeFiles\RawrEngine.dir\src\runtime\Sovereign_RingTelemetry.cpp.obj
+[53/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\mars\MARSController.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[54/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\mars\VRAMManager.cpp.obj
+[55/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\NVMeStream.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[56/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\deep2_link_stubs.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[57/105] Building CXX object CMakeFiles\RawrEngine.dir\src\inference\RawrXD_LlamaNative.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[58/105] Building CXX object CMakeFiles\RawrEngine.dir\src\logging\Logger.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[59/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[60/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\mars\DualGPUBackend.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\ppltasks.h(1580): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[61/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\Chamber.cpp.obj
+[62/105] Building CXX object CMakeFiles\RawrEngine.dir\src\sampling\advanced_sampler.cpp.obj
+[63/105] Building CXX object CMakeFiles\RawrEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[64/105] Building CXX object CMakeFiles\RawrEngine.dir\src\security\InputSanitizer.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[65/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\hotpatch\Engine.cpp.obj
+[66/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\OutOfCoreRuntime.cpp.obj
+[67/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\SovereignOutOfCoreRuntime.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[68/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[69/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\cli_autonomy_loop_stub.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[70/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\js_extension_host_headless_impl.cpp.obj
+[71/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\BP16Streamer.cpp.obj
+[72/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ToroidalKVCache.cpp.obj
+[73/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\PlasmaGovernor.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[74/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\ConfigurationValidator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[75/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[76/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_q4k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q4k_gemv.asm
+[77/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_q4_1_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q4_1_gemv.asm
+[78/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_deep2_kernels.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_deep2_kernels.asm
+[79/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_q5_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q5_k_gemv.asm
+[80/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\QAHive.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[81/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\SwarmOrchestrator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[82/105] Building CXX object CMakeFiles\RawrEngine.dir\src\InferenceProfiler.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+D:\rawrxd\src\InferenceProfiler.cpp(16): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+D:\rawrxd\src\InferenceProfiler.cpp(16): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+[83/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\AdvancedAgentCoordinator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[84/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_fp16_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_fp16_gemv.asm
+[85/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\CinematicVibeEngine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\__msvc_ostream.hpp(781): note: the template instantiation context (the oldest one first) is
+D:\rawrxd\src\swarm\CinematicVibeEngine.cpp(244): note: see reference to function template instantiation 'std::basic_ostream<char,std::char_traits<char>> &std::operator <<<std::char_traits<char>>(std::basic_ostream<char,std::char_traits<char>> &,const char *)' being compiled
+[86/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_q6_k_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q6_k_gemv.asm
+[87/105] Building ASM_MASM object CMakeFiles\RawrEngine.dir\src\deep2\sovereign_q8_0_gemv.asm.obj
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:\rawrxd\src\deep2\sovereign_q8_0_gemv.asm
+[88/105] Building CXX object CMakeFiles\RawrEngine.dir\src\deep2\ResidencyManager.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[89/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\ArchitectAgent.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[90/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\BackendCore.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[91/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\ReviewerAgents.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[92/105] Building CXX object CMakeFiles\RawrEngine.dir\src\BackendOrchestrator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+D:\rawrxd\src\BackendOrchestrator.cpp(22): warning C4005: 'WIN32_LEAN_AND_MEAN': macro redefinition
+D:\rawrxd\src\BackendOrchestrator.cpp(22): note: 'WIN32_LEAN_AND_MEAN' previously declared on the command line
+[93/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\command_handlers_lsp.cpp.obj
+[94/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\command_handlers_asm.cpp.obj
+[95/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\command_handlers_hybrid.cpp.obj
+[96/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\FrontendSquad.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[97/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\LegacyRefactorModule.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[98/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\command_handlers_comprehensive.cpp.obj
+[99/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\DeepContextManager.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[100/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\native_debugger_symbols.cpp.obj
+[101/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\KimiSwarmOrchestrator.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[102/105] Building CXX object CMakeFiles\RawrEngine.dir\src\swarm\OpenClawBridge.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[103/105] Building CXX object CMakeFiles\RawrEngine.dir\src\agentic\AgentOllamaClient.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+[104/105] Building CXX object CMakeFiles\RawrEngine.dir\src\core\native_debugger_engine.cpp.obj
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\chrono(2359): warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify /EHsc
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4164): warning C4005: 'IDM_DBG_GO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(425): note: see previous definition of 'IDM_DBG_GO'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4165): warning C4005: 'IDM_DBG_STEP_OVER': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(428): note: see previous definition of 'IDM_DBG_STEP_OVER'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4166): warning C4005: 'IDM_DBG_STEP_INTO': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(429): note: see previous definition of 'IDM_DBG_STEP_INTO'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4167): warning C4005: 'IDM_DBG_STEP_OUT': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(430): note: see previous definition of 'IDM_DBG_STEP_OUT'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4168): warning C4005: 'IDM_DBG_BREAK': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(426): note: see previous definition of 'IDM_DBG_BREAK'
+D:\rawrxd\src\core\../win32app/Win32IDE.h(4169): warning C4005: 'IDM_DBG_KILL': macro redefinition
+D:\rawrxd\src\win32app\Win32IDE_Commands.h(427): note: see previous definition of 'IDM_DBG_KILL'
+[105/105] Linking CXX executable bin\RawrEngine.exe; Generating OMEGA-1 manifest for RawrEngine
+FAILED: [code=4294967295] bin/RawrEngine.exe 
+C:\WINDOWS\system32\cmd.exe /C "cd . && "C:\Program Files\CMake\bin\cmake.exe" -E vs_link_exe --msvc-ver=1944 --intdir=CMakeFiles\RawrEngine.dir --rc="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" --mt="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\mt.exe" --manifests  -- "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe" /nologo @CMakeFiles\RawrEngine.rsp  /out:bin\RawrEngine.exe /implib:RawrEngine.lib /pdb:bin\RawrEngine.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG /LARGEADDRESSAWARE:NO && C:\WINDOWS\system32\cmd.exe /C "cd /D D:\rawrxd\build-fresh-aug22 && powershell -ExecutionPolicy Bypass -File D:/rawrxd/src/omega1_modules/Generate-Manifest.ps1 -BinaryPath D:/rawrxd/build-fresh-aug22/bin/RawrEngine.exe -OutputPath D:/rawrxd/build-fresh-aug22/omega1_manifest.json""
+LINK: command "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe /nologo @CMakeFiles\RawrEngine.rsp /out:bin\RawrEngine.exe /implib:RawrEngine.lib /pdb:bin\RawrEngine.pdb /version:0.0 /machine:x64 /INCREMENTAL:NO /subsystem:console /LTCG /LARGEADDRESSAWARE:NO /MANIFEST:EMBED,ID=1" failed (exit code 1104) with the following output:
+LINK : fatal error LNK1104: cannot open file 'CMakeFiles\RawrEngine.dir\src\swarm\OpenClawBridge.cpp.obj'
+
+ninja: build stopped: subcommand failed.

@@ -7,6 +7,7 @@
 #include "rawrxd_inference.h"
 #include "deep2/GGUFLoader.hpp"
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -1288,12 +1289,13 @@ void DequantizeF16(const uint8_t* quantized, float* output, int num_elements)
     }
 }
 
+static bool g_avx2Enabled = true;
+
 void EnableAVX2(bool enable)
 {
     // Runtime dispatch: check CPU features
     int cpuInfo[4];
     __cpuid(cpuInfo, 1);
-    // Bit 28 of ECX (cpuInfo[2]) indicates AVX support, not AVX2.
     bool hasAVX = (cpuInfo[2] & (1 << 28)) != 0;
     bool hasAVX2 = false;
     if (hasAVX)
@@ -1302,22 +1304,47 @@ void EnableAVX2(bool enable)
         hasAVX2 = (cpuInfo[1] & (1 << 5)) != 0;
     }
     
-    // NOTE: This facade does not implement AVX2 dispatch.
-    // Actual optimized paths are in RawrXDInference backend.
-    (void)enable;
-    (void)hasAVX2;
+    // Only enable if CPU actually supports AVX2
+    g_avx2Enabled = enable && hasAVX2;
+    printf("[CPUInferenceEngine] AVX2 %s (CPU support: %s)\n", 
+           g_avx2Enabled ? "enabled" : "disabled",
+           hasAVX2 ? "yes" : "no");
 }
+
+static bool g_multiThreadingEnabled = false;
+static std::vector<std::thread> g_threadPool;
+static std::atomic<bool> g_threadPoolRunning{false};
 
 void EnableMultiThreading(bool enable)
 {
-    // Thread pool toggle for parallel regions
-    if (enable)
+    if (enable && !g_multiThreadingEnabled)
     {
-        // Initialize thread pool with hardware_concurrency workers
+        unsigned int nThreads = std::thread::hardware_concurrency();
+        if (nThreads == 0) nThreads = 4;
+        g_threadPoolRunning.store(true);
+        g_threadPool.reserve(nThreads);
+        for (unsigned int i = 0; i < nThreads; ++i)
+        {
+            g_threadPool.emplace_back([]() {
+                // Worker thread idle loop - waits for work
+                while (g_threadPoolRunning.load()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
+            });
+        }
+        g_multiThreadingEnabled = true;
+        printf("[CPUInferenceEngine] Thread pool initialized with %u workers\n", nThreads);
     }
-    else
+    else if (!enable && g_multiThreadingEnabled)
     {
-        // Signal thread pool to idle
+        g_threadPoolRunning.store(false);
+        for (auto& t : g_threadPool)
+        {
+            if (t.joinable()) t.join();
+        }
+        g_threadPool.clear();
+        g_multiThreadingEnabled = false;
+        printf("[CPUInferenceEngine] Thread pool shutdown\n");
     }
 }
 

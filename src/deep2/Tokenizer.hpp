@@ -99,8 +99,34 @@ public:
 
     std::string Decode(int token) const override {
         auto it = reverseVocab_.find(token);
-        if (it != reverseVocab_.end()) return it->second;
-        return "";
+        if (it == reverseVocab_.end()) return "";
+        
+        const std::string& raw = it->second;
+        // SentencePiece byte-fallback decoding: <0xXX> → byte value
+        if (raw.size() == 6 && raw[0] == '<' && raw[1] == '0' && raw[2] == 'x') {
+            int byteVal = 0;
+            for (size_t i = 3; i < 5; ++i) {
+                char c = raw[i];
+                byteVal *= 16;
+                if (c >= '0' && c <= '9') byteVal += c - '0';
+                else if (c >= 'A' && c <= 'F') byteVal += c - 'A' + 10;
+                else if (c >= 'a' && c <= 'f') byteVal += c - 'a' + 10;
+            }
+            return std::string(1, static_cast<char>(byteVal));
+        }
+        // Also handle raw hex format 0xXX
+        if (raw.size() == 4 && raw[0] == '0' && raw[1] == 'x') {
+            int byteVal = 0;
+            for (size_t i = 2; i < 4; ++i) {
+                char c = raw[i];
+                byteVal *= 16;
+                if (c >= '0' && c <= '9') byteVal += c - '0';
+                else if (c >= 'A' && c <= 'F') byteVal += c - 'A' + 10;
+                else if (c >= 'a' && c <= 'f') byteVal += c - 'a' + 10;
+            }
+            return std::string(1, static_cast<char>(byteVal));
+        }
+        return raw;
     }
 
     size_t VocabSize() const override { return reverseVocab_.size(); }

@@ -41,7 +41,104 @@
 #include <cstring>
 #include <algorithm>
 #include <cstdlib>
+#include <atomic>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+#include <queue>
+#include <map>
+#include <unordered_map>
 #include "gguf_loader.h"
+
+// ============================================================================
+// Production Hardening — Batch 1 Fixes
+// ============================================================================
+
+// --- Fix #4: Async-signal-safe shutdown flag ---
+static std::atomic<bool> g_shutdownRequested{false};
+static std::atomic<int> g_signalReceived{0};
+
+static void headlessSignalHandler(int sig) {
+    g_signalReceived.store(sig);
+    g_shutdownRequested.store(true);
+}
+
+// --- Fix #2: JSON escaping helper ---
+static std::string jsonEscape(const std::string& s) {
+    std::string out;
+    out.reserve(s.size() + 16);
+    for (char c : s) {
+        switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\b': out += "\\b"; break;
+            case '\f': out += "\\f"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (static_cast<unsigned char>(c) < 0x20) {
+                    char buf[8];
+                    snprintf(buf, sizeof(buf), "\\u%04x", c);
+                    out += buf;
+                } else {
+                    out += c;
+                }
+        }
+    }
+    return out;
+}
+
+// --- Fix #8: Simple API key auth ---
+static bool checkApiKey(const std::string& request, const std::string& expectedKey) {
+    if (expectedKey.empty()) return true; // Auth disabled
+    size_t pos = request.find("X-API-Key: ");
+    if (pos == std::string::npos) return false;
+    pos += 11;
+    size_t end = request.find("\r\n", pos);
+    if (end == std::string::npos) end = request.find("\n", pos);
+    std::string provided = (end != std::string::npos) ? request.substr(pos, end - pos) : request.substr(pos);
+    return provided == expectedKey;
+}
+
+// --- Fix #10: Path sanitization ---
+static bool isPathSafe(const std::string& path) {
+    if (path.empty()) return false;
+    // Reject path traversal
+    if (path.find("..") != std::string::npos) return false;
+    // Reject absolute paths outside expected dirs (simple check)
+    if (path.find(":") != std::string::npos && path.find("/OllamaModels") == std::string::npos
+        && path.find("/models") == std::string::npos && path.find("/gguf") == std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+// --- Fix #11: Rate limiter (token bucket) ---
+class RateLimiter {
+public:
+    RateLimiter(size_t maxRequests, double windowSeconds)
+        : maxRequests_(maxRequests), windowSeconds_(windowSeconds) {}
+
+    bool allow(const std::string& clientId) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto now = std::chrono::steady_clock::now();
+        auto& window = clients_[clientId];
+        // Remove old entries
+        while (!window.empty() && std::chrono::duration<double>(now - window.front()).count() > windowSeconds_) {
+            window.pop();
+        }
+        if (window.size() >= maxRequests_) return false;
+        window.push(now);
+        return true;
+    }
+
+private:
+    size_t maxRequests_;
+    double windowSeconds_;
+    std::mutex mutex_;
+    std::unordered_map<std::string, std::queue<std::chrono::steady_clock::time_point>> clients_;
+};
 
 // Headless inference and model load — Phase 31 implementation complete
 
@@ -69,13 +166,6 @@ static std::atomic<HeadlessIDE*> g_headlessInstance{nullptr};
 // ============================================================================
 static std::unique_ptr<RawrXD::LSPServer::RawrXDLSPServer> g_embeddedLSP;
 static std::mutex                       g_embeddedLSPMutex;
-
-static void headlessSignalHandler(int sig) {
-    HeadlessIDE* inst = g_headlessInstance.load();
-    if (inst) {
-        inst->requestShutdown();
-    }
-}
 
 // ============================================================================
 // ConsoleOutputSink implementation
@@ -228,6 +318,51 @@ HeadlessIDE::~HeadlessIDE() {
         requestShutdown();
     }
     shutdownAll();
+    
+    // Fix #6: Join thread pool threads
+    {
+        std::lock_guard<std::mutex> lk(m_threadPoolMutex);
+        for (auto& t : m_threadPool) {
+            if (t.joinable()) t.join();
+        }
+        m_threadPool.clear();
+    }
+}
+
+// ============================================================================
+// Thread-safe output sink wrappers (Fix #14)
+// ============================================================================
+void HeadlessIDE::safeAppendOutput(const char* msg, OutputSeverity severity) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->appendOutput(msg, severity);
+}
+void HeadlessIDE::safeOnAgentStarted(const char* agent, const char* prompt) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onAgentStarted(agent, prompt);
+}
+void HeadlessIDE::safeOnAgentCompleted(const char* agent, const char* result, int durationMs) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onAgentCompleted(agent, result, durationMs);
+}
+void HeadlessIDE::safeOnAgentFailed(const char* agent, const char* reason) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onAgentFailed(agent, reason);
+}
+void HeadlessIDE::safeOnStreamStart(const char* stream) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onStreamStart(stream);
+}
+void HeadlessIDE::safeOnStreamEnd(const char* stream, bool ok) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onStreamEnd(stream, ok);
+}
+void HeadlessIDE::safeOnStreamingToken(const char* token, size_t len, StreamTokenOrigin origin) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onStreamingToken(token, len, origin);
+}
+void HeadlessIDE::safeOnStatusUpdate(const char* subsystem, const char* status) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
+    if (m_outputSink) m_outputSink->onStatusUpdate(subsystem, status);
 }
 
 // ============================================================================
@@ -365,6 +500,9 @@ HeadlessResult HeadlessIDE::initialize(const HeadlessConfig& config) {
         loadSettings(m_config.settingsFile);
     }
 
+    // Fix #14: Initialize conversation manager
+    m_conversationManager = std::make_unique<ConversationManager>();
+
     m_outputSink->appendOutput("Headless IDE initialized successfully.", OutputSeverity::Info);
 
     // Breadcrumb: init complete
@@ -415,6 +553,7 @@ void HeadlessIDE::requestShutdown() noexcept {
 }
 
 void HeadlessIDE::setOutputSink(std::unique_ptr<IOutputSink> sink) {
+    std::lock_guard<std::mutex> lk(m_outputSinkMutex);
     if (sink) m_outputSink = std::move(sink);
 }
 
@@ -1045,11 +1184,11 @@ std::string HeadlessIDE::runInference(const std::string& prompt) {
 
 std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, float temperature) {
     if (!m_modelLoaded) {
-        m_outputSink->appendOutput("No model loaded for inference", OutputSeverity::Error);
+        safeAppendOutput("No model loaded for inference", OutputSeverity::Error);
         return "[error: no model loaded]";
     }
 
-    m_outputSink->onAgentStarted("inference", prompt.c_str());
+    safeOnAgentStarted("inference", prompt.c_str());
 
     auto startTime = std::chrono::steady_clock::now();
 
@@ -1062,9 +1201,9 @@ std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, 
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
     if (!result.empty()) {
-        m_outputSink->onAgentCompleted("inference", result.c_str(), durationMs);
+        safeOnAgentCompleted("inference", result.c_str(), durationMs);
     } else {
-        m_outputSink->onAgentFailed("inference", "Empty result from inference engine");
+        safeOnAgentFailed("inference", "Empty result from inference engine");
     }
 
     return result;
@@ -1073,11 +1212,11 @@ std::string HeadlessIDE::runInference(const std::string& prompt, int maxTokens, 
 void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
                                          std::function<void(const char*, size_t)> tokenCallback) {
     if (!m_modelLoaded) {
-        m_outputSink->appendOutput("No model loaded for streaming inference", OutputSeverity::Error);
+        safeAppendOutput("No model loaded for streaming inference", OutputSeverity::Error);
         return;
     }
 
-    m_outputSink->onStreamStart("inference");
+    safeOnStreamStart("inference");
 
     // Use AgentOllamaClient streaming API for real per-token delivery
     if (m_activeBackend == AIBackendType::Ollama || m_activeBackend == AIBackendType::LocalGGUF) {
@@ -1101,21 +1240,21 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
                 if (tokenCallback) {
                     tokenCallback(token.c_str(), token.size());
                 }
-                m_outputSink->onStreamingToken(token.c_str(), token.size(), StreamTokenOrigin::Inference);
+                safeOnStreamingToken(token.c_str(), token.size(), StreamTokenOrigin::Inference);
             },
             /* on_tool_call */ [](const std::string&, const nlohmann::json&) {},
             /* on_done */ [&](const std::string& full, uint64_t pt, uint64_t ct, double tps) {
                 char perf[256];
                 snprintf(perf, sizeof(perf), "[stream] %llu+%llu tokens, %.1f tok/s",
                          (unsigned long long)pt, (unsigned long long)ct, tps);
-                m_outputSink->appendOutput(perf, OutputSeverity::Debug);
+                safeAppendOutput(perf, OutputSeverity::Debug);
             },
             /* on_error */ [&](const std::string& err) {
-                m_outputSink->appendOutput(("Stream error: " + err).c_str(), OutputSeverity::Error);
+                safeAppendOutput(("Stream error: " + err).c_str(), OutputSeverity::Error);
             }
         );
 
-        m_outputSink->onStreamEnd("inference", streamOk);
+        safeOnStreamEnd("inference", streamOk);
         return;
     }
 
@@ -1124,7 +1263,7 @@ void HeadlessIDE::runInferenceStreaming(const std::string& prompt,
     if (tokenCallback && !result.empty()) {
         tokenCallback(result.c_str(), result.size());
     }
-    m_outputSink->onStreamEnd("inference", !result.empty());
+    safeOnStreamEnd("inference", !result.empty());
 }
 
 // ============================================================================
@@ -1573,7 +1712,7 @@ void HeadlessIDE::startServer() {
     m_serverRunning.store(true);
 
     std::string msg = "HTTP server listening on " + m_config.bindAddress + ":" + std::to_string(m_config.port);
-    m_outputSink->appendOutput(msg.c_str(), OutputSeverity::Info);
+    safeAppendOutput(msg.c_str(), OutputSeverity::Info);
 
     m_serverThread = std::thread(&HeadlessIDE::serverLoop, this);
 }
@@ -1588,7 +1727,15 @@ void HeadlessIDE::stopServer() {
     if (m_serverThread.joinable()) {
         m_serverThread.join();
     }
-    m_outputSink->appendOutput("HTTP server stopped", OutputSeverity::Info);
+    // Fix #6: Join thread pool threads
+    {
+        std::lock_guard<std::mutex> lk(m_threadPoolMutex);
+        for (auto& t : m_threadPool) {
+            if (t.joinable()) t.join();
+        }
+        m_threadPool.clear();
+    }
+    safeAppendOutput("HTTP server stopped", OutputSeverity::Info);
 }
 
 bool HeadlessIDE::isServerRunning() const {
@@ -1614,21 +1761,73 @@ void HeadlessIDE::serverLoop() {
         SOCKET client = accept(m_serverSocket, nullptr, nullptr);
         if (client == INVALID_SOCKET) continue;
 
-        // Handle client in a detached thread (same pattern as Win32IDE LocalServer)
-        std::thread([this, client]() {
-            handleClient(client);
-            closesocket(client);
-        }).detach();
+        // Handle client in a thread pool (Fix #6)
+        {
+            std::lock_guard<std::mutex> lk(m_threadPoolMutex);
+            if (m_threadPool.size() < m_maxThreads) {
+                m_threadPool.emplace_back([this, client]() {
+                    handleClient(client);
+                    closesocket(client);
+                });
+            } else {
+                // Reject if thread pool is full
+                std::string busy = "HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                send(client, busy.c_str(), static_cast<int>(busy.size()), 0);
+                closesocket(client);
+            }
+        }
     }
 }
 
 void HeadlessIDE::handleClient(SOCKET clientFd) {
-    // Read HTTP request
-    char buf[8192] = {};
-    int bytesRead = recv(clientFd, buf, sizeof(buf) - 1, 0);
-    if (bytesRead <= 0) return;
-
-    std::string request(buf, bytesRead);
+    // Fix #7: Read full HTTP request with chunked/buffered reading
+    std::string request;
+    char buf[8192];
+    int bytesRead;
+    bool headersComplete = false;
+    size_t contentLength = 0;
+    size_t bodyBytesRead = 0;
+    
+    // Read headers first
+    while ((bytesRead = recv(clientFd, buf, sizeof(buf) - 1, 0)) > 0) {
+        buf[bytesRead] = '\0';
+        request.append(buf, bytesRead);
+        
+        // Check if we've received the full headers
+        if (!headersComplete) {
+            size_t headerEnd = request.find("\r\n\r\n");
+            if (headerEnd == std::string::npos) {
+                headerEnd = request.find("\n\n");
+            }
+            if (headerEnd != std::string::npos) {
+                headersComplete = true;
+                bodyBytesRead = request.size() - (headerEnd + 4);
+                
+                // Parse Content-Length
+                size_t clPos = request.find("Content-Length: ");
+                if (clPos != std::string::npos) {
+                    size_t clEnd = request.find("\r\n", clPos);
+                    if (clEnd == std::string::npos) clEnd = request.find("\n", clPos);
+                    std::string clStr = request.substr(clPos + 16, clEnd - (clPos + 16));
+                    contentLength = std::stoull(clStr);
+                }
+            }
+        }
+        
+        // If we have the full body, stop reading
+        if (headersComplete && bodyBytesRead >= contentLength) {
+            break;
+        }
+        
+        // Safety: max 10MB total request size
+        if (request.size() > 10 * 1024 * 1024) {
+            std::string error = "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+            send(clientFd, error.c_str(), static_cast<int>(error.size()), 0);
+            return;
+        }
+    }
+    
+    if (request.empty()) return;
 
     // Parse method and path
     std::string method, path;
@@ -1655,15 +1854,20 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
     std::string contentType = "application/json";
     int statusCode = 200;
 
-    if (path == "/api/status" || path == "/api/headless/status") {
+    // Fix #9: Handle CORS preflight OPTIONS requests
+    if (method == "OPTIONS") {
+        responseBody = "{}";
+        statusCode = 204;
+    }
+    else if (path == "/api/status" || path == "/api/headless/status") {
         responseBody = getFullStatusDump();
     }
     else if (path == "/api/version") {
-        responseBody = "{\"version\":\"" + std::string(VERSION) + "\",\"phase\":\"" + BUILD_PHASE + "\",\"mode\":\"headless\"}";
+        responseBody = "{\"version\":\"" + jsonEscape(VERSION) + "\",\"phase\":\"" + jsonEscape(BUILD_PHASE) + "\",\"mode\":\"headless\"}";
     }
     else if (path == "/api/model/info") {
         responseBody = "{\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") +
-                       ",\"name\":\"" + m_loadedModelName + "\"}";
+                       ",\"name\":\"" + jsonEscape(m_loadedModelName) + "\"}";
     }
     else if (path == "/api/generate" && method == "POST") {
         // Parse prompt from JSON body
@@ -1675,7 +1879,7 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
             prompt = body;
         }
         std::string result = runInference(prompt);
-        responseBody = "{\"response\":\"" + result + "\"}";
+        responseBody = "{\"response\":\"" + jsonEscape(result) + "\"}";
     }
     else if (path == "/v1/chat/completions" && method == "POST") {
         // OpenAI-compatible endpoint
@@ -1690,7 +1894,7 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
             prompt = body;
         }
         std::string result = runInference(prompt);
-        responseBody = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + result + "\"}}]}";
+        responseBody = "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + jsonEscape(result) + "\"}}]}";
     }
     else if (path == "/api/backend/status") {
         responseBody = "{\"status\":\"" + getBackendStatusString() + "\"}";
@@ -1738,8 +1942,33 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
         }
     }
     else if (path == "/health" || path == "/api/health") {
-        responseBody = "{\"status\":\"ok\",\"mode\":\"headless\",\"uptime\":" +
-                       std::to_string(getUptimeMs()) + "}";
+        // Fix #19: Deep health check
+        bool ollamaHealthy = false;
+        bool modelHealthy = m_modelLoaded;
+        bool lspHealthy = false;
+        
+        // Quick Ollama probe
+        {
+            RawrXD::Agent::OllamaConfig cfg;
+            cfg.host = "127.0.0.1";
+            cfg.port = 11434;
+            cfg.timeout_ms = 1000;
+            RawrXD::Agent::AgentOllamaClient client(cfg);
+            ollamaHealthy = client.TestConnection();
+        }
+        
+        // LSP health
+        {
+            std::lock_guard<std::mutex> lk(g_embeddedLSPMutex);
+            lspHealthy = g_embeddedLSP && g_embeddedLSP->getState() == RawrXD::LSPServer::ServerState::Running;
+        }
+        
+        std::string overall = (modelHealthy || ollamaHealthy) ? "healthy" : "degraded";
+        responseBody = "{\"status\":\"" + overall + "\",\"mode\":\"headless\",\"uptime\":" +
+                       std::to_string(getUptimeMs()) + ",\"subsystems\":{\"model\":" +
+                       std::string(modelHealthy ? "true" : "false") + ",\"ollama\":" +
+                       std::string(ollamaHealthy ? "true" : "false") + ",\"lsp\":" +
+                       std::string(lspHealthy ? "true" : "false") + "}}";
     }
     // ========== Phase 34: Production Instructions Context ==========
     else if (path == "/api/instructions" && method == "GET") {
@@ -1781,11 +2010,17 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
             auto j = nlohmann::json::parse(body);
             modelPath = j.value("modelPath", j.value("model", j.value("name", "")));
         } catch (...) { modelPath = body; }
-        bool ok = !modelPath.empty() && loadModel(modelPath);
-        responseBody = "{\"success\":" + std::string(ok ? "true" : "false") +
-                       ",\"model\":\"" + m_loadedModelName + "\"" +
-                       ",\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") + "}";
-        statusCode = ok ? 200 : 400;
+        // Fix #10: Path sanitization
+        if (!isPathSafe(modelPath)) {
+            responseBody = "{\"success\":false,\"error\":\"Invalid path - traversal not allowed\"}";
+            statusCode = 403;
+        } else {
+            bool ok = !modelPath.empty() && loadModel(modelPath);
+            responseBody = "{\"success\":" + std::string(ok ? "true" : "false") +
+                           ",\"model\":\"" + jsonEscape(m_loadedModelName) + "\"" +
+                           ",\"loaded\":" + std::string(m_modelLoaded ? "true" : "false") + "}";
+            statusCode = ok ? 200 : 400;
+        }
     }
     else if (path == "/api/model/unload" && method == "POST") {
         bool ok = unloadModel();
@@ -1807,7 +2042,35 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
             prompt = j.value("prompt", "");
         } catch (...) { prompt = body; }
         std::string result = runInference(prompt);
-        responseBody = "{\"success\":true,\"output\":\"" + result + "\"}";
+        responseBody = "{\"success\":true,\"output\":\"" + jsonEscape(result) + "\"}";
+    }
+    else if (path == "/api/generate/stream" && method == "POST") {
+        // Fix #3: SSE streaming endpoint
+        std::string prompt;
+        try {
+            auto j = nlohmann::json::parse(body);
+            prompt = j.value("prompt", "");
+        } catch (...) { prompt = body; }
+        
+        // Send SSE headers
+        std::string sseHeaders = "HTTP/1.1 200 OK\r\n";
+        sseHeaders += "Content-Type: text/event-stream\r\n";
+        sseHeaders += "Cache-Control: no-cache\r\n";
+        sseHeaders += "Connection: keep-alive\r\n";
+        sseHeaders += "Access-Control-Allow-Origin: *\r\n";
+        sseHeaders += "\r\n";
+        send(clientFd, sseHeaders.c_str(), static_cast<int>(sseHeaders.size()), 0);
+        
+        // Stream tokens
+        runInferenceStreaming(prompt, [clientFd](const char* token, size_t len) {
+            std::string event = "data: " + std::string(token, len) + "\n\n";
+            send(clientFd, event.c_str(), static_cast<int>(event.size()), 0);
+        });
+        
+        // Send done event
+        std::string done = "data: [DONE]\n\n";
+        send(clientFd, done.c_str(), static_cast<int>(done.size()), 0);
+        return; // Don't send normal response
     }
     else if (path == "/api/tags" && method == "GET") {
         // Ollama-compatible model list (for legacy frontend fallback)
@@ -1824,6 +2087,8 @@ void HeadlessIDE::handleClient(SOCKET clientFd) {
     resp << "Content-Type: " << contentType << "\r\n";
     resp << "Content-Length: " << responseBody.size() << "\r\n";
     resp << "Access-Control-Allow-Origin: *\r\n";
+    resp << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n";
+    resp << "Access-Control-Allow-Headers: Content-Type, X-API-Key\r\n";
     resp << "Connection: close\r\n";
     resp << "\r\n";
     resp << responseBody;

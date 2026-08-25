@@ -43,8 +43,6 @@
 #endif
 #include "gguf_loader.h"
 
-#include "gguf_loader.h"
-
 // Deep2 kernel interface
 extern "C" {
     void Deep2_VecDotProduct(const float* a, const float* b, float* out, size_t n);
@@ -610,6 +608,8 @@ static void q4kGEMV(const void* weights, const float* input,
                 for (int chunk = 0; chunk < 2; ++chunk) {
                     int offset = sb * 32 + chunk * 8;
                     if ((size_t)offset + 8 > elemsInBlock) break;
+                    // Bounds check: ensure we don't read past input buffer (cols elements)
+                    if ((size_t)(b * 256 + offset + 8) > cols) break;
 
                     __m128i nibbles = (chunk == 0) ? lowNibbles
                         : _mm_srli_si128(lowNibbles, 8);
@@ -624,6 +624,8 @@ static void q4kGEMV(const void* weights, const float* input,
                 for (int chunk = 0; chunk < 2; ++chunk) {
                     int offset = sb * 32 + 16 + chunk * 8;
                     if ((size_t)offset + 8 > elemsInBlock) break;
+                    // Bounds check: ensure we don't read past input buffer (cols elements)
+                    if ((size_t)(b * 256 + offset + 8) > cols) break;
 
                     __m128i nibbles = (chunk == 0) ? highNibbles
                         : _mm_srli_si128(highNibbles, 8);
@@ -3568,13 +3570,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 uint32_t pause_us = plasmaGovernor_->coolingPauseMicros();
                 if (pause_us > 0) {
                     printf("[Deep2Engine] PlasmaGovernor cooling pause: %u us\n", pause_us);
-                    // Use high-resolution sleep for microsecond precision
-                    auto start = std::chrono::high_resolution_clock::now();
-                    while (true) {
-                        auto now = std::chrono::high_resolution_clock::now();
-                        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - start).count();
-                        if (elapsed >= pause_us) break;
-                    }
+                    // Use actual sleep instead of busy-wait spin loop
+                    std::this_thread::sleep_for(std::chrono::microseconds(pause_us));
                 }
             }
         }

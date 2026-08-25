@@ -6,31 +6,47 @@
 #include <immintrin.h>
 
 bool RawrXDTokenizer::Load(const std::string& vocabPath) {
-    // 1. Initialize with bytes 
+    // 1. Initialize with bytes as <0xXX> SentencePiece format
     for (int i = 0; i < 256; i++) {
-        std::string s(1, (char)i);
-        // Standard Llama token mapping often has <0xXX> for bytes or raw bytes
-        // We'll map them to a safe range if needed, or assume raw index.
-        // For simplicity:
-        vocab[s] = i + 3; 
-        reverse_vocab[i + 3] = s;
+        char hexBuf[8];
+        snprintf(hexBuf, sizeof(hexBuf), "<0x%02X>", i);
+        std::string hexStr(hexBuf);
+        vocab[hexStr] = i + 3;
+        reverse_vocab[i + 3] = hexStr;
     }
     
     // 2. Load file if exists (e.g. tokenizer.model or vocab.json)
-    // Stub: Try to read basic lines
     std::ifstream f(vocabPath);
     if (!f.is_open()) {
-        // Fallback to ASCII byte encoding only
         return true;
     }
     
     std::string line;
     int idx = 259; // Start after bytes
     while (std::getline(f, line)) {
-        // Minimal parser
         if (line.empty()) continue;
-        vocab[line] = idx;
-        reverse_vocab[idx] = line;
+        // Handle SentencePiece model format: token\tscore\n
+        size_t tabPos = line.find('\t');
+        std::string token = (tabPos != std::string::npos) ? line.substr(0, tabPos) : line;
+        
+        // Decode SentencePiece escaped tokens
+        std::string decoded;
+        decoded.reserve(token.size());
+        for (size_t i = 0; i < token.size(); ++i) {
+            if (token[i] == '\\' && i + 1 < token.size()) {
+                char next = token[i + 1];
+                if (next == 'n') { decoded += '\n'; i++; }
+                else if (next == 'r') { decoded += '\r'; i++; }
+                else if (next == 't') { decoded += '\t'; i++; }
+                else if (next == '\\') { decoded += '\\'; i++; }
+                else { decoded += token[i]; }
+            } else {
+                decoded += token[i];
+            }
+        }
+        
+        vocab[decoded] = idx;
+        reverse_vocab[idx] = decoded;
         idx++;
     }
     
@@ -89,7 +105,31 @@ std::string RawrXDTokenizer::Decode(const std::vector<uint32_t>& tokens) {
     for (uint32_t t : tokens) {
         if (t == BOS_ID || t == EOS_ID) continue;
         if (reverse_vocab.count(t)) {
-            res += reverse_vocab[t];
+            const std::string& raw = reverse_vocab[t];
+            // SentencePiece byte-fallback: <0xXX> → actual byte
+            if (raw.size() == 6 && raw[0] == '<' && raw[1] == '0' && raw[2] == 'x') {
+                int byteVal = 0;
+                for (size_t i = 3; i < 5; ++i) {
+                    char c = raw[i];
+                    byteVal *= 16;
+                    if (c >= '0' && c <= '9') byteVal += c - '0';
+                    else if (c >= 'A' && c <= 'F') byteVal += c - 'A' + 10;
+                    else if (c >= 'a' && c <= 'f') byteVal += c - 'a' + 10;
+                }
+                res += static_cast<char>(byteVal);
+            } else if (raw.size() == 4 && raw[0] == '0' && raw[1] == 'x') {
+                int byteVal = 0;
+                for (size_t i = 2; i < 4; ++i) {
+                    char c = raw[i];
+                    byteVal *= 16;
+                    if (c >= '0' && c <= '9') byteVal += c - '0';
+                    else if (c >= 'A' && c <= 'F') byteVal += c - 'A' + 10;
+                    else if (c >= 'a' && c <= 'f') byteVal += c - 'a' + 10;
+                }
+                res += static_cast<char>(byteVal);
+            } else {
+                res += raw;
+            }
         } else if (t < 256 + 3 && t >= 3) {
             res += (char)(t - 3);
         }
