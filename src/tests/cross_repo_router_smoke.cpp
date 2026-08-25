@@ -28,7 +28,7 @@ int main() {
     const RepoSymbolIndex* repos[] = {&idxA, &idxB};
 
     RouteContext ctx{};
-    ctx.active_file = 0xAAA;
+    ctx.active_file = 0xAAA
     ctx.active_symbol = 0x101;
     ctx.signature_hint = 0xD00D;
     ctx.edit_tick = 100;

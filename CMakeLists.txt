@@ -322,10 +322,10 @@ if(RAWRXD_BUILD_CLI)
 
     # Add LIBPATH flags for Windows SDK, MSVC runtime, and UCRT
     target_link_options(rawrxd PRIVATE
-        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64"
-        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/x64"
-        "/LIBPATH:C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/x64"
-        "/LIBPATH:C:/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/MSVC/14.51.36231/lib/onecore/x64"
+        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64"
+        "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64"
+        "/LIBPATH:C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64"
+        "/LIBPATH:C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64"
     )
     
     # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
@@ -2775,6 +2775,15 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/camellia256_bridge.cpp
     src/core/cli_autonomy_loop_stub.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
+    # ── Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ──
+    src/deep2/Chamber.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/OutOfCoreRuntime.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/ToroidalKVCache.cpp
+    src/vulkan_compute.cpp
 
     # ═══════════════════════════════════════════════════════════════════
     # Kimi K2.6 300-Agent Swarm Architecture (subset — excluded files
@@ -2917,6 +2926,11 @@ add_subdirectory(src/generation)
 set(RAWR_ENGINE_ASM_SOURCES
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4_1_gemv.asm
+    src/deep2/sovereign_q5_k_gemv.asm
+    src/deep2/sovereign_q6_k_gemv.asm
+    src/deep2/sovereign_q8_0_gemv.asm
+    src/deep2/sovereign_fp16_gemv.asm
 )
 set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
 
@@ -4348,6 +4362,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/TensorExecutionRouter.cpp
     src/runtime/Deep2ExecutionTelemetry.cpp
     src/backend/VulkanGemmDispatcher.cpp
+    src/kernels/VulkanComputeKernels.cpp
+    src/vulkan_compute.cpp
     src/runtime/memory/TransferScheduler.cpp
     src/runtime/memory/PredictiveMemoryManager.cpp
     src/runtime/memory/PlacementPolicy.cpp
@@ -4379,6 +4395,78 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
+    # Deep2 core — unified into InferenceEngine for canonical local inference
+    src/deep2/Deep2Engine.cpp
+    src/deep2/GGUFLoader.cpp
+    src/deep2/InferenceSession.cpp
+    src/deep2/QuantKernelRegistry.cpp
+    src/deep2/ThreadPool.cpp
+    src/deep2/KVCache.cpp
+    src/deep2/MoERouter.cpp
+    src/deep2/MoEWeightProxy.cpp
+    src/deep2/MoEWeightsLoader.cpp
+    src/deep2/MoEArchitectureParser.cpp
+    src/deep2/TensorHop.cpp
+    src/deep2/DeepSeekMoELoader.cpp
+    src/deep2/Deep2ExecutionGraph.cpp
+    src/deep2/StreamRouter.cpp
+    src/deep2/FusedInferenceKernel.cpp
+    src/deep2/UniversalModelLoader.cpp
+    src/deep2/ModelLoader.cpp
+    src/deep2/ModelRegistry.cpp
+    src/deep2/RuntimePlanner.cpp
+    src/deep2/WarmupScheduler.cpp
+    src/deep2/NUFusedPacker.cpp
+    src/deep2/CompressedKVCache.cpp
+    src/deep2/NVMeStream.cpp
+    src/deep2/SlidingWindowEngine.cpp
+    src/deep2/MedusaDecoder.cpp
+    src/deep2/RawrXDInferenceAdapter.cpp
+    src/deep2/KimiK2Config.cpp
+    src/deep2/K2MLAWeights.cpp
+    src/deep2/K2MoEWeights.cpp
+    src/deep2/K2GlobalTensorIndex.cpp
+    src/deep2/Deep2Bridge.cpp
+    src/deep2/ProductionProfiler.cpp
+    src/deep2/TrailBrake.cpp
+    src/deep2/HotPatcher.cpp
+    src/deep2/HotPatcherSafety.cpp
+    src/deep2/AntiPatcher.cpp
+    src/deep2/GoalSystem.cpp
+    src/deep2/PatchCache.cpp
+    src/deep2/BottleTTL.cpp
+    src/deep2/CPUFrequency.cpp
+    src/deep2/DualGPUHook.cpp
+    src/deep2/ReverseTensorRecovery.cpp
+    src/deep2/StreamEngine.cpp
+    src/deep2/ShardRouterIntegration.cpp
+    src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/Deep2ModelRuntime.cpp
+    src/deep2/FabricTensorTable.cpp
+    src/deep2/ReverseIntegration.cpp
+    src/deep2/ReverseHotpatchEngine.cpp
+    src/reverse/ReverseEngine.cpp
+    src/reverse/ReverseModelLoader.cpp
+    src/deep2/Chamber.cpp
+    src/deep2/ToroidalKVCache.cpp
+    src/deep2/PlasmaGovernor.cpp
+    src/deep2/OutOfCoreRuntime.cpp
+    src/deep2/SovereignOutOfCoreRuntime.cpp
+    src/deep2/BP16Streamer.cpp
+    src/deep2/ResidencyManager.cpp
+    src/deep2/mars/VRAMManager.cpp
+    src/deep2/mars/TensorHotpatch.cpp
+    src/deep2/mars/DualGPUBackend.cpp
+    src/deep2/mars/MARSController.cpp
+    src/deep2/deep2_link_stubs.cpp
+    # MASM GEMV kernels
+    src/deep2/sovereign_deep2_kernels.asm
+    src/deep2/sovereign_q4k_gemv.asm
+    src/deep2/sovereign_q4_1_gemv.asm
+    src/deep2/sovereign_q5_k_gemv.asm
+    src/deep2/sovereign_q6_k_gemv.asm
+    src/deep2/sovereign_q8_0_gemv.asm
+    src/deep2/sovereign_fp16_gemv.asm
 )
 list(REMOVE_DUPLICATES INFERENCE_ENGINE_SOURCES)
 # REMOVED: inference_standalone_link_shims.cpp reference - stub file deleted
@@ -4511,6 +4599,14 @@ endif()
             # Pure MASM inference kernels (zero dependencies, no GGML)
             src/masm/rawrxd_math_masm.asm
             src/masm/rawrxd_transformer_masm_fixed.asm
+            # Deep2 sovereign GEMV kernels
+            src/deep2/sovereign_deep2_kernels.asm
+            src/deep2/sovereign_q4k_gemv.asm
+            src/deep2/sovereign_q4_1_gemv.asm
+            src/deep2/sovereign_q5_k_gemv.asm
+            src/deep2/sovereign_q6_k_gemv.asm
+            src/deep2/sovereign_q8_0_gemv.asm
+            src/deep2/sovereign_fp16_gemv.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -6596,6 +6692,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         ${MASM_OBJECTS}
         ${_WIN32IDE_LINKED_MONOLITHIC_OBJS}
         nlohmann_json::nlohmann_json
+        InferenceEngine
     )
 
     # Explicit nlohmann/json include for multi-header FetchContent layout
@@ -9694,6 +9791,7 @@ if(NOT TARGET rawrxd)
     add_executable(rawrxd
         src/sovereign/rawrxd.cpp
         src/sovereign/ExecutionContract.cpp
+        src/sovereign/Deep2InferenceWrapper.cpp
         src/cpu_inference_engine.cpp
         src/rawrxd_inference.cpp
         src/rawrxd_model_loader.cpp
@@ -9765,9 +9863,10 @@ target_compile_features(rawrxd PRIVATE cxx_std_17)
 if(WIN32)
     target_link_libraries(rawrxd PRIVATE
         Threads::Threads
+        InferenceEngine
     )
 else()
-    target_link_libraries(rawrxd PRIVATE Threads::Threads)
+    target_link_libraries(rawrxd PRIVATE Threads::Threads InferenceEngine)
 endif()
 
 if(TARGET rawrxd_runtime)

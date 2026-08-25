@@ -1142,8 +1142,7 @@ void DequantizeQ8_0(const uint8_t* quantized, float* output, int size)
 
 void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    using namespace Deep2;
-    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(quantized);
+    const ::Deep2::block_q4_K* blocks = reinterpret_cast<const ::Deep2::block_q4_K*>(quantized);
     int numBlocks = num_elements / 256;
     for (int b = 0; b < numBlocks; ++b) {
         float d    = F16ToF32(blocks[b].d);
@@ -1166,8 +1165,7 @@ void DequantizeQ4_K(const uint8_t* quantized, float* output, int num_elements)
 
 void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    using namespace Deep2;
-    const block_q5_K* blocks = reinterpret_cast<const block_q5_K*>(quantized);
+    const ::Deep2::block_q5_K* blocks = reinterpret_cast<const ::Deep2::block_q5_K*>(quantized);
     int numBlocks = num_elements / 256;
     for (int b = 0; b < numBlocks; ++b) {
         float d    = F16ToF32(blocks[b].d);
@@ -1195,8 +1193,7 @@ void DequantizeQ5_K(const uint8_t* quantized, float* output, int num_elements)
 
 void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    using namespace Deep2;
-    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(quantized);
+    const ::Deep2::block_q6_K* blocks = reinterpret_cast<const ::Deep2::block_q6_K*>(quantized);
     int numBlocks = num_elements / 256;
     for (int b = 0; b < numBlocks; ++b) {
         float d = F16ToF32(blocks[b].d);
@@ -1216,8 +1213,7 @@ void DequantizeQ6_K(const uint8_t* quantized, float* output, int num_elements)
 
 void DequantizeQ2_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    using namespace Deep2;
-    const block_q2_K* blocks = reinterpret_cast<const block_q2_K*>(quantized);
+    const ::Deep2::block_q2_K* blocks = reinterpret_cast<const ::Deep2::block_q2_K*>(quantized);
     int numBlocks = num_elements / 256;
     for (int b = 0; b < numBlocks; ++b) {
         float d    = F16ToF32(blocks[b].d);
@@ -1244,8 +1240,7 @@ void DequantizeQ2_K(const uint8_t* quantized, float* output, int num_elements)
 
 void DequantizeQ3_K(const uint8_t* quantized, float* output, int num_elements)
 {
-    using namespace Deep2;
-    const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(quantized);
+    const ::Deep2::block_q3_K* blocks = reinterpret_cast<const ::Deep2::block_q3_K*>(quantized);
     int numBlocks = num_elements / 256;
     for (int b = 0; b < numBlocks; ++b) {
         float d = F16ToF32(blocks[b].d);

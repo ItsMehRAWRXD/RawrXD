@@ -143,17 +143,19 @@ OrchestratorBridge& OrchestratorBridge::Instance() {
 }
 
 bool OrchestratorBridge::Initialize(const std::string& workingDir,
-                                     const std::string& ollamaUrl) {
+                                     const std::string& backend,
+                                     const std::string& modelPath) {
     std::cout << "[OrchestratorBridge] Initializing..." << std::endl;
     std::cout << "[OrchestratorBridge] Working Dir: " << workingDir << std::endl;
-    std::cout << "[OrchestratorBridge] Ollama URL: " << ollamaUrl << std::endl;
-    
+    std::cout << "[OrchestratorBridge] Backend: " << backend << std::endl;
+    if (!modelPath.empty()) {
+        std::cout << "[OrchestratorBridge] Model: " << modelPath << std::endl;
+    }
+
     m_workingDir = workingDir;
-    m_ollamaClient = std::make_unique<AgentOllamaClient>();
-    m_ollamaConfig.chat_model = "qwen2.5-coder:32b";
-    m_ollamaConfig.host = "127.0.0.1";
-    m_ollamaConfig.port = 11434;
-    
+    m_backendName = backend;
+    m_modelPath = modelPath;
+
     m_initialized = true;
     std::cout << "[OrchestratorBridge] Initialization complete" << std::endl;
     return true;
@@ -163,16 +165,16 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
     if (!m_initialized) {
         return "[Error] OrchestratorBridge not initialized";
     }
-    
+
     std::cout << "[OrchestratorBridge] Executing: " << userPrompt << std::endl;
-    
-    if (!EnsureClientReady()) {
-        return "[Error] Failed to initialize Ollama client";
+
+    if (!EnsureRuntimeReady()) {
+        return "[Error] Failed to initialize runtime";
     }
-    
+
     std::string result = "[Agent] Executed: " + userPrompt;
     std::cout << "[OrchestratorBridge] Result: " << result << std::endl;
-    
+
     return result;
 }
 
@@ -190,14 +192,15 @@ void OrchestratorBridge::RequestGhostTextStream(
 }
 
 void OrchestratorBridge::SetModel(const std::string& model) {
-    m_ollamaConfig.chat_model = model;
+    m_modelPath = model;
 }
 
 void OrchestratorBridge::SetFIMModel(const std::string& model) {
+    (void)model;
 }
 
 void OrchestratorBridge::SetTemperature(float temperature) {
-    m_ollamaConfig.temperature = temperature;
+    (void)temperature;
 }
 
 void OrchestratorBridge::SetMaxSteps(int steps) {
@@ -208,8 +211,8 @@ void OrchestratorBridge::SetWorkingDirectory(const std::string& dir) {
     m_workingDir = dir;
 }
 
-bool OrchestratorBridge::EnsureClientReady() {
-    return m_initialized && m_ollamaClient != nullptr;
+bool OrchestratorBridge::EnsureRuntimeReady() {
+    return m_initialized;
 }
 
 void OrchestratorBridge::RefreshAvailableModels() {
@@ -219,7 +222,8 @@ void OrchestratorBridge::ApplyConfig() {
 }
 
 std::string OrchestratorBridge::SelectPreferredModel(bool preferCoder) const {
-    return preferCoder ? "qwen2.5-coder:32b" : m_ollamaConfig.chat_model;
+    (void)preferCoder;
+    return m_modelPath.empty() ? "default" : m_modelPath;
 }
 
 } // namespace Agent

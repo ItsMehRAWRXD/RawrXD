@@ -2962,62 +2962,22 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
             size_t blocksPerRow = (cols + 31) / 32;
             for (size_t r = startRow; r < endRow; ++r) {
                 const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
-                __m256 acc256 = _mm256_setzero_ps();
-                size_t b = 0;
-                for (; b + 1 <= blocksPerRow; b += 2) {
-                    // Block 0
-                    float d0 = fp16ToFloat(rowBlocks[b].d);
-                    __m256 vD0 = _mm256_set1_ps(d0);
-                    // Block 1
-                    float d1 = fp16ToFloat(rowBlocks[b + 1].d);
-                    __m256 vD1 = _mm256_set1_ps(d1);
-                    for (int i = 0; i < 32; i += 8) {
-                        // Load 4 bytes -> 8 nibbles for block 0
-                        uint32_t pack0 = *(const uint32_t*)(rowBlocks[b].qs + i / 2);
-                        __m128i p0 = _mm_cvtsi32_si128((int)pack0);
-                        __m128i low0 = _mm_and_si128(p0, _mm_set1_epi8(0x0F));
-                        __m128i high0 = _mm_and_si128(_mm_srli_epi16(p0, 4), _mm_set1_epi8(0x0F));
-                        __m128i q0_8 = _mm_unpacklo_epi8(low0, high0);
-                        __m256i q0_32 = _mm256_cvtepu16_epi32(q0_8);
-                        __m256 q0f = _mm256_cvtepi32_ps(q0_32);
-                        __m256 w0 = _mm256_fmsub_ps(vD0, q0f, _mm256_set1_ps(8.0f * d0));
-                        __m256 x0 = _mm256_loadu_ps(input + b * 32 + i);
-                        acc256 = _mm256_fmadd_ps(w0, x0, acc256);
-                        // Load 4 bytes -> 8 nibbles for block 1
-                        uint32_t pack1 = *(const uint32_t*)(rowBlocks[b + 1].qs + i / 2);
-                        __m128i p1 = _mm_cvtsi32_si128((int)pack1);
-                        __m128i low1 = _mm_and_si128(p1, _mm_set1_epi8(0x0F));
-                        __m128i high1 = _mm_and_si128(_mm_srli_epi16(p1, 4), _mm_set1_epi8(0x0F));
-                        __m128i q1_8 = _mm_unpacklo_epi8(low1, high1);
-                        __m256i q1_32 = _mm256_cvtepu16_epi32(q1_8);
-                        __m256 q1f = _mm256_cvtepi32_ps(q1_32);
-                        __m256 w1 = _mm256_fmsub_ps(vD1, q1f, _mm256_set1_ps(8.0f * d1));
-                        __m256 x1 = _mm256_loadu_ps(input + (b + 1) * 32 + i);
-                        acc256 = _mm256_fmadd_ps(w1, x1, acc256);
-                    }
-                }
-                for (; b < blocksPerRow; ++b) {
+                float sum = 0.0f;
+                for (size_t b = 0; b < blocksPerRow; ++b) {
                     float d = fp16ToFloat(rowBlocks[b].d);
-                    __m256 vD = _mm256_set1_ps(d);
-                    for (int i = 0; i < 32; i += 8) {
-                        uint32_t pack = *(const uint32_t*)(rowBlocks[b].qs + i / 2);
-                        __m128i p = _mm_cvtsi32_si128((int)pack);
-                        __m128i low = _mm_and_si128(p, _mm_set1_epi8(0x0F));
-                        __m128i high = _mm_and_si128(_mm_srli_epi16(p, 4), _mm_set1_epi8(0x0F));
-                        __m128i q8 = _mm_unpacklo_epi8(low, high);
-                        __m256i q32 = _mm256_cvtepu16_epi32(q8);
-                        __m256 qf = _mm256_cvtepi32_ps(q32);
-                        __m256 w = _mm256_fmsub_ps(vD, qf, _mm256_set1_ps(8.0f * d));
-                        __m256 x = _mm256_loadu_ps(input + b * 32 + i);
-                        acc256 = _mm256_fmadd_ps(w, x, acc256);
+                    const uint8_t* qs = rowBlocks[b].qs;
+                    size_t base = b * 32;
+                    for (int j = 0; j < 16; ++j) {
+                        uint8_t byte = qs[j];
+                        int q0 = (byte & 0x0F) - 8;
+                        int q1 = ((byte >> 4) & 0x0F) - 8;
+                        sum += d * q0 * input[base + j * 2 + 0];
+                        if (base + j * 2 + 1 < cols) {
+                            sum += d * q1 * input[base + j * 2 + 1];
+                        }
                     }
                 }
-                __m128 hi = _mm256_extractf128_ps(acc256, 1);
-                __m128 lo = _mm256_castps256_ps128(acc256);
-                __m128 s = _mm_add_ps(lo, hi);
-                s = _mm_hadd_ps(s, s);
-                s = _mm_hadd_ps(s, s);
-                output[r] = _mm_cvtss_f32(s);
+                output[r] = sum;
             }
             break;
         }
@@ -3146,10 +3106,29 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
-    // --- Profiler: record quant type for attribution ---
-    auto tQuant0 = std::chrono::high_resolution_clock::now();
+    // --- Vulkan GPU dispatch path (FP32/FP16 only) ---
+    if (vulkanEnabled_ && vulkanInitialized_ && vulkanCompute_) {
+        if (tryVulkanGEMV(wt, input, output, outDim)) {
+            // GPU dispatch succeeded — apply bias and return
+            if (bias) {
+                for (size_t i = 0; i < outDim; ++i) {
+                    output[i] += bias[i];
+                }
+            }
+            auto tLinearW1 = std::chrono::high_resolution_clock::now();
+            double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
+            int typeIdx = wt.type & 0x1F;
+            if (typeIdx >= 0 && typeIdx < 32) {
+                g_linearwByType[typeIdx].calls++;
+                g_linearwByType[typeIdx].totalMs += linearwMs;
+                g_linearwByType[typeIdx].totalMACs += rows * cols;
+            }
+            return;
+        }
+    }
 
-    // --- Row-parallel GEMV dispatch (VAL-051.8) ---
+    // --- CPU fallback: row-parallel GEMV dispatch (VAL-051.8) ---
+    auto tQuant0 = std::chrono::high_resolution_clock::now();
     if (threadPool && rows >= 64) {
         size_t numThreads = threadPool->size();
         size_t rowsPerThread = rows / numThreads;
@@ -4758,6 +4737,102 @@ void Deep2Engine::enableSovereignRuntime(bool enable) {
 
 rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
     return sovereignRuntime_.get();
+}
+
+// ============================================================================
+// Vulkan GPU Backend Integration
+// ============================================================================
+
+void Deep2Engine::enableVulkan(bool enable) {
+    if (enable && !vulkanInitialized_) {
+        vulkanCompute_ = std::make_unique<CPUInference::VulkanCompute>();
+        if (vulkanCompute_->Initialize()) {
+            vulkanInitialized_ = true;
+            vulkanEnabled_ = true;
+            printf("[Deep2Engine] Vulkan GPU backend initialized on: %s\n",
+                   vulkanCompute_->GetDeviceInfo().device_name.c_str());
+        } else {
+            fprintf(stderr, "[Deep2Engine] Vulkan initialization failed — falling back to CPU\n");
+            vulkanCompute_.reset();
+            vulkanEnabled_ = false;
+        }
+    } else if (enable && vulkanInitialized_) {
+        vulkanEnabled_ = true;
+        printf("[Deep2Engine] Vulkan GPU backend re-enabled\n");
+    } else {
+        vulkanEnabled_ = false;
+        printf("[Deep2Engine] Vulkan GPU backend disabled — using CPU\n");
+    }
+}
+
+bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
+                                  float* output, size_t outDim) {
+    if (!vulkanEnabled_ || !vulkanInitialized_ || !vulkanCompute_) {
+        return false;  // CPU fallback
+    }
+
+    // Only dispatch FP32 and FP16 weights to Vulkan for now
+    // Quantized types (Q4_K, Q2_K, etc.) need dequantization shaders not yet loaded
+    if (wt.type != (int)GGMLType::GGML_TYPE_F32 &&
+        wt.type != (int)GGMLType::GGML_TYPE_F16) {
+        return false;  // CPU fallback for quantized types
+    }
+
+    size_t cols = wt.cols;
+    size_t rows = wt.rows;
+    if (rows == 0 || cols == 0 || outDim == 0) return false;
+
+    // For FP32: upload weights and input, dispatch matmul, download output
+    if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+        const float* weights = static_cast<const float*>(wt.data);
+
+        // Upload input vector
+        uint32_t inputIdx = 0;
+        if (!vulkanCompute_->AllocateBuffer(cols * sizeof(float), inputIdx, *(size_t*)0)) {
+            return false;
+        }
+        if (!vulkanCompute_->CopyHostToBuffer(const_cast<float*>(input), inputIdx, cols * sizeof(float))) {
+            return false;
+        }
+
+        // Upload weight matrix
+        uint32_t weightIdx = 0;
+        if (!vulkanCompute_->AllocateBuffer(rows * cols * sizeof(float), weightIdx, *(size_t*)0)) {
+            return false;
+        }
+        if (!vulkanCompute_->CopyHostToBuffer(const_cast<float*>(weights), weightIdx, rows * cols * sizeof(float))) {
+            return false;
+        }
+
+        // Allocate output buffer
+        uint32_t outputIdx = 0;
+        if (!vulkanCompute_->AllocateBuffer(outDim * sizeof(float), outputIdx, *(size_t*)0)) {
+            return false;
+        }
+
+        // Dispatch matmul: output = weights * input  [outDim x cols] * [cols] -> [outDim]
+        if (!vulkanCompute_->DispatchMatMul(weightIdx, inputIdx, outputIdx,
+                                              static_cast<uint32_t>(outDim),
+                                              static_cast<uint32_t>(cols),
+                                              1)) {
+            return false;
+        }
+
+        // Download result
+        if (!vulkanCompute_->CopyBufferToHost(outputIdx, output, outDim * sizeof(float))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // FP16 path: dequantize on CPU then dispatch (until FP16 shader is loaded)
+    if (wt.type == (int)GGMLType::GGML_TYPE_F16) {
+        // For now, fall back to CPU for FP16 — Vulkan FP16 shader not yet integrated
+        return false;
+    }
+
+    return false;
 }
 
 // ============================================================================

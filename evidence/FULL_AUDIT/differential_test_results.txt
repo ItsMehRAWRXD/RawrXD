@@ -1,0 +1,39 @@
+
+=== Differential Test Results: Gemma3 vs TinyLlama ===
+Date: 2026-08-23
+Build: D:\rawrxd\build-ninja-final\bin\RawrXD-Win32IDE.exe (2026-05-14)
+
+--- TinyLlama Test ---
+Model: D:\rawrxd\model_solo\tinyllama_fresh.gguf
+Result: HUNG (process alive, no output after pipeline entry)
+Observed: Pipeline entered but no token generation logged
+Status: INCONCLUSIVE (may need longer timeout or different model)
+
+--- Gemma3 Test ---
+Model: D:\rawrxd\gemma3-1b-Q2_K.gguf
+Result: FAIL at Layer 1
+Error: [StreamingMatMul] K=1152 not divisible by 256 for tensor blk.0.attn_v.weight
+[Forward] FATAL: StreamingMatMul failed for blk.0.attn_v.weight
+
+Root Cause Analysis:
+- Gemma3: dim=1152, heads=4, kv_heads=1, head_dim=288
+  But key_length=256, value_length=256 (from GGUF metadata)
+  attn_v.weight shape = [1152, 256]
+  In matmul: K=dim=1152, N=kv_dim=256
+  1152 % 256 = 128 != 0 -> FAILS kernel divisibility check
+
+- TinyLlama (from prior successful run): dim=2048, heads=32, kv_heads=4, head_dim=64
+  kv_dim = 64 * 4 = 256
+  attn_v.weight shape = [2048, 256]
+  In matmul: K=dim=2048, N=kv_dim=256
+  2048 % 256 = 0 -> PASSES kernel divisibility check
+
+CONCLUSION: StreamingMatMul kernel has hard constraint K % 256 == 0.
+This is a MODEL-SPECIFIC ARCHITECTURE BUG, not a harness or corruption issue.
+Models with dim not divisible by 256 will fail at layer 1.
+
+Affected models: Gemma3 (dim=1152), any model where dim % 256 != 0
+Safe models: TinyLlama (dim=2048), any model where dim % 256 == 0
+
+Next step: Fix StreamingMatMul to handle K not divisible by 256,
+or add padding/tiling logic for non-aligned dimensions.

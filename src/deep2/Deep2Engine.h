@@ -31,6 +31,8 @@
 #include "ToroidalKVCache.hpp"
 #include "PlasmaGovernor.hpp"
 #include "SovereignOutOfCoreRuntime.hpp"
+// Vulkan GPU backend
+#include "vulkan_compute.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -295,6 +297,10 @@ public:
     const EngineConfig& getConfig() const { return config; }
     const ModelWeights& getModelWeights() const { return modelWeights; }
     
+    // Backend identity for certification
+    static constexpr const char* backendName() noexcept { return "Deep2Engine/Sovereign"; }
+    static constexpr const char* backendId() noexcept { return "DEEP2_SOVEREIGN"; }
+    
     // API Server helpers
     size_t getWeightSize() const { return weightSize; }
     std::string getModelPath() const { return config.modelPath; }
@@ -330,6 +336,14 @@ public:
     void enableSovereignRuntime(bool enable);
     bool isSovereignRuntimeEnabled() const { return sovereignRuntimeEnabled_; }
     rawrxd::SovereignOutOfCoreRuntime* getSovereignRuntime() const;
+
+    // Vulkan GPU backend
+    void enableVulkan(bool enable);
+    bool isVulkanEnabled() const { return vulkanEnabled_; }
+    bool isVulkanInitialized() const { return vulkanInitialized_; }
+    CPUInference::VulkanCompute* getVulkanCompute() const { return vulkanCompute_.get(); }
+    // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
+    bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 
     // VAL-000 Phase 3: Advanced feature control
     void enableMedusa(bool enable);
@@ -519,6 +533,11 @@ private:
     bool toroidalKVEnabled_ = false;
     bool plasmaGovernorEnabled_ = false;
     bool sovereignRuntimeEnabled_ = false;
+
+    // Vulkan GPU backend
+    std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
+    bool vulkanEnabled_ = false;
+    bool vulkanInitialized_ = false;
 
     // Weight tensors (legacy registration system)
     float* weights = nullptr;

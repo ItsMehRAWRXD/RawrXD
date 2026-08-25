@@ -94,36 +94,9 @@ void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* out
     }
 }
 
-// Production implementation of rawr_cpu_has_avx512
-// Detects AVX-512 support using CPUID instruction
-unsigned int rawr_cpu_has_avx512() {
-    int cpuInfo[4] = {0};
-    
-    // Check if CPUID supports extended features (EAX=7, ECX=0)
-    __cpuid(cpuInfo, 0);
-    if (cpuInfo[0] < 7) {
-        return 0; // CPUID level too low for AVX-512 detection
-    }
-    
-    // Get extended features (EAX=7, ECX=0)
-    __cpuidex(cpuInfo, 7, 0);
-    
-    // Check AVX-512 Foundation (bit 16 of EBX)
-    // Also check for OS support via XCR0
-    if ((cpuInfo[1] & (1 << 16)) != 0) {
-        // AVX-512 is present in hardware, check OS support
-        // XCR0: bit 1=XMM, bit 2=YMM, bit 5=OPMASK, bit 6=ZMM_Hi256, bit 7=Hi16_ZMM
-        unsigned __int64 xcr0 = _xgetbv(0);
-        const unsigned __int64 avx512Mask = (1ULL << 1) | (1ULL << 2) | 
-                                            (1ULL << 5) | (1ULL << 6) | (1ULL << 7);
-        
-        if ((xcr0 & avx512Mask) == avx512Mask) {
-            return 1; // AVX-512 fully supported
-        }
-    }
-    
-    return 0; // AVX-512 not supported
-}
+// Authoritative implementation lives in src/asm/rawr_cpu_features.asm (MASM64).
+// This translation unit only consumes the symbol.
+extern "C" unsigned int rawr_cpu_has_avx512();
 
 // Production implementation of RawrXD_StreamToGPU_AVX512
 // Optimized memory streaming with AVX-512 when available

@@ -1,0 +1,6 @@
+[23:47:29.186] PID=23032 CRT_ENTRY_REACHED
+[23:47:29.186] PID=23032 STATIC_INIT_COMPLETE_OK
+[Prometheus] Listening on port 9090 for /metrics...
+[23:47:29.199] PID=23032 INIT_0_WINMAIN_ENTRY_REACHED
+[SMOKE] start model=D:\rawrxd\gemma3-1b-Q2_K.gguf  max_tokens=128 timeout_ms=120000
+[SMOKE] trace_path=C:\Users\Garrett\AppData\Local\Temp\rawrxd_smoke_trace.json

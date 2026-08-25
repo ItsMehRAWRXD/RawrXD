@@ -5,7 +5,7 @@
 #include "../../include/ui/chat_panel.h"
 #include "../../include/update_signature.h"
 #if RAWR_HAS_VULKAN
-#include "../vulkan_compute.h"
+#include "../../include/vulkan_compute.h"
 #endif
 #include "../agentic/ErrorRecoveryManager.h"
 #include "../core/ConfigurationValidator.h"
@@ -125,7 +125,7 @@ CommandResult HandleTranscendenceCoordinator(const CommandContext& ctx) {
 
 CommandResult HandleVulkanRenderer(const CommandContext& ctx) {
 #if RAWR_HAS_VULKAN
-    VulkanCompute compute;
+    CPUInference::VulkanCompute compute;
     if (!compute.Initialize()) {
         return errorResult(ctx, "Vulkan renderer initialization failed");
     }

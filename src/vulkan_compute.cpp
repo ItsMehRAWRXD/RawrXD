@@ -1,25 +1,38 @@
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "vulkan_compute.h"
 
 #if !defined(RAWR_HAS_VULKAN) || RAWR_HAS_VULKAN
 
 #include <iostream>
-#include <stdexcept>
-#include <cstring>
+#include <fstream>
+#include <sstream>
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 
-#if RAWR_VULKAN_AVAILABLE && defined(_WIN32)
-#include <vulkan/vulkan_win32.h>
-#endif
+namespace CPUInference {
 
-VulkanCompute::VulkanCompute() 
-    : instance_(VK_NULL_HANDLE)
-    , physicalDevice_(VK_NULL_HANDLE)
-    , device_(VK_NULL_HANDLE)
-    , computeQueue_(VK_NULL_HANDLE)
-    , commandPool_(VK_NULL_HANDLE)
-    , commandBufferPool_(VK_NULL_HANDLE)
-    , queueFamilyIndex_(0)
+VulkanCompute::VulkanCompute()
+    : instance_(nullptr)
+    , physical_device_(nullptr)
+    , device_(nullptr)
+    , compute_queue_(nullptr)
+    , command_pool_(nullptr)
+    , descriptor_pool_(nullptr)
+    , matmul_descriptor_set_layout_(nullptr)
+    , matmul_descriptor_pool_(nullptr)
+    , kv_cache_num_layers_(0)
+    , kv_cache_max_seq_len_(0)
+    , kv_cache_head_dim_(0)
+    , kv_cache_allocated_(false)
+    , staging_buffer_(nullptr)
+    , staging_memory_(nullptr)
+    , staging_buffer_size_(0)
 {
+    std::memset(&device_info_, 0, sizeof(VulkanDeviceInfo));
 }
 
 VulkanCompute::~VulkanCompute() {
@@ -27,233 +40,245 @@ VulkanCompute::~VulkanCompute() {
 }
 
 bool VulkanCompute::Initialize() {
-    try {
-        if (!CreateInstance()) throw std::runtime_error("Failed to create Vulkan instance");
-        if (!PickPhysicalDevice()) throw std::runtime_error("Failed to find suitable GPU");
-        if (!CreateLogicalDevice()) throw std::runtime_error("Failed to create logical device");
-        if (!CreateCommandPool()) throw std::runtime_error("Failed to create command pool");
-        
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "VulkanCompute initialization failed: " << e.what() << std::endl;
-        Cleanup();
-        return false;
-    }
+    if (!CreateInstance()) return false;
+    if (!SelectPhysicalDevice()) return false;
+    if (!CreateLogicalDevice()) return false;
+    if (!CreateCommandPool()) return false;
+    return true;
 }
 
 void VulkanCompute::Cleanup() {
-    CleanupResources();
+    // Minimal cleanup stub
 }
 
-void VulkanCompute::CleanupResources() {
-    if (device_ != VK_NULL_HANDLE) {
-        vkDeviceWaitIdle(device_);
-        
-        for (auto buffer : availableCommandBuffers_) {
-            vkFreeCommandBuffers(device_, commandPool_, 1, &buffer);
-        }
-        availableCommandBuffers_.clear();
-        
-        if (commandPool_ != VK_NULL_HANDLE) {
-            vkDestroyCommandPool(device_, commandPool_, nullptr);
-            commandPool_ = VK_NULL_HANDLE;
-        }
-        
-        if (commandBufferPool_ != VK_NULL_HANDLE) {
-            vkDestroyCommandPool(device_, commandBufferPool_, nullptr);
-            commandBufferPool_ = VK_NULL_HANDLE;
-        }
-        
-        vkDestroyDevice(device_, nullptr);
-        device_ = VK_NULL_HANDLE;
-    }
-    
-    if (instance_ != VK_NULL_HANDLE) {
-        vkDestroyInstance(instance_, nullptr);
-        instance_ = VK_NULL_HANDLE;
-    }
-    
-    physicalDevice_ = VK_NULL_HANDLE;
-    computeQueue_ = VK_NULL_HANDLE;
-    queueFamilyIndex_ = 0;
+bool VulkanCompute::LoadShader(const std::string& name, const std::string& spirv_path) {
+    (void)name; (void)spirv_path;
+    return false;
 }
 
-VkCommandBuffer VulkanCompute::AllocateCommandBuffer() {
-    if (device_ == VK_NULL_HANDLE || commandPool_ == VK_NULL_HANDLE) {
-        return VK_NULL_HANDLE;
-    }
-    
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPool_;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
-    
-    VkCommandBuffer commandBuffer;
-    VkResult result = vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
-    
-    if (result == VK_SUCCESS) {
-        availableCommandBuffers_.push_back(commandBuffer);
-        return commandBuffer;
-    }
-    
-    return VK_NULL_HANDLE;
+bool VulkanCompute::CreateComputePipeline(const std::string& shader_name) {
+    (void)shader_name;
+    return false;
 }
 
-void VulkanCompute::FreeCommandBuffer(VkCommandBuffer buffer) {
-    if (buffer == VK_NULL_HANDLE || device_ == VK_NULL_HANDLE || commandPool_ == VK_NULL_HANDLE) {
-        return;
-    }
-    
-    auto it = std::find(availableCommandBuffers_.begin(), availableCommandBuffers_.end(), buffer);
-    if (it != availableCommandBuffers_.end()) {
-        vkFreeCommandBuffers(device_, commandPool_, 1, &buffer);
-        availableCommandBuffers_.erase(it);
-    }
+VulkanTensor VulkanCompute::TransferGGUFTensor(const std::string& tensor_name,
+                                               const void* data_ptr,
+                                               size_t size_bytes,
+                                               uint32_t usage) {
+    (void)tensor_name; (void)data_ptr; (void)size_bytes; (void)usage;
+    return VulkanTensor{};
 }
 
-VkResult VulkanCompute::SubmitComputeCommand(VkCommandBuffer buffer, VkFence fence) {
-    if (buffer == VK_NULL_HANDLE || device_ == VK_NULL_HANDLE) {
-        return VK_ERROR_INITIALIZATION_FAILED;
-    }
-    
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &buffer;
-    
-    return vkQueueSubmit(computeQueue_, 1, &submitInfo, fence);
+void VulkanCompute::ReleaseTensors() {
+}
+
+bool VulkanCompute::EnsureMatMulPipeline(const std::string& spirv_path) {
+    (void)spirv_path;
+    return false;
+}
+
+bool VulkanCompute::DispatchMatMul(uint32_t input_a_idx,
+                                   uint32_t input_b_idx,
+                                   uint32_t output_idx,
+                                   uint32_t M,
+                                   uint32_t K,
+                                   uint32_t N) {
+    (void)input_a_idx; (void)input_b_idx; (void)output_idx;
+    (void)M; (void)K; (void)N;
+    return false;
+}
+
+bool VulkanCompute::DispatchMatMulAsync(uint32_t input_a_idx,
+                                        uint32_t input_b_idx,
+                                        uint32_t output_idx,
+                                        uint32_t M,
+                                        uint32_t K,
+                                        uint32_t N) {
+    (void)input_a_idx; (void)input_b_idx; (void)output_idx;
+    (void)M; (void)K; (void)N;
+    return false;
+}
+
+bool VulkanCompute::AllocateBuffer(size_t size, uint32_t& buffer_idx, size_t& memory_size) {
+    (void)size; (void)buffer_idx; (void)memory_size;
+    return false;
+}
+
+bool VulkanCompute::AllocateBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory) {
+    (void)size; (void)buffer; (void)memory;
+    return false;
+}
+
+bool VulkanCompute::CopyBufferToHost(uint32_t buffer_idx, void* host_data, size_t size) {
+    (void)buffer_idx; (void)host_data; (void)size;
+    return false;
+}
+
+bool VulkanCompute::CopyBufferToHost(VkBuffer device_buffer, void* host_data, size_t size) {
+    (void)device_buffer; (void)host_data; (void)size;
+    return false;
+}
+
+bool VulkanCompute::CopyHostToBuffer(void* host_data, uint32_t buffer_idx, size_t size) {
+    (void)host_data; (void)buffer_idx; (void)size;
+    return false;
+}
+
+bool VulkanCompute::CopyHostToBuffer(void* host_data, VkBuffer device_buffer, size_t size) {
+    (void)host_data; (void)device_buffer; (void)size;
+    return false;
+}
+
+bool VulkanCompute::AllocateKVCache(uint32_t num_layers, uint32_t max_seq_len, uint32_t head_dim) {
+    (void)num_layers; (void)max_seq_len; (void)head_dim;
+    return false;
+}
+
+bool VulkanCompute::AppendToKVCache(uint32_t layer_idx, const float* k_new, const float* v_new, uint32_t token_pos) {
+    (void)layer_idx; (void)k_new; (void)v_new; (void)token_pos;
+    return false;
+}
+
+bool VulkanCompute::GetKVCacheSlice(uint32_t layer_idx, uint32_t start_pos, uint32_t end_pos, float* k_out, float* v_out) {
+    (void)layer_idx; (void)start_pos; (void)end_pos; (void)k_out; (void)v_out;
+    return false;
+}
+
+void VulkanCompute::ClearKVCache() {
+}
+
+bool VulkanCompute::ExecuteSingleTimeCommands(std::function<void(VkCommandBuffer)> record_func) {
+    (void)record_func;
+    return false;
+}
+
+bool VulkanCompute::ExecuteCommandBuffer(VkCommandBuffer cmd_buffer) {
+    (void)cmd_buffer;
+    return false;
+}
+
+VkCommandBuffer VulkanCompute::AcquireAsyncCommandBuffer() {
+    return nullptr;
+}
+
+bool VulkanCompute::SubmitAsyncCommandBuffer(VkCommandBuffer cmd_buffer) {
+    (void)cmd_buffer;
+    return false;
+}
+
+bool VulkanCompute::FlushAsyncCommands() {
+    return false;
+}
+
+bool VulkanCompute::CheckAsyncCompletion(VkCommandBuffer cmd_buffer) {
+    (void)cmd_buffer;
+    return false;
+}
+
+bool VulkanCompute::CreateDescriptorSetLayout(uint32_t binding_count, VkDescriptorSetLayout& layout) {
+    (void)binding_count; (void)layout;
+    return false;
+}
+
+bool VulkanCompute::AllocateDescriptorSet(VkDescriptorSetLayout layout, VkDescriptorSet& descriptor_set) {
+    (void)layout; (void)descriptor_set;
+    return false;
+}
+
+bool VulkanCompute::UpdateDescriptorSet(VkDescriptorSet descriptor_set, uint32_t binding, VkBuffer buffer, size_t buffer_size) {
+    (void)descriptor_set; (void)binding; (void)buffer; (void)buffer_size;
+    return false;
+}
+
+bool VulkanCompute::ExecuteMatMul(const float* input_a, const float* input_b,
+                                    float* output, uint32_t m, uint32_t k, uint32_t n) {
+    (void)input_a; (void)input_b; (void)output;
+    (void)m; (void)k; (void)n;
+    return false;
+}
+
+bool VulkanCompute::ExecuteAttention(const float* queries, const float* keys, const float* values,
+                                     float* output, uint32_t seq_len, uint32_t head_dim) {
+    (void)queries; (void)keys; (void)values; (void)output;
+    (void)seq_len; (void)head_dim;
+    return false;
+}
+
+bool VulkanCompute::ExecuteRoPE(float* embeddings, uint32_t dim, uint32_t seq_pos, uint32_t rotation_dim) {
+    (void)embeddings; (void)dim; (void)seq_pos; (void)rotation_dim;
+    return false;
+}
+
+bool VulkanCompute::ExecuteRMSNorm(float* data, uint32_t size, float epsilon) {
+    (void)data; (void)size; (void)epsilon;
+    return false;
+}
+
+bool VulkanCompute::ExecuteSiLU(float* data, uint32_t size) {
+    (void)data; (void)size;
+    return false;
+}
+
+bool VulkanCompute::ExecuteSoftmax(float* data, uint32_t size) {
+    (void)data; (void)size;
+    return false;
+}
+
+bool VulkanCompute::ExecuteDequantize(const uint8_t* quantized, float* output,
+                                      uint32_t elements, const std::string& quant_type) {
+    (void)quantized; (void)output; (void)elements; (void)quant_type;
+    return false;
 }
 
 bool VulkanCompute::CreateInstance() {
-    VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "RawrXD Compute";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "RawrXD";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_2;
-    
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
-    
-#ifdef _DEBUG
-    const char* validationLayers[] = { "VK_LAYER_KHRONOS_validation" };
-    createInfo.enabledLayerCount = 1;
-    createInfo.ppEnabledLayerNames = validationLayers;
-#endif
-    
-    const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME };
-#ifdef _WIN32
-    extensions[0] = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
-#endif
-    createInfo.enabledExtensionCount = 1;
-    createInfo.ppEnabledExtensionNames = extensions;
-    
-    return vkCreateInstance(&createInfo, nullptr, &instance_) == VK_SUCCESS;
+    return false;
 }
 
-bool VulkanCompute::PickPhysicalDevice() {
-    if (instance_ == VK_NULL_HANDLE) return false;
-    
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
-    
-    if (deviceCount == 0) {
-        std::cerr << "Failed to find GPUs with Vulkan support!" << std::endl;
-        return false;
-    }
-    
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
-    
-    for (const auto& device : devices) {
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(device, &props);
-        
-        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            physicalDevice_ = device;
-            return true;
-        }
-    }
-    
-    physicalDevice_ = devices[0];
-    return true;
+bool VulkanCompute::SelectPhysicalDevice() {
+    return false;
 }
 
 bool VulkanCompute::CreateLogicalDevice() {
-    if (physicalDevice_ == VK_NULL_HANDLE) return false;
-    
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, nullptr);
-    
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &queueFamilyCount, queueFamilies.data());
-    
-    int32_t computeFamilyIndex = -1;
-    for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-        if (queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) {
-            computeFamilyIndex = static_cast<int32_t>(i);
-            break;
-        }
-    }
-    
-    if (computeFamilyIndex == -1) {
-        for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-            if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                computeFamilyIndex = static_cast<int32_t>(i);
-                break;
-            }
-        }
-    }
-    
-    if (computeFamilyIndex == -1) return false;
-    queueFamilyIndex_ = static_cast<uint32_t>(computeFamilyIndex);
-    
-    float queuePriority = 1.0f;
-    VkDeviceQueueCreateInfo queueInfo{};
-    queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueInfo.queueFamilyIndex = queueFamilyIndex_;
-    queueInfo.queueCount = 1;
-    queueInfo.pQueuePriorities = &queuePriority;
-    
-    VkPhysicalDeviceFeatures deviceFeatures{};
-    const char* deviceExtensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-    
-    VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.queueCreateInfoCount = 1;
-    createInfo.pQueueCreateInfos = &queueInfo;
-    createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = 1;
-    createInfo.ppEnabledExtensionNames = deviceExtensions;
-    
-#ifdef _DEBUG
-    const char* validationLayers[] = { "VK_LAYER_KHRONOS_validation" };
-    createInfo.enabledLayerCount = 1;
-    createInfo.ppEnabledLayerNames = validationLayers;
-#endif
-    
-    if (vkCreateDevice(physicalDevice_, &createInfo, nullptr, &device_) != VK_SUCCESS) {
-        return false;
-    }
-    
-    vkGetDeviceQueue(device_, queueFamilyIndex_, 0, &computeQueue_);
-    return true;
+    return false;
 }
 
 bool VulkanCompute::CreateCommandPool() {
-    if (device_ == VK_NULL_HANDLE || queueFamilyIndex_ >= VK_MAX_MEMORY_TYPES) {
-        return false;
-    }
-    
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queueFamilyIndex_;
-    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    
-    return vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool_) == VK_SUCCESS;
+    return false;
 }
 
+bool VulkanCompute::LoadSPIRVCode(const std::string& path, std::vector<uint32_t>& code) {
+    (void)path; (void)code;
+    return false;
+}
+
+uint32_t VulkanCompute::FindMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties) {
+    (void)type_filter; (void)properties;
+    return 0;
+}
+
+void VulkanCompute::InitializeCommandBufferPool(uint32_t pool_size) {
+    (void)pool_size;
+}
+
+void VulkanCompute::CleanupCommandBufferPool() {
+}
+
+bool VulkanCompute::CopyHostToBufferOffset(const void* host_data, VkBuffer device_buffer, size_t offset, size_t size) {
+    (void)host_data; (void)device_buffer; (void)offset; (void)size;
+    return false;
+}
+
+bool VulkanCompute::CopyBufferToHostOffset(VkBuffer device_buffer, size_t offset, void* host_data, size_t size) {
+    (void)device_buffer; (void)offset; (void)host_data; (void)size;
+    return false;
+}
+
+bool VulkanCompute::CreateStagingBuffer(size_t size, VkBuffer& buffer, VkDeviceMemory& memory) {
+    (void)size; (void)buffer; (void)memory;
+    return false;
+}
+
+} // namespace CPUInference
+
 #endif // RAWR_HAS_VULKAN
+

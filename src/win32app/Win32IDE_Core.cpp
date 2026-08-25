@@ -45,10 +45,9 @@ extern "C" void ShutdownAICompletion();
 #include <commctrl.h>
 #include <richedit.h>
 
-// B428Trace — lightweight no-op trace (was extern, now defined here to avoid LNK2001)
+// Stub definition for B428Trace (was declared extern, defined here)
 static void B428Trace(const char* msg) {
     (void)msg;
-    // No-op: reserved for future telemetry
 }
 
 #ifndef WM_DPICHANGED
