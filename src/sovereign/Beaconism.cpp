@@ -117,10 +117,4 @@ void BeaconismEmitter::Reset() {
     m_lastReadIndex = 0;
 }
 
-void BeaconismEmitter::Reset() {
-    if (!m_pShared) return;
-    m_pShared->readIndex = 0;
-    m_pShared->writeIndex = 0;
-}
-
 } // namespace Sovereign

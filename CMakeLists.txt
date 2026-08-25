@@ -306,10 +306,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/memory/WorkingSetPredictor.cpp
         src/inference/NegativeSpaceProfiler.cpp
         B014/build/b014_profiler.cpp
-        # Agentic stack — 101% IDE parity (Batch 1 wiring)
-        src/win32app/Win32IDE_AgenticBridge.cpp
-        src/win32app/Win32IDE_Autonomy.cpp
-        src/win32app/Win32IDE_SubAgent.cpp
+        # Agentic stack — headless CLI parity (no Win32IDE GUI dependencies)
         src/agentic_engine.cpp
         src/agent_history.cpp
         src/agent_policy.cpp
@@ -317,7 +314,7 @@ if(RAWRXD_BUILD_CLI)
         src/cli/swarm_orchestrator.cpp
         src/full_agentic_ide/AgenticIOCPBridge.cpp
         src/full_agentic_ide/AgenticPlanningOrchestrator.cpp
-        src/full_agentic_ide/FullAgenticIDE.cpp
+        # src/full_agentic_ide/FullAgenticIDE.cpp  # excluded: depends on Win32IDE
         # Agentic components for CLI Ollama testing
         src/agentic/FIMPromptBuilder.cpp
         src/agentic/RobustOllamaParser.cpp
@@ -328,6 +325,23 @@ if(RAWRXD_BUILD_CLI)
         src/modules/engine_manager.cpp
         src/modules/codex_ultimate.cpp
         src/deep2/Deep2IDEIntegration.cpp
+        # Missing utilities required by agentic stack
+        src/security/InputSanitizer.cpp
+        src/config/IDEConfig.cpp
+        src/inference/PerformanceMonitor.cpp
+        # HeadlessIDE agentic dependencies
+        src/agentic/SubAgentManager.cpp
+        src/core/chain_of_thought_engine.cpp
+        src/lsp/RawrXD_LSPServer.cpp
+        src/core/multi_response_engine.cpp
+        # Missing implementations for unresolved externals
+        src/BackendOrchestrator.cpp
+        src/core/enterprise_telemetry_compliance.cpp
+        src/core/enterprise_licensev2_impl.cpp
+        src/deep2/FabricTensorTable.cpp
+        src/deep2/Deep2Engine.cpp
+        src/utils/Diagnostics.cpp
+        src/subagent_core.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
@@ -351,6 +365,21 @@ if(RAWRXD_BUILD_CLI)
         "/LIBPATH:C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64"
         "/LIBPATH:C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64"
         "/LIBPATH:C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64"
+    )
+
+    # Include directories for headless agentic stack
+    target_include_directories(rawrxd PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/config
+        ${CMAKE_SOURCE_DIR}/src/win32app
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/src/cli
+        ${CMAKE_SOURCE_DIR}/src/full_agentic_ide
+        ${CMAKE_SOURCE_DIR}/src/modules
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/utils
+        ${CMAKE_SOURCE_DIR}/src/backend
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
     )
     
     # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
@@ -2949,6 +2978,11 @@ add_subdirectory(src/ceo)
 add_subdirectory(src/repository)
 add_subdirectory(src/generation)
 
+# =============================================================================
+# RGUF (RawrXD GGUF Unified Format) — Pack/inspect/patch encrypted model blocks
+# =============================================================================
+add_subdirectory(rguf_source)
+
 # RawrEngine needs specific ASM kernels for Deep2 and Sovereign Q4K
 set(RAWR_ENGINE_ASM_SOURCES
     src/deep2/sovereign_deep2_kernels.asm
@@ -4581,15 +4615,15 @@ set(INFERENCE_ENGINE_SOURCES
     src/sovereign/IDE_Lifecycle_Hook.cpp
     src/sovereign/RawrXD_SovereignStatusPanel.cpp
     src/sovereign/IntegrityChecker.cpp
-    # src/sovereign/HealthReport.cpp  # excluded: time ternary operator issue
-    # src/sovereign/AutoRepair.cpp  # excluded: missing ModelRegistry.hpp
+    src/sovereign/HealthReport.cpp
+    src/sovereign/AutoRepair.cpp
     src/sovereign/AutoRepairEngine.cpp
-    # src/sovereign/CrashRecovery.cpp  # excluded: missing KVCache.hpp
-    # src/sovereign/StressTester.cpp  # excluded: missing KVCache.hpp
-    # src/sovereign/Profiler.cpp  # excluded: missing Telemetry.hpp
-    # src/sovereign/DistributedKV.cpp  # excluded: references undefined Beaconism, Fabric
-    # src/sovereign/ExpertSharding.cpp  # excluded: references undefined Beaconism, Fabric
-    # src/sovereign/Beaconism.cpp  # excluded: duplicate Reset definition
+    src/sovereign/CrashRecovery.cpp
+    src/sovereign/StressTester.cpp
+    src/sovereign/Profiler.cpp
+    src/sovereign/DistributedKV.cpp
+    src/sovereign/ExpertSharding.cpp
+    src/sovereign/Beaconism.cpp
     src/sovereign/rawr_transport_strict.cpp
     # src/sovereign/verify_integration.cpp  # excluded: unknown header issues
     # MASM GEMV kernels

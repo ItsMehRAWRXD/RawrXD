@@ -1,6 +1,6 @@
 #include "ElasticEngine.hpp"
 #include "../gguf_tensor_loader.hpp"
-#include "../../kernels/attention_contracts.h"
+#include "../../../kernels/attention_contracts.h"
 #include <iostream>
 #include <algorithm>
 #include <cmath>

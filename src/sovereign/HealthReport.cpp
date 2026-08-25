@@ -3,6 +3,8 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <ctime>
+#include <intrin.h>
 
 namespace Sovereign {
 
@@ -137,7 +139,7 @@ void HealthReport::GenerateHTML(const std::wstring& path) {
     html << "<h1>🛡️ RawrXD Sovereign Health Report</h1>\n";
     html << "<p>Generated: " << std::put_time(std::localtime(&timestamp), "%Y-%m-%d %H:%M:%S") << "</p>\n";
     html << "<p class=\"" << (GetOverallHealth() == HealthState::OK ? "ok" : 
-                              GetOverallHealth() == HealthState::WARNING ? "warn" : "fail") << "\">";
+                              (GetOverallHealth() == HealthState::WARNING ? "warn" : "fail")) << "\">";
     html << summary << "</p>\n";
     html << "</div>\n";
     
@@ -147,15 +149,25 @@ void HealthReport::GenerateHTML(const std::wstring& path) {
     for (const auto& sub : subsystems) {
         html << "<tr>";
         html << "<td>" << sub.name << "</td>";
-        html << "<td class=\"status " << (sub.state == HealthState::OK ? "ok" : 
-                                            sub.state == HealthState::WARNING ? "warn" : "fail") << "\">";
+        html << "<td class=\"status ";
+        if (sub.state == HealthState::OK) html << "ok";
+        else if (sub.state == HealthState::WARNING) html << "warn";
+        else html << "fail";
+        html << "\">";
         html << StateEmoji(sub.state) << " ";
-        html << (sub.state == HealthState::OK ? "OK" : 
-                 sub.state == HealthState::WARNING ? "WARNING" : "FAIL");
+        if (sub.state == HealthState::OK) html << "OK";
+        else if (sub.state == HealthState::WARNING) html << "WARNING";
+        else html << "FAIL";
         html << "</td>";
         html << "<td>" << (sub.durationNs / 1000000) << " ms</td>";
         html << "<td>" << sub.beaconCount << "</td>";
-        html << "<td>" << (sub.lastSuccess ? std::put_time(std::localtime(&sub.lastSuccess), "%H:%M:%S") : "Never") << "</td>";
+        html << "<td>";
+        if (sub.lastSuccess) {
+            html << std::put_time(std::localtime(&sub.lastSuccess), "%H:%M:%S");
+        } else {
+            html << "Never";
+        }
+        html << "</td>";
         html << "</tr>\n";
     }
     
@@ -170,7 +182,7 @@ void HealthReport::GenerateJSON(const std::wstring& path) {
     json << "  \"timestamp\": " << timestamp << ",\n";
     json << "  \"overall\": \"" << summary << "\",\n";
     json << "  \"health\": \"" << (GetOverallHealth() == HealthState::OK ? "ok" : 
-                                     GetOverallHealth() == HealthState::WARNING ? "warning" : "fail") << "\",\n";
+                                     (GetOverallHealth() == HealthState::WARNING ? "warning" : "fail")) << "\",\n";
     json << "  \"summary\": {\n";
     json << "    \"total\": " << totalBeacons << ",\n";
     json << "    \"passed\": " << passedTests << ",\n";
@@ -182,8 +194,11 @@ void HealthReport::GenerateJSON(const std::wstring& path) {
         const auto& sub = subsystems[i];
         json << "    {\n";
         json << "      \"name\": \"" << sub.name << "\",\n";
-        json << "      \"state\": \"" << (sub.state == HealthState::OK ? "ok" : 
-                                              sub.state == HealthState::WARNING ? "warning" : "fail") << "\",\n";
+        json << "      \"state\": \"";
+        if (sub.state == HealthState::OK) json << "ok";
+        else if (sub.state == HealthState::WARNING) json << "warning";
+        else json << "fail";
+        json << "\",\n";
         json << "      \"duration_ms\": " << (sub.durationNs / 1000000) << ",\n";
         json << "      \"beacon_count\": " << sub.beaconCount << ",\n";
         json << "      \"last_run\": " << sub.lastRun << ",\n";

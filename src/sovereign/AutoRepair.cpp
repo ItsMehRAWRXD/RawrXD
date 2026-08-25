@@ -125,16 +125,16 @@ void TryRepair(const SovereignHealth& health) {
 }
 
 bool NeedsRepair(const SovereignHealth& health) {
-    return health.kv.state != HealthState::Ok ||
-           health.experts.state != HealthState::Ok ||
-           health.attention.state != HealthState::Ok ||
-           health.moe.state != HealthState::Ok ||
-           health.nvme.state != HealthState::Ok ||
-           health.vulkan.state != HealthState::Ok ||
-           health.model.state != HealthState::Ok ||
-           health.quant.state != HealthState::Ok ||
-           health.telemetry.state != HealthState::Ok ||
-           health.replay.state != HealthState::Ok;
+    return health.kv.state != HealthState::OK ||
+           health.experts.state != HealthState::OK ||
+           health.attention.state != HealthState::OK ||
+           health.moe.state != HealthState::OK ||
+           health.nvme.state != HealthState::OK ||
+           health.vulkan.state != HealthState::OK ||
+           health.model.state != HealthState::OK ||
+           health.quant.state != HealthState::OK ||
+           health.telemetry.state != HealthState::OK ||
+           health.replay.state != HealthState::OK;
 }
 
 const char* GetLastRepairMessage() {

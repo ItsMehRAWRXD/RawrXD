@@ -48,7 +48,9 @@ public:
 
 private:
     SubAgentManager() = default;
+public:
     ~SubAgentManager() = default;
+private:
     SubAgentManager(const SubAgentManager&) = delete;
     SubAgentManager& operator=(const SubAgentManager&) = delete;
 

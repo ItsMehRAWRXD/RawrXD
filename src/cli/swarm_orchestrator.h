@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "universal_model_hotpatcher.h"
+#include "../core/universal_model_hotpatcher.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

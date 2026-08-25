@@ -4,7 +4,7 @@
 // ============================================================================
 
 #include "IDEConfig.h"
-#include "win32app/IDELogger.h"
+#include "../win32app/IDELogger.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <sstream>

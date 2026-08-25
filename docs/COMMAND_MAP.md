@@ -448,7 +448,6 @@ Proof baseline: RAWRXD_SMOKE_CHAT
 | 504 | tools.terminal | handleToolsTerminal | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 505 | tools.build | handleToolsBuild | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 506 | tools.debug | handleToolsDebug | Tools | yes | 0 | Registry wired + unified dispatch path |
-| 507 | tools.killBuildLocks | handleToolsKillBuildLocks | Tools | yes | 0 | Registry wired + unified dispatch path |
 | 601 | help.docs | handleHelpDocs | Help | yes | 0 | Registry wired + unified dispatch path |
 | 603 | help.shortcuts | handleHelpShortcuts | Help | yes | 0 | Registry wired + unified dispatch path |
 | 8001 | decomp.renameVar | handleDecompRenameVar | ReverseEng | yes | 0 | Registry wired + unified dispatch path |

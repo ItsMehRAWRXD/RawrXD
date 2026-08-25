@@ -1,5 +1,5 @@
 #pragma once
-#include "HealthReport.hpp"
+#include "sovereign/SovereignHealth.hpp"
 
 namespace Sovereign {
 namespace AutoRepair {

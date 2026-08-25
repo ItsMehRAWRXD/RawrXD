@@ -1953,6 +1953,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
 
     modelWeights.loaded = true;
+    initialized = true;
     printf("[Deep2Engine] Model loaded successfully (%zu tensors)\n",
            isMultiShard ? globalIndex_->TotalTensors() : ggufResult.tensors.size());
 

@@ -40,12 +40,17 @@ enum class BeaconID : uint32_t {
     KV_DONE = 0x101,
     EXPERT_START = 0x200,
     EXPERT_DONE = 0x201,
+    ExpertDone = EXPERT_DONE,
     ATTENTION_START = 0x300,
     ATTENTION_DONE = 0x301,
     MOE_START = 0x400,
     MOE_DONE = 0x401,
+    MoEStart = MOE_START,
+    MoEDone = MOE_DONE,
     NVME_START = 0x500,
     NVME_DONE = 0x501,
+    NVMeStart = NVME_START,
+    NVMeDone = NVME_DONE,
     VULKAN_START = 0x600,
     VULKAN_DONE = 0x601,
     QUANT_START = 0x700,
@@ -125,5 +130,12 @@ private:
 };
 
 #pragma pack(pop)
+
+// Convenience namespace for free-function Emit style
+namespace Beaconism {
+    inline void Emit(BeaconID id, uint32_t payload = 0) {
+        BeaconismEmitter::Instance().Emit(id, payload);
+    }
+}
 
 } // namespace Sovereign

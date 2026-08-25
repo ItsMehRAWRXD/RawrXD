@@ -113,6 +113,10 @@ private:
 };
 
 // Convenience functions
+inline Fabric& Instance() {
+    return Fabric::Instance();
+}
+
 inline void JoinCluster(const std::string& addr, NodeRole role = NodeRole::Worker) {
     Instance().JoinCluster(addr, role);
 }

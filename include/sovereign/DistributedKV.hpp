@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <nlohmann/json.hpp>
 
 namespace Sovereign {
 namespace DistributedKV {
