@@ -127,6 +127,17 @@ struct ResidencyCounters {
         batchedMatMulCount++;
     }
 
+    // Phase profiling helpers (no-op stubs for compilation)
+    static void BeginEmbed() {}
+    static void EndEmbed() {}
+    static void BeginLogits() {}
+    static void EndLogits() {}
+    static void BeginAttention() {}
+    static void EndAttention() {}
+    static void BeginFFN() {}
+    static void EndFFN() {}
+    static void RecordLayerTime(size_t /*layer*/, double /*ms*/) {}
+
     static void Print() {
         printf("\n============================================================\n");
         printf("RESIDENCY COUNTERS\n");

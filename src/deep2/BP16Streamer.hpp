@@ -11,15 +11,13 @@
 #include <string>
 #include <vector>
 
-// Use Deep2::GGMLType from GGUFLoader.hpp — forward declare only
-namespace Deep2 { enum class GGMLType : uint32_t; }
-
 class BP16Streamer {
 public:
     struct Record {
         std::string name;
         std::vector<size_t> dimensions;
-        Deep2::GGMLType type = static_cast<Deep2::GGMLType>(0);
+        int type = 0;  // GGMLType enum value (int to avoid header coupling)
+        size_t byteSize = 0;
     };
 
     BP16Streamer() = default;

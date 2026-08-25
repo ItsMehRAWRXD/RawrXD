@@ -31,6 +31,18 @@ public:
     template<typename F, typename... Args>
     auto enqueue(F&& f, Args&&... args) -> std::future<typename std::invoke_result_t<F, Args...>>;
 
+    // Fire-and-forget enqueue (no future returned)
+    template<typename F>
+    void enqueue_void(F&& f) {
+        {
+            std::unique_lock<std::mutex> lock(queueMutex);
+            if (stop) return;
+            activeTasks++;
+            tasks.emplace(std::forward<F>(f));
+        }
+        condition.notify_one();
+    }
+
     // Wait for all tasks to complete
     void waitAll();
 

@@ -48,6 +48,8 @@ public:
     void endAttnNorm();
 
     void beginQKVProj();
+    void endQKVProj();
+    void beginAttnOutProj();
     void endAttnOutProj();
 
     void beginAttnResidual();
