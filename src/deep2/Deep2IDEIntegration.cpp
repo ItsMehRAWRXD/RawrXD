@@ -130,13 +130,20 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadSingleFile(const std::string&
     s_fabric = std::make_unique<FabricTensorTable>();
     s_fabric->ingest_gguf_router(*s_router);
 
-    // Extract metadata from first tensor
+    // Extract metadata from router
     result.success = true;
     result.modelName = fs::path(path).filename().string();
     result.shardCount = 1;
     result.tensorCount = static_cast<uint32_t>(s_router->tensor_count());
     result.totalFileBytes = fs::file_size(path);
     result.streamingEnabled = true;
+
+    const auto& meta = s_router->metadata();
+    if (meta.has_metadata) {
+        result.numLayers = meta.layer_count;
+        result.numExperts = meta.expert_count;
+        result.context_length = meta.context_length;
+    }
 
     // Try to detect MoE from tensor names
     for (const auto& [name, loc] : s_router->tensors()) {
@@ -189,6 +196,7 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadShardedDirectory(const std::s
     if (meta.has_metadata) {
         result.numLayers = meta.layer_count;
         result.numExperts = meta.expert_count;
+        result.context_length = meta.context_length;
         // Store additional metadata for downstream consumers
         s_lastResult = result;  // Will be overwritten below, but keeps metadata accessible
     } else {

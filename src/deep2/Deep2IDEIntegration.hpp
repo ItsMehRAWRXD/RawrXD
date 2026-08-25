@@ -44,6 +44,7 @@ public:
         uint64_t totalFileBytes = 0;
         uint32_t shardCount = 0;
         uint32_t tensorCount = 0;
+        uint32_t context_length = 0;
         bool isMoE = false;
         bool streamingEnabled = false;
     };
