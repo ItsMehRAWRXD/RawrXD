@@ -54,7 +54,7 @@ bool RawrXDTokenizer::Load(const std::string& vocabPath) {
 }
 
 std::vector<uint32_t> RawrXDTokenizer::Encode(const std::string& text) {
-    // Greedy Matcher (Longest Prefix) - Simplified BPE
+    // Longest-prefix matching BPE encoding
     std::vector<uint32_t> tokens;
     
     // Add BOS
@@ -63,38 +63,32 @@ std::vector<uint32_t> RawrXDTokenizer::Encode(const std::string& text) {
     size_t pos = 0;
     size_t len = text.length();
     
-    // SIMD-optimized byte processing for simple byte-level tokenization
-    // Process 64 bytes at a time using AVX-512 (64 bytes = 512 bits)
-    while (pos + 63 < len) {
-        // Load 64 bytes into AVX-512 register
-        __m512i byte_vec = _mm512_loadu_si512((__m512i*)(text.data() + pos));
-        
-        // For each byte, create token
-        // Since we're doing byte-level, we can process all 64 bytes in parallel
-        for (int i = 0; i < 64; i++) {
-            uint8_t c = ((uint8_t*)&byte_vec)[i];
-            std::string s(1, (char)c);
-            if (vocab.count(s)) {
-                tokens.push_back(vocab[s]);
-            } else {
-                tokens.push_back(c + 3);
+    while (pos < len) {
+        // Try longest match first (max 64 chars)
+        size_t maxLen = std::min(len - pos, (size_t)64);
+        bool found = false;
+        for (size_t tryLen = maxLen; tryLen > 0; --tryLen) {
+            std::string sub = text.substr(pos, tryLen);
+            auto it = vocab.find(sub);
+            if (it != vocab.end()) {
+                tokens.push_back(it->second);
+                pos += tryLen;
+                found = true;
+                break;
             }
         }
-        pos += 64;
-    }
-    
-    // Handle remaining bytes
-    while (pos < len) {
-        uint8_t c = (uint8_t)text[pos];
-        std::string s(1, (char)c);
-        
-        if (vocab.count(s)) {
-            tokens.push_back(vocab[s]);
-        } else {
-            // Unknown? Just cast to int?
-            tokens.push_back(c + 3); 
+        if (!found) {
+            // Unknown character - try byte fallback <0xXX>
+            char hexBuf[8];
+            snprintf(hexBuf, sizeof(hexBuf), "<0x%02X>", (unsigned char)text[pos]);
+            auto it = vocab.find(hexBuf);
+            if (it != vocab.end()) {
+                tokens.push_back(it->second);
+            } else {
+                tokens.push_back((unsigned char)text[pos] + 3);
+            }
+            pos++;
         }
-        pos++;
     }
     
     return tokens;

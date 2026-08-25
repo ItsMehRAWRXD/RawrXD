@@ -784,9 +784,22 @@ struct TubiRenderResult
     bool mp4Created = false;
 };
 
-std::expected<TubiRenderResult, std::string> renderVideoClip(const TubiRenderRequest& request) {
+// Simple expected-like result for C++20 compatibility
+struct TubiRenderResult {
+    std::filesystem::path previewStartPath;
+    std::filesystem::path previewMidPath;
+    std::filesystem::path previewEndPath;
+    std::string encoderDiagnostics;
+    std::string extractedTags;
+    bool mp4Created = false;
+};
+
+// C++20 compatible: return pair<bool, result_or_error>
+std::pair<bool, TubiRenderResult> renderVideoClip(const TubiRenderRequest& request) {
     (void)request;
-    return std::unexpected<std::string>("Video rendering not implemented in Gold build");
+    TubiRenderResult result;
+    result.encoderDiagnostics = "Video rendering not implemented in Gold build";
+    return {false, result};
 }
 
 } // namespace video

@@ -75,15 +75,34 @@ public:
     }
 
     std::vector<int> Encode(const std::string& text) const override {
-        // Simple: map each character to its token if in vocab
+        // Longest-prefix matching BPE encoding
         std::vector<int> tokens;
-        for (unsigned char c : text) {
-            std::string s(1, (char)c);
-            auto it = vocab_.find(s);
-            if (it != vocab_.end()) {
-                tokens.push_back(it->second);
-            } else {
-                tokens.push_back(special_.unkId);
+        size_t pos = 0;
+        while (pos < text.size()) {
+            // Try longest match first
+            size_t maxLen = std::min(text.size() - pos, (size_t)64); // Max token length
+            bool found = false;
+            for (size_t len = maxLen; len > 0; --len) {
+                std::string sub = text.substr(pos, len);
+                auto it = vocab_.find(sub);
+                if (it != vocab_.end()) {
+                    tokens.push_back(it->second);
+                    pos += len;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // Unknown character - encode as byte fallback <0xXX>
+                char hexBuf[8];
+                snprintf(hexBuf, sizeof(hexBuf), "<0x%02X>", (unsigned char)text[pos]);
+                auto it = vocab_.find(hexBuf);
+                if (it != vocab_.end()) {
+                    tokens.push_back(it->second);
+                } else {
+                    tokens.push_back(special_.unkId);
+                }
+                pos++;
             }
         }
         return tokens;
