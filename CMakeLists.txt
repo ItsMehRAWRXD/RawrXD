@@ -9062,6 +9062,7 @@ if(WIN32)
         src/deep2/DualGPUHook.cpp
         src/reverse/ReverseEngine.cpp
         src/reverse/ReverseModelLoader.cpp
+        src/deep2/asm_stubs.cpp
         src/vulkan_compute.cpp
     )
     target_include_directories(RawrXD-ProductionBenchmark PRIVATE
