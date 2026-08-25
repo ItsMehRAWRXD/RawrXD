@@ -2429,6 +2429,8 @@ set(SOURCES
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
+    src/deep2/ToroidalKVCache.cpp
+    src/deep2/Chamber.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/ReverseIntegration.cpp
     src/deep2/ReverseHotpatchEngine.cpp
