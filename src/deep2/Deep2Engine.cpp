@@ -4105,10 +4105,25 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
     ResidencyCounters::EndAttention();
 
-    // 3. Residual connection
+    // 3. Residual connection — AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginAttnResidual();
-    for (size_t i = 0; i < hiddenDim; ++i) {
-        output[i] += input[i];
+    #if defined(__AVX2__) || defined(_MSC_VER)
+    if (hiddenDim >= 8) {
+        size_t i = 0;
+        for (; i + 7 < hiddenDim; i += 8) {
+            __m256 outv = _mm256_loadu_ps(output + i);
+            __m256 inv = _mm256_loadu_ps(input + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, inv));
+        }
+        for (; i < hiddenDim; ++i) {
+            output[i] += input[i];
+        }
+    } else
+    #endif
+    {
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            output[i] += input[i];
+        }
     }
     if (profilingEnabled_ && profiler_) profiler_->endAttnResidual();
     #if 1
@@ -4135,10 +4150,25 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
 
-    // 6. Residual connection
+    // 6. Residual connection — AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginFFNResidual();
-    for (size_t i = 0; i < hiddenDim; ++i) {
-        output[i] += ffnOutput[i];
+    #if defined(__AVX2__) || defined(_MSC_VER)
+    if (hiddenDim >= 8) {
+        size_t i = 0;
+        for (; i + 7 < hiddenDim; i += 8) {
+            __m256 outv = _mm256_loadu_ps(output + i);
+            __m256 fnv = _mm256_loadu_ps(ffnOutput + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, fnv));
+        }
+        for (; i < hiddenDim; ++i) {
+            output[i] += ffnOutput[i];
+        }
+    } else
+    #endif
+    {
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            output[i] += ffnOutput[i];
+        }
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNResidual();
     #if 1
