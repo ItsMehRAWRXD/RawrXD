@@ -5,6 +5,7 @@ cd /d d:\rawrxd\src\deep2
 set CLFLAGS=/nologo /W3 /O2 /arch:AVX2 /EHsc /std:c++20 /I. /I.. /I..\..\include /I..\sampling /D_CRT_SECURE_NO_WARNINGS
 
 echo === Compiling all TUs ===
+cl.exe %CLFLAGS% /c Deep2Engine.cpp
 cl.exe %CLFLAGS% /c Deep2_Elastic_Forward_Test.cpp
 cl.exe %CLFLAGS% /c Deep2_Elastic_Generation_Test.cpp
 cl.exe %CLFLAGS% /c deep2_link_stubs.cpp

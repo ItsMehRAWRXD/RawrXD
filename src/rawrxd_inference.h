@@ -267,42 +267,68 @@ class RawrXDInference
     RawrXDModelLoader& GetLoader() { return loader; }
     const RawrXDModelLoader& GetLoader() const { return loader; }
 
+    // Backend selection for deterministic CPU-only paths
+    enum class Backend { AUTO, CPU_AVX2, CPU_AVX512, VULKAN_AMD, VULKAN_NVIDIA, CUDA, METAL };
+
     bool Initialize(const wchar_t* modelPath, const char* vocabPath, const char* mergesPath)
+    {
+        return Initialize(modelPath, vocabPath, mergesPath, Backend::AUTO);
+    }
+
+    bool Initialize(const wchar_t* modelPath, const char* vocabPath, const char* mergesPath, Backend backend)
     {
         m_lastLoadErrorMessage.clear();
         loader.SetLoadErrorCallback([this](const std::string& stage, const std::string& message)
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
-#if RAWR_VULKAN_AVAILABLE
-        VkInstance instance = CreateVulkanInstance();
-        VkPhysicalDevice physDevice = VK_NULL_HANDLE;
-        VkDevice device = VK_NULL_HANDLE;
 
-        if (!instance)
+        // Determine whether to initialize Vulkan based on backend selection
+        bool useVulkan = false;
+        if (backend == Backend::CPU_AVX2 || backend == Backend::CPU_AVX512)
         {
-            printf("[RawrXD] Vulkan init failed at instance creation; falling back to CPU mode\n");
+            printf("[RawrXD] Backend=%s: skipping Vulkan initialization\n",
+                   (backend == Backend::CPU_AVX2) ? "cpu_avx2" : "cpu_avx512");
         }
-        else
+        else if (backend == Backend::VULKAN_AMD || backend == Backend::VULKAN_NVIDIA || backend == Backend::AUTO)
         {
-            physDevice = SelectPhysicalDevice(instance);
-            if (!physDevice)
+            useVulkan = true;
+        }
+
+        VkDevice device = VK_NULL_HANDLE;
+        VkPhysicalDevice physDevice = VK_NULL_HANDLE;
+
+#if RAWR_VULKAN_AVAILABLE
+        if (useVulkan)
+        {
+            VkInstance instance = CreateVulkanInstance();
+            if (!instance)
             {
-                printf("[RawrXD] Vulkan init failed at physical device selection; falling back to CPU mode\n");
+                printf("[RawrXD] Vulkan init failed at instance creation; falling back to CPU mode\n");
             }
             else
             {
-                device = CreateLogicalDevice(physDevice);
-                if (!device)
+                physDevice = SelectPhysicalDevice(instance);
+                if (!physDevice)
                 {
-                    printf("[RawrXD] Vulkan init failed at logical device creation; falling back to CPU mode\n");
-                    physDevice = VK_NULL_HANDLE;
+                    printf("[RawrXD] Vulkan init failed at physical device selection; falling back to CPU mode\n");
+                }
+                else
+                {
+                    device = CreateLogicalDevice(physDevice);
+                    if (!device)
+                    {
+                        printf("[RawrXD] Vulkan init failed at logical device creation; falling back to CPU mode\n");
+                        physDevice = VK_NULL_HANDLE;
+                    }
                 }
             }
         }
+        else
+        {
+            printf("[RawrXD] CPU-only mode (Vulkan disabled by backend selection)\n");
+        }
 #else
-        // CPU-only mode — no GPU required
-        VkDevice device = VK_NULL_HANDLE;
-        VkPhysicalDevice physDevice = VK_NULL_HANDLE;
-        printf("[RawrXD] CPU-only mode (Vulkan disabled)\n");
+        (void)useVulkan;
+        printf("[RawrXD] CPU-only mode (Vulkan not compiled in)\n");
 #endif
 
         printf("[RawrXD] Stage: loader.Load\n");
@@ -347,7 +373,6 @@ class RawrXDInference
         printf("[RawrXD] Config: dim=%d layers=%d heads=%d kv_heads=%d vocab=%d hidden=%d ctx=%d\n", cfg.dim,
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
         printf("[RawrXD] Stage: transformer.Initialize\n");
-        transformer.Initialize(device, physDevice, cfg, &loader);
         transformer.Initialize(device, physDevice, cfg, &loader);
 
         m_swarmScheduler = RawrXD::Swarm::makeSwarmSchedulerWithLoader(&loader);

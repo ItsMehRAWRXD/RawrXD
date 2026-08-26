@@ -197,9 +197,24 @@ void GGUFTensorLoader::Close() {
 
 #ifdef _WIN32
 
+// Helper: convert UTF-8 path to UTF-16 for Windows wide APIs
+static std::wstring Utf8ToWide(const std::string& utf8)
+{
+    if (utf8.empty()) return std::wstring();
+    int len = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    if (len <= 0) return std::wstring();
+    std::wstring wide(len, 0);
+    MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, &wide[0], len);
+    // Remove trailing null if present
+    if (!wide.empty() && wide.back() == L'\0')
+        wide.pop_back();
+    return wide;
+}
+
 bool GGUFTensorLoader::MapFile(const std::string& path) {
-    file_handle_ = CreateFileA(
-        path.c_str(),
+    std::wstring wpath = Utf8ToWide(path);
+    file_handle_ = CreateFileW(
+        wpath.c_str(),
         GENERIC_READ,
         FILE_SHARE_READ,
         nullptr,

@@ -2041,8 +2041,21 @@ void RawrXDTransformer::Initialize(VkDevice device, VkPhysicalDevice physDevice,
         try {
             ggufIndex = std::make_shared<RawrXD::Elastic::ElasticGGUFIndex>(loader->GetModelPath());
         } catch (const std::exception& e) {
-            printf("[Elastic] GGUF index creation failed: %s — falling back to direct loader path.\n", e.what());
+            printf("[Elastic] GGUF index creation failed: %s — Elastic disabled, continuing with direct loader.\n", e.what());
+            // Elastic is optional: do NOT reset m_elasticEngine here; instead
+            // skip the ElasticEngine::Initialize() call below and continue
+            // with CPU-only transformer operation.
+            ggufIndex.reset();
+        } catch (...) {
+            printf("[Elastic] GGUF index creation failed: unknown exception — Elastic disabled, continuing.\n");
+            ggufIndex.reset();
+        }
+
+        if (!ggufIndex) {
+            // Elastic index unavailable — skip ElasticEngine initialization
+            // and continue with direct loader path (CPU inference works fine).
             m_elasticEngine.reset();
+            printf("[Elastic] Engine skipped (no index). Running direct loader path.\n");
             return;
         }
 

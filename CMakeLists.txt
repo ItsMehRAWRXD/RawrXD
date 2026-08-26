@@ -9457,9 +9457,12 @@ if(WIN32)
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/include
+        ${RAWR_VULKAN_INCLUDE}
     )
     target_compile_definitions(RawrXD-ProductionBenchmark PRIVATE
         RAWR_PRODUCTION_BENCHMARK=1
+        RAWR_HAS_VULKAN=1
+        RAWR_VULKAN_AVAILABLE=1
     )
     if(MSVC)
         target_compile_options(RawrXD-ProductionBenchmark PRIVATE /EHsc /W0 /O2)
@@ -9468,6 +9471,7 @@ if(WIN32)
         kernel32
         user32
         cabinet
+        ${RAWR_VULKAN_LIB}
     )
     set_target_properties(RawrXD-ProductionBenchmark PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

@@ -246,6 +246,16 @@ MoEWeightHandle MoEWeightProxy::AcquireInternal(int layer, int expert) {
     h.expertBytes = gateBytes + upBytes + downBytes;
     h.layer = layer;
     h.expertId = expert;
+    // Resolve quant type from first projection with matching layer
+    for (const auto& info : projections) {
+        if (info.layerIdx == layer && info.expertIdx == -1) {
+            h.quantType = static_cast<int>(info.type);
+            break;
+        }
+    }
+    if (h.quantType == 0) {
+        h.quantType = static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
+    }
     h.valid = true;
 
     stats_.bytesStreamed.fetch_add(h.expertBytes, std::memory_order_relaxed);

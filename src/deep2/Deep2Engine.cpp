@@ -4231,7 +4231,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (compressedKVEnabled_ && compressedKV_) {
             // Attention with compressed KV cache — optimized: single allocation, AVX2 paths
             const float scale = 1.0f / sqrtf((float)headDim);
-            const size_t maxAttend = std::max(attend, (size_t)128);
+            const size_t maxAttend = (attend > 128) ? attend : 128;
             
             // Single allocation for all heads (amortize malloc cost)
             float* tempK = (float*)_aligned_malloc(maxAttend * headDim * sizeof(float), 32);
@@ -4718,20 +4718,31 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
         return;
     }
 
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    auto kernel = reg.GetGEMV(handle.quantType);
+    auto geom   = reg.GetGeometry(handle.quantType);
+    if (!kernel || geom.blockSize == 0) {
+        memset(output, 0, hiddenDim * sizeof(float));
+        printf("[computeExpertFFN] ERROR: No registry kernel for quantType=%d\n", handle.quantType);
+        return;
+    }
+    size_t blocksPerRow = (hiddenDim + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
+    size_t rowBytes = blocksPerRow * geom.blockSize;
+
     // Use gateBuf and upBuf as temp (both hiddenDim*4 sized, enough for expertDim)
     // Gate projection: [expertDim, hiddenDim] * input -> [expertDim]
     float* gateOut = gateBuf;
-    q4kGEMV(handle.gateWeights, input, gateOut, expertDim, hiddenDim);
+    kernel((const uint8_t*)handle.gateWeights, input, gateOut, expertDim, hiddenDim);
 
     // Up projection: [expertDim, hiddenDim] * input -> [expertDim]
     float* upOut = upBuf;
-    q4kGEMV(handle.upWeights, input, upOut, expertDim, hiddenDim);
+    kernel((const uint8_t*)handle.upWeights, input, upOut, expertDim, hiddenDim);
 
     // SwiGLU: silu(gate) * up
     SwiGLU(gateOut, upOut, gateOut, expertDim);
 
     // Down projection: [hiddenDim, expertDim] * gateOut -> [hiddenDim]
-    q4kGEMV(handle.downWeights, gateOut, output, hiddenDim, expertDim);
+    kernel((const uint8_t*)handle.downWeights, gateOut, output, hiddenDim, expertDim);
 }
 
 // ============================================================================
@@ -4794,6 +4805,7 @@ void Deep2Engine::computeSharedExpertFFN(size_t layer, const float* input,
     handle.expertBytes = totalBytes;
     handle.layer = (int)layer;
     handle.expertId = -2;
+    handle.quantType = static_cast<int>(GGMLType::GGML_TYPE_Q4_K);
     handle.valid = true;
 
     computeExpertFFN(handle, input, output, hiddenDim, sharedDim);
@@ -5019,17 +5031,23 @@ void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias,
 
     const LegacyWeightTensor& wt = g_weightTensors[weightIdx];
 
-    // --- Quant-agnostic dispatch ---
+    // --- Quant-agnostic dispatch via registry (zero inline switch) ---
     auto& reg = Deep2::QuantKernelRegistry::Instance();
+    if (reg.GetRegisteredCount() == 0) reg.Initialize();
     auto kernel = reg.GetGEMV(wt.type);
-    if (kernel) {
+    auto geom   = reg.GetGeometry(wt.type);
+    if (kernel && geom.blockSize > 0) {
         kernel((const uint8_t*)wt.data, input, output, wt.rows, wt.cols);
-    } else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
-        q4kGEMV(wt.data, input, output, wt.rows, wt.cols);
-    } else if (wt.type == (int)GGMLType::GGML_TYPE_F16) {
-        fp16GEMV((const uint16_t*)wt.data, input, output, wt.rows, wt.cols);
     } else {
-        fp32GEMV((const float*)wt.data, input, output, wt.rows, wt.cols);
+        // Scalar fallback for unregistered types
+        printf("[Linear] WARNING: No registry kernel for type=%d, scalar fallback\n", wt.type);
+        for (size_t r = 0; r < wt.rows; ++r) {
+            float acc = 0.0f;
+            for (size_t c = 0; c < wt.cols; ++c) {
+                acc += ((const float*)wt.data)[r * wt.cols + c] * input[c];
+            }
+            output[r] = acc;
+        }
     }
 
     if (bias) {

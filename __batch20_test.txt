@@ -1,0 +1,69 @@
+[ProductionBenchmark] Model: f:\~dev\ministral3_q4_0.gguf
+[ProductionBenchmark] Output: "
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Max Seq Len: 2048
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Initializing: layers=32 maxSeqLen=2048 numHeads=32 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 32 * 2048 * 32 * 128 * 2 * 4
+[KVCache]        = 2147483648 bytes (K=1073741824 + V=1073741824)
+[KVCache] Total cache size: 2048.00 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 13 GEMV kernels, 13 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] Initialization complete
+[Deep2Engine] Loading model from: f:\~dev\ministral3_q4_0.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in f:\~dev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] Tokenizer loaded: 131072 tokens from GGUF
+[WO_DIAG] GGUF wo.data=000001A7FF0F0000 rows=4096 cols=4096 type=2 first16=[0.000000,-0.000000,878535.437500,17225.107422] min=-0.000098 max=7561831079060757943123398061195264.000000 nz=16
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001A73F3E9860  Registered 'blk.0.attn_q.weight': offset=0 bytes=9437184  |  registry_size=1  registeredBytes=9437184  maxResidentBytes=536870912
+[ResidencyManager] this=000001A73F3E9860  Registered 'blk.11.attn_q.weight': offset=0 bytes=9437184  |  registry_size=100  registeredBytes=1359314944  maxResidentBytes=536870912
+[ResidencyManager] this=000001A73F3E9860  Registered 'blk.22.attn_k.weight': offset=0 bytes=2359296  |  registry_size=200  registeredBytes=2711552000  maxResidentBytes=536870912
+[ResidencyManager] this=000001A73F3E9860  Registered 'blk.33.attn_v.weight': offset=0 bytes=2359296  |  registry_size=300  registeredBytes=4063789056  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001A73F3E9860  registered=309 tensors  bytes=4914757632  max=536870912
+[KVCache] Initializing: layers=34 maxSeqLen=2048 numHeads=8 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 34 * 2048 * 8 * 128 * 2 * 4
+[KVCache]        = 570425344 bytes (K=285212672 + V=285212672)
+[KVCache] Total cache size: 544.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (531 tensors)
+[ProductionBenchmark] Model loaded in 4835.11 ms
+[ProductionBenchmark] Initializing Sovereign Engine components...
+[Deep2Engine] SovereignOutOfCoreRuntime initialized (8GB RAM / 32GB VRAM)
+[Deep2Engine] SovereignOutOfCoreRuntime: ENABLED
+[Deep2Engine] Chamber (SM0-DSP) initialized
+[Deep2Engine] Chamber state synced to SovereignRuntime
+[Deep2Engine] Chamber: ENABLED
+[SAFETY] CRASH DETECTED: type=0, patch=, op=
+[SAFETY] Crash detected during patch operation!
+  Patch: 
+  Operation: 
+  Type: 0
+[SAFETY] Initiating emergency rollback...
+[HotPatcher] EMERGENCY ROLLBACK initiated
+[HotPatcher] Emergency ro

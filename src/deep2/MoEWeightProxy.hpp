@@ -31,6 +31,7 @@ struct MoEWeightHandle {
     size_t expertBytes = 0;
     int layer = -1;
     int expertId = -1;
+    int quantType = 0;   // GGMLType enum value (default resolved by proxy)
     bool valid = false;
 };
 
