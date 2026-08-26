@@ -4294,25 +4294,94 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // Store K, V into KV cache
-    if (config.useKVCache && kvCache) {
+    if (config.useKVCache) {
         if (profilingEnabled_ && profiler_) profiler_->beginKVStore();
-        for (size_t h = 0; h < numKVHeads; ++h) {
-            float* kPtr = nullptr;
-            float* vPtr = nullptr;
-            kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
-            if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
-            if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
+        
+        // Use CompressedKVCache if enabled
+        if (compressedKVEnabled_ && compressedKV_) {
+            for (size_t h = 0; h < numKVHeads; ++h) {
+                size_t pos = compressedKV_->currentLength();
+                compressedKV_->storeKV(layer, h, pos, kProj + h * headDim, vProj + h * headDim);
+            }
+            compressedKV_->advance();
+        } else if (kvCache) {
+            for (size_t h = 0; h < numKVHeads; ++h) {
+                float* kPtr = nullptr;
+                float* vPtr = nullptr;
+                kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
+                if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
+                if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
+            }
         }
+        
         if (profilingEnabled_ && profiler_) profiler_->endKVStore();
 
         // GQA: KV heads are shared across Q heads
         if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
-        for (size_t h = 0; h < numHeads; ++h) {
-            size_t kvHead = h % numKVHeads; // GQA mapping
-            float* headOut = output + h * headDim;
-            AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
-                               headOut, seqLen);
+        
+        if (compressedKVEnabled_ && compressedKV_) {
+            // Attention with compressed KV cache
+            for (size_t h = 0; h < numHeads; ++h) {
+                size_t kvHead = h % numKVHeads;
+                float* headOut = output + h * headDim;
+                
+                const size_t attend = seqLen;
+                const float scale = 1.0f / sqrtf((float)headDim);
+                
+                // Allocate temp buffers for dequantized K/V
+                float* tempK = (float*)_aligned_malloc(attend * headDim * sizeof(float), 32);
+                float* tempV = (float*)_aligned_malloc(attend * headDim * sizeof(float), 32);
+                float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
+                
+                if (tempK && tempV && scores) {
+                    // Dequantize K and V ranges
+                    compressedKV_->loadKRange(layer, kvHead, 0, attend, tempK);
+                    compressedKV_->loadVRange(layer, kvHead, 0, attend, tempV);
+                    
+                    // Compute attention scores
+                    float maxScore = -1e38f;
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        float dot = 0.0f;
+                        for (size_t i = 0; i < headDim; ++i) {
+                            dot += qProj[h * headDim + i] * tempK[pos * headDim + i];
+                        }
+                        scores[pos] = dot * scale;
+                        if (scores[pos] > maxScore) maxScore = scores[pos];
+                    }
+                    
+                    // Softmax
+                    float sumExp = 0.0f;
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        scores[pos] = expf(scores[pos] - maxScore);
+                        sumExp += scores[pos];
+                    }
+                    float invSum = 1.0f / sumExp;
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        scores[pos] *= invSum;
+                    }
+                    
+                    // Weighted sum
+                    memset(headOut, 0, headDim * sizeof(float));
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        for (size_t i = 0; i < headDim; ++i) {
+                            headOut[i] += tempV[pos * headDim + i] * scores[pos];
+                        }
+                    }
+                }
+                
+                _aligned_free(tempK);
+                _aligned_free(tempV);
+                _aligned_free(scores);
+            }
+        } else if (kvCache) {
+            for (size_t h = 0; h < numHeads; ++h) {
+                size_t kvHead = h % numKVHeads;
+                float* headOut = output + h * headDim;
+                AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
+                                   headOut, seqLen);
+            }
         }
+        
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
     }
     // ── Sovereign ToroidalKVCache: infinite-context ring buffer ────────

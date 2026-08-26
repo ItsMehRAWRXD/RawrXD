@@ -230,7 +230,7 @@ void NVMeStream::prefetchPredicted(const int* expertIds, const float* weights,
         return a.first > b.first;
     });
     
-    int prefetchCount = (std::min)((int)config.prefetchDepth, count);
+    int prefetchCount = (int)config.prefetchDepth < count ? (int)config.prefetchDepth : count;
     for (int i = 0; i < prefetchCount; i++) {
         // Use current layer context for prefetch
         // Layer context is set by the caller before prefetch operations
