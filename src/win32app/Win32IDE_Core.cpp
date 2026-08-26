@@ -47,7 +47,7 @@ extern "C" void ShutdownAICompletion();
 
 // Stub definition for B428Trace (was declared extern, defined here)
 static void B428Trace(const char* msg) {
-    (void)msg;
+    if (msg) OutputDebugStringA(msg);
 }
 
 #ifndef WM_DPICHANGED
@@ -110,9 +110,9 @@ Win32IDE::~Win32IDE()
     // If onDestroy wasn't called (abnormal exit), do the thread wait here
     if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
     {
-        for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
+        for (int i = 0; i < 300 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
         {
-            Sleep(50);
+            Sleep(10);
         }
     }
 
@@ -1112,6 +1112,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             {
                 std::vector<std::string>* models = reinterpret_cast<std::vector<std::string>*>(wParam);
                 onOllamaModelsUpdated(models);
+                delete models;  // FIX: free heap-allocated vector from sender
                 return 0;
             }
             // Handle background init completion — refresh UI (Tier 5 menus enabled here after initTier5Cosmetics)
@@ -1139,7 +1140,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             // (HuggingFace / URL downloads complete, m_loadedModelPath already set)
             if (uMsg == WM_APP + 201)
             {
-                std::string pathToLoad = getLoadedModelPath();
+                const std::string& pathToLoad = getLoadedModelPath();
                 if (!pathToLoad.empty())
                 {
                     appendToOutput("Loading downloaded model: " + pathToLoad + "\n", "Output", OutputSeverity::Info);
@@ -2077,7 +2078,7 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
     try
     {
         // Use discovered backend URL (already resolved by Deep2 Discovery)
-        std::string backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
+        const std::string& backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
         ModelConnection conn(backendUrl);
 
         if (!conn.checkConnection())
@@ -2085,7 +2086,7 @@ bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outRespon
             return false;
         }
 
-        std::string modelTag = getResolvedOllamaModel();
+        const std::string& modelTag = getResolvedOllamaModel();
 
         // Synchronous send for simplicity — uses sendPrompt internally
         bool gotResponse = false;
@@ -2662,6 +2663,7 @@ bool initializeEnterpriseSubsystems(Win32IDE* ide)
     OutputDebugStringA("[deferredHeavyInit] Enterprise license initialized\n");
 
     std::string tierBadge = std::string("[") + license.GetEditionName() + "]";
+    // Use PostMessage with a copy; receiver must free with free()
     PostMessage(ide->getMainWindow(), WM_USER + 200, 0, reinterpret_cast<LPARAM>(_strdup(tierBadge.c_str())));
     return true;
 }
@@ -3257,14 +3259,15 @@ void Win32IDE::onDestroy()
     m_planExecutionCancelled.store(true);
 
     // Wait for all detached threads to notice the flag and exit (up to 3s).
-    for (int i = 0; i < 60 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
+    // TODO: Replace polling with condition_variable + thread handle wait
+    for (int i = 0; i < 300 && m_activeDetachedThreads.load(std::memory_order_acquire) > 0; ++i)
     {
-        Sleep(50);
+        Sleep(10);
     }
     if (m_activeDetachedThreads.load(std::memory_order_acquire) > 0)
     {
         OutputDebugStringA("onDestroy: WARNING — detached threads still active after 3s\n");
-        Sleep(200);  // Extra grace
+        Sleep(50);  // Reduced grace period
     }
 
     // Shutdown Phase 29+36: VS Code Extension API + QuickJS VSIX Host
@@ -3405,11 +3408,11 @@ void Win32IDE::onDestroy()
                 session["window"]["width"] = (int)(rc.right - rc.left);
                 session["window"]["height"] = (int)(rc.bottom - rc.top);
             }
-            session["window"]["maximized"] = (IsZoomed(m_hwndMain) != 0);
+            session["window"]["maximized"] = ((GetWindowLongPtr(m_hwndMain, GWL_STYLE) & WS_MAXIMIZE) != 0);
         }
 
         // Save open tabs
-        nlohmann::json tabs = nlohmann::json::array();
+        nlohmann::json tabs(nlohmann::json::value_t::array);
         for (const auto& tab : m_editorTabs)
         {
             nlohmann::json t;

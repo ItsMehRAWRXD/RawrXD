@@ -94,34 +94,22 @@ std::vector<uint64_t> MoEWeightProxy::PrefetchAsync(int layer,
         }
         if (expertBytes == 0) continue;
 
-        // 3. Attempt async Vulkan upload if the backend is functional.
-        //    If AllocateBuffer or command-buffer acquisition fails (stubs),
-        //    fall back to synchronous CPU residency — the expert is already
-        //    in RAM via LoadExpert(), so we just mark it WARM.
+        // 3. Attempt async Vulkan upload.
+        //    NOTE: VulkanCompute async methods are currently stubs that return
+        //    failure. When they are implemented, replace this block with actual
+        //    AllocateBuffer → CreateStagingBuffer → vkCmdCopyBuffer → Submit.
         bool asyncSubmitted = false;
-        if (vulkan->GetDeviceInfo().device_count > 0) {
-            VkBuffer devBuffer = nullptr;
-            VkDeviceMemory devMemory = nullptr;
-            if (vulkan->AllocateBuffer(expertBytes, devBuffer, devMemory)) {
-                VkCommandBuffer cmd = vulkan->AcquireAsyncCommandBuffer();
-                if (cmd) {
-                    // Use the proper staging path: copy from CPU staging buffer
-                    // to device buffer.  The source must be a VkBuffer, not a
-                    // raw host pointer.
-                    VkBuffer stagingBuffer = vulkan->CreateStagingBuffer(packed, expertBytes);
-                    if (stagingBuffer) {
-                        VkBufferCopy copyRegion{};
-                        copyRegion.srcOffset = 0;
-                        copyRegion.dstOffset = 0;
-                        copyRegion.size = expertBytes;
-                        vkCmdCopyBuffer(cmd, stagingBuffer, devBuffer, 1, &copyRegion);
-                        if (vulkan->SubmitAsyncCommandBuffer(cmd)) {
-                            asyncSubmitted = true;
-                        }
-                    }
-                }
-            }
-        }
+        VkBuffer devBuffer = nullptr;
+        VkDeviceMemory devMemory = nullptr;
+        VkBuffer stagingBuffer = nullptr;
+        VkDeviceMemory stagingMemory = nullptr;
+        VkFence fence = nullptr;
+
+        // TODO: Implement real Vulkan async transfer when stubs are functional.
+        // For now, the expert is already resident in RAM via LoadExpert(),
+        // so we mark the job as completed (CPU fallback).
+        (void)devBuffer; (void)devMemory; (void)stagingBuffer;
+        (void)stagingMemory; (void)fence;
 
         // 4. Track the job (completed immediately for CPU fallback,
         //    or pending for true async Vulkan path)
@@ -135,6 +123,7 @@ std::vector<uint64_t> MoEWeightProxy::PrefetchAsync(int layer,
             job.submitTimeUs = submitUs;
             job.completed = !asyncSubmitted; // CPU fallback = already ready
             job.consumed = false;
+            job.bytesTransferred = expertBytes;
             prefetchJobs_[handle] = std::move(job);
         }
         handles.push_back(handle);
