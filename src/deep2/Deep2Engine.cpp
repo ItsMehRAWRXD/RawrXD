@@ -4710,8 +4710,23 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     // --- Shared expert (always executed) ---
     float* sharedOut = attentionOutput;
     computeSharedExpertFFN(layer, input, sharedOut);
-    for (size_t i = 0; i < hiddenDim; ++i) {
-        output[i] += sharedOut[i];
+    #if defined(__AVX2__) || defined(_MSC_VER)
+    if (hiddenDim >= 8) {
+        size_t i = 0;
+        for (; i + 7 < hiddenDim; i += 8) {
+            __m256 outv = _mm256_loadu_ps(output + i);
+            __m256 shv = _mm256_loadu_ps(sharedOut + i);
+            _mm256_storeu_ps(output + i, _mm256_add_ps(outv, shv));
+        }
+        for (; i < hiddenDim; ++i) {
+            output[i] += sharedOut[i];
+        }
+    } else
+    #endif
+    {
+        for (size_t i = 0; i < hiddenDim; ++i) {
+            output[i] += sharedOut[i];
+        }
     }
 
     // --- Routed experts ---
