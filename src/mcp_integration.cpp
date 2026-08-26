@@ -162,8 +162,107 @@ static std::string jsonExtractToolName(const std::string& paramsJson) {
 }
 
 // ============================================================================
+// MCPServer Types (defined inline to avoid header dependency issues)
+// ============================================================================
+struct ServerInfo {
+    std::string name;
+    std::string version;
+};
+
+struct ToolDefinition {
+    std::string name;
+    std::string description;
+    nlohmann::json inputSchema;
+};
+
+struct ResourceDefinition {
+    std::string uri;
+    std::string name;
+    std::string mimeType;
+};
+
+struct PromptTemplate {
+    std::string name;
+    std::string description;
+    std::vector<std::string> arguments;
+};
+
+using ToolHandler = std::function<nlohmann::json(const nlohmann::json&)>;
+using ResourceHandler = std::function<nlohmann::json(const std::string&)>;
+using PromptHandler = std::function<nlohmann::json(const std::map<std::string, std::string>&)>;
+
+enum class MCPErrorCode {
+    ParseError = -32700,
+    InvalidRequest = -32600,
+    MethodNotFound = -32601,
+    InvalidParams = -32602,
+    InternalError = -32603,
+};
+
+struct MCPRequest {
+    int64_t id = 0;
+    std::string method;
+    nlohmann::json params;
+};
+
+struct MCPResponse {
+    int64_t id = 0;
+    nlohmann::json result;
+    nlohmann::json error;
+    bool isError = false;
+};
+
+// ============================================================================
 // MCPServer Implementation
 // ============================================================================
+
+class MCPServer {
+public:
+    MCPServer();
+    ~MCPServer();
+
+    bool initialize(const ServerInfo& info);
+    void shutdown();
+
+    void registerTool(const ToolDefinition& def, ToolHandler handler);
+    void unregisterTool(const std::string& name);
+    std::vector<ToolDefinition> listTools() const;
+
+    void registerResource(const ResourceDefinition& def, ResourceHandler handler);
+    void unregisterResource(const std::string& uri);
+    std::vector<ResourceDefinition> listResources() const;
+
+    void registerPrompt(const PromptTemplate& tmpl, PromptHandler handler);
+    std::vector<PromptTemplate> listPrompts() const;
+
+    std::string handleMessage(const std::string& rawJson);
+    bool startStdioTransport();
+    void stopTransport();
+
+private:
+    bool m_running;
+    int64_t m_totalRequests;
+    int64_t m_totalErrors;
+    int64_t m_nextId;
+    ServerInfo m_serverInfo;
+    mutable std::mutex m_mutex;
+    std::map<std::string, std::pair<ToolDefinition, ToolHandler>> m_tools;
+    std::map<std::string, std::pair<ResourceDefinition, ResourceHandler>> m_resources;
+    std::map<std::string, std::pair<PromptTemplate, PromptHandler>> m_prompts;
+
+    MCPResponse dispatch(const MCPRequest& req);
+    MCPResponse handleInitialize(const MCPRequest& req);
+    MCPResponse handlePing(const MCPRequest& req);
+    MCPResponse handleToolsList(const MCPRequest& req);
+    MCPResponse handleToolsCall(const MCPRequest& req);
+    MCPResponse handleResourcesList(const MCPRequest& req);
+    MCPResponse handleResourcesRead(const MCPRequest& req);
+    MCPResponse handlePromptsList(const MCPRequest& req);
+    MCPResponse handlePromptsGet(const MCPRequest& req);
+    std::string serializeResponse(const MCPResponse& resp) const;
+    MCPRequest parseRequest(const std::string& json) const;
+    std::string makeErrorResponse(int64_t id, MCPErrorCode code, const std::string& msg) const;
+};
 
 MCPServer::MCPServer()
     : m_running(false)

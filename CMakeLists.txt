@@ -5619,7 +5619,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Telemetry.cpp
 
         # Phase 36: MCP Integration — Model Context Protocol Server + Client
-        src/mcp_integration.cpp
+        # src/mcp_integration.cpp  # excluded: structurally broken, needs rewrite
+        src/mcp_integration_stub.cpp  # stub to satisfy linker
         src/win32app/Win32IDE_MCP.cpp
 
         # Phase 36: Flight Recorder — memory-mapped binary ring-buffer logger
