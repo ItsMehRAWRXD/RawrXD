@@ -581,6 +581,11 @@ bool VulkanCompute::CopyHostToBuffer(void* host_data, VkBuffer device_buffer, si
     return false;
 }
 
+VkBuffer VulkanCompute::CreateStagingBuffer(const void* host_data, size_t size) {
+    (void)host_data; (void)size;
+    return nullptr; // Stubs: real implementation allocates host-visible VkBuffer + memcpy
+}
+
 bool VulkanCompute::AllocateKVCache(uint32_t num_layers, uint32_t max_seq_len, uint32_t head_dim) {
     (void)num_layers; (void)max_seq_len; (void)head_dim;
     return false;

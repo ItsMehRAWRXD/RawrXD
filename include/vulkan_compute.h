@@ -43,6 +43,14 @@ typedef void* VkFence;
 typedef void* VkDescriptorSetLayoutBinding;
 typedef uint32_t VkMemoryPropertyFlags;
 typedef int VkResult;
+typedef uint64_t VkDeviceSize;
+
+// VkBufferCopy for buffer-to-buffer copy regions
+typedef struct VkBufferCopy {
+    VkDeviceSize srcOffset;
+    VkDeviceSize dstOffset;
+    VkDeviceSize size;
+} VkBufferCopy;
 
 typedef struct { 
     uint32_t vendorID; 
@@ -216,6 +224,9 @@ public:
     bool CopyBufferToHost(VkBuffer device_buffer, void* host_data, size_t size);
     bool CopyHostToBuffer(void* host_data, uint32_t buffer_idx, size_t size);
     bool CopyHostToBuffer(void* host_data, VkBuffer device_buffer, size_t size);
+    
+    // Staging buffer creation for async upload (CPU pointer -> VkBuffer)
+    VkBuffer CreateStagingBuffer(const void* host_data, size_t size);
     
     // KV Cache management for autoregressive inference
     bool AllocateKVCache(uint32_t num_layers, uint32_t max_seq_len, uint32_t head_dim);
