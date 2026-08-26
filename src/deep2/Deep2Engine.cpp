@@ -3175,172 +3175,27 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
         printf("[KERNEL] tensor=%s type=%s rows=%zu cols=%zu\n",
                wt.name.c_str(), typeName, rows, cols);
     }
-    switch (wt.type) {
-        case (int)GGMLType::GGML_TYPE_F32:
-            fp32GEMV((const float*)wt.data + startRow * cols, input, output + startRow, rows, cols);
-            break;
-        case (int)GGMLType::GGML_TYPE_F16:
-            fp16GEMV((const uint16_t*)wt.data + startRow * cols, input, output + startRow, rows, cols);
-            break;
-        case (int)GGMLType::GGML_TYPE_Q4_K: {
-            size_t numBlocks = (cols + 255) / 256;
-            size_t rowBytes = numBlocks * sizeof(block_q4_K);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            // MASM V2 kernel has correctness bugs; use C++ kernel
-            q4kGEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q5_K: {
-            size_t numBlocks = (cols + 255) / 256;
-            size_t rowBytes = numBlocks * sizeof(block_q5_K);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            q5kGEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q2_K: {
-            size_t numBlocks = (cols + 255) / 256;
-            size_t rowBytes = numBlocks * sizeof(block_q2_K);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            // ASM kernel has correctness bugs; force C++ scalar
-            q2kGEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q3_K: {
-            size_t numBlocks = (cols + 255) / 256;
-            size_t rowBytes = numBlocks * sizeof(block_q3_K);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            // ASM kernel has correctness bugs; force C++ scalar
-            q3kGEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q4_0: {
-            const block_q4_0* blocks = (const block_q4_0*)wt.data;
-            size_t blocksPerRow = (cols + 31) / 32;
-            for (size_t r = startRow; r < endRow; ++r) {
-                const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
-                float sum = 0.0f;
-                for (size_t b = 0; b < blocksPerRow; ++b) {
-                    float d = fp16ToFloat(rowBlocks[b].d);
-                    const uint8_t* qs = rowBlocks[b].qs;
-                    size_t base = b * 32;
-                    for (int j = 0; j < 16; ++j) {
-                        uint8_t byte = qs[j];
-                        int q0 = (byte & 0x0F) - 8;
-                        int q1 = ((byte >> 4) & 0x0F) - 8;
-                        sum += d * q0 * input[base + j * 2 + 0];
-                        if (base + j * 2 + 1 < cols) {
-                            sum += d * q1 * input[base + j * 2 + 1];
-                        }
-                    }
-                }
-                output[r] = sum;
-            }
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q4_1: {
-            size_t numBlocks = (cols + 31) / 32;
-            size_t rowBytes = numBlocks * sizeof(block_q4_1);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            // ASM kernel has broken FP16 conversion; force scalar
-            q4_1GEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q5_0: {
-            size_t numBlocks = (cols + 31) / 32;
-            size_t rowBytes = numBlocks * sizeof(block_q5_0);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            q5_0GEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q5_1: {
-            size_t numBlocks = (cols + 31) / 32;
-            size_t rowBytes = numBlocks * sizeof(block_q5_1);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            q5_1GEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q8_0: {
-            const block_q8_0* blocks = (const block_q8_0*)wt.data;
-            size_t blocksPerRow = (cols + 31) / 32;
-            // ASM kernel has broken FP16 conversion and wrong output indexing; force scalar
-            for (size_t r = startRow; r < endRow; ++r) {
-                float acc = 0.0f;
-                const block_q8_0* rowBlocks = blocks + r * blocksPerRow;
-                for (size_t b = 0; b < blocksPerRow; ++b) {
-                    float d = fp16ToFloat(rowBlocks[b].d);
-                    float blockAcc = 0.0f;
-                    for (int i = 0; i < 32; ++i) {
-                        blockAcc += (float)rowBlocks[b].qs[i] * input[b * 32 + i];
-                    }
-                    acc += d * blockAcc;
-                }
-                output[r] = acc;
-            }
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q8_K: {
-            size_t numBlocks = (cols + 255) / 256;
-            size_t rowBytes = numBlocks * sizeof(block_q8_K);
-            const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-            q8kGEMV(rowWeights, input, output + startRow, rows, cols);
-            break;
-        }
-        case (int)GGMLType::GGML_TYPE_Q6_K: {
-            const block_q6_K* blocks = (const block_q6_K*)wt.data;
-            size_t blocksPerRow = (cols + 255) / 256;
-            constexpr size_t kBlockSize = sizeof(block_q6_K);  // 210 bytes
-            alignas(32) float dequantBuf[256];
 
-            // ASM dispatch: validate on first call, then use if certified
-            static bool q6kValidatedOnce = false;
-            if (!q6kValidatedOnce && Deep2_HasAVX2()) {
-                q6kValidatedOnce = true;
-                ValidateQ6KAsm(blocks, input, output, startRow, endRow, cols);
+    // ── QuantKernelRegistry dispatch (replaces inline switch) ─────────────
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    auto kernel = reg.GetGEMV(wt.type);
+    auto geom = reg.GetGeometry(wt.type);
+
+    if (kernel && geom.blockSize > 0) {
+        size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
+        size_t rowBytes = blocksPerRow * geom.blockSize;
+        const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+        kernel(rowWeights, input, output + startRow, rows, cols);
+    } else {
+        // Fallback: scalar GEMV for unknown types
+        printf("[LinearW_Range] WARNING: No registry kernel for type=%d, falling back to scalar\n", wt.type);
+        for (size_t r = startRow; r < endRow; ++r) {
+            float acc = 0.0f;
+            for (size_t c = 0; c < cols; ++c) {
+                acc += ((const float*)wt.data)[r * cols + c] * input[c];
             }
-            if (Q6KAsmEnabled()) {
-                // New 4-arg ABI: Deep2_Q6_K_GEMV(blocks, x, out, nBlocks)
-                // where nBlocks = blocksPerRow * rows
-                size_t totalBlocks = blocksPerRow * rows;
-                const uint8_t* rowWeights = (const uint8_t*)blocks + startRow * blocksPerRow * kBlockSize;
-                Deep2_Q6_K_GEMV(rowWeights, input, output + startRow, totalBlocks);
-            } else {
-                for (size_t r = startRow; r < endRow; ++r) {
-                    const block_q6_K* rowBlocks =
-                        (const block_q6_K*)((const uint8_t*)blocks + r * blocksPerRow * kBlockSize);
-                    float sum = 0.0f;
-                    for (size_t b = 0; b < blocksPerRow; ++b) {
-                        size_t elemsInBlock = (b == blocksPerRow - 1)
-                            ? (cols - b * 256)
-                            : 256;
-                        if (elemsInBlock == 0) break;
-                        dequantizeQ6KBlock(&rowBlocks[b], dequantBuf);
-                        __m256 acc = _mm256_setzero_ps();
-                        size_t i = 0;
-                        for (; i + 8 <= elemsInBlock; i += 8) {
-                            __m256 w = _mm256_load_ps(dequantBuf + i);
-                            __m256 x = _mm256_loadu_ps(input + b * 256 + i);
-                            acc = _mm256_fmadd_ps(w, x, acc);
-                        }
-                        __m128 hi128 = _mm256_extractf128_ps(acc, 1);
-                        __m128 lo128 = _mm256_castps256_ps128(acc);
-                        __m128 sum128 = _mm_add_ps(lo128, hi128);
-                        sum128 = _mm_hadd_ps(sum128, sum128);
-                        sum128 = _mm_hadd_ps(sum128, sum128);
-                        sum += _mm_cvtss_f32(sum128);
-                        for (; i < elemsInBlock; ++i) {
-                            sum += dequantBuf[i] * input[b * 256 + i];
-                        }
-                    }
-                    output[r] = sum;
-                }
-            }
-            break;
+            output[r] = acc;
         }
-        default:
-            for (size_t r = startRow; r < endRow; ++r) {
-                output[r] = 0.0f;
-            }
-            break;
     }
 
     // === Batch 15C: Post-call instrumentation =========================

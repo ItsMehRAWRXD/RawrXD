@@ -12,11 +12,22 @@
 // ═════════════════════════════════════════════════════════════════════════════
 // 1. Profiler symbols (rawrxd_transformer.cpp)
 // ═════════════════════════════════════════════════════════════════════════════
+#include <intrin.h>
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+#include <random>
+
 extern "C" {
-    void Profiler_Initialize() {}
-    void Profiler_SetBatchContext(uint32_t) {}
-    uint64_t Profiler_ReadTsc() { return 0; }
-    void Profiler_TrackCall(uint32_t, uint64_t) {}
+    static uint64_t g_profilerBaseTsc = 0;
+    static uint32_t g_profilerBatchCtx = 0;
+    void Profiler_Initialize() { g_profilerBaseTsc = __rdtsc(); }
+    void Profiler_SetBatchContext(uint32_t ctx) { g_profilerBatchCtx = ctx; }
+    uint64_t Profiler_ReadTsc() { return __rdtsc() - g_profilerBaseTsc; }
+    void Profiler_TrackCall(uint32_t id, uint64_t duration) {
+        (void)id; (void)duration;
+        // Real tracking would write to a ring buffer; kept minimal for now
+    }
     void Profiler_AnalyzeBottlenecks() {}
 }
 
@@ -59,9 +70,59 @@ public:
     SamplingResult sample(const std::vector<float>& logits,
                            const SamplingContext& ctx) override {
         SamplingResult result;
-        if (!logits.empty()) {
-            result.tokens.push_back(0);
-            result.probability = 1.0f;
+        if (logits.empty()) return result;
+
+        // Temperature scaling
+        float temp = ctx.temperature_scaled / 100.0f;
+        if (temp < 0.01f) temp = 0.01f;
+
+        std::vector<float> probs = logits;
+        for (float& v : probs) v /= temp;
+
+        // Softmax
+        float max_val = *std::max_element(probs.begin(), probs.end());
+        float sum = 0.0f;
+        for (float& v : probs) { v = std::exp(v - max_val); sum += v; }
+        for (float& v : probs) v /= sum;
+
+        // Top-K filtering
+        size_t k = std::min(static_cast<size_t>(ctx.top_k), probs.size());
+        std::vector<size_t> idx(probs.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::partial_sort(idx.begin(), idx.begin() + k, idx.end(),
+            [&](size_t a, size_t b) { return probs[a] > probs[b]; });
+
+        // Top-P (nucleus) filtering
+        std::vector<std::pair<size_t, float>> filtered;
+        float cumsum = 0.0f;
+        for (size_t i = 0; i < k; ++i) {
+            size_t id = idx[i];
+            filtered.emplace_back(id, probs[id]);
+            cumsum += probs[id];
+            if (cumsum >= ctx.top_p) break;
+        }
+
+        // Re-normalize filtered distribution
+        sum = 0.0f;
+        for (auto& p : filtered) sum += p.second;
+        for (auto& p : filtered) p.second /= sum;
+
+        // Sample from filtered distribution
+        static thread_local std::mt19937 gen(static_cast<uint32_t>(__rdtsc()));
+        std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+        float r = dist(gen);
+        cumsum = 0.0f;
+        for (auto& p : filtered) {
+            cumsum += p.second;
+            if (r <= cumsum) {
+                result.tokens.push_back(static_cast<uint32_t>(p.first));
+                result.probability = p.second;
+                break;
+            }
+        }
+        if (result.tokens.empty()) {
+            result.tokens.push_back(static_cast<uint32_t>(filtered.back().first));
+            result.probability = filtered.back().second;
         }
         return result;
     }
@@ -137,13 +198,13 @@ public:
     bool Load() { return true; }
     bool Decompress(unsigned char* out, unsigned int* outLen,
                     const unsigned char* in, unsigned int inLen) {
-        if (!out || !outLen || !in || inLen == 0) return false;
-        // Passthrough fallback
-        for (unsigned int i = 0; i < inLen && i < *outLen; ++i) {
-            out[i] = in[i];
-        }
-        *outLen = inLen;
-        return true;
+        if (!out || !outLen || !in) return false;
+        if (inLen == 0) { *outLen = 0; return true; }
+        // Passthrough fallback with bounds checking
+        unsigned int copyLen = (inLen < *outLen) ? inLen : *outLen;
+        std::memcpy(out, in, copyLen);
+        *outLen = copyLen;
+        return (copyLen == inLen);
     }
 };
 
@@ -167,12 +228,20 @@ public:
     bool IsRunning() const;
 };
 
+static bool g_deep2ApiRunning = false;
 Deep2APIServer::Deep2APIServer() {}
-Deep2APIServer::~Deep2APIServer() {}
-bool Deep2APIServer::Initialize(Deep2Engine*) { return true; }
-bool Deep2APIServer::Start(int) { return true; }
-void Deep2APIServer::Stop() {}
-bool Deep2APIServer::IsRunning() const { return false; }
+Deep2APIServer::~Deep2APIServer() { if (g_deep2ApiRunning) Stop(); }
+bool Deep2APIServer::Initialize(Deep2Engine*) {
+    // TODO: bind HTTP routes when real HTTP server is integrated
+    return true;
+}
+bool Deep2APIServer::Start(int port) {
+    (void)port;
+    g_deep2ApiRunning = true;
+    return true;
+}
+void Deep2APIServer::Stop() { g_deep2ApiRunning = false; }
+bool Deep2APIServer::IsRunning() const { return g_deep2ApiRunning; }
 
 } // namespace Deep2
 
@@ -228,10 +297,11 @@ public:
 };
 
 void BackendScheduler::initialize(const std::vector<AcceleratorDevice>&) {}
+static bool g_prodApiRunning = false;
 bool ProductionAPIServer::initialize(const ServerConfig&) { return true; }
-void ProductionAPIServer::start() {}
-void ProductionAPIServer::stop() {}
-bool ProductionAPIServer::isRunning() const { return false; }
+void ProductionAPIServer::start() { g_prodApiRunning = true; }
+void ProductionAPIServer::stop() { g_prodApiRunning = false; }
+bool ProductionAPIServer::isRunning() const { return g_prodApiRunning; }
 void ProductionAPIServer::registerHealthRoutes() {}
 void ProductionAPIServer::registerModelRoutes() {}
 void ProductionAPIServer::registerInferenceRoutes() {}
@@ -246,6 +316,50 @@ void CertificationHarness::initialize(const std::vector<AcceleratorDevice>&) {}
 // 8. VAL038 Benchmark symbols (VAL038_Benchmark_Harness.cpp)
 // ═════════════════════════════════════════════════════════════════════════════
 extern "C" {
-    void TreeAttention_Fused_VAL038(const float*, const float*, float*, int, int, int) {}
-    void SoftmaxLUT_AVX512(const float*, float*, int) {}
+    void TreeAttention_Fused_VAL038(const float* Q, const float* K, float* O,
+                                      int seqLen, int headDim, int numHeads) {
+        // Real scaled dot-product attention (naive reference)
+        float scale = 1.0f / std::sqrt(static_cast<float>(headDim));
+        for (int h = 0; h < numHeads; ++h) {
+            for (int i = 0; i < seqLen; ++i) {
+                // Compute attention scores for this query position
+                std::vector<float> scores(seqLen);
+                float maxScore = -1e30f;
+                for (int j = 0; j < seqLen; ++j) {
+                    float dot = 0.0f;
+                    for (int d = 0; d < headDim; ++d) {
+                        dot += Q[(h * seqLen + i) * headDim + d] *
+                               K[(h * seqLen + j) * headDim + d];
+                    }
+                    scores[j] = dot * scale;
+                    if (scores[j] > maxScore) maxScore = scores[j];
+                }
+                // Softmax
+                float sum = 0.0f;
+                for (int j = 0; j < seqLen; ++j) {
+                    scores[j] = std::exp(scores[j] - maxScore);
+                    sum += scores[j];
+                }
+                for (int j = 0; j < seqLen; ++j) {
+                    scores[j] /= sum;
+                }
+                // Write output (attention weights only; no V projection in this stub)
+                for (int j = 0; j < seqLen; ++j) {
+                    O[(h * seqLen + i) * seqLen + j] = scores[j];
+                }
+            }
+        }
+    }
+
+    void SoftmaxLUT_AVX512(const float* in, float* out, int n) {
+        if (n <= 0 || !in || !out) return;
+        float max_val = in[0];
+        for (int i = 1; i < n; ++i) if (in[i] > max_val) max_val = in[i];
+        float sum = 0.0f;
+        for (int i = 0; i < n; ++i) {
+            out[i] = std::exp(in[i] - max_val);
+            sum += out[i];
+        }
+        for (int i = 0; i < n; ++i) out[i] /= sum;
+    }
 }
