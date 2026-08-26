@@ -14,8 +14,28 @@
 #include <windows.h>
 #include <intrin.h>
 #include <cstring>
+#include <iostream>
+#include <string>
 
 namespace SovereignAssembler {
+
+// =============================================================================
+// Delimiter Scanner Implementations (missing definitions)
+// =============================================================================
+
+static const char* FindNextDelimiter_Scalar(const char* start, const char* end) {
+    for (const char* p = start; p < end; ++p) {
+        if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
+            return p;
+        }
+    }
+    return end;
+}
+
+static const char* FindNextDelimiter_AVX2(const char* start, const char* end) {
+    // Fallback to scalar until AVX2 implementation is added
+    return FindNextDelimiter_Scalar(start, end);
+}
 
 // =============================================================================
 // Kernel Management
@@ -205,13 +225,6 @@ bool LoadOptimizedKernel(const wchar_t* dllPath, std::string& errorMsg) {
 // =============================================================================
 // Performance Monitoring
 // =============================================================================
-
-struct PerformanceStats {
-    uint64_t callCount;
-    uint64_t totalBytesScanned;
-    uint64_t cacheHits;
-    uint64_t cacheMisses;
-};
 
 static PerformanceStats g_stats = {};
 

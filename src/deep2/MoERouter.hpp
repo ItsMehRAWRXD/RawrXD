@@ -70,6 +70,11 @@ public:
         size_t numTokens
     );
 
+    // Expose the actual top-K expert IDs from the most recent Route() call.
+    // This is the prediction signal for the prefetch pipeline.
+    // Returns empty if no route has been computed yet.
+    std::vector<int> GetLastRouteExpertIds() const;
+
     // Get expert weights (router parameters)
     void SetRouterWeights(const float* weights, size_t rows, size_t cols);
 
@@ -107,6 +112,9 @@ private:
     
     // Random generator for noise
     std::mt19937 rng_;
+
+    // Last route result (stored for prefetch prediction exposure)
+    std::vector<int> lastRouteExpertIds_;
 
     // Softmax over router logits
     std::vector<float> Softmax(const std::vector<float>& logits) const;

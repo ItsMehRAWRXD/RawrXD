@@ -12,6 +12,7 @@
 #include <thread>
 #include <atomic>
 #include <unordered_set>
+#include <memory>
 
 namespace RawrXD {
 namespace Memory {
@@ -28,6 +29,11 @@ public:
 
     // Post a transfer.  Callback is invoked on the worker thread.
     void schedule(const TransferRequest& req, TransferCallback cb = {});
+
+    // Post a transfer and return a token for async completion tracking.
+    // The caller owns the token; wait() or poll isReady() to know when done.
+    // This replaces the blocking spin-wait in TensorPlacementManager.
+    std::shared_ptr<TransferCompletionToken> scheduleAsync(const TransferRequest& req);
 
     // Cancel all speculative/opportunistic transfers for a tensor.
     // Blocking transfers are never cancelled.

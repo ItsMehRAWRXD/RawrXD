@@ -58,6 +58,7 @@
 struct PatchResult;
 struct PyreTensor;
 #include "../engine/pyre_compute.h"  // PyreLayerConfig full definition (needed for by-value member)
+#include "../runtime/memory/TransferScheduler.hpp"
 enum class PyreDataType : uint32_t;
 
 namespace RawrXD {
@@ -235,6 +236,10 @@ public:
     PatchResult initialize(const char* modelPath, const PyreLayerConfig& config,
                            const OffloadConfig& offloadConfig = OffloadConfig::defaultConfig());
 
+    // Bind to the unified TransferScheduler (replaces private prefetch thread).
+    // Must be called before any prefetchLayer() calls.
+    void setTransferScheduler(class RawrXD::Memory::TransferScheduler* scheduler);
+
     // Scan model file and build layer→tensor index
     PatchResult scanModelLayers();
 
@@ -348,7 +353,10 @@ private:
     };
     std::unordered_map<uint32_t, std::unordered_map<std::string, DequantTensorEntry>> m_dequantWeights;
 
-    // ---- Prefetch Thread State ----
+    // ---- Unified Transfer Scheduler (replaces private prefetch thread) ----
+    class RawrXD::Memory::TransferScheduler* m_transferScheduler = nullptr;
+
+    // ---- Prefetch Thread State (legacy — kept for backward compat if no scheduler bound) ----
     std::thread                     m_prefetchThread;
     std::mutex                      m_mutex;
     std::condition_variable         m_prefetchCV;

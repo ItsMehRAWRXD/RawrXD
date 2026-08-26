@@ -6,6 +6,7 @@
 #include "AgenticEngineSovereignHook.h"
 #include <sstream>
 #include <iomanip>
+#include <mutex>
 
 namespace RawrXD {
 

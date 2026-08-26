@@ -129,7 +129,7 @@ json AuditResult::toJSON() const {
 // ============================================================================
 // TerminalLimits Implementation
 // ============================================================================
-int TerminalLimits::getTimeoutForTask(const TodoItem& task, const std::vector<TodoItem>& history) {
+int TerminalLimits::getTimeoutForTask(const TodoItem& task, const std::vector<TodoItem>& history) const {
     if (!autoAdjust || strategy == AdjustmentStrategy::Fixed) {
         return currentTimeoutMs;
     }
@@ -148,7 +148,7 @@ int TerminalLimits::getTimeoutForTask(const TodoItem& task, const std::vector<To
             complexityMultiplier = std::pow(1.2f, task.complexity);
             break;
         
-        case AdjustmentStrategy::Adaptive:
+        case AdjustmentStrategy::Adaptive: {
             // Learn from history for similar tasks
             float avgTimeForCategory = 0.0f;
             int count = 0;
@@ -165,6 +165,7 @@ int TerminalLimits::getTimeoutForTask(const TodoItem& task, const std::vector<To
             }
             complexityMultiplier = 1.0f + (task.complexity / 10.0f) * 1.5f;
             break;
+        }
             
         default:
             break;
@@ -1188,16 +1189,24 @@ std::vector<TodoItem> AutonomousOrchestrator::auditDirectory(const std::string& 
     if (!fs::exists(dir)) return todos;
     
     try {
-        auto iterator = recursive ? 
-            fs::recursive_directory_iterator(dir) : 
-            fs::directory_iterator(dir);
-            
-        for (const auto& entry : iterator) {
-            if (entry.is_regular_file()) {
-                auto ext = entry.path().extension().string();
-                if (ext == ".cpp" || ext == ".hpp" || ext == ".h" || ext == ".c") {
-                    auto fileTodos = auditFile(entry.path().string());
-                    todos.insert(todos.end(), fileTodos.begin(), fileTodos.end());
+        if (recursive) {
+            for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+                if (entry.is_regular_file()) {
+                    auto ext = entry.path().extension().string();
+                    if (ext == ".cpp" || ext == ".hpp" || ext == ".h" || ext == ".c") {
+                        auto fileTodos = auditFile(entry.path().string());
+                        todos.insert(todos.end(), fileTodos.begin(), fileTodos.end());
+                    }
+                }
+            }
+        } else {
+            for (const auto& entry : fs::directory_iterator(dir)) {
+                if (entry.is_regular_file()) {
+                    auto ext = entry.path().extension().string();
+                    if (ext == ".cpp" || ext == ".hpp" || ext == ".h" || ext == ".c") {
+                        auto fileTodos = auditFile(entry.path().string());
+                        todos.insert(todos.end(), fileTodos.begin(), fileTodos.end());
+                    }
                 }
             }
         }
@@ -1328,6 +1337,142 @@ float AutonomousOrchestrator::estimateTaskComplexity(const TodoItem& todo) const
     }
     
     return complexity;
+}
+
+// ============================================================================
+// Autonomous Fix Loop — Closed-loop repository repair
+// ============================================================================
+json AutonomousOrchestrator::fixRepository(const std::string& repoPath,
+                                              const std::string& buildCmd,
+                                              const std::string& testCmd) {
+    json evidence;
+    evidence["repository_path"] = repoPath;
+    evidence["timestamp"] = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    evidence["initial_build"] = json::object();
+    evidence["initial_test_results"] = json::object();
+    evidence["files_modified"] = json::array();
+    evidence["patches_applied"] = json::array();
+    evidence["builds_performed"] = 0;
+    evidence["tests_performed"] = 0;
+    evidence["failures_detected"] = 0;
+    evidence["recovery_iterations"] = 0;
+    evidence["final_test_results"] = json::object();
+    evidence["final_commit"] = "";
+    evidence["success"] = false;
+
+    auto startTime = std::chrono::steady_clock::now();
+
+    // ---- Step 1: Audit the repository ----
+    auto auditResult = auditCodebase(repoPath, true);
+    evidence["audit"] = auditResult.toJSON();
+
+    if (auditResult.todos.empty()) {
+        evidence["detail"] = "No issues found in repository audit.";
+        evidence["success"] = true;
+        return evidence;
+    }
+
+    addTodos(auditResult.todos);
+    evidence["todos_generated"] = (int)auditResult.todos.size();
+
+    // ---- Step 2: Initial build (if command provided) ----
+    bool initialBuildOk = true;
+    if (!buildCmd.empty()) {
+        evidence["builds_performed"] = evidence["builds_performed"].get<int>() + 1;
+        int buildExit = std::system(buildCmd.c_str());
+        initialBuildOk = (buildExit == 0);
+        evidence["initial_build"]["command"] = buildCmd;
+        evidence["initial_build"]["success"] = initialBuildOk;
+        evidence["initial_build"]["exit_code"] = buildExit;
+    }
+
+    // ---- Step 3: Initial test (if command provided) ----
+    bool initialTestOk = true;
+    if (!testCmd.empty()) {
+        evidence["tests_performed"] = evidence["tests_performed"].get<int>() + 1;
+        int testExit = std::system(testCmd.c_str());
+        initialTestOk = (testExit == 0);
+        evidence["initial_test_results"]["command"] = testCmd;
+        evidence["initial_test_results"]["success"] = initialTestOk;
+        evidence["initial_test_results"]["exit_code"] = testExit;
+    }
+
+    if (initialBuildOk && initialTestOk && !auditResult.todos.empty()) {
+        // Audit found issues but build/test pass — likely code quality issues
+        evidence["detail"] = "Build and tests pass, but audit found quality issues.";
+    }
+
+    // ---- Step 4: Execute todos (the fix loop) ----
+    int recoveryIterations = 0;
+    bool allFixed = false;
+
+    while (recoveryIterations < m_config.maxRetries && !allFixed) {
+        recoveryIterations++;
+        evidence["recovery_iterations"] = recoveryIterations;
+
+        // Execute all pending todos
+        bool execSuccess = execute();
+
+        // Re-build after fixes
+        if (!buildCmd.empty()) {
+            evidence["builds_performed"] = evidence["builds_performed"].get<int>() + 1;
+            int buildExit = std::system(buildCmd.c_str());
+            bool buildOk = (buildExit == 0);
+            evidence["builds"][std::to_string(recoveryIterations)]["command"] = buildCmd;
+            evidence["builds"][std::to_string(recoveryIterations)]["success"] = buildOk;
+            evidence["builds"][std::to_string(recoveryIterations)]["exit_code"] = buildExit;
+
+            if (!buildOk) {
+                evidence["failures_detected"] = evidence["failures_detected"].get<int>() + 1;
+                continue; // Try next recovery iteration
+            }
+        }
+
+        // Re-test after fixes
+        if (!testCmd.empty()) {
+            evidence["tests_performed"] = evidence["tests_performed"].get<int>() + 1;
+            int testExit = std::system(testCmd.c_str());
+            bool testOk = (testExit == 0);
+            evidence["tests"][std::to_string(recoveryIterations)]["command"] = testCmd;
+            evidence["tests"][std::to_string(recoveryIterations)]["success"] = testOk;
+            evidence["tests"][std::to_string(recoveryIterations)]["exit_code"] = testExit;
+
+            if (!testOk) {
+                evidence["failures_detected"] = evidence["failures_detected"].get<int>() + 1;
+                continue; // Try next recovery iteration
+            }
+        }
+
+        // If we get here, build and test passed
+        allFixed = true;
+    }
+
+    // ---- Step 5: Finalize evidence ----
+    auto endTime = std::chrono::steady_clock::now();
+    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+    evidence["duration_ms"] = durationMs;
+    evidence["success"] = allFixed;
+    evidence["detail"] = allFixed
+        ? ("Repository fixed after " + std::to_string(recoveryIterations) + " iteration(s).")
+        : ("Failed to fix repository after " + std::to_string(recoveryIterations) + " iteration(s).");
+
+    // Collect modified files from completed todos
+    for (const auto& todo : m_completedHistory) {
+        if (!todo.targetFile.empty()) {
+            json fileEntry;
+            fileEntry["file"] = todo.targetFile;
+            fileEntry["category"] = todo.category;
+            fileEntry["confidence"] = todo.confidence;
+            evidence["files_modified"].push_back(fileEntry);
+        }
+    }
+
+    // Final stats
+    auto stats = getStats();
+    evidence["final_stats"] = stats.toJSON();
+
+    return evidence;
 }
 
 } // namespace RawrXD

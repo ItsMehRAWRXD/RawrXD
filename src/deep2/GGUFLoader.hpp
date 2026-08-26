@@ -139,6 +139,7 @@ struct TensorInfo {
             case GGMLType::GGML_TYPE_Q4_K: return sizeof(block_q4_K);
             case GGMLType::GGML_TYPE_Q5_K: return sizeof(block_q5_K);
             case GGMLType::GGML_TYPE_Q6_K: return sizeof(block_q6_K);
+            case GGMLType::GGML_TYPE_IQ1_S: return sizeof(block_iq1_s);
             default: return 4;
         }
     }
@@ -164,6 +165,7 @@ struct TensorInfo {
             case GGMLType::GGML_TYPE_Q4_K: return QK_K;
             case GGMLType::GGML_TYPE_Q5_K: return QK_K;
             case GGMLType::GGML_TYPE_Q6_K: return QK_K;
+            case GGMLType::GGML_TYPE_IQ1_S: return QK_K;
             default: return 1;
         }
     }
@@ -284,7 +286,7 @@ public:
     static RawrXD::QuantType ConvertGGMLType(GGMLType ggmlType);
     static size_t CalculateTensorSize(const TensorInfo& tensor);
     static bool ValidateFile(const char* filepath, char* error = nullptr);
-    
+
     // Hardened version with page fault fixes
     static GGUFLoadResult LoadHardened(const char* filepath, const GGUFLoadOptions& options);
 
@@ -298,7 +300,7 @@ private:
     static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
                                uint64_t dataOffset, uint64_t fileSize);
 
-    // Validation
+    // Extended validation returning file size and data offset (for diagnostics)
     static bool ValidateFile(const char* filepath, uint64_t& outFileSize, uint64_t& outDataOffset);
 
     // Memory management

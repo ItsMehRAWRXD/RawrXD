@@ -240,7 +240,14 @@ endif()
 # ============================================================================
 
 # Define the path to pre-compiled libraries
-set(RAWRXD_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build-ninja")
+# Try the active build directory first, fall back to build-ninja
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build-fresh-aug22/InferenceEngine.lib")
+    set(RAWRXD_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build-fresh-aug22")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build-ninja/InferenceEngine.lib")
+    set(RAWRXD_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build-ninja")
+else()
+    set(RAWRXD_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../build-ninja")
+endif()
 
 # Check if libraries exist
 if(EXISTS "${RAWRXD_BUILD_DIR}/RawrXD_Gold.lib")

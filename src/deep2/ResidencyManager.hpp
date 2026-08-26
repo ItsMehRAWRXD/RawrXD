@@ -14,11 +14,46 @@
 #include <memory>
 #include <mutex>
 #include <functional>
+#include <future>
+#include <chrono>
+#include <algorithm>
 
 namespace Deep2 {
 
 // Forward declarations
-class ResidencyLease;
+class ResidencyManager;
+
+// ============================================================================
+// ResidencyLease — RAII wrapper for tensor residency
+// ============================================================================
+class ResidencyLease {
+public:
+    ResidencyLease() = default;
+    ResidencyLease(ResidencyManager* mgr, const std::string& name,
+                   void* data, size_t bytes, uint64_t generation);
+    ~ResidencyLease();
+
+    // Move-only
+    ResidencyLease(ResidencyLease&& other) noexcept;
+    ResidencyLease& operator=(ResidencyLease&& other) noexcept;
+    ResidencyLease(const ResidencyLease&) = delete;
+    ResidencyLease& operator=(const ResidencyLease&) = delete;
+
+    bool valid() const { return mgr_ != nullptr && data_ != nullptr; }
+    void* data() const { return data_; }
+    size_t bytes() const { return bytes_; }
+    uint64_t generation() const { return generation_; }
+    const std::string& name() const { return name_; }
+
+    void release();
+
+private:
+    ResidencyManager* mgr_ = nullptr;
+    std::string name_;
+    void* data_ = nullptr;
+    size_t bytes_ = 0;
+    uint64_t generation_ = 0;
+};
 
 // ============================================================================
 // Residency Configuration
@@ -51,11 +86,14 @@ struct ResidencyConfig {
 // Tensor Residency State
 // ============================================================================
 enum class TensorResidencyState : uint8_t {
-    Unmapped = 0,
-    Resident = 1,
-    InUse = 2,
-    Evictable = 3,
-    Evicted = 4
+    Cold = 0,          // NVMe only, not mapped
+    Loading = 1,       // NVMe -> RAM in progress
+    Warm = 2,          // RAM resident, not in use
+    Uploading = 3,     // RAM -> VRAM in progress
+    Hot = 4,           // VRAM resident
+    Computing = 5,     // actively referenced by kernel
+    EvictPending = 6,  // compute complete, eligible for eviction
+    Failed = 7
 };
 
 // ============================================================================
@@ -71,7 +109,7 @@ struct ResidentTensor {
     uint64_t generation = 0;        // Incremented on every eviction/remap
     uint64_t lastUseSequence = 0;   // For LRU
     size_t leaseCount = 0;          // Active leases
-    TensorResidencyState state = TensorResidencyState::Unmapped;
+    TensorResidencyState state = TensorResidencyState::Cold;
 
     // Source validation
     std::vector<uint8_t> sourceChecksum;  // Optional: SHA-256 or CRC
@@ -114,6 +152,15 @@ public:
                        void*& outData,
                        size_t& outBytes,
                        uint64_t& outGeneration);
+
+    // Acquire a lease as RAII wrapper (preferred API).
+    ResidencyLease AcquireLease(const std::string& name);
+
+    // Async acquisition for prefetch / overlap.
+    std::future<ResidencyLease> AcquireAsync(const std::string& name);
+
+    // Prefetch a tensor into residency without acquiring a lease.
+    bool PrefetchAsync(const std::string& name);
 
     // ── Release ──────────────────────────────────────────────────────
     // Release one lease on a tensor.
@@ -203,6 +250,89 @@ private:
     void UpdatePeakBytes();
     void InvokeCounterCallbacks();
 };
+
+// ============================================================================
+// ResidencyLease inline implementation
+// ============================================================================
+inline ResidencyLease::ResidencyLease(ResidencyManager* mgr, const std::string& name,
+                                       void* data, size_t bytes, uint64_t generation)
+    : mgr_(mgr), name_(name), data_(data), bytes_(bytes), generation_(generation) {}
+
+inline ResidencyLease::~ResidencyLease() {
+    release();
+}
+
+inline ResidencyLease::ResidencyLease(ResidencyLease&& other) noexcept
+    : mgr_(other.mgr_), name_(std::move(other.name_)),
+      data_(other.data_), bytes_(other.bytes_), generation_(other.generation_) {
+    other.mgr_ = nullptr;
+    other.data_ = nullptr;
+    other.bytes_ = 0;
+    other.generation_ = 0;
+}
+
+inline ResidencyLease& ResidencyLease::operator=(ResidencyLease&& other) noexcept {
+    if (this != &other) {
+        release();
+        mgr_ = other.mgr_;
+        name_ = std::move(other.name_);
+        data_ = other.data_;
+        bytes_ = other.bytes_;
+        generation_ = other.generation_;
+        other.mgr_ = nullptr;
+        other.data_ = nullptr;
+        other.bytes_ = 0;
+        other.generation_ = 0;
+    }
+    return *this;
+}
+
+inline void ResidencyLease::release() {
+    if (mgr_ && !name_.empty()) {
+        mgr_->ReleaseTensor(name_);
+        mgr_ = nullptr;
+        data_ = nullptr;
+        bytes_ = 0;
+        generation_ = 0;
+    }
+}
+
+// ============================================================================
+// ResidencyManager inline helpers (header-only implementation)
+// ============================================================================
+inline ResidencyLease ResidencyManager::AcquireLease(const std::string& name) {
+    void* data = nullptr;
+    size_t bytes = 0;
+    uint64_t generation = 0;
+    if (AcquireTensor(name, data, bytes, generation)) {
+        return ResidencyLease(this, name, data, bytes, generation);
+    }
+    return ResidencyLease();
+}
+
+inline std::future<ResidencyLease> ResidencyManager::AcquireAsync(const std::string& name) {
+    return std::async(std::launch::async, [this, name]() {
+        return AcquireLease(name);
+    });
+}
+
+inline bool ResidencyManager::PrefetchAsync(const std::string& name) {
+    // Fire-and-forget: launch async acquisition but don't wait
+    auto fut = std::async(std::launch::async, [this, name]() {
+        AcquireLease(name);
+    });
+    // Detach by moving to a static storage (simplified; production would use a thread pool)
+    static std::vector<std::future<void>> s_prefetchFutures;
+    s_prefetchFutures.push_back(std::move(fut));
+    // Prune completed futures occasionally
+    if (s_prefetchFutures.size() > 64) {
+        s_prefetchFutures.erase(
+            std::remove_if(s_prefetchFutures.begin(), s_prefetchFutures.end(),
+                [](const std::future<void>& f) { return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready; }),
+            s_prefetchFutures.end());
+    }
+    return true;
+}
 
 } // namespace Deep2
 

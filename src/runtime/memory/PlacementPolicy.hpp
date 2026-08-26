@@ -5,6 +5,9 @@
 #pragma once
 
 #include <cstdint>
+#include <atomic>
+#include <chrono>
+#include <intrin.h>
 
 namespace RawrXD {
 namespace Memory {
@@ -83,6 +86,61 @@ struct TransferRequest {
     uint64_t         deadline    = 0;   // monotonic ns; 0 = ASAP
     TransferPriority priority    = TransferPriority::Speculative;
     bool             speculative = false;
+};
+
+// ── Transfer completion token (async notification primitive) ─────────────────
+// Replaces spin-wait loops with a proper synchronization primitive.
+// States: Pending → Ready | Failed | Evicted
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum class TransferCompletionState : uint8_t {
+    Pending  = 0,
+    Ready    = 1,
+    Failed   = 2,
+    Evicted  = 3
+};
+
+struct TransferCompletionToken {
+    std::atomic<TransferCompletionState> state{TransferCompletionState::Pending};
+    std::atomic<uint64_t>                address{0};   // resident VA when Ready
+    std::atomic<uint64_t>                transferTimeNs{0};
+
+    void signalReady(uint64_t addr, uint64_t t_ns = 0) noexcept {
+        address.store(addr, std::memory_order_relaxed);
+        transferTimeNs.store(t_ns, std::memory_order_relaxed);
+        state.store(TransferCompletionState::Ready, std::memory_order_release);
+    }
+
+    void signalFailed() noexcept {
+        state.store(TransferCompletionState::Failed, std::memory_order_release);
+    }
+
+    void signalEvicted() noexcept {
+        state.store(TransferCompletionState::Evicted, std::memory_order_release);
+    }
+
+    // Blocking wait with optional timeout. Returns final state.
+    TransferCompletionState wait(uint32_t timeoutMs = 0) const noexcept {
+        if (timeoutMs == 0) {
+            while (state.load(std::memory_order_acquire) == TransferCompletionState::Pending) {
+                _mm_pause();
+            }
+            return state.load(std::memory_order_relaxed);
+        }
+        auto deadline = std::chrono::steady_clock::now()
+                      + std::chrono::milliseconds(timeoutMs);
+        while (state.load(std::memory_order_acquire) == TransferCompletionState::Pending) {
+            if (std::chrono::steady_clock::now() >= deadline) {
+                return TransferCompletionState::Pending;
+            }
+            _mm_pause();
+        }
+        return state.load(std::memory_order_relaxed);
+    }
+
+    bool isReady() const noexcept {
+        return state.load(std::memory_order_acquire) == TransferCompletionState::Ready;
+    }
 };
 
 // ── Runtime memory budget ────────────────────────────────────────────────────

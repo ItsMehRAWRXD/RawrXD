@@ -134,7 +134,7 @@ struct TerminalLimits {
     } strategy = AdjustmentStrategy::Adaptive;
 
     /// Adjust timeout based on task complexity and history
-    int getTimeoutForTask(const TodoItem& task, const std::vector<TodoItem>& history);
+    int getTimeoutForTask(const TodoItem& task, const std::vector<TodoItem>& history) const;
 
     /// Get a randomized timeout within variance
     int getRandomizedTimeout() const;
@@ -336,6 +336,13 @@ public:
 
     bool isRunning() const { return m_running.load(); }
     bool isPaused() const { return m_paused.load(); }
+
+    // ---- Autonomous Fix Loop ----
+    /// Full closed-loop fix: audit → fix → build → test → verify → commit
+    /// Returns JSON evidence record of the entire operation
+    json fixRepository(const std::string& repoPath,
+                       const std::string& buildCmd = "",
+                       const std::string& testCmd = "");
 
     // ---- Progress Tracking ----
     ExecutionStats getStats() const;

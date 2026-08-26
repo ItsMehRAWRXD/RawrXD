@@ -11,7 +11,6 @@
 #include <thread>
 #include <functional>
 #include "include/RawrXD_AgentHost.h"
-#include "RawrXD_SymbolHealer.cpp"
 
 // External MASM linkages for low-level execution
 extern "C" {

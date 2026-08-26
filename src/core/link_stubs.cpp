@@ -52,8 +52,14 @@ std::vector<unsigned char> compress(const std::vector<unsigned char>& input) {
 // Logging is now provided by src/logging/Logger.cpp - no stubs needed
 
 // ============================================================================
-// Enterprise License ASM Stubs (for CLI builds without MASM enterprise)
+// Enterprise License ASM Stubs (DISABLED — real MASM implementations linked)
 // ============================================================================
+// These stubs caused LNK2005 duplicates with RawrXD_EnterpriseLicense.asm,
+// RawrXD_Telemetry_Kernel.asm, and swarm_tensor_stream.asm.
+// Real implementations are now linked via CMake MASM custom commands.
+// If building a pure-CLI target without MASM, re-enable these stubs.
+// ============================================================================
+#if 0  // Stubs disabled — real ASM linked
 extern "C" {
     int Enterprise_InitLicenseSystem() { return 1; }
     int Enterprise_ValidateLicense() { return 1; }
@@ -94,3 +100,4 @@ extern "C" {
     uint64_t swarm_compress_chunk_rle(const void*, uint64_t, void*, uint64_t) { return 0; }
     uint32_t swarm_build_discovery_packet(void*, uint32_t, uint64_t, uint64_t, uint32_t, uint32_t) { return 0; }
 }
+#endif

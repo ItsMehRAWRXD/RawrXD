@@ -216,8 +216,15 @@ HttpResponse StlHttpClient::platformSend(const HttpRequest& req) {
     if (!hConnect) {
         DWORD err = GetLastError();
         WinHttpCloseHandle(hSession);
-        return HttpResponse::fail("WinHttpConnect failed to " +
-            std::string(parsed.host.begin(), parsed.host.end()) + ":" +
+        // Convert wchar_t host to narrow string for error message
+        int narrowLen = WideCharToMultiByte(CP_UTF8, 0, parsed.host.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        std::string hostNarrow;
+        if (narrowLen > 0) {
+            hostNarrow.resize(narrowLen);
+            WideCharToMultiByte(CP_UTF8, 0, parsed.host.c_str(), -1, &hostNarrow[0], narrowLen, nullptr, nullptr);
+            hostNarrow.resize(narrowLen - 1); // remove null terminator
+        }
+        return HttpResponse::fail("WinHttpConnect failed to " + hostNarrow + ":" +
             std::to_string(parsed.port) + " (err=" + std::to_string(err) + ")",
             static_cast<int>(nowMs() - startT));
     }

@@ -2,12 +2,14 @@
 #include "ElasticTypes.hpp"
 #include "ElasticGGUFIndex.hpp"
 #include "../governance/HardwareCapabilityProbe.hpp"
+#include "../memory/PlacementPolicy.hpp"
 #include <cstdint>
 #include <vector>
 #include <mutex>
 #include <atomic>
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <windows.h>
 
 namespace RawrXD::Elastic {
@@ -53,6 +55,16 @@ public:
     // Returns the GPU buffer handle, or nullptr on failure.
     // ------------------------------------------------------------------------
     void* RequireGpuResident(uint32_t block_id);
+
+    // Async variant: returns a token representing future readiness.
+    // The caller polls/waits on the token; no blocking in the hot path.
+    // States:
+    //   - Already VRAM? token signals Ready immediately with buffer address.
+    //   - RAM resident? token signals Ready after RAM→VRAM upload.
+    //   - NVMe only?    token signals Ready after NVMe→RAM→VRAM pipeline.
+    //   - Failure?      token signals Failed.
+    std::shared_ptr<RawrXD::Memory::TransferCompletionToken>
+        RequireGpuResidentAsync(uint32_t block_id);
 
     // Mark a block as non-evictable (e.g. current layer)
     void PinBlock(uint32_t block_id);

@@ -115,10 +115,8 @@ extern "C" int32_t GGUF_GetTensorInfo(void* mappedBase, uint32_t tensorIdx, stru
             memset(out, 0, sizeof(GGUF_Tensor));
             out->name_len = static_cast<uint32_t>(nameLen > 255 ? 255 : nameLen);
             
-            // Copy name (up to 255 chars)
-            for (uint32_t j = 0; j < out->name_len; ++j) {
-                out->name[j] = static_cast<char>(data[offset + j]);
-            }
+            // Store name pointer as offset into mapped file
+            out->name_ptr = static_cast<uint64_t>(offset);
             offset += nameLen;
             
             // Read number of dimensions

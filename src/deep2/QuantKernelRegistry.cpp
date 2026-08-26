@@ -96,6 +96,7 @@ BlockGeometry GetBlockGeometryForType(int quantType) {
         case GGMLType::GGML_TYPE_IQ2_S:  return {82, 256, true, false};
         case GGMLType::GGML_TYPE_IQ4_NL: return {132, 256, true, false};
         case GGMLType::GGML_TYPE_IQ4_XS: return {136, 256, true, false};
+        case GGMLType::GGML_TYPE_IQ1_S: return {34, 256, true, false};
         case GGMLType::GGML_TYPE_I8:  return {1, 1, false, false};
         case GGMLType::GGML_TYPE_I16: return {2, 1, false, false};
         case GGMLType::GGML_TYPE_I32: return {4, 1, false, false};
@@ -131,6 +132,7 @@ const char* GGMLTypeName(int type) {
         case GGMLType::GGML_TYPE_IQ2_S:   return "IQ2_S";
         case GGMLType::GGML_TYPE_IQ4_NL:  return "IQ4_NL";
         case GGMLType::GGML_TYPE_IQ4_XS:  return "IQ4_XS";
+        case GGMLType::GGML_TYPE_IQ1_S:   return "IQ1_S";
         case GGMLType::GGML_TYPE_I8:      return "I8";
         case GGMLType::GGML_TYPE_I16:     return "I16";
         case GGMLType::GGML_TYPE_I32:     return "I32";
@@ -992,7 +994,8 @@ static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
             size_t idx = b * 32 + i;
             if (idx >= n) return;
             uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
+            float q = (i % 2 == 0) ? (float)((int)(byte & 0x0F) - 8)
+                                   : (float)((int)(byte >> 4) - 8);
             dst[idx] = d * q;
         }
     }

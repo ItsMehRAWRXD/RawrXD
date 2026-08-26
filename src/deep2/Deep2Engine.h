@@ -25,6 +25,8 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "TensorResidencyCache.hpp"
 #include "ResidencyManager.hpp"
+#include "ElasticResidencyManager.hpp"
+#include "RouterPrefetchTelemetry.hpp"
 #include "ProductionProfiler.hpp"
 // Sovereign Engine components (Dragon Lore)
 #include "Chamber.hpp"
@@ -314,6 +316,21 @@ public:
     void setNumThreads(size_t numThreads);
     void enableKVCache(bool enable);
 
+    // Batch 15: Elastic residency control
+    void enableElasticResidency(bool enable);
+    bool isElasticResidencyEnabled() const { return elasticResidencyEnabled_; }
+    ElasticResidencyManager* getElasticResidencyManager() const { return elasticResidency_.get(); }
+
+    // Router-driven prefetch telemetry
+    void enableResidencyTelemetry(bool enable);
+    bool isResidencyTelemetryEnabled() const { return telemetryEnabled_; }
+    RouterPrefetchTelemetry* getResidencyTelemetry() const { return residencyTelemetry_.get(); }
+    void printResidencyTelemetryReport() const;
+
+    // Async Vulkan prefetch state management
+    void setAsyncPrefetchEnabled(bool enable) { asyncPrefetchEnabled_ = enable; }
+    bool isAsyncPrefetchEnabled() const { return asyncPrefetchEnabled_; }
+
     // Production profiler (Batch 1)
     void enableProfiling(bool enable);
     bool isProfilingEnabled() const { return profilingEnabled_; }
@@ -513,9 +530,22 @@ private:
     std::filesystem::path modelDir_;
     bool isMultiShard_ = false;
     
-    // VAL-051.7: Bounded-window tensor residency manager
+    // VAL-051.7: Bounded-window tensor residency manager (legacy)
     std::unique_ptr<ResidencyManager> residencyManager_;
     bool residencyEnabled_ = false;
+
+    // Batch 15: ElasticResidencyManager — representation-aware, async prefetch
+    std::unique_ptr<ElasticResidencyManager> elasticResidency_;
+    bool elasticResidencyEnabled_ = false;
+
+    // Router-driven prefetch telemetry
+    std::unique_ptr<RouterPrefetchTelemetry> residencyTelemetry_;
+    bool telemetryEnabled_ = false;
+
+    // Async Vulkan prefetch: pending jobs from previous layer's PrefetchAsync
+    // Key: layerId, Value: vector of job handles returned by PrefetchAsync
+    std::unordered_map<int, std::vector<uint64_t>> pendingPrefetches_;
+    bool asyncPrefetchEnabled_ = false;
 
     // BP16 streaming support (zero-copy mapped weight access)
     std::unique_ptr<BP16Streamer> bp16Streamer_;

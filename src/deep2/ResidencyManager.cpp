@@ -50,9 +50,9 @@ void ResidencyManager::Shutdown() {
 
     // Unmap all residents
     for (auto& kv : residents_) {
-        if (kv.second.state == TensorResidencyState::Resident ||
-            kv.second.state == TensorResidencyState::InUse ||
-            kv.second.state == TensorResidencyState::Evictable) {
+        if (kv.second.state == TensorResidencyState::Warm ||
+            kv.second.state == TensorResidencyState::Computing ||
+            kv.second.state == TensorResidencyState::EvictPending) {
             UnmapTensor(kv.first, kv.second);
         }
     }
@@ -69,9 +69,9 @@ void ResidencyManager::Reset() {
     if (!initialized_) return;
 
     for (auto& kv : residents_) {
-        if (kv.second.state == TensorResidencyState::Resident ||
-            kv.second.state == TensorResidencyState::InUse ||
-            kv.second.state == TensorResidencyState::Evictable) {
+        if (kv.second.state == TensorResidencyState::Warm ||
+            kv.second.state == TensorResidencyState::Computing ||
+            kv.second.state == TensorResidencyState::EvictPending) {
             UnmapTensor(kv.first, kv.second);
         }
     }
@@ -168,12 +168,12 @@ bool ResidencyManager::AcquireTensor(const std::string& name,
     auto resIt = residents_.find(name);
     if (resIt != residents_.end()) {
         ResidentTensor& entry = resIt->second;
-        if (entry.state == TensorResidencyState::Resident ||
-            entry.state == TensorResidencyState::InUse ||
-            entry.state == TensorResidencyState::Evictable) {
+        if (entry.state == TensorResidencyState::Warm ||
+            entry.state == TensorResidencyState::Computing ||
+            entry.state == TensorResidencyState::EvictPending) {
             // Reuse existing mapping
             entry.leaseCount++;
-            entry.state = TensorResidencyState::InUse;
+            entry.state = TensorResidencyState::Computing;
             entry.lastUseSequence = ++useSequence_;
             totalAcquires_++;
 
@@ -205,7 +205,7 @@ bool ResidencyManager::AcquireTensor(const std::string& name,
     entry.mappedOffset = AlignedOffset(entry.tensorOffset);
     entry.generation = totalRemaps_;
     entry.leaseCount = 1;
-    entry.state = TensorResidencyState::InUse;
+    entry.state = TensorResidencyState::Computing;
     entry.lastUseSequence = ++useSequence_;
 
     // Map
@@ -280,7 +280,7 @@ bool ResidencyManager::ReleaseTensor(const std::string& name) {
     ResidencyCounters::OnRelease(entry.mappedBytes);
 
     if (entry.leaseCount == 0) {
-        entry.state = TensorResidencyState::Evictable;
+        entry.state = TensorResidencyState::EvictPending;
         printf("[ResidencyManager] Released '%s': now evictable\n", name.c_str());
     } else {
         printf("[ResidencyManager] Released '%s': leases remaining=%zu\n",
@@ -298,9 +298,9 @@ bool ResidencyManager::ValidateLease(const std::string& name,
     auto resIt = residents_.find(name);
     if (resIt == residents_.end()) return false;
     const ResidentTensor& entry = resIt->second;
-    if (entry.state != TensorResidencyState::InUse &&
-        entry.state != TensorResidencyState::Resident &&
-        entry.state != TensorResidencyState::Evictable) {
+    if (entry.state != TensorResidencyState::Computing &&
+        entry.state != TensorResidencyState::Warm &&
+        entry.state != TensorResidencyState::EvictPending) {
         return false;
     }
     if (entry.generation != generation) {
@@ -321,17 +321,16 @@ bool ResidencyManager::EvictTensor(const std::string& name) {
     if (resIt == residents_.end()) return false;
 
     ResidentTensor& entry = resIt->second;
-    if (entry.state == TensorResidencyState::InUse) {
+    if (entry.state == TensorResidencyState::Computing) {
         fprintf(stderr, "[ResidencyManager] WARNING: cannot evict active tensor '%s'\n", name.c_str());
         return false;
     }
-    if (entry.state == TensorResidencyState::Unmapped ||
-        entry.state == TensorResidencyState::Evicted) {
+    if (entry.state == TensorResidencyState::Cold) {
         return true;  // Already unmapped
     }
 
     UnmapTensor(name, entry);
-    entry.state = TensorResidencyState::Evicted;
+    entry.state = TensorResidencyState::Cold;
     entry.generation++;  // Increment generation on eviction
     currentResidentBytes_ -= entry.mappedBytes;
     totalEvictions_++;
@@ -357,7 +356,7 @@ bool ResidencyManager::EvictToMakeRoom(size_t needBytes) {
     // Build LRU list: evictable tensors sorted by lastUseSequence
     std::vector<std::pair<uint64_t, std::string>> candidates;
     for (auto& kv : residents_) {
-        if (kv.second.state == TensorResidencyState::Evictable) {
+        if (kv.second.state == TensorResidencyState::EvictPending) {
             candidates.push_back({kv.second.lastUseSequence, kv.first});
         }
     }
@@ -369,11 +368,11 @@ bool ResidencyManager::EvictToMakeRoom(size_t needBytes) {
         auto resIt = residents_.find(name);
         if (resIt == residents_.end()) continue;
         ResidentTensor& entry = resIt->second;
-        if (entry.state != TensorResidencyState::Evictable) continue;
+        if (entry.state != TensorResidencyState::EvictPending) continue;
 
         size_t entryBytes = entry.mappedBytes;
         UnmapTensor(name, entry);
-        entry.state = TensorResidencyState::Evicted;
+        entry.state = TensorResidencyState::Cold;
         entry.generation++;
         currentResidentBytes_ -= entryBytes;
         freed += entryBytes;
@@ -421,7 +420,7 @@ size_t ResidencyManager::GetRegisteredBytes() const {
 TensorResidencyState ResidencyManager::GetTensorState(const std::string& name) const {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = residents_.find(name);
-    if (it == residents_.end()) return TensorResidencyState::Unmapped;
+    if (it == residents_.end()) return TensorResidencyState::Cold;
     return it->second.state;
 }
 
@@ -452,11 +451,14 @@ void ResidencyManager::DumpResidentTensors() const {
         const ResidentTensor& e = kv.second;
         const char* stateStr = "Unknown";
         switch (e.state) {
-            case TensorResidencyState::Unmapped: stateStr = "Unmapped"; break;
-            case TensorResidencyState::Resident: stateStr = "Resident"; break;
-            case TensorResidencyState::InUse: stateStr = "InUse"; break;
-            case TensorResidencyState::Evictable: stateStr = "Evictable"; break;
-            case TensorResidencyState::Evicted: stateStr = "Evicted"; break;
+            case TensorResidencyState::Cold: stateStr = "Cold"; break;
+            case TensorResidencyState::Loading: stateStr = "Loading"; break;
+            case TensorResidencyState::Warm: stateStr = "Warm"; break;
+            case TensorResidencyState::Uploading: stateStr = "Uploading"; break;
+            case TensorResidencyState::Hot: stateStr = "Hot"; break;
+            case TensorResidencyState::Computing: stateStr = "Computing"; break;
+            case TensorResidencyState::EvictPending: stateStr = "EvictPending"; break;
+            case TensorResidencyState::Failed: stateStr = "Failed"; break;
         }
         printf("  '%s': state=%s data=%p bytes=%zu/%zu gen=%llu leases=%zu seq=%llu\n",
                e.name.c_str(), stateStr, e.data, e.tensorBytes, e.mappedBytes,
@@ -503,7 +505,7 @@ bool ResidencyManager::UnmapTensor(const std::string& name, ResidentTensor& entr
         free(entry.data);
         entry.data = nullptr;
     }
-    entry.state = TensorResidencyState::Unmapped;
+    entry.state = TensorResidencyState::Cold;
     return true;
 }
 

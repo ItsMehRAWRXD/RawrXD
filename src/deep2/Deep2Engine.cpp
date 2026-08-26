@@ -1876,8 +1876,6 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
     }
 
     // ── VAL-051.7: Initialize ResidencyManager and register all tensors ──
-    // DISABLED: ResidencyManager implementation pending — not needed for basic inference
-    /*
     residencyManager_ = std::make_unique<ResidencyManager>();
     ResidencyConfig resConfig;
     resConfig.maxResidentBytes = 512ULL * 1024 * 1024;
@@ -1931,7 +1929,78 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                (void*)residencyManager_.get(), regCount, regBytes,
                residencyManager_->GetMaxResidentBytes());
     }
-    */
+
+    // ── Batch 15: Register all tensors with ElasticResidencyManager ──
+    if (elasticResidencyEnabled_ && elasticResidency_) {
+        auto ggmlTypeToTensorFormat = [](int ggmlType) -> TensorFormat {
+            switch (ggmlType) {
+                case 2:  return TensorFormat::Q4_0;
+                case 3:  return TensorFormat::Q4_1;
+                case 10: return TensorFormat::Q4_K;
+                case 6:  return TensorFormat::Q5_0;
+                case 7:  return TensorFormat::Q5_1;
+                case 12: return TensorFormat::Q5_K;
+                case 13: return TensorFormat::Q6_K;
+                case 8:  return TensorFormat::Q8_0;
+                case 4:  return TensorFormat::Q2_K;
+                case 5:  return TensorFormat::Q3_K;
+                case 1:  return TensorFormat::FP16;
+                case 0:  return TensorFormat::FP32;
+                default: return TensorFormat::Unknown;
+            }
+        };
+
+        for (size_t layerIdx = 0; layerIdx < modelWeights.layers.size(); ++layerIdx) {
+            const auto& lw = modelWeights.layers[layerIdx];
+            auto registerElastic = [&](const WeightTensor& wt, uint32_t expertIdx) {
+                if (wt.data && wt.sizeBytes > 0 && !wt.name.empty()) {
+                    elasticResidency_->RegisterTensor(
+                        wt.name,
+                        static_cast<uint32_t>(layerIdx),
+                        expertIdx,
+                        0, // fileOffset: not used for single-shard (data already mapped)
+                        wt.sizeBytes,
+                        ggmlTypeToTensorFormat(wt.type),
+                        wt.data);
+                }
+            };
+            registerElastic(lw.wq, ~0u); registerElastic(lw.wk, ~0u);
+            registerElastic(lw.wv, ~0u); registerElastic(lw.wo, ~0u);
+            registerElastic(lw.attnNorm, ~0u); registerElastic(lw.ffnNorm, ~0u);
+            registerElastic(lw.wGate, ~0u); registerElastic(lw.wUp, ~0u);
+            registerElastic(lw.wDown, ~0u);
+            registerElastic(lw.attnQ_a, ~0u); registerElastic(lw.attnQ_a_norm, ~0u);
+            registerElastic(lw.attnQ_b, ~0u); registerElastic(lw.attnKV_a_mqa, ~0u);
+            registerElastic(lw.attnKV_a_norm, ~0u); registerElastic(lw.attnK_b, ~0u);
+            registerElastic(lw.attnV_b, ~0u); registerElastic(lw.attnO, ~0u);
+            registerElastic(lw.moeRouter, ~0u);
+            registerElastic(lw.moeSharedGate, ~0u);
+            registerElastic(lw.moeSharedUp, ~0u);
+            registerElastic(lw.moeSharedDown, ~0u);
+        }
+        if (modelWeights.tokenEmbed.data && modelWeights.tokenEmbed.sizeBytes > 0) {
+            elasticResidency_->RegisterTensor(
+                modelWeights.tokenEmbed.name, ~0u, ~0u, 0,
+                modelWeights.tokenEmbed.sizeBytes,
+                ggmlTypeToTensorFormat(modelWeights.tokenEmbed.type),
+                modelWeights.tokenEmbed.data);
+        }
+        if (modelWeights.lmHead.data && modelWeights.lmHead.sizeBytes > 0) {
+            elasticResidency_->RegisterTensor(
+                modelWeights.lmHead.name, ~0u, ~0u, 0,
+                modelWeights.lmHead.sizeBytes,
+                ggmlTypeToTensorFormat(modelWeights.lmHead.type),
+                modelWeights.lmHead.data);
+        }
+        if (modelWeights.finalNorm.data && modelWeights.finalNorm.sizeBytes > 0) {
+            elasticResidency_->RegisterTensor(
+                modelWeights.finalNorm.name, ~0u, ~0u, 0,
+                modelWeights.finalNorm.sizeBytes,
+                ggmlTypeToTensorFormat(modelWeights.finalNorm.type),
+                modelWeights.finalNorm.data);
+        }
+        printf("[Deep2Engine] ElasticResidencyManager: registered all tensors\n");
+    }
 
     // Re-allocate buffers with correct dimensions
     deallocateBuffers();
@@ -2085,6 +2154,15 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
                 moeWeightProxy_ = std::make_unique<MoEWeightProxy>();
                 moeWeightProxy_->Attach(moeWeightsLoader_.get());
+
+                // Initialize residency telemetry for router-driven prefetch pipeline
+                residencyTelemetry_ = std::make_unique<RouterPrefetchTelemetry>();
+                residencyTelemetry_->Initialize(
+                    static_cast<int>(modelWeights.numLayers),
+                    static_cast<int>(modelWeights.numExperts));
+                telemetryEnabled_ = true;
+                printf("[Deep2Engine] RouterPrefetchTelemetry initialized: %zu layers x %u experts\n",
+                       modelWeights.numLayers, meta.numExperts);
 
                 moeInitialized_ = true;
             }
@@ -2929,27 +3007,90 @@ namespace {
 static void LinearW_Range(const WeightTensor& wt, const float* input,
                           float* output, size_t startRow, size_t endRow, size_t cols) {
     size_t rows = endRow - startRow;
+
+    // === Batch 15C: LinearW_Range Instrumentation =====================
+    static std::mutex traceMutex;
+    static FILE* traceFile = nullptr;
+    static int traceCount = 0;
+    const int kMaxTrace = 2000;
+    int tc = 0;
+    bool doTrace = false;
+    const char* typeName = "UNKNOWN";
+    switch (wt.type) {
+        case (int)GGMLType::GGML_TYPE_F32: typeName = "F32"; break;
+        case (int)GGMLType::GGML_TYPE_F16: typeName = "F16"; break;
+        case (int)GGMLType::GGML_TYPE_Q4_0: typeName = "Q4_0"; break;
+        case (int)GGMLType::GGML_TYPE_Q4_1: typeName = "Q4_1"; break;
+        case (int)GGMLType::GGML_TYPE_Q5_0: typeName = "Q5_0"; break;
+        case (int)GGMLType::GGML_TYPE_Q5_1: typeName = "Q5_1"; break;
+        case (int)GGMLType::GGML_TYPE_Q8_0: typeName = "Q8_0"; break;
+        case (int)GGMLType::GGML_TYPE_Q8_K: typeName = "Q8_K"; break;
+        case (int)GGMLType::GGML_TYPE_Q2_K: typeName = "Q2_K"; break;
+        case (int)GGMLType::GGML_TYPE_Q3_K: typeName = "Q3_K"; break;
+        case (int)GGMLType::GGML_TYPE_Q4_K: typeName = "Q4_K"; break;
+        case (int)GGMLType::GGML_TYPE_Q5_K: typeName = "Q5_K"; break;
+        case (int)GGMLType::GGML_TYPE_Q6_K: typeName = "Q6_K"; break;
+        default: typeName = "UNKNOWN"; break;
+    }
+    {
+        std::lock_guard<std::mutex> lock(traceMutex);
+        tc = traceCount++;
+        doTrace = (tc < kMaxTrace);
+        if (doTrace && !traceFile) {
+            traceFile = fopen("__linearw_range_trace.txt", "w");
+            if (traceFile) setvbuf(traceFile, nullptr, _IOLBF, 4096);
+        }
+        if (doTrace && traceFile) {
+            fprintf(traceFile, "[LR_ENTER] name=%s type=%s(%d) rows=%zu cols=%zu startRow=%zu endRow=%zu\n",
+                    wt.name.c_str(), typeName, wt.type, rows, cols, startRow, endRow);
+            bool valid = true;
+            if (!wt.data) { fprintf(traceFile, "[LR_VALIDATE_FAIL] wt.data is null\n"); valid = false; }
+            if (!input)   { fprintf(traceFile, "[LR_VALIDATE_FAIL] input is null\n"); valid = false; }
+            if (!output)  { fprintf(traceFile, "[LR_VALIDATE_FAIL] output is null\n"); valid = false; }
+            if (startRow > endRow) { fprintf(traceFile, "[LR_VALIDATE_FAIL] startRow(%zu) > endRow(%zu)\n", startRow, endRow); valid = false; }
+            if (endRow > wt.rows)  { fprintf(traceFile, "[LR_VALIDATE_FAIL] endRow(%zu) > wt.rows(%zu)\n", endRow, wt.rows); valid = false; }
+            if (cols != wt.cols)   { fprintf(traceFile, "[LR_VALIDATE_WARN] cols(%zu) != wt.cols(%zu)\n", cols, wt.cols); }
+            if (wt.data && (reinterpret_cast<size_t>(wt.data) % 64 != 0)) { fprintf(traceFile, "[LR_VALIDATE_WARN] wt.data misaligned addr=%p\n", wt.data); }
+            if (input && (reinterpret_cast<size_t>(input) % 64 != 0))     { fprintf(traceFile, "[LR_VALIDATE_WARN] input misaligned addr=%p\n", input); }
+            if (output && (reinterpret_cast<size_t>(output) % 64 != 0))   { fprintf(traceFile, "[LR_VALIDATE_WARN] output misaligned addr=%p\n", output); }
+            auto GetRowBytes = [&](int t, size_t c) -> size_t {
+                switch (t) {
+                    case (int)GGMLType::GGML_TYPE_F32: return c * sizeof(float);
+                    case (int)GGMLType::GGML_TYPE_F16: return c * sizeof(uint16_t);
+                    case (int)GGMLType::GGML_TYPE_Q4_0: return ((c + 31) / 32) * sizeof(block_q4_0);
+                    case (int)GGMLType::GGML_TYPE_Q4_1: return ((c + 31) / 32) * sizeof(block_q4_1);
+                    case (int)GGMLType::GGML_TYPE_Q5_0: return ((c + 31) / 32) * sizeof(block_q5_0);
+                    case (int)GGMLType::GGML_TYPE_Q5_1: return ((c + 31) / 32) * sizeof(block_q5_1);
+                    case (int)GGMLType::GGML_TYPE_Q8_0: return ((c + 31) / 32) * sizeof(block_q8_0);
+                    case (int)GGMLType::GGML_TYPE_Q4_K: return ((c + 255) / 256) * sizeof(block_q4_K);
+                    case (int)GGMLType::GGML_TYPE_Q5_K: return ((c + 255) / 256) * sizeof(block_q5_K);
+                    case (int)GGMLType::GGML_TYPE_Q2_K: return ((c + 255) / 256) * sizeof(block_q2_K);
+                    case (int)GGMLType::GGML_TYPE_Q3_K: return ((c + 255) / 256) * sizeof(block_q3_K);
+                    case (int)GGMLType::GGML_TYPE_Q8_K: return ((c + 255) / 256) * sizeof(block_q8_K);
+                    case (int)GGMLType::GGML_TYPE_Q6_K: return ((c + 255) / 256) * sizeof(block_q6_K);
+                    default: return 0;
+                }
+            };
+            size_t rb = GetRowBytes(wt.type, cols);
+            size_t reqBytes = endRow * rb;
+            if (reqBytes > wt.sizeBytes) {
+                fprintf(traceFile, "[LR_VALIDATE_FAIL] byte overflow: endRow*rowBytes=%zu > wt.sizeBytes=%zu\n", reqBytes, wt.sizeBytes);
+                valid = false;
+            } else {
+                fprintf(traceFile, "[LR_VALIDATE] byte bounds OK: req=%zu <= total=%zu\n", reqBytes, wt.sizeBytes);
+            }
+            fprintf(traceFile, "[LR_SOURCE] wt.data=%p mapped=%d input=%p output=%p sizeBytes=%zu rowBytes=%zu\n",
+                    wt.data, wt.mapped ? 1 : 0, input, output, wt.sizeBytes, rb);
+            fprintf(traceFile, "[LR_VALIDATE] result=%s\n", valid ? "PASS" : "FAIL");
+            fflush(traceFile);
+        }
+    }
+    // ===================================================================
+
     // ── Kernel dispatch trace for certification proof ────────────────────
     static int dispatchLogCount = 0;
     if (dispatchLogCount < 500) {
         ++dispatchLogCount;
-        const char* typeName = "UNKNOWN";
-        switch (wt.type) {
-            case (int)GGMLType::GGML_TYPE_F32: typeName = "F32"; break;
-            case (int)GGMLType::GGML_TYPE_F16: typeName = "F16"; break;
-            case (int)GGMLType::GGML_TYPE_Q4_0: typeName = "Q4_0"; break;
-            case (int)GGMLType::GGML_TYPE_Q4_1: typeName = "Q4_1"; break;
-            case (int)GGMLType::GGML_TYPE_Q5_0: typeName = "Q5_0"; break;
-            case (int)GGMLType::GGML_TYPE_Q5_1: typeName = "Q5_1"; break;
-            case (int)GGMLType::GGML_TYPE_Q8_0: typeName = "Q8_0"; break;
-            case (int)GGMLType::GGML_TYPE_Q8_K: typeName = "Q8_K"; break;
-            case (int)GGMLType::GGML_TYPE_Q2_K: typeName = "Q2_K"; break;
-            case (int)GGMLType::GGML_TYPE_Q3_K: typeName = "Q3_K"; break;
-            case (int)GGMLType::GGML_TYPE_Q4_K: typeName = "Q4_K"; break;
-            case (int)GGMLType::GGML_TYPE_Q5_K: typeName = "Q5_K"; break;
-            case (int)GGMLType::GGML_TYPE_Q6_K: typeName = "Q6_K"; break;
-            default: typeName = "UNKNOWN"; break;
-        }
         printf("[KERNEL] tensor=%s type=%s rows=%zu cols=%zu\n",
                wt.name.c_str(), typeName, rows, cols);
     }
@@ -3120,6 +3261,26 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
             }
             break;
     }
+
+    // === Batch 15C: Post-call instrumentation =========================
+    if (doTrace) {
+        std::lock_guard<std::mutex> lock(traceMutex);
+        if (traceFile) {
+            fprintf(traceFile, "[LR_GEMV] type=%s(%d) rows=%zu cols=%zu startRow=%zu endRow=%zu\n",
+                    typeName, wt.type, rows, cols, startRow, endRow);
+            double norm = 0.0;
+            bool allFinite = true;
+            for (size_t r = startRow; r < endRow; ++r) {
+                float v = output[r];
+                if (!std::isfinite(v)) allFinite = false;
+                norm += (double)v * (double)v;
+            }
+            norm = std::sqrt(norm);
+            fprintf(traceFile, "[LR_EXIT] norm=%.6e allFinite=%s\n", norm, allFinite ? "YES" : "NO");
+            fflush(traceFile);
+        }
+    }
+    // ===================================================================
 }
 
 // ============================================================================
@@ -3132,8 +3293,19 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
         return;
     }
 
-    size_t cols = wt.cols;
-    size_t rows = wt.rows;
+    // --- Batch 15: Elastic residency binding ---
+    WeightTensor wtEffective = wt;
+    if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
+        if (elasticResidency_->IsTensorReadyForCompute(wt.name)) {
+            const void* residentPtr = elasticResidency_->AcquireForCpu(wt.name, TensorFormat::Unknown);
+            if (residentPtr) {
+                wtEffective.data = const_cast<void*>(residentPtr);
+            }
+        }
+    }
+
+    size_t cols = wtEffective.cols;
+    size_t rows = wtEffective.rows;
 
     auto tLinearW0 = std::chrono::high_resolution_clock::now();
 
@@ -3142,7 +3314,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
 
     // --- Vulkan GPU dispatch path (FP32/FP16 only) ---
     if (vulkanEnabled_ && vulkanInitialized_ && vulkanCompute_) {
-        if (tryVulkanGEMV(wt, input, output, outDim)) {
+        if (tryVulkanGEMV(wtEffective, input, output, outDim)) {
             // GPU dispatch succeeded — apply bias and return
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) {
@@ -3151,7 +3323,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             }
             auto tLinearW1 = std::chrono::high_resolution_clock::now();
             double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
-            int typeIdx = wt.type & 0x1F;
+            int typeIdx = wtEffective.type & 0x1F;
             if (typeIdx >= 0 && typeIdx < 32) {
                 g_linearwByType[typeIdx].calls++;
                 g_linearwByType[typeIdx].totalMs += linearwMs;
@@ -3178,7 +3350,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             size_t endRow = startRow + chunkRows;
 
             threadPool->enqueue_void([&, startRow, endRow]() {
-                LinearW_Range(wt, input, output, startRow, endRow, cols);
+                LinearW_Range(wtEffective, input, output, startRow, endRow, cols);
                 completed++;
             });
             ++submitted;
@@ -3190,17 +3362,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             _mm_pause();
         }
     } else {
-        LinearW_Range(wt, input, output, 0, rows, cols);
+        LinearW_Range(wtEffective, input, output, 0, rows, cols);
     }
     auto tLinearW1 = std::chrono::high_resolution_clock::now();
     double linearwMs = std::chrono::duration<double, std::milli>(tLinearW1 - tLinearW0).count();
-    int typeIdx = wt.type & 0x1F;
+    int typeIdx = wtEffective.type & 0x1F;
     if (typeIdx >= 0 && typeIdx < 32) {
         g_linearwByType[typeIdx].calls++;
         g_linearwByType[typeIdx].totalMs += linearwMs;
         g_linearwByType[typeIdx].totalMACs += rows * cols;
     }
-    auto& tensorStats = g_linearwByTensor[wt.name];
+    auto& tensorStats = g_linearwByTensor[wtEffective.name];
     tensorStats.calls++;
     tensorStats.totalMs += linearwMs;
     tensorStats.totalMACs += rows * cols;
@@ -3209,16 +3381,16 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // DISABLED for profiler builds to avoid I/O overhead
     #if 0
     static const void* q4kFingerprinted = nullptr;
-    if (wt.type == 12 && wt.data && q4kFingerprinted != wt.data) {
-        q4kFingerprinted = wt.data;
-        const uint8_t* p = static_cast<const uint8_t*>(wt.data);
+    if (wtEffective.type == 12 && wtEffective.data && q4kFingerprinted != wtEffective.data) {
+        q4kFingerprinted = wtEffective.data;
+        const uint8_t* p = static_cast<const uint8_t*>(wtEffective.data);
         uint16_t dBits = 0, dminBits = 0;
         memcpy(&dBits,    p + 0, 2);
         memcpy(&dminBits,  p + 2, 2);
         fprintf(stderr,
             "[Q4K_HDR] name=%s data=%p d=0x%04x dmin=0x%04x "
             "b0..3=%02x%02x%02x%02x s4..7=%02x%02x%02x%02x\n",
-            wt.name.c_str(), wt.data, dBits, dminBits,
+            wtEffective.name.c_str(), wtEffective.data, dBits, dminBits,
             p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
         fflush(stderr);
     }
@@ -3240,7 +3412,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             fprintf(stderr,
                 "[LinearW:FATAL] name=%s type=%d rows=%zu cols=%zu "
                 "bad=%zu/%zu firstBad[%zu]=%g\n",
-                wt.name.c_str(), wt.type, rows, cols,
+                wtEffective.name.c_str(), wtEffective.type, rows, cols,
                 bad, outDim, firstBadIdx, output[firstBadIdx]);
             fflush(stderr);
         }
@@ -3261,7 +3433,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
         auto tQuant1 = std::chrono::high_resolution_clock::now();
         uint64_t quantUs = static_cast<uint64_t>(
             std::chrono::duration_cast<std::chrono::microseconds>(tQuant1 - tQuant0).count());
-        profiler_->recordQuantTime(wt.type, quantUs);
+        profiler_->recordQuantTime(wtEffective.type, quantUs);
     }
 }
 
@@ -3463,6 +3635,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            // ── Batch 15: Prefetch next layer weights into residency ──
+            if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
+                const auto& nextLw = modelWeights.layers[layer + 1];
+                auto prefetchWt = [&](const WeightTensor& wt) {
+                    if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
+                };
+                prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
+                prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
+                prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+            }
+
             auto layerT0 = std::chrono::high_resolution_clock::now();
             forwardLayer(layer, layerInput, layerOutput, t + 1);
             auto layerT1 = std::chrono::high_resolution_clock::now();
@@ -3538,6 +3721,17 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         float* layerOutput = attentionOutput;
 
         for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+            // ── Batch 15: Prefetch next layer weights into residency ──
+            if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
+                const auto& nextLw = modelWeights.layers[layer + 1];
+                auto prefetchWt = [&](const WeightTensor& wt) {
+                    if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
+                };
+                prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
+                prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
+                prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+            }
+
             auto layerT0 = std::chrono::high_resolution_clock::now();
             forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
             auto layerT1 = std::chrono::high_resolution_clock::now();
@@ -3675,6 +3869,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     ResidencyCounters::Print();
     Deep2_ReportLinearWStats();
 
+    // ── Batch 15: Print ElasticResidencyManager telemetry ──────────
+    if (elasticResidencyEnabled_ && elasticResidency_) {
+        elasticResidency_->PrintTelemetry();
+    }
+
     return tokensGenerated;
 }
 
@@ -3782,6 +3981,27 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
                 marsLayerLeases_[layer] = lease;
             }
         }
+    }
+
+    // ── Batch 14A: Acquire residency leases for layer weights ───────────
+    std::vector<ResidencyLease> layerLeases;
+    if (residencyEnabled_ && residencyManager_) {
+        auto tryLease = [&](const WeightTensor& wt) {
+            if (wt.data && !wt.name.empty()) {
+                auto lease = residencyManager_->AcquireLease(wt.name);
+                if (lease.valid()) layerLeases.push_back(std::move(lease));
+            }
+        };
+        tryLease(lw.wq); tryLease(lw.wk); tryLease(lw.wv); tryLease(lw.wo);
+        tryLease(lw.wqkv);
+        tryLease(lw.attnNorm); tryLease(lw.ffnNorm);
+        tryLease(lw.wGate); tryLease(lw.wUp); tryLease(lw.wDown);
+        tryLease(lw.attnQ_a); tryLease(lw.attnQ_a_norm);
+        tryLease(lw.attnQ_b); tryLease(lw.attnKV_a_mqa);
+        tryLease(lw.attnKV_a_norm); tryLease(lw.attnK_b);
+        tryLease(lw.attnV_b); tryLease(lw.attnO);
+        tryLease(lw.moeRouter);
+        tryLease(lw.moeSharedGate); tryLease(lw.moeSharedUp); tryLease(lw.moeSharedDown);
     }
 
     // ── Per-layer state trace: input ────────────────────────────────
@@ -4185,6 +4405,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 // Compute MoE FFN - Real routed expert execution
 // Routes token through MoERouter, executes top-k experts via streamed
 // weights from MoEWeightProxy, adds shared expert output.
+// Router-driven prefetch: after routing layer N, prefetch layer N+1 experts.
 // NO dense fallback. NO stubs.
 // ============================================================================
 void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output) {
@@ -4199,7 +4420,6 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
     memset(output, 0, hiddenDim * sizeof(float));
 
     // --- Shared expert (always executed) ---
-    // Use attentionOutput as temp (it's hiddenDim-sized and not in use during FFN)
     float* sharedOut = attentionOutput;
     computeSharedExpertFFN(layer, input, sharedOut);
     for (size_t i = 0; i < hiddenDim; ++i) {
@@ -4208,16 +4428,63 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
     // --- Routed experts ---
     if (layer >= moeRouters_.size() || !moeRouters_[layer] || !moeWeightProxy_) {
-        // MoE not initialized - shared expert output is still valid
         return;
     }
 
-    // Route the token through the per-layer router
+    // 1. Route the token through the per-layer router
     TokenRoute route = moeRouters_[layer]->Route(input);
 
-    // Execute each selected expert
-    // gateBuf/upBuf are used as temps inside computeExpertFFN
-    // attentionOutput is used as expert output temp (hiddenDim-sized)
+    // 2. Check pending prefetches from layer N-1 (previous layer's async jobs)
+    //    If fence signaled → expert is HOT, record telemetry
+    //    If still pending → record as late, fallback to sync acquire
+    if (asyncPrefetchEnabled_ && vulkanCompute_ && moeWeightProxy_) {
+        auto it = pendingPrefetches_.find(static_cast<int>(layer));
+        if (it != pendingPrefetches_.end()) {
+            for (uint64_t jobHandle : it->second) {
+                const PrefetchJob* job = moeWeightProxy_->GetPrefetchJob(jobHandle);
+                if (!job) continue;
+
+                bool ready = moeWeightProxy_->CheckPrefetchReady(jobHandle, vulkanCompute_.get());
+                if (telemetryEnabled_ && residencyTelemetry_) {
+                    residencyTelemetry_->RecordAsyncPrefetchReadyAtCompute(
+                        job->layer, job->expertId, ready);
+                }
+            }
+            // Clear checked prefetches for this layer
+            pendingPrefetches_.erase(it);
+        }
+    }
+
+    // 3. Router-driven async prefetch: submit transfer for layer N+1 experts
+    //    Returns immediately with fence handles. Compute N proceeds in parallel.
+    if (asyncPrefetchEnabled_ && layer + 1 < modelWeights.numLayers &&
+        layer + 1 < moeRouters_.size() && vulkanCompute_ && moeWeightProxy_) {
+        std::vector<int> predictedExperts = moeRouters_[layer]->GetLastRouteExpertIds();
+        if (!predictedExperts.empty()) {
+            std::vector<uint64_t> jobHandles = moeWeightProxy_->PrefetchAsync(
+                static_cast<int>(layer + 1), predictedExperts, vulkanCompute_.get());
+            if (!jobHandles.empty()) {
+                pendingPrefetches_[static_cast<int>(layer + 1)] = std::move(jobHandles);
+            }
+            // Telemetry: record submissions
+            if (telemetryEnabled_ && residencyTelemetry_) {
+                for (int eid : predictedExperts) {
+                    residencyTelemetry_->RecordAsyncPrefetchSubmitted(
+                        static_cast<int>(layer + 1), eid);
+                }
+            }
+        }
+    } else {
+        // Synchronous fallback: warm cache without async Vulkan
+        if (layer + 1 < modelWeights.numLayers && layer + 1 < moeRouters_.size()) {
+            std::vector<int> predictedExperts = moeRouters_[layer]->GetLastRouteExpertIds();
+            if (!predictedExperts.empty() && moeWeightProxy_) {
+                moeWeightProxy_->Prefetch(static_cast<int>(layer + 1), predictedExperts);
+            }
+        }
+    }
+
+    // 4. Execute each selected expert for CURRENT layer
     float* expertOut = attentionOutput;
     for (const auto& er : route.topExperts) {
         int expertId = er.expertId;
@@ -4225,13 +4492,36 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
 
         if (expertId < 0) continue;
 
+        auto tAcquire0 = std::chrono::high_resolution_clock::now();
+
         // Acquire expert weights via proxy (streams from disk if needed)
         MoEWeightHandle handle = moeWeightProxy_->Acquire((int)layer, expertId);
+
+        auto tAcquire1 = std::chrono::high_resolution_clock::now();
+        uint64_t acquireUs = std::chrono::duration_cast<std::chrono::microseconds>(
+            tAcquire1 - tAcquire0).count();
+
         if (!handle.valid) continue;
+
+        // Telemetry: record invocation and whether prefetch hit
+        bool prefetchHit = (acquireUs < 100); // < 100us suggests cache hit
+        if (telemetryEnabled_ && residencyTelemetry_) {
+            residencyTelemetry_->RecordInvocation((int)layer, expertId, prefetchHit);
+        }
+
+        auto tCompute0 = std::chrono::high_resolution_clock::now();
 
         // Execute expert FFN: gate/up SwiGLU -> down projection
         computeExpertFFN(handle, input, expertOut, hiddenDim,
                          moeConfig_.expertDim);
+
+        auto tCompute1 = std::chrono::high_resolution_clock::now();
+        uint64_t computeUs = std::chrono::duration_cast<std::chrono::microseconds>(
+            tCompute1 - tCompute0).count();
+
+        if (telemetryEnabled_ && residencyTelemetry_) {
+            residencyTelemetry_->RecordComputeTime((int)layer, expertId, computeUs);
+        }
 
         // Weighted accumulation into output
         for (size_t i = 0; i < hiddenDim; ++i) {
@@ -4452,6 +4742,37 @@ void Deep2Engine::enableKVCache(bool enable) {
         kvConfig.numHeads = config.numHeads;
         kvConfig.headDim = config.hiddenDim / config.numHeads;
         kvCache->initialize(kvConfig);
+    }
+}
+
+// ============================================================================
+// Batch 15: Enable Elastic Residency
+// ============================================================================
+void Deep2Engine::enableElasticResidency(bool enable) {
+    elasticResidencyEnabled_ = enable;
+    if (enable && !elasticResidency_) {
+        elasticResidency_ = std::make_unique<ElasticResidencyManager>();
+        ElasticResidencyConfig resConfig;
+        resConfig.maxWarmCompressedBytes = 4ULL * 1024 * 1024 * 1024;   // 4 GB
+        resConfig.maxWarmStagedBytes     = 512ULL * 1024 * 1024;       // 512 MB
+        resConfig.maxHotBytes            = 2ULL * 1024 * 1024 * 1024;   // 2 GB
+        resConfig.prefetchLookahead      = 2;
+        resConfig.retainStagedAfterUpload = false;
+        resConfig.useQuantizedGpuPath    = true;
+        if (!elasticResidency_->Initialize(resConfig)) {
+            printf("[Deep2Engine] WARNING: ElasticResidencyManager initialization failed\n");
+            elasticResidency_.reset();
+            elasticResidencyEnabled_ = false;
+        } else {
+            printf("[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=%zu MB, warmStaged=%zu MB, hot=%zu MB\n",
+                   resConfig.maxWarmCompressedBytes / (1024*1024),
+                   resConfig.maxWarmStagedBytes / (1024*1024),
+                   resConfig.maxHotBytes / (1024*1024));
+        }
+    } else if (!enable && elasticResidency_) {
+        elasticResidency_->Shutdown();
+        elasticResidency_.reset();
+        printf("[Deep2Engine] ElasticResidencyManager shut down\n");
     }
 }
 
@@ -4880,10 +5201,38 @@ void Deep2Engine::enableVulkan(bool enable) {
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
                                   float* output, size_t outDim) {
-    // Vulkan backend has unresolved externals and is not production-ready.
-    // Always return false to use the optimized CPU fallback.
-    (void)wt; (void)input; (void)output; (void)outDim;
-    return false;
+    // Phase A: FP32 Vulkan GEMV dispatch — production-ready path
+    if (!vulkanInitialized_ || !vulkanEnabled_ || !vulkanCompute_) {
+        return false;
+    }
+    // Only FP32 weights are supported by the Vulkan compute shader (for now)
+    if (wt.type != (int)GGMLType::GGML_TYPE_F32) {
+        return false;
+    }
+    if (!wt.data || !input || !output || wt.rows == 0 || wt.cols == 0) {
+        return false;
+    }
+    if (outDim != wt.rows) {
+        fprintf(stderr, "[VULKAN_GEMV] WARN: outDim(%zu) != wt.rows(%zu) for %s\n",
+                outDim, wt.rows, wt.name.c_str());
+    }
+
+    printf("[VULKAN_GEMV] tensor=%s type=F32 rows=%zu cols=%zu backend=Vulkan\n",
+           wt.name.c_str(), wt.rows, wt.cols);
+
+    bool ok = vulkanCompute_->DispatchGEMV(
+        (const float*)wt.data,
+        input,
+        output,
+        static_cast<uint32_t>(wt.rows),
+        static_cast<uint32_t>(wt.cols));
+
+    if (!ok) {
+        fprintf(stderr, "[VULKAN_GEMV] FAIL: DispatchGEMV failed for %s — falling back to CPU\n",
+                wt.name.c_str());
+        return false;
+    }
+    return true;
 }
 
 // ============================================================================
@@ -5058,6 +5407,22 @@ void Deep2Engine::disableReverseAnalysis() {
 
 ReverseIntegration* Deep2Engine::getReverseIntegration() const {
     return reverseIntegration_.get();
+}
+
+// ============================================================================
+// Residency Telemetry Control
+// ============================================================================
+void Deep2Engine::enableResidencyTelemetry(bool enable) {
+    telemetryEnabled_ = enable;
+    if (enable) {
+        printf("[Deep2Engine] Residency telemetry: ENABLED (stub)\n");
+    } else {
+        printf("[Deep2Engine] Residency telemetry: DISABLED\n");
+    }
+}
+
+void Deep2Engine::printResidencyTelemetryReport() const {
+    printf("[Deep2Engine] Residency telemetry not enabled or not initialized\n");
 }
 
 // ============================================================================

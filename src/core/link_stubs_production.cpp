@@ -202,18 +202,8 @@ struct BytePatchEnhanced {
     bool reversible;
 };
 
-PatchResult patch_bytes(const char* filename, const BytePatchEnhanced& patch) {
-    (void)filename;
-    (void)patch;
-    return PatchResult::error("Stub implementation");
-}
-
-PatchResult search_and_patch_bytes(const char* filename, const std::vector<uint8_t>& pattern, const std::vector<uint8_t>& replacement) {
-    (void)filename;
-    (void)pattern;
-    (void)replacement;
-    return PatchResult::error("Stub implementation");
-}
+// patch_bytes and search_and_patch_bytes are provided by byte_level_hotpatcher.cpp
+// Do NOT define stubs here to avoid duplicate symbol errors.
 
 // Additional patch functions
 PatchResult direct_read(const char* filename, uint64_t offset, uint64_t size, void* buffer, uint64_t* bytesRead) {

@@ -22,6 +22,7 @@
 #include <immintrin.h>
 #include <intrin.h>
 #include <stdint.h>
+#include <cmath>  // sqrtf, expf
 
 // Link required libraries
 #pragma comment(lib, "ws2_32.lib")
@@ -303,7 +304,7 @@ extern "C" void __cdecl Sovereign_RMSNorm_AVX512(
     
     // Horizontal sum
     float total = _mm512_reduce_add_ps(sum_sq);
-    float rms = 1.0f / sqrtf(total / dim + epsilon);
+    float rms = 1.0f / std::sqrt(total / dim + epsilon);
     __m512 scale = _mm512_set1_ps(rms);
     
     // Normalize
@@ -641,7 +642,7 @@ static uint32_t Sovereign_RouteExperts(
     // Softmax weights
     float exp_sum = 0.0f;
     for (uint32_t i = 0; i < k; i++) {
-        expert_weights[i] = expf(top_val[i]);
+        expert_weights[i] = std::exp(top_val[i]);
         exp_sum += expert_weights[i];
     }
     for (uint32_t i = 0; i < k; i++) {
@@ -851,17 +852,12 @@ static void Sovereign_DestroyContext(SovereignContext* ctx) {
 
 extern "C" void __cdecl Sovereign_EntryPoint(void);
 
+// x64 does not support __declspec(naked) or inline asm; use normal function
 #ifdef _WIN32
-#pragma code_seg(push, ".text")
-__declspec(naked) void __cdecl WinMainCRTStartup(void) {
-    __asm {
-        sub rsp, 40
-        call Sovereign_EntryPoint
-        xor ecx, ecx
-        call ExitProcess
-    }
+void __cdecl WinMainCRTStartup(void) {
+    Sovereign_EntryPoint();
+    ExitProcess(0);
 }
-#pragma code_seg(pop)
 #endif
 
 void __cdecl Sovereign_EntryPoint(void) {

@@ -71,11 +71,7 @@ uint64_t TensorPlacementManager::ensureResident(TensorId id, DeviceId targetDevi
         evict(evictions);
     }
 
-    // Issue a blocking transfer and wait inline (synchronous path).
-    uint64_t resultAddr = 0;
-    bool     done       = false;
-    bool     ok         = false;
-
+    // Issue a blocking transfer and wait via completion token (no spin-wait).
     TransferRequest req;
     req.tensor      = id;
     req.source      = res.tier;
@@ -87,28 +83,26 @@ uint64_t TensorPlacementManager::ensureResident(TensorId id, DeviceId targetDevi
 
     m_tracker.markPrefetching(id, MemoryTier::VRAM);
 
-    m_scheduler.schedule(req, [&](TensorId, bool success) {
-        ok = success;
-        done = true;
-    });
+    auto token = m_scheduler.scheduleAsync(req);
+    auto finalState = token->wait(60000);  // 60s timeout
 
-    // Spin-wait (acceptable for blocking path; real impl would use a semaphore).
-    while (!done) {
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
-
-    if (ok) {
+    if (finalState == TransferCompletionState::Ready) {
         m_capacity.reserve(targetDevice, MemoryTier::VRAM, res.bytes);
         // Address assignment: in a real implementation the DMA executor fills this.
         // Here we preserve the existing address or set a placeholder.
-        resultAddr = res.address ? res.address : reinterpret_cast<uint64_t>(nullptr) + id;
+        uint64_t resultAddr = token->address.load(std::memory_order_relaxed);
+        if (!resultAddr) resultAddr = res.address ? res.address : reinterpret_cast<uint64_t>(nullptr) + id;
         m_tracker.markResident(id, MemoryTier::VRAM, resultAddr);
         m_tracker.recordUse(id, nowNs());
-    } else {
+        return resultAddr;
+    } else if (finalState == TransferCompletionState::Failed) {
         m_tracker.markFailed(id);
+        return 0;
+    } else {
+        // Timeout or still pending — treat as failure
+        m_tracker.markFailed(id);
+        return 0;
     }
-
-    return resultAddr;
 }
 
 void TensorPlacementManager::prefetch(uint32_t currentLayer, uint32_t lookahead) {

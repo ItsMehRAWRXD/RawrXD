@@ -53,6 +53,18 @@
 #include <winhttp.h>
 
 // ============================================================================
+// RGUF (RawrXD GGUF Unified Format) — Pack / Inspect / Patch
+// ============================================================================
+#include "../../rguf_source/RGUFWriter.hpp"
+#include "../../rguf_source/RGUFLoader.hpp"
+
+// ============================================================================
+// Autonomous Orchestrator — Closed-loop repository repair
+// ============================================================================
+#include "../agent/autonomous_orchestrator.hpp"
+#include "../agent/orchestrator_cli_handler.hpp"
+
+// ============================================================================
 // Minimal ConversationManager definition (Fix #14)
 // ============================================================================
 class HeadlessIDE::ConversationManager {
@@ -2700,6 +2712,144 @@ void HeadlessIDE::processReplCommand(const std::string& input) {
         if (!ip.isLoaded()) ip.loadAll();
         m_outputSink->appendOutput(ip.toJSON().c_str(), OutputSeverity::Info);
     }
+    // ── Phase 36: RGUF Commands ─────────────────────────────────────────
+    else if (input.substr(0, 9) == "rguf pack") {
+        std::istringstream iss(input.substr(9));
+        std::string inPath, outPath, keyHex;
+        iss >> inPath >> outPath >> keyHex;
+        if (inPath.empty() || outPath.empty()) {
+            m_outputSink->appendOutput("Usage: rguf pack <in.gguf> <out.rguf> [32-byte-hex-key]", OutputSeverity::Error);
+        } else {
+            uint8_t key[32]{};
+            bool encrypt = false;
+            if (!keyHex.empty()) {
+                if (keyHex.size() != 64) {
+                    m_outputSink->appendOutput("Key must be 64 hex characters.", OutputSeverity::Error);
+                } else {
+                    encrypt = true;
+                    for (int i = 0; i < 32; ++i) {
+                        unsigned v = 0;
+                        std::sscanf(keyHex.c_str() + 2*i, "%2x", &v);
+                        key[i] = static_cast<uint8_t>(v);
+                    }
+                }
+            }
+            rguf::Writer w;
+            std::string err;
+            if (w.pack(inPath, outPath, encrypt, key, err)) {
+                m_outputSink->appendOutput(("RGUF packed: " + outPath).c_str(), OutputSeverity::Info);
+            } else {
+                m_outputSink->appendOutput(("RGUF pack failed: " + err).c_str(), OutputSeverity::Error);
+            }
+        }
+    }
+    else if (input.substr(0, 12) == "rguf inspect") {
+        std::istringstream iss(input.substr(12));
+        std::string modelPath;
+        iss >> modelPath;
+        if (modelPath.empty()) {
+            m_outputSink->appendOutput("Usage: rguf inspect <model.rguf>", OutputSeverity::Error);
+        } else {
+            rguf::Model m;
+            std::string err;
+            if (m.open(modelPath, err)) {
+                std::string msg = "RGUF blocks: " + std::to_string(m.block_count());
+                m_outputSink->appendOutput(msg.c_str(), OutputSeverity::Info);
+            } else {
+                m_outputSink->appendOutput(("RGUF inspect failed: " + err).c_str(), OutputSeverity::Error);
+            }
+        }
+    }
+    else if (input.substr(0, 10) == "rguf patch") {
+        std::istringstream iss(input.substr(10));
+        std::string modelPath, patchPath, tensorStr, blockStr, replPath;
+        iss >> modelPath >> patchPath >> tensorStr >> blockStr >> replPath;
+        if (modelPath.empty() || patchPath.empty() || tensorStr.empty() || blockStr.empty() || replPath.empty()) {
+            m_outputSink->appendOutput("Usage: rguf patch <model.rguf> <patch.rgp> <tensor> <block> <replacement.bin>", OutputSeverity::Error);
+        } else {
+            std::ifstream f(replPath, std::ios::binary);
+            if (!f) {
+                m_outputSink->appendOutput("Failed to open replacement file.", OutputSeverity::Error);
+            } else {
+                f.seekg(0, std::ios::end);
+                size_t n = static_cast<size_t>(f.tellg());
+                f.seekg(0);
+                std::vector<uint8_t> b(n);
+                f.read(reinterpret_cast<char*>(b.data()), static_cast<std::streamsize>(n));
+                rguf::Writer w;
+                std::string err;
+                uint64_t tensor = std::stoull(tensorStr);
+                uint64_t block  = std::stoull(blockStr);
+                if (w.make_patch(modelPath, patchPath, tensor, block, b.data(), b.size(), err)) {
+                    m_outputSink->appendOutput(("RGUF patch written: " + patchPath).c_str(), OutputSeverity::Info);
+                } else {
+                    m_outputSink->appendOutput(("RGUF patch failed: " + err).c_str(), OutputSeverity::Error);
+                }
+            }
+        }
+    }
+    // ── Phase 37: Autonomous Fix Command ────────────────────────────────
+    else if (input.substr(0, 13) == "autonomous fix") {
+        std::istringstream iss(input.substr(13));
+        std::string repoPath, buildCmd, testCmd;
+        iss >> repoPath;
+        std::getline(iss, buildCmd);
+        // Parse optional build/test commands from remaining args
+        size_t pipePos = buildCmd.find("|");
+        if (pipePos != std::string::npos) {
+            testCmd = buildCmd.substr(pipePos + 1);
+            buildCmd = buildCmd.substr(0, pipePos);
+        }
+        // Trim whitespace
+        auto trim = [](std::string& s) {
+            size_t start = s.find_first_not_of(" \t");
+            if (start != std::string::npos) s = s.substr(start);
+            size_t end = s.find_last_not_of(" \t");
+            if (end != std::string::npos) s = s.substr(0, end + 1);
+        };
+        trim(buildCmd);
+        trim(testCmd);
+
+        if (repoPath.empty()) {
+            m_outputSink->appendOutput("Usage: autonomous fix <repo-path> [build-cmd] | [test-cmd]", OutputSeverity::Error);
+            m_outputSink->appendOutput("Example: autonomous fix D:\\\\myrepo cmake --build build | ctest --test-dir build", OutputSeverity::Info);
+        } else {
+            m_outputSink->appendOutput(("[AUTONOMOUS] Starting fix loop for: " + repoPath).c_str(), OutputSeverity::Info);
+            m_outputSink->appendOutput("[AUTONOMOUS] Step 1: Auditing repository...", OutputSeverity::Info);
+
+            RawrXD::AutonomousOrchestrator orchestrator;
+            json evidence = orchestrator.fixRepository(repoPath, buildCmd, testCmd);
+
+            // Emit structured results
+            std::ostringstream oss;
+            oss << "\n╔══════════════════════════════════════════════════════════════╗\n";
+            oss << "║           AUTONOMOUS FIX COMPLETE                          ║\n";
+            oss << "╚══════════════════════════════════════════════════════════════╝\n\n";
+            oss << "Repository:    " << repoPath << "\n";
+            oss << "Success:       " << (evidence.value("success", false) ? "YES ✅" : "NO ❌") << "\n";
+            oss << "Duration:      " << evidence.value("duration_ms", 0) << " ms\n";
+            oss << "Iterations:    " << evidence.value("recovery_iterations", 0) << "\n";
+            oss << "Todos found:   " << evidence.value("todos_generated", 0) << "\n";
+            oss << "Builds run:    " << evidence.value("builds_performed", 0) << "\n";
+            oss << "Tests run:     " << evidence.value("tests_performed", 0) << "\n";
+            oss << "Failures:      " << evidence.value("failures_detected", 0) << "\n";
+            oss << "Detail:        " << evidence.value("detail", "") << "\n";
+
+            if (evidence.contains("files_modified") && evidence["files_modified"].is_array()) {
+                oss << "\n─── Files Modified ───\n";
+                for (const auto& f : evidence["files_modified"]) {
+                    oss << "  " << f.value("file", "?") << " (" << f.value("category", "?") << ")\n";
+                }
+            }
+
+            m_outputSink->appendOutput(oss.str().c_str(), OutputSeverity::Info);
+
+            // Also emit raw JSON for machine parsing
+            if (m_config.jsonOutput) {
+                m_outputSink->appendOutput(evidence.dump(2).c_str(), OutputSeverity::Info);
+            }
+        }
+    }
     else {
         // Treat as inference prompt
         if (m_modelLoaded) {
@@ -2753,6 +2903,13 @@ RawrXD Headless IDE — REPL Commands
   instructions reload Reload from disk
   instructions paths  Show search paths
   instructions json   Export as JSON
+  rguf pack <in.gguf> <out.rguf> [key]   Pack GGUF into encrypted RGUF
+  rguf inspect <model.rguf>                Show RGUF block count
+  rguf patch <model.rguf> <patch.rgp> <tensor> <block> <replacement.bin>
+                                           Create a patch for a tensor block
+  autonomous fix <repo> [build] | [test]   Closed-loop autonomous repair:
+                                           audit → fix → build → test → verify
+                                           Example: autonomous fix D:\\myrepo "cmake --build build" | "ctest --test-dir build"
   quit / exit      Exit the REPL
 
   <any other text>  Treated as inference prompt

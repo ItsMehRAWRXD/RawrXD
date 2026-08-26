@@ -131,7 +131,7 @@ public:
     AllocateVolatileBSS AllocateVolatileBSS_AST();
     int RecursiveReprompt(int maxRetries);
     void ExecuteParallelSubagents();
-    void BinaryHexPatchPipeline(uint8_t* offset, const std::vector<uint8_t>& hook);
+    void BinaryHexPatchPipeline(uint8_t* offset, const std::vector<uint8_t>& hook, size_t targetSize = 0);
     bool EnforceLexicalHandshake();
     void HushTerminalOutput(bool active);
 
@@ -175,4 +175,10 @@ private:
     // Callbacks
     struct CycleCB { SelfHealCycleCallback fn; void* userData; };
     std::vector<CycleCB>                m_cycleCallbacks;
+
+    // HotSwapGGUF state
+    void*                               m_enginePtr = nullptr;
+    bool                                m_engineUnloadRequested = false;
+    bool                                m_modelSwapPending = false;
+    std::string                         m_pendingModelPath;
 };

@@ -15,7 +15,7 @@
 // RULE:      NO SOURCE FILE IS TO BE SIMPLIFIED
 // ============================================================================
 
-#include "enterprise_license.h"
+#include "../../include/enterprise_license.h"
 
 #include <cstdio>
 #include <cstdlib>

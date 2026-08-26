@@ -108,6 +108,58 @@ void* ElasticResidencyManager::RequireGpuResident(uint32_t block_id) {
 }
 
 // ============================================================================
+// GPU VRAM residency — ASYNC variant
+// ============================================================================
+std::shared_ptr<RawrXD::Memory::TransferCompletionToken>
+    ElasticResidencyManager::RequireGpuResidentAsync(uint32_t block_id) {
+    auto token = std::make_shared<RawrXD::Memory::TransferCompletionToken>();
+
+    auto* state = index_.GetResidency(block_id);
+    const auto* meta = index_.GetBlock(block_id);
+    if (!state || !meta || !gpu_alloc_) {
+        token->signalFailed();
+        return token;
+    }
+
+    uint64_t tick = global_tick_.fetch_add(1, std::memory_order_relaxed);
+    state->last_access_tick.store(tick, std::memory_order_relaxed);
+
+    // Already GPU resident? Immediate ready.
+    if (state->state.load(std::memory_order_acquire) == ElasticResidencyTier::Hot &&
+        state->gpu_buffer != nullptr) {
+        token->signalReady(reinterpret_cast<uint64_t>(state->gpu_buffer));
+        return token;
+    }
+
+    // Ensure CPU mapping exists first (synchronous — mmap is cheap)
+    const void* cpu_ptr = RequireCpuResident(block_id);
+    if (!cpu_ptr) {
+        token->signalFailed();
+        return token;
+    }
+
+    // Evict LRU until we have budget
+    EvictLruUntilFits(meta->byte_size);
+
+    // Allocate GPU buffer
+    uint64_t allocated = 0;
+    void* gpu_buf = gpu_alloc_(meta->byte_size, allocated);
+    if (!gpu_buf) {
+        token->signalFailed();
+        return token;
+    }
+
+    state->gpu_buffer = gpu_buf;
+    state->gpu_buffer_size = allocated;
+    state->state.store(ElasticResidencyTier::Hot, std::memory_order_release);
+    gpu_resident_bytes_.fetch_add(allocated, std::memory_order_relaxed);
+
+    // Signal ready with the GPU buffer address
+    token->signalReady(reinterpret_cast<uint64_t>(gpu_buf));
+    return token;
+}
+
+// ============================================================================
 // Pin / Unpin
 // ============================================================================
 void ElasticResidencyManager::PinBlock(uint32_t block_id) {

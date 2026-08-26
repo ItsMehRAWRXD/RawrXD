@@ -117,8 +117,12 @@ LayerOffloadManager::LayerOffloadManager()
     memset(&m_modelConfig, 0, sizeof(m_modelConfig));
 }
 
+void LayerOffloadManager::setTransferScheduler(RawrXD::Memory::TransferScheduler* scheduler) {
+    m_transferScheduler = scheduler;
+}
+
 LayerOffloadManager::~LayerOffloadManager() {
-    // Signal prefetch thread shutdown
+    // Signal prefetch thread shutdown (only if legacy thread was started)
     m_shutdownRequested.store(true, std::memory_order_release);
     m_prefetchCV.notify_all();
     if (m_prefetchThread.joinable()) {
@@ -923,8 +927,42 @@ PatchResult LayerOffloadManager::prefetchLayer(uint32_t layerIndex) {
         return PatchResult::ok("Prefetch: layer already loaded or loading");
     }
 
+    // Unified path: if TransferScheduler is bound, use it as the single movement authority
+    if (m_transferScheduler) {
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_layers[layerIndex].state = LayerState::Loading;
+        }
+
+        // Build a TransferRequest for this layer
+        RawrXD::Memory::TransferRequest req;
+        req.tensor      = static_cast<RawrXD::Memory::TensorId>(layerIndex);
+        req.source      = RawrXD::Memory::MemoryTier::SSD;
+        req.destination = RawrXD::Memory::MemoryTier::SYSTEM_RAM;
+        req.bytes       = m_layers[layerIndex].totalCompressedBytes;
+        req.deadline    = 0;
+        req.priority    = RawrXD::Memory::TransferPriority::Imminent;
+        req.speculative = false;
+
+        m_transferScheduler->schedule(req, [this, layerIndex](RawrXD::Memory::TensorId, bool success) {
+            if (success) {
+                // Dequantize after load
+                PatchResult r = loadLayerFromDisk(layerIndex);
+                if (r.success) {
+                    std::lock_guard<std::mutex> lock(m_mutex);
+                    m_prefetchCV.notify_all();
+                }
+            } else {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_layers[layerIndex].state = LayerState::OnDisk;
+                m_prefetchCV.notify_all();
+            }
+        });
+        return PatchResult::ok("Prefetch queued via TransferScheduler");
+    }
+
+    // Legacy path: private prefetch thread
     if (m_config.asyncPrefetch) {
-        // Enqueue for prefetch thread
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_layers[layerIndex].state = LayerState::Loading;

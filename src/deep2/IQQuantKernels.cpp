@@ -467,6 +467,56 @@ static void dequant_iq4_xs(const uint8_t* src, float* dst, size_t n) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// IQ1_S
+// ---------------------------------------------------------------------------
+// (block_iq1_s defined in GGUFLoader.hpp)
+// 32 bytes of packed 1-bit weights + f16 scale = 34 bytes, 256 elements
+
+static void gemv_iq1_s_scalar(
+    const uint8_t* __restrict__ w,
+    const float*  __restrict__ x,
+    float*        __restrict__ y,
+    size_t rows, size_t cols
+) {
+    const block_iq1_s* blocks = reinterpret_cast<const block_iq1_s*>(w);
+    size_t blocksPerRow = (cols + 255) / 256;
+    for (size_t r = 0; r < rows; ++r) {
+        float acc = 0.0f;
+        const block_iq1_s* rowBlocks = blocks + r * blocksPerRow;
+        for (size_t b = 0; b < blocksPerRow; ++b) {
+            float d = f16_to_f32(rowBlocks[b].d);
+            for (int i = 0; i < 32; ++i) {
+                uint8_t byte = rowBlocks[b].qs[i];
+                // 8 weights per byte (1 bit each): 1 -> d, 0 -> 0
+                for (int j = 0; j < 8; ++j) {
+                    int bit = (byte >> j) & 1;
+                    int idx = i * 8 + j;
+                    float q = bit ? d : 0.0f;
+                    acc += q * x[b * 256 + idx];
+                }
+            }
+        }
+        y[r] += acc;
+    }
+}
+
+static void dequant_iq1_s(const uint8_t* src, float* dst, size_t n) {
+    const block_iq1_s* blocks = reinterpret_cast<const block_iq1_s*>(src);
+    size_t numBlocks = (n + 255) / 256;
+    for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        for (int i = 0; i < 32; ++i) {
+            uint8_t byte = blocks[b].qs[i];
+            for (int j = 0; j < 8; ++j) {
+                int bit = (byte >> j) & 1;
+                int idx = b * 256 + i * 8 + j;
+                if (idx < (int)n) dst[idx] = bit ? d : 0.0f;
+            }
+        }
+    }
+}
+
 // ===========================================================================
 // AVX-512 accelerated IQ4_NL kernel (primary high-throughput path)
 // ===========================================================================
@@ -581,7 +631,13 @@ void RegisterIQKernels() {
     reg.RegisterGEMV((int)GGMLType::GGML_TYPE_IQ4_XS, gemv_iq4_xs_scalar);
     reg.RegisterDequant((int)GGMLType::GGML_TYPE_IQ4_XS, dequant_iq4_xs);
 
-    printf("[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS\n");
+    // --- IQ1_S ---
+    reg.RegisterGeometry((int)GGMLType::GGML_TYPE_IQ1_S,
+                         GetBlockGeometryForType((int)GGMLType::GGML_TYPE_IQ1_S));
+    reg.RegisterGEMV((int)GGMLType::GGML_TYPE_IQ1_S, gemv_iq1_s_scalar);
+    reg.RegisterDequant((int)GGMLType::GGML_TYPE_IQ1_S, dequant_iq1_s);
+
+    printf("[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S\n");
     printf("[IQKernels] IQ4_NL using %s path\n", hasAVX512 ? "AVX-512" : "scalar");
 }
 

@@ -70,6 +70,13 @@ TokenRoute MoERouter::Route(const float* hiddenState) {
     
     // Select top-k experts
     route.topExperts = TopK(gatingScores, config_.numActiveExperts);
+
+    // Store the top-K expert IDs for prefetch prediction exposure
+    lastRouteExpertIds_.clear();
+    lastRouteExpertIds_.reserve(route.topExperts.size());
+    for (const auto& er : route.topExperts) {
+        lastRouteExpertIds_.push_back(er.expertId);
+    }
     
     // Track statistics
     stats_.totalTokens++;
@@ -90,6 +97,10 @@ std::vector<TokenRoute> MoERouter::RouteBatch(
     }
     
     return routes;
+}
+
+std::vector<int> MoERouter::GetLastRouteExpertIds() const {
+    return lastRouteExpertIds_;
 }
 
 std::vector<float> MoERouter::Softmax(const std::vector<float>& logits) const {

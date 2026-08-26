@@ -64,15 +64,7 @@ nlohmann::json ToolRegistry::GetSchema(const std::string& name) const {
     return nullptr;
 }
 
-std::vector<std::string> ToolRegistry::ListTools() const {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    std::vector<std::string> names;
-    names.reserve(m_tools.size());
-    for (const auto& [name, _] : m_tools) {
-        names.push_back(name);
-    }
-    return names;
-}
+// ListTools() defined in RawrXD_ToolRegistry.cpp — do not duplicate here
 
 std::vector<std::string> ToolRegistry::ListToolsByPermission(ToolPermission perm) const {
     std::lock_guard<std::mutex> lock(m_mutex);
