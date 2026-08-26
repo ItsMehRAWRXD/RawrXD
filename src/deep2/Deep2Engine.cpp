@@ -4305,13 +4305,13 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
             compressedKV_->advance();
         } else if (kvCache) {
-            for (size_t h = 0; h < numKVHeads; ++h) {
-                float* kPtr = nullptr;
-                float* vPtr = nullptr;
-                kvCache->getKVPointers(layer, h, &kPtr, &vPtr);
-                if (kPtr) memcpy(kPtr, kProj + h * headDim, headDim * sizeof(float));
-                if (vPtr) memcpy(vPtr, vProj + h * headDim, headDim * sizeof(float));
-            }
+            // Batch all heads into single memcpy per layer (K + V)
+            size_t kvBytes = numKVHeads * headDim * sizeof(float);
+            float* kBase = nullptr;
+            float* vBase = nullptr;
+            kvCache->getKVPointers(layer, 0, &kBase, &vBase);
+            if (kBase) memcpy(kBase, kProj, kvBytes);
+            if (vBase) memcpy(vBase, vProj, kvBytes);
         }
         
         if (profilingEnabled_ && profiler_) profiler_->endKVStore();
