@@ -4682,6 +4682,10 @@ set(INFERENCE_ENGINE_SOURCES
     src/runtime/gguf_tensor_loader.cpp
     tests/b009/b009b_batched_gemm.cpp
     B014/build/b014_profiler.cpp
+    # Codec implementations (deflate/inflate/compress)
+    src/codec/compression.cpp
+    src/codec/brutal_gzip.cpp
+    src/codec/gzip_brutal_inflate.cpp
     # Deep2 core — unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
     src/deep2/GGUFLoader.cpp
