@@ -16,9 +16,13 @@
 #include <cstdint>
 #include <mutex>
 #include <vector>
+#include <atomic>
 #include "agent_self_healing_orchestrator.hpp"
 #include <cstring>
 #include <cstdio>
+
+// Forward declaration: defined in src/core/unlinked_symbols_batch_012.cpp
+extern "C" void RawrXD_Native_Log(const char* fmt, ...);
 
 // ---------------------------------------------------------------------------
 // Singleton
@@ -404,7 +408,8 @@ size_t AgentSelfHealingOrchestrator::dumpFullReport(char* buffer, size_t bufferS
 // 7 Advanced Agent Enhancements
 // ==========================================
 
-extern "C" void RawrXD_Native_Log(const char* msg);
+// RawrXD_Native_Log is defined in src/core/unlinked_symbols_batch_012.cpp
+// (variadic version with stderr + OutputDebugString output)
 
 void AgentSelfHealingOrchestrator::DeterministicFallback(const std::string& path) {
     RawrXD_Native_Log("[Agentic Enhancements] DeterministicFallback invoked: Using fallback stack.");
@@ -430,7 +435,15 @@ void AgentSelfHealingOrchestrator::ExecuteParallelSubagents() {
     t2.join();
 }
 
-void AgentSelfHealingOrchestrator::BinaryHexPatchPipeline(uint8_t* offset, const std::vector<uint8_t>& hook) {
+void AgentSelfHealingOrchestrator::BinaryHexPatchPipeline(uint8_t* offset, const std::vector<uint8_t>& hook, size_t targetSize) {
+    if (!offset || hook.empty()) {
+        RawrXD_Native_Log("[Agentic Enhancements] BinaryHexPatchPipeline aborted: null offset or empty hook.");
+        return;
+    }
+    if (hook.size() > targetSize) {
+        RawrXD_Native_Log("[Agentic Enhancements] BinaryHexPatchPipeline aborted: hook exceeds target region.");
+        return;
+    }
     RawrXD_Native_Log("[Agentic Enhancements] BinaryHexPatchPipeline invoked: Injecting Hex Patch at targeted offset.");
 }
 
@@ -445,9 +458,35 @@ void AgentSelfHealingOrchestrator::HushTerminalOutput(bool active) {
 
 bool AgentSelfHealingOrchestrator::HotSwapGGUF(const std::string& modelPath) {
     RawrXD_Native_Log(("[Agentic Enhancements] HotSwapGGUF invoked: Request to unload current model & load " + modelPath).c_str());
-    RawrXD_Native_Log("llama_free(ctx) - Tearing down old GGML context safely...");
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    // If we have an active engine reference, tear it down safely
+    if (m_enginePtr) {
+        RawrXD_Native_Log("[HotSwapGGUF] Tearing down old inference context...");
+        // Notify engine to release model resources (non-blocking, engine handles actual free)
+        m_engineUnloadRequested = true;
+    }
+
+    // Validate new model path exists before attempting load
+    if (modelPath.empty()) {
+        RawrXD_Native_Log("[HotSwapGGUF] ERROR: Empty model path provided.");
+        return false;
+    }
+
+    DWORD attr = GetFileAttributesA(modelPath.c_str());
+    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+        RawrXD_Native_Log("[HotSwapGGUF] ERROR: Model file not found or is a directory.");
+        return false;
+    }
+
     RawrXD_Native_Log(("llama_load_model_from_file(" + modelPath + ") - Initializing new model inline...").c_str());
-    RawrXD_Native_Log("Hot-swap complete. Process NOT restarted.");
+
+    // Store pending model path for the engine to pick up on next cycle
+    m_pendingModelPath = modelPath;
+    m_modelSwapPending = true;
+
+    RawrXD_Native_Log("Hot-swap staged. Process NOT restarted.");
     return true;
 }
 
@@ -471,6 +510,7 @@ void AgentSelfHealingOrchestrator::ActivateSwarmLink(int gpu_count, std::vector<
 struct PrometheusExporter {
     std::thread serverThread;
     std::atomic<bool> running{true};
+    SOCKET listenSocket = INVALID_SOCKET;
 
     PrometheusExporter() {
         serverThread = std::thread([this]() {
@@ -480,8 +520,8 @@ struct PrometheusExporter {
                 return;
             }
 
-            SOCKET ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if (ListenSocket == INVALID_SOCKET) {
+            listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (listenSocket == INVALID_SOCKET) {
                 RawrXD_Native_Log("[Prometheus] Error at socket()");
                 WSACleanup();
                 return;
@@ -492,24 +532,35 @@ struct PrometheusExporter {
             serverService.sin_addr.s_addr = INADDR_ANY;
             serverService.sin_port = htons(9090);
 
-            if (bind(ListenSocket, (SOCKADDR*)&serverService, sizeof(serverService)) == SOCKET_ERROR) {
+            if (bind(listenSocket, (SOCKADDR*)&serverService, sizeof(serverService)) == SOCKET_ERROR) {
                 RawrXD_Native_Log("[Prometheus] bind() failed.");
-                closesocket(ListenSocket);
+                closesocket(listenSocket);
+                listenSocket = INVALID_SOCKET;
                 WSACleanup();
                 return;
             }
 
-            if (listen(ListenSocket, SOMAXCONN) == SOCKET_ERROR) {
+            if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
                 RawrXD_Native_Log("[Prometheus] listen() failed.");
-                closesocket(ListenSocket);
+                closesocket(listenSocket);
+                listenSocket = INVALID_SOCKET;
                 WSACleanup();
                 return;
             }
 
             RawrXD_Native_Log("[Prometheus] Listening on port 9090 for /metrics...");
 
-            while (running) {
-                SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
+            while (running.load()) {
+                fd_set readfds;
+                FD_ZERO(&readfds);
+                FD_SET(listenSocket, &readfds);
+                timeval tv{0, 100000}; // 100ms timeout
+                int sel = select(0, &readfds, nullptr, nullptr, &tv);
+                if (sel <= 0 || !FD_ISSET(listenSocket, &readfds)) {
+                    continue;
+                }
+
+                SOCKET ClientSocket = accept(listenSocket, NULL, NULL);
                 if (ClientSocket == INVALID_SOCKET) {
                     continue;
                 }
@@ -529,15 +580,18 @@ struct PrometheusExporter {
                 closesocket(ClientSocket);
             }
 
-            closesocket(ListenSocket);
+            closesocket(listenSocket);
             WSACleanup();
         });
     }
 
     ~PrometheusExporter() {
-        running = false;
+        running.store(false);
+        if (listenSocket != INVALID_SOCKET) {
+            closesocket(listenSocket); // Unblock accept/select
+        }
         if (serverThread.joinable()) {
-            serverThread.detach();
+            serverThread.join();
         }
     }
 };

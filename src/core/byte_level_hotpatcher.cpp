@@ -11,11 +11,7 @@
 // C++ fallback for find_pattern_asm when ASM module is not linked.
 // The real SIMD Boyer-Moore version lives in src/asm/byte_search.asm
 // and is used when building with ml64 (MASM64).
-#ifdef _MSC_VER
-// With MSVC, the real ASM object is linked — just declare extern
-extern "C" const void* find_pattern_asm(const void* haystack, size_t haystack_len,
-                                         const void* needle, size_t needle_len);
-#else
+// NOTE: Always provide C++ fallback — ASM object may not be linked.
 extern "C" const void* find_pattern_asm(const void* haystack, size_t haystack_len,
                                          const void* needle, size_t needle_len) {
     if (!haystack || !needle || needle_len == 0 || haystack_len < needle_len) {
@@ -30,7 +26,6 @@ extern "C" const void* find_pattern_asm(const void* haystack, size_t haystack_le
     }
     return nullptr;
 }
-#endif
 
 PatchResult patch_bytes(const char* filename, const BytePatchEnhanced& patch) {
     if (!RawrXD::Enforce::LicenseEnforcer::Instance().allow(

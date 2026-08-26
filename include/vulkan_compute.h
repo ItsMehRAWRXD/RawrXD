@@ -35,12 +35,14 @@ typedef void* VkDescriptorSetLayout;
 typedef void* VkShaderModule;
 typedef void* VkPipelineLayout;
 typedef void* VkPipeline;
+typedef void* VkPipelineCache;
 typedef void* VkBuffer;
 typedef void* VkDeviceMemory;
 typedef void* VkCommandBuffer;
 typedef void* VkFence;
 typedef void* VkDescriptorSetLayoutBinding;
 typedef uint32_t VkMemoryPropertyFlags;
+typedef int VkResult;
 
 typedef struct { 
     uint32_t vendorID; 
@@ -80,6 +82,52 @@ inline void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice, uint32_t*
     if (count) *count = 0;
 }
 inline void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice, VkPhysicalDeviceMemoryProperties*) {}
+
+// Additional Vulkan function stubs for CPU fallback compilation
+inline VkResult vkCreateInstance(const void*, const void*, VkInstance*) { return 0; }
+inline void vkDestroyInstance(VkInstance, const void*) {}
+inline VkResult vkEnumeratePhysicalDevices(VkInstance, uint32_t* count, VkPhysicalDevice*) { if (count) *count = 0; return 0; }
+inline void vkGetPhysicalDeviceProperties(VkPhysicalDevice, VkPhysicalDeviceProperties*) {}
+inline VkResult vkCreateDevice(VkPhysicalDevice, const void*, const void*, VkDevice*) { return 0; }
+inline void vkDestroyDevice(VkDevice, const void*) {}
+inline void vkGetDeviceQueue(VkDevice, uint32_t, uint32_t, VkQueue*) {}
+inline VkResult vkCreateCommandPool(VkDevice, const void*, const void*, VkCommandPool*) { return 0; }
+inline void vkDestroyCommandPool(VkDevice, VkCommandPool, const void*) {}
+inline VkResult vkCreateDescriptorSetLayout(VkDevice, const void*, const void*, VkDescriptorSetLayout*) { return 0; }
+inline void vkDestroyDescriptorSetLayout(VkDevice, VkDescriptorSetLayout, const void*) {}
+inline VkResult vkCreateDescriptorPool(VkDevice, const void*, const void*, VkDescriptorPool*) { return 0; }
+inline void vkDestroyDescriptorPool(VkDevice, VkDescriptorPool, const void*) {}
+inline VkResult vkCreatePipelineLayout(VkDevice, const void*, const void*, VkPipelineLayout*) { return 0; }
+inline void vkDestroyPipelineLayout(VkDevice, VkPipelineLayout, const void*) {}
+inline VkResult vkCreateShaderModule(VkDevice, const void*, const void*, VkShaderModule*) { return 0; }
+inline void vkDestroyShaderModule(VkDevice, VkShaderModule, const void*) {}
+inline VkResult vkCreateComputePipelines(VkDevice, VkPipelineCache, uint32_t, const void*, const void*, VkPipeline*) { return 0; }
+inline void vkDestroyPipeline(VkDevice, VkPipeline, const void*) {}
+inline VkResult vkCreateBuffer(VkDevice, const void*, const void*, VkBuffer*) { return 0; }
+inline void vkDestroyBuffer(VkDevice, VkBuffer, const void*) {}
+inline VkResult vkAllocateMemory(VkDevice, const void*, const void*, VkDeviceMemory*) { return 0; }
+inline void vkFreeMemory(VkDevice, VkDeviceMemory, const void*) {}
+inline void vkGetBufferMemoryRequirements(VkDevice, VkBuffer, void*) {}
+inline VkResult vkBindBufferMemory(VkDevice, VkBuffer, VkDeviceMemory, uint64_t) { return 0; }
+inline VkResult vkMapMemory(VkDevice, VkDeviceMemory, uint64_t, uint64_t, uint32_t, void**) { return 0; }
+inline void vkUnmapMemory(VkDevice, VkDeviceMemory) {}
+inline VkResult vkAllocateDescriptorSets(VkDevice, const void*, VkDescriptorSet*) { return 0; }
+inline void vkUpdateDescriptorSets(VkDevice, uint32_t, const void*, uint32_t, const void*) {}
+inline VkResult vkAllocateCommandBuffers(VkDevice, const void*, VkCommandBuffer*) { return 0; }
+inline void vkFreeCommandBuffers(VkDevice, VkCommandPool, uint32_t, const VkCommandBuffer*) {}
+inline VkResult vkBeginCommandBuffer(VkCommandBuffer, const void*) { return 0; }
+inline VkResult vkEndCommandBuffer(VkCommandBuffer) { return 0; }
+inline void vkCmdBindPipeline(VkCommandBuffer, uint32_t, VkPipeline) {}
+inline void vkCmdBindDescriptorSets(VkCommandBuffer, uint32_t, VkPipelineLayout, uint32_t, uint32_t, const VkDescriptorSet*, uint32_t, const uint32_t*) {}
+inline void vkCmdDispatch(VkCommandBuffer, uint32_t, uint32_t, uint32_t) {}
+inline void vkCmdPushConstants(VkCommandBuffer, VkPipelineLayout, uint32_t, uint32_t, uint32_t, const void*) {}
+inline void vkCmdCopyBuffer(VkCommandBuffer, VkBuffer, VkBuffer, uint32_t, const void*) {}
+inline VkResult vkCreateFence(VkDevice, const void*, const void*, VkFence*) { return 0; }
+inline void vkDestroyFence(VkDevice, VkFence, const void*) {}
+inline VkResult vkQueueSubmit(VkQueue, uint32_t, const void*, VkFence) { return 0; }
+inline VkResult vkQueueWaitIdle(VkQueue) { return 0; }
+inline VkResult vkDeviceWaitIdle(VkDevice) { return 0; }
+inline VkResult vkWaitForFences(VkDevice, uint32_t, const VkFence*, uint32_t, uint64_t) { return 0; }
 
 #endif // VK_VERSION_1_0
 #endif // !RAWR_VULKAN_AVAILABLE
@@ -153,6 +201,10 @@ public:
                              uint32_t M,
                              uint32_t K,
                              uint32_t N);
+    
+    // GEMV dispatch for transformer inference (FP32 weights, uploads data, dispatches, downloads result)
+    bool DispatchGEMV(const float* weights, const float* input, float* output,
+                      uint32_t rows, uint32_t cols);
     
     VulkanDeviceInfo GetDeviceInfo() const { return device_info_; }
     bool IsAMDDevice() const { return device_info_.vendor_id == 0x1002; }
@@ -235,6 +287,13 @@ private:
     VkBuffer staging_buffer_ = nullptr;
     VkDeviceMemory staging_memory_ = nullptr;
     size_t staging_buffer_size_ = 0;
+
+    // GEMV pipeline cache
+    VkPipeline gemv_pipeline_ = nullptr;
+    VkPipelineLayout gemv_pipeline_layout_ = nullptr;
+    VkDescriptorSetLayout gemv_ds_layout_ = nullptr;
+    VkDescriptorPool gemv_desc_pool_ = nullptr;
+    bool gemv_pipeline_created_ = false;
 
     VulkanDeviceInfo device_info_;
     std::unordered_map<std::string, ComputeShader> shaders_;

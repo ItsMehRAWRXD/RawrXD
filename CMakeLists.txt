@@ -233,7 +233,7 @@ option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units f
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
-option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" OFF)
+option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" ON)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -271,6 +271,13 @@ if(RAWRXD_BUILD_CLI)
         src/core/universal_model_hotpatcher.cpp
         src/core/instructions_provider.cpp
         src/core/enterprise_license.cpp
+        src/core/enterprise_license_v2.cpp
+        src/core/license_anti_tampering.cpp
+        src/license_enforcement.cpp
+        src/feature_flags_runtime.cpp
+        src/core/agentic_autonomous_config.cpp
+        src/InferenceProfiler.cpp
+        src/subagent_core.cpp
         src/logging/Logger.cpp
         # Generation Bouncer - unified entry point
         src/runtime/GenerationBouncer.cpp
@@ -279,6 +286,7 @@ if(RAWRXD_BUILD_CLI)
         src/runtime/Sovereign_KernelBridge_CPP.cpp
         src/runtime/Deep2ExecutionTelemetry.cpp
         src/backend/VulkanGemmDispatcher.cpp
+        src/vulkan_compute.cpp
         src/runtime/gguf_tensor_loader.cpp
         # Elastic runtime for predictive tensor residency
         src/runtime/elastic/ElasticEngine.cpp
@@ -333,15 +341,22 @@ if(RAWRXD_BUILD_CLI)
         src/agentic/SubAgentManager.cpp
         src/core/chain_of_thought_engine.cpp
         src/lsp/RawrXD_LSPServer.cpp
-        src/core/multi_response_engine.cpp
         # Missing implementations for unresolved externals
         src/BackendOrchestrator.cpp
         src/core/enterprise_telemetry_compliance.cpp
         src/core/enterprise_licensev2_impl.cpp
         src/deep2/FabricTensorTable.cpp
-        src/deep2/Deep2Engine.cpp
         src/utils/Diagnostics.cpp
-        src/subagent_core.cpp
+        src/cli/rawrxd_deep_stubs.cpp
+        rguf_source/RGUFWriter.cpp
+        rguf_source/RGUFLoader.cpp
+        rguf_source/RGUFPlatform.cpp
+        rguf_source/RGUFQuant.cpp
+        src/agent/autonomous_subagent.cpp
+        src/agent/agentic_failure_detector.cpp
+        src/agent/agentic_puppeteer.cpp
+        src/agent/autonomous_orchestrator.cpp
+        src/agent/orchestrator_cli_handler.cpp
     )
     set_target_properties(rawrxd PROPERTIES EXCLUDE_FROM_ALL TRUE EXCLUDE_FROM_DEFAULT_BUILD TRUE)
     if(MSVC)
@@ -380,6 +395,8 @@ if(RAWRXD_BUILD_CLI)
         ${CMAKE_SOURCE_DIR}/src/backend
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/hotpatch
     )
     
     # Explicit absolute library paths ensure linking succeeds even if LIBPATH is dropped
@@ -650,6 +667,40 @@ if(RAWRXD_BUILD_CLI)
             set_property(TARGET vulkan_gemm_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
         endif()
         message(STATUS "vulkan_gemm_test: Vulkan GEMM verification test configured")
+
+        # =====================================================================
+        # Vulkan GEMV Isolated Test
+        # Proves: VulkanCompute::DispatchGEMV() with synthetic FP32 data.
+        #         No GGUF, no transformer, no inference engine.
+        # =====================================================================
+        add_executable(vulkan_gemv_isolated_test
+            tests/vulkan_gemv_isolated_test.cpp
+            src/vulkan_compute.cpp
+        )
+        set_target_properties(vulkan_gemv_isolated_test PROPERTIES
+            EXCLUDE_FROM_ALL TRUE
+            EXCLUDE_FROM_DEFAULT_BUILD TRUE
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        )
+        target_include_directories(vulkan_gemv_isolated_test PRIVATE
+            ${CMAKE_SOURCE_DIR}
+            ${CMAKE_SOURCE_DIR}/include
+            ${RAWR_VULKAN_INCLUDE}
+        )
+        target_link_libraries(vulkan_gemv_isolated_test PRIVATE
+            ${RAWR_VULKAN_LIB}
+            kernel32.lib user32.lib gdi32.lib
+        )
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+            set_property(TARGET vulkan_gemv_isolated_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+        endif()
+        if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+            set_property(TARGET vulkan_gemv_isolated_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+        endif()
+        if(DEFINED _MSVC_ROOT)
+            set_property(TARGET vulkan_gemv_isolated_test APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+        endif()
+        message(STATUS "vulkan_gemv_isolated_test: Vulkan GEMV isolated test configured")
 
         # =====================================================================
         # Vulkan Real-Dimension GEMM Test
@@ -1801,7 +1852,6 @@ set(SOURCES
     src/core/confidence_gate.cpp
     src/core/deterministic_replay.cpp
     src/core/execution_governor.cpp
-    # src/core/multi_response_engine.cpp  # excluded: methods defined inline in win32app/multi_response_engine.h
     src/core/streaming_engine_registry.cpp
     src/core/flash_attention.cpp
     src/core/gpu_backend_bridge.cpp
@@ -1816,7 +1866,7 @@ set(SOURCES
     
     # Three-layer hotpatch system (needed by decision tree)
     src/core/model_memory_hotpatch.cpp
-    # src/core/byte_level_hotpatcher.cpp  # excluded: patch_bytes and search_and_patch_bytes defined in link_stubs_production.cpp
+    src/core/byte_level_hotpatcher.cpp
     src/core/unified_hotpatch_manager.cpp
     src/core/proxy_hotpatcher.cpp
     src/core/model_bruteforce_engine.cpp
@@ -3362,7 +3412,7 @@ if(WIN32)
     )
 endif()
 
-target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine)
+target_link_libraries(RawrXD_Gold PRIVATE RawrXD-RE-Library Omega1Engine rguf)
 
 target_include_directories(RawrXD_Gold PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -4278,9 +4328,17 @@ if(MSVC)
     # Link MASM objects into RawrXD_Gold
     target_link_libraries(RawrXD_Gold PRIVATE ${MASM_OBJECTS})
 
+    # Link MASM objects into rawrxd CLI (only if target exists)
+    if(TARGET rawrxd)
+        target_link_libraries(rawrxd PRIVATE ${MASM_OBJECTS})
+    endif()
+
     # Ensure MASM objects are built before linking
     add_custom_target(masm_kernels DEPENDS ${MASM_OBJECTS})
     add_dependencies(RawrXD_Gold masm_kernels)
+    if(TARGET rawrxd)
+        add_dependencies(rawrxd masm_kernels)
+    endif()
 
     # =========================================================================
     # NanoQuant Engine — Sub-1-Bit Quantization Static Library
@@ -4554,16 +4612,17 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/AgentOrchestrator.cpp
     src/agentic/AgentOllamaClient.cpp
     src/agentic/AgentToolHandlers.cpp
+    src/agentic/AutonomousFixOrchestrator.cpp
     src/agentic/RawrXD_AgentLoop.cpp
-    src/agentic/RawrXD_AutonomousFlow.cpp
-    src/agentic/RawrXD_AutonomousCoordinator_Final.cpp
-    # src/agentic/RawrXD_AgentHost.cpp  # excluded: missing include/RawrXD_AgentHost.h
+    # src/agentic/RawrXD_AutonomousFlow.cpp  # excluded: defines main() - standalone executable only
+    # src/agentic/RawrXD_AutonomousCoordinator_Final.cpp  # excluded: defines main() - standalone executable only
+    src/agentic/RawrXD_AgentHost.cpp
     src/agentic/RawrXD_RewardModel.cpp
     src/agentic/RawrXD_SymbolHealer.cpp
     src/agentic/RawrXD_ToolRegistry.cpp
     src/agentic/DeterministicReplayEngine.cpp
     src/agentic/DiffEngine.cpp
-    # src/agentic/DirectFIM.cpp  # excluded: missing json.hpp
+    src/agentic/DirectFIM.cpp
     src/agentic/FIMPromptBuilder.cpp
     src/agentic/GGMLAgenticEngine.cpp
     src/agentic/GgmlEngine.cpp
@@ -4585,8 +4644,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/NativeInferenceClient.cpp
     src/agentic/SovereignStandaloneClient.cpp
     src/agentic/SovereignAssembler.cpp
-    # src/agentic/SovereignAssembler_HotPatch.cpp  # excluded: redefinition, missing iostream
-    src/agentic/SovereignCodeGenerator.cpp
+    src/agentic/SovereignAssembler_HotPatch.cpp
+    # src/agentic/SovereignCodeGenerator.cpp  # excluded: defines main() - standalone executable only
     src/agentic/Titan_Sovereign_Bridge.cpp
     src/agentic/Phase3_Agent_Kernel_Bridge.cpp
     src/agentic/BackendEmissionService.cpp
@@ -4605,13 +4664,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/sovereign/SovereignRuntime.cpp
     src/sovereign/ExecutionContract.cpp
     src/sovereign/SovereignCoreWrapper.cpp
-    # src/sovereign/SovereignDenseEngine.cpp  # excluded: sqrtf/expf/__asm issues
+    src/sovereign/SovereignDenseEngine.cpp
     src/sovereign/SovereignEventBus.cpp
     src/sovereign/SovereignCheckpoint.cpp
     src/sovereign/SovereignVCS.cpp
     src/sovereign/SovereignWatchdog.cpp
     src/sovereign/Deep2InferenceWrapper.cpp
-    # src/sovereign/AgenticEngineSovereignHook.cpp  # excluded: missing <mutex> include
+    src/sovereign/AgenticEngineSovereignHook.cpp
     src/sovereign/IDE_Lifecycle_Hook.cpp
     src/sovereign/RawrXD_SovereignStatusPanel.cpp
     src/sovereign/IntegrityChecker.cpp
@@ -4625,7 +4684,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/sovereign/ExpertSharding.cpp
     src/sovereign/Beaconism.cpp
     src/sovereign/rawr_transport_strict.cpp
-    # src/sovereign/verify_integration.cpp  # excluded: unknown header issues
+    # src/sovereign/verify_integration.cpp  # excluded: C++20 format header conflicts with MSVC 14.44
     # MASM GEMV kernels
     src/deep2/sovereign_deep2_kernels.asm
     src/deep2/sovereign_q4k_gemv.asm
@@ -4854,6 +4913,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agent/quantum_dynamic_time_manager.cpp
         src/agent/quantum_missing_impl.cpp
         src/agent/quantum_production_orchestrator.cpp
+        src/agent/autonomous_orchestrator.cpp
+        src/agent/orchestrator_cli_handler.cpp
         src/ui/RawrXD_MainLoop.cpp
         src/ui/webview2_bridge.cpp
         src/ui/debugger_core.cpp
@@ -6023,7 +6084,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Production/CI can force -DRAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF when the full ASM graph is linked.
     option(RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK
         "Allow stub/link-fallback units in RawrXD-Win32IDE agentic path"
-        ON
+        OFF
     )
     if(NOT RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
         message(WARNING
@@ -6860,6 +6921,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         ${_WIN32IDE_LINKED_MONOLITHIC_OBJS}
         nlohmann_json::nlohmann_json
         InferenceEngine
+        rguf
     )
 
     # Explicit nlohmann/json include for multi-header FetchContent layout
@@ -9897,6 +9959,9 @@ add_executable(agentic_orchestrator_smoke_test EXCLUDE_FROM_ALL
     src/agentic/agentic_orchestrator_integration.cpp
     src/agentic/agentic_audit_sink.cpp
     src/agentic/agentic_orchestrator_smoke_test.cpp
+    src/agentic/observability/Logger.cpp
+    src/core/execution_governor.cpp
+    src/core/agent_safety_contract.cpp
 )
 
 target_include_directories(agentic_orchestrator_smoke_test PRIVATE
