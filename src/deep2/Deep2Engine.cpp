@@ -4826,9 +4826,25 @@ void Deep2Engine::computeMoEFFN(size_t layer, const float* input, float* output)
             residencyTelemetry_->RecordComputeTime((int)layer, expertId, computeUs);
         }
 
-        // Weighted accumulation into output
-        for (size_t i = 0; i < hiddenDim; ++i) {
-            output[i] += weight * expertOut[i];
+        // Weighted accumulation into output — AVX2 vectorized
+        #if defined(__AVX2__) || defined(_MSC_VER)
+        if (hiddenDim >= 8) {
+            __m256 wvec = _mm256_set1_ps(weight);
+            size_t i = 0;
+            for (; i + 7 < hiddenDim; i += 8) {
+                __m256 outv = _mm256_loadu_ps(output + i);
+                __m256 exv = _mm256_loadu_ps(expertOut + i);
+                _mm256_storeu_ps(output + i, _mm256_fmadd_ps(wvec, exv, outv));
+            }
+            for (; i < hiddenDim; ++i) {
+                output[i] += weight * expertOut[i];
+            }
+        } else
+        #endif
+        {
+            for (size_t i = 0; i < hiddenDim; ++i) {
+                output[i] += weight * expertOut[i];
+            }
         }
     }
 }
