@@ -2524,8 +2524,24 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         const uint16_t* embedTable = (const uint16_t*)embedDataPtr;
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
-            for (size_t i = 0; i < hiddenDim; ++i) {
-                output[i] = fp16ToFloat(embedTable[tokenId * hiddenDim + i]);
+            const uint16_t* src = embedTable + tokenId * hiddenDim;
+            #if defined(__F16C__) || defined(_MSC_VER)
+            if (hiddenDim >= 8) {
+                size_t i = 0;
+                for (; i + 7 < hiddenDim; i += 8) {
+                    __m128i h16 = _mm_loadu_si128((const __m128i*)(src + i));
+                    __m256 f32 = _mm256_cvtph_ps(h16);
+                    _mm256_storeu_ps(output + i, f32);
+                }
+                for (; i < hiddenDim; ++i) {
+                    output[i] = fp16ToFloat(src[i]);
+                }
+            } else
+            #endif
+            {
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    output[i] = fp16ToFloat(src[i]);
+                }
             }
         } else {
             memset(output, 0, hiddenDim * sizeof(float));
