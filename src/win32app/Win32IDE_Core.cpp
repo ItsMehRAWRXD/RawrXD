@@ -147,6 +147,14 @@ Win32IDE::~Win32IDE()
     m_engineManager = nullptr;
     m_codexUltimate = nullptr;
 
+    // Clean up optional panel objects allocated with 'new' in onCreate
+    delete m_modelRegistry;         m_modelRegistry = nullptr;
+    delete m_interpretabilityPanel; m_interpretabilityPanel = nullptr;
+    delete m_checkpointManager;     m_checkpointManager = nullptr;
+    delete m_ciCdSettings;          m_ciCdSettings = nullptr;
+    delete m_multiFileSearch;       m_multiFileSearch = nullptr;
+    delete m_benchmarkMenu;         m_benchmarkMenu = nullptr;
+
     if (m_backgroundBrush)
     {
         DeleteObject(m_backgroundBrush);
@@ -1196,15 +1204,6 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 refreshMoEPackHudStatusBarPart();
                 return 0;
             }
-            // Handle Ghost Text completion delivery from background thread
-            if (uMsg == WM_GHOST_TEXT_READY)
-            {
-                const char* completionText = reinterpret_cast<const char*>(lParam);
-                onGhostTextReady((int)wParam, completionText);
-                if (completionText)
-                    free(const_cast<char*>(completionText));
-                return 0;
-            }
             // Handle Plan Executor messages
             if (uMsg == WM_PLAN_READY)
             {
@@ -1809,16 +1808,17 @@ static thread_local bool s_inOnSize = false;
 
 void Win32IDE::onSize(int width, int height)
 {
-    // Re-entrancy guard: prevent recursive onSize calls
+    // Re-entrancy guard: prevent recursive onSize calls.
+    // If already inside onSize, bail out immediately.
     if (s_inOnSize)
     {
         OutputDebugStringA("[Win32IDE] RE-ENTRANT onSize BLOCKED\n");
         return;
     }
-    s_inOnSize = true;
     
-    // Auto-reset guard for early returns
+    // RAII guard: sets flag on construction, resets on destruction (including early returns).
     struct OnSizeGuard {
+        OnSizeGuard()  { s_inOnSize = true; }
         ~OnSizeGuard() { s_inOnSize = false; }
     } onSizeGuard;
 
