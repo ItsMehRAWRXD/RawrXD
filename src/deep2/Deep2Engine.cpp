@@ -4326,32 +4326,55 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         size_t attend = attentionEnd - attentionStart;
         
         if (compressedKVEnabled_ && compressedKV_) {
-            // Attention with compressed KV cache
-            for (size_t h = 0; h < numHeads; ++h) {
-                size_t kvHead = h % numKVHeads;
-                float* headOut = output + h * headDim;
-                
-                const float scale = 1.0f / sqrtf((float)headDim);
-                
-                // Allocate temp buffers for dequantized K/V
-                float* tempK = (float*)_aligned_malloc(attend * headDim * sizeof(float), 32);
-                float* tempV = (float*)_aligned_malloc(attend * headDim * sizeof(float), 32);
-                float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
-                
-                if (tempK && tempV && scores) {
+            // Attention with compressed KV cache — optimized: single allocation, AVX2 paths
+            const float scale = 1.0f / sqrtf((float)headDim);
+            const size_t maxAttend = std::max(attend, (size_t)128);
+            
+            // Single allocation for all heads (amortize malloc cost)
+            float* tempK = (float*)_aligned_malloc(maxAttend * headDim * sizeof(float), 32);
+            float* tempV = (float*)_aligned_malloc(maxAttend * headDim * sizeof(float), 32);
+            float* scores = (float*)_aligned_malloc(maxAttend * sizeof(float), 32);
+            
+            if (tempK && tempV && scores) {
+                for (size_t h = 0; h < numHeads; ++h) {
+                    size_t kvHead = h % numKVHeads;
+                    float* headOut = output + h * headDim;
+                    const float* q = qProj + h * headDim;
+                    
                     // Dequantize K and V ranges (only within sliding window)
                     compressedKV_->loadKRange(layer, kvHead, attentionStart, attend, tempK);
                     compressedKV_->loadVRange(layer, kvHead, attentionStart, attend, tempV);
                     
-                    // Compute attention scores
+                    // Compute attention scores — AVX2 dot product
                     float maxScore = -1e38f;
-                    for (size_t pos = 0; pos < attend; ++pos) {
-                        float dot = 0.0f;
-                        for (size_t i = 0; i < headDim; ++i) {
-                            dot += qProj[h * headDim + i] * tempK[pos * headDim + i];
+                    #if defined(__AVX2__) || defined(_MSC_VER)
+                    if (headDim >= 8) {
+                        for (size_t pos = 0; pos < attend; ++pos) {
+                            __m256 sum = _mm256_setzero_ps();
+                            const float* k = tempK + pos * headDim;
+                            size_t i = 0;
+                            for (; i + 7 < headDim; i += 8) {
+                                __m256 qv = _mm256_loadu_ps(q + i);
+                                __m256 kv = _mm256_loadu_ps(k + i);
+                                sum = _mm256_fmadd_ps(qv, kv, sum);
+                            }
+                            float dot = sum.m256_f32[0] + sum.m256_f32[1] + sum.m256_f32[2] + sum.m256_f32[3]
+                                      + sum.m256_f32[4] + sum.m256_f32[5] + sum.m256_f32[6] + sum.m256_f32[7];
+                            for (; i < headDim; ++i) dot += q[i] * k[i];
+                            scores[pos] = dot * scale;
+                            if (scores[pos] > maxScore) maxScore = scores[pos];
                         }
-                        scores[pos] = dot * scale;
-                        if (scores[pos] > maxScore) maxScore = scores[pos];
+                    } else
+                    #endif
+                    {
+                        for (size_t pos = 0; pos < attend; ++pos) {
+                            float dot = 0.0f;
+                            for (size_t i = 0; i < headDim; ++i) {
+                                dot += q[i] * tempK[pos * headDim + i];
+                            }
+                            scores[pos] = dot * scale;
+                            if (scores[pos] > maxScore) maxScore = scores[pos];
+                        }
                     }
                     
                     // Softmax
@@ -4360,24 +4383,44 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                         scores[pos] = expf(scores[pos] - maxScore);
                         sumExp += scores[pos];
                     }
-                    float invSum = 1.0f / sumExp;
+                    float invSum = 1.0f / (sumExp + 1e-12f);
                     for (size_t pos = 0; pos < attend; ++pos) {
                         scores[pos] *= invSum;
                     }
                     
-                    // Weighted sum
+                    // Weighted sum — AVX2 accumulate
                     memset(headOut, 0, headDim * sizeof(float));
-                    for (size_t pos = 0; pos < attend; ++pos) {
-                        for (size_t i = 0; i < headDim; ++i) {
-                            headOut[i] += tempV[pos * headDim + i] * scores[pos];
+                    #if defined(__AVX2__) || defined(_MSC_VER)
+                    if (headDim >= 8) {
+                        for (size_t pos = 0; pos < attend; ++pos) {
+                            __m256 w = _mm256_set1_ps(scores[pos]);
+                            const float* v = tempV + pos * headDim;
+                            size_t i = 0;
+                            for (; i + 7 < headDim; i += 8) {
+                                __m256 outv = _mm256_loadu_ps(headOut + i);
+                                __m256 vv = _mm256_loadu_ps(v + i);
+                                _mm256_storeu_ps(headOut + i, _mm256_fmadd_ps(w, vv, outv));
+                            }
+                            for (; i < headDim; ++i) {
+                                headOut[i] += v[i] * scores[pos];
+                            }
+                        }
+                    } else
+                    #endif
+                    {
+                        for (size_t pos = 0; pos < attend; ++pos) {
+                            const float* v = tempV + pos * headDim;
+                            for (size_t i = 0; i < headDim; ++i) {
+                                headOut[i] += v[i] * scores[pos];
+                            }
                         }
                     }
                 }
-                
-                _aligned_free(tempK);
-                _aligned_free(tempV);
-                _aligned_free(scores);
             }
+            
+            _aligned_free(tempK);
+            _aligned_free(tempV);
+            _aligned_free(scores);
         } else if (kvCache) {
             for (size_t h = 0; h < numHeads; ++h) {
                 size_t kvHead = h % numKVHeads;
@@ -4417,14 +4460,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             ? (toroidalKV_->writeHead() - toroidalKV_->tokenCount()) : 0;
         bool haveTorus = toroidalKV_->queryTokenRange(oldestSeq, toroidalKV_->writeHead(), torusKeys, torusValues, tokenCount);
 
-        for (size_t h = 0; h < numHeads; ++h) {
-            size_t kvHead = h % numKVHeads; // GQA mapping
-            const float* q = qProj + h * headDim;
-            float* headOut = output + h * headDim;
-
-            if (!haveTorus || tokenCount == 0 || !torusKeys || !torusValues) {
-                // Fallback: self-attention on current token only
-                float scale = 1.0f / sqrtf((float)headDim);
+        const size_t attend = tokenCount;
+        const float scale = 1.0f / sqrtf((float)headDim);
+        alignas(32) float scores[128];
+        float* scoreBuf = (attend <= 128) ? scores : (float*)_aligned_malloc(attend * sizeof(float), 32);
+        if (!scoreBuf) {
+            memset(output, 0, numHeads * headDim * sizeof(float));
+        } else if (!haveTorus || tokenCount == 0 || !torusKeys || !torusValues) {
+            // Fallback: self-attention on current token only
+            for (size_t h = 0; h < numHeads; ++h) {
+                size_t kvHead = h % numKVHeads;
+                const float* q = qProj + h * headDim;
+                float* headOut = output + h * headDim;
                 float score = 0.0f;
                 for (size_t i = 0; i < headDim; ++i) {
                     score += q[i] * kProj[kvHead * headDim + i];
@@ -4434,61 +4481,94 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 for (size_t i = 0; i < headDim; ++i) {
                     headOut[i] = weight * vProj[kvHead * headDim + i];
                 }
-                continue;
             }
-
-            // Toroidal attention: compute Q*K^T over all stored tokens
-            const size_t attend = tokenCount;
-            const float  scale = 1.0f / sqrtf((float)headDim);
-            alignas(32) float scores[128]; // stack buffer for up to 128 tokens (adjust if needed)
-            float* scoreBuf = (attend <= 128) ? scores : (float*)_aligned_malloc(attend * sizeof(float), 32);
-            if (!scoreBuf) {
-                memset(headOut, 0, headDim * sizeof(float));
-                continue;
-            }
-
-            // Pass 1: compute Q*K^T scores
-            float maxScore = -1e38f;
+        } else {
             size_t numLayers = modelWeights.numLayers;
-            for (size_t pos = 0; pos < attend; ++pos) {
-                // torus layout: [token][layer][head][head_dim]
-                size_t layerOffset = layer * numHeads * headDim;
-                size_t headOffset = kvHead * headDim;
-                const float* k = torusKeys + pos * (numLayers * numHeads * headDim) + layerOffset + headOffset;
-                float dot = 0.0f;
-                for (size_t i = 0; i < headDim; ++i) {
-                    dot += q[i] * k[i];
+            size_t layerStride = numHeads * headDim;
+            size_t tokenStride = numLayers * layerStride;
+            
+            for (size_t h = 0; h < numHeads; ++h) {
+                size_t kvHead = h % numKVHeads;
+                const float* q = qProj + h * headDim;
+                float* headOut = output + h * headDim;
+                size_t layerOffset = layer * layerStride + kvHead * headDim;
+
+                // Pass 1: compute Q*K^T scores
+                float maxScore = -1e38f;
+                #if defined(__AVX2__) || defined(_MSC_VER)
+                if (headDim >= 8) {
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        __m256 sum = _mm256_setzero_ps();
+                        const float* k = torusKeys + pos * tokenStride + layerOffset;
+                        size_t i = 0;
+                        for (; i + 7 < headDim; i += 8) {
+                            __m256 qv = _mm256_loadu_ps(q + i);
+                            __m256 kv = _mm256_loadu_ps(k + i);
+                            sum = _mm256_fmadd_ps(qv, kv, sum);
+                        }
+                        float dot = sum.m256_f32[0] + sum.m256_f32[1] + sum.m256_f32[2] + sum.m256_f32[3]
+                                  + sum.m256_f32[4] + sum.m256_f32[5] + sum.m256_f32[6] + sum.m256_f32[7];
+                        for (; i < headDim; ++i) dot += q[i] * k[i];
+                        scoreBuf[pos] = dot * scale;
+                        if (scoreBuf[pos] > maxScore) maxScore = scoreBuf[pos];
+                    }
+                } else
+                #endif
+                {
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        float dot = 0.0f;
+                        const float* k = torusKeys + pos * tokenStride + layerOffset;
+                        for (size_t i = 0; i < headDim; ++i) {
+                            dot += q[i] * k[i];
+                        }
+                        scoreBuf[pos] = dot * scale;
+                        if (scoreBuf[pos] > maxScore) maxScore = scoreBuf[pos];
+                    }
                 }
-                scoreBuf[pos] = dot * scale;
-                if (scoreBuf[pos] > maxScore) maxScore = scoreBuf[pos];
-            }
 
-            // Pass 2: softmax
-            float sumExp = 0.0f;
-            for (size_t pos = 0; pos < attend; ++pos) {
-                scoreBuf[pos] = expf(scoreBuf[pos] - maxScore);
-                sumExp += scoreBuf[pos];
-            }
-            if (sumExp < 1e-12f) sumExp = 1e-12f;
-            float invSum = 1.0f / sumExp;
-            for (size_t pos = 0; pos < attend; ++pos) {
-                scoreBuf[pos] *= invSum;
-            }
+                // Pass 2: softmax
+                float sumExp = 0.0f;
+                for (size_t pos = 0; pos < attend; ++pos) {
+                    scoreBuf[pos] = expf(scoreBuf[pos] - maxScore);
+                    sumExp += scoreBuf[pos];
+                }
+                if (sumExp < 1e-12f) sumExp = 1e-12f;
+                float invSum = 1.0f / sumExp;
+                for (size_t pos = 0; pos < attend; ++pos) {
+                    scoreBuf[pos] *= invSum;
+                }
 
-            // Pass 3: weighted sum of values
-            memset(headOut, 0, headDim * sizeof(float));
-            for (size_t pos = 0; pos < attend; ++pos) {
-                size_t layerOffset = layer * numHeads * headDim;
-                size_t headOffset = kvHead * headDim;
-                const float* v = torusValues + pos * (numLayers * numHeads * headDim) + layerOffset + headOffset;
-                float w = scoreBuf[pos];
-                for (size_t i = 0; i < headDim; ++i) {
-                    headOut[i] += w * v[i];
+                // Pass 3: weighted sum of values — AVX2
+                memset(headOut, 0, headDim * sizeof(float));
+                #if defined(__AVX2__) || defined(_MSC_VER)
+                if (headDim >= 8) {
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        __m256 w = _mm256_set1_ps(scoreBuf[pos]);
+                        const float* v = torusValues + pos * tokenStride + layerOffset;
+                        size_t i = 0;
+                        for (; i + 7 < headDim; i += 8) {
+                            __m256 outv = _mm256_loadu_ps(headOut + i);
+                            __m256 vv = _mm256_loadu_ps(v + i);
+                            _mm256_storeu_ps(headOut + i, _mm256_fmadd_ps(w, vv, outv));
+                        }
+                        for (; i < headDim; ++i) {
+                            headOut[i] += v[i] * scoreBuf[pos];
+                        }
+                    }
+                } else
+                #endif
+                {
+                    for (size_t pos = 0; pos < attend; ++pos) {
+                        const float* v = torusValues + pos * tokenStride + layerOffset;
+                        float w = scoreBuf[pos];
+                        for (size_t i = 0; i < headDim; ++i) {
+                            headOut[i] += w * v[i];
+                        }
+                    }
                 }
             }
-
-            if (scoreBuf != scores) _aligned_free(scoreBuf);
         }
+        if (scoreBuf != scores) _aligned_free(scoreBuf);
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
     } else {
         // No KV cache: self-attention on current token only
