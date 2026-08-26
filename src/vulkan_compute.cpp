@@ -862,14 +862,30 @@ bool VulkanCompute::CreateStagingBuffer(size_t size, VkBuffer& buffer, VkDeviceM
 
 #endif // RAWR_VULKAN_AVAILABLE
 
-// Stub implementations when Vulkan is not available at compile time
+// ============================================================================
+// Stub implementations when Vulkan SDK is not available
+// These satisfy linker requirements for translation units that reference
+// CPUInference::VulkanCompute when RAWR_VULKAN_AVAILABLE == 0.
+// ============================================================================
 #if !RAWR_VULKAN_AVAILABLE
 namespace CPUInference {
-    VulkanCompute::VulkanCompute() {}
-    VulkanCompute::~VulkanCompute() {}
-    bool VulkanCompute::Initialize() { return false; }
-    void VulkanCompute::Cleanup() {}
-    bool VulkanCompute::DispatchGEMV(const float*, const float*, float*, uint32_t, uint32_t) { return false; }
+
+VulkanCompute::VulkanCompute() {}
+VulkanCompute::~VulkanCompute() {}
+
+bool VulkanCompute::Initialize() { return false; }
+
+bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float* output,
+                                 uint32_t rows, uint32_t cols) {
+    (void)weights; (void)input; (void)output; (void)rows; (void)cols;
+    return false;
+}
+
+bool VulkanCompute::FlushAsyncCommands() { return false; }
+
 } // namespace CPUInference
-#endif
+#endif // !RAWR_VULKAN_AVAILABLE
+
+
+
 

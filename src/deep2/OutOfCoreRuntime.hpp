@@ -20,6 +20,9 @@ enum class ChamberResult : uint8_t;
 struct FormulaRoute;
 struct ThermalState;
 
+// Ensure telemetry namespace exists for Deep2Telemetry.hpp
+namespace telemetry {}
+
 // Minimal stub types
 using TensorId = uint64_t;
 

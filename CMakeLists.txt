@@ -1960,7 +1960,7 @@ set(SOURCES
     # src/swarm/SovereignSwarm.cpp  # excluded: large file, use linker stubs instead
     src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
-    src/vulkan_kernel_stubs.cpp
+    src/vulkan_kernel_bridge.cpp
     src/reverse/ReverseEngine.cpp
     src/reverse/ReverseModelLoader.cpp
     src/compression/zlib_runtime_loader.cpp
@@ -3509,7 +3509,7 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     B014/build/b014_profiler.cpp
     src/runtime/StreamRouterAdapter.cpp
     src/runtime/memory/CapacityManager.cpp
-    src/vulkan_kernel_stubs.cpp
+    src/vulkan_kernel_bridge.cpp
     src/runtime/elastic/ElasticEngine.cpp
     src/runtime/elastic/ElasticGGUFIndex.cpp
     src/runtime/elastic/ElasticResidencyManager.cpp
@@ -4693,6 +4693,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/QuantKernelRegistry.cpp
     src/deep2/QuantKernelMASM.cpp
     src/deep2/IQQuantKernels.cpp
+    src/deep2/GhostCache.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
     src/deep2/MoERouter.cpp
@@ -5250,6 +5251,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic_engine.cpp
         src/subagent_core.cpp
 
+        # Real GPU compute backends (required by vulkan_kernel_bridge.cpp and rdna3_bridge.cpp)
+        src/backend/vulkan_compute.cpp
+        src/kernels/rdna3/RDNA3_GpuDispatcher.cpp
+
         # Bounded Agent Loop + FIM Provider (Agent→IDE Pivot)
         src/agentic/AgentToolHandlers.cpp
         src/agentic/BoundedAgentLoop.cpp
@@ -5293,13 +5298,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
         src/ANSIParser.cpp  # ADDED: Real ANSIParser implementation (replaces stub in unlinked_symbols_batch_021.cpp)
-        src/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
+        src/vulkan_kernel_bridge.cpp  # ADDED: Real Vulkan compute bridge for RawrXD_VulkanBridge.asm
 
         # ASM link stubs for missing symbols
         # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)
         src/gguf_d3d12_bridge.cpp  # ADDED: Real implementation (was gguf_d3d12_bridge_stub.cpp)
         # src/core/rtp_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (RTP_* functions)
-        src/core/rdna3_stubs.cpp  # KEPT: No real implementations found for RDNA3_* functions
+        src/rdna3_bridge.cpp  # ADDED: Real RDNA3 GPU dispatcher bridge
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
@@ -5321,7 +5326,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/speciator_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_007.cpp
         # src/core/neural_bridge_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
-        src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
+        src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
         src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
@@ -9406,8 +9411,7 @@ if(WIN32)
         src/deep2/mars/DualGPUBackend.cpp
         src/deep2/mars/MARSController.cpp
         src/sampling/advanced_sampler.cpp
-        src/deep2/deep2_link_stubs.cpp
-        src/deep2/deep2_link_stubs.cpp
+        src/deep2/ResidencyTrace.asm
         src/deep2/sovereign_q4k_gemv.asm
         src/deep2/sovereign_q4k_gemv_v2.asm
         src/deep2/sovereign_q2k_gemv_v2.asm
@@ -9433,6 +9437,7 @@ if(WIN32)
         src/deep2/SovereignOutOfCoreRuntime.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/ResidencyManager.cpp
+        src/deep2/GhostCache.cpp
         src/deep2/ElasticResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
         src/deep2/HotPatcher.cpp
@@ -9442,7 +9447,6 @@ if(WIN32)
         src/deep2/BottleTTL.cpp
         src/deep2/GoalSystem.cpp
         src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyLease.cpp
         src/deep2/LlamaNativeBridge.cpp
         src/deep2/RawrRuntime.cpp
         src/deep2/ZlibRuntimeLoader.cpp

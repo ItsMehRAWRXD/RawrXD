@@ -1490,14 +1490,14 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q2_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+    // NOTE: Q2_K MASM kernel is a stub; use scalar until real AVX2 kernel is implemented
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
 
     // --- Q3_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    // NOTE: Q3_K MASM kernel is a stub; use scalar until real AVX2 kernel is implemented
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
 
     // --- Q4_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
