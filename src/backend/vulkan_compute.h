@@ -92,6 +92,7 @@ private:
     // Real pipeline cache
     std::unordered_map<std::string, VkPipeline> m_pipelines;
     std::unordered_map<std::string, VkPipelineLayout> m_pipelineLayouts;
+    std::unordered_map<std::string, VkDescriptorSetLayout> m_descriptorSetLayouts;
     mutable std::mutex m_mutex;
     
     // Real implementation methods

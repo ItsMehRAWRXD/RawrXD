@@ -290,13 +290,15 @@ public:
     // Hardened version with page fault fixes
     static GGUFLoadResult LoadHardened(const char* filepath, const GGUFLoadOptions& options);
 
-private:
+    // Public parsing entry points for IOCP-based streaming loaders
     static bool ParseHeader(FILE* fp, uint64_t& tensorCount, uint64_t& kvCount);
     static bool ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& metadata,
                                 std::unordered_map<std::string, std::string>& rawMeta);
     static bool ParseTensors(FILE* fp, uint64_t tensorCount,
                              std::vector<TensorInfo>& tensors,
                              uint64_t& dataOffset, bool verbose);
+
+private:
     static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
                                uint64_t dataOffset, uint64_t fileSize);
 

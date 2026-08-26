@@ -220,6 +220,33 @@ Get_TileStreamer_Binary PROC
 Get_TileStreamer_Binary ENDP
 
 ;------------------------------------------------------------------------------
+; Get_Q4MatMul_BinarySize
+;------------------------------------------------------------------------------
+PUBLIC Get_Q4MatMul_BinarySize
+Get_Q4MatMul_BinarySize PROC
+    mov     eax, Q4MatMul_RDNA3_BinSize
+    ret
+Get_Q4MatMul_BinarySize ENDP
+
+;------------------------------------------------------------------------------
+; Get_KVCacheAttention_BinarySize
+;------------------------------------------------------------------------------
+PUBLIC Get_KVCacheAttention_BinarySize
+Get_KVCacheAttention_BinarySize PROC
+    mov     eax, KVCacheAttention_RDNA3_BinSize
+    ret
+Get_KVCacheAttention_BinarySize ENDP
+
+;------------------------------------------------------------------------------
+; Get_TileStreamer_BinarySize
+;------------------------------------------------------------------------------
+PUBLIC Get_TileStreamer_BinarySize
+Get_TileStreamer_BinarySize PROC
+    mov     eax, TileStreamer_RDNA3_BinSize
+    ret
+Get_TileStreamer_BinarySize ENDP
+
+;------------------------------------------------------------------------------
 ; Dispatch_Q4MatMul_RDNA3
 ;------------------------------------------------------------------------------
 PUBLIC Dispatch_Q4MatMul_RDNA3

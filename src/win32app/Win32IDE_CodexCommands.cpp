@@ -174,11 +174,6 @@ std::shared_ptr<RawrXD::Codex::CodexCLI> Win32IDE::GetCodexCLI() {
 }
 
 // ============================================================================
-// Semantic Index stub implementation
+// Semantic Index — real implementation in Win32IDE_SemanticIndex.cpp
+// This file no longer provides a stub; the real implementation is linked.
 // ============================================================================
-
-void Win32IDE::showSemanticIndex() {
-    // Stub implementation - semantic index functionality is in Win32IDE_CursorParity.cpp
-    // This stub satisfies the linker requirement from Win32IDE_Commands.cpp
-    OutputDebugStringA("showSemanticIndex() called\n");
-}

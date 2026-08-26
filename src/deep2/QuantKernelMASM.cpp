@@ -123,4 +123,27 @@ void Deep2_Q4_0_GEMV(
     }
 }
 
+// ============================================================================
+// Aliases for expected symbol names
+// ============================================================================
+void Deep2_Q2_K_GEMV(
+    const void* weights,
+    const float* input,
+    float* output,
+    unsigned int numBlocks,
+    unsigned int outputDim
+) {
+    Sovereign_Q2K_GEMV_AVX2_V2(weights, input, output, numBlocks, outputDim);
+}
+
+void Deep2_Q3_K_GEMV(
+    const void* weights,
+    const float* input,
+    float* output,
+    unsigned int numBlocks,
+    unsigned int outputDim
+) {
+    Sovereign_Q3K_GEMV_AVX2_V2(weights, input, output, numBlocks, outputDim);
+}
+
 } // extern "C"

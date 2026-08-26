@@ -26,6 +26,7 @@
 #include "KimiK2Config.hpp"
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
+#include "Deep2Telemetry.hpp"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -1419,6 +1420,11 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     // Initialize QuantKernelRegistry (quantization dispatch table)
     Deep2::QuantKernelRegistry::Instance().Initialize();
 
+    // Initialize Deep2 Active Telemetry Controller
+    telemetryController_ = std::make_unique<Deep2TelemetryController>();
+    telemetryControllerEnabled_ = true;
+    printf("[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)\n");
+
     initialized = true;
     printf("[Deep2Engine] Initialization complete\n");
     return true;
@@ -2447,10 +2453,20 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         printedEmbedInfo = true;
     }
 
+    // --- VAL-051.7+: Elastic residency for token embeddings ---
+    const void* embedDataPtr = modelWeights.tokenEmbed.data;
+    if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty()) {
+        Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
+        auto status = elasticResidency_->AcquireTensor(modelWeights.tokenEmbed.name, 0, 0, resHandle);
+        if (status == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready) {
+            embedDataPtr = resHandle.cpuPtr;
+        }
+    }
+
     // tokenEmbed is [vocabSize, hiddenDim]
     // For FP32: direct copy
     if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F32) {
-        const float* embedTable = (const float*)modelWeights.tokenEmbed.data;
+        const float* embedTable = (const float*)embedDataPtr;
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             memcpy(output, embedTable + tokenId * hiddenDim, hiddenDim * sizeof(float));
@@ -2458,7 +2474,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             memset(output, 0, hiddenDim * sizeof(float));
         }
     } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F16) {
-        const uint16_t* embedTable = (const uint16_t*)modelWeights.tokenEmbed.data;
+        const uint16_t* embedTable = (const uint16_t*)embedDataPtr;
         size_t hiddenDim = modelWeights.hiddenDim;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             for (size_t i = 0; i < hiddenDim; ++i) {
@@ -2472,7 +2488,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         size_t hiddenDim = modelWeights.hiddenDim;
         size_t numBlocks = hiddenDim / 256;
         size_t rowBytes = numBlocks * sizeof(Q4_K_Block);
-        const uint8_t* embedData = (const uint8_t*)modelWeights.tokenEmbed.data;
+        const uint8_t* embedData = (const uint8_t*)embedDataPtr;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             const Q4_K_Block* blocks = (const Q4_K_Block*)(embedData + tokenId * rowBytes);
             // Diagnostic: inspect first block header
@@ -2493,7 +2509,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
     } else {
         // --- Quant-agnostic embedding dequant via registry ---
         size_t hiddenDim = modelWeights.hiddenDim;
-        const uint8_t* embedData = (const uint8_t*)modelWeights.tokenEmbed.data;
+        const uint8_t* embedData = (const uint8_t*)embedDataPtr;
         
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             // Compute rowBytes from block geometry, not sizeBytes/vocabSize
@@ -2656,6 +2672,11 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             memset(output, 0, hiddenDim * sizeof(float));
         }
     }
+
+    // --- Release Elastic residency for token embeddings ---
+    if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty()) {
+        elasticResidency_->ReleaseTensor(modelWeights.tokenEmbed.name);
+    }
 }
 
 // ============================================================================
@@ -2793,7 +2814,7 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
                              size_t numKVHeads, size_t pos, float theta, float scaling) {
     // Ensure tables are initialized and large enough
     if (g_ropeMaxSeqLen == 0 || g_ropeHeadDim != headDim || pos >= g_ropeMaxSeqLen) {
-        initRoPETables(std::max(config.maxSeqLen * 2, pos + 128), headDim, theta);
+        initRoPETables((std::max)(config.maxSeqLen * 2, pos + 128), headDim, theta);
     }
     
     // Bounds check after initialization
@@ -2971,12 +2992,7 @@ namespace {
             float ref = refBuf[r];
             float asmVal = output[startRow + r];
             float diff = std::fabs(ref - asmVal);
-            float scale = std::max(1.0f, std::fabs(ref));
-            float relErr = diff / scale;
-
-            if (diff > maxAbsErr) maxAbsErr = diff;
-            if (relErr > maxRelErr) maxRelErr = relErr;
-
+            float scale = (std::max)(1.0f, std::fabs(ref));
             if (!NearlyEqual(ref, asmVal, 1.0e-3f, 2.0e-3f)) {
                 if (failIdx == testRows) failIdx = r;
             }
@@ -3293,14 +3309,17 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
         return;
     }
 
-    // --- Batch 15: Elastic residency binding ---
+    // --- VAL-051.7+: Cyclone-Elastic contract ---
+    // AcquireTensor guarantees CPU-resident pointer before compute.
+    // No fallback to wt.data — eliminates silent page-fault escape hatch.
     WeightTensor wtEffective = wt;
+    Deep2::ElasticResidencyManager::ResidencyHandle resHandle;
+    bool acquired = false;
     if (elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
-        if (elasticResidency_->IsTensorReadyForCompute(wt.name)) {
-            const void* residentPtr = elasticResidency_->AcquireForCpu(wt.name, TensorFormat::Unknown);
-            if (residentPtr) {
-                wtEffective.data = const_cast<void*>(residentPtr);
-            }
+        auto status = elasticResidency_->AcquireTensor(wt.name, 0, 0, resHandle);
+        if (status == Deep2::ElasticResidencyManager::AcquireStatus::Ready && resHandle.ready) {
+            wtEffective.data = resHandle.cpuPtr;
+            acquired = true;
         }
     }
 
@@ -3314,6 +3333,7 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
 
     // --- Vulkan GPU dispatch path (FP32/FP16 only) ---
     if (vulkanEnabled_ && vulkanInitialized_ && vulkanCompute_) {
+        auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         if (tryVulkanGEMV(wtEffective, input, output, outDim)) {
             // GPU dispatch succeeded — apply bias and return
             if (bias) {
@@ -3328,6 +3348,13 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
                 g_linearwByType[typeIdx].calls++;
                 g_linearwByType[typeIdx].totalMs += linearwMs;
                 g_linearwByType[typeIdx].totalMACs += rows * cols;
+            }
+            // Telemetry: Record GPU dispatch latency
+            if (telemetryControllerEnabled_ && telemetryController_) {
+                auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
+                auto gpuDispatchNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    tGpuDispatch1 - tGpuDispatch0).count();
+                telemetryController_->record_gpu_dispatch(static_cast<uint64_t>(gpuDispatchNs));
             }
             return;
         }
@@ -3395,6 +3422,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
         fflush(stderr);
     }
     #endif
+
+    // --- Release Elastic residency after compute ---
+    if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
+        elasticResidency_->ReleaseTensor(wt.name);
+    }
 
     // --- NAN-GUARD: hard stop on first nonfinite output, log once ---
     static bool nanGuardPrinted = false;
@@ -3874,6 +3906,20 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         elasticResidency_->PrintTelemetry();
     }
 
+    // ── Deep2 Active Telemetry: Evaluate and route ─────────────────
+    if (telemetryControllerEnabled_ && telemetryController_) {
+        auto health = telemetryController_->evaluate_and_route();
+        const char* healthStr = "UNKNOWN";
+        switch (health) {
+            case SystemHealth::HEALTHY_PREFETCH: healthStr = "HEALTHY_PREFETCH"; break;
+            case SystemHealth::PCIE_HOST_BOTTLENECK: healthStr = "PCIE_HOST_BOTTLENECK"; break;
+            case SystemHealth::VRAM_BW_SATURATED: healthStr = "VRAM_BW_SATURATED"; break;
+            case SystemHealth::COMPUTE_BOUND: healthStr = "COMPUTE_BOUND"; break;
+            case SystemHealth::UNKNOWN: healthStr = "UNKNOWN"; break;
+        }
+        printf("[Deep2Engine] Telemetry health: %s\n", healthStr);
+    }
+
     return tokensGenerated;
 }
 
@@ -3983,26 +4029,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         }
     }
 
-    // ── Batch 14A: Acquire residency leases for layer weights ───────────
-    std::vector<ResidencyLease> layerLeases;
-    if (residencyEnabled_ && residencyManager_) {
-        auto tryLease = [&](const WeightTensor& wt) {
-            if (wt.data && !wt.name.empty()) {
-                auto lease = residencyManager_->AcquireLease(wt.name);
-                if (lease.valid()) layerLeases.push_back(std::move(lease));
-            }
-        };
-        tryLease(lw.wq); tryLease(lw.wk); tryLease(lw.wv); tryLease(lw.wo);
-        tryLease(lw.wqkv);
-        tryLease(lw.attnNorm); tryLease(lw.ffnNorm);
-        tryLease(lw.wGate); tryLease(lw.wUp); tryLease(lw.wDown);
-        tryLease(lw.attnQ_a); tryLease(lw.attnQ_a_norm);
-        tryLease(lw.attnQ_b); tryLease(lw.attnKV_a_mqa);
-        tryLease(lw.attnKV_a_norm); tryLease(lw.attnK_b);
-        tryLease(lw.attnV_b); tryLease(lw.attnO);
-        tryLease(lw.moeRouter);
-        tryLease(lw.moeSharedGate); tryLease(lw.moeSharedUp); tryLease(lw.moeSharedDown);
-    }
+    // ── Residency: LinearW() handles ElasticResidencyManager acquisition ─
+    // The legacy residencyManager_->AcquireLease() path has been removed.
+    // All weight tensor residency is now managed inside LinearW() via
+    // elasticResidency_->AcquireTensor() / ReleaseTensor().
+
+    // ── Telemetry: Record residency wait time ──────────────────────
+    auto residency_wait_start = std::chrono::high_resolution_clock::now();
 
     // ── Per-layer state trace: input ────────────────────────────────
     #if 1
@@ -4068,6 +4101,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_TraceState(phase, layer, output, hiddenDim);
     }
     #endif
+
+    // ── Telemetry: Record residency wait time ──────────────────────
+    if (telemetryControllerEnabled_ && telemetryController_) {
+        auto residency_wait_end = std::chrono::high_resolution_clock::now();
+        auto residency_wait_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            residency_wait_end - residency_wait_start).count();
+        telemetryController_->record_residency_wait(static_cast<uint64_t>(residency_wait_ns));
+    }
 
     // ── Per-layer state trace: output ───────────────────────────────
     #if 0

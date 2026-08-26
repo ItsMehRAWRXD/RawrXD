@@ -7,10 +7,16 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <functional>
 
-#include "lsp_client.h"
-#include "ghost_text_renderer.h"
-
+// Forward declarations
+class LSPClient;
+class AICompletionProvider;
+class GhostTextRenderer;
+struct CompletionItem;
+struct AICompletion;
 
 namespace RawrXD {
 
@@ -25,124 +31,95 @@ namespace RawrXD {
  * - Auto-trigger completions on typing pause (300ms debounce)
  * - Multi-language support (C++, Python, JavaScript, etc.)
  */
-class AgenticTextEdit
-{
-
+class AgenticTextEdit {
 public:
     explicit AgenticTextEdit(void* parent = nullptr);
-    ~AgenticTextEdit() override = default;
+    ~AgenticTextEdit();
 
-    /**
-     * Two-phase initialization
-     * Call after void is ready
-     */
+    // Two-phase initialization
     void initialize();
 
-    /**
-     * Set LSP client for this editor
-     */
+    // LSP client integration
     void setLSPClient(LSPClient* client);
-
-    /**
-     * Get current LSP client
-     */
     LSPClient* lspClient() const { return m_lspClient; }
 
-    /**
-     * Set AI completion provider for this editor
-     * Enables Cursor-style AI completions powered by local GGUF models
-     */
+    // AI completion provider integration
     void setAICompletionProvider(AICompletionProvider* provider);
-
-    /**
-     * Get current AI completion provider
-     */
     AICompletionProvider* aiCompletionProvider() const { return m_aiProvider; }
-
-    /**
-     * Enable/disable AI completions (separate from LSP)
-     */
     void setAICompletionsEnabled(bool enabled);
-
-    /**
-     * Check if AI completions are enabled
-     */
     bool aiCompletionsEnabled() const { return m_aiCompletionsEnabled; }
 
-    /**
-     * Get ghost text renderer
-     */
+    // Ghost text renderer
     GhostTextRenderer* ghostRenderer() const { return m_ghostRenderer; }
+    void setGhostRenderer(GhostTextRenderer* renderer);
 
-    /**
-     * Set document URI (for LSP communication)
-     */
+    // Document management
     void setDocumentUri(const std::string& uri);
-
-    /**
-     * Get document URI
-     */
     std::string documentUri() const { return m_documentUri; }
 
-    /**
-     * Enable/disable auto-completions
-     */
+    // Text buffer operations
+    void setText(const std::string& text);
+    std::string text() const;
+    void insertPlainText(const std::string& text);
+    void setCursorPosition(int pos);
+    int cursorPosition() const;
+
+    // Auto-completion settings
     void setAutoCompletionsEnabled(bool enabled);
-
-    /**
-     * Check if auto-completions are enabled
-     */
     bool autoCompletionsEnabled() const { return m_autoCompletionsEnabled; }
-
-    /**
-     * Set completion debounce delay (milliseconds)
-     */
     void setCompletionDelay(int ms);
 
+    // Ghost text actions
+    void acceptGhostText();
+    void dismissGhostText();
 
-    /**
-     * Emitted when ghost text is accepted
-     */
-    void completionAccepted(const std::string& text);
+    // Callbacks
+    std::function<void(const std::string&)> onTextChangedCallback;
+    std::function<void(const std::string&)> onCompletionAccepted;
+    std::function<void()> onCompletionDismissed;
 
-    /**
-     * Emitted when ghost text is dismissed
-     */
-    void completionDismissed();
-
-protected:
-    void keyPressEvent(void*  event) override;
+    // Key handling
+    void keyPressEvent(void* event);
 
 private:
     void onTextChanged();
     void onCursorPositionChanged();
     void onCompletionTimeout();
-    void onCompletionsReceived(const std::string& uri, int line, int character, const std::vector<CompletionItem>& items);
+    void onCompletionsReceived(const std::string& uri, int line, int character,
+                                const std::vector<CompletionItem>& items);
     void onAICompletionsReceived(const std::vector<AICompletion>& completions);
     void onAICompletionError(const std::string& error);
     void onGhostTextAccepted(const std::string& text);
     void onGhostTextDismissed();
 
-private:
     void triggerCompletion();
     void syncDocumentToLSP();
     std::string getCurrentLineText() const;
+    std::string getCompletionPrefix() const;
+    std::string getCompletionSuffix() const;
     bool shouldTriggerCompletion(const std::string& lineText) const;
+    std::vector<CompletionItem> filterCompletions(const std::vector<CompletionItem>& items) const;
+    void offsetToLineChar(int offset, int& line, int& character) const;
+    void startCompletionTimer();
+    void stopCompletionTimer();
 
-    LSPClient* m_lspClient{};
-    AICompletionProvider* m_aiProvider{};
-    GhostTextRenderer* m_ghostRenderer{};
+    void* m_parent;
+    LSPClient* m_lspClient;
+    AICompletionProvider* m_aiProvider;
+    GhostTextRenderer* m_ghostRenderer;
     
+    std::string m_buffer;
     std::string m_documentUri;
-    std::string m_languageId = "cpp";
-    int m_documentVersion = 0;
+    std::string m_languageId;
+    int m_cursorPos;
+    int m_documentVersion;
     
-    void** m_completionTimer{};
-    int m_completionDelay = 300;  // 300ms debounce
-    bool m_autoCompletionsEnabled = true;
-    bool m_aiCompletionsEnabled = true;  // AI completions enabled by default
-    
-    bool m_documentOpened = false;
+    void* m_completionTimer;
+    int m_completionDelay;
+    bool m_autoCompletionsEnabled;
+    bool m_aiCompletionsEnabled;
+    bool m_documentOpened;
+    bool m_pendingCompletions;
 };
 
 } // namespace RawrXD

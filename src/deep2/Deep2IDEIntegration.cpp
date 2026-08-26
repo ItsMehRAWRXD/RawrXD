@@ -11,6 +11,8 @@
 #include "Deep2Bridge.hpp"
 #include "GGUFShardRouter.hpp"
 #include "FabricTensorTable.hpp"
+#include "IOCPGGUFLoader.hpp"
+#include "ElasticResidencyManager.hpp"
 
 #include <cstdio>
 #include <cstring>
@@ -31,6 +33,8 @@ namespace RawrXD {
 // ============================================================================
 std::unique_ptr<GGUFShardRouter> Deep2ModelLoader::s_router;
 std::unique_ptr<FabricTensorTable> Deep2ModelLoader::s_fabric;
+std::unique_ptr<IOCPGGUFLoader> Deep2ModelLoader::s_iocpLoader;
+std::unique_ptr<ElasticResidencyManager> Deep2ModelLoader::s_elastic;
 Deep2ModelLoader::LoadResult Deep2ModelLoader::s_lastResult;
 std::mutex Deep2ModelLoader::s_mutex;
 
@@ -121,7 +125,7 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadSingleFile(const std::string&
         return result;
     }
 
-    // Create router, add shard, and scan
+    // Create router, add shard, and scan (metadata only)
     s_router = std::make_unique<GGUFShardRouter>();
     s_router->add_shard(path);
     s_router->scan();
@@ -130,25 +134,64 @@ Deep2ModelLoader::LoadResult Deep2ModelLoader::LoadSingleFile(const std::string&
     s_fabric = std::make_unique<FabricTensorTable>();
     s_fabric->ingest_gguf_router(*s_router);
 
-    // Extract metadata from router
+    // Initialize Elastic Residency Manager for out-of-core operation
+    s_elastic = std::make_unique<ElasticResidencyManager>();
+    s_elastic->Initialize({
+        .maxWarmCompressedBytes = 48ULL * 1024 * 1024 * 1024, // 48 GB RAM
+        .maxWarmStagedBytes = 2ULL * 1024 * 1024 * 1024,     // 2 GB staging
+        .maxHotBytes = 28ULL * 1024 * 1024 * 1024,           // 28 GB VRAM (leave headroom)
+        .prefetchLookahead = 2,
+        .useQuantizedGpuPath = true
+    });
+
+    // Open GGUF with IOCP for explicit async reads (no memory mapping)
+    s_iocpLoader = std::make_unique<IOCPGGUFLoader>();
+    IOCPGGUFLoader::Config iocpCfg;
+    iocpCfg.useIOCP = true;
+    iocpCfg.noBuffering = true;
+    iocpCfg.extentSize = 64 * 1024 * 1024;  // 64 MB read extents
+    iocpCfg.maxConcurrentReads = 8;
+    iocpCfg.registerWithElastic = true;
+    iocpCfg.verbose = false;
+
+    if (!s_iocpLoader->Open(path, iocpCfg)) {
+        result.error = "Failed to open GGUF with IOCP: " + path;
+        Unload();
+        return result;
+    }
+
+    // Parse header and register tensors with Elastic (metadata only, no data loaded yet)
+    ModelMetadata meta;
+    std::vector<TensorInfo> tensors;
+    uint64_t dataOffset = 0;
+    if (!s_iocpLoader->ParseHeader(meta, tensors, dataOffset)) {
+        result.error = "Failed to parse GGUF header: " + path;
+        Unload();
+        return result;
+    }
+
+    s_iocpLoader->SetElasticManager(s_elastic.get());
+    if (!s_iocpLoader->LoadTensorDataAsync(tensors, dataOffset)) {
+        result.error = "Failed to register tensors with Elastic Residency";
+        Unload();
+        return result;
+    }
+
+    // Extract metadata
     result.success = true;
     result.modelName = fs::path(path).filename().string();
     result.shardCount = 1;
-    result.tensorCount = static_cast<uint32_t>(s_router->tensor_count());
+    result.tensorCount = static_cast<uint32_t>(tensors.size());
     result.totalFileBytes = fs::file_size(path);
     result.streamingEnabled = true;
+    result.numLayers = meta.numLayers;
+    result.numExperts = meta.numExperts;
+    result.context_length = meta.maxPositionEmbeddings;
 
-    const auto& meta = s_router->metadata();
-    if (meta.has_metadata) {
-        result.numLayers = meta.layer_count;
-        result.numExperts = meta.expert_count;
-        result.context_length = meta.context_length;
-    }
-
-    // Try to detect MoE from tensor names
-    for (const auto& [name, loc] : s_router->tensors()) {
-        if (name.find("expert") != std::string::npos ||
-            name.find("gate") != std::string::npos) {
+    // Detect MoE from tensor names
+    for (const auto& t : tensors) {
+        if (t.name.find("expert") != std::string::npos ||
+            t.name.find("gate") != std::string::npos) {
             result.isMoE = true;
             break;
         }

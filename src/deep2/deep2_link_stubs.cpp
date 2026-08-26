@@ -1,24 +1,19 @@
 ﻿// ============================================================================
 // deep2_link_stubs.cpp — Honest stubs for symbols NOT provided by real TUs
-//
-// Philosophy: Only define what is genuinely missing. If a real TU exists in
-// the target, do NOT redefine its symbols here — that causes LNK2005.
 // ============================================================================
 
-#include <cstring>
+#include "vulkan_compute.h"
 #include <vector>
-#include <functional>
-#include <memory>
-#include <unordered_map>
-#include <filesystem>
-#include <cstdint>
-#include <cstddef>
-#include <string>
-#include <string_view>
+#include <cstring>
 
-namespace Deep2 {
+namespace CPUInference {
 
-// All GEMV kernels now have real ASM implementations in src/deep2/sovereign_*.asm.
-// This file intentionally left empty to avoid LNK2005 duplicate symbol errors.
+// VulkanCompute stubs
+VulkanCompute::VulkanCompute() {}
+VulkanCompute::~VulkanCompute() {}
+bool VulkanCompute::Initialize() { return false; }
+bool VulkanCompute::DispatchGEMV(const float*, const float*, float*, unsigned int, unsigned int) {
+    return false;
+}
 
-} // namespace Deep2
+} // namespace CPUInference

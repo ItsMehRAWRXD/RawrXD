@@ -1,9 +1,11 @@
 #include "vulkan_compute.h"
 #include <chrono>
 #include <fstream>
-#include <shaderc/shaderc.hpp>
 #include <sstream>
 #include <stdexcept>
+
+// Precompiled SPIR-V shaders (no shaderc runtime dependency)
+#include "spirv_shaders.h"
 
 // Vulkan compute backend implementation
 // Uses standard Vulkan 1.3 API for cross-platform GPU compute
@@ -14,81 +16,6 @@
 namespace RawrXD
 {
 
-// Real SPIR-V shaders for matrix operations
-static const char* MATMUL_SHADER = R"(
-#version 450
-layout(local_size_x = 256) in;
-
-layout(binding = 0) readonly buffer InputA {
-    float a[];
-};
-
-layout(binding = 1) readonly buffer InputB {
-    float b[];
-};
-
-layout(binding = 2) writeonly buffer Output {
-    float result[];
-};
-
-layout(push_constant) uniform PushConstants {
-    uint dim;
-} push;
-
-void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    uint row = idx / push.dim;
-    uint col = idx % push.dim;
-    
-    float sum = 0.0;
-    for (uint k = 0; k < push.dim; k++) {
-        sum += a[row * push.dim + k] * b[k * push.dim + col];
-    }
-    
-    result[idx] = sum;
-}
-)";
-
-static const char* SOFTMAX_SHADER = R"(
-#version 450
-layout(local_size_x = 256) in;
-
-layout(binding = 0) buffer Logits {
-    float logits[];
-};
-
-layout(binding = 1) writeonly buffer Output {
-    float probs[];
-};
-
-layout(push_constant) uniform PushConstants {
-    float temperature;
-    uint vocabSize;
-} push;
-
-void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    
-    // Find max for numerical stability
-    float maxLogit = -1e20;
-    for (uint i = 0; i < push.vocabSize; i++) {
-        maxLogit = max(maxLogit, logits[i]);
-    }
-    
-    // Compute exp and sum
-    float sum = 0.0;
-    for (uint i = 0; i < push.vocabSize; i++) {
-        float expVal = exp((logits[i] - maxLogit) / push.temperature);
-        sum += expVal;
-        probs[i] = expVal;
-    }
-    
-    // Normalize
-    for (uint i = 0; i < push.vocabSize; i++) {
-        probs[i] /= sum;
-    }
-}
-)";
 
 VulkanCompute::VulkanCompute()
 {
@@ -127,6 +54,11 @@ void VulkanCompute::shutdown()
         for (auto& [name, layout] : m_pipelineLayouts)
         {
             vkDestroyPipelineLayout(m_device, layout, nullptr);
+        }
+
+        for (auto& [name, dsl] : m_descriptorSetLayouts)
+        {
+            vkDestroyDescriptorSetLayout(m_device, dsl, nullptr);
         }
 
         vkDestroyDevice(m_device, nullptr);
@@ -280,11 +212,11 @@ std::expected<void, VulkanError> VulkanCompute::initialize()
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }
 
-    // Create compute pipelines
+    // Create compute pipelines using precompiled SPIR-V (no runtime shaderc dependency)
     try
     {
         auto matmulResult =
-            createComputePipeline("matmul", compileGLSLToSPIRV(MATMUL_SHADER, "main"),
+            createComputePipeline("matmul", std::vector<uint32_t>(MATMUL_SPV, MATMUL_SPV + MATMUL_SPV_SIZE / sizeof(uint32_t)),
                                   {{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
                                    {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
                                    {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}});
@@ -295,7 +227,7 @@ std::expected<void, VulkanError> VulkanCompute::initialize()
         }
 
         auto softmaxResult =
-            createComputePipeline("softmax", compileGLSLToSPIRV(SOFTMAX_SHADER, "main"),
+            createComputePipeline("softmax", std::vector<uint32_t>(SOFTMAX_SPV, SOFTMAX_SPV + SOFTMAX_SPV_SIZE / sizeof(uint32_t)),
                                   {{0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
                                    {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}});
 
@@ -347,9 +279,13 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(cons
     descriptorAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     descriptorAllocInfo.descriptorPool = m_descriptorPool;
     descriptorAllocInfo.descriptorSetCount = 1;
-    descriptorAllocInfo.pSetLayouts = &m_pipelineLayouts["matmul"];
+    descriptorAllocInfo.pSetLayouts = &m_descriptorSetLayouts["matmul"];
 
     vkAllocateDescriptorSets(m_device, &descriptorAllocInfo, &descriptorSet);
+
+    VkDescriptorBufferInfo bufferInfoA{a.buffer, 0, VK_WHOLE_SIZE};
+    VkDescriptorBufferInfo bufferInfoB{b.buffer, 0, VK_WHOLE_SIZE};
+    VkDescriptorBufferInfo bufferInfoResult{result.buffer, 0, VK_WHOLE_SIZE};
 
     VkWriteDescriptorSet descriptorWrites[3];
 
@@ -360,7 +296,7 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(cons
     descriptorWrites[0].dstArrayElement = 0;
     descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pBufferInfo = &a.buffer;
+    descriptorWrites[0].pBufferInfo = &bufferInfoA;
 
     // Input B
     descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -369,7 +305,7 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(cons
     descriptorWrites[1].dstArrayElement = 0;
     descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[1].descriptorCount = 1;
-    descriptorWrites[1].pBufferInfo = &b.buffer;
+    descriptorWrites[1].pBufferInfo = &bufferInfoB;
 
     // Output
     descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -378,7 +314,7 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(cons
     descriptorWrites[2].dstArrayElement = 0;
     descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     descriptorWrites[2].descriptorCount = 1;
-    descriptorWrites[2].pBufferInfo = &result.buffer;
+    descriptorWrites[2].pBufferInfo = &bufferInfoResult;
 
     vkUpdateDescriptorSets(m_device, 3, descriptorWrites, 0, nullptr);
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_pipelineLayouts["matmul"], 0, 1,
@@ -416,25 +352,6 @@ std::expected<void, VulkanError> VulkanCompute::executeMatrixMultiplication(cons
     vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
 
     return {};
-}
-
-std::vector<uint32_t> VulkanCompute::compileGLSLToSPIRV(const std::string& glslCode, const std::string& entryPoint)
-{
-    // Real GLSL to SPIR-V compilation using shaderc
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetOptimizationLevel(shaderc_optimization_level_performance);
-
-    auto result = compiler.CompileGlslToSpv(glslCode, shaderc_glsl_compute_shader, entryPoint.c_str(), options);
-
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success)
-    {
-        // Fallback or empty if failed
-        return {};
-        // throw std::runtime_error(result.GetErrorMessage());
-    }
-
-    return std::vector<uint32_t>(result.begin(), result.end());
 }
 
 std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
@@ -477,8 +394,11 @@ std::expected<void, VulkanError> VulkanCompute::createComputePipeline(
     pipelineLayoutInfo.pushConstantRangeCount = 1;
     pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
+    m_descriptorSetLayouts[name] = descriptorSetLayout;
+
     if (vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayouts[name]) != VK_SUCCESS)
     {
+        vkDestroyDescriptorSetLayout(m_device, descriptorSetLayout, nullptr);
         vkDestroyShaderModule(m_device, shaderModule, nullptr);
         return std::unexpected(VulkanError::PipelineCreationFailed);
     }

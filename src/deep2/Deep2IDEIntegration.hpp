@@ -24,7 +24,11 @@
 #include "GGUFShardRouter_lanes.hpp"
 #include "FabricTensorTable.hpp"
 
-namespace Deep2 { class Deep2Engine; }
+namespace Deep2 {
+    class Deep2Engine;
+    class IOCPGGUFLoader;
+    class ElasticResidencyManager;
+}
 
 namespace RawrXD {
 
@@ -82,6 +86,9 @@ private:
     static LoadResult LoadSingleFile(const std::string& path);
     static LoadResult LoadShardedDirectory(const std::string& path);
     static bool DetectKimiK2Shards(const std::string& dir, std::vector<std::string>& outShards);
+
+    static std::unique_ptr<::Deep2::IOCPGGUFLoader> s_iocpLoader;
+    static std::unique_ptr<::Deep2::ElasticResidencyManager> s_elastic;
 };
 
 // ============================================================================

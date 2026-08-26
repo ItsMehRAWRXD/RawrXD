@@ -26,6 +26,7 @@
 #include <thread>
 #include <queue>
 #include <chrono>
+#include "GhostCache.hpp"
 
 namespace Deep2 {
 
@@ -90,6 +91,12 @@ struct ElasticResidencyConfig {
     // Whether to use quantized GEMV directly on GPU (skip staging)
     bool useQuantizedGpuPath = false;
 
+    // Whether to use Ghost Cache for reuse prediction
+    bool useGhostCache = true;
+
+    // Ghost Cache capacity (number of tracked evicted tensors)
+    size_t ghostCacheCapacity = 16384;
+
     // Expert-aware: number of experts to keep hot for MoE
     uint32_t moeHotExpertCount = 4;
 };
@@ -108,12 +115,15 @@ struct ResidencyTelemetry {
     std::atomic<uint64_t> vramEvictionUs{0};
     std::atomic<uint64_t> cpuFallbackUs{0};
     std::atomic<uint64_t> stateRaceBlocked{0};  // times a transition was blocked
+    std::atomic<uint64_t> ghostHits{0};          // tensor reloaded after eviction
+    std::atomic<uint64_t> ghostMisses{0};       // tensor loaded without prior eviction record
 
     void Reset() {
         nvmeReadUs = 0; ramStageUs = 0; ramToVramUs = 0;
         gpuWaitUs = 0; gpuComputeUs = 0;
         prefetchHit = 0; prefetchMiss = 0;
         vramEvictionUs = 0; cpuFallbackUs = 0; stateRaceBlocked = 0;
+        ghostHits = 0; ghostMisses = 0;
     }
 
     void Initialize(int /*numLayers*/, int /*numExperts*/) {
@@ -132,6 +142,8 @@ struct ResidencyTelemetry {
         printf("  VRAM eviction us  : %llu\n", (unsigned long long)vramEvictionUs.load());
         printf("  CPU fallback us   : %llu\n", (unsigned long long)cpuFallbackUs.load());
         printf("  State race blocked: %llu\n", (unsigned long long)stateRaceBlocked.load());
+        printf("  Ghost hits        : %llu\n", (unsigned long long)ghostHits.load());
+        printf("  Ghost misses      : %llu\n", (unsigned long long)ghostMisses.load());
         printf("  Efficiency        : %.4f\n", ComputeEfficiency());
         printf("----------------------------------\n");
     }
@@ -244,21 +256,41 @@ public:
     ResidencyState GetTensorState(const std::string& name) const;
     bool IsTensorReadyForCompute(const std::string& name) const;  // Hot or WarmStaged
 
-    // ── Synchronous Acquire (for CPU path) ───────────────────────────
-    // Returns a pointer to usable weight data. May trigger staging.
-    // For quantized CPU kernels: returns compressedData.
-    // For FP32 CPU kernels: returns stagedData.
+    // ── Cyclone Contract: AcquireTensor / ReleaseTensor ───────────────
+    // Narrow interface between Cyclone (temporal) and Elastic (spatial).
+    // Cyclone asks: "I need this tensor by this deadline."
+    // Elastic answers: handle + status.
+    struct ResidencyHandle {
+        uint64_t id = 0;
+        void* cpuPtr = nullptr;      // valid if state >= WarmCompressed
+        void* gpuPtr = nullptr;      // valid if state == Hot
+        ResidencyState state = ResidencyState::Cold;
+        bool ready = false;          // true if usable immediately
+    };
+
+    enum class AcquireStatus : uint8_t {
+        Ready = 0,       // Tensor is resident and ready
+        Pending = 1,     // Async transfer scheduled
+        DeadlineMiss = 2,// Transfer cannot complete by deadline
+        NotFound = 3,    // Tensor not registered
+        Failed = 4       // Allocation or transfer failure
+    };
+
+    // Cyclone calls this before compute. Non-blocking for speculative,
+    // may block for urgent (priority == 0).
+    AcquireStatus AcquireTensor(const std::string& name,
+                                 uint32_t priority,       // 0 = urgent, 255 = speculative
+                                 uint64_t deadlineTicks,    // compute distance
+                                 ResidencyHandle& outHandle);
+
+    // Cyclone calls this when tensor is no longer needed for current compute.
+    // Elastic may evict based on pressure.
+    void ReleaseTensor(const std::string& name);
+
+    // ── Legacy API (kept for backward compatibility) ────────────────────
     const void* AcquireForCpu(const std::string& name, TensorFormat desiredFormat);
     void ReleaseFromCpu(const std::string& name);
-
-    // ── Async Prefetch (for GPU path) ────────────────────────────────
-    // Request that tensor become Hot by the time it is needed.
-    // Non-blocking. Returns immediately; actual work happens on scheduler thread.
     void PrefetchToGpu(const std::string& name, uint32_t targetLayer);
-
-    // ── GPU Compute Binding ──────────────────────────────────────────
-    // Called by Deep2Engine before launching a kernel.
-    // Ensures tensor is Hot. Blocks ONLY if prefetch failed to keep up.
     const void* BindForGpuCompute(const std::string& name);
     void UnbindFromGpuCompute(const std::string& name);
 
@@ -313,6 +345,9 @@ private:
                         const std::string& name,
                         uint32_t priority);
 
+    // ── GhostCache Accounting ──────────────────────────────────────
+    void AccountGhostAccess(const std::string& name, uint32_t layerIndex);
+
     // ── Members ──────────────────────────────────────────────────────
     ElasticResidencyConfig config_;
     std::atomic<bool> initialized_{false};
@@ -344,6 +379,9 @@ private:
     // Expert predictor (optional, for MoE)
     std::shared_ptr<IExpertPredictor> expertPredictor_;
     mutable std::mutex predictorMutex_;
+
+    // Ghost Cache (reuse predictor)
+    std::unique_ptr<GhostCache> ghostCache_;
 
     // File handle for NVMe reads (platform-specific)
     void* fileHandle_ = nullptr;  // Windows: HANDLE, Linux: int fd

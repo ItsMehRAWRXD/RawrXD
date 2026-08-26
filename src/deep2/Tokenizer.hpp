@@ -80,7 +80,7 @@ public:
         size_t pos = 0;
         while (pos < text.size()) {
             // Try longest match first
-            size_t maxLen = std::min(text.size() - pos, (size_t)64); // Max token length
+            size_t maxLen = (std::min)(text.size() - pos, (size_t)64); // Max token length
             bool found = false;
             for (size_t len = maxLen; len > 0; --len) {
                 std::string sub = text.substr(pos, len);

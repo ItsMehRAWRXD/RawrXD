@@ -1,0 +1,38 @@
+#version 450
+layout(local_size_x = 256) in;
+
+layout(binding = 0) buffer Logits {
+    float logits[];
+};
+
+layout(binding = 1) writeonly buffer Output {
+    float probs[];
+};
+
+layout(push_constant) uniform PushConstants {
+    float temperature;
+    uint vocabSize;
+} push;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    // Find max for numerical stability
+    float maxLogit = -1e20;
+    for (uint i = 0; i < push.vocabSize; i++) {
+        maxLogit = max(maxLogit, logits[i]);
+    }
+    
+    // Compute exp and sum
+    float sum = 0.0;
+    for (uint i = 0; i < push.vocabSize; i++) {
+        float expVal = exp((logits[i] - maxLogit) / push.temperature);
+        sum += expVal;
+        probs[i] = expVal;
+    }
+    
+    // Normalize
+    for (uint i = 0; i < push.vocabSize; i++) {
+        probs[i] /= sum;
+    }
+}

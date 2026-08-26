@@ -7,6 +7,9 @@
 #include <cstddef>
 #include <vector>
 
+namespace rawrxd {
+namespace telemetry {
+
 template <size_t Capacity = 65536>
 class LockFreeLatencyTracker {
     static_assert((Capacity & (Capacity - 1)) == 0, "Capacity must be a power of 2");
@@ -100,3 +103,8 @@ private:
 
 // Convenience alias for PCIe stall tracking
 using PCIeStallTracker = LockFreeLatencyTracker<65536>;
+
+using DefaultLatencyTracker = LockFreeLatencyTracker<>;
+
+} // namespace telemetry
+} // namespace rawrxd

@@ -1,0 +1,77 @@
+[1/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelMASM.cpp.obj
+[2/4] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\deep2_link_stubs.cpp.obj
+FAILED: [code=2] CMakeFiles/InferenceEngine.dir/src/deep2/deep2_link_stubs.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DRAWR_STANDALONE_INFERENCE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\src\masm -ID:\rawrxd\src\runtime\governance -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\InferenceEngine.dir\src\deep2\deep2_link_stubs.cpp.obj /FdCMakeFiles\InferenceEngine.dir\InferenceEngine.pdb /FS -c D:\rawrxd\src\deep2\deep2_link_stubs.cpp
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(15): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(18): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(18): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(19): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(19): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2039: 'path': is not a member of 'std'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\queue(32): note: see declaration of 'std'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2065: 'path': undeclared identifier
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2923: 'std::vector': 'path' is not a valid template type argument for parameter '_Ty'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): note: see declaration of 'path'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2955: 'std::vector': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(20): error C2955: 'std::vector': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2065: 'TensorRepair': undeclared identifier
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2923: 'std::vector': 'TensorRepair' is not a valid template type argument for parameter '_Ty'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): note: see declaration of 'TensorRepair'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2270: 'GetRepairs': modifiers not allowed on nonmember functions
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(21): error C2955: 'std::vector': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2065: 'TensorRepair': undeclared identifier
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2923: 'std::vector': 'TensorRepair' is not a valid template type argument for parameter '_Ty'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): note: see declaration of 'TensorRepair'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2641: cannot deduce template arguments for 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(22): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2065: 'TensorCorruption': undeclared identifier
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2923: 'std::vector': 'TensorCorruption' is not a valid template type argument for parameter '_Ty'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): note: see declaration of 'TensorCorruption'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2270: 'GetCorruptions': modifiers not allowed on nonmember functions
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(25): error C2955: 'std::vector': use of class template requires template argument list
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2065: 'TensorCorruption': undeclared identifier
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2923: 'std::vector': 'TensorCorruption' is not a valid template type argument for parameter '_Ty'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): note: see declaration of 'TensorCorruption'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2976: 'std::vector': too few template arguments
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2641: cannot deduce template arguments for 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2783: 'std::vector<_Ty,_Alloc> std::vector(void) noexcept(<expr>)': could not deduce template argument for '_Ty'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(670): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(26): error C2780: 'std::vector<_Ty,_Alloc> std::vector(std::vector<_Ty,_Alloc>)': expects 1 arguments - 0 provided
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(442): note: see declaration of 'std::vector'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(29): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(30): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(31): error C2653: 'ReverseHotpatchEngine': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(43): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(43): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(43): error C2143: syntax error: missing ',' before '&'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(43): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(44): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(44): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(45): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(48): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(51): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(51): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(51): error C2143: syntax error: missing ',' before '&'
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(52): error C2653: 'SovereignOutOfCoreRuntime': is not a class or namespace name
+D:\rawrxd\src\deep2\deep2_link_stubs.cpp(52): error C2270: 'currentThrottle': modifiers not allowed on nonmember functions
+ninja: build stopped: subcommand failed.

@@ -39,6 +39,13 @@ bool ElasticResidencyManager::Initialize(const ElasticResidencyConfig& config) {
     initialized_.store(true);
     shutdownRequested_.store(false);
 
+    // Initialize Ghost Cache if enabled
+    if (config_.useGhostCache) {
+        ghostCache_ = std::make_unique<GhostCache>(config_.ghostCacheCapacity);
+        printf("[ElasticResidencyManager] GhostCache enabled: capacity=%zu entries\n",
+               config_.ghostCacheCapacity);
+    }
+
     // Start scheduler thread
     schedulerThread_ = std::thread(&ElasticResidencyManager::SchedulerThreadBody, this);
 
@@ -208,8 +215,167 @@ const void* ElasticResidencyManager::AcquireForCpu(const std::string& name,
 
 void ElasticResidencyManager::ReleaseFromCpu(const std::string& name) {
     // For now, CPU release is a no-op; LRU eviction handles cleanup.
-    // In the future, this could decrement a use-count for eager eviction.
     (void)name;
+}
+
+// ============================================================================
+// GhostCache Accounting Helpers
+// ============================================================================
+void ElasticResidencyManager::AccountGhostAccess(const std::string& name, uint32_t layerIndex) {
+    if (!ghostCache_) return;
+    // RecordHit returns true iff tensor was previously evicted (in ghost cache).
+    // This is the single source of truth for hit/miss classification.
+    bool wasGhostHit = ghostCache_->RecordHit(name, layerIndex);
+    if (wasGhostHit) {
+        telemetry_.ghostHits.fetch_add(1);
+    } else {
+        telemetry_.ghostMisses.fetch_add(1);
+        // Establish ghost history so future reacquisitions become hits.
+        ghostCache_->RecordEvict(name, layerIndex);
+    }
+}
+
+// ============================================================================
+// Cyclone Contract: AcquireTensor / ReleaseTensor
+// ============================================================================
+ElasticResidencyManager::AcquireStatus ElasticResidencyManager::AcquireTensor(
+    const std::string& name,
+    uint32_t priority,
+    uint64_t deadlineTicks,
+    ResidencyHandle& outHandle)
+{
+    auto t = FindTensor(name);
+    if (!t) return AcquireStatus::NotFound;
+
+    ResidencyState current = t->state.load();
+
+    // Fast path: already Hot
+    if (current == ResidencyState::Hot) {
+        outHandle.id = t->layerIndex;
+        outHandle.cpuPtr = t->compressedData;
+        outHandle.gpuPtr = t->gpuData;
+        outHandle.state = ResidencyState::Hot;
+        outHandle.ready = true;
+        t->lastUseSequence.fetch_add(1);
+        return AcquireStatus::Ready;
+    }
+
+    // Fast path: WarmStaged (CPU-usable, can DMA)
+    if (current == ResidencyState::WarmStaged) {
+        outHandle.id = t->layerIndex;
+        outHandle.cpuPtr = t->stagedData;
+        outHandle.gpuPtr = nullptr;
+        outHandle.state = ResidencyState::WarmStaged;
+        outHandle.ready = true;
+        t->lastUseSequence.fetch_add(1);
+        return AcquireStatus::Ready;
+    }
+
+    // Fast path: WarmCompressed (CPU-usable quantized)
+    if (current == ResidencyState::WarmCompressed) {
+        outHandle.id = t->layerIndex;
+        outHandle.cpuPtr = t->compressedData;
+        outHandle.gpuPtr = nullptr;
+        outHandle.state = ResidencyState::WarmCompressed;
+        outHandle.ready = true;
+        t->lastUseSequence.fetch_add(1);
+        return AcquireStatus::Ready;
+    }
+
+    // Urgent path: priority == 0 means block until CPU-resident
+    // For CPU inference, WarmCompressed (quantized) or WarmStaged (FP32) is sufficient.
+    // Only push to VRAM if explicitly requested via deadlineTicks != 0.
+    if (priority == 0) {
+        auto start = std::chrono::steady_clock::now();
+
+        // Stage synchronously: Cold → WarmCompressed
+        if (current == ResidencyState::Cold) {
+            ExecuteNvmeToRam(*t);
+            current = t->state.load();
+            // Cold load: classify as ghost hit (reacquire after eviction)
+            // or ghost miss (first observation).
+            AccountGhostAccess(t->name, t->layerIndex);
+        }
+
+        // If GPU path requested (deadlineTicks > 0), continue to Hot
+        bool needVram = (deadlineTicks > 0);
+        if (needVram) {
+            if (current == ResidencyState::WarmCompressed && !config_.useQuantizedGpuPath) {
+                ExecuteDequantStage(*t);
+                current = t->state.load();
+            }
+            if (current == ResidencyState::WarmStaged || current == ResidencyState::WarmCompressed) {
+                if (!ReserveHot(t->gpuBytes)) {
+                    EvictLeastRecentlyUsed(t->gpuBytes);
+                }
+                ExecuteRamToVram(*t);
+                current = t->state.load();
+            }
+        }
+
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        telemetry_.gpuWaitUs.fetch_add(elapsed);
+
+        // Return appropriate handle based on final state
+        if (current == ResidencyState::Hot) {
+            outHandle.id = t->layerIndex;
+            outHandle.cpuPtr = t->compressedData;
+            outHandle.gpuPtr = t->gpuData;
+            outHandle.state = ResidencyState::Hot;
+            outHandle.ready = true;
+            t->lastUseSequence.fetch_add(1);
+            return AcquireStatus::Ready;
+        }
+        if (current == ResidencyState::WarmStaged) {
+            outHandle.id = t->layerIndex;
+            outHandle.cpuPtr = t->stagedData;
+            outHandle.gpuPtr = nullptr;
+            outHandle.state = ResidencyState::WarmStaged;
+            outHandle.ready = true;
+            t->lastUseSequence.fetch_add(1);
+            return AcquireStatus::Ready;
+        }
+        if (current == ResidencyState::WarmCompressed) {
+            outHandle.id = t->layerIndex;
+            outHandle.cpuPtr = t->compressedData;
+            outHandle.gpuPtr = nullptr;
+            outHandle.state = ResidencyState::WarmCompressed;
+            outHandle.ready = true;
+            t->lastUseSequence.fetch_add(1);
+            return AcquireStatus::Ready;
+        }
+        return AcquireStatus::Failed;
+    }
+
+    // Non-urgent: enqueue async transfer
+    if (current == ResidencyState::Cold) {
+        EnqueueRequest(TransferRequest::Type::NvmeToRam, name, priority);
+    }
+    if (!config_.useQuantizedGpuPath) {
+        EnqueueRequest(TransferRequest::Type::DequantStage, name, priority);
+    }
+    EnqueueRequest(TransferRequest::Type::RamToVram, name, priority);
+
+    outHandle.ready = false;
+    outHandle.state = ResidencyState::Cold;
+    return AcquireStatus::Pending;
+}
+
+void ElasticResidencyManager::ReleaseTensor(const std::string& name) {
+    auto t = FindTensor(name);
+    if (!t) return;
+
+    // Decrement implicit refcount; if zero and under pressure, evict
+    // For now, just update LRU. Eviction is lazy.
+    (void)t;
+
+    // Periodic decay of ghost cache scores (every 64 releases)
+    static std::atomic<uint64_t> releaseCounter{0};
+    uint64_t cnt = releaseCounter.fetch_add(1);
+    if (ghostCache_ && (cnt & 63) == 0) {
+        ghostCache_->Decay();
+    }
 }
 
 // ============================================================================
@@ -365,10 +531,21 @@ void ElasticResidencyManager::EvictLeastRecentlyUsed(size_t bytesNeeded) {
         }
     }
 
-    // Sort by lastUseSequence ascending (oldest first)
+    // Sort by composite score: LRU sequence + ghost reuse penalty
+    // Lower score = better eviction candidate
     std::sort(candidates.begin(), candidates.end(),
-              [](ElasticResidentTensor* a, ElasticResidentTensor* b) {
-                  return a->lastUseSequence.load() < b->lastUseSequence.load();
+              [this](ElasticResidentTensor* a, ElasticResidentTensor* b) {
+                  uint64_t scoreA = a->lastUseSequence.load();
+                  uint64_t scoreB = b->lastUseSequence.load();
+                  if (ghostCache_) {
+                      // Higher ghost score = more likely to be reused = worse victim
+                      // Add penalty to LRU score: score += ghostScore * weight
+                      uint32_t gA = ghostCache_->GetReuseScore(a->name);
+                      uint32_t gB = ghostCache_->GetReuseScore(b->name);
+                      scoreA += static_cast<uint64_t>(gA) * 1000000ULL;
+                      scoreB += static_cast<uint64_t>(gB) * 1000000ULL;
+                  }
+                  return scoreA < scoreB;
               });
 
     size_t freed = 0;
@@ -385,11 +562,13 @@ void ElasticResidencyManager::EvictLeastRecentlyUsed(size_t bytesNeeded) {
             telemetry_.vramEvictionUs.fetch_add(
                 std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count());
             freed += t->gpuBytes;
+            if (ghostCache_) ghostCache_->RecordEvict(t->name, t->layerIndex);
         } else if (s == ResidencyState::WarmStaged) {
             if (TryTransition(t->name, ResidencyState::WarmStaged, ResidencyState::WarmCompressed)) {
                 ExecuteFreeStaged(*t);
             }
             freed += t->stagedAllocated;
+            if (ghostCache_) ghostCache_->RecordEvict(t->name, t->layerIndex);
         } else if (s == ResidencyState::WarmCompressed) {
             if (TryTransition(t->name, ResidencyState::WarmCompressed, ResidencyState::Cold)) {
                 if (t->compressedData) {
@@ -404,6 +583,7 @@ void ElasticResidencyManager::EvictLeastRecentlyUsed(size_t bytesNeeded) {
                 ReleaseWarmCompressed(t->compressedBytes);
             }
             freed += t->compressedBytes;
+            if (ghostCache_) ghostCache_->RecordEvict(t->name, t->layerIndex);
         }
     }
 }

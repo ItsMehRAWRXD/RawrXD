@@ -191,7 +191,7 @@ protected:
     // Apply repetition penalty to logits based on token history
     virtual void applyPenalties(std::vector<float>& logits) {
         if (tokenHistory_.empty() || logits.empty()) return;
-        size_t window = std::min(tokenHistory_.size(), size_t(64));
+        size_t window = (std::min)(tokenHistory_.size(), size_t(64));
         std::unordered_set<int> recent(tokenHistory_.end() - window, tokenHistory_.end());
         for (int tok : recent) {
             if (tok >= 0 && tok < (int)logits.size()) {

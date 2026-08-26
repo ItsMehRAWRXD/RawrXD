@@ -471,50 +471,28 @@ void Win32IDE_TabManager::initializeGPUSovereignControl()
 
 void Win32IDE_TabManager::performGPUHealthCheck()
 {
-    // Read telemetry
-    uint64_t telemetry = RDNA3_Telemetry_Read();
-
-    // Check MMIO registers
-    uint64_t reg_value = RDNA3_MMIO_Read(0x1A20); // Page fault counter
-
-    // Perform power pulse for health check
-    RDNA3_Power_Pulse();
-
-    // Validate entropy generation
-    Neural_Entropy_Generate();
+    // DISABLED: No real GPU health check API available on Windows user-mode.
+    // These extern declarations reference non-existent ASM symbols.
+    OutputDebugStringA("[TabManager] performGPUHealthCheck: no-op (no GPU API)\n");
 }
 
 void Win32IDE_TabManager::enableNeuralEntropyShield()
 {
-    // Generate quantum-resistant entropy
-    Neural_Entropy_Generate();
-
-    // Enable speculative preload
-    RDNA3_Speculative_Preload();
+    // DISABLED: No real neural entropy API available.
+    OutputDebugStringA("[TabManager] enableNeuralEntropyShield: no-op\n");
 }
 
 void Win32IDE_TabManager::optimizeVirtualMemory()
 {
-    // Allocate huge pages
-    uint64_t huge_page = RDNA3_HugePage_Allocate();
-
-    // Virtualize address space
-    uint64_t virtualized = RDNA3_3X_Virtualize(huge_page);
-
-    // Scale elastically
-    uint64_t scaled = RDNA3_Elastic_Scale(virtualized);
+    // DISABLED: No real virtual memory optimization API.
+    // Windows already handles this via VirtualAlloc/Memory Manager.
+    OutputDebugStringA("[TabManager] optimizeVirtualMemory: no-op (OS managed)\n");
 }
 
-void Win32IDE_TabManager::compressModelData(uint8_t* data, size_t size)
+void Win32IDE_TabManager::compressModelData(uint8_t* /*data*/, size_t /*size*/)
 {
-    // Deflate using sovereign codec
-    RDNA3_Sovereign_Deflate(data, data + size);
-
-    // Expand 3x if needed
-    RDNA3_3x_Expand(data, data + size * 3);
-
-    // Custom inflate
-    RDNA3_Custom_Inflate(data, data + size);
+    // DISABLED: No real sovereign codec. Use standard compression APIs instead.
+    OutputDebugStringA("[TabManager] compressModelData: no-op (use standard APIs)\n");
 }
 
 void Win32IDE_TabManager::authenticateSiliconIntegrity()

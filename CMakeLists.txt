@@ -4754,7 +4754,6 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/mars/TensorHotpatch.cpp
     src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
-    src/deep2/deep2_link_stubs.cpp
     # ═══════════════════════════════════════════════════════════════════
     # Agentic Core — minimal verified set (add more after individual validation)
     # ═══════════════════════════════════════════════════════════════════

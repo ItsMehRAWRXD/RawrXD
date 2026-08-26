@@ -46,6 +46,7 @@ namespace Deep2 {
 
 // Forward declarations
 class ReverseIntegration;
+class Deep2TelemetryController;
 
 // ============================================================================
 // Weight Tensor - Real quantized weight storage
@@ -558,6 +559,10 @@ private:
     std::unique_ptr<ProductionProfiler> profiler_;
     std::vector<TokenProfile> profileHistory_;
     bool profilingEnabled_ = false;
+
+    // Deep2 Active Telemetry Controller (PCIe stall + bandwidth + residency)
+    std::unique_ptr<Deep2TelemetryController> telemetryController_;
+    bool telemetryControllerEnabled_ = false;
 
     // Sovereign Engine components (Dragon Lore)
     std::unique_ptr<rawrxd::Chamber> chamber_;              // SM0-DSP clash detector

@@ -3,17 +3,6 @@
 // Dynamic dual-GPU VRAM allocator with tensor leases
 // Replaces static GPU parity with runtime tensor placement decisions
 // ============================================================================
-// Hardware target:
-//   GPU0: Sapphire R9700 AI Pro  32GB VRAM (primary)
-//   GPU1: RX 7800 XT             16GB VRAM (secondary)
-//
-// No permanent GPU ownership. No fixed layer split. No one-way migration.
-// Tensors are leased, not owned. The system continuously decides:
-//   - where tensors live
-//   - when VRAM is reclaimed
-//   - when blocks are restored
-//   - which GPU executes the next workload
-// ============================================================================
 
 #pragma once
 
@@ -26,9 +15,22 @@
 #include <mutex>
 #include <functional>
 #include <atomic>
+#include <chrono>
 
 namespace Deep2 {
 namespace MARS {
+
+// ============================================================================
+// Hotpatch Result
+// ============================================================================
+enum class HotpatchResult {
+    SUCCESS = 0,
+    SOURCE_NOT_FOUND,
+    ALREADY_ON_TARGET,
+    GPU_UNHEALTHY,
+    DESTINATION_FULL,
+    MIGRATION_FAILED
+};
 
 // ============================================================================
 // Tensor Lease — dynamic GPU ownership (not permanent assignment)
@@ -46,9 +48,13 @@ struct VRAMLease {
     bool        hotpatchable = true;  // Can be moved without reload
     bool        resident = false;     // Currently in VRAM
     bool        recoverable = true;   // Can be rebuilt from GGUF
+    bool        pinned = false;       // Cannot be evicted
 
     void*       devicePtr = nullptr;  // GPU-side pointer
     void*       hostPtr = nullptr;    // Host-mapped pointer (if any)
+
+    uint64_t    lastAccess = 0;       // Timestamp of last access
+    uint32_t    accessCount = 0;      // Number of accesses
 
     enum class State {
         HostOnly,       // Not on GPU
@@ -59,6 +65,27 @@ struct VRAMLease {
         Recovered,      // Restored from GGUF
         Migrating       // In transit
     } state = State::HostOnly;
+
+    void RecordAccess() {
+        lastAccess = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::high_resolution_clock::now().time_since_epoch()).count());
+        accessCount++;
+    }
+};
+
+// ============================================================================
+// GPU State — per-GPU metrics
+// ============================================================================
+struct GPUState {
+    int     gpuId = -1;
+    size_t  totalBytes = 0;
+    size_t  usedBytes = 0;
+    size_t  freeBytes = 0;
+    float   load = 0.0f;
+    float   bandwidth = 0.0f;
+    float   tps = 0.0f;
+    bool    healthy = true;
 };
 
 // ============================================================================
@@ -87,6 +114,10 @@ struct DynamicParity {
     float   load[2] = {0.0f, 0.0f};
     float   bandwidth[2] = {0.0f, 0.0f};
     bool    canMoveTensor = true;
+
+    GPUState gpu[2];
+    float   imbalance = 0.0f;
+    uint64_t lastRebalance = 0;
 
     void Update(const GPUAgent& gpu0, const GPUAgent& gpu1);
     int SelectBestGPU(size_t bytes, float priority) const;
@@ -127,126 +158,142 @@ struct TensorRecovery {
 };
 
 // ============================================================================
+// Eviction Policy
+// ============================================================================
+enum class EvictionPolicy {
+    LRU = 0,
+    LFU,
+    PRIORITY,
+    HYBRID
+};
+
+// ============================================================================
+// GPU Pool — per-GPU tensor storage
+// ============================================================================
+struct GPUPool {
+    size_t totalBytes = 0;
+    size_t usedBytes = 0;
+    bool healthy = true;
+    mutable std::mutex mutex;
+    std::unordered_map<uint64_t, std::unique_ptr<VRAMLease>> tensors;
+};
+
+// ============================================================================
+// Forward declaration
+// ============================================================================
+class MARSController;
+
+// ============================================================================
+// Tensor Hotpatch — runtime tensor migration
+// ============================================================================
+class TensorHotpatch {
+public:
+    explicit TensorHotpatch(MARSController* controller);
+
+    HotpatchResult Redirect(uint64_t tensorId, int targetGPU);
+    std::vector<HotpatchResult> RedirectBatch(
+        const std::vector<std::pair<uint64_t, int>>& migrations);
+    bool Prestage(uint64_t tensorId, int targetGPU);
+    bool VerifyIntegrity(uint64_t tensorId);
+
+private:
+    MARSController* controller_ = nullptr;
+    std::mutex migrationMutex_;
+};
+
+// ============================================================================
 // MARS Controller — dynamic orchestration layer
 // ============================================================================
-class Controller {
+class MARSController {
 public:
-    Controller();
-    ~Controller();
+    MARSController();
+    ~MARSController();
 
     // ------------------------------------------------------------------------
     // Lifecycle
     // ------------------------------------------------------------------------
     bool Initialize(size_t gpu0TotalVRAM, size_t gpu1TotalVRAM);
     void Shutdown();
-    bool IsInitialized() const { return initialized_; }
+    bool IsInitialized() const { return initialized_.load(); }
 
     // ------------------------------------------------------------------------
     // Tensor lease management
     // ------------------------------------------------------------------------
-    VRAMLease* CreateLease(
+    VRAMLease* PlaceTensor(
         uint64_t    tensorId,
         const std::string& name,
         size_t      bytes,
         float       priority,
-        int         preferredGPU = -1
+        bool        pin = false
     );
 
-    bool ReleaseLease(uint64_t tensorId);
-    bool ReleaseLease(VRAMLease* lease);
-
-    // ------------------------------------------------------------------------
-    // Dynamic placement — the core MARS decision engine
-    // ------------------------------------------------------------------------
-    int ResolvePlacement(
-        size_t  bytes,
-        float   priority,
-        int     hintGPU = -1
-    );
-
-    bool RedirectLease(VRAMLease& lease, int targetGPU);
-    bool MigrateTensor(uint64_t tensorId, int targetGPU);
-    bool EvictToHost(uint64_t tensorId);
-    bool RestoreToGPU(uint64_t tensorId, int targetGPU = -1);
-
-    // ------------------------------------------------------------------------
-    // Rebalancing — continuous optimization
-    // ------------------------------------------------------------------------
-    void RebalanceAll();
-    void RebalancePressure();   // Move under pressure
-    void RebalanceIdle();       // Move to idle GPU
-    void RebalanceBandwidth();  // Optimize for bandwidth
-
-    // ------------------------------------------------------------------------
-    // Hotpatch VRAM — redirect ownership at runtime
-    // ------------------------------------------------------------------------
-    bool HotpatchRedirect(VRAMLease& lease, int targetGPU);
-    bool HotpatchRollback(VRAMLease& lease);
-    bool HotpatchVerify(VRAMLease& lease);
-
-    // ------------------------------------------------------------------------
-    // Recovery — reverse tensor drop/undrop
-    // ------------------------------------------------------------------------
-    bool DropVRAMBlock(VRAMBlock& block);
-    bool UndropVRAMBlock(VRAMBlock& block);
-    bool RecoverTensor(uint64_t tensorId);
-
-    // ------------------------------------------------------------------------
-    // Split planner — initial placement for GGUF load
-    // ------------------------------------------------------------------------
-    DualGPUSplit PlanSplit(
-        const std::vector<std::pair<uint64_t, size_t>>& tensorSizes,
-        size_t gpu0VRAM,
-        size_t gpu1VRAM
-    );
+    bool EvictTensor(uint64_t tensorId);
+    bool EvictLeastImportant(int gpu, size_t minBytesToFree);
 
     // ------------------------------------------------------------------------
     // Queries
     // ------------------------------------------------------------------------
-    size_t GetFreeVRAM(int gpu) const;
-    size_t GetUsedVRAM(int gpu) const;
-    float  GetGPUUtilization(int gpu) const;
-    size_t GetLeaseCount() const;
-    VRAMLease* GetLease(uint64_t tensorId);
-    const std::vector<TensorRecovery>& GetRecoveryLog() const;
+    VRAMLease* GetTensor(uint64_t tensorId);
+    VRAMLease* FindTensorByName(const std::string& name);
+    void RecordTensorAccess(uint64_t tensorId);
 
     // ------------------------------------------------------------------------
-    // Callbacks
+    // Rebalancing
     // ------------------------------------------------------------------------
-    using LeaseMovedCallback = std::function<void(const VRAMLease&, int fromGPU, int toGPU)>;
-    using LeaseDroppedCallback = std::function<void(const VRAMLease&)>;
-    using LeaseRecoveredCallback = std::function<void(const VRAMLease&)>;
+    void Rebalance();
 
-    void SetLeaseMovedCallback(LeaseMovedCallback cb);
-    void SetLeaseDroppedCallback(LeaseDroppedCallback cb);
-    void SetLeaseRecoveredCallback(LeaseRecoveredCallback cb);
+    // ------------------------------------------------------------------------
+    // Fault handling
+    // ------------------------------------------------------------------------
+    bool HandleTensorFault(uint64_t tensorId);
+    bool HandleGPUFailure(int gpu);
+
+    // ------------------------------------------------------------------------
+    // Parity
+    // ------------------------------------------------------------------------
+    DynamicParity GetCurrentParity() const;
+
+    // ------------------------------------------------------------------------
+    // Health
+    // ------------------------------------------------------------------------
+    bool IsGPUHealthy(int gpu) const;
+    void MarkGPUUnhealthy(int gpu);
+    void MarkGPUHealthy(int gpu);
+
+    // ------------------------------------------------------------------------
+    // Hotpatch access
+    // ------------------------------------------------------------------------
+    TensorHotpatch* GetTensorHotpatch() const { return hotpatch_.get(); }
+
+    // ------------------------------------------------------------------------
+    // Internal allocation (host placeholder for device memory)
+    // ------------------------------------------------------------------------
+    void* AllocateDeviceMemory(size_t bytes);
+    void FreeDeviceMemory(void* ptr);
 
 private:
-    bool initialized_ = false;
+    std::atomic<bool> initialized_{false};
+    std::mutex globalMutex_;
 
-    GPUAgent gpu0_;
-    GPUAgent gpu1_;
-    DynamicParity parity_;
+    GPUPool pools_[2];
 
-    mutable std::mutex leasesMutex_;
-    std::unordered_map<uint64_t, std::unique_ptr<VRAMLease>> leases_;
-    std::vector<TensorRecovery> recoveryLog_;
+    std::atomic<size_t> totalAllocated_{0};
+    std::atomic<size_t> totalFreed_{0};
+    std::atomic<size_t> migrationCount_{0};
+    std::atomic<size_t> faultCount_{0};
 
-    size_t vramUsed0_ = 0;
-    size_t vramUsed1_ = 0;
-    size_t vramTotal0_ = 0;
-    size_t vramTotal1_ = 0;
+    size_t minFreeBytes_ = 64 * 1024 * 1024;  // 64 MB minimum free
+    float rebalanceThreshold_ = 0.2f;        // 20% imbalance threshold
+    EvictionPolicy evictionPolicy_ = EvictionPolicy::HYBRID;
 
-    LeaseMovedCallback    onMoved_;
-    LeaseDroppedCallback  onDropped_;
-    LeaseRecoveredCallback onRecovered_;
+    std::unique_ptr<TensorHotpatch> hotpatch_;
 
-    // Internal
-    bool CanFit(size_t bytes, int gpu) const;
-    int  SelectTargetGPU(size_t bytes, float priority, int hint) const;
-    void RecordRecovery(const VRAMLease& lease, VRAMLease::State prev, VRAMLease::State cur, const char* reason);
-    bool CopyTensor(int fromGPU, int toGPU, uint64_t tensorId, size_t bytes);
-    bool UploadFromHost(int gpu, uint64_t tensorId, const void* data, size_t bytes);
+    // Internal methods
+    int SelectBestGPU(size_t bytes, float priority);
+    bool CanFit(int gpu, size_t bytes);
+    size_t CalculateEvictionScore(const VRAMLease& lease);
+    bool MigrateTensorInternal(uint64_t tensorId, int sourceGPU, int targetGPU);
+    void UpdateParityMetrics();
 };
 
 // ============================================================================
