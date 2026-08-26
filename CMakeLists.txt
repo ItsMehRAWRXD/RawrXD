@@ -4687,6 +4687,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/GGUFLoader.cpp
     src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
+    src/deep2/QuantKernelMASM.cpp
     src/deep2/IQQuantKernels.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
@@ -4876,8 +4877,9 @@ list(REMOVE_ITEM INFERENCE_ENGINE_LIBRARY_SOURCES
 )
 
 add_library(InferenceEngine STATIC ${INFERENCE_ENGINE_LIBRARY_SOURCES})
-# Link precompiled MASM tracer object
+# Link precompiled MASM objects (tracer + quantKB)
 target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/ResidencyTrace.obj")
+target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -4982,6 +4984,7 @@ endif()
             src/deep2/sovereign_q6_k_gemv.asm
             src/deep2/sovereign_q8_0_gemv.asm
             src/deep2/sovereign_fp16_gemv.asm
+            src/deep2/QuantKB.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -5286,7 +5289,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/unlinked_symbols_batch_020.cpp
         src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
         src/ANSIParser.cpp  # ADDED: Real ANSIParser implementation (replaces stub in unlinked_symbols_batch_021.cpp)
-        src/core/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
+        src/vulkan_kernel_stubs.cpp  # ADDED: Provides VulkanKernel_* symbols for RawrXD_VulkanBridge.asm
 
         # ASM link stubs for missing symbols
         # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)

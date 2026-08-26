@@ -70,6 +70,149 @@ void QuantKernelRegistry::ProbeCPU() {
     cpu_.avx512vnni = (ecx & (1 << 11)) != 0;
 }
 
+// ===========================================================================
+// MASM KERNEL DECLARATIONS (linked from .asm files)
+// ===========================================================================
+extern "C" {
+    // Q4_K MASM kernels
+    void Sovereign_Q4K_GEMV_AVX2(const void* q4_weights, const float* input,
+                                    float* output, unsigned int num_blocks, unsigned int rows);
+    void Sovereign_Q4K_GEMV_AVX2_V2(const void* q4_weights, const float* input,
+                                     float* output, unsigned int num_blocks, unsigned int rows);
+
+    // Q2_K / Q3_K MASM kernels
+    void Sovereign_Q2K_GEMV_AVX2_V2(const void* q2_weights, const float* input,
+                                     float* output, unsigned int num_blocks, unsigned int rows);
+    void Sovereign_Q3K_GEMV_AVX2_V2(const void* q3_weights, const float* input,
+                                     float* output, unsigned int num_blocks, unsigned int rows);
+
+    // Q4_0 / Q4_1 / Q8_0 / Q5_K / Q6_K MASM kernels
+    void Deep2_Q4_0_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
+    void Deep2_Q4_1_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
+    void Deep2_Q8_0_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
+    void Deep2_Q5_K_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
+    void Deep2_Q6_K_GEMV(const void* blocks, const float* x, float* out, std::size_t nBlocks);
+
+    // FP16 GEMV
+    void Deep2_FP16_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int rows, unsigned int cols);
+}
+
+// ===========================================================================
+// MASM WRAPPER FUNCTIONS
+// Bridge the standard GEMV signature to the MASM ABI
+// ===========================================================================
+
+// Q4_K wrapper: standard GEMV -> Sovereign_Q4K_GEMV_AVX2_V2
+static void gemv_q4_k_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    Sovereign_Q4K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                                  static_cast<unsigned int>(rows));
+}
+
+// Q2_K wrapper
+static void gemv_q2_k_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    Sovereign_Q2K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                                  static_cast<unsigned int>(rows));
+}
+
+// Q3_K wrapper
+static void gemv_q3_k_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    Sovereign_Q3K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                                  static_cast<unsigned int>(rows));
+}
+
+// Q4_0 wrapper
+static void gemv_q4_0_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 31) / 32;
+    Deep2_Q4_0_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
+}
+
+// Q4_1 wrapper
+static void gemv_q4_1_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 31) / 32;
+    Deep2_Q4_1_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
+}
+
+// Q8_0 wrapper
+static void gemv_q8_0_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 31) / 32;
+    Deep2_Q8_0_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
+}
+
+// Q5_K wrapper
+static void gemv_q5_k_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    Deep2_Q5_K_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
+}
+
+// Q6_K wrapper
+static void gemv_q6_k_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    size_t blocksPerRow = (cols + 255) / 256;
+    Deep2_Q6_K_GEMV(w, x, y, static_cast<std::size_t>(blocksPerRow));
+}
+
+// FP16 wrapper
+static void gemv_f16_masm(
+    const uint8_t* RESTRICT w,
+    const float*  RESTRICT x,
+    float*        RESTRICT y,
+    size_t rows, size_t cols
+) {
+    Deep2_FP16_GEMV(w, x, y, static_cast<unsigned int>(rows),
+                     static_cast<unsigned int>(cols));
+}
+
 // ---------------------------------------------------------------------------
 // Static block geometry lookup
 // ---------------------------------------------------------------------------
@@ -1317,55 +1460,56 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- F16 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_F16, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_F16));
     RegisterDequant((int)GGMLType::GGML_TYPE_F16, dequant_f16);
-    if (hasAVX512 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx512);
-    else if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_avx2);
+    if (hasAVX2 && cpu_.f16c) RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_masm);
     else                         RegisterGEMV((int)GGMLType::GGML_TYPE_F16, gemv_f16_scalar);
 
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_avx2);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_masm);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    // Use scalar for stability until AVX2 kernels are fully validated
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
-    // Use scalar for stability until AVX2 kernels are fully validated
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q6_K, dequant_q6_k);
-    if (hasAVX512)      RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx512);
-    else if (hasAVX2)   RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_avx2);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_masm);
     else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
     // --- Q2_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
 
     // --- Q3_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
 
     // --- Q4_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_0, dequant_q4_0);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
 
     // --- Q4_1 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_1));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_1, dequant_q4_1);
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
 
     // --- Q5_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_0));
