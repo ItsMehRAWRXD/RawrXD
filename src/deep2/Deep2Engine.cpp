@@ -4319,13 +4319,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // GQA: KV heads are shared across Q heads
         if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
         
+        // Apply sliding window if enabled
+        size_t attentionStart = 0;
+        size_t attentionEnd = seqLen;
+        applySlidingWindow(attentionStart, attentionEnd);
+        size_t attend = attentionEnd - attentionStart;
+        
         if (compressedKVEnabled_ && compressedKV_) {
             // Attention with compressed KV cache
             for (size_t h = 0; h < numHeads; ++h) {
                 size_t kvHead = h % numKVHeads;
                 float* headOut = output + h * headDim;
                 
-                const size_t attend = seqLen;
                 const float scale = 1.0f / sqrtf((float)headDim);
                 
                 // Allocate temp buffers for dequantized K/V
@@ -4334,9 +4339,9 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 float* scores = (float*)_aligned_malloc(attend * sizeof(float), 32);
                 
                 if (tempK && tempV && scores) {
-                    // Dequantize K and V ranges
-                    compressedKV_->loadKRange(layer, kvHead, 0, attend, tempK);
-                    compressedKV_->loadVRange(layer, kvHead, 0, attend, tempV);
+                    // Dequantize K and V ranges (only within sliding window)
+                    compressedKV_->loadKRange(layer, kvHead, attentionStart, attend, tempK);
+                    compressedKV_->loadVRange(layer, kvHead, attentionStart, attend, tempV);
                     
                     // Compute attention scores
                     float maxScore = -1e38f;
@@ -4378,7 +4383,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                 size_t kvHead = h % numKVHeads;
                 float* headOut = output + h * headDim;
                 AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
-                                   headOut, seqLen);
+                                   headOut, attentionEnd);
             }
         }
         
