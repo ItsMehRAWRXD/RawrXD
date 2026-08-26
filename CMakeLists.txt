@@ -1129,6 +1129,58 @@ if(WIN32)
     message(STATUS "VAL-051.7: Residency Baseline / Fixture Gate configured")
 
     # =====================================================================
+    # RESIDENCY-A/B-CERT — Elastic Residency A/B Certification Harness
+    # =====================================================================
+    add_executable(residency_ab_cert
+        tests/residency_ab_cert.cpp
+    )
+    target_link_libraries(residency_ab_cert PRIVATE InferenceEngine)
+    set_target_properties(residency_ab_cert PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(residency_ab_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(residency_ab_cert PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(residency_ab_cert PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(residency_ab_cert PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(residency_ab_cert PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(residency_ab_cert PRIVATE dxgi)
+        target_compile_definitions(residency_ab_cert PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(residency_ab_cert PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(residency_ab_cert PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(residency_ab_cert PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(residency_ab_cert PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(residency_ab_cert PRIVATE dxgi)
+    else()
+        target_link_libraries(residency_ab_cert PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET residency_ab_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET residency_ab_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET residency_ab_cert APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(residency_ab_cert PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured")
+
+    # =====================================================================
     # validate_val051_evidence — Evidence JSON validator for VAL-051.2.A
     # =====================================================================
     add_executable(validate_val051_evidence
@@ -1509,6 +1561,93 @@ if(WIN32)
     message(STATUS "K2 Router Injection Smoke Test configured")
 endif()
 
+# =============================================================================
+# Batch 15A — GGUF Alignment Diagnostic
+# Instruments a single tensor (default blk.29.attn_qkv.weight) for offset,
+# alignment, bounds, and dequant correctness.
+# =============================================================================
+if(WIN32)
+    add_executable(GGUF_Alignment_Diagnostic
+        src/deep2/test_gguf_alignment_diagnostic.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    set_target_properties(GGUF_Alignment_Diagnostic PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(GGUF_Alignment_Diagnostic PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_link_directories(GGUF_Alignment_Diagnostic PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(GGUF_Alignment_Diagnostic PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET GGUF_Alignment_Diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET GGUF_Alignment_Diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET GGUF_Alignment_Diagnostic APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(GGUF_Alignment_Diagnostic PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Batch 15A GGUF Alignment Diagnostic configured")
+endif()
+
+# =============================================================================
+# Batch 15B — Q4_0 GEMV Certification
+# Verifies Q4_0 scalar GEMV path against independent reference implementation.
+# =============================================================================
+if(WIN32)
+    add_executable(Q4_0_GEMV_Certification
+        src/deep2/test_q4_0_gemv_certification.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    set_target_properties(Q4_0_GEMV_Certification PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
+    target_include_directories(Q4_0_GEMV_Certification PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_link_directories(Q4_0_GEMV_Certification PRIVATE ${_RAWR_MSVC_LIBPATHS})
+        foreach(_rawr_lib IN LISTS _RAWR_MSVC_LIBPATHS)
+            if(EXISTS "${_rawr_lib}")
+                target_link_options(Q4_0_GEMV_Certification PRIVATE "/LIBPATH:\"${_rawr_lib}\"")
+            endif()
+        endforeach()
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET Q4_0_GEMV_Certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET Q4_0_GEMV_Certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET Q4_0_GEMV_Certification APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(Q4_0_GEMV_Certification PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "Batch 15B Q4_0 GEMV Certification configured")
+endif()
+
 # Resource compiler for icon/version (Windows only)
 if(WIN32)
     enable_language(RC)
@@ -1819,7 +1958,7 @@ set(SOURCES
     src/core/rawrxd_linker_closure.cpp
     # src/infinite/InfinitePerfectionEngine.cpp  # excluded: 100+ compilation errors
     # src/swarm/SovereignSwarm.cpp  # excluded: large file, use linker stubs instead
-    # src/core/rawrxd_subsystem_api_impl.cpp  # excluded: compilation errors, use rawrxd_subsystem_api.cpp instead
+    src/core/rawrxd_subsystem_api_impl.cpp
     # src/core/link_stubs_production.cpp  # excluded: duplicate symbols with rawrxd_subsystem_api.cpp
     src/vulkan_kernel_stubs.cpp
     src/reverse/ReverseEngine.cpp
@@ -2528,6 +2667,7 @@ set(SOURCES
     src/deep2/Deep2ModelRuntime.cpp
     src/deep2/FabricTensorTable.cpp
     src/deep2/Deep2Engine.cpp
+    src/deep2/ElasticResidencyManager.cpp
     src/deep2/ProductionProfiler.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
@@ -2740,6 +2880,11 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # Exclude the duplicate time-manager impl translation unit in this lane.
     list(REMOVE_ITEM RAWR_ENGINE_SOURCES src/agent/quantum_dynamic_time_manager_impl.cpp)
 endif()
+
+# RouterPrefetchTelemetry is added to SOURCES after RAWR_ENGINE_SOURCES is captured;
+# add it explicitly here so RawrEngine links the telemetry definitions.
+list(APPEND RAWR_ENGINE_SOURCES src/deep2/RouterPrefetchTelemetry.cpp)
+
 string(TOUPPER "${RAWR_SSOT_PROVIDER}" RAWR_SSOT_PROVIDER_UPPER)
 set(_RAWR_VALID_SSOT_PROVIDERS CORE EXT AUTO STUBS FEATURES)
 list(FIND _RAWR_VALID_SSOT_PROVIDERS "${RAWR_SSOT_PROVIDER_UPPER}" _rawwr_ssot_provider_idx)
@@ -4597,6 +4742,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/SovereignOutOfCoreRuntime.cpp
     src/deep2/BP16Streamer.cpp
     src/deep2/ResidencyManager.cpp
+    src/deep2/ElasticResidencyManager.cpp
+    src/deep2/RouterPrefetchTelemetry.cpp
     src/deep2/mars/VRAMManager.cpp
     src/deep2/mars/TensorHotpatch.cpp
     src/deep2/mars/DualGPUBackend.cpp
@@ -4626,7 +4773,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/FIMPromptBuilder.cpp
     src/agentic/GGMLAgenticEngine.cpp
     src/agentic/GgmlEngine.cpp
-    # src/agentic/gguf_types.cpp  # excluded: GGUF_Tensor.name mismatch
+    src/agentic/gguf_types.cpp
     src/agentic/GGUFLoader.cpp
     src/agentic/KnowledgeGraph.cpp
     src/agentic/chain_of_thought.cpp
@@ -9228,6 +9375,7 @@ if(WIN32)
         src/deep2/MoEWeightProxy.cpp
         src/deep2/MoEWeightsLoader.cpp
         src/deep2/MoEArchitectureParser.cpp
+        src/deep2/RouterPrefetchTelemetry.cpp
         src/deep2/TensorHop.cpp
         src/deep2/DeepSeekMoELoader.cpp
         src/deep2/Deep2ExecutionGraph.cpp
@@ -9276,6 +9424,7 @@ if(WIN32)
         src/deep2/SovereignOutOfCoreRuntime.cpp
         src/deep2/BP16Streamer.cpp
         src/deep2/ResidencyManager.cpp
+        src/deep2/ElasticResidencyManager.cpp
         src/deep2/AntiPatcher.cpp
         src/deep2/HotPatcher.cpp
         src/deep2/HotPatcherSafety.cpp
