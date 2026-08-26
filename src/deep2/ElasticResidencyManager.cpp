@@ -5,6 +5,7 @@
 
 #include "ElasticResidencyManager.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "ResidencyTrace.hpp"
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
@@ -522,11 +523,20 @@ void ElasticResidencyManager::ExecuteNvmeToRam(ElasticResidentTensor& t) {
 
     // Read from source (already-mapped GGUF data or file)
     if (t.compressedData) {
+        auto* ev = TraceBegin(0, t.layerIndex, t.expertIndex, t.compressedBytes, 0, 1); // COLD → RAM
+        if (ev) {
+            TraceSetDestination(ev, 1, reinterpret_cast<uint64_t>(t.compressedData), 0, 0, 0, 0);
+        }
+
         if (t.sourceData) {
             memcpy(t.compressedData, t.sourceData, t.compressedBytes);
         } else {
             // No source pointer available — zero-fill as fallback (will fail validation)
             memset(t.compressedData, 0, t.compressedBytes);
+        }
+
+        if (ev) {
+            TraceComplete(ev, 0, 0, 1);
         }
     }
 

@@ -5415,14 +5415,21 @@ ReverseIntegration* Deep2Engine::getReverseIntegration() const {
 void Deep2Engine::enableResidencyTelemetry(bool enable) {
     telemetryEnabled_ = enable;
     if (enable) {
-        printf("[Deep2Engine] Residency telemetry: ENABLED (stub)\n");
+        if (residencyTelemetry_) {
+            residencyTelemetry_->Reset();
+        }
+        printf("[Deep2Engine] Residency telemetry: ENABLED\n");
     } else {
         printf("[Deep2Engine] Residency telemetry: DISABLED\n");
     }
 }
 
 void Deep2Engine::printResidencyTelemetryReport() const {
-    printf("[Deep2Engine] Residency telemetry not enabled or not initialized\n");
+    if (!telemetryEnabled_ || !residencyTelemetry_) {
+        printf("[Deep2Engine] Residency telemetry not enabled or not initialized\n");
+        return;
+    }
+    residencyTelemetry_->PrintReport();
 }
 
 // ============================================================================

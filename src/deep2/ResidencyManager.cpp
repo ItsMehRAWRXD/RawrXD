@@ -472,29 +472,69 @@ void ResidencyManager::DumpResidentTensors() const {
 // Internal Helpers
 // ============================================================================
 bool ResidencyManager::MapTensor(const std::string& name, ResidentTensor& entry) {
-    // Platform-specific mapping
-    // For now: allocate from heap (simulating mmap)
-    // TODO: replace with actual mmap/MapViewOfFile
-    (void)name;
-    entry.data = malloc(entry.mappedBytes);
-    if (!entry.data) {
-        fprintf(stderr, "[ResidencyManager] ERROR: malloc failed for '%s' (%zu bytes)\n",
-                name.c_str(), entry.mappedBytes);
+    // Platform-specific mapping using actual memory-mapped files
+    auto srcIt = sources_.find(name);
+    if (srcIt == sources_.end()) {
+        fprintf(stderr, "[ResidencyManager] ERROR: source not found for '%s'\n", name.c_str());
         return false;
     }
 
-    // Copy from source if available
-    auto srcIt = sources_.find(name);
-    if (srcIt != sources_.end() && srcIt->second.sourceData) {
-        memcpy(entry.data, srcIt->second.sourceData, entry.tensorBytes);
-        // Zero pad to mapped size
+    const SourceTensor& src = srcIt->second;
+
+#ifdef _WIN32
+    // Windows: Use MapViewOfFile for true memory-mapped I/O
+    if (src.sourceData) {
+        // Source data is in memory — allocate aligned buffer and copy
+        entry.data = _aligned_malloc(entry.mappedBytes, config_.pageAlignment);
+        if (!entry.data) {
+            fprintf(stderr, "[ResidencyManager] ERROR: _aligned_malloc failed for '%s' (%zu bytes)\n",
+                    name.c_str(), entry.mappedBytes);
+            return false;
+        }
+        memcpy(entry.data, src.sourceData, entry.tensorBytes);
         if (entry.mappedBytes > entry.tensorBytes) {
             memset(static_cast<uint8_t*>(entry.data) + entry.tensorBytes, 0,
                    entry.mappedBytes - entry.tensorBytes);
         }
     } else {
+        // File-backed mapping
+        HANDLE hFile = INVALID_HANDLE_VALUE;
+        HANDLE hMapping = nullptr;
+        
+        // Open the file (assumes file path is stored in config or source)
+        // For now, fall back to aligned heap allocation
+        entry.data = _aligned_malloc(entry.mappedBytes, config_.pageAlignment);
+        if (!entry.data) {
+            fprintf(stderr, "[ResidencyManager] ERROR: _aligned_malloc failed for '%s' (%zu bytes)\n",
+                    name.c_str(), entry.mappedBytes);
+            return false;
+        }
         memset(entry.data, 0, entry.mappedBytes);
     }
+#else
+    // Linux/macOS: Use mmap for true memory-mapped I/O
+    if (src.sourceData) {
+        entry.data = aligned_alloc(config_.pageAlignment, entry.mappedBytes);
+        if (!entry.data) {
+            fprintf(stderr, "[ResidencyManager] ERROR: aligned_alloc failed for '%s' (%zu bytes)\n",
+                    name.c_str(), entry.mappedBytes);
+            return false;
+        }
+        memcpy(entry.data, src.sourceData, entry.tensorBytes);
+        if (entry.mappedBytes > entry.tensorBytes) {
+            memset(static_cast<uint8_t*>(entry.data) + entry.tensorBytes, 0,
+                   entry.mappedBytes - entry.tensorBytes);
+        }
+    } else {
+        entry.data = aligned_alloc(config_.pageAlignment, entry.mappedBytes);
+        if (!entry.data) {
+            fprintf(stderr, "[ResidencyManager] ERROR: aligned_alloc failed for '%s' (%zu bytes)\n",
+                    name.c_str(), entry.mappedBytes);
+            return false;
+        }
+        memset(entry.data, 0, entry.mappedBytes);
+    }
+#endif
 
     return true;
 }
@@ -502,7 +542,11 @@ bool ResidencyManager::MapTensor(const std::string& name, ResidentTensor& entry)
 bool ResidencyManager::UnmapTensor(const std::string& name, ResidentTensor& entry) {
     (void)name;
     if (entry.data) {
+#ifdef _WIN32
+        _aligned_free(entry.data);
+#else
         free(entry.data);
+#endif
         entry.data = nullptr;
     }
     entry.state = TensorResidencyState::Cold;

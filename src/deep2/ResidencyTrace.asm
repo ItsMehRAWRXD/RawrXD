@@ -98,7 +98,7 @@ RESIDENCY_EVENT ENDS
 
 .data
 
-ALIGN 64
+ALIGN 16
 
 gTraceWrite:
     QWORD 0
@@ -109,7 +109,7 @@ gTraceRead:
 gTraceSequence:
     QWORD 0
 
-ALIGN 64
+ALIGN 16
 
 gTraceEvents:
     BYTE (TRACE_CAPACITY * TRACE_EVENT_SIZE) DUP(0)
@@ -169,22 +169,25 @@ TraceInit PROC
     lea     rcx, szTraceFile
     mov     r8d, 40000000h       ; GENERIC_WRITE
     xor     r9d, r9d             ; no sharing
-    mov     QWORD PTR [rsp+20h], 2       ; CREATE_ALWAYS
-    mov     QWORD PTR [rsp+28h], 80h     ; FILE_ATTRIBUTE_NORMAL
-    mov     QWORD PTR [rsp+30h], 0
-    mov     QWORD PTR [rsp+38h], 0
+    mov     rax, 2
+    mov     QWORD PTR [rsp+20h], rax     ; CREATE_ALWAYS
+    mov     rax, 80h
+    mov     QWORD PTR [rsp+28h], rax     ; FILE_ATTRIBUTE_NORMAL
+    xor     eax, eax
+    mov     QWORD PTR [rsp+30h], rax
+    mov     QWORD PTR [rsp+38h], rax
     call    CreateFileA
 
     cmp     rax, INVALID_HANDLE
     je      TraceInitFail
 
-    mov     gTraceFile, rax
+    mov     QWORD PTR [gTraceFile], rax
 
     ; Reset ring
     xor     eax, eax
-    mov     gTraceWrite, rax
-    mov     gTraceRead, rax
-    mov     gTraceSequence, rax
+    mov     QWORD PTR [gTraceWrite], rax
+    mov     QWORD PTR [gTraceRead], rax
+    mov     QWORD PTR [gTraceSequence], rax
 
     mov     eax, 1
 
@@ -244,7 +247,7 @@ TraceBegin PROC
 
     ; Atomically reserve sequence number
     mov     rax, 1
-    lock xadd gTraceWrite, rax
+    lock xadd QWORD PTR [gTraceWrite], rax
 
     ; RAX = old write position
     mov     rbx, rax
@@ -331,12 +334,14 @@ TraceComplete PROC
     mov     [rcx].RESIDENCY_EVENT.Queue, r8
     test    eax, eax
     jz      TraceCompleteFail
-    mov     DWORD PTR [rcx].RESIDENCY_EVENT.State, STATE_COMPLETED
+    mov     edx, STATE_COMPLETED
+    mov     DWORD PTR [rcx].RESIDENCY_EVENT.State, edx
     call    TraceTimestamp
     mov     [rcx].RESIDENCY_EVENT.Timestamp, rax
     ret
 TraceCompleteFail:
-    mov     DWORD PTR [rcx].RESIDENCY_EVENT.State, STATE_FAILED
+    mov     edx, STATE_FAILED
+    mov     DWORD PTR [rcx].RESIDENCY_EVENT.State, edx
     call    TraceTimestamp
     mov     [rcx].RESIDENCY_EVENT.Timestamp, rax
     ret
@@ -374,7 +379,8 @@ FlushLoop:
     mov     rdx, rcx
     mov     r8d, TRACE_EVENT_SIZE
     lea     r9, [rsp+20h]
-    mov     QWORD PTR [rsp+28h], 0
+    xor     eax, eax
+    mov     QWORD PTR [rsp+28h], rax
     mov     rcx, rbx
     call    WriteFile
 
@@ -385,7 +391,7 @@ FlushLoop:
     cmp     rsi, rdi
     jb      FlushLoop
 
-    mov     gTraceRead, rsi
+    mov     QWORD PTR [gTraceRead], rsi
 
 TraceFlushDone:
     add     rsp, 30h
@@ -407,7 +413,8 @@ TraceShutdown PROC
     je      ShutdownDone
     call    CloseHandle
 ShutdownDone:
-    mov     gTraceFile, INVALID_HANDLE
+    mov     rax, INVALID_HANDLE
+    mov     QWORD PTR [gTraceFile], rax
     add     rsp, 28h
     ret
 TraceShutdown ENDP
