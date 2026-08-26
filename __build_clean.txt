@@ -1,0 +1,599 @@
+[0/1] Re-running CMake...
+-- [SDK Fix] Found MSVC with cl.exe at: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [SDK Fix] INCLUDE = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/include;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/ucrt;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/shared;C:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um
+-- [SDK Fix] LIB     = C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/x64;C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/onecore/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/ucrt/x64;C:/Program Files (x86)/Windows Kits/10/Lib/10.0.26100.0/um/x64
+-- [SDK Fix] MT      = C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe
+-- [Vulkan] Common SDK: C:/VulkanSDK/1.4.357.0
+-- Using the multi-header code from D:/rawrxd/build_ninja/_deps/nlohmann_json-src/include/
+-- VAL-051.2.A: Real Token Proof Harness configured
+-- VAL-051.5: 32-Token KV Stability Gate configured
+-- VAL-051.6: 15-Token KV Stability Gate configured
+-- VAL-051.7: Residency Baseline / Fixture Gate configured
+-- RESIDENCY-A/B-CERT: Elastic Residency A/B Certification Harness configured
+-- validate_val051_evidence: VAL-051.2.A evidence validator configured
+-- test_gguf_tokenizer_bounds: GGUF tokenizer bounds validation configured
+-- test_parseheader_bounds: ParseHeader adversarial bounds validation configured
+-- test_parseheader_fuzz: B32 deterministic fuzz matrix configured
+-- test_gguf_metadata_bounds: B33 metadata bounds gate configured
+-- test_gguf_tensor_bounds: B34 tensor/offset bounds gate configured
+-- Dual GPU Smoke Test configured
+-- GGUF Inspector tool configured
+-- Comprehensive Dual GPU Test configured
+-- OMEGA-1 Bridge Test Harness configured
+-- K2 Router Injection Smoke Test configured
+-- Batch 15A GGUF Alignment Diagnostic configured
+-- Batch 15B Q4_0 GEMV Certification configured
+-- RawrXD v14.7.3 Target Configured - Zero Bloat Mode
+-- [Build Paths] MSVC CRT: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207
+-- [Intent Guardrails] Configuring...
+-- [Intent Guardrails] Features:
+--   - Intent Guard: ON
+--   - Validation: ON
+--   - Transactions: ON
+--   - Capability Tokens: ON
+--   - Hotpatch Journal: ON
+--   - Patch Firewall: ON
+--   - Reflector Agent: ON
+--   - Atomic Activation: ON
+--   - First-Class Rollback: ON
+--   - Model Adapter: ON
+-- [Intent Guardrails] Added src/intent/intent_config.cpp to build
+-- [Intent Guardrails] Configuration complete
+-- MASM64 enabled: ASM kernels will be compiled
+-- [SSOT Ownership] RawrEngine provider=AUTO (CORE=0 EXT=0 AUTO=1 STUBS=0 FEATURES=0)
+-- [CommandAudit] Audit targets available: audit-registry, audit-registry-ci
+-- ✓ RawrXD_Compression configured (runtime ZLIB loader, zero build deps)
+-- [RE] Deobfuscator MASM64 targets registered
+-- [RE] Model reverse pipeline MASM64 target registered
+-- [RE] NASM not found — Reverser compiler targets skipped
+-- [RE] Reverse Engineering Suite configured:
+--   C++ Library:       RawrXD-RE-Library (pe_tools/re_tools.cpp;disassembler.cpp;pe_analyzer.cpp;decompiler.cpp;binary_patcher.cpp)
+--   Headers:           4 HPP files (Codex, Compiler, DumpBin, ReverseEngine)
+--   Omega Suite:       19 ASM files across v3/v4/v5/v7 + src_variants
+--   Deobfuscator:      3 ASM files + 1 INC + build/test
+--   Reverser Compiler: 11 ASM + 6 tests + 1 .rev source
+--   PE Tools:          re_tools.cpp/h (PE analyzer + inline compiler)
+--   Model Reverse:     model-llm-harvester.asm
+--   Security Toolkit:  RawrXD_IDE_unified.asm
+--   RE Modules:        gpu_dma_complete_reverse_engineered.asm
+-- [Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)
+-- [MASM] Using prebuilt RDNA3_Full_Test.obj (RX 7800 XT kernels)
+-- [NanoQuant] DISABLED — enable with -DRAWR_ENABLE_NANOQUANT=ON
+-- [RawrXD] Vulkan detection fix — Phase 4A
+-- [RawrXD] Found Vulkan headers: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD] Found Vulkan library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [RawrXD] ✅ Vulkan FULLY ENABLED
+-- [RawrXD]   Include: C:/VulkanSDK/1.4.357.0/Include
+-- [RawrXD]   Library: C:/VulkanSDK/1.4.357.0/Lib/vulkan-1.lib
+-- [Vulkan] Found SDK: C:/VulkanSDK/1.4.357.0/include
+-- [Phase 6] Standalone inference engine target: RawrXD-InferenceEngine
+-- RawrXD-Crypto skipped (requires WIN32 + MSVC + MASM + uac_bypass_impl_stub.cpp)
+-- [SSOT] Stub lane guard disabled (set RAWRXD_ENABLE_MISSING_HANDLER_STUBS=ON to enable).
+-- [Sovereign] Test suite: SovereignTest_Suite (beaconism pattern)
+-- [Sovereign] VAL-038 E2E test: SovereignTest_VAL038_E2E
+-- [Sovereign] Deep2 batch test: Deep2_Batch_Test
+-- [Deep2] One-token validation gate: test_generate_one_token
+-- [Deep2] VAL-051.3 multi-token gate: test_val_051_3_multi_token
+-- [Deep2] VAL-051.5 15-token KV stability gate: val_051_5_fifteen_token
+-- [Deep2] VAL-051.5 1-token diagnostic harness: val_051_5_diag_1_token
+-- [Deep2] BP16 → Deep2 integration test: val_bp16_int_1_token
+-- [Deep2] VAL-051.5 Q6_K synthetic test: val_051_5_q6k_synthetic
+-- [Deep2] VAL-051.5 BP16 streamer test: val_051_5_bp16_streamer
+-- [Deep2] VAL-051.5 BP16 E2E test: val_051_5_bp16_e2e
+-- [Deep2] VAL-051.5 BP16 comparison test: val_051_5_bp16_compare
+-- [Deep2] VAL-051.5 BP16 weights test: val_051_5_bp16_weights
+-- [Deep2] VAL-051.5 BP16 verify test: val_051_5_bp16_verify
+-- [Deep2] VAL-051.5 BP16 logits test: val_051_5_bp16_logits
+-- [Deep2] VAL-051.6 BP16 perf benchmark: val_051_6_bp16_perf
+-- [Deep2] VAL-051.7 BP16 profile: val_051_7_bp16_profile
+-- [Deep2] VAL-051.7 lightweight profile: val_051_7_bp16_lightweight_profile
+-- [Deep2] Minimal 1-token profiler: minimal_1token_profiler
+-- [Deep2] Quick 1-layer profiler: quick_1layer_profiler
+-- [Deep2] Q4_K GEMV bench: q4k_gemv_bench
+-- [Deep2] Q5_K GEMV bench: q5k_gemv_bench
+-- [Deep2] VAL-051.5 BP16 diagnostic: val_051_5_bp16_diag
+-- [Deep2] VAL-051.5 BP16 benchmark: val_051_5_bp16_bench
+-- [Deep2] VAL-051.5 BP16 load benchmark: val_051_5_bp16_loadbench
+-- [Deep2] Q4_K fused verify: val_051_5_q4k_fused_verify
+-- [Deep2] Q4_K GEMV bench: val_051_5_q4k_gemv_bench
+-- [Deep2] Q2_K GEMV verify: val_051_5_q2k_gemv_verify
+-- [Deep2] Q2_K GEMV bench: val_051_5_q2k_gemv_bench
+-- [Deep2] Q5_K GEMV verify: val_051_5_q5k_gemv_verify
+-- [Deep2] Q5_K GEMV bench: val_051_5_q5k_gemv_bench
+-- [Deep2] Q5_K forward bench: val_051_5_q5k_forward_bench
+-- [Deep2] LinearW thread-scaling bench: val_051_8_linearw_thread_scaling
+-- [Deep2] Layer profiler: val_051_8_layer_profile
+-- [Deep2] Q2_K profile: val_051_5_q2k_profile
+-- [Sovereign] PatchRegistry test: SovereignTest_PatchRegistry
+-- [Sovereign] HotPatcher test: SovereignTest_HotPatcher
+-- [Sovereign] AutonomousAgent test: SovereignTest_AutonomousAgent
+-- [Sovereign] AntiHallucination test: SovereignTest_AntiHallucination
+-- [CI] self_test_gate target available (cmake --build . --target self_test_gate)
+-- [CI] RAWR_ASAN=OFF
+-- [Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)
+-- [Batch 1] Production benchmark target: RawrXD-ProductionBenchmark
+-- [Batch 1] Production cert test target: RawrXD-ProductionCertTest
+-- [Phase C] GPU Benchmark target: RawrXD-Benchmark
+-- [Phase D] Fused Layer Benchmark target: RawrXD-FusedBenchmark
+-- [Phase E] KV Cache Benchmark target: RawrXD-KVBenchmark
+-- [Fix #4] Flash Attention v2 Benchmark target: Fix4_FlashAttention_Benchmark
+-- [Fix #5] Fused Quantized Kernels Benchmark target: Fix5_FusedQuantized_Benchmark
+-- [VAL-032] Speculative Decoding Benchmark target: VAL032_SpeculativeDecoding_Benchmark
+-- [VAL-032] AVX-512 Benchmark target: VAL032_AVX512_Benchmark
+-- [VAL-032] Simple intrinsics benchmark: tree_attention_bench_simple
+-- [VAL-033] Profiling instrumentation: tree_attention_profiled
+-- [VAL-034] Q@K^T alignment optimization: tree_attention_aligned
+-- [VAL-035] Tiled Q@K^T: tree_attention_tiled
+-- [VAL-036] Vectorized softmax: tree_attention_vectorized
+-- [VAL-037] Tree sparsity: tree_attention_sparse
+-- [VAL-037.1] Fused online softmax: tree_attention_fused_sparse
+-- [VAL-037.2] Tree-specialized: tree_attention_tree_specialized
+-- [VAL-038.1] MASM mechanical: tree_attention_masm_val038
+-- [VAL-038] Fused attention benchmark: VAL038_FusedAttention_Benchmark
+-- [VAL-038] Validation benchmark (B→C→A): VAL038_Validation_Benchmark
+-- [Smoke] RawrXD-TpsSmoke target (Run-TpsSmoke.ps1)
+-- [Analysis] RawrXD-ModelAnalysis target (Implant_Model_Analysis.ps1 / ANALYSIS_QUICKSTART.md)
+-- [BackendOrchestrator] Smoke test target: BackendOrchestratorShardSmoke
+-- [AgenticOrchestrator] Smoke test target: agentic_orchestrator_smoke_test (build with: cmake --build . --target agentic_orchestrator_smoke_test)
+-- [GoldenRecoveryTests] Target: RawrXD-GoldenRecoveryTests (build with: cmake --build . --target RawrXD-GoldenRecoveryTests)
+-- [SovereignRuntime] Vulkan SDK: C:/VulkanSDK/1.4.357.0
+-- [SovereignRuntime] rawrxd_runtime target missing; linked router/PMM sources directly for B004
+-- [SovereignRuntime] Target: rawrxd (build with: cmake --build . --target rawrxd)
+-- [SovereignRuntime] Usage: rawrxd --model MODEL.gguf --prompt TEXT [--inference|--agentic|--validate]
+-- [Validation] RAWRXD_ENABLE_VALIDATION=ON — runtime tensor dumping enabled
+-- [Tools] Native address resolver target enabled: address_resolver_native (smoke targets: address_resolver_native_smoke, address_resolver_native_smoke_soft, address_resolver_native_smoke_minimal)
+-- [LSP] RawrXD-Script Language Server target enabled: RawrXD_LSPServer
+-- [DAP] RawrXD-Script Debug Adapter target enabled: RawrXDScriptDAPAdapter
+--   ✓ Using prebuilt gtest from build-master
+-- ========================================
+-- Registering Tests with CTest
+-- ========================================
+--   ✓ Added test_ai_completions
+--   ✓ Added test_llm_connectivity
+--   ✓ Added test_tool_registry
+--   ✓ Added test_voice_processor
+--   ✓ Added test_zero_retention_manager
+--   ✓ Added test_gui_components
+--   ✓ Added test_semantic_diff_analyzer
+--   ✓ Added test_ai_merge_resolver
+--   ✓ Added test_sandboxed_terminal
+--   ✓ Added test_agentic_file_operations
+--   ✓ Added model_registry_test
+--   ✓ Added test_gguf_integration
+--   ✓ Added test_swarm_scheduler_pin
+--   ✓ Added deterministic_replay_gate
+--   ✓ Added VAL063_InferenceGatewayHarness
+--   ✓ Added test_swarm_expert_heatmap_stress
+--   ✓ Added test_moe_mixture_reference
+--   ✓ Added test_moe_down_project_policy
+--   ✓ Added test_moe_plan_row_mixture_pack_cache
+--   ✓ Added moe_grouped_gemm_bench (manual / CI microbench; not registered in CTest)
+--   ✓ Added test_basic_profiler
+--   ✓ Added test_batch3_profiler_smoke
+--   ✓ Added test_production_regression (Qt-free regression suite)
+--   ✓ Added test_instructions_provider
+-- ========================================
+-- Registering Measurement Framework Tests
+-- ========================================
+-- ========================================
+-- Test Suite Registration Complete
+-- ========================================
+-- Run all tests:      ctest --output-on-failure -C Release
+-- Run measurement:    ctest -L measurement -V -C Release
+-- Run specific:       ctest -R <name> -V -C Release
+-- ========================================
+--   ✓ Added test_model_loader_streamer_smoke
+--   ✓ Added test_predictive_memory_subsystem
+--   ✓ Added smoke_core (minimal validation)
+--   ✓ Added test_rmsnorm_avx2 (AVX2 kernel validation)
+--   ✓ Added test_softmax_avx2 (AVX2 kernel validation)
+--   ✓ Using RawrXD_Compression for checkpoint compression
+--   ✓ Added sovereign_integrated_test (Sovereign Burn-in)
+--   ✓ Added test_agentic_supervisor (Agentic Supervisor)
+-- [Test] Sovereign Bridge test harness: TestSovereignBridge (build with: cmake --build . --target TestSovereignBridge)
+-- [Test] DebugBridge telemetry test: TestDebugBridgeTelemetry
+-- [Test] Pure MASM inference test: TestMASMInference
+-- [Test] Debugger stress tests: stress_target, stress_memory
+-- [Test] SovereignRPC Simulator: test_simulator (build with: cmake --build . --target test_simulator)
+-- [VAL-Q4.0] Fused pipeline validation: test_q4_fused_pipeline
+-- [VAL-Q4.0] Cache alignment validation: test_q4_cache_alignment
+-- [VAL-Q4.0] ASM debug test: test_q4_asm_debug
+-- [VAL-Q4.0] AVX-512 kernel: q4_preprocessed_avx512
+-- [VAL-Q4.0] Scalar SIMD simulation: test_q4_scalar_simd
+CMake Warning at src/validation/CMakeLists.txt:343 (message):
+  RawrXD libraries not found at
+  D:/rawrxd/src/validation/../../build-fresh-aug22
+
+
+CMake Warning at src/validation/CMakeLists.txt:344 (message):
+  Building only minimal validation (simulation mode)
+
+
+-- Standalone kernel benchmark: kernel_differential_benchmark
+-- SiLU accuracy comparison test: silu_accuracy_test
+-- Q4_0 differential test: q4_0_differential_test
+-- Q4_0 optimized benchmark: q4_0_optimized_bench
+-- A/B test runner target: ab_test_runner
+-- RE Framework: Capstone NOT found - disassembly disabled
+-- RE Framework: Keystone NOT found - assembly disabled
+-- RE Framework: Unicorn NOT found - emulation disabled
+-- RE Framework library: rawr_re_framework
+-- RE Framework test: SKIPPED (requires Capstone + Keystone + Unicorn)
+-- [MASM] Found ml64.exe: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+-- [MASM] Configuration:
+--   Assembler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/ml64.exe
+--   Output: masm_kernels.lib
+--   Sources:
+--     - silu_activation_avx512.asm
+--   Targets:
+--     - masm_kernels (static library)
+--     - masm_kernels_test (test executable)
+-- Token Estimator Swarm library: TokenEstimatorSwarm
+-- Token Estimator Swarm demo: TokenEstimatorDemo
+-- Validation Gate Runner: ValidationRunner
+-- Swarm Integration Test: test_swarm_integration
+-- ========================================
+-- Measurement Framework Tests
+-- ========================================
+--   [MEASURE] benchmark_dispatch_overhead - RDTSC dispatch latency
+--   [MEASURE] benchmark_planner_amortization - Break-even analysis
+--   [MEASURE] validate_end_to_end - Four independent gates
+--   [MEASURE] nevm_determinism_validation - Thread affinity + FNV-1a hashing
+--   [MEASURE] nevm_stress_test - 100K token stress + RSS monitoring
+--   [MEASURE] pmc_profiler - Performance Monitoring Counters
+--   [MEASURE] flame_graph_profiler - Flame graph generation
+--   [MEASURE] benchmark_dispatch_pmc - PMC profiling
+-- ========================================
+-- [Native] Separate native toolchain build available
+-- Could NOT find Qt6 (missing: Qt6_DIR)
+CMake Warning at CMakeLists.txt:10981 (message):
+  [SoloIDE] Qt6 not found — SoloIDE target skipped.  Install Qt6 or set
+  CMAKE_PREFIX_PATH.
+
+
+-- certification_harness: Adversarial evidence-producing certification suite configured
+-- Configuring done (1.7s)
+-- Generating done (1.4s)
+-- Build files have been written to: D:/rawrxd/build_ninja
+[1/332] [MASM] Assembling RawrXD_License_Shield.asm (CRC32 Integrity, Anti-Debug, Tamper Detection)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_License_Shield.asm
+[2/332] [MASM] Assembling RawrXD_HardwareSynthesizer.asm (Dataflow, GEMM Spec, Verilog Gen)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_HardwareSynthesizer.asm
+[3/332] [MASM] Assembling RawrXD_GSIHash.asm (PDB hash, GSI bucket probe)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_GSIHash.asm
+[4/332] [MASM] Assembling RawrCodex.asm (Agentic Decision Tree, Pattern Engine)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrCodex.asm
+[5/332] [MASM] Assembling RawrXD_Camellia256_Auth.asm (Encrypt-then-MAC, HMAC-SHA256, RCM2 Format)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Camellia256_Auth.asm
+[6/332] [MASM] Assembling RawrXD_Debug_Engine.asm (Breakpoints, Watchpoints, Symbolic DynTrace)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Debug_Engine.asm
+[7/332] [MASM] Assembling RawrXD_CopilotGapCloser.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_CopilotGapCloser.asm
+[8/332] [MASM] Assembling RawrXD_LSP_SymbolIndex.asm (Hash Lookup, Batch FNV-1a, Prefix Scan)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_LSP_SymbolIndex.asm
+[9/332] [MASM] Assembling RawrXD_GGUF_Vulkan_Loader.asm (GGUF v3, FNV-1a, Tensor Staging, GGML Types)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_GGUF_Vulkan_Loader.asm
+[10/332] [MASM] Assembling RawrXD_AgenticOrchestrator.asm (23-Handler VTable, SPSC Queue, Metrics)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_AgenticOrchestrator.asm
+[11/332] [MASM] Assembling RawrXD_Camellia256.asm (Camellia-256 CTR Encrypt, 24-Round Feistel, HWID Key)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Camellia256.asm
+[12/332] [MASM] Assembling RawrXD_KQuant_Kernel.asm (Q4_K AVX2+AVX-512 Dequant, CPUID Dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_KQuant_Kernel.asm
+[13/332] [MASM] Assembling RawrXD_LSP_AI_Bridge.asm (Symbol Ranking, Weight Fusion, Kind Boost)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_LSP_AI_Bridge.asm
+[14/332] [MASM] Assembling RawrXD_Hotpatch_Kernel.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Hotpatch_Kernel.asm
+[15/332] [MASM] Assembling RawrXD_EnterpriseLicense.asm (License Validation, HWID, Feature Gates)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_EnterpriseLicense.asm
+[16/332] [MASM] Assembling RawrXD_MeshBrain.asm (CRDT, ZKP, DHT, FedAvg, Gossip)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_MeshBrain.asm
+[17/332] [MASM] Assembling RawrXD_MonacoCore.asm (Gap Buffer, Tokenizer)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_MonacoCore.asm
+[18/332] [MASM] Assembling RawrXD_NeuralBridge.asm (EEG FFT, Intent Classify, Phosphene HUD)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_NeuralBridge.asm
+[19/332] [MASM] Assembling RawrXD_OmegaOrchestrator.asm (Task DAG, Agents, Pipeline, Self-Improve)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_OmegaOrchestrator.asm
+[20/332] [MASM] Assembling RawrXD_PDBKernel.asm (MSF magic, PubSym scan, GUID hex)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_PDBKernel.asm
+[21/332] [MASM] Assembling RawrXD_PerfCounters.asm (RDTSC Cycle Histograms, 64 Slots)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_PerfCounters.asm
+[22/332] [MASM] Assembling RawrXD_Pyre_Compute.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Pyre_Compute.asm
+[23/332] [MASM] Assembling RawrXD_QuadBuffer_Streamer.asm (4-Buffer Ring, Zero-Copy Streaming)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_QuadBuffer_Streamer.asm
+[24/332] [MASM] Assembling RawrXD_RefProvider.asm (Reference hash, pattern match)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_RefProvider.asm
+[25/332] [MASM] Assembling RawrXD_RouterBridge.asm (Fast-Path Router Dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_RouterBridge.asm
+[26/332] [MASM] Assembling RawrXD_SelfHost_Engine.asm (Self-Compile, uASM, Atomic Swap)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_SelfHost_Engine.asm
+[27/332] [MASM] Assembling RawrXD_SelfPatch_Engine.asm (Hotpatch Table, Code Caves, CPUID Optimize, Quant Switch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_SelfPatch_Engine.asm
+[28/332] [MASM] Assembling RawrXD_Snapshot.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Snapshot.asm
+[29/332] [MASM] Assembling RawrXD_SocketResponder.asm (IOCP HTTP: /health /status /models sub-0.5ms)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_SocketResponder.asm
+[30/332] [MASM] Assembling RawrXD_Speciator.asm (Genome, Crossover, Mutation, Speciation)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Speciator.asm
+[31/332] [MASM] Assembling RawrXD_Streaming_QuadBuffer.asm (SPSC Ring, GDI BitBlt, 60 FPS Render)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Streaming_QuadBuffer.asm
+[32/332] [MASM] Assembling RawrXD_StubDetector.asm (Stub Pattern Scanner)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_StubDetector.asm
+[33/332] [MASM] Assembling RawrXD_Swarm_Network.asm (P2P Discovery, Task Distribution)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Swarm_Network.asm
+[34/332] [MASM] Assembling RawrXD_Watchdog.asm (.text HMAC-SHA256 Integrity, PE Parser, Tamper Detect)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_Watchdog.asm
+[35/332] [MASM] Assembling RawrXD_TridentBeacon.asm (COM Trident Host, Beacon IDispatch, Ollama Bridge)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_TridentBeacon.asm
+[36/332] [MASM] Assembling RawrXD_TridentBeacon_GPU.asm (IE11 Feature Control, WebGL FBO, OpenGL Bridge)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_TridentBeacon_GPU.asm
+[37/332] [MASM] Assembling deflate_brutal_masm.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/gpu_masm/deflate_brutal_masm.asm
+[38/332] [MASM] Assembling RawrXD_VulkanBridge.asm (GPU Dispatch Shim: Init, MatMul, FlashAttn, Hotswap)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/RawrXD_VulkanBridge.asm
+[39/332] [MASM] Assembling rawrxd_cot_dll_entry.asm (DllMain, SRW Lock, Thread Tracking)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/rawrxd_cot_dll_entry.asm
+[40/332] [MASM] Assembling native_speed_kernels.asm
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/native_speed_kernels.asm
+[41/332] [MASM] Assembling swarm_tensor_stream.asm (CRC32C, RLE, chunks)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/swarm_tensor_stream.asm
+[42/332] [MASM] Assembling rawrxd_cot_engine.asm (CoT Engine: 12 roles, 6 presets, 1GB arena, SEH)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/rawrxd_cot_engine.asm
+[43/332] [MASM] Assembling rawrxd_cot_phase39.asm (Snapshot, Telemetry, CopyEngine, Seal, Quotas)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/rawrxd_cot_phase39.asm
+[44/332] [MASM] Assembling gpu_requantize_rocm.asm (HIP dispatch)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/gpu_requantize_rocm.asm
+[45/332] [MASM] Assembling requantize_q4km_to_q2k_avx512.asm (AVX-512 DQ/BW)
+Microsoft (R) Macro Assembler (x64) Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: D:/rawrxd/src/asm/requantize_q4km_to_q2k_avx512.asm
+[46/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\compression_interface.cpp.obj
+[47/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\feature_flags_runtime.cpp.obj
+[48/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_sampler.cpp.obj
+[49/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\license_enforcement.cpp.obj
+[50/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_tokenizer.cpp.obj
+[51/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_vocab_resolver.cpp.obj
+[52/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\enterprise_licensev2_impl.cpp.obj
+[53/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ultra_fast_inference.cpp.obj
+[54/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\gguf_loader.cpp.obj
+[55/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\ollama_blob_parser.cpp.obj
+[56/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\tools\license_validator_manifest.cpp.obj
+[57/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\memory_core.cpp.obj
+[58/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ignite_800b.cpp.obj
+[59/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\license_anti_tampering.cpp.obj
+[60/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer_forwardbatch.cpp.obj
+[61/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\transformer.cpp.obj
+[62/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_model_loader.cpp.obj
+[63/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\streaming_gguf_loader.cpp.obj
+[64/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\polymorphic_loader.cpp.obj
+[65/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\inference_kernels.cpp.obj
+[66/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\gguf_core.cpp.obj
+[67/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sampler.cpp.obj
+[68/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_inference.cpp.obj
+[69/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\bpe_tokenizer.cpp.obj
+[70/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\TitanLoaderDiagnostics.cpp.obj
+[71/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\rawr_engine.cpp.obj
+[72/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\ConfigurationValidator.cpp.obj
+[73/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\cpu_inference_engine.cpp.obj
+[74/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\engine_registry.cpp.obj
+[75/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\NegativeSpaceProfiler.cpp.obj
+[76/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\utils\Diagnostics.cpp.obj
+[77/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\memory_stubs.cpp.obj
+[78/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\MemoryPressureGuard.cpp.obj
+[79/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\backend\VulkanGemmDispatcher.cpp.obj
+[80/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\sovereign_engines.cpp.obj
+[81/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\pyre_compute.cpp.obj
+[82/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\engine\core_generator.cpp.obj
+[83/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\link_stubs.cpp.obj
+[84/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\agentic\ErrorRecoveryManager.cpp.obj
+[85/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\layer_offload_manager.cpp.obj
+[86/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\inference\PerformanceMonitor.cpp.obj
+[87/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\rawrxd_transformer.cpp.obj
+[88/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Deep2ExecutionTelemetry.cpp.obj
+[89/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\kernels\VulkanComputeKernels.cpp.obj
+[90/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\vulkan_compute.cpp.obj
+[91/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\Sovereign_KernelBridge_CPP.cpp.obj
+[92/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TransferScheduler.cpp.obj
+[93/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\gguf_swarm_plan_builder.cpp.obj
+[94/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PlacementPolicy.cpp.obj
+[95/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\core\swarm_scheduler.cpp.obj
+[96/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\TensorExecutionRouter.cpp.obj
+[97/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\ResidencyTracker.cpp.obj
+[98/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\CapacityManager.cpp.obj
+[99/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\CapabilityTierMatrix.cpp.obj
+[100/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\sampling\advanced_sampler.cpp.obj
+[101/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\PredictiveMemoryManager.cpp.obj
+[102/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\PressedStateEngine.cpp.obj
+[103/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\WorkingSetPredictor.cpp.obj
+[104/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareGovernor.cpp.obj
+[105/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\TensorPlacementManager.cpp.obj
+[106/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\logging\Logger.cpp.obj
+[107/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\TLSInstructionGate.cpp.obj
+[108/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\StreamRouterAdapter.cpp.obj
+[109/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\memory\RouterPredictiveMemoryBridge.cpp.obj
+[110/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\HardwareCapabilityProbe.cpp.obj
+[111/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\Ensemble58Governor.cpp.obj
+[112/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticDecoder.cpp.obj
+[113/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\K2TimeLimitedServing.cpp.obj
+[114/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\GenerationBouncer.cpp.obj
+[115/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticGGUFIndex.cpp.obj
+[116/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\governance\UnifiedTriggerOrchestrator.cpp.obj
+[117/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\RawrRuntime.cpp.obj
+[118/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\gzip_brutal_inflate.cpp.obj
+[119/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\brutal_gzip.cpp.obj
+[120/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\codec\compression.cpp.obj
+[121/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticArchitectureDetector.cpp.obj
+[122/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticEngine.cpp.obj
+[123/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\ElasticResidencyManager.cpp.obj
+[124/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\gguf_tensor_loader.cpp.obj
+[125/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelMASM.cpp.obj
+[126/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\KVCache.cpp.obj
+[127/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\IQQuantKernels.cpp.obj
+[128/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GhostCache.cpp.obj
+[129/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\runtime\elastic\VulkanTensorResidencyBackend.cpp.obj
+[130/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\QuantKernelRegistry.cpp.obj
+[131/332] Building CXX object CMakeFiles\InferenceEngine.dir\tests\b009\b009b_batched_gemm.cpp.obj
+[132/332] Building CXX object CMakeFiles\InferenceEngine.dir\B014\build\b014_profiler.cpp.obj
+[133/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ThreadPool.cpp.obj
+[134/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\InferenceSession.cpp.obj
+[135/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoERouter.cpp.obj
+[136/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\GGUFLoader.cpp.obj
+[137/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj
+FAILED: [code=2] CMakeFiles/InferenceEngine.dir/src/deep2/Deep2Engine.cpp.obj 
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe"  /nologo /TP -DHAS_BRUTAL_GZIP_MASM=1 -DNOMINMAX -DRAWRXD_LINK_ADVANCED_DEOBFUSCATOR_ASM=1 -DRAWRXD_LINK_ANALYZER_DISTILLER_ASM=0 -DRAWRXD_LINK_CODEBASE_AUDIT_SYSTEM_ASM=0 -DRAWRXD_LINK_DUAL_ENGINE_QUANTUM_BEACON_ASM=0 -DRAWRXD_LINK_INFERENCE_KERNELS_ASM=1 -DRAWRXD_LINK_PATTERN_RECONSTRUCTOR_ASM=1 -DRAWRXD_LINK_PROMETHEUS_EXPORTER_ASM=1 -DRAWRXD_LINK_QUADBUFFER_ASM=1 -DRAWRXD_LINK_REVERSE_ENGINEERED_ASM=1 -DRAWRXD_LINK_SELFPATCH_AGENT_ASM=1 -DRAWRXD_LINK_SOURCEEDIT_KERNEL_ASM=1 -DRAWRXD_LINK_STREAMING_ORCHESTRATOR_ASM=0 -DRAWRXD_LINK_TELEMETRY_KERNEL_ASM=1 -DRAWRXD_LINK_UNIFIED_OVERCLOCK_GOVERNOR_ASM=0 -DRAWRXD_LINK_VISION_PROJECTION_ASM=0 -DRAWRXD_PRODUCTION_STRIP_STUB_SOURCES=0 -DRAWRXD_STRICT_PRODUCTION_PROFILE=0 -DRAWR_ATOMIC_ACTIVATION_ENABLED=1 -DRAWR_CAPABILITY_TOKENS_ENABLED=1 -DRAWR_ENABLE_VULKAN=1 -DRAWR_HAS_MASM=1 -DRAWR_HAS_SOVEREIGN_ENGINES=1 -DRAWR_HAS_VULKAN=1 -DRAWR_HOTPATCH_JOURNAL_ENABLED=1 -DRAWR_INTENT_EMERGENCY_BYPASS=0 -DRAWR_INTENT_GUARD_ENABLED=1 -DRAWR_INTENT_VALIDATION_ENABLED=1 -DRAWR_MODEL_ADAPTER_ENABLED=1 -DRAWR_PATCH_FIREWALL_ENABLED=1 -DRAWR_PATCH_TRANSACTION_ENABLED=1 -DRAWR_REFLECTOR_AGENT_ENABLED=1 -DRAWR_ROLLBACK_FIRST_CLASS_ENABLED=1 -DRAWR_STANDALONE_INFERENCE=1 -DVULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS -ID:\rawrxd\include -ID:\rawrxd\src -ID:\rawrxd\src\inference -ID:\rawrxd\src\engine -ID:\rawrxd\src\core -ID:\rawrxd\src\codec -ID:\rawrxd\src\masm -ID:\rawrxd\src\runtime\governance -IC:\VulkanSDK\1.4.357.0\Include -external:I"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um" -external:I"C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\winrt" -external:ID:\rawrxd\Ship\webview2\build\native\include -external:W0 /DWIN32 /D_WINDOWS /EHsc /Zi /O2 /Ob1 /DNDEBUG -std:c++20 -MT /GS- /sdl- /EHsc /W0 /arch:AVX512 /O2 /showIncludes /FoCMakeFiles\InferenceEngine.dir\src\deep2\Deep2Engine.cpp.obj /FdCMakeFiles\InferenceEngine.dir\InferenceEngine.pdb /FS -c D:\rawrxd\src\deep2\Deep2Engine.cpp
+D:\rawrxd\src\deep2\Deep2Engine.cpp(1530): error C2039: 'ContainsGGUF': is not a member of 'rawrxd::ollama::OllamaBlobDetector'
+D:\rawrxd\src\ollama_blob_parser.h(58): note: see declaration of 'rawrxd::ollama::OllamaBlobDetector'
+D:\rawrxd\src\deep2\Deep2Engine.cpp(1530): error C3861: 'ContainsGGUF': identifier not found
+D:\rawrxd\src\deep2\Deep2Engine.cpp(1543): error C2039: 'ExtractGGUFData': is not a member of 'rawrxd::ollama::OllamaBlobParser'
+D:\rawrxd\src\ollama_blob_parser.h(124): note: see declaration of 'rawrxd::ollama::OllamaBlobParser'
+[138/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\TensorHop.cpp.obj
+[139/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightProxy.cpp.obj
+[140/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\UniversalModelLoader.cpp.obj
+[141/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\CompressedKVCache.cpp.obj
+[142/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\SlidingWindowEngine.cpp.obj
+[143/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelLoader.cpp.obj
+[144/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\ModelRegistry.cpp.obj
+[145/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NUFusedPacker.cpp.obj
+[146/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\RuntimePlanner.cpp.obj
+[147/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\FusedInferenceKernel.cpp.obj
+[148/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\StreamRouter.cpp.obj
+[149/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEArchitectureParser.cpp.obj
+[150/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\MoEWeightsLoader.cpp.obj
+[151/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\NVMeStream.cpp.obj
+[152/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\WarmupScheduler.cpp.obj
+[153/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\DeepSeekMoELoader.cpp.obj
+[154/332] Building CXX object CMakeFiles\InferenceEngine.dir\src\deep2\Deep2ExecutionGraph.cpp.obj
+ninja: build stopped: subcommand failed.

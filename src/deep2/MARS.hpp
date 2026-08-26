@@ -288,12 +288,14 @@ private:
 
     std::unique_ptr<TensorHotpatch> hotpatch_;
 
-    // Internal methods
+    // Internal methods (friend access for TensorHotpatch)
     int SelectBestGPU(size_t bytes, float priority);
     bool CanFit(int gpu, size_t bytes);
     size_t CalculateEvictionScore(const VRAMLease& lease);
     bool MigrateTensorInternal(uint64_t tensorId, int sourceGPU, int targetGPU);
     void UpdateParityMetrics();
+
+    friend class TensorHotpatch;
 };
 
 // ============================================================================

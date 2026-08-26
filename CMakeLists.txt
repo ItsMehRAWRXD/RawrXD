@@ -333,6 +333,7 @@ if(RAWRXD_BUILD_CLI)
         src/modules/engine_manager.cpp
         src/modules/codex_ultimate.cpp
         src/deep2/Deep2IDEIntegration.cpp
+        src/deep2/IOCPGGUFLoader.cpp
         # Missing utilities required by agentic stack
         src/security/InputSanitizer.cpp
         src/config/IDEConfig.cpp
@@ -2707,7 +2708,6 @@ set(SOURCES
     src/deep2/mars/DualGPUBackend.cpp
     src/deep2/mars/MARSController.cpp
     src/sampling/advanced_sampler.cpp
-    src/deep2/deep2_link_stubs.cpp
 
     # Sovereign ABI runtime — stable C++/MASM execution plane seam
     src/runtime/Sovereign_RingTelemetry.cpp
@@ -2860,19 +2860,9 @@ list(REMOVE_ITEM RAWR_ENGINE_SOURCES
     src/lsp/gguf_diagnostic_provider.cpp
     # Remove quantum_agent_orchestrator.cpp - references GPUDispatchGate which has no implementation
     src/agent/quantum_agent_orchestrator.cpp
-    # Remove unified_hotpatch_manager.cpp - references patch_bytes/search_and_patch_bytes from excluded byte_level_hotpatcher.cpp
-    src/core/unified_hotpatch_manager.cpp
     # Remove RawrXD_AgentLoop.cpp and DiskRecoveryToolHandler.cpp - reference AgentToolRegistry from excluded ToolRegistry.cpp
     src/agentic/RawrXD_AgentLoop.cpp
     src/agentic/DiskRecoveryToolHandler.cpp
-    # Remove files referencing UnifiedHotpatchManager (unified_hotpatch_manager.cpp excluded above)
-    src/core/iterative_tensor_traversal.cpp
-    src/core/execution_scheduler.cpp
-    src/cli/agentic_decision_tree.cpp
-    src/core/agentic_task_graph.cpp
-    src/core/auto_repair_orchestrator.cpp
-    # Remove cli_autonomy_loop.cpp - references AgenticDecisionTree from excluded agentic_decision_tree.cpp
-    src/cli/cli_autonomy_loop.cpp
 )
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/agent/quantum_missing_impl.cpp")
     # RawrEngine currently relies on quantum_missing_impl.cpp for additional
@@ -3023,7 +3013,6 @@ list(APPEND RAWR_ENGINE_SOURCES
     src/core/js_extension_host_headless_impl.cpp
     src/core/shadow_page_detour.cpp
     src/core/camellia256_bridge.cpp
-    src/core/cli_autonomy_loop_stub.cpp
     # src/core/rawrxd_native_log_impl.cpp  # Duplicate - RawrXD_Native_Log defined in unlinked_symbols_batch_012.cpp
     # ── Sovereign Engine + Deep2 missing TUs (32 unresolved externals fix) ──
     src/deep2/Chamber.cpp
@@ -9448,6 +9437,7 @@ if(WIN32)
         src/deep2/CPUFrequency.cpp
         src/deep2/LlamaNativeBridge.cpp
         src/deep2/RawrRuntime.cpp
+        src/inference/ollama_blob_parser.cpp
         src/deep2/ZlibRuntimeLoader.cpp
         src/deep2/DualGPUHook.cpp
         src/reverse/ReverseEngine.cpp

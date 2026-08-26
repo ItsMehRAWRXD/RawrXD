@@ -27,6 +27,7 @@
 #include "K2GlobalTensorIndex.hpp"
 #include "ResidencyCounters.hpp"
 #include "Deep2Telemetry.hpp"
+#include "ollama_blob_parser.h"
 #include <cstdio>
 #include <cmath>
 #include <cstring>
@@ -1363,6 +1364,11 @@ Deep2Engine::~Deep2Engine() {
     disableMARS();
 
     deallocateBuffers();
+    
+    // Clean up temp Ollama extracted files
+    if (!tempOllamaGGUFPath_.empty() && std::filesystem::exists(tempOllamaGGUFPath_)) {
+        std::filesystem::remove(tempOllamaGGUFPath_);
+    }
 }
 
 bool Deep2Engine::initialize(const EngineConfig& cfg) {
@@ -1507,8 +1513,49 @@ void Deep2Engine::deallocateBuffers() {
 bool Deep2Engine::loadModel(const std::string& ggufPath) {
     printf("[Deep2Engine] Loading model from: %s\n", ggufPath.c_str());
 
+    // ── Ollama model detection and resolution ──────────────────────────
+    std::string resolvedPath = ggufPath;
+    std::string tempGGUFPath;
+    bool isOllamaBlob = false;
+    
+    // Check if this is an Ollama blob path (sha256-xxx format or OllamaModels directory)
+    bool looksLikeOllamaBlob = ggufPath.find("sha256-") != std::string::npos ||
+                                ggufPath.find("OllamaModels") != std::string::npos;
+    
+    if (looksLikeOllamaBlob && std::filesystem::exists(ggufPath)) {
+        printf("[Deep2Engine] Detected Ollama blob, scanning for GGUF data...\n");
+        
+        // Use blob parser to detect and extract GGUF
+        rawrxd::ollama::OllamaBlobParser parser;
+        auto result = parser.parseBlobToGGUF(ggufPath);
+        
+        if (result.success) {
+            printf("[Deep2Engine] Found GGUF at offset %zu in blob\n", result.gguf_offset);
+            
+            if (!result.requires_extraction) {
+                // GGUF at start of file, use directly
+                resolvedPath = ggufPath;
+                printf("[Deep2Engine] Using blob directly (GGUF at offset 0)\n");
+            } else {
+                // Need to extract GGUF portion to temp file
+                tempGGUFPath = std::filesystem::temp_directory_path().string() +
+                               "\\rawrxd_ollama_" + std::to_string(GetCurrentProcessId()) + ".gguf";
+                
+                if (parser.extractGGUFToFile(ggufPath, result.gguf_offset, result.gguf_size, tempGGUFPath)) {
+                    printf("[Deep2Engine] Extracted GGUF to: %s\n", tempGGUFPath.c_str());
+                    resolvedPath = tempGGUFPath;
+                    isOllamaBlob = true;
+                } else {
+                    printf("[Deep2Engine] WARNING: Failed to extract GGUF from blob\n");
+                }
+            }
+        } else {
+            printf("[Deep2Engine] WARNING: No GGUF data found in blob: %s\n", result.error_message.c_str());
+        }
+    }
+
     // ── Detect multi-shard vs single-file ──────────────────────────────
-    std::filesystem::path inputPath(ggufPath);
+    std::filesystem::path inputPath(resolvedPath);
     bool isDirectory = std::filesystem::is_directory(inputPath);
     bool isMultiShard = false;
     std::filesystem::path shardDir;
@@ -1525,7 +1572,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             }
         }
         if (!isMultiShard) {
-            printf("[Deep2Engine] ERROR: No .gguf files found in directory: %s\n", ggufPath.c_str());
+            printf("[Deep2Engine] ERROR: No .gguf files found in directory: %s\n", resolvedPath.c_str());
             return false;
         }
     } else {

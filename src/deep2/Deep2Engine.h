@@ -578,6 +578,9 @@ private:
     std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
+    
+    // Ollama model loading temp file cleanup
+    std::string tempOllamaGGUFPath_;
 
     // Weight tensors (legacy registration system)
     float* weights = nullptr;

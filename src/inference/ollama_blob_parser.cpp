@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <windows.h>
 
 namespace fs = std::filesystem;
 
@@ -363,6 +364,127 @@ uint64_t OllamaBlobStreamAdapter::Tell() const {
 
 bool OllamaBlobStreamAdapter::IsOpen() const {
     return pimpl->file.is_open() && pimpl->file.good();
+}
+
+// ============================================================================
+// Header-Compatible API Wrappers
+// ============================================================================
+
+OllamaBlobParser::ParseResult OllamaBlobParser::parseBlobToGGUF(const std::string& blob_path) {
+    ParseResult result;
+    result.success = false;
+    
+    // Use detector instance (ContainsGGUF is not static in header)
+    OllamaBlobDetector detector;
+    uint64_t offset = 0;
+    if (!detector.ContainsGGUF(blob_path, offset)) {
+        result.error_message = "No GGUF data found in blob";
+        return result;
+    }
+    
+    result.gguf_offset = offset;
+    result.requires_extraction = (offset != 0);
+    
+    // Get file size
+    std::ifstream file(blob_path, std::ios::binary | std::ios::ate);
+    if (file.is_open()) {
+        size_t fileSize = file.tellg();
+        file.close();
+        result.gguf_size = fileSize - offset;
+    }
+    
+    if (offset == 0) {
+        result.gguf_model_path = blob_path;
+        result.success = true;
+    } else {
+        result.gguf_model_path = "";
+        result.success = true;  // Caller needs to extract
+    }
+    
+    return result;
+}
+
+bool OllamaBlobParser::extractGGUFToFile(
+    const std::string& blob_path,
+    size_t offset,
+    size_t size,
+    const std::string& output_path
+) {
+    (void)size;  // Size is calculated from file
+    return ExtractGGUFData(blob_path, offset, output_path);
+}
+
+void* OllamaBlobParser::mapGGUFData(
+    const std::string& blob_path,
+    size_t offset,
+    size_t size
+) {
+    (void)blob_path; (void)offset; (void)size;
+    // Memory mapping not implemented - return nullptr
+    return nullptr;
+}
+
+void OllamaBlobParser::unmapGGUFData(void* mapped_address) {
+    (void)mapped_address;
+}
+
+std::string OllamaBlobParser::getGGUFReaderPath(const std::string& blob_path) {
+    auto result = parseBlobToGGUF(blob_path);
+    if (!result.success) return "";
+    
+    if (!result.requires_extraction) {
+        return blob_path;
+    }
+    
+    // Need to extract to temp file
+    DWORD pid = GetCurrentProcessId();
+    std::string tempPath = std::filesystem::temp_directory_path().string() +
+                           "\\rawrxd_" + std::to_string(static_cast<unsigned long>(pid)) + ".gguf";
+    if (extractGGUFToFile(blob_path, result.gguf_offset, result.gguf_size, tempPath)) {
+        return tempPath;
+    }
+    return "";
+}
+
+void OllamaBlobParser::cleanupTempFiles() {
+    for (const auto& file : temp_files_) {
+        std::filesystem::remove(file);
+    }
+    temp_files_.clear();
+}
+
+std::string OllamaBlobParser::generateTempPath(const std::string& blob_id) {
+    return temp_directory_ + "\\" + blob_id + ".gguf";
+}
+
+// OllamaModelLocator header-compatible wrappers
+std::vector<OllamaModelLocator::ModelLocation> OllamaModelLocator::findAllModels() {
+    std::vector<ModelLocation> results;
+    
+    auto models = FindAllModels();
+    for (const auto& model : models) {
+        ModelLocation loc;
+        loc.model_name = model.name;
+        loc.blob_paths.push_back(model.blob_path);
+        loc.total_size_bytes = model.size_bytes;
+        results.push_back(loc);
+    }
+    
+    return results;
+}
+
+OllamaModelLocator::ModelLocation OllamaModelLocator::findModel(const std::string& model_name) {
+    ModelLocation result;
+    
+    auto allModels = findAllModels();
+    for (const auto& model : allModels) {
+        if (model.model_name == model_name || 
+            model.model_name.find(model_name) != std::string::npos) {
+            return model;
+        }
+    }
+    
+    return result;  // Empty = not found
 }
 
 } // namespace ollama

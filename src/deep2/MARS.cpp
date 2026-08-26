@@ -258,7 +258,7 @@ bool MARSController::EvictLeastImportant(int gpu, size_t minBytesToFree) {
             }
             freed += it->second->bytes;
             pools_[gpu].usedBytes -= it->second->bytes;
-            printf("[MARS] Evicted '%s' (%.2f MB) from GPU%d (score=%.2f)\n",
+            printf("[MARS] Evicted '%s' (%.2f MB) from GPU%d (score=%zu)\n",
                    it->second->tensorName.c_str(),
                    it->second->bytes / (1024.0 * 1024.0),
                    gpu,

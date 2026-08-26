@@ -225,9 +225,9 @@ void NVMeStream::prefetchPredicted(const int* expertIds, const float* weights,
     for (int i = 0; i < count; i++) {
         ranked.push_back({weights[i], expertIds[i]});
     }
-    std::sort(ranked.begin(), ranked.end(), std::greater<std::pair<float,int>>());
+    std::sort(ranked.begin(), ranked.end(), std::greater<std::pair<float,int> >());
     
-    int prefetchCount = std::min((int)config.prefetchDepth, count);
+    int prefetchCount = (std::min)((int)config.prefetchDepth, count);
     for (int i = 0; i < prefetchCount; i++) {
         // Use current layer context for prefetch
         // Layer context is set by the caller before prefetch operations
