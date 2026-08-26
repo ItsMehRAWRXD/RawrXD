@@ -1460,6 +1460,7 @@ bool Deep2Engine::allocateBuffers() {
     vProj           = alignedAlloc(hiddenSize);
     gateBuf         = alignedAlloc(ffnDim);
     upBuf           = alignedAlloc(ffnDim);
+    layerTemp       = alignedAlloc(hiddenSize);
 
     // MLA (K2) buffers
     if (config.useMLA) {
@@ -1497,13 +1498,14 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(vProj);
     alignedFree(gateBuf);
     alignedFree(upBuf);
+    alignedFree(layerTemp);
     alignedFree(mlaQ_a);
     alignedFree(mlaKV_a);
     alignedFree(mlaQ_b);
     alignedFree(mlaK_b);
     alignedFree(mlaV_b);
     hiddenStates = attentionOutput = ffnOutput = nullptr;
-    logits = qProj = kProj = vProj = gateBuf = upBuf = nullptr;
+    logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
 }
 
@@ -4111,13 +4113,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // 1. Attention RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
-    RMSNormW(lw.attnNorm, input, attentionOutput, hiddenDim, modelWeights.normEps);
+    RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
 
     // 2. Attention with real Q/K/V/O projections
     ResidencyCounters::BeginAttention();
     if (profilingEnabled_ && profiler_) profiler_->beginQKVProj();
-    computeAttention(layer, attentionOutput, output, seqLen);
+    computeAttention(layer, layerTemp, output, seqLen);
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
     ResidencyCounters::EndAttention();
 
@@ -4152,16 +4154,16 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // 4. FFN RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
-    RMSNormW(lw.ffnNorm, output, attentionOutput, hiddenDim, modelWeights.normEps);
+    RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
 
     // 5. FFN (SwiGLU) with real weight projections
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
     if (modelWeights.isMoE && modelWeights.numExperts > 0) {
-        computeMoEFFN(layer, attentionOutput, ffnOutput);
+        computeMoEFFN(layer, layerTemp, ffnOutput);
     } else {
-        computeFFN(layer, attentionOutput, ffnOutput);
+        computeFFN(layer, layerTemp, ffnOutput);
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();

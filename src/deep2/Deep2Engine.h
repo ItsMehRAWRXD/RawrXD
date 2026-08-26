@@ -596,6 +596,7 @@ private:
     float* vProj = nullptr;
     float* gateBuf = nullptr;
     float* upBuf = nullptr;
+    float* layerTemp = nullptr;  // Dedicated temp buffer for forwardLayer()
 
     // MLA (K2) buffers
     float* mlaQ_a = nullptr;      // [qLoraRank]
