@@ -2,6 +2,8 @@
 // Provides subsystem management and invocation
 
 #include "rawrxd_subsystem_api.hpp"
+#include <cstring>
+#include <chrono>
 
 // Private constructor implementation
 SubsystemRegistry::SubsystemRegistry() 
@@ -20,7 +22,7 @@ SubsystemRegistry::SubsystemRegistry()
 SubsystemResult SubsystemRegistry::invoke(const SubsystemParams& params) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
-    int idx = static_cast<int>(params.mode);
+    int idx = static_cast<int>(params.id);
     if (idx < 0 || idx >= static_cast<int>(SubsystemId::_Count)) {
         return SubsystemResult::error("Invalid subsystem ID", -1);
     }
@@ -55,7 +57,7 @@ SubsystemResult SubsystemRegistry::invokeBySwitch(const char* switchStr) {
     for (int i = 0; i < static_cast<int>(SubsystemId::_Count); ++i) {
         if (m_modes[i].switchName && std::strcmp(m_modes[i].switchName, switchStr) == 0) {
             SubsystemParams params = {};
-            params.mode = static_cast<SubsystemId>(i);
+            params.id = static_cast<SubsystemId>(i);
             return invoke(params);
         }
     }
@@ -90,6 +92,10 @@ SubsystemRegistry::ModeStats SubsystemRegistry::getStats(SubsystemId id) const {
 
 void SubsystemRegistry::emitEvent(SubsystemEventType type, SubsystemId mode, const char* detail) {
     if (m_eventCallback) {
-        m_eventCallback(type, mode, detail, m_eventUserData);
+        SubsystemEvent event;
+        event.mode = mode;
+        event.timestamp = 0;
+        event.detail = detail;
+        m_eventCallback(&event, m_eventUserData);
     }
 }

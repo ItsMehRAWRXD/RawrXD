@@ -2929,6 +2929,30 @@ namespace {
 static void LinearW_Range(const WeightTensor& wt, const float* input,
                           float* output, size_t startRow, size_t endRow, size_t cols) {
     size_t rows = endRow - startRow;
+    // ── Kernel dispatch trace for certification proof ────────────────────
+    static int dispatchLogCount = 0;
+    if (dispatchLogCount < 500) {
+        ++dispatchLogCount;
+        const char* typeName = "UNKNOWN";
+        switch (wt.type) {
+            case (int)GGMLType::GGML_TYPE_F32: typeName = "F32"; break;
+            case (int)GGMLType::GGML_TYPE_F16: typeName = "F16"; break;
+            case (int)GGMLType::GGML_TYPE_Q4_0: typeName = "Q4_0"; break;
+            case (int)GGMLType::GGML_TYPE_Q4_1: typeName = "Q4_1"; break;
+            case (int)GGMLType::GGML_TYPE_Q5_0: typeName = "Q5_0"; break;
+            case (int)GGMLType::GGML_TYPE_Q5_1: typeName = "Q5_1"; break;
+            case (int)GGMLType::GGML_TYPE_Q8_0: typeName = "Q8_0"; break;
+            case (int)GGMLType::GGML_TYPE_Q8_K: typeName = "Q8_K"; break;
+            case (int)GGMLType::GGML_TYPE_Q2_K: typeName = "Q2_K"; break;
+            case (int)GGMLType::GGML_TYPE_Q3_K: typeName = "Q3_K"; break;
+            case (int)GGMLType::GGML_TYPE_Q4_K: typeName = "Q4_K"; break;
+            case (int)GGMLType::GGML_TYPE_Q5_K: typeName = "Q5_K"; break;
+            case (int)GGMLType::GGML_TYPE_Q6_K: typeName = "Q6_K"; break;
+            default: typeName = "UNKNOWN"; break;
+        }
+        printf("[KERNEL] tensor=%s type=%s rows=%zu cols=%zu\n",
+               wt.name.c_str(), typeName, rows, cols);
+    }
     switch (wt.type) {
         case (int)GGMLType::GGML_TYPE_F32:
             fp32GEMV((const float*)wt.data + startRow * cols, input, output + startRow, rows, cols);
@@ -3458,7 +3482,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         // ── B3: Trace after final layer for prompt ────────────────────
-        B3_TraceState("PROMPT_FINAL", t, h, config.hiddenDim);
+        B3_TraceState("PROMPT_POST_LAYERS", t, h, config.hiddenDim);
+
+        // Final norm before logits (if not done in last layer)
+        if (modelWeights.finalNorm.data) {
+            RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
+        }
+        B3_TraceState("PROMPT_FINAL_NORM", t, h, config.hiddenDim);
 
         // Advance KV cache after processing each prompt token
         if (kvCache) {
@@ -3534,6 +3564,9 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         if (modelWeights.finalNorm.data) {
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
+        // ── B3: Trace after final norm ─────────────────────────────────
+        B3_TraceState("FINAL_NORM", currentPos, h, config.hiddenDim);
+
         if (profilingEnabled_ && profiler_) {
             profiler_->endFinalNorm();
             profiler_->beginLogits();
@@ -3543,6 +3576,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         ResidencyCounters::BeginLogits();
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
+        // ── B3: Trace logits ──────────────────────────────────────────
+        B3_TraceLogits("LOGITS", currentPos, logits, config.vocabSize);
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endLogits();
