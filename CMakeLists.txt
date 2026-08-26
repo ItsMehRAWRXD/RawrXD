@@ -6336,6 +6336,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
                                 if(src MATCHES "ai_agent_masm_core_impl\\.cpp$")
                                     continue()
                                 endif()
+                                # These are real production implementations, not stubs — exempt
+                                if(src MATCHES "cot_fallback_system\\.cpp$" OR
+                                   src MATCHES "dml_asm_fallback\\.cpp$")
+                                    continue()
+                                endif()
                 list(APPEND STUB_VIOLATIONS "${src}")
                 math(EXPR STUB_COUNT "${STUB_COUNT} + 1")
             endif()

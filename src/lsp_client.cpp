@@ -418,4 +418,51 @@ nlohmann::json LSPClient::createNotification(const std::string& method, const nl
     return req;
 }
 
+void LSPClient::sendIncrementalUpdate(const std::string& uri, int64_t version,
+                                     const std::string& oldContent,
+                                     const std::string& newContent) {
+    (void)oldContent;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!m_transport || !m_transport->isConnected()) return;
+
+    nlohmann::json td = nlohmann::json::object();
+    td["uri"] = uri;
+    td["version"] = static_cast<int>(version);
+
+    nlohmann::json change = nlohmann::json::object();
+    change["text"] = newContent;
+
+    nlohmann::json cc = nlohmann::json::array();
+    cc.push_back(change);
+
+    nlohmann::json params = nlohmann::json::object();
+    params["textDocument"] = td;
+    params["contentChanges"] = cc;
+
+    m_transport->send(createNotification("textDocument/didChange", params));
+}
+
+void LSPClient::cancelRequest(const std::string& id) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!m_transport || !m_transport->isConnected()) return;
+
+    nlohmann::json params = nlohmann::json::object();
+    params["id"] = id;
+    m_transport->send(createNotification("$/cancelRequest", params));
+    m_pendingCancellations[id] = true;
+}
+
+Position LSPClient::offsetToPosition(const std::string& text, int offset) {
+    Position pos{0, 0};
+    for (int i = 0; i < offset && i < static_cast<int>(text.size()); ++i) {
+        if (text[i] == '\n') {
+            pos.line++;
+            pos.character = 0;
+        } else {
+            pos.character++;
+        }
+    }
+    return pos;
+}
+
 }  // namespace RawrXD
