@@ -225,7 +225,10 @@ void NVMeStream::prefetchPredicted(const int* expertIds, const float* weights,
     for (int i = 0; i < count; i++) {
         ranked.push_back({weights[i], expertIds[i]});
     }
-    std::sort(ranked.begin(), ranked.end(), std::greater<std::pair<float,int> >());
+    using PairType = std::pair<float, int>;
+    std::sort(ranked.begin(), ranked.end(), [](const PairType& a, const PairType& b) {
+        return a.first > b.first;
+    });
     
     int prefetchCount = (std::min)((int)config.prefetchDepth, count);
     for (int i = 0; i < prefetchCount; i++) {

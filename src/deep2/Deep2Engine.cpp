@@ -2069,7 +2069,7 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         KVCacheConfig kvConfig;
         kvConfig.numLayers = modelWeights.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads = modelWeights.numHeads;
+        kvConfig.numHeads = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
         kvConfig.headDim = modelWeights.headDim;
         kvCache->initialize(kvConfig);
     }
@@ -2429,7 +2429,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
         KVCacheConfig kvConfig;
         kvConfig.numLayers = modelWeights.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads  = modelWeights.numHeads;
+        kvConfig.numHeads  = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
         kvConfig.headDim   = modelWeights.headDim;
         kvCache->initialize(kvConfig);
     }
@@ -4827,7 +4827,7 @@ void Deep2Engine::enableKVCache(bool enable) {
         KVCacheConfig kvConfig;
         kvConfig.numLayers = config.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads = config.numHeads;
+        kvConfig.numHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
         kvConfig.headDim = config.hiddenDim / config.numHeads;
         kvCache->initialize(kvConfig);
     }
