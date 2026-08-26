@@ -5328,8 +5328,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # src/core/hwsynth_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_008.cpp, batch_009.cpp
         src/spengine_bridge.cpp  # ADDED: Real memory patch implementation with journal/rollback
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
-        # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
-        src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
+        src/win32app/Win32IDE_SemanticIndex.cpp  # REAL: Semantic code intelligence (file is clean, 509 lines)
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: ODR violations — real implementations exist in Win32IDE_ChatPanel_Ollama.cpp, Win32IDE_SemanticIndex.cpp, Win32IDE_CodexCommands.cpp
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -9470,6 +9470,7 @@ if(WIN32)
     target_link_libraries(RawrXD-ProductionBenchmark PRIVATE
         kernel32
         user32
+        cabinet
     )
     set_target_properties(RawrXD-ProductionBenchmark PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

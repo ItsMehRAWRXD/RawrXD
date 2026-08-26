@@ -80,11 +80,11 @@ extern "C" {
     void Sovereign_Q4K_GEMV_AVX2_V2(const void* q4_weights, const float* input,
                                      float* output, unsigned int num_blocks, unsigned int rows);
 
-    // Q2_K / Q3_K MASM kernels
-    void Sovereign_Q2K_GEMV_AVX2_V2(const void* q2_weights, const float* input,
-                                     float* output, unsigned int num_blocks, unsigned int rows);
-    void Sovereign_Q3K_GEMV_AVX2_V2(const void* q3_weights, const float* input,
-                                     float* output, unsigned int num_blocks, unsigned int rows);
+    // Q2_K / Q3_K MASM kernels (real implementations in sovereign_q2_k_gemv.asm / sovereign_q3_k_gemv.asm)
+    void Deep2_Q2_K_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
+    void Deep2_Q3_K_GEMV(const void* weights, const float* input, float* output,
+                         unsigned int numBlocks, unsigned int outputDim);
 
     // Q4_0 / Q4_1 / Q8_0 / Q5_K / Q6_K MASM kernels
     void Deep2_Q4_0_GEMV(const void* weights, const float* input, float* output,
@@ -119,7 +119,7 @@ static void gemv_q4_k_masm(
                                   static_cast<unsigned int>(rows));
 }
 
-// Q2_K wrapper
+// Q2_K wrapper: standard GEMV -> Deep2_Q2_K_GEMV
 static void gemv_q2_k_masm(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -127,11 +127,11 @@ static void gemv_q2_k_masm(
     size_t rows, size_t cols
 ) {
     size_t blocksPerRow = (cols + 255) / 256;
-    Sovereign_Q2K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
-                                  static_cast<unsigned int>(rows));
+    Deep2_Q2_K_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
 }
 
-// Q3_K wrapper
+// Q3_K wrapper: standard GEMV -> Deep2_Q3_K_GEMV
 static void gemv_q3_k_masm(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
@@ -139,8 +139,8 @@ static void gemv_q3_k_masm(
     size_t rows, size_t cols
 ) {
     size_t blocksPerRow = (cols + 255) / 256;
-    Sovereign_Q3K_GEMV_AVX2_V2(w, x, y, static_cast<unsigned int>(blocksPerRow),
-                                  static_cast<unsigned int>(rows));
+    Deep2_Q3_K_GEMV(w, x, y, static_cast<unsigned int>(blocksPerRow),
+                     static_cast<unsigned int>(rows));
 }
 
 // Q4_0 wrapper
@@ -1490,14 +1490,14 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q2_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    // NOTE: Q2_K MASM kernel is a stub; use scalar until real AVX2 kernel is implemented
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
 
     // --- Q3_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
-    // NOTE: Q3_K MASM kernel is a stub; use scalar until real AVX2 kernel is implemented
-    RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_masm);
+    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
 
     // --- Q4_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
