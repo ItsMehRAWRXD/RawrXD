@@ -150,21 +150,35 @@ void Sovereign_Q4K_GEMV_AVX2_V2(
                     __m128i packed = _mm_loadu_si128(reinterpret_cast<const __m128i*>(qs + group * 16 + g2 * 8));
 
                     __m128i low_nibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
-                    for (int sub = 0; sub < 2; ++sub) {
-                        __m128i eight = _mm_srli_si128(low_nibbles, sub * 8);
+                    {
+                        __m128i eight = low_nibbles;
                         __m256 f32 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(eight));
                         f32 = _mm256_fmadd_ps(f32, scale_vec, min_vec);
-                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base + sub * 8);
+                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base);
+                        sum_vec = _mm256_fmadd_ps(f32, in_vec, sum_vec);
+                    }
+                    {
+                        __m128i eight = _mm_srli_si128(low_nibbles, 8);
+                        __m256 f32 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(eight));
+                        f32 = _mm256_fmadd_ps(f32, scale_vec, min_vec);
+                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base + 8);
                         sum_vec = _mm256_fmadd_ps(f32, in_vec, sum_vec);
                     }
 
                     __m128i high_nibbles = _mm_srli_epi16(packed, 4);
                     high_nibbles = _mm_and_si128(high_nibbles, _mm_set1_epi8(0x0F));
-                    for (int sub = 0; sub < 2; ++sub) {
-                        __m128i eight = _mm_srli_si128(high_nibbles, sub * 8);
+                    {
+                        __m128i eight = high_nibbles;
                         __m256 f32 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(eight));
                         f32 = _mm256_fmadd_ps(f32, scale_vec, min_vec);
-                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base + 16 + sub * 8);
+                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base + 16);
+                        sum_vec = _mm256_fmadd_ps(f32, in_vec, sum_vec);
+                    }
+                    {
+                        __m128i eight = _mm_srli_si128(high_nibbles, 8);
+                        __m256 f32 = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(eight));
+                        f32 = _mm256_fmadd_ps(f32, scale_vec, min_vec);
+                        __m256 in_vec = _mm256_loadu_ps(input + block * 256 + base + 24);
                         sum_vec = _mm256_fmadd_ps(f32, in_vec, sum_vec);
                     }
                 }

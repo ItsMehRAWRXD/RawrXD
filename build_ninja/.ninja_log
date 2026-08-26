@@ -656,3 +656,6 @@
 16782	20542	8094587780083117	CMakeFiles/rawrxd.dir/src/runtime/memory/PredictiveMemoryManager.cpp.obj	4fb6a462340bf82d
 16654	20964	8094587778807552	CMakeFiles/rawrxd.dir/src/runtime/memory/TransferScheduler.cpp.obj	89bd9d706bbe94ab
 20964	22699	8094587821910498	bin/rawrxd.exe	cbe670286c1d1ba1
+59	317	8094591799835894	CMakeFiles/InferenceEngine.dir/src/deep2/QuantKernelMASM.cpp.obj	ee39c1c454ef082d
+318	1264	8094591802422300	InferenceEngine.lib	a8809590c9a1e527
+1265	1959	8094591811898765	bin/rawrxd.exe	cbe670286c1d1ba1

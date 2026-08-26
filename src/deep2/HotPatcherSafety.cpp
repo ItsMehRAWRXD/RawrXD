@@ -646,7 +646,7 @@ float PatchSafety::calculateRiskScore(const std::string& patchId) {
         score += 0.5f;
     }
     
-    return std::min(score, 1.0f);
+    return (score < 1.0f) ? score : 1.0f;
 }
 
 uint64_t PatchSafety::estimateRollbackTimeMs(const std::string& patchId) {
