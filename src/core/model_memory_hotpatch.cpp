@@ -18,15 +18,32 @@
 // Global state
 // ---------------------------------------------------------------------------
 static std::mutex             g_memPatchMutex;
+static std::recursive_mutex   g_windowMutex;  // Serializes begin/end_writable_window across threads
 static MemoryPatchStats       g_memPatchStats;
 
 // ---------------------------------------------------------------------------
 // RegionProtectCookie — Tracks VirtualProtect state for writable windows
+//
+// VirtualProtect operates on whole pages.  A byte range [offset, offset+size)
+// may span multiple pages, and those pages can have *different* original
+// protections (e.g. PAGE_READONLY for a read-only data section adjacent to
+// PAGE_READWRITE for a mutable tensor).  Capturing a single oldProtection
+// value and restoring it across the entire aligned range would corrupt pages
+// whose original protection differed.
+//
+// We therefore walk VirtualQuery page-by-page, record each page's protection
+// individually, and restore them independently on close.
 // ---------------------------------------------------------------------------
+struct PageProtectionEntry {
+    void*  pageStart;
+    size_t pageSize;
+    DWORD  originalProtect;
+};
+
 struct RegionProtectCookie {
-    DWORD   oldProtection{0};
-    size_t  alignedStart{0};
-    size_t  alignedSize{0};
+    size_t                              alignedStart{0};
+    size_t                              alignedSize{0};
+    std::vector<PageProtectionEntry>    pages;  // one entry per page in the window
 };
 
 // ---------------------------------------------------------------------------
@@ -91,6 +108,56 @@ static bool safe_memcpy_seh(void* dst, const void* src, size_t size) {
     return true;
 }
 #endif
+
+// ---------------------------------------------------------------------------
+// safe_bounds_check — Overflow-safe range validation
+// Returns true iff [offset, offset+size) is entirely within [0, regionSize).
+// Rejects wrap-around (offset + size < offset) and zero-size with nonzero offset.
+// ---------------------------------------------------------------------------
+static bool safe_bounds_check(size_t offset, size_t size, size_t regionSize) {
+    if (size == 0) return offset == 0;  // zero-length op only valid at offset 0
+    if (offset > regionSize) return false;
+    if (size > regionSize - offset) return false;  // cannot overflow: offset <= regionSize
+    return true;
+}
+
+// Overload for two ranges (e.g. copy/swap src+dst)
+static bool safe_bounds_check2(size_t off1, size_t off2, size_t size, size_t regionSize) {
+    return safe_bounds_check(off1, size, regionSize) &&
+           safe_bounds_check(off2, size, regionSize);
+}
+
+// ---------------------------------------------------------------------------
+// is_valid_mapped_region — Verify [ptr, ptr+size) is a committed, readable
+// memory region via VirtualQuery.  Prevents attach() from accepting dangling
+// pointers, stack addresses, or unmapped ranges.
+// ---------------------------------------------------------------------------
+static bool is_valid_mapped_region(const void* ptr, size_t size) {
+    if (!ptr || size == 0) return false;
+
+    MEMORY_BASIC_INFORMATION mbi;
+    const char* cursor = static_cast<const char*>(ptr);
+    const char* end    = cursor + size;
+
+    while (cursor < end) {
+        SIZE_T q = VirtualQuery(cursor, &mbi, sizeof(mbi));
+        if (q == 0) return false;
+
+        // Must be committed (not free/reserved)
+        if (mbi.State != MEM_COMMIT) return false;
+
+        // Must be readable
+        DWORD prot = mbi.Protect;
+        bool readable = (prot & (PAGE_READONLY | PAGE_READWRITE |
+                                  PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+                                  PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY)) != 0;
+        if (!readable) return false;
+
+        // Advance to next region boundary
+        cursor = static_cast<const char*>(mbi.BaseAddress) + mbi.RegionSize;
+    }
+    return true;
+}
 
 // ---------------------------------------------------------------------------
 // apply_memory_patch
@@ -295,7 +362,15 @@ static size_t getSystemPageSize() {
 // ===========================================================================
 PatchResult begin_writable_window(void* modelPtr, size_t modelSize,
                                   size_t offset, size_t size, void*& cookie) {
-    if (!modelPtr || offset + size > modelSize) {
+    // Serialize window operations across threads.  Without this, two threads
+    // opening windows on the same page would race: Thread A captures RO and
+    // makes RW, Thread B captures RW and makes RW, Thread A restores RO,
+    // Thread B restores RW — leaving the page incorrectly writable.
+    // The recursive mutex is locked here and unlocked in end_writable_window.
+    g_windowMutex.lock();
+
+    if (!modelPtr || !safe_bounds_check(offset, size, modelSize)) {
+        g_windowMutex.unlock();
         return PatchResult::error("Invalid offset or size for writable window", 1001);
     }
 
@@ -310,10 +385,49 @@ PatchResult begin_writable_window(void* modelPtr, size_t modelSize,
     rc->alignedStart = alignedStart;
     rc->alignedSize  = alignedSize;
 
+    // Walk VirtualQuery page-by-page to capture each page's original
+    // protection.  This handles ranges that span pages with heterogeneous
+    // protections (e.g. PAGE_READONLY adjacent to PAGE_READWRITE).
+    char* cursor = reinterpret_cast<char*>(alignedStart);
+    char* regionEnd = reinterpret_cast<char*>(alignedEnd);
+    while (cursor < regionEnd) {
+        MEMORY_BASIC_INFORMATION mbi;
+        SIZE_T q = VirtualQuery(cursor, &mbi, sizeof(mbi));
+        if (q == 0) {
+            int err = static_cast<int>(GetLastError());
+            // Roll back any pages we already made writable
+            for (auto& p : rc->pages) {
+                DWORD dummy = 0;
+                VirtualProtect(p.pageStart, p.pageSize, p.originalProtect, &dummy);
+            }
+            delete rc;
+            g_windowMutex.unlock();
+            return PatchResult::error("VirtualQuery failed during window open", err);
+        }
+
+        // Clamp the page extent to our region boundary
+        char* pageEnd = reinterpret_cast<char*>(mbi.BaseAddress) + mbi.RegionSize;
+        if (pageEnd > regionEnd) pageEnd = regionEnd;
+        size_t thisChunk = static_cast<size_t>(pageEnd - cursor);
+
+        PageProtectionEntry pe;
+        pe.pageStart = cursor;
+        pe.pageSize  = thisChunk;
+        pe.originalProtect = mbi.Protect;
+        rc->pages.push_back(pe);
+
+        cursor = pageEnd;
+    }
+
+    // Now make the entire aligned range writable in one call.  VirtualProtect
+    // will set all pages to PAGE_EXECUTE_READWRITE and return the *first*
+    // page's old protection (which we ignore — we have per-page values).
+    DWORD firstOldProt = 0;
     if (!VirtualProtect(reinterpret_cast<void*>(alignedStart), alignedSize,
-                        PAGE_EXECUTE_READWRITE, &rc->oldProtection)) {
+                        PAGE_EXECUTE_READWRITE, &firstOldProt)) {
         int err = static_cast<int>(GetLastError());
         delete rc;
+        g_windowMutex.unlock();
         return PatchResult::error("VirtualProtect (open window) failed", err);
     }
 
@@ -322,17 +436,30 @@ PatchResult begin_writable_window(void* modelPtr, size_t modelSize,
 }
 
 PatchResult end_writable_window(void* cookie) {
-    if (!cookie) return PatchResult::error("Invalid cookie", 1004);
+    if (!cookie) {
+        g_windowMutex.unlock();  // Match the lock from begin_writable_window
+        return PatchResult::error("Invalid cookie", 1004);
+    }
 
     auto* rc = static_cast<RegionProtectCookie*>(cookie);
-    DWORD dummy = 0;
-    bool ok = VirtualProtect(reinterpret_cast<void*>(rc->alignedStart),
-                             rc->alignedSize, rc->oldProtection, &dummy);
-    delete rc;
-    if (!ok) {
-        return PatchResult::error("VirtualProtect (restore) failed", static_cast<int>(GetLastError()));
+    bool allOk = true;
+
+    // Restore each page's original protection individually.  This correctly
+    // handles ranges that span pages with heterogeneous protections.
+    for (const auto& pe : rc->pages) {
+        DWORD dummy = 0;
+        if (!VirtualProtect(pe.pageStart, pe.pageSize, pe.originalProtect, &dummy)) {
+            allOk = false;
+            std::cerr << "[MemHotpatch] WARNING: VirtualProtect restore failed for page at "
+                      << pe.pageStart << " (err=" << GetLastError() << ")\n";
+        }
     }
-    return PatchResult::ok("Protection restored");
+
+    delete rc;
+    g_windowMutex.unlock();  // Release the lock held since begin_writable_window
+    return allOk ? PatchResult::ok("Protection restored")
+                 : PatchResult::error("Some pages failed protection restore",
+                                      static_cast<int>(GetLastError()));
 }
 
 // ===========================================================================
@@ -343,7 +470,7 @@ PatchResult safe_memory_write(void* modelPtr, size_t modelSize,
     if (!modelPtr || !data || dataSize == 0) {
         return PatchResult::error("Invalid args for safe_memory_write", 2001);
     }
-    if (offset + dataSize > modelSize) {
+    if (!safe_bounds_check(offset, dataSize, modelSize)) {
         return PatchResult::error("Out of bounds", 2002);
     }
 
@@ -367,7 +494,7 @@ PatchResult safe_memory_write(void* modelPtr, size_t modelSize,
 // CRC32 integrity check
 // ===========================================================================
 uint32_t calculate_crc32(const void* ptr, size_t offset, size_t size, size_t maxSize) {
-    if (!ptr || offset + size > maxSize) return 0;
+    if (!ptr || !safe_bounds_check(offset, size, maxSize)) return 0;
 
     static constexpr uint32_t CRC32_POLY = 0xEDB88320u;
     uint32_t crc = 0xFFFFFFFFu;
@@ -386,7 +513,7 @@ uint32_t calculate_crc32(const void* ptr, size_t offset, size_t size, size_t max
 // FNV-1a 64-bit checksum (for patch verification)
 // ===========================================================================
 uint64_t calculate_checksum64(const void* ptr, size_t offset, size_t size, size_t maxSize) {
-    if (!ptr || offset + size > maxSize) return 0;
+    if (!ptr || !safe_bounds_check(offset, size, maxSize)) return 0;
 
     const char* data = static_cast<const char*>(ptr) + offset;
     uint64_t hash  = 0xcbf29ce484222325ULL;
@@ -410,6 +537,12 @@ PatchResult model_hotpatch_attach(void* modelPtr, size_t modelSize) {
     }
     if (!modelPtr || modelSize == 0) {
         return PatchResult::error("Invalid model pointer or size", 2);
+    }
+
+    // Verify the region is actually committed, readable memory — prevents
+    // accepting dangling pointers, stack addresses, or unmapped ranges.
+    if (!is_valid_mapped_region(modelPtr, modelSize)) {
+        return PatchResult::error("Model region is not valid committed memory", 3);
     }
 
     g_modelState.modelPtr    = modelPtr;
@@ -491,13 +624,16 @@ static bool check_patch_conflict(const NamedPatchEntry& newPatch,
                                  PatchConflict& conflict) {
     for (const auto& [name, existing] : g_modelState.patches) {
         if (existing.name == newPatch.name) continue;
+        if (existing.size == 0 || newPatch.size == 0) continue;
 
+        // Overflow-safe half-open interval overlap check:
+        // [eStart, eEnd) ∩ [nStart, nEnd) ≠ ∅  iff  nStart < eEnd && eStart < nEnd
         size_t eStart = existing.offset;
-        size_t eEnd   = existing.offset + existing.size - 1;
+        size_t eEnd   = existing.offset + existing.size;  // safe: size > 0, checked above
         size_t nStart = newPatch.offset;
-        size_t nEnd   = newPatch.offset + newPatch.size - 1;
+        size_t nEnd   = newPatch.offset + newPatch.size;
 
-        if (nStart <= eEnd && nEnd >= eStart) {
+        if (nStart < eEnd && eStart < nEnd) {
             if (newPatch.priority <= existing.priority) {
                 conflict.existingPatch = existing;
                 conflict.incomingPatch = newPatch;
@@ -531,7 +667,7 @@ PatchResult model_add_named_patch(const char* name, size_t offset, size_t size,
     std::memcpy(entry.patchBytes.data(), patchData, size);
 
     // Back up original bytes
-    if (g_modelState.attached && offset + size <= g_modelState.modelSize) {
+    if (g_modelState.attached && safe_bounds_check(offset, size, g_modelState.modelSize)) {
         entry.originalBytes.resize(size);
         std::memcpy(entry.originalBytes.data(),
                     static_cast<char*>(g_modelState.modelPtr) + offset, size);
@@ -707,6 +843,8 @@ PatchResult model_verify_integrity() {
 void* model_get_direct_pointer(size_t offset) {
     std::lock_guard<std::mutex> lock(g_modelState.mtx);
     if (!g_modelState.attached || offset >= g_modelState.modelSize) return nullptr;
+    // Ensure at least 1 byte is accessible at offset
+    if (!safe_bounds_check(offset, 1, g_modelState.modelSize)) return nullptr;
     return static_cast<char*>(g_modelState.modelPtr) + offset;
 }
 
@@ -716,7 +854,7 @@ PatchResult model_direct_read(size_t offset, size_t size, void* dest) {
     if (!g_modelState.attached || !dest) {
         return PatchResult::error("Not attached or null dest", 6001);
     }
-    if (offset + size > g_modelState.modelSize) {
+    if (!safe_bounds_check(offset, size, g_modelState.modelSize)) {
         return PatchResult::error("Read out of bounds", 6002);
     }
 
@@ -736,7 +874,7 @@ PatchResult model_direct_fill(size_t offset, size_t size, uint8_t value) {
     std::lock_guard<std::mutex> lock(g_modelState.mtx);
 
     if (!g_modelState.attached) return PatchResult::error("Not attached", 6005);
-    if (offset + size > g_modelState.modelSize) return PatchResult::error("Fill out of bounds", 6006);
+    if (!safe_bounds_check(offset, size, g_modelState.modelSize)) return PatchResult::error("Fill out of bounds", 6006);
 
     void* cookie = nullptr;
     PatchResult openRes = begin_writable_window(g_modelState.modelPtr,
@@ -755,15 +893,20 @@ PatchResult model_direct_copy(size_t srcOffset, size_t dstOffset, size_t size) {
     std::lock_guard<std::mutex> lock(g_modelState.mtx);
 
     if (!g_modelState.attached) return PatchResult::error("Not attached", 6007);
-    if (srcOffset + size > g_modelState.modelSize ||
-        dstOffset + size > g_modelState.modelSize) {
+    if (!safe_bounds_check2(srcOffset, dstOffset, size, g_modelState.modelSize)) {
         return PatchResult::error("Copy out of bounds", 6008);
     }
 
+    // Use a single writable window covering both src and dst to handle
+    // overlapping regions correctly — memmove handles the copy semantics,
+    // but the source bytes may live in a page that needs write access
+    // when src and dst overlap.
+    size_t winOff = (std::min)(srcOffset, dstOffset);
+    size_t winEnd = (std::max)(srcOffset, dstOffset) + size;
     void* cookie = nullptr;
     PatchResult openRes = begin_writable_window(g_modelState.modelPtr,
                                                 g_modelState.modelSize,
-                                                dstOffset, size, cookie);
+                                                winOff, winEnd - winOff, cookie);
     if (!openRes.success) return openRes;
 
     std::memmove(static_cast<char*>(g_modelState.modelPtr) + dstOffset,
@@ -779,6 +922,7 @@ int64_t model_direct_search(size_t startOffset, const void* pattern, size_t patt
 
     if (!g_modelState.attached || !pattern || patternLen == 0) return -1;
     if (startOffset >= g_modelState.modelSize) return -1;
+    if (patternLen > g_modelState.modelSize - startOffset) return -1;  // pattern longer than remaining
 
     const char* base = static_cast<const char*>(g_modelState.modelPtr);
     const char* haystack = base + startOffset;
@@ -797,24 +941,31 @@ PatchResult model_direct_swap(size_t offset1, size_t offset2, size_t size) {
     std::lock_guard<std::mutex> lock(g_modelState.mtx);
 
     if (!g_modelState.attached) return PatchResult::error("Not attached", 6009);
-    if (offset1 + size > g_modelState.modelSize ||
-        offset2 + size > g_modelState.modelSize) {
+    if (!safe_bounds_check2(offset1, offset2, size, g_modelState.modelSize)) {
         return PatchResult::error("Swap out of bounds", 6010);
     }
 
     std::vector<uint8_t> temp(size);
     std::memcpy(temp.data(), static_cast<char*>(g_modelState.modelPtr) + offset1, size);
 
-    void* cookie1 = nullptr;
-    begin_writable_window(g_modelState.modelPtr, g_modelState.modelSize, offset1, size, cookie1);
+    // Use a single writable window covering [min, max+size) to handle
+    // overlapping regions correctly — two separate windows would race
+    // on protection restoration when offset1 and offset2 overlap.
+    size_t winOff = (std::min)(offset1, offset2);
+    size_t winEnd = (std::max)(offset1, offset2) + size;
+    void* cookie = nullptr;
+    PatchResult openRes = begin_writable_window(g_modelState.modelPtr,
+                                                g_modelState.modelSize,
+                                                winOff, winEnd - winOff, cookie);
+    if (!openRes.success) {
+        return PatchResult::error("Swap: failed to open combined writable window", 6011);
+    }
+
     std::memcpy(static_cast<char*>(g_modelState.modelPtr) + offset1,
                 static_cast<char*>(g_modelState.modelPtr) + offset2, size);
-    end_writable_window(cookie1);
-
-    void* cookie2 = nullptr;
-    begin_writable_window(g_modelState.modelPtr, g_modelState.modelSize, offset2, size, cookie2);
     std::memcpy(static_cast<char*>(g_modelState.modelPtr) + offset2, temp.data(), size);
-    end_writable_window(cookie2);
+
+    end_writable_window(cookie);
 
     g_modelState.bytesModified += 2 * size;
     return PatchResult::ok("Swap completed");

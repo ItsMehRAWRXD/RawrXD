@@ -7497,6 +7497,77 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
+# dump_qwen35_meta — Dump Qwen3.5 GGUF metadata + tensor topology
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" ON)
+if(BUILD_DUMP_QWEN35_META)
+    add_executable(dump_qwen35_meta
+        src/deep2/dump_qwen35_meta.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    target_link_libraries(dump_qwen35_meta PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(dump_qwen35_meta PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(dump_qwen35_meta PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(dump_qwen35_meta PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME dump_qwen35_meta
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Deep2] Qwen3.5 metadata dump: dump_qwen35_meta")
+endif()
+
+# layer_harness — Single-layer Qwen3.5 correctness harness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_LAYER_HARNESS "Build single-layer Qwen3.5 correctness harness" ON)
+if(BUILD_LAYER_HARNESS)
+    add_executable(layer_harness
+        src/deep2/layer_harness.cpp
+    )
+    target_link_libraries(layer_harness PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(layer_harness PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(layer_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(layer_harness PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME layer_harness
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Deep2] Single-layer harness: layer_harness")
+endif()
+
+# qwen35_attn_contract — Establish Qwen3.5 full-attention contract
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_QWEN35_ATTN_CONTRACT "Build Qwen3.5 attention contract harness" ON)
+if(BUILD_QWEN35_ATTN_CONTRACT)
+    add_executable(qwen35_attn_contract
+        src/deep2/qwen35_attn_contract.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    target_link_libraries(qwen35_attn_contract PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(qwen35_attn_contract PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(qwen35_attn_contract PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(qwen35_attn_contract PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME qwen35_attn_contract
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Deep2] Qwen3.5 attention contract: qwen35_attn_contract")
+endif()
+
 # test_val_051_3_multi_token — VAL-051.3: 4-Token Autoregressive Generation Gate
 # ═══════════════════════════════════════════════════════════════════════════════
 option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" ON)
@@ -9318,6 +9389,26 @@ if(WIN32)
     else()
         message(STATUS "RawrXD-AutoFixCLI skipped (cpu_inference_engine_autofix_stub.cpp missing)")
     endif()
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Hotpatch Stress Test — Acquisition-grade memory hotpatch validation
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(hotpatch_stress_test EXCLUDE_FROM_ALL
+        src/test_harness/hotpatch_stress_test.cpp
+        src/core/model_memory_hotpatch.cpp
+        src/license_enforcement.cpp
+        src/core/enterprise_license_v2.cpp
+        src/core/license_anti_tampering.cpp
+        src/feature_flags_runtime.cpp
+    )
+    target_include_directories(hotpatch_stress_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    )
+    target_link_libraries(hotpatch_stress_test PRIVATE
+        kernel32.lib user32.lib
+    )
+    set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     # ═══════════════════════════════════════════════════════════════════
     # Production Benchmark — Batch 1: Repeatable 1/10/32/128 token benchmark

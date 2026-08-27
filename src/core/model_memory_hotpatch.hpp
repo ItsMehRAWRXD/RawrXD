@@ -115,6 +115,60 @@ PatchResult detect_memory_conflicts(void* addr, size_t size);
 PatchResult validate_patch_integrity(void* addr, size_t size, uint32_t expected_checksum);
 PatchResult autonomous_memory_heal(void* base_addr, size_t region_size);
 
+// ---------------------------------------------------------------------------
+// Writable window API (region cookie pattern)
+// ---------------------------------------------------------------------------
+PatchResult begin_writable_window(void* modelPtr, size_t modelSize,
+                                  size_t offset, size_t size, void*& cookie);
+PatchResult end_writable_window(void* cookie);
+
+// ---------------------------------------------------------------------------
+// Safe memory write (uses writable window internally)
+// ---------------------------------------------------------------------------
+PatchResult safe_memory_write(void* modelPtr, size_t modelSize,
+                              size_t offset, const void* data, size_t dataSize);
+
+// ---------------------------------------------------------------------------
+// Integrity checksums
+// ---------------------------------------------------------------------------
+uint32_t calculate_crc32(const void* ptr, size_t offset, size_t size, size_t maxSize);
+uint64_t calculate_checksum64(const void* ptr, size_t offset, size_t size, size_t maxSize);
+
+// ---------------------------------------------------------------------------
+// Model attach / detach / backup / restore
+// ---------------------------------------------------------------------------
+PatchResult model_hotpatch_attach(void* modelPtr, size_t modelSize);
+PatchResult model_hotpatch_detach();
+PatchResult model_create_backup();
+PatchResult model_restore_backup();
+
+// ---------------------------------------------------------------------------
+// Named patch management
+// ---------------------------------------------------------------------------
+PatchResult model_add_named_patch(const char* name, size_t offset, size_t size,
+                                  const void* patchData, int priority);
+PatchResult model_apply_named_patch(const char* name);
+PatchResult model_revert_named_patch(const char* name);
+PatchResult model_remove_named_patch(const char* name);
+PatchResult model_apply_all_patches();
+PatchResult model_revert_all_patches();
+
+// ---------------------------------------------------------------------------
+// Model integrity verification
+// ---------------------------------------------------------------------------
+PatchResult model_verify_integrity();
+
+// ---------------------------------------------------------------------------
+// Direct memory manipulation API
+// ---------------------------------------------------------------------------
+void*      model_get_direct_pointer(size_t offset);
+PatchResult model_direct_read(size_t offset, size_t size, void* dest);
+PatchResult model_direct_write(size_t offset, const void* data, size_t size);
+PatchResult model_direct_fill(size_t offset, size_t size, uint8_t value);
+PatchResult model_direct_copy(size_t srcOffset, size_t dstOffset, size_t size);
+int64_t     model_direct_search(size_t startOffset, const void* pattern, size_t patternLen);
+PatchResult model_direct_swap(size_t offset1, size_t offset2, size_t size);
+
 // Performance monitoring and optimization
 struct PatchPerformanceMetrics {
     uint64_t cycles_elapsed;
