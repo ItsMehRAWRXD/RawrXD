@@ -9433,6 +9433,17 @@ if(WIN32)
     set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     # ═══════════════════════════════════════════════════════════════════
+    # ARCH-CERT-001: GGUF Tensor/Operation Inventory
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(arch_cert_tensor_inventory EXCLUDE_FROM_ALL
+        src/test_harness/arch_cert_tensor_inventory.cpp
+    )
+    target_include_directories(arch_cert_tensor_inventory PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    # ═══════════════════════════════════════════════════════════════════
     # Production Benchmark — Batch 1: Repeatable 1/10/32/128 token benchmark
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
