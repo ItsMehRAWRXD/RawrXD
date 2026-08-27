@@ -394,8 +394,47 @@ static void gemv_q8_0_scalar(
     }
 }
 
-// --- Q4_K GEMV (scalar) ---
-// block_q4_K defined in GGUFLoader.hpp
+// --- Q4_K GEMV (scalar reference) ---
+// VAL-051.8: Correct GGML Q4_K block unpacking.
+// block_q4_K layout: d(fp16), dmin(fp16), scales[12], qs[128]
+//   256 weights per block, 8 sub-blocks of 32.
+//   scales[0..3]  = low 6 bits of scales 0..3
+//   scales[4..7]  = low 6 bits of mins 0..3
+//   scales[8..11] = high 2 bits packed:
+//       bits 0..1 -> scales 0..3 high
+//       bits 2..3 -> mins 0..3 high
+//       bits 4..5 -> scales 4..7 high
+//       bits 6..7 -> mins 4..7 high
+//   scales 4..7 low 4 bits from scales[8..11] & 0x0F
+//   mins 4..7 low 4 bits from scales[8..11] >> 4
+//
+// CRITICAL: Q4_K uses GROUPED nibbles, not interleaved:
+//   qs[0..31]   low  nibbles -> weights 0..31
+//   qs[0..31]   high nibbles -> weights 32..63
+//   qs[32..63]  low  nibbles -> weights 64..95
+//   qs[32..63]  high nibbles -> weights 96..127
+//   ...
+
+static inline void unpack_q4_k_scales(
+    const uint8_t scales[12],
+    uint8_t out_scale[8],
+    uint8_t out_min[8])
+{
+    // First 4 groups
+    for (int j = 0; j < 4; ++j) {
+        out_scale[j] = (scales[j] & 0x3F) |
+                       (((scales[8 + j] >> 0) & 0x03) << 6);
+        out_min[j]   = (scales[4 + j] & 0x3F) |
+                       (((scales[8 + j] >> 2) & 0x03) << 6);
+    }
+    // Last 4 groups
+    for (int j = 0; j < 4; ++j) {
+        out_scale[4 + j] = ((scales[8 + j] >> 0) & 0x0F) |
+                           (((scales[j] >> 6) & 0x03) << 4);
+        out_min[4 + j]   = ((scales[8 + j] >> 4) & 0x0F) |
+                           (((scales[4 + j] >> 6) & 0x03) << 4);
+    }
+}
 
 static void gemv_q4_k_scalar(
     const uint8_t* RESTRICT w,
@@ -405,33 +444,61 @@ static void gemv_q4_k_scalar(
 ) {
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
     size_t blocksPerRow = (cols + 255) / 256;
+
     for (size_t r = 0; r < rows; ++r) {
         float acc = 0.0f;
         const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
+
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q4_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
+            float d    = f16_to_f32(blk.d);
             float dmin = f16_to_f32(blk.dmin);
+
+            size_t base = b * 256;
             size_t elemsInBlock = (b == blocksPerRow - 1)
-                ? (cols - b * 256)
+                ? (cols - base)
                 : 256;
             if (elemsInBlock == 0) break;
 
-            // 8 sub-blocks of 32 weights each
-            for (int sb = 0; sb < 8; ++sb) {
-                uint8_t scale, min;
-                get_scale_min_k4(sb, blk.scales, scale, min);
-                float s = d * scale;
-                float m = dmin * min;
-                float blockAcc = 0.0f;
-                for (int i = 0; i < 32; ++i) {
-                    int idx = sb * 32 + i;
-                    if ((size_t)idx >= elemsInBlock) break;
-                    uint8_t byte = blk.qs[idx / 2];
-                    float q = (idx % 2 == 0) ? (byte & 0x0F) : (byte >> 4);
-                    blockAcc += (s * q - m) * x[b * 256 + idx];
+            uint8_t scales[8], mins[8];
+            unpack_q4_k_scales(blk.scales, scales, mins);
+
+            // Q4_K: 4 sections of 64 weights, each section has 2 groups of 32
+            // Each section uses qs[32 bytes]:
+            //   low nibbles  -> first 32 weights in section
+            //   high nibbles -> second 32 weights in section
+            const uint8_t* q = blk.qs;
+            int is = 0;
+
+            for (int section = 0; section < 4; ++section) {
+                // First 32 values in this 64-value section
+                uint8_t sc0 = scales[is + 0];
+                uint8_t mn0 = mins[is + 0];
+                float d0 = d * static_cast<float>(sc0);
+                float m0 = dmin * static_cast<float>(mn0);
+
+                for (int l = 0; l < 32; ++l) {
+                    int idx = section * 64 + l;
+                    if (static_cast<size_t>(idx) >= elemsInBlock) break;
+                    int nibble = q[l] & 0x0F;
+                    acc += (d0 * static_cast<float>(nibble) - m0) * x[base + idx];
                 }
-                acc += blockAcc;
+
+                // Second 32 values in this 64-value section
+                uint8_t sc1 = scales[is + 1];
+                uint8_t mn1 = mins[is + 1];
+                float d1 = d * static_cast<float>(sc1);
+                float m1 = dmin * static_cast<float>(mn1);
+
+                for (int l = 0; l < 32; ++l) {
+                    int idx = section * 64 + 32 + l;
+                    if (static_cast<size_t>(idx) >= elemsInBlock) break;
+                    int nibble = q[l] >> 4;
+                    acc += (d1 * static_cast<float>(nibble) - m1) * x[base + idx];
+                }
+
+                q += 32;
+                is += 2;
             }
         }
         y[r] += acc;
