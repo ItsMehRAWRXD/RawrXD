@@ -9411,6 +9411,28 @@ if(WIN32)
     set_property(TARGET hotpatch_stress_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     # ═══════════════════════════════════════════════════════════════════
+    # Hotpatch E2E Test — Real GGUF tensor → hotpatch → inference → rollback
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(hotpatch_e2e_test EXCLUDE_FROM_ALL
+        src/test_harness/hotpatch_e2e_test.cpp
+        src/core/model_memory_hotpatch.cpp
+        src/license_enforcement.cpp
+        src/core/enterprise_license_v2.cpp
+        src/core/license_anti_tampering.cpp
+        src/feature_flags_runtime.cpp
+    )
+    target_include_directories(hotpatch_e2e_test PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_link_libraries(hotpatch_e2e_test PRIVATE
+        kernel32.lib user32.lib bcrypt.lib
+    )
+    set_property(TARGET hotpatch_e2e_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    # ═══════════════════════════════════════════════════════════════════
     # Production Benchmark — Batch 1: Repeatable 1/10/32/128 token benchmark
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
