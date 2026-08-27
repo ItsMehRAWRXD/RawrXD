@@ -1379,10 +1379,17 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     printf("  Hidden Dim: %zu\n", config.hiddenDim);
     printf("  Num Layers: %zu\n", config.numLayers);
     printf("  Num Heads: %zu\n", config.numHeads);
+    printf("  Num KV Heads: %zu\n", config.numKVHeads);
+    printf("  Head Dim: %zu\n", config.headDim);
     printf("  Max Seq Len: %zu\n", config.maxSeqLen);
     printf("  Use ThreadPool: %s\n", config.useThreadPool ? "YES" : "NO");
     printf("  Use KV Cache: %s\n", config.useKVCache ? "YES" : "NO");
     printf("  Use RoPE: %s\n", config.useRoPE ? "YES" : "NO");
+
+    // Clean up any previously allocated resources
+    deallocateBuffers();
+    kvCache.reset();
+    threadPool.reset();
 
     // Initialize thread pool with auto-detected physical cores
     if (config.useThreadPool) {
@@ -1391,14 +1398,18 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
         printf("  ThreadPool: %zu threads (auto-detected)\n", threadPool->size());
     }
 
-    // Initialize KV cache
+    // Initialize KV cache with correct GQA dimensions
     if (config.useKVCache) {
         kvCache = std::make_unique<KVCache>();
         KVCacheConfig kvConfig;
         kvConfig.numLayers = config.numLayers;
         kvConfig.maxSeqLen = config.maxSeqLen;
-        kvConfig.numHeads = config.numHeads;
-        kvConfig.headDim = config.hiddenDim / config.numHeads;
+        kvConfig.numHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
+        kvConfig.headDim = config.headDim > 0 ? config.headDim
+                          : (config.hiddenDim / config.numHeads);
+
+        printf("[KVCache] Allocating: layers=%zu seq=%zu kv_heads=%zu headDim=%zu\n",
+               kvConfig.numLayers, kvConfig.maxSeqLen, kvConfig.numHeads, kvConfig.headDim);
 
         if (!kvCache->initialize(kvConfig)) {
             printf("[Deep2Engine] ERROR: Failed to initialize KV cache\n");
@@ -1442,7 +1453,7 @@ bool Deep2Engine::allocateBuffers() {
     size_t vocabSize = config.vocabSize;
     size_t maxSeq = config.maxSeqLen;
     size_t headDim = config.headDim > 0 ? config.headDim : (hiddenSize / config.numHeads);
-    size_t kvHeads = config.numHeads; // Will be updated from model
+    size_t kvHeads = config.numKVHeads > 0 ? config.numKVHeads : config.numHeads;
 
     // Use model's intermediateDim if available, otherwise fallback to hidden*4
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;

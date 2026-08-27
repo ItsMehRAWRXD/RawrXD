@@ -28,35 +28,35 @@ int main(int argc, char** argv) {
     printf("[Tokenizer] Decode=ready\n");
 
     Deep2Engine engine;
-    EngineConfig cfg;
-    // Codestral-22B Q4_K_M actual dimensions
-    cfg.hiddenDim = 6144;
-    cfg.numLayers = 56;
-    cfg.numHeads = 48;
-    cfg.numKVHeads = 8;
-    cfg.headDim = 128;
-    cfg.vocabSize = 32768;
-    cfg.maxSeqLen = 4096;
-    cfg.useKVCache = true;
-    cfg.useThreadPool = true;
-    cfg.numThreads = 16;
 
-    printf("[TEST] Initializing engine (dim=%zu, layers=%zu, heads=%zu, kv_heads=%zu)...\n",
-           cfg.hiddenDim, cfg.numLayers, cfg.numHeads, cfg.numKVHeads);
+    printf("[TEST] Loading model to detect architecture...\n");
+    if (!engine.loadModel(modelPath)) {
+        printf("[FAIL] loadModel() returned false\n");
+        return 1;
+    }
+    const auto& mw = engine.getModelWeights();
+    printf("[PASS] Model loaded: hidden=%zu layers=%zu heads=%zu kv_heads=%zu headDim=%zu vocab=%zu\n",
+           mw.hiddenDim, mw.numLayers, mw.numHeads, mw.numKVHeads, mw.headDim, mw.vocabSize);
+
+    EngineConfig cfg;
+    cfg.hiddenDim   = mw.hiddenDim;
+    cfg.numLayers   = mw.numLayers;
+    cfg.numHeads    = mw.numHeads;
+    cfg.numKVHeads  = mw.numKVHeads;
+    cfg.headDim     = mw.headDim;
+    cfg.vocabSize   = mw.vocabSize;
+    cfg.maxSeqLen   = 4096;
+    cfg.useKVCache  = true;
+    cfg.useThreadPool = true;
+    cfg.numThreads  = 16;
+
+    printf("[TEST] Initializing engine (dim=%zu, layers=%zu, heads=%zu, kv_heads=%zu, headDim=%zu)...\n",
+           cfg.hiddenDim, cfg.numLayers, cfg.numHeads, cfg.numKVHeads, cfg.headDim);
     if (!engine.initialize(cfg)) {
         printf("[FAIL] Engine initialization failed\n");
         return 1;
     }
     printf("[PASS] Engine initialized\n");
-
-    printf("[TEST] Loading model...\n");
-    if (!engine.loadModel(modelPath)) {
-        printf("[FAIL] loadModel() returned false\n");
-        return 1;
-    }
-    printf("[PASS] Model loaded: %zu layers, vocab=%zu\n",
-           engine.getModelWeights().numLayers,
-           engine.getModelWeights().vocabSize);
 
     // Tokenize a simple prompt using embedded tokenizer
     std::string prompt = "Hello";
