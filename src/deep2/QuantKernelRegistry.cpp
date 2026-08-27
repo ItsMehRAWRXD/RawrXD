@@ -12,6 +12,7 @@
 #include "QuantKernelRegistry.hpp"
 #include "GGUFLoader.hpp"
 #include "QuantKernelRegistry_K.h"  // K-quant dequant/GEMV kernels
+#include "Deep2Q40Reference.hpp"    // Reference Q4_0 GEMV (VAL-051.7)
 
 #include <immintrin.h>
 #include <cstring>
@@ -439,6 +440,8 @@ static void gemv_q4_k_scalar(
 
 // --- Q6_K GEMV (scalar) ---
 // block_q6_K defined in GGUFLoader.hpp
+// Layout: ql[128] (low 4 bits, paired), qh[64] (high 2 bits, grouped by 4),
+//         scales[16] (signed), d (FP16).  256 weights per 210-byte block.
 
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
@@ -454,49 +457,44 @@ static void gemv_q6_k_scalar(
         for (size_t b = 0; b < blocksPerRow; ++b) {
             const block_q6_K& blk = rowBlocks[b];
             float d = f16_to_f32(blk.d);
-            for (int sb = 0; sb < 16; ++sb) {
-                float s = (float)blk.scales[sb];
-                float blockAcc = 0.0f;
-                for (int i = 0; i < 16; ++i) {
-                    int idx = sb * 16 + i;
-                    uint8_t lo = blk.ql[idx];
-                    uint8_t hi = blk.qh[idx / 2];
-                    int q = (lo | (((hi >> (idx % 2 * 4)) & 0x0C) << 4)) - 32;
-                    blockAcc += (float)q * x[b * 256 + idx];
-                }
-                acc += d * s * blockAcc;
+            size_t base = b * 256;
+            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
+            if (elemsInBlock == 0) break;
+            for (size_t i = 0; i < elemsInBlock; ++i) {
+                // ql holds low 4 bits: two weights per byte
+                size_t qlIdx  = i / 2;
+                int    qlShift = (i % 2) * 4;
+                uint8_t low4   = (blk.ql[qlIdx] >> qlShift) & 0x0F;
+                // qh holds high 2 bits: four weights per byte
+                size_t qhIdx  = i / 4;
+                int    qhShift = (i % 4) * 2;
+                uint8_t high2  = (blk.qh[qhIdx] >> qhShift) & 0x03;
+                // Reconstruct 6-bit quantized value and subtract bias 32
+                int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
+                // One scale per 16 weights
+                int scaleIdx = (int)(i / 16);
+                acc += d * (float)blk.scales[scaleIdx] * (float)q * x[base + i];
             }
         }
         y[r] += acc;
     }
 }
 
-// --- Q4_0 GEMV (scalar) ---
+// --- Q4_0 GEMV (reference) ---
+// VAL-051.7: Unconditionally use reference implementation until
+// optimized kernel parity is certified.  The reference path:
+//   1. Zeroes destination before accumulation
+//   2. Uses exact 18-byte block geometry
+//   3. Decodes fresh scale + nibbles per block
+//   4. Applies -8 nibble bias (ggml canonical)
+//   5. Hard-finite guard on every row result
 static void gemv_q4_0_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q4_0* blocks = reinterpret_cast<const block_q4_0*>(w);
-    size_t blocksPerRow = (cols + 31) / 32;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q4_0* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_0& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            size_t base = b * 32;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 32;
-            if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                uint8_t byte = blk.qs[i / 2];
-                float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                acc += d * q * x[base + i];
-            }
-        }
-        y[r] += acc;
-    }
+    (void)rawrxd::deep2::Q4_0_GEMV_Reference(w, rows, cols, x, y);
 }
 
 // --- Q4_1 GEMV (scalar) ---
@@ -986,6 +984,8 @@ static void dequant_q8_0(const uint8_t* src, float* dst, size_t n) {
     const block_q8_0* blocks = reinterpret_cast<const block_q8_0*>(src);
     size_t numBlocks = (n + 31) / 32;
     for (size_t b = 0; b < numBlocks; ++b) {
+        float d = f16_to_f32(blocks[b].d);
+        if (!std::isfinite(d)) d = 0.0f;
         for (int i = 0; i < 32; ++i) {
             size_t idx = b * 32 + i;
             if (idx < n) dst[idx] = f16_to_f32(blocks[b].d) * (float)blocks[b].qs[i];
@@ -999,6 +999,8 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
         float dmin = f16_to_f32(blocks[b].dmin);
+        if (!std::isfinite(d))    d    = 0.0f;
+        if (!std::isfinite(dmin)) dmin = 0.0f;
         for (int sb = 0; sb < 8; ++sb) {
             uint8_t sc, m;
             get_scale_min_k4(sb, blocks[b].scales, sc, m);
@@ -1027,6 +1029,9 @@ static void dequant_q2_k(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         float d    = f16_to_f32(blocks[b].d);
         float dmin = f16_to_f32(blocks[b].dmin);
+        // Sanitize non-finite scale values to prevent NaN propagation
+        if (!std::isfinite(d))    d    = 0.0f;
+        if (!std::isfinite(dmin)) dmin = 0.0f;
         for (int chunk = 0; chunk < 2; ++chunk) {
             for (int subBlock = 0; subBlock < 4; ++subBlock) {
                 for (int group = 0; group < 2; ++group) {
@@ -1053,6 +1058,7 @@ static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
+        if (!std::isfinite(d)) d = 0.0f;
         int8_t scales[16];
         for (int j = 0; j < 8; ++j) {
             scales[j]     = (int8_t)(blocks[b].scales[j] & 0x0F);
@@ -1067,13 +1073,14 @@ static void dequant_q3_k(const uint8_t* src, float* dst, size_t n) {
             int qsIdx    = chunk * 32 + posInSub;
             int qsShift  = subBlock * 2;
             int lo       = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
-            int hmIdx    = posInSub;
-            int hmShift  = (int)(i / 32);
-            int hmaskBit = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
-            int q        = lo - (hmaskBit ? 0 : 4);
-            int scaleIdx = chunk * 4 + subBlock;
-            float dl     = d * (float)(scales[scaleIdx] - 32);
-            dst[globalIdx] = dl * (float)q;
+            // hmask: 1 bit per weight, 8 weights per byte
+            int hmIdx     = (int)(i / 8);
+            int hmShift   = (int)(i % 8);
+            int hmaskBit  = (blocks[b].hmask[hmIdx] >> hmShift) & 0x01;
+            int q         = lo - (hmaskBit ? 0 : 4);
+            int scaleIdx  = chunk * 4 + subBlock;
+            float dl      = d * (float)(scales[scaleIdx] - 32);
+            dst[globalIdx]  = dl * (float)q;
         }
     }
 }
@@ -1083,6 +1090,8 @@ static void dequant_q5_k(const uint8_t* src, float* dst, size_t n) {
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
         float dmin = f16_to_f32(blocks[b].dmin);
+        if (!std::isfinite(d))    d    = 0.0f;
+        if (!std::isfinite(dmin)) dmin = 0.0f;
         for (int sb = 0; sb < 8; ++sb) {
             uint8_t scale, min;
             get_scale_min_k4(sb, blocks[b].scales, scale, min);
@@ -1109,6 +1118,7 @@ static void dequant_q6_k(const uint8_t* src, float* dst, size_t n) {
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
         float d = f16_to_f32(blocks[b].d);
+        if (!std::isfinite(d)) d = 0.0f;
         const uint8_t* ql = blocks[b].ql;
         const uint8_t* qh = blocks[b].qh;
         const int8_t*  sc = blocks[b].scales;
@@ -1137,8 +1147,7 @@ static void dequant_q4_0(const uint8_t* src, float* dst, size_t n) {
             size_t idx = b * 32 + i;
             if (idx >= n) return;
             uint8_t byte = blocks[b].qs[i / 2];
-            float q = (i % 2 == 0) ? (float)((int)(byte & 0x0F) - 8)
-                                   : (float)((int)(byte >> 4) - 8);
+            float q = (i % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
             dst[idx] = d * q;
         }
     }
@@ -1261,8 +1270,22 @@ static void gemv_q3_k_scalar(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
+    static int diagCount = 0;
     const block_q3_K* blocks = reinterpret_cast<const block_q3_K*>(w);
     size_t blocksPerRow = (cols + 255) / 256;
+    if (diagCount < 3) {
+        printf("[Q3K_GEMV_DIAG#%d] rows=%zu cols=%zu blocksPerRow=%zu sizeof(block)=%zu\n",
+               diagCount, rows, cols, blocksPerRow, sizeof(block_q3_K));
+        if (blocksPerRow > 0) {
+            float d0 = f16_to_f32(blocks[0].d);
+            printf("[Q3K_GEMV_DIAG#%d] firstBlock d=%.6e scales=[%u,%u,%u,%u] qs[0]=0x%02X hmask[0]=0x%02X\n",
+                   diagCount, d0,
+                   (unsigned)blocks[0].scales[0], (unsigned)blocks[0].scales[1],
+                   (unsigned)blocks[0].scales[2], (unsigned)blocks[0].scales[3],
+                   (unsigned)blocks[0].qs[0], (unsigned)blocks[0].hmask[0]);
+        }
+        ++diagCount;
+    }
     for (size_t r = 0; r < rows; ++r) {
         float acc = 0.0f;
         const block_q3_K* rowBlocks = blocks + r * blocksPerRow;
@@ -1279,11 +1302,12 @@ static void gemv_q3_k_scalar(
                 int qsIdx    = chunk * 32 + posInSub;
                 int qsShift  = subBlock * 2;
                 int lo       = (blk.qs[qsIdx] >> qsShift) & 0x03;
-                int hmIdx    = posInSub;
-                int hmShift  = (int)(i / 32);
-                int hmaskBit = (blk.hmask[hmIdx] >> hmShift) & 0x01;
-                int q        = lo - (hmaskBit ? 0 : 4);
-                int scaleIdx = chunk * 4 + subBlock;
+                // hmask: 1 bit per weight, 8 weights per byte
+                int hmIdx     = (int)(i / 8);
+                int hmShift   = (int)(i % 8);
+                int hmaskBit  = (blk.hmask[hmIdx] >> hmShift) & 0x01;
+                int q         = lo - (hmaskBit ? 0 : 4);
+                int scaleIdx  = chunk * 4 + subBlock;
                 int8_t sc = get_scale_q3_k(scaleIdx, blk.scales);
                 float dl = d * (float)(sc - 32);
                 acc += dl * (float)q * x[base + i];
@@ -1466,50 +1490,50 @@ void QuantKernelRegistry::RegisterBuiltins() {
     // --- Q8_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q8_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q8_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q8_0, dequant_q8_0);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
+    // MASM stubbed — use scalar reference until AVX2 kernel is verified
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q8_0, gemv_q8_0_scalar);
 
     // --- Q4_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    // MASM linked but unverified — use scalar reference until byte-level comparison passes
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q5_K, dequant_q5_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
+    // MASM stubbed — use scalar reference until AVX2 kernel is verified
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q5_K, gemv_q5_k_scalar);
 
     // --- Q6_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q6_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q6_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q6_K, dequant_q6_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
+    // MASM stubbed — use scalar reference until AVX2 kernel is verified
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q6_K, gemv_q6_k_scalar);
 
     // --- Q2_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q2_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q2_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q2_K, dequant_q2_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
+    // MASM has wrong block stride (72 vs 84 bytes) — use scalar reference
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q2_K, gemv_q2_k_scalar);
 
     // --- Q3_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q3_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q3_K));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q3_K, dequant_q3_k);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
+    // MASM untrusted — use scalar reference until byte-level comparison passes
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q3_K, gemv_q3_k_scalar);
 
     // --- Q4_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_0));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_0, dequant_q4_0);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
+    // MASM has dimensionality bug (iterates blocks as rows) — use scalar reference
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_0, gemv_q4_0_scalar);
 
     // --- Q4_1 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q4_1, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q4_1));
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_1, dequant_q4_1);
-    if (hasAVX2)        RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_masm);
-    else                RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
+    // MASM stubbed — use scalar reference until AVX2 kernel is verified
+    RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_1, gemv_q4_1_scalar);
 
     // --- Q5_0 ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_0, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_0));
@@ -1595,6 +1619,24 @@ std::string QuantKernelRegistry::DumpTable() const {
         oss << "  " << name << " (type=" << type << ") -> " << impl << "\n";
     }
     return oss.str();
+}
+
+// ============================================================================
+// Batch 21 telemetry report
+// ============================================================================
+void QuantKernelRegistry::PrintBatch21Report() const {
+    printf("\n[BATCH21]\n");
+    printf("registry_hit=%llu\n", (unsigned long long)batch21_.registryHits.load());
+    printf("registry_miss=%llu\n", (unsigned long long)batch21_.registryMisses.load());
+    printf("scalar_fallback=%llu\n", (unsigned long long)batch21_.scalarFallbacks.load());
+    printf("kernel_invocations=%llu\n", (unsigned long long)batch21_.kernelInvocations.load());
+    printf("vulkan_compute_submissions=%llu\n", (unsigned long long)batch21_.vulkanComputeSubmissions.load());
+    printf("vulkan_compute_failures=%llu\n", (unsigned long long)batch21_.vulkanComputeFailures.load());
+    bool pass = batch21_.registryHits.load() > 0 &&
+                batch21_.registryMisses.load() == 0 &&
+                batch21_.scalarFallbacks.load() == 0 &&
+                batch21_.kernelInvocations.load() > 0;
+    printf("status=%s\n", pass ? "PASS" : "FAIL");
 }
 
 } // namespace Deep2

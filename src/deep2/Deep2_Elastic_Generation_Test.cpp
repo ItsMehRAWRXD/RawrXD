@@ -9,6 +9,7 @@
 
 #include "Deep2Engine.h"
 #include "ElasticResidencyManager.hpp"
+#include "QuantKernelRegistry.hpp"
 #include <cstdio>
 #include <cstring>
 #include <cmath>
@@ -151,6 +152,11 @@ int main(int argc, char** argv) {
     } else {
         printf("  (ElasticResidencyManager not available)\n");
     }
+
+    // --- Step 9: Batch 21 telemetry ---
+    printf("\n[Step 9] Batch 21 telemetry:\n");
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    reg.PrintBatch21Report();
 
     // --- Cleanup ---
     engine.unloadModel();

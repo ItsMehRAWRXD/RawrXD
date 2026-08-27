@@ -22,7 +22,7 @@
 #pragma comment(lib, "winhttp.lib")
 
 // --- Existing RawrXD includes (these already compile in your build) ---
-#include "../backend/BackendOrchestrator.h"
+#include "../BackendOrchestrator.h"
 #include "../RawrXD_Exports.h"  // For Titan DLL function pointers
 
 // ============================================================================

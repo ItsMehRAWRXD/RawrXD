@@ -26,6 +26,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <atomic>
 
 namespace Deep2 {
 
@@ -168,6 +169,30 @@ public:
     size_t GetRegisteredCount() const { return gemvTable_.size(); }
     std::string DumpTable() const;
 
+    // Batch 21 telemetry counters (thread-safe)
+    struct Batch21Counters {
+        std::atomic<uint64_t> registryHits{0};
+        std::atomic<uint64_t> registryMisses{0};
+        std::atomic<uint64_t> scalarFallbacks{0};
+        std::atomic<uint64_t> kernelInvocations{0};
+        std::atomic<uint64_t> vulkanComputeSubmissions{0};
+        std::atomic<uint64_t> vulkanComputeFailures{0};
+
+        void Reset() {
+            registryHits = 0;
+            registryMisses = 0;
+            scalarFallbacks = 0;
+            kernelInvocations = 0;
+            vulkanComputeSubmissions = 0;
+            vulkanComputeFailures = 0;
+        }
+    };
+
+    Batch21Counters& GetBatch21Counters() { return batch21_; }
+    const Batch21Counters& GetBatch21Counters() const { return batch21_; }
+    void PrintBatch21Report() const;
+    void ResetBatch21Counters() { batch21_.Reset(); }
+
 private:
     QuantKernelRegistry() = default;
     ~QuantKernelRegistry() = default;
@@ -181,6 +206,7 @@ private:
     std::unordered_map<int, GEMVKernelFn>     gemvTable_;
     std::unordered_map<int, DequantKernelFn>  dequantTable_;
     std::unordered_map<int, BlockGeometry>   geometryTable_;
+    mutable Batch21Counters batch21_;
 };
 
 // ---------------------------------------------------------------------------

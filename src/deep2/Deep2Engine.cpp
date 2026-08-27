@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <mutex>
 #include <future>
+#include <atomic>
 #include <vector>
 #include <immintrin.h>
 #include <filesystem>
@@ -1844,17 +1845,31 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                 else if (name.find("attn_output") != std::string::npos) {
                     lw.wo = wt;
                     if (layerIdx == 0) {
-                        const float* fp = (const float*)wt.data;
-                        float mn = 1e30f, mx = -1e30f;
-                        size_t nz = 0;
-                        for (size_t i = 0; i < 16 && i < wt.rows * wt.cols; ++i) {
-                            float v = fp[i];
-                            if (v < mn) mn = v; if (v > mx) mx = v;
-                            if (v != 0.0f) ++nz;
+                        // Quantization-aware diagnostic: don't treat quantized data as float*
+                        if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+                            const float* fp = (const float*)wt.data;
+                            float mn = 1e30f, mx = -1e30f;
+                            size_t nz = 0;
+                            for (size_t i = 0; i < 16 && i < wt.rows * wt.cols; ++i) {
+                                float v = fp[i];
+                                if (v < mn) mn = v; if (v > mx) mx = v;
+                                if (v != 0.0f) ++nz;
+                            }
+                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(F32) first16=[%.6f,%.6f,%.6f,%.6f] min=%.6f max=%.6f nz=%zu\n",
+                                   wt.data, wt.rows, wt.cols, wt.type,
+                                   fp[0], fp[1], fp[2], fp[3], mn, mx, nz);
+                        } else if (wt.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+                            const Q4_K_Block* blk = (const Q4_K_Block*)wt.data;
+                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(Q4_K) block0 d=0x%04X dmin=0x%04X qs[0]=0x%02X\n",
+                                   wt.data, wt.rows, wt.cols, wt.type, blk[0].d, blk[0].dmin, blk[0].qs[0]);
+                        } else if (wt.type == (int)GGMLType::GGML_TYPE_Q6_K) {
+                            const block_q6_K* blk = (const block_q6_K*)wt.data;
+                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(Q6_K) block0 d=0x%04X ql[0]=0x%02X qh[0]=0x%02X sc[0]=%d\n",
+                                   wt.data, wt.rows, wt.cols, wt.type, blk[0].d, blk[0].ql[0], blk[0].qh[0], (int)blk[0].scales[0]);
+                        } else {
+                            printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d(other) — skipping float interpretation\n",
+                                   wt.data, wt.rows, wt.cols, wt.type);
                         }
-                        printf("[WO_DIAG] GGUF wo.data=%p rows=%zu cols=%zu type=%d first16=[%.6f,%.6f,%.6f,%.6f] min=%.6f max=%.6f nz=%zu\n",
-                               wt.data, wt.rows, wt.cols, wt.type,
-                               fp[0], fp[1], fp[2], fp[3], mn, mx, nz);
                     }
                 }
                 else if (name.find("attn_q.") != std::string::npos)
@@ -2502,6 +2517,33 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         printedEmbedInfo = true;
     }
 
+    // ── P0 Diagnostic: raw byte inspection for embedding row ───────────
+    // This determines whether the raw GGUF bytes are zero (mapping bug)
+    // or whether the dequantizer is producing zero from valid bytes.
+    {
+        const uint8_t* rawBase = (const uint8_t*)modelWeights.tokenEmbed.data;
+        size_t rowBytes = 0;
+        if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q6_K) {
+            size_t numBlocks = modelWeights.hiddenDim / 256;
+            rowBytes = numBlocks * sizeof(block_q6_K);
+        } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
+            size_t numBlocks = modelWeights.hiddenDim / 256;
+            rowBytes = numBlocks * sizeof(Q4_K_Block);
+        } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F32) {
+            rowBytes = modelWeights.hiddenDim * sizeof(float);
+        } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F16) {
+            rowBytes = modelWeights.hiddenDim * sizeof(uint16_t);
+        } else {
+            rowBytes = modelWeights.tokenEmbed.sizeBytes / modelWeights.vocabSize;
+        }
+        if (rowBytes > 0 && tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
+            const uint8_t* row = rawBase + tokenId * rowBytes;
+            fprintf(stderr, "[EMBED_RAW] token=%d row=%p rowBytes=%zu first32=", tokenId, row, rowBytes);
+            for (size_t i = 0; i < 32; ++i) fprintf(stderr, "%02X ", row[i]);
+            fprintf(stderr, "\n");
+        }
+    }
+
     // --- VAL-051.7+: Elastic residency for token embeddings ---
     const void* embedDataPtr = modelWeights.tokenEmbed.data;
     if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty()) {
@@ -2615,6 +2657,48 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             if (dequant) {
                 // Registry handles all quant types uniformly
                 dequant(row, output, hiddenDim);
+                
+                // ── Full-output NaN/Inf scan ──────────────────────────────
+                int firstBadIdx = -1;
+                float firstBadVal = 0.0f;
+                const char* firstBadKind = "";
+                for (size_t i = 0; i < hiddenDim; ++i) {
+                    if (!std::isfinite(output[i])) {
+                        firstBadIdx = (int)i;
+                        firstBadVal = output[i];
+                        firstBadKind = std::isnan(output[i]) ? "NaN" : "Inf";
+                        break;
+                    }
+                }
+                if (firstBadIdx >= 0) {
+                    fprintf(stderr, "[EMBED_DIAG][FIRST_BAD] token=%d idx=%d value=%.6f kind=%s\n",
+                            tokenId, firstBadIdx, firstBadVal, firstBadKind);
+                    // Inspect the raw block that produced the NaN
+                    int badBlock = firstBadIdx / 256;
+                    size_t blockOffset = badBlock * sizeof(block_q2_K);
+                    if (blockOffset + sizeof(block_q2_K) <= rowBytes) {
+                        const block_q2_K* blk = (const block_q2_K*)(row + blockOffset);
+                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] block=%d offset=%zu d_raw=0x%04X dmin_raw=0x%04X\n",
+                                badBlock, blockOffset, blk->d, blk->dmin);
+                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] scales=");
+                        for (int k = 0; k < 16; ++k) fprintf(stderr, "%02X ", blk->scales[k]);
+                        fprintf(stderr, "\n");
+                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] qs[0..15]=");
+                        for (int k = 0; k < 16; ++k) fprintf(stderr, "%02X ", blk->qs[k]);
+                        fprintf(stderr, "\n");
+                        // Decode d/dmin with fp16ToFloat
+                        float d_decoded = fp16ToFloat(blk->d);
+                        float dmin_decoded = fp16ToFloat(blk->dmin);
+                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] d: raw=0x%04X fp16ToFloat=%.6f finite=%d\n",
+                                blk->d, d_decoded, (int)std::isfinite(d_decoded));
+                        fprintf(stderr, "[EMBED_DIAG][BLOCK_RAW] dmin: raw=0x%04X fp16ToFloat=%.6f finite=%d\n",
+                                blk->dmin, dmin_decoded, (int)std::isfinite(dmin_decoded));
+                    }
+                } else {
+                    fprintf(stderr, "[EMBED_DIAG] token=%d all_finite hiddenDim=%zu\n",
+                            tokenId, hiddenDim);
+                }
+                
                 fprintf(stderr, "[EMBED_DIAG] token=%d rowBytes=%zu first8=", tokenId, rowBytes);
                 for (int i = 0; i < 8; ++i) fprintf(stderr, " %.3f", output[i]);
                 fprintf(stderr, "\n");
@@ -2646,24 +2730,102 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
                 size_t numBlocks = hiddenDim / 256;
                 rowBytes = numBlocks * sizeof(block_q2_K);
                 const block_q2_K* blocks = (const block_q2_K*)row;
+                
+                // ── Q2_K Block-Level Diagnostic ─────────────────────────────
+                static bool q2diagPrinted = false;
+                bool firstNanFound = false;
+                int firstNanBlock = -1, firstNanElem = -1;
+                float firstNanValue = 0.0f;
+                const char* firstNanStage = "";
+                
                 for (size_t b = 0; b < numBlocks; ++b) {
-                    float d = fp16ToFloat(blocks[b].d);
-                    float min = fp16ToFloat(blocks[b].dmin);
+                    const block_q2_K& blk = blocks[b];
+                    float d = fp16ToFloat(blk.d);
+                    float dmin = fp16ToFloat(blk.dmin);
+                    
+                    // Check block header finiteness
+                    bool dFinite = std::isfinite(d);
+                    bool dminFinite = std::isfinite(dmin);
+                    
+                    if (!q2diagPrinted && b == 0) {
+                        fprintf(stderr, "[Q2DIAG] token=%d block=%zu/%zu\n", tokenId, b, numBlocks);
+                        fprintf(stderr, "[Q2DIAG]   rawHeader=");
+                        for (size_t k = 0; k < 20; ++k) fprintf(stderr, "%02X ", ((const uint8_t*)&blk)[k]);
+                        fprintf(stderr, "\n");
+                        fprintf(stderr, "[Q2DIAG]   d=0x%04X -> %.6f (finite=%d)\n", blk.d, d, (int)dFinite);
+                        fprintf(stderr, "[Q2DIAG]   dmin=0x%04X -> %.6f (finite=%d)\n", blk.dmin, dmin, (int)dminFinite);
+                        fprintf(stderr, "[Q2DIAG]   scales=");
+                        for (int k = 0; k < 16; ++k) fprintf(stderr, "%02X ", blk.scales[k]);
+                        fprintf(stderr, "\n");
+                        fprintf(stderr, "[Q2DIAG]   qs[0..15]=");
+                        for (int k = 0; k < 16; ++k) fprintf(stderr, "%02X ", blk.qs[k]);
+                        fprintf(stderr, "\n");
+                    }
+                    
+                    if (!dFinite || !dminFinite) {
+                        if (!firstNanFound) {
+                            firstNanFound = true;
+                            firstNanBlock = (int)b;
+                            firstNanElem = -1;
+                            firstNanValue = !dFinite ? d : dmin;
+                            firstNanStage = !dFinite ? "D_VALUE" : "DMIN_VALUE";
+                        }
+                        if (!q2diagPrinted) {
+                            fprintf(stderr, "[Q2DIAG][FIRST_NAN] block=%zu stage=%s value=%.6f\n", b, firstNanStage, firstNanValue);
+                        }
+                        // Fill remainder with zeros to avoid propagating NaN
+                        for (size_t i = 0; i < 256; ++i) output[b * 256 + i] = 0.0f;
+                        continue;
+                    }
+                    
                     for (size_t i = 0; i < 256; ++i) {
                         int chunk = (int)(i / 128);
                         int subBlock = (int)((i % 128) / 32);
                         int posInSubBlock = (int)(i % 32);
                         int group = posInSubBlock / 16;
                         int scaleIdx = chunk * 8 + subBlock * 2 + group;
-                        uint8_t sc = blocks[b].scales[scaleIdx];
+                        uint8_t sc = blk.scales[scaleIdx];
                         float dl = d * (float)(sc & 0x0F);
-                        float ml = min * (float)(sc >> 4);
+                        float ml = dmin * (float)(sc >> 4);
                         int qsIdx = chunk * 32 + posInSubBlock;
                         int qsShift = subBlock * 2;
-                        int q = (blocks[b].qs[qsIdx] >> qsShift) & 0x03;
-                        output[b * 256 + i] = dl * (float)q - ml;
+                        int q = (blk.qs[qsIdx] >> qsShift) & 0x03;
+                        float val = dl * (float)q - ml;
+                        
+                        if (!std::isfinite(val) && !firstNanFound) {
+                            firstNanFound = true;
+                            firstNanBlock = (int)b;
+                            firstNanElem = (int)i;
+                            firstNanValue = val;
+                            firstNanStage = "DEQUANT";
+                            if (!q2diagPrinted) {
+                                fprintf(stderr, "[Q2DIAG][FIRST_NAN] block=%zu elem=%zu stage=DEQUANT dl=%.6f ml=%.6f q=%d val=%.6f\n",
+                                        b, i, dl, ml, q, val);
+                            }
+                        }
+                        output[b * 256 + i] = val;
                     }
                 }
+                
+                if (firstNanFound && !q2diagPrinted) {
+                    fprintf(stderr, "[Q2DIAG][SUMMARY] firstNanBlock=%d firstNanElem=%d stage=%s value=%.6f\n",
+                            firstNanBlock, firstNanElem, firstNanStage, firstNanValue);
+                }
+                
+                // Print output range summary for first block only
+                if (!q2diagPrinted) {
+                    float outMin = output[0], outMax = output[0];
+                    size_t outNonZero = 0;
+                    for (size_t i = 0; i < hiddenDim; ++i) {
+                        if (output[i] < outMin) outMin = output[i];
+                        if (output[i] > outMax) outMax = output[i];
+                        if (output[i] != 0.0f) outNonZero++;
+                    }
+                    fprintf(stderr, "[Q2DIAG] output range=[%.6f, %.6f] nonzero=%zu/%zu\n",
+                            outMin, outMax, outNonZero, hiddenDim);
+                    q2diagPrinted = true;
+                }
+                // ── End Q2_K Diagnostic ─────────────────────────────────────
             } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q3_K) {
                 // Q3_K embedding: 256 weights per 110-byte block
                 // hmask[32]: 1-bit high flags (organized per-element: hmask[i%32] bit i/32)
@@ -2742,6 +2904,22 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
     if (elasticResidencyEnabled_ && elasticResidency_ && !modelWeights.tokenEmbed.name.empty()) {
         elasticResidency_->ReleaseTensor(modelWeights.tokenEmbed.name);
     }
+
+    // ── P0 Hard Gate: stop inference immediately if embedding is zero ───
+    // This prevents wasting compute on 28 layers of zero propagation.
+    float embedNorm = 0.0f;
+    for (size_t i = 0; i < modelWeights.hiddenDim; ++i) {
+        embedNorm += output[i] * output[i];
+    }
+    embedNorm = std::sqrt(embedNorm);
+    if (!std::isfinite(embedNorm) || embedNorm == 0.0f) {
+        fprintf(stderr,
+            "[FATAL_EMBED] token=%d produced invalid embedding norm=%e "
+            "type=%d data=%p — inference cannot proceed.\n",
+            tokenId, embedNorm, modelWeights.tokenEmbed.type, modelWeights.tokenEmbed.data);
+        // Zero the output to ensure downstream layers see consistent state
+        memset(output, 0, modelWeights.hiddenDim * sizeof(float));
+    }
 }
 
 // ============================================================================
@@ -2751,34 +2929,46 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
 void Deep2Engine::RMSNormW(const WeightTensor& normWeight, const float* input,
                             float* output, size_t dim, float eps) {
     if (dim == 0) return;
-    
-    // Compute sum of squares with AVX2
+
+    // Compute sum of squares with AVX2 (accumulate in double)
     __m256 sum_sq_vec = _mm256_setzero_ps();
     size_t i = 0;
-    
+
     for (; i + 8 <= dim; i += 8) {
         __m256 vx = _mm256_loadu_ps(&input[i]);
         sum_sq_vec = _mm256_fmadd_ps(vx, vx, sum_sq_vec);
     }
-    
-    // Horizontal sum
+
+    // Horizontal sum → float, then promote to double
     __m128 hi = _mm256_extractf128_ps(sum_sq_vec, 1);
     __m128 lo = _mm256_castps256_ps128(sum_sq_vec);
     __m128 sum128 = _mm_add_ps(lo, hi);
     sum128 = _mm_hadd_ps(sum128, sum128);
     sum128 = _mm_hadd_ps(sum128, sum128);
-    float sumSq = _mm_cvtss_f32(sum128);
-    
-    // Scalar remainder
+    double sumSq = static_cast<double>(_mm_cvtss_f32(sum128));
+
+    // Scalar remainder in double
     for (; i < dim; ++i) {
-        sumSq += input[i] * input[i];
+        double v = static_cast<double>(input[i]);
+        sumSq += v * v;
     }
-    
-    // Compute RMS
-    float meanSq = sumSq / dim;
-    float rms = sqrtf(meanSq + eps);
-    float invRms = 1.0f / rms;
+
+    // Compute RMS in double
+    double meanSq = sumSq / static_cast<double>(dim);
+    double rms = std::sqrt(meanSq + static_cast<double>(eps));
+    float invRms = static_cast<float>(1.0 / rms);
     __m256 vinvRms = _mm256_set1_ps(invRms);
+
+    // Diagnostic: if input was huge, print what happened
+    if (meanSq > 1e30) {
+        float inMin = 1e30f, inMax = -1e30f;
+        for (size_t j = 0; j < dim; ++j) {
+            if (input[j] < inMin) inMin = input[j];
+            if (input[j] > inMax) inMax = input[j];
+        }
+        printf("[RMS_DIAG] dim=%zu sumSq=%.6e meanSq=%.6e rms=%.6e invRms=%.6e inMin=%.6e inMax=%.6e\n",
+               dim, sumSq, meanSq, rms, invRms, inMin, inMax);
+    }
 
     // Apply normalization + weight with AVX2
     if (normWeight.data) {
@@ -3182,12 +3372,22 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
     auto geom = reg.GetGeometry(wt.type);
 
     if (kernel && geom.blockSize > 0) {
+        reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
+        reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
         const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
+        // ── VAL-051.7: Q4_0 dispatch telemetry ─────────────────────
+        if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0) {
+            fprintf(stderr,
+                "[Q4_DISPATCH] tensor=%s rows=%zu cols=%zu rowBytes=%zu kernel=Q4_0_REFERENCE\n",
+                wt.name.c_str(), rows, cols, rowBytes);
+        }
         kernel(rowWeights, input, output + startRow, rows, cols);
     } else {
         // Fallback: scalar GEMV for unknown types
+        reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
+        reg.GetBatch21Counters().scalarFallbacks.fetch_add(1, std::memory_order_relaxed);
         printf("[LinearW_Range] WARNING: No registry kernel for type=%d, falling back to scalar\n", wt.type);
         for (size_t r = startRow; r < endRow; ++r) {
             float acc = 0.0f;
@@ -3636,14 +3836,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
     // Generate tokens (decode)
     for (size_t t = 0; t < maxOutputLen; ++t) {
-        // Use the last hidden state as input
+        // ── VAL-051.7: Monotonic position tracking ─────────────────
+        // Position is the ACTUAL decode position (0..promptLen-1 are prompt).
+        // First generated token is at position = promptLen.
+        const size_t position = currentPos;
+
+        // Use the correct position in hiddenStates buffer
         float* h = (t == 0 && promptLen > 0)
             ? hiddenStates + (promptLen - 1) * config.hiddenDim
-            : hiddenStates;
+            : hiddenStates + position * config.hiddenDim;
 
         // ── Production Profiler: begin token ─────────────────────────
         if (profilingEnabled_ && profiler_) {
-            profiler_->beginToken((uint32_t)t, (uint32_t)currentPos);
+            profiler_->beginToken((uint32_t)t, (uint32_t)position);
             profiler_->setModelInfo(
                 modelWeights.loaded ? "loaded" : "none",
                 0, // quant_bits determined from weights
@@ -3685,7 +3890,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
 
             auto layerT0 = std::chrono::high_resolution_clock::now();
-            forwardLayer(layer, layerInput, layerOutput, currentPos + 1);
+            forwardLayer(layer, layerInput, layerOutput, position + 1);
             auto layerT1 = std::chrono::high_resolution_clock::now();
             double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
             ResidencyCounters::RecordLayerTime(layer, layerMs);
@@ -3711,7 +3916,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
         // ── B3: Trace after final norm ─────────────────────────────────
-        B3_TraceState("FINAL_NORM", currentPos, h, config.hiddenDim);
+        B3_TraceState("FINAL_NORM", position, h, config.hiddenDim);
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endFinalNorm();
@@ -3723,7 +3928,7 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
         // ── B3: Trace logits ──────────────────────────────────────────
-        B3_TraceLogits("LOGITS", currentPos, logits, config.vocabSize);
+        B3_TraceLogits("LOGITS", position, logits, config.vocabSize);
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endLogits();
@@ -3734,19 +3939,19 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         const double stateNorm = B3_L2Norm(h, config.hiddenDim);
         if (!(stateNorm > 1.0e-12) || !std::isfinite(stateNorm)) {
             fprintf(stderr, "[B3_FAIL] hidden state invalid pos=%zu norm=%.9e\n",
-                    currentPos, stateNorm);
+                    position, stateNorm);
             return tokensGenerated;
         }
         // Soft gate: warn on norm explosion (>100x expected)
         if (stateNorm > 100.0) {
             fprintf(stderr, "[B3_WARN] hidden state norm explosion pos=%zu norm=%.9e\n",
-                    currentPos, stateNorm);
+                    position, stateNorm);
         }
 
         // Hard gate: reject invalid logits
         if (config.vocabSize == 0 || B3_CountNonFinite(logits, config.vocabSize) != 0) {
             fprintf(stderr, "[B3_FAIL] invalid logits pos=%zu size=%zu\n",
-                    currentPos, config.vocabSize);
+                    position, config.vocabSize);
             return tokensGenerated;
         }
 
@@ -3970,6 +4175,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_) profiler_->beginAttnNorm();
     RMSNormW(lw.attnNorm, input, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endAttnNorm();
+    B3_TraceState("ATTN_NORM", layer, layerTemp, hiddenDim);
 
     // 2. Attention with real Q/K/V/O projections
     ResidencyCounters::BeginAttention();
@@ -4011,6 +4217,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
     RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
+    B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
 
     // 5. FFN (SwiGLU) with real weight projections
     ResidencyCounters::BeginFFN();
@@ -4020,6 +4227,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     } else {
         computeFFN(layer, layerTemp, ffnOutput);
     }
+    B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
 
@@ -4160,6 +4368,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         size_t qkvDim = hiddenDim + 2 * kvDim;
         // Project fused QKV: [qkvDim] = wqkv^T * input
         LinearW(lw.wqkv, input, nullptr, qProj, qkvDim);
+        B3_TraceState("ATTN_QKV", layer, qProj, qkvDim);
 
         // Split into Q, K, V
         float* q = qProj;                           // [hiddenDim]
@@ -4174,13 +4383,16 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     else if (lw.wq.data) {
         // Q projection: [hiddenDim] -> [hiddenDim]
         LinearW(lw.wq, input, nullptr, qProj, hiddenDim);
+        B3_TraceState("ATTN_Q", layer, qProj, hiddenDim);
 
         // K projection: [hiddenDim] -> [kvDim]
         size_t kvDim = numKVHeads * headDim;
         LinearW(lw.wk, input, nullptr, kProj, kvDim);
+        B3_TraceState("ATTN_K", layer, kProj, kvDim);
 
         // V projection: [hiddenDim] -> [kvDim]
         LinearW(lw.wv, input, nullptr, vProj, kvDim);
+        B3_TraceState("ATTN_V", layer, vProj, kvDim);
     } else {
         // No attention weights available
         memset(output, 0, hiddenDim * sizeof(float));
@@ -4195,6 +4407,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                   modelWeights.ropeTheta, modelWeights.ropeScaling);
         if (profilingEnabled_ && profiler_) profiler_->endRoPE();
     }
+    B3_TraceState("ATTN_ROPE", layer, qProj, hiddenDim);
 
     // Store K, V into KV cache
     if (config.useKVCache) {
@@ -4290,7 +4503,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     for (size_t pos = 0; pos < attend; ++pos) {
                         scores[pos] *= invSum;
                     }
-                    
+                    if (h == 0) B3_TraceState("ATTN_SOFTMAX", layer, scores, attend);
+
                     // Weighted sum — AVX2 accumulate
                     memset(headOut, 0, headDim * sizeof(float));
                     #if defined(__AVX2__) || defined(_MSC_VER)
@@ -4320,7 +4534,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     }
                 }
             }
-            
+            if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
+
             _aligned_free(tempK);
             _aligned_free(tempV);
             _aligned_free(scores);
@@ -4473,6 +4688,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         }
         if (scoreBuf != scores) _aligned_free(scoreBuf);
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
+        if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
     } else {
         // No KV cache: self-attention on current token only
         if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
@@ -4495,6 +4711,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             }
         }
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
+        if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
     }
 
     // Output projection: [hiddenDim] -> [hiddenDim]
@@ -4503,6 +4720,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     LinearW(lw.wo, output, nullptr, tempOut, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
     memcpy(output, tempOut, hiddenDim * sizeof(float));
+    B3_TraceState("ATTN_O", layer, output, hiddenDim);
 
     // Reverse analysis hook: attention computed
     if (reverseAnalysisEnabled_ && reverseIntegration_) {
@@ -4525,25 +4743,42 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
 
     if (intermediateDim == 0) intermediateDim = hiddenDim * 4;
 
-    // Gate projection: [hiddenDim] -> [intermediateDim]
-    if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
-    LinearW(lw.wGate, input, nullptr, gateBuf, intermediateDim);
-    if (profilingEnabled_ && profiler_) profiler_->endFFNGate();
+    // ── Phi-3 / self-gating SwiGLU: no separate gate tensor ──────────────
+    // Some models (e.g. Phi-3) store only ffn_up and ffn_down, using the up
+    // projection as both gate and up in SwiGLU: silu(up) * up.
+    bool hasGate = (lw.wGate.data != nullptr && lw.wGate.sizeBytes > 0);
+
+    if (hasGate) {
+        // Standard SwiGLU: gate and up are separate projections
+        if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
+        std::fill(gateBuf, gateBuf + intermediateDim, 0.0f);
+        LinearW(lw.wGate, input, nullptr, gateBuf, intermediateDim);
+        if (profilingEnabled_ && profiler_) profiler_->endFFNGate();
+    }
 
     // Up projection: [hiddenDim] -> [intermediateDim]
     if (profilingEnabled_ && profiler_) profiler_->beginFFNUp();
+    std::fill(upBuf, upBuf + intermediateDim, 0.0f);
     LinearW(lw.wUp, input, nullptr, upBuf, intermediateDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
 
     // SwiGLU: output = silu(gate) * up
     if (profilingEnabled_ && profiler_) profiler_->beginFFNSwiGLU();
-    SwiGLU(gateBuf, upBuf, gateBuf, intermediateDim);
+    if (hasGate) {
+        SwiGLU(gateBuf, upBuf, gateBuf, intermediateDim);
+    } else {
+        // Self-gating: gate == up, so SwiGLU becomes silu(up) * up
+        SwiGLU(upBuf, upBuf, gateBuf, intermediateDim);
+    }
     if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
+    B3_TraceState("FFN_SWIGLU", layer, gateBuf, intermediateDim);
 
     // Down projection: [intermediateDim] -> [hiddenDim]
     if (profilingEnabled_ && profiler_) profiler_->beginFFNDown();
+    std::fill(output, output + hiddenDim, 0.0f);
     LinearW(lw.wDown, gateBuf, nullptr, output, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
+    B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
 }
 
 // ============================================================================
@@ -4723,9 +4958,12 @@ void Deep2Engine::computeExpertFFN(const MoEWeightHandle& handle,
     auto geom   = reg.GetGeometry(handle.quantType);
     if (!kernel || geom.blockSize == 0) {
         memset(output, 0, hiddenDim * sizeof(float));
+        reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
         printf("[computeExpertFFN] ERROR: No registry kernel for quantType=%d\n", handle.quantType);
         return;
     }
+    reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
+    reg.GetBatch21Counters().kernelInvocations.fetch_add(3, std::memory_order_relaxed); // gate + up + down
     size_t blocksPerRow = (hiddenDim + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
     size_t rowBytes = blocksPerRow * geom.blockSize;
 
@@ -4820,6 +5058,9 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
         memset(logits, 0, config.vocabSize * sizeof(float));
         return;
     }
+
+    // ── VAL-051.7: Clear logits before compute to prevent stale values ─
+    std::fill(logits, logits + config.vocabSize, 0.0f);
 
     // ── Diagnostic: verify hidden state and weights ────────────────────
     float hiddenNorm = 0.0f;
@@ -5037,9 +5278,13 @@ void Deep2Engine::Linear(int weightIdx, const float* input, const float* bias,
     auto kernel = reg.GetGEMV(wt.type);
     auto geom   = reg.GetGeometry(wt.type);
     if (kernel && geom.blockSize > 0) {
+        reg.GetBatch21Counters().registryHits.fetch_add(1, std::memory_order_relaxed);
+        reg.GetBatch21Counters().kernelInvocations.fetch_add(1, std::memory_order_relaxed);
         kernel((const uint8_t*)wt.data, input, output, wt.rows, wt.cols);
     } else {
         // Scalar fallback for unregistered types
+        reg.GetBatch21Counters().registryMisses.fetch_add(1, std::memory_order_relaxed);
+        reg.GetBatch21Counters().scalarFallbacks.fetch_add(1, std::memory_order_relaxed);
         printf("[Linear] WARNING: No registry kernel for type=%d, scalar fallback\n", wt.type);
         for (size_t r = 0; r < wt.rows; ++r) {
             float acc = 0.0f;
@@ -5421,7 +5666,11 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         static_cast<uint32_t>(wt.rows),
         static_cast<uint32_t>(wt.cols));
 
-    if (!ok) {
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    if (ok) {
+        reg.GetBatch21Counters().vulkanComputeSubmissions.fetch_add(1, std::memory_order_relaxed);
+    } else {
+        reg.GetBatch21Counters().vulkanComputeFailures.fetch_add(1, std::memory_order_relaxed);
         fprintf(stderr, "[VULKAN_GEMV] FAIL: DispatchGEMV failed for %s — falling back to CPU\n",
                 wt.name.c_str());
         return false;

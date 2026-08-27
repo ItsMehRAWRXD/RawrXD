@@ -6,9 +6,12 @@
 #include "cpu_inference_engine.h"
 #include "deep2/Deep2Engine.h"
 #include "deep2/Tokenizer.hpp"
+#include "agentic/BoundedAgentLoop.h"
+#include "agentic/AgentToolHandlers.h"
 #include <chrono>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -256,7 +259,75 @@ ExecutionResult SovereignRuntime::executeAgentic(const ExecutionRequest& req) {
     ExecutionResult result;
     result.status = ExecutionResult::Status::SUCCESS;
     result.statusMessage = "Agentic execution complete";
-    result.telemetry.agentIterations = 1;
+
+    try {
+        // Configure the bounded agent loop
+        RawrXD::Agent::AgentLoopConfig config;
+        config.maxSteps = static_cast<int>(req.maxAgentIterations);
+        config.maxTokensPerRequest = static_cast<int>(req.maxTokens);
+        config.model = req.modelPath; // Model path used as model identifier
+        config.ollamaBaseUrl = "http://localhost:11434";
+        config.workingDirectory = std::filesystem::current_path().string();
+        config.dryRun = false;
+        config.autoVerify = true;
+        config.transcriptPath = "agent_transcript.json";
+
+        // Set up tool guardrails (sandbox to current working directory)
+        RawrXD::Agent::ToolGuardrails guardrails;
+        guardrails.allowedRoots.push_back(config.workingDirectory);
+        guardrails.maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+        guardrails.maxOutputCaptureBytes = 4 * 1024 * 1024; // 4 MB
+        guardrails.commandTimeoutMs = 30000; // 30 seconds
+        guardrails.maxSearchResults = 200;
+        guardrails.requireBackupOnWrite = true;
+        RawrXD::Agent::AgentToolHandlers::SetGuardrails(guardrails);
+
+        // Create and configure the agent loop
+        RawrXD::Agent::BoundedAgentLoop agent;
+        agent.Configure(config);
+
+        // Set progress callback to log agent steps
+        agent.SetProgressCallback([](int step, int maxSteps,
+                                      const std::string& status,
+                                      const std::string& detail) {
+            std::cout << "[Agent Step " << step << "/" << maxSteps << "] "
+                      << status << ": " << detail << std::endl;
+        });
+
+        // Determine the user prompt: use agentGoal if provided, otherwise fall back to prompt
+        std::string userPrompt = req.agentGoal.empty() ? req.prompt : req.agentGoal;
+
+        // Execute the bounded agent loop
+        std::string finalAnswer = agent.Execute(userPrompt);
+
+        // Populate result
+        result.generatedText = finalAnswer;
+        result.telemetry.agentIterations = static_cast<uint32_t>(agent.GetCurrentStep());
+        result.statusMessage = "Agentic execution completed in " +
+                               std::to_string(agent.GetCurrentStep()) + " steps";
+
+        // If the agent ended in an error state, mark partial success
+        RawrXD::Agent::AgentLoopState finalState = agent.GetState();
+        if (finalState == RawrXD::Agent::AgentLoopState::Error) {
+            result.status = ExecutionResult::Status::PARTIAL_SUCCESS;
+            result.statusMessage = "Agentic execution completed with errors";
+        } else if (finalState == RawrXD::Agent::AgentLoopState::StepLimitReached) {
+            result.status = ExecutionResult::Status::PARTIAL_SUCCESS;
+            result.statusMessage = "Agentic execution reached step limit";
+        }
+
+    } catch (const std::exception& e) {
+        result.status = ExecutionResult::Status::FAILED_RUNTIME;
+        result.statusMessage = std::string("Agentic execution error: ") + e.what();
+        ExecutionResult::ErrorInfo err;
+        err.category = "RUNTIME";
+        err.component = "SovereignRuntime::executeAgentic";
+        err.message = std::string("Agentic execution error: ") + e.what();
+        err.stackTrace = "";
+        err.context = nlohmann::json::object();
+        result.error = std::move(err);
+    }
+
     return result;
 }
 

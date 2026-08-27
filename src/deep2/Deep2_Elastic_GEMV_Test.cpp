@@ -333,6 +333,11 @@ int main(int argc, char** argv) {
     printf("  Ghost hits:   %llu\n", (unsigned long long)telem.ghostHits.load());
     printf("  Ghost misses: %llu\n", (unsigned long long)telem.ghostMisses.load());
 
+    // --- Step 8: Batch 21 telemetry ---
+    printf("\n[Step 8] Batch 21 telemetry:\n");
+    auto& reg = Deep2::QuantKernelRegistry::Instance();
+    reg.PrintBatch21Report();
+
     mgr.Shutdown();
 
     printf("\n=================================================================\n");
