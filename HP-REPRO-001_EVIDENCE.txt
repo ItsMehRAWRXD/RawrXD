@@ -1,0 +1,24 @@
+﻿HP-REPRO-001 â€” Hotpatch Certification Reproducibility Evidence
+==============================================================
+Source commit:  a9fa6f635f79d08faf05b2dd40c874934e711191
+Source branch:  main
+Executable:     D:\rawrxd\build-hotpatch-repro\bin\hotpatch_stress_test.exe
+SHA256:         EFAC6D2CABDC6B1D3989F9A40838D7070C1FAAB2651EE6423606FFBBB73A19AC
+Size:           2431488 bytes
+Timestamp:      2026-08-27T23:04:11.7036525Z
+Build dir:      build-hotpatch-repro
+Generator:      Ninja
+Vulkan:         OFF
+
+Tests run:      187
+Tests passed:   187
+Tests failed:   0
+Exit code:      0
+
+Expected:
+  Tests run:    187
+  Tests passed: 187
+  Tests failed: 0
+  Exit code:    0
+
+Result:         REPRODUCED
