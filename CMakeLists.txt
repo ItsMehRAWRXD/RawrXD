@@ -58,48 +58,54 @@ if(MSVC)
     include_directories(SYSTEM "${MSVC_INC}" "${SDK_UCRT_INC}" "${SDK_UM_INC}" "${SDK_SHARED_INC}")
     link_directories("${MSVC_LIB}" "${SDK_UM_LIB}" "${SDK_UCRT_LIB}")
 
-    # MASM-specific flags (ml64 only understands /c, /Fo, /nologo, /W, /Zi)
-    # Robust MASM assembler detection - integrates with CI and local builds
-    if(NOT DEFINED CMAKE_ASM_MASM_COMPILER OR NOT EXISTS "${CMAKE_ASM_MASM_COMPILER}")
-        set(_ML64_CANDIDATES)
+    # MASM detection
+    if(MSVC)
+        set(RAWRXD_MASM_FOUND FALSE)
 
-        # GitHub Actions / Developer Command Prompt environment
+        # GitHub Actions / VS Developer Prompt
         if(DEFINED ENV{VCToolsInstallDir})
-            list(APPEND _ML64_CANDIDATES
-                "$ENV{VCToolsInstallDir}/bin/Hostx64/x64/ml64.exe"
-                "$ENV{VCToolsInstallDir}/bin/Hostx86/x64/ml64.exe"
-            )
+            set(_MSVC_ROOT "$ENV{VCToolsInstallDir}")
         endif()
 
-        # Existing local MSVC root detection
-        if(DEFINED _MSVC_ROOT)
-            list(APPEND _ML64_CANDIDATES
-                "${_MSVC_ROOT}/bin/Hostx64/x64/ml64.exe"
-                "${_MSVC_ROOT}/bin/Hostx86/x64/ml64.exe"
-            )
-        endif()
-
-        # Search PATH as final fallback
-        find_program(ML64_EXECUTABLE ml64.exe)
-        if(ML64_EXECUTABLE)
-            list(APPEND _ML64_CANDIDATES "${ML64_EXECUTABLE}")
-        endif()
-
-        foreach(_ML64 ${_ML64_CANDIDATES})
-            if(EXISTS "${_ML64}")
-                set(CMAKE_ASM_MASM_COMPILER "${_ML64}"
-                    CACHE FILEPATH "MASM64 assembler" FORCE)
-                break()
+        # Local fallback
+        if(NOT _MSVC_ROOT)
+            if(DEFINED ENV{VSINSTALLDIR})
+                set(_MSVC_ROOT "$ENV{VSINSTALLDIR}/VC/Tools/MSVC")
             endif()
-        endforeach()
+        endif()
 
-        if(NOT CMAKE_ASM_MASM_COMPILER)
+        # Locate ml64.exe
+        if(_MSVC_ROOT)
+            file(TO_CMAKE_PATH "${_MSVC_ROOT}" _MSVC_ROOT)
+
+            find_program(
+                MASM_ML64
+                NAMES ml64.exe
+                PATHS
+                    "${_MSVC_ROOT}"
+                    "${_MSVC_ROOT}/bin/Hostx64/x64"
+                PATH_SUFFIXES
+                    bin/Hostx64/x64
+                NO_DEFAULT_PATH
+            )
+        endif()
+
+        # PATH fallback
+        if(NOT MASM_ML64)
+            find_program(MASM_ML64 ml64.exe)
+        endif()
+
+        if(MASM_ML64)
+            enable_language(ASM_MASM)
+            set(CMAKE_ASM_MASM_COMPILER "${MASM_ML64}" CACHE FILEPATH "MASM64" FORCE)
+            message(STATUS "MASM assembler: ${MASM_ML64}")
+        else()
             message(FATAL_ERROR
-                "MASM ml64.exe not found. Install MSVC C++ build tools with MASM support.")
+                "MASM assembler ml64.exe not found. "
+                "Install Visual Studio C++ Build Tools with MASM support."
+            )
         endif()
     endif()
-
-    message(STATUS "MASM assembler: ${CMAKE_ASM_MASM_COMPILER}")
     set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /nologo /Zi /I\"${SDK_SHARED_INC}\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/src\" /I\"${CMAKE_CURRENT_SOURCE_DIR}/include\"")
 
     add_link_options(
