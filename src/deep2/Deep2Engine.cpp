@@ -4113,15 +4113,24 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             profileHistory_.push_back(tp);
         }
 
+        printf("[B3_LOGITS] Storing token %d at index %zu\n", nextToken, tokensGenerated);
+        fflush(stdout);
+
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
         
         if (onToken) {
+            printf("[B3_LOGITS] Calling onToken callback\n");
+            fflush(stdout);
             if (!onToken(nextToken)) {
+                printf("[B3_LOGITS] onToken returned false, breaking\n");
+                fflush(stdout);
                 break;
             }
         }
 
+        printf("[B3_LOGITS] Checking PlasmaGovernor\n");
+        fflush(stdout);
         // ── Sovereign PlasmaGovernor: thermal throttle ────────────────────
         if (plasmaGovernorEnabled_ && plasmaGovernor_) {
             if (plasmaGovernor_->isEmergencyStopped()) {
@@ -4138,23 +4147,28 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
 
+        printf("[B3_LOGITS] Advancing KV cache\n");
+        fflush(stdout);
         // Advance KV cache BEFORE next forward so attention sees correct position
         if (kvCache) {
             kvCache->advance();
         }
         currentPos++;
 
-        // Reverse analysis hook: token generated
-        if (reverseAnalysisEnabled_ && reverseIntegration_) {
-            uint8_t tokenByte = static_cast<uint8_t>(nextToken & 0xFF);
-            reverseIntegration_->onTokenGenerated(static_cast<uint64_t>(nextToken), &tokenByte, 1);
-        }
-
+        printf("[B3_LOGITS] Checking EOS\n");
+        fflush(stdout);
         // Check for EOS
         if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId) {
+            printf("[B3_LOGITS] EOS detected, breaking\n");
+            fflush(stdout);
             break;
         }
+        printf("[B3_LOGITS] End of generation loop iteration\n");
+        fflush(stdout);
     }
+
+    printf("[B3_LOGITS] Generation loop exited, tokensGenerated=%zu\n", tokensGenerated);
+    fflush(stdout);
 
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);

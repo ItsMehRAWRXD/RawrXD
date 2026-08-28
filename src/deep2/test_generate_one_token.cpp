@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     printf("[PASS] Engine initialized\n");
 
     // Tokenize a simple prompt using embedded tokenizer
-    std::string prompt = "Hello";
+    std::string prompt = "hello";
     printf("[TEST] Tokenizing prompt: '%s'\n", prompt.c_str());
     std::vector<uint32_t> promptTokens;
     if (!tokenizer.EncodeLongestMatch(prompt, promptTokens)) {
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     }
     printf("[PASS] Tokenized to %zu tokens\n", promptTokens.size());
     for (size_t i = 0; i < promptTokens.size(); ++i) {
-        printf("  token[%zu]=%u text=\"%s\"\n", i, promptTokens[i],
+        printf("  prompt_token[%zu]=%u text=\"%s\"\n", i, promptTokens[i],
                tokenizer.Token(promptTokens[i]).c_str());
     }
 
@@ -76,25 +76,32 @@ int main(int argc, char** argv) {
     std::vector<int> tokens;
     for (auto t : promptTokens) tokens.push_back(static_cast<int>(t));
 
-    // Generate ONE token
-    printf("[TEST] Generating 1 token...\n");
-    std::vector<int> outputTokens(1);
+    // Generate 16 tokens
+    const size_t kGenCount = 16;
+    printf("[TEST] Generating %zu tokens...\n", kGenCount);
+    std::vector<int> outputTokens(kGenCount);
     size_t generated = engine.generate(tokens.data(), tokens.size(),
-                                        outputTokens.data(), 1);
+                                        outputTokens.data(), kGenCount);
     if (generated == 0) {
         printf("[FAIL] generate() returned 0 tokens\n");
         return 1;
     }
 
-    printf("[PASS] Generated token ID: %d\n", outputTokens[0]);
+    printf("[PASS] Generated %zu tokens\n", generated);
+    fflush(stdout);
+    std::string allText;
+    for (size_t i = 0; i < generated; ++i) {
+        std::string text = tokenizer.Token(static_cast<uint32_t>(outputTokens[i]));
+        allText += text;
+    }
 
-    // Detokenize using embedded tokenizer
-    std::string text = tokenizer.Token(static_cast<uint32_t>(outputTokens[0]));
-    printf("[PASS] Detokenized: '%s'\n", text.c_str());
+    printf("\n=== GENERATED RESPONSE ===\n");
+    printf("Prompt: '%s'\n", prompt.c_str());
+    printf("Response: '%s'\n", allText.c_str());
+    printf("=== TOKEN GENERATION SUCCESS ===\n");
+    fflush(stdout);
 
-    printf("\n=== TOKEN GENERATION SUCCESS ===\n");
-    printf("Prompt: '%s' -> Generated token: %d ('%s')\n",
-           prompt.c_str(), outputTokens[0], text.c_str());
-
+    printf("[TEST] Returning 0\n");
+    fflush(stdout);
     return 0;
 }
