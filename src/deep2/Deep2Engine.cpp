@@ -1459,9 +1459,10 @@ bool Deep2Engine::allocateBuffers() {
     size_t ffnDim = config.intermediateDim > 0 ? config.intermediateDim : hiddenSize * 4;
 
     // qProj must hold: (a) numHeads*headDim for MLA, (b) hiddenSize for standard Q,
-    // or (c) hiddenSize + 2*kvDim for fused QKV. Allocate for worst case.
+    // (c) hiddenSize + 2*kvDim for fused QKV, or (d) 2*hiddenSize for Qwen3.5 gated attention.
+    // Allocate for worst case.
     size_t kvDim = config.numKVHeads > 0 ? config.numKVHeads * headDim : config.numHeads * headDim;
-    size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (hiddenSize + 2 * kvDim);
+    size_t qProjSize = config.useMLA ? (config.numHeads * headDim) : (2 * hiddenSize + 2 * kvDim);
 
     hiddenStates    = alignedAlloc(hiddenSize * maxSeq);
     attentionOutput = alignedAlloc(hiddenSize);
@@ -1496,6 +1497,15 @@ bool Deep2Engine::allocateBuffers() {
             numHeads * qkNopeHeadDim, numHeads * vHeadDim);
     }
 
+    // SSM / Mamba buffers (allocated eagerly; used if model has SSM layers)
+    ssmState     = alignedAlloc(config.numLayers * ssmStateDim * sizeof(float));
+    ssmConvState = alignedAlloc(config.numLayers * ssmConvKernel * hiddenSize * sizeof(float));
+    ssmX         = alignedAlloc(hiddenSize * sizeof(float));
+    ssmY         = alignedAlloc(hiddenSize * sizeof(float));
+    ssmTemp      = alignedAlloc(hiddenSize * sizeof(float));
+    if (ssmState) memset(ssmState, 0, config.numLayers * ssmStateDim * sizeof(float));
+    if (ssmConvState) memset(ssmConvState, 0, config.numLayers * ssmConvKernel * hiddenSize * sizeof(float));
+
     return hiddenStates && attentionOutput && ffnOutput && logits &&
            qProj && kProj && vProj && gateBuf && upBuf;
 }
@@ -1516,9 +1526,15 @@ void Deep2Engine::deallocateBuffers() {
     alignedFree(mlaQ_b);
     alignedFree(mlaK_b);
     alignedFree(mlaV_b);
+    alignedFree(ssmState);
+    alignedFree(ssmConvState);
+    alignedFree(ssmX);
+    alignedFree(ssmY);
+    alignedFree(ssmTemp);
     hiddenStates = attentionOutput = ffnOutput = nullptr;
     logits = qProj = kProj = vProj = gateBuf = upBuf = layerTemp = nullptr;
     mlaQ_a = mlaKV_a = mlaQ_b = mlaK_b = mlaV_b = nullptr;
+    ssmState = ssmConvState = ssmX = ssmY = ssmTemp = nullptr;
 }
 
 // ============================================================================
@@ -1676,6 +1692,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
 
     // Extract architecture from metadata
     const auto& meta = ggufResult.metadata;
+    printf("[Deep2Engine] GGUF architecture: '%s'  hidden=%u layers=%u heads=%u kvHeads=%u inter=%u vocab=%u\n",
+           meta.architecture.c_str(), meta.hiddenSize, meta.numLayers, meta.numHeads,
+           meta.numKeyValueHeads, meta.intermediateSize, meta.vocabSize);
     modelWeights.hiddenDim       = meta.hiddenSize;
     modelWeights.numLayers       = meta.numLayers;
     modelWeights.numHeads        = meta.numHeads;
@@ -1724,6 +1743,29 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
         modelWeights.headDim = modelWeights.hiddenDim / modelWeights.numHeads;
         modelWeights.useMLA  = false;
+
+        // ── Qwen3.5 hybrid architecture: infer numHeads from Q tensor ──
+        // The qwen35 metadata may report numHeads=16, but the actual Q tensor
+        // has output=8192 = 32 heads × 256 headDim. Infer from tensor shape.
+        if (meta.architecture == "qwen35") {
+            for (const auto& t : ggufResult.tensors) {
+                // Look for attn_q.weight on a non-SSM layer (e.g. blk.3)
+                if (t.name.find("attn_q.weight") != std::string::npos &&
+                    t.name.find("blk.3.") != std::string::npos) {
+                    // GGUF dims are [cols, rows] = [in, out]; dimensions[0]=in, dimensions[1]=out
+                    size_t qOut = t.dimensions.size() >= 2 ? t.dimensions[1] : 0;
+                    if (qOut > modelWeights.hiddenDim && modelWeights.headDim > 0) {
+                        size_t inferredHeads = qOut / modelWeights.headDim;
+                        if (inferredHeads != modelWeights.numHeads) {
+                            printf("[Deep2Engine] Qwen3.5: inferring numHeads=%zu from Q tensor (out=%zu, headDim=%zu, metadata said %zu)\n",
+                                   inferredHeads, qOut, modelWeights.headDim, modelWeights.numHeads);
+                            modelWeights.numHeads = inferredHeads;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     // ── Infer vocabSize from tensor shapes when metadata lacks it ────────
@@ -1906,8 +1948,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     lw.attnV_b = wt;
                 else if (name.find("attn_o") != std::string::npos)
                     lw.attnO = wt;
+                else if (name.find("attn_gate") != std::string::npos) {
+                    // Qwen-style attention output projection (NOT FFN gate)
+                    lw.attnO = wt;
+                    printf("[ATTN_GATE] Mapped %s to attnO (rows=%zu cols=%zu type=%d)\n",
+                           name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("attn_proj") != std::string::npos) {
+                    // Qwen-style attention output projection
+                    lw.attnO = wt;
+                    printf("[ATTN_PROJ] Mapped %s to attnO (rows=%zu cols=%zu type=%d)\n",
+                           name.c_str(), wt.rows, wt.cols, wt.type);
+                }
                 else if (name.find("attn_norm") != std::string::npos || name.find("input_layernorm") != std::string::npos)
                     lw.attnNorm = wt;
+                else if (name.find("attn_q_norm") != std::string::npos)
+                    lw.attnQNorm = wt;
+                else if (name.find("attn_k_norm") != std::string::npos)
+                    lw.attnKNorm = wt;
+                else if (name.find("attn_") != std::string::npos && layerIdx == 0) {
+                    printf("[ATTN_UNKNOWN] Unmatched attention tensor: %s (rows=%zu cols=%zu type=%d)\n",
+                           name.c_str(), wt.rows, wt.cols, wt.type);
+                }
                 // ── Layer topology: dense vs MoE ──
                 // If numExperts == 0, this is a dense model: ALL layers use dense FFN.
                 // If numExperts > 0, leadingDenseBlockCount layers are dense, rest are MoE.
@@ -1940,8 +2002,65 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
                     }
                 }
                 // Norms apply to both dense and MoE layers
-                if (name.find("ffn_norm") != std::string::npos || name.find("post_attention_layernorm") != std::string::npos)
+                if (name.find("ffn_norm") != std::string::npos ||
+                    name.find("post_attention_layernorm") != std::string::npos ||
+                    name.find("post_attn_norm") != std::string::npos ||
+                    name.find("post_attention_norm") != std::string::npos)
                     lw.ffnNorm = wt;
+                else if (name.find("ffn_") != std::string::npos &&
+                         name.find("ffn_gate") == std::string::npos &&
+                         name.find("ffn_up") == std::string::npos &&
+                         name.find("ffn_down") == std::string::npos &&
+                         name.find("ffn_gate_inp") == std::string::npos &&
+                         name.find("ffn_gate_exps") == std::string::npos &&
+                         name.find("ffn_up_exps") == std::string::npos &&
+                         name.find("ffn_down_exps") == std::string::npos &&
+                         name.find("shared_experts") == std::string::npos &&
+                         layerIdx == 0) {
+                    printf("[FFN_UNKNOWN] Unmatched FFN tensor: %s (rows=%zu cols=%zu type=%d)\n",
+                           name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+
+                // ── SSM / Mamba tensor mapping ──
+                if (name.find("ssm_a") != std::string::npos && name.find("ssm_alpha") == std::string::npos) {
+                    lw.ssmA = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmA (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_alpha.weight") != std::string::npos) {
+                    lw.ssmAlpha = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmAlpha (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_beta.weight") != std::string::npos) {
+                    lw.ssmBeta = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmBeta (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_conv1d.weight") != std::string::npos) {
+                    lw.ssmConv1d = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmConv1d (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_dt.bias") != std::string::npos) {
+                    lw.ssmDtBias = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmDtBias (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_norm.weight") != std::string::npos) {
+                    lw.ssmNorm = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmNorm (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_out.weight") != std::string::npos) {
+                    lw.ssmOut = wt;
+                    lw.hasSSM = true;
+                    if (layerIdx == 0) printf("[SSM_MAP] %s -> ssmOut (dims=%zux%zu type=%d)\n", name.c_str(), wt.rows, wt.cols, wt.type);
+                }
+                else if (name.find("ssm_") != std::string::npos && layerIdx == 0) {
+                    printf("[SSM_UNKNOWN] Unmatched SSM tensor: %s (rows=%zu cols=%zu type=%d)\n",
+                           name.c_str(), wt.rows, wt.cols, wt.type);
+                }
             }
         }
     }
@@ -1988,6 +2107,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
             registerWt(lw.attnV_b); registerWt(lw.attnO);
             registerWt(lw.moeRouter);
             registerWt(lw.moeSharedGate); registerWt(lw.moeSharedUp); registerWt(lw.moeSharedDown);
+            registerWt(lw.ssmA); registerWt(lw.ssmAlpha); registerWt(lw.ssmBeta);
+            registerWt(lw.ssmConv1d); registerWt(lw.ssmDtBias); registerWt(lw.ssmNorm);
+            registerWt(lw.ssmOut);
         }
         if (modelWeights.tokenEmbed.data && modelWeights.tokenEmbed.sizeBytes > 0) {
             residencyManager_->RegisterTensor(modelWeights.tokenEmbed.name, 0,
@@ -2340,7 +2462,12 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
     config.numKVHeads = config.numHeads;
     config.headDim = config.hiddenDim > 0 && config.numHeads > 0
         ? config.hiddenDim / config.numHeads : 128;
-    config.intermediateDim = config.hiddenDim * 4; // heuristic
+    // Preserve metadata-derived intermediateDim if available, otherwise heuristic
+    if (modelWeights.intermediateDim == 0) {
+        config.intermediateDim = config.hiddenDim * 4; // heuristic
+    } else {
+        config.intermediateDim = modelWeights.intermediateDim;
+    }
 
     // Allocate layer weights
     modelWeights.layers.resize(config.numLayers);
@@ -4142,8 +4269,8 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     // ── Diagnostic: print layer weight info for layer 0 ────────────────
     static bool printedLayerInfo = false;
     if (!printedLayerInfo && layer == 0) {
-        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p wqkv.data=%p\n",
-               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data, lw.wqkv.data);
+        printf("[Deep2Engine] Layer 0 weights: wq.data=%p type=%d wk.data=%p wv.data=%p wo.data=%p wqkv.data=%p attnO.data=%p\n",
+               lw.wq.data, lw.wq.type, lw.wk.data, lw.wv.data, lw.wo.data, lw.wqkv.data, lw.attnO.data);
         printf("[Deep2Engine] Layer 0 weights: attnNorm.data=%p ffnNorm.data=%p\n",
                lw.attnNorm.data, lw.ffnNorm.data);
         printedLayerInfo = true;
@@ -4224,21 +4351,26 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     #endif
 
-    // 4. FFN RMSNorm
+    // 4. FFN / SSM RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
     RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
 
-    // 5. FFN (SwiGLU) with real weight projections
+    // 5. FFN (SwiGLU) OR SSM (Mamba) with real weight projections
     ResidencyCounters::BeginFFN();
     if (profilingEnabled_ && profiler_) profiler_->beginFFNGate();
-    if (modelWeights.isMoE && modelWeights.numExperts > 0) {
+    if (lw.hasSSM) {
+        // Hybrid layer: use SSM instead of FFN
+        computeSSM(layer, layerTemp, ffnOutput);
+        B3_TraceState("SSM_OUT", layer, ffnOutput, hiddenDim);
+    } else if (modelWeights.isMoE && modelWeights.numExperts > 0) {
         computeMoEFFN(layer, layerTemp, ffnOutput);
+        B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     } else {
         computeFFN(layer, layerTemp, ffnOutput);
+        B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     }
-    B3_TraceState("FFN_DOWN", layer, ffnOutput, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
 
@@ -4374,7 +4506,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // ── Fused QKV path (Phi-3, etc.) ────────────────────────────────────
-    if (lw.wqkv.data) {
+    if (lw.wqkv.data && !lw.hasSSM) {
         size_t kvDim = numKVHeads * headDim;
         size_t qkvDim = hiddenDim + 2 * kvDim;
         // Project fused QKV: [qkvDim] = wqkv^T * input
@@ -4390,6 +4522,44 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         memcpy(kProj, k, kvDim * sizeof(float));
         memcpy(vProj, v, kvDim * sizeof(float));
     }
+    // ── SSM hybrid layer: attn_qkv is Q-only, no K/V ───────────────────
+    // Qwen3.5 SSM layers have attn_qkv (8192=2×4096, gated projection) + attn_gate (output proj)
+    // No K/V projections → no standard attention. The 8192 output is split into
+    // two 4096 halves: first half is the projection, second half is the gate.
+    // Output = projection * silu(gate), then attn_gate projects to hiddenDim.
+    else if (lw.wqkv.data && lw.hasSSM) {
+        // Project input to 8192 via attn_qkv
+        size_t qDim = numHeads * headDim;  // 8192 = 32 × 256
+        LinearW(lw.wqkv, input, nullptr, qProj, qDim);
+        B3_TraceState("ATTN_Q_SSM", layer, qProj, qDim);
+
+        // Split 8192 into two 4096 halves: projection and gate
+        size_t halfDim = qDim / 2;  // 4096
+        float* proj = qProj;           // first 4096
+        float* gate = qProj + halfDim; // second 4096
+
+        // Gated projection: output = proj * silu(gate)
+        for (size_t i = 0; i < halfDim; ++i) {
+            float g = gate[i];
+            // SiLU activation: silu(x) = x * sigmoid(x)
+            float silu_g = g / (1.0f + expf(-g));
+            proj[i] = proj[i] * silu_g;
+        }
+
+        // Output projection via attn_gate (mapped to attnO): [4096] -> [4096]
+        if (lw.attnO.data) {
+            memset(output, 0, hiddenDim * sizeof(float));
+            LinearW(lw.attnO, proj, nullptr, output, hiddenDim);
+        } else {
+            memcpy(output, proj, hiddenDim * sizeof(float));
+        }
+        B3_TraceState("ATTN_O", layer, output, hiddenDim);
+
+        if (reverseAnalysisEnabled_ && reverseIntegration_) {
+            reverseIntegration_->onAttentionComputed(static_cast<int>(layer), output, hiddenDim);
+        }
+        return;
+    }
     // ── Standard MHA / GQA path ────────────────────────────────────────
     else if (lw.wq.data) {
         // Q projection: [hiddenDim] -> [hiddenDim]
@@ -4404,6 +4574,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         // V projection: [hiddenDim] -> [kvDim]
         LinearW(lw.wv, input, nullptr, vProj, kvDim);
         B3_TraceState("ATTN_V", layer, vProj, kvDim);
+
+        // ── Qwen3.5: Apply per-head QK norm (RMSNorm) before RoPE ──
+        if (lw.attnQNorm.data && lw.attnQNorm.sizeBytes > 0) {
+            for (size_t h = 0; h < numHeads; ++h) {
+                RMSNormW(lw.attnQNorm, qProj + h * headDim, qProj + h * headDim, headDim, modelWeights.normEps);
+            }
+        }
+        if (lw.attnKNorm.data && lw.attnKNorm.sizeBytes > 0) {
+            for (size_t h = 0; h < numKVHeads; ++h) {
+                RMSNormW(lw.attnKNorm, kProj + h * headDim, kProj + h * headDim, headDim, modelWeights.normEps);
+            }
+        }
     } else {
         // No attention weights available
         memset(output, 0, hiddenDim * sizeof(float));
@@ -4726,11 +4908,22 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     }
 
     // Output projection: [hiddenDim] -> [hiddenDim]
-    float* tempOut = ffnOutput;
-    if (profilingEnabled_ && profiler_) profiler_->beginAttnOutProj();
-    LinearW(lw.wo, output, nullptr, tempOut, hiddenDim);
-    if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
-    memcpy(output, tempOut, hiddenDim * sizeof(float));
+    // Qwen models with fused QKV may not have a separate attention output projection.
+    // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
+    const auto* attnOutWeight = (lw.wo.data != nullptr) ? &lw.wo :
+                                 (lw.attnO.data != nullptr) ? &lw.attnO : nullptr;
+    if (attnOutWeight == nullptr || attnOutWeight->data == nullptr) {
+        // No output projection: pass through unchanged (already correct size)
+        if (layer == 0) {
+            printf("[ATTN] No attention output weight at layer %zu — passing through concatenated heads\n", layer);
+        }
+    } else {
+        float* tempOut = ffnOutput;
+        if (profilingEnabled_ && profiler_) profiler_->beginAttnOutProj();
+        LinearW(*attnOutWeight, output, nullptr, tempOut, hiddenDim);
+        if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
+        std::memcpy(output, tempOut, hiddenDim * sizeof(float));
+    }
     B3_TraceState("ATTN_O", layer, output, hiddenDim);
 
     // Reverse analysis hook: attention computed
@@ -4790,6 +4983,125 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     LinearW(lw.wDown, gateBuf, nullptr, output, hiddenDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     B3_TraceState("FFN_DOWN", layer, output, hiddenDim);
+}
+
+// ============================================================================
+// Compute SSM / Mamba - Simplified selective scan for hybrid architectures
+// Supports Jamba-style SSM layers where SSM replaces FFN.
+// Tensor dimensions from model: ssmStateDim=32, convKernel=4, hiddenDim=4096
+// ============================================================================
+void Deep2Engine::computeSSM(size_t layer, const float* input, float* output) {
+    if (layer >= modelWeights.layers.size()) {
+        memcpy(output, input, config.hiddenDim * sizeof(float));
+        return;
+    }
+
+    const auto& lw = modelWeights.layers[layer];
+    size_t hiddenDim = config.hiddenDim;
+    size_t stateDim = ssmStateDim;   // 32 from tensor dims
+    size_t convK = ssmConvKernel;    // 4 from tensor dims
+
+    if (!lw.hasSSM || !lw.ssmAlpha.data || !lw.ssmOut.data) {
+        // No SSM weights: fallback to identity (should not happen for SSM layers)
+        memcpy(output, input, hiddenDim * sizeof(float));
+        return;
+    }
+
+    // ── Step 1: Project input to SSM state space via alpha ──
+    // alpha: [stateDim, hiddenDim] — computes x_alpha = alpha^T * input
+    float* xAlpha = ssmX;  // [hiddenDim] reused as temp
+    memset(xAlpha, 0, hiddenDim * sizeof(float));
+    LinearW(lw.ssmAlpha, input, nullptr, xAlpha, stateDim);
+
+    // ── Step 2: Project input to SSM state space via beta ──
+    // beta: [stateDim, hiddenDim] — computes x_beta = beta^T * input
+    float* xBeta = ssmTemp;  // [hiddenDim] reused as temp
+    memset(xBeta, 0, hiddenDim * sizeof(float));
+    LinearW(lw.ssmBeta, input, nullptr, xBeta, stateDim);
+
+    // ── Step 3: Causal conv1d on xAlpha (simplified: shift-register convolution) ──
+    // conv1d.weight: [convK, hiddenDim*2] — actually operates on 2*hiddenDim channels
+    // For simplicity, apply a 1D causal convolution per channel on xAlpha
+    float* convOut = ssmY;  // [hiddenDim] reused
+    memset(convOut, 0, hiddenDim * sizeof(float));
+
+    if (lw.ssmConv1d.data && lw.ssmConv1d.sizeBytes > 0) {
+        // conv1d weight is F32 [convK, hiddenDim*2]
+        // We only use the first hiddenDim channels for xAlpha
+        const float* convW = (const float*)lw.ssmConv1d.data;
+        size_t chStride = hiddenDim * 2;  // channels per kernel position
+
+        // Per-channel causal convolution: y[t] = sum_k w[k] * x[t-k]
+        // For single-token inference, only the newest sample is non-zero in conv state
+        float* convStatePtr = ssmConvState + layer * convK * hiddenDim;
+        for (size_t c = 0; c < stateDim && c < hiddenDim; ++c) {
+            // Shift conv state: state[k] = state[k-1], state[0] = xAlpha[c]
+            for (size_t k = convK - 1; k > 0; --k) {
+                convStatePtr[k * hiddenDim + c] = convStatePtr[(k - 1) * hiddenDim + c];
+            }
+            convStatePtr[c] = xAlpha[c];
+
+            // Compute conv output
+            float sum = 0.0f;
+            for (size_t k = 0; k < convK; ++k) {
+                size_t wIdx = k * chStride + c;
+                if (wIdx < lw.ssmConv1d.rows * lw.ssmConv1d.cols) {
+                    sum += convW[wIdx] * convStatePtr[k * hiddenDim + c];
+                }
+            }
+            convOut[c] = sum;
+        }
+    } else {
+        // No conv1d weights: pass through
+        memcpy(convOut, xAlpha, stateDim * sizeof(float));
+    }
+
+    // ── Step 4: Selective scan (discrete SSM) ──
+    // h' = A * h + B * x, where A = exp(a * dt), B = dt * beta
+    // y = C * h, where C = convOut (treated as output projection)
+    float* statePtr = ssmState + layer * stateDim;
+    const float* aParam = (const float*)lw.ssmA.data;
+    const float* dtBias = (const float*)lw.ssmDtBias.data;
+
+    for (size_t i = 0; i < stateDim; ++i) {
+        // Compute delta_t (softplus of dt bias for now; could include projection)
+        float dt = dtBias ? dtBias[i] : 1.0f;
+        if (dt <= 0.0f) dt = 0.001f;  // clamp to positive
+
+        // Discretization: A_bar = exp(a * dt), B_bar = dt * beta
+        float a = aParam ? aParam[i] : -1.0f;
+        float Abar = expf(a * dt);
+        float Bbar = dt * xBeta[i];
+
+        // State update: h = A_bar * h + B_bar * x
+        statePtr[i] = Abar * statePtr[i] + Bbar * convOut[i];
+
+        // Output: y = state (identity output projection for selective scan)
+        xAlpha[i] = statePtr[i];
+    }
+
+    // ── Step 5: Apply SSM norm (RMSNorm on state) ──
+    if (lw.ssmNorm.data && lw.ssmNorm.sizeBytes > 0) {
+        float rms = 0.0f;
+        for (size_t i = 0; i < stateDim; ++i) {
+            rms += xAlpha[i] * xAlpha[i];
+        }
+        rms = sqrtf(rms / stateDim + modelWeights.normEps);
+        const float* normW = (const float*)lw.ssmNorm.data;
+        for (size_t i = 0; i < stateDim; ++i) {
+            xAlpha[i] = xAlpha[i] / rms * normW[i % 128];  // mod 128 in case norm dim differs
+        }
+    }
+
+    // ── Step 6: Project SSM state back to hiddenDim via ssmOut ──
+    // ssmOut: [hiddenDim, hiddenDim] — but we only have stateDim active inputs
+    // Zero-pad the input vector to hiddenDim, then apply LinearW
+    memset(ssmTemp, 0, hiddenDim * sizeof(float));
+    memcpy(ssmTemp, xAlpha, stateDim * sizeof(float));
+    memset(output, 0, hiddenDim * sizeof(float));
+    LinearW(lw.ssmOut, ssmTemp, nullptr, output, hiddenDim);
+
+    B3_TraceState("SSM_OUT", layer, output, hiddenDim);
 }
 
 // ============================================================================

@@ -4881,6 +4881,14 @@ target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/d
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+# Add Vulkan include directories if available
+if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
+    target_include_directories(InferenceEngine PRIVATE "${RAWR_VULKAN_INCLUDE}")
+    target_link_directories(InferenceEngine PRIVATE "${RAWR_VULKAN_SDK_ROOT}/Lib")
+    target_link_libraries(InferenceEngine PRIVATE "${RAWR_VULKAN_LIB}")
+    target_compile_definitions(InferenceEngine PRIVATE RAWR_HAS_VULKAN=1 RAWR_VULKAN_AVAILABLE=1)
+endif()
+
 add_executable(RawrXD-InferenceEngine EXCLUDE_FROM_ALL
     src/inference/inference_standalone_main.cpp
 )
@@ -7482,7 +7490,7 @@ if(BUILD_DEEP2_TOKEN_GATE)
     )
     target_link_libraries(test_generate_one_token PRIVATE InferenceEngine)
     if(MSVC)
-        target_compile_options(test_generate_one_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+        target_compile_options(test_generate_one_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
     target_include_directories(test_generate_one_token PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
@@ -7492,7 +7500,7 @@ if(BUILD_DEEP2_TOKEN_GATE)
     set_target_properties(test_generate_one_token PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME test_generate_one_token
-        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
@@ -7772,7 +7780,7 @@ if(BUILD_VAL_051_5_DIAG)
         src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
-        target_compile_options(val_051_5_diag_1_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+        target_compile_options(val_051_5_diag_1_token PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
     endif()
     target_include_directories(val_051_5_diag_1_token PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
