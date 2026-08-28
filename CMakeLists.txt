@@ -9452,6 +9452,21 @@ if(WIN32)
     set_property(TARGET arch_cert_tensor_inventory PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
     # ═══════════════════════════════════════════════════════════════════
+    # FWD-CERT-001: Deterministic Forward-Pass Certification
+    # ═══════════════════════════════════════════════════════════════════
+    add_executable(fwd_cert_001 EXCLUDE_FROM_ALL
+        src/test_harness/fwd_cert_001.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(fwd_cert_001 PRIVATE InferenceEngine bcrypt.lib)
+    target_include_directories(fwd_cert_001 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deep2
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    set_property(TARGET fwd_cert_001 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+    # ═══════════════════════════════════════════════════════════════════
     # Production Benchmark — Batch 1: Repeatable 1/10/32/128 token benchmark
     # ═══════════════════════════════════════════════════════════════════
     add_executable(RawrXD-ProductionBenchmark EXCLUDE_FROM_ALL
