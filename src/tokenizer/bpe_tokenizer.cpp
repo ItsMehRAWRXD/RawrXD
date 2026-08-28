@@ -41,7 +41,15 @@ void BPETokenizer::refresh_specials_()
 {
     const auto assign = [&](const char* s, TokenId& dst)
     {
-        auto it = m_token_to_id.find(s);
+        // Byte-encode the special token string to match byte-encoded vocab
+        std::string encoded;
+        for (const unsigned char* p = (const unsigned char*)s; *p; ++p)
+        {
+            auto it = m_byte_enc.find(*p);
+            if (it != m_byte_enc.end())
+                encoded += it->second;
+        }
+        auto it = m_token_to_id.find(encoded);
         if (it != m_token_to_id.end())
             dst = it->second;
     };
@@ -67,7 +75,18 @@ bool BPETokenizer::load_vocab(const std::vector<std::string>& vocab_lines, const
         info.score = 0.0f;
         info.type = 0;
         m_vocab.push_back(info);
-        m_token_to_id[tok] = id;
+        // Byte-encode the token before storing in lookup map,
+        // because pretokenize_ byte-encodes the input text.
+        // Without this, tokens with non-ASCII bytes (like ▁ = U+2581)
+        // won't match their byte-encoded forms.
+        std::string encoded;
+        for (unsigned char b : tok)
+        {
+            auto it = m_byte_enc.find(b);
+            if (it != m_byte_enc.end())
+                encoded += it->second;
+        }
+        m_token_to_id[encoded] = id;
         ++id;
     }
 
@@ -82,7 +101,23 @@ bool BPETokenizer::load_vocab(const std::vector<std::string>& vocab_lines, const
         std::string a = line.substr(0, sp);
         std::string b = line.substr(sp + 1);
         if (!a.empty() && !b.empty())
-            m_merges[{a, b}] = rank++;
+        {
+            // Byte-encode merge tokens to match byte-encoded input
+            std::string ea, eb;
+            for (unsigned char c : a)
+            {
+                auto it = m_byte_enc.find(c);
+                if (it != m_byte_enc.end())
+                    ea += it->second;
+            }
+            for (unsigned char c : b)
+            {
+                auto it = m_byte_enc.find(c);
+                if (it != m_byte_enc.end())
+                    eb += it->second;
+            }
+            m_merges[{ea, eb}] = rank++;
+        }
     }
 
     refresh_specials_();
@@ -169,6 +204,19 @@ std::vector<std::string> BPETokenizer::pretokenize_(const std::string& text) con
     if (m_add_prefix_space && !out.empty() && !out[0].empty() && out[0][0] != ' ')
     {
         out[0] = " " + out[0];
+    }
+
+    // SentencePiece normalization: replace leading space with ▁ (U+2581).
+    // The GGUF vocabulary for Llama-family models stores tokens with ▁ as
+    // the word-boundary marker (e.g. "▁Hello" = token 15043).
+    // Without this replacement, " Hello" won't match "▁Hello" in the vocab.
+    for (auto& tok : out)
+    {
+        if (!tok.empty() && tok[0] == ' ')
+        {
+            // Replace the leading space (1 byte: 0x20) with ▁ (3 bytes: 0xE2 0x96 0x81)
+            tok = "\xE2\x96\x81" + tok.substr(1);
+        }
     }
 
     // Byte-encode each token into unicode-safe form.

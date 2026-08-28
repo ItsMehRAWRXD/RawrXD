@@ -1,4 +1,4 @@
-// test_generate_one_token.cpp - Minimal: load Codestral and generate 1 token
+// test_generate_one_token.cpp - Minimal: load a GGUF model and generate 1 token
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -9,7 +9,7 @@
 using namespace Deep2;
 
 int main(int argc, char** argv) {
-    const char* modelPath = argc > 1 ? argv[1] : "G:\\OllamaModels\\Codestral-22B-v0.1-Q4_K_M.gguf";
+    const char* modelPath = argc > 1 ? argv[1] : "G:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf";
 
     printf("[TEST] Token Generation Test\n");
     printf("[TEST] Model: %s\n", modelPath);

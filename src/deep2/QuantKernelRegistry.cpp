@@ -395,18 +395,13 @@ static void gemv_q8_0_scalar(
 }
 
 // --- Q4_K GEMV (scalar reference) ---
-// VAL-051.8: Correct GGML Q4_K block unpacking.
+// VAL-051.9: Correct GGML Q4_K block unpacking per llama.cpp reference.
 // block_q4_K layout: d(fp16), dmin(fp16), scales[12], qs[128]
 //   256 weights per block, 8 sub-blocks of 32.
-//   scales[0..3]  = low 6 bits of scales 0..3
-//   scales[4..7]  = low 6 bits of mins 0..3
-//   scales[8..11] = high 2 bits packed:
-//       bits 0..1 -> scales 0..3 high
-//       bits 2..3 -> mins 0..3 high
-//       bits 4..5 -> scales 4..7 high
-//       bits 6..7 -> mins 4..7 high
-//   scales 4..7 low 4 bits from scales[8..11] & 0x0F
-//   mins 4..7 low 4 bits from scales[8..11] >> 4
+//   scales[0..3]  = low 6 bits of scales 0..3 (NO high bits)
+//   scales[4..7]  = low 6 bits of mins 0..3 (NO high bits)
+//   scales[4..7] high bits from s[0..3] >> 6, combined with s[8..11] low 4 bits
+//   mins[4..7] high bits from s[4..7] >> 6, combined with s[8..11] high 4 bits
 //
 // CRITICAL: Q4_K uses GROUPED nibbles, not interleaved:
 //   qs[0..31]   low  nibbles -> weights 0..31
@@ -416,24 +411,32 @@ static void gemv_q8_0_scalar(
 //   ...
 
 static inline void unpack_q4_k_scales(
-    const uint8_t scales[12],
-    uint8_t out_scale[8],
-    uint8_t out_min[8])
+    const uint8_t s[12],
+    uint8_t scales[8],
+    uint8_t mins[8])
 {
-    // First 4 groups
-    for (int j = 0; j < 4; ++j) {
-        out_scale[j] = (scales[j] & 0x3F) |
-                       (((scales[8 + j] >> 0) & 0x03) << 6);
-        out_min[j]   = (scales[4 + j] & 0x3F) |
-                       (((scales[8 + j] >> 2) & 0x03) << 6);
-    }
-    // Last 4 groups
-    for (int j = 0; j < 4; ++j) {
-        out_scale[4 + j] = ((scales[8 + j] >> 0) & 0x0F) |
-                           (((scales[j] >> 6) & 0x03) << 4);
-        out_min[4 + j]   = ((scales[8 + j] >> 4) & 0x0F) |
-                           (((scales[4 + j] >> 6) & 0x03) << 4);
-    }
+    // Low 6 bits — first four scale/min pairs
+    scales[0] = s[0] & 0x3F;
+    scales[1] = s[1] & 0x3F;
+    scales[2] = s[2] & 0x3F;
+    scales[3] = s[3] & 0x3F;
+
+    mins[0] = s[4] & 0x3F;
+    mins[1] = s[5] & 0x3F;
+    mins[2] = s[6] & 0x3F;
+    mins[3] = s[7] & 0x3F;
+
+    // Upper four scales: low 4 bits from s[8..11], high 2 bits from s[0..3] >> 6
+    scales[4] = (s[8] & 0x0F) | ((s[0] >> 6) << 4);
+    scales[5] = (s[9] & 0x0F) | ((s[1] >> 6) << 4);
+    scales[6] = (s[10] & 0x0F) | ((s[2] >> 6) << 4);
+    scales[7] = (s[11] & 0x0F) | ((s[3] >> 6) << 4);
+
+    // Upper four minimums: low 4 bits from s[8..11] >> 4, high 2 bits from s[4..7] >> 6
+    mins[4] = (s[8] >> 4) | ((s[4] >> 6) << 4);
+    mins[5] = (s[9] >> 4) | ((s[5] >> 6) << 4);
+    mins[6] = (s[10] >> 4) | ((s[6] >> 6) << 4);
+    mins[7] = (s[11] >> 4) | ((s[7] >> 6) << 4);
 }
 
 static void gemv_q4_k_scalar(
@@ -463,52 +466,228 @@ static void gemv_q4_k_scalar(
             uint8_t scales[8], mins[8];
             unpack_q4_k_scales(blk.scales, scales, mins);
 
-            // Q4_K: 4 sections of 64 weights, each section has 2 groups of 32
-            // Each section uses qs[32 bytes]:
-            //   low nibbles  -> first 32 weights in section
-            //   high nibbles -> second 32 weights in section
+            // Q4_K: 4 sections of 64 weights.
+            // Each section j uses qs[j*32..j*32+31] and contains:
+            //   - low nibbles  -> weights j*64 + 0..31  (scale group j)
+            //   - high nibbles -> weights j*64 + 32..63 (scale group j+4)
             const uint8_t* q = blk.qs;
-            int is = 0;
 
-            for (int section = 0; section < 4; ++section) {
-                // First 32 values in this 64-value section
-                uint8_t sc0 = scales[is + 0];
-                uint8_t mn0 = mins[is + 0];
-                float d0 = d * static_cast<float>(sc0);
-                float m0 = dmin * static_cast<float>(mn0);
+            for (int j = 0; j < 4; ++j) {
+                const float d0 = d * static_cast<float>(scales[j]);
+                const float m0 = dmin * static_cast<float>(mins[j]);
+                const float d1 = d * static_cast<float>(scales[j + 4]);
+                const float m1 = dmin * static_cast<float>(mins[j + 4]);
 
                 for (int l = 0; l < 32; ++l) {
-                    int idx = section * 64 + l;
-                    if (static_cast<size_t>(idx) >= elemsInBlock) break;
-                    int nibble = q[l] & 0x0F;
-                    acc += (d0 * static_cast<float>(nibble) - m0) * x[base + idx];
-                }
+                    int idx0 = j * 64 + l;
+                    int idx1 = j * 64 + 32 + l;
 
-                // Second 32 values in this 64-value section
-                uint8_t sc1 = scales[is + 1];
-                uint8_t mn1 = mins[is + 1];
-                float d1 = d * static_cast<float>(sc1);
-                float m1 = dmin * static_cast<float>(mn1);
-
-                for (int l = 0; l < 32; ++l) {
-                    int idx = section * 64 + 32 + l;
-                    if (static_cast<size_t>(idx) >= elemsInBlock) break;
-                    int nibble = q[l] >> 4;
-                    acc += (d1 * static_cast<float>(nibble) - m1) * x[base + idx];
+                    if (static_cast<size_t>(idx0) < elemsInBlock) {
+                        int nibble0 = q[l] & 0x0F;
+                        acc += (d0 * static_cast<float>(nibble0) - m0) * x[base + idx0];
+                    }
+                    if (static_cast<size_t>(idx1) < elemsInBlock) {
+                        int nibble1 = q[l] >> 4;
+                        acc += (d1 * static_cast<float>(nibble1) - m1) * x[base + idx1];
+                    }
                 }
 
                 q += 32;
-                is += 2;
             }
         }
         y[r] += acc;
     }
 }
 
-// --- Q6_K GEMV (scalar) ---
-// block_q6_K defined in GGUFLoader.hpp
-// Layout: ql[128] (low 4 bits, paired), qh[64] (high 2 bits, grouped by 4),
-//         scales[16] (signed), d (FP16).  256 weights per 210-byte block.
+// --- Q6_K GEMV (scalar reference) ---
+// VAL-051.10: Correct GGML Q6_K block unpacking per llama.cpp reference.
+// block_q6_K layout (210 bytes, 256 values):
+//   [0..127]   ql      128 bytes (low 4 bits)
+//   [128..191] qh      64 bytes (high 2 bits)
+//   [192..207] scales  16 signed bytes
+//   [208..209] d       FP16
+//
+// Q6_K has 16 scale groups, each covering 16 values.
+// The first 128 values and second 128 values are reconstructed from
+// separate ql/qh regions.
+
+static inline float rxd_q6k_f16(uint16_t h)
+{
+    const uint32_t sign = ((uint32_t)(h & 0x8000u)) << 16;
+    const uint32_t exp  = (h >> 10) & 0x1Fu;
+    const uint32_t mant = h & 0x03FFu;
+    uint32_t bits;
+    if (exp == 0) {
+        if (mant == 0) { bits = sign; }
+        else {
+            uint32_t m = mant; int e = -14;
+            while ((m & 0x0400u) == 0) { m <<= 1; --e; }
+            m &= 0x03FFu;
+            bits = sign | ((uint32_t)(e + 127) << 23) | (m << 13);
+        }
+    } else if (exp == 31) {
+        bits = sign | 0x7F800000u | (mant << 13);
+    } else {
+        bits = sign | ((exp + 112u) << 23) | (mant << 13);
+    }
+    float f; std::memcpy(&f, &bits, sizeof(f)); return f;
+}
+
+static inline bool rxd_q6k_dequant_block(
+    const uint8_t* block, float* dst)
+{
+    if (!block || !dst) return false;
+    // block_q6_K layout: ql[128] @ 0, qh[64] @ 128, scales[16] @ 192, d @ 208
+    // Per llama.cpp: 256 values, 16 scale groups of 16 values each
+    uint16_t d16; std::memcpy(&d16, block + 208, sizeof(d16));
+    const float d = rxd_q6k_f16(d16);
+    if (!std::isfinite(d)) return false;
+
+    const uint8_t* ql = block + 0;
+    const uint8_t* qh = block + 128;
+    const int8_t* sc = reinterpret_cast<const int8_t*>(block + 192);
+    float* yp = dst;
+
+    // Process in two halves of 128 values each
+    // Each half: j=0..127, is = j/16 (0..7), using sc[0..15] for first half
+    // and sc[8..15] for second half (sc += 8)
+    for (int n = 0; n < 256; n += 128) {
+        for (int j = 0; j < 128; ++j) {
+            int is = j / 16;  // 0..7
+            // Each j produces 4 values: y[j], y[j+32], y[j+64], y[j+96]
+            // But j goes 0..127, so j+96 can be 96..223 — need to handle wrapping
+            // Actually in llama.cpp, the loop is j=0..63 (qk/4), not j=0..127
+            // Let me use the correct llama.cpp loop structure
+        }
+        // This approach is wrong — let me use the correct structure
+        break;
+    }
+
+    // Correct llama.cpp Q6_K dequantization:
+    // qk = 256, processed in two halves of 128 values
+    // Each half: 32 iterations of l=0..31, each producing 4 values
+    // Scale index: is = l/16 gives 0 or 1, but we need 0..7
+    // The correct mapping: for l=0..31, the 4 values use scales sc[2*is], sc[2*is+1], etc.
+    // Actually, llama.cpp uses j=0..127 with is=j/16, but processes 4 values per j
+    // at positions j, j+32, j+64, j+96 — but j+96 > 128 for j > 32!
+    //
+    // The ACTUAL llama.cpp code uses j=0..63 (not 0..127):
+    // for (int j = 0; j < qk/4; ++j) {  // qk/4 = 64
+    //     const int is = j / 16;  // 0..3
+    //     ... 4 values at j, j+64, j+128, j+192
+    // }
+    // But that doesn't match our block layout either.
+    //
+    // Let me use the EXACT llama.cpp dequantize_row_q6_K implementation:
+
+    ql = block + 0;
+    qh = block + 128;
+    sc = reinterpret_cast<const int8_t*>(block + 192);
+    yp = dst;
+
+    // llama.cpp: for (int j = 0; j < qk/2; ++j) with qk=256 → j=0..127
+    // But the 4 values are at: y[j], y[j+qk/4], y[j+qk/2], y[j+3*qk/4]
+    // = y[j], y[j+64], y[j+128], y[j+192]
+    // Wait, that can't be right either. Let me check the actual code.
+    //
+    // ACTUAL llama.cpp (ggml-quants.c):
+    // for (int j = 0; j < QK_K/2; ++j) {  // QK_K=256, j=0..127
+    //     const int is = j / 16;  // 0..7
+    //     const int8_t q1 = (int8_t)((ql[j] & 0xF) | (((qh[j] >> 0) & 3) << 4)) - 32;
+    //     const int8_t q2 = (int8_t)((ql[j + 64] & 0xF) | (((qh[j] >> 2) & 3) << 4)) - 32;
+    //     const int8_t q3 = (int8_t)((ql[j] >> 4) | (((qh[j] >> 4) & 3) << 4)) - 32;
+    //     const int8_t q4 = (int8_t)((ql[j + 64] >> 4) | (((qh[j] >> 6) & 3) << 4)) - 32;
+    //     y[j +  0] = d * sc[is + 0] * q1;
+    //     y[j + 32] = d * sc[is + 2] * q2;
+    //     y[j + 64] = d * sc[is + 4] * q3;
+    //     y[j + 96] = d * sc[is + 6] * q4;
+    // }
+    // ql += 64; qh += 32; sc += 8;
+    // ... repeat for second 128 values
+    //
+    // Wait, j goes 0..127 but y[j+96] with j=127 would be y[223] — out of bounds for 256!
+    // Actually, the loop runs j=0..127 but writes to y[j], y[j+32], y[j+64], y[j+96]
+    // For j=0..31: writes to y[0..31], y[32..63], y[64..95], y[96..127] → first 128 values
+    // For j=32..63: writes to y[32..63], y[64..95], y[96..127], y[128..159] → OVERLAP!
+    // This can't be right. The actual llama.cpp code must use j=0..31, not j=0..127.
+    //
+    // Let me look at the ACTUAL code: j goes 0..QK_K/2-1 = 0..127, but the 4 outputs
+    // are at y[j], y[j+QK_K/4], y[j+QK_K/2], y[j+3*QK_K/4] = y[j], y[j+64], y[j+128], y[j+192]
+    // No, that's 256 apart. Let me just use j=0..31 with 4 outputs per j, 2 passes.
+
+    // CORRECT implementation: j=0..31, 4 values per j, 2 passes of 128 values
+    for (int n = 0; n < 256; n += 128) {
+        for (int l = 0; l < 32; ++l) {
+            // is = l/16 gives 0 or 1 — but llama.cpp uses is = l/16 for j=0..31
+            // and sc[is+0], sc[is+2], sc[is+4], sc[is+6]
+            // With is=0: sc[0], sc[2], sc[4], sc[6]
+            // With is=1: sc[1], sc[3], sc[5], sc[7]
+            // Then sc += 8 for next 128 values
+            // This uses sc[0..7] for first 128, sc[8..15] for second 128
+            // Total: all 16 scales used correctly
+            int is = l / 16;
+            const int8_t q1 = (int8_t)((ql[l +  0] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
+            const int8_t q2 = (int8_t)((ql[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+            const int8_t q3 = (int8_t)((ql[l +  0]  >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+            const int8_t q4 = (int8_t)((ql[l + 32]  >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+            yp[l +  0] = d * sc[is + 0] * q1;
+            yp[l + 32] = d * sc[is + 2] * q2;
+            yp[l + 64] = d * sc[is + 4] * q3;
+            yp[l + 96] = d * sc[is + 6] * q4;
+        }
+        yp += 128;
+        ql += 64;
+        qh += 32;
+        sc += 8;
+    }
+    return true;
+}
+
+static inline bool rxd_q6k_dot(
+    const uint8_t* block, const float* x, float& result)
+{
+    float w[256];
+    if (!rxd_q6k_dequant_block(block, w)) { result = 0.0f; return false; }
+    double sum = 0.0;
+    for (int i = 0; i < 256; ++i) {
+        if (!std::isfinite(x[i]) || !std::isfinite(w[i])) { result = 0.0f; return false; }
+        sum += (double)w[i] * (double)x[i];
+    }
+    result = (float)sum;
+    return std::isfinite(result);
+}
+
+static bool rxd_q6k_gemv_reference(
+    const uint8_t* weights, const float* input, float* output,
+    int64_t rows, int64_t cols)
+{
+    if (!weights || !input || !output || rows <= 0 || cols <= 0 || (cols % 256) != 0) {
+        std::fprintf(stderr, "[Q6K_REF] INVALID params: weights=%p input=%p output=%p rows=%lld cols=%lld\n",
+                     (const void*)weights, (const void*)input, (void*)output, (long long)rows, (long long)cols);
+        return false;
+    }
+    const int64_t blocksPerRow = cols / 256;
+    for (int64_t row = 0; row < rows; ++row) {
+        const uint8_t* rowBase = weights + (size_t)row * (size_t)blocksPerRow * 210;
+        double sum = 0.0;
+        for (int64_t b = 0; b < blocksPerRow; ++b) {
+            float dot = 0.0f;
+            if (!rxd_q6k_dot(rowBase + (size_t)b * 210, input + (size_t)b * 256, dot)) {
+                uint16_t d16; std::memcpy(&d16, rowBase + (size_t)b * 210 + 208, sizeof(d16));
+                std::fprintf(stderr, "[Q6K_REF] BLOCK FAIL row=%lld block=%lld d=0x%04X\n",
+                             (long long)row, (long long)b, d16);
+                return false;
+            }
+            sum += (double)dot;
+        }
+        output[row] = (float)sum;
+        if (!std::isfinite(output[row])) {
+            std::fprintf(stderr, "[Q6K_REF] NONFINITE row=%lld sum=%f\n", (long long)row, output[row]);
+            return false;
+        }
+    }
+    return true;
+}
 
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
@@ -516,34 +695,8 @@ static void gemv_q6_k_scalar(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q6_K* rowBlocks = blocks + r * blocksPerRow;
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q6_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
-            if (elemsInBlock == 0) break;
-            for (size_t i = 0; i < elemsInBlock; ++i) {
-                // ql holds low 4 bits: two weights per byte
-                size_t qlIdx  = i / 2;
-                int    qlShift = (i % 2) * 4;
-                uint8_t low4   = (blk.ql[qlIdx] >> qlShift) & 0x0F;
-                // qh holds high 2 bits: four weights per byte
-                size_t qhIdx  = i / 4;
-                int    qhShift = (i % 4) * 2;
-                uint8_t high2  = (blk.qh[qhIdx] >> qhShift) & 0x03;
-                // Reconstruct 6-bit quantized value and subtract bias 32
-                int8_t q = (int8_t)(low4 | (high2 << 4)) - 32;
-                // One scale per 16 weights
-                int scaleIdx = (int)(i / 16);
-                acc += d * (float)blk.scales[scaleIdx] * (float)q * x[base + i];
-            }
-        }
-        y[r] += acc;
+    if (!rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols)) {
+        std::fprintf(stderr, "[Q6K_REF] GEMV FAILED rows=%zu cols=%zu\n", rows, cols);
     }
 }
 

@@ -1,0 +1,985 @@
+=================================================================
+ Deep2Engine.generate() + ElasticResidencyManager Integration
+=================================================================
+Model: G:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+Prompt: "Hello"
+
+[Step 1] Creating Deep2Engine...
+[Deep2Engine] Initializing production inference engine...
+  Hidden Dim: 4096
+  Num Layers: 32
+  Num Heads: 32
+  Max Seq Len: 2048
+  Use ThreadPool: YES
+  Use KV Cache: YES
+  Use RoPE: YES
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+  ThreadPool: 16 threads (auto-detected)
+[KVCache] Initializing: layers=32 maxSeqLen=2048 numHeads=32 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 32 * 2048 * 32 * 128 * 2 * 4
+[KVCache]        = 2147483648 bytes (K=1073741824 + V=1073741824)
+[KVCache] Total cache size: 2048.00 MB
+[KVCache] Initialization complete
+[SAFETY] Crash recovery initialized
+[HotPatcher] Initialized - The Bottle is ready (with safety systems)
+[Deep2Engine] HotPatcher initialized - The Bottle is ready
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=0 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 23 GEMV kernels, 8 dequant kernels
+[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)
+[Deep2Engine] Initialization complete
+[PASS] Engine initialized
+
+[Step 2] Loading GGUF model...
+[Deep2Engine] Loading model from: G:\Franken\BackwardsUnlock\1b\unlock-1B-Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in G:\Franken\BackwardsUnlock\1b)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[GGUF] WARNING: Tensor 'rope_freqs.weight' offset not 64-byte aligned: 7837664
+[GGUF] WARNING: Tensor 'token_embd.weight' offset not 64-byte aligned: 7837920
+[GGUF] WARNING: Tensor 'blk.0.attn_norm.weight' offset not 64-byte aligned: 331043040
+[GGUF] WARNING: Tensor 'blk.0.ffn_down.weight' offset not 64-byte aligned: 331055328
+[GGUF] WARNING: Tensor 'blk.0.ffn_gate.weight' offset not 64-byte aligned: 351699168
+[GGUF] WARNING: Tensor 'blk.0.ffn_up.weight' offset not 64-byte aligned: 365854944
+[GGUF] WARNING: Tensor 'blk.0.ffn_norm.weight' offset not 64-byte aligned: 380010720
+[GGUF] WARNING: Tensor 'blk.0.attn_k.weight' offset not 64-byte aligned: 380023008
+[GGUF] WARNING: Tensor 'blk.0.attn_output.weight' offset not 64-byte aligned: 381792480
+[GGUF] WARNING: Tensor 'blk.0.attn_q.weight' offset not 64-byte aligned: 387100896
+[GGUF] WARNING: Tensor 'blk.0.attn_v.weight' offset not 64-byte aligned: 392409312
+[GGUF] WARNING: Tensor 'blk.1.attn_norm.weight' offset not 64-byte aligned: 394989792
+[GGUF] WARNING: Tensor 'blk.1.ffn_down.weight' offset not 64-byte aligned: 395002080
+[GGUF] WARNING: Tensor 'blk.1.ffn_gate.weight' offset not 64-byte aligned: 415645920
+[GGUF] WARNING: Tensor 'blk.1.ffn_up.weight' offset not 64-byte aligned: 429801696
+[GGUF] WARNING: Tensor 'blk.1.ffn_norm.weight' offset not 64-byte aligned: 443957472
+[GGUF] WARNING: Tensor 'blk.1.attn_k.weight' offset not 64-byte aligned: 443969760
+[GGUF] WARNING: Tensor 'blk.1.attn_output.weight' offset not 64-byte aligned: 445739232
+[GGUF] WARNING: Tensor 'blk.1.attn_q.weight' offset not 64-byte aligned: 451047648
+[GGUF] WARNING: Tensor 'blk.1.attn_v.weight' offset not 64-byte aligned: 456356064
+[GGUF] WARNING: Tensor 'blk.10.attn_norm.weight' offset not 64-byte aligned: 458936544
+[GGUF] WARNING: Tensor 'blk.10.ffn_down.weight' offset not 64-byte aligned: 458948832
+[GGUF] WARNING: Tensor 'blk.10.ffn_gate.weight' offset not 64-byte aligned: 479592672
+[GGUF] WARNING: Tensor 'blk.10.ffn_up.weight' offset not 64-byte aligned: 493748448
+[GGUF] WARNING: Tensor 'blk.10.ffn_norm.weight' offset not 64-byte aligned: 507904224
+[GGUF] WARNING: Tensor 'blk.10.attn_k.weight' offset not 64-byte aligned: 507916512
+[GGUF] WARNING: Tensor 'blk.10.attn_output.weight' offset not 64-byte aligned: 509685984
+[GGUF] WARNING: Tensor 'blk.10.attn_q.weight' offset not 64-byte aligned: 514994400
+[GGUF] WARNING: Tensor 'blk.10.attn_v.weight' offset not 64-byte aligned: 520302816
+[GGUF] WARNING: Tensor 'blk.11.attn_norm.weight' offset not 64-byte aligned: 522883296
+[GGUF] WARNING: Tensor 'blk.11.ffn_down.weight' offset not 64-byte aligned: 522895584
+[GGUF] WARNING: Tensor 'blk.11.ffn_gate.weight' offset not 64-byte aligned: 537051360
+[GGUF] WARNING: Tensor 'blk.11.ffn_up.weight' offset not 64-byte aligned: 551207136
+[GGUF] WARNING: Tensor 'blk.11.ffn_norm.weight' offset not 64-byte aligned: 565362912
+[GGUF] WARNING: Tensor 'blk.11.attn_k.weight' offset not 64-byte aligned: 565375200
+[GGUF] WARNING: Tensor 'blk.11.attn_output.weight' offset not 64-byte aligned: 567144672
+[GGUF] WARNING: Tensor 'blk.11.attn_q.weight' offset not 64-byte aligned: 572453088
+[GGUF] WARNING: Tensor 'blk.11.attn_v.weight' offset not 64-byte aligned: 577761504
+[GGUF] WARNING: Tensor 'blk.12.attn_norm.weight' offset not 64-byte aligned: 579530976
+[GGUF] WARNING: Tensor 'blk.12.ffn_down.weight' offset not 64-byte aligned: 579543264
+[GGUF] WARNING: Tensor 'blk.12.ffn_gate.weight' offset not 64-byte aligned: 593699040
+[GGUF] WARNING: Tensor 'blk.12.ffn_up.weight' offset not 64-byte aligned: 607854816
+[GGUF] WARNING: Tensor 'blk.12.ffn_norm.weight' offset not 64-byte aligned: 622010592
+[GGUF] WARNING: Tensor 'blk.12.attn_k.weight' offset not 64-byte aligned: 622022880
+[GGUF] WARNING: Tensor 'blk.12.attn_output.weight' offset not 64-byte aligned: 623792352
+[GGUF] WARNING: Tensor 'blk.12.attn_q.weight' offset not 64-byte aligned: 629100768
+[GGUF] WARNING: Tensor 'blk.12.attn_v.weight' offset not 64-byte aligned: 634409184
+[GGUF] WARNING: Tensor 'blk.13.attn_norm.weight' offset not 64-byte aligned: 636178656
+[GGUF] WARNING: Tensor 'blk.13.ffn_down.weight' offset not 64-byte aligned: 636190944
+[GGUF] WARNING: Tensor 'blk.13.ffn_gate.weight' offset not 64-byte aligned: 656834784
+[GGUF] WARNING: Tensor 'blk.13.ffn_up.weight' offset not 64-byte aligned: 670990560
+[GGUF] WARNING: Tensor 'blk.13.ffn_norm.weight' offset not 64-byte aligned: 685146336
+[GGUF] WARNING: Tensor 'blk.13.attn_k.weight' offset not 64-byte aligned: 685158624
+[GGUF] WARNING: Tensor 'blk.13.attn_output.weight' offset not 64-byte aligned: 686928096
+[GGUF] WARNING: Tensor 'blk.13.attn_q.weight' offset not 64-byte aligned: 692236512
+[GGUF] WARNING: Tensor 'blk.13.attn_v.weight' offset not 64-byte aligned: 697544928
+[GGUF] WARNING: Tensor 'blk.14.attn_norm.weight' offset not 64-byte aligned: 700125408
+[GGUF] WARNING: Tensor 'blk.14.ffn_down.weight' offset not 64-byte aligned: 700137696
+[GGUF] WARNING: Tensor 'blk.14.ffn_gate.weight' offset not 64-byte aligned: 714293472
+[GGUF] WARNING: Tensor 'blk.14.ffn_up.weight' offset not 64-byte aligned: 728449248
+[GGUF] WARNING: Tensor 'blk.14.ffn_norm.weight' offset not 64-byte aligned: 742605024
+[GGUF] WARNING: Tensor 'blk.14.attn_k.weight' offset not 64-byte aligned: 742617312
+[GGUF] WARNING: Tensor 'blk.14.attn_output.weight' offset not 64-byte aligned: 744386784
+[GGUF] WARNING: Tensor 'blk.14.attn_q.weight' offset not 64-byte aligned: 749695200
+[GGUF] WARNING: Tensor 'blk.14.attn_v.weight' offset not 64-byte aligned: 755003616
+[GGUF] WARNING: Tensor 'blk.15.attn_norm.weight' offset not 64-byte aligned: 756773088
+[GGUF] WARNING: Tensor 'blk.15.ffn_down.weight' offset not 64-byte aligned: 756785376
+[GGUF] WARNING: Tensor 'blk.15.ffn_gate.weight' offset not 64-byte aligned: 770941152
+[GGUF] WARNING: Tensor 'blk.15.ffn_up.weight' offset not 64-byte aligned: 785096928
+[GGUF] WARNING: Tensor 'blk.15.ffn_norm.weight' offset not 64-byte aligned: 799252704
+[GGUF] WARNING: Tensor 'blk.15.attn_k.weight' offset not 64-byte aligned: 799264992
+[GGUF] WARNING: Tensor 'blk.15.attn_output.weight' offset not 64-byte aligned: 801034464
+[GGUF] WARNING: Tensor 'blk.15.attn_q.weight' offset not 64-byte aligned: 806342880
+[GGUF] WARNING: Tensor 'blk.15.attn_v.weight' offset not 64-byte aligned: 811651296
+[GGUF] WARNING: Tensor 'blk.16.attn_norm.weight' offset not 64-byte aligned: 813420768
+[GGUF] WARNING: Tensor 'blk.16.ffn_down.weight' offset not 64-byte aligned: 813433056
+[GGUF] WARNING: Tensor 'blk.16.ffn_gate.weight' offset not 64-byte aligned: 834076896
+[GGUF] WARNING: Tensor 'blk.16.ffn_up.weight' offset not 64-byte aligned: 848232672
+[GGUF] WARNING: Tensor 'blk.16.ffn_norm.weight' offset not 64-byte aligned: 862388448
+[GGUF] WARNING: Tensor 'blk.16.attn_k.weight' offset not 64-byte aligned: 862400736
+[GGUF] WARNING: Tensor 'blk.16.attn_output.weight' offset not 64-byte aligned: 864170208
+[GGUF] WARNING: Tensor 'blk.16.attn_q.weight' offset not 64-byte aligned: 869478624
+[GGUF] WARNING: Tensor 'blk.16.attn_v.weight' offset not 64-byte aligned: 874787040
+[GGUF] WARNING: Tensor 'blk.17.attn_norm.weight' offset not 64-byte aligned: 877367520
+[GGUF] WARNING: Tensor 'blk.17.ffn_down.weight' offset not 64-byte aligned: 877379808
+[GGUF] WARNING: Tensor 'blk.17.ffn_gate.weight' offset not 64-byte aligned: 891535584
+[GGUF] WARNING: Tensor 'blk.17.ffn_up.weight' offset not 64-byte aligned: 905691360
+[GGUF] WARNING: Tensor 'blk.17.ffn_norm.weight' offset not 64-byte aligned: 919847136
+[GGUF] WARNING: Tensor 'blk.17.attn_k.weight' offset not 64-byte aligned: 919859424
+[GGUF] WARNING: Tensor 'blk.17.attn_output.weight' offset not 64-byte aligned: 921628896
+[GGUF] WARNING: Tensor 'blk.17.attn_q.weight' offset not 64-byte aligned: 926937312
+[GGUF] WARNING: Tensor 'blk.17.attn_v.weight' offset not 64-byte aligned: 932245728
+[GGUF] WARNING: Tensor 'blk.18.attn_norm.weight' offset not 64-byte aligned: 934015200
+[GGUF] WARNING: Tensor 'blk.18.ffn_down.weight' offset not 64-byte aligned: 934027488
+[GGUF] WARNING: Tensor 'blk.18.ffn_gate.weight' offset not 64-byte aligned: 948183264
+[GGUF] WARNING: Tensor 'blk.18.ffn_up.weight' offset not 64-byte aligned: 962339040
+[GGUF] WARNING: Tensor 'blk.18.ffn_norm.weight' offset not 64-byte aligned: 976494816
+[GGUF] WARNING: Tensor 'blk.18.attn_k.weight' offset not 64-byte aligned: 976507104
+[GGUF] WARNING: Tensor 'blk.18.attn_output.weight' offset not 64-byte aligned: 978276576
+[GGUF] WARNING: Tensor 'blk.18.attn_q.weight' offset not 64-byte aligned: 983584992
+[GGUF] WARNING: Tensor 'blk.18.attn_v.weight' offset not 64-byte aligned: 988893408
+[GGUF] WARNING: Tensor 'blk.19.attn_norm.weight' offset not 64-byte aligned: 990662880
+[GGUF] WARNING: Tensor 'blk.19.ffn_down.weight' offset not 64-byte aligned: 990675168
+[GGUF] WARNING: Tensor 'blk.19.ffn_gate.weight' offset not 64-byte aligned: 1011319008
+[GGUF] WARNING: Tensor 'blk.19.ffn_up.weight' offset not 64-byte aligned: 1025474784
+[GGUF] WARNING: Tensor 'blk.19.ffn_norm.weight' offset not 64-byte aligned: 1039630560
+[GGUF] WARNING: Tensor 'blk.19.attn_k.weight' offset not 64-byte aligned: 1039642848
+[GGUF] WARNING: Tensor 'blk.19.attn_output.weight' offset not 64-byte aligned: 1041412320
+[GGUF] WARNING: Tensor 'blk.19.attn_q.weight' offset not 64-byte aligned: 1046720736
+[GGUF] WARNING: Tensor 'blk.19.attn_v.weight' offset not 64-byte aligned: 1052029152
+[GGUF] WARNING: Tensor 'blk.2.attn_norm.weight' offset not 64-byte aligned: 1054609632
+[GGUF] WARNING: Tensor 'blk.2.ffn_down.weight' offset not 64-byte aligned: 1054621920
+[GGUF] WARNING: Tensor 'blk.2.ffn_gate.weight' offset not 64-byte aligned: 1068777696
+[GGUF] WARNING: Tensor 'blk.2.ffn_up.weight' offset not 64-byte aligned: 1082933472
+[GGUF] WARNING: Tensor 'blk.2.ffn_norm.weight' offset not 64-byte aligned: 1097089248
+[GGUF] WARNING: Tensor 'blk.2.attn_k.weight' offset not 64-byte aligned: 1097101536
+[GGUF] WARNING: Tensor 'blk.2.attn_output.weight' offset not 64-byte aligned: 1098871008
+[GGUF] WARNING: Tensor 'blk.2.attn_q.weight' offset not 64-byte aligned: 1104179424
+[GGUF] WARNING: Tensor 'blk.2.attn_v.weight' offset not 64-byte aligned: 1109487840
+[GGUF] WARNING: Tensor 'blk.20.ffn_gate.weight' offset not 64-byte aligned: 1111257312
+[GGUF] WARNING: Tensor 'blk.20.ffn_up.weight' offset not 64-byte aligned: 1125413088
+[GGUF] WARNING: Tensor 'blk.20.attn_k.weight' offset not 64-byte aligned: 1139568864
+[GGUF] WARNING: Tensor 'blk.20.attn_output.weight' offset not 64-byte aligned: 1141338336
+[GGUF] WARNING: Tensor 'blk.20.attn_q.weight' offset not 64-byte aligned: 1146646752
+[GGUF] WARNING: Tensor 'blk.20.attn_v.weight' offset not 64-byte aligned: 1151955168
+[GGUF] WARNING: Tensor 'blk.3.attn_norm.weight' offset not 64-byte aligned: 1153724640
+[GGUF] WARNING: Tensor 'blk.3.ffn_down.weight' offset not 64-byte aligned: 1153736928
+[GGUF] WARNING: Tensor 'blk.3.ffn_gate.weight' offset not 64-byte aligned: 1167892704
+[GGUF] WARNING: Tensor 'blk.3.ffn_up.weight' offset not 64-byte aligned: 1182048480
+[GGUF] WARNING: Tensor 'blk.3.ffn_norm.weight' offset not 64-byte aligned: 1196204256
+[GGUF] WARNING: Tensor 'blk.3.attn_k.weight' offset not 64-byte aligned: 1196216544
+[GGUF] WARNING: Tensor 'blk.3.attn_output.weight' offset not 64-byte aligned: 1197986016
+[GGUF] WARNING: Tensor 'blk.3.attn_q.weight' offset not 64-byte aligned: 1203294432
+[GGUF] WARNING: Tensor 'blk.3.attn_v.weight' offset not 64-byte aligned: 1208602848
+[GGUF] WARNING: Tensor 'blk.4.attn_norm.weight' offset not 64-byte aligned: 1211183328
+[GGUF] WARNING: Tensor 'blk.4.ffn_down.weight' offset not 64-byte aligned: 1211195616
+[GGUF] WARNING: Tensor 'blk.4.ffn_gate.weight' offset not 64-byte aligned: 1231839456
+[GGUF] WARNING: Tensor 'blk.4.ffn_up.weight' offset not 64-byte aligned: 1245995232
+[GGUF] WARNING: Tensor 'blk.4.ffn_norm.weight' offset not 64-byte aligned: 1260151008
+[GGUF] WARNING: Tensor 'blk.4.attn_k.weight' offset not 64-byte aligned: 1260163296
+[GGUF] WARNING: Tensor 'blk.4.attn_output.weight' offset not 64-byte aligned: 1261932768
+[GGUF] WARNING: Tensor 'blk.4.attn_q.weight' offset not 64-byte aligned: 1267241184
+[GGUF] WARNING: Tensor 'blk.4.attn_v.weight' offset not 64-byte aligned: 1272549600
+[GGUF] WARNING: Tensor 'blk.5.attn_norm.weight' offset not 64-byte aligned: 1274319072
+[GGUF] WARNING: Tensor 'blk.5.ffn_down.weight' offset not 64-byte aligned: 1274331360
+[GGUF] WARNING: Tensor 'blk.5.ffn_gate.weight' offset not 64-byte aligned: 1288487136
+[GGUF] WARNING: Tensor 'blk.5.ffn_up.weight' offset not 64-byte aligned: 1302642912
+[GGUF] WARNING: Tensor 'blk.5.ffn_norm.weight' offset not 64-byte aligned: 1316798688
+[GGUF] WARNING: Tensor 'blk.5.attn_k.weight' offset not 64-byte aligned: 1316810976
+[GGUF] WARNING: Tensor 'blk.5.attn_output.weight' offset not 64-byte aligned: 1318580448
+[GGUF] WARNING: Tensor 'blk.5.attn_q.weight' offset not 64-byte aligned: 1323888864
+[GGUF] WARNING: Tensor 'blk.5.attn_v.weight' offset not 64-byte aligned: 1329197280
+[GGUF] WARNING: Tensor 'blk.6.attn_norm.weight' offset not 64-byte aligned: 1330966752
+[GGUF] WARNING: Tensor 'blk.6.ffn_down.weight' offset not 64-byte aligned: 1330979040
+[GGUF] WARNING: Tensor 'blk.6.ffn_gate.weight' offset not 64-byte aligned: 1345134816
+[GGUF] WARNING: Tensor 'blk.6.ffn_up.weight' offset not 64-byte aligned: 1359290592
+[GGUF] WARNING: Tensor 'blk.6.ffn_norm.weight' offset not 64-byte aligned: 1373446368
+[GGUF] WARNING: Tensor 'blk.6.attn_k.weight' offset not 64-byte aligned: 1373458656
+[GGUF] WARNING: Tensor 'blk.6.attn_output.weight' offset not 64-byte aligned: 1375228128
+[GGUF] WARNING: Tensor 'blk.6.attn_q.weight' offset not 64-byte aligned: 1380536544
+[GGUF] WARNING: Tensor 'blk.6.attn_v.weight' offset not 64-byte aligned: 1385844960
+[GGUF] WARNING: Tensor 'blk.7.attn_norm.weight' offset not 64-byte aligned: 1388425440
+[GGUF] WARNING: Tensor 'blk.7.ffn_down.weight' offset not 64-byte aligned: 1388437728
+[GGUF] WARNING: Tensor 'blk.7.ffn_gate.weight' offset not 64-byte aligned: 1409081568
+[GGUF] WARNING: Tensor 'blk.7.ffn_up.weight' offset not 64-byte aligned: 1423237344
+[GGUF] WARNING: Tensor 'blk.7.ffn_norm.weight' offset not 64-byte aligned: 1437393120
+[GGUF] WARNING: Tensor 'blk.7.attn_k.weight' offset not 64-byte aligned: 1437405408
+[GGUF] WARNING: Tensor 'blk.7.attn_output.weight' offset not 64-byte aligned: 1439174880
+[GGUF] WARNING: Tensor 'blk.7.attn_q.weight' offset not 64-byte aligned: 1444483296
+[GGUF] WARNING: Tensor 'blk.7.attn_v.weight' offset not 64-byte aligned: 1449791712
+[GGUF] WARNING: Tensor 'blk.8.attn_norm.weight' offset not 64-byte aligned: 1451561184
+[GGUF] WARNING: Tensor 'blk.8.ffn_down.weight' offset not 64-byte aligned: 1451573472
+[GGUF] WARNING: Tensor 'blk.8.ffn_gate.weight' offset not 64-byte aligned: 1465729248
+[GGUF] WARNING: Tensor 'blk.8.ffn_up.weight' offset not 64-byte aligned: 1479885024
+[GGUF] WARNING: Tensor 'blk.8.ffn_norm.weight' offset not 64-byte aligned: 1494040800
+[GGUF] WARNING: Tensor 'blk.8.attn_k.weight' offset not 64-byte aligned: 1494053088
+[GGUF] WARNING: Tensor 'blk.8.attn_output.weight' offset not 64-byte aligned: 1495822560
+[GGUF] WARNING: Tensor 'blk.8.attn_q.weight' offset not 64-byte aligned: 1501130976
+[GGUF] WARNING: Tensor 'blk.8.attn_v.weight' offset not 64-byte aligned: 1506439392
+[GGUF] WARNING: Tensor 'blk.9.attn_norm.weight' offset not 64-byte aligned: 1508208864
+[GGUF] WARNING: Tensor 'blk.9.ffn_down.weight' offset not 64-byte aligned: 1508221152
+[GGUF] WARNING: Tensor 'blk.9.ffn_gate.weight' offset not 64-byte aligned: 1522376928
+[GGUF] WARNING: Tensor 'blk.9.ffn_up.weight' offset not 64-byte aligned: 1536532704
+[GGUF] WARNING: Tensor 'blk.9.ffn_norm.weight' offset not 64-byte aligned: 1550688480
+[GGUF] WARNING: Tensor 'blk.9.attn_k.weight' offset not 64-byte aligned: 1550700768
+[GGUF] WARNING: Tensor 'blk.9.attn_output.weight' offset not 64-byte aligned: 1552470240
+[GGUF] WARNING: Tensor 'blk.9.attn_q.weight' offset not 64-byte aligned: 1557778656
+[GGUF] WARNING: Tensor 'blk.9.attn_v.weight' offset not 64-byte aligned: 1563087072
+[GGUF] WARNING: Tensor 'blk.20.attn_norm.weight' offset not 64-byte aligned: 1565667552
+[GGUF] WARNING: Tensor 'blk.20.ffn_down.weight' offset not 64-byte aligned: 1565679840
+[GGUF] WARNING: Tensor 'blk.20.ffn_norm.weight' offset not 64-byte aligned: 1586323680
+[GGUF] WARNING: Tensor 'blk.21.attn_norm.weight' offset not 64-byte aligned: 1586335968
+[GGUF] WARNING: Tensor 'blk.21.ffn_down.weight' offset not 64-byte aligned: 1586348256
+[GGUF] WARNING: Tensor 'blk.21.ffn_gate.weight' offset not 64-byte aligned: 1600504032
+[GGUF] WARNING: Tensor 'blk.21.ffn_up.weight' offset not 64-byte aligned: 1614659808
+[GGUF] WARNING: Tensor 'blk.21.ffn_norm.weight' offset not 64-byte aligned: 1628815584
+[GGUF] WARNING: Tensor 'blk.21.attn_k.weight' offset not 64-byte aligned: 1628827872
+[GGUF] WARNING: Tensor 'blk.21.attn_output.weight' offset not 64-byte aligned: 1630597344
+[GGUF] WARNING: Tensor 'blk.21.attn_q.weight' offset not 64-byte aligned: 1635905760
+[GGUF] WARNING: Tensor 'blk.21.attn_v.weight' offset not 64-byte aligned: 1641214176
+[GGUF] WARNING: Tensor 'blk.22.attn_norm.weight' offset not 64-byte aligned: 1642983648
+[GGUF] WARNING: Tensor 'blk.22.ffn_down.weight' offset not 64-byte aligned: 1642995936
+[GGUF] WARNING: Tensor 'blk.22.ffn_gate.weight' offset not 64-byte aligned: 1657151712
+[GGUF] WARNING: Tensor 'blk.22.ffn_up.weight' offset not 64-byte aligned: 1671307488
+[GGUF] WARNING: Tensor 'blk.22.ffn_norm.weight' offset not 64-byte aligned: 1685463264
+[GGUF] WARNING: Tensor 'blk.22.attn_k.weight' offset not 64-byte aligned: 1685475552
+[GGUF] WARNING: Tensor 'blk.22.attn_output.weight' offset not 64-byte aligned: 1687245024
+[GGUF] WARNING: Tensor 'blk.22.attn_q.weight' offset not 64-byte aligned: 1692553440
+[GGUF] WARNING: Tensor 'blk.22.attn_v.weight' offset not 64-byte aligned: 1697861856
+[GGUF] WARNING: Tensor 'blk.23.attn_norm.weight' offset not 64-byte aligned: 1699631328
+[GGUF] WARNING: Tensor 'blk.23.ffn_down.weight' offset not 64-byte aligned: 1699643616
+[GGUF] WARNING: Tensor 'blk.23.ffn_gate.weight' offset not 64-byte aligned: 1720287456
+[GGUF] WARNING: Tensor 'blk.23.ffn_up.weight' offset not 64-byte aligned: 1734443232
+[GGUF] WARNING: Tensor 'blk.23.ffn_norm.weight' offset not 64-byte aligned: 1748599008
+[GGUF] WARNING: Tensor 'blk.23.attn_k.weight' offset not 64-byte aligned: 1748611296
+[GGUF] WARNING: Tensor 'blk.23.attn_output.weight' offset not 64-byte aligned: 1750380768
+[GGUF] WARNING: Tensor 'blk.23.attn_q.weight' offset not 64-byte aligned: 1755689184
+[GGUF] WARNING: Tensor 'blk.23.attn_v.weight' offset not 64-byte aligned: 1760997600
+[GGUF] WARNING: Tensor 'blk.24.attn_norm.weight' offset not 64-byte aligned: 1763578080
+[GGUF] WARNING: Tensor 'blk.24.ffn_down.weight' offset not 64-byte aligned: 1763590368
+[GGUF] WARNING: Tensor 'blk.24.ffn_gate.weight' offset not 64-byte aligned: 1784234208
+[GGUF] WARNING: Tensor 'blk.24.ffn_up.weight' offset not 64-byte aligned: 1798389984
+[GGUF] WARNING: Tensor 'blk.24.ffn_norm.weight' offset not 64-byte aligned: 1812545760
+[GGUF] WARNING: Tensor 'blk.24.attn_k.weight' offset not 64-byte aligned: 1812558048
+[GGUF] WARNING: Tensor 'blk.24.attn_output.weight' offset not 64-byte aligned: 1814327520
+[GGUF] WARNING: Tensor 'blk.24.attn_q.weight' offset not 64-byte aligned: 1819635936
+[GGUF] WARNING: Tensor 'blk.24.attn_v.weight' offset not 64-byte aligned: 1824944352
+[GGUF] WARNING: Tensor 'blk.25.attn_norm.weight' offset not 64-byte aligned: 1827524832
+[GGUF] WARNING: Tensor 'blk.25.ffn_down.weight' offset not 64-byte aligned: 1827537120
+[GGUF] WARNING: Tensor 'blk.25.ffn_gate.weight' offset not 64-byte aligned: 1848180960
+[GGUF] WARNING: Tensor 'blk.25.ffn_up.weight' offset not 64-byte aligned: 1862336736
+[GGUF] WARNING: Tensor 'blk.25.ffn_norm.weight' offset not 64-byte aligned: 1876492512
+[GGUF] WARNING: Tensor 'blk.25.attn_k.weight' offset not 64-byte aligned: 1876504800
+[GGUF] WARNING: Tensor 'blk.25.attn_output.weight' offset not 64-byte aligned: 1878274272
+[GGUF] WARNING: Tensor 'blk.25.attn_q.weight' offset not 64-byte aligned: 1883582688
+[GGUF] WARNING: Tensor 'blk.25.attn_v.weight' offset not 64-byte aligned: 1888891104
+[GGUF] WARNING: Tensor 'blk.26.attn_norm.weight' offset not 64-byte aligned: 1891471584
+[GGUF] WARNING: Tensor 'blk.26.ffn_down.weight' offset not 64-byte aligned: 1891483872
+[GGUF] WARNING: Tensor 'blk.26.ffn_gate.weight' offset not 64-byte aligned: 1912127712
+[GGUF] WARNING: Tensor 'blk.26.ffn_up.weight' offset not 64-byte aligned: 1926283488
+[GGUF] WARNING: Tensor 'blk.26.ffn_norm.weight' offset not 64-byte aligned: 1940439264
+[GGUF] WARNING: Tensor 'blk.26.attn_k.weight' offset not 64-byte aligned: 1940451552
+[GGUF] WARNING: Tensor 'blk.26.attn_output.weight' offset not 64-byte aligned: 1942221024
+[GGUF] WARNING: Tensor 'blk.26.attn_q.weight' offset not 64-byte aligned: 1947529440
+[GGUF] WARNING: Tensor 'blk.26.attn_v.weight' offset not 64-byte aligned: 1952837856
+[GGUF] WARNING: Tensor 'blk.27.attn_norm.weight' offset not 64-byte aligned: 1955418336
+[GGUF] WARNING: Tensor 'blk.27.ffn_down.weight' offset not 64-byte aligned: 1955430624
+[GGUF] WARNING: Tensor 'blk.27.ffn_gate.weight' offset not 64-byte aligned: 1976074464
+[GGUF] WARNING: Tensor 'blk.27.ffn_up.weight' offset not 64-byte aligned: 1990230240
+[GGUF] WARNING: Tensor 'blk.27.ffn_norm.weight' offset not 64-byte aligned: 2004386016
+[GGUF] WARNING: Tensor 'blk.27.attn_k.weight' offset not 64-byte aligned: 2004398304
+[GGUF] WARNING: Tensor 'blk.27.attn_output.weight' offset not 64-byte aligned: 2006167776
+[GGUF] WARNING: Tensor 'blk.27.attn_q.weight' offset not 64-byte aligned: 2011476192
+[GGUF] WARNING: Tensor 'blk.27.attn_v.weight' offset not 64-byte aligned: 2016784608
+[GGUF] WARNING: Tensor 'output_norm.weight' offset not 64-byte aligned: 2019365088
+[Deep2Engine] Tokenizer loaded: 128256 tokens from GGUF
+[WO_DIAG] GGUF wo.data=0000017758A00000 rows=3072 cols=3072 type=12 first16=[0.000000,-0.000000,-0.062498,-1376.232178] min=-276991511889969152.000000 max=346021920311449831171356123725824.000000 nz=16
+[Deep2Engine] Using tied embeddings
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000176BAA8DC70  Registered 'blk.0.attn_q.weight': offset=0 bytes=5308416  |  registry_size=1  registeredBytes=5308416  maxResidentBytes=536870912
+[ResidencyManager] this=00000176BAA8DC70  Registered 'blk.11.attn_q.weight': offset=0 bytes=5308416  |  registry_size=100  registeredBytes=665739264  maxResidentBytes=536870912
+[ResidencyManager] this=00000176BAA8DC70  Registered 'blk.22.attn_k.weight': offset=0 bytes=1769472  |  registry_size=200  registeredBytes=1319018496  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=00000176BAA8DC70  registered=254 tensors  bytes=2011539456  max=536870912
+[KVCache] Initializing: layers=28 maxSeqLen=2048 numHeads=24 headDim=128
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 28 * 2048 * 24 * 128 * 2 * 4
+[KVCache]        = 1409286144 bytes (K=704643072 + V=704643072)
+[KVCache] Total cache size: 1344.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (255 tensors)
+[PASS] Model loaded
+  Layers: 28, Hidden: 3072, Vocab: 128256
+
+[Step 3] Enabling ElasticResidencyManager...
+[ElasticResidencyManager] GhostCache enabled: capacity=16384 entries
+[ElasticResidencyManager] Initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB, lookahead=2
+[Deep2Engine] ElasticResidencyManager initialized: warmCompressed=4096 MB, warmStaged=512 MB, hot=2048 MB
+[PASS] Elastic residency enabled
+
+[Step 4] Tokenizing prompt...
+[PASS] Tokenized to 1 tokens: 9906 ...
+
+[Step 5] Generating tokens...
+[Deep2Engine] embedToken: type=14 vocabSize=128256 hiddenDim=3072 data=0000017742540000 sizeBytes=323205120
+[ElasticResidencyManager] Scheduler thread started
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[Deep2Engine] Layer 0 weights: wq.data=0000017758F10000 type=12 wk.data=0000017758850000 wv.data=0000017759420000 wo.data=0000017758A00000 wqkv.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=0000017755980000 ffnNorm.data=0000017758840000
+[B3_STATE] phase=LAYER0_INPUT pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_K rows=192 cols=3072
+[B3_STATE] phase=LAYER0_POST_ATTN pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q6_K rows=192 cols=8192
+[B3_STATE] phase=LAYER0_POST_FFN pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER1_INPUT pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_K rows=192 cols=3072
+[B3_STATE] phase=LAYER1_POST_ATTN pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q6_K rows=192 cols=8192
+[B3_STATE] phase=LAYER1_POST_FFN pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER2_INPUT pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_K rows=192 cols=3072
+[B3_STATE] phase=LAYER2_POST_ATTN pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_K rows=192 cols=8192
+[B3_STATE] phase=LAYER2_POST_FFN pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER3_INPUT pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_v.weight type=Q6_K rows=64 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_K rows=192 cols=3072
+[B3_STATE] phase=LAYER3_POST_ATTN pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_K rows=512 cols=3072
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_K rows=192 cols=8192
+[B3_STATE] phase=LAYER3_POST_FFN pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_INPUT pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_K rows=64 cols=3072
+[KERNEL] tensor=blk.4.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_output.weight type=Q4_K rows=192 cols=3072
+[KERNEL] tensor=blk.4.attn_output.weight type=Q4_K rows=192 cols=3072
+[B3_STATE] phase=LAYER4_POST_ATTN pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_POST_FFN pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_INPUT pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_ATTN pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_FFN pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_INPUT pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_ATTN pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_FFN pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_INPUT pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_ATTN pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_FFN pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_INPUT pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_ATTN pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_FFN pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_INPUT pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_ATTN pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_FFN pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_INPUT pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_ATTN pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_FFN pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_INPUT pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_ATTN pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_FFN pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_INPUT pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_ATTN pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_FFN pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_INPUT pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_ATTN pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_FFN pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_INPUT pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_ATTN pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_FFN pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_INPUT pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_ATTN pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_FFN pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_INPUT pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_ATTN pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_FFN pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_INPUT pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_ATTN pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_FFN pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_INPUT pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_ATTN pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_FFN pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_INPUT pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_ATTN pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_FFN pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_INPUT pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_ATTN pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_FFN pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER21_INPUT pos=21 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER21_POST_ATTN pos=21 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER21_POST_FFN pos=21 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER22_INPUT pos=22 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER22_POST_ATTN pos=22 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER22_POST_FFN pos=22 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER23_INPUT pos=23 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER23_POST_ATTN pos=23 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER23_POST_FFN pos=23 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER24_INPUT pos=24 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER24_POST_ATTN pos=24 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER24_POST_FFN pos=24 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER25_INPUT pos=25 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER25_POST_ATTN pos=25 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER25_POST_FFN pos=25 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER26_INPUT pos=26 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER26_POST_ATTN pos=26 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER26_POST_FFN pos=26 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER27_INPUT pos=27 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER27_POST_ATTN pos=27 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER27_POST_FFN pos=27 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=PROMPT_POST_LAYERS pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=PROMPT_FINAL_NORM pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER0_INPUT pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER0_POST_ATTN pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER0_POST_FFN pos=0 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER1_INPUT pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER1_POST_ATTN pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER1_POST_FFN pos=1 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER2_INPUT pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER2_POST_ATTN pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER2_POST_FFN pos=2 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER3_INPUT pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER3_POST_ATTN pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER3_POST_FFN pos=3 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_INPUT pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_POST_ATTN pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_POST_FFN pos=4 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_INPUT pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_ATTN pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_FFN pos=5 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_INPUT pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_ATTN pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_FFN pos=6 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_INPUT pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_ATTN pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_FFN pos=7 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_INPUT pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_ATTN pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_FFN pos=8 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_INPUT pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_ATTN pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_FFN pos=9 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_INPUT pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_ATTN pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_FFN pos=10 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_INPUT pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_ATTN pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_FFN pos=11 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_INPUT pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_ATTN pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_FFN pos=12 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_INPUT pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_ATTN pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_FFN pos=13 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_INPUT pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_ATTN pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_FFN pos=14 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_INPUT pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_ATTN pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_FFN pos=15 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_INPUT pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_ATTN pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_FFN pos=16 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_INPUT pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_ATTN pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_FFN pos=17 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_INPUT pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_ATTN pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_FFN pos=18 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_INPUT pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_ATTN pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_FFN pos=19 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_INPUT pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_ATTN pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_FFN pos=20 size=3072 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER21_I

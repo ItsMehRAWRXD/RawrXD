@@ -75,6 +75,8 @@ struct LayerWeights {
     WeightTensor wo;          // [hiddenDim, hiddenDim]
     WeightTensor wqkv;        // [hiddenDim + 2*kvDim, hiddenDim] fused QKV (Phi-3, etc.)
     WeightTensor attnNorm;    // [hiddenDim] RMSNorm weights
+    WeightTensor attnQNorm;   // [headDim] per-head Q RMSNorm (Qwen3.5)
+    WeightTensor attnKNorm;   // [headDim] per-head K RMSNorm (Qwen3.5)
 
     // MLA (Multi-Latent Attention) — K2 factorized attention
     // Q-path: hidden → q_a (GEMV) → RMSNorm → q_b (GEMV)
@@ -104,6 +106,16 @@ struct LayerWeights {
     WeightTensor moeSharedGate;  // [sharedIntermediate, hiddenDim]
     WeightTensor moeSharedUp;    // [sharedIntermediate, hiddenDim]
     WeightTensor moeSharedDown;  // [hiddenDim, sharedIntermediate]
+
+    // SSM / Mamba (State Space Model) — hybrid architecture support
+    WeightTensor ssmA;          // [ssmStateDim] — SSM state transition parameters (F32)
+    WeightTensor ssmAlpha;      // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
+    WeightTensor ssmBeta;       // [ssmStateDim, hiddenDim] — input projection to state (Q4_K)
+    WeightTensor ssmConv1d;     // [convKernelSize, hiddenDim*2] — causal conv1d weights (F32)
+    WeightTensor ssmDtBias;     // [ssmStateDim] — delta_t bias (F32)
+    WeightTensor ssmNorm;       // [ssmStateDim] — RMSNorm weights for SSM path (F32)
+    WeightTensor ssmOut;        // [hiddenDim, hiddenDim] — SSM output projection (Q4_K)
+    bool         hasSSM = false; // true when SSM tensors are populated
 };
 
 // ============================================================================
@@ -604,7 +616,16 @@ private:
     float* mlaQ_b = nullptr;      // [numHeads * headDim]
     float* mlaK_b = nullptr;      // [numHeads * qkNopeHeadDim]
     float* mlaV_b = nullptr;      // [numHeads * vHeadDim]
-    
+
+    // SSM / Mamba buffers
+    float* ssmState = nullptr;      // [numLayers * ssmStateDim] — per-layer SSM hidden state
+    float* ssmConvState = nullptr;  // [numLayers * ssmConvSize * hiddenDim] — causal conv1d state
+    float* ssmX = nullptr;          // [hiddenDim] — SSM input buffer
+    float* ssmY = nullptr;          // [hiddenDim] — SSM output buffer
+    float* ssmTemp = nullptr;       // [hiddenDim] — SSM temp buffer
+    size_t ssmStateDim = 32;        // SSM state dimension (from tensor dims)
+    size_t ssmConvKernel = 4;       // Conv1d kernel size (from tensor dims)
+
     bool initialized = false;
     
     // Internal methods
@@ -630,7 +651,10 @@ private:
     
     // Shared expert FFN
     void computeSharedExpertFFN(size_t layer, const float* input, float* output);
-    
+
+    // SSM / Mamba forward pass (selective scan + causal conv1d)
+    void computeSSM(size_t layer, const float* input, float* output);
+
     // Sampling
     int sampleToken(const float* logits);
 

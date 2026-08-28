@@ -348,19 +348,41 @@ bool GGUFEmbeddedTokenizer::EncodeLongestMatch(
     if (text.empty())
         return true;
 
-    size_t pos = 0;
+    // SentencePiece normalization: replace leading space with ▁ (U+2581).
+    // The GGUF vocabulary stores tokens with ▁ as the space marker.
+    // Without this, "Hello" won't match "▁Hello" (token 15043).
+    std::string normalized;
+    normalized.reserve(text.size() + 3);
 
-    while (pos < text.size()) {
+    if (text[0] == ' ') {
+        // Replace leading space with ▁ (UTF-8: 0xE2 0x96 0x81)
+        normalized.push_back(static_cast<char>(0xE2));
+        normalized.push_back(static_cast<char>(0x96));
+        normalized.push_back(static_cast<char>(0x81));
+        normalized.append(text.substr(1));
+    } else {
+        // No leading space — prepend ▁ to match vocabulary entries
+        // that start with ▁ (SentencePiece convention)
+        normalized.push_back(static_cast<char>(0xE2));
+        normalized.push_back(static_cast<char>(0x96));
+        normalized.push_back(static_cast<char>(0x81));
+        normalized.append(text);
+    }
+
+    size_t pos = 0;
+    std::string_view normView(normalized);
+
+    while (pos < normView.size()) {
         size_t bestLength = 0;
         uint32_t bestId = 0;
 
         // Longest-match search. Cap prevents pathological work.
         const size_t maxProbe =
-            std::min<size_t>(64, text.size() - pos);
+            std::min<size_t>(64, normView.size() - pos);
 
         for (size_t len = maxProbe; len > 0; --len) {
             const std::string_view candidate =
-                text.substr(pos, len);
+                normView.substr(pos, len);
 
             auto it = lookup_.find(std::string(candidate));
 
@@ -374,7 +396,7 @@ bool GGUFEmbeddedTokenizer::EncodeLongestMatch(
         if (bestLength == 0) {
             // Try single-byte token.
             const unsigned char c =
-                static_cast<unsigned char>(text[pos]);
+                static_cast<unsigned char>(normView[pos]);
 
             std::string oneByte(1, static_cast<char>(c));
 
