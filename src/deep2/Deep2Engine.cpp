@@ -4065,8 +4065,15 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         ResidencyCounters::BeginLogits();
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
+        printf("[B3_LOGITS] AFTER computeLogits\n");
+        fflush(stdout);
+
         // ── B3: Trace logits ──────────────────────────────────────────
+        printf("[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=%zu\n", config.vocabSize);
+        fflush(stdout);
         B3_TraceLogits("LOGITS", position, logits, config.vocabSize);
+        printf("[B3_LOGITS] AFTER B3_TraceLogits\n");
+        fflush(stdout);
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endLogits();
@@ -4094,7 +4101,11 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         // Sample next token
+        printf("[B3_LOGITS] BEFORE sampleToken\n");
+        fflush(stdout);
         int nextToken = sampleToken(logits);
+        printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
+        fflush(stdout);
 
         if (profilingEnabled_ && profiler_) {
             profiler_->endSampling();
@@ -5396,9 +5407,20 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
     printf("[Deep2Engine] computeLogits: lmHead type=%d rows=%zu cols=%zu data=%p\n",
            modelWeights.lmHead.type, modelWeights.lmHead.rows,
            modelWeights.lmHead.cols, modelWeights.lmHead.data);
+    fflush(stdout);
+
+    printf("[B3_LOGITS] BEFORE LinearW type=%d rows=%zu cols=%zu data=%p\n",
+           static_cast<int>(modelWeights.lmHead.type),
+           modelWeights.lmHead.rows,
+           modelWeights.lmHead.cols,
+           modelWeights.lmHead.data);
+    fflush(stdout);
 
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
+
+    printf("[B3_LOGITS] AFTER LinearW\n");
+    fflush(stdout);
 }
 
 // ============================================================================

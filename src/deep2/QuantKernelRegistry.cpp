@@ -695,8 +695,19 @@ static void gemv_q6_k_scalar(
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
+    static std::atomic<int> q6kDebugCalls{0};
+    const int call = q6kDebugCalls.fetch_add(1);
+    if (call < 4) {
+        printf("[Q6K_GEMV] ENTER call=%d w=%p x=%p y=%p rows=%zu cols=%zu\n",
+               call, (const void*)w, (const void*)x, (void*)y, rows, cols);
+        fflush(stdout);
+    }
     if (!rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols)) {
         std::fprintf(stderr, "[Q6K_REF] GEMV FAILED rows=%zu cols=%zu\n", rows, cols);
+    }
+    if (call < 4) {
+        printf("[Q6K_GEMV] EXIT call=%d\n", call);
+        fflush(stdout);
     }
 }
 
