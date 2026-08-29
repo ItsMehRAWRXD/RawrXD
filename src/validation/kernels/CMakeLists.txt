@@ -45,7 +45,14 @@ if(NOT ML64_EXE AND DEFINED _MSVC_ROOT AND EXISTS "${_MSVC_ROOT}/bin/Hostx64/x64
 endif()
 
 if(NOT ML64_EXE OR NOT EXISTS "${ML64_EXE}")
-    message(WARNING "[MASM] ml64.exe not found (CMAKE_ASM_MASM_COMPILER='${CMAKE_ASM_MASM_COMPILER}'). Skipping telemetry_masm_kernels.")
+    message(WARNING "[MASM] ml64.exe not found (CMAKE_ASM_MASM_COMPILER='${CMAKE_ASM_MASM_COMPILER}'). Building empty telemetry_masm_kernels stub.")
+    if(NOT TARGET telemetry_masm_kernels)
+        add_library(telemetry_masm_kernels STATIC masm_kernels_dummy.cpp)
+        target_include_directories(telemetry_masm_kernels PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/..
+        )
+    endif()
     return()
 endif()
 

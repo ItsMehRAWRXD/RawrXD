@@ -14,12 +14,15 @@ void BuildStateGraph::TransitionTo(BuildState newState) {
 
 bool BuildStateGraph::StartBuild(const std::string& target, const BuildConfiguration& config) {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (target.empty()) {
+        return false;
+    }
     current_.target = target;
     current_.config = config;
     current_.percent = 0;
     current_.lastError.clear();
     current_.state = BuildState::BUILDING;
-    return !target.empty();
+    return true;
 }
 
 bool BuildStateGraph::CancelBuild() {

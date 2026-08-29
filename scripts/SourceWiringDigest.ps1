@@ -269,11 +269,11 @@ function Get-SourceFiles {
     $collected = New-Object System.Collections.Generic.List[System.IO.FileInfo]
     foreach ($scanTarget in $scanTargets) {
         if (-not (Test-Path -LiteralPath $scanTarget)) { continue }
-        Get-ChildItem -LiteralPath $scanTarget -Recurse -Include $patterns -File -ErrorAction SilentlyContinue | ForEach-Object {
-            if ($collected.Count -ge $MaxScanFiles) { return }
-            if ($excludeRegex -and $_.FullName -match $excludeRegex) { return }
-            if (Test-ExcludePattern -FilePath $_.FullName -Patterns $projectExcludePatterns -RegexPatterns $projectExcludeRegex) { return }
-            $collected.Add($_)
+        foreach ($file in @(Get-ChildItem -LiteralPath $scanTarget -Recurse -Include $patterns -File -ErrorAction SilentlyContinue)) {
+            if ($collected.Count -ge $MaxScanFiles) { break }
+            if ($excludeRegex -and $file.FullName -match $excludeRegex) { continue }
+            if (Test-ExcludePattern -FilePath $file.FullName -Patterns $projectExcludePatterns -RegexPatterns $projectExcludeRegex) { continue }
+            $collected.Add($file)
         }
         if ($collected.Count -ge $MaxScanFiles) {
             Write-Warning "Scan file cap reached ($MaxScanFiles). Remaining roots skipped to avoid runner OOM."
