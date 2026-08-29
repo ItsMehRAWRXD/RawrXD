@@ -445,11 +445,14 @@ static inline float fp16ToFloat(uint16_t h) {
         if (mant == 0) {
             f = sign << 31;
         } else {
-            // Subnormal
-            int e = -1;
-            do { e++; mant <<= 1; } while (!(mant & 0x400));
+            // Subnormal: value = mant * 2^(-10) * 2^(-14) = mant * 2^(-24)
+            // Normalize: shift left until bit 10 is set
+            int e = 0;
+            while (!(mant & 0x400)) { mant <<= 1; e++; }
             mant &= 0x3FF;
-            f = (sign << 31) | ((127 - 15 - e) << 23) | (mant << 13);
+            // After e shifts, exponent = -14 - e
+            // FP32 exponent = 127 + (-14 - e) = 113 - e
+            f = (sign << 31) | ((113 - e) << 23) | (mant << 13);
         }
     } else if (exp == 31) {
         f = (sign << 31) | (0xFF << 23) | (mant << 13);
@@ -2671,7 +2674,7 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             rowBytes = numBlocks * sizeof(block_q6_K);
         } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
             size_t numBlocks = modelWeights.hiddenDim / 256;
-            rowBytes = numBlocks * sizeof(Q4_K_Block);
+            rowBytes = numBlocks * sizeof(block_q4_K);
         } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F32) {
             rowBytes = modelWeights.hiddenDim * sizeof(float);
         } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_F16) {
@@ -2734,25 +2737,39 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             memset(output, 0, hiddenDim * sizeof(float));
         }
     } else if (modelWeights.tokenEmbed.type == (int)GGMLType::GGML_TYPE_Q4_K) {
-        // Q4_K token embedding: each row is [numBlocks x Q4_K_Block]
+        // Q4_K token embedding: each row is [numBlocks x block_q4_K (144 bytes)]
         size_t hiddenDim = modelWeights.hiddenDim;
         size_t numBlocks = hiddenDim / 256;
-        size_t rowBytes = numBlocks * sizeof(Q4_K_Block);
+        size_t rowBytes = numBlocks * sizeof(block_q4_K);
         const uint8_t* embedData = (const uint8_t*)embedDataPtr;
         if (tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
-            const Q4_K_Block* blocks = (const Q4_K_Block*)(embedData + tokenId * rowBytes);
-            // Diagnostic: inspect first block header
-            fprintf(stderr, "[Q4K_EMBED] token=%d block0 d=0x%04X dmin=0x%04X qs[0]=0x%02X\n",
-                    tokenId, blocks[0].d, blocks[0].dmin, blocks[0].qs[0]);
-            float* dequantBuf = alignedAlloc(256);
-            for (size_t b = 0; b < numBlocks; ++b) {
-                dequantizeQ4KBlock(&blocks[b], dequantBuf);
-                memcpy(output + b * 256, dequantBuf, 256 * sizeof(float));
+            const uint8_t* row = embedData + tokenId * rowBytes;
+            // Use the registry dequantizer for correctness
+            auto& reg = Deep2::QuantKernelRegistry::Instance();
+            auto dequant = reg.GetDequant((int)GGMLType::GGML_TYPE_Q4_K);
+            if (dequant) {
+                dequant(row, output, hiddenDim);
+            } else {
+                // Fallback: manual dequant using correct block_q4_K layout
+                const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(row);
+                for (size_t b = 0; b < numBlocks; ++b) {
+                    float d = fp16ToFloat(blocks[b].d);
+                    float dmin = fp16ToFloat(blocks[b].dmin);
+                    for (int sb = 0; sb < 8; ++sb) {
+                        uint8_t sc, mn;
+                        unpackQ4KScaleMin(blocks[b].scales, sb, sc, mn);
+                        float scale = d * sc;
+                        float min = dmin * mn;
+                        for (int k = 0; k < 16; ++k) {
+                            uint8_t byte = blocks[b].qs[sb * 16 + k];
+                            int lo = byte & 0x0F;
+                            int hi = (byte >> 4) & 0x0F;
+                            output[b * 256 + sb * 32 + k] = scale * lo - min;
+                            output[b * 256 + sb * 32 + k + 16] = scale * hi - min;
+                        }
+                    }
+                }
             }
-            fprintf(stderr, "[Q4K_EMBED] token=%d first8= %.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",
-                    tokenId, output[0], output[1], output[2], output[3],
-                    output[4], output[5], output[6], output[7]);
-            alignedFree(dequantBuf);
         } else {
             memset(output, 0, hiddenDim * sizeof(float));
         }

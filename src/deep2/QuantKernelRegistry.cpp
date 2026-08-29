@@ -508,24 +508,27 @@ static void gemv_q4_k_scalar(
 
 static inline float rxd_q6k_f16(uint16_t h)
 {
-    const uint32_t sign = ((uint32_t)(h & 0x8000u)) << 16;
-    const uint32_t exp  = (h >> 10) & 0x1Fu;
-    const uint32_t mant = h & 0x03FFu;
-    uint32_t bits;
+    // Use the same algorithm as f16_to_f32 in QuantKernelRegistry_K.h
+    uint32_t sign = (static_cast<uint32_t>(h & 0x8000)) << 16;
+    uint32_t exp  = (h >> 10) & 0x1F;
+    uint32_t frac = h & 0x03FF;
+
     if (exp == 0) {
-        if (mant == 0) { bits = sign; }
-        else {
-            uint32_t m = mant; int e = -14;
-            while ((m & 0x0400u) == 0) { m <<= 1; --e; }
-            m &= 0x03FFu;
-            bits = sign | ((uint32_t)(e + 127) << 23) | (m << 13);
-        }
-    } else if (exp == 31) {
-        bits = sign | 0x7F800000u | (mant << 13);
-    } else {
-        bits = sign | ((exp + 112u) << 23) | (mant << 13);
+        if (frac == 0) return reinterpret_cast<const float&>(sign);
+        // Denormalized
+        uint32_t e = 1;
+        uint32_t f = frac;
+        while ((f & 0x0400) == 0) { f <<= 1; e++; }
+        f &= 0x03FF;
+        uint32_t bits = sign | ((127 - 15 + 2 - e) << 23) | (f << 13);
+        return reinterpret_cast<float&>(bits);
     }
-    float f; std::memcpy(&f, &bits, sizeof(f)); return f;
+    if (exp == 31) {
+        uint32_t bits = sign | 0x7F800000 | (frac << 13);
+        return reinterpret_cast<float&>(bits);
+    }
+    uint32_t bits = sign | ((exp + 127 - 15) << 23) | (frac << 13);
+    return reinterpret_cast<float&>(bits);
 }
 
 static inline bool rxd_q6k_dequant_block(
@@ -1227,11 +1230,11 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
         float dmin = f16_to_f32(blocks[b].dmin);
         if (!std::isfinite(d))    d    = 0.0f;
         if (!std::isfinite(dmin)) dmin = 0.0f;
+        uint8_t scales[8], mins[8];
+        unpack_q4_k_scales(blocks[b].scales, scales, mins);
         for (int sb = 0; sb < 8; ++sb) {
-            uint8_t sc, m;
-            get_scale_min_k4(sb, blocks[b].scales, sc, m);
-            float scale = d * sc;
-            float min   = dmin * m;
+            float scale = d * scales[sb];
+            float min   = dmin * mins[sb];
             const uint8_t* quants = blocks[b].qs + sb * 16;
             for (int k = 0; k < 16; ++k) {
                 uint8_t byte = quants[k];
