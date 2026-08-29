@@ -17,8 +17,8 @@ Write-Host ">>> Configuring CMake ..."
 cmake -S (Join-Path $PSScriptRoot "..") -B $BuildDir -A $A -DCMAKE_BUILD_TYPE=$Config
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
-Write-Host ">>> Building ..."
-cmake --build $BuildDir --config $Config
+Write-Host ">>> Building live ModelLoader targets ..."
+cmake --build $BuildDir --config $Config --target RawrXD-Chromatic brutal_gzip
 if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
 
 Write-Host ">>> Done: binaries in $BuildDir\$Config"

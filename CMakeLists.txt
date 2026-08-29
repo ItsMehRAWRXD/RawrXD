@@ -1925,6 +1925,26 @@ add_subdirectory(src/ceo)
 # =============================================================================
 add_subdirectory(src/repository)
 
+function(rawrxd_keep_existing_sources inout_var)
+    set(_in "${${inout_var}}")
+    set(_out "")
+    foreach(src IN LISTS _in)
+        if(IS_ABSOLUTE "${src}")
+            set(_path "${src}")
+        else()
+            set(_path "${CMAKE_SOURCE_DIR}/${src}")
+        endif()
+        if(EXISTS "${_path}")
+            list(APPEND _out "${src}")
+        else()
+            message(WARNING "[CMake] Skipping missing source: ${src}")
+        endif()
+    endforeach()
+    set(${inout_var} "${_out}" PARENT_SCOPE)
+endfunction()
+
+rawrxd_keep_existing_sources(RAWR_ENGINE_SOURCES)
+rawrxd_keep_existing_sources(RAWR_ENGINE_ASM_SOURCES)
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
@@ -2220,6 +2240,8 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/link_stubs_gold.cpp
 )
 
+rawrxd_keep_existing_sources(GOLD_UNDERSCORE_SOURCES)
+rawrxd_keep_existing_sources(ASM_KERNEL_SOURCES)
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
 if(WIN32)
@@ -4994,6 +5016,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/engine/Omega1Engine_Server.cpp
     )
 
+    rawrxd_keep_existing_sources(WIN32IDE_SOURCES)
+    rawrxd_keep_existing_sources(WIN32IDE_EXTRA_ASM)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)

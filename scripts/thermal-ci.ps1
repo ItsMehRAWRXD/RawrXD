@@ -64,8 +64,11 @@ if ($LASTEXITCODE -ne 0) { throw "Failed to link Orchestrator" }
 Write-Host "[*] Building Governor (C++)..." -ForegroundColor Cyan
 # Note: GovernorMain.cpp includes ThermalGovernor.h, assume .cpp is there too or header only?
 # Based on file list, ThermalGovernor.cpp exists.
-& $CL /c /nologo /EHsc /Zi /Fo"GovernorMain.obj" "$GovernorSrc\GovernorMain.cpp" /I"$GovernorSrc"
-& $CL /c /nologo /EHsc /Zi /Fo"ThermalGovernor.obj" "$GovernorSrc\ThermalGovernor.cpp" /I"$GovernorSrc"
+$ThermalInc = Join-Path $SrcThermal "include"
+& $CL /c /nologo /EHsc /Zi /Fo"GovernorMain.obj" "$GovernorSrc\GovernorMain.cpp" /I"$GovernorSrc" /I"$ThermalInc"
+if ($LASTEXITCODE -ne 0) { throw "Failed to compile GovernorMain" }
+& $CL /c /nologo /EHsc /Zi /Fo"ThermalGovernor.obj" "$GovernorSrc\ThermalGovernor.cpp" /I"$GovernorSrc" /I"$ThermalInc"
+if ($LASTEXITCODE -ne 0) { throw "Failed to compile ThermalGovernor" }
 
 Write-Host "[*] Linking Sovereign Governor..." -ForegroundColor Cyan
 & $LINK /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /OUT:"SovereignGovernor.exe" "GovernorMain.obj" "ThermalGovernor.obj" "SovereignAgentBridge.obj" kernel32.lib user32.lib advapi32.lib

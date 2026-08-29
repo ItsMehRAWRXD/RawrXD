@@ -376,6 +376,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_q8_0_end2end.cpp")
     target_compile_definitions(bench_q8_0_end2end PRIVATE __AVX2__=1)
     set_target_properties(bench_q8_0_end2end PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        EXCLUDE_FROM_ALL TRUE
     )
 endif()
 
@@ -391,6 +392,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_attn.cpp")
     target_compile_definitions(bench_flash_attn PRIVATE __AVX2__=1)
     set_target_properties(bench_flash_attn PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        EXCLUDE_FROM_ALL TRUE
     )
 endif()
 # Flash-Attention All-Quant bench
@@ -405,6 +407,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_all_quant.cpp")
     target_compile_definitions(bench_flash_all_quant PRIVATE __AVX2__=1)
     set_target_properties(bench_flash_all_quant PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+        EXCLUDE_FROM_ALL TRUE
     )
 endif()
 
@@ -423,6 +426,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_flash_asm_puppeteer.cpp")
         target_compile_definitions(bench_flash_asm_puppeteer PRIVATE __AVX2__=1)
         set_target_properties(bench_flash_asm_puppeteer PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests"
+            EXCLUDE_FROM_ALL TRUE
         )
     endif()
 endif()
@@ -432,14 +436,14 @@ if(MSVC)
     enable_language(ASM_MASM)
     
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_masm.cpp")
-        add_executable(bench_deflate_godmode tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)
+        add_executable(bench_deflate_godmode EXCLUDE_FROM_ALL tests/bench_deflate_masm.cpp kernels/deflate_godmode_masm.asm)
         target_compile_definitions(bench_deflate_godmode PRIVATE NO_ZLIB_REF=1 DEFLATE_GODMODE=1)
         set_target_properties(bench_deflate_godmode PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
     # Brutal MASM benchmark
     if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_brutal.cpp")
-        add_executable(bench_deflate_brutal tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
+        add_executable(bench_deflate_brutal EXCLUDE_FROM_ALL tests/bench_deflate_brutal.cpp kernels/deflate_brutal_masm.asm)
         set_target_properties(bench_deflate_brutal PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
     endif()
 
@@ -466,7 +470,7 @@ endif()
 
 # Add benchmark for 50MB payload
 if(EXISTS "${CMAKE_SOURCE_DIR}/tests/bench_deflate_50mb.cpp")
-    add_executable(bench_deflate_50mb tests/bench_deflate_50mb.cpp kernels/deflate_brutal_masm.asm)
+    add_executable(bench_deflate_50mb EXCLUDE_FROM_ALL tests/bench_deflate_50mb.cpp kernels/deflate_brutal_masm.asm)
     set_target_properties(bench_deflate_50mb PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests")
 endif()
 
