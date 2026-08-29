@@ -33,10 +33,16 @@ extern "C" {
 }
 #endif
 
-std::string drainFinalAnswer(std::string* eventLog) {
-    std::string finalAns;
+struct DrainOutcome {
+    std::string answer;
+    bool needInput = false;
+    bool emittedFinal = false;
+    bool satisfiedEvt = false;
+};
+
+DrainOutcome drainEvents(std::string* eventLog) {
+    DrainOutcome o;
     std::string lastCandidate;
-    bool satisfied = false;
 #ifdef RAWR_HAS_MASM
     HxEvent ev{};
     while (HexMag_PollEvent(&ev)) {
@@ -46,24 +52,36 @@ std::string drainFinalAnswer(std::string* eventLog) {
             *eventLog += ev.payload;
             *eventLog += "\n";
         }
-        if (ev.kind == HX_EVT_ANSWER_FINAL || ev.kind == HX_EVT_GOAL_SATISFIED) {
-            finalAns = ev.payload;
-            satisfied = true;
+        if (ev.kind == HX_EVT_NEED_INPUT) {
+            o.needInput = true;
+            // Latch ASK_USER — later FINAL must not overwrite (constitution D2)
+            o.answer = std::string("INSUFFICIENT_INFORMATION: ") + ev.payload;
+        }
+        if (ev.kind == HX_EVT_ANSWER_FINAL) {
+            o.emittedFinal = true;
+            if (!o.needInput) {
+                o.answer = ev.payload;
+                o.satisfiedEvt = true;
+            }
+        }
+        if (ev.kind == HX_EVT_GOAL_SATISFIED) {
+            o.satisfiedEvt = true;
+            if (!o.needInput && o.answer.empty()) o.answer = ev.payload;
+            else if (!o.needInput) o.answer = ev.payload;
         }
         if (ev.kind == HX_EVT_ANSWER_CANDIDATE || ev.kind == HX_EVT_ANSWER) {
             lastCandidate = ev.payload;
-        }
-        if (ev.kind == HX_EVT_NEED_INPUT) {
-            finalAns = std::string("INSUFFICIENT_INFORMATION: ") + ev.payload;
         }
         ev = {};
     }
 #else
     (void)eventLog;
 #endif
-    if (!finalAns.empty()) return finalAns;
-    if (satisfied && !lastCandidate.empty()) return lastCandidate;
-    return lastCandidate;
+    if (o.answer.empty() && !o.needInput) {
+        if (o.satisfiedEvt && !lastCandidate.empty()) o.answer = lastCandidate;
+        else o.answer = lastCandidate;
+    }
+    return o;
 }
 
 uint64_t installMission(const std::string& prompt, const std::string& context) {
@@ -215,11 +233,15 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
 
     const uint64_t rc = HexMag_RunToSatisfied(64);
     std::string log;
-    std::string ans = drainFinalAnswer(&log);
+    DrainOutcome drained = drainEvents(&log);
+    std::string ans = drained.answer;
 
     out.agentsSpawned = HexMag_AgentsSpawned();
     out.tunerAttempt = HexMag_TunerAttempt();
-    out.goalSatisfied = (rc == HX_OK);
+    out.goalSatisfied = (rc == HX_OK) && !drained.needInput && drained.satisfiedEvt;
+    out.needInput = drained.needInput;
+    out.emittedFinal = drained.emittedFinal;
+    out.eventLog = std::move(log);
 
     Claim claim = claimFromSwarmAnswer(ans, out.goalSatisfied);
     claim.directiveId = missionId;
@@ -230,18 +252,22 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     if (claim.state == ClaimState::Proven) fin = ClaimFinalizeClass::Proven;
     else if (claim.state == ClaimState::Verified || claim.verified())
         fin = ClaimFinalizeClass::Verified;
-    else if (claim.state == ClaimState::MissingInput) fin = ClaimFinalizeClass::MissingInput;
+    else if (claim.state == ClaimState::MissingInput || drained.needInput)
+        fin = ClaimFinalizeClass::MissingInput;
     else if (claim.state == ClaimState::Contradicted) fin = ClaimFinalizeClass::Contradicted;
     else if (claim.state == ClaimState::FinalRejected) fin = ClaimFinalizeClass::Unknown;
 
     // FINAL GATE — confidence irrelevant; HexMagAction + allowFinal both required
-    if (!allowFinal(claim) || !isAllowedFinalClaim(fin)) {
-        if (claim.state == ClaimState::MissingInput
+    if (drained.needInput || !allowFinal(claim) || !isAllowedFinalClaim(fin)) {
+        if (drained.needInput || claim.state == ClaimState::MissingInput
             || fin == ClaimFinalizeClass::MissingInput) {
             out.success = false;
             out.error = ans.empty() ? "INSUFFICIENT_INFORMATION" : ans;
             out.answer = out.error;
             out.claimState = ClaimState::MissingInput;
+            out.needInput = true;
+            // Refuse to treat any FINAL emission as success after ASK_USER
+            out.emittedFinal = drained.emittedFinal;
             return out;
         }
         // Candidate without verifier evidence — do not fake success

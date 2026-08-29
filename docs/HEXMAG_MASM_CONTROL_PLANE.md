@@ -105,8 +105,9 @@ hexmag.verify → llm.answer.final → hexmag.deflate
 ## Next implementation target (MASM)
 
 Loop **candidate → reverse → spawn/refine → final → deflate** is smoke-certified.
-Remaining product gap: attach ReasoningOracle / Deep2 for non-stub candidates and
-emit `HX_EVT_NEED_INPUT` on informational deficits.
+`HX_EVT_NEED_INPUT` is emitted for under-specified goals (ASK_USER); FINAL is withheld.
+
+Remaining product gap: attach ReasoningOracle / Deep2 for non-stub candidates.
 
 Status already flipped:
 
@@ -124,6 +125,7 @@ HEXMAG_WEIGHTED_MODEL      = FALSE
 HEXMAG_GENERATE_ON_CONTACT = TRUE
 HEXMAG_RECURSIVE_*         = COMPLETE    # smoke + cert harness
 HEXMAG_REPEAT_TUNER        = COMPLETE    # HEXMAG_POLYMORPHIC_REPEAT_TUNER_001
+HEXMAG_NEED_INPUT          = COMPLETE    # HEXMAG_NEED_INPUT_001 (ASK_USER observable)
 HEXMAG_IDE_CLIENT          = MASM        # hexmag_control_plane (not FastAPI stubs)
 DEEP2_PARITY_AUTHORITY     = UNCHANGED
 ```

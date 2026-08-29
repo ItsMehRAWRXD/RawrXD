@@ -35,9 +35,11 @@ $objTuner = Join-Path $OutDir "RawrXD_HexMag_RepeatTuner.obj"
 $exeUnit = Join-Path $OutDir "hexmag_swarm_smoke.exe"
 $exeE2E = Join-Path $OutDir "hexmag_e2e_smoke.exe"
 $exeCert = Join-Path $OutDir "hexmag_repeat_tuner_cert.exe"
+$exeNeed = Join-Path $OutDir "hexmag_need_input_cert.exe"
 $cppUnit = Join-Path $Root "tests\hexmag_swarm_smoke.cpp"
 $cppE2E = Join-Path $Root "tests\hexmag_e2e_smoke.cpp"
 $cppCert = Join-Path $Root "tests\hexmag_repeat_tuner_cert.cpp"
+$cppNeed = Join-Path $Root "tests\hexmag_need_input_cert.cpp"
 $cpCpp = Join-Path $Root "src\core\hexmag_control_plane.cpp"
 $inc = Join-Path $Root "src"
 $incAgentic = Join-Path $Root "src\agentic"
@@ -54,22 +56,28 @@ $cmd = @"
 call "$vcvars" >nul
 cd /d "$OutDir"
 
-echo === 1/3 unit swarm smoke ===
+echo === 1/4 unit swarm smoke ===
 cl /nologo /EHsc /O2 /DRAWR_HAS_MASM /I "$inc" "$cppUnit" /Fe:"$exeUnit" /link /nologo "$obj" "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeUnit"
 if errorlevel 1 exit /b 1
 
-echo === 2/3 E2E policy+control plane ===
+echo === 2/4 E2E policy+control plane ===
 cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppE2E" "$cpCpp" /Fe:"$exeE2E" /link /nologo "$obj" "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeE2E"
 if errorlevel 1 exit /b 1
 
-echo === 3/3 repeat tuner cert (integration pack) ===
+echo === 3/4 repeat tuner cert (integration pack) ===
 cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$incAgentic" /I "$inc" "$cppCert" /Fe:"$exeCert" /link /nologo "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeCert"
+if errorlevel 1 exit /b 1
+
+echo === 4/4 NEED_INPUT observability cert ===
+cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppNeed" "$cpCpp" /Fe:"$exeNeed" /link /nologo "$obj" "$objTuner" kernel32.lib
+if errorlevel 1 exit /b 1
+"$exeNeed"
 if errorlevel 1 exit /b 1
 
 exit /b 0

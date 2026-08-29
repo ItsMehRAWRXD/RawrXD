@@ -49,6 +49,7 @@ constexpr uint64_t HX_ERR_REPEAT      = 6;
 constexpr uint64_t HX_ERR_QUEUE_FULL  = 7;
 constexpr uint64_t HX_ERR_IDLE_FAIL   = 8;
 constexpr uint64_t HX_ERR_TIMEOUT     = 9;
+constexpr uint64_t HX_ERR_NEED_INPUT  = 10;
 
 constexpr uint32_t HX_MAX_HANDOFF_DEPTH = 16;
 constexpr uint32_t HX_MAX_SIGNATURES    = 32;

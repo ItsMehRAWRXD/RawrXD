@@ -23,8 +23,11 @@ struct AskResult {
     uint64_t agentsSpawned = 0;
     uint32_t tunerAttempt = 0;
     bool goalSatisfied = false;
+    bool needInput = false;     // HX_EVT_NEED_INPUT observed
+    bool emittedFinal = false;  // HX_EVT_ANSWER_FINAL observed
     ClaimState claimState = ClaimState::Candidate;
     std::string provenance; // directive explain chain
+    std::string eventLog;
 };
 
 struct StreamResult {

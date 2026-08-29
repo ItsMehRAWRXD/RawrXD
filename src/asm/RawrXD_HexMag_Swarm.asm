@@ -78,6 +78,7 @@ HX_ERR_REPEAT           EQU     6
 HX_ERR_QUEUE_FULL       EQU     7
 HX_ERR_IDLE_FAIL        EQU     8
 HX_ERR_TIMEOUT          EQU     9
+HX_ERR_NEED_INPUT       EQU     10         ; ASK_USER / missing information
 
 HX_MAX_HANDOFF_DEPTH    EQU     16          ; allow refine loops
 HX_MAX_SIGNATURES       EQU     32
@@ -193,6 +194,28 @@ g_RunStub       DB  'verification.run: ok (stub)', 0
 g_DoneStub      DB  'goal.satisfied: verified', 0
 g_DeflateStub   DB  'hexmag.deflate: responders discarded (ids burned)', 0
 g_FinalStub     DB  'llm.answer.final', 0
+g_NeedInputStub DB  'ASK_USER: missing required specification (guessing_missing_facts=FORBIDDEN)', 0
+
+; Underspec marker needles (ASCII; matched case-insensitively)
+g_MarkUnspec    DB  'unspecified', 0
+g_MarkNeedOp    DB  'need_operator', 0
+g_MarkTbd       DB  'tbd', 0
+g_MarkQmark     DB  '???', 0
+g_MarkMissing   DB  'missing information', 0
+
+; Actionable needles — presence allows codegen (case-insensitive)
+g_ActCreate     DB  'create', 0
+g_ActImpl       DB  'implement', 0
+g_ActWrite      DB  'write', 0
+g_ActBuild      DB  'build', 0
+g_ActFix        DB  'fix', 0
+g_ActPrint      DB  'print', 0
+g_ActHello      DB  'hello', 0
+g_ActMasm       DB  'masm', 0
+g_ActVerify     DB  'verify', 0
+g_ActRefactor   DB  'refactor', 0
+g_ActProgram    DB  'program', 0
+g_ActCode       DB  'code', 0
 
 _DATA64 ENDS
 
@@ -927,15 +950,235 @@ hx_tuner_bump PROC FRAME
 hx_tuner_bump ENDP
 
 ; -----------------------------------------------------------------------------
+; hx_tolower_al — AL = tolower(AL) for ASCII A-Z
+; -----------------------------------------------------------------------------
+hx_tolower_al PROC
+    cmp     al, 'A'
+    jb      @tl_done
+    cmp     al, 'Z'
+    ja      @tl_done
+    add     al, 32
+@tl_done:
+    ret
+hx_tolower_al ENDP
+
+; -----------------------------------------------------------------------------
+; hx_stristr — case-insensitive substring
+;   RCX = haystack (NUL), RDX = needle (NUL)
+;   Returns RAX = 1 if found, 0 otherwise
+; -----------------------------------------------------------------------------
+hx_stristr PROC FRAME
+    push    rsi
+    .pushreg rsi
+    push    rdi
+    .pushreg rdi
+    push    rbx
+    .pushreg rbx
+    push    r12
+    .pushreg r12
+    sub     rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    mov     rsi, rcx                    ; haystack walk
+    mov     r12, rdx                    ; needle
+    test    rsi, rsi
+    jz      @si_no
+    test    r12, r12
+    jz      @si_no
+    cmp     BYTE PTR [r12], 0
+    je      @si_yes                     ; empty needle matches
+
+@si_outer:
+    mov     rdi, r12
+    mov     rbx, rsi
+@si_inner:
+    mov     al, BYTE PTR [rdi]
+    test    al, al
+    jz      @si_yes
+    mov     cl, BYTE PTR [rbx]
+    test    cl, cl
+    jz      @si_no
+    call    hx_tolower_al              ; AL = tolower(needle)
+    mov     ah, al
+    mov     al, cl
+    call    hx_tolower_al              ; AL = tolower(hay)
+    cmp     al, ah
+    jne     @si_next
+    inc     rdi
+    inc     rbx
+    jmp     @si_inner
+@si_next:
+    inc     rsi
+    cmp     BYTE PTR [rsi], 0
+    jne     @si_outer
+@si_no:
+    xor     eax, eax
+    jmp     @si_done
+@si_yes:
+    mov     eax, 1
+@si_done:
+    add     rsp, 28h
+    pop     r12
+    pop     rbx
+    pop     rdi
+    pop     rsi
+    ret
+hx_stristr ENDP
+
+; -----------------------------------------------------------------------------
+; hx_goal_needs_input — EAX=1 if architect must ASK_USER (no FINAL)
+; Markers force NEED_INPUT; else require an actionable verb/token.
+; -----------------------------------------------------------------------------
+hx_goal_needs_input PROC FRAME
+    push    rbx
+    .pushreg rbx
+    push    rsi
+    .pushreg rsi
+    push    r12
+    .pushreg r12
+    sub     rsp, 20h
+    .allocstack 20h
+    .endprolog
+
+    lea     rbx, g_HxState
+    mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
+    test    rsi, rsi
+    jz      @gn_yes
+    lea     r12, [rsi].HX_AGENT_CTX.root_goal
+
+    ; Explicit deficit markers → ASK_USER
+    mov     rcx, r12
+    lea     rdx, g_MarkUnspec
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_yes
+    mov     rcx, r12
+    lea     rdx, g_MarkNeedOp
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_yes
+    mov     rcx, r12
+    lea     rdx, g_MarkTbd
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_yes
+    mov     rcx, r12
+    lea     rdx, g_MarkQmark
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_yes
+    mov     rcx, r12
+    lea     rdx, g_MarkMissing
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_yes
+
+    ; Actionable content present?
+    mov     rcx, r12
+    lea     rdx, g_ActCreate
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActImpl
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActWrite
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActBuild
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActFix
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActPrint
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActHello
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActMasm
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActVerify
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActRefactor
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActProgram
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+    mov     rcx, r12
+    lea     rdx, g_ActCode
+    call    hx_stristr
+    test    eax, eax
+    jnz     @gn_no
+
+@gn_yes:
+    mov     eax, 1
+    jmp     @gn_done
+@gn_no:
+    xor     eax, eax
+@gn_done:
+    add     rsp, 20h
+    pop     r12
+    pop     rsi
+    pop     rbx
+    ret
+hx_goal_needs_input ENDP
+
+; -----------------------------------------------------------------------------
 ; Role handlers
 ; -----------------------------------------------------------------------------
 hx_run_architect PROC FRAME
     push    rbx
     .pushreg rbx
-    sub     rsp, 20h
-    .allocstack 20h
+    push    rsi
+    .pushreg rsi
+    sub     rsp, 28h
+    .allocstack 28h
     .endprolog
 
+    lea     rbx, g_HxState
+    mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
+
+    ; Constitution D2: missing_information -> ASK_USER (observable NEED_INPUT)
+    call    hx_goal_needs_input
+    test    eax, eax
+    jz      @ar_normal
+
+    mov     ecx, HX_EVT_NEED_INPUT
+    mov     edx, HX_ROLE_ARCHITECT
+    xor     r8d, r8d
+    lea     r9, g_NeedInputStub
+    call    hx_emit_event
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.failed, 1
+    ; Do not mint / plan / handoff — no FINAL path
+    jmp     @ar_done
+
+@ar_normal:
     ; Contact + plan + fresh architect agent
     mov     ecx, HX_EVT_CONTACT
     mov     edx, HX_ROLE_ARCHITECT
@@ -962,7 +1205,9 @@ hx_run_architect PROC FRAME
     lea     r8, g_PlanStub
     call    hx_try_handoff
 
-    add     rsp, 20h
+@ar_done:
+    add     rsp, 28h
+    pop     rsi
     pop     rbx
     ret
 hx_run_architect ENDP
@@ -1335,6 +1580,12 @@ HexMag_Step PROC FRAME
 
 @st_arch:
     call    hx_run_architect
+    mov     rax, QWORD PTR [rbx].HX_STATE.ctx
+    cmp     DWORD PTR [rax].HX_AGENT_CTX.failed, 1
+    jne     @st_arch_ok
+    mov     eax, HX_EVT_NEED_INPUT
+    jmp     @st_done
+@st_arch_ok:
     mov     eax, HX_EVT_HANDOFF
     jmp     @st_done
 @st_code:
@@ -1444,21 +1695,26 @@ HexMag_RunToSatisfied PROC FRAME
     jz      @rts_timeout
     dec     esi
     call    HexMag_Step
-    mov     rax, QWORD PTR [rbx].HX_STATE.ctx
-    cmp     DWORD PTR [rax].HX_AGENT_CTX.satisfied, 1
+    mov     rcx, QWORD PTR [rbx].HX_STATE.ctx
+    cmp     DWORD PTR [rcx].HX_AGENT_CTX.satisfied, 1
     je      @rts_ok
-    cmp     eax, HX_EVT_NONE            ; HexMag_Step return in eax already overwritten
-    ; re-check work
+    cmp     DWORD PTR [rcx].HX_AGENT_CTX.failed, 1
+    je      @rts_need_input
     cmp     DWORD PTR [rbx].HX_STATE.work_count, 0
     jne     @rts_loop
-    mov     rax, QWORD PTR [rbx].HX_STATE.ctx
-    cmp     DWORD PTR [rax].HX_AGENT_CTX.satisfied, 1
+    mov     rcx, QWORD PTR [rbx].HX_STATE.ctx
+    cmp     DWORD PTR [rcx].HX_AGENT_CTX.satisfied, 1
     je      @rts_ok
+    cmp     DWORD PTR [rcx].HX_AGENT_CTX.failed, 1
+    je      @rts_need_input
     mov     eax, HX_ERR_IDLE_FAIL
     jmp     @rts_done
 
 @rts_ok:
     xor     eax, eax
+    jmp     @rts_done
+@rts_need_input:
+    mov     eax, HX_ERR_NEED_INPUT
     jmp     @rts_done
 @rts_timeout:
     mov     eax, HX_ERR_TIMEOUT
@@ -1506,6 +1762,9 @@ HexMag_Feedback PROC FRAME
     test    ecx, ecx
     jnz     @fb_wrong
 
+    ; correct — never finalize after NEED_INPUT / failed ASK_USER
+    cmp     DWORD PTR [rsi].HX_AGENT_CTX.failed, 1
+    je      @fb_err
     ; correct — promote to final if not already
     cmp     DWORD PTR [rsi].HX_AGENT_CTX.satisfied, 1
     je      @fb_done_ok
