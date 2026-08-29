@@ -23,9 +23,17 @@ int main(int argc, char** argv) {
     deep2_enable_utf8_console();
 
     const char* modelPath = argc > 1 ? argv[1] : "G:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf";
+    // Optional: argv[2]=prompt argv[3]=maxTokens  (PONG cert: model "PONG" 1)
+    const char* promptArg = argc > 2 ? argv[2] : "hello";
+    size_t kGenCount = 16;
+    if (argc > 3) {
+        kGenCount = static_cast<size_t>(std::max(1, atoi(argv[3])));
+    }
+    const bool greedyOneToken = (kGenCount == 1) || (std::getenv("RAWRXD_GREEDY") != nullptr);
 
     printf("[TEST] Token Generation Test\n");
     printf("[TEST] Model: %s\n", modelPath);
+    printf("[TEST] Prompt: '%s' maxTokens=%zu greedy=%d\n", promptArg, kGenCount, (int)greedyOneToken);
 
     // Load embedded tokenizer from GGUF
     RawrXD::GGUFEmbeddedTokenizer tokenizer;
@@ -72,7 +80,7 @@ int main(int argc, char** argv) {
     printf("[PASS] Engine initialized\n");
 
     // Tokenize a simple prompt using embedded tokenizer
-    std::string prompt = "hello";
+    std::string prompt = promptArg;
     printf("[TEST] Tokenizing prompt: '%s'\n", prompt.c_str());
     std::vector<uint32_t> promptTokens;
     if (!tokenizer.EncodeLongestMatch(prompt, promptTokens)) {
@@ -89,8 +97,16 @@ int main(int argc, char** argv) {
     std::vector<int> tokens;
     for (auto t : promptTokens) tokens.push_back(static_cast<int>(t));
 
-    // Generate 16 tokens
-    const size_t kGenCount = 16;
+    // Greedy 1-token path for PONG / numerical cert
+    if (greedyOneToken) {
+        GenerationOptions opts{};
+        opts.maxTokens = static_cast<uint32_t>(kGenCount);
+        opts.temperature = 0.0f;
+        opts.topK = 1;
+        opts.topP = 1.0f;
+        engine.configureGeneration(opts);
+    }
+
     printf("[TEST] Generating %zu tokens...\n", kGenCount);
     std::vector<int> outputTokens(kGenCount);
     size_t generated = engine.generate(tokens.data(), tokens.size(),
@@ -106,6 +122,7 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < generated; ++i) {
         std::string text = tokenizer.Token(static_cast<uint32_t>(outputTokens[i]));
         allText += text;
+        printf("  gen_token[%zu]=%d text=\"%s\"\n", i, outputTokens[i], text.c_str());
     }
 
     printf("\n=== GENERATED RESPONSE ===\n");
@@ -113,6 +130,16 @@ int main(int argc, char** argv) {
     printf("Response: '%s'\n", allText.c_str());
     printf("=== TOKEN GENERATION SUCCESS ===\n");
     fflush(stdout);
+
+    // Optional exact-match gate for PONG smoke
+    if (std::getenv("RAWRXD_EXPECT_CONTAINS")) {
+        const char* expect = std::getenv("RAWRXD_EXPECT_CONTAINS");
+        if (allText.find(expect) == std::string::npos) {
+            printf("[FAIL] expected substring '%s' not in response\n", expect);
+            return 2;
+        }
+        printf("[PASS] expected substring '%s' found\n", expect);
+    }
 
     printf("[TEST] Returning 0\n");
     fflush(stdout);

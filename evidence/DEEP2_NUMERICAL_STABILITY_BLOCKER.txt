@@ -1,0 +1,23 @@
+﻿TINYLLAMA-AGENT-SMOKE (updated 2026-08-29)
+RESULT=FAIL (semantic PONG)
+EXIT=2
+EXPECTED=PONG
+OBSERVED=greedy token id=3748 (not PONG)
+
+FINITE_ACTIVATIONS=PASS (fresh process; nan=0 on traced states)
+GREEDY_ARGMAX=PASS
+SEMANTIC_PONG=FAIL
+
+PRIMARY_BLOCKER=DEEP2_FINITE_BUT_INCORRECT_LOGITS
+PATH=Deep2/Q4_K_M TinyLlama
+FAILURE_CLASS=wrong greedy decode (not NaN explosion on this run)
+
+AGENT_LOOP_P0S=CLOSED
+AGENT-E2E-002=FROZEN_CANDIDATE_PASS (deterministic spine)
+AGENT-E2E-002b=BLOCKED_BY_INFERENCE_CORRECTNESS
+
+NEXT_MILESTONE=
+  correct deterministic 1-token PONG (or agreed golden token)
+  → multi-token generation correctness
+  → tool-call synthesis
+  → AGENT-E2E-002b

@@ -1,0 +1,18 @@
+﻿{
+    "observedTokenId":  3748,
+    "prompt":  "PONG",
+    "valuationMidpoint":  135000000,
+    "next":  "debug finite-but-wrong logits / Q4_K decode / tokenizer for TinyLlama",
+    "greedyArgmax":  "PASS",
+    "finiteActivations":  "PASS",
+    "maxTokens":  1,
+    "model":  "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "greedy":  true,
+    "asOf":  "2026-08-29",
+    "expectContainsPONG":  "FAIL",
+    "deferred":  [
+                     "AGENT-E2E-002b",
+                     "MLA",
+                     "SSM"
+                 ]
+}

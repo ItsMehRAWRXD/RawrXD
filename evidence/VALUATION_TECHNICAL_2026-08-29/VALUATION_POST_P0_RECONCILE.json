@@ -1,0 +1,28 @@
+﻿{
+    "rangeUsd":  {
+                     "low":  125000000,
+                     "midpoint":  135000000,
+                     "high":  145000000
+                 },
+    "nextBlocker":  "deep2_one_token_bounded_forward_pong",
+    "asOf":  "2026-08-29",
+    "deferred":  [
+                     "AGENT-E2E-002b"
+                 ],
+    "reason":  "p0_agent_infra_closed_not_gguf_autonomy",
+    "frozen":  [
+                   "AGENT-E2E-002",
+                   "MLA",
+                   "SSM"
+               ],
+    "chain":  [
+                  "load",
+                  "one_token_forward",
+                  "finite_activations",
+                  "valid_logits",
+                  "deterministic_pong",
+                  "multi_token",
+                  "tool_call_synthesis",
+                  "AGENT-E2E-002b"
+              ]
+}
