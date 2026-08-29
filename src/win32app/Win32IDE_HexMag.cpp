@@ -14,13 +14,14 @@
 
 
 #ifndef WM_HEXMAG_ASK_DONE
-#define WM_HEXMAG_ASK_DONE (WM_APP + 109)
+// Keep clear of Copilot WM_APP+109..111 and plan/agent 500–521 bands.
+#define WM_HEXMAG_ASK_DONE (WM_APP + 560)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_CHUNK
-#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 110)
+#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 561)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_DONE
-#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 111)
+#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 562)
 #endif
 
 namespace
@@ -237,6 +238,36 @@ void Win32IDE::setHexMagStatusBarHint(const std::wstring& text)
         SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, reinterpret_cast<LPARAM>(text.c_str()));
 }
 
+void Win32IDE::setHexMagStatusBarHint(const std::string& text)
+{
+    setHexMagStatusBarHint(utf8ToWideLocal(text));
+}
+
+void Win32IDE::appendCopilotChatTextOnUiThread(const std::string& text)
+{
+    if (!m_hwndCopilotChatOutput || !IsWindow(m_hwndCopilotChatOutput) || text.empty())
+        return;
+    const std::wstring wide = utf8ToWideLocal(text);
+    const int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+    SendMessageW(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, reinterpret_cast<LPARAM>(wide.c_str()));
+    SendMessageW(m_hwndCopilotChatOutput, EM_SCROLLCARET, 0, 0);
+}
+
+void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
+{
+    if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+        EnableWindow(m_hwndCopilotSendBtn, busy ? FALSE : TRUE);
+    if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        EnableWindow(m_hwndCopilotChatInput, busy ? FALSE : TRUE);
+}
+
+void Win32IDE::showAgentActivityStatus(const std::string& text, int /*durationMs*/)
+{
+    setHexMagStatusBarHint(text);
+    appendToOutput(text + "\n", "Agent", OutputSeverity::Info);
+}
+
 void Win32IDE::onHexMagStartService()
 {
     setHexMagStatusBarHint(L"HexMag: spawning engine...");
@@ -372,6 +403,9 @@ bool Win32IDE::handleHexMagCommand(unsigned cmdId)
     case IDM_AGENT_HEXMAG_SWARM_8:
         onHexMagSetSwarmSizeFromCmd(cmdId);
         return true;
+    case IDM_AGENT_HEXMAG_TELEMETRY:
+        onHexMagShowTelemetryPanel();
+        return true;
     default:
         return false;
     }
@@ -473,9 +507,8 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
 
             if (hwndMain && IsWindow(hwndMain))
             {
-                auto& session = hexIdeSession();
-                session.ctrl.resetSession();
-                const auto ctrl = session.ctrl.run(userMessage, codeContext);
+                // Controller owns sequencing + FINALIZE_POLICY; IDE only renders.
+                const auto ctrl = hexIdeSession().runOperatorTurn(userMessage, codeContext);
                 payload->uiState = uiStateFromController(ctrl);
                 payload->success = ctrl.finalAuthority;
                 payload->answer = ctrl.lastClient.ask.answer.empty()

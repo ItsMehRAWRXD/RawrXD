@@ -461,6 +461,12 @@ struct IDESettings
     // dedicated terminal so user sessions are never interrupted.
     bool agentTerminalIsolated = true;
 
+    // HexMag swarm (MASM control plane) — IDE → controller → FinalizePolicy
+    bool hexmagGgufFallbackEnabled = true;
+    bool hexmagRouteCopilotPanel = true;  // chat send routes through HexMag when true
+    /** Parallel polymorphic agents per generation (1–8). */
+    int hexmagSwarmAgentCount = 3;
+
     // Settings GUI fields
     bool caretAnimationEnabled = true;
     bool autoUpdateCheckEnabled = true;

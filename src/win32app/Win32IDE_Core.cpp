@@ -1194,6 +1194,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
                 return 0;
             }
+            // HexMag controller → UI (FINAL | NEED_INPUT | FAILURE)
+            if (uMsg == WM_HEXMAG_ASK_DONE)
+            {
+                extern void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam);
+                RawrXD_FinishHexMagAsk(this, wParam, lParam);
+                return 0;
+            }
+            if (uMsg == WM_HEXMAG_TELEMETRY_CHUNK)
+            {
+                extern void RawrXD_FinishHexMagTelemetryChunk(Win32IDE* ide, LPARAM lParam);
+                RawrXD_FinishHexMagTelemetryChunk(this, lParam);
+                return 0;
+            }
+            if (uMsg == WM_HEXMAG_TELEMETRY_DONE)
+            {
+                extern void RawrXD_FinishHexMagTelemetryDone(Win32IDE* ide, WPARAM wParam);
+                RawrXD_FinishHexMagTelemetryDone(this, wParam);
+                return 0;
+            }
             // Handle custom agent output message
             if (uMsg == WM_AGENT_OUTPUT_SAFE)
             {
@@ -1267,6 +1286,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (uMsg == WM_NATIVE_AI_PROGRESS)
             {
                 onNativeAIProgress();
+                return 0;
+            }
+            // HexMag async ask / telemetry (WM_APP+560..562 — see Win32IDE_HexMag.cpp)
+            if (uMsg == (WM_APP + 560))
+            {
+                extern void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam);
+                RawrXD_FinishHexMagAsk(this, wParam, lParam);
+                return 0;
+            }
+            if (uMsg == (WM_APP + 561))
+            {
+                extern void RawrXD_FinishHexMagTelemetryChunk(Win32IDE* ide, LPARAM lParam);
+                RawrXD_FinishHexMagTelemetryChunk(this, lParam);
+                return 0;
+            }
+            if (uMsg == (WM_APP + 562))
+            {
+                extern void RawrXD_FinishHexMagTelemetryDone(Win32IDE* ide, WPARAM wParam);
+                RawrXD_FinishHexMagTelemetryDone(this, wParam);
                 return 0;
             }
             break;
@@ -3685,6 +3723,8 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         HandleCopilotClear();
         return;
     }
+    if (handleHexMagCommand(static_cast<unsigned>(id)))
+        return;
     if (id == 1206)
     {
         setAgenticMode(RawrXD::AgenticMode::Plan);

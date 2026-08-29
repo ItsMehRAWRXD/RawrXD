@@ -3,6 +3,7 @@
 // ============================================================================
 #include "core/hexmag_control_plane.hpp"
 #include "core/hexmag_oracle_binder.hpp"
+#include "core/hexmag_finalize_policy.hpp"
 #include "agentic/HexMagAction.hpp"
 
 #include <cstring>
@@ -306,21 +307,14 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     Claim claim = claimFromSwarmAnswer(ans, out.goalSatisfied);
     claim.directiveId = missionId;
     claim.generationId = HexMag_Tuner_GenerationId();
+    if (drained.needInput)
+        claim.state = ClaimState::MissingInput;
 
-    // Map ClaimState → HexMagAction finalize class (unsupported_claim_emission=FORBIDDEN)
-    ClaimFinalizeClass fin = ClaimFinalizeClass::Unverified;
-    if (claim.state == ClaimState::Proven) fin = ClaimFinalizeClass::Proven;
-    else if (claim.state == ClaimState::Verified || claim.verified())
-        fin = ClaimFinalizeClass::Verified;
-    else if (claim.state == ClaimState::MissingInput || drained.needInput)
-        fin = ClaimFinalizeClass::MissingInput;
-    else if (claim.state == ClaimState::Contradicted) fin = ClaimFinalizeClass::Contradicted;
-    else if (claim.state == ClaimState::FinalRejected) fin = ClaimFinalizeClass::Unknown;
-
-    // FINAL GATE — confidence irrelevant; HexMagAction + allowFinal both required
-    if (drained.needInput || !allowFinal(claim) || !isAllowedFinalClaim(fin)) {
+    // FINAL GATE — single P0D surface (evaluateFinalize); confidence irrelevant
+    const FinalizeDecision finDecision = evaluateFinalize(claim);
+    if (drained.needInput || !finDecision.allowed) {
         if (drained.needInput || claim.state == ClaimState::MissingInput
-            || fin == ClaimFinalizeClass::MissingInput) {
+            || finDecision.finClass == ClaimFinalizeClass::MissingInput) {
             out.success = false;
             out.error = ans.empty() ? "INSUFFICIENT_INFORMATION" : ans;
             out.answer = out.error;
@@ -346,7 +340,9 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     out.success = true;
     out.answer = ans.empty() ? std::string("goal.satisfied") : ans;
     out.claimState = claim.state;
-    out.provenance += "FINAL allowed by D1 (evidence verifier)\n";
+    out.provenance += "FINAL allowed by FinalizePolicy (";
+    out.provenance += finDecision.reason;
+    out.provenance += ")\n";
     return out;
 #else
     (void)missionId;
