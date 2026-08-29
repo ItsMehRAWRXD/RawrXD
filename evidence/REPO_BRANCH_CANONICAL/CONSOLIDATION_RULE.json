@@ -1,0 +1,17 @@
+﻿{
+    "asOf":  "2026-08-29",
+    "nextEngineeringGate":  "AGENT-E2E-002",
+    "forbidden":  [
+                      "merge master into main",
+                      "merge stale-dependabot ancestry"
+                  ],
+    "rule":  "inspect-extract-transplant; no wholesale merge; no deletions",
+    "canonicalTipAtAudit":  "d7651c5f0ca72c0a21724167d25b7529861c0267",
+    "githubDefaultBranch":  "master",
+    "canonicalBranch":  "main",
+    "next":  [
+                 "transplant dependabot unique deps",
+                 "evaluate _overflow/ value",
+                 "switch default branch to main"
+             ]
+}
