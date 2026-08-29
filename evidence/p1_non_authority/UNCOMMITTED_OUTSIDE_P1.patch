@@ -1,0 +1,85 @@
+﻿diff --git a/src/deep2/sovereign_moe_fused.asm b/src/deep2/sovereign_moe_fused.asm
+index 9b5a3f216..a27588c99 100644
+--- a/src/deep2/sovereign_moe_fused.asm
++++ b/src/deep2/sovereign_moe_fused.asm
+@@ -68,7 +68,8 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
+     
+     mov r9, rsi         ; hidden ptr
+     mov r10, rdi        ; gate_up weight ptr for this row
+-    add r10, r8, 18     ; Q4_K block size
++    imul rax, r8, 18    ; Q4_K block size * row
++    add r10, rax
+     
+     xor r11, r11        ; j = 0
+ @dot_loop:
+@@ -152,7 +153,8 @@ Sovereign_MoE_Fused_Q4K_AVX512 PROC FRAME
+     
+     mov r9, rcx         ; activated ptr
+     mov r10, rbx        ; down weight ptr
+-    add r10, r8, 18     ; offset to this row
++    imul rax, r8, 18    ; offset to this row
++    add r10, rax
+     
+     xor r11, r11        ; j = 0
+ @down_dot_loop:
+diff --git a/src/win32app/Win32IDE.h b/src/win32app/Win32IDE.h
+index 38cb9c4d2..967bc5566 100644
+--- a/src/win32app/Win32IDE.h
++++ b/src/win32app/Win32IDE.h
+@@ -340,6 +340,8 @@ class Win32IDE
+     bool handleHexMagCommand(unsigned cmdId);
+     void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel);
+     bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId);
++    /// GGUF/local NativeAgent fallback from HexMag free finish helper (keeps m_agent private).
++    bool askNativeAgentIfPresent(const std::string& question);
+     void onHexMagShowTelemetryPanel();
+     void onHexMagStartAgentTelemetryStream();
+     void appendHexMagTelemetryText(const std::wstring& text);
+diff --git a/src/win32app/Win32IDE_HexMag.cpp b/src/win32app/Win32IDE_HexMag.cpp
+index 3bce108d8..f12be31b9 100644
+--- a/src/win32app/Win32IDE_HexMag.cpp
++++ b/src/win32app/Win32IDE_HexMag.cpp
+@@ -6,6 +6,7 @@
+ #include "Win32IDE_Commands.h"
+ #include <atomic>
+ #include <memory>
++#include <richedit.h>
+ #include <thread>
+ 
+ #ifndef MSFTEDIT_CLASS
+@@ -200,12 +201,15 @@ void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam)
+         return;
+     }
+ 
+-    if (payload->requestGgufFallback && ide->m_agent && !payload->fallbackQuestion.empty())
++    if (payload->requestGgufFallback && !payload->fallbackQuestion.empty())
+     {
+-        ide->appendCopilotChatTextOnUiThread("\n[HexMag] " + payload->error + " ΓÇö local model fallback engaged.\n");
+-        ide->setHexMagStatusBarHint(L"HexMag: fallback");
+-        ide->m_agent->Ask(payload->fallbackQuestion);
+-        return;
++        if (ide->askNativeAgentIfPresent(payload->fallbackQuestion))
++        {
++            ide->appendCopilotChatTextOnUiThread("\n[HexMag] " + payload->error +
++                                                 " ΓÇö local model fallback engaged.\n");
++            ide->setHexMagStatusBarHint(L"HexMag: fallback");
++            return;
++        }
+     }
+ 
+     ide->appendCopilotChatTextOnUiThread("\n[HexMag failure]\n" + payload->error + "\n");
+@@ -219,6 +223,14 @@ void Win32IDE::setHexMagStatusBarHint(const std::wstring& text)
+         SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, reinterpret_cast<LPARAM>(text.c_str()));
+ }
+ 
++bool Win32IDE::askNativeAgentIfPresent(const std::string& question)
++{
++    if (!m_agent || question.empty())
++        return false;
++    m_agent->Ask(question);
++    return true;
++}
++
+ void Win32IDE::onHexMagStartService()
+ {
+     setHexMagStatusBarHint(L"HexMag: spawning engine...");
