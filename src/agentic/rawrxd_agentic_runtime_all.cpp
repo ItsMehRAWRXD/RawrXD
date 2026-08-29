@@ -2287,7 +2287,10 @@ static CliOptions parseCli(int argc, char** argv) {
     return options;
 }
 
-// AGENT-TOOL-SCHEMA-002: model-independent lanes A (malformed reject) + B (valid accept).
+// AGENT-TOOL-SCHEMA-002: model-independent lanes:
+//   A = irreparable / strict-mode reject (SCHEMA_VALID=false ⇒ DISPATCHED=false)
+//   R = TinyLlama bare-key dialect repaired then accepted
+//   B = already-strict JSON accepted
 static int runToolSchemaCert(const CliOptions& cli) {
     WorkspaceSandbox sandbox(cli.workspace);
     ToolRegistry tools(sandbox);
@@ -2302,25 +2305,40 @@ static int runToolSchemaCert(const CliOptions& cli) {
         const char* raw;
         bool expectAccept;
         bool expectDispatch;
+        bool forceStrict; // disable bare-key repair for this case
     };
     const Case cases[] = {
-        {"A", "TOOL_CALL: replace_in_file {path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}", false, false},
-        {"A", "TOOL_CALL: run_command {command: \"cmake --build build\"}", false, false},
-        {"B", "TOOL_CALL: replace_in_file {\"path\":\"main.c\",\"search\":\"DOES_NOT_EXIST\",\"replace\":\"42\"}", true, true},
-        {"B", "TOOL_CALL: read_file {\"path\":\"main.c\"}", true, true},
-        {"B", "TOOL_CALL: run_command {\"command\":\"cmake --build build\"}", true, true},
+        // Lane A: fail-closed (strict) — bare keys must NOT dispatch
+        {"A", "TOOL_CALL: replace_in_file {path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}", false, false, true},
+        {"A", "TOOL_CALL: run_command {command: \"cmake --build build\"}", false, false, true},
+        {"A", "TOOL_CALL: read_file {path:\"main.c\"}", false, false, true}, // mixed / irreparable-ish under strict
+        // Lane R: repair enabled — same bare-key dialect becomes SCHEMA_VALID + dispatched
+        {"R", "TOOL_CALL: replace_in_file {path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}", true, true, false},
+        {"R", "TOOL_CALL: read_file {path:main.c}", true, true, false},
+        // Lane B: already strict
+        {"B", "TOOL_CALL: replace_in_file {\"path\":\"main.c\",\"search\":\"DOES_NOT_EXIST\",\"replace\":\"42\"}", true, true, false},
+        {"B", "TOOL_CALL: read_file {\"path\":\"main.c\"}", true, true, false},
+        {"B", "TOOL_CALL: run_command {\"command\":\"cmake --build build\"}", true, true, false},
     };
 
     bool laneAPass = true;
+    bool laneRPass = true;
     bool laneBPass = true;
     std::ostringstream report;
     report << "AGENT-TOOL-SCHEMA-002 DIRECT\n";
 
     for (const auto& c : cases) {
+        if (c.forceStrict) {
+            _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "1");
+        } else {
+            _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "0");
+        }
         const auto calls = ToolCallParser::parse(c.raw);
         if (calls.empty()) {
             report << "FAIL lane=" << c.lane << " parse_empty raw=" << c.raw << "\n";
-            if (c.lane[0] == 'A') laneAPass = false; else laneBPass = false;
+            if (c.lane[0] == 'A') laneAPass = false;
+            else if (c.lane[0] == 'R') laneRPass = false;
+            else laneBPass = false;
             continue;
         }
         const ToolCall& call = calls.front();
@@ -2344,12 +2362,15 @@ static int runToolSchemaCert(const CliOptions& cli) {
                << "\n";
         report << "  result_json=" << result.toJson() << "\n";
         if (!ok) {
-            if (c.lane[0] == 'A') laneAPass = false; else laneBPass = false;
+            if (c.lane[0] == 'A') laneAPass = false;
+            else if (c.lane[0] == 'R') laneRPass = false;
+            else laneBPass = false;
         }
         // Lane A hard invariant
         if (c.lane[0] == 'A' && result.dispatched) laneAPass = false;
         if (c.lane[0] == 'A' && result.error != "schema_validation") laneAPass = false;
     }
+    _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "0");
 
     // Step-2 render dump (needs GGUF metadata for template contract; no Deep2 load).
     if (!cli.model.empty()) {
@@ -2385,10 +2406,11 @@ static int runToolSchemaCert(const CliOptions& cli) {
     }
 
     report << "LANE_A_MALFORMED_REJECT=" << (laneAPass ? "PASS" : "FAIL") << "\n";
+    report << "LANE_R_BAREKEY_REPAIR=" << (laneRPass ? "PASS" : "FAIL") << "\n";
     report << "LANE_B_VALID_ACCEPT=" << (laneBPass ? "PASS" : "FAIL") << "\n";
     report << "VALID_SCHEMA_LANE=" << (laneBPass ? "PASS" : "FAIL") << "\n";
     report << "AGENT-TOOL-SCHEMA-002="
-           << ((laneAPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\n";
+           << ((laneAPass && laneRPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\n";
 
     const std::string text = report.str();
     std::cout << text;
@@ -2398,15 +2420,16 @@ static int runToolSchemaCert(const CliOptions& cli) {
     std::ostringstream lock;
     lock << "{\n"
          << "  \"gate\": \"AGENT-TOOL-SCHEMA-002\",\n"
-         << "  \"status\": \"" << ((laneAPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\",\n"
+         << "  \"status\": \"" << ((laneAPass && laneRPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\",\n"
          << "  \"LANE_A_MALFORMED_REJECT\": \"" << (laneAPass ? "PASS" : "FAIL") << "\",\n"
+         << "  \"LANE_R_BAREKEY_REPAIR\": \"" << (laneRPass ? "PASS" : "FAIL") << "\",\n"
          << "  \"LANE_B_VALID_ACCEPT\": \"" << (laneBPass ? "PASS" : "FAIL") << "\",\n"
          << "  \"VALID_SCHEMA_LANE\": \"" << (laneBPass ? "PASS" : "FAIL") << "\",\n"
-         << "  \"note\": \"Architectural gate independent of TinyLlama. Full agent next-action is a separate defect.\"\n"
+         << "  \"note\": \"Lane A uses RAWRXD_TOOL_ARGS_STRICT=1; Lane R proves TinyLlama bare-key repair.\"\n"
          << "}\n";
     writeWholeFile(outDir / "AGENT-TOOL-SCHEMA-002.lock.json", lock.str());
 
-    return (laneAPass && laneBPass) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return (laneAPass && laneRPass && laneBPass) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 static void printRuntimeInfo(const NativeInferenceClient& inference, const WorkspaceSandbox& sandbox) {
