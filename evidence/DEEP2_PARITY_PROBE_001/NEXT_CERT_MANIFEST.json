@@ -2,37 +2,33 @@
   "manifest": "NEXT_CERT_MANIFEST",
   "date": "2026-08-29",
   "ids": [1, 21521, 9312],
-  "cert_commit_l10_ffn_inp": "7ee02e8b3",
-  "cert_commit_l10_out": "e53bac4b0",
+  "branch_authority": "e4e71e277",
   "cert_commit_l11": "a1d27e372",
+  "cert_commit_tip": "e4e71e277",
   "authority": "RAWRXD_FORCE_PRE_O_EXPAND_V",
   "independent_tracks": ["GBS", "P1_GGUF_streaming"],
   "do_not_reopen": [
-    "tokenizer / Track A/B / L0 / L1 / wo",
-    "Deep2Engine::SwiGLU (exact at L2 and L10)",
-    "L10 path / L10_OUT / L11 growth as native root",
-    "tip filename pos labels (use TIP_* content pairing)",
-    "HexMag control-plane / IDE route",
-    "GBS / P1 product-path status (independent)"
+    "L10 / L11 as native root",
+    "tip ARGMAX (MATCH id=13)",
+    "tip filename pos labels",
+    "HexMag / GBS / P1"
   ],
   "closed": [
-    "L10_FFN_INP_SAME_SOURCE @ 7ee02e8b3",
-    "L10_OUT_RESCORE @ e53bac4b0 INHERITED_FROM_FFN_DOWN",
-    "L11_BODY @ a1d27e372 VERDICT=AMPLIFICATION",
-    "TIP_ALIGN FINAL_NORM/LOGITS ARGMAX_MATCH id=13"
+    "L10 @ 7ee02e8b3 / e53bac4b0",
+    "L11 @ a1d27e372 AMPLIFICATION",
+    "TIP_ALIGN @ e4e71e277 ARGMAX_MATCH",
+    "L16_L21_GROWTH_MAP AMPLIFICATION_MAP (first_strong=L21_OUT)"
   ],
   "active": {
-    "id": "OPTIONAL_L16_L21_GROWTH_MAP",
-    "status": "OPTIONAL",
-    "tip_gate": "ARGMAX_MATCH",
-    "TIP_FINAL_NORM": {"max_abs": 5.687e-1, "class": "amplification_strong"},
-    "TIP_LOGITS": {"max_abs": 4.822e-1, "class": "inherited", "argmax": 13},
-    "evidence": "BATCH2_TIP_ALIGN_001/GATE.txt"
+    "id": "PARITY_LADDER_MAPPED",
+    "status": "DONE",
+    "greedy_tip": "CLOSED ARGMAX_MATCH id=13",
+    "evidence": "BATCH2_L16_L21_GROWTH_001/GATE.txt"
   },
   "todos_ordered": [
-    {"seq": 8, "id": "TODO_SPARSE_GROWTH_L11_L12", "status": "DONE", "result": "AMPLIFICATION @ a1d27e372"},
-    {"seq": 9, "id": "TODO_FINAL_NORM_LOGITS", "status": "DONE", "result": "TIP_ALIGNED; ARGMAX_MATCH id=13"},
+    {"seq": 9, "id": "TODO_FINAL_NORM_LOGITS", "status": "DONE", "result": "TIP_ALIGNED ARGMAX_MATCH @ e4e71e277"},
+    {"seq": 11, "id": "TODO_L16_L21_GROWTH_MAP", "status": "DONE", "result": "AMPLIFICATION_MAP; L21 first strong jump; tip still MATCH"},
     {"seq": 10, "id": "TODO_L10_RESID_IN_LOCALIZE", "status": "DEFERRED"},
-    {"seq": 11, "id": "TODO_L16_L21_GROWTH_MAP", "status": "OPTIONAL", "action": "Map post-L12 amplification if needed; not blocking greedy tip"}
+    {"seq": 12, "id": "TODO_PRODUCT_TRACKS", "status": "INDEPENDENT", "action": "GBS / P1 remain separate from Deep2 ladder"}
   ]
 }

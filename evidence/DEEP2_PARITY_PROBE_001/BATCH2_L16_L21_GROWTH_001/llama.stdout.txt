@@ -1,0 +1,216 @@
+PARITY-CERT-001
+side=reference
+reference_backend=llama.cpp
+note=external_measuring_stick_only_not_a_deep2_dependency
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+prompt=hi
+max_new_tokens=1
+temperature=0
+top_k=1
+REF_LOAD=PASS
+REF_EMBEDDINGS=0
+REF_CB_EVAL=1
+REF_N_EMBD=2048
+REF_ROPE_FREQ_SCALE_TRAIN=1.000000000
+REF_FORCE_IDS=1 count=3
+REF_PROMPT_IDS=1,21521,9312
+REF_CB_SPARSE=1 layers=12,13,14,15,16,17,18,19,20,21,
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=0 layer=0 head=-1 n=2048 l2=1.008737855e-01 max_abs=7.818102837e-03 min=-7.818102837e-03 max=5.915760994e-03 sum=5.792212486e-02 fnv=13123758da8b244a nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_PROMPT_EMBED_pos0_layer0_full_n2048_seq001.bin nelem=2048 head=-1 seq=001 fnv=13123758da8b244a
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=1 layer=0 head=-1 n=2048 l2=6.859930578e-01 max_abs=4.812109470e-02 min=-4.482078552e-02 max=4.812109470e-02 sum=2.338130474e-01 fnv=8a6fb3e8ad112243 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_PROMPT_EMBED_pos1_layer0_full_n2048_seq002.bin nelem=2048 head=-1 seq=002 fnv=8a6fb3e8ad112243
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=2 layer=0 head=-1 n=2048 l2=5.756086220e-01 max_abs=4.809522629e-02 min=-4.809522629e-02 max=4.663950205e-02 sum=-1.291597664e+00 fnv=4c65a249c9e0756c nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_PROMPT_EMBED_pos2_layer0_full_n2048_seq003.bin nelem=2048 head=-1 seq=003 fnv=4c65a249c9e0756c
+FORCE_PRE_O=APPLIED kqv_out-0 cols=1/3 hit=1 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-0 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-1 cols=1/3 hit=2 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-1 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-2 cols=1/3 hit=3 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-2 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-3 cols=1/3 hit=4 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-3 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-4 cols=1/3 hit=5 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-4 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-5 cols=1/3 hit=6 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-5 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-6 cols=1/3 hit=7 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-6 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-7 cols=1/3 hit=8 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-7 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-8 cols=1/3 hit=9 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-8 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-9 cols=1/3 hit=10 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-9 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-10 cols=1/3 hit=11 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-10 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-11 cols=1/3 hit=12 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-11 ne=[2048,3,1] nb=[4,8192,24576]
+FORCE_PRE_O=APPLIED kqv_out-12 cols=1/3 hit=13 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-12 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER12_OUT pos=0 layer=0 head=-1 n=2048 l2=1.679535880e+02 max_abs=1.338966522e+02 min=-1.338966522e+02 max=2.026575470e+01 sum=-2.002595988e+02 fnv=3041a45e578a33b4 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER12_OUT_pos0_layer0_full_n2048_seq004.bin nelem=2048 head=-1 seq=004 fnv=3041a45e578a33b4
+[STAGE_DIGEST] side=llama key=LAYER12_OUT pos=1 layer=0 head=-1 n=2048 l2=5.955557834e+00 max_abs=1.685150504e+00 min=-1.165687680e+00 max=1.685150504e+00 sum=4.316406335e+00 fnv=516dd2f3c7166fe4 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER12_OUT_pos1_layer0_full_n2048_seq005.bin nelem=2048 head=-1 seq=005 fnv=516dd2f3c7166fe4
+[STAGE_DIGEST] side=llama key=LAYER12_OUT pos=2 layer=0 head=-1 n=2048 l2=5.333076316e+00 max_abs=1.403236389e+00 min=-8.789122105e-01 max=1.403236389e+00 sum=3.761245034e+00 fnv=a918c247fa4e55df nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER12_OUT_pos2_layer0_full_n2048_seq006.bin nelem=2048 head=-1 seq=006 fnv=a918c247fa4e55df
+FORCE_PRE_O=APPLIED kqv_out-13 cols=1/3 hit=14 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-13 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER13_OUT pos=0 layer=0 head=-1 n=2048 l2=1.678289140e+02 max_abs=1.338070831e+02 min=-1.338070831e+02 max=2.020626640e+01 sum=-2.012512563e+02 fnv=c8689d6ebe392ff7 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER13_OUT_pos0_layer0_full_n2048_seq007.bin nelem=2048 head=-1 seq=007 fnv=c8689d6ebe392ff7
+[STAGE_DIGEST] side=llama key=LAYER13_OUT pos=1 layer=0 head=-1 n=2048 l2=6.620535182e+00 max_abs=2.012398243e+00 min=-1.328562975e+00 max=2.012398243e+00 sum=3.368114666e+00 fnv=6ba6da31eff12d11 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER13_OUT_pos1_layer0_full_n2048_seq008.bin nelem=2048 head=-1 seq=008 fnv=6ba6da31eff12d11
+[STAGE_DIGEST] side=llama key=LAYER13_OUT pos=2 layer=0 head=-1 n=2048 l2=6.490488568e+00 max_abs=1.971020937e+00 min=-9.681633711e-01 max=1.971020937e+00 sum=2.731969153e+00 fnv=e6586077353c8c55 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER13_OUT_pos2_layer0_full_n2048_seq009.bin nelem=2048 head=-1 seq=009 fnv=e6586077353c8c55
+FORCE_PRE_O=APPLIED kqv_out-14 cols=1/3 hit=15 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-14 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER14_OUT pos=0 layer=0 head=-1 n=2048 l2=1.676503481e+02 max_abs=1.336297760e+02 min=-1.336297760e+02 max=2.013203621e+01 sum=-2.008290803e+02 fnv=cdc906c5bc721391 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER14_OUT_pos0_layer0_full_n2048_seq010.bin nelem=2048 head=-1 seq=010 fnv=cdc906c5bc721391
+[STAGE_DIGEST] side=llama key=LAYER14_OUT pos=1 layer=0 head=-1 n=2048 l2=7.066239572e+00 max_abs=2.384232998e+00 min=-1.391854525e+00 max=2.384232998e+00 sum=5.599990543e-01 fnv=a88a70d0d2377165 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER14_OUT_pos1_layer0_full_n2048_seq011.bin nelem=2048 head=-1 seq=011 fnv=a88a70d0d2377165
+[STAGE_DIGEST] side=llama key=LAYER14_OUT pos=2 layer=0 head=-1 n=2048 l2=7.276878889e+00 max_abs=2.252613068e+00 min=-1.111590981e+00 max=2.252613068e+00 sum=7.326390394e-01 fnv=a421d289eee49f37 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER14_OUT_pos2_layer0_full_n2048_seq012.bin nelem=2048 head=-1 seq=012 fnv=a421d289eee49f37
+FORCE_PRE_O=APPLIED kqv_out-15 cols=1/3 hit=16 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-15 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER15_OUT pos=0 layer=0 head=-1 n=2048 l2=1.674670661e+02 max_abs=1.334666901e+02 min=-1.334666901e+02 max=2.009509659e+01 sum=-2.019492578e+02 fnv=7e17956fd9da072e nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER15_OUT_pos0_layer0_full_n2048_seq013.bin nelem=2048 head=-1 seq=013 fnv=7e17956fd9da072e
+[STAGE_DIGEST] side=llama key=LAYER15_OUT pos=1 layer=0 head=-1 n=2048 l2=8.507145999e+00 max_abs=2.045302391e+00 min=-1.416586637e+00 max=2.045302391e+00 sum=-4.975966718e+00 fnv=1701c195fe676c50 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER15_OUT_pos1_layer0_full_n2048_seq014.bin nelem=2048 head=-1 seq=014 fnv=1701c195fe676c50
+[STAGE_DIGEST] side=llama key=LAYER15_OUT pos=2 layer=0 head=-1 n=2048 l2=8.987074608e+00 max_abs=2.392320395e+00 min=-1.236934304e+00 max=2.392320395e+00 sum=-2.851679421e+00 fnv=8bbc14f264e17a91 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER15_OUT_pos2_layer0_full_n2048_seq015.bin nelem=2048 head=-1 seq=015 fnv=8bbc14f264e17a91
+FORCE_PRE_O=APPLIED kqv_out-16 cols=1/3 hit=17 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-16 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER16_OUT pos=0 layer=0 head=-1 n=2048 l2=1.672301485e+02 max_abs=1.332660217e+02 min=-1.332660217e+02 max=2.000319481e+01 sum=-2.015947569e+02 fnv=c0a5176332852121 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER16_OUT_pos0_layer0_full_n2048_seq016.bin nelem=2048 head=-1 seq=016 fnv=c0a5176332852121
+[STAGE_DIGEST] side=llama key=LAYER16_OUT pos=1 layer=0 head=-1 n=2048 l2=1.073736789e+01 max_abs=2.217061520e+00 min=-1.440097928e+00 max=2.217061520e+00 sum=-4.621926071e+00 fnv=03398af5bec2e112 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER16_OUT_pos1_layer0_full_n2048_seq017.bin nelem=2048 head=-1 seq=017 fnv=03398af5bec2e112
+[STAGE_DIGEST] side=llama key=LAYER16_OUT pos=2 layer=0 head=-1 n=2048 l2=1.031969833e+01 max_abs=3.412851334e+00 min=-1.496149778e+00 max=3.412851334e+00 sum=-4.922052482e-01 fnv=b23df7bc3c74d2db nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER16_OUT_pos2_layer0_full_n2048_seq018.bin nelem=2048 head=-1 seq=018 fnv=b23df7bc3c74d2db
+FORCE_PRE_O=APPLIED kqv_out-17 cols=1/3 hit=18 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-17 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER17_OUT pos=0 layer=0 head=-1 n=2048 l2=1.668073613e+02 max_abs=1.328926392e+02 min=-1.328926392e+02 max=1.995107460e+01 sum=-2.021823333e+02 fnv=7987e28c4255975f nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER17_OUT_pos0_layer0_full_n2048_seq019.bin nelem=2048 head=-1 seq=019 fnv=7987e28c4255975f
+[STAGE_DIGEST] side=llama key=LAYER17_OUT pos=1 layer=0 head=-1 n=2048 l2=1.263756636e+01 max_abs=3.463401556e+00 min=-1.499361634e+00 max=3.463401556e+00 sum=-5.876443619e+00 fnv=38ba939a7f5fe427 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER17_OUT_pos1_layer0_full_n2048_seq020.bin nelem=2048 head=-1 seq=020 fnv=38ba939a7f5fe427
+[STAGE_DIGEST] side=llama key=LAYER17_OUT pos=2 layer=0 head=-1 n=2048 l2=1.294558840e+01 max_abs=5.255059242e+00 min=-1.654371262e+00 max=5.255059242e+00 sum=-4.442368732e+00 fnv=517bdb42d29c6988 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER17_OUT_pos2_layer0_full_n2048_seq021.bin nelem=2048 head=-1 seq=021 fnv=517bdb42d29c6988
+FORCE_PRE_O=APPLIED kqv_out-18 cols=1/3 hit=19 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-18 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER18_OUT pos=0 layer=0 head=-1 n=2048 l2=1.661820903e+02 max_abs=1.323789062e+02 min=-1.323789062e+02 max=1.993916321e+01 sum=-2.040651316e+02 fnv=579fdfedac12aee1 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER18_OUT_pos0_layer0_full_n2048_seq022.bin nelem=2048 head=-1 seq=022 fnv=579fdfedac12aee1
+[STAGE_DIGEST] side=llama key=LAYER18_OUT pos=1 layer=0 head=-1 n=2048 l2=1.501991095e+01 max_abs=4.396863937e+00 min=-1.508517504e+00 max=4.396863937e+00 sum=-8.951855340e+00 fnv=616d74d7fa475fff nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER18_OUT_pos1_layer0_full_n2048_seq023.bin nelem=2048 head=-1 seq=023 fnv=616d74d7fa475fff
+[STAGE_DIGEST] side=llama key=LAYER18_OUT pos=2 layer=0 head=-1 n=2048 l2=1.549667538e+01 max_abs=6.537374496e+00 min=-1.857606888e+00 max=6.537374496e+00 sum=-1.873090723e+00 fnv=b2c044810914c06a nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER18_OUT_pos2_layer0_full_n2048_seq024.bin nelem=2048 head=-1 seq=024 fnv=b2c044810914c06a
+FORCE_PRE_O=APPLIED kqv_out-19 cols=1/3 hit=20 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-19 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER19_OUT pos=0 layer=0 head=-1 n=2048 l2=1.647478372e+02 max_abs=1.311267853e+02 min=-1.311267853e+02 max=1.985976982e+01 sum=-2.105721075e+02 fnv=50baaf70dacce3ec nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER19_OUT_pos0_layer0_full_n2048_seq025.bin nelem=2048 head=-1 seq=025 fnv=50baaf70dacce3ec
+[STAGE_DIGEST] side=llama key=LAYER19_OUT pos=1 layer=0 head=-1 n=2048 l2=1.778493082e+01 max_abs=5.369304180e+00 min=-1.488629460e+00 max=5.369304180e+00 sum=-1.947324047e+01 fnv=e541b00596c9362e nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER19_OUT_pos1_layer0_full_n2048_seq026.bin nelem=2048 head=-1 seq=026 fnv=e541b00596c9362e
+[STAGE_DIGEST] side=llama key=LAYER19_OUT pos=2 layer=0 head=-1 n=2048 l2=1.864234504e+01 max_abs=8.770946503e+00 min=-2.140824795e+00 max=8.770946503e+00 sum=-2.412948907e+00 fnv=e3950080efd0caaa nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER19_OUT_pos2_layer0_full_n2048_seq027.bin nelem=2048 head=-1 seq=027 fnv=e3950080efd0caaa
+FORCE_PRE_O=APPLIED kqv_out-20 cols=1/3 hit=21 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-20 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER20_OUT pos=0 layer=0 head=-1 n=2048 l2=1.628879376e+02 max_abs=1.296203308e+02 min=-1.296203308e+02 max=1.968909454e+01 sum=-2.097218557e+02 fnv=fd2d1bd2151c7391 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER20_OUT_pos0_layer0_full_n2048_seq028.bin nelem=2048 head=-1 seq=028 fnv=fd2d1bd2151c7391
+[STAGE_DIGEST] side=llama key=LAYER20_OUT pos=1 layer=0 head=-1 n=2048 l2=2.182533607e+01 max_abs=7.210105896e+00 min=-2.181391716e+00 max=7.210105896e+00 sum=-1.271640352e+01 fnv=127ec700b6d51cee nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER20_OUT_pos1_layer0_full_n2048_seq029.bin nelem=2048 head=-1 seq=029 fnv=127ec700b6d51cee
+[STAGE_DIGEST] side=llama key=LAYER20_OUT pos=2 layer=0 head=-1 n=2048 l2=2.185537915e+01 max_abs=1.250954056e+01 min=-2.167103529e+00 max=1.250954056e+01 sum=-2.529477306e+01 fnv=2cc4ea58a7b0b7ff nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER20_OUT_pos2_layer0_full_n2048_seq030.bin nelem=2048 head=-1 seq=030 fnv=2cc4ea58a7b0b7ff
+FORCE_PRE_O=APPLIED kqv_out-21 cols=1/3 hit=22 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-21 ne=[2048,3,1] nb=[4,8192,24576]
+[STAGE_DIGEST] side=llama key=LAYER21_OUT pos=0 layer=0 head=-1 n=2048 l2=3.544875249e+01 max_abs=1.969958496e+01 min=-9.306513786e+00 max=1.969958496e+01 sum=-8.846395768e+01 fnv=b3ee74a7fa82c939 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER21_OUT_pos0_layer0_full_n2048_seq031.bin nelem=2048 head=-1 seq=031 fnv=b3ee74a7fa82c939
+[STAGE_DIGEST] side=llama key=FINAL_NORM pos=0 layer=0 head=-1 n=2048 l2=7.653507045e+01 max_abs=2.939944839e+01 min=-2.939944839e+01 max=1.447103310e+01 sum=-2.730515676e+02 fnv=44afc5688d5bee7f nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_FINAL_NORM_pos0_layer0_full_n2048_seq032.bin nelem=2048 head=-1 seq=032 fnv=44afc5688d5bee7f
+[STAGE_DIGEST] side=llama key=TIP_FINAL_NORM pos=0 layer=0 head=-1 n=2048 l2=7.653507045e+01 max_abs=2.939944839e+01 min=-2.939944839e+01 max=1.447103310e+01 sum=-2.730515676e+02 fnv=44afc5688d5bee7f nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq033.bin nelem=2048 head=-1 seq=033 fnv=44afc5688d5bee7f
+[STAGE_DIGEST] side=llama key=LOGITS pos=0 layer=0 head=-1 n=32000 l2=7.456022323e+02 max_abs=1.371913910e+01 min=-1.371913910e+01 max=8.286348343e+00 sum=-1.041400114e+05 fnv=10bfdb9f7225d160 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LOGITS_pos0_layer0_full_n32000_seq034.bin nelem=32000 head=-1 seq=034 fnv=10bfdb9f7225d160
+[STAGE_DIGEST] side=llama key=TIP_LOGITS pos=0 layer=0 head=-1 n=32000 l2=7.456022323e+02 max_abs=1.371913910e+01 min=-1.371913910e+01 max=8.286348343e+00 sum=-1.041400114e+05 fnv=10bfdb9f7225d160 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_TIP_LOGITS_pos0_layer0_full_n32000_seq035.bin nelem=32000 head=-1 seq=035 fnv=10bfdb9f7225d160
+[STAGE_DIGEST] side=llama key=ARGMAX pos=0 id=13 logit=8.286348343
+REF_TOP10=13:8.286348:' ',29892:8.196154:' ',29899:8.126904:'-',29949:8.009759:'O',29889:7.921789:'.',29903:7.794400:'S',29871:7.704365:' ',29901:7.567165:':',29909:7.256569:'A',313:7.211880:' ('
+REF_SELECTED_ID=13
+REF_SELECTED_LOGIT=8.286348
+REF_LOGIT_13=8.286348343
+REF_LOGIT_29892=8.196153641
+REF_DELTA_13_minus_29892=0.090194702
+[STAGE_DIGEST] side=llama key=PROMPT_EMBED pos=0 layer=0 head=-1 n=2048 l2=2.113148567e-01 max_abs=6.863570213e-02 min=-6.224441528e-02 max=6.863570213e-02 sum=4.796147346e-02 fnv=94bfd11c29214314 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_PROMPT_EMBED_pos0_layer0_full_n2048_seq036.bin nelem=2048 head=-1 seq=036 fnv=94bfd11c29214314
+FORCE_PRE_O=APPLIED kqv_out-0 cols=1/1 hit=23 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-0 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-1 cols=1/1 hit=24 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-1 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-2 cols=1/1 hit=25 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-2 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-3 cols=1/1 hit=26 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-3 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-4 cols=1/1 hit=27 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-4 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-5 cols=1/1 hit=28 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-5 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-6 cols=1/1 hit=29 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-6 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-7 cols=1/1 hit=30 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-7 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-8 cols=1/1 hit=31 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-8 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-9 cols=1/1 hit=32 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-9 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-10 cols=1/1 hit=33 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-10 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-11 cols=1/1 hit=34 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-11 ne=[2048,1,1] nb=[4,8192,8192]
+FORCE_PRE_O=APPLIED kqv_out-12 cols=1/1 hit=35 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-12 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER12_OUT pos=0 layer=0 head=-1 n=2048 l2=1.758353853e+02 max_abs=1.400605621e+02 min=-1.400605621e+02 max=2.138299751e+01 sum=-2.028543104e+02 fnv=1098d3f1bd206ce6 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER12_OUT_pos0_layer0_full_n2048_seq037.bin nelem=2048 head=-1 seq=037 fnv=1098d3f1bd206ce6
+FORCE_PRE_O=APPLIED kqv_out-13 cols=1/1 hit=36 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-13 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER13_OUT pos=0 layer=0 head=-1 n=2048 l2=1.757050117e+02 max_abs=1.399662476e+02 min=-1.399662476e+02 max=2.132084656e+01 sum=-2.037532212e+02 fnv=61f40c5711381591 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER13_OUT_pos0_layer0_full_n2048_seq038.bin nelem=2048 head=-1 seq=038 fnv=61f40c5711381591
+FORCE_PRE_O=APPLIED kqv_out-14 cols=1/1 hit=37 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-14 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER14_OUT pos=0 layer=0 head=-1 n=2048 l2=1.755250774e+02 max_abs=1.397888794e+02 min=-1.397888794e+02 max=2.125349236e+01 sum=-2.032803326e+02 fnv=a998db1054fe11c3 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER14_OUT_pos0_layer0_full_n2048_seq039.bin nelem=2048 head=-1 seq=039 fnv=a998db1054fe11c3
+FORCE_PRE_O=APPLIED kqv_out-15 cols=1/1 hit=38 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-15 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER15_OUT pos=0 layer=0 head=-1 n=2048 l2=1.753431927e+02 max_abs=1.396230011e+02 min=-1.396230011e+02 max=2.121691322e+01 sum=-2.043853322e+02 fnv=55dfa8efdd202e15 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER15_OUT_pos0_layer0_full_n2048_seq040.bin nelem=2048 head=-1 seq=040 fnv=55dfa8efdd202e15
+FORCE_PRE_O=APPLIED kqv_out-16 cols=1/1 hit=39 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-16 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER16_OUT pos=0 layer=0 head=-1 n=2048 l2=1.751089149e+02 max_abs=1.394152069e+02 min=-1.394152069e+02 max=2.114282608e+01 sum=-2.038535872e+02 fnv=6e0063ab7dbb770a nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER16_OUT_pos0_layer0_full_n2048_seq041.bin nelem=2048 head=-1 seq=041 fnv=6e0063ab7dbb770a
+FORCE_PRE_O=APPLIED kqv_out-17 cols=1/1 hit=40 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-17 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER17_OUT pos=0 layer=0 head=-1 n=2048 l2=1.746933876e+02 max_abs=1.390578613e+02 min=-1.390578613e+02 max=2.109153366e+01 sum=-2.044869982e+02 fnv=5dc41989bb695a31 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER17_OUT_pos0_layer0_full_n2048_seq042.bin nelem=2048 head=-1 seq=042 fnv=5dc41989bb695a31
+FORCE_PRE_O=APPLIED kqv_out-18 cols=1/1 hit=41 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-18 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER18_OUT pos=0 layer=0 head=-1 n=2048 l2=1.740792550e+02 max_abs=1.385690765e+02 min=-1.385690765e+02 max=2.106736183e+01 sum=-2.067336244e+02 fnv=43d89084534ae2ed nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER18_OUT_pos0_layer0_full_n2048_seq043.bin nelem=2048 head=-1 seq=043 fnv=43d89084534ae2ed
+FORCE_PRE_O=APPLIED kqv_out-19 cols=1/1 hit=42 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-19 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER19_OUT pos=0 layer=0 head=-1 n=2048 l2=1.727103674e+02 max_abs=1.373843231e+02 min=-1.373843231e+02 max=2.100258446e+01 sum=-2.136501923e+02 fnv=4e58fe947c0452c6 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER19_OUT_pos0_layer0_full_n2048_seq044.bin nelem=2048 head=-1 seq=044 fnv=4e58fe947c0452c6
+FORCE_PRE_O=APPLIED kqv_out-20 cols=1/1 hit=43 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-20 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER20_OUT pos=0 layer=0 head=-1 n=2048 l2=1.704335131e+02 max_abs=1.355050507e+02 min=-1.355050507e+02 max=2.092903328e+01 sum=-2.159564607e+02 fnv=8a110b6cf687e766 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER20_OUT_pos0_layer0_full_n2048_seq045.bin nelem=2048 head=-1 seq=045 fnv=8a110b6cf687e766
+FORCE_PRE_O=APPLIED kqv_out-21 cols=1/1 hit=44 mode=EXPAND_V
+REF_KQV_SHAPE name=kqv_out-21 ne=[2048,1,1] nb=[4,8192,8192]
+[STAGE_DIGEST] side=llama key=LAYER21_OUT pos=0 layer=0 head=-1 n=2048 l2=1.729438864e+01 max_abs=7.433977127e+00 min=-3.187711477e+00 max=7.433977127e+00 sum=-1.536082951e+00 fnv=180334fdb15307af nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LAYER21_OUT_pos0_layer0_full_n2048_seq046.bin nelem=2048 head=-1 seq=046 fnv=180334fdb15307af
+[STAGE_DIGEST] side=llama key=FINAL_NORM pos=0 layer=0 head=-1 n=2048 l2=8.069680390e+01 max_abs=2.306838226e+01 min=-2.306838226e+01 max=1.240401173e+01 sum=-3.737319705e+01 fnv=3d46ff673da98b6d nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_FINAL_NORM_pos0_layer0_full_n2048_seq047.bin nelem=2048 head=-1 seq=047 fnv=3d46ff673da98b6d
+[STAGE_DIGEST] side=llama key=TIP_FINAL_NORM pos=0 layer=0 head=-1 n=2048 l2=8.069680390e+01 max_abs=2.306838226e+01 min=-2.306838226e+01 max=1.240401173e+01 sum=-3.737319705e+01 fnv=3d46ff673da98b6d nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq048.bin nelem=2048 head=-1 seq=048 fnv=3d46ff673da98b6d
+[STAGE_DIGEST] side=llama key=LOGITS pos=0 layer=0 head=-1 n=32000 l2=4.525652213e+02 max_abs=9.896809578e+00 min=-9.896809578e+00 max=7.636218071e+00 sum=-4.209706848e+04 fnv=e7c96614de54ff88 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_LOGITS_pos0_layer0_full_n32000_seq049.bin nelem=32000 head=-1 seq=049 fnv=e7c96614de54ff88
+[STAGE_DIGEST] side=llama key=TIP_LOGITS pos=0 layer=0 head=-1 n=32000 l2=4.525652213e+02 max_abs=9.896809578e+00 min=-9.896809578e+00 max=7.636218071e+00 sum=-4.209706848e+04 fnv=e7c96614de54ff88 nf=0
+[STAGE_DUMP] F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L16_L21_GROWTH_001\llama\llama_TIP_LOGITS_pos0_layer0_full_n32000_seq050.bin nelem=32000 head=-1 seq=050 fnv=e7c96614de54ff88
+[STAGE_DIGEST] side=llama key=ARGMAX pos=0 id=3707 logit=7.636218071
+REF_GEN_IDS=13
+REF_GEN_COUNT=1
+REF_SIDE=DONE

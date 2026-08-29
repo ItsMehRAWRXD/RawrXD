@@ -1,0 +1,26 @@
+BATCH2_L16_L21_GROWTH_001
+============================================================
+date=2026-08-29
+authority_tip=e4e71e277
+prereq=a1d27e372 L11 AMPLIFICATION; tip ARGMAX_MATCH id=13
+scope=L12..L21 layer-out growth map (no body reopen)
+
+SPARSE GROWTH (pos0, earliest seq)
+----------------------------------------
+  L12_OUT          dual=FAIL    max_abs=4.635e-04 amp=1.00 class=inherited
+  L13_OUT          dual=FAIL    max_abs=7.095e-04 amp=1.53 class=amplification
+  L14_OUT          dual=FAIL    max_abs=1.804e-03 amp=2.54 class=amplification
+  L15_OUT          dual=FAIL    max_abs=2.274e-03 amp=1.26 class=amplification
+  L16_OUT          dual=FAIL    max_abs=2.761e-03 amp=1.21 class=inherited
+  L17_OUT          dual=FAIL    max_abs=2.991e-03 amp=1.08 class=inherited
+  L18_OUT          dual=FAIL    max_abs=4.180e-03 amp=1.40 class=amplification
+  L19_OUT          dual=FAIL    max_abs=8.005e-03 amp=1.92 class=amplification
+  L20_OUT          dual=FAIL    max_abs=1.013e-02 amp=1.27 class=amplification
+  L21_OUT          dual=FAIL    max_abs=1.982e+01 amp=1956.22 class=amplification_strong
+  TIP_FINAL_NORM   dual=FAIL    max_abs=9.740e-01 amp=0.05 class=inherited
+  TIP_LOGITS       dual=FAIL    max_abs=5.209e-01 amp=0.53 class=inherited
+
+VERDICT=AMPLIFICATION_MAP
+first_amplification_strong=L21_OUT
+DO_NOT_reopen=L10 / L11 / tip ARGMAX / HexMag / GBS / P1
+NOTE=greedy tip closed; this map explains magnitude growth only

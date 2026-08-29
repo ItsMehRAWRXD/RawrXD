@@ -1,0 +1,321 @@
+{
+  "prereq": "e4e71e277 tip-align ARGMAX_MATCH; a1d27e372 L11 AMPLIFICATION",
+  "do_not_reopen": [
+    "L10",
+    "L11",
+    "tip ARGMAX"
+  ],
+  "stages": {
+    "L12_OUT": {
+      "n": 2048,
+      "max_abs": 0.0004634857177734375,
+      "mean_abs": 0.00010621178410019638,
+      "l2": 0.006039737074226868,
+      "max_rel": 0.0004547238349914551,
+      "argmax": 1454,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 0.9999691861347088,
+      "class": "inherited",
+      "prev": "L12_OUT_CERT",
+      "prev_abs": 0.0004635,
+      "d": "deep2_LAYER_OUT_12_pos0_layer0_full_n2048_seq055.bin",
+      "l": "llama_LAYER12_OUT_pos0_layer0_full_n2048_seq004.bin"
+    },
+    "L13_OUT": {
+      "n": 2048,
+      "max_abs": 0.0007095038890838623,
+      "mean_abs": 0.00014515622865474143,
+      "l2": 0.008336209134020858,
+      "max_rel": 0.0007095038890838623,
+      "argmax": 551,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.5307998971193415,
+      "class": "amplification",
+      "prev": "L12_OUT",
+      "prev_abs": 0.0004634857177734375,
+      "d": "deep2_LAYER_OUT_13_pos0_layer0_full_n2048_seq056.bin",
+      "l": "llama_LAYER13_OUT_pos0_layer0_full_n2048_seq007.bin"
+    },
+    "L14_OUT": {
+      "n": 2048,
+      "max_abs": 0.0018036365509033203,
+      "mean_abs": 0.00024574051201398106,
+      "l2": 0.014103418330865604,
+      "max_rel": 0.0013620853424072266,
+      "argmax": 411,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 2.542109463603142,
+      "class": "amplification",
+      "prev": "L13_OUT",
+      "prev_abs": 0.0007095038890838623,
+      "d": "deep2_LAYER_OUT_14_pos0_layer0_full_n2048_seq057.bin",
+      "l": "llama_LAYER14_OUT_pos0_layer0_full_n2048_seq010.bin"
+    },
+    "L15_OUT": {
+      "n": 2048,
+      "max_abs": 0.0022735595703125,
+      "mean_abs": 0.0004713884360398879,
+      "l2": 0.026757550969620368,
+      "max_rel": 0.0018801689147949219,
+      "argmax": 624,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.2605419695968274,
+      "class": "amplification",
+      "prev": "L14_OUT",
+      "prev_abs": 0.0018036365509033203,
+      "d": "deep2_LAYER_OUT_15_pos0_layer0_full_n2048_seq058.bin",
+      "l": "llama_LAYER15_OUT_pos0_layer0_full_n2048_seq013.bin"
+    },
+    "L16_OUT": {
+      "n": 2048,
+      "max_abs": 0.002761363983154297,
+      "mean_abs": 0.0005972383867174358,
+      "l2": 0.033999826545680456,
+      "max_rel": 0.002670109272003174,
+      "argmax": 1454,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.2145553691275168,
+      "class": "inherited",
+      "prev": "L15_OUT",
+      "prev_abs": 0.0022735595703125,
+      "d": "deep2_LAYER_OUT_16_pos0_layer0_full_n2048_seq059.bin",
+      "l": "llama_LAYER16_OUT_pos0_layer0_full_n2048_seq016.bin"
+    },
+    "L17_OUT": {
+      "n": 2048,
+      "max_abs": 0.002990536391735077,
+      "mean_abs": 0.0006755910721381042,
+      "l2": 0.03837171751076331,
+      "max_rel": 0.002990536391735077,
+      "argmax": 494,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.0829924667587636,
+      "class": "inherited",
+      "prev": "L16_OUT",
+      "prev_abs": 0.002761363983154297,
+      "d": "deep2_LAYER_OUT_17_pos0_layer0_full_n2048_seq060.bin",
+      "l": "llama_LAYER17_OUT_pos0_layer0_full_n2048_seq019.bin"
+    },
+    "L18_OUT": {
+      "n": 2048,
+      "max_abs": 0.004179701209068298,
+      "mean_abs": 0.0008691429775353754,
+      "l2": 0.04966403433123342,
+      "max_rel": 0.004179701209068298,
+      "argmax": 1632,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.3976426505357726,
+      "class": "amplification",
+      "prev": "L17_OUT",
+      "prev_abs": 0.002990536391735077,
+      "d": "deep2_LAYER_OUT_18_pos0_layer0_full_n2048_seq061.bin",
+      "l": "llama_LAYER18_OUT_pos0_layer0_full_n2048_seq022.bin"
+    },
+    "L19_OUT": {
+      "n": 2048,
+      "max_abs": 0.008004769682884216,
+      "mean_abs": 0.001567377378933088,
+      "l2": 0.08904595921478561,
+      "max_rel": 0.008004769682884216,
+      "argmax": 611,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.9151535677997826,
+      "class": "amplification",
+      "prev": "L18_OUT",
+      "prev_abs": 0.004179701209068298,
+      "d": "deep2_LAYER_OUT_19_pos0_layer0_full_n2048_seq062.bin",
+      "l": "llama_LAYER19_OUT_pos0_layer0_full_n2048_seq025.bin"
+    },
+    "L20_OUT": {
+      "n": 2048,
+      "max_abs": 0.010130241513252258,
+      "mean_abs": 0.0019282791963632917,
+      "l2": 0.10895977419585129,
+      "max_rel": 0.010130241513252258,
+      "argmax": 113,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1.2655256696407795,
+      "class": "amplification",
+      "prev": "L19_OUT",
+      "prev_abs": 0.008004769682884216,
+      "d": "deep2_LAYER_OUT_20_pos0_layer0_full_n2048_seq063.bin",
+      "l": "llama_LAYER20_OUT_pos0_layer0_full_n2048_seq028.bin"
+    },
+    "L21_OUT": {
+      "n": 2048,
+      "max_abs": 19.8170006275177,
+      "mean_abs": 0.5039561691901326,
+      "l2": 38.25166908848212,
+      "max_rel": 1.8347565470618483,
+      "argmax": 1709,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 1956.2219322800293,
+      "class": "amplification_strong",
+      "prev": "L20_OUT",
+      "prev_abs": 0.010130241513252258,
+      "d": "deep2_LAYER_OUT_21_pos0_layer0_full_n2048_seq064.bin",
+      "l": "llama_LAYER21_OUT_pos0_layer0_full_n2048_seq031.bin"
+    },
+    "TIP_FINAL_NORM": {
+      "n": 2048,
+      "max_abs": 0.9740390777587891,
+      "mean_abs": 0.06146711269958871,
+      "l2": 3.668040794886376,
+      "max_rel": 0.24326759576797485,
+      "argmax": 158,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 0.049151690312117545,
+      "class": "inherited",
+      "prev": "L21_OUT",
+      "prev_abs": 19.8170006275177,
+      "d": "deep2_TIP_FINAL_NORM_pos2_layer0_full_n2048_seq202.bin",
+      "l": "llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq033.bin"
+    },
+    "TIP_LOGITS": {
+      "n": 32000,
+      "max_abs": 0.5208611488342285,
+      "mean_abs": 0.08953619190544122,
+      "l2": 20.134758636085152,
+      "max_rel": 0.4002179205417633,
+      "argmax": 27267,
+      "first": 0,
+      "dual": "FAIL",
+      "amp_vs_prev": 0.5347435854757508,
+      "class": "inherited",
+      "prev": "TIP_FINAL_NORM",
+      "prev_abs": 0.9740390777587891,
+      "d": "deep2_TIP_LOGITS_pos3_layer0_full_n32000_seq205.bin",
+      "l": "llama_TIP_LOGITS_pos0_layer0_full_n32000_seq035.bin",
+      "deep2_argmax": {
+        "id": 13,
+        "logit": 8.276629447937012
+      },
+      "llama_argmax": {
+        "id": 13,
+        "logit": 8.286348342895508
+      },
+      "argmax_match": true
+    }
+  },
+  "transitions": [
+    {
+      "from": "L12_OUT_CERT",
+      "to": "L12_OUT",
+      "ratio": 0.9999691861347088,
+      "class": "inherited",
+      "prev_abs": 0.0004635,
+      "cur_abs": 0.0004634857177734375
+    },
+    {
+      "from": "L12_OUT",
+      "to": "L13_OUT",
+      "ratio": 1.5307998971193415,
+      "class": "amplification",
+      "prev_abs": 0.0004634857177734375,
+      "cur_abs": 0.0007095038890838623
+    },
+    {
+      "from": "L13_OUT",
+      "to": "L14_OUT",
+      "ratio": 2.542109463603142,
+      "class": "amplification",
+      "prev_abs": 0.0007095038890838623,
+      "cur_abs": 0.0018036365509033203
+    },
+    {
+      "from": "L14_OUT",
+      "to": "L15_OUT",
+      "ratio": 1.2605419695968274,
+      "class": "amplification",
+      "prev_abs": 0.0018036365509033203,
+      "cur_abs": 0.0022735595703125
+    },
+    {
+      "from": "L15_OUT",
+      "to": "L16_OUT",
+      "ratio": 1.2145553691275168,
+      "class": "inherited",
+      "prev_abs": 0.0022735595703125,
+      "cur_abs": 0.002761363983154297
+    },
+    {
+      "from": "L16_OUT",
+      "to": "L17_OUT",
+      "ratio": 1.0829924667587636,
+      "class": "inherited",
+      "prev_abs": 0.002761363983154297,
+      "cur_abs": 0.002990536391735077
+    },
+    {
+      "from": "L17_OUT",
+      "to": "L18_OUT",
+      "ratio": 1.3976426505357726,
+      "class": "amplification",
+      "prev_abs": 0.002990536391735077,
+      "cur_abs": 0.004179701209068298
+    },
+    {
+      "from": "L18_OUT",
+      "to": "L19_OUT",
+      "ratio": 1.9151535677997826,
+      "class": "amplification",
+      "prev_abs": 0.004179701209068298,
+      "cur_abs": 0.008004769682884216
+    },
+    {
+      "from": "L19_OUT",
+      "to": "L20_OUT",
+      "ratio": 1.2655256696407795,
+      "class": "amplification",
+      "prev_abs": 0.008004769682884216,
+      "cur_abs": 0.010130241513252258
+    },
+    {
+      "from": "L20_OUT",
+      "to": "L21_OUT",
+      "ratio": 1956.2219322800293,
+      "class": "amplification_strong",
+      "prev_abs": 0.010130241513252258,
+      "cur_abs": 19.8170006275177
+    },
+    {
+      "from": "L21_OUT",
+      "to": "TIP_FINAL_NORM",
+      "ratio": 0.049151690312117545,
+      "class": "inherited",
+      "prev_abs": 19.8170006275177,
+      "cur_abs": 0.9740390777587891
+    },
+    {
+      "from": "TIP_FINAL_NORM",
+      "to": "TIP_LOGITS",
+      "ratio": 0.5347435854757508,
+      "class": "inherited",
+      "prev_abs": 0.9740390777587891,
+      "cur_abs": 0.5208611488342285
+    }
+  ],
+  "verdict": "AMPLIFICATION_MAP",
+  "first_strong": "L21_OUT",
+  "strong_jumps": [
+    {
+      "from": "L20_OUT",
+      "to": "L21_OUT",
+      "ratio": 1956.2219322800293,
+      "class": "amplification_strong",
+      "prev_abs": 0.010130241513252258,
+      "cur_abs": 19.8170006275177
+    }
+  ]
+}

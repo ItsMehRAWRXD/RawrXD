@@ -1,13 +1,14 @@
 ﻿NEXT_CERT todos (live)
 ======================
-HEXMAG (FROZEN) — do not touch unless regression
-GBS / P1     — independent tracks; unchanged by Deep2 certs
+HEXMAG (FROZEN)
+GBS / P1     — independent (unchanged)
 
 PARITY
-  DONE: L10 @ 7ee02e8b3 / e53bac4b0 — CLOSED
-  DONE: L11 @ a1d27e372 — AMPLIFICATION (do not reopen)
-  DONE: TIP_ALIGN @ BATCH2_TIP_ALIGN_001 — TIP_ALIGNED / ARGMAX_MATCH id=13
-        deep2 TIP_* content <-> llama TIP_* (ignore filename pos labels)
-  OPTIONAL: L16/L21 growth map (not blocking greedy tip)
+  DONE: L10 CLOSED
+  DONE: L11 @ a1d27e372 AMPLIFICATION
+  DONE: TIP @ e4e71e277 ARGMAX_MATCH id=13  (branch authority)
+  DONE: L16_L21_GROWTH_MAP — VERDICT=AMPLIFICATION_MAP
+        L12 4.6e-4 → L16 2.8e-3 → L20 1.0e-2 → L21 ~20 (first strong)
+        TIP_LOGITS inherited; ARGMAX still 13=13
   DEFERRED: RESID_IN localize
-  DO_NOT_REOPEN: L10 / L11 / tip-pos-filename / HexMag / GBS / P1
+  DO_NOT_REOPEN: L10 / L11 / tip ARGMAX / HexMag / GBS / P1

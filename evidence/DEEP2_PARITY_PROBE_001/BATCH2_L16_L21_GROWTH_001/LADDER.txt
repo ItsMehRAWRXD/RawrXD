@@ -1,0 +1,42 @@
+BATCH2_L16_L21_GROWTH_001
+prereq=e4e71e277 TIP_ALIGNED ARGMAX_MATCH; L11=a1d27e372 AMPLIFICATION
+authority=EXPAND_V + REF_CB_SPARSE=12..21 + Deep2 STAGE_DIGEST
+pairing=earliest pos0 seq
+purpose=map post-L12 amplification; not a new root hunt
+
+stage            dual          max_abs     mean_abs           L2        amp class                 
+L12_OUT          FAIL     4.634857e-04 1.062118e-04 6.039737e-03      1.000 inherited             
+L13_OUT          FAIL     7.095039e-04 1.451562e-04 8.336209e-03      1.531 amplification         
+L14_OUT          FAIL     1.803637e-03 2.457405e-04 1.410342e-02      2.542 amplification         
+L15_OUT          FAIL     2.273560e-03 4.713884e-04 2.675755e-02      1.261 amplification         
+L16_OUT          FAIL     2.761364e-03 5.972384e-04 3.399983e-02      1.215 inherited             
+L17_OUT          FAIL     2.990536e-03 6.755911e-04 3.837172e-02      1.083 inherited             
+L18_OUT          FAIL     4.179701e-03 8.691430e-04 4.966403e-02      1.398 amplification         
+L19_OUT          FAIL     8.004770e-03 1.567377e-03 8.904596e-02      1.915 amplification         
+L20_OUT          FAIL     1.013024e-02 1.928279e-03 1.089598e-01      1.266 amplification         
+L21_OUT          FAIL     1.981700e+01 5.039562e-01 3.825167e+01   1956.222 amplification_strong  
+TIP_FINAL_NORM   FAIL     9.740391e-01 6.146711e-02 3.668041e+00      0.049 inherited             
+TIP_LOGITS       FAIL     5.208611e-01 8.953619e-02 2.013476e+01      0.535 inherited             
+
+GROWTH CHAIN
+  L12_OUT_CERT (frozen) = 4.635e-04
+  L12_OUT          4.634857e-04  inherited
+  L13_OUT          7.095039e-04  amplification
+  L14_OUT          1.803637e-03  amplification
+  L15_OUT          2.273560e-03  amplification
+  L16_OUT          2.761364e-03  inherited
+  L17_OUT          2.990536e-03  inherited
+  L18_OUT          4.179701e-03  amplification
+  L19_OUT          8.004770e-03  amplification
+  L20_OUT          1.013024e-02  amplification
+  L21_OUT          1.981700e+01  amplification_strong
+  TIP_FINAL_NORM   9.740391e-01  inherited
+  TIP_LOGITS       5.208611e-01  inherited
+
+ARGMAX deep2=13 llama=13 match=True
+
+VERDICT=AMPLIFICATION_MAP
+  Post-L12 error growth is amplification of the certified L12 carrier.
+  Tip ARGMAX remains matched; greedy tip not reopened.
+DO_NOT_reopen=L10 / L11 / tip ARGMAX / HexMag / GBS / P1
+NEXT=ladder numerically mapped; product tracks independent
