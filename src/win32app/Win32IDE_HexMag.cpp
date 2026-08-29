@@ -1,26 +1,26 @@
 // Win32IDE_HexMag.cpp — HexMag IDE route: controller → client → FinalizePolicy → UI
 #include "../agent/hexmag_client.hpp"
+#include "../core/hexmag_ide_send_path.hpp"
 #include "../core/hexmag_runtime_controller.hpp"
 #include "Win32IDE.h"
 #include "Win32IDE_Commands.h"
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <thread>
 
 #ifndef MSFTEDIT_CLASS
 #define MSFTEDIT_CLASS L"RichEdit20W"
 #endif
 
-
+// Avoid collision with WM_COPILOT_* (WM_APP+105..111) in Copilot native glue.
 #ifndef WM_HEXMAG_ASK_DONE
-#define WM_HEXMAG_ASK_DONE (WM_APP + 109)
+#define WM_HEXMAG_ASK_DONE (WM_APP + 220)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_CHUNK
-#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 110)
+#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 221)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_DONE
-#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 111)
+#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 222)
 #endif
 
 namespace
@@ -57,27 +57,6 @@ struct HexMagAskDonePayload
     HexMagUiState uiState = HexMagUiState::Failure;
 };
 
-/// Process-lifetime HexMag sequencing session (NEED_INPUT latch persists).
-struct HexMagIdeSession {
-    std::mutex mu;
-    RawrXD::HexMag::LiveHexMagTransport transport;
-    RawrXD::HexMag::HexMagRuntimeController ctrl{&transport};
-
-    RawrXD::HexMag::ControllerResult runOperatorTurn(const std::string& prompt,
-                                                     const std::string& context)
-    {
-        std::lock_guard<std::mutex> lock(mu);
-        // New operator turn clears prior NEED_INPUT / FINAL stop so chat can continue.
-        ctrl.resetSession();
-        return ctrl.run(prompt, context);
-    }
-};
-HexMagIdeSession& hexIdeSession()
-{
-    static HexMagIdeSession s;
-    return s;
-}
-
 void postHexMagTelemetryChunk(HWND hwndMain, std::string* chunk)
 {
     if (!chunk)
@@ -110,11 +89,14 @@ void postHexMagAskDone(HWND hwndMain, HexMagAskDonePayload* payload)
 
 HexMagUiState uiStateFromController(const RawrXD::HexMag::ControllerResult& r)
 {
-    if (r.finalAuthority)
+    switch (RawrXD::HexMag::ideUiOutcome(r)) {
+    case RawrXD::HexMag::IdeUiOutcome::Final:
         return HexMagUiState::Final;
-    if (r.needInputLatched || r.fail == RawrXD::HexMag::ControllerFail::NeedInput)
+    case RawrXD::HexMag::IdeUiOutcome::NeedInput:
         return HexMagUiState::NeedInput;
-    return HexMagUiState::Failure;
+    default:
+        return HexMagUiState::Failure;
+    }
 }
 
 void applyHexMagUiState(Win32IDE* ide, HexMagUiState st, const std::string& detail)
@@ -390,7 +372,7 @@ void Win32IDE::dispatchHexMagAskFromUi(const std::string& question, bool toCopil
 
     setHexMagStatusBarHint(L"HexMag: running…");
     const std::string codeContext = m_currentFile.empty() ? std::string{} : getEditorText();
-    const auto ctrl = hexIdeSession().runOperatorTurn(question, codeContext);
+    const auto ctrl = RawrXD::HexMag::ideHexMagSendPath().operatorTurn(question, codeContext);
     const HexMagUiState st = uiStateFromController(ctrl);
 
     if (ctrl.finalAuthority)
@@ -473,7 +455,8 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
 
             if (hwndMain && IsWindow(hwndMain))
             {
-                const auto ctrl = hexIdeSession().runOperatorTurn(userMessage, codeContext);
+                const auto ctrl =
+                    RawrXD::HexMag::ideHexMagSendPath().operatorTurn(userMessage, codeContext);
                 payload->uiState = uiStateFromController(ctrl);
                 payload->success = ctrl.finalAuthority;
                 payload->answer = ctrl.lastClient.ask.answer.empty()

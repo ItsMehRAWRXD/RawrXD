@@ -5832,6 +5832,11 @@ void Win32IDE::HandleCopilotSend() {
     
     // Clear input
     SetWindowTextA(m_hwndCopilotChatInput, "");
+
+    // HexMag IDE send path (controller → client → FinalizePolicy → UI).
+    // When routing is enabled this is the authoritative Copilot ask path.
+    if (tryDispatchCopilotThroughHexMag(userMessage, 0))
+        return;
     
     // Generate response asynchronously
     auto onResponse = [this](const std::string& response, bool complete) {
