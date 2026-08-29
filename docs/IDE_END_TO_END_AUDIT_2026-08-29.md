@@ -73,11 +73,11 @@ The repo also contains hundreds of thousands of non-IDE files (history runoff, e
 
 ## 3. Honest headline
 
-The shipping IDE is a **real Win32 shell**: files, RichEdit editing, themes, sidebar chrome, session JSON, PowerShell/git.exe, a large command table, and several real backends (Ollama WinHTTP, local GGUF routing, DbgEng on MSVC, in-process MCP tools, VSIX extract + optional QuickJS).
+The shipping IDE is a **real Win32 shell**: files, RichEdit editing, themes, sidebar chrome, session JSON, PowerShell/git.exe, a large command table, and local GGUF/blob inference (DbgEng on MSVC, in-process MCP tools, VSIX extract + optional QuickJS). Ollama HTTP, HuggingFace download, and cloud APIs are **disabled** as inference fallbacks.
 
 It is **not** a finished Cursor-class product. The in-tree Feature Manifest claims 98/98 Win32 features are `Real`. That catalog is a registration list, not a verification. The largest gaps are:
 
-1. **Copilot chat send is stub-overridden** while the real Ollama/GGUF send implementation is also in the same target (duplicate symbol / stub wins).
+1. **Copilot chat send** now links the native path (`Win32IDE_private_stubs.cpp` removed from CMake). Send uses local GGUF only; if nothing is loaded, the from-scratch reverse parser lists every missing artifact.
 2. **Hundreds of win32app TUs are orphaned** — written, not linked.
 3. **Many panels are compiled but never `create*()`’d**; live UI is a smaller sidebar/manual-layout subset.
 4. **Debugger / LSP / extensions each have 2–3 parallel stacks**; only one path per area is init-wired, and it is often the weaker one.
@@ -125,16 +125,17 @@ It is **not** a finished Cursor-class product. The in-tree Feature Manifest clai
 | Feature | Status | Evidence |
 |---------|--------|----------|
 | Copilot chat UI HWNDs | **IMPLEMENTED** | Created in `Win32IDE_VSCodeUI.cpp` |
-| Copilot **send → model** | **STUB** (critical) | `HandleCopilotSend()` → `HandleCopilotSend_Ollama()`. Real body in `Win32IDE_ChatPanel_Ollama.cpp` (GGUF then Ollama stream). **Also** defined as OutputDebugString stub in `Win32IDE_private_stubs.cpp`. Both files are in `WIN32IDE_SOURCES` (CMake ~L3737 and ~L4873). Core calls `initializeChatPanelOllama()` at ~L2522 |
+| Copilot **send → model** | **IMPLEMENTED** | `HandleCopilotSend_Ollama()` uses local native engine only. No Ollama HTTP fallback. Missing model/agent/extension/file lists come from `src/streamer/LocalStreamReverseParser` |
 | `HandleChatPanel` / message renderer command handlers | **STUB** | MessageBox feature lists only (`Win32IDE_ChatPanel.cpp`, `Win32IDE_ChatMessageRenderer.cpp`) |
-| Backend switcher (Ollama / local GGUF / cloud APIs) | **IMPLEMENTED** | `Win32IDE_BackendSwitcher.cpp` — WinHTTP `/api/generate`, `routeToLocalGGUF` |
-| LLM router | **IMPLEMENTED** | Wraps `routeInferenceRequest` |
+| Backend switcher | **IMPLEMENTED** (local only) | Remote backends (Ollama/OpenAI/Claude/Gemini/Copilot/Amazon Q) probe as disabled. `routeToLocalGGUF` is the live path |
+| LLM router | **IMPLEMENTED** (local only) | All tasks prefer `LocalGGUF`; cloud/Ollama fallbacks off |
+| Local stream reverse parser | **IMPLEMENTED** | From-scratch GGUF + embedded-blob stream parser (`src/streamer/LocalStreamReverseParser.*`). Header/metadata/tensor names only. `parseLocalArtifact` always fills `present[]` / `missing[]`. Linux test: `RawrXD-LocalStreamReverseParserTest` |
 | Bounded agent loop + tool dispatch | **IMPLEMENTED** | `BoundedAgentLoop`, `Win32IDE_AgentPanel.cpp`, `AgentToolHandlers` (real file/shell I/O). Prefers `RawrXD_InferenceEngine.dll`; falls back to backend switcher |
 | Agentic bridge | **IMPLEMENTED** | CPU engine → orchestrator → `routeInferenceRequest` |
 | Autonomy loop | **IMPLEMENTED** | `Win32IDE_Autonomy.cpp` — rate-limited tick + bridge tools |
 | Ask / Agent / Plan mode handlers | **SCAFFOLDED** | Prompt-mode headers; Plan has more wiring |
-| Ghost text | **IMPLEMENTED** | `initGhostText()` on startup; Deep2 / Ollama / native / snippet fallback |
-| Chat token streaming UX | **SCAFFOLDED** | Stream append exists on the Ollama send path that the stub blocks |
+| Ghost text | **IMPLEMENTED** | `initGhostText()` on startup; Deep2 / native / snippet. Ollama HTTP provider is not constructed |
+| Chat token streaming UX | **IMPLEMENTED** | Stream append on the local native send path |
 | Model-load streaming UX | **IMPLEMENTED** | Progress UI in `Win32IDE_StreamingUX.cpp` |
 | Multi-response engine | **STUB** | Hardcoded template strings; no LLM call |
 | Sub-agent core (chain/swarm) | **IMPLEMENTED** | `subagent_core.cpp` via `m_engine->chat()` |
@@ -411,9 +412,23 @@ Dependency deltas already on `main` (Maven/npm/Keras) were not re-imported.
 
 ---
 
+## 13b. Follow-up implemented on this branch (2026-08-29)
+
+Policy: **native local inference only**. No Ollama daemon, HuggingFace download, or cloud API as fallback.
+
+| Piece | What landed |
+|-------|-------------|
+| From-scratch reverse parser | `src/streamer/LocalStreamReverseParser.hpp/.cpp` — streams local files, scans for GGUF magic (including embedded blobs), parses header + all 13 GGUF v3 KV types + tensor names (no weights). Always fills `present[]` / `missing[]` for model / agent / extension / file. |
+| Diagnostics | `Win32IDE_StreamLoadDiagnostics.cpp` calls the reverse parser (does **not** wrap `StreamingGGUFLoader`). Failed loads print the full missing list. |
+| Linux test | `RawrXD-LocalStreamReverseParserTest` — pure GGUF, 256-byte-prefixed blob, truncated header, missing path, extension sidecars. |
+| Chat / router / switcher | Local GGUF only. Remote probe/route paths return a native-only error. |
+| Resolver | Rejects HuggingFace and HTTP URLs. On-disk blobs may still resolve to a local path. |
+
+---
+
 ## 14. Recommended next work (implementation, not more audits)
 
-1. **Remove or `#if 0` `Win32IDE_private_stubs.cpp`** so `Win32IDE_ChatPanel_Ollama.cpp` is the only `HandleCopilotSend_Ollama` / `initializeChatPanelOllama`.  
+1. ~~Remove `Win32IDE_private_stubs.cpp` from the shipping target~~ **done** (commented out of `WIN32IDE_SOURCES`).  
 2. Add **`cmd`** to `agentic_controller_wiring.cpp` `allowedPrefixes` (and document `AgentToolHandlers::allowedCommands`).  
 3. Delete or quarantine **orphaned** win32app TUs, or add a generated “in-target vs on-disk” list to CI so the folder stops lying.  
 4. Pick **one** debugger stack and make F5 call it; delete or `#if 0` Sidebar no-ops.  
@@ -432,7 +447,8 @@ Dependency deltas already on `main` (Maven/npm/Keras) were not re-imported.
 | Catalog (optimistic) | `src/win32app/Win32IDE_FeatureManifest.cpp` |
 | Flags (more honest, unlinked) | `src/win32app/FeatureRegistry.cpp` |
 | Agent tools | `src/agentic/AgentToolHandlers.cpp`, `src/agentic/agentic_controller_wiring.cpp` |
-| Chat defect | `Win32IDE_private_stubs.cpp` vs `Win32IDE_ChatPanel_Ollama.cpp` |
+| Chat send | `Win32IDE_ChatPanel_Ollama.cpp` (native only; stubs removed from CMake) |
+| Reverse parser | `src/streamer/LocalStreamReverseParser.hpp/.cpp`, `src/win32app/Win32IDE_StreamLoadDiagnostics.cpp` |
 | Theater admission | `CMakeLists.txt` ~L4843–4862 |
 
 ---

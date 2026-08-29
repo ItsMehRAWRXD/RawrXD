@@ -46,40 +46,15 @@ void Win32IDE::initLLMRouter() {
     //
     // Default: everything routes to the active backend (router off = passthrough).
     // When the router is enabled, these preferences guide selection.
+    // Native-only: every task stays on LocalGGUF. No cloud / Ollama fallback.
     for (size_t i = 0; i < (size_t)LLMTaskType::Count; ++i) {
         auto& pref     = m_taskPreferences[i];
         pref.taskType  = (LLMTaskType)i;
         pref.preferredBackend  = AIBackendType::LocalGGUF;
-        pref.fallbackBackend   = AIBackendType::Count;   // No fallback by default
-        pref.allowFallback     = true;
+        pref.fallbackBackend   = AIBackendType::Count;
+        pref.allowFallback     = false;
         pref.maxFailuresBeforeSkip = 5;
     }
-
-    // ---- Sensible overrides for specific task types ------------------------
-    //
-    // Code generation → prefer Claude/OpenAI if available (higher quality)
-    m_taskPreferences[(size_t)LLMTaskType::CodeGeneration].preferredBackend  = AIBackendType::Claude;
-    m_taskPreferences[(size_t)LLMTaskType::CodeGeneration].fallbackBackend   = AIBackendType::OpenAI;
-
-    // Code review → prefer Claude (strong reasoning)
-    m_taskPreferences[(size_t)LLMTaskType::CodeReview].preferredBackend  = AIBackendType::Claude;
-    m_taskPreferences[(size_t)LLMTaskType::CodeReview].fallbackBackend   = AIBackendType::OpenAI;
-
-    // Planning → prefer OpenAI (good structured output)
-    m_taskPreferences[(size_t)LLMTaskType::Planning].preferredBackend  = AIBackendType::OpenAI;
-    m_taskPreferences[(size_t)LLMTaskType::Planning].fallbackBackend   = AIBackendType::Claude;
-
-    // Tool execution → prefer OpenAI (native function calling)
-    m_taskPreferences[(size_t)LLMTaskType::ToolExecution].preferredBackend  = AIBackendType::OpenAI;
-    m_taskPreferences[(size_t)LLMTaskType::ToolExecution].fallbackBackend   = AIBackendType::Gemini;
-
-    // Chat → prefer LocalGGUF (low latency, free)
-    m_taskPreferences[(size_t)LLMTaskType::Chat].preferredBackend  = AIBackendType::LocalGGUF;
-    m_taskPreferences[(size_t)LLMTaskType::Chat].fallbackBackend   = AIBackendType::Ollama;
-
-    // Research → prefer Gemini (large context window)
-    m_taskPreferences[(size_t)LLMTaskType::Research].preferredBackend  = AIBackendType::Gemini;
-    m_taskPreferences[(size_t)LLMTaskType::Research].fallbackBackend   = AIBackendType::Claude;
 
     // ---- Reset stats -------------------------------------------------------
     m_routerStats = {};

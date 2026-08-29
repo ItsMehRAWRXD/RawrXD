@@ -70,6 +70,9 @@ public:
     // Get total file size
     uint64_t GetTotalFileSize();
 
+    // Byte offset of the GGUF payload (0 for a pure .gguf; non-zero for embedded blobs).
+    uint64_t GetGgufPayloadOffset() const { return gguf_payload_offset_; }
+
 private:
     std::string filepath_;
     std::ifstream file_;
@@ -118,6 +121,9 @@ private:
     
     uint64_t tensor_info_offset = 0;
     uint64_t data_base_offset = 0;
+    uint64_t gguf_payload_offset_ = 0;
+
+    bool FindEmbeddedGgufMagic(uint64_t& offset);
 };
 
 } // namespace RawrXD

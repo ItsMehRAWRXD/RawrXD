@@ -66,7 +66,8 @@ void Win32IDE::openFileDialog() {
                     LOG_INFO("Model loaded successfully");
                 } else {
                     LOG_ERROR("Failed to load model: " + filePath);
-                    MessageBoxA(m_hwndMain, "Failed to load model. Check Output/Errors panel for details.", "Model Load Failed", MB_OK | MB_ICONERROR);
+                    reportMissingLoadArtifacts("model", filePath);
+                    MessageBoxA(m_hwndMain, "Failed to load model. Check Output/Errors panel for the reverse-parse missing list.", "Model Load Failed", MB_OK | MB_ICONERROR);
                 }
             } catch (const std::exception& e) {
                 std::string error = "Exception while loading model: " + std::string(e.what());
@@ -273,7 +274,8 @@ void Win32IDE::openModelDialog() {
                     appendToOutput(message, "Output", OutputSeverity::Info);
                     MessageBoxA(m_hwndMain, "Model loaded successfully!", "Model Loaded", MB_OK | MB_ICONINFORMATION);
                 } else {
-                    MessageBoxA(m_hwndMain, "Failed to load GGUF model.", "Model Load Failed", MB_OK | MB_ICONERROR);
+                    reportMissingLoadArtifacts("model", filePath);
+                    MessageBoxA(m_hwndMain, "Failed to load GGUF model. See Output for the reverse-parse missing list.", "Model Load Failed", MB_OK | MB_ICONERROR);
                 }
             } catch (const std::exception& e) {
                 std::string error = "Exception while loading GGUF: " + std::string(e.what());

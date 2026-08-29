@@ -97,10 +97,10 @@ void Win32IDE::initBackendManager()
     auto& ollama = m_backendConfigs[(size_t)AIBackendType::Ollama];
     ollama.type = AIBackendType::Ollama;
     ollama.name = "Ollama";
-    ollama.endpoint = "http://localhost:11434";
-    ollama.model = "";  // Will be populated from Ollama /api/tags or settings
+    ollama.endpoint = "";
+    ollama.model = "";
     ollama.apiKey = "";
-    ollama.enabled = true;
+    ollama.enabled = false;  // HTTP Ollama disabled — local GGUF/blob only
     ollama.timeoutMs = 30000;
     ollama.maxTokens = 2048;
     ollama.temperature = 0.7f;
@@ -193,9 +193,12 @@ void Win32IDE::initBackendManager()
     loadBackendConfigs();
 
     // ---- Auto-detect Ollama model if still empty ----------------------------
+    // Native-only: never probe :11434.
     {
         auto& ollamaCfg = m_backendConfigs[(size_t)AIBackendType::Ollama];
-        if (ollamaCfg.model.empty() && ollamaCfg.enabled)
+        ollamaCfg.enabled = false;
+        ollamaCfg.endpoint.clear();
+        if (false && ollamaCfg.model.empty() && ollamaCfg.enabled)
         {
             try
             {
@@ -556,99 +559,19 @@ bool Win32IDE::probeBackendHealth(AIBackendType type)
             break;
         }
         case AIBackendType::Ollama:
-        {
-            // Probe /api/tags endpoint
-            const auto& cfg = m_backendConfigs[(size_t)type];
-            try
-            {
-                std::string resp = httpPost(cfg.endpoint + "/api/tags", "", {}, 5000);
-                healthy = !resp.empty() && resp.find("models") != std::string::npos;
-                if (!healthy)
-                    error = "Ollama not responding or no models available";
-            }
-            catch (...)
-            {
-                error = "Connection failed to " + cfg.endpoint;
-            }
-            break;
-        }
         case AIBackendType::OpenAI:
-        {
-            const auto& cfg = m_backendConfigs[(size_t)type];
-            healthy = !cfg.apiKey.empty();
-            if (!healthy)
-                error = "No API key configured";
-            else
-            {
-                try
-                {
-                    std::string resp =
-                        httpPost(cfg.endpoint + "/v1/models", "", {"Authorization: Bearer " + cfg.apiKey}, 5000);
-                    healthy = !resp.empty() && resp.find("data") != std::string::npos;
-                    if (!healthy)
-                        error = "OpenAI API returned unexpected response";
-                }
-                catch (...)
-                {
-                    error = "Connection failed to OpenAI";
-                }
-            }
-            break;
-        }
         case AIBackendType::Claude:
-        {
-            const auto& cfg = m_backendConfigs[(size_t)type];
-            healthy = !cfg.apiKey.empty();
-            if (!healthy)
-                error = "No API key configured";
-            // Anthropic doesn't have a lightweight health endpoint; we trust the key
-            break;
-        }
         case AIBackendType::Gemini:
+        case AIBackendType::GitHubCopilot:
+        case AIBackendType::AmazonQ:
         {
-            const auto& cfg = m_backendConfigs[(size_t)type];
-            healthy = !cfg.apiKey.empty();
-            if (!healthy)
-                error = "No API key configured";
+            healthy = false;
+            error = "Remote inference is disabled. Load a local GGUF or blob.";
             break;
         }
         case AIBackendType::ReasoningEngine:
         {
             healthy = true;  // Local static reasoning engine always available
-            break;
-        }
-        case AIBackendType::GitHubCopilot:
-        {
-            // Probe GitHub Copilot extension via VSIXLoader (Install from VSIX / extension registry)
-            try
-            {
-                healthy = VSIXLoader::GetInstance().IsPluginLoaded("github.copilot");
-                if (!healthy)
-                    error = "GitHub Copilot extension not loaded. Use AI menu > Install from VSIX, or switch to "
-                            "Ollama/Local.";
-            }
-            catch (...)
-            {
-                healthy = false;
-                error = "VSIXLoader unavailable or GitHub Copilot not installed.";
-            }
-            break;
-        }
-        case AIBackendType::AmazonQ:
-        {
-            // Probe Amazon Q (AWS Toolkit) extension via VSIXLoader
-            try
-            {
-                healthy = VSIXLoader::GetInstance().IsPluginLoaded("amazonwebservices.aws-toolkit-vscode");
-                if (!healthy)
-                    error =
-                        "Amazon Q extension not loaded. Use AI menu > Install from VSIX, or switch to Ollama/Local.";
-            }
-            catch (...)
-            {
-                healthy = false;
-                error = "VSIXLoader unavailable or Amazon Q not installed.";
-            }
             break;
         }
         default:
@@ -720,26 +643,16 @@ std::string Win32IDE::routeInferenceRequest(const std::string& prompt)
         case AIBackendType::LocalGGUF:
             result = routeToLocalGGUF(prompt);
             break;
-        case AIBackendType::Ollama:
-            result = routeToOllama(prompt);
-            break;
-        case AIBackendType::OpenAI:
-            result = routeToOpenAI(prompt);
-            break;
-        case AIBackendType::Claude:
-            result = routeToClaude(prompt);
-            break;
-        case AIBackendType::Gemini:
-            result = routeToGemini(prompt);
-            break;
         case AIBackendType::ReasoningEngine:
             result = this->routeToReasoningEngine(prompt);
             break;
+        case AIBackendType::Ollama:
+        case AIBackendType::OpenAI:
+        case AIBackendType::Claude:
+        case AIBackendType::Gemini:
         case AIBackendType::GitHubCopilot:
-            result = routeToGitHubCopilot(prompt);
-            break;
         case AIBackendType::AmazonQ:
-            result = routeToAmazonQ(prompt);
+            result = "[NativeOnly] Remote backends are disabled. Load a local GGUF or blob.";
             break;
         default:
             result = "[BackendSwitcher] Unknown active backend";
@@ -806,6 +719,8 @@ std::string Win32IDE::routeToLocalGGUF(const std::string& prompt)
 
 std::string Win32IDE::routeToOllama(const std::string& prompt)
 {
+    (void)prompt;
+    return "[NativeOnly] HTTP Ollama is disabled. Load a local GGUF or blob.";
     const auto& cfg = m_backendConfigs[(size_t)AIBackendType::Ollama];
     if (cfg.endpoint.empty())
     {

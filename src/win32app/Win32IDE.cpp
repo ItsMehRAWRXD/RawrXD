@@ -829,8 +829,8 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     GetCurrentDirectoryA(MAX_PATH, currentDir);
     m_gitRepoPath = currentDir;
 
-    // Default Ollama configuration
-    m_ollamaBaseUrl = "http://localhost:11434";
+    // Local streamer only — no Ollama/cloud endpoint.
+    m_ollamaBaseUrl.clear();
     m_ollamaModelOverride = "";
 
     m_nativeEngineLoaded = false;
@@ -4925,9 +4925,10 @@ void Win32IDE::loadModelFromPath(const std::string& filepath)
 
 bool Win32IDE::loadGGUFModel(const std::string& filepath)
 {
-    if (!m_ggufLoader)
+    if (!ensureStreamingGgufLoader())
     {
-        std::string error = "Error: GGUF Loader not initialized";
+        reportMissingLoadArtifacts("model", filepath);
+        std::string error = "Error: GGUF streaming reverse parser not initialized";
         appendToOutput(error, "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
         return false;
@@ -4942,8 +4943,9 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         appendToOutput("[1/5] Opening file...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->Open(filepath))
         {
-            std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
+            std::string error = "❌ Failed to open GGUF/blob: " + filepath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
+            reportMissingLoadArtifacts("model", filepath);
             ErrorReporter::report(error, m_hwndMain);
             return false;
         }
@@ -4954,6 +4956,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             std::string error =
                 "❌ Failed to parse GGUF header from: " + filepath + "\nFile may be corrupted or not a valid GGUF.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
+            reportMissingLoadArtifacts("model", filepath);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
@@ -4965,6 +4968,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             std::string error =
                 "❌ Failed to parse GGUF metadata from: " + filepath + "\nFile structure may be invalid.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
+            reportMissingLoadArtifacts("model", filepath);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
@@ -4978,6 +4982,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             std::string error =
                 "❌ Failed to build tensor index from: " + filepath + "\nFile may be too large or corrupted.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
+            reportMissingLoadArtifacts("model", filepath);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
             return false;
@@ -5668,8 +5673,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
     bool canChat = isModelLoaded() || (m_agenticBridge && m_agenticBridge->IsInitialized());
     if (!canChat)
     {
-        return "Error: No model loaded. Load a GGUF (File > Open / Load Model) or set up Ollama/backend in Backend "
-               "Switcher.";
+        return "Error: No model loaded. Load a local GGUF or blob (File > Open / Load Model).";
     }
 
     // Phase 8B/8C: Route through LLM router (if enabled) or backend manager
@@ -5683,15 +5687,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         }
     }
 
-    // First try: send through local Ollama if available
-    std::string llmResponse;
-    if (trySendToOllama(message, llmResponse))
-    {
-        m_chatHistory.push_back({message, llmResponse});
-        return llmResponse;
-    }
-
-    // Fallback: Local CPU Inference (Real Logic)
+    // Local CPU Inference only — no remote / Ollama fallback
     if (m_ggufLoader)
     {
         // Use the native fallback engine if available
@@ -6242,6 +6238,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
     {
         appendToOutput("Failed to load model: " + filepath + "\n", "System", OutputSeverity::Error);
     }
+    reportMissingLoadArtifacts("model", filepath);
     return false;
 }
 
@@ -6409,148 +6406,7 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         return routeWithIntelligence(prompt);
     }
 
-    // Attempt real remote/local inference via Ollama if configured
-    auto performOllama = [&](const std::string& promptText) -> std::string
-    {
-        if (m_ollamaBaseUrl.empty())
-            return "";
-        // Expect base URL like http://localhost:11434
-        std::string base = m_ollamaBaseUrl;
-        if (base.rfind("http://", 0) != 0 && base.rfind("https://", 0) != 0)
-            return "";
-        bool https = base.rfind("https://", 0) == 0;
-        std::string withoutProto = base.substr(base.find("://") + 3);
-        std::string host;
-        int port = https ? 443 : 80;
-        size_t colonPos = withoutProto.find(':');
-        size_t slashPos = withoutProto.find('/');
-        if (colonPos != std::string::npos)
-        {
-            host = withoutProto.substr(0, colonPos);
-            std::string portStr = withoutProto.substr(
-                colonPos + 1, (slashPos == std::string::npos ? withoutProto.size() : slashPos) - (colonPos + 1));
-            port = atoi(portStr.c_str());
-        }
-        else
-        {
-            host = (slashPos == std::string::npos) ? withoutProto : withoutProto.substr(0, slashPos);
-            // Default Ollama port
-            if (!https)
-                port = 11434;
-        }
-        std::wstring whost(host.begin(), host.end());
-        HINTERNET hSession = WinHttpOpen(L"RawrXDIDE/1.0", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, 0);
-        if (!hSession)
-            return "";
-        HINTERNET hConnect = WinHttpConnect(hSession, whost.c_str(), (INTERNET_PORT)port, 0);
-        if (!hConnect)
-        {
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/generate", NULL, WINHTTP_NO_REFERER,
-                                                WINHTTP_DEFAULT_ACCEPT_TYPES, https ? WINHTTP_FLAG_SECURE : 0);
-        if (!hRequest)
-        {
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        // Build JSON body
-        std::string modelTag;
-        if (!m_ollamaModelOverride.empty())
-            modelTag = m_ollamaModelOverride;
-        else
-        {
-            // Derive from loaded path
-            modelTag = m_loadedModelPath;
-            size_t pos = modelTag.find_last_of("\\/");
-            if (pos != std::string::npos)
-                modelTag = modelTag.substr(pos + 1);
-        }
-        // Basic escaping of quotes in prompt
-        std::string escPrompt;
-        escPrompt.reserve(promptText.size() + 16);
-        for (char c : promptText)
-        {
-            if (c == '"')
-                escPrompt += "\\\"";
-            else if (c == '\n')
-                escPrompt += "\\n";
-            else
-                escPrompt += c;
-        }
-        std::string body =
-            std::string("{\"model\":\"") + modelTag + "\",\"prompt\":\"" + escPrompt + "\",\"stream\":false}";
-        std::wstring wHeaders = L"Content-Type: application/json";
-        BOOL bResults = WinHttpSendRequest(hRequest, wHeaders.c_str(), (DWORD)-1L, (LPVOID)body.c_str(),
-                                           (DWORD)body.size(), (DWORD)body.size(), 0);
-        if (!bResults)
-        {
-            WinHttpCloseHandle(hRequest);
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        bResults = WinHttpReceiveResponse(hRequest, NULL);
-        std::string raw;
-        if (bResults)
-        {
-            DWORD dwSize = 0;
-            do
-            {
-                if (!WinHttpQueryDataAvailable(hRequest, &dwSize))
-                    break;
-                if (!dwSize)
-                    break;
-                std::string chunk;
-                chunk.resize(dwSize);
-                DWORD dwRead = 0;
-                if (!WinHttpReadData(hRequest, chunk.data(), dwSize, &dwRead))
-                    break;
-                if (dwRead)
-                    raw.append(chunk.data(), dwRead);
-            } while (dwSize > 0);
-        }
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        if (raw.empty())
-            return "";
-        // Naive JSON parse: look for "response":"..."
-        std::string out;
-        size_t pos = raw.rfind("\"response\":\"");
-        if (pos != std::string::npos)
-        {
-            pos += 12;  // start after marker
-            while (pos < raw.size())
-            {
-                char c = raw[pos++];
-                if (c == '"')
-                    break;  // end of string (assumes not escaped)
-                if (c == '\\')
-                {
-                    if (pos < raw.size())
-                    {
-                        char next = raw[pos++];
-                        if (next == 'n')
-                            out += '\n';
-                        else
-                            out += next;
-                    }
-                }
-                else
-                    out += c;
-            }
-        }
-        return out.empty() ? raw : out;
-    };
-
-    std::string remote = performOllama(prompt);
-    if (!remote.empty())
-        return remote;
-
-    // Fallback structured guidance if no remote inference available
+    // Native local inference only — no HTTP / Ollama generate path.
     std::string modelName =
         m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
 
@@ -6578,7 +6434,7 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
     }
 
     return std::string("[Native Engine Error]\nModel: ") + modelName + "\nPrompt: " + prompt +
-           "\n(Ollama unavailable and Native Engine not ready)";
+           "\n(Load a local GGUF or blob; remote inference is disabled)";
 }
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
@@ -8341,6 +8197,16 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
     appendToOutput("Model source detected: " + sourceDesc + "\n", "Output", OutputSeverity::Info);
     appendToOutput("Input: " + input + "\n", "Output", OutputSeverity::Info);
 
+    if (sourceType == GGUFConstants::ModelSourceType::HUGGINGFACE_REPO ||
+        sourceType == GGUFConstants::ModelSourceType::HTTP_URL)
+    {
+        appendToOutput("[NativeOnly] Remote model sources are disabled. Use a local GGUF or on-disk blob.\n",
+                       "Errors", OutputSeverity::Error);
+        reportMissingLoadArtifacts("model", input);
+        METRICS.increment("model.resolve_failures");
+        return false;
+    }
+
     // For local files, skip resolution and go straight to loading
     if (sourceType == GGUFConstants::ModelSourceType::LOCAL_FILE)
     {
@@ -8351,91 +8217,53 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
             METRICS.increment("model.resolve_success");
             return true;
         }
+        reportMissingLoadArtifacts("model", input);
         METRICS.increment("model.resolve_failures");
         return false;
     }
 
-    // For remote sources, resolve with progress reporting
-    appendToOutput("Resolving model source (this may involve downloading)...\n", "Output", OutputSeverity::Info);
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide("Resolving: " + input).c_str());
+    // On-disk blobs only — resolver may search local blob directories.
+    appendToOutput("Resolving local blob path (no download)...\n", "Output", OutputSeverity::Info);
+    if (m_hwndStatusBar)
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide("Resolving local: " + input).c_str());
 
-    // Progress callback that writes to the output panel
-    auto progressCallback = [this](const RawrXD::ModelDownloadProgress& prog)
-    {
-        if (prog.has_error)
-        {
-            appendToOutput("Download error: " + prog.error_message + "\n", "Errors", OutputSeverity::Error);
-            return;
-        }
-        if (prog.is_completed)
-        {
-            appendToOutput("Download complete: " + prog.local_path + "\n", "Output", OutputSeverity::Info);
-            return;
-        }
-        // Progress update — update status bar with percentage
-        char buf[256];
-        if (prog.total_bytes > 0)
-        {
-            snprintf(buf, sizeof(buf), "Downloading: %.1f%% (%llu / %llu MB) — %s", prog.progress_percent,
-                     (unsigned long long)(prog.downloaded_bytes / (1024 * 1024)),
-                     (unsigned long long)(prog.total_bytes / (1024 * 1024)), prog.filename.c_str());
-        }
-        else
-        {
-            snprintf(buf, sizeof(buf), "Downloading: %llu MB — %s",
-                     (unsigned long long)(prog.downloaded_bytes / (1024 * 1024)), prog.filename.c_str());
-        }
-        if (m_hwndStatusBar)
-        {
-            SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)utf8ToWide(buf).c_str());
-        }
-    };
-
-    // Perform resolution (may download)
     RawrXD::ResolvedModelPath resolved;
     try
     {
-        resolved = m_modelResolver->Resolve(input, progressCallback);
+        resolved = m_modelResolver->Resolve(input, nullptr);
     }
     catch (const std::exception& e)
     {
-        std::string err = "Exception during model resolution: " + std::string(e.what());
+        std::string err = "Exception during local blob resolution: " + std::string(e.what());
         appendToOutput(err + "\n", "Errors", OutputSeverity::Error);
+        reportMissingLoadArtifacts("model", input);
         ErrorReporter::report(err, m_hwndMain);
         METRICS.increment("model.resolve_failures");
         return false;
     }
     catch (...)
     {
-        std::string err = "Unknown exception during model resolution for: " + input;
-        appendToOutput(err + "\n", "Errors", OutputSeverity::Error);
+        appendToOutput("Unknown exception during local blob resolution for: " + input + "\n", "Errors",
+                       OutputSeverity::Error);
+        reportMissingLoadArtifacts("model", input);
         METRICS.increment("model.resolve_failures");
         return false;
     }
 
-    if (!resolved.success)
+    if (!resolved.success || resolved.local_path.empty() || !resolved.hf_repo_id.empty())
     {
-        std::string err = "Failed to resolve model source: " + resolved.error_message;
-        appendToOutput(err + "\n", "Errors", OutputSeverity::Error);
-        ErrorReporter::report(err, m_hwndMain);
-        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Model resolution failed");
+        const std::string err = resolved.error_message.empty()
+                                    ? "No local GGUF/blob found for: " + input
+                                    : resolved.error_message;
+        appendToOutput("[NativeOnly] " + err + "\n", "Errors", OutputSeverity::Error);
+        reportMissingLoadArtifacts("model", resolved.local_path.empty() ? input : resolved.local_path);
+        if (m_hwndStatusBar)
+            SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"Local model resolution failed");
         METRICS.increment("model.resolve_failures");
         return false;
     }
 
-    // Log resolution details
     appendToOutput("Resolved to local path: " + resolved.local_path + "\n", "Output", OutputSeverity::Info);
-    if (!resolved.hf_repo_id.empty())
-    {
-        appendToOutput("HuggingFace repo: " + resolved.hf_repo_id + " / " + resolved.hf_filename + "\n", "Output",
-                       OutputSeverity::Info);
-    }
-    if (!resolved.ollama_model_name.empty())
-    {
-        appendToOutput("Ollama model: " + resolved.ollama_model_name + "\n", "Output", OutputSeverity::Info);
-    }
-
-    // Load through the streaming GGUF pipeline (preserves all zone-based 800B+ logic)
     appendToOutput("Loading resolved model through streaming GGUF pipeline...\n", "Output", OutputSeverity::Info);
     if (loadGGUFModel(resolved.local_path))
     {
@@ -8444,24 +8272,7 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
         return true;
     }
 
-    // No local GGUF path or load failed — still feed Ollama model name to bridge so chat and agentic use it (local
-    // definitions vary)
-    if (!resolved.ollama_model_name.empty())
-    {
-        initializeAgenticBridge();
-        if (m_agenticBridge)
-        {
-            m_agenticBridge->SetModel(resolved.ollama_model_name);
-            m_ollamaModelOverride = resolved.ollama_model_name;
-            if (getLoadedModelPath().empty())
-                setLoadedModelPath(resolved.ollama_model_name);
-            appendToOutput("Ollama model set in Agentic Bridge: " + resolved.ollama_model_name + "\n", "Output",
-                           OutputSeverity::Info);
-            METRICS.increment("model.resolve_success");
-            return true;
-        }
-    }
-
+    reportMissingLoadArtifacts("model", resolved.local_path);
     METRICS.increment("model.resolve_failures");
     return false;
 }
@@ -8473,6 +8284,13 @@ bool Win32IDE::resolveAndLoadModel(const std::string& input)
 void Win32IDE::openModelFromHuggingFace()
 {
     SCOPED_METRIC("model.open_from_huggingface");
+    appendToOutput("[NativeOnly] HuggingFace download is disabled. Load a local GGUF or on-disk blob.",
+                   "Errors", OutputSeverity::Error);
+    reportMissingLoadArtifacts("model", "");
+    MessageBoxW(m_hwndMain,
+                L"Remote HuggingFace downloads are disabled.\nLoad a local .gguf file or an on-disk blob.",
+                L"Native only", MB_OK | MB_ICONINFORMATION);
+    return;
 
     // Step 1: Ask user for HuggingFace repo ID or search query
     char inputBuf[512] = {0};
