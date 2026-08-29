@@ -1,1 +1,3 @@
+need_input: NEED_INPUT
+need_input_resume: BACKEND_FAILURE
 real_need_input: NEED_INPUT

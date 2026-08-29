@@ -1,16 +1,9 @@
-final_allow: BACKEND_FAILURE
-final_deny: BACKEND_FAILURE
-need_input: BACKEND_FAILURE
-need_input_resume: RESUME_FORBIDDEN: controller stopped
-tuner_retry: BACKEND_FAILURE
-exhaust: BACKEND_FAILURE
-empty_events: BACKEND_FAILURE
-ooo: BACKEND_FAILURE
+need_input_resume: BACKEND_FAILURE
+empty_events: EMPTY_EVENT_STREAM
+ooo: OUT_OF_ORDER_EVENT
 unavailable: BACKEND_FAILURE
-dup_final: BACKEND_FAILURE
 dup_final_resume: RESUME_FORBIDDEN: controller stopped
 stale: STALE_GENERATION
-unsupported: BACKEND_FAILURE
+unsupported: UNSUPPORTED_SUCCESS: success without verified claim
 exception: CONTROLLER_EXCEPTION: controller_force_exception
 empty_goal: EMPTY_GOAL: no fake success
-order_ok: BACKEND_FAILURE

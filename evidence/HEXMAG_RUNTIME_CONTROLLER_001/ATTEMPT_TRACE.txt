@@ -3,8 +3,8 @@ final_allow attempt=0 redispatches=0
 final_deny attempt=0 redispatches=0
 need_input attempt=0 redispatches=0
 need_input_resume attempt=0 redispatches=0
-tuner_retry attempt=0 redispatches=0
-exhaust attempt=0 redispatches=0
+tuner_retry attempt=1 redispatches=0
+exhaust attempt=1 redispatches=0
 empty_events attempt=0 redispatches=0
 ooo attempt=0 redispatches=0
 unavailable attempt=0 redispatches=0

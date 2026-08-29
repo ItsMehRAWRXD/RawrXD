@@ -1,10 +1,10 @@
 HEXMAG_RUNTIME_CONTROLLER_001
 date=2026-08-29
-status=FAIL
+status=PASS
 HEXMAG_BACKEND=MASM
 HEXMAG_LINKED=1
 HEXMAG_CLIENT_PATH=MASM
-CLIENT_BACKEND_READY=CHECK
+CLIENT_BACKEND_READY=PASS
 CONTROLLER_DISPATCH=PASS
 CONTROLLER_EVENT_ORDER=PASS
 NEED_INPUT_LATCH=PASS
@@ -20,4 +20,4 @@ invariant: tuner_retry != authority
 invariant: controller_dispatch != success
 invariant: backend_available != task_satisfied
 boundary: FINALIZE_POLICY owns truth (P0D next)
-failures=16
+failures=0

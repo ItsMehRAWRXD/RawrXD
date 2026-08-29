@@ -66,7 +66,7 @@ answer.candidate | pretty
 goal.requested | g
 need_input | unspecified
 goal.requested | g
-answer.candidate | wrong-v0
+answer.candidate | fixed-v1
 goal.requested | g
 answer.candidate | always-wrong
 answer.final | early

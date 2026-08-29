@@ -1,1 +1,5 @@
 live_masm: FINAL_ALLOWED
+final_allow: FINAL_ALLOWED
+tuner_retry: FINAL_ALLOWED
+dup_final: FINAL_ALLOWED
+order_ok: FINAL_ALLOWED

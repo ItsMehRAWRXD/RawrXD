@@ -61,6 +61,9 @@ static ClientAskResult mk(bool clientOk, bool needInput, bool finalAuth,
     r.trace.masmSubmitCalled = true;
     r.trace.masmRunCalled = true;
     r.trace.masmPollCalled = true;
+    r.trace.id.backend = "MASM";
+    r.trace.id.linked = 1;
+    r.trace.id.clientPath = "MASM";
     return r;
 }
 
