@@ -198,7 +198,7 @@ private:
 
     void enter(ControllerResult& r, ControllerPhase p, const char* step) const;
     ControllerResult failClosed(ControllerResult r, ControllerFail f,
-                                const char* why) const;
+                                const char* why);
 };
 
 } // namespace HexMag

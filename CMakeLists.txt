@@ -157,6 +157,9 @@ set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /I\"${CMAKE_CURRENT_SOURCE_DIR
 
 set(HEXMAG_SOURCES
     src/core/hexmag_control_plane.cpp
+    src/core/hexmag_oracle_binder.cpp
+    src/core/hexmag_runtime_controller.cpp
+    src/core/hexmag_ide_link_probe.cpp
     src/agent/hexmag_client.cpp
 )
 
