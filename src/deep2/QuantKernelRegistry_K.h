@@ -25,7 +25,7 @@ static inline float f16_to_f32(uint16_t h) {
         uint32_t f = frac;
         while ((f & 0x0400) == 0) { f <<= 1; e++; }
         f &= 0x03FF;
-        uint32_t bits = sign | ((127 - 15 + 1 - e) << 23) | (f << 13);
+        uint32_t bits = sign | ((127 - 15 + 2 - e) << 23) | (f << 13);
         return reinterpret_cast<float&>(bits);
     }
     if (exp == 31) {

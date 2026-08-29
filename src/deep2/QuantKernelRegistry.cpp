@@ -328,28 +328,28 @@ static void gemv_f32_scalar(
 }
 
 // --- F16 GEMV (scalar via soft conversion) ---
+// Uses the same algorithm as QuantKernelRegistry_K.h for consistency.
 static inline float f16_to_f32(uint16_t h) {
-    uint32_t sign = (h >> 15) & 1;
-    uint32_t expo = (h >> 10) & 0x1F;
-    uint32_t mant = h & 0x3FF;
-    uint32_t f;
-    if (expo == 0) {
-        if (mant == 0) {
-            f = sign << 31;
-        } else {
-            // subnormal
-            float val = (mant / 1024.0f) * (1.0f / 8388608.0f);
-            f = sign ? (*reinterpret_cast<uint32_t*>(&val) | 0x80000000) :
-                       *reinterpret_cast<uint32_t*>(&val);
-        }
-    } else if (expo == 31) {
-        f = (sign << 31) | 0x7F800000 | (mant << 13);
-    } else {
-        f = (sign << 31) | ((expo + 112) << 23) | (mant << 13);
+    uint32_t sign = (static_cast<uint32_t>(h & 0x8000)) << 16;
+    uint32_t exp  = (h >> 10) & 0x1F;
+    uint32_t frac = h & 0x03FF;
+
+    if (exp == 0) {
+        if (frac == 0) return reinterpret_cast<const float&>(sign);
+        // Denormalized: value = frac * 2^(-10) * 2^(-14) = frac * 2^(-24)
+        uint32_t e = 1;
+        uint32_t f = frac;
+        while ((f & 0x0400) == 0) { f <<= 1; e++; }
+        f &= 0x03FF;
+        uint32_t bits = sign | ((127 - 15 + 2 - e) << 23) | (f << 13);
+        return reinterpret_cast<float&>(bits);
     }
-    float result;
-    std::memcpy(&result, &f, 4);
-    return result;
+    if (exp == 31) {
+        uint32_t bits = sign | 0x7F800000 | (frac << 13);
+        return reinterpret_cast<float&>(bits);
+    }
+    uint32_t bits = sign | ((exp + 127 - 15) << 23) | (frac << 13);
+    return reinterpret_cast<float&>(bits);
 }
 
 static void gemv_f16_scalar(
@@ -466,33 +466,28 @@ static void gemv_q4_k_scalar(
             uint8_t scales[8], mins[8];
             unpack_q4_k_scales(blk.scales, scales, mins);
 
-            // Q4_K: 4 sections of 64 weights.
-            // Each section j uses qs[j*32..j*32+31] and contains:
-            //   - low nibbles  -> weights j*64 + 0..31   (scale group 2*j)
-            //   - high nibbles -> weights j*64 + 32..63  (scale group 2*j+1)
-            const uint8_t* q = blk.qs;
+            // Q4_K: 8 sub-blocks of 32 weights each.
+            // Sub-block j (0..7): weights j*32 + 0..31, scale[j], min[j]
+            // qs[j*16 + k] contains nibbles for weights j*32 + k (lo) and j*32 + k+16 (hi)
+            for (int j = 0; j < 8; ++j) {
+                const float dl = d * static_cast<float>(scales[j]);
+                const float ml = dmin * static_cast<float>(mins[j]);
+                const uint8_t* q = blk.qs + j * 16;
 
-            for (int j = 0; j < 4; ++j) {
-                const float d0 = d * static_cast<float>(scales[2 * j]);
-                const float m0 = dmin * static_cast<float>(mins[2 * j]);
-                const float d1 = d * static_cast<float>(scales[2 * j + 1]);
-                const float m1 = dmin * static_cast<float>(mins[2 * j + 1]);
-
-                for (int l = 0; l < 32; ++l) {
-                    int idx0 = j * 64 + l;
-                    int idx1 = j * 64 + 32 + l;
+                for (int k = 0; k < 16; ++k) {
+                    uint8_t byte = q[k];
+                    int idx0 = j * 32 + k;
+                    int idx1 = j * 32 + k + 16;
 
                     if (static_cast<size_t>(idx0) < elemsInBlock) {
-                        int nibble0 = q[l] & 0x0F;
-                        acc += (d0 * static_cast<float>(nibble0) - m0) * x[base + idx0];
+                        int nibble0 = byte & 0x0F;
+                        acc += (dl * static_cast<float>(nibble0) - ml) * x[base + idx0];
                     }
                     if (static_cast<size_t>(idx1) < elemsInBlock) {
-                        int nibble1 = q[l] >> 4;
-                        acc += (d1 * static_cast<float>(nibble1) - m1) * x[base + idx1];
+                        int nibble1 = byte >> 4;
+                        acc += (dl * static_cast<float>(nibble1) - ml) * x[base + idx1];
                     }
                 }
-
-                q += 32;
             }
         }
         y[r] += acc;
