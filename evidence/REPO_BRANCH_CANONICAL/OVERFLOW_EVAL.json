@@ -1,0 +1,9 @@
+﻿{
+    "merge":  "REJECT",
+    "asOf":  "2026-08-29",
+    "sourceCommit":  "365daa6f3",
+    "note":  "Design archive layout against current main; do not replay stale rename ancestry",
+    "intent":  "ACCEPT_PROBLEM_STATEMENT",
+    "applyNow":  "DEFER_DEDICATED_HYGIENE",
+    "mainTopLevelTrackedApprox":  4647
+}
