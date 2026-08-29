@@ -166,17 +166,25 @@ std::string W0Engine::realize(const W0Result& r) {
 
 W0Result W0Engine::solve(const W0Request& req) {
     W0Result r;
+    auto step = [&](const char* name, bool ok) {
+        r.ladder.push_back(std::string(ok ? "PASS " : "FAIL ") + name);
+    };
+
     GraphStore graph;
     MultiIndexEngine index;
     EvidenceLedger ledger;
     RepairMemory memory;
     KnowledgePackManager packs;
 
+    step("W0_INPUT_RECEIVED", !req.task.empty());
     KnowledgeCompiler::seedCoreOntology(graph);
     packs.registerPack({"core", "W0K1", 1, 0, 0, {}});
     packs.registerPack({"project", "W0K1", 1, 0, 0, {}});
 
     if (looksUnderspecified(req.task)) {
+        step("W0_INTENT_PARSED", true);
+        step("W0_ACTIONABLE", false);
+        r.ladder.push_back("PASS W0_MISSING_INFO=TRUE");
         r.needInput = true;
         r.error = "INSUFFICIENT_INFORMATION";
         r.surface = realize(r);
@@ -184,6 +192,9 @@ W0Result W0Engine::solve(const W0Request& req) {
     }
 
     QueryIR q = compileQuery(req.task);
+    step("W0_INTENT_PARSED", true);
+    step("W0_ACTIONABLE", true);
+    r.ladder.push_back("PASS W0_MISSING_INFO=FALSE");
     r.intentSummary = "intent=" + std::to_string(static_cast<int>(q.intent))
         + " entities=" + std::to_string(q.entities.size());
 
@@ -194,23 +205,24 @@ W0Result W0Engine::solve(const W0Request& req) {
     primaryPath += "main.cpp";
     std::string src = readFile(primaryPath);
     if (src.empty()) {
-        // Also try bare workspaceRoot as file
         src = readFile(req.workspaceRoot);
         primaryPath = req.workspaceRoot;
     }
     if (src.empty()) {
+        step("W0_TARGET_RESOLVED", false);
+        step("W0_MISSING_INFO", true);
         r.needInput = true;
         r.error = "INSUFFICIENT_INFORMATION: workspace source not found";
         r.surface = realize(r);
         return r;
     }
+    step("W0_TARGET_RESOLVED", true);
 
     KnowledgeCompiler::ingestSourceFile(graph, primaryPath, src, KnowledgeScope::Project);
     index.rebuild(graph);
     auto packMeta = KnowledgeCompiler::compilePackMeta("project", graph);
     packs.registerPack(packMeta);
 
-    // Hierarchical retrieval (no embeddings)
     auto hits = index.retrieve(q.entities);
     EvidenceEntry retEv;
     retEv.type = EvidenceType::Structural;
@@ -219,33 +231,39 @@ W0Result W0Engine::solve(const W0Request& req) {
     retEv.verified = !hits.empty() || !q.entities.empty();
     ledger.add(retEv);
 
-    // Diagnostic: WRONG_LITERAL from return scrape
     W0Patch patch;
     patch.path = primaryPath;
     if (!synthesizeChangeLiteral(src, req.task, patch)) {
+        step("W0_PLAN_CREATED", false);
+        step("W0_RULE_MATCHED", false);
         r.error = "no applicable transform (coverage ended)";
         r.needInput = false;
         r.success = false;
         r.surface = realize(r);
         return r;
     }
+    step("W0_PLAN_CREATED", true);
+    step("W0_RULE_MATCHED", true); // CHANGE_LITERAL
+    r.ladder.push_back("PASS W0_RULE_MATCHED=CHANGE_LITERAL");
 
     if (memory.isForbidden("CHANGE_LITERAL")) {
         r.error = "FORBIDDEN_REPAIR";
         return r;
     }
 
-    // Prefer prior repair memory when fingerprint matches
     const std::string problemFp = "WRONG_LITERAL";
     if (const RepairCase* prior = memory.bestMatch(problemFp)) {
-        (void)prior; // first run empty; reserved for hotpatch growth
+        (void)prior;
     }
 
     std::string candidate = applyPatches(src, {patch});
     r.patches.push_back(patch);
-    r.candidateSource = candidate; // CANDIDATE_ONLY
+    r.candidateSource = candidate;
+    step("W0_TRANSFORM_CREATED", !patch.before.empty() && !patch.after.empty());
+    step("W0_CANDIDATE_RENDERED", candidate.find(patch.after) != std::string::npos);
 
     const bool okStruct = structuralVerify(candidate, patch);
+    step("W0_STRUCTURAL_VERIFY", okStruct);
     EvidenceEntry sev;
     sev.type = EvidenceType::Structural;
     sev.sourceId = "structural_verify";
@@ -253,14 +271,9 @@ W0Result W0Engine::solve(const W0Request& req) {
     sev.payload = patch.rationale;
     sev.verified = okStruct;
     ledger.add(sev);
+    step("W0_EVIDENCE_PASS", okStruct);
 
-    // Optional write-back for compile/test oracles (caller may compile)
-    if (okStruct && !req.workspaceRoot.empty()) {
-        const std::string outPath = primaryPath + ".w0cand";
-        writeFile(outPath, candidate);
-    }
-
-    r.score.compiles = okStruct; // structural stand-in; real compile is external oracle
+    r.score.compiles = okStruct;
     r.score.failedTests = okStruct ? 0 : 1;
     r.score.editDistance = static_cast<uint32_t>(
         patch.before.size() + patch.after.size());
@@ -275,6 +288,7 @@ W0Result W0Engine::solve(const W0Request& req) {
     }
 
     r.success = okStruct && ledger.allVerified();
+    step("W0_CANDIDATE_OK", r.success);
     if (r.success) {
         RepairCase c;
         c.problemFingerprint = problemFp;

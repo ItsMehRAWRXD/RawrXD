@@ -104,6 +104,8 @@ struct W0Result {
     CandidateScore score;
     std::vector<W0Evidence> evidence;
     std::string surface; // template-realized human response
+    /// Debug ladder (first deviation is authority). Printed by certs.
+    std::vector<std::string> ladder;
 };
 
 inline constexpr const char* kW0Contract =

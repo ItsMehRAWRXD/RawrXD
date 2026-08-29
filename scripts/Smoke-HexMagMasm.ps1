@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-  HexMag MASM smoke + NEED_INPUT + Oracle binder + W0-001 (weightless prototype).
-  Keep-it-simple critical path: IR → workspace → intent → synth → evidence → HexMag gates.
+  HexMag MASM smoke + NEED_INPUT + Oracle binder + W0-001.
+  Fail-closed: nonzero exit OR any stderr/stdout line matching ^FAIL: ⇒ ALL FAIL.
 #>
 param([string]$OutDir = "")
 $ErrorActionPreference = "Stop"
@@ -33,23 +33,11 @@ if (-not $ml -or -not $vcvars) { Write-Error "ml64/vcvars not found" }
 
 $obj = Join-Path $OutDir "RawrXD_HexMag_Swarm.obj"
 $objTuner = Join-Path $OutDir "RawrXD_HexMag_RepeatTuner.obj"
-$exeUnit = Join-Path $OutDir "hexmag_swarm_smoke.exe"
-$exeE2E = Join-Path $OutDir "hexmag_e2e_smoke.exe"
-$exeCert = Join-Path $OutDir "hexmag_repeat_tuner_cert.exe"
-$exeNeed = Join-Path $OutDir "hexmag_need_input_cert.exe"
-$exeBind = Join-Path $OutDir "hexmag_oracle_binder_cert.exe"
-$exeW0 = Join-Path $OutDir "w0_001_cert.exe"
-$cppUnit = Join-Path $Root "tests\hexmag_swarm_smoke.cpp"
-$cppE2E = Join-Path $Root "tests\hexmag_e2e_smoke.cpp"
-$cppCert = Join-Path $Root "tests\hexmag_repeat_tuner_cert.cpp"
-$cppNeed = Join-Path $Root "tests\hexmag_need_input_cert.cpp"
-$cppBind = Join-Path $Root "tests\hexmag_oracle_binder_cert.cpp"
-$cppW0 = Join-Path $Root "tests\w0_001_cert.cpp"
+$inc = Join-Path $Root "src"
+$incAgentic = Join-Path $Root "src\agentic"
 $cpCpp = Join-Path $Root "src\core\hexmag_control_plane.cpp"
 $obCpp = Join-Path $Root "src\core\hexmag_oracle_binder.cpp"
 $w0Cpp = Join-Path $Root "src\deep2w0\W0Engine.cpp"
-$inc = Join-Path $Root "src"
-$incAgentic = Join-Path $Root "src\agentic"
 $fixW0 = Join-Path $Root "tests\fixtures\w0_001"
 
 Push-Location (Join-Path $Root "src\asm")
@@ -60,52 +48,76 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "ml64 tuner failed" }
 } finally { Pop-Location }
 
-$cmd = @"
-call "$vcvars" >nul
-cd /d "$OutDir"
+function Invoke-CertStep {
+    param(
+        [string]$Name,
+        [string]$CompileCmd,
+        [string]$RunExe,
+        [string[]]$RunArgs = @()
+    )
+    Write-Host "=== $Name ==="
+    cmd /c "`"$vcvars`" >nul && $CompileCmd"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "COMPILE_FAIL: $Name" -ForegroundColor Red
+        return $false
+    }
+    # Capture stdout+stderr without treating stderr writes as terminating errors
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $out = @()
+    try {
+        $out = & $RunExe @RunArgs 2>&1 | ForEach-Object { "$_" }
+    } finally {
+        $ErrorActionPreference = $prevEap
+    }
+    $code = $LASTEXITCODE
+    $out | ForEach-Object { Write-Host $_ }
+    $hasFailLine = $false
+    foreach ($line in $out) {
+        if ($line -match '(?m)^FAIL:') { $hasFailLine = $true; break }
+    }
+    if ($code -ne 0 -or $hasFailLine) {
+        Write-Host "CERT_FAIL: $Name exit=$code fail_line=$hasFailLine" -ForegroundColor Red
+        return $false
+    }
+    return $true
+}
 
-echo === 1/6 unit swarm smoke ===
-cl /nologo /EHsc /O2 /DRAWR_HAS_MASM /I "$inc" "$cppUnit" /Fe:"$exeUnit" /link /nologo "$obj" "$objTuner" kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeUnit"
-if errorlevel 1 exit /b 1
+$allPass = $true
 
-echo === 2/6 E2E policy+control plane ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppE2E" "$cpCpp" "$obCpp" /Fe:"$exeE2E" /link /nologo "$obj" "$objTuner" kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeE2E"
-if errorlevel 1 exit /b 1
+$exeUnit = Join-Path $OutDir "hexmag_swarm_smoke.exe"
+$allPass = (Invoke-CertStep -Name "1/6 unit swarm" `
+    -CompileCmd "cl /nologo /EHsc /O2 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_swarm_smoke.cpp')`" /Fe:`"$exeUnit`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
+    -RunExe $exeUnit) -and $allPass
 
-echo === 3/6 repeat tuner cert ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$incAgentic" /I "$inc" "$cppCert" /Fe:"$exeCert" /link /nologo "$objTuner" kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeCert"
-if errorlevel 1 exit /b 1
+$exeE2E = Join-Path $OutDir "hexmag_e2e_smoke.exe"
+$allPass = (Invoke-CertStep -Name "2/6 E2E" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_e2e_smoke.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeE2E`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
+    -RunExe $exeE2E) -and $allPass
 
-echo === 4/6 NEED_INPUT cert ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppNeed" "$cpCpp" "$obCpp" /Fe:"$exeNeed" /link /nologo "$obj" "$objTuner" kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeNeed"
-if errorlevel 1 exit /b 1
+$exeCert = Join-Path $OutDir "hexmag_repeat_tuner_cert.exe"
+$allPass = (Invoke-CertStep -Name "3/6 repeat tuner" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$incAgentic`" /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_repeat_tuner_cert.cpp')`" /Fe:`"$exeCert`" /link /nologo `"$objTuner`" kernel32.lib" `
+    -RunExe $exeCert) -and $allPass
 
-echo === 5/6 Oracle binder cert ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppBind" "$cpCpp" "$obCpp" /Fe:"$exeBind" /link /nologo "$obj" "$objTuner" kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeBind"
-if errorlevel 1 exit /b 1
+$exeNeed = Join-Path $OutDir "hexmag_need_input_cert.exe"
+$allPass = (Invoke-CertStep -Name "4/6 NEED_INPUT" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_need_input_cert.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeNeed`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
+    -RunExe $exeNeed) -and $allPass
 
-echo === 6/6 W0-001 weightless prototype ===
-cl /nologo /EHsc /O2 /std:c++20 /I "$inc" "$cppW0" "$w0Cpp" "$obCpp" /Fe:"$exeW0" /link /nologo kernel32.lib
-if errorlevel 1 exit /b 1
-"$exeW0" "$fixW0"
-if errorlevel 1 exit /b 1
+$exeBind = Join-Path $OutDir "hexmag_oracle_binder_cert.exe"
+$allPass = (Invoke-CertStep -Name "5/6 Oracle binder" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_oracle_binder_cert.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeBind`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
+    -RunExe $exeBind) -and $allPass
 
-exit /b 0
-"@
-$bat = Join-Path $OutDir "_e2e_cert.cmd"
-Set-Content -Path $bat -Value $cmd -Encoding ASCII
-cmd /c $bat
-$code = $LASTEXITCODE
-if ($code -eq 0) { Write-Host "`nSmoke-HexMagMasm ALL: PASS" -ForegroundColor Green }
-else { Write-Host "`nSmoke-HexMagMasm ALL: FAIL ($code)" -ForegroundColor Red }
-exit $code
+$exeW0 = Join-Path $OutDir "w0_001_cert.exe"
+$allPass = (Invoke-CertStep -Name "6/6 W0-001" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /I `"$inc`" `"$(Join-Path $Root 'tests\w0_001_cert.cpp')`" `"$w0Cpp`" `"$obCpp`" /Fe:`"$exeW0`" /link /nologo kernel32.lib" `
+    -RunExe $exeW0 -RunArgs @($fixW0)) -and $allPass
+
+if (-not $allPass) {
+    Write-Host "`nSmoke-HexMagMasm ALL: FAIL" -ForegroundColor Red
+    exit 1
+}
+Write-Host "`nSmoke-HexMagMasm ALL: PASS" -ForegroundColor Green
+exit 0

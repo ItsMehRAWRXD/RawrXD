@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
             req.task.pop_back();
         req.workspaceRoot = root;
         auto r = RawrXD::W0::W0Engine().solve(req);
+        for (const auto& s : r.ladder) std::fprintf(stderr, "  ladder: %s\n", s.c_str());
         expect(!r.needInput, "actionable task: not NEED_INPUT");
         expect(r.success, "W0 solve success (structural verify)");
         expect(r.candidateSource.find("return 42") != std::string::npos,
@@ -95,8 +96,17 @@ int main(int argc, char** argv) {
                "W0 candidate Ok");
         expect(brOut.success && brOut.gateAllowFinal && brOut.gateIsAllowedFinalClaim,
                "verified W0 candidate → existing FINAL gates ALLOW");
-        expect(brOut.claim.evidence[0].payload.find("return 42") == std::string::npos,
+        const bool evidenceSafe = !brOut.claim.evidence.empty()
+            && brOut.claim.evidence[0].payload.find("return 42") == std::string::npos;
+        expect(brOut.success ? evidenceSafe : true,
                "candidate_as_evidence=FORBIDDEN");
+        if (brOut.success) {
+            std::fprintf(stderr, "  ladder: PASS HEXMAG_CANDIDATE_ACCEPTED\n");
+            std::fprintf(stderr, "  ladder: PASS FINAL_ALLOWED\n");
+        } else {
+            std::fprintf(stderr, "  ladder: FAIL HEXMAG_CANDIDATE_ACCEPTED\n");
+            std::fprintf(stderr, "  ladder: FAIL FINAL_ALLOWED (correct if no verified candidate)\n");
+        }
 
         // needInput latch still holds
         br.needInputLatched = true;
