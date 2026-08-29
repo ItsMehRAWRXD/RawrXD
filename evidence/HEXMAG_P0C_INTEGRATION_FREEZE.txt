@@ -10,11 +10,12 @@ Next phase = integration / certification (no controller rewrite).
 
 FROZEN TIP (at freeze authoring)
 --------------------------------
-tip_sha          = 447615d28f047fac4b728b1d840677f972b8f3cc
+tip_sha          = f8d8ffd6326119020ec892f2b3c235e447ec2a44
 P0C_controller   = 955876d48  (HEXMAG_RUNTIME_CONTROLLER_001 + FinalizePolicy)
 IDE_wire_ctrl    = b77e6d3f7  (Win32IDE_HexMag → HexMagRuntimeController)
 IDE_operator_mtx = bf9cdad6f  (AgentRuntimeController + thread-safe turns)
 IDE_link_probe   = 447615d28  (HEXMAG_IDE_LINK_001 probe TU)
+IDE_E2E_001      = f8d8ffd63  (HEXMAG_IDE_E2E_001 PASS — send path + 5 cases)
 
 STACK (do not re-architect)
 ---------------------------
