@@ -19,97 +19,9 @@ option(ENABLE_COPILOT "Enable Copilot streaming integration for Win32 IDE" OFF)
 # Force Windows SDK version that ships all required headers
 set(CMAKE_SYSTEM_VERSION "10.0.22621.0")
 
-<<<<<<< HEAD
 # Qt fully eliminated — pure C++20/Win32/MASM architecture
 
 # Win32-based IDE (MSVC only)
-=======
-# Set Qt path
-# Qt path: prefer environment-provided Qt6_DIR (e.g. C:/Qt/6.7.3/msvc2022_64/lib/cmake/Qt6)
-# or CMAKE_PREFIX_PATH (e.g. C:/Qt/6.7.3/msvc2022_64)
-if(DEFINED ENV{Qt6_DIR})
-    message(STATUS "Using Qt6 from ENV Qt6_DIR=$ENV{Qt6_DIR}")
-    # Qt6_DIR should point to .../lib/cmake/Qt6, so use parent for PREFIX_PATH
-    get_filename_component(QT_CMAKE_DIR "$ENV{Qt6_DIR}" DIRECTORY)
-    get_filename_component(QT_LIB_DIR "${QT_CMAKE_DIR}" DIRECTORY)
-    get_filename_component(QT_ROOT_DIR "${QT_LIB_DIR}" DIRECTORY)
-    set(CMAKE_PREFIX_PATH "${QT_ROOT_DIR}")
-    message(STATUS "Set CMAKE_PREFIX_PATH to ${CMAKE_PREFIX_PATH}")
-endif()
-
-# Explicitly specify Qt6 paths
-set(Qt6_DIR "C:/Qt/6.7.3/msvc2022_64/lib/cmake/Qt6")
-list(APPEND CMAKE_PREFIX_PATH "C:/Qt/6.7.3/msvc2022_64")
-
-
-if(Qt6_FOUND)
-    message(STATUS "Qt6 found: ${Qt6_VERSION}")
-    add_definitions(-DHAVE_QT_CORE)
-    include_directories(${Qt6_INCLUDE_DIRS})
-else()
-    message(WARNING "Qt6 not found. Qt-based benchmarks will be skipped.")
-endif()
-
-# Qt-based IDE shell (separate executable, no Vulkan)
-if(MSVC)
-    if(FALSE AND Qt6_FOUND) # Disabled until headers exist
-        message(STATUS "Building Qt Shell with Qt version: ${Qt6_VERSION}")
-        
-        # Enable Qt MOC for QObject classes
-
-        # Create a separate Qt target that doesn't depend on problematic files
-        add_executable(RawrXD-QtShell 
-            src/qtapp/main_qt.cpp
-            src/qtapp/MainWindow.cpp
-            src/qtapp/MainWindow.h
-        )
-
-        # Ensure QtShell links all required QObject implementations
-        target_sources(RawrXD-QtShell PRIVATE
-            src/qtapp/ui/AISuggestionOverlay.cpp
-            src/qtapp/StreamerClient.cpp
-            src/qtapp/ui/TaskProposalWidget.cpp
-            src/llm_adapter/GGUFRunner.cpp
-            src/llm_adapter/GGUFRunner.h
-            src/qtapp/utils/ModelCompilerUtils.cpp
-            src/qtapp/utils/ModelCompilerUtils.h
-            src/orchestrator/TaskNode.cpp
-            src/orchestrator/AgentOrchestrator.cpp
-            src/llm_adapter/matmul_avx2.cpp
-        )
-        
-        # Link brutal gzip library
-        target_link_libraries(RawrXD-QtShell PRIVATE brutal_gzip)
-        
-        # Add Assembly kernel for high-performance MatMul (MSVC-specific syntax)
-        if(MSVC)
-            enable_language(ASM_MASM)
-            target_sources(RawrXD-QtShell PRIVATE
-                src/llm_adapter/gguf_kernels.asm
-            )
-        endif()
-        
-        target_include_directories(RawrXD-QtShell PRIVATE include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/qtapp)
-        
-        set_target_properties(RawrXD-QtShell PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}"
-            WIN32_EXECUTABLE TRUE
-        )
-
-        if(MSVC)
-            target_compile_options(RawrXD-QtShell PRIVATE /arch:AVX2)
-        else()
-            target_compile_options(RawrXD-QtShell PRIVATE -mavx2)
-        endif()
-    else()
-        message(STATUS "Qt6 not found, building Win32 IDE with terminal integration")
-    endif()
-else()
-    message(STATUS "MSVC not detected; skipping Qt6 targets to avoid MinGW/MSVC mismatch")
-endif()
-
-# Win32-based IDE (MSVC only to match Qt)
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 if(FALSE AND MSVC) # Disabled until headers exist
     add_executable(RawrXD-Win32IDE 
         src/win32app/main_win32.cpp
@@ -269,13 +181,6 @@ if(Vulkan_FOUND)
     target_link_libraries(RawrXD-CLI PRIVATE Vulkan::Vulkan)
 endif()
 set_target_properties(RawrXD-CLI PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin-${COMPILER_SUFFIX}")
-<<<<<<< HEAD
-=======
-
-if(Qt6Widgets_FOUND)
-    message(STATUS "Qt6Widgets already configured above")
-endif()
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # Link libraries
 target_link_libraries(RawrXD-ModelLoader PRIVATE
@@ -381,59 +286,7 @@ set_target_properties(RawrXD-IDE PROPERTIES
 )
 endif()
 
-<<<<<<< HEAD
 # [REMOVED] RawrXD-SimpleIDE (legacy Qt/qtapp target — replaced by RawrXD-IDE Win32)
-=======
-if(FALSE) # Disabled until headers exist
-# Simple C++ IDE with advanced features stubs
-add_executable(RawrXD-SimpleIDE
-    src/qtapp/main_simple.cpp
-    src/qtapp/MainWindowSimple.cpp
-    src/qtapp/MainWindowSimple.h
-    src/editor_buffer.cpp
-    src/syntax_engine.cpp
-    src/overclock_vendor.cpp
-    src/overclock_governor.cpp
-    src/settings.cpp
-    src/telemetry.cpp
-    src/baseline_profile.cpp
-    src/gguf_loader.cpp
-    src/telemetry/ai_metrics.cpp
-    src/session/ai_session.cpp
-    src/backend/ollama_client.cpp
-    src/backend/websocket_server.cpp
-    src/backend/agentic_tools.cpp
-    src/tools/file_ops.cpp
-    src/tools/git_client.cpp
-    src/context/indexer.cpp
-    src/context/semantic_store.cpp
-    src/ui/split_layout.cpp
-    src/ui/chat_panel.cpp
-)
-
-target_include_directories(RawrXD-SimpleIDE PRIVATE include)
-target_link_libraries(RawrXD-SimpleIDE PRIVATE 
-    user32 
-    gdi32 
-    wbemuuid 
-    pdh
-    winhttp
-    ws2_32
-)
-
-set_target_properties(RawrXD-SimpleIDE PROPERTIES 
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-# Enable standard exception semantics and optimization for SimpleIDE
-if(MSVC)
-    target_compile_options(RawrXD-SimpleIDE PRIVATE /EHsc /O2)
-else()
-    target_compile_options(RawrXD-SimpleIDE PRIVATE -fexceptions -O2)
-endif()
-target_compile_definitions(RawrXD-SimpleIDE PRIVATE _CRT_SECURE_NO_WARNINGS)
-endif()
->>>>>>> 99cf6bb9afc974435d8bd1fc140968c0301b26f9
 
 # Chromatic Wave Demo - Chameleon/Neon effects with D3D11
 # Target: 540Hz @ 3840x2160 (4K UHD)
