@@ -1,0 +1,144 @@
+{
+  "manifest": "NEXT_CERT_MANIFEST",
+  "date": "2026-08-29",
+  "ids": [1, 21521, 9312],
+  "authority": "RAWRXD_FORCE_PRE_O_EXPAND_V (PRE_O := GQA_expand(V) all layers)",
+  "worktree": "F:/~dev/rawrxd",
+  "branch": "cert/deep2-parity-probe-001",
+  "commit": "d3d6057b4e49dd6de0adfb6aa4cae37cb6208885",
+  "abs_eps_pass": 1e-6,
+  "abs_eps_inspect": 1e-5,
+  "do_not_reopen": [
+    "tokenizer / GATE1",
+    "Track A / Track B",
+    "L0 attn + FFN (same-operand)",
+    "O_PROJ / wo / blk.0.attn_output",
+    "L0 → L1 entry",
+    "L1 attn + FFN under EXPAND_V",
+    "blk.1.attn_output / wo",
+    "BATCH2_SPARSE_TIP_001 L1 fail (INVALIDATED — ENTRY oracle contamination)"
+  ],
+  "closed": [
+    {
+      "id": "GATE1_TOKENIZER",
+      "status": "CLOSED"
+    },
+    {
+      "id": "TRACK_A_B",
+      "status": "CLOSED"
+    },
+    {
+      "id": "L0_ATTN_FFN",
+      "status": "CLOSED",
+      "note": "same-operand Gate A PASS ~1e-8"
+    },
+    {
+      "id": "L0_L1_ENTRY",
+      "status": "CLOSED",
+      "evidence": "BATCH2_L1_ENTRY_001 entry stages PASS; native ATTN_OUT fail invalidated"
+    },
+    {
+      "id": "L1_CLEAN",
+      "status": "CLOSED",
+      "evidence": "BATCH2_L1_CLEAN_001 LAYER1_OUT PASS ~6e-8"
+    },
+    {
+      "id": "L1_WO",
+      "status": "CLOSED",
+      "evidence": "BATCH2_L1_ATTN_OUT_LOC ATTN_OUT_1 PASS ~4.66e-8"
+    },
+    {
+      "id": "SWIGLU_CLAMP_BUG",
+      "status": "FIXED",
+      "root": "Deep2Engine::SwiGLU used x*sigmoid(clamp(x,±10)) — under-scales |x|>10",
+      "fix": "stable SiLU: x>20→x; x<-20→0; else x/(1+exp(-x))",
+      "evidence": "BATCH2_L1_CLEAN_001 VERDICT / BATCH2_L2_CLEAN_001"
+    },
+    {
+      "id": "SPARSE_TIP_001_L1",
+      "status": "INVALIDATED",
+      "reason": "compared against BATCH2_L1_ENTRY_001 (FORCE L0 only); not CLEAN EXPAND_V",
+      "evidence": "BATCH2_SPARSE_TIP_001/AUTHORITY_RECONCILE.txt"
+    }
+  ],
+  "active_first_fail": {
+    "id": "L2_FFN_ACT_RESIDUAL",
+    "stage": "FFN_ACT_2 / LAYER_OUT_2",
+    "max_abs": 4.58e-5,
+    "authority": "BATCH2_SPARSE_CLEAN_001 post-SwiGLU-fix + EXPAND_V APPLIED all layers",
+    "class": "INSPECT→FAIL vs 1e-6; clamp bug closed; residual ULP/Q8_K sensitivity class",
+    "not": "oracle contamination; not wo reopen"
+  },
+  "todos_ordered": [
+    {
+      "seq": 1,
+      "id": "TODO_L2_ACT_OPERAND_FREEZE",
+      "status": "NEXT",
+      "action": "Freeze FFN_GATE_2 + FFN_UP_2 Deep2 vs llama under EXPAND_V; prove ACT residual is silu(G)*U vs mul_mat sensitivity, not layout",
+      "pass_criteria": "GATE_2/UP_2 ≤1e-6; ACT self-check Deep2 ACT == silu(G)*U exact/≤1e-7",
+      "on_fail": "localize first of GATE/UP/SiLU path only"
+    },
+    {
+      "seq": 2,
+      "id": "TODO_L2_SAME_OPERAND_DOWN",
+      "status": "PENDING",
+      "action": "If ACT residual ≤1e-5 INSPECT: Gate A force llama FFN ACT ← Deep2 ACT then compare FFN_DOWN / LAYER_OUT",
+      "pass_criteria": "same-operand DOWN ≤1e-6 → kernel CLOSED; tip residual = input-induced",
+      "on_fail": "open blk.2.ffn_down only under identical ACT"
+    },
+    {
+      "seq": 3,
+      "id": "TODO_SPARSE_TIPS_RERUN",
+      "status": "PENDING",
+      "depends_on": ["TODO_L2_ACT_OPERAND_FREEZE"],
+      "action": "Re-score L2_OUT→L4→L8→L12→L16→L21 under BATCH2_SPARSE_CLEAN_001 only; stop at first FAIL; never use ENTRY_001 as llama baseline",
+      "harness": "tests/gate2_sparse_tips.cpp",
+      "invariant": "FORCE APPLIED count == n_layers; SKIP==0 before accepting any tip FAIL"
+    },
+    {
+      "seq": 4,
+      "id": "TODO_TIP_FINAL_NORM_ALIGN",
+      "status": "PENDING",
+      "action": "Align Deep2 FINAL_NORM dump to tip token (not mid-prefill pos0-only mismatch vs llama result_norm)",
+      "pass_criteria": "FINAL_NORM numerical gate ≤1e-6 or documented tip-index match",
+      "note": "prior FINAL_NORM ~30 gap was tip-alignment / unclean inheritance — re-open only after L2 residual closed"
+    },
+    {
+      "seq": 5,
+      "id": "TODO_LOGITS_VECTOR",
+      "status": "PENDING",
+      "action": "Dump + compare LOGITS_VECTOR Deep2 vs llama under clean tip hidden",
+      "pass_criteria": "≤ numerical tolerance (separate from TOP1)"
+    },
+    {
+      "seq": 6,
+      "id": "TODO_ARGMAX_TOP1",
+      "status": "PENDING",
+      "action": "TOP1_TOKEN exact match; TOPK_ORDER optional diagnostic",
+      "pass_criteria": "argmax Deep2 == argmax llama"
+    },
+    {
+      "seq": 7,
+      "id": "TODO_PORT_SWIGLU_G_TREE",
+      "status": "PENDING",
+      "action": "Port Deep2Engine::SwiGLU stable-SiLU fix from F:~dev/rawrxd → g:/rawrxd (g: still clamp±6 AVX path)",
+      "pass_criteria": "g: SwiGLU matches F: silu1 semantics"
+    },
+    {
+      "seq": 8,
+      "id": "TODO_FIX_DEEP2_SWIGLU_EXPORT",
+      "status": "PENDING",
+      "action": "Fix orphan Deep2_SwiGLU AVX clamp±10 export used by benches/smoketests (main FFN uses Deep2Engine::SwiGLU)",
+      "pass_criteria": "Deep2_SwiGLU == stable SiLU * up"
+    }
+  ],
+  "sparse_harness_invariant": {
+    "before_accept_ATTN_OUT_n_or_L_OUT_n_fail": [
+      "llama_PRE_O_n == GQA_expand(llama_V_n) OR FORCE_EXPAND_V APPLIED for layer n",
+      "Deep2_PRE_O_n == GQA_expand(Deep2_V_n)",
+      "Deep2_V_n ~= llama_V_n",
+      "SHA/FNV(forced PRE_O consumed by llama wo) == expected clean PRE_O when dumps exist"
+    ]
+  },
+  "stop_rule": "if checkpoint PASS continue; if FAIL stop and expand only the interval/layer immediately before it"
+}
