@@ -4679,6 +4679,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/codec/gzip_brutal_inflate.cpp
     # Deep2 core — unified into InferenceEngine for canonical local inference
     src/deep2/Deep2Engine.cpp
+    src/deep2/ChatTemplate.cpp
     src/deep2/GGUFLoader.cpp
     src/deep2/InferenceSession.cpp
     src/deep2/QuantKernelRegistry.cpp
@@ -4788,6 +4789,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/agentic/task_graph.cpp
     src/agentic/task_scheduler.cpp
     src/agentic/NativeInferenceClient.cpp
+    src/agentic/Deep2SovereignInferenceGateway.cpp
     src/agentic/SovereignStandaloneClient.cpp
     src/agentic/SovereignAssembler.cpp
     src/agentic/SovereignAssembler_HotPatch.cpp
@@ -4880,6 +4882,14 @@ target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/d
 target_link_libraries(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2/QuantKB.obj")
 # Set MSVC runtime library to match RawrEngine (static CRT)
 set_property(TARGET InferenceEngine PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Deep2 stage-by-stage certification (D2-CERT-002)
+option(RAWRXD_DEEP2_CERT "Enable Deep2 production/reference parity hooks" OFF)
+if(RAWRXD_DEEP2_CERT)
+    target_compile_definitions(InferenceEngine PRIVATE RAWRXD_DEEP2_CERT=1)
+    target_include_directories(InferenceEngine PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/deep2")
+    message(STATUS "[Deep2Cert] RAWRXD_DEEP2_CERT=1 — stage telemetry + reference parity enabled")
+endif()
 
 # Add Vulkan include directories if available
 if(RAWR_ENABLE_VULKAN AND DEFINED RAWR_VULKAN_INCLUDE)
@@ -7505,6 +7515,76 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
+# test_chat_template -- Chat template + streaming generation test
+option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" ON)
+if(BUILD_DEEP2_CHAT_TEMPLATE)
+    add_executable(test_chat_template
+        src/deep2/test_chat_template.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(test_chat_template PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_chat_template PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_chat_template PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_chat_template PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_chat_template
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Chat template test: test_chat_template")
+endif()
+
+# test_chat_template_unit -- Chat template unit tests (no model loading)
+option(BUILD_DEEP2_CHAT_TEMPLATE_UNIT "Build chat template unit tests" ON)
+if(BUILD_DEEP2_CHAT_TEMPLATE_UNIT)
+    add_executable(test_chat_template_unit
+        src/deep2/test_chat_template_unit.cpp
+    )
+    target_link_libraries(test_chat_template_unit PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_chat_template_unit PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_chat_template_unit PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_chat_template_unit PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_chat_template_unit
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Chat template unit tests: test_chat_template_unit")
+endif()
+
+# test_streaming -- Streaming generation test with per-token callback
+option(BUILD_DEEP2_STREAMING "Build streaming generation test" ON)
+if(BUILD_DEEP2_STREAMING)
+    add_executable(test_streaming
+        src/deep2/test_streaming.cpp
+        src/tokenizer/gguf_embedded_tokenizer.cpp
+    )
+    target_link_libraries(test_streaming PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_streaming PRIVATE /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_streaming PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_streaming PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_streaming
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Streaming test: test_streaming")
+endif()
+
 # dump_qwen35_meta — Dump Qwen3.5 GGUF metadata + tensor topology
 # ═══════════════════════════════════════════════════════════════════════════════
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" ON)
@@ -7527,6 +7607,29 @@ if(BUILD_DUMP_QWEN35_META)
         MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
     message(STATUS "[Deep2] Qwen3.5 metadata dump: dump_qwen35_meta")
+endif()
+
+# RawrXD-Agentic — Sovereign agentic runtime (unified closure drop)
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_RAWRXD_AGENTIC "Build RawrXD sovereign agentic runtime" ON)
+if(BUILD_RAWRXD_AGENTIC)
+    add_executable(RawrXD-Agentic
+        src/agentic/rawrxd_agentic_runtime_all.cpp
+    )
+    target_link_libraries(RawrXD-Agentic PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(RawrXD-Agentic PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(RawrXD-Agentic PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(RawrXD-Agentic PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME RawrXD-Agentic
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic")
 endif()
 
 # layer_harness — Single-layer Qwen3.5 correctness harness

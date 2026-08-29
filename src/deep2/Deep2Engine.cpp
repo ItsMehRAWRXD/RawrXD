@@ -8,6 +8,7 @@
 // Continuation mode removed for production certification.
 // #define B3_CONTINUE_FOR_RESIDENCY_BASELINE
 
+#include "ChatTemplate.hpp"
 #include "Deep2Engine.h"
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
@@ -45,6 +46,10 @@
 #include <cpuid.h>
 #endif
 #include "gguf_loader.h"
+
+#ifdef RAWRXD_DEEP2_CERT
+#include "Deep2CertBridge.hpp"
+#endif
 
 // Deep2 kernel interface
 extern "C" {
@@ -4228,39 +4233,31 @@ std::string Deep2Engine::generateText(const std::string& prompt, size_t maxToken
 std::string Deep2Engine::generateChat(const std::string& userMessage,
                                         const std::string& systemPrompt,
                                         size_t maxTokens) {
-    // Build formatted prompt using chat template
-    std::string formattedPrompt;
-    
+    // Use the new ChatTemplate engine for proper multi-format support
+    ChatTemplate chatTmpl;
     const ModelMetadata& meta = ggufResult.metadata;
     
-    if (!meta.chatTemplate.empty()) {
-        // Use the model's native chat template
-        formattedPrompt = meta.chatTemplate;
-        // Replace template placeholders
-        size_t sysPos = formattedPrompt.find("{{system_prompt}}");
-        if (sysPos != std::string::npos) {
-            std::string sys = systemPrompt.empty() ? "You are a helpful assistant." : systemPrompt;
-            formattedPrompt.replace(sysPos, 17, sys);
-        }
-        size_t userPos = formattedPrompt.find("{{user_message}}");
-        if (userPos != std::string::npos) {
-            formattedPrompt.replace(userPos, 16, userMessage);
-        }
-        // Handle common template formats
-        size_t contentPos = formattedPrompt.find("{{content}}");
-        if (contentPos != std::string::npos) {
-            formattedPrompt.replace(contentPos, 11, userMessage);
-        }
-    } else {
-        // Default Llama-3 / Qwen format
-        if (!systemPrompt.empty()) {
-            formattedPrompt = "<|system|>\n" + systemPrompt + "\n<|user|>\n" + userMessage + "\n<|assistant|>\n";
-        } else {
-            formattedPrompt = "<|user|>\n" + userMessage + "\n<|assistant|>\n";
-        }
+    if (!chatTmpl.initFromMetadata(meta.architecture, "", meta.chatTemplate,
+                                    meta.bosToken, meta.eosToken)) {
+        printf("[Deep2Engine] WARNING: Failed to init chat template, falling back to raw prompt\n");
     }
     
-    // Generate with the formatted prompt
+    printf("[Deep2Engine] Chat template: %s\n", chatTmpl.getTypeName());
+    
+    // Build messages
+    std::vector<ChatMessage> messages;
+    if (!systemPrompt.empty()) {
+        messages.push_back({"system", systemPrompt, ""});
+    } else if (!meta.chatTemplate.empty()) {
+        // Some models have default system prompt in template; keep it empty for default
+    }
+    messages.push_back({"user", userMessage, ""});
+    
+    // Format with detected template
+    std::string formattedPrompt = chatTmpl.format(messages);
+    printf("[Deep2Engine] Formatted prompt:\n%s\n", formattedPrompt.c_str());
+    
+    // Generate
     std::vector<int> promptTokens = tokenize(formattedPrompt);
     std::vector<int> outputTokens(maxTokens);
     
@@ -4271,9 +4268,20 @@ std::string Deep2Engine::generateChat(const std::string& userMessage,
     std::string response = detokenize(outputTokens);
     
     // Trim any trailing template tokens from response
-    size_t eosPos = response.find(meta.eosToken);
-    if (eosPos != std::string::npos) {
-        response = response.substr(0, eosPos);
+    if (!meta.eosToken.empty() && meta.eosToken != "<s>") {
+        size_t eosPos = response.find(meta.eosToken);
+        if (eosPos != std::string::npos) {
+            response = response.substr(0, eosPos);
+        }
+    }
+    // Also trim common end markers
+    if (chatTmpl.isEndOfTurn("<|end|>")) {
+        size_t endPos = response.find("<|end|>");
+        if (endPos != std::string::npos) response = response.substr(0, endPos);
+    }
+    if (chatTmpl.isEndOfTurn("<|im_end|>")) {
+        size_t endPos = response.find("<|im_end|>");
+        if (endPos != std::string::npos) response = response.substr(0, endPos);
     }
     
     return response;
@@ -4466,6 +4474,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     size_t numHeads = modelWeights.numHeads;
     size_t numKVHeads = modelWeights.numKVHeads;
     size_t headDim = modelWeights.headDim;
+    size_t groupSize = (numKVHeads > 0) ? (numHeads / numKVHeads) : 1;
 
     // ── MLA (K2) path ──────────────────────────────────────────────────
     if (lw.useMLA) {
@@ -4671,7 +4680,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             
             if (tempK && tempV && scores) {
                 for (size_t h = 0; h < numHeads; ++h) {
-                    size_t kvHead = h % numKVHeads;
+                    size_t kvHead = h / groupSize;
                     float* headOut = output + h * headDim;
                     const float* q = qProj + h * headDim;
                     
@@ -4759,11 +4768,12 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             _aligned_free(scores);
         } else if (kvCache) {
             for (size_t h = 0; h < numHeads; ++h) {
-                size_t kvHead = h % numKVHeads;
+                size_t kvHead = h / groupSize;
                 float* headOut = output + h * headDim;
                 AttentionWithCache(qProj + h * headDim, *kvCache, layer, kvHead,
                                    headOut, attentionEnd);
             }
+            if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
         }
         
         if (profilingEnabled_ && profiler_) profiler_->endAttnCompute();
@@ -4805,7 +4815,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         } else if (!haveTorus || tokenCount == 0 || !torusKeys || !torusValues) {
             // Fallback: self-attention on current token only
             for (size_t h = 0; h < numHeads; ++h) {
-                size_t kvHead = h % numKVHeads;
+                size_t kvHead = h / groupSize;
                 const float* q = qProj + h * headDim;
                 float* headOut = output + h * headDim;
                 float score = 0.0f;
@@ -4824,7 +4834,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
             size_t tokenStride = numLayers * layerStride;
             
             for (size_t h = 0; h < numHeads; ++h) {
-                size_t kvHead = h % numKVHeads;
+                size_t kvHead = h / groupSize;
                 const float* q = qProj + h * headDim;
                 float* headOut = output + h * headDim;
                 size_t layerOffset = layer * layerStride + kvHead * headDim;
@@ -4912,8 +4922,8 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_) profiler_->beginAttnCompute();
         for (size_t h = 0; h < numHeads; ++h) {
             const float* q = qProj + h * headDim;
-            const float* k = kProj + (h % numKVHeads) * headDim;
-            const float* v = vProj + (h % numKVHeads) * headDim;
+            const float* k = kProj + (h / groupSize) * headDim;
+            const float* v = vProj + (h / groupSize) * headDim;
 
             float scale = 1.0f / sqrtf((float)headDim);
             float score = 0.0f;
@@ -4932,6 +4942,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (numHeads > 0) B3_TraceState("ATTN_OUT", layer, output, hiddenDim);
     }
 
+    // ── D2-CERT-002: Stage 8 — ATTN_OUT (pre-O projection) ────────────
+    // DISABLED: cert code causes STATUS_STACK_BUFFER_OVERRUN crash in trace()
+    // #ifdef RAWRXD_DEEP2_CERT
+    // if (layer == 0) {
+    //     deep2cert_bridge::stage("L00_ATTN_OUT", output, hiddenDim);
+    // }
+    // #endif
+
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
@@ -4948,6 +4966,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         LinearW(*attnOutWeight, output, nullptr, tempOut, hiddenDim);
         if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj();
         std::memcpy(output, tempOut, hiddenDim * sizeof(float));
+
+        // ── D2-CERT-002: Stage 9 — ATTN_O parity (production vs reference Q4_0 GEMV)
+        // DISABLED pending Q4_K_M support in cert reference
+        // #ifdef RAWRXD_DEEP2_CERT
+        // if (layer == 0 && attnOutWeight->type == (int)GGMLType::GGML_TYPE_Q4_0) {
+        //     std::vector<float> o_ref(hiddenDim);
+        //     deep2cert::gemv_q4_0_f32(
+        //         reinterpret_cast<const deep2cert::block_q4_0*>(attnOutWeight->data),
+        //         output, o_ref.data(), hiddenDim, numHeads * headDim);
+        //     deep2cert_bridge::parity("L00_O_PROJ_Q4_0", tempOut, o_ref.data(), hiddenDim, 2e-4, 2e-3);
+        // }
+        // #endif
     }
     B3_TraceState("ATTN_O", layer, output, hiddenDim);
 
