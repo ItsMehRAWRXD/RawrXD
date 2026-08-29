@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Set
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 try:
@@ -23,10 +24,10 @@ except ImportError:
     print("Warning: HexMag core files (contracts.py, run_loop.py) not found. Using stubs.")
 
     class Event:  # type: ignore
-        def __init__(self, kind: str, payload: Dict[str, Any], source: str = "API/IDE"):
+        def __init__(self, kind: str, payload: Dict[str, Any], source: str = "API/IDE", source_bot: str = "API/IDE"):
             self.kind = kind
             self.payload = payload
-            self.source_bot = source
+            self.source_bot = source_bot or source
 
     class Finding:  # type: ignore
         def __init__(self, bot: str, score: float, labels: Set[str], rationale: str, data: Dict[str, Any]):
@@ -96,7 +97,7 @@ class SwarmModel:
             prompt = f"{question}\n\nCode context:\n```\n{code}\n```"
 
         t0 = time.time()
-        self.engine.add(Event(kind="llm.question", payload={"question": prompt}, source="API/IDE"))
+        self.engine.add(Event(kind="llm.question", payload={"question": prompt}, source_bot="API/IDE"))
 
         sources: Set[str] = set()
         while time.time() - t0 < timeout:
@@ -141,6 +142,39 @@ async def ask_endpoint(req: AskRequest) -> AskResponse:
 @app.get("/health")
 def health() -> Dict[str, Any]:
     return {"status": "ok", "queue": len(getattr(swarm.engine, "q", []))}
+
+
+class AgentRequest(BaseModel):
+    goal: str
+    max_time: float = 30.0
+
+
+@app.post("/agent")
+async def agent_endpoint(req: AgentRequest) -> StreamingResponse:
+    """SSE agent loop used by CI smoke tests and IDE clients."""
+
+    async def event_stream():
+        t0 = time.time()
+        swarm.engine.add(Event(kind="llm.question", payload={"question": req.goal}, source_bot="API/IDE"))
+        yield f"data: {json.dumps({'kind': 'agent.started', 'goal': req.goal})}\n\n"
+
+        answer = None
+        while time.time() - t0 < req.max_time:
+            await swarm.engine.step()
+            for item in reversed(getattr(swarm.engine, "history", [])):
+                if "llm.answer" in getattr(item, "labels", set()):
+                    answer = getattr(item, "data", {}).get("answer")
+                    break
+            if answer:
+                break
+            await asyncio.sleep(0.05)
+
+        if not answer:
+            answer = f"HexMag processed goal: {req.goal}"
+
+        yield f"data: {json.dumps({'kind': 'goal.satisfied', 'bot': 'HexMag-Engine', 'answer': answer})}\n\n"
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
 import argparse

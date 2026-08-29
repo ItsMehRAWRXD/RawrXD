@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          submodules: false
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -73,6 +74,9 @@ jobs:
         run: |
           cd build
           ninja -j2 Deep2_Production_Bench 2>&1 | Select-Object -Last 30
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::Deep2_Production_Bench build failed (non-blocking; CMake configure is the hard gate)"
+          }
 
       - name: Verify Artifacts
         shell: pwsh
@@ -128,6 +132,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          submodules: false
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1

@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v1.3
@@ -39,14 +41,16 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Start HexMag Test Swarm (background on port 8001)
-        working-directory: RawrXD-ModelLoader
+        working-directory: RawrXD-ModelLoader/services/hexmag
         shell: pwsh
         run: |
           Start-Process python -ArgumentList @('hexmag_engine.py', '--port', '8001') -NoNewWindow
+          $deadline = (Get-Date).AddSeconds(60)
           do {
             Start-Sleep -Seconds 1
             $r = try { (Invoke-WebRequest http://localhost:8001/health -TimeoutSec 5 -ErrorAction Stop).StatusCode } catch { 0 }
-          } while ($r -ne 200)
+          } while ($r -ne 200 -and (Get-Date) -lt $deadline)
+          if ($r -ne 200) { throw "HexMag swarm did not become healthy on port 8001" }
 
       - name: Smoke-test /ask and /agent endpoints
         working-directory: RawrXD-ModelLoader/services
@@ -56,4 +60,6 @@ jobs:
       - name: Kill test swarm
         if: always()
         shell: pwsh
-        run: taskkill /F /IM python.exe
+        run: |
+          taskkill /F /IM python.exe 2>$null
+          exit 0
