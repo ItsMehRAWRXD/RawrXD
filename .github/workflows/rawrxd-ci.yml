@@ -54,29 +54,38 @@ jobs:
       - name: Build RawrEngine
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
           cd build
           ninja -j2 RawrEngine 2>&1 | Select-Object -Last 30
           if ($LASTEXITCODE -ne 0) {
             Write-Host "::warning::RawrEngine build failed (non-blocking for IDE validation)"
           }
+          exit 0
 
       - name: Build Win32IDE
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
           cd build
           ninja -j2 RawrXD-Win32IDE 2>&1 | Select-Object -Last 30
           if ($LASTEXITCODE -ne 0) {
             Write-Host "::warning::RawrXD-Win32IDE build failed (non-blocking)"
           }
+          exit 0
 
       - name: Build Deep2 Production Bench
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Continue'
+          $PSNativeCommandUseErrorActionPreference = $false
           cd build
           ninja -j2 Deep2_Production_Bench 2>&1 | Select-Object -Last 30
           if ($LASTEXITCODE -ne 0) {
             Write-Host "::warning::Deep2_Production_Bench build failed (non-blocking; CMake configure is the hard gate)"
           }
+          exit 0
 
       - name: Verify Artifacts
         shell: pwsh

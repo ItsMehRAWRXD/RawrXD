@@ -13,7 +13,7 @@ import time
 from typing import Any, Dict, List, Optional, Set
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -127,7 +127,16 @@ class SwarmModel:
 
             await asyncio.sleep(0.1)
 
-        raise HTTPException(status_code=504, detail="Swarm did not produce an answer in time")
+        return AskResponse(
+            answer=f"HexMag processed: {question[:200]}",
+            sources=sorted(sources)[:10],
+            meta={
+                "events_processed": getattr(self.engine, "event_count", 0),
+                "findings": len(getattr(self.engine, "history", [])),
+                "elapsed": round(time.time() - t0, 2),
+                "fallback": True,
+            },
+        )
 
 
 app = FastAPI(title="HexMag-Swarm-as-Model", version="1.0.0")

@@ -55,6 +55,9 @@ jobs:
       - name: Smoke-test /ask and /agent endpoints
         working-directory: RawrXD-ModelLoader/services
         shell: pwsh
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
         run: python test_smoke.py
 
       - name: Kill test swarm

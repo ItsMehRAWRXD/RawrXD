@@ -17,7 +17,14 @@ param(
     [string]$GraphPath = (Join-Path $PSScriptRoot "..\WIRING_DEPENDENCY_GRAPH.dot"),
     [string]$CallGraphPath = (Join-Path $PSScriptRoot "..\WIRING_CALL_GRAPH.dot"),
     [string[]]$IncludeExtensions = @('ps1','psm1','ts','js','tsx','jsx','cpp','cxx','c','h','hpp','cmake','txt','md','json','toml'),
-    [string[]]$ExcludeDirectories = @('.git','.vs','.vscode','node_modules','dist','build','out','bin','obj','target','.idea','.cache','__pycache__'),
+    [string[]]$ScanRoots = @(),
+    [int]$MaxScanFiles = 25000,
+    [string[]]$ExcludeDirectories = @(
+        '.git','.vs','.vscode','node_modules','dist','build','out','bin','obj','target',
+        '.idea','.cache','__pycache__','reconstructed','history','3rdparty','vendor',
+        'extensions','Full Source','Full_Source','artifacts','coverage','_deps',
+        'Cursor_Source_Extracted','Cursor_Reverse_Engineered_Fork'
+    ),
     [string]$ExcludeConfigPath = (Join-Path $RootPath ".wiringdigestignore"),
     [string]$RulesConfigPath = (Join-Path $RootPath ".wiringdigestrules.json"),
     [string]$RulesProfile = "default",
@@ -246,11 +253,34 @@ function Get-SourceFiles {
         return $false
     }
 
-    Get-ChildItem -Path $Path -Recurse -Include $patterns -File | Where-Object {
-        if ($excludeRegex -and $_.FullName -match $excludeRegex) { return $false }
-        if (Test-ExcludePattern -FilePath $_.FullName -Patterns $projectExcludePatterns -RegexPatterns $projectExcludeRegex) { return $false }
-        return $true
+    $scanTargets = @()
+    if ($ScanRoots -and $ScanRoots.Count -gt 0) {
+        foreach ($scanRoot in $ScanRoots) {
+            if ([System.IO.Path]::IsPathRooted($scanRoot)) {
+                $scanTargets += $scanRoot
+            } else {
+                $scanTargets += (Join-Path $Path $scanRoot)
+            }
+        }
+    } else {
+        $scanTargets += $Path
     }
+
+    $collected = New-Object System.Collections.Generic.List[System.IO.FileInfo]
+    foreach ($scanTarget in $scanTargets) {
+        if (-not (Test-Path -LiteralPath $scanTarget)) { continue }
+        Get-ChildItem -LiteralPath $scanTarget -Recurse -Include $patterns -File -ErrorAction SilentlyContinue | ForEach-Object {
+            if ($collected.Count -ge $MaxScanFiles) { return }
+            if ($excludeRegex -and $_.FullName -match $excludeRegex) { return }
+            if (Test-ExcludePattern -FilePath $_.FullName -Patterns $projectExcludePatterns -RegexPatterns $projectExcludeRegex) { return }
+            $collected.Add($_)
+        }
+        if ($collected.Count -ge $MaxScanFiles) {
+            Write-Warning "Scan file cap reached ($MaxScanFiles). Remaining roots skipped to avoid runner OOM."
+            break
+        }
+    }
+    return $collected.ToArray()
 }
 
 function Find-ModuleReferences {
@@ -646,7 +676,11 @@ function Get-CICDHealthSignals {
         $signals += [PSCustomObject]@{ Label = 'Missing'; Path = $appVeyor; Detail = 'AppVeyor config missing' }
     }
 
-    $ciFiles = @(Get-ChildItem -Path $Root -Recurse -File -Include *.yml,*.yaml | Where-Object { $_.FullName -match 'workflows|ci|pipeline' })
+    $ciFiles = @()
+    if (Test-Path $githubWorkflows) {
+        $ciFiles = @(Get-ChildItem -Path $githubWorkflows -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Extension -in @('.yml', '.yaml') })
+    }
     if ($ciFiles.Count -eq 0) {
         $signals += [PSCustomObject]@{ Label = 'Missing'; Path = $Root; Detail = 'No CI/CD configs detected' }
     }

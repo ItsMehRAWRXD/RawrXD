@@ -26,17 +26,17 @@ def test_endpoint(path, data=None, method='POST'):
         if 'application/json' in response.headers.get('content-type', ''):
              return response.json()
         else:
-             print(f"❌ Response content type is not JSON: {response.headers.get('content-type')}")
+             print(f"[FAIL] Response content type is not JSON: {response.headers.get('content-type')}")
              raise ValueError("Non-JSON response received.")
 
     except httpx.RequestError as e:
-        print(f"❌ Request failed: {e}")
+        print(f"[FAIL] Request failed: {e}")
         raise
     except httpx.HTTPStatusError as e:
-        print(f"❌ HTTP Error {e.response.status_code}: {e.response.text.strip()}")
+        print(f"[FAIL] HTTP Error {e.response.status_code}: {e.response.text.strip()}")
         raise
     except Exception as e:
-        print(f"❌ Unexpected Error: {e}")
+        print(f"[FAIL] Unexpected Error: {e}")
         raise
 
 
@@ -52,7 +52,7 @@ def run_ask_test():
     if not result.get("answer"):
         raise AssertionError(f"'/ask' response missing 'answer' field: {result}")
     
-    print(f"✅ /ask succeeded. Answer length: {len(result['answer'])} chars.")
+    print(f"[OK] /ask succeeded. Answer length: {len(result['answer'])} chars.")
     print(f"  Snippet: {result['answer'][:60]}...")
 
 
@@ -77,7 +77,7 @@ def run_agent_test():
                         msg = json.loads(line[5:].strip())
                         # Check for the terminal condition
                         if msg.get("kind") == "goal.satisfied":
-                            print(f"→ Goal satisfied by bot: {msg.get('bot')}")
+                            print(f"[OK] Goal satisfied by bot: {msg.get('bot')}")
                             satisfied = True
                             break
                     except json.JSONDecodeError:
@@ -87,10 +87,10 @@ def run_agent_test():
                 raise AssertionError("Agent finished stream without emitting 'goal.satisfied'.")
 
     except Exception as e:
-        print(f"❌ Agent test failed: {e}")
+        print(f"[FAIL] Agent test failed: {e}")
         raise
 
-    print("✅ /agent succeeded and emitted 'goal.satisfied' autonomously.")
+    print("[OK] /agent succeeded and emitted 'goal.satisfied' autonomously.")
 
 
 if __name__ == "__main__":
@@ -106,6 +106,3 @@ if __name__ == "__main__":
     except (AssertionError, ValueError, httpx.RequestError, httpx.HTTPStatusError) as e:
         print(f"\n=== HEXMAG SMOKE TESTS FAILED ===\nDetails: {e}")
         sys.exit(1)
-
-if __name__ == "__main__":
-    sys.exit(main())

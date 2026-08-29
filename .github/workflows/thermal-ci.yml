@@ -13,6 +13,7 @@ jobs:
   build-and-test:
     name: Build & Stress Test (MASM/C++)
     runs-on: windows-latest
+    timeout-minutes: 20
     
     steps:
     - name: Checkout Repository

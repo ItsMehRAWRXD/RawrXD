@@ -31,9 +31,11 @@
 #include <windows.h>
 
 // Vulkan handle types — defined at global scope for the Tensor struct below.
-// When real Vulkan headers are available, they provide proper definitions.
-// When not, these stubs allow compilation.
+// vulkan_compute.h (via gguf_loader.h) already provides these stubs when the
+// SDK is absent. Do not redefine them.
+#ifndef RAWR_VULKAN_STUB_TYPES
 #ifndef VK_DEFINE_HANDLE
+#define RAWR_VULKAN_STUB_TYPES
 typedef void* VkInstance;
 typedef void* VkPhysicalDevice;
 typedef void* VkDevice;
@@ -60,6 +62,7 @@ struct VkPhysicalDeviceMemoryProperties {
     uint32_t memoryHeapCount;
     VkMemoryHeap memoryHeaps[16];
 };
+#endif
 #endif
 
 struct Tensor
