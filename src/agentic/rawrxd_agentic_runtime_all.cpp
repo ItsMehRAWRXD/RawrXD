@@ -1316,7 +1316,8 @@ struct ToolResult {
     }
 };
 
-// AGENT-TOOL-SCHEMA-002: strict JSON object (quoted keys). No silent bare-key repair.
+// AGENT-TOOL-SCHEMA-002: strict JSON object (quoted keys). Bare-key TinyLlama dialect
+// is repaired explicitly via tryRepairBareKeyJsonObject (logged) before this gate.
 static bool isStrictJsonObject(std::string_view raw) {
     const std::string trimmed = trim(std::string(raw));
     if (trimmed.empty() || trimmed.front() != '{') return false;
@@ -1344,6 +1345,99 @@ static bool isStrictJsonObject(std::string_view raw) {
         return false;
     }
     return false;
+}
+
+// TinyLlama often emits {path:main.c, search: "x", replace: "y"} — quote bare keys/values.
+// Returns strict JSON on success; nullopt if irreparable (fail-closed at schema gate).
+static std::optional<std::string> tryRepairBareKeyJsonObject(std::string_view raw) {
+    const std::string trimmed = trim(std::string(raw));
+    if (trimmed.empty() || trimmed.front() != '{') return std::nullopt;
+    if (isStrictJsonObject(trimmed)) return trimmed;
+
+    auto isKeyStart = [](unsigned char c) { return std::isalpha(c) || c == '_'; };
+    auto isKeyCont = [](unsigned char c) { return std::isalnum(c) || c == '_'; };
+    auto isJsonLiteral = [](std::string_view v) {
+        if (v == "true" || v == "false" || v == "null") return true;
+        if (v.empty()) return false;
+        std::size_t i = 0;
+        if (v[0] == '-' || v[0] == '+') ++i;
+        if (i >= v.size() || !std::isdigit(static_cast<unsigned char>(v[i]))) return false;
+        bool sawDot = false;
+        for (; i < v.size(); ++i) {
+            const unsigned char c = static_cast<unsigned char>(v[i]);
+            if (std::isdigit(c)) continue;
+            if (c == '.' && !sawDot) { sawDot = true; continue; }
+            return false;
+        }
+        return true;
+    };
+
+    std::ostringstream out;
+    out << '{';
+    std::size_t i = skipWs(trimmed, 1);
+    bool first = true;
+    while (i < trimmed.size()) {
+        i = skipWs(trimmed, i);
+        if (i < trimmed.size() && trimmed[i] == '}') {
+            out << '}';
+            return skipWs(trimmed, i + 1) == trimmed.size()
+                ? std::optional<std::string>(out.str())
+                : std::nullopt;
+        }
+        if (!first) {
+            if (i >= trimmed.size() || trimmed[i] != ',') return std::nullopt;
+            out << ',';
+            ++i;
+            i = skipWs(trimmed, i);
+        }
+        first = false;
+
+        std::string key;
+        if (i < trimmed.size() && trimmed[i] == '"') {
+            const auto keySlice = scanJsonString(trimmed, i);
+            if (!keySlice) return std::nullopt;
+            key = unescapeJsonString(trimmed.substr(keySlice->begin, keySlice->end - keySlice->begin));
+            i = keySlice->end;
+        } else if (i < trimmed.size() && isKeyStart(static_cast<unsigned char>(trimmed[i]))) {
+            const std::size_t begin = i;
+            while (i < trimmed.size() && isKeyCont(static_cast<unsigned char>(trimmed[i]))) ++i;
+            key = std::string(trimmed.substr(begin, i - begin));
+        } else {
+            return std::nullopt;
+        }
+        i = skipWs(trimmed, i);
+        if (i >= trimmed.size() || trimmed[i] != ':') return std::nullopt;
+        ++i;
+        i = skipWs(trimmed, i);
+        if (i >= trimmed.size()) return std::nullopt;
+
+        out << jsonQuote(key) << ':';
+        if (trimmed[i] == '"') {
+            const auto vs = scanJsonString(trimmed, i);
+            if (!vs) return std::nullopt;
+            out << trimmed.substr(vs->begin, vs->end - vs->begin);
+            i = vs->end;
+        } else if (trimmed[i] == '{' || trimmed[i] == '[') {
+            const auto vs = scanBalancedJson(trimmed, i);
+            if (!vs) return std::nullopt;
+            const auto nested = trimmed.substr(vs->begin, vs->end - vs->begin);
+            if (trimmed[i] == '{') {
+                const auto repairedNested = tryRepairBareKeyJsonObject(nested);
+                out << (repairedNested ? *repairedNested : nested);
+            } else {
+                out << nested;
+            }
+            i = vs->end;
+        } else {
+            const auto vs = scanJsonValue(trimmed, i);
+            if (!vs) return std::nullopt;
+            const auto lit = trimmed.substr(vs->begin, vs->end - vs->begin);
+            if (isJsonLiteral(lit)) out << lit;
+            else out << jsonQuote(lit);
+            i = vs->end;
+        }
+    }
+    return std::nullopt;
 }
 
 static std::vector<std::string> schemaRequiredKeys(const std::string& parametersJson) {
@@ -1605,7 +1699,20 @@ public:
         if (defIt == definitions_.end()) {
             return ToolResult::schemaFailure(call.name, {"tool definition missing"});
         }
-        const ArgSchemaCheck check = validateToolArguments(defIt->second, call.argumentsJson);
+        // Fail-closed on irreparable args; TinyLlama bare-key dialect is repaired + logged.
+        std::string argsJson = call.argumentsJson;
+        const bool strictEnv = []() {
+            const char* v = std::getenv("RAWRXD_TOOL_ARGS_STRICT");
+            return v && v[0] == '1' && v[1] == '\0';
+        }();
+        if (!isStrictJsonObject(argsJson) && !strictEnv) {
+            if (auto repaired = tryRepairBareKeyJsonObject(argsJson)) {
+                std::printf("[TOOL_SCHEMA] REPAIR tool=%s bare_keys->strict\n", call.name.c_str());
+                std::fflush(stdout);
+                argsJson = std::move(*repaired);
+            }
+        }
+        const ArgSchemaCheck check = validateToolArguments(defIt->second, argsJson);
         if (!check.ok) {
             std::printf("[TOOL_SCHEMA] REJECT tool=%s dispatched=0 details=%zu\n",
                         call.name.c_str(), check.details.size());
@@ -1613,7 +1720,7 @@ public:
             return ToolResult::schemaFailure(call.name, check.details);
         }
         try {
-            ToolResult result = it->second(call.argumentsJson);
+            ToolResult result = it->second(argsJson);
             result.dispatched = true;
             if (result.tool.empty()) result.tool = call.name;
             std::printf("[TOOL_SCHEMA] ACCEPT tool=%s dispatched=1 ok=%d\n",
