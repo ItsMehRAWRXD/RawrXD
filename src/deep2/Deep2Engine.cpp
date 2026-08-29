@@ -4146,6 +4146,36 @@ static bool B3_StageDigestEnabled()
     return on;
 }
 
+// Body dumps (Q/K/V/FFN) default to layers 0..2. Opt-in extras via:
+//   RAWRXD_STAGE_DUMP_LAYERS=8,9,10,11,12
+//   RAWRXD_STAGE_DUMP_MAX_LAYER=10   (inclusive 0..N, in addition to 0..2)
+static bool B3_StageDumpLayer(size_t layer)
+{
+    if (layer <= 2) return true;
+    static bool parsed = false;
+    static bool layers[64] = {};
+    static int maxLayer = -1;
+    if (!parsed) {
+        parsed = true;
+        if (const char* p = std::getenv("RAWRXD_STAGE_DUMP_MAX_LAYER")) {
+            maxLayer = std::atoi(p);
+        }
+        if (const char* p = std::getenv("RAWRXD_STAGE_DUMP_LAYERS")) {
+            while (p && *p) {
+                while (*p == ' ' || *p == ',') ++p;
+                if (!*p) break;
+                char* end = nullptr;
+                long v = std::strtol(p, &end, 10);
+                if (end == p) break;
+                if (v >= 0 && v < 64) layers[v] = true;
+                p = end;
+            }
+        }
+    }
+    if (maxLayer >= 0 && (int)layer <= maxLayer) return true;
+    return (layer < 64) && layers[layer];
+}
+
 static const char* B3_StageDumpDir()
 {
     return std::getenv("RAWRXD_STAGE_DUMP_DIR");
@@ -4791,6 +4821,30 @@ void Deep2Engine::configureGeneration(const GenerationOptions& options)
     }
 }
 
+void Deep2Engine::setTemperature(float temperature) {
+    GenerationOptions opts;
+    opts.temperature = temperature;
+    opts.topP = 0.95f;
+    opts.topK = (temperature <= 0.0f) ? 1u : 40u;
+    configureGeneration(opts);
+}
+
+void Deep2Engine::setTopP(float topP) {
+    GenerationOptions opts;
+    opts.temperature = deterministicGreedy_ ? 0.0f : 0.8f;
+    opts.topP = topP;
+    opts.topK = deterministicGreedy_ ? 1u : 40u;
+    configureGeneration(opts);
+}
+
+void Deep2Engine::setSampling(float temperature, float topP) {
+    GenerationOptions opts;
+    opts.temperature = temperature;
+    opts.topP = topP;
+    opts.topK = (temperature <= 0.0f) ? 1u : 40u;
+    configureGeneration(opts);
+}
+
 Deep2::GenerationResult Deep2Engine::generateStream(
     const std::string& prompt,
     const GenerationOptions& options,
@@ -5039,7 +5093,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
         AttnCert::record(AttnCert::Stage::AttnNorm, 0, pos, layerTemp, hiddenDim);
     }
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5062,7 +5116,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
     ResidencyCounters::EndAttention();
 
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5103,7 +5157,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_TraceState(phase, layer, output, hiddenDim);
     }
     #endif
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5114,7 +5168,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5138,7 +5192,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5174,7 +5228,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_TraceState(phase, layer, output, hiddenDim);
     }
     #endif
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
         char key[64];
@@ -5305,7 +5359,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         LinearW(lw.wv, input, nullptr, vProj, kvDim);
         B3_TraceState("ATTN_V", layer, vProj, kvDim);
 
-        if (B3_StageDigestEnabled() && layer <= 2) {
+        if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
             const size_t tokPos = kvCache ? kvCache->currentLength()
                                           : (seqLen > 0 ? seqLen - 1 : 0);
             char key[64];
@@ -5705,7 +5759,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         // Concatenated head outputs BEFORE wo — isolates O_PROJ from QK/softmax/AV.
         const size_t tokPos = kvCache ? kvCache->currentLength()
                                       : (seqLen > 0 ? seqLen - 1 : 0);
@@ -5775,7 +5829,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
 
     // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
-    if (B3_StageDigestEnabled() && layer <= 2 && hasGate) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer) && hasGate) {
         const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
         char key[64];
         std::snprintf(key, sizeof(key), "FFN_GATE_%zu", layer);
@@ -5792,7 +5846,7 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
     B3_TraceState("FFN_SWIGLU", layer, gateBuf, intermediateDim);
-    if (B3_StageDigestEnabled() && layer <= 2) {
+    if (B3_StageDigestEnabled() && B3_StageDumpLayer(layer)) {
         const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
         char key[64];
         std::snprintf(key, sizeof(key), "FFN_UP_%zu", layer);

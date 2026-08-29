@@ -7772,12 +7772,24 @@ if(BUILD_DUMP_QWEN35_META)
     message(STATUS "[Deep2] Qwen3.5 metadata dump: dump_qwen35_meta")
 endif()
 
-# RawrXD-Agentic — Sovereign agentic runtime (unified closure drop)
-# ═══════════════════════════════════════════════════════════════════════════════
+# RawrXD-Agentic ? Sovereign agentic runtime (unified closure drop)
+# ???????????????????????????????????????????????????????????????????????????????
 option(BUILD_RAWRXD_AGENTIC "Build RawrXD sovereign agentic runtime" ON)
 if(BUILD_RAWRXD_AGENTIC)
+    # HexMag polymorphic repeat tuner (MASM) ? Q_BLOCKING singleton state
+    add_library(rawrxd_hexmag_repeat OBJECT
+        src/asm/RawrXD_HexMag_RepeatTuner.asm
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_RepeatTuner.asm PROPERTIES LANGUAGE ASM_MASM)
+    if(MSVC)
+        target_compile_options(rawrxd_hexmag_repeat PRIVATE
+            $<$<COMPILE_LANGUAGE:ASM_MASM>:/I${CMAKE_SOURCE_DIR}/src/asm>
+        )
+    endif()
+
     add_executable(RawrXD-Agentic
         src/agentic/rawrxd_agentic_runtime_all.cpp
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
     )
     target_link_libraries(RawrXD-Agentic PRIVATE InferenceEngine)
     if(MSVC)
@@ -7785,6 +7797,7 @@ if(BUILD_RAWRXD_AGENTIC)
     endif()
     target_include_directories(RawrXD-Agentic PRIVATE
         ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/agentic
         ${CMAKE_SOURCE_DIR}/include
     )
     set_target_properties(RawrXD-Agentic PROPERTIES
@@ -7792,7 +7805,23 @@ if(BUILD_RAWRXD_AGENTIC)
         OUTPUT_NAME RawrXD-Agentic
         MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
-    message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic")
+    message(STATUS "[Agentic] RawrXD sovereign agentic runtime: RawrXD-Agentic (+HexMag repeat)")
+
+    add_executable(hexmag_repeat_tuner_cert
+        tests/hexmag_repeat_tuner_cert.cpp
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    target_include_directories(hexmag_repeat_tuner_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/agentic
+    )
+    if(MSVC)
+        target_compile_options(hexmag_repeat_tuner_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_repeat_tuner_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
 endif()
 
 # layer_harness — Single-layer Qwen3.5 correctness harness

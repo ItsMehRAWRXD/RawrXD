@@ -451,6 +451,11 @@ public:
     void configureGeneration(const GenerationOptions& options);
     bool isDeterministicGreedy() const { return deterministicGreedy_; }
 
+    // Thin setters used by HexMag RepeatSession sampling adapters.
+    void setTemperature(float temperature);
+    void setTopP(float topP);
+    void setSampling(float temperature, float topP);
+
     // Token embedding lookup (public for tree speculative decoding)
     // Returns false on FATAL_EMBED (zero/nonfinite row). Callers must abort inference.
     bool embedToken(int tokenId, float* output);
