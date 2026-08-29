@@ -5,6 +5,7 @@
 #include "Win32IDE_Commands.h"
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <thread>
 
 #ifndef MSFTEDIT_CLASS
@@ -58,8 +59,18 @@ struct HexMagAskDonePayload
 
 /// Process-lifetime HexMag sequencing session (NEED_INPUT latch persists).
 struct HexMagIdeSession {
+    std::mutex mu;
     RawrXD::HexMag::LiveHexMagTransport transport;
     RawrXD::HexMag::HexMagRuntimeController ctrl{&transport};
+
+    RawrXD::HexMag::ControllerResult runOperatorTurn(const std::string& prompt,
+                                                     const std::string& context)
+    {
+        std::lock_guard<std::mutex> lock(mu);
+        // New operator turn clears prior NEED_INPUT / FINAL stop so chat can continue.
+        ctrl.resetSession();
+        return ctrl.run(prompt, context);
+    }
 };
 HexMagIdeSession& hexIdeSession()
 {
@@ -379,10 +390,7 @@ void Win32IDE::dispatchHexMagAskFromUi(const std::string& question, bool toCopil
 
     setHexMagStatusBarHint(L"HexMag: running…");
     const std::string codeContext = m_currentFile.empty() ? std::string{} : getEditorText();
-    auto& session = hexIdeSession();
-    // New operator turn clears prior NEED_INPUT / FINAL stop so chat can continue.
-    session.ctrl.resetSession();
-    const auto ctrl = session.ctrl.run(question, codeContext);
+    const auto ctrl = hexIdeSession().runOperatorTurn(question, codeContext);
     const HexMagUiState st = uiStateFromController(ctrl);
 
     if (ctrl.finalAuthority)
@@ -465,9 +473,7 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
 
             if (hwndMain && IsWindow(hwndMain))
             {
-                auto& session = hexIdeSession();
-                session.ctrl.resetSession();
-                const auto ctrl = session.ctrl.run(userMessage, codeContext);
+                const auto ctrl = hexIdeSession().runOperatorTurn(userMessage, codeContext);
                 payload->uiState = uiStateFromController(ctrl);
                 payload->success = ctrl.finalAuthority;
                 payload->answer = ctrl.lastClient.ask.answer.empty()

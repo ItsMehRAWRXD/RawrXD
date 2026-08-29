@@ -2,21 +2,23 @@
 // ============================================================================
 // AgentRuntimeController — Agent ⇄ Response Gen toggle ABOVE inference
 // ============================================================================
-// Execution Mode (this file) is orthogonal to Inference Backend (Deep2/llama/…).
-// Response Gen does NOT require a loaded GGUF; it routes to HexMag (+ optional oracle).
+// Response Gen routes through HexMagRuntimeController (sequencing) +
+// FinalizePolicy (FINAL authority). Controller does not invent FINAL.
 // ============================================================================
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "core/hexmag_control_plane.hpp"
+#include "core/hexmag_runtime_controller.hpp"
 
 namespace RawrXD {
 
 enum class AgentRuntimeMode {
     Agent,        // NativeAgent: model + tools + workspace mutation
-    ResponseGen,  // HexMag: inflate ephemeral swarm, consult oracle if needed, deflate
-    Auto          // optional classifier; not required for UI v1
+    ResponseGen,  // HexMag controller → client → FinalizePolicy
+    Auto
 };
 
 enum class HexMagMode {
@@ -24,7 +26,6 @@ enum class HexMagMode {
     AgentDelegation
 };
 
-/// Advisory language/reasoning resource — NOT HexMag's weights.
 struct ReasoningOracle {
     virtual ~ReasoningOracle() = default;
     virtual bool available() const = 0;
@@ -32,7 +33,6 @@ struct ReasoningOracle {
                             const std::string& roleContext) = 0;
 };
 
-/// Null oracle: HexMag stays fully weightless / deterministic-only.
 struct NullReasoningOracle final : ReasoningOracle {
     bool available() const override { return false; }
     std::string ask(const std::string&, const std::string&) override {
@@ -44,14 +44,6 @@ using AgentAskFn = std::function<void(const std::string& input)>;
 using HexMagAskFn = std::function<std::string(const std::string& question,
                                                HexMagMode mode)>;
 
-/**
- * One visible Agent surface; mode selects execution policy, not "another model".
- *
- * AGENT:        model_required≈true, tools=yes, mutate=yes, goal=DO
- * RESPONSE_GEN: model_required=false, tools=no, mutate=no, goal=ANSWER,
- *               HexMag inflate → reverse/verify → (ASK_USER if missing info) → deflate → 0
- *               unsupported_claim_emission=FORBIDDEN (evidence required to finalize)
- */
 class AgentRuntimeController {
 public:
     void setMode(AgentRuntimeMode mode) { m_mode = mode; }
@@ -62,6 +54,11 @@ public:
     void setOracle(ReasoningOracle* oracle) { m_oracle = oracle; }
 
     ReasoningOracle* oracle() const { return m_oracle; }
+
+    HexMag::HexMagRuntimeController& hexController() {
+        ensureHexSession();
+        return *m_hexCtrl;
+    }
 
     std::string submit(const std::string& input) {
         switch (effectiveMode(input)) {
@@ -87,11 +84,20 @@ private:
     AgentAskFn m_agentAsk;
     HexMagAskFn m_hexMagAsk;
     ReasoningOracle* m_oracle = nullptr;
+    std::unique_ptr<HexMag::LiveHexMagTransport> m_hexTransport;
+    std::unique_ptr<HexMag::HexMagRuntimeController> m_hexCtrl;
+
+    void ensureHexSession() {
+        if (!m_hexTransport)
+            m_hexTransport = std::make_unique<HexMag::LiveHexMagTransport>();
+        if (!m_hexCtrl)
+            m_hexCtrl = std::make_unique<HexMag::HexMagRuntimeController>(
+                m_hexTransport.get());
+    }
 
     AgentRuntimeMode effectiveMode(const std::string& input) const {
         if (m_mode != AgentRuntimeMode::Auto)
             return m_mode;
-        // Cheap heuristic for Auto (optional exposure later)
         const std::string& s = input;
         auto has = [&](const char* k) {
             return s.find(k) != std::string::npos;
@@ -109,15 +115,33 @@ private:
         if (!m_agentAsk)
             return "Agent mode: no NativeAgent binder (model+tools path).";
         m_agentAsk(input);
-        return {}; // NativeAgent streams via callback
+        return {};
     }
 
     std::string runResponseGen(const std::string& question) {
-        // Bypass NativeAgent::Ask entirely — no "No model loaded" gate.
         if (m_hexMagAsk)
             return m_hexMagAsk(question, HexMagMode::ResponseGeneration);
-        // Default binder: MASM HexMag control plane (policy stack + swarm).
-        return HexMag::defaultResponseGenAsk(question);
+
+        ensureHexSession();
+        // New Response Gen turn — clear prior NEED_INPUT / FINAL stop.
+        m_hexCtrl->resetSession();
+        auto r = m_hexCtrl->run(question, {});
+        if (r.finalAuthority) {
+            if (!r.lastClient.ask.answer.empty())
+                return r.lastClient.ask.answer;
+            return r.diagnostic.empty() ? std::string("goal.satisfied")
+                                        : r.diagnostic;
+        }
+        if (r.needInputLatched
+            || r.fail == HexMag::ControllerFail::NeedInput) {
+            return std::string("[HexMag NEED_INPUT] ")
+                + (r.lastClient.ask.error.empty() ? r.diagnostic
+                                                  : r.lastClient.ask.error);
+        }
+        if (!r.lastClient.ask.error.empty())
+            return std::string("[HexMag] ") + r.lastClient.ask.error;
+        return std::string("[HexMag] ")
+            + (r.diagnostic.empty() ? "failed" : r.diagnostic);
     }
 };
 
