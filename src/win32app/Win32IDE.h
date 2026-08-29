@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -1289,7 +1289,24 @@ private:
     static LRESULT CALLBACK PowerShellPanelProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK PowerShellInputProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    // ========================================================================
+    
+    // HexMag MASM control plane + swarm size (Cursor multi-model style)
+    void refreshHexMagAgentMenuChecks();
+    void setHexMagStatusBarHint(const std::wstring& text);
+    void onHexMagStartService();
+    void onHexMagHealthCheck();
+    void onHexMagToggleGgufFallback();
+    void onHexMagToggleRouteCopilotPanel();
+    void applyHexMagSwarmAgentCount(int count);
+    void onHexMagCycleSwarmSize();
+    void onHexMagSetSwarmSizeFromCmd(unsigned cmdId);
+    bool handleHexMagCommand(unsigned cmdId);
+    void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel);
+    bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId);
+    void onHexMagShowTelemetryPanel();
+    void onHexMagStartAgentTelemetryStream();
+
+// ========================================================================
     // DEBUGGER IMPLEMENTATION
     // ========================================================================
     

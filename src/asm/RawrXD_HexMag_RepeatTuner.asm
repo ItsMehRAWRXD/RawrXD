@@ -157,6 +157,7 @@ HexMag_Tuner_Fingerprint PROC
     test    rcx, rcx
     jz      @fp_zero
     push    rbx
+    sub     rsp, 20h                    ; Win64 shadow space; stack remains call-aligned
     mov     rbx, rcx
     mov     eax, 2166136261
     mov     ecx, DWORD PTR [rbx].HX_GEN_PROFILE.strategy
@@ -181,6 +182,7 @@ HexMag_Tuner_Fingerprint PROC
     call    hx_fp_mix
     mov     ecx, DWORD PTR [rbx].HX_GEN_PROFILE.mutation_nonce
     call    hx_fp_mix
+    add     rsp, 20h
     pop     rbx
     ret
 @fp_zero:
@@ -267,6 +269,7 @@ hx_seen_add ENDP
 hx_unique PROC
     push    rbx
     push    rsi
+    sub     rsp, 28h                    ; 20h shadow + 8-byte alignment for nested calls
     mov     ebx, 64
 @uq_loop:
     mov     rcx, rdi
@@ -293,6 +296,7 @@ hx_unique PROC
     call    hx_seen_add
     xor     eax, eax
 @uq_done:
+    add     rsp, 28h
     pop     rsi
     pop     rbx
     ret
@@ -422,7 +426,7 @@ hx_apply_failure PROC
 
 @af_miss:
     test    ecx, HX_FAIL_MISSING_INFO
-    jz      @af_done
+    jz      @af_wrong
     ; evidence-guard: do NOT increase creativity
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.strategy, HX_STRAT_EVIDENCE_GUARD
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.specialist, HX_SPEC_EPISTEMIC
@@ -431,8 +435,41 @@ hx_apply_failure PROC
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count, 1
     mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.counterexample_budget
     cmp     eax, 2
-    jae     @af_done
+    jae     @af_wrong
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.counterexample_budget, 2
+
+@af_wrong:
+    ; Generic verifier WRONG is a real mutation signal, not "rerun same generation".
+    ; If a more specific failure bit was supplied, keep that specialist's strategy.
+    test    ecx, HX_FAIL_WRONG
+    jz      @af_done
+    test    ecx, 003Fh                  ; any specific bit CONTRADICTION..MISSING_INFO?
+    jnz     @af_done
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.strategy, HX_STRAT_REVERSE
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.specialist, HX_SPEC_FALSIFIER
+    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.temp_milli
+    cmp     eax, 260
+    jbe     @af_wrong_t
+    mov     eax, 260
+@af_wrong_t:
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.temp_milli, eax
+    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count
+    cmp     eax, 2
+    jae     @af_wrong_c
+    mov     eax, 2
+@af_wrong_c:
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.candidate_count, eax
+    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.reverse_depth
+    cmp     eax, 2
+    jae     @af_wrong_r
+    mov     eax, 2
+@af_wrong_r:
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.reverse_depth, eax
+    mov     eax, DWORD PTR [rdi].HX_GEN_PROFILE.invariant_budget
+    cmp     eax, 2
+    jae     @af_done
+    mov     DWORD PTR [rdi].HX_GEN_PROFILE.invariant_budget, 2
+
 @af_done:
     ; Always enforce Q_BLOCKING + 3 passes on repeats
     mov     DWORD PTR [rdi].HX_GEN_PROFILE.blocking_passes, 3

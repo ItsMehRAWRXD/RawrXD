@@ -84,6 +84,10 @@ extern "C" {
     uint64_t HexMag_AgentsSpawned();
     uint64_t HexMag_LastAgentId();
     uint32_t HexMag_TunerAttempt();
+    uint32_t HexMag_IsInitialized();
+    uint32_t HexMag_Feedback(uint32_t fail_kind_or_zero);
+    uint32_t HexMag_SetParallelAgents(uint32_t count);
+    uint32_t HexMag_GetParallelAgents();
 }
 #endif
 

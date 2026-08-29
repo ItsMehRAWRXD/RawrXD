@@ -1855,6 +1855,27 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_TOOLS, "View &Tools");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_VIEW_STATUS, "View &Status");
     AppendMenuA(hAgentMenu, MF_STRING, IDM_AGENT_STOP, "&Stop Agent");
+    AppendMenuA(hAgentMenu, MF_SEPARATOR, 0, nullptr);
+
+    // HexMag swarm — multi-agent responses (Cursor multi-model style)
+    HMENU hHexMag = CreatePopupMenu();
+    AppendMenuA(hHexMag, MF_STRING, IDM_AGENT_HEXMAG_START, "&Start Control Plane");
+    AppendMenuA(hHexMag, MF_STRING, IDM_AGENT_HEXMAG_HEALTH, "&Health Check");
+    AppendMenuA(hHexMag, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hHexMag, MF_STRING, IDM_AGENT_HEXMAG_TOGGLE_FALLBACK, "GGUF &Fallback");
+    AppendMenuA(hHexMag, MF_STRING, IDM_AGENT_HEXMAG_ROUTE_COPILOT, "Route &Copilot Panel");
+    AppendMenuA(hHexMag, MF_SEPARATOR, 0, nullptr);
+    AppendMenuA(hHexMag, MF_STRING, IDM_AGENT_HEXMAG_CYCLE_SWARM, "Cycle Swarm &Size\tCtrl+Shift+H");
+    HMENU hSwarm = CreatePopupMenu();
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_1, "&1 agent");
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_2, "&2 agents");
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_3, "&3 agents");
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_4, "&4 agents");
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_6, "&6 agents");
+    AppendMenuA(hSwarm, MF_STRING, IDM_AGENT_HEXMAG_SWARM_8, "&8 agents");
+    AppendMenuA(hHexMag, MF_POPUP, (UINT_PTR)hSwarm, "Swarm &Agents");
+    AppendMenuA(hAgentMenu, MF_POPUP, (UINT_PTR)hHexMag, "&HexMag Swarm");
+
     AppendMenuA(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, "&Agent");
 
     // Autonomy menu (new high-level autonomous orchestration)

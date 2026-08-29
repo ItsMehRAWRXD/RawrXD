@@ -156,6 +156,8 @@ HX_STATE STRUCT
     next_agent_id   QWORD   ?           ; monotonic; never reused
     agents_spawned  QWORD   ?           ; total fresh agents minted
     last_agent_id   QWORD   ?           ; most recent mint
+    parallel_agents DWORD   ?           ; 1..8 multi-candidate swarm width
+    _pad_par        DWORD   ?
 HX_STATE ENDS
 
 ; =============================================================================
@@ -209,6 +211,10 @@ PUBLIC HexMag_BotCount
 PUBLIC HexMag_AgentsSpawned
 PUBLIC HexMag_LastAgentId
 PUBLIC HexMag_TunerAttempt
+PUBLIC HexMag_Feedback
+PUBLIC HexMag_IsInitialized
+PUBLIC HexMag_SetParallelAgents
+PUBLIC HexMag_GetParallelAgents
 
 ; =============================================================================
 ;                         CODE
@@ -319,6 +325,7 @@ HexMag_Init PROC FRAME
     mov     QWORD PTR [rbx].HX_STATE.next_agent_id, 1   ; first unused id
     mov     QWORD PTR [rbx].HX_STATE.agents_spawned, 0
     mov     QWORD PTR [rbx].HX_STATE.last_agent_id, 0
+    mov     DWORD PTR [rbx].HX_STATE.parallel_agents, 3 ; default multi-agent
 
     lea     rcx, g_MsgHxInit
     call    OutputDebugStringA
@@ -903,10 +910,7 @@ hx_tuner_bump PROC FRAME
     lea     r9, g_PayloadBuf
     call    hx_emit_event
 
-    ; Mint a brand-new unused codegen agent/model (never reuse failed id)
-    mov     edx, HX_ROLE_CODEGEN
-    call    hx_mint_unused_agent
-
+    ; Mint happens in hx_run_codegen — do not double-mint here
     mov     edx, HX_ROLE_CODEGEN
     call    hx_enqueue_role
 
@@ -968,6 +972,12 @@ hx_run_codegen PROC FRAME
     .pushreg rbx
     push    rsi
     .pushreg rsi
+    push    r12
+    .pushreg r12
+    push    r13
+    .pushreg r13
+    push    r14
+    .pushreg r14
     sub     rsp, 28h
     .allocstack 28h
     .endprolog
@@ -975,19 +985,36 @@ hx_run_codegen PROC FRAME
     lea     rbx, g_HxState
     mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
 
-    ; Always mint a NEW unused agent/model for this codegen attempt
+    ; parallel_agents = swarm width (Cursor-style multi-response)
+    mov     r13d, DWORD PTR [rbx].HX_STATE.parallel_agents
+    cmp     r13d, 1
+    jae     @cg_have_n
+    mov     r13d, 1
+@cg_have_n:
+    cmp     r13d, 8
+    jbe     @cg_n_ok
+    mov     r13d, 8
+@cg_n_ok:
+
+    xor     r12d, r12d                  ; any_ok flag
+    xor     r14d, r14d                  ; candidate index
+
+@cg_multi:
     mov     edx, HX_ROLE_CODEGEN
     call    hx_mint_unused_agent
 
-    ; Variant from tuner: attempt 0,1 => wrong; attempt>=2 => correct
+    ; Variant: tuner_attempt>=2 => OK for all; else wrong cycling 0/1 by index
     mov     eax, DWORD PTR [rsi].HX_AGENT_CTX.tuner_attempt
     cmp     eax, 2
-    jae     @cg_ok
-    mov     DWORD PTR [rsi].HX_AGENT_CTX.last_variant, eax  ; 0 or 1
-    jmp     @cg_built
-@cg_ok:
+    jae     @cg_var_ok
+    mov     eax, r14d
+    and     eax, 1
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.last_variant, eax
+    jmp     @cg_emit
+@cg_var_ok:
     mov     DWORD PTR [rsi].HX_AGENT_CTX.last_variant, 2
-@cg_built:
+    mov     r12d, 1
+@cg_emit:
     call    hx_build_candidate
 
     mov     ecx, HX_EVT_PARTIAL
@@ -1002,18 +1029,25 @@ hx_run_codegen PROC FRAME
     lea     r9, g_PayloadBuf
     call    hx_emit_event
 
-    ; Legacy ANSWER for older smoke consumers
     mov     ecx, HX_EVT_ANSWER
     mov     edx, HX_ROLE_CODEGEN
     xor     r8d, r8d
     lea     r9, g_PayloadBuf
     call    hx_emit_event
 
-    ; Handoff to verification — signature mixes attempt so refine is allowed
+    inc     r14d
+    cmp     r14d, r13d
+    jb      @cg_multi
+
+    ; Verify uses last_variant: mark OK if any candidate in batch was OK
+    test    r12d, r12d
+    jz      @cg_handoff
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.last_variant, 2
+
+@cg_handoff:
     mov     edx, HX_ROLE_VERIFICATION
     lea     r8, g_PayloadBuf
     call    hx_try_handoff
-    ; If repeat (same attempt), still enqueue verify once
     test    eax, eax
     jz      @cg_done
     cmp     eax, HX_ERR_REPEAT
@@ -1023,6 +1057,9 @@ hx_run_codegen PROC FRAME
 
 @cg_done:
     add     rsp, 28h
+    pop     r14
+    pop     r13
+    pop     r12
     pop     rsi
     pop     rbx
     ret
@@ -1434,6 +1471,122 @@ HexMag_RunToSatisfied PROC FRAME
     pop     rbx
     ret
 HexMag_RunToSatisfied ENDP
+
+; -----------------------------------------------------------------------------
+; HexMag_IsInitialized — RAX = 1 if control plane up
+; -----------------------------------------------------------------------------
+HexMag_IsInitialized PROC
+    lea     rax, g_HxState
+    mov     eax, DWORD PTR [rax].HX_STATE.initialized
+    ret
+HexMag_IsInitialized ENDP
+
+; -----------------------------------------------------------------------------
+; HexMag_Feedback — external verifier / user / IDE signal
+;   ECX = 0 => correct (finalize if candidate pending)
+;   ECX = fail_kind_mask (nonzero) => mutate genome + re-spawn codegen
+; Returns RAX = 1 if refine scheduled, 2 if finalized, 0 exhausted/error
+; -----------------------------------------------------------------------------
+HexMag_Feedback PROC FRAME
+    push    rbx
+    .pushreg rbx
+    push    rsi
+    .pushreg rsi
+    sub     rsp, 28h
+    .allocstack 28h
+    .endprolog
+
+    lea     rbx, g_HxState
+    cmp     DWORD PTR [rbx].HX_STATE.initialized, 1
+    jne     @fb_err
+    mov     rsi, QWORD PTR [rbx].HX_STATE.ctx
+    test    rsi, rsi
+    jz      @fb_err
+
+    test    ecx, ecx
+    jnz     @fb_wrong
+
+    ; correct — promote to final if not already
+    cmp     DWORD PTR [rsi].HX_AGENT_CTX.satisfied, 1
+    je      @fb_done_ok
+    mov     ecx, HX_EVT_ANSWER_FINAL
+    mov     edx, HX_ROLE_VERIFICATION
+    xor     r8d, r8d
+    lea     r9, g_FinalStub
+    call    hx_emit_event
+    mov     ecx, HX_EVT_GOAL_SATISFIED
+    mov     edx, HX_ROLE_VERIFICATION
+    xor     r8d, r8d
+    lea     r9, g_DoneStub
+    call    hx_emit_event
+    mov     ecx, HX_EVT_DEFLATE
+    mov     edx, HX_ROLE_VERIFICATION
+    xor     r8d, r8d
+    lea     r9, g_DeflateStub
+    call    hx_emit_event
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.satisfied, 1
+@fb_done_ok:
+    mov     eax, 2
+    jmp     @fb_done
+
+@fb_wrong:
+    ; Force candidate as wrong for tuner path
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.last_variant, 0
+    call    hx_tuner_bump
+    test    eax, eax
+    jz      @fb_exhausted
+    mov     eax, 1
+    jmp     @fb_done
+@fb_exhausted:
+    mov     ecx, HX_EVT_FAILED
+    mov     edx, HX_ROLE_VERIFICATION
+    xor     r8d, r8d
+    lea     r9, g_CritiqueWrong
+    call    hx_emit_event
+    mov     DWORD PTR [rsi].HX_AGENT_CTX.failed, 1
+    xor     eax, eax
+    jmp     @fb_done
+@fb_err:
+    xor     eax, eax
+@fb_done:
+    add     rsp, 28h
+    pop     rsi
+    pop     rbx
+    ret
+HexMag_Feedback ENDP
+
+; -----------------------------------------------------------------------------
+; HexMag_SetParallelAgents — ECX = count (clamped 1..8). Cursor-style swarm width.
+; Returns RAX = applied count
+; -----------------------------------------------------------------------------
+HexMag_SetParallelAgents PROC
+    lea     rax, g_HxState
+    mov     edx, ecx
+    cmp     edx, 1
+    jae     @spa_lo
+    mov     edx, 1
+@spa_lo:
+    cmp     edx, 8
+    jbe     @spa_hi
+    mov     edx, 8
+@spa_hi:
+    mov     DWORD PTR [rax].HX_STATE.parallel_agents, edx
+    mov     eax, edx
+    ret
+HexMag_SetParallelAgents ENDP
+
+; -----------------------------------------------------------------------------
+; HexMag_GetParallelAgents — RAX = current swarm width
+; -----------------------------------------------------------------------------
+HexMag_GetParallelAgents PROC
+    lea     rax, g_HxState
+    mov     eax, DWORD PTR [rax].HX_STATE.parallel_agents
+    test    eax, eax
+    jnz     @gpa_ok
+    mov     eax, 1
+@gpa_ok:
+    ret
+HexMag_GetParallelAgents ENDP
 
 _TEXT ENDS
 END

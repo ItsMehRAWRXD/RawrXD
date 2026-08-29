@@ -148,12 +148,21 @@ set(ASM_SOURCES
     RawrXD_NetworkRelay.asm
     RawrXD_NetworkSniper.asm
     RawrXD_P2PRelay.asm
+    src/asm/RawrXD_HexMag_RepeatTuner.asm
+    src/asm/RawrXD_HexMag_Swarm.asm
 )
 
 set_source_files_properties(${ASM_SOURCES} PROPERTIES LANGUAGE ASM_MASM)
+set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} /I\"${CMAKE_CURRENT_SOURCE_DIR}/src/asm\"")
+
+set(HEXMAG_SOURCES
+    src/core/hexmag_control_plane.cpp
+    src/agent/hexmag_client.cpp
+)
 
 # Create library for native components
-add_library(RawrXD_Native STATIC ${NATIVE_SOURCES} ${ASM_SOURCES})
+add_library(RawrXD_Native STATIC ${NATIVE_SOURCES} ${ASM_SOURCES} ${HEXMAG_SOURCES})
+target_compile_definitions(RawrXD_Native PUBLIC RAWR_HAS_MASM=1)
 
 target_include_directories(RawrXD_Native PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -166,6 +175,9 @@ target_include_directories(RawrXD_Native PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
     ${CMAKE_CURRENT_SOURCE_DIR}/src/win32app
     ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/agent
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/agentic
     ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/src/win32app
     ${CMAKE_CURRENT_SOURCE_DIR}/RawrXD-ModelLoader/include
 )
