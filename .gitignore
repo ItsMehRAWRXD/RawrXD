@@ -7,6 +7,9 @@ build-*/
 **/build-*/
 build-arm64/
 **/build-arm64/
+# Source tree exception: sovereign coordination primitive lives under build/
+!src/sovereign/build/
+!src/sovereign/build/**
 bin/
 lib/
 obj/
