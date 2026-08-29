@@ -1,0 +1,52 @@
+{
+  "cert": "PARITY-CERT-001",
+  "canonical_repo": "F:\\~dev\\rawrxd",
+  "model": "tinyllama_fresh.gguf",
+  "model_path": "F:\\~dev\\tinyllama_fresh.gguf",
+  "model_sha256": "DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556",
+  "tokenizer_sha256": null,
+  "prompt": "hello",
+  "max_new_tokens": 15,
+  "reference_mode": "FROZEN_GOLDEN",
+  "live_external_runtime_required": false,
+  "deep2_runtime_dependencies": [],
+  "sampling": {
+    "temperature": 0.0,
+    "top_k": 1,
+    "top_p": 1.0,
+    "seed": 0,
+    "deterministic": true
+  },
+  "tolerances": {
+    "logit_abs_error_max": 1.0e-3,
+    "logit_rel_error_max": 1.0e-3,
+    "require_exact_token_ids": true,
+    "require_exact_prompt_ids": true
+  },
+  "gates": [
+    "MODEL_HASH_MATCH",
+    "TOKENIZER_INPUT_MATCH",
+    "INPUT_TOKEN_SEQUENCE_MATCH",
+    "LOGIT_ERROR_WITHIN_TOLERANCE",
+    "ARGMAX_TOKEN_MATCH",
+    "STREAM_TOKEN_SEQUENCE_MATCH",
+    "NO_EXTERNAL_RUNTIME_DEPENDENCIES"
+  ],
+  "artifacts": {
+    "golden_tokens": "golden_tokens.json",
+    "golden_logits": "golden_logits.bin",
+    "deep2_result": "deep2_result.json",
+    "verdict": "PARITY_CERT_VERDICT.txt"
+  },
+  "golden_status": "AWAITING_TRUSTED_DUMP",
+  "golden_provenance": {
+    "origin": null,
+    "origin_note": "Populate offline from a trusted reference once; never required at cert runtime.",
+    "imported_at": null
+  },
+  "streamer_boundary": {
+    "cert": "STREAMER-CERT-001",
+    "status": "CERTIFIED",
+    "note": "Streamer proves sequencing/stream semantics only; does not imply numerical parity."
+  }
+}

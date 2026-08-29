@@ -1,0 +1,14 @@
+{
+  "cert": "PARITY-CERT-001",
+  "status": "AWAITING_TRUSTED_DUMP",
+  "prompt": "hello",
+  "prompt_token_ids": [],
+  "generated_token_ids": [],
+  "argmax_token_ids": [],
+  "top10_step0": [],
+  "notes": [
+    "Empty until a trusted frozen golden is imported offline.",
+    "Do not invent IDs. Do not derive PASS from STREAMER-CERT-001.",
+    "Import with scripts/import_parity_golden.ps1 once provenance exists."
+  ]
+}

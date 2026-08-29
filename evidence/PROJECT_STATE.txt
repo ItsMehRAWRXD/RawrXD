@@ -1,0 +1,37 @@
+MODEL-CATALOG / SOVEREIGN CERT AUTHORITY
+========================================
+canonical_repo=F:\~dev\rawrxd
+stale_reference=G:\rawrxd
+
+gate_order=
+  MODEL-CATALOG-001
+  SOVEREIGN-BACKEND-001
+  LIFECYCLE-CERT-001
+  PARITY-CERT-001
+  AGENT-UNIFY-001
+  AUTONOMOUS-E2E-001
+  PACKAGE-CERT-001
+
+STREAMER-CERT-001=CERTIFIED
+streamer_commit=ec1d98e6a402e0ece18f02187009a126deca4c13
+streamer_tag=streamer-cert-001
+
+MODEL-CATALOG-001=IN_PROGRESS
+# ModelCatalog.hpp/cpp: RAWRXD_MODEL_ROOT + G:\OllamaModels file-store resolution
+# G:\OllamaModels is STORAGE only — not Ollama runtime
+
+SOVEREIGN-BACKEND-001=NEXT
+LIFECYCLE-CERT-001=OPEN
+PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
+AGENT-UNIFY-001=PENDING
+AUTONOMOUS-E2E-001=BLOCKED_ON_PARITY
+PACKAGE-CERT-001=PENDING
+
+deep2_runtime_dependencies=[]
+runtime_ollama_http_deps=NONE (target; purge defaults in SOVEREIGN-BACKEND-001)
+runtime_ollama_daemon_deps=NONE
+runtime_llamacpp_deps=NONE
+inference_backend=DEEP2
+model_store=FILESYSTEM
+
+note=Do not spend effort making Ollama work. Highest value: MODEL-CATALOG + SOVEREIGN-BACKEND; lifecycle before final parity.

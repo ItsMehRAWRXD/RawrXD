@@ -7608,6 +7608,30 @@ if(BUILD_DEEP2_STREAMER_CERT)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
+# deep2_parity_cert — PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)
+# External llama.cpp measuring stick is tools/parity_ref (separate process only).
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DEEP2_PARITY_CERT "Build Deep2 parity certification harness (Deep2-only)" ON)
+if(BUILD_DEEP2_PARITY_CERT)
+    add_executable(deep2_parity_cert
+        src/deep2/deep2_parity_cert.cpp
+    )
+    target_link_libraries(deep2_parity_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_parity_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_parity_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_parity_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_parity_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
+endif()
+
 # test_deterministic_replay — STREAMER-CERT-001: deterministic replay gate
 # ═══════════════════════════════════════════════════════════════════════════════
 option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" ON)

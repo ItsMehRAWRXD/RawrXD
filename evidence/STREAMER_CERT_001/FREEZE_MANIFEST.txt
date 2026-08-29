@@ -1,0 +1,21 @@
+﻿PARITY-CERT-001_NEXT
+STREAMER-CERT-001 FREEZE
+========================
+RAWRXD_DEEP2_STREAMER=CERTIFIED
+Results: 10/10 PASS
+EXIT=0
+lifecycle_note=exits via _Exit to avoid known destructor crash; tracked separately as LIFECYCLE-CERT-001 OPEN
+
+git_commit=ec1d98e6a402e0ece18f02187009a126deca4c13
+git_commit_short=ec1d98e6a
+deep2_streamer_cert_exe=F:\~dev\rawrxd\build-ninja\bin\deep2_streamer_cert.exe
+deep2_streamer_cert_sha256=FDF79A0DCCFA152B5FA2D4097FA3419AD9F5FE75E603C0B4486BB481889960EB
+model_path=F:\~dev\tinyllama_fresh.gguf
+model_sha256=DA3087FB14AEDE55FDE6EB81A0E55E886810E43509EC82ECDC7AA5D62A03B556
+canonical_repo=F:\~dev\rawrxd
+stale_reference=G:\rawrxd
+llama_ref=F:\~dev\llama-direct\vulkan
+
+deep2_inference_deps=NONE
+llama_ref_role=external_measuring_stick_only
+

@@ -1,0 +1,29 @@
+PARITY-CERT-001 AUTHORITY
+=========================
+canonical_repo=F:\~dev\rawrxd
+stale_reference=G:\rawrxd
+
+STREAMER-CERT-001=CERTIFIED
+streamer_commit=ec1d98e6a402e0ece18f02187009a126deca4c13
+streamer_tag=streamer-cert-001
+streamer_exe_sha256=FDF79A0DCCFA152B5FA2D4097FA3419AD9F5FE75E603C0B4486BB481889960EB
+
+PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
+# Not PASS. Streamer cert does not establish numerical inference parity.
+# Smart App Control blocked live external-oracle execution.
+# Certification path is FROZEN_GOLDEN: Deep2 compares against offline artifacts only.
+
+LIFECYCLE-CERT-001=OPEN
+AUTONOMOUS-E2E-001=BLOCKED_ON_PARITY
+
+deep2_runtime_dependencies=[]
+live_external_runtime_required=false
+reference_mode=FROZEN_GOLDEN
+
+# Provenance vs dependency:
+# A frozen golden dump MAY have originated from an external reference
+# implementation offline. Certification execution MUST NOT execute or link
+# that implementation (no Ollama, no llama.cpp process/DLL at cert time).
+
+architecture=
+  reference implementation → frozen evidence once → sovereign Deep2 cert forever
