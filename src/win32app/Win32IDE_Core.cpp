@@ -1164,6 +1164,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 }
                 return 0;
             }
+            // HexMag ask completion (WM_APP+220..222 — avoid WM_COPILOT_* 105..111).
+            if (uMsg == (WM_APP + 220))
+            {
+                extern void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam);
+                RawrXD_FinishHexMagAsk(this, wParam, lParam);
+                return 0;
+            }
+            if (uMsg == (WM_APP + 221))
+            {
+                extern void RawrXD_FinishHexMagTelemetryChunk(Win32IDE* ide, LPARAM lParam);
+                RawrXD_FinishHexMagTelemetryChunk(this, lParam);
+                return 0;
+            }
+            if (uMsg == (WM_APP + 222))
+            {
+                extern void RawrXD_FinishHexMagTelemetryDone(Win32IDE* ide, WPARAM wParam);
+                RawrXD_FinishHexMagTelemetryDone(this, wParam);
+                return 0;
+            }
             // Handle custom agent output message
             if (uMsg == WM_AGENT_OUTPUT_SAFE)
             {

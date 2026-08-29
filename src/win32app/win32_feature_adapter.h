@@ -22,6 +22,9 @@
 // Forward declare Win32IDE — we operate on void* internally
 class Win32IDE;
 
+// Win32IDE_HexMag.cpp — HexMag menu/commands (avoids including Win32IDE.h here).
+extern "C" int RawrXD_HandleHexMagCommand(void* idePtr, unsigned cmdId);
+
 // ============================================================================
 // GUI OUTPUT CALLBACK — Routes to Win32 IDE status bar / output panel
 // ============================================================================
@@ -50,6 +53,13 @@ static void gui_status_output(const char* text, void* userData) {
 // ============================================================================
 
 static bool routeCommandUnified(int commandId, void* idePtr, HWND hwndMain = nullptr) {
+    // HexMag swarm / control-plane commands (MASM) — before registry SSOT
+    if (idePtr && commandId >= 5330 && commandId <= 5340) {
+        if (RawrXD_HandleHexMagCommand(idePtr, static_cast<unsigned>(commandId))) {
+            return true;
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // PRIMARY PATH: Direct dispatch from g_commandRegistry[] (SSOT)
     // No hash map lookup, no manual registration required.

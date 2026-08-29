@@ -1,5 +1,7 @@
-// Win32IDE_HexMag.cpp — HexMag FastAPI service UI hooks (menu, status bar, copilot routing)
+// Win32IDE_HexMag.cpp — HexMag IDE route: controller → client → FinalizePolicy → UI
 #include "../agent/hexmag_client.hpp"
+#include "../core/hexmag_ide_send_path.hpp"
+#include "../core/hexmag_runtime_controller.hpp"
 #include "Win32IDE.h"
 #include "Win32IDE_Commands.h"
 #include <atomic>
@@ -10,15 +12,15 @@
 #define MSFTEDIT_CLASS L"RichEdit20W"
 #endif
 
-
+// Avoid collision with WM_COPILOT_* (WM_APP+105..111) in Copilot native glue.
 #ifndef WM_HEXMAG_ASK_DONE
-#define WM_HEXMAG_ASK_DONE (WM_APP + 109)
+#define WM_HEXMAG_ASK_DONE (WM_APP + 220)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_CHUNK
-#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 110)
+#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 221)
 #endif
 #ifndef WM_HEXMAG_TELEMETRY_DONE
-#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 111)
+#define WM_HEXMAG_TELEMETRY_DONE (WM_APP + 222)
 #endif
 
 namespace
@@ -36,6 +38,14 @@ std::wstring utf8ToWideLocal(const std::string& text)
     return result;
 }
 
+enum class HexMagUiState : uint8_t {
+    Idle = 0,
+    Running,
+    NeedInput,
+    Final,
+    Failure,
+};
+
 struct HexMagAskDonePayload
 {
     unsigned long long traceId = 0;
@@ -44,6 +54,7 @@ struct HexMagAskDonePayload
     std::string error;
     bool requestGgufFallback = false;
     std::string fallbackQuestion;
+    HexMagUiState uiState = HexMagUiState::Failure;
 };
 
 void postHexMagTelemetryChunk(HWND hwndMain, std::string* chunk)
@@ -68,13 +79,46 @@ void postHexMagAskDone(HWND hwndMain, HexMagAskDonePayload* payload)
         return;
     if (hwndMain && IsWindow(hwndMain))
     {
-        // PostMessage only — never SendMessage from worker threads (blocks worker on UI dispatch).
         PostMessageW(hwndMain, WM_HEXMAG_ASK_DONE, payload->success ? 1 : 0, reinterpret_cast<LPARAM>(payload));
     }
     else
     {
         delete payload;
     }
+}
+
+HexMagUiState uiStateFromController(const RawrXD::HexMag::ControllerResult& r)
+{
+    switch (RawrXD::HexMag::ideUiOutcome(r)) {
+    case RawrXD::HexMag::IdeUiOutcome::Final:
+        return HexMagUiState::Final;
+    case RawrXD::HexMag::IdeUiOutcome::NeedInput:
+        return HexMagUiState::NeedInput;
+    default:
+        return HexMagUiState::Failure;
+    }
+}
+
+void applyHexMagUiState(Win32IDE* ide, HexMagUiState st, const std::string& detail)
+{
+    if (!ide)
+        return;
+    switch (st) {
+    case HexMagUiState::Running:
+        ide->setHexMagStatusBarHint(L"HexMag: running…");
+        break;
+    case HexMagUiState::NeedInput:
+        ide->setHexMagStatusBarHint(L"HexMag: NEED_INPUT — ask user");
+        break;
+    case HexMagUiState::Final:
+        ide->setHexMagStatusBarHint(L"HexMag: FINAL");
+        break;
+    case HexMagUiState::Failure:
+    default:
+        ide->setHexMagStatusBarHint(L"HexMag: failed");
+        break;
+    }
+    (void)detail;
 }
 
 }  // namespace
@@ -109,6 +153,21 @@ void Win32IDE::refreshHexMagAgentMenuChecks()
                   m_settings.hexmagGgufFallbackEnabled ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(hexMenu, IDM_AGENT_HEXMAG_ROUTE_COPILOT,
                   m_settings.hexmagRouteCopilotPanel ? MF_CHECKED : MF_UNCHECKED);
+
+    const int n = m_settings.hexmagSwarmAgentCount;
+    auto checkSwarm = [&](UINT id, int want) {
+        CheckMenuItem(hexMenu, id, (n == want) ? MF_CHECKED : MF_UNCHECKED);
+    };
+    // Radio checks live on the Swarm Agents popup; also try direct IDs.
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_1, 1);
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_2, 2);
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_3, 3);
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_4, 4);
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_6, 6);
+    checkSwarm(IDM_AGENT_HEXMAG_SWARM_8, 8);
+
+    // Sync MASM parallel width
+    RawrXD::HexMag::setSwarmAgentCount(static_cast<uint32_t>(n > 0 ? n : 3));
 }
 
 void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam)
@@ -121,14 +180,23 @@ void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam)
     ide->m_chatSendInFlight.store(false);
     ide->setCopilotInteractionBusyOnUiThread(false);
 
-    if (ok)
+    if (payload->uiState == HexMagUiState::NeedInput)
+    {
+        ide->appendCopilotChatTextOnUiThread("\n[HexMag NEED_INPUT]\n" + payload->error + "\n");
+        ide->appendToOutput("[HexMag] NEED_INPUT latched — waiting for user.\n", "Agent",
+                            Win32IDE::OutputSeverity::Warning);
+        ide->setHexMagStatusBarHint(L"HexMag: NEED_INPUT");
+        return;
+    }
+
+    if (ok || payload->uiState == HexMagUiState::Final)
     {
         ide->m_lastCopilotAssistantResponse = payload->answer;
-        ide->appendCopilotChatTextOnUiThread("\n[HexMag Copilot]\n" + payload->answer + "\n");
-        ide->appendToOutput("[HexMag Copilot] response delivered (" + std::to_string(payload->answer.size()) +
+        ide->appendCopilotChatTextOnUiThread("\n[HexMag FINAL]\n" + payload->answer + "\n");
+        ide->appendToOutput("[HexMag] FINAL delivered (" + std::to_string(payload->answer.size()) +
                                 " chars)\n",
                             "Agent", Win32IDE::OutputSeverity::Info);
-        ide->setHexMagStatusBarHint(L"HexMag: OK");
+        ide->setHexMagStatusBarHint(L"HexMag: FINAL");
         return;
     }
 
@@ -140,9 +208,9 @@ void RawrXD_FinishHexMagAsk(Win32IDE* ide, WPARAM wParam, LPARAM lParam)
         return;
     }
 
-    ide->appendCopilotChatTextOnUiThread("\n[HexMag] " + payload->error + "\n");
+    ide->appendCopilotChatTextOnUiThread("\n[HexMag failure]\n" + payload->error + "\n");
     ide->appendToOutput("[HexMag] " + payload->error + "\n", "Errors", Win32IDE::OutputSeverity::Error);
-    ide->setHexMagStatusBarHint(L"HexMag: offline");
+    ide->setHexMagStatusBarHint(L"HexMag: failure");
 }
 
 void Win32IDE::setHexMagStatusBarHint(const std::wstring& text)
@@ -210,32 +278,137 @@ void Win32IDE::onHexMagToggleRouteCopilotPanel()
     appendToOutput("HexMag copilot panel routing: " + state + "\n", "Agent", Win32IDE::OutputSeverity::Info);
 }
 
+void Win32IDE::applyHexMagSwarmAgentCount(int count)
+{
+    static const int kAllowed[] = {1, 2, 3, 4, 6, 8};
+    int applied = 3;
+    for (int a : kAllowed) {
+        if (a == count) {
+            applied = a;
+            break;
+        }
+    }
+    m_settings.hexmagSwarmAgentCount = applied;
+    RawrXD::HexMag::setSwarmAgentCount(static_cast<uint32_t>(applied));
+    saveSettings();
+    refreshHexMagAgentMenuChecks();
+    const std::wstring tip = L"HexMag swarm: " + std::to_wstring(applied) + L" agents";
+    setHexMagStatusBarHint(tip);
+    appendToOutput("HexMag swarm agent count set to " + std::to_string(applied)
+                       + " (parallel polymorphic candidates / Cursor multi-model style)\n",
+                   "Agent", Win32IDE::OutputSeverity::Info);
+}
+
+void Win32IDE::onHexMagCycleSwarmSize()
+{
+    static const int kCycle[] = {1, 2, 3, 4, 6, 8};
+    int cur = m_settings.hexmagSwarmAgentCount;
+    int next = 3;
+    for (size_t i = 0; i < sizeof(kCycle) / sizeof(kCycle[0]); ++i) {
+        if (kCycle[i] == cur) {
+            next = kCycle[(i + 1) % (sizeof(kCycle) / sizeof(kCycle[0]))];
+            break;
+        }
+    }
+    applyHexMagSwarmAgentCount(next);
+}
+
+void Win32IDE::onHexMagSetSwarmSizeFromCmd(unsigned cmdId)
+{
+    int n = 3;
+    switch (cmdId) {
+    case IDM_AGENT_HEXMAG_SWARM_1: n = 1; break;
+    case IDM_AGENT_HEXMAG_SWARM_2: n = 2; break;
+    case IDM_AGENT_HEXMAG_SWARM_3: n = 3; break;
+    case IDM_AGENT_HEXMAG_SWARM_4: n = 4; break;
+    case IDM_AGENT_HEXMAG_SWARM_6: n = 6; break;
+    case IDM_AGENT_HEXMAG_SWARM_8: n = 8; break;
+    default: break;
+    }
+    applyHexMagSwarmAgentCount(n);
+}
+
+bool Win32IDE::handleHexMagCommand(unsigned cmdId)
+{
+    switch (cmdId) {
+    case IDM_AGENT_HEXMAG_START:
+        onHexMagStartService();
+        return true;
+    case IDM_AGENT_HEXMAG_HEALTH:
+        onHexMagHealthCheck();
+        return true;
+    case IDM_AGENT_HEXMAG_TOGGLE_FALLBACK:
+        onHexMagToggleGgufFallback();
+        return true;
+    case IDM_AGENT_HEXMAG_ROUTE_COPILOT:
+        onHexMagToggleRouteCopilotPanel();
+        return true;
+    case IDM_AGENT_HEXMAG_CYCLE_SWARM:
+        onHexMagCycleSwarmSize();
+        return true;
+    case IDM_AGENT_HEXMAG_SWARM_1:
+    case IDM_AGENT_HEXMAG_SWARM_2:
+    case IDM_AGENT_HEXMAG_SWARM_3:
+    case IDM_AGENT_HEXMAG_SWARM_4:
+    case IDM_AGENT_HEXMAG_SWARM_6:
+    case IDM_AGENT_HEXMAG_SWARM_8:
+        onHexMagSetSwarmSizeFromCmd(cmdId);
+        return true;
+    default:
+        return false;
+    }
+}
+
+extern "C" int RawrXD_HandleHexMagCommand(void* idePtr, unsigned cmdId)
+{
+    if (!idePtr) return 0;
+    return static_cast<Win32IDE*>(idePtr)->handleHexMagCommand(cmdId) ? 1 : 0;
+}
+
 void Win32IDE::dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel)
 {
     if (question.empty())
         return;
 
+    setHexMagStatusBarHint(L"HexMag: running…");
     const std::string codeContext = m_currentFile.empty() ? std::string{} : getEditorText();
-    const auto hex = RawrXD::HexMag::askWithAutoStart(question, codeContext);
+    const auto ctrl = RawrXD::HexMag::ideHexMagSendPath().operatorTurn(question, codeContext);
+    const HexMagUiState st = uiStateFromController(ctrl);
 
-    if (hex.success)
+    if (ctrl.finalAuthority)
     {
+        const std::string& answer = ctrl.lastClient.ask.answer.empty()
+            ? ctrl.diagnostic
+            : ctrl.lastClient.ask.answer;
         if (toCopilotPanel)
         {
-            m_lastCopilotAssistantResponse = hex.answer;
-            appendCopilotChatTextOnUiThread("\n[HexMag Copilot]\n" + hex.answer + "\n");
+            m_lastCopilotAssistantResponse = answer;
+            appendCopilotChatTextOnUiThread("\n[HexMag Copilot]\n" + answer + "\n");
         }
         else
         {
-            appendToOutput("[HexMag Copilot]\n" + hex.answer + "\n", "Agent", Win32IDE::OutputSeverity::Info);
+            appendToOutput("[HexMag Copilot]\n" + answer + "\n", "Agent", Win32IDE::OutputSeverity::Info);
         }
-        setHexMagStatusBarHint(L"HexMag: OK");
+        setHexMagStatusBarHint(L"HexMag: FINAL");
+        return;
+    }
+
+    if (st == HexMagUiState::NeedInput)
+    {
+        const std::string msg = ctrl.lastClient.ask.error.empty()
+            ? ctrl.diagnostic
+            : ctrl.lastClient.ask.error;
+        if (toCopilotPanel)
+            appendCopilotChatTextOnUiThread("\n[HexMag NEED_INPUT]\n" + msg + "\n");
+        else
+            appendToOutput("[HexMag NEED_INPUT] " + msg + "\n", "Agent", OutputSeverity::Warning);
+        setHexMagStatusBarHint(L"HexMag: NEED_INPUT — ask user");
         return;
     }
 
     if (m_settings.hexmagGgufFallbackEnabled && m_agent)
     {
-        const std::string warn = "[HexMag] " + hex.error + " — using local model.\n";
+        const std::string warn = "[HexMag] " + ctrl.diagnostic + " — using local model.\n";
         if (toCopilotPanel)
             appendCopilotChatTextOnUiThread("\n" + warn);
         else
@@ -245,12 +418,12 @@ void Win32IDE::dispatchHexMagAskFromUi(const std::string& question, bool toCopil
         return;
     }
 
-    const std::string err = "[HexMag] " + hex.error + "\n";
+    const std::string err = "[HexMag] " + ctrl.diagnostic + "\n";
     if (toCopilotPanel)
         appendCopilotChatTextOnUiThread("\n" + err);
     else
         appendToOutput(err, "Errors", Win32IDE::OutputSeverity::Error);
-    setHexMagStatusBarHint(L"HexMag: offline");
+    setHexMagStatusBarHint(L"HexMag: failed");
 }
 
 bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId)
@@ -265,8 +438,8 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
         return false;
 
     setCopilotInteractionBusyOnUiThread(true);
-    appendCopilotChatTextOnUiThread("\n[HexMag] routing...\n");
-    setHexMagStatusBarHint(L"HexMag: working...");
+    appendCopilotChatTextOnUiThread("\n[HexMag] routing via controller…\n");
+    setHexMagStatusBarHint(L"HexMag: running…");
 
     const std::string codeContext = m_currentFile.empty() ? std::string{} : getEditorText();
     HWND hwndMain = m_hwndMain;
@@ -278,15 +451,25 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
         {
             auto* payload = new HexMagAskDonePayload();
             payload->traceId = traceId;
+            payload->uiState = HexMagUiState::Failure;
 
             if (hwndMain && IsWindow(hwndMain))
             {
-                const auto hex = RawrXD::HexMag::askWithAutoStart(userMessage, codeContext);
-                payload->success = hex.success;
-                payload->answer = hex.answer;
-                payload->error = hex.error.empty() ? "HexMag request failed" : hex.error;
+                const auto ctrl =
+                    RawrXD::HexMag::ideHexMagSendPath().operatorTurn(userMessage, codeContext);
+                payload->uiState = uiStateFromController(ctrl);
+                payload->success = ctrl.finalAuthority;
+                payload->answer = ctrl.lastClient.ask.answer.empty()
+                    ? ctrl.diagnostic
+                    : ctrl.lastClient.ask.answer;
+                payload->error = ctrl.lastClient.ask.error.empty()
+                    ? ctrl.diagnostic
+                    : ctrl.lastClient.ask.error;
+                if (payload->error.empty())
+                    payload->error = "HexMag request failed";
 
-                if (!hex.success && allowFallback && agentAvailable)
+                if (!ctrl.finalAuthority && payload->uiState != HexMagUiState::NeedInput
+                    && allowFallback && agentAvailable)
                 {
                     payload->requestGgufFallback = true;
                     payload->fallbackQuestion = userMessage;
@@ -296,6 +479,7 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
             {
                 payload->success = false;
                 payload->error = "IDE window closed";
+                payload->uiState = HexMagUiState::Failure;
             }
 
             postHexMagAskDone(hwndMain, payload);
@@ -472,4 +656,23 @@ void RawrXD_FinishHexMagTelemetryDone(Win32IDE* ide, WPARAM wParam)
     const bool ok = (wParam != 0);
     ide->setHexMagStatusBarHint(ok ? L"HexMag: stream done" : L"HexMag: stream failed");
     ide->appendHexMagTelemetryText(ok ? L"\r\n[telemetry] stream complete\r\n" : L"\r\n[telemetry] stream failed\r\n");
+}
+
+void Win32IDE::appendCopilotChatTextOnUiThread(const std::string& text)
+{
+    if (!text.empty())
+        HandleCopilotStreamUpdate(text.c_str(), text.size());
+}
+
+void Win32IDE::setCopilotInteractionBusyOnUiThread(bool busy)
+{
+    if (m_hwndCopilotSendBtn && IsWindow(m_hwndCopilotSendBtn))
+        EnableWindow(m_hwndCopilotSendBtn, busy ? FALSE : TRUE);
+    if (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+        EnableWindow(m_hwndCopilotChatInput, busy ? FALSE : TRUE);
+}
+
+void Win32IDE::showAgentActivityStatus(const std::string& text, int)
+{
+    setHexMagStatusBarHint(utf8ToWideLocal(text));
 }

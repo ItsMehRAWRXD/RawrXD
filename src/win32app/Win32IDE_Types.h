@@ -476,6 +476,11 @@ struct IDESettings
     bool modelPrefetchEnabled = true;
     bool modelWorkingSetLockEnabled = false;
     bool silencePrivilegeWarnings = true;
+
+    // HexMag MASM control plane (P0C certified → P1 product path)
+    bool hexmagGgufFallbackEnabled = false;
+    bool hexmagRouteCopilotPanel = true;
+    int hexmagSwarmAgentCount = 3;
 };
 
 struct LocalServerStats

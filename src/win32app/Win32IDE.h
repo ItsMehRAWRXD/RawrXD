@@ -327,6 +327,34 @@ class Win32IDE
     void onAgentStop();
     void onAgentAuditDrive();
 
+    // HexMag MASM control plane + swarm (certified P0C; P1 product path)
+    void refreshHexMagAgentMenuChecks();
+    void setHexMagStatusBarHint(const std::wstring& text);
+    void onHexMagStartService();
+    void onHexMagHealthCheck();
+    void onHexMagToggleGgufFallback();
+    void onHexMagToggleRouteCopilotPanel();
+    void applyHexMagSwarmAgentCount(int count);
+    void onHexMagCycleSwarmSize();
+    void onHexMagSetSwarmSizeFromCmd(unsigned cmdId);
+    bool handleHexMagCommand(unsigned cmdId);
+    void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel);
+    bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId);
+    void onHexMagShowTelemetryPanel();
+    void onHexMagStartAgentTelemetryStream();
+    void appendHexMagTelemetryText(const std::wstring& text);
+    void ensureHexMagTelemetryTab();
+    void showHexMagTelemetryPanel();
+    void clearHexMagTelemetryPanel();
+    void appendCopilotChatTextOnUiThread(const std::string& text);
+    void setCopilotInteractionBusyOnUiThread(bool busy);
+    void showAgentActivityStatus(const std::string& text, int unused = 0);
+    std::atomic<bool> m_chatSendInFlight{false};
+    std::atomic<bool> m_hexmagTelemetryStreaming{false};
+    std::string m_lastCopilotAssistantResponse;
+    std::string m_lastCopilotUserPrompt;
+    HWND m_hwndHexMagTelemetry = nullptr;
+
     // Autonomy Framework Controls
     std::unique_ptr<AutonomyManager> m_autonomyManager;  // high-level autonomous orchestrator
     void onAutonomyStart();

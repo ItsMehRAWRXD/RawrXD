@@ -7370,7 +7370,20 @@ void Win32IDE::HandleCopilotSend()
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
-    // Use Ollama direct implementation for chat
+    // Prefer certified HexMag IDE send path when routing is enabled.
+    if (m_hwndCopilotChatInput)
+    {
+        char inputBuffer[4096] = {0};
+        GetWindowTextA(m_hwndCopilotChatInput, inputBuffer, sizeof(inputBuffer) - 1);
+        const std::string userMessage(inputBuffer);
+        if (!userMessage.empty() && tryDispatchCopilotThroughHexMag(userMessage, 0))
+        {
+            SetWindowTextA(m_hwndCopilotChatInput, "");
+            return;
+        }
+    }
+
+    // Fallback: Ollama / local chat path
     HandleCopilotSend_Ollama();
 }
 

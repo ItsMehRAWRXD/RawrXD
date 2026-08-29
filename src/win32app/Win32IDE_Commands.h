@@ -49,6 +49,7 @@
 #define IDC_OUTPUT_EDIT_ERRORS      1013
 #define IDC_OUTPUT_EDIT_DEBUG       1014
 #define IDC_OUTPUT_EDIT_FIND        1015
+#define IDC_OUTPUT_EDIT_AGENT_TELEMETRY 1016
 #define IDC_SPLITTER                1016
 #define IDC_SEVERITY_FILTER         1017
 #define IDC_TITLE_TEXT              1018
@@ -366,6 +367,21 @@
 #define IDM_VIEW_THERMAL_DASHBOARD  5311
 #define IDM_AGENT_SMOKE_TEST        5320
 #define IDM_AGENT_SET_CYCLE_AGENT_COUNTER 5321
+
+// ---- HexMag swarm (multi-agent responses, like Cursor multi-model) ----------
+#define IDM_AGENT_HEXMAG_START              5330
+#define IDM_AGENT_HEXMAG_HEALTH             5331
+#define IDM_AGENT_HEXMAG_TOGGLE_FALLBACK    5332
+#define IDM_AGENT_HEXMAG_ROUTE_COPILOT      5333
+#define IDM_AGENT_HEXMAG_CYCLE_SWARM        5334
+#define IDM_AGENT_HEXMAG_SWARM_1            5335
+#define IDM_AGENT_HEXMAG_SWARM_2            5336
+#define IDM_AGENT_HEXMAG_SWARM_3            5337
+#define IDM_AGENT_HEXMAG_SWARM_4            5338
+#define IDM_AGENT_HEXMAG_SWARM_6            5339
+#define IDM_AGENT_HEXMAG_SWARM_8            5340
+#define IDM_AGENT_HEXMAG_SWARM_FIRST        IDM_AGENT_HEXMAG_SWARM_1
+#define IDM_AGENT_HEXMAG_SWARM_LAST         IDM_AGENT_HEXMAG_SWARM_8
 
 // ---- Plan Approval Dialog controls (7001–7032) -----------------------------
 #define IDC_PLAN_LIST               7001

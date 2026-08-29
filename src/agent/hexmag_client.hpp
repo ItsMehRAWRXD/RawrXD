@@ -1,106 +1,113 @@
-// hexmag_client.hpp — HexMag CLI ↔ SovereignKernelJIT integration header
+// hexmag_client.hpp — HexMag client (MASM control-plane path)
+// ============================================================================
+// HEXMAG_CLIENT_MASM_001
+//
+//   client may transport/decode/expose status
+//   client MUST NOT invent FINAL, downgrade NEED_INPUT, bypass finalize gates,
+//   or treat candidates as verified evidence.
+//
+// Runtime identity (required in GATE):
+//   HEXMAG_BACKEND=MASM|NONE
+//   HEXMAG_LINKED=0|1
+//   HEXMAG_CLIENT_PATH=MASM|UNAVAILABLE|NATIVE_FALLBACK
+// ============================================================================
 #pragma once
 
-#include <string>
+#include "core/hexmag_control_plane.hpp"
+#include "core/hexmag_swarm.hpp"
+
+#include <cstdint>
 #include <functional>
+#include <string>
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// ---------------------------------------------------------------------------
-// HexMag JIT Pipeline API
-// ---------------------------------------------------------------------------
-
-/// Initialize the JIT buffer with RWX memory.
-/// @param capacity Size in bytes for the JIT code buffer.
-/// @return 0 on success, -1 on failure.
+// Legacy JIT demo exports — NOT the HexMag control plane.
 __declspec(dllexport) int HexMagJIT_Init(size_t capacity);
-
-/// Shutdown and free the JIT buffer.
 __declspec(dllexport) void HexMagJIT_Shutdown(void);
-
-/// Emit a simple "exit 42" function into the JIT buffer.
-/// @return Number of bytes emitted, or negative on error.
 __declspec(dllexport) int HexMagJIT_EmitExit42(void);
-
-/// Execute the emitted JIT code.
-/// @return The integer result from JIT execution, or negative on error.
 __declspec(dllexport) int HexMagJIT_Execute(void);
-
-/// Full CLI entry point — initializes, emits, executes, and shuts down.
-/// @param argc Argument count.
-/// @param argv Argument vector.
-/// @return 0 if JIT returned 42, 1 otherwise.
 __declspec(dllexport) int HexMagCLI_Run(int argc, const char** argv);
-
-/// Legacy stub — kept for backward compatibility.
+// MASM builds: prints fail-closed diagnostic (no fake service).
 __declspec(dllexport) void hexmag_connect_stub(void);
-
 #ifdef __cplusplus
 }
 #endif
 
-// ---------------------------------------------------------------------------
-// HexMag Service API (C++ namespace)
-// ---------------------------------------------------------------------------
-
 namespace RawrXD {
 namespace HexMag {
 
-/// Result structure for ask operations.
-struct AskResult {
-    bool success = false;
-    std::string answer;
-    std::string error;
+struct ClientIdentity {
+    const char* backend = "NONE";       // MASM | NONE
+    int linked = 0;                     // 1 iff RAWR_HAS_MASM compiled in
+    const char* clientPath = "UNAVAILABLE"; // MASM | UNAVAILABLE | NATIVE_FALLBACK
 };
 
-/// Result structure for stream operations.
-struct StreamResult {
-    bool success = false;
-    std::string error;
-    bool goalSatisfied = false;
+struct DecodedEvent {
+    uint32_t kind = HX_EVT_NONE;
+    std::string name;
+    std::string payload;
 };
 
-/// Try to launch the HexMag background service.
-/// @return true if service started successfully, false otherwise.
-inline bool tryLaunchService() { return false; }
+struct ClientTrace {
+    ClientIdentity id;
+    bool masmInitCalled = false;
+    bool masmSubmitCalled = false;
+    bool masmRunCalled = false;
+    bool masmPollCalled = false;
+    uint64_t submitRc = 0;
+    uint64_t runRc = 0;
+    uint32_t pollCount = 0;
+    uint64_t generationIdBefore = 0;
+    uint64_t generationIdAfter = 0;
+    uint32_t tunerAttempt = 0;
+    std::vector<DecodedEvent> events; // order preserved
+    std::string backendTrace;
+    std::string diagnostic;
+};
 
-/// Check if the HexMag service is healthy.
-/// @return true if service is healthy, false otherwise.
-inline bool healthCheck() { return false; }
+struct ClientAskResult {
+    AskResult ask;          // control-plane / gate outcome (FINAL authority lives here)
+    ClientTrace trace;
+    // Invariants mirrored for cert readability:
+    bool clientSuccess = false;     // transport/decode ok — NOT final authority
+    bool finalAuthority = false;    // ask.success after allowFinal + isAllowedFinalClaim
+    bool fabricatedFinal = false;   // must always be false
+};
 
-/// Resolve the base URL for the HexMag service.
-/// @return The base URL as a string.
-inline std::string resolveBaseUrl() { return "http://localhost:8765"; }
+/// Snapshot of compile-time + optional env fallback policy.
+ClientIdentity clientIdentity();
 
-/// Ask with auto-start.
-/// @param prompt The prompt to send.
-/// @param context Optional code context.
-/// @return AskResult with success, answer, and error fields.
-inline AskResult askWithAutoStart(const std::string& prompt, const std::string& context) {
-    (void)prompt; (void)context;
-    AskResult result;
-    result.success = false;
-    result.error = "HexMag service not implemented";
-    return result;
-}
+/// Format required GATE identity block.
+std::string formatClientIdentityBlock();
 
-/// Stream agent with auto-start.
-/// @param prompt The prompt to send.
-/// @param onToken Callback for each token received.
-/// @param timeoutSeconds Timeout in seconds (default 30.0).
-/// @return StreamResult with success, error, and goalSatisfied fields.
-inline StreamResult streamAgentWithAutoStart(const std::string& prompt, 
-                                              std::function<void(const std::string&)> onToken, 
-                                              float timeoutSeconds = 30.0f) {
-    (void)prompt; (void)onToken; (void)timeoutSeconds;
-    StreamResult result;
-    result.success = false;
-    result.error = "HexMag service not implemented";
-    result.goalSatisfied = false;
-    return result;
-}
+class HexMagClient {
+public:
+    /// Fail-closed simulation (cert: Backend unavailable).
+    void setForceUnavailable(bool v) { forceUnavailable_ = v; }
+    bool forceUnavailable() const { return forceUnavailable_; }
+
+    /// Init control plane (HexMag_Init). Fail closed if MASM absent / forced down.
+    bool initialize(ClientTrace* trace = nullptr);
+
+    /// Full ask: Init → SubmitGoal → RunToSatisfied → PollEvent → decode → FINAL gates.
+    /// Does not invent FINAL; delegates allowFinal / isAllowedFinalClaim to control plane.
+    ClientAskResult ask(const std::string& prompt, const std::string& context = {});
+
+    /// Low-level: same MASM call chain, returns raw drained events without upgrading
+    /// candidates to FINAL. Used by cert to prove ordering / NEED_INPUT / candidates.
+    ClientAskResult runMasmChain(const std::string& goal, uint32_t maxSteps = 64);
+
+    bool healthCheck() const;
+    std::string resolveBaseUrl() const;
+
+private:
+    bool forceUnavailable_ = false;
+    void fillIdentity(ClientTrace& t) const;
+    void appendBackend(ClientTrace& t, const char* line) const;
+};
 
 } // namespace HexMag
 } // namespace RawrXD
