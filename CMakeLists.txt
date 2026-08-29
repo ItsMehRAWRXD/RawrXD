@@ -4992,7 +4992,32 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/engine/Omega1Engine_Server.cpp
     )
 
+    # HexMag IDE integration (P0C closed → P1 product): UI route + controller + client + MASM.
+    list(APPEND WIN32IDE_SOURCES
+        src/win32app/Win32IDE_HexMag.cpp
+        src/core/hexmag_control_plane.cpp
+        src/core/hexmag_oracle_binder.cpp
+        src/core/hexmag_runtime_controller.cpp
+        src/core/hexmag_ide_link_probe.cpp
+        src/agent/hexmag_client.cpp
+    )
+    if(RAWR_HAS_MASM)
+        list(APPEND WIN32IDE_EXTRA_ASM
+            src/asm/RawrXD_HexMag_Swarm.asm
+            src/asm/RawrXD_HexMag_RepeatTuner.asm
+        )
+        set_source_files_properties(
+            src/asm/RawrXD_HexMag_Swarm.asm
+            src/asm/RawrXD_HexMag_RepeatTuner.asm
+            PROPERTIES LANGUAGE ASM_MASM
+        )
+    endif()
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
+
+    if(RAWR_HAS_MASM)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_MASM=1)
+    endif()
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
     set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
