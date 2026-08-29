@@ -2073,6 +2073,15 @@ class Win32IDE
     HWND m_hwndCopilotChatOutput;
     HWND m_hwndCopilotSendBtn;
     HWND m_hwndCopilotClearBtn;
+    HWND m_hwndHexMagTelemetry = nullptr;
+    std::atomic<bool> m_chatSendInFlight{false};
+    std::atomic<bool> m_hexmagTelemetryStreaming{false};
+    // F-native HexMag Copilot route gate (control-plane; no G settings transplant).
+    bool m_hexmagRouteCopilotPanel = true;
+    bool m_hexmagGgufFallbackEnabled = false;
+    int m_hexmagSwarmAgentCount = 3;
+    std::string m_lastCopilotAssistantResponse;
+    std::string m_lastCopilotUserPrompt;
     HWND m_hwndModelSelector;
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
@@ -2352,6 +2361,35 @@ class Win32IDE
                                    std::function<void(const std::string&, bool)> callback);
     void HandleCopilotSend_Ollama();
     void initializeChatPanelOllama();
+
+    // HexMag control-plane dependency (not HexMag UI):
+    // HandleCopilotSend → RuntimeController → FinalizePolicy → HandleCopilotStreamUpdate
+    bool tryHexMagControllerCopilotSend(const std::string& userMessage);
+
+    // Optional HexMag agent menu / telemetry (Win32IDE_HexMag.cpp)
+    bool handleHexMagCommand(unsigned cmdId);
+    void setHexMagStatusBarHint(const std::wstring& text);
+    void setHexMagStatusBarHint(const std::string& text);
+    void refreshHexMagAgentMenuChecks();
+    void onHexMagStartService();
+    void onHexMagHealthCheck();
+    void onHexMagToggleGgufFallback();
+    void onHexMagToggleRouteCopilotPanel();
+    void applyHexMagSwarmAgentCount(int count);
+    void onHexMagCycleSwarmSize();
+    void onHexMagSetSwarmSizeFromCmd(unsigned cmdId);
+    void appendHexMagTelemetryText(const std::wstring& text);
+    void ensureHexMagTelemetryTab();
+    void showHexMagTelemetryPanel();
+    void clearHexMagTelemetryPanel();
+    void onHexMagShowTelemetryPanel();
+    void onHexMagStartAgentTelemetryStream();
+    void appendCopilotChatTextOnUiThread(const std::string& text);
+    void setCopilotInteractionBusyOnUiThread(bool busy);
+    void showAgentActivityStatus(const std::string& text, int durationMs = 4500);
+    bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId = 0);
+    void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel = true);
+
     std::vector<std::string> getModelsFromDirectory(const std::string& directory);
     std::string makeHttpRequest(const std::string& url, const std::string& method, const std::string& body,
                                 const std::string& contentType);

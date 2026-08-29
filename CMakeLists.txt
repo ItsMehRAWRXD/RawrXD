@@ -6237,7 +6237,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
         # HEXMAG_IDE_ROUTE — controller + MASM client + FINALIZE_POLICY
         src/core/hexmag_ide_link_probe.cpp
-        src/win32app/Win32IDE_HexMag.cpp
+        src/win32app/Win32IDE_HexMagCopilotRoute.cpp
+        # Win32IDE_HexMag.cpp excluded: G HexMag UI transplant; CopilotRoute owns control-plane + link stubs
         src/core/hexmag_control_plane.cpp
         src/core/hexmag_oracle_binder.cpp
         src/core/hexmag_runtime_controller.cpp
@@ -6895,6 +6896,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     if(RAWR_HAS_MASM)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAS_BRUTAL_GZIP_MASM=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_MASM_GLOBALS_LINKED=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_MASM=1)
     endif()
 
     # =========================================================================

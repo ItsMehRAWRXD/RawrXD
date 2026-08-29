@@ -28,6 +28,7 @@ extern "C" void ShutdownAICompletion();
 #include "../native_agent.hpp"
 #include "../streaming_gguf_loader.h"
 #include "IDEConfig.h"
+#include "Win32IDE_HexMagMessages.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
 #include "../deep2/Deep2Discovery.h"
@@ -1128,6 +1129,12 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (uMsg == WM_APP + 100)
             {
                 sehCallDeferredInit(deferredInitTrampoline, this);
+                return 0;
+            }
+            // HexMag controller → Copilot render (shared WM_HEXMAG_COPILOT_DONE)
+            if (uMsg == WM_HEXMAG_COPILOT_DONE)
+            {
+                RawrXD_FinishHexMagCopilotDone(this, lParam);
                 return 0;
             }
             // Handle Ollama model list update from background thread

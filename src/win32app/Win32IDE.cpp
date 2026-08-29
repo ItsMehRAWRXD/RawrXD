@@ -7442,19 +7442,19 @@ void Win32IDE::HandleCopilotSend()
     if (userMessage.empty())
         return;
 
-    // IDE → HexMagRuntimeController → FinalizePolicy → UI (async finish msg).
-    // When routing is enabled and accepted, clear the input here; otherwise leave
-    // it for HandleCopilotSend_Ollama which re-reads the edit control.
-    static std::atomic<unsigned long long> s_hexTrace{1};
-    if (tryDispatchCopilotThroughHexMag(userMessage, s_hexTrace.fetch_add(1)))
+    // IDE → HexMagRuntimeController → FinalizePolicy → existing Copilot render path.
+    // When accepted, clear input here; otherwise leave it for HandleCopilotSend_Ollama.
+    if (tryHexMagControllerCopilotSend(userMessage))
     {
-        const std::string displayText = "\n[User]: " + userMessage + "\n";
+        const std::string displayText = "\n[User]: " + userMessage + "\n\n[AI]: ";
         const int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
         if (len > 0)
             SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
         SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
                      (LPARAM)utf8ToWide(displayText).c_str());
         SetWindowTextW(m_hwndCopilotChatInput, L"");
+        m_chatHistory.push_back({"user", userMessage});
+        m_lastCopilotUserPrompt = userMessage;
         return;
     }
 
