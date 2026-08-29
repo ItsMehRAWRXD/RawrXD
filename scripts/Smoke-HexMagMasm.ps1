@@ -86,34 +86,43 @@ function Invoke-CertStep {
 $allPass = $true
 
 $exeUnit = Join-Path $OutDir "hexmag_swarm_smoke.exe"
-$allPass = (Invoke-CertStep -Name "1/6 unit swarm" `
+$allPass = (Invoke-CertStep -Name "1/7 unit swarm" `
     -CompileCmd "cl /nologo /EHsc /O2 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_swarm_smoke.cpp')`" /Fe:`"$exeUnit`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
     -RunExe $exeUnit) -and $allPass
 
 $exeE2E = Join-Path $OutDir "hexmag_e2e_smoke.exe"
-$allPass = (Invoke-CertStep -Name "2/6 E2E" `
+$allPass = (Invoke-CertStep -Name "2/7 E2E" `
     -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_e2e_smoke.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeE2E`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
     -RunExe $exeE2E) -and $allPass
 
 $exeCert = Join-Path $OutDir "hexmag_repeat_tuner_cert.exe"
-$allPass = (Invoke-CertStep -Name "3/6 repeat tuner" `
+$allPass = (Invoke-CertStep -Name "3/7 repeat tuner" `
     -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$incAgentic`" /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_repeat_tuner_cert.cpp')`" /Fe:`"$exeCert`" /link /nologo `"$objTuner`" kernel32.lib" `
     -RunExe $exeCert) -and $allPass
 
 $exeNeed = Join-Path $OutDir "hexmag_need_input_cert.exe"
-$allPass = (Invoke-CertStep -Name "4/6 NEED_INPUT" `
+$allPass = (Invoke-CertStep -Name "4/7 NEED_INPUT" `
     -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_need_input_cert.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeNeed`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
     -RunExe $exeNeed) -and $allPass
 
 $exeBind = Join-Path $OutDir "hexmag_oracle_binder_cert.exe"
-$allPass = (Invoke-CertStep -Name "5/6 Oracle binder" `
+$allPass = (Invoke-CertStep -Name "5/7 Oracle binder" `
     -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_oracle_binder_cert.cpp')`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeBind`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
     -RunExe $exeBind) -and $allPass
 
 $exeW0 = Join-Path $OutDir "w0_001_cert.exe"
-$allPass = (Invoke-CertStep -Name "6/6 W0-001" `
+$allPass = (Invoke-CertStep -Name "6/7 W0-001" `
     -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /I `"$inc`" `"$(Join-Path $Root 'tests\w0_001_cert.cpp')`" `"$w0Cpp`" `"$obCpp`" /Fe:`"$exeW0`" /link /nologo kernel32.lib" `
     -RunExe $exeW0 -RunArgs @($fixW0)) -and $allPass
+
+$exeCtrl = Join-Path $OutDir "hexmag_runtime_controller_cert.exe"
+$rcCpp = Join-Path $Root "src\core\hexmag_runtime_controller.cpp"
+$clCpp = Join-Path $Root "src\agent\hexmag_client.cpp"
+$evCtrl = Join-Path $Root "evidence\HEXMAG_RUNTIME_CONTROLLER_001"
+New-Item -ItemType Directory -Force -Path $evCtrl | Out-Null
+$allPass = (Invoke-CertStep -Name "7/7 Runtime controller" `
+    -CompileCmd "cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I `"$inc`" `"$(Join-Path $Root 'tests\hexmag_runtime_controller_cert.cpp')`" `"$rcCpp`" `"$clCpp`" `"$cpCpp`" `"$obCpp`" /Fe:`"$exeCtrl`" /link /nologo `"$obj`" `"$objTuner`" kernel32.lib" `
+    -RunExe $exeCtrl -RunArgs @($evCtrl)) -and $allPass
 
 if (-not $allPass) {
     Write-Host "`nSmoke-HexMagMasm ALL: FAIL" -ForegroundColor Red
