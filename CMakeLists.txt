@@ -6235,6 +6235,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/ui/ExportBridge.cpp
         src/terminal/embedded_terminal.cpp
         # REMOVED: src/win32app/sovereign_gpu_link_stubs.cpp - stub file deleted
+        # HEXMAG_IDE_ROUTE â€” controller + MASM client + FINALIZE_POLICY
+        src/core/hexmag_ide_link_probe.cpp
+        src/win32app/Win32IDE_HexMag.cpp
+        src/core/hexmag_control_plane.cpp
+        src/core/hexmag_oracle_binder.cpp
+        src/core/hexmag_runtime_controller.cpp
+        src/agent/hexmag_client.cpp
     )
 
     set(WIN32IDE_EXTRA_ASM "")
@@ -6244,7 +6251,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             src/asm/RawrXD_PE_Exporter.asm
             src/asm/ghost_text_ranker.asm
             src/asm/diff_engine.asm
+            src/asm/RawrXD_HexMag_Swarm.asm
+            src/asm/RawrXD_HexMag_RepeatTuner.asm
         )
+        message(STATUS "[Win32IDE] HexMag MASM linked (Swarm + RepeatTuner)")
 
         # NOTE: Removed fraudulent GPU sovereign modules
         # These claimed capabilities that are physically impossible:
@@ -13185,7 +13195,7 @@ endif()
 include(cmake/RawrXDSovereignFinish.cmake)
 
 
-# test_v_proj_parity — BATCH2_V_PROJ_001
+# test_v_proj_parity ï¿½ BATCH2_V_PROJ_001
 if(TARGET InferenceEngine)
     add_executable(test_v_proj_parity
         src/deep2/test_v_proj_parity.cpp
