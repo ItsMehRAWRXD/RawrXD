@@ -1,0 +1,302 @@
+﻿diff --git a/src/win32app/Win32IDE_Core.cpp b/src/win32app/Win32IDE_Core.cpp
+index 8af80fc41..d24ea6843 100644
+--- a/src/win32app/Win32IDE_Core.cpp
++++ b/src/win32app/Win32IDE_Core.cpp
+@@ -1279,15 +1279,54 @@ void fileTrace(const char* msg) {
+     fopen_s(&f, "win32ide_trace.log", "a");
+     if (f) {
+         fprintf(f, "%s\n", msg);
++        fflush(f);
+         fclose(f);
+     }
+ }
+ 
++// Reverse-engineered createWindow ladder ΓÇö every gate flushed to disk + stderr.
++namespace {
++char g_reLastGate[256] = "G_NONE";
++char g_reLastDetail[512] = "";
++} // namespace
++
++extern "C" void RawrXD_ReManifest(const char* gate, const char* detail)
++{
++    if (!gate)
++        gate = "G_NULL";
++    if (!detail)
++        detail = "";
++    strncpy_s(g_reLastGate, gate, _TRUNCATE);
++    strncpy_s(g_reLastDetail, detail, _TRUNCATE);
++
++    char line[1024];
++    SYSTEMTIME st{};
++    GetLocalTime(&st);
++    _snprintf_s(line, _TRUNCATE, "%02u:%02u:%02u.%03u pid=%lu %s %s\n",
++                (unsigned)st.wHour, (unsigned)st.wMinute, (unsigned)st.wSecond,
++                (unsigned)st.wMilliseconds, (unsigned long)GetCurrentProcessId(), gate, detail);
++    OutputDebugStringA(line);
++    fputs(line, stderr);
++    fflush(stderr);
++    FILE* f = nullptr;
++    fopen_s(&f, "re_createwindow_ladder.log", "a");
++    if (f) {
++        fputs(line, f);
++        fflush(f);
++        fclose(f);
++    }
++    fileTrace(line);
++}
++
++extern "C" const char* RawrXD_ReManifestLastGate(void) { return g_reLastGate; }
++extern "C" const char* RawrXD_ReManifestLastDetail(void) { return g_reLastDetail; }
++
+ // ============================================================================
+ // createWindow - Register class and create main window
+ // ============================================================================
+ bool Win32IDE::createWindow()
+ {
++    RawrXD_ReManifest("G0_CREATEWINDOW_ENTER", "BEGIN");
+     OutputDebugStringA("RawrXD: [Win32IDE_Core.cpp] createWindow() ENTER\n");
+     fileTrace("[Win32IDE_Core] createWindow() ENTER");
+     
+@@ -1295,13 +1334,16 @@ bool Win32IDE::createWindow()
+     // Enterprise: Load external configuration before window creation
+     // ====================================================================
+     {
++        RawrXD_ReManifest("G1_IDECONFIG_GET", "before");
+         OutputDebugStringA("RawrXD: About to call IDEConfig::getInstance()...\n");
+         fileTrace("[Win32IDE_Core] About to call IDEConfig::getInstance()");
+         auto& config = IDEConfig::getInstance();
+         OutputDebugStringA("RawrXD: IDEConfig::getInstance() returned\n");
+         fileTrace("[Win32IDE_Core] IDEConfig::getInstance() returned");
++        RawrXD_ReManifest("G1_IDECONFIG_GET", "after");
+         // Try workspace config, then user config, then defaults
+         std::string configPath = "rawrxd.config.json";
++        RawrXD_ReManifest("G2_CONFIG_LOAD", configPath.c_str());
+         if (!config.loadFromFile(configPath))
+         {
+             // Try in exe directory
+@@ -1313,16 +1355,21 @@ bool Win32IDE::createWindow()
+             {
+                 exeDir = exeDir.substr(0, lastSlash);
+                 config.loadFromFile(exeDir + "\\rawrxd.config.json");
++                RawrXD_ReManifest("G2_CONFIG_LOAD_EXE_DIR", (exeDir + "\\rawrxd.config.json").c_str());
+             }
+         }
++        RawrXD_ReManifest("G3_ENV_OVERRIDES", "before");
+         // Apply environment variable overrides (RAWRXD_* prefix)
+         config.applyEnvironmentOverrides();
+         // Initialize feature toggles from config
+         config.applyFeatureToggles();
++        RawrXD_ReManifest("G3_ENV_OVERRIDES", "after");
+ 
+         // Apply config to IDE state
+         // Use Deep2 Discovery for backend auto-detection
++        RawrXD_ReManifest("G4_DEEP2_DISCOVERY", "before");
+         auto deep2Backend = Deep2::Deep2Discovery::GetPreferredBackend();
++        RawrXD_ReManifest("G4_DEEP2_DISCOVERY", deep2Backend.native ? "native" : "fallback");
+         if (deep2Backend.native && !deep2Backend.url.empty()) {
+             m_ollamaBaseUrl = deep2Backend.url;
+             fprintf(stderr, "[Win32IDE] Using Deep2 backend: %s\n", m_ollamaBaseUrl.c_str());
+@@ -1337,6 +1384,7 @@ bool Win32IDE::createWindow()
+         m_useVulkanRenderer = config.getBool("performance.vulkanRenderer", false);
+ 
+         // Sync agentic autonomous config (1ΓÇô99x limits, QualitySpeedBalance, operation/model mode)
++        RawrXD_ReManifest("G5_AGENTIC_AUTONOMOUS_CFG", "before");
+         {
+             auto& aac = RawrXD::AgenticAutonomousConfig::instance();
+             aac.setPerModelInstanceCount(config.getInt("agent.perModelInstances", 1));
+@@ -1350,25 +1398,33 @@ bool Win32IDE::createWindow()
+             if (!agenticJson.empty())
+                 aac.fromJson(agenticJson);
+         }
++        RawrXD_ReManifest("G5_AGENTIC_AUTONOMOUS_CFG", "after");
+ 
++        RawrXD_ReManifest("G6_CONFIG_METRICS", "before");
+         LOG_INFO("Configuration loaded ΓÇö " + std::to_string(config.getAllKeys().size()) + " keys");
+         METRICS.increment("config.loads_total");
+         OutputDebugStringA("RawrXD: Configuration loading complete\n");
+         LOG_INFO("[createWindow] Configuration loading complete");
+         fileTrace("[Win32IDE_Core] Configuration loading complete");
++        RawrXD_ReManifest("G6_CONFIG_METRICS", "after");
+     }
++    RawrXD_ReManifest("G7_CONFIG_SCOPE_EXIT", "ok");
+ 
+     // ====================================================================
+     // Initialize Settings Manager for persistent preferences
+     // ====================================================================
+     {
++        RawrXD_ReManifest("G8_SETTINGS_MGR", "before_GetSettings");
+         OutputDebugStringA("RawrXD: Initializing SettingsManager...\n");
+         fileTrace("[Win32IDE_Core] Initializing SettingsManager");
++        RawrXD_ReManifest("G8_SETTINGS_MGR", "before_Initialize");
+         if (RawrXD::GetSettings().Initialize()) {
++            RawrXD_ReManifest("G8_SETTINGS_MGR", "Initialize=true");
+             OutputDebugStringA("RawrXD: SettingsManager initialized\n");
+             LOG_INFO("[createWindow] SettingsManager initialized");
+             
+             // Apply window state from settings
++            RawrXD_ReManifest("G8_SETTINGS_MGR", "before_GetWindowState");
+             auto windowState = RawrXD::GetSettings().GetWindowState();
+             if (windowState.IsValid()) {
+                 // Store for use in window creation
+@@ -1377,14 +1433,20 @@ bool Win32IDE::createWindow()
+                 m_windowWidth = windowState.width;
+                 m_windowHeight = windowState.height;
+                 m_windowMaximized = windowState.maximized;
++                RawrXD_ReManifest("G8_SETTINGS_MGR", "windowState=valid");
++            } else {
++                RawrXD_ReManifest("G8_SETTINGS_MGR", "windowState=invalid");
+             }
+         } else {
++            RawrXD_ReManifest("G8_SETTINGS_MGR", "Initialize=false");
+             OutputDebugStringA("RawrXD: SettingsManager initialization failed\n");
+             LOG_WARNING("[createWindow] SettingsManager initialization failed");
+         }
+     }
++    RawrXD_ReManifest("G9_SETTINGS_SCOPE_EXIT", "ok");
+ 
+     // Load RichEdit libraries ΓÇö need both for RICHEDIT_CLASSA and MSFTEDIT_CLASS
++    RawrXD_ReManifest("G10_RICHED20", "LoadLibraryA");
+     OutputDebugStringA("RawrXD: About to LoadLibraryA(riched20.dll)...\n");
+     LOG_INFO("[createWindow] About to LoadLibraryA(riched20.dll)");
+     fileTrace("[Win32IDE_Core] About to LoadLibraryA(riched20.dll)");
+@@ -1392,6 +1454,8 @@ bool Win32IDE::createWindow()
+     OutputDebugStringA("RawrXD: riched20.dll loaded\n");
+     LOG_INFO("[createWindow] riched20.dll loaded");
+     fileTrace("[Win32IDE_Core] riched20.dll loaded");
++    RawrXD_ReManifest("G10_RICHED20", "ok");
++    RawrXD_ReManifest("G11_MSFTEDIT", "LoadLibraryA");
+     OutputDebugStringA("RawrXD: About to LoadLibraryA(msftedit.dll)...\n");
+     LOG_INFO("[createWindow] About to LoadLibraryA(msftedit.dll)");
+     fileTrace("[Win32IDE_Core] About to LoadLibraryA(msftedit.dll)");
+@@ -1399,10 +1463,12 @@ bool Win32IDE::createWindow()
+     OutputDebugStringA("RawrXD: msftedit.dll loaded\n");
+     LOG_INFO("[createWindow] msftedit.dll loaded");
+     fileTrace("[Win32IDE_Core] msftedit.dll loaded");
++    RawrXD_ReManifest("G11_MSFTEDIT", "ok");
+ 
+     OutputDebugStringA("RawrXD: Setting up WNDCLASSEXA...\n");
+     LOG_INFO("[createWindow] Setting up WNDCLASSEXA");
+     fileTrace("[Win32IDE_Core] Setting up WNDCLASSEXA");
++    RawrXD_ReManifest("G12_WNDCLASS", "setup");
+     WNDCLASSEXA wc = {};
+     wc.cbSize = sizeof(WNDCLASSEXA);
+     wc.style = CS_HREDRAW | CS_VREDRAW;
+@@ -1416,6 +1482,7 @@ bool Win32IDE::createWindow()
+     OutputDebugStringA("RawrXD: About to RegisterClassExA()...\n");
+     LOG_INFO("[createWindow] About to RegisterClassExA()");
+     fileTrace("[Win32IDE_Core] About to RegisterClassExA()");
++    RawrXD_ReManifest("G12_WNDCLASS", "RegisterClassExA");
+ 
+     BOOL regResult = RegisterClassExA(&wc);
+     fileTrace("[Win32IDE_Core] RegisterClassExA() returned");
+@@ -1434,17 +1501,20 @@ bool Win32IDE::createWindow()
+             OutputDebugStringA("RawrXD: RegisterClassExA FAILED\n");
+             LOG_ERROR("[createWindow] RegisterClassExA FAILED");
+             fileTrace("[Win32IDE_Core] RegisterClassExA FAILED");
++            RawrXD_ReManifest("G12_WNDCLASS", "FAILED");
+             return false;
+         }
+         OutputDebugStringA("RawrXD: RegisterClassExA - class already exists (OK)\n");
+         LOG_INFO("[createWindow] RegisterClassExA - class already exists (OK)");
+         fileTrace("[Win32IDE_Core] RegisterClassExA - class already exists (OK)");
++        RawrXD_ReManifest("G12_WNDCLASS", "already_exists");
+     }
+     else
+     {
+         OutputDebugStringA("RawrXD: RegisterClassExA succeeded\n");
+         LOG_INFO("[createWindow] RegisterClassExA succeeded");
+         fileTrace("[Win32IDE_Core] RegisterClassExA succeeded");
++        RawrXD_ReManifest("G12_WNDCLASS", "registered");
+     }
+ 
+     OutputDebugStringA("RawrXD: About to CreateWindowExA()...\n");
+@@ -1454,6 +1524,7 @@ bool Win32IDE::createWindow()
+     int winW = 1600, winH = 1000;
+     int winX = 50, winY = 50;
+     fileTrace("[Win32IDE_Core] Calling MonitorFromPoint");
++    RawrXD_ReManifest("G13_MONITOR", "MonitorFromPoint");
+     HMONITOR hMon = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY);
+     fileTrace("[Win32IDE_Core] MonitorFromPoint returned");
+     MONITORINFO mi = {sizeof(mi)};
+@@ -1467,8 +1538,10 @@ bool Win32IDE::createWindow()
+         winH = (std::min)((int)(r.bottom - r.top) - 100, 1000);
+     }
+     fileTrace("[Win32IDE_Core] GetMonitorInfoA returned");
++    RawrXD_ReManifest("G13_MONITOR", "ok");
+     LOG_INFO("[createWindow] Calling CreateWindowExA...");
+     fileTrace("[Win32IDE_Core] Calling CreateWindowExA...");
++    RawrXD_ReManifest("G14_CREATEWINDOWEX", "before");
+     m_hwndMain =
+         CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD IDE - Native Win32 AI Development Environment",
+                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_VISIBLE, winX, winY, winW, winH, nullptr, nullptr,
+@@ -1487,8 +1560,10 @@ bool Win32IDE::createWindow()
+         LOG_ERROR(errBuf);
+         OutputDebugStringA("RawrXD: CreateWindowExA FAILED\n");
+         LOG_ERROR("[createWindow] CreateWindowExA FAILED");
++        RawrXD_ReManifest("G14_CREATEWINDOWEX", errBuf);
+         return false;
+     }
++    RawrXD_ReManifest("G14_CREATEWINDOWEX", "hwnd_ok");
+     OutputDebugStringA("RawrXD: CreateWindowExA succeeded - window created\n");
+     LOG_INFO("[createWindow] CreateWindowExA succeeded - window created");
+ 
+@@ -1530,6 +1605,7 @@ bool Win32IDE::createWindow()
+ 
+     LOG_INFO("Main window created successfully");
+     OutputDebugStringA("RawrXD: createWindow returning TRUE\n");
++    RawrXD_ReManifest("G16_CREATEWINDOW_RETURN", "TRUE");
+     return true;
+ }
+ 
+diff --git a/src/win32app/main_win32.cpp b/src/win32app/main_win32.cpp
+index ce369d943..e679c2ff1 100644
+--- a/src/win32app/main_win32.cpp
++++ b/src/win32app/main_win32.cpp
+@@ -904,14 +904,27 @@ static EngineManager* s_engine_mgr = nullptr;
+ static CodexUltimate* s_codex = nullptr;
+ 
+ // SEH wrapper for createWindow - must be in separate function without C++ object unwinding
++extern "C" void RawrXD_ReManifest(const char* gate, const char* detail);
++extern "C" const char* RawrXD_ReManifestLastGate(void);
++extern "C" const char* RawrXD_ReManifestLastDetail(void);
++
+ static bool createWindowWithSEH(Win32IDE& ide)
+ {
++    RawrXD_ReManifest("G_SEH_ENTER", "createWindowWithSEH");
+     __try
+     {
+-        return ide.createWindow();
++        const bool ok = ide.createWindow();
++        RawrXD_ReManifest("G_SEH_LEAVE", ok ? "ok=1" : "ok=0");
++        return ok;
+     }
+     __except (EXCEPTION_EXECUTE_HANDLER)
+     {
++        char buf[128];
++        _snprintf_s(buf, _TRUNCATE, "code=0x%08lX last=%s/%s",
++                    (unsigned long)GetExceptionCode(),
++                    RawrXD_ReManifestLastGate(),
++                    RawrXD_ReManifestLastDetail());
++        RawrXD_ReManifest("G_SEH_EXCEPTION", buf);
+         return false;
+     }
+ }
+@@ -2176,7 +2189,17 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
+                 delete s_startupLog;
+                 s_startupLog = nullptr;
+             }
+-            MessageBoxW(nullptr, L"Failed to initialize IDE", L"Error", MB_OK | MB_ICONERROR);
++            MessageBoxW(nullptr,
++                        L"Failed to initialize IDE\n\n"
++                        L"See re_createwindow_ladder.log next to the EXE\n"
++                        L"(last reverse-engineered gate is also on stderr).",
++                        L"Error", MB_OK | MB_ICONERROR);
++            {
++                char last[512];
++                _snprintf_s(last, _TRUNCATE, "abort_phase=%s last_gate=%s detail=%s",
++                            name.c_str(), RawrXD_ReManifestLastGate(), RawrXD_ReManifestLastDetail());
++                RawrXD_ReManifest("G_INIT_ABORT", last);
++            }
+             return 1;
+         }
+         startupTrace(name.c_str(), "phase_done");
