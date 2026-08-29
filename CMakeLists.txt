@@ -1925,6 +1925,26 @@ add_subdirectory(src/ceo)
 # =============================================================================
 add_subdirectory(src/repository)
 
+function(rawrxd_keep_existing_sources inout_var)
+    set(_in "${${inout_var}}")
+    set(_out "")
+    foreach(src IN LISTS _in)
+        if(IS_ABSOLUTE "${src}")
+            set(_path "${src}")
+        else()
+            set(_path "${CMAKE_SOURCE_DIR}/${src}")
+        endif()
+        if(EXISTS "${_path}")
+            list(APPEND _out "${src}")
+        else()
+            message(WARNING "[CMake] Skipping missing source: ${src}")
+        endif()
+    endforeach()
+    set(${inout_var} "${_out}" PARENT_SCOPE)
+endfunction()
+
+rawrxd_keep_existing_sources(RAWR_ENGINE_SOURCES)
+rawrxd_keep_existing_sources(RAWR_ENGINE_ASM_SOURCES)
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
@@ -2220,6 +2240,8 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/link_stubs_gold.cpp
 )
 
+rawrxd_keep_existing_sources(GOLD_UNDERSCORE_SOURCES)
+rawrxd_keep_existing_sources(ASM_KERNEL_SOURCES)
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
 if(WIN32)
@@ -3566,6 +3588,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_VisionEncoder.cpp
         src/win32app/Win32IDE_Themes.cpp
         src/win32app/Win32IDE_StreamingUX.cpp
+        src/win32app/Win32IDE_StreamLoadDiagnostics.cpp
+        src/streamer/LocalStreamReverseParser.cpp
         src/win32app/Win32IDE_Sidebar.cpp
         src/win32app/Win32IDE_Debugger.cpp
         src/win32app/Win32IDE_AutonomousDebugger.cpp
@@ -3734,7 +3758,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/core/spengine_stubs.cpp  # KEPT: Provides asm_apply_memory_patch (not in any batch file)
         # src/core/model_router_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (LoadModel, ModelLoaderInit) and unlinked_symbols_batch_012.cpp (HotSwapModel)
         # src/win32app/Win32IDE_SemanticIndex.cpp  # SKIPPED: File has syntax errors at end
-        src/win32app/Win32IDE_private_stubs.cpp  # KEPT: Stubs for Win32IDE private methods
+        # src/win32app/Win32IDE_private_stubs.cpp  # REMOVED: shadowed native GGUF chat send
         
         # SDMA Phase 1: Coordinator (burst scheduling bridge/thread management)
         src/core/sdma/sdma_coordinator.cpp
@@ -4992,6 +5016,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/engine/Omega1Engine_Server.cpp
     )
 
+    rawrxd_keep_existing_sources(WIN32IDE_SOURCES)
+    rawrxd_keep_existing_sources(WIN32IDE_EXTRA_ASM)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -5937,6 +5963,23 @@ target_include_directories(RawrXD-InferenceRoutingTest PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 message(STATUS "[Test] RawrXD-InferenceRoutingTest target added (validates local vs Ollama routing)")
+
+# From-scratch local stream reverse parser (GGUF + embedded blobs). Portable.
+add_executable(RawrXD-LocalStreamReverseParserTest
+    src/tests/local_stream_reverse_parser_test.cpp
+    src/streamer/LocalStreamReverseParser.cpp
+)
+set_target_properties(RawrXD-LocalStreamReverseParserTest PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    OUTPUT_NAME RawrXD-LocalStreamReverseParserTest
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+)
+target_include_directories(RawrXD-LocalStreamReverseParserTest PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/streamer
+)
+message(STATUS "[Test] RawrXD-LocalStreamReverseParserTest target added (from-scratch GGUF/blob reverse parser)")
 
 # Autonomous Agentic Pipeline unit test (Task 5 — buildable)
 if(WIN32)

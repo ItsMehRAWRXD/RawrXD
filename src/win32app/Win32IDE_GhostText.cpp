@@ -389,40 +389,7 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
                 }
             }
 
-            if (isStale()) return "";
-
-            // ---- Fallback: prediction backend, then native model, then local Ollama prompt ----
-            if (!m_predictionProvider) {
-                std::string baseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
-                m_predictionProvider = std::make_unique<OllamaProvider>(baseUrl);
-
-                PredictionConfig cfg;
-                cfg.model       = getResolvedOllamaModel().empty() ? "qwen2.5-coder:14b" : getResolvedOllamaModel();
-                cfg.temperature = 0.2f;
-                cfg.maxTokens   = 256;
-                cfg.maxLines    = GHOST_TEXT_MAX_LINES;
-                cfg.useFIM      = true;
-                cfg.stopSequences = "<|endoftext|>,<|fim_pad|>,\n\n\n";
-                m_predictionProvider->Configure(cfg);
-            }
-
-            if (m_predictionProvider->IsAvailable()) {
-                PredictionContext ctx;
-                ctx.prefix       = context;
-                ctx.suffix       = suffix;
-                ctx.language     = language;
-                ctx.filePath     = filePath;
-                ctx.cursorLine   = cursorLine;
-                ctx.cursorColumn = cursorCol;
-
-                PredictionResult result = m_predictionProvider->Predict(ctx);
-                if (result.success && !result.completion.empty()) {
-                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
-                    m_ghostTextMetrics.localWins++;
-                    return trimGhostText(result.completion);
-                }
-            }
-
+            // Native local model only — no Ollama HTTP provider.
             if (isStale()) return "";
 
             if (m_nativeEngine && m_nativeEngine->IsModelLoaded()) {
@@ -440,18 +407,6 @@ std::string Win32IDE::requestGhostTextCompletion(const std::string& context,
             }
 
             if (isStale()) return "";
-
-            if (!m_ollamaBaseUrl.empty()) {
-                std::string response;
-                std::string prompt = "Complete the following " + language + " code. "
-                                     "Output ONLY the completion, no explanation, no markdown. "
-                                     "Maximum 3 lines:\n\n" + context;
-                if (trySendToOllama(prompt, response)) {
-                    std::lock_guard<std::mutex> lock(m_ghostTextCacheMutex);
-                    m_ghostTextMetrics.localWins++;
-                    return trimGhostText(response);
-                }
-            }
         }
 
         if (provider == GhostProviderKind::Snippet) {

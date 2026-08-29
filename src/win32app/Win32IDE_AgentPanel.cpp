@@ -513,7 +513,7 @@ void Win32IDE::startAgentSession(const std::string& prompt) {
         AgentLoopConfig config;
         config.maxSteps = std::clamp(IDEConfig::getInstance().getInt("agent.cycleCount", 10), 1, 99);
         // model left empty — auto-detected from Ollama /api/tags at runtime
-        config.ollamaBaseUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
+        config.ollamaBaseUrl.clear();  // Native local inference only — no Ollama HTTP
         config.workingDirectory = m_settings.workingDirectory;
 
         // Populate open files

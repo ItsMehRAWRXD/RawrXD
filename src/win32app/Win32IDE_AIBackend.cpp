@@ -224,18 +224,11 @@ void Win32IDE::initializeAIBackend()
     // We wrap it here to ensure the onAIBackendVerified() handler is also
     // called when the result arrives.
     HWND hwnd = m_hwndMain;
-    std::string endpoint = m_ollamaBaseUrl.empty() ? "http://localhost:11434" : m_ollamaBaseUrl;
-
-    std::thread([hwnd, endpoint]() {
-        ModelConnection conn(endpoint);
-        bool ok = conn.checkConnection();
-
-        // Post result — this triggers WindowProc → onAIBackendVerified()
-        if (hwnd && IsWindow(hwnd))
-        {
-            PostMessage(hwnd, WM_AI_BACKEND_STATUS, ok ? 1 : 0, 0);
-        }
-    }).detach();
+    const bool localReady = (m_nativeEngine && m_nativeEngine->IsModelLoaded());
+    if (hwnd && IsWindow(hwnd))
+    {
+        PostMessage(hwnd, WM_AI_BACKEND_STATUS, localReady ? 1 : 0, 0);
+    }
 
     OutputDebugStringA("[AIBackend] Background verification thread spawned\n");
 }

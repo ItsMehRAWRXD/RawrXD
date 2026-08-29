@@ -20,8 +20,48 @@ StreamingGGUFLoader::~StreamingGGUFLoader() {
     Close();
 }
 
+bool StreamingGGUFLoader::FindEmbeddedGgufMagic(uint64_t& offset) {
+    if (!file_.is_open())
+        return false;
+
+    file_.clear();
+    file_.seekg(0, std::ios::end);
+    const std::streamoff fileSize = file_.tellg();
+    if (fileSize < 4)
+        return false;
+
+    const uint32_t kMagic = GGUFConstants::GGUF_MAGIC;
+    const size_t chunkSize = 1024 * 1024;
+    std::vector<char> buffer(chunkSize + 3);
+    uint64_t position = 0;
+    file_.seekg(0, std::ios::beg);
+
+    while (file_ && static_cast<std::streamoff>(position) < fileSize) {
+        file_.read(buffer.data(), static_cast<std::streamsize>(chunkSize));
+        const std::streamsize bytesRead = file_.gcount();
+        if (bytesRead < 4)
+            break;
+        for (std::streamsize i = 0; i + 4 <= bytesRead; ++i) {
+            uint32_t candidate = 0;
+            std::memcpy(&candidate, buffer.data() + i, sizeof(candidate));
+            if (candidate == kMagic) {
+                offset = position + static_cast<uint64_t>(i);
+                return true;
+            }
+        }
+        if (bytesRead >= 3) {
+            position += static_cast<uint64_t>(bytesRead) - 3;
+            file_.seekg(static_cast<std::streamoff>(position), std::ios::beg);
+        } else {
+            break;
+        }
+    }
+    return false;
+}
+
 bool StreamingGGUFLoader::Open(const std::string& filepath) {
     filepath_ = filepath;
+    gguf_payload_offset_ = 0;
     file_.open(filepath, std::ios::binary);
     if (!file_.is_open()) {
         
@@ -30,10 +70,19 @@ bool StreamingGGUFLoader::Open(const std::string& filepath) {
     
     is_open_ = true;
     
-    // Parse header first
+    // Parse header at offset 0, then reverse-scan the blob for an embedded GGUF.
     if (!ParseHeader()) {
-        Close();
-        return false;
+        uint64_t embedded = 0;
+        if (FindEmbeddedGgufMagic(embedded) && embedded != 0) {
+            gguf_payload_offset_ = embedded;
+            if (!ParseHeader()) {
+                Close();
+                return false;
+            }
+        } else {
+            Close();
+            return false;
+        }
     }
     
     // Parse metadata
@@ -70,7 +119,8 @@ bool StreamingGGUFLoader::Close() {
 bool StreamingGGUFLoader::ParseHeader() {
     if (!file_.is_open()) return false;
     
-    file_.seekg(0);
+    file_.clear();
+    file_.seekg(static_cast<std::streamoff>(gguf_payload_offset_));
     
     // Read magic
     if (!ReadValue(header_.magic)) return false;

@@ -127,6 +127,8 @@ namespace {
 // ============================================================================
 void Win32IDE::fetchOllamaModelsAsync()
 {
+    OutputDebugStringA("[NativeOnly] Ollama /api/tags fetch is disabled. Load a local GGUF or blob.\n");
+    return;
     std::thread([this]() {
         std::string response = HttpRequest("localhost", 11434, OLLAMA_API_TAGS);
         
@@ -400,27 +402,16 @@ void Win32IDE::HandleCopilotSend_Ollama()
         return;
     }
     
-    // PRIORITY 2: Fallback to Ollama (requires external service)
-    appendToOutput("[AUDIT] Chat: FALLING BACK to Ollama (local engine not ready)", "Output", OutputSeverity::Warning);
-    OutputDebugStringA("[AUDIT] Chat: Entering OLLAMA fallback branch\n");
-    sendChatMessageToOllama(userMessage, 
-        [this](const std::string& token, bool complete) {
-            if (!m_hwndCopilotChatOutput) return;
-            
-            if (!token.empty()) {
-                int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                    (LPARAM)utf8ToWide(token).c_str());
-            }
-            
-            if (complete) {
-                int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
-                SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-                SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                    (LPARAM)L"\n\n");
-            }
-        });
+    appendToOutput("[NativeOnly] Chat: no local GGUF/blob loaded. Remote Ollama fallback is disabled.",
+                   "Errors", OutputSeverity::Error);
+    reportMissingLoadArtifacts("model", m_loadedModelPath);
+    const std::string missing =
+        "\n[NativeOnly] Load a local GGUF or blob before sending chat. Remote inference is disabled.\n\n";
+    if (m_hwndCopilotChatOutput) {
+        int outLen = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+        SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, outLen, outLen);
+        SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(missing).c_str());
+    }
 }
 
 // ============================================================================
@@ -437,17 +428,11 @@ void Win32IDE::initializeChatPanelOllama()
             SetWindowTextW(m_hwndStatusBar, L"Local AI: Ready (Native GGUF)");
         }
         
-        // Still fetch Ollama models as fallback option
-        fetchOllamaModelsAsync();
         return;
     }
-    
-    // No local model - try Ollama
-    OutputDebugStringA("[ChatPanel] No local model loaded, checking Ollama...\n");
-    
+
+    OutputDebugStringA("[ChatPanel] No local model loaded. Native-only: no Ollama probe.\n");
     if (m_hwndStatusBar) {
-        SetWindowTextW(m_hwndStatusBar, L"Local AI: No GGUF loaded - checking Ollama...");
+        SetWindowTextW(m_hwndStatusBar, L"Local AI: No GGUF/blob loaded");
     }
-    
-    fetchOllamaModelsAsync();
 }

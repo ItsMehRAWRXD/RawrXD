@@ -1303,15 +1303,9 @@ bool Win32IDE::createWindow()
 
         // Apply config to IDE state
         // Use Deep2 Discovery for backend auto-detection
-        auto deep2Backend = Deep2::Deep2Discovery::GetPreferredBackend();
-        if (deep2Backend.native && !deep2Backend.url.empty()) {
-            m_ollamaBaseUrl = deep2Backend.url;
-            fprintf(stderr, "[Win32IDE] Using Deep2 backend: %s\n", m_ollamaBaseUrl.c_str());
-        } else {
-            m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
-            fprintf(stderr, "[Win32IDE] Deep2 not available, using Ollama fallback: %s\n", m_ollamaBaseUrl.c_str());
-        }
-        m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
+        m_ollamaBaseUrl.clear();
+        m_ollamaModelOverride.clear();
+        fprintf(stderr, "[Win32IDE] Inference is local GGUF/blob streamer only (no Ollama/cloud fallback)\n");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
         m_gpuTextEnabled = config.getBool("performance.gpuTextRendering", true);
         m_useStreamingLoader = config.getBool("performance.streamingGGUFLoad", true);
@@ -2055,68 +2049,9 @@ std::string Win32IDE::getResolvedOllamaModel() const
 // ============================================================================
 bool Win32IDE::trySendToOllama(const std::string& prompt, std::string& outResponse)
 {
-    try
-    {
-        // Use discovered backend URL (already resolved by Deep2 Discovery)
-        std::string backendUrl = m_ollamaBaseUrl.empty() ? "http://localhost:11436" : m_ollamaBaseUrl;
-        ModelConnection conn(backendUrl);
-
-        if (!conn.checkConnection())
-        {
-            return false;
-        }
-
-        std::string modelTag = getResolvedOllamaModel();
-
-        // Synchronous send for simplicity — uses sendPrompt internally
-        bool gotResponse = false;
-        std::string responseText;
-        std::mutex mtx;
-        std::condition_variable cv;
-
-        conn.sendPrompt(
-            modelTag, prompt, {},
-            [&](const std::string& token)
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                responseText += token;
-            },
-            [&](const std::string& error)
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                responseText = "[Error] " + error;
-                gotResponse = true;
-                cv.notify_one();
-            },
-            [&]()
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                gotResponse = true;
-                cv.notify_one();
-            });
-
-        // Wait up to 60 seconds
-        std::unique_lock<std::mutex> lock(mtx);
-        cv.wait_for(lock, std::chrono::seconds(60), [&]() { return gotResponse; });
-
-        if (!responseText.empty())
-        {
-            outResponse = responseText;
-            return true;
-        }
-
-        return false;
-    }
-    catch (const std::exception& e)
-    {
-        outResponse = std::string("[Error] ") + e.what();
-        return false;
-    }
-    catch (...)
-    {
-        outResponse = "[Error] Unknown exception in Ollama communication";
-        return false;
-    }
+    (void)prompt;
+    outResponse = "[NativeOnly] External inference is disabled. Load a local GGUF or blob via File > Load Model.";
+    return false;
 }
 
 // ============================================================================
@@ -2703,6 +2638,8 @@ void Win32IDE::deferredHeavyInitBody()
         m_nativeEngineLoaded = false;
         OutputDebugStringA("ERROR: CPUInferenceEngine init failed\n");
     }
+    if (!isShuttingDown())
+        ensureStreamingGgufLoader();
     if (isShuttingDown())
         return;
 

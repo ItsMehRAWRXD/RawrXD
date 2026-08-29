@@ -300,6 +300,8 @@ class Win32IDE
     static DWORD WINAPI VisibilityWatchdogThread(LPVOID param);
     void openModel();
     bool loadModelForInference(const std::string& filepath);
+    bool ensureStreamingGgufLoader();
+    void reportMissingLoadArtifacts(const std::string& kind, const std::string& path);
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
