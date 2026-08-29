@@ -1,13 +1,15 @@
 ﻿NEXT_CERT todos (live)
 ======================
 HEXMAG (FROZEN) — do not touch unless regression
+GBS / P1     — independent tracks; unchanged by Deep2 certs
 
 PARITY
-  DONE: L0..L8 tip floor; FIRST_LAYER_ABOVE_FLOOR=L10
-  DONE: L10_GATE_SAME_OPERAND — GEMV CLOSED
-  DONE: L10_FFN_INP_SAME_SOURCE — FFN_GATE_10 INHERITED
-        ATTN_OUT PASS; FFN_INP abs 4.58e-5; RESID_IN=INP-ATTN carries it;
-        same-weight RMSNorm faithful; GEMV closed under frozen NORM
-  NEXT: TODO_L10_RESID_IN_LOCALIZE (L9→L10 entry / residual-in)
-  THEN: TODO_RESUME_TIPS_AFTER_L10
-  DO_NOT_REOPEN: SiLU / wo / <=L1 / L2..L8 floor / L10 GEMV / HexMag
+  DONE: L10_FFN_INP_SAME_SOURCE (7ee02e8b3) — GATE inherited from RESID_IN
+  DONE: L10_OUT_RESCORE — L10_OUT INHERITED_FROM_FFN_DOWN
+        body_recon max_abs=5.83e-5 ≈ FFN_DOWN 5.81e-5
+  NEXT: TODO_SPARSE_GROWTH_L11_L12
+        L11 1.07e-4 amp → L12 4.64e-4 amp → L16/L21 strong growth
+        classify inherited | amplification | native at each boundary
+  THEN: tip-aligned FINAL_NORM → LOGITS (deep2 LOGITS currently pos3)
+  DEFERRED: RESID_IN L9 entry localize (optional; not blocking sparse advance)
+  DO_NOT_REOPEN: L10 GEMV / GATE-as-root / SiLU / HexMag / GBS / P1

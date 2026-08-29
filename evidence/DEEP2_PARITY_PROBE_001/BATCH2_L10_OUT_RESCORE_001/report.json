@@ -1,0 +1,152 @@
+{
+  "prereq": "7ee02e8b3",
+  "l10_body": {
+    "FFN_INP_10": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.159046173095703e-06,
+      "first": 14,
+      "largest": 624,
+      "class": null,
+      "note": "certified FIRST_ABS_FAIL / RESID_IN carrier"
+    },
+    "FFN_GATE_10": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 3.5997480154037476e-05,
+      "max_rel": 3.5997480154037476e-05,
+      "first": 0,
+      "largest": 4741,
+      "class": "inherited",
+      "note": "INHERITED (not root); GEMV CLOSED"
+    },
+    "FFN_DOWN_10": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 5.810242146253586e-05,
+      "max_rel": 5.810242146253586e-05,
+      "first": 0,
+      "largest": 1198,
+      "class": "amplification",
+      "note": "post-SwiGLU down proj"
+    },
+    "L10_OUT_body": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 5.828123539686203e-05,
+      "max_rel": 5.828123539686203e-05,
+      "first": 0,
+      "largest": 1198,
+      "class": "inherited",
+      "note": "same-run recon from body FFN_INP+FFN_DOWN"
+    },
+    "L10_OUT_tip": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 5.829334259033203e-05,
+      "max_rel": 5.829334259033203e-05,
+      "first": 0,
+      "largest": 1198,
+      "class": "amplification",
+      "note": "sparse_clean deep2 vs expand llama (EXPAND_V family)"
+    },
+    "L10_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 5.829334259033203e-05,
+      "max_rel": 5.829334259033203e-05,
+      "first": 0,
+      "largest": 1198,
+      "class": "amplification",
+      "note": "layer=10"
+    }
+  },
+  "sparse_tips": {
+    "L8_OUT": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1515955924987793e-06,
+      "first": 14,
+      "largest": 624,
+      "class": "inherited",
+      "note": "layer=8"
+    },
+    "L9_OUT": {
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.166496753692627e-06,
+      "first": 14,
+      "largest": 624,
+      "class": "inherited",
+      "note": "layer=9"
+    },
+    "L11_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.00010654330253601074,
+      "max_rel": 0.00010654330253601074,
+      "first": 0,
+      "largest": 503,
+      "class": "amplification",
+      "note": "layer=11"
+    },
+    "L12_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.0004634857177734375,
+      "max_rel": 0.0004547238349914551,
+      "first": 0,
+      "largest": 1454,
+      "class": "amplification",
+      "note": "layer=12"
+    },
+    "L16_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.002761363983154297,
+      "max_rel": 0.002670109272003174,
+      "first": 0,
+      "largest": 1454,
+      "class": "amplification_strong",
+      "note": "layer=16"
+    },
+    "L21_OUT": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 19.8170006275177,
+      "max_rel": 1.8347565470618483,
+      "first": 0,
+      "largest": 1709,
+      "class": "amplification_strong",
+      "note": "layer=21"
+    },
+    "FINAL_NORM": {
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 29.807189464569092,
+      "max_rel": 1.9897614263156087,
+      "first": 0,
+      "largest": 1278,
+      "class": "amplification",
+      "note": "layer=99"
+    }
+  },
+  "classes": {
+    "FFN_GATE_10": "inherited",
+    "FFN_DOWN_10": "amplification",
+    "L10_OUT_body": "inherited",
+    "L10_OUT_tip": "amplification",
+    "L8_OUT": "inherited",
+    "L9_OUT": "inherited",
+    "L10_OUT": "amplification",
+    "L11_OUT": "amplification",
+    "L12_OUT": "amplification",
+    "L16_OUT": "amplification_strong",
+    "L21_OUT": "amplification_strong",
+    "FINAL_NORM": "amplification"
+  },
+  "verdict_l10_out": "INHERITED_FROM_FFN_DOWN"
+}

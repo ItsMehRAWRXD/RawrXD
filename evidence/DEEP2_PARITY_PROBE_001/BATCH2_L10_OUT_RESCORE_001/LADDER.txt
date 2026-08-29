@@ -1,0 +1,40 @@
+BATCH2_L10_OUT_RESCORE_001
+prereq=7ee02e8b3 L10_FFN_INP_SAME_SOURCE PASS; GATE inherited from RESID_IN
+do_not_reopen=L10 GEMV / FFN_GATE root / SiLU / HexMag
+dual: PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6); INSPECT if abs<=1e-4 AND rel<=5e-6
+
+FFN_INP_10   abs=FAIL    dual=INSPECT tip=INSPECT    max_abs=4.577637e-05 max_rel=3.159046e-06 first=14 largest=624  # certified FIRST_ABS_FAIL / RESID_IN carrier
+FFN_GATE_10  abs=FAIL    dual=FAIL    tip=FAIL       max_abs=3.599748e-05 max_rel=3.599748e-05 first=0 largest=4741 class=inherited  # INHERITED (not root); GEMV CLOSED
+FFN_DOWN_10  abs=FAIL    dual=FAIL    tip=FAIL       max_abs=5.810242e-05 max_rel=5.810242e-05 first=0 largest=1198 class=amplification  # post-SwiGLU down proj
+RECON_d==L10 abs=INSPECT dual=PASS    max_abs=6.742775e-06  # Deep2 POST residual identity
+RECON_d==POST abs=INSPECT dual=PASS    max_abs=6.742775e-06
+L10_OUT_body abs=FAIL    dual=FAIL    tip=FAIL       max_abs=5.828124e-05 max_rel=5.828124e-05 first=0 largest=1198 class=inherited  # same-run recon from body FFN_INP+FFN_DOWN
+L10_OUT_tip  abs=FAIL    dual=FAIL    tip=FAIL       max_abs=5.829334e-05 max_rel=5.829334e-05 first=0 largest=1198 class=amplification  # sparse_clean deep2 vs expand llama (EXPAND_V family)
+
+SPARSE LADDER (certified L10 context — do not reopen L10 predicates)
+L8_OUT       abs=FAIL    dual=INSPECT tip=PASS_FLOOR max_abs=4.577637e-05 max_rel=3.151596e-06 first=14 largest=624 class=inherited  # layer=8
+L9_OUT       abs=FAIL    dual=INSPECT tip=INSPECT    max_abs=4.577637e-05 max_rel=3.166497e-06 first=14 largest=624 class=inherited  # layer=9
+L10_OUT      abs=FAIL    dual=FAIL    tip=FAIL       max_abs=5.829334e-05 max_rel=5.829334e-05 first=0 largest=1198 class=amplification  # layer=10
+L11_OUT      abs=FAIL    dual=FAIL    tip=FAIL       max_abs=1.065433e-04 max_rel=1.065433e-04 first=0 largest=503 class=amplification  # layer=11
+L12_OUT      abs=FAIL    dual=FAIL    tip=FAIL       max_abs=4.634857e-04 max_rel=4.547238e-04 first=0 largest=1454 class=amplification  # layer=12
+L16_OUT      abs=FAIL    dual=FAIL    tip=FAIL       max_abs=2.761364e-03 max_rel=2.670109e-03 first=0 largest=1454 class=amplification_strong  # layer=16
+L21_OUT      abs=FAIL    dual=FAIL    tip=FAIL       max_abs=1.981700e+01 max_rel=1.834757e+00 first=0 largest=1709 class=amplification_strong  # layer=21
+FINAL_NORM   abs=FAIL    dual=FAIL    tip=FAIL       max_abs=2.980719e+01 max_rel=1.989761e+00 first=0 largest=1278 class=amplification  # layer=99
+LOGITS       SKIP missing d=False l=True
+
+CLASSIFICATION SUMMARY
+  L10_OUT_body class=inherited max_abs=5.828124e-05
+  vs FFN_DOWN max_abs=5.810242e-05 ratio=1.003
+  vs FFN_INP  max_abs=4.577637e-05 ratio=1.273
+  L10_OUT ≈ FFN_DOWN (residual add of INP): inherited from DOWN/GATE chain
+  VERDICT_L10_OUT=INHERITED_FROM_FFN_DOWN (nearly identical error footprint)
+  L11_OUT class=amplification dual=FAIL
+  L12_OUT class=amplification dual=FAIL
+  L16_OUT class=amplification_strong dual=FAIL
+  L21_OUT class=amplification_strong dual=FAIL
+  FINAL_NORM class=amplification dual=FAIL
+
+NEXT
+  Active tip after certified L10: L11_OUT
+  Keep L10 predicates closed; attribute further growth as inherited/amplification/native
+  GBS/P1: independent — unchanged by this cert

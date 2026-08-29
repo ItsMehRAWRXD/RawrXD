@@ -1,0 +1,29 @@
+BATCH2_L10_OUT_RESCORE_001
+============================================================
+date=2026-08-29
+cert_commit=7ee02e8b3 L10_FFN_INP_SAME_SOURCE
+branch_tip_at_run=2f4bd3ec0
+
+L10_OUT (certified-state re-score)
+----------------------------------
+  body_recon (FFN_INP+FFN_DOWN) dual=FAIL max_abs=5.828e-05
+  FFN_DOWN                      dual=FAIL max_abs=5.810e-05
+  FFN_INP                       max_abs=4.578e-05 (certified carrier)
+  class=INHERITED_FROM_FFN_DOWN
+  residual add does not invent a new root (error footprint matches DOWN)
+
+SPARSE continuation (L10 predicates closed)
+-------------------------------------------
+  L8_OUT       dual=INSPECT max_abs=4.578e-05 class=inherited (floor)
+  L9_OUT       dual=INSPECT max_abs=4.578e-05 class=inherited (at floor)
+  L10_OUT tip  dual=FAIL    max_abs=5.829e-05 class=INHERITED_FROM_FFN_DOWN
+  L11_OUT      dual=FAIL    max_abs=1.065e-04 class=amplification
+  L12_OUT      dual=FAIL    max_abs=4.635e-04 class=amplification
+  L16_OUT      dual=FAIL    max_abs=2.761e-03 class=amplification_strong
+  L21_OUT      dual=FAIL    max_abs=1.982e+01 class=amplification_strong
+  FINAL_NORM   dual=FAIL    max_abs=2.981e+01 class=amplification
+  LOGITS       SKIP tip-align (deep2 pos3 vs llama pos0)
+
+VERDICT_L10_OUT=INHERITED_FROM_FFN_DOWN
+DO_NOT_reopen=L10 GEMV / GATE-as-root / SiLU / HexMag / GBS / P1
+NEXT=SPARSE_GROWTH at L11→L12 with class tags; then tip-aligned LOGITS

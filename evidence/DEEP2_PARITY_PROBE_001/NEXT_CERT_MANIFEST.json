@@ -2,68 +2,52 @@
   "manifest": "NEXT_CERT_MANIFEST",
   "date": "2026-08-29",
   "ids": [1, 21521, 9312],
-  "authority": "RAWRXD_FORCE_PRE_O_EXPAND_V + RAWRXD_FORCE_FFN_NORM_BIN",
-  "publish": {
-    "closure-origin": "GOOD",
-    "rawrxd-gh": "PUBLISH_MIRROR_DEGRADED"
-  },
+  "cert_commit_l10_ffn_inp": "7ee02e8b3",
+  "branch_tip_at_authoring": "2f4bd3ec0",
+  "authority": "RAWRXD_FORCE_PRE_O_EXPAND_V",
+  "independent_tracks": ["GBS", "P1_GGUF_streaming"],
   "do_not_reopen": [
     "tokenizer / Track A/B / L0 / L1 / wo",
     "Deep2Engine::SwiGLU (exact at L2 and L10)",
     "L2_OUT abs-FAIL as SiLU defect (GATE ULP amp; dual INSPECT)",
     "L10 attn (NORM/OUT PASS)",
     "L10 ffn_gate / ffn_up GEMV (same-operand CLOSED)",
-    "HexMag control-plane / IDE route"
+    "L10 FFN_GATE as native root (INHERITED from RESID_IN)",
+    "HexMag control-plane / IDE route",
+    "GBS / P1 product-path status (independent)"
   ],
   "closed": [
     "L2_OUT_LOC dual (CLASS=GATE_ULP_AMPLIFIED_THROUGH_SWIGLU)",
     "SPARSE_TIPS_DUAL through L8 (INSPECT)",
     "L8_L12 expand → FIRST_DUAL_FAIL=L10_OUT",
     "L10 ATTN path PASS; SiLU PASS",
-    "L10_GATE_SAME_OPERAND: GEMV CLOSED vs Q8_K scalar + llama FORCE",
-    "L10_FFN_INP_SAME_SOURCE: FFN_GATE_10 INHERITED from FFN_INP/RESID_IN"
+    "L10_GATE_SAME_OPERAND: GEMV CLOSED",
+    "L10_FFN_INP_SAME_SOURCE: FFN_GATE_10 INHERITED from FFN_INP/RESID_IN",
+    "L10_OUT_RESCORE: L10_OUT INHERITED_FROM_FFN_DOWN (matches DOWN footprint)"
   ],
   "active": {
-    "id": "RESID_IN_L10",
+    "id": "SPARSE_GROWTH_POST_L10",
     "status": "NEXT",
-    "max_abs_ffn_inp": 4.578e-5,
-    "class": "FFN_INP_10 - ATTN_OUT_10 residual-in carries upstream ULP; GATE not root",
-    "evidence": "BATCH2_L10_FFN_INP_SAME_SOURCE/GATE.txt"
+    "first_post_l10": "L11_OUT",
+    "L10_OUT": {"max_abs": 5.828e-5, "class": "INHERITED_FROM_FFN_DOWN"},
+    "L12_OUT": {"max_abs": 4.635e-4, "class": "amplification"},
+    "evidence": "BATCH2_L10_OUT_RESCORE_001/GATE.txt"
   },
   "todos_ordered": [
-    {"seq": 1, "id": "L2_OUT_LOC", "status": "DONE"},
-    {"seq": 2, "id": "SPARSE_DUAL_TIPS", "status": "DONE"},
-    {"seq": 3, "id": "EXPAND_L8_L12", "status": "DONE", "result": "FIRST_DUAL_FAIL=L10_OUT"},
-    {"seq": 4, "id": "L10_BODY", "status": "DONE", "result": "FIRST_DUAL_FAIL=FFN_GATE_10; SiLU CLOSED"},
-    {"seq": 5, "id": "TODO_L10_GATE_SAME_OPERAND", "status": "DONE", "result": "GEMV CLOSED"},
-    {
-      "seq": 6,
-      "id": "TODO_L10_FFN_INP_SAME_SOURCE",
-      "status": "DONE",
-      "result": "FFN_GATE_10_INHERITED; RESID_IN=FFN_INP-ATTN_OUT carries 4.58e-5; RMSNorm faithful; GEMV closed"
-    },
-    {
-      "seq": 7,
-      "id": "TODO_L10_RESID_IN_LOCALIZE",
-      "status": "NEXT",
-      "action": "Localize FFN_INP residual-in vs L9_OUT / layer entry; then resume sparse tips L10_OUT→L12→…→LOGITS"
-    },
-    {
-      "seq": 8,
-      "id": "TODO_RESUME_TIPS_AFTER_L10",
-      "status": "PENDING",
-      "action": "After RESID_IN closed: re-score L10_OUT→L12→…→FINAL_NORM→LOGITS→ARGMAX under dual gate"
-    }
+    {"seq": 6, "id": "TODO_L10_FFN_INP_SAME_SOURCE", "status": "DONE", "result": "GATE inherited from RESID_IN"},
+    {"seq": 7, "id": "TODO_L10_OUT_RESCORE", "status": "DONE", "result": "L10_OUT INHERITED_FROM_FFN_DOWN; residual add does not invent new root"},
+    {"seq": 8, "id": "TODO_SPARSE_GROWTH_L11_L12", "status": "NEXT", "action": "Classify L11/L12 growth as inherited vs amplification vs native; do not reopen L10"},
+    {"seq": 9, "id": "TODO_FINAL_NORM_LOGITS", "status": "PENDING", "action": "Tip-align LOGITS pos0 (deep2 currently pos3); score FINAL_NORM→LOGITS→ARGMAX"},
+    {"seq": 10, "id": "TODO_L10_RESID_IN_LOCALIZE", "status": "DEFERRED", "action": "Optional: L9→L10 entry localization — not required to advance sparse ladder"}
   ],
   "dual_gate_policy": {
     "PASS": "abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6)",
     "INSPECT": "abs<=1e-4 AND rel<=5e-6",
     "FAIL": "else"
   },
-  "tooling": {
-    "l10_ffn_inp_same_source": "src/deep2/test_l10_ffn_inp_same_source.cpp",
-    "l10_gate_same_operand": "src/deep2/test_l10_gate_same_operand.cpp",
-    "llama_force_ffn_inp": "RAWRXD_FORCE_FFN_INP_BIN / RAWRXD_FORCE_FFN_INP_LAYER",
-    "llama_force_ffn_norm": "RAWRXD_FORCE_FFN_NORM_BIN / RAWRXD_FORCE_FFN_NORM_LAYER"
+  "error_class_policy": {
+    "inherited": "input discrepancy quantitatively explains output (ratio≲1.25 or matching footprint)",
+    "amplification": "operation magnifies inherited ULP/error",
+    "native": "same inputs still produce material output divergence"
   }
 }
