@@ -5,10 +5,27 @@ cmake_minimum_required(VERSION 3.20)
 option(RAWR_ENABLE_VULKAN "Enable Vulkan SDK for GPU compute (dual GPU testing)" ON)
 
 # Force Windows SDK version BEFORE any project() or compiler checks
-# This MUST be set before project() to affect the VS generator
+# This MUST be set before project() to affect the VS generator.
+# Prefer an installed kit (26100 then 22621) so P1 hosts without 22621 still configure.
 if(WIN32)
-    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version for VS generator" FORCE)
-    set(CMAKE_SYSTEM_VERSION "10.0.22621.0" CACHE STRING "Windows SDK version" FORCE)
+    if(EXISTS "D:/Program Files (x86)/Windows Kits/10")
+        set(_RAWR_WIN10_SDK_ROOT_EARLY "D:/Program Files (x86)/Windows Kits/10")
+    else()
+        set(_RAWR_WIN10_SDK_ROOT_EARLY "C:/Program Files (x86)/Windows Kits/10")
+    endif()
+    set(_RAWR_SDK_VER "")
+    foreach(_RAWR_SDK_CANDIDATE "10.0.26100.0" "10.0.22621.0")
+        if(EXISTS "${_RAWR_WIN10_SDK_ROOT_EARLY}/Include/${_RAWR_SDK_CANDIDATE}/um/windows.h")
+            set(_RAWR_SDK_VER "${_RAWR_SDK_CANDIDATE}")
+            break()
+        endif()
+    endforeach()
+    if(NOT _RAWR_SDK_VER)
+        set(_RAWR_SDK_VER "10.0.22621.0")
+    endif()
+    set(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION "${_RAWR_SDK_VER}" CACHE STRING "Windows SDK version for VS generator" FORCE)
+    set(CMAKE_SYSTEM_VERSION "${_RAWR_SDK_VER}" CACHE STRING "Windows SDK version" FORCE)
+    message(STATUS "[SDK] Target platform version: ${_RAWR_SDK_VER}")
 endif()
 
 # =============================================================================
@@ -27,17 +44,21 @@ if(WIN32 AND NOT DEFINED ENV{VSCMD_ARG_TGT_ARCH})
     else()
         set(_WIN10_SDK_ROOT "C:/Program Files (x86)/Windows Kits/10")
     endif()
-    set(_SDK_UCRT_VER "10.0.22621.0")    # Has ucrt
-    
-    # Force use of 22621.0 since 26100.0 is not registered properly for MSBuild
+    set(_SDK_UCRT_VER "10.0.22621.0")    # Preferred when present (partial-kit hosts)
     set(_SDK_UM_VER "10.0.22621.0")
-    
-    # Fallback: if 10.0.26100.0 doesn't exist for um, try 10.0.22621.0 for everything
+
+    # Prefer newest complete kit when preferred version is absent (P1 hosts often have 26100 only).
     if(NOT EXISTS "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um/windows.h")
-        set(_SDK_UM_VER "${_SDK_UCRT_VER}")
+        if(EXISTS "${_WIN10_SDK_ROOT}/Include/10.0.26100.0/um/windows.h")
+            set(_SDK_UM_VER "10.0.26100.0")
+            set(_SDK_UCRT_VER "10.0.26100.0")
+        endif()
     endif()
     if(NOT EXISTS "${_WIN10_SDK_ROOT}/Include/${_SDK_UCRT_VER}/ucrt")
         set(_SDK_UCRT_VER "${_SDK_UM_VER}")
+    endif()
+    if(NOT EXISTS "${_WIN10_SDK_ROOT}/Include/${_SDK_UM_VER}/um/windows.h")
+        set(_SDK_UM_VER "${_SDK_UCRT_VER}")
     endif()
 
     # Auto-detect MSVC toolchain: try D: first, fall back to C:
@@ -5053,48 +5074,93 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         )
     endif()
 
-    # P1: do not resurrect missing historical units — skip absent paths so
-    # RawrXD-Win32IDE can configure/link on canonical main without inventing files.
-    # Inventory entries remain in CMakeLists; absent files are reported and omitted.
-    set(_RAWRXD_WIN32IDE_SOURCES_PRESENT "")
-    set(_RAWRXD_WIN32IDE_SOURCES_MISSING "")
-    foreach(_rawrxd_src IN LISTS WIN32IDE_SOURCES)
-        if(IS_ABSOLUTE "${_rawrxd_src}")
-            set(_rawrxd_src_path "${_rawrxd_src}")
-        else()
-            set(_rawrxd_src_path "${CMAKE_CURRENT_SOURCE_DIR}/${_rawrxd_src}")
-        endif()
-        if(EXISTS "${_rawrxd_src_path}")
-            list(APPEND _RAWRXD_WIN32IDE_SOURCES_PRESENT "${_rawrxd_src}")
-        else()
-            list(APPEND _RAWRXD_WIN32IDE_SOURCES_MISSING "${_rawrxd_src}")
+    # P1: required HexMag promote units — never silently filtered.
+    set(_P1_REQUIRED_HEXMAG
+        src/win32app/Win32IDE_HexMag.cpp
+        src/core/hexmag_control_plane.cpp
+        src/core/hexmag_oracle_binder.cpp
+        src/core/hexmag_runtime_controller.cpp
+        src/core/hexmag_ide_link_probe.cpp
+        src/agent/hexmag_client.cpp
+    )
+    foreach(_src IN LISTS _P1_REQUIRED_HEXMAG)
+        if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_src}")
+            message(FATAL_ERROR
+                "[P1][HexMag] Required promoted source missing: ${_src}")
         endif()
     endforeach()
-    list(LENGTH _RAWRXD_WIN32IDE_SOURCES_MISSING _rawrxd_missing_n)
-    if(_rawrxd_missing_n GREATER 0)
-        message(STATUS "[P1] Omitting ${_rawrxd_missing_n} missing Win32IDE source path(s) (inventory retained, files not resurrected)")
-        foreach(_miss IN LISTS _RAWRXD_WIN32IDE_SOURCES_MISSING)
-            message(STATUS "[P1]   missing: ${_miss}")
+    if(RAWR_HAS_MASM)
+        foreach(_asm IN ITEMS
+            src/asm/RawrXD_HexMag_Swarm.asm
+            src/asm/RawrXD_HexMag_RepeatTuner.asm)
+            if(NOT EXISTS "${CMAKE_SOURCE_DIR}/${_asm}")
+                message(FATAL_ERROR
+                    "[P1][HexMag] Required promoted ASM missing: ${_asm}")
+            endif()
         endforeach()
     endif()
-    set(WIN32IDE_SOURCES ${_RAWRXD_WIN32IDE_SOURCES_PRESENT})
 
-    set(_RAWRXD_WIN32IDE_ASM_PRESENT "")
+    # P1: canonical Win32IDE inventory hygiene.
+    # Do not resurrect stale source entries merely to satisfy CMake configure.
+    # Successful configure after filtering does NOT prove missing TUs are harmless —
+    # the linker is the next authority for required symbols/providers.
+    set(_P1_WIN32IDE_PRESENT "")
+    set(_P1_WIN32IDE_MISSING "")
+
+    foreach(_src IN LISTS WIN32IDE_SOURCES)
+        if(IS_ABSOLUTE "${_src}")
+            set(_probe "${_src}")
+        else()
+            set(_probe "${CMAKE_SOURCE_DIR}/${_src}")
+        endif()
+
+        if(EXISTS "${_probe}")
+            list(APPEND _P1_WIN32IDE_PRESENT "${_src}")
+        else()
+            list(APPEND _P1_WIN32IDE_MISSING "${_src}")
+            message(STATUS "[P1][Win32IDE][SKIP_MISSING] ${_src}")
+        endif()
+    endforeach()
+
+    set(WIN32IDE_SOURCES "${_P1_WIN32IDE_PRESENT}")
+
+    list(LENGTH WIN32IDE_SOURCES P1_WIN32IDE_PRESENT_COUNT)
+    list(LENGTH _P1_WIN32IDE_MISSING P1_WIN32IDE_MISSING_COUNT)
+
+    message(STATUS
+        "[P1][Win32IDE] present=${P1_WIN32IDE_PRESENT_COUNT} "
+        "missing=${P1_WIN32IDE_MISSING_COUNT}")
+
+    string(JOIN "\n"
+        _P1_WIN32IDE_MISSING_TEXT
+        ${_P1_WIN32IDE_MISSING})
+
+    file(WRITE
+        "${CMAKE_BINARY_DIR}/P1_WIN32IDE_MISSING_SOURCES.txt"
+        "P1_WIN32IDE_SOURCE_FILTER\n"
+        "=========================\n"
+        "present=${P1_WIN32IDE_PRESENT_COUNT}\n"
+        "missing=${P1_WIN32IDE_MISSING_COUNT}\n\n"
+        "MISSING\n"
+        "-------\n"
+        "${_P1_WIN32IDE_MISSING_TEXT}\n")
+
+    # Present-only ASM graph (HexMag ASM already fail-closed above when MASM on).
+    set(_P1_WIN32IDE_ASM_PRESENT "")
     foreach(_rawrxd_asm IN LISTS ASM_KERNEL_SOURCES WIN32IDE_EXTRA_ASM)
         if(IS_ABSOLUTE "${_rawrxd_asm}")
             set(_rawrxd_asm_path "${_rawrxd_asm}")
         else()
-            set(_rawrxd_asm_path "${CMAKE_CURRENT_SOURCE_DIR}/${_rawrxd_asm}")
+            set(_rawrxd_asm_path "${CMAKE_SOURCE_DIR}/${_rawrxd_asm}")
         endif()
         if(EXISTS "${_rawrxd_asm_path}")
-            list(APPEND _RAWRXD_WIN32IDE_ASM_PRESENT "${_rawrxd_asm}")
+            list(APPEND _P1_WIN32IDE_ASM_PRESENT "${_rawrxd_asm}")
         else()
-            message(STATUS "[P1]   missing asm: ${_rawrxd_asm}")
+            message(STATUS "[P1][Win32IDE][SKIP_MISSING_ASM] ${_rawrxd_asm}")
         endif()
     endforeach()
-    # Rebuild ASM lists from present-only (WIN32IDE_EXTRA_ASM may duplicate ASM_KERNEL entries)
     set(ASM_KERNEL_SOURCES "")
-    set(WIN32IDE_EXTRA_ASM ${_RAWRXD_WIN32IDE_ASM_PRESENT})
+    set(WIN32IDE_EXTRA_ASM ${_P1_WIN32IDE_ASM_PRESENT})
 
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
