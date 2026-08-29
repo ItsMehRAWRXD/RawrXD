@@ -1,0 +1,81 @@
+1788035408022 WinMain start
+1788035408022 heap_snapshot [main_win32][heap] stage=startup_log_initialized processHeap=00000000009E0000 heapValid=1 pid=18208
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[0] addr=00000000009E0750 size=136 overhead=8
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[1] addr=00000000009E07E0 size=80 overhead=16
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[2] addr=00000000009E0840 size=24 overhead=8
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[3] addr=00000000009E0860 size=48 overhead=16
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[4] addr=00000000009E08A0 size=4096 overhead=16
+
+1788035408022 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[5] addr=00000000009E18B0 size=88 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[6] addr=00000000009E1910 size=360 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=startup_log_initialized busy[7] addr=00000000009E1A80 size=472 overhead=8
+
+1788035408023 heap_walk_summary [main_win32][heap] stage=startup_log_initialized walkDone busyBlocks=4604 busyBytes=648794 regions=2 uncommitted=1 walkErr=259
+
+1788035408023 crash_containment_installed
+1788035408023 heap_snapshot [main_win32][heap] stage=crash_containment_installed processHeap=00000000009E0000 heapValid=1 pid=18208
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[0] addr=00000000009E0750 size=136 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[1] addr=00000000009E07E0 size=80 overhead=16
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[2] addr=00000000009E0840 size=24 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[3] addr=00000000009E0860 size=48 overhead=16
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[4] addr=00000000009E08A0 size=4096 overhead=16
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[5] addr=00000000009E18B0 size=88 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[6] addr=00000000009E1910 size=360 overhead=8
+
+1788035408023 heap_walk_busy [main_win32][heap] stage=crash_containment_installed busy[7] addr=00000000009E1A80 size=472 overhead=8
+
+1788035408023 heap_walk_summary [main_win32][heap] stage=crash_containment_installed walkDone busyBlocks=4604 busyBytes=648794 regions=2 uncommitted=1 walkErr=259
+
+1788035408023 dpi_awareness
+1788035408026 heap_snapshot [main_win32][heap] stage=ide_constructed processHeap=00000000009E0000 heapValid=1 pid=18208
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[0] addr=00000000009E0750 size=136 overhead=8
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[1] addr=00000000009E07E0 size=80 overhead=16
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[2] addr=00000000009E0840 size=24 overhead=8
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[3] addr=00000000009E0860 size=48 overhead=16
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[4] addr=00000000009E08A0 size=4096 overhead=16
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[5] addr=00000000009E18B0 size=88 overhead=8
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[6] addr=00000000009E1910 size=360 overhead=8
+
+1788035408026 heap_walk_busy [main_win32][heap] stage=ide_constructed busy[7] addr=00000000009E1A80 size=472 overhead=8
+
+1788035408026 heap_walk_summary [main_win32][heap] stage=ide_constructed walkDone busyBlocks=4714 busyBytes=665918 regions=2 uncommitted=1 walkErr=259
+
+1788035408026 init_common_controls phase_start
+1788035408026 init_common_controls
+1788035408026 init_common_controls phase_done
+1788035408026 first_run_gauntlet phase_start
+1788035408026 first_run_gauntlet_start
+1788035408026 first_run_gauntlet_done
+1788035408026 first_run_gauntlet phase_done
+1788035408026 vsix_loader phase_start
+1788035408027 vsix_loader
+1788035408027 vsix_loader phase_done
+1788035408027 plugin_signature phase_start
+1788035408027 plugin_signature
+1788035408027 plugin_signature phase_done
+1788035408027 creating_ide_instance phase_start
+1788035408027 creating_ide_instance
+1788035408027 creating_ide_instance phase_done
+1788035408027 createWindow phase_start
+1788035408027 createWindow_start
