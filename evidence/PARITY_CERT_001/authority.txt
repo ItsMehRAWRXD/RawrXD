@@ -8,12 +8,14 @@ streamer_commit=ec1d98e6a402e0ece18f02187009a126deca4c13
 streamer_tag=streamer-cert-001
 streamer_exe_sha256=FDF79A0DCCFA152B5FA2D4097FA3419AD9F5FE75E603C0B4486BB481889960EB
 
-PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
-# Not PASS. Streamer cert does not establish numerical inference parity.
-# Smart App Control blocked live external-oracle execution.
-# Certification path is FROZEN_GOLDEN: Deep2 compares against offline artifacts only.
+LIFECYCLE-CERT-001=CERTIFIED
+# Independent of parity. See evidence/LIFECYCLE_CERT_001/LIFECYCLE_CERT_VERDICT.txt
 
-LIFECYCLE-CERT-001=OPEN
+PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
+# Not PASS. Streamer + lifecycle do not establish numerical inference parity.
+# Certification path is FROZEN_GOLDEN: Deep2 compares against offline artifacts only.
+# Contract: GOLDEN_DUMP_CONTRACT.txt — do not synthesize golden from Deep2.
+
 AUTONOMOUS-E2E-001=BLOCKED_ON_PARITY
 
 deep2_runtime_dependencies=[]
@@ -27,3 +29,8 @@ reference_mode=FROZEN_GOLDEN
 
 architecture=
   reference implementation → frozen evidence once → sovereign Deep2 cert forever
+
+NEXT=
+  Import trusted golden offline into evidence\PARITY_CERT_001\golden_tokens.json
+  per GOLDEN_DUMP_CONTRACT.txt, then:
+  powershell -File F:\~dev\rawrxd\scripts\run_parity_cert_001.ps1

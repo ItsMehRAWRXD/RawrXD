@@ -1,0 +1,4 @@
+[TEST] Token Generation Test
+[TEST] Model: --help
+[Tokenizer] Loading from GGUF...
+[FAIL] Failed to load embedded tokenizer from GGUF

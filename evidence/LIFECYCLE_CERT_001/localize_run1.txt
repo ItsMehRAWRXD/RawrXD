@@ -1,0 +1,528 @@
+[LIFE] iteration=0 construct BEGIN
+[Deep2Engine] Loading model from: F:\~dev\tinyllama_fresh.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: 32000 tokens from GGUF
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=00000225FB700000 rows=2048 cols=2048 type=2(other) — skipping float interpretation
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=00000225F47E9250  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=00000225F47E9250  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=275038208  maxResidentBytes=536870912
+[ResidencyManager] this=00000225F47E9250  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=635981824  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=00000225F47E9250  registered=201 tensors  bytes=635990016  max=536870912
+[Deep2Engine] Model loaded successfully (201 tensors)
+[GREEDY] enabled=0 temperature=0.8000 topK=40
+[Deep2Engine] embedToken: type=2 vocabSize=32000 hiddenDim=2048 data=00000225F8140000 sizeBytes=36864000
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[B3_STATE] phase=PROMPT_EMBED pos=0 size=2048 norm=1.631861323e+00 min=-7.537841797e-02 max=8.245849609e-02 nonfinite=0
+[Deep2Engine] Layer 0 weights: wq.data=00000225FB940000 type=2 wk.data=00000225F4A50000 wv.data=00000225FBB80000 wo.data=00000225FB700000 wqkv.data=0000000000000000 attnO.data=0000000000000000
+[Deep2Engine] Layer 0 weights: attnNorm.data=00000225F4A30000 ffnNorm.data=00000225F4A40000
+[B3_STATE] phase=LAYER0_INPUT pos=0 size=2048 norm=1.631861323e+00 min=-7.537841797e-02 max=8.245849609e-02 nonfinite=0
+[B3_STATE] phase=ATTN_NORM pos=0 size=2048 norm=2.060628150e+00 min=-8.137691021e-01 max=8.297966123e-01 nonfinite=0
+[KERNEL] tensor=blk.0.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=0 size=2048 norm=5.062820985e+00 min=-7.630118728e-01 max=1.081493974e+00 nonfinite=0
+[KERNEL] tensor=blk.0.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=0 size=256 norm=7.642399345e+00 min=-2.123440981e+00 max=1.707968116e+00 nonfinite=0
+[KERNEL] tensor=blk.0.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=0 size=256 norm=1.204586344e-01 min=-3.192386404e-02 max=4.220225289e-02 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=0 size=2048 norm=5.062820985e+00 min=-7.630118728e-01 max=1.081493974e+00 nonfinite=0
+[KERNEL] tensor=blk.0.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=0 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[B3_STATE] phase=LAYER0_POST_ATTN pos=0 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.367812e+32 inMax=2.077834e+32
+[B3_STATE] phase=FFN_NORM pos=0 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.0.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.0.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=0 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.0.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=0 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=0 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER0_POST_FFN pos=0 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[B3_STATE] phase=LAYER1_INPUT pos=1 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.367812e+32 inMax=2.077834e+32
+[B3_STATE] phase=ATTN_NORM pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=1 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=1 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=1 size=2048 norm=1.050903147e+00 min=-8.968719095e-02 max=7.746244967e-02 nonfinite=0
+[B3_STATE] phase=LAYER1_POST_ATTN pos=1 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.367812e+32 inMax=2.077834e+32
+[B3_STATE] phase=FFN_NORM pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.1.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=1 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.1.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=1 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER1_POST_FFN pos=1 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[B3_STATE] phase=LAYER2_INPUT pos=2 size=2048 norm=1.313195790e+33 min=-1.367812232e+32 max=2.077834192e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.367812e+32 inMax=2.077834e+32
+[B3_STATE] phase=ATTN_NORM pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=2 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=2 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=2 size=2048 norm=8.156440151e+32 min=-8.402431941e+31 max=1.096674833e+32 nonfinite=0
+[B3_STATE] phase=LAYER2_POST_ATTN pos=2 size=2048 norm=1.563321479e+33 min=-1.711263125e+32 max=2.788806949e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.711263e+32 inMax=2.788807e+32
+[B3_STATE] phase=FFN_NORM pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.2.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=2 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.2.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=2 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER2_POST_FFN pos=2 size=2048 norm=1.563321479e+33 min=-1.711263125e+32 max=2.788806949e+32 nonfinite=0
+[B3_STATE] phase=LAYER3_INPUT pos=3 size=2048 norm=1.563321479e+33 min=-1.711263125e+32 max=2.788806949e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.711263e+32 inMax=2.788807e+32
+[B3_STATE] phase=ATTN_NORM pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=3 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=3 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=3 size=2048 norm=8.414246998e+32 min=-1.071755487e+32 max=5.983735505e+31 nonfinite=0
+[B3_STATE] phase=LAYER3_POST_ATTN pos=3 size=2048 norm=1.788761570e+33 min=-2.023832346e+32 max=3.263576296e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.023832e+32 inMax=3.263576e+32
+[B3_STATE] phase=FFN_NORM pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.3.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=3 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.3.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=3 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER3_POST_FFN pos=3 size=2048 norm=1.788761570e+33 min=-2.023832346e+32 max=3.263576296e+32 nonfinite=0
+[B3_STATE] phase=LAYER4_INPUT pos=4 size=2048 norm=1.788761570e+33 min=-2.023832346e+32 max=3.263576296e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.023832e+32 inMax=3.263576e+32
+[B3_STATE] phase=ATTN_NORM pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=4 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=4 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=4 size=2048 norm=1.012376048e+33 min=-7.352046104e+31 max=7.351531102e+31 nonfinite=0
+[B3_STATE] phase=LAYER4_POST_ATTN pos=4 size=2048 norm=2.069926116e+33 min=-2.371256350e+32 max=3.616083591e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.371256e+32 inMax=3.616084e+32
+[B3_STATE] phase=FFN_NORM pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.4.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=4 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.4.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=4 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER4_POST_FFN pos=4 size=2048 norm=2.069926116e+33 min=-2.371256350e+32 max=3.616083591e+32 nonfinite=0
+[B3_STATE] phase=LAYER5_INPUT pos=5 size=2048 norm=2.069926116e+33 min=-2.371256350e+32 max=3.616083591e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.371256e+32 inMax=3.616084e+32
+[B3_STATE] phase=ATTN_NORM pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=5 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=5 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=5 size=2048 norm=1.209204512e+33 min=-2.297402201e+32 max=9.547334016e+31 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_ATTN pos=5 size=2048 norm=2.440077403e+33 min=-4.668658744e+32 max=4.011012383e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-4.668659e+32 inMax=4.011012e+32
+[B3_STATE] phase=FFN_NORM pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.5.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=5 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.5.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=5 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER5_POST_FFN pos=5 size=2048 norm=2.440077403e+33 min=-4.668658744e+32 max=4.011012383e+32 nonfinite=0
+[B3_STATE] phase=LAYER6_INPUT pos=6 size=2048 norm=2.440077403e+33 min=-4.668658744e+32 max=4.011012383e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-4.668659e+32 inMax=4.011012e+32
+[B3_STATE] phase=ATTN_NORM pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=6 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=6 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=6 size=2048 norm=1.324770079e+33 min=-9.557166936e+31 max=1.346592779e+32 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_ATTN pos=6 size=2048 norm=2.724285617e+33 min=-5.614025969e+32 max=3.653584277e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-5.614026e+32 inMax=3.653584e+32
+[B3_STATE] phase=FFN_NORM pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.6.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=6 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.6.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=6 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER6_POST_FFN pos=6 size=2048 norm=2.724285617e+33 min=-5.614025969e+32 max=3.653584277e+32 nonfinite=0
+[B3_STATE] phase=LAYER7_INPUT pos=7 size=2048 norm=2.724285617e+33 min=-5.614025969e+32 max=3.653584277e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-5.614026e+32 inMax=3.653584e+32
+[B3_STATE] phase=ATTN_NORM pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=7 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=7 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=7 size=2048 norm=1.555030187e+33 min=-1.145647257e+32 max=1.412347705e+32 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_ATTN pos=7 size=2048 norm=3.151858552e+33 min=-6.273436395e+32 max=3.471359503e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.273436e+32 inMax=3.471360e+32
+[B3_STATE] phase=FFN_NORM pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.7.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=7 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.7.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=7 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER7_POST_FFN pos=7 size=2048 norm=3.151858552e+33 min=-6.273436395e+32 max=3.471359503e+32 nonfinite=0
+[B3_STATE] phase=LAYER8_INPUT pos=8 size=2048 norm=3.151858552e+33 min=-6.273436395e+32 max=3.471359503e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.273436e+32 inMax=3.471360e+32
+[B3_STATE] phase=ATTN_NORM pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=8 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=8 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=8 size=2048 norm=1.787321903e+33 min=-1.367485919e+32 max=1.613099896e+32 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_ATTN pos=8 size=2048 norm=3.607946322e+33 min=-6.920265868e+32 max=3.812365561e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.920266e+32 inMax=3.812366e+32
+[B3_STATE] phase=FFN_NORM pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.8.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=8 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.8.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=8 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER8_POST_FFN pos=8 size=2048 norm=3.607946322e+33 min=-6.920265868e+32 max=3.812365561e+32 nonfinite=0
+[B3_STATE] phase=LAYER9_INPUT pos=9 size=2048 norm=3.607946322e+33 min=-6.920265868e+32 max=3.812365561e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.920266e+32 inMax=3.812366e+32
+[B3_STATE] phase=ATTN_NORM pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=9 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=9 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=9 size=2048 norm=2.165722747e+33 min=-1.812079028e+32 max=1.437988055e+32 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_ATTN pos=9 size=2048 norm=4.221877945e+33 min=-6.092513779e+32 max=3.969148346e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.092514e+32 inMax=3.969148e+32
+[B3_STATE] phase=FFN_NORM pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.9.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=9 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.9.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=9 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER9_POST_FFN pos=9 size=2048 norm=4.221877945e+33 min=-6.092513779e+32 max=3.969148346e+32 nonfinite=0
+[B3_STATE] phase=LAYER10_INPUT pos=10 size=2048 norm=4.221877945e+33 min=-6.092513779e+32 max=3.969148346e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.092514e+32 inMax=3.969148e+32
+[B3_STATE] phase=ATTN_NORM pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=10 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=10 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=10 size=2048 norm=2.495124285e+33 min=-2.096549911e+32 max=2.640534615e+32 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_ATTN pos=10 size=2048 norm=4.821037916e+33 min=-3.585156754e+32 max=4.196396999e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-3.585157e+32 inMax=4.196397e+32
+[B3_STATE] phase=FFN_NORM pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.10.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=10 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.10.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=10 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER10_POST_FFN pos=10 size=2048 norm=4.821037916e+33 min=-3.585156754e+32 max=4.196396999e+32 nonfinite=0
+[B3_STATE] phase=LAYER11_INPUT pos=11 size=2048 norm=4.821037916e+33 min=-3.585156754e+32 max=4.196396999e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-3.585157e+32 inMax=4.196397e+32
+[B3_STATE] phase=ATTN_NORM pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=11 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=11 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=11 size=2048 norm=2.737257008e+33 min=-2.038317986e+32 max=3.260856697e+32 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_ATTN pos=11 size=2048 norm=5.544835677e+33 min=-4.734161634e+32 max=4.119840466e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-4.734162e+32 inMax=4.119840e+32
+[B3_STATE] phase=FFN_NORM pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.11.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=11 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.11.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=11 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER11_POST_FFN pos=11 size=2048 norm=5.544835677e+33 min=-4.734161634e+32 max=4.119840466e+32 nonfinite=0
+[B3_STATE] phase=LAYER12_INPUT pos=12 size=2048 norm=5.544835677e+33 min=-4.734161634e+32 max=4.119840466e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-4.734162e+32 inMax=4.119840e+32
+[B3_STATE] phase=ATTN_NORM pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=12 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=12 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=12 size=2048 norm=3.579367332e+33 min=-2.840494233e+32 max=3.269775668e+32 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_ATTN pos=12 size=2048 norm=6.617886492e+33 min=-5.108346806e+32 max=5.403874429e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-5.108347e+32 inMax=5.403874e+32
+[B3_STATE] phase=FFN_NORM pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.12.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=12 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.12.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=12 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER12_POST_FFN pos=12 size=2048 norm=6.617886492e+33 min=-5.108346806e+32 max=5.403874429e+32 nonfinite=0
+[B3_STATE] phase=LAYER13_INPUT pos=13 size=2048 norm=6.617886492e+33 min=-5.108346806e+32 max=5.403874429e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-5.108347e+32 inMax=5.403874e+32
+[B3_STATE] phase=ATTN_NORM pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=13 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=13 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=13 size=2048 norm=3.608399953e+33 min=-3.077882002e+32 max=2.804227619e+32 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_ATTN pos=13 size=2048 norm=7.689477135e+33 min=-6.504212790e+32 max=7.309194906e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.504213e+32 inMax=7.309195e+32
+[B3_STATE] phase=FFN_NORM pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.13.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=13 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.13.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=13 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER13_POST_FFN pos=13 size=2048 norm=7.689477135e+33 min=-6.504212790e+32 max=7.309194906e+32 nonfinite=0
+[B3_STATE] phase=LAYER14_INPUT pos=14 size=2048 norm=7.689477135e+33 min=-6.504212790e+32 max=7.309194906e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-6.504213e+32 inMax=7.309195e+32
+[B3_STATE] phase=ATTN_NORM pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=14 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=14 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=14 size=2048 norm=4.703557717e+33 min=-3.962314143e+32 max=3.492713969e+32 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_ATTN pos=14 size=2048 norm=8.781850615e+33 min=-9.519169333e+32 max=7.880068634e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-9.519169e+32 inMax=7.880069e+32
+[B3_STATE] phase=FFN_NORM pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.14.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=14 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.14.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=14 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER14_POST_FFN pos=14 size=2048 norm=8.781850615e+33 min=-9.519169333e+32 max=7.880068634e+32 nonfinite=0
+[B3_STATE] phase=LAYER15_INPUT pos=15 size=2048 norm=8.781850615e+33 min=-9.519169333e+32 max=7.880068634e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-9.519169e+32 inMax=7.880069e+32
+[B3_STATE] phase=ATTN_NORM pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=15 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=15 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=15 size=2048 norm=5.676830304e+33 min=-4.329277483e+32 max=4.716941501e+32 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_ATTN pos=15 size=2048 norm=1.074300671e+34 min=-1.171804640e+33 max=9.243144295e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.171805e+33 inMax=9.243144e+32
+[B3_STATE] phase=FFN_NORM pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.15.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=15 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.15.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=15 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER15_POST_FFN pos=15 size=2048 norm=1.074300671e+34 min=-1.171804640e+33 max=9.243144295e+32 nonfinite=0
+[B3_STATE] phase=LAYER16_INPUT pos=16 size=2048 norm=1.074300671e+34 min=-1.171804640e+33 max=9.243144295e+32 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.171805e+33 inMax=9.243144e+32
+[B3_STATE] phase=ATTN_NORM pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=16 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=16 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=16 size=2048 norm=5.971200539e+33 min=-4.685049071e+32 max=5.053965647e+32 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_ATTN pos=16 size=2048 norm=1.243309077e+34 min=-1.197206705e+33 max=1.070515380e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.197207e+33 inMax=1.070515e+33
+[B3_STATE] phase=FFN_NORM pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.16.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=16 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.16.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=16 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER16_POST_FFN pos=16 size=2048 norm=1.243309077e+34 min=-1.197206705e+33 max=1.070515380e+33 nonfinite=0
+[B3_STATE] phase=LAYER17_INPUT pos=17 size=2048 norm=1.243309077e+34 min=-1.197206705e+33 max=1.070515380e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.197207e+33 inMax=1.070515e+33
+[B3_STATE] phase=ATTN_NORM pos=17 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=17 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=17 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=17 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=17 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=17 size=2048 norm=8.575963258e+33 min=-5.730845728e+32 max=6.697914042e+32 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_ATTN pos=17 size=2048 norm=1.505464543e+34 min=-1.118838602e+33 max=1.420929396e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.118839e+33 inMax=1.420929e+33
+[B3_STATE] phase=FFN_NORM pos=17 size=2048 norm=0.000000000e+00 min=-0.000000000e+00 max=-0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.17.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=17 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.17.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=17 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=17 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER17_POST_FFN pos=17 size=2048 norm=1.505464543e+34 min=-1.118838602e+33 max=1.420929396e+33 nonfinite=0
+[B3_STATE] phase=LAYER18_INPUT pos=18 size=2048 norm=1.505464543e+34 min=-1.118838602e+33 max=1.420929396e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.118839e+33 inMax=1.420929e+33
+[B3_STATE] phase=ATTN_NORM pos=18 size=2048 norm=0.000000000e+00 min=-0.000000000e+00 max=-0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=18 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=18 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=18 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=18 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=18 size=2048 norm=1.005100687e+34 min=-9.113856159e+32 max=7.741102128e+32 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_ATTN pos=18 size=2048 norm=1.813670340e+34 min=-1.274712893e+33 max=1.828860659e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.274713e+33 inMax=1.828861e+33
+[B3_STATE] phase=FFN_NORM pos=18 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.18.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=18 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.18.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=18 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=18 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER18_POST_FFN pos=18 size=2048 norm=1.813670340e+34 min=-1.274712893e+33 max=1.828860659e+33 nonfinite=0
+[B3_STATE] phase=LAYER19_INPUT pos=19 size=2048 norm=1.813670340e+34 min=-1.274712893e+33 max=1.828860659e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.274713e+33 inMax=1.828861e+33
+[B3_STATE] phase=ATTN_NORM pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=19 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=19 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=19 size=2048 norm=1.240291542e+34 min=-9.755629807e+32 max=1.094355939e+33 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_ATTN pos=19 size=2048 norm=2.226102216e+34 min=-1.621874763e+33 max=2.249476939e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.621875e+33 inMax=2.249477e+33
+[B3_STATE] phase=FFN_NORM pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.19.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=19 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.19.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=19 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER19_POST_FFN pos=19 size=2048 norm=2.226102216e+34 min=-1.621874763e+33 max=2.249476939e+33 nonfinite=0
+[B3_STATE] phase=LAYER20_INPUT pos=20 size=2048 norm=2.226102216e+34 min=-1.621874763e+33 max=2.249476939e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-1.621875e+33 inMax=2.249477e+33
+[B3_STATE] phase=ATTN_NORM pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=20 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=20 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=20 size=2048 norm=1.509143220e+34 min=-1.142011292e+33 max=1.314699904e+33 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_ATTN pos=20 size=2048 norm=2.715005753e+34 min=-2.381701933e+33 max=2.336514336e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.381702e+33 inMax=2.336514e+33
+[B3_STATE] phase=FFN_NORM pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.20.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=20 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.20.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=20 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER20_POST_FFN pos=20 size=2048 norm=2.715005753e+34 min=-2.381701933e+33 max=2.336514336e+33 nonfinite=0
+[B3_STATE] phase=LAYER21_INPUT pos=21 size=2048 norm=2.715005753e+34 min=-2.381701933e+33 max=2.336514336e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.381702e+33 inMax=2.336514e+33
+[B3_STATE] phase=ATTN_NORM pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.attn_q.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_Q pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.attn_k.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_K pos=21 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.attn_v.weight type=Q4_0 rows=256 cols=2048
+[B3_STATE] phase=ATTN_V pos=21 size=256 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=ATTN_ROPE pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.attn_output.weight type=Q4_0 rows=2048 cols=2048
+[B3_STATE] phase=ATTN_O pos=21 size=2048 norm=1.954015190e+34 min=-1.266530651e+33 max=2.096772702e+33 nonfinite=0
+[B3_STATE] phase=LAYER21_POST_ATTN pos=21 size=2048 norm=3.360380589e+34 min=-2.673620883e+33 max=4.433287038e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.673621e+33 inMax=4.433287e+33
+[B3_STATE] phase=FFN_NORM pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.ffn_gate.weight type=Q4_0 rows=5632 cols=2048
+[KERNEL] tensor=blk.21.ffn_up.weight type=Q4_0 rows=5632 cols=2048
+[B3_STATE] phase=FFN_SWIGLU pos=21 size=5632 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[KERNEL] tensor=blk.21.ffn_down.weight type=Q4_0 rows=2048 cols=5632
+[B3_STATE] phase=FFN_DOWN pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=FFN_DOWN pos=21 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_STATE] phase=LAYER21_POST_FFN pos=21 size=2048 norm=3.360380589e+34 min=-2.673620883e+33 max=4.433287038e+33 nonfinite=0
+[B3_STATE] phase=PROMPT_POST_LAYERS pos=0 size=2048 norm=3.360380589e+34 min=-2.673620883e+33 max=4.433287038e+33 nonfinite=0
+[RMS_DIAG] dim=2048 sumSq=inf meanSq=inf rms=inf invRms=0.000000e+00 inMin=-2.673621e+33 inMax=4.433287e+33
+[B3_STATE] phase=PROMPT_FINAL_NORM pos=0 size=2048 norm=0.000000000e+00 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[Deep2Engine] computeLogits: hiddenState norm=0.000000 (dim=2048)
+[Deep2Engine] computeLogits: lmHead type=14 rows=32000 cols=2048 data=00000225F4DF0000
+[B3_LOGITS] BEFORE LinearW type=14 rows=32000 cols=2048 data=00000225F4DF0000
+[KERNEL] tensor=output.weight type=Q6_K rows=32000 cols=2048
+[Q6K_GEMV] ENTER call=0 w=00000225F4DF0000 x=000002259B3B9060 y=00000225F4B55220 rows=32000 cols=2048
+[Q6K_GEMV] EXIT call=0
+[B3_LOGITS] AFTER LinearW
+[B3_LOGITS] AFTER computeLogits
+[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=32000
+[B3_LOGITS] phase=LOGITS pos=1 size=32000 min=0.000000000e+00 max=0.000000000e+00 nonfinite=0
+[B3_LOGITS] AFTER B3_TraceLogits

@@ -1,0 +1,27 @@
+SSM-CERT-001 MODEL QUALIFICATION
+================================
+date=2026-08-29
+
+QUALIFIED_AND_RUN=
+  ollama_tag=pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest
+  ollama_id=9d7b1b2ae3ba
+  gguf_blob=G:\OllamaModels\blobs\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada
+  size≈5.24 GB (second blob sha256-d589… is also GGUF, 0.86GB — not used for this run)
+  allow=RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+  result=CANDIDATE_PASS EXIT=0
+
+rejected_earlier=
+  tinyllama → EXIT 61 ssm_layers=0
+  F:\~dev\Qwen3.5-40B-Q4_K_M.gguf → truncated incomplete file
+  G:\…Qwen3.5-40B…Q4_K_M.gguf → GQA topology fail before SSM
+
+invariants_met=
+  ssm_layers=24 > 0
+  SSM tensors mapped (ssmA/alpha/beta/conv/dt/norm/out)
+  StatePre + StatePost emitted
+  SeqStep monotonic 1..4
+  nonfinite==0
+  one-token PASS
+  multi-token PASS
+  StatePost[n] == StatePre[n+1] (persistent state evolution)
+  EXIT=0 (via _Exit after verdict; destructor NOT certified)

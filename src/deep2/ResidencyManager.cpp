@@ -42,8 +42,11 @@ void ResidencyManager::Shutdown() {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_) return;
 
-    // Assert clean state
-    size_t activeLeases = GetActiveLeaseCount();
+    // Count leases without re-entering mutex_ (GetActiveLeaseCount also locks).
+    size_t activeLeases = 0;
+    for (const auto& kv : residents_) {
+        activeLeases += kv.second.leaseCount;
+    }
     if (activeLeases > 0) {
         fprintf(stderr, "[ResidencyManager] WARNING: %zu active leases at shutdown\n", activeLeases);
     }
@@ -439,7 +442,11 @@ void ResidencyManager::PrintStats() const {
     printf("totalReleases        = %llu\n", (unsigned long long)totalReleases_);
     printf("totalEvictions       = %llu\n", (unsigned long long)totalEvictions_);
     printf("totalRemaps          = %llu\n", (unsigned long long)totalRemaps_);
-    printf("activeLeases         = %zu\n", GetActiveLeaseCount());
+    size_t activeLeases = 0;
+    for (const auto& kv : residents_) {
+        activeLeases += kv.second.leaseCount;
+    }
+    printf("activeLeases         = %zu\n", activeLeases);
     printf("residentTensors      = %zu\n", residents_.size());
     printf("============================================================\n");
 }

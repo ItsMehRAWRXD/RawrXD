@@ -161,7 +161,11 @@ const ToolGuardrails& AgentToolHandlers::GetGuardrails() {
 
 std::string AgentToolHandlers::NormalizePath(const std::string& path) {
     try {
-        return fs::weakly_canonical(path).string();
+        fs::path p(path);
+        if (!p.is_absolute() && !s_guardrails.allowedRoots.empty()) {
+            p = fs::path(s_guardrails.allowedRoots[0]) / p;
+        }
+        return fs::weakly_canonical(p).string();
     } catch (...) {
         return path;
     }
@@ -555,8 +559,15 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args) {
         if (timeout > 300000) timeout = 300000;
     }
 
+    // Run from primary workspace root so relative paths (sources/exes) resolve.
+    std::string wrapped = command;
+    if (!s_guardrails.allowedRoots.empty()) {
+        const std::string& root = s_guardrails.allowedRoots[0];
+        wrapped = "cd /d \"" + root + "\" && " + command;
+    }
+
     // Build command line via cmd.exe
-    std::wstring cmdLine = L"cmd.exe /C " + ToWide(command);
+    std::wstring cmdLine = L"cmd.exe /C " + ToWide(wrapped);
 
     std::string output;
     uint32_t exitCode = 0;
@@ -1611,7 +1622,10 @@ std::string AgentToolHandlers::GetSystemPrompt(const std::string& cwd,
        << "4. Run get_diagnostics after code changes to verify correctness.\n"
        << "5. Explain your reasoning before executing each tool.\n"
        << "6. Use search_code to find relevant code before making assumptions.\n"
-       << "7. Do not modify files outside the workspace.\n";
+       << "7. Do not modify files outside the workspace.\n"
+       << "8. Emit tools exactly as: TOOL_CALL: <name> {\"arg\": \"value\"}\n"
+       << "   Example: TOOL_CALL: read_file {\"path\": \"main.cpp\"}\n"
+       << "9. After build/run succeeds, reply with a final answer (no TOOL_CALL).\n";
 
     return ss.str();
 }

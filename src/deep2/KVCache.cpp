@@ -3,6 +3,7 @@
 // ============================================================================
 
 #include "KVCache.h"
+#include "AttnCertProbe.hpp"
 #include <cstring>
 #include <cstdio>
 #include <cmath>
@@ -253,6 +254,12 @@ void AttentionWithCache(const float* query,
 #endif
 
     // --- Pass 2: Online softmax with numerical stability ---
+    // ATTN-CERT-001: pre-softmax scores (head 0 / layer 0 only)
+    if (layer == 0 && head == 0) {
+        AttnCert::record(AttnCert::Stage::PreSoftmax, 0,
+                         static_cast<std::uint32_t>(cache.currentLength()),
+                         scores, attend, static_cast<double>(maxScore));
+    }
     // Use online softmax algorithm for better numerical stability
     float sumExp = 0.0f;
     for (size_t pos = 0; pos < attend; ++pos) {
@@ -263,8 +270,16 @@ void AttentionWithCache(const float* query,
     
     // Normalize to get softmax probabilities
     float invSum = 1.0f / sumExp;
+    double sumCheck = 0.0;
     for (size_t pos = 0; pos < attend; ++pos) {
         scores[pos] *= invSum;
+        sumCheck += scores[pos];
+    }
+    // ATTN-CERT-001: capture head-0 softmax for layer 0 only (no math change)
+    if (layer == 0 && head == 0) {
+        AttnCert::record(AttnCert::Stage::Softmax, 0,
+                         static_cast<std::uint32_t>(cache.currentLength()),
+                         scores, attend, sumCheck);
     }
 
     // --- Pass 3: Weighted sum of values with AVX2 ---

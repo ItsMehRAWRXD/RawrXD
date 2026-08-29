@@ -100,22 +100,37 @@ void Win32IDE_TabManager::applySovereignTheme()
         return;
     }
 
-    OutputDebugStringA("[TabManager] Getting sovereign config...\n");
-    fileTrace("[TabManager] Getting sovereign config...");
-    // Get sovereign colors from settings
-    auto config = GetSovereignConfig();
-    OutputDebugStringA("[TabManager] Got sovereign config\n");
-    fileTrace("[TabManager] Got sovereign config");
-    COLORREF tabBg = RGB(30, 30, 30);
-    COLORREF tabActiveBg = RGB(45, 45, 45);
-    COLORREF tabText = RGB(200, 200, 200);
-    COLORREF tabBorder = RGB(60, 60, 60);
+    try
+    {
+        OutputDebugStringA("[TabManager] Getting sovereign config...\n");
+        fileTrace("[TabManager] Getting sovereign config...");
+        // Touch config so settings load once; colors are currently fixed (Rose-pine-ish dark).
+        (void)GetSovereignConfig();
+        OutputDebugStringA("[TabManager] Got sovereign config\n");
+        fileTrace("[TabManager] Got sovereign config");
+        COLORREF tabBg = RGB(30, 30, 30);
+        COLORREF tabActiveBg = RGB(45, 45, 45);
+        COLORREF tabText = RGB(200, 200, 200);
+        COLORREF tabBorder = RGB(60, 60, 60);
 
-    // Apply theme via window properties
-    SetPropW(m_hwndTabBar, L"SovereignTabBg", (HANDLE)tabBg);
-    SetPropW(m_hwndTabBar, L"SovereignTabActiveBg", (HANDLE)tabActiveBg);
-    SetPropW(m_hwndTabBar, L"SovereignTabText", (HANDLE)tabText);
-    SetPropW(m_hwndTabBar, L"SovereignTabBorder", (HANDLE)tabBorder);
+        SetPropW(m_hwndTabBar, L"SovereignTabBg", (HANDLE)tabBg);
+        SetPropW(m_hwndTabBar, L"SovereignTabActiveBg", (HANDLE)tabActiveBg);
+        SetPropW(m_hwndTabBar, L"SovereignTabText", (HANDLE)tabText);
+        SetPropW(m_hwndTabBar, L"SovereignTabBorder", (HANDLE)tabBorder);
+        OutputDebugStringA("[TabManager] applySovereignTheme() OK\n");
+    }
+    catch (const std::exception& ex)
+    {
+        OutputDebugStringA("[TabManager] applySovereignTheme std::exception: ");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        fileTrace("[TabManager] applySovereignTheme exception (swallowed)");
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[TabManager] applySovereignTheme unknown exception (swallowed)\n");
+        fileTrace("[TabManager] applySovereignTheme unknown exception (swallowed)");
+    }
 }
 
 int Win32IDE_TabManager::addTab(const std::string& filePath, const std::string& displayName)

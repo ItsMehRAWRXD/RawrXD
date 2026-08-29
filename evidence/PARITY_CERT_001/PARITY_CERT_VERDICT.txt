@@ -1,18 +1,7 @@
-PARITY-CERT-001
+﻿PARITY-CERT-001
 status=AWAITING_TRUSTED_GOLDEN
 reference_mode=FROZEN_GOLDEN
-live_external_runtime_required=false
-deep2_runtime_dependencies=[]
-
-MODEL_HASH_MATCH=PENDING
-TOKENIZER_INPUT_MATCH=PENDING
-INPUT_TOKEN_SEQUENCE_MATCH=PENDING
-LOGIT_ERROR_WITHIN_TOLERANCE=PENDING
-ARGMAX_TOKEN_MATCH=PENDING
-STREAM_TOKEN_SEQUENCE_MATCH=PENDING
-NO_EXTERNAL_RUNTIME_DEPENDENCIES=PASS
-
 RAWRXD_DEEP2_PARITY=NOT_CERTIFIED
 reason=golden_tokens.json has status=AWAITING_TRUSTED_DUMP; no trusted frozen reference artifact bound yet.
-note=STREAMER-CERT-001=CERTIFIED does not establish numerical inference parity.
-next=Import trusted golden offline into evidence\PARITY_CERT_001 then run scripts\run_parity_cert_001.ps1 (Deep2-only).
+note=STREAMER-CERT-001=CERTIFIED and LIFECYCLE-CERT-001=CERTIFIED do not establish numerical inference parity.
+next=Import independent offline golden into golden_tokens.json per GOLDEN_DUMP_CONTRACT.txt, then re-run this script (Deep2-only).

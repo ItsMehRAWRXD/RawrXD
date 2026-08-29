@@ -11,6 +11,7 @@
 #include <cmath>
 #include "Deep2Engine.h"
 #include "GGUFLoader.hpp"
+#include "../sampling/advanced_sampler.hpp"
 
 using namespace Deep2;
 
@@ -121,6 +122,7 @@ int main(int argc, char** argv) {
         printf("[FAIL] Engine initialization failed\n");
         return 1;
     }
+    engine.setSampler(std::make_unique<rawrxd::sampling::GreedySampler>());
 
     printf("[Phase 1] Loading model...\n");
     if (!engine.loadModel(modelPath)) {

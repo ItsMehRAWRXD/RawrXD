@@ -1,0 +1,37 @@
+SSM-CERT-001 AUTHORITY
+======================
+philosophy=observe existing production/experimental computeSSM path
+           digest-only frames; one+multi token; no architecture rewrite
+           same disposition language as ATTN-CERT
+
+prerequisites=
+  hybrid SSM/Mamba GGUF with hasSSM layers
+  RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1 (scaffolding only)
+
+quarantine=
+  production default REFUSES SSM loads without allow flag (PRODUCTION_P0)
+  experimental path is approximate selective-scan — NOT architecture parity
+
+required_fingerprints=
+  SSM_ALPHA
+  SSM_BETA
+  SSM_CONV
+  SSM_STATE_PRE
+  SSM_STATE_POST
+  SSM_NORM (when present)
+  SSM_OUT
+  SSM_SEQ_STEP (strictly increasing across tokens)
+
+related=
+  ATTN-CERT-001=CANDIDATE_PASS (FROZEN evidence/ATTN_CERT_001/)
+  LIFECYCLE-CERT-001=CANDIDATE_PASS
+  STREAMER-CERT-001=CERTIFIED (untouched)
+  ResidencyCounters=TELEMETRY debt (isolated)
+
+sequence=
+  ATTN-CERT → SSM-CERT → MLA-CERT → PARITY-CERT → PERF/TPS
+
+verdict_language=
+  AWAITING_SSM_MODEL / AWAITING_ALLOW_FLAG = honest blocker, not a green
+  CANDIDATE_PASS = digests+invariants on real SSM path
+  CERTIFIED = explicit authority promotion only

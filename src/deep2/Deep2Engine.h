@@ -446,6 +446,11 @@ public:
     // Set sampler
     void setSampler(std::unique_ptr<rawrxd::sampling::ISampler> sampler);
 
+    // Apply GenerationOptions to the authoritative sampler used by generate().
+    // temperature <= 0 or topK <= 1 enables deterministic greedy (hard argmax).
+    void configureGeneration(const GenerationOptions& options);
+    bool isDeterministicGreedy() const { return deterministicGreedy_; }
+
     // Token embedding lookup (public for tree speculative decoding)
     void embedToken(int tokenId, float* output);
 
@@ -487,6 +492,7 @@ private:
     std::unique_ptr<ThreadPool> threadPool;
     std::unique_ptr<KVCache> kvCache;
     std::unique_ptr<rawrxd::sampling::ISampler> sampler;
+    bool deterministicGreedy_ = false;
     
     // Real model weights
     ModelWeights modelWeights;

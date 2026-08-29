@@ -26,6 +26,7 @@ extern "C" void ShutdownAICompletion();
 #include "../modules/ExtensionLoader.hpp"
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
+#include "../streaming_gguf_loader.h"
 #include "IDEConfig.h"
 #include "IDELogger.h"
 #include "ModelConnection.h"
@@ -467,6 +468,17 @@ static void sehCallDeferredInit(DeferredInitFn fn, void* self)
 // with destructors allowed inside __try on MSVC, hence the trampoline pattern).
 typedef void (*BgThreadBodyFn)(void* self);
 
+// Phase 2: last reached marker for 0xC0000005 isolation in background init.
+static thread_local volatile const char* g_bgInitStep = "bg_uninitialized";
+
+static void bgInitMark(const char* step)
+{
+    g_bgInitStep = step;
+    OutputDebugStringA("[BgInit] ");
+    OutputDebugStringA(step);
+    OutputDebugStringA("\n");
+}
+
 static DWORD sehRunBgThread(BgThreadBodyFn fn, void* self)
 {
 #if defined(_MSC_VER)
@@ -477,18 +489,22 @@ static DWORD sehRunBgThread(BgThreadBodyFn fn, void* self)
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         DWORD code = GetExceptionCode();
-        char crashMsg[512];
+        char crashMsg[768];
+        const char* step = const_cast<const char*>(g_bgInitStep);
+        if (!step)
+            step = "(null)";
         snprintf(crashMsg, sizeof(crashMsg),
                  "[RawrXD] SEH exception 0x%08lX in background init thread — non-fatal.\n"
+                 "Last BgInit step: %s\n"
                  "Some subsystems may be unavailable. The IDE window remains open.\n",
-                 code);
+                 code, step);
         OutputDebugStringA(crashMsg);
 
         // Write crash log for diagnostics
         FILE* f = fopen("rawrxd_crash.log", "a");
         if (f)
         {
-            fprintf(f, "BACKGROUND THREAD CRASH: Exception 0x%08lX\n", code);
+            fprintf(f, "BACKGROUND THREAD CRASH: Exception 0x%08lX last_step=%s\n", code, step);
             fclose(f);
         }
         return code;
@@ -2647,24 +2663,47 @@ int initializeEnterpriseSubsystemsSehThunk(Win32IDE* ide, DWORD* sehCode)
 }
 #endif
 
+// Phase 2: last enterprise step for AV isolation
+static volatile const char* g_enterpriseInitStep = "enterprise_uninitialized";
+
 bool initializeEnterpriseSubsystems(Win32IDE* ide)
 {
+    // Step-instrumented for Phase 2 AV isolation (0xC0000005).
+    g_enterpriseInitStep = "step1_EnterpriseLicense";
+    OutputDebugStringA("[EnterpriseInit] step=1 EnterpriseLicense::Initialize ENTER\n");
     auto& license = RawrXD::EnterpriseLicense::Instance();
     license.Initialize();
+    OutputDebugStringA("[EnterpriseInit] step=1 OK\n");
 
+    g_enterpriseInitStep = "step2_EnterpriseFeatureManager";
+    OutputDebugStringA("[EnterpriseInit] step=2 EnterpriseFeatureManager::Initialize ENTER\n");
     auto& featureMgr = EnterpriseFeatureManager::Instance();
     featureMgr.Initialize();
+    OutputDebugStringA("[EnterpriseInit] step=2 OK\n");
 
+    g_enterpriseInitStep = "step3_EnterpriseLicenseV2";
+    OutputDebugStringA("[EnterpriseInit] step=3 EnterpriseLicenseV2::initialize ENTER\n");
     auto& licV2 = RawrXD::License::EnterpriseLicenseV2::Instance();
     licV2.initialize();
-    RawrXD::Flags::FeatureFlagsRuntime::Instance().refreshFromLicense();
-    RawrXD::Enforce::LicenseEnforcer::Instance().initialize();
+    OutputDebugStringA("[EnterpriseInit] step=3 OK\n");
 
+    g_enterpriseInitStep = "step4_FeatureFlagsRuntime";
+    OutputDebugStringA("[EnterpriseInit] step=4 FeatureFlagsRuntime::refreshFromLicense ENTER\n");
+    RawrXD::Flags::FeatureFlagsRuntime::Instance().refreshFromLicense();
+    OutputDebugStringA("[EnterpriseInit] step=4 OK\n");
+
+    g_enterpriseInitStep = "step5_LicenseEnforcer";
+    OutputDebugStringA("[EnterpriseInit] step=5 LicenseEnforcer::initialize ENTER\n");
+    RawrXD::Enforce::LicenseEnforcer::Instance().initialize();
+    OutputDebugStringA("[EnterpriseInit] step=5 OK\n");
+
+    g_enterpriseInitStep = "step6_PostMessage_tierBadge";
     OutputDebugStringA("[deferredHeavyInit] Enterprise license initialized\n");
 
     std::string tierBadge = std::string("[") + license.GetEditionName() + "]";
     // Use PostMessage with a copy; receiver must free with free()
     PostMessage(ide->getMainWindow(), WM_USER + 200, 0, reinterpret_cast<LPARAM>(_strdup(tierBadge.c_str())));
+    g_enterpriseInitStep = "enterprise_complete";
     return true;
 }
 
@@ -2677,9 +2716,13 @@ bool initializeEnterpriseSubsystemsSafe(Win32IDE* ide)
         return true;
     }
 
-    char sehMsg[192] = {};
-    sprintf_s(sehMsg, "ERROR: Enterprise license SEH faulted (code=0x%08lX); continuing in community mode",
-              static_cast<unsigned long>(sehCode));
+    char sehMsg[320] = {};
+    const char* step = const_cast<const char*>(g_enterpriseInitStep);
+    if (!step)
+        step = "(null)";
+    sprintf_s(sehMsg,
+              "ERROR: Enterprise license SEH faulted (code=0x%08lX) last_step=%s; continuing in community mode",
+              static_cast<unsigned long>(sehCode), step);
     LOG_ERROR(sehMsg);
     OutputDebugStringA(sehMsg);
     OutputDebugStringA("\n");
@@ -2726,6 +2769,7 @@ void bgInitBody(void* self)
 
 void Win32IDE::deferredHeavyInitBody()
 {
+    bgInitMark("logger_init");
     // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
     try
     {
@@ -2746,9 +2790,31 @@ void Win32IDE::deferredHeavyInitBody()
     if (isShuttingDown())
         return;
 
+    // Standby StreamingGGUFLoader so File→Load Model / session restore never hit a nullptr gate.
+    bgInitMark("streaming_gguf_loader");
+    if (!m_ggufLoader)
+    {
+        try
+        {
+            m_ggufLoader = std::make_unique<RawrXD::StreamingGGUFLoader>();
+            OutputDebugStringA("[deferredHeavyInit] StreamingGGUFLoader ready\n");
+            // If session restore stashed a model path before the loader existed, load it now.
+            const std::string pending = getLoadedModelPath();
+            if (!pending.empty())
+                PostMessageA(m_hwndMain, WM_APP + 201, 0, 0);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: StreamingGGUFLoader allocation failed (non-fatal)\n");
+        }
+    }
+    if (isShuttingDown())
+        return;
+
     // ================================================================
     // Enterprise License System — initialize FIRST (gates engine registration)
     // ================================================================
+    bgInitMark("enterprise_license");
     try
     {
         initializeEnterpriseSubsystemsSafe(this);
@@ -2761,6 +2827,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize Native CPU Inference Engine
+    bgInitMark("cpu_inference_engine");
     try
     {
         m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
@@ -2779,6 +2846,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize DirectX renderer (needs to be on UI thread ideally, but creation is OK)
+    bgInitMark("transparent_renderer");
     try
     {
         m_renderer = std::make_unique<TransparentRenderer>();
@@ -2790,6 +2858,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize PowerShell state
+    bgInitMark("powershell_state");
     try
     {
         initializePowerShellState();
@@ -2802,6 +2871,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Theme already applied in onCreate — skip here
 
     // Load code snippets
+    bgInitMark("code_snippets");
     try
     {
         loadCodeSnippets();
@@ -2812,6 +2882,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Agent
+    bgInitMark("native_agent");
     try
     {
         if (m_nativeEngine)
@@ -2830,6 +2901,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Extension Loader
+    bgInitMark("extension_loader");
     try
     {
         m_extensionLoader = std::make_unique<RawrXD::ExtensionLoader>();
@@ -2844,6 +2916,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialise the agentic bridge (needs m_hwndMain, which is set)
+    bgInitMark("agentic_bridge");
     try
     {
         initializeAgenticBridge();
@@ -2856,6 +2929,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize AI/Extensions panels so menu -> show() creates real UI
     if (isShuttingDown())
         return;
+    bgInitMark("ai_panels");
     try
     {
         if (m_modelRegistry)
@@ -2874,6 +2948,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Ghost Text renderer (Copilot-style inline completions)
+    bgInitMark("ghost_text");
     try
     {
         initGhostText();
@@ -2884,6 +2959,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Failure Detector (agent self-correction)
+    bgInitMark("failure_detector");
     try
     {
         initFailureDetector();
@@ -2894,6 +2970,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Agent Diff Panel (Win32IDE_AgentPanel.cpp)
+    bgInitMark("agent_panel");
     try
     {
         initAgentPanel();
@@ -2904,6 +2981,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Load persistent settings from %APPDATA%\RawrXD\settings.json
+    bgInitMark("load_apply_settings");
     try
     {
         loadSettings();
@@ -2919,6 +2997,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize Agent History (append-only JSONL event log)
+    bgInitMark("agent_history");
     try
     {
         initAgentHistory();
@@ -3135,6 +3214,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 36: MCP Integration — Model Context Protocol
+    bgInitMark("init_mcp");
     try
     {
         initMCP();
@@ -3145,6 +3225,7 @@ void Win32IDE::deferredHeavyInitBody()
     }
 
     // Initialize Phase 29+36: VS Code Extension API + QuickJS VSIX Host
+    bgInitMark("init_vscode_extension_api");
     try
     {
         initVSCodeExtensionAPI();
@@ -3158,6 +3239,7 @@ void Win32IDE::deferredHeavyInitBody()
         return;
 
     // Initialize Phase 43: Plugin System (Native Win32 DLL loading)
+    bgInitMark("init_plugin_system");
     try
     {
         initPluginSystem();
@@ -3170,6 +3252,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Auto-start Local HTTP server (port 11435) so HTML beacon / Ghost can detect IDE
     if (!isShuttingDown())
     {
+        bgInitMark("start_local_server");
         try
         {
             startLocalServer();
@@ -3183,6 +3266,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Cursor/JB-Parity Feature Modules
     if (!isShuttingDown())
     {
+        bgInitMark("init_all_feature_modules");
         try
         {
             initAllFeatureModules();
@@ -3205,6 +3289,7 @@ void Win32IDE::deferredHeavyInitBody()
     // Initialize Tier 5 cosmetic features (Emoji, Telemetry Dashboard, Shortcut Editor, etc.)
     if (!isShuttingDown())
     {
+        bgInitMark("init_tier5_cosmetics");
         try
         {
             initTier5Cosmetics();
@@ -3215,6 +3300,7 @@ void Win32IDE::deferredHeavyInitBody()
         }
     }
 
+    bgInitMark("deferredHeavyInit_complete");
     OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
 
     // Initialize AI backend probe (background thread, posts WM_AI_BACKEND_STATUS on result)

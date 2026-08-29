@@ -1,0 +1,35 @@
+ATTN-CERT-001 AUTHORITY
+=======================
+scope=MHA_GQA_ONLY
+model_baseline=TinyLlama (frozen path)
+rejects=SSM escape (RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM), MLA escape (RAWRXD_DEEP2_ALLOW_UNSAFE_MLA)
+streamer=FROZEN (STREAMER-CERT-001 untouched)
+
+required_fingerprints=
+  Q_PROJ
+  K_PROJ
+  V_PROJ
+  AFTER_ROPE (Q and K)
+  KV_LENGTH
+  PRE_SOFTMAX (layer0 head0)
+  SOFTMAX (sum≈1)
+  ATTN_OUT
+  O_PROJ
+  RESIDUAL
+
+cases=
+  one_token
+  multi_token (autoregressive KV progression)
+
+verdict_language=
+  CANDIDATE_PASS = harness green, fingerprints present, invariants hold
+  CERTIFIED      = only after explicit authority promotion (not automatic)
+  NOT_CERTIFIED  = default until promotion
+
+related_gates=
+  LIFECYCLE-CERT-001 = CANDIDATE_PASS only (do not synonymize with CERTIFIED)
+  STREAMER-CERT-001  = CERTIFIED (frozen)
+  PARITY-CERT-001    = AWAITING_TRUSTED_GOLDEN (after ATTN→SSM→MLA)
+
+sequence=
+  ATTN-CERT → SSM-CERT → MLA-CERT → PARITY-CERT → PERF/TPS

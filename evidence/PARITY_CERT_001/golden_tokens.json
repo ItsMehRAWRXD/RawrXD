@@ -8,7 +8,9 @@
   "top10_step0": [],
   "notes": [
     "Empty until a trusted frozen golden is imported offline.",
-    "Do not invent IDs. Do not derive PASS from STREAMER-CERT-001.",
-    "Import with scripts/import_parity_golden.ps1 once provenance exists."
+    "Do not invent IDs. Do not derive PASS from STREAMER-CERT-001 or LIFECYCLE-CERT-001.",
+    "Do not populate from Deep2 output — that destroys certification independence.",
+    "Required field contract: GOLDEN_DUMP_CONTRACT.txt",
+    "After bind: powershell -File F:\\~dev\\rawrxd\\scripts\\run_parity_cert_001.ps1 (Deep2-only)."
   ]
 }

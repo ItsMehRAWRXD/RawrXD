@@ -1,0 +1,56 @@
+# Deep2 Production Correctness Gates (P0)
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+
+## Applied (source)
+
+1. QUANT-SAFETY-001
+   - LinearW_Range / Linear: format-blind FP32 fallback removed
+   - Only GGML_TYPE_F32 may use scalar float* GEMV
+   - Unsupported types throw QUANT_FATAL
+
+2. ROPE-CERT-002
+   - Scaling applied to effective position (pos/scale), not sin/cos amplitude
+   - Cache invalidates on headDim + theta + scaling
+   - Energy invariant remains
+
+3. MLA-CERT-001 (quarantine)
+   - loadModel refuses MLA/DeepSeek2 unless RAWRXD_DEEP2_ALLOW_UNSAFE_MLA=1
+   - Forward path throws if incomplete MLA is reached
+
+4. SSM-CERT-001 (quarantine)
+   - loadModel refuses SSM/hybrid layers unless RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+   - computeSSM hard-fails on missing tensors (no identity substitute)
+   - Comments mark path as experimental approximation
+
+5. NO-KV-CERT-001
+   - Single-token / no-KV attention = memcpy(V) (softmax([s])=1), not sigmoid
+
+6. TOPOLOGY-CERT-001 (partial)
+   - GQA contract: numHeads >= numKVHeads && numHeads % numKVHeads == 0
+   - Missing attention Q weights → fatal (no zero-output substitute)
+   - Tokenizer missing → load fail unless RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER=1
+
+7. allocateBuffers
+   - Validates layerTemp + MLA + SSM buffers
+   - SSM allocations use element counts (not bytes*sizeof(float) double multiply)
+
+8. loadWeights()
+   - Returns false (no false success)
+
+## Escape hatches (explicit, non-default)
+RAWRXD_DEEP2_ALLOW_UNSAFE_MLA=1
+RAWRXD_DEEP2_ALLOW_EXPERIMENTAL_SSM=1
+RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER=1
+
+## Not claimed finished
+- Full MLA attention math
+- Exact SSM/Mamba parity
+- Per-engine RoPE tables (still process-global, but correctly keyed)
+- TRACE-OFF / hot-path logging strip
+- PARITY-CERT-001 golden
+- STREAMER path unchanged (do not destabilize)
+
+## Capability matrix (production default)
+GGUF loader / MHA-GQA / streamer / lifecycle teardown fixes: enabled
+SSM / MLA / byte tokenizer: BLOCKED until cert or explicit allow

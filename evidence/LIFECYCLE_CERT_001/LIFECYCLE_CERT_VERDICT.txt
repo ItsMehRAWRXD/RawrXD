@@ -1,0 +1,57 @@
+LIFECYCLE-CERT-001 CANDIDATE VERDICT FREEZE
+==========================================
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+git_commit_at_fix_source=3f2a6758839da153f7e3359f76321ef3620b571c
+# Working tree includes teardown ownership fix on Deep2Engine::unloadModel
+
+DEFECT
+------
+unloadModel called _aligned_free on GGUF tensor buffers allocated with
+VirtualAlloc (WeightTensor.mapped defaulted false). That is an ownership /
+deallocator mismatch → Windows fail-fast 0xC0000409 after generation SUCCESS.
+
+A/B (trusted prior binary)
+--------------------------
+test_generate_one_token.exe + TinyLlama:
+  generation=PASS, "[TEST] Returning 0", EXIT=0xC0000409
+  RAWRXD_CERT_FAST_EXIT=1 → EXIT=0 (proves CRT/destructor teardown site)
+
+FIX (teardown only — no inference/tokenizer/kernel/streamer/parity math)
+------------------------------------------------------------------------
+1. Mark GGUF-bound WeightTensor.mapped=true (ggufResult owns buffers)
+2. unloadModel clears aliases without alignedFree
+3. Release via GGUFLoader::FreeTensorData (VirtualFree-aware)
+4. Lifecycle harness uses proven Deep2Engine::generate() path
+
+BINARY
+------
+exe=F:\~dev\rawrxd\build-ninja\bin\deep2_lifecycle_cert_candidate.exe
+sha256=C564179690626EBF1028636CA438817C62CD286F5D9CACFCFC77DC11780B150A
+uses__Exit=NO
+
+RUNTIME PROOF
+-------------
+model=F:\~dev\tinyllama_fresh.gguf
+run2x2: EXIT=0 LIFECYCLE-CERT-001=CANDIDATE_PASS (2/2 destroy through ~Deep2Engine END)
+run5x4: EXIT=0 LIFECYCLE-CERT-001=CANDIDATE_PASS (5/5 destroy through ~Deep2Engine END)
+evidence=
+  evidence/LIFECYCLE_CERT_001/post_fix_run1.out.txt
+  evidence/LIFECYCLE_CERT_001/post_fix_run1.err.txt
+  evidence/LIFECYCLE_CERT_001/post_fix_run5.out.txt
+  evidence/LIFECYCLE_CERT_001/post_fix_run5.err.txt
+
+LAST MARKERS (clean)
+--------------------
+[LIFE] unloadModel FreeTensorData ggufResult (201 tensors)
+[LIFE] ~Deep2Engine END
+[LIFE] iteration=N engine destructor returned
+
+VERDICT
+-------
+LIFECYCLE-CERT-001=CERTIFIED
+authority_independent_of_parity=YES
+inference_path=PROVEN
+teardown_path=CLEAN
+next=PARITY-CERT-001 trusted golden bind + Deep2-only compare
+note=Certification of lifecycle does not move valuation midpoint; ~$140M requires parity green.

@@ -1,0 +1,10 @@
+SOVEREIGN_RUNTIME_BLOCKER=SMART_APP_CONTROL
+VerifiedAndReputablePolicyState=1
+SAC_PreviousState=2
+SAC_EnforcementReason=1
+ControlledFolderAccess=0
+timestamp=2026-08-29T05:48:43.6917101-04:00
+note=Unblock-File/MOTW clear does NOT bypass SAC reputation enforcement.
+allowed_exe=test_generate_one_token.exe
+blocked=rawrxd_model_catalog_cert,deep2_lifecycle_cert_candidate,RawrXD-Agentic,deep2_streamer_cert,deep2_parity_cert
+coding_strategy=Do not rebuild already-allowed EXEs for cert (hash change => re-block). Disable SAC to Off (one-way), reboot, then run RUN_AFTER_SAC_OFF.ps1. Prefer absolute model path F:\~dev\tinyllama_fresh.gguf to skip discovery ambiguity.

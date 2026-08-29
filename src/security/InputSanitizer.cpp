@@ -108,15 +108,10 @@ std::string InputSanitizer::escapeShellMetacharacters(const std::string& input) 
 std::string InputSanitizer::validatePathTraversal(const std::string& input) {
     std::string result = input;
 
-    // Remove path traversal sequences
+    // Remove path traversal sequences only (keep absolute drive paths — IDE
+    // workspaces and GGUF loads require them).
     std::regex traversal(R"(\.\./|\.\.\\)");
     result = std::regex_replace(result, traversal, "");
-
-    // Remove absolute path indicators
-    if (result.find(":\\") != std::string::npos || result.find(":/") != std::string::npos) {
-        // In strict mode, this might be an issue, but we'll just clean it
-        result = std::filesystem::path(result).filename().string();
-    }
 
     return result;
 }

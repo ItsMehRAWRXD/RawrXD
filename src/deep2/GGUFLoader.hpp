@@ -298,15 +298,15 @@ public:
                              std::vector<TensorInfo>& tensors,
                              uint64_t& dataOffset, bool verbose);
 
+    // Release VirtualAlloc / aligned tensor buffers owned by GGUFLoadResult.
+    static void FreeTensorData(void* data);
+
 private:
     static bool LoadTensorData(FILE* fp, std::vector<TensorInfo>& tensors,
                                uint64_t dataOffset, uint64_t fileSize);
 
     // Extended validation returning file size and data offset (for diagnostics)
     static bool ValidateFile(const char* filepath, uint64_t& outFileSize, uint64_t& outDataOffset);
-
-    // Memory management
-    static void FreeTensorData(void* data);
 
     static std::string ReadString(FILE* fp);
     static uint64_t ReadUint64(FILE* fp);

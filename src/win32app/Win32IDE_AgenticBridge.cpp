@@ -11,6 +11,7 @@
 #include "../agentic/OrchestratorBridge.h"
 #include "../agentic_engine.h"
 #include "../cpu_inference_engine.h"
+#include "../deep2/Deep2IDEIntegration.hpp"
 #include "../inference/PerformanceMonitor.h"
 #include "../logging/Logger.h"
 #include "../modules/native_memory.hpp"
@@ -311,14 +312,29 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
 
     applyAgentCapabilityHotpatches(refinedPrompt);
 
-    // When no local model is loaded, route through active backend (Ollama/cloud) so agentic
-    // work can use the same backend as chat (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
+    // Deep2-backed path: always use OrchestratorBridge tool loop (read/edit/build/run).
+    // Do not use CPU engine or Ollama when Deep2 is ready.
     std::string response;
     bool localReady = SharedCpuEngine()->IsModelLoaded();
-    if (!localReady)
+    if (m_deep2Ready) {
+        auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
+        if (!m_workspaceRoot.empty()) {
+            orch.SetWorkingDirectory(m_workspaceRoot);
+        }
+        if (!m_deep2ModelPath.empty() && !orch.IsInitialized()) {
+            const std::string workDir =
+                m_workspaceRoot.empty()
+                    ? std::filesystem::current_path().string()
+                    : m_workspaceRoot;
+            (void)orch.Initialize(workDir, "deep2", m_deep2ModelPath);
+        }
+        response = orch.RunAgent(refinedPrompt);
+        if (response.empty() && m_ide) {
+            response = m_ide->routeInferenceRequest(refinedPrompt);
+        }
+    } else if (!localReady)
     {
-        // Prefer the orchestrator bridge (Ollama-backed, tool-aware) and let it decide
-        // capability at runtime. If it cannot serve, fall back to legacy routing.
+        // Prefer the orchestrator bridge and let it decide capability at runtime.
         auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
         if (!m_modelName.empty())
         {
@@ -1166,6 +1182,41 @@ bool AgenticBridge::LoadModel(const std::string& path)
     if (!m_initialized)
         Initialize("", path);
 
+    m_deep2Ready = false;
+    m_deep2ModelPath.clear();
+
+    // Prefer Deep2 sovereign runtime (no Ollama). Fail closed into CPU only if Deep2 cannot load.
+    {
+        const std::string workDir =
+            m_workspaceRoot.empty()
+                ? std::filesystem::current_path().string()
+                : m_workspaceRoot;
+        auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
+        if (orch.Initialize(workDir, "deep2", path)) {
+            m_deep2Ready = true;
+            m_deep2ModelPath = path;
+            m_modelName = path;
+            m_lastModelLoadError.clear();
+            LOG_INFO("Model loaded via Deep2 OrchestratorBridge: " + path);
+            SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
+            return true;
+        }
+        std::string deep2Err;
+        if (RawrXD::Deep2LoadModelForBridge(path, deep2Err)) {
+            // Loader OK but orchestrator init failed — still mark Deep2 path for retry on execute.
+            if (orch.Initialize(workDir, "deep2", path)) {
+                m_deep2Ready = true;
+                m_deep2ModelPath = path;
+                m_modelName = path;
+                m_lastModelLoadError.clear();
+                LOG_INFO("Model loaded via Deep2LoadModelForBridge + Orchestrator: " + path);
+                return true;
+            }
+        }
+        LOG_WARNING("Deep2 load failed for AgenticBridge (" + deep2Err +
+                    "); falling back to CPUInferenceEngine");
+    }
+
     if (g_agentEngine)
     {
         bool success = g_agentEngine->loadLocalModel(path);
@@ -1173,7 +1224,7 @@ bool AgenticBridge::LoadModel(const std::string& path)
         {
             m_modelName = g_agentEngine->currentModelPath();
             m_lastModelLoadError.clear();
-            LOG_INFO("Model loaded in bridge: " + m_modelName);
+            LOG_INFO("Model loaded in bridge (CPU fallback): " + m_modelName);
             SetIDEAgenticEngineForCommands(g_agentEngine ? g_agentEngine.get() : nullptr);
         }
         else
@@ -1190,7 +1241,7 @@ bool AgenticBridge::LoadModel(const std::string& path)
         }
         return success;
     }
-    m_lastModelLoadError = "Model load failed: agent engine not initialized";
+    m_lastModelLoadError = "Model load failed: agent engine not initialized and Deep2 unavailable";
     if (m_modelLoadErrorCallback)
     {
         m_modelLoadErrorCallback(m_lastModelLoadError);

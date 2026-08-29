@@ -30,6 +30,7 @@
 
 #include "Deep2Engine.h"
 #include "GGUFLoader.hpp"
+#include "../sampling/advanced_sampler.hpp"
 
 namespace {
 
@@ -109,6 +110,7 @@ int main(int argc, char** argv)
             std::cerr << "[FAIL] engine initialization\n";
             return 1;
         }
+        engine.setSampler(std::make_unique<rawrxd::sampling::GreedySampler>());
         std::cout << "[ENGINE_INIT] PASS\n";
 
         if (!engine.loadModel(modelPath)) {

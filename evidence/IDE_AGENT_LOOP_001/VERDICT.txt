@@ -1,0 +1,33 @@
+﻿IDE_AGENT_LOOP_001 — scripted spine CANDIDATE_PASS
+date=2026-08-29
+authority=NOT_CERTIFIED (scripted TOOL_CALL driver; not model-autonomous E2E)
+
+spine_proven:
+  OrchestratorBridge.RunAgent
+  → ParseToolCalls (TOOL_CALL: name {json})
+  → AgentToolHandlers Execute (JSON object args)
+  → read_file → get_diagnostics → replace_in_file → get_diagnostics
+  → execute_command (cl.exe) → execute_command (run exe)
+  → final SUCCESS
+
+fixes_required_for_pass:
+  1. AgenticBridge::LoadModel prefers Deep2 OrchestratorBridge
+  2. Execute tool args: parse JSON string → object (was silently wrong)
+  3. execute_command cds to workspace root
+  4. NormalizePath joins relative paths to workspace
+  5. InputSanitizer no longer strips absolute drive paths to filename
+
+smoke:
+  exe=F:\~dev\rawrxd\build-ninja\bin\ide_agent_loop_cert.exe
+  mode=scripted
+  fixture=F:\~dev\rawrxd\fixtures\agent_loop_broken_hello
+  VERDICT=PASS
+  fixed_source=yes exe_exists=yes output=Hello RawrXD
+
+deep2_mode:
+  available via --mode deep2 --model F:\~dev\tinyllama_fresh.gguf
+  TinyLlama not expected to emit TOOL_CALL grammar reliably → exit 2 INCOMPLETE if so
+
+gui:
+  rebuild RawrXD-Win32IDE required (build-ninja missing .exe; only pdb/map)
+  LoadModel now Deep2-first for agent chat

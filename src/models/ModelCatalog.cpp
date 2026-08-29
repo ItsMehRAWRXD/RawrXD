@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -129,6 +130,22 @@ bool ModelCatalog::looksLikeSha256BlobName(const std::string& name) {
     return false;
 }
 
+void ModelCatalog::syncPathAlias(ResolvedModel& m) {
+    m.path = m.absolutePath;
+}
+
+bool ModelCatalog::hasGGUFMagic(const fs::path& path, std::uint64_t offset) {
+    return hasGgufMagicAt(path, offset);
+}
+
+std::optional<std::uint64_t> ModelCatalog::findGGUFOffset(
+    const fs::path& path,
+    std::uint64_t maxScanBytes)
+{
+    (void)maxScanBytes; // detectGgufOffset currently caps at 1 MiB
+    return detectGgufOffset(path);
+}
+
 std::optional<uint64_t> ModelCatalog::detectGgufOffset(const fs::path& path) {
     if (hasGgufMagicAt(path, 0)) return 0ull;
     // Common Ollama blob: scan first 1 MiB for GGUF magic (cheap, no daemon).
@@ -169,6 +186,7 @@ std::optional<ResolvedModel> ModelCatalog::resolveExistingPath(const fs::path& p
         if (!any) return std::nullopt;
         out.storageKind = StorageKind::GgufShards;
         out.blobOffset = 0;
+        syncPathAlias(out);
         return out;
     }
 
@@ -180,6 +198,7 @@ std::optional<ResolvedModel> ModelCatalog::resolveExistingPath(const fs::path& p
     if (ext == ".gguf") {
         out.storageKind = StorageKind::Gguf;
         out.blobOffset = 0;
+        syncPathAlias(out);
         return out;
     }
 
@@ -191,6 +210,7 @@ std::optional<ResolvedModel> ModelCatalog::resolveExistingPath(const fs::path& p
         out.blobOffset = *off;
         if (name.rfind("sha256-", 0) == 0) out.sha256 = name.substr(7);
         else if (name.size() == 64) out.sha256 = name;
+        syncPathAlias(out);
         return out;
     }
 
@@ -198,6 +218,7 @@ std::optional<ResolvedModel> ModelCatalog::resolveExistingPath(const fs::path& p
     if (hasGgufMagicAt(out.absolutePath, 0)) {
         out.storageKind = StorageKind::Gguf;
         out.blobOffset = 0;
+        syncPathAlias(out);
         return out;
     }
     return std::nullopt;
@@ -322,7 +343,7 @@ std::optional<ResolvedModel> ModelCatalog::resolveManifestName(const std::string
     return std::nullopt;
 }
 
-std::optional<ResolvedModel> ModelCatalog::resolve(const std::string& query) const {
+std::optional<ResolvedModel> ModelCatalog::resolveQuery(const std::string& query) const {
     if (query.empty()) return std::nullopt;
 
     // 1) Absolute / relative existing path (--model)

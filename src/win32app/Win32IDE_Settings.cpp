@@ -113,8 +113,11 @@ __m512i GenerateZMMSignature(const SovereignIDEConfig& config)
 bool VerifyZMMSignature(const SovereignIDEConfig& config)
 {
     __m512i computed = GenerateZMMSignature(config);
-    __mmask64 mask = _mm512_cmpeq_epi64_mask(config.zmm_signature, computed);
-    return mask == 0xFFFFFFFFFFFFFFFFULL;  // All 64 bits match
+    // _mm512_cmpeq_epi64_mask compares 8 qwords → 8-bit mask (0xFF = all match).
+    // Previously compared to 0xFFFFFFFFFFFFFFFFULL, so verification ALWAYS failed,
+    // triggering WSSR → Save → Load recursion and C++ exception 0xE06D7363 in onCreateChildren.
+    const __mmask8 mask = _mm512_cmpeq_epi64_mask(config.zmm_signature, computed);
+    return mask == static_cast<__mmask8>(0xFF);
 }
 
 // WSSR Config Recovery (<50ms sovereign restoration)
@@ -257,14 +260,23 @@ bool SaveSettingsSovereign(const SovereignIDEConfig& config)
         // Atomic rename
         std::filesystem::rename(temp_file, SETTINGS_FILE);
 
-        // Verify written signature
-        SovereignIDEConfig verify_config;
-        if (!LoadSettingsSovereign(verify_config))
+        // Verify by re-reading signature bytes only — do NOT call LoadSettingsSovereign
+        // here (that path can re-enter Save on verify failure → recursion → 0xE06D7363).
+        std::ifstream verify(SETTINGS_FILE, std::ios::binary);
+        if (!verify)
             return false;
-
-        return VerifyZMMSignature(verify_config);
+        __m512i written_sig{};
+        verify.read(reinterpret_cast<char*>(&written_sig), 64);
+        if (!verify || verify.gcount() != 64)
+            return false;
+        const __mmask8 mask = _mm512_cmpeq_epi64_mask(written_sig, signature);
+        return mask == static_cast<__mmask8>(0xFF);
     }
     catch (const std::exception&)
+    {
+        return false;
+    }
+    catch (...)
     {
         return false;
     }
@@ -348,9 +360,11 @@ bool LoadSettingsSovereign(SovereignIDEConfig& config)
         {
             OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verification FAILED\n");
             fileTrace("[LoadSettingsSovereign] ZMM signature verification FAILED");
-            // Tamper detected: WSSR recovery
+            // Tamper detected: recover in-memory defaults. Persist once without
+            // re-entering Load via Save's old verify path (recursion / 0xE06D7363).
             WSSR_ConfigRecovery(config);
-            return SaveSettingsSovereign(config);
+            (void)SaveSettingsSovereign(config);
+            return true;
         }
         OutputDebugStringA("[LoadSettingsSovereign] ZMM signature verified OK\n");
         fileTrace("[LoadSettingsSovereign] ZMM signature verified OK");
@@ -359,11 +373,22 @@ bool LoadSettingsSovereign(SovereignIDEConfig& config)
         fileTrace("[LoadSettingsSovereign] Returning true");
         return true;
     }
-    catch (const std::exception&)
+    catch (const std::exception& ex)
     {
-        // Any error triggers WSSR
+        OutputDebugStringA("[LoadSettingsSovereign] std::exception — WSSR recovery\n");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        // Any error triggers WSSR; never throw across onCreateChildren SEH boundary
         WSSR_ConfigRecovery(config);
-        return SaveSettingsSovereign(config);
+        (void)SaveSettingsSovereign(config);
+        return true;
+    }
+    catch (...)
+    {
+        OutputDebugStringA("[LoadSettingsSovereign] unknown exception — WSSR recovery\n");
+        WSSR_ConfigRecovery(config);
+        (void)SaveSettingsSovereign(config);
+        return true;
     }
 }
 
@@ -373,7 +398,15 @@ const SovereignIDEConfig& GetSovereignConfig()
     static bool loaded = false;
     if (!loaded)
     {
-        LoadSettingsSovereign(g_sovereign_config);
+        try
+        {
+            LoadSettingsSovereign(g_sovereign_config);
+        }
+        catch (...)
+        {
+            OutputDebugStringA("[GetSovereignConfig] exception swallowed — using defaults\n");
+            WSSR_ConfigRecovery(g_sovereign_config);
+        }
         loaded = true;
     }
     return g_sovereign_config;

@@ -220,4 +220,7 @@ class AgenticBridge
     std::string m_lastModelLoadError;
     bool m_multiAgentEnabled = false;
     bool m_swarmMode = false;
+    /// When true, agent prompts use OrchestratorBridge + Deep2 (not CPU/Ollama stub path).
+    bool m_deep2Ready = false;
+    std::string m_deep2ModelPath;
 };

@@ -1,0 +1,39 @@
+LIFECYCLE-FAILURE → CANDIDATE_PASS EVIDENCE
+===========================================
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+git_commit_baseline=3f2a6758839da153f7e3359f76321ef3620b571c
+
+INTERPRETATION
+--------------
+Generation was always PROVEN. Fail-fast was teardown-only.
+
+ROOT CAUSES FIXED (lifecycle boundary only — not inference math)
+----------------------------------------------------------------
+1) GGUF WeightTensor.mapped left false → unloadModel alignedFree'd mmap views
+   → STATUS_HEAP_CORRUPTION (0xC0000374) on first layer wq free.
+   Fix: wt.mapped = true when binding GGUF tensor views.
+
+2) ResidencyManager::Shutdown() called GetActiveLeaseCount() while already
+   holding mutex_ (non-recursive) → fail-fast during residencyManager_.reset()
+   (0xC0000409). Fix: count leases inline without re-locking.
+   Same pattern fixed in PrintStats.
+
+REPRO LOCALIZATION TRAIL
+------------------------
+generation complete → unload free owned weight buffers → layer0 wq alignedFree FAIL
+after mapped fix → unload END → ~Deep2Engine → reset residencyManager FAIL
+after mutex fix → full ~Deep2Engine END + ThreadPool Shutdown + CANDIDATE_PASS
+
+3x RESULT
+---------
+evidence=evidence/SOVEREIGN_FINISH_HOUR/lifecycle_3x_after_residency_mutex_fix.txt
+LIFECYCLE_3X_MUTEX_FIX_EXIT=0
+LIFECYCLE-CERT-001=CANDIDATE_PASS
+iterations=0..2 destroy=PASS (uses__Exit=NO)
+
+AUTHORITY
+---------
+LIFECYCLE-CERT-001 remains CANDIDATE_PASS evidence — not auto-promoted to
+CERTIFIED authority until 25x + freeze hashes + review. Do not flip PARITY
+or AUTONOMOUS-E2E from this alone.

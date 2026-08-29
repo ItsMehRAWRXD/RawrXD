@@ -74,6 +74,8 @@
 #error "RawrXD unified agentic runtime requires the real Deep2Engine header."
 #endif
 
+#include "../models/ModelCatalog.hpp"
+
 #ifndef RAWRXD_DEEP2_ENGINE_TYPE
 #define RAWRXD_DEEP2_ENGINE_TYPE Deep2::Deep2Engine
 #endif
@@ -1677,7 +1679,7 @@ static CliOptions parseCli(int argc, char** argv) {
         }
         else if (arg == "--no-stream") options.noStream = true;
         else if (arg == "--help" || arg == "-h") {
-            std::cout << "RawrXD-Agentic.exe --model model.gguf --workspace D:\\rawrxd [--task \"...\"] [--max-steps 16] [--max-tokens 2048] [--no-stream]\n";
+            std::cout << "RawrXD-Agentic.exe --model path|friendly-name|model:tag|sha256-blob --workspace D:\\rawrxd [--task \"...\"] [--max-steps 16] [--max-tokens 2048] [--no-stream]\n";
             std::exit(EXIT_SUCCESS);
         }
         else throw std::runtime_error("unknown argument: " + arg);
@@ -1706,7 +1708,48 @@ int main(int argc, char** argv) {
     try {
         const CliOptions cli = parseCli(argc, argv);
         WorkspaceSandbox sandbox(cli.workspace);
-        NativeInferenceClient inference(cli.model);
+
+        const auto catalogModel =
+            rawrxd::models::ModelCatalog::resolve(cli.model.string());
+
+        if (!catalogModel) {
+            throw std::runtime_error(
+                "ModelCatalog could not resolve model spec: " +
+                cli.model.string() +
+                ". Set RAWRXD_MODEL_ROOT or use an absolute GGUF/blob path.");
+        }
+
+        if (catalogModel->storageKind ==
+            rawrxd::models::StorageKind::GgufShards) {
+            throw std::runtime_error(
+                "RawrXD-Agentic unified metadata reader currently requires a "
+                "GGUF/blob file. ModelCatalog resolved a shard directory: " +
+                catalogModel->path.string() +
+                ". Pass an individual GGUF shard/file until the directory "
+                "metadata bridge is promoted to the unified runtime.");
+        }
+
+        if (catalogModel->blobOffset != 0) {
+            throw std::runtime_error(
+                "ModelCatalog found a wrapped GGUF payload at non-zero offset " +
+                std::to_string(catalogModel->blobOffset) +
+                ". Deep2 can consume wrapped Ollama blobs, but this unified "
+                "agent runtime's GGUF metadata reader currently requires "
+                "offset-0 GGUF. Use the Deep2 gateway path or an offset-0 model layer.");
+        }
+
+        std::cout
+            << "catalog-model: "
+            << catalogModel->displayName
+            << "\n"
+            << "catalog-path: "
+            << catalogModel->path.string()
+            << "\n"
+            << "catalog-kind: "
+            << rawrxd::models::storageKindName(catalogModel->storageKind)
+            << "\n";
+
+        NativeInferenceClient inference(catalogModel->path);
         ToolRegistry tools(sandbox);
         printRuntimeInfo(inference, sandbox);
         AgentConfig config;

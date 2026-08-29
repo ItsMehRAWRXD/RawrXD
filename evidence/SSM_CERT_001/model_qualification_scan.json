@@ -1,0 +1,18 @@
+﻿[
+    {
+        "Path":  "F:\\~dev\\Qwen3.5-40B-Q4_K_M.gguf",
+        "SizeMB":  6150.2,
+        "ArchHint":  "qwen3*_name_hit",
+        "Signals":  "ssm_out=72; ssm_conv=72; ssm_a=144; ssm_alpha=72; ssm_beta=72; ssm_dt=72; ssm_norm=72; blk.0.ssm=7; attn_qkv=72; qwen35=20; general.architecture=1",
+        "SignalCount":  11,
+        "LikelySsm":  true
+    },
+    {
+        "Path":  "G:\\OllamaModels\\Qwen3.5-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking.Q4_K_M.gguf",
+        "SizeMB":  22818.8,
+        "ArchHint":  "qwen3*_name_hit",
+        "Signals":  "ssm_out=72; ssm_conv=72; ssm_a=144; ssm_alpha=72; ssm_beta=72; ssm_dt=72; ssm_norm=72; blk.0.ssm=7; attn_qkv=72; qwen35=20; general.architecture=1",
+        "SignalCount":  11,
+        "LikelySsm":  true
+    }
+]

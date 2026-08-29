@@ -1,0 +1,27 @@
+﻿{
+  "status": "SUCCESS",
+  "steps": {
+    "open_exe": true,
+    "select_local_gguf": true,
+    "open_project_folder": true,
+    "prompt": "Fix the compile error and run the program",
+    "agent_path": "--autofix QuantumOrchestrator::executeAutoFix",
+    "reads_source_identifies_issue": true,
+    "edits_file": true,
+    "invokes_build_consumes_problems": true,
+    "repairs_rebuilds": true,
+    "runs_executable": true,
+    "reports_success": true
+  },
+  "gui_ready": true,
+  "gui_had_early_error_dialog": false,
+  "gui_pid": 17596,
+  "gui_title": "",
+  "model": "F:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "project": "F:\\~dev\\rawrxd\\build-win32ide-fresh\\phase2_e2e_fixture",
+  "telemetry": {"attemptCount":1,"totalDiagnosticsGenerated":1,"totalDiagnosticsHandled":"1","totalFixesStaged":"1","finalStatus":"success","durationMs":18663},
+  "run_output": "hello from e2e_fix",
+  "source_after": "#include <stdio.h>\n\n\nint main(void) {\n    printf(\"hello from e2e_fix\\n\");\n    return 0;\n}",
+  "exe_sha256": "377A6DE7FA3A5FB2F1EC69C760578956F7C7F781B26581979B5A808AEC9F41A4"
+}
+

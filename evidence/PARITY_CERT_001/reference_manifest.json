@@ -48,5 +48,11 @@
     "cert": "STREAMER-CERT-001",
     "status": "CERTIFIED",
     "note": "Streamer proves sequencing/stream semantics only; does not imply numerical parity."
-  }
+  },
+  "lifecycle_boundary": {
+    "cert": "LIFECYCLE-CERT-001",
+    "status": "CERTIFIED",
+    "note": "Lifecycle proves clean construct/load/generate/unload/destroy only; does not imply numerical parity."
+  },
+  "golden_contract": "GOLDEN_DUMP_CONTRACT.txt"
 }

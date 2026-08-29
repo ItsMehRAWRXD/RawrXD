@@ -1,0 +1,27 @@
+﻿{
+    "id":  "AGENT-E2E-001",
+    "EVIDENCE":  "F:\\~dev\\rawrxd\\build-win32ide-fresh\\phase2_evidence\\e2e_loop_result.json",
+    "AUTOFIX_REBUILD":  "PASS",
+    "AUTOFIX_COMPILE_REPAIR":  "PASS",
+    "observed_stdout":  "hello from e2e_fix",
+    "EXPECTED_STDOUT":  "hello from e2e_fix",
+    "fixture":  "F:\\~dev\\rawrxd\\build-win32ide-fresh\\phase2_e2e_fixture",
+    "authority":  "NOT_CERTIFIED",
+    "AUTOFIX_EXECUTION":  "PASS",
+    "frozen":  true,
+    "non_claims":  [
+                       "Not proven GGUF-model-directed vs deterministic/scripted prepass",
+                       "RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK not closed",
+                       "Lifecycle/heap teardown debt open",
+                       "MLA/external parity/performance open",
+                       "Single fixture only; AGENT-E2E-002 required for suite"
+                   ],
+    "next_gate":  "AGENT-E2E-002",
+    "evidence_root":  "F:\\~dev\\rawrxd\\build-win32ide-fresh\\phase2_evidence",
+    "frozenAt":  "2026-08-29T07:20:29.4761869-04:00",
+    "WIN32IDE_EXE":  "F:\\~dev\\rawrxd\\build-win32ide-fresh\\bin\\RawrXD-Win32IDE.exe",
+    "WIN32IDE_EXE_SHA256":  "377A6DE7FA3A5FB2F1EC69C760578956F7C7F781B26581979B5A808AEC9F41A4",
+    "status":  "CANDIDATE_PASS",
+    "agent_path":  "--autofix / QuantumOrchestrator::executeAutoFix",
+    "AUTOFIX_EXPECTED_STDOUT":  "PASS"
+}

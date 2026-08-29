@@ -1,0 +1,55 @@
+PARITY-CERT-001 TRUSTED GOLDEN DUMP CONTRACT
+============================================
+date=2026-08-29
+canonical_repo=F:\~dev\rawrxd
+status=AWAITING_INDEPENDENT_DUMP
+rule=DO_NOT_POPULATE_FROM_DEEP2_OUTPUT
+rule=DO_NOT_SYNTHESIZE_TOKEN_IDS
+
+INDEPENDENCE
+------------
+The golden dump MUST originate from a trusted external reference offline.
+Certification execution compares Deep2 against the frozen artifact only.
+No llama.cpp / Ollama / other reference runtime may participate in the
+certification run itself.
+
+REQUIRED FIELDS (freeze at least)
+---------------------------------
+model_path                  absolute path used for the dump
+model_sha256                immutable content hash of the GGUF
+prompt                      canonical prompt string (or prompt_bytes)
+tokenizer_identity          tokenizer name/config/source identity
+prompt_token_ids            reference tokenization of prompt
+seed                        RNG seed (deterministic)
+temperature                 must be 0 for greedy parity
+top_k                       must be 1 for greedy parity
+top_p                       sampler setting as used by reference
+max_generated_tokens        e.g. 15
+reference_input_token_ids   same as prompt_token_ids if identical contract
+reference_sampled_token_ids generated token ID sequence
+eos_id                      EOS token id
+reference_implementation    e.g. llama.cpp
+reference_version_or_commit exact version/commit of reference
+dump_timestamp              ISO-8601 UTC when dump was produced
+
+STRONGLY RECOMMENDED (forward parity vs token coincidence)
+----------------------------------------------------------
+first_token_logits          full or truncated first-step logits
+OR top_n_logit_fingerprint  deterministic top-N (id, logit) pairs at step 0
+
+BIND TARGET
+-----------
+evidence/PARITY_CERT_001/golden_tokens.json
+Leave status=AWAITING_TRUSTED_DUMP until a genuine independent dump is imported.
+
+CERT COMMAND (after bind only)
+------------------------------
+powershell -File F:\~dev\rawrxd\scripts\run_parity_cert_001.ps1
+# Must run Deep2-only against frozen golden; no live reference process.
+
+HIERARCHY AT FREEZE
+-------------------
+STREAMER-CERT-001=CERTIFIED
+LIFECYCLE-CERT-001=CERTIFIED
+PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
+valuation_midpoint=~$115M (frozen; ~$140M requires parity green)

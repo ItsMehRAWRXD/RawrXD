@@ -1,0 +1,37 @@
+SSM-CERT-001 VERDICT
+====================
+status=NOT_CERTIFIED
+candidate=CANDIDATE_PASS
+scope=EXPERIMENTAL_SSM_OBSERVATION
+architecture_rewrite=NO
+streamer_touched=NO
+attn_evidence=FROZEN (CANDIDATE_PASS)
+
+active_state=
+  ATTN-CERT-001=CANDIDATE_PASS
+  LIFECYCLE=CANDIDATE_PASS
+  SSM-CERT-001=CANDIDATE_PASS
+  SSM-CERT-001_AUTHORITY=NOT_CERTIFIED
+
+model=
+  ollama_tag=pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest
+  id=9d7b1b2ae3ba
+  gguf=G:\OllamaModels\blobs\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada
+  arch=qwen35 hidden=4096 layers=32 ssm_layers=24
+
+run=
+  EXIT=0
+  one_token PASS frames=8
+  multi_token PASS frames=32
+  SeqStep 1..4 monotonic
+  StatePost[n] hash == StatePre[n+1] for n=1,2,3
+  all digest nonfinite=0
+  uses__Exit=YES (destructor heap corruption NOT certified — LIFECYCLE debt)
+
+evidence=
+  qwen35_9b_frames.txt
+  qwen35_9b_console.txt
+  MODEL_QUALIFICATION.txt
+
+note=experimental approximate selective-scan — not architecture parity.
+     Next: MLA-CERT → PARITY → PERF

@@ -1,0 +1,33 @@
+--no-conversation is not supported by llama-cli
+please use llama-completion instead
+
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b8352-d23355afc
+model      : tinyllama_fresh.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read               add a text file
+
+
+> hello
+
+
+Can you summarize the main points of the text material about the benefits
+
+[ Prompt: 161.0 t/s | Generation: 62.0 t/s ]
+
+Exiting...

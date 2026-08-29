@@ -4969,9 +4969,10 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
 {
     if (!m_ggufLoader)
     {
+        // Non-modal: session restore can run before deferredHeavyInit creates the loader.
         std::string error = "Error: GGUF Loader not initialized";
         appendToOutput(error, "Errors", OutputSeverity::Error);
-        ErrorReporter::report(error, m_hwndMain);
+        LOG_ERROR(error);
         return false;
     }
 

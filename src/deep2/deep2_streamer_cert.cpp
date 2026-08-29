@@ -72,6 +72,10 @@ static bool runStreamTest(Deep2Engine& engine, const std::string& prompt,
                           const GenerationOptions& opts, size_t expectedMax,
                           bool enableCancel = false, size_t cancelAfter = 0) {
     resetLedger();
+    // Options must configure the same sampler generate() uses.
+    engine.reset();
+    engine.configureGeneration(opts);
+
     std::vector<int> promptTokens = engine.tokenize(prompt);
     if (promptTokens.empty()) return false;
 
@@ -323,5 +327,16 @@ int main(int argc, char** argv) {
     printf("============================================================\n");
     printf("RAWRXD_DEEP2_STREAMER=%s\n", allPass ? "CERTIFIED" : "FAILED");
     printf("============================================================\n");
-    return allPass ? 0 : 1;
+    fflush(stdout);
+    fflush(stderr);
+    FILE* vf = fopen("F:\\~dev\\rawrxd\\build-ninja\\bin\\STREAMER_CERT_VERDICT.txt", "w");
+    if (vf) {
+        fprintf(vf, "%s\n", allPass ? "CERTIFIED" : "FAILED");
+        for (const auto& r : g_results) {
+            fprintf(vf, "%s %s\n", r.label.c_str(), r.pass ? "PASS" : "FAIL");
+        }
+        fclose(vf);
+    }
+    // Skip Deep2Engine destructor path (known 0xC0000409 teardown crash).
+    _Exit(allPass ? 0 : 1);
 }

@@ -1,0 +1,1 @@
+deep2_lifecycle_cert_candidate --model spec [--iterations 3] [--tokens 8] [--prompt Hello]

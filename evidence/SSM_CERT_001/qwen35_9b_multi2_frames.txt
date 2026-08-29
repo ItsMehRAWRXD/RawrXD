@@ -1,0 +1,38 @@
+SSM-CERT-001 evidence dump
+model=G:\OllamaModels\blobs\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada
+ssm_layers=24
+observation=digest_frames_only
+architecture_rewrite=NO
+streamer_touched=NO
+attn_evidence=FROZEN_CANDIDATE_PASS
+
+=== case=one_token tokens=1 frames=8 ===
+stage=SSM_ALPHA layer=0 pos=1 count=32 nonfinite=0 min=-2.00881 max=2.16303 l2=7.51968 sum=21.1311 sum_abs=38.7725 aux=0 hash=0xa360b4269b6af1b7
+stage=SSM_BETA layer=0 pos=1 count=32 nonfinite=0 min=-0.871675 max=0.456354 l2=2.37085 sum=-8.25227 sum_abs=10.6723 aux=0 hash=0x7882ab810c684362
+stage=SSM_CONV layer=0 pos=1 count=32 nonfinite=0 min=-0.100096 max=0.188205 l2=0.338934 sum=0.250226 sum_abs=0.936887 aux=0 hash=0xc521d521bfd88378
+stage=SSM_STATE_PRE layer=0 pos=1 count=32 nonfinite=0 min=0 max=0 l2=0 sum=0 sum_abs=0 aux=0 hash=0x8421ae126c7ced25
+stage=SSM_STATE_POST layer=0 pos=1 count=32 nonfinite=0 min=-0.546729 max=0.374366 l2=0.674759 sum=-0.119755 sum_abs=1.12376 aux=0 hash=0x6134aa4389857e59
+stage=SSM_NORM layer=0 pos=1 count=32 nonfinite=0 min=-4.2208 max=2.70932 l2=5.11198 sum=-1.08441 sum_abs=8.48839 aux=0 hash=0xb26bfd9694ead03a
+stage=SSM_OUT layer=0 pos=1 count=4096 nonfinite=0 min=-0.483045 max=0.384647 l2=5.69606 sum=-2.05107 sum_abs=289.513 aux=0 hash=0x51a93e3f58327f41
+stage=SSM_SEQ_STEP layer=0 pos=1 count=0 nonfinite=0 min=0 max=0 l2=0 sum=0 sum_abs=0 aux=1 hash=0x0
+
+=== case=multi_token tokens=2 frames=16 ===
+stage=SSM_ALPHA layer=0 pos=1 count=32 nonfinite=0 min=-2.00881 max=2.16303 l2=7.51968 sum=21.1311 sum_abs=38.7725 aux=0 hash=0xa360b4269b6af1b7
+stage=SSM_BETA layer=0 pos=1 count=32 nonfinite=0 min=-0.871675 max=0.456354 l2=2.37085 sum=-8.25227 sum_abs=10.6723 aux=0 hash=0x7882ab810c684362
+stage=SSM_CONV layer=0 pos=1 count=32 nonfinite=0 min=-0.619647 max=0.385302 l2=1.06527 sum=-0.716638 sum_abs=4.14902 aux=0 hash=0xd14ca212c62ff915
+stage=SSM_STATE_PRE layer=0 pos=1 count=32 nonfinite=0 min=-0.546729 max=0.374366 l2=0.674759 sum=-0.119755 sum_abs=1.12376 aux=0 hash=0x6134aa4389857e59
+stage=SSM_STATE_POST layer=0 pos=1 count=32 nonfinite=0 min=-0.714918 max=4.10844 l2=4.2435 sum=4.07919 sum_abs=6.56134 aux=0 hash=0xbfb3a1aa889a2d9e
+stage=SSM_NORM layer=0 pos=1 count=32 nonfinite=0 min=-0.877644 max=4.9794 l2=5.13809 sum=4.88063 sum_abs=7.90941 aux=0 hash=0x699823f0db4296b7
+stage=SSM_OUT layer=0 pos=1 count=4096 nonfinite=0 min=-0.341638 max=0.640796 l2=5.69582 sum=0.755953 sum_abs=288.697 aux=0 hash=0xf5befdeceb6c00f8
+stage=SSM_SEQ_STEP layer=0 pos=1 count=0 nonfinite=0 min=0 max=0 l2=0 sum=0 sum_abs=0 aux=1 hash=0x0
+stage=SSM_ALPHA layer=0 pos=2 count=32 nonfinite=0 min=-2.43386 max=3.14194 l2=7.46561 sum=5.66687 sum_abs=32.648 aux=0 hash=0x3948d8fc4c27437
+stage=SSM_BETA layer=0 pos=2 count=32 nonfinite=0 min=-1.02961 max=0.632376 l2=2.5718 sum=-6.05789 sum_abs=11.6106 aux=0 hash=0xc3fbd27dda4813b4
+stage=SSM_CONV layer=0 pos=2 count=32 nonfinite=0 min=-0.753258 max=0.378518 l2=1.2508 sum=-1.59253 sum_abs=4.42799 aux=0 hash=0x7b65baf210dd47fa
+stage=SSM_STATE_PRE layer=0 pos=2 count=32 nonfinite=0 min=-0.714918 max=4.10844 l2=4.2435 sum=4.07919 sum_abs=6.56134 aux=0 hash=0xbfb3a1aa889a2d9e
+stage=SSM_STATE_POST layer=0 pos=2 count=32 nonfinite=0 min=-0.198443 max=7.48321 l2=7.77934 sum=10.2993 sum_abs=11.0058 aux=0 hash=0x785395d49e759546
+stage=SSM_NORM layer=0 pos=2 count=32 nonfinite=0 min=-0.132886 max=4.94731 l2=5.1501 sum=6.81521 sum_abs=7.28246 aux=0 hash=0xa659d2a98f7b4696
+stage=SSM_OUT layer=0 pos=2 count=4096 nonfinite=0 min=-0.375272 max=0.751452 l2=5.92771 sum=1.41007 sum_abs=299.5 aux=0 hash=0xf77636c756a88736
+stage=SSM_SEQ_STEP layer=0 pos=2 count=0 nonfinite=0 min=0 max=0 l2=0 sum=0 sum_abs=0 aux=2 hash=0x0
+
+SSM-CERT-001=CANDIDATE_PASS
+SSM-CERT-001_AUTHORITY=NOT_CERTIFIED

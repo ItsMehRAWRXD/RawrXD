@@ -7,6 +7,9 @@ gate_order=
   MODEL-CATALOG-001
   SOVEREIGN-BACKEND-001
   LIFECYCLE-CERT-001
+  ATTN-CERT-001
+  SSM-CERT-001
+  MLA-CERT-001
   PARITY-CERT-001
   AGENT-UNIFY-001
   AUTONOMOUS-E2E-001
@@ -15,23 +18,65 @@ gate_order=
 STREAMER-CERT-001=CERTIFIED
 streamer_commit=ec1d98e6a402e0ece18f02187009a126deca4c13
 streamer_tag=streamer-cert-001
+streamer_note=FROZEN — do not modify emission sequencing unless real streamer regression
 
-MODEL-CATALOG-001=IN_PROGRESS
-# ModelCatalog.hpp/cpp: RAWRXD_MODEL_ROOT + G:\OllamaModels file-store resolution
-# G:\OllamaModels is STORAGE only — not Ollama runtime
+BUILD_STATUS=PASS
+LINK_STATUS=PASS
+NEW_BINARY_EXECUTION=SAC_CLEARED
+DEEP2_EXECUTION=PROVEN
 
+MODEL-CATALOG-001=BUILD_PASS
 SOVEREIGN-BACKEND-001=NEXT
-LIFECYCLE-CERT-001=OPEN
+LIFECYCLE-CERT-001=CANDIDATE_PASS
+# NOT CERTIFIED. Candidate vs certified distinction is intentional.
+# Evidence: lifecycle_3x_after_residency_mutex_fix.txt + lifecycle_3x_after_p0_gates.txt
+# uses__Exit=NO; memory_growth=NOT_MEASURED — do not auto-promote.
+
+ATTN-CERT-001=CANDIDATE_PASS
+# NOT CERTIFIED. Evidence FROZEN under evidence/ATTN_CERT_001/ — do not mutate.
+# Authority: evidence/ATTN_CERT_001/ATTN_CERT_VERDICT.txt
+# inference_math_changed=NO; streamer_touched=NO
+# TELEMETRY: ResidencyCounters=0 is a separate defect (not ATTN arithmetic)
+
+SSM-CERT-001=CANDIDATE_PASS
+# NOT CERTIFIED. Model: pdurugyan/qwen3.5-9b-deepseek-v4-flash-Q4_K_M-v_2:latest
+# blob=G:\OllamaModels\blobs\sha256-9be227448d319e6a7acca8056b71bf7d9a2c6b2811986e6658a9dedc208d0ada
+# ssm_layers=24; one+multi digests PASS; StatePre[n+1]==StatePost[n]; EXIT=0
+# uses__Exit=YES — destructor heap corruption is LIFECYCLE debt, not SSM invent
+# experimental approximation — not architecture parity
+# evidence/SSM_CERT_001/ (ATTN evidence still FROZEN)
+
+MLA-CERT-001=NEXT
+# After SSM CANDIDATE_PASS: observe MLA path with same digest philosophy
+
+PRODUCTION_P0_GATES=APPLIED
+# evidence/SOVEREIGN_FINISH_HOUR/PRODUCTION_P0_GATES.txt
+# QUANT-SAFETY-001, ROPE-CERT-002, MLA/SSM quarantine, NO-KV softmax fix,
+# GQA topology, allocateBuffers, loadWeights false
+# Production baseline = fail-closed incomplete architectures; not universal correctness.
+
+capability_matrix=
+  GGUF_LOADER=ENABLED
+  MHA_GQA=ENABLED (production baseline)
+  STREAMER=CERTIFIED (frozen)
+  LIFECYCLE_TEARDOWN=CANDIDATE_PASS (not CERTIFIED)
+  ATTN_PATH=CANDIDATE_PASS (ATTN-CERT-001; FROZEN; not CERTIFIED)
+  SSM=CANDIDATE_PASS (SSM-CERT-001; experimental; not CERTIFIED)
+  MLA=BLOCKED (RAWRXD_DEEP2_ALLOW_UNSAFE_MLA) — next cert target
+  BYTE_TOKENIZER=BLOCKED (RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER)
+
 PARITY-CERT-001=AWAITING_TRUSTED_GOLDEN
 AGENT-UNIFY-001=PENDING
 AUTONOMOUS-E2E-001=BLOCKED_ON_PARITY
 PACKAGE-CERT-001=PENDING
 
 deep2_runtime_dependencies=[]
-runtime_ollama_http_deps=NONE (target; purge defaults in SOVEREIGN-BACKEND-001)
-runtime_ollama_daemon_deps=NONE
-runtime_llamacpp_deps=NONE
 inference_backend=DEEP2
 model_store=FILESYSTEM
 
-note=Do not spend effort making Ollama work. Highest value: MODEL-CATALOG + SOVEREIGN-BACKEND; lifecycle before final parity.
+cert_sequence_next=MLA-CERT → PARITY-CERT → PERF/TPS
+note=Do not claim universal production certification until ATTN/SSM/MLA/parity certs green.
+     ATTN+SSM removed from active blocker list (both CANDIDATE_PASS).
+     Do not synonymize CANDIDATE_PASS with CERTIFIED.
+     ResidencyCounters zero = telemetry debt only.
+     SSM uses__Exit — do not claim destructor certified via that harness.

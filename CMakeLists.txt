@@ -4688,6 +4688,9 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/GhostCache.cpp
     src/deep2/ThreadPool.cpp
     src/deep2/KVCache.cpp
+    src/deep2/AttnCertProbe.cpp
+    src/deep2/MlaCertProbe.cpp
+    src/deep2/SsmCertProbe.cpp
     src/deep2/MoERouter.cpp
     src/deep2/MoEWeightProxy.cpp
     src/deep2/MoEWeightsLoader.cpp
@@ -7630,6 +7633,38 @@ if(BUILD_DEEP2_PARITY_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] Parity certification harness: deep2_parity_cert (deps=NONE)")
+endif()
+
+# ide_agent_loop_cert — Win32IDE agent spine: read → edit → diag → build → run
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_IDE_AGENT_LOOP_CERT "Build IDE agent loop spine certification harness" ON)
+if(BUILD_IDE_AGENT_LOOP_CERT)
+    add_executable(ide_agent_loop_cert
+        src/agentic/ide_agent_loop_cert.cpp
+        src/security/InputSanitizer.cpp
+        src/agent/agentic_hotpatch_orchestrator.cpp
+        src/core/proxy_hotpatcher.cpp
+        src/deep2/IOCPGGUFLoader.cpp
+    )
+    target_link_libraries(ide_agent_loop_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(ide_agent_loop_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(ide_agent_loop_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(ide_agent_loop_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME ide_agent_loop_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    if(MSVC)
+        target_link_options(ide_agent_loop_cert PRIVATE /LARGEADDRESSAWARE:NO)
+    endif()
+    message(STATUS "[Agentic] IDE agent loop cert: ide_agent_loop_cert")
 endif()
 
 # test_deterministic_replay — STREAMER-CERT-001: deterministic replay gate
@@ -13058,3 +13093,7 @@ if(BUILD_TESTING)
     add_test(NAME b009_batched_prefill_certification
              COMMAND b009_batched_prefill_certification)
 endif()
+
+# RAWRXD_SOVEREIGN_FINISH_HOUR_INCLUDE
+include(cmake/RawrXDSovereignFinish.cmake)
+

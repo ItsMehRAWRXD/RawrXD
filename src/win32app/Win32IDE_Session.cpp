@@ -144,14 +144,23 @@ void Win32IDE::restoreSession() {
             DWORD modelAttrs = GetFileAttributesA(savedModelPath.c_str());
             if (modelAttrs != INVALID_FILE_ATTRIBUTES && !(modelAttrs & FILE_ATTRIBUTE_DIRECTORY)) {
                 LOG_INFO("Session: restoring model from path " + savedModelPath);
-                bool ggufOk = loadGGUFModel(savedModelPath);
-                if (ggufOk) {
-                    initializeInference();
-                    initBackendManager();
-                    initLLMRouter();
+                // Keep path even if StreamingGGUFLoader is not ready yet (created in deferredHeavyInit).
+                setLoadedModelPath(savedModelPath);
+                bool ggufOk = false;
+                if (m_ggufLoader) {
+                    ggufOk = loadGGUFModel(savedModelPath);
+                    if (ggufOk) {
+                        initializeInference();
+                        initBackendManager();
+                        initLLMRouter();
+                    }
+                } else {
+                    LOG_WARNING("Session: StreamingGGUFLoader not ready — deferring GGUF metadata load");
+                    // WM_APP+201 handler reloads from getLoadedModelPath() once init completes.
+                    PostMessageA(m_hwndMain, WM_APP + 201, 0, 0);
                 }
                 bool bridgeOk = loadModelForInference(savedModelPath);
-                restoredModel = ggufOk || bridgeOk;
+                restoredModel = ggufOk || bridgeOk || !savedModelPath.empty();
             } else {
                 LOG_INFO("Session: attempting logical model restore via bridge for " + savedModelPath);
                 restoredModel = ensureAgenticBridgeHasModel(savedModelPath);

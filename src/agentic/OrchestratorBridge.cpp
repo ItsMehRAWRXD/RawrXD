@@ -243,8 +243,26 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
                 continue;
             }
 
+            nlohmann::json argsJson = nlohmann::json::object();
+            try {
+                argsJson = nlohmann::json::parse(toolCalls[i].second);
+                if (!argsJson.is_object()) {
+                    ToolCallResult bad = ToolCallResult::Validation(
+                        "Tool args must be a JSON object");
+                    toolResults += "Tool '" + toolCalls[i].first + "' result: " +
+                                   BuildToolMessageContent(bad) + "\n";
+                    continue;
+                }
+            } catch (const std::exception& ex) {
+                ToolCallResult bad = ToolCallResult::Validation(
+                    std::string("Invalid tool args JSON: ") + ex.what());
+                toolResults += "Tool '" + toolCalls[i].first + "' result: " +
+                               BuildToolMessageContent(bad) + "\n";
+                continue;
+            }
+
             ToolCallResult toolResult = RawrXD::Agent::AgentToolHandlers::Instance().Execute(
-                toolCalls[i].first, toolCalls[i].second);
+                toolCalls[i].first, argsJson);
 
             toolResults += "Tool '" + toolCalls[i].first + "' result: " +
                           BuildToolMessageContent(toolResult) + "\n";
