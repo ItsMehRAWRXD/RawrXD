@@ -1,0 +1,30 @@
+BATCH2_TIP_ALIGN_001
+prereq=a1d27e372 L11/L12=AMPLIFICATION; L10 CLOSED
+align=TIP_* last-prompt hidden / first decode sample
+NOTE: deep2 TIP_LOGITS filename pos3 != llama TIP_LOGITS filename pos0; CONTENT is tip-aligned
+
+TIP_FINAL_NORM     dual=FAIL    max_abs=5.686935e-01 mean=6.439584e-02 L2=3.798845e+00 max_rel=4.008623e-01 argmax_i=2045 amp=1226.955 class=amplification_strong
+  d=deep2_TIP_FINAL_NORM_pos2_layer0_full_n2048_seq241.bin
+  l=llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq104.bin
+TIP_FINAL_HIDDEN   dual=FAIL    max_abs=5.686935e-01 mean=6.439584e-02 L2=3.798845e+00 max_rel=4.008623e-01 argmax_i=2045 amp=1.000 class=inherited
+  d=deep2_TIP_FINAL_HIDDEN_pos3_layer0_full_n2048_seq245.bin
+  l=llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq104.bin
+TIP_LOGITS         dual=FAIL    max_abs=4.821737e-01 mean=8.742776e-02 L2=1.968905e+01 max_rel=3.691507e-01 argmax_i=30036 amp=0.848 class=inherited
+  d=deep2_TIP_LOGITS_pos3_layer0_full_n32000_seq244.bin
+  l=llama_TIP_LOGITS_pos0_layer0_full_n32000_seq106.bin
+MISPAIR_FN_d0_l0   dual=FAIL    max_abs=3.001200e+01 mean=1.800377e+00 L2=1.101146e+02 max_rel=1.997638e+00 argmax_i=1278 amp=62.243 class=diagnostic_mispair
+  d=deep2_FINAL_NORM_pos0_layer0_full_n2048_seq080.bin
+  l=llama_FINAL_NORM_pos0_layer0_full_n2048_seq103.bin
+MISPAIR_LOG_d3_l0  dual=FAIL    max_abs=4.821737e-01 mean=8.742776e-02 L2=1.968905e+01 max_rel=3.691507e-01 argmax_i=30036 amp=1.000 class=diagnostic_mispair
+  d=deep2_LOGITS_pos3_layer0_full_n32000_seq243.bin
+  l=llama_LOGITS_pos0_layer0_full_n32000_seq105.bin
+
+ARGMAX
+  from bins: deep2 id=13 llama id=13 match=True
+  from stdout: deep2=None llama={'pos': 0, 'id': 13, 'logit': 8.18529892}
+
+VERDICT=TIP_ALIGNED
+TIP_GATE=ARGMAX_MATCH
+TIP_LOGITS_CLASS=inherited
+DO_NOT_reopen=L10 / L11 cert a1d27e372 / HexMag / GBS / P1
+NEXT=optional L16/L21 growth map OR freeze tip PASS and close numerical ladder for greedy-1

@@ -4,12 +4,10 @@ HEXMAG (FROZEN) — do not touch unless regression
 GBS / P1     — independent tracks; unchanged by Deep2 certs
 
 PARITY
-  DONE: L10_FFN_INP_SAME_SOURCE (7ee02e8b3)
-  DONE: L10_OUT_RESCORE (e53bac4b0) — INHERITED_FROM_FFN_DOWN
-  DONE: L11_BODY / L12 growth (BATCH2_L11_BODY_001) — VERDICT=AMPLIFICATION
-        L11_IN inherits L10_OUT; ATTN_OUT_11 CLOSED; FFN_GATE/DOWN amp to 1.07e-4
-        L12 jump via ATTN_OUT_12 amp (4.76x); L12_OUT ~ FFN_INP residual
-  NEXT: TODO_FINAL_NORM_LOGITS — tip-align pos0 (deep2 pos3 non-authoritative)
-  DEFERRED: RESID_IN localize (L11/L12 do not point back)
-  DO_NOT_REOPEN: L10 / L11-L12-as-root / SiLU / HexMag / GBS / P1
-  DO_NOT_CHASE: L16/L21 until tip-align closed
+  DONE: L10 @ 7ee02e8b3 / e53bac4b0 — CLOSED
+  DONE: L11 @ a1d27e372 — AMPLIFICATION (do not reopen)
+  DONE: TIP_ALIGN @ BATCH2_TIP_ALIGN_001 — TIP_ALIGNED / ARGMAX_MATCH id=13
+        deep2 TIP_* content <-> llama TIP_* (ignore filename pos labels)
+  OPTIONAL: L16/L21 growth map (not blocking greedy tip)
+  DEFERRED: RESID_IN localize
+  DO_NOT_REOPEN: L10 / L11 / tip-pos-filename / HexMag / GBS / P1

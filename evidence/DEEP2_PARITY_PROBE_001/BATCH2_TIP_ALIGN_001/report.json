@@ -1,0 +1,106 @@
+{
+  "prereq": "a1d27e372 L11 AMPLIFICATION",
+  "authority": "EXPAND_V tip = last prompt token",
+  "align_rule": {
+    "deep2_TIP_FINAL_NORM": "pos=promptLen-1 (2)",
+    "deep2_TIP_LOGITS": "filename pos=promptLen (3) but content=logits(last prompt hidden)",
+    "llama_TIP_*": "sole/last prefill column; filename may say pos0 when tensor is tip-only"
+  },
+  "stages": {
+    "TIP_FINAL_NORM": {
+      "n": 2048,
+      "max_abs": 0.5686934590339661,
+      "mean_abs": 0.06439583705503438,
+      "l2": 3.7988445222768017,
+      "max_rel": 0.4008623098233374,
+      "argmax": 2045,
+      "first": 0,
+      "dual": "FAIL",
+      "class": "amplification_strong",
+      "amp_vs_prev": 1226.9546041725266,
+      "d": "deep2_TIP_FINAL_NORM_pos2_layer0_full_n2048_seq241.bin",
+      "l": "llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq104.bin",
+      "prev_abs": 0.0004635
+    },
+    "TIP_FINAL_HIDDEN": {
+      "n": 2048,
+      "max_abs": 0.5686934590339661,
+      "mean_abs": 0.06439583705503438,
+      "l2": 3.7988445222768017,
+      "max_rel": 0.4008623098233374,
+      "argmax": 2045,
+      "first": 0,
+      "dual": "FAIL",
+      "class": "inherited",
+      "amp_vs_prev": 1.0,
+      "d": "deep2_TIP_FINAL_HIDDEN_pos3_layer0_full_n2048_seq245.bin",
+      "l": "llama_TIP_FINAL_NORM_pos0_layer0_full_n2048_seq104.bin",
+      "prev_abs": 0.5686934590339661
+    },
+    "TIP_LOGITS": {
+      "n": 32000,
+      "max_abs": 0.4821736812591553,
+      "mean_abs": 0.08742775837919908,
+      "l2": 19.689051628856017,
+      "max_rel": 0.36915069818496704,
+      "argmax": 30036,
+      "first": 0,
+      "dual": "FAIL",
+      "class": "inherited",
+      "amp_vs_prev": 0.8478621893739009,
+      "d": "deep2_TIP_LOGITS_pos3_layer0_full_n32000_seq244.bin",
+      "l": "llama_TIP_LOGITS_pos0_layer0_full_n32000_seq106.bin",
+      "prev_abs": 0.5686934590339661,
+      "deep2_argmax": {
+        "id": 13,
+        "logit": 8.276629447937012
+      },
+      "llama_argmax": {
+        "id": 13,
+        "logit": 8.185298919677734
+      },
+      "argmax_match": true
+    },
+    "MISPAIR_FN_d0_l0": {
+      "n": 2048,
+      "max_abs": 30.011996746063232,
+      "mean_abs": 1.8003774429826116,
+      "l2": 110.11455956821278,
+      "max_rel": 1.9976384652467838,
+      "argmax": 1278,
+      "first": 0,
+      "dual": "FAIL",
+      "class": "diagnostic_mispair",
+      "amp_vs_prev": 62.24312506582581,
+      "d": "deep2_FINAL_NORM_pos0_layer0_full_n2048_seq080.bin",
+      "l": "llama_FINAL_NORM_pos0_layer0_full_n2048_seq103.bin",
+      "prev_abs": 0.4821736812591553
+    },
+    "MISPAIR_LOG_d3_l0": {
+      "n": 32000,
+      "max_abs": 0.4821736812591553,
+      "mean_abs": 0.08742775837919908,
+      "l2": 19.689051628856017,
+      "max_rel": 0.36915069818496704,
+      "argmax": 30036,
+      "first": 0,
+      "dual": "FAIL",
+      "class": "diagnostic_mispair",
+      "amp_vs_prev": 1.0,
+      "d": "deep2_LOGITS_pos3_layer0_full_n32000_seq243.bin",
+      "l": "llama_LOGITS_pos0_layer0_full_n32000_seq105.bin",
+      "prev_abs": 0.4821736812591553
+    }
+  },
+  "stdout_argmax": {
+    "deep2": null,
+    "llama": {
+      "pos": 0,
+      "id": 13,
+      "logit": 8.18529892
+    }
+  },
+  "verdict": "TIP_ALIGNED",
+  "tip_gate": "ARGMAX_MATCH",
+  "tip_logits_class": "inherited"
+}

@@ -4,54 +4,35 @@
   "ids": [1, 21521, 9312],
   "cert_commit_l10_ffn_inp": "7ee02e8b3",
   "cert_commit_l10_out": "e53bac4b0",
+  "cert_commit_l11": "a1d27e372",
   "authority": "RAWRXD_FORCE_PRE_O_EXPAND_V",
   "independent_tracks": ["GBS", "P1_GGUF_streaming"],
   "do_not_reopen": [
     "tokenizer / Track A/B / L0 / L1 / wo",
     "Deep2Engine::SwiGLU (exact at L2 and L10)",
-    "L2_OUT abs-FAIL as SiLU defect (GATE ULP amp; dual INSPECT)",
-    "L10 attn (NORM/OUT PASS)",
-    "L10 ffn_gate / ffn_up GEMV (same-operand CLOSED)",
-    "L10 FFN_GATE as native root (INHERITED from RESID_IN)",
-    "L10_OUT (INHERITED_FROM_FFN_DOWN)",
-    "L11/L12 as native root (AMPLIFICATION of L10_OUT carrier)",
+    "L10 path / L10_OUT / L11 growth as native root",
+    "tip filename pos labels (use TIP_* content pairing)",
     "HexMag control-plane / IDE route",
     "GBS / P1 product-path status (independent)"
   ],
   "closed": [
-    "L2_OUT_LOC dual (CLASS=GATE_ULP_AMPLIFIED_THROUGH_SWIGLU)",
-    "SPARSE_TIPS_DUAL through L8 (INSPECT)",
-    "L8_L12 expand → FIRST_DUAL_FAIL=L10_OUT",
-    "L10 ATTN path PASS; SiLU PASS",
-    "L10_GATE_SAME_OPERAND: GEMV CLOSED",
-    "L10_FFN_INP_SAME_SOURCE: FFN_GATE_10 INHERITED from FFN_INP/RESID_IN",
-    "L10_OUT_RESCORE: L10_OUT INHERITED_FROM_FFN_DOWN",
-    "L11_BODY: L11_OUT AMPLIFICATION of inherited L10_OUT; ATTN_OUT_11 CLOSED",
-    "L12_BODY: L12 jump via ATTN_OUT_12 amp of L11 tip; L12_OUT inherits ATTN residual"
+    "L10_FFN_INP_SAME_SOURCE @ 7ee02e8b3",
+    "L10_OUT_RESCORE @ e53bac4b0 INHERITED_FROM_FFN_DOWN",
+    "L11_BODY @ a1d27e372 VERDICT=AMPLIFICATION",
+    "TIP_ALIGN FINAL_NORM/LOGITS ARGMAX_MATCH id=13"
   ],
   "active": {
-    "id": "TIP_ALIGN_FINAL_NORM_LOGITS",
-    "status": "NEXT",
-    "L11_OUT": {"max_abs": 1.065e-4, "class": "AMPLIFICATION"},
-    "L12_OUT": {"max_abs": 4.635e-4, "class": "AMPLIFICATION"},
-    "evidence": "BATCH2_L11_BODY_001/GATE.txt"
+    "id": "OPTIONAL_L16_L21_GROWTH_MAP",
+    "status": "OPTIONAL",
+    "tip_gate": "ARGMAX_MATCH",
+    "TIP_FINAL_NORM": {"max_abs": 5.687e-1, "class": "amplification_strong"},
+    "TIP_LOGITS": {"max_abs": 4.822e-1, "class": "inherited", "argmax": 13},
+    "evidence": "BATCH2_TIP_ALIGN_001/GATE.txt"
   },
   "todos_ordered": [
-    {"seq": 6, "id": "TODO_L10_FFN_INP_SAME_SOURCE", "status": "DONE", "result": "GATE inherited from RESID_IN"},
-    {"seq": 7, "id": "TODO_L10_OUT_RESCORE", "status": "DONE", "result": "L10_OUT INHERITED_FROM_FFN_DOWN"},
-    {"seq": 8, "id": "TODO_SPARSE_GROWTH_L11_L12", "status": "DONE", "result": "VERDICT=AMPLIFICATION; L11 FFN amp; L12 ATTN residual amp"},
-    {"seq": 9, "id": "TODO_FINAL_NORM_LOGITS", "status": "NEXT", "action": "Tip-align LOGITS/FINAL_NORM pos0 (deep2 currently pos3 non-authoritative)"},
-    {"seq": 10, "id": "TODO_L10_RESID_IN_LOCALIZE", "status": "DEFERRED", "action": "L11/L12 do not point back; keep deferred"}
-  ],
-  "dual_gate_policy": {
-    "PASS": "abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6)",
-    "INSPECT": "abs<=1e-4 AND rel<=5e-6",
-    "FAIL": "else"
-  },
-  "error_class_policy": {
-    "inherited": "input discrepancy quantitatively explains output (ratio≲1.25 or matching footprint)",
-    "amplification": "operation magnifies inherited ULP/error",
-    "native": "same inputs still produce material output divergence",
-    "note": "amp_vs near-zero ATTN residual is not a root signal; compare to residual carrier (L*_IN)"
-  }
+    {"seq": 8, "id": "TODO_SPARSE_GROWTH_L11_L12", "status": "DONE", "result": "AMPLIFICATION @ a1d27e372"},
+    {"seq": 9, "id": "TODO_FINAL_NORM_LOGITS", "status": "DONE", "result": "TIP_ALIGNED; ARGMAX_MATCH id=13"},
+    {"seq": 10, "id": "TODO_L10_RESID_IN_LOCALIZE", "status": "DEFERRED"},
+    {"seq": 11, "id": "TODO_L16_L21_GROWTH_MAP", "status": "OPTIONAL", "action": "Map post-L12 amplification if needed; not blocking greedy tip"}
+  ]
 }

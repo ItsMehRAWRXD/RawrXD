@@ -1,0 +1,29 @@
+BATCH2_TIP_ALIGN_001
+============================================================
+date=2026-08-29
+prereq=a1d27e372 L11 AMPLIFICATION (L10 CLOSED)
+authority=EXPAND_V; tip = last prompt token
+binaries=test_generate_one_token.exe + llama_ref_parity_probe.exe (located separately)
+
+ALIGN RULE (authoritative)
+--------------------------
+  deep2 TIP_FINAL_NORM @ pos2  <->  llama TIP_FINAL_NORM (tip column; file may say pos0)
+  deep2 TIP_LOGITS      @ pos3  <->  llama TIP_LOGITS (content tip-aligned; file may say pos0)
+  prior SKIP deep2 LOGITS_pos3 vs llama LOGITS_pos0 without TIP_* = NON-AUTHORITATIVE
+
+SCORES
+------
+  TIP_FINAL_NORM  dual=FAIL  max_abs=5.687e-01  class=amplification_strong (post-L12 growth)
+  TIP_LOGITS      dual=FAIL  max_abs=4.822e-01  class=inherited from tip hidden
+  ARGMAX          deep2=13   llama=13           MATCH
+  LOGIT_13        deep2=8.277 llama=8.185       (near-miss pair still tips LF)
+
+VERDICT=TIP_ALIGNED
+TIP_GATE=ARGMAX_MATCH
+  Tip position pairing is closed. Numerical FAIL is inherited amplification of the
+  certified L10->L12 growth chain, not a new tip-only root.
+  Greedy-1 tip selection matches oracle (id=13).
+
+DO_NOT_reopen=L10 / L11 a1d27e372 / HexMag / GBS / P1
+DO_NOT_treat_filename_pos_as_authority
+NEXT=optional L16/L21 growth map; greedy tip ARGMAX closed
