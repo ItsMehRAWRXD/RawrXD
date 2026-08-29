@@ -5,9 +5,12 @@
 
 ## Binary gate (after clean rebuild)
 
-- [ ] `RawrXD-Win32IDE.exe` builds from fresh `build-win32ide-p1/`
-- [ ] Map/dumpbin shows `HexMag_Init`, `HexMag_Tuner_*`, controller/client TUs linked
-- [ ] Record SHA-256 of the exe into `evidence/P1_WIN32IDE_BINARY.txt`
+- [x] `RawrXD-Win32IDE.exe` builds from fresh `build-win32ide-p1/`
+- [x] Map/dumpbin shows `HexMag_Init`, `HexMag_Tuner_*`, controller/client TUs linked
+- [x] Record SHA-256 of the exe into `evidence/P1_WIN32IDE_BINARY.txt`
+
+Frozen: tip `b91641016`, sha256 `D7BD2FFBD23BDFD6DDE2553F05BD1CD7ED38998555D3784603534496F7B24091`
+(see `evidence/P1_WIN32IDE_BINARY.txt`).
 
 ## Product path
 

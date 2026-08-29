@@ -2,7 +2,7 @@ P1_PROMOTE_STATUS
 =================
 date=2026-08-29
 promote_branch=promote/hexmag-p1-ide-product
-promote_tip=2ceb9e26f (+ pending smoke doc commit)
+promote_tip=b91641016b397d4e78e21dd6f34fd76177d464e6
 base=origin/main @ c270b9a57
 feature_authority_tip=5d7da8e46
 
@@ -11,8 +11,16 @@ TRANSPLANT
 strategy=path-checkout + surgical IDE hooks (NOT wholesale merge)
 files≈74 in initial transplant commit 20dd43ebc
 HexMagAction.hpp=added (was untracked on feature; required by FinalizePolicy)
-CMakeLists.txt=HexMag WIN32IDE_SOURCES/EXTRA_ASM wired (e9b517a27)
-ml64 detection=CMAKE_ASM_MASM_COMPILER aware (2ceb9e26f)
+CMakeLists.txt=HexMag WIN32IDE_SOURCES/EXTRA_ASM wired
+ml64 detection=CMAKE_ASM_MASM_COMPILER aware
+
+CMAKE_TARGET_ISOLATION (P1)
+---------------------------
+RAWRXD_BUILD_RAWRENGINE=option default ON; P1 configures OFF
+RAWRXD_BUILD_GOLD=option default ON; P1 configures OFF
+WIN32IDE=omit-missing inventory filter (do not resurrect stale TUs)
+SDK shims=commdlg/commctrl prefer installed 10.0.26100.0
+src/sovereign/build/=un-ignored + BuildStateGraph committed (was swallowed by **/build/)
 
 PRESERVED UNCHANGED
 -------------------
@@ -27,22 +35,26 @@ HEXMAG_IDE_E2E_001=PASS (scripts/Cert-HexMagIdeE2E.ps1 -Root G:\rawrxd-p1-promot
 
 WIN32IDE CLEAN BUILD
 --------------------
-status=BLOCKED_BY_PREEXISTING_MAIN_CMAKE
+status=LINKED
 fresh_dir=build-win32ide-p1
-blocker=CMakeLists.txt on origin/main references missing sources
-  (e.g. src/build/BuildIntelligence.cpp) and other targets before
-  RawrXD-Win32IDE link — unrelated to HexMag transplant.
-next=repair main's Win32IDE source inventory OR build from a known-good
-  IDE cmake snapshot that already produced RawrXD-Win32IDE, then overlay
-  HexMag objects; then record SHA-256 in evidence/P1_WIN32IDE_BINARY.txt
+exe=build-win32ide-p1\bin\RawrXD-Win32IDE.exe
+sha256=D7BD2FFBD23BDFD6DDE2553F05BD1CD7ED38998555D3784603534496F7B24091
+evidence=evidence/P1_WIN32IDE_BINARY.txt
 
 PRODUCT SMOKE
 -------------
 checklist=docs/P1_PRODUCT_PATH_SMOKE.md
-status=PENDING (needs exe)
+binary_gate=PASS (exe + map symbols + SHA frozen)
+interactive_scenarios_1_8=PENDING (manual GUI)
+
+NEXT
+----
+run P1_PRODUCT_PATH_SMOKE scenarios 1-8
+only then open/merge P1 PR
 
 DO NOT
 ------
 - reopen HexMag sequencing / FinalizePolicy
 - merge feat/hexmag-polymorphic-repeat-tuner-masm wholesale into main
 - mutate frozen GATE bodies
+- resurrect missing RawrEngine files merely to unblock P1
