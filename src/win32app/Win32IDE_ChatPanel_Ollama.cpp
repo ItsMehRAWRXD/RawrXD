@@ -332,7 +332,7 @@ void Win32IDE::sendChatMessageToOllama(const std::string& message,
 }
 
 // ============================================================================
-// Unified Chat Handler - Local GGUF first, Ollama fallback
+// Unified Chat Handler - HexMag controller first, then local GGUF / Ollama
 // ============================================================================
 void Win32IDE::HandleCopilotSend_Ollama()
 {
@@ -362,6 +362,10 @@ void Win32IDE::HandleCopilotSend_Ollama()
     
     // Add to history
     m_chatHistory.push_back({"user", userMessage});
+    m_lastCopilotUserPrompt = userMessage;
+
+    // PRIORITY 0 already attempted in HandleCopilotSend via tryHexMagControllerCopilotSend.
+    // Do not re-enter HexMag here (avoids double dispatch when Ollama is the fallback).
     
     // PRIORITY 1: Try local native inference first (fully local, no HTTP)
     // INSTRUMENTATION: Log which branch is taken

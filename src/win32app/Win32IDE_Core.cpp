@@ -3730,8 +3730,6 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         HandleCopilotClear();
         return;
     }
-    if (handleHexMagCommand(static_cast<unsigned>(id)))
-        return;
     if (id == 1206)
     {
         setAgenticMode(RawrXD::AgenticMode::Plan);

@@ -2362,11 +2362,14 @@ class Win32IDE
     void HandleCopilotSend_Ollama();
     void initializeChatPanelOllama();
 
+  public:
     // HexMag control-plane dependency (not HexMag UI):
-    // HandleCopilotSend → RuntimeController → FinalizePolicy → HandleCopilotStreamUpdate
+    // HandleCopilotSend → RuntimeController → FinalizePolicy → Copilot chat
     bool tryHexMagControllerCopilotSend(const std::string& userMessage);
+    void finishHexMagCopilotDone(LPARAM lParam);
+    void appendCopilotChatUtf8(const std::string& utf8);
 
-    // Optional HexMag agent menu / telemetry (Win32IDE_HexMag.cpp)
+    // Optional HexMag agent menu / telemetry stubs (implemented in HexMagCopilotRoute)
     bool handleHexMagCommand(unsigned cmdId);
     void setHexMagStatusBarHint(const std::wstring& text);
     void setHexMagStatusBarHint(const std::string& text);
@@ -2390,6 +2393,7 @@ class Win32IDE
     bool tryDispatchCopilotThroughHexMag(const std::string& userMessage, unsigned long long traceId = 0);
     void dispatchHexMagAskFromUi(const std::string& question, bool toCopilotPanel = true);
 
+  private:
     std::vector<std::string> getModelsFromDirectory(const std::string& directory);
     std::string makeHttpRequest(const std::string& url, const std::string& method, const std::string& body,
                                 const std::string& contentType);

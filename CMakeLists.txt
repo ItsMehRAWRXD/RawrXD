@@ -6797,6 +6797,17 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
     set_property(TARGET RawrXD-Win32IDE PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+    # Static CRT (/MT) needs ATL static lib path for atls.lib (LNK1104 otherwise).
+    if(MSVC AND CMAKE_CXX_COMPILER)
+        get_filename_component(_MSVC_BIN "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        get_filename_component(_MSVC_VC "${_MSVC_BIN}/../../.." ABSOLUTE)
+        set(_ATL_LIB "${_MSVC_VC}/atlmfc/lib/x64")
+        if(EXISTS "${_ATL_LIB}/atls.lib")
+            target_link_directories(RawrXD-Win32IDE PRIVATE "${_ATL_LIB}")
+            message(STATUS "[Win32IDE] ATL static lib: ${_ATL_LIB}")
+        endif()
+    endif()
+
     # GPU sovereign ASM link state (UI/runtime detection)
     if(DEFINED RAWRXD_HAS_SOVEREIGN_GPU_ASM)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_SOVEREIGN_GPU_ASM=${RAWRXD_HAS_SOVEREIGN_GPU_ASM})

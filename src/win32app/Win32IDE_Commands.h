@@ -127,6 +127,33 @@
 
 #define IDM_AGENT_BOUNDED_LOOP      4120
 
+// HexMag controller route (4130–4149) — IDE collects input; controller owns authority
+#define IDM_AGENT_HEXMAG_START           4130
+#define IDM_AGENT_HEXMAG_HEALTH          4131
+#define IDM_AGENT_HEXMAG_TOGGLE_FALLBACK 4132
+#define IDM_AGENT_HEXMAG_ROUTE_COPILOT   4133
+#define IDM_AGENT_HEXMAG_CYCLE_SWARM     4134
+#define IDM_AGENT_HEXMAG_SWARM_1         4135
+#define IDM_AGENT_HEXMAG_SWARM_2         4136
+#define IDM_AGENT_HEXMAG_SWARM_3         4137
+#define IDM_AGENT_HEXMAG_SWARM_4         4138
+#define IDM_AGENT_HEXMAG_SWARM_6         4139
+#define IDM_AGENT_HEXMAG_SWARM_8         4140
+#define IDM_AGENT_HEXMAG_TELEMETRY       4141
+
+#define IDC_OUTPUT_EDIT_AGENT_TELEMETRY  1028
+
+// HexMag UI-thread completion (avoid WM_APP+109 = WM_COPILOT_RECORD_TOOL_TURN)
+#ifndef WM_HEXMAG_ASK_DONE
+#define WM_HEXMAG_ASK_DONE        (WM_APP + 560)
+#endif
+#ifndef WM_HEXMAG_TELEMETRY_CHUNK
+#define WM_HEXMAG_TELEMETRY_CHUNK (WM_APP + 561)
+#endif
+#ifndef WM_HEXMAG_TELEMETRY_DONE
+#define WM_HEXMAG_TELEMETRY_DONE  (WM_APP + 562)
+#endif
+
 // ---- Autonomy + pipeline (4150–4162) ---------------------------------------
 #define IDM_AUTONOMY_TOGGLE         4150
 #define IDM_AUTONOMY_START          4151

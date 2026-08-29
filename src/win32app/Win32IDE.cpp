@@ -1238,26 +1238,6 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_AUTONOMOUS_COMMUNICATOR, L"Autonomous &Communicator");
     AppendMenuW(hAgentMenu, MF_STRING, IDM_AGENT_STOP, L"&Stop Agent");
 
-    // HexMag: Copilot → HexMagRuntimeController → FINALIZE_POLICY
-    AppendMenuW(hAgentMenu, MF_SEPARATOR, 0, nullptr);
-    HMENU hHexMagMenu = CreatePopupMenu();
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_START, L"&Start HexMag Engine");
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_HEALTH, L"&Health Check");
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_ROUTE_COPILOT, L"Route &Copilot through HexMag");
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_TOGGLE_FALLBACK, L"GGUF &Fallback on Failure");
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_TELEMETRY, L"Show &Telemetry Panel");
-    AppendMenuW(hHexMagMenu, MF_SEPARATOR, 0, nullptr);
-    HMENU hSwarmMenu = CreatePopupMenu();
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_1, L"1 agent");
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_2, L"2 agents");
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_3, L"3 agents");
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_4, L"4 agents");
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_6, L"6 agents");
-    AppendMenuW(hSwarmMenu, MF_STRING, IDM_AGENT_HEXMAG_SWARM_8, L"8 agents");
-    AppendMenuW(hHexMagMenu, MF_POPUP, (UINT_PTR)hSwarmMenu, L"&Swarm Agents");
-    AppendMenuW(hHexMagMenu, MF_STRING, IDM_AGENT_HEXMAG_CYCLE_SWARM, L"&Cycle Swarm Size");
-    AppendMenuW(hAgentMenu, MF_POPUP, (UINT_PTR)hHexMagMenu, L"&HexMag");
-
     AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hAgentMenu, L"&Agent");
 
     // Telemetry menu
