@@ -1,0 +1,91 @@
+HEXMAG_IDE_ROUTE_INTEGRATION_GATE
+date=2026-08-29
+status=CLOSED
+route_freeze_ref=fc409ae9cb (Win32IDE HexMag Copilot route frozen — not modified)
+
+========================================================================
+SCOPE
+========================================================================
+Live Copilot → HexMag control-plane route is certified CLOSED for:
+  BUILD_WIRED
+  RUNTIME_ROUTE (A / B1 / B2 / C)
+  FINAL_EXCLUSIVITY
+  FAIL_CLOSED
+  MASM underspec classifier (objectless imperative seam)
+
+IDE UI polish / HEXMAG_IDE_E2E_001 full UI cert remains out of this freeze.
+
+========================================================================
+FINAL SEAM FIXED (this close)
+========================================================================
+Root domain: MASM underspec classifier only
+  NOT Win32IDE wiring
+  NOT HexMagRuntimeController routing
+  NOT FINAL/NEED_INPUT rendering
+
+Predicate (semantic):
+  action verb + unresolved pronoun / missing object + no usable target/evidence
+  = UNDERSPECIFIED → NEED_INPUT
+
+Examples:
+  Fix it.                         → NEED_INPUT
+  Fix this.                       → NEED_INPUT
+  Repair it.                      → NEED_INPUT
+  Make it work.                   → NEED_INPUT
+  UNSPECIFIED markers             → NEED_INPUT
+  Create hello.cpp                → actionable
+  Build project                   → actionable
+  Open README.md                  → actionable
+  Run tests                       → actionable
+  Fix the compile error.          → actionable
+  Fix src/main.cpp line 42.       → actionable
+  Fix the failing tokenizer test. → actionable
+
+Sources patched:
+  src/asm/RawrXD_HexMag_Swarm.asm
+    hx_goal_objectless_imperative / hx_goal_has_substance
+    hx_goal_needs_input (objectless before actionable-token short-circuit)
+  src/core/hexmag_oracle_binder.cpp
+    goalLooksUnderspecified mirror (isObjectlessImperative)
+
+========================================================================
+EVIDENCE
+========================================================================
+Classifier:
+  tests/hexmag_underspec_classifier_cert.cpp
+  HEXMAG_UNDERSPEC_CLASSIFIER_001=PASS failures=0
+
+Runtime route smoke:
+  scripts/Smoke-HexMagRuntimeRoute.ps1
+  evidence/HEXMAG_RUNTIME_ROUTE_SMOKE/GATE.txt
+  A  actionable → FINAL              PASS
+  B1 Fix it.    → NEED_INPUT         PASS
+  B2 UNSPECIFIED→ NEED_INPUT         PASS
+  C  unavailable→ fail-closed        PASS
+  BUILD_WIRED=PASS
+  RUNTIME_ROUTE=PASS
+  FINAL_EXCLUSIVITY=PASS
+  FAIL_CLOSED=PASS
+  SMOKE_EXIT=0
+
+Prior ladder (still green; not reopened here):
+  Smoke-HexMagMasm 1–7 ALL: PASS / SMOKE_EXIT=0
+  HEXMAG_RUNTIME_CONTROLLER_001=PASS
+  HEXMAG_CLIENT_MASM_001=PASS
+  HEXMAG_IDE_LINK_001=PASS
+
+========================================================================
+INVARIANTS (LOCKED)
+========================================================================
+client_success != final_authority
+candidate_exists != final_allowed
+NEED_INPUT latches; no FINAL resurrection
+short length alone != NEED_INPUT
+objectless repair imperative == NEED_INPUT
+Win32IDE_HexMagCopilotRoute.cpp frozen (no further route edits for this gate)
+
+========================================================================
+VERDICT
+========================================================================
+HEXMAG_IDE_CONTROL_PLANE_ROUTE + RUNTIME_ROUTE_SMOKE = CLOSED
+Live Copilot → HexMag path ready for operator use under these certs.

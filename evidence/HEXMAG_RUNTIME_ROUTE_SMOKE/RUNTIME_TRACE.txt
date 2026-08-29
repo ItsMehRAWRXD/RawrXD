@@ -1,0 +1,35 @@
+COPILOT_SEND
+tryHexMagControllerCopilotSend=entered (via ideHexMagSendPath)
+
+=== CASE A actionable ===
+HexMagRuntimeController::run=entered
+status=FINAL
+finalAuthority=1
+finalize.allowed=1
+diag=ACTIONABLE_FINAL
+answer=goal.satisfied: verified
+WM_HEXMAG_COPILOT_DONE=received (mapped)
+chat_render=FINAL
+
+=== CASE B1 underspec live 'Fix it.' ===
+HexMagRuntimeController::run=entered
+status=NEED_INPUT
+finalAuthority=0
+diag=NEED_INPUT
+chat_render=NEED_INPUT
+FINAL=ABSENT
+
+=== CASE B2 underspec markers (route exclusivity) ===
+HexMagRuntimeController::run=entered
+status=NEED_INPUT
+finalAuthority=0
+diag=NEED_INPUT
+chat_render=NEED_INPUT
+FINAL=ABSENT
+
+=== CASE C forced failure ===
+status=FAILURE
+finalAuthority=0
+diag=BACKEND_FAILURE
+chat_render=FAILURE
+FINAL=ABSENT

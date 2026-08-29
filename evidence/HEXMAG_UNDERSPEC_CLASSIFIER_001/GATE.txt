@@ -1,0 +1,9 @@
+HEXMAG_UNDERSPEC_CLASSIFIER_001
+date=2026-08-29
+status=PASS
+rule=action_verb + unresolved_pronoun + no_usable_target => NEED_INPUT
+masm=PASS
+cpp_mirror=PASS
+positives_preserved=Create hello.cpp|Build project|Open README.md|Run tests|Fix the compile error.
+objectless=Fix it.|Fix this.|Repair it.|Make it work.
+failures=0

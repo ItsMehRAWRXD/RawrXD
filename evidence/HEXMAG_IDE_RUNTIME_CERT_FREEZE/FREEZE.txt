@@ -1,0 +1,44 @@
+﻿HEXMAG_IDE_RUNTIME_CERT_FREEZE
+timestamp_utc=2026-08-29T19:39:18.8108979Z
+disposition=HEXMAG_IDE_RUNTIME_CERT=PASS/FROZEN
+status=WIRED_EXECUTABLE_CERTIFIED
+integration_gate=CLOSED
+copilot_route=FROZEN
+prior_controller_FAIL_smoke=STALE/NON-AUTHORITATIVE
+canonical_cite=evidence\HEXMAG_IDE_RUNTIME_CERT_FREEZE\
+see_also=AUTHORITY.txt
+
+exe_path=F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+exe_sha256=2CF41F7FAACC93205D98F9F9ED875684CAD4B3CEBCF735EF8AE9E7282F44203E
+exe_bytes=309938176
+exe_mtime_local=2026-08-29T15:35:54.4928406-04:00
+
+git_root=F:\~dev\rawrxd
+git_branch=cert/deep2-parity-probe-001
+git_head=fc409ae9cb224db7cda6ef39303c7c9425863bb6
+
+SMOKE:
+HEXMAG_NEED_INPUT_001=PASS
+HEXMAG_ORACLE_BINDER_001=PASS
+W0-001=PASS
+W0_ACTIONABLE=PASS (ladder; solve/FINAL gates OK)
+HEXMAG_RUNTIME_CONTROLLER_001=PASS
+Smoke-HexMagMasm ALL: PASS
+SMOKE_EXIT=0
+
+IDE_ROUTE_CERT:
+IDE_E2E_EXIT=0
+HEXMAG_IDE_E2E_001=PASS failures=0
+ide_e2e_cert_sha256=105774D18265826F34267728C8C3724A6C760D8C5BBD9159E01290480E987635
+entry=HandleCopilotSend->tryHexMagControllerCopilotSend->ideHexMagSendPath
+A_ACTIONABLE: finalAuthority=1 ui=FINAL
+B_NEED_INPUT: finalAuthority=0 ui=NEED_INPUT
+D_TOOL_FAIL: FinalizePolicy deny / no false FINAL
+
+gui_live_copilot_panel=NOT_AUTOMATED
+wndproc_ui_delivery=UNPROVEN
+runtime_controller_cert=PASS
+# UI delivery is a separately scoped coverage gap; does NOT downgrade HEXMAG_IDE_RUNTIME_CERT.
+proof_basis=hexmag_ide_e2e_cert + Smoke-HexMagMasm (shared control-plane with Win32IDE CopilotRoute)
+next_after_publish=TODO_L10_RESID_IN_LOCALIZE
+hexmag=DO_NOT_REOPEN

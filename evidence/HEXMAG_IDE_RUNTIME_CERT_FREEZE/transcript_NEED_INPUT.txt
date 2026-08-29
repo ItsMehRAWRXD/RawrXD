@@ -1,0 +1,10 @@
+﻿=== B_NEED_INPUT ===
+phase=LATCH_NEED_INPUT fail=need_input finalAuthority=0 ui=NEED_INPUT gen=1 redispatches=0
+CTRL_RUN
+CTRL_CLASSIFY
+CTRL_DISPATCH
+CTRL_CLIENT_RESULT
+CTRL_NEED_INPUT_LATCH_SET
+finalAuthority=0
+need_input=1
+no_accidental_FINAL=1

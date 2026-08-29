@@ -1,0 +1,24 @@
+HEXMAG_IDE_RUNTIME_CERT = PASS / FROZEN
+Copilot route            = FROZEN
+integration gate         = CLOSED
+
+CANONICAL_CITE = evidence\HEXMAG_IDE_RUNTIME_CERT_FREEZE\
+
+# Authoritative sequence (cite this freeze only)
+controller            = PASS
+full suite            = PASS
+IDE E2E               = PASS
+runtime certification = FROZEN
+
+# Superseded — NON-AUTHORITATIVE (do not cite for audit/valuation)
+PRIOR_SMOKE_FALSE_AGGREGATE:
+  controller = FAIL
+  failures   = 16
+  ALL: PASS  = INVALID
+  SMOKE_EXIT = 0   ← false aggregate
+  disposition = STALE / NON-AUTHORITATIVE
+  reason = suite printed ALL PASS while HEXMAG_RUNTIME_CONTROLLER_001 failed
+
+Any future audit or valuation MUST cite this runtime cert freeze directory,
+not any earlier Smoke-HexMagMasm "ALL: PASS" / SMOKE_EXIT=0 output that
+preceded the honest controller PASS rerun.

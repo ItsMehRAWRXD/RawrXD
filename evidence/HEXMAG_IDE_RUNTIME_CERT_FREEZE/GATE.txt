@@ -1,0 +1,7 @@
+HEXMAG_IDE_E2E_001
+status=PASS
+entry=HandleCopilotSend→ideHexMagSendPath
+controller_rewrite=0
+P0C_CLOSED=1
+cases=ACTIONABLE_FINAL,NEED_INPUT,WRONG_THEN_FINAL,TOOL_FAIL_CLOSED,POLYMORPHISM
+failures=0
