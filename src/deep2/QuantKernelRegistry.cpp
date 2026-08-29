@@ -468,15 +468,15 @@ static void gemv_q4_k_scalar(
 
             // Q4_K: 4 sections of 64 weights.
             // Each section j uses qs[j*32..j*32+31] and contains:
-            //   - low nibbles  -> weights j*64 + 0..31  (scale group j)
-            //   - high nibbles -> weights j*64 + 32..63 (scale group j+4)
+            //   - low nibbles  -> weights j*64 + 0..31   (scale group 2*j)
+            //   - high nibbles -> weights j*64 + 32..63  (scale group 2*j+1)
             const uint8_t* q = blk.qs;
 
             for (int j = 0; j < 4; ++j) {
-                const float d0 = d * static_cast<float>(scales[j]);
-                const float m0 = dmin * static_cast<float>(mins[j]);
-                const float d1 = d * static_cast<float>(scales[j + 4]);
-                const float m1 = dmin * static_cast<float>(mins[j + 4]);
+                const float d0 = d * static_cast<float>(scales[2 * j]);
+                const float m0 = dmin * static_cast<float>(mins[2 * j]);
+                const float d1 = d * static_cast<float>(scales[2 * j + 1]);
+                const float m1 = dmin * static_cast<float>(mins[2 * j + 1]);
 
                 for (int l = 0; l < 32; ++l) {
                     int idx0 = j * 64 + l;
