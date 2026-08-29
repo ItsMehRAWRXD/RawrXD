@@ -97,6 +97,8 @@ class SwarmModel:
             prompt = f"{question}\n\nCode context:\n```\n{code}\n```"
 
         t0 = time.time()
+        history = getattr(self.engine, "history", [])
+        start = len(history)
         self.engine.add(Event(kind="llm.question", payload={"question": prompt}, source_bot="API/IDE"))
 
         sources: Set[str] = set()
@@ -104,7 +106,7 @@ class SwarmModel:
             await self.engine.step()
 
             final_answer: Optional[Finding] = None
-            for item in reversed(getattr(self.engine, "history", [])):
+            for item in reversed(history[start:]):
                 labels = getattr(item, "labels", set())
                 data = getattr(item, "data", {})
                 if "web.content" in labels and data.get("url"):
@@ -120,7 +122,7 @@ class SwarmModel:
                     sources=sorted(sources)[:10],
                     meta={
                         "events_processed": getattr(self.engine, "event_count", 0),
-                        "findings": len(getattr(self.engine, "history", [])),
+                        "findings": len(history),
                         "elapsed": round(time.time() - t0, 2),
                     },
                 )
@@ -164,13 +166,15 @@ async def agent_endpoint(req: AgentRequest) -> StreamingResponse:
 
     async def event_stream():
         t0 = time.time()
+        history = getattr(swarm.engine, "history", [])
+        start = len(history)
         swarm.engine.add(Event(kind="llm.question", payload={"question": req.goal}, source_bot="API/IDE"))
         yield f"data: {json.dumps({'kind': 'agent.started', 'goal': req.goal})}\n\n"
 
         answer = None
         while time.time() - t0 < req.max_time:
             await swarm.engine.step()
-            for item in reversed(getattr(swarm.engine, "history", [])):
+            for item in reversed(history[start:]):
                 if "llm.answer" in getattr(item, "labels", set()):
                     answer = getattr(item, "data", {}).get("answer")
                     break

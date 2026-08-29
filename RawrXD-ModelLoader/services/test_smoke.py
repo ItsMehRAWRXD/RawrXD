@@ -54,9 +54,10 @@ def run_ask_test():
     
     print(f"[OK] /ask succeeded. Answer length: {len(result['answer'])} chars.")
     print(f"  Snippet: {result['answer'][:60]}...")
+    return result["answer"]
 
 
-def run_agent_test():
+def run_agent_test(prior_ask_answer=None):
     """Tests the streaming /agent endpoint for goal satisfaction."""
     print("Running autonomous agent test (/agent)...")
     goal = "List the first three stable LLM models released by Google and satisfy the goal."
@@ -70,6 +71,7 @@ def run_agent_test():
             r.raise_for_status()
             
             satisfied = False
+            agent_answer = None
             for line in r.iter_lines():
                 line = line.strip()
                 if line.startswith("data:"):
@@ -78,6 +80,7 @@ def run_agent_test():
                         # Check for the terminal condition
                         if msg.get("kind") == "goal.satisfied":
                             print(f"[OK] Goal satisfied by bot: {msg.get('bot')}")
+                            agent_answer = msg.get("answer")
                             satisfied = True
                             break
                     except json.JSONDecodeError:
@@ -85,6 +88,8 @@ def run_agent_test():
 
             if not satisfied:
                 raise AssertionError("Agent finished stream without emitting 'goal.satisfied'.")
+            if prior_ask_answer and agent_answer == prior_ask_answer:
+                raise AssertionError("/agent reused leftover /ask answer instead of answering the new goal.")
 
     except Exception as e:
         print(f"[FAIL] Agent test failed: {e}")
@@ -97,8 +102,8 @@ if __name__ == "__main__":
     try:
         print("Starting HexMag Smoke Tests...")
         
-        run_ask_test()
-        run_agent_test()
+        ask_answer = run_ask_test()
+        run_agent_test(ask_answer)
 
         print("\n=== ALL HEXMAG SMOKE TESTS PASSED ===\n")
         sys.exit(0)

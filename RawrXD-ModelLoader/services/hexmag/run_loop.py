@@ -30,6 +30,7 @@ class Engine:
         # Pop the next event
         event = self.q.pop(0)
         self.event_count += 1
+        prior = len(self.history)
         
         # Dispatch to bots
         tasks = []
@@ -45,15 +46,14 @@ class Engine:
                 elif isinstance(res, Exception):
                     print(f"Bot error: {res}")
 
-        # Fallback if no bots handled it (for basic Q&A if no bot matched)
-        # We check if any finding was generated for this event (conceptually)
-        # But since we don't track which finding belongs to which event easily here without ID,
-        # we'll just do a quick check if we need to generate a default answer.
-        
-        # If it was a question and no bot produced an answer, use the default generator.
+        # Fallback only when THIS event produced no llm.answer.
+        # Scanning the full history would treat a leftover answer as current.
         if event.kind == "llm.question":
-            has_answer = any("llm.answer" in getattr(item, "labels", set()) for item in self.history)
-            if not self.bots or not has_answer:
+            has_answer = any(
+                "llm.answer" in getattr(item, "labels", set())
+                for item in self.history[prior:]
+            )
+            if not has_answer:
                 self._run_default_logic(event)
 
     def _run_default_logic(self, event: Event):
