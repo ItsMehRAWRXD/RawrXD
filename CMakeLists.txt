@@ -7834,6 +7834,56 @@ if(BUILD_RAWRXD_AGENTIC)
         MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
     message(STATUS "[Agentic] HexMag repeat tuner cert: hexmag_repeat_tuner_cert")
+
+    # HEXMAG_IDE_E2E_001 — Copilot send path → controller → tuner → FinalizePolicy
+    add_executable(hexmag_ide_e2e_cert
+        tests/hexmag_ide_e2e_cert.cpp
+        src/core/hexmag_runtime_controller.cpp
+        src/core/hexmag_control_plane.cpp
+        src/core/hexmag_oracle_binder.cpp
+        src/agent/hexmag_client.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_ide_e2e_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/agentic
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_ide_e2e_cert PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_ide_e2e_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_ide_e2e_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag IDE E2E cert: hexmag_ide_e2e_cert")
+
+    add_executable(hexmag_runtime_controller_cert
+        tests/hexmag_runtime_controller_cert.cpp
+        src/core/hexmag_runtime_controller.cpp
+        src/agent/hexmag_client.cpp
+        src/core/hexmag_control_plane.cpp
+        src/core/hexmag_oracle_binder.cpp
+        src/asm/RawrXD_HexMag_Swarm.asm
+        $<TARGET_OBJECTS:rawrxd_hexmag_repeat>
+    )
+    set_source_files_properties(src/asm/RawrXD_HexMag_Swarm.asm PROPERTIES LANGUAGE ASM_MASM)
+    target_include_directories(hexmag_runtime_controller_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    target_compile_definitions(hexmag_runtime_controller_cert PRIVATE RAWR_HAS_MASM=1)
+    if(MSVC)
+        target_compile_options(hexmag_runtime_controller_cert PRIVATE /EHsc /W4 /std:c++20)
+    endif()
+    set_target_properties(hexmag_runtime_controller_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Agentic] HexMag runtime controller cert: hexmag_runtime_controller_cert")
 endif()
 
 # layer_harness — Single-layer Qwen3.5 correctness harness

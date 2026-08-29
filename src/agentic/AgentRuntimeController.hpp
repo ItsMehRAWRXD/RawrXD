@@ -11,6 +11,7 @@
 #include <string>
 
 #include "core/hexmag_control_plane.hpp"
+#include "core/hexmag_ide_send_path.hpp"
 #include "core/hexmag_runtime_controller.hpp"
 
 namespace RawrXD {
@@ -123,9 +124,8 @@ private:
             return m_hexMagAsk(question, HexMagMode::ResponseGeneration);
 
         ensureHexSession();
-        // New Response Gen turn — clear prior NEED_INPUT / FINAL stop.
-        m_hexCtrl->resetSession();
-        auto r = m_hexCtrl->run(question, {});
+        // Prefer shared IDE send path (same entry as HandleCopilotSend).
+        auto r = HexMag::ideHexMagSendPath().operatorTurn(question, {});
         if (r.finalAuthority) {
             if (!r.lastClient.ask.answer.empty())
                 return r.lastClient.ask.answer;

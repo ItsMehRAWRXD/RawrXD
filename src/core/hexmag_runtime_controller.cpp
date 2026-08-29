@@ -2,6 +2,7 @@
 // hexmag_runtime_controller.cpp — sequencing owner (P0C); truth via finalize
 // ============================================================================
 #include "core/hexmag_runtime_controller.hpp"
+#include "core/hexmag_repeat_tuner.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -15,6 +16,41 @@ void HexMagRuntimeController::enter(ControllerResult& r, ControllerPhase p,
     r.phase = p;
     r.phases.push_back(p);
     r.sequenceLog.push_back(step && step[0] ? step : controllerPhaseName(p));
+}
+
+void HexMagRuntimeController::ensureTunerRequest(const std::string& prompt) {
+#ifdef RAWR_HAS_MASM
+    if (requestIdHash_ != 0)
+        return;
+    uint64_t h = 14695981039346656037ull;
+    for (unsigned char c : prompt) {
+        h ^= c;
+        h *= 1099511628211ull;
+    }
+    if (h == 0)
+        h = 1;
+    requestIdHash_ = h;
+    (void)HexMag_Tuner_Init(cfg_.maxRetries + 1);
+    (void)HexMag_Tuner_Reset(requestIdHash_);
+    HxGenProfile profile{};
+    (void)HexMag_Tuner_Initial(requestIdHash_, &profile);
+#else
+    (void)prompt;
+#endif
+}
+
+void HexMagRuntimeController::advanceTunerOnWrong(uint32_t failKindMask) {
+#ifdef RAWR_HAS_MASM
+    // NEED_INPUT is terminal for the request — never mutate toward FINAL.
+    if (needInputLatched_)
+        return;
+    if (requestIdHash_ == 0)
+        return;
+    HxGenProfile profile{};
+    (void)HexMag_Tuner_Next(requestIdHash_, failKindMask, attempt_, &profile);
+#else
+    (void)failKindMask;
+#endif
 }
 
 ControllerResult HexMagRuntimeController::failClosed(ControllerResult r,
@@ -190,6 +226,8 @@ ControllerResult HexMagRuntimeController::sequenceClientResult(
         ++retriesUsed_;
         ++attempt_;
         ++generation_;
+        // Polymorphic WRONG path: mutate genome inside controller (not IDE).
+        advanceTunerOnWrong(HX_FAIL_WRONG | HX_FAIL_TEST | HX_FAIL_UNSUPPORTED);
         r.generation = generation_;
         r.attempt = attempt_;
         r.redispatches = retriesUsed_;
@@ -238,6 +276,7 @@ ControllerResult HexMagRuntimeController::sequenceClientResult(
             ++retriesUsed_;
             ++attempt_;
             ++generation_;
+            advanceTunerOnWrong(HX_FAIL_WRONG | HX_FAIL_UNSUPPORTED);
             r.generation = generation_;
             r.attempt = attempt_;
             r.redispatches = retriesUsed_;
@@ -297,6 +336,8 @@ ControllerResult HexMagRuntimeController::run(const std::string& prompt,
             return failClosed(std::move(bootstrap), ControllerFail::BackendFailure,
                               "BACKEND_FAILURE: no transport");
         }
+
+        ensureTunerRequest(prompt);
 
         const ClientIdentity id = clientIdentity();
         const bool backendReady = (std::strcmp(id.backend, "MASM") == 0)

@@ -179,6 +179,7 @@ public:
         finalGranted_ = false;
         stopped_ = false;
         authorityDecisions_ = 0;
+        requestIdHash_ = 0;
     }
 
     /// Cert: throw inside run loop.
@@ -195,10 +196,14 @@ private:
     bool stopped_ = false;
     uint32_t authorityDecisions_ = 0;
     bool forceException_ = false;
+    uint64_t requestIdHash_ = 0;
 
     void enter(ControllerResult& r, ControllerPhase p, const char* step) const;
     ControllerResult failClosed(ControllerResult r, ControllerFail f,
                                 const char* why);
+    /// Mutate polymorphic genome before generation+1 redispatch (NEVER on NEED_INPUT).
+    void advanceTunerOnWrong(uint32_t failKindMask);
+    void ensureTunerRequest(const std::string& prompt);
 };
 
 } // namespace HexMag

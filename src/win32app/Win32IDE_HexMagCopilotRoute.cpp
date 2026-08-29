@@ -6,7 +6,7 @@
 // ============================================================================
 #include "Win32IDE.h"
 #include "Win32IDE_HexMagMessages.h"
-#include "core/hexmag_runtime_controller.hpp"
+#include "core/hexmag_ide_send_path.hpp"
 #include "agent/hexmag_client.hpp"
 
 #include <cstdint>
@@ -57,35 +57,60 @@ void setHexMagResultHint(Win32IDE* ide, HexMagCopilotStatus st)
 void RawrXD_FinishHexMagCopilotDone(void* idePtr, LPARAM lParam)
 {
     auto* ide = static_cast<Win32IDE*>(idePtr);
+    if (!ide) {
+        delete reinterpret_cast<HexMagCopilotDonePayload*>(lParam);
+        return;
+    }
+    ide->finishHexMagCopilotDone(lParam);
+}
+
+void Win32IDE::appendCopilotChatUtf8(const std::string& utf8)
+{
+    if (!m_hwndCopilotChatOutput || !IsWindow(m_hwndCopilotChatOutput) || utf8.empty())
+        return;
+    const int n = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    if (n <= 1)
+        return;
+    std::wstring wide(static_cast<size_t>(n - 1), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, wide.data(), n);
+    const int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+    SendMessageW(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
+    SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
+                 reinterpret_cast<LPARAM>(wide.c_str()));
+    SendMessageW(m_hwndCopilotChatOutput, WM_VSCROLL, SB_BOTTOM, 0);
+}
+
+void Win32IDE::finishHexMagCopilotDone(LPARAM lParam)
+{
     std::unique_ptr<HexMagCopilotDonePayload> p(
         reinterpret_cast<HexMagCopilotDonePayload*>(lParam));
-    if (!ide || !p)
+    if (!p)
         return;
 
     std::string line;
     switch (p->status) {
     case HexMagCopilotStatus::Final:
         line = p->text;
-        ide->appendToOutput("[HexMag] FINAL → Copilot render\n", "Agent",
-                            Win32IDE::OutputSeverity::Info);
+        appendToOutput("[HexMag] FINAL → Copilot render\n", "Agent",
+                       OutputSeverity::Info);
         break;
     case HexMagCopilotStatus::NeedInput:
         line = std::string("[NEED_INPUT] ") + p->text;
-        ide->appendToOutput("[HexMag] NEED_INPUT (no FINAL)\n", "Agent",
-                            Win32IDE::OutputSeverity::Warning);
+        appendToOutput("[HexMag] NEED_INPUT (no FINAL)\n", "Agent",
+                       OutputSeverity::Warning);
         break;
     case HexMagCopilotStatus::Failed:
     default:
         line = std::string("[HexMag failure] ") + p->text;
-        ide->appendToOutput("[HexMag] fail-closed: " + p->text + "\n", "Errors",
-                            Win32IDE::OutputSeverity::Error);
+        appendToOutput("[HexMag] fail-closed: " + p->text + "\n", "Errors",
+                       OutputSeverity::Error);
         break;
     }
 
     if (!line.empty())
-        ide->HandleCopilotStreamUpdate(line.c_str(), line.size());
-    ide->HandleCopilotStreamUpdate("\n\n", 2);
-    setHexMagResultHint(ide, p->status);
+        appendCopilotChatUtf8(line);
+    appendCopilotChatUtf8("\n\n");
+    setHexMagResultHint(this, p->status);
 }
 
 bool Win32IDE::tryHexMagControllerCopilotSend(const std::string& userMessage)
@@ -117,10 +142,9 @@ bool Win32IDE::tryHexMagControllerCopilotSend(const std::string& userMessage)
         auto* payload = new HexMagCopilotDonePayload();
 
         try {
-            LiveHexMagTransport transport;
-            HexMagRuntimeController controller(&transport, ControllerConfig{0});
-            controller.resetSession();
-            const ControllerResult r = controller.run(userMessage, context);
+            // Shared IDE send path — tuner/retry lives inside HexMagRuntimeController.
+            const ControllerResult r =
+                ideHexMagSendPath().operatorTurn(userMessage, context);
 
             if (r.needInputLatched || r.fail == ControllerFail::NeedInput) {
                 payload->status = HexMagCopilotStatus::NeedInput;
@@ -236,3 +260,12 @@ bool Win32IDE::tryDispatchCopilotThroughHexMag(const std::string& userMessage, u
 void Win32IDE::dispatchHexMagAskFromUi(const std::string& question, bool) {
     (void)tryHexMagControllerCopilotSend(question);
 }
+
+// Legacy Core.cpp PostMessage finishers (G HexMag UI removed) — free only.
+void RawrXD_FinishHexMagAsk(Win32IDE* /*ide*/, WPARAM, LPARAM lParam) {
+    delete reinterpret_cast<char*>(lParam);
+}
+void RawrXD_FinishHexMagTelemetryChunk(Win32IDE* /*ide*/, LPARAM lParam) {
+    delete reinterpret_cast<std::string*>(lParam);
+}
+void RawrXD_FinishHexMagTelemetryDone(Win32IDE* /*ide*/, WPARAM) {}
