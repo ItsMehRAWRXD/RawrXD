@@ -1,0 +1,77 @@
+RawrXD CertLadder Manifest — WHAT'S NEXT
+generated: 2026-08-29T18:04:29Z
+rule: DOC CLAIMS DO NOT SET STATE. compiled+registered+active+cert = state.
+firstGenuineFail: NONE through L1_LAYER_OUT
+firstOpen: sparse.tips
+
+LADDER
+------
+  [CLOSED] gate1.tokenizer — Gate1 / tokenizer + chat template
+  [CLOSED] l0.attn_ffn — L0 attention + FFN → LAYER0_OUT
+  [CLOSED] l1.attn — L1 attention / wo (ATTN_OUT_LOC)
+  [CLOSED] l1.ffn — L1 FFN → L1_LAYER_OUT  (FIRST_FAIL (L1 path)=none)
+  [OPEN] sparse.tips — Sparse tips L2/L4/L8/L12/L16/L21 under FORCE L0..21  (oracle dumps ready (SPARSE_CLEAN APPLIED=22); GATE not written yet)
+  [BLOCKED] tip.final_norm — FINAL_NORM (clean full-stack oracle)  (oracle dumps ready (SPARSE_CLEAN APPLIED=22); GATE not written yet)
+  [BLOCKED] tip.logits — LOGITS parity  (oracle dumps ready (SPARSE_CLEAN APPLIED=22); GATE not written yet)
+  [BLOCKED] tip.argmax — ARGMAX / greedy tip token  (oracle dumps ready (SPARSE_CLEAN APPLIED=22); GATE not written yet)
+  [BLOCKED] decode.kv — Multi-token decode + KV parity  (no evidence path yet)
+  [MISSING] agent.schema_pre_dispatch — Strict pre-dispatch tool schema  (no GATE.txt)
+  [MISSING] agent.schema_retry — Schema rejection → correction retry  (no GATE.txt)
+  [BLOCKED] agent.edit_e2e — Model-driven edit → compile → repair E2E  (no evidence path yet)
+  [BLOCKED] lifecycle.soak — Lifecycle / soak / failure recovery  (no evidence path yet)
+  [BLOCKED] dist.clean_machine — Clean-machine offline distribution  (no evidence path yet)
+  [BLOCKED] perf.competitive — Competitive same-hardware performance cert  (no evidence path yet)
+
+NEXT TODOS (in order)
+--------------------
+  1. [P0] sparse.tips
+     Sparse tips L2/L4/L8/L12/L16/L21 under FORCE L0..21
+     reason: oracle dumps ready (SPARSE_CLEAN APPLIED=22); GATE not written yet
+     evidence: BATCH2_SPARSE_CLEAN_001
+  2. [P1] tip.final_norm
+     FINAL_NORM (clean full-stack oracle)
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips
+     evidence: BATCH2_SPARSE_CLEAN_001
+  3. [P1] tip.logits
+     LOGITS parity
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm
+     evidence: BATCH2_SPARSE_CLEAN_001
+  4. [P1] tip.argmax
+     ARGMAX / greedy tip token
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits
+     evidence: BATCH2_SPARSE_CLEAN_001
+  5. [P1] decode.kv
+     Multi-token decode + KV parity
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax
+  6. [P0] agent.schema_pre_dispatch
+     Strict pre-dispatch tool schema
+     reason: no GATE.txt
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv
+     evidence: AGENT_TOOL_EFFECT_001
+  7. [P0] agent.schema_retry
+     Schema rejection → correction retry
+     reason: no GATE.txt
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv agent.schema_pre_dispatch
+     evidence: AGENT_TOOL_EFFECT_001
+  8. [P1] agent.edit_e2e
+     Model-driven edit → compile → repair E2E
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv agent.schema_pre_dispatch agent.schema_retry
+  9. [P1] lifecycle.soak
+     Lifecycle / soak / failure recovery
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv agent.schema_pre_dispatch agent.schema_retry agent.edit_e2e
+  10. [P1] dist.clean_machine
+     Clean-machine offline distribution
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv agent.schema_pre_dispatch agent.schema_retry agent.edit_e2e lifecycle.soak
+  11. [P1] perf.competitive
+     Competitive same-hardware performance cert
+     reason: blocked by earlier open rung
+     blocked_by: sparse.tips tip.final_norm tip.logits tip.argmax decode.kv agent.schema_pre_dispatch agent.schema_retry agent.edit_e2e lifecycle.soak dist.clean_machine
+
+DO_NOW = sparse.tips
