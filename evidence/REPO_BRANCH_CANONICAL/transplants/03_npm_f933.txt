@@ -1,0 +1,4 @@
+npm2=296ae1b53
+from=f933dc5ef
+ok=True
+note=conflicts resolved toward picked versions; OrganizedPiProject requires git add -f

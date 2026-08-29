@@ -1,0 +1,35 @@
+﻿{
+    "rejectedAncestry":  "365daa6f3",
+    "base":  "02eca52cd",
+    "transplants":  [
+                        {
+                            "result":  "cd5633f273",
+                            "source":  "5d9869644",
+                            "kind":  "maven"
+                        },
+                        {
+                            "result":  "b99237a9c4",
+                            "source":  "5347a1565",
+                            "kind":  "npm"
+                        },
+                        {
+                            "result":  "296ae1b53c",
+                            "source":  "f933dc5ef",
+                            "kind":  "npm"
+                        },
+                        {
+                            "remappedFrom":  "_overflow/requirements.txt",
+                            "result":  "60c06e476b",
+                            "remappedTo":  "3rdparty/ggml/requirements.txt",
+                            "source":  "776e0ba11",
+                            "kind":  "keras"
+                        }
+                    ],
+    "asOf":  "2026-08-29",
+    "tip":  "60c06e476b",
+    "next":  [
+                 "evaluate_overflow_independently",
+                 "switch_default_branch_to_main",
+                 "AGENT-E2E-002"
+             ]
+}
