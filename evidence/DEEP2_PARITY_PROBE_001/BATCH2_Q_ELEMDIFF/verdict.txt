@@ -1,0 +1,13 @@
+BATCH2_Q_ELEMDIFF=FAIL
+deep2_fnv=ced1abe971861249
+llama_fnv=8d53927ede5ddb3f
+max_abs_error=1.4901161193847656e-07
+mean_abs_error=5.8347495723864995e-09
+rms_error=1.011874752607872e-08
+number_exact_equal=309
+number_bitwise_different=1739
+first_different_index=0
+largest_error_index=1264
+pattern_guess=many_tiny_fp_diffs
+authority_files=deep2_Q_PRE_ROPE_0_pos0.bin,llama_Q_PRE_ROPE_0_pos0.bin
+discriminator=many_tiny_diffs => accumulation/FP precision

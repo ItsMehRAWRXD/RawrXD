@@ -1,0 +1,63 @@
+BATCH2_L1_FFN_LADDER_001 — L1 clean FFN (after ATTN_OUT CLOSED)
+===============================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0
+authority=BATCH2_L1_CLEAN_001 (FORCE_PRE_O_EXPAND_V @ L0+L1)
+harness=g:\rawrxd\tests\gate2_l1_ffn_ladder.cpp
+prereq=BATCH2_L1_ATTN_OUT_LOC CLOSED
+
+RESIDUAL CONFIRM
+----------------
+FFN_INP_1 == LAYER_OUT_0 + ATTN_OUT_1   PASS exact
+
+L1 FFN LADDER (deep2 vs llama clean)
+------------------------------------
+stage          max_abs     gate
+L1_FFN_INP     4.10e-8     PASS   (confirmation rung)
+L1_FFN_NORM    2.38e-7     PASS
+L1_FFN_GATE    1.64e-7     PASS
+L1_FFN_UP      1.79e-7     PASS
+L1_FFN_ACT     4.47e-8     PASS
+L1_FFN_DOWN    2.98e-8     PASS
+L1_LAYER_OUT   5.96e-8     PASS
+POST_FFN≡LAYER exact       PASS
+
+FIRST_FAIL (L1 path) = none
+L1 FFN → L1_LAYER_OUT    = CLOSED
+
+SPARSE TIPS
+-----------
+L2/L4/L8/L12/L16/L21     OPEN — llama dumps MISSING
+  (RAWRXD_REF_CB_MAX_LAYER defaulted to 1 in L1_CLEAN run)
+FINAL_NORM               FAIL max_abs~30 vs llama pos0
+  NOT a localized Deep2 tip defect yet:
+  - FORCE_PRE_O only hit kqv_out-0 and kqv_out-1 (stdout)
+  - layers 2..21 ran unclean on llama → tip inherits
+  - mid-layer tips absent → cannot bisect
+LOGITS / ARGMAX          OPEN — deep2 logits dump MISSING
+
+DO_NOT_REOPEN
+-------------
+L0 | Q/K/V | PRE_O | wo (L0 or L1) | L1 attention | L1 FFN
+
+STATUS
+------
+Gate1 / tokenizer     CLOSED
+L0 attn+FFN           CLOSED
+L0→L1 entry           CLOSED
+L1 attention          CLOSED
+L1 FFN → LAYER_OUT    CLOSED
+FIRST_GENUINE_FAIL    NONE (through L1_LAYER_OUT)
+
+NEXT
+----
+BATCH2_SPARSE_TIPS_001:
+  re-dump llama with REF_CB_MAX_LAYER>=21 + FORCE_PRE_O_EXPAND_V
+  (ensure V stash + FORCE hit for layers 2..21)
+  compare L2,L4,L8,L12,L16,L21 → FINAL_NORM → LOGITS → ARGMAX
+  expand only first failing tip
+
+Artifacts
+---------
+evidence/.../BATCH2_L1_FFN_LADDER_001/LADDER_QUICK.txt
+evidence/.../BATCH2_L1_FFN_LADDER_001/GATE.txt

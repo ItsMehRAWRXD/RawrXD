@@ -1,0 +1,10 @@
+EMBED-Q4K-001
+focus_token=35
+raw_row_bytes=ZERO
+scalar_ggml_dequant=ZERO
+production_GetDequant=ZERO
+classification=RAW_ROW_BYTES_ZERO => tensor offset / row addressing
+AGENT-E2E-002b=BLOCKED
+BLOCKER_CLASS=DEEP2_INFERENCE
+FIRST_RUNTIME_FAILURE=TOKEN_EMBED_Q4K
+note=BOS token=1 previously matched; row-dependent defects possible

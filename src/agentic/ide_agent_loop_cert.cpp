@@ -5,8 +5,10 @@
 //                    Proves OrchestratorBridge + AgentToolHandlers end-to-end.
 //   --mode deep2     Real Deep2 + GGUF; model must emit TOOL_CALL lines (honest).
 //
-// Exit 0 = scripted spine PASS (exe printed Hello RawrXD) or deep2 completed
-//         with SUCCESS marker. deep2 without tool emissions → exit 2 (not fake green).
+// Exit 0 = scripted spine PASS only when independent rebuild exits 0 AND
+//         run exits 0 with exact stdout "Hello RawrXD".
+//         The canned reply word SUCCESS never satisfies the run proof.
+//         deep2 without a real proven build/run → exit 2 (not fake green).
 
 #include "OrchestratorBridge.h"
 #include "AgentToolHandlers.h"
@@ -14,6 +16,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -117,6 +120,10 @@ private:
 
 void SeedBrokenFixture(const fs::path& dir) {
     fs::create_directories(dir);
+    // Always remove stale binary so a prior PASS cannot satisfy fs::exists().
+    std::error_code ec;
+    fs::remove(dir / "broken_hello.exe", ec);
+    fs::remove(dir / "main.obj", ec);
     std::ofstream out(dir / "main.cpp", std::ios::binary | std::ios::trunc);
     out << "#include <iostream>\n\n"
            "int main() {\n"
@@ -133,12 +140,59 @@ bool FileContains(const fs::path& p, const std::string& needle) {
     return s.find(needle) != std::string::npos;
 }
 
+struct ProcessProof {
+    int exitCode = -1;
+    std::string stdoutText;
+    bool ran = false;
+};
+
+ProcessProof RunCmdInDir(const fs::path& dir, const std::string& command) {
+    ProcessProof proof;
+    const std::string full =
+        "cmd.exe /C \"cd /d \"" + dir.string() + "\" && " + command + "\"";
+    FILE* pipe = _popen(full.c_str(), "r");
+    if (!pipe) return proof;
+    proof.ran = true;
+    char buf[512];
+    while (fgets(buf, sizeof(buf), pipe)) proof.stdoutText += buf;
+    proof.exitCode = _pclose(pipe);
+    return proof;
+}
+
+std::string TrimCopy(std::string s) {
+    while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
+    size_t i = 0;
+    while (i < s.size() && (s[i] == ' ' || s[i] == '\r' || s[i] == '\n')) ++i;
+    return s.substr(i);
+}
+
+// Independent verifier: rebuild + run must both exit 0 with exact stdout.
+// The canned agent reply string "SUCCESS" must NEVER satisfy this proof.
+bool ProveBuildAndRun(const fs::path& fixture, const std::string& exeName,
+                      const std::string& expectedStdout) {
+    const std::string buildCmd =
+        "cl.exe /nologo /EHsc /std:c++20 /Fe:" + exeName + " main.cpp";
+    const ProcessProof build = RunCmdInDir(fixture, buildCmd);
+    std::cout << "proof_build_exit=" << build.exitCode << "\n";
+    std::cout << "proof_build_stdout=" << TrimCopy(build.stdoutText) << "\n";
+    if (!build.ran || build.exitCode != 0) return false;
+
+    const ProcessProof run = RunCmdInDir(fixture, exeName);
+    const std::string out = TrimCopy(run.stdoutText);
+    std::cout << "proof_run_exit=" << run.exitCode << "\n";
+    std::cout << "proof_run_stdout=\"" << out << "\"\n";
+    std::cout << "proof_expected=\"" << expectedStdout << "\"\n";
+    return run.ran && run.exitCode == 0 && out == expectedStdout;
+}
+
 int RunScripted(const fs::path& fixture) {
     SeedBrokenFixture(fixture);
     const std::string mainRel = "main.cpp";
     const std::string exeName = "broken_hello.exe";
+    constexpr const char* kExpectedStdout = "Hello RawrXD";
 
     // Scripted model emits the same TOOL_CALL grammar OrchestratorBridge parses.
+    // Run via `cmd /c` so the executable token stays allow-listed.
     std::vector<std::string> steps = {
         "I'll inspect the source.\nTOOL_CALL: read_file {\"path\": \"" + mainRel + "\"}",
         "Checking compiler diagnostics.\nTOOL_CALL: get_diagnostics {\"file\": \"" + mainRel + "\"}",
@@ -148,7 +202,7 @@ int RunScripted(const fs::path& fixture) {
         "Re-checking diagnostics.\nTOOL_CALL: get_diagnostics {\"file\": \"" + mainRel + "\"}",
         "Building.\nTOOL_CALL: execute_command {\"command\": \"cl.exe /nologo /EHsc /std:c++20 /Fe:" +
             exeName + " " + mainRel + "\"}",
-        "Running.\nTOOL_CALL: execute_command {\"command\": \"" + exeName + "\"}",
+        "Running.\nTOOL_CALL: execute_command {\"command\": \"cmd /c " + exeName + "\"}",
         "Fixed the compile error and ran the program successfully. SUCCESS"
     };
 
@@ -163,24 +217,26 @@ int RunScripted(const fs::path& fixture) {
     std::cout << "=== agent reply ===\n" << reply << "\n";
 
     const bool fixed = FileContains(fixture / mainRel, "std::endl;");
-    const bool exeOk = fs::exists(fixture / exeName);
-    const bool successMark = reply.find("SUCCESS") != std::string::npos ||
-                             reply.find("Hello RawrXD") != std::string::npos;
+    // Note: reply containing "SUCCESS" is informational only — not a PASS gate.
+    const bool successMark = reply.find("SUCCESS") != std::string::npos;
+    const bool proved = ProveBuildAndRun(fixture, exeName, kExpectedStdout);
 
     std::cout << "fixed_source=" << (fixed ? "yes" : "no") << "\n";
-    std::cout << "exe_exists=" << (exeOk ? "yes" : "no") << "\n";
-    std::cout << "success_mark=" << (successMark ? "yes" : "no") << "\n";
+    std::cout << "agent_said_success=" << (successMark ? "yes" : "no") << "\n";
+    std::cout << "build_run_proof=" << (proved ? "yes" : "no") << "\n";
 
-    if (fixed && exeOk && successMark) {
+    if (fixed && proved) {
         std::cout << "VERDICT=PASS mode=scripted\n";
         return 0;
     }
-    std::cout << "VERDICT=FAIL mode=scripted\n";
+    std::cout << "VERDICT=FAIL mode=scripted "
+                 "(need source_fixed + independent build_exit0 + run_exit0 + exact stdout)\n";
     return 1;
 }
 
 int RunDeep2(const fs::path& fixture, const std::string& modelPath) {
     SeedBrokenFixture(fixture);
+    constexpr const char* kExpectedStdout = "Hello RawrXD";
     auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
     if (!orch.Initialize(fixture.string(), "deep2", modelPath)) {
         std::cerr << "Deep2 Initialize failed for " << modelPath << "\n";
@@ -192,15 +248,17 @@ int RunDeep2(const fs::path& fixture, const std::string& modelPath) {
     std::cout << "=== agent reply ===\n" << reply << "\n";
 
     const bool fixed = FileContains(fixture / "main.cpp", "std::endl;");
-    const bool exeOk = fs::exists(fixture / "broken_hello.exe");
-    if (fixed && exeOk) {
+    const bool proved = ProveBuildAndRun(fixture, "broken_hello.exe", kExpectedStdout);
+
+    std::cout << "fixed_source=" << (fixed ? "yes" : "no") << "\n";
+    std::cout << "build_run_proof=" << (proved ? "yes" : "no") << "\n";
+
+    if (fixed && proved) {
         std::cout << "VERDICT=PASS mode=deep2\n";
         return 0;
     }
     std::cout << "VERDICT=INCOMPLETE mode=deep2 "
-                 "(model did not complete tool loop — not fake-greened)\n";
-    std::cout << "fixed_source=" << (fixed ? "yes" : "no")
-              << " exe_exists=" << (exeOk ? "yes" : "no") << "\n";
+                 "(need source_fixed + independent build_exit0 + run_exit0 + exact Hello RawrXD)\n";
     return 2;
 }
 

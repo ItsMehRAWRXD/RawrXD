@@ -1,0 +1,57 @@
+BATCH2_TRACK_B_POS0 = PASS
+================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=0
+authority_model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+
+PRE_O_AUTHORITY_POS0 = GQA_expand(reference_V)
+reason = attend=1 identity at pos0
+
+CLOSED
+------
+TOKENIZER              CLOSED
+PROMPT_EMBED           PASS exact
+ATTN_NORM_0            PASS exact
+Q_PRE_ROPE_0           PASS @ 1e-6
+Q/K/V                  PASS
+SOFTMAX / AV           PASS
+GQA EXPAND             PASS (Deep2 PRE_O == expand(V) exact)
+Deep2 ATTN_PRE_O       PASS
+O_PROJ Q4_K×Q8_K       PASS-class / EXONERATED
+  proof: O(expand(Vl)) vs Deep2 ATTN_OUT max_abs≈1.68e-8
+
+INVALIDATED (oracle hygiene — not Deep2 defects)
+------------------------------------------------
+llama_PRE_O_dump_status = INVALIDATED
+  reason = violates attend=1 identity: dumped_PRE_O != GQA_expand(dumped_V)
+           max_abs≈6.14e-6 (stride-64 lattice)
+
+prior_ATTN_OUT_FAIL = INVALIDATED
+  reason = compared Deep2 O(expand(V)) against llama O(invalid_PRE_O_dump)
+           i.e. different PRE_O inputs
+
+ORACLE_DEBT (non-blocking)
+--------------------------
+LLAMA_PRE_O_DUMP_HYGIENE_001
+  cert: dumped_PRE_O == GQA_expand(dumped_V) @ pos0
+  touch: tools/parity_ref/llama_ref_parity_probe.cpp kqv_out-0 flatten only
+  do_not: touch Deep2
+
+DO_NOT_REOPEN
+-------------
+tokenizer | Q/K/V | Softmax/AV | PRE_O | O_PROJ | Track A
+
+NEXT_GENUINE_LADDER (Deep2 vs clean oracle)
+------------------------------------------
+ATTN_OUT_0 (PASS-class under expand(V) authority)
+  → RESIDUAL_AFTER_ATTN_0 / FFN_INP_0
+  → FFN_NORM_0
+  → FFN_GATE / UP
+  → ACTIVATION
+  → FFN_DOWN
+  → LAYER0_OUT / POST_FFN_0
+
+evidence=
+  BATCH2_O_PROJ_ROW_002/VERDICT.txt
+  BATCH2_ATTN_PRE_O_001/VERDICT.txt
+  TRACK_A_Q_PRE_ROPE_POST_TOKENIZER/VERDICT.txt

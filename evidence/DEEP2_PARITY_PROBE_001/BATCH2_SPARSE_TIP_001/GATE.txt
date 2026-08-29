@@ -1,0 +1,35 @@
+BATCH2_SPARSE_TIP_001 — SUPERSEDED / INVALIDATED
+================================================
+date=2026-08-29
+prior_authority_claim=ids=[1,21521,9312] + llama FORCE_PRE_O (L0 clean) pos=0
+actual_llama_source=BATCH2_L1_ENTRY_001 (FORCE_PRE_O L0 ONLY — unclean at L1)
+
+VERDICT
+-------
+L1_ATTN_OUT FAIL @ 4.45e-5 and L1_OUT FAIL @ 1.51e-3 = ORACLE CONTAMINATION
+NOT a Deep2 defect. NOT a wo reopen.
+
+See AUTHORITY_RECONCILE.txt for SHA/FNV/delta table.
+
+CLOSED (unchanged)
+------------------
+blk.1.attn_output / wo          CLOSED (BATCH2_L1_ATTN_OUT_LOC)
+BATCH2_L1_CLEAN_001 L1 ladder   PASS incl ATTN_OUT_1 ~4.66e-8
+LAYER1_OUT under CLEAN          PASS ~5.96e-8
+
+INVALIDATED
+-----------
+SPARSE L1_OUT / L1_ATTN_OUT / L1_FFN_* / L2+ tips from this batch
+(compared against ENTRY llama native L1 Y, not EXPAND_V clean Y)
+
+ACTIVE TARGET
+-------------
+Re-run sparse tips under BATCH2_L1_CLEAN_001 EXPAND_V llama dumps
+(or new probe with FORCE_PRE_O_EXPAND_V for all tip layers):
+  L2_OUT L4_OUT L8_OUT L12_OUT L16_OUT L21_OUT
+  FINAL_NORM ? LOGITS_VECTOR ? TOP1_TOKEN
+
+Harness invariant before any ATTN_OUT_n / L_OUT_n FAIL is accepted:
+  llama forced PRE_O_n present + matches CLEAN / expand(V)
+  Deep2 PRE_O_n == expand(Vd)
+  Deep2 V ~= llama V

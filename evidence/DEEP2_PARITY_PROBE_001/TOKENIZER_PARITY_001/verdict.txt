@@ -1,0 +1,55 @@
+TOKENIZER-PARITY-001 / AGENT-E2E-002b
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+rendered_prompt_bytes=3367
+rendered_prompt_sha256=b72dcf4fb25250615a761c738e9cdb218c5fe686acc2d67bc87e0a67fda21ba0
+template_family=mistral (arch=llama detectFamily)
+tokens[35]='<0x20>'
+tokens[29871]='<U+2581>'
+deep2_n=1130
+llama_no_bos_n=879
+llama_default_n=880
+deep2_count_35=263
+llama_count_35=0
+deep2_count_29871=0
+llama_count_29871=0
+first_diff_index=1
+first_diff_deep2_id=29961
+first_diff_llama_id=518
+first_diff_deep2_piece='['
+first_diff_llama_piece='<U+2581>['
+context_deep2=1,29961,25580,29962,35,3492,35,598,35
+context_llama=1,518,25580,29962,887,526,22038,29878,29990
+context_deep2_pieces='<s>' | '[' | 'INST' | ']' | '<0x20>' | 'You' | '<0x20>' | 'are' | '<0x20>'
+context_llama_pieces='<s>' | '<U+2581>[' | 'INST' | ']' | '<U+2581>You' | '<U+2581>are' | '<U+2581>Raw' | 'r' | 'X'
+ROOT_CAUSE_CLOSED_SPACE_VS_METASPACE=True  # via count(35): Deep2=263 llama=0; first_diff is [ vs <U+2581>[
+CLASSIFICATION=DEEP2_BYTE_FALLBACK_FOR_ASCII_SPACE
+
+REFINED_ROOT_CAUSE
+  Deep2 BPETokenizer::Encode lacks SentencePiece metaspace normalization.
+  ASCII ' ' (0x20) never matches vocab pieces that use U+2581 (<U+2581>).
+  Deep2 falls back to byte token <0x20> = id 35 (GGUF row intentionally zero).
+  llama folds whitespace into <U+2581>-prefixed pieces (e.g. <U+2581>[, <U+2581>You); count(35)=0.
+
+FIRST_DIFF_CLASS
+  index=1 Deep2:[ (29961) vs llama:<U+2581>[ (518)
+  Same defect class as space→35: missing <U+2581> pretreatment / SPM encode.
+
+AGENT_E2E_POS7_NOTE
+  Prior FATAL_EMBED token=35 pos=7 is consistent with early prompt spaces
+  under this encode path (exact pos depends on rendered string / BOS).
+
+TRACK_SEPARATION
+  TRACK_A Q_PRE_ROPE numerical parity: UNCHANGED / still FAIL under frozen IDs
+  TRACK_B AGENT-E2E tokenizer parity: ACTIVE / CLOSED as root cause for FATAL_EMBED
+
+DISPOSITION
+  AGENT-E2E-002b=BLOCKED
+  FIRST_RUNTIME_DOMAIN=TOKENIZER
+  FIRST_BAD_TOKEN=35
+  LIKELY_PIECE=<0x20>
+  BYTE_VALUE=0x20
+  GGUF_EMBED_ROW_35=VALID_ZERO_ROW
+  EMBED_TENSOR_LAYOUT=EXONERATED
+  EMBED_Q4K_ROW_ADDRESSING=EXONERATED_FOR_TOKEN_35
+  deep2_count_35=263
+  llama_count_35=0

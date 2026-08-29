@@ -1,0 +1,12 @@
+BATCH2_SPARSE_TIP_001 pos=0 sparse (existing FORCE_PRE_O dumps)
+deep2=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001\deep2_frozen
+llama=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L1_ENTRY_001
+L1_OUT: gate=FAIL max_abs=1.514703e-003 exact=8/2048 first_bad=0 worst=411  deep_seq=28 llama_seq=252
+L2_OUT: gate=FAIL max_abs=4.155121e-001 exact=2/2048 first_bad=0 worst=624  deep_seq=35 llama_seq=405
+L4_OUT: gate=FAIL max_abs=4.157715e-001 exact=1/2048 first_bad=0 worst=624  deep_seq=37 llama_seq=711
+L8_OUT: gate=FAIL max_abs=4.162598e-001 exact=0/2048 first_bad=0 worst=624  deep_seq=41 llama_seq=1323
+L12_OUT: MISSING  deep_seq=45 llama_seq=
+L16_OUT: MISSING  deep_seq=49 llama_seq=
+L21_OUT: gate=FAIL max_abs=1.992790e+001 exact=0/2048 first_bad=0 worst=1709  deep_seq=54 llama_seq=3300
+FINAL_NORM_pos0: gate=FAIL max_abs=3.028686e+001 exact=0/2048 first_bad=0 worst=1278  deep_seq=56 llama_seq=3301
+FIRST_FAIL_POS0=L1_OUT

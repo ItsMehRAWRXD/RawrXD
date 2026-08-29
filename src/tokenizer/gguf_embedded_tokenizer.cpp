@@ -1,6 +1,8 @@
 #include "gguf_embedded_tokenizer.hpp"
+#include "sentencepiece_encode.hpp"
 
 #include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 
@@ -11,7 +13,6 @@ namespace {
 constexpr uint32_t GGUF_MAGIC = 0x46554747;
 constexpr uint32_t GGUF_VERSION = 3;
 
-// GGUF metadata value types.
 enum GGUFType : uint32_t {
     UINT8    = 0,
     INT8     = 1,
@@ -41,6 +42,24 @@ bool ReadScalar(
     std::memcpy(&out, p, sizeof(T));
     p += sizeof(T);
     return true;
+}
+
+static int HexNibble(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+// Parse vocab byte-fallback name "<0xHH>" -> byte value, or -1.
+static int ParseByteFallbackName(const std::string& tok) {
+    if (tok.size() != 6) return -1;
+    if (tok[0] != '<' || tok[1] != '0' || tok[2] != 'x' || tok[5] != '>')
+        return -1;
+    const int hi = HexNibble(tok[3]);
+    const int lo = HexNibble(tok[4]);
+    if (hi < 0 || lo < 0) return -1;
+    return (hi << 4) | lo;
 }
 
 } // namespace
@@ -88,8 +107,6 @@ bool GGUFEmbeddedTokenizer::ReadString(
     if (!ReadU64(p, end, len))
         return false;
 
-    // Defensive limit. A tokenizer string should never be remotely
-    // close to this size.
     if (len > 16ull * 1024ull * 1024ull)
         return false;
 
@@ -160,6 +177,53 @@ bool GGUFEmbeddedTokenizer::SkipValue(
     }
 }
 
+void GGUFEmbeddedTokenizer::RebuildIndexes() {
+    lookup_.clear();
+    lookup_.reserve(tokens_.size() * 2);
+    specialsSorted_.clear();
+    byteFallback_.fill(-1);
+
+    for (uint32_t id = 0;
+         id < static_cast<uint32_t>(tokens_.size());
+         ++id) {
+        lookup_.emplace(tokens_[id], id);
+
+        const int32_t tt =
+            (id < tokenTypes_.size()) ? tokenTypes_[id] : 1;
+
+        if (tt == TOKEN_CONTROL || tt == TOKEN_USER_DEFINED) {
+            if (!tokens_[id].empty()) {
+                specialsSorted_.emplace_back(tokens_[id], id);
+            }
+        }
+
+        const int b = ParseByteFallbackName(tokens_[id]);
+        if (b >= 0 && b < 256 && byteFallback_[static_cast<size_t>(b)] < 0) {
+            byteFallback_[static_cast<size_t>(b)] = static_cast<int32_t>(id);
+        }
+    }
+
+    // Also treat bos/eos strings as atomic even if type metadata missing
+    auto ensureSpecial = [&](int32_t id) {
+        if (id < 0 || static_cast<size_t>(id) >= tokens_.size()) return;
+        const std::string& s = tokens_[static_cast<size_t>(id)];
+        if (s.empty()) return;
+        for (const auto& e : specialsSorted_) {
+            if (e.second == static_cast<uint32_t>(id)) return;
+        }
+        specialsSorted_.emplace_back(s, static_cast<uint32_t>(id));
+    };
+    ensureSpecial(bosToken_);
+    ensureSpecial(eosToken_);
+
+    std::sort(specialsSorted_.begin(), specialsSorted_.end(),
+              [](const auto& a, const auto& b) {
+                  if (a.first.size() != b.first.size())
+                      return a.first.size() > b.first.size();
+                  return a.first < b.first;
+              });
+}
+
 bool GGUFEmbeddedTokenizer::ParseGGUF(
     const uint8_t* data,
     size_t size)
@@ -194,6 +258,7 @@ bool GGUFEmbeddedTokenizer::ParseGGUF(
         return false;
 
     std::vector<std::string> tokens;
+    std::vector<int32_t> tokenTypes;
     int32_t bos = -1;
     int32_t eos = -1;
 
@@ -238,6 +303,44 @@ bool GGUFEmbeddedTokenizer::ParseGGUF(
             continue;
         }
 
+        if (key == "tokenizer.ggml.token_type" &&
+            type == ARRAY) {
+
+            uint32_t elementType = 0;
+            uint64_t count = 0;
+
+            if (!ReadU32(p, end, elementType))
+                return false;
+
+            if (!ReadU64(p, end, count))
+                return false;
+
+            if (count > 1000000ull)
+                return false;
+
+            tokenTypes.reserve(static_cast<size_t>(count));
+
+            for (uint64_t n = 0; n < count; ++n) {
+                if (elementType == INT32) {
+                    int32_t v = 0;
+                    if (!ReadI32(p, end, v))
+                        return false;
+                    tokenTypes.push_back(v);
+                } else if (elementType == UINT32) {
+                    uint32_t v = 0;
+                    if (!ReadU32(p, end, v))
+                        return false;
+                    tokenTypes.push_back(static_cast<int32_t>(v));
+                } else {
+                    if (!SkipValue(p, end, elementType))
+                        return false;
+                    tokenTypes.push_back(1); // NORMAL placeholder
+                }
+            }
+
+            continue;
+        }
+
         if (key == "tokenizer.ggml.bos_token_id" &&
             type == UINT32) {
 
@@ -262,6 +365,20 @@ bool GGUFEmbeddedTokenizer::ParseGGUF(
             continue;
         }
 
+        // INT32 variants of bos/eos also appear in some GGUFs
+        if (key == "tokenizer.ggml.bos_token_id" && type == INT32) {
+            int32_t v = 0;
+            if (!ReadI32(p, end, v)) return false;
+            bos = v;
+            continue;
+        }
+        if (key == "tokenizer.ggml.eos_token_id" && type == INT32) {
+            int32_t v = 0;
+            if (!ReadI32(p, end, v)) return false;
+            eos = v;
+            continue;
+        }
+
         if (!SkipValue(p, end, type))
             return false;
     }
@@ -270,21 +387,10 @@ bool GGUFEmbeddedTokenizer::ParseGGUF(
         return false;
 
     tokens_ = std::move(tokens);
+    tokenTypes_ = std::move(tokenTypes);
     bosToken_ = bos;
     eosToken_ = eos;
-
-    lookup_.clear();
-    lookup_.reserve(tokens_.size() * 2);
-
-    for (uint32_t id = 0;
-         id < static_cast<uint32_t>(tokens_.size());
-         ++id) {
-
-        // Preserve the first occurrence if malformed GGUF contains
-        // duplicate token strings.
-        lookup_.emplace(tokens_[id], id);
-    }
-
+    RebuildIndexes();
     return true;
 }
 
@@ -292,7 +398,10 @@ bool GGUFEmbeddedTokenizer::LoadFromGGUF(
     const std::string& ggufPath)
 {
     tokens_.clear();
+    tokenTypes_.clear();
     lookup_.clear();
+    specialsSorted_.clear();
+    byteFallback_.fill(-1);
     bosToken_ = -1;
     eosToken_ = -1;
 
@@ -308,7 +417,6 @@ bool GGUFEmbeddedTokenizer::LoadFromGGUF(
     if (fileSize <= 0)
         return false;
 
-    // VAL harness safety limit.
     if (static_cast<uint64_t>(fileSize) > 16ull * 1024ull * 1024ull * 1024ull)
         return false;
 
@@ -336,6 +444,54 @@ int32_t GGUFEmbeddedTokenizer::FindToken(
     return static_cast<int32_t>(it->second);
 }
 
+bool GGUFEmbeddedTokenizer::MatchSpecialAt(
+    std::string_view text,
+    size_t pos,
+    size_t& matchedLen,
+    uint32_t& matchedId) const
+{
+    const std::string_view rest = text.substr(pos);
+    for (const auto& sp : specialsSorted_) {
+        if (rest.size() < sp.first.size())
+            continue;
+        if (rest.compare(0, sp.first.size(), sp.first) == 0) {
+            matchedLen = sp.first.size();
+            matchedId = sp.second;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool GGUFEmbeddedTokenizer::EncodeOrdinarySpan(
+    std::string_view span,
+    std::vector<uint32_t>& output) const
+{
+    if (span.empty())
+        return true;
+
+    // TOKENIZER-PARITY-002c: same Spm::encode as Deep2::BPETokenizer::Encode
+    std::array<int, 256> fb{};
+    for (size_t i = 0; i < fb.size(); ++i) {
+        fb[i] = byteFallback_[i];
+    }
+
+    // lookup_ maps string -> uint32_t; Spm wants string -> int
+    std::unordered_map<std::string, int> vocabInt;
+    vocabInt.reserve(lookup_.size() * 2);
+    for (const auto& e : lookup_) {
+        vocabInt.emplace(e.first, static_cast<int>(e.second));
+    }
+
+    std::vector<int> ids;
+    if (!RawrXD::Spm::encode(
+            span, vocabInt, fb, /*scores=*/nullptr, /*unkId=*/0, ids)) {
+        return false;
+    }
+    output.insert(output.end(), ids.begin(), ids.end());
+    return true;
+}
+
 bool GGUFEmbeddedTokenizer::EncodeLongestMatch(
     std::string_view text,
     std::vector<uint32_t>& output) const
@@ -348,70 +504,33 @@ bool GGUFEmbeddedTokenizer::EncodeLongestMatch(
     if (text.empty())
         return true;
 
-    // SentencePiece normalization: replace leading space with ▁ (U+2581).
-    // The GGUF vocabulary stores tokens with ▁ as the space marker.
-    // Without this, "Hello" won't match "▁Hello" (token 15043).
-    std::string normalized;
-    normalized.reserve(text.size() + 3);
-
-    if (text[0] == ' ') {
-        // Replace leading space with ▁ (UTF-8: 0xE2 0x96 0x81)
-        normalized.push_back(static_cast<char>(0xE2));
-        normalized.push_back(static_cast<char>(0x96));
-        normalized.push_back(static_cast<char>(0x81));
-        normalized.append(text.substr(1));
-    } else {
-        // No leading space — prepend ▁ to match vocabulary entries
-        // that start with ▁ (SentencePiece convention)
-        normalized.push_back(static_cast<char>(0xE2));
-        normalized.push_back(static_cast<char>(0x96));
-        normalized.push_back(static_cast<char>(0x81));
-        normalized.append(text);
-    }
-
     size_t pos = 0;
-    std::string_view normView(normalized);
+    size_t ordinaryStart = 0;
 
-    while (pos < normView.size()) {
-        size_t bestLength = 0;
-        uint32_t bestId = 0;
+    auto flushOrdinary = [&](size_t endPos) -> bool {
+        if (endPos <= ordinaryStart)
+            return true;
+        return EncodeOrdinarySpan(
+            text.substr(ordinaryStart, endPos - ordinaryStart),
+            output);
+    };
 
-        // Longest-match search. Cap prevents pathological work.
-        const size_t maxProbe =
-            std::min<size_t>(64, normView.size() - pos);
-
-        for (size_t len = maxProbe; len > 0; --len) {
-            const std::string_view candidate =
-                normView.substr(pos, len);
-
-            auto it = lookup_.find(std::string(candidate));
-
-            if (it != lookup_.end()) {
-                bestLength = len;
-                bestId = it->second;
-                break;
-            }
-        }
-
-        if (bestLength == 0) {
-            // Try single-byte token.
-            const unsigned char c =
-                static_cast<unsigned char>(normView[pos]);
-
-            std::string oneByte(1, static_cast<char>(c));
-
-            auto it = lookup_.find(oneByte);
-
-            if (it == lookup_.end())
+    while (pos < text.size()) {
+        size_t spLen = 0;
+        uint32_t spId = 0;
+        if (MatchSpecialAt(text, pos, spLen, spId)) {
+            if (!flushOrdinary(pos))
                 return false;
-
-            bestLength = 1;
-            bestId = it->second;
+            output.push_back(spId);
+            pos += spLen;
+            ordinaryStart = pos;
+            continue;
         }
-
-        output.push_back(bestId);
-        pos += bestLength;
+        ++pos;
     }
+
+    if (!flushOrdinary(text.size()))
+        return false;
 
     return !output.empty();
 }

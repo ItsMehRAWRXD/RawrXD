@@ -206,6 +206,29 @@ bool ChatTemplate::initFromMetadata(const std::string& architecture,
             if (config_.type == ChatTemplateType::CUSTOM) {
                 config_.customTemplate = chatTemplateStr;
             }
+            // PHI3 family shares <|user|>/<|assistant|>; turn closer self-heals
+            // from GGUF: prefer jinja eos_token (TinyLlama </s>); only use
+            // literal <|end|> when jinja asks for it AND GGUF eos is that tag
+            // (or missing). Avoid inventing <|end|> on SPM vocabs that lack it.
+            if (config_.type == ChatTemplateType::PHI3) {
+                const bool jinjaUsesEosVar =
+                    chatTemplateStr.find("eos_token") != std::string::npos;
+                const bool jinjaHasEndTag =
+                    chatTemplateStr.find("<|end|>") != std::string::npos;
+                if (jinjaUsesEosVar) {
+                    // Keep GGUF eos (TinyLlama: </s>).
+                    printf("[ChatTemplate] PHI3 heal=eos_token stop=%s\n",
+                           config_.eosToken.c_str());
+                } else if (jinjaHasEndTag) {
+                    if (!eosToken.empty() && eosToken != "<|end|>") {
+                        // Jinja says <|end|> but tokenizer eos is something else.
+                        printf("[ChatTemplate] PHI3 heal=end_tag->eos stop=%s\n",
+                               config_.eosToken.c_str());
+                    } else {
+                        config_.eosToken = "<|end|>";
+                    }
+                }
+            }
             printf("[ChatTemplate] Detected '%s' from template string\n", getTypeName());
             return true;
         }
@@ -228,6 +251,13 @@ bool ChatTemplate::initFromMetadata(const std::string& architecture,
 void ChatTemplate::init(ChatTemplateType type, const ChatTemplateConfig& cfg) {
     config_ = cfg;
     config_.type = type;
+    // Manual PHI3 init defaults to HF <|end|> turn closer (unit tests / Phi-3 GGUFs).
+    // TinyLlama overrides via initFromGGUF (eosToken=</s>, template uses eos_token).
+    if (type == ChatTemplateType::PHI3 &&
+        (cfg.eosToken.empty() || cfg.eosToken == "</s>") &&
+        cfg.customTemplate.empty()) {
+        config_.eosToken = "<|end|>";
+    }
 }
 
 // ============================================================================
@@ -270,7 +300,7 @@ std::string ChatTemplate::formatSingle(const std::string& userMessage,
 
 std::string ChatTemplate::getAssistantPrefix() const {
     switch (config_.type) {
-        case ChatTemplateType::PHI3:           return "<|assistant|>\n";
+        case ChatTemplateType::PHI3:           return "<|assistant|>";
         case ChatTemplateType::PHI4:           return "<|im_start|>assistant\n";
         case ChatTemplateType::LLAMA3:         return "<|start_header_id|>assistant<|end_header_id|>\n\n";
         case ChatTemplateType::MISTRAL:
@@ -294,7 +324,8 @@ std::string ChatTemplate::getAssistantPrefix() const {
 bool ChatTemplate::isEndOfTurn(const std::string& tokenPiece) const {
     switch (config_.type) {
         case ChatTemplateType::PHI3:
-            return tokenPiece == "<|end|>" || tokenPiece == "<|endoftext|>";
+            return tokenPiece == "<|end|>" || tokenPiece == "<|endoftext|>" ||
+                   tokenPiece == config_.eosToken || tokenPiece == "</s>";
         case ChatTemplateType::PHI4:
             return tokenPiece == "<|im_end|>" || tokenPiece == "<|endoftext|>";
         case ChatTemplateType::LLAMA3:
@@ -327,19 +358,20 @@ bool ChatTemplate::isEndOfTurn(const std::string& tokenPiece) const {
 // Per-Format Implementations
 // ============================================================================
 
-// -- Phi-3 -----------------------------------------------------------------
-// <|system|>You are a helpful assistant<|end|>
-// <|user|>Hello<|end|>
-// <|assistant|>
+// -- Phi-3 / TinyLlama-chat ------------------------------------------------
+// GGUF jinja (TinyLlama) and HF Phi-3 both use role tags + newline + content
+// + end marker. End marker is model-specific: Phi-3 `<|end|>`, TinyLlama `</s>`
+// (config_.eosToken from GGUF). Generation prompt is `<|assistant|>`.
 std::string ChatTemplate::formatPhi3(const std::vector<ChatMessage>& messages) const {
     std::string out;
+    const std::string& end = config_.eosToken.empty() ? "</s>" : config_.eosToken;
     for (const auto& msg : messages) {
         if (msg.role == "system") {
-            out += "<|system|>" + msg.content + "<|end|>";
+            out += "<|system|>\n" + msg.content + end;
         } else if (msg.role == "user") {
-            out += "<|user|>" + msg.content + "<|end|>";
+            out += "<|user|>\n" + msg.content + end;
         } else if (msg.role == "assistant") {
-            out += "<|assistant|>" + msg.content + "<|end|>";
+            out += "<|assistant|>\n" + msg.content + end;
         }
     }
     out += "<|assistant|>";

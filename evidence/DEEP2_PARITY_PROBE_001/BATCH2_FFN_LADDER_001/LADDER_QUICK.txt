@@ -1,0 +1,19 @@
+BATCH2_FFN_LADDER_001 — clean operands via FORCE_PRE_O (pos=0)
+deep2=BATCH2_ORACLE_V3  llama=O_PROJ_MULMAT_PARITY_002 force dumps
+gate: <=1e-6 PASS; <=1e-5 INSPECT; else FAIL
+
+ATTN_OUT: gate=PASS max_abs=1.117587e-008 exact=2048/2048 first_bad=-1 worst=1454
+FFN_INP: gate=PASS max_abs=1.117587e-008 exact=2048/2048 first_bad=-1 worst=1454
+FFN_NORM: gate=PASS max_abs=8.344650e-007 exact=2048/2048 first_bad=-1 worst=485
+FFN_UP: gate=PASS max_abs=2.384186e-007 exact=5632/5632 first_bad=-1 worst=1453
+FFN_GATE: SKIP (missing side deep=False llama=True)
+FFN_ACT: SKIP (missing side deep=True llama=False)
+FFN_DOWN: gate=PASS max_abs=1.862645e-008 exact=2048/2048 first_bad=-1 worst=1561
+POST_FFN: gate=PASS max_abs=2.235174e-008 exact=2048/2048 first_bad=-1 worst=837
+
+FIRST_FAIL=
+
+FFN_ACT recon(silu(gate)*up) vs deep2: gate=PASS max_abs=1.043081e-007
+POST_FFN vs LAYER_OUT deep2: gate=PASS max_abs=0 (exact identity)
+LAYER0_OUT deep2 vs llama POST_FFN force: gate=PASS max_abs=2.235174e-008
+FIRST_FAIL=none

@@ -251,7 +251,9 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                         metadata.numKeyValueHeads = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                     } else if (subkey == "feed_forward_length") {
                         metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
-                    } else if (subkey == "rms_norm_eps") {
+                    } else if (subkey == "rms_norm_eps" ||
+                               subkey == "attention.layer_norm_rms_epsilon" ||
+                               subkey == "attention.layer_norm_epsilon") {
                         metadata.rmsNormEps = (float)atof(valueStr.c_str());
                     } else if (subkey == "rope.freq_base") {
                         metadata.ropeTheta = (float)atof(valueStr.c_str());
@@ -331,7 +333,9 @@ bool GGUFLoader::ParseMetadataKV(FILE* fp, uint64_t kvCount, ModelMetadata& meta
                 if (key.find("feed_forward_length") != std::string::npos || key.find("intermediate_size") != std::string::npos) {
                     metadata.intermediateSize = (uint32_t)strtoul(valueStr.c_str(), nullptr, 10);
                 }
-                if (key.find("rms_norm_eps") != std::string::npos || key.find("layer_norm_eps") != std::string::npos) {
+                if (key.find("rms_norm_eps") != std::string::npos ||
+                    key.find("layer_norm_rms_epsilon") != std::string::npos ||
+                    key.find("layer_norm_eps") != std::string::npos) {
                     metadata.rmsNormEps = (float)atof(valueStr.c_str());
                 }
                 if (key.find("rope.dimension_count") != std::string::npos) {

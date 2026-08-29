@@ -1,0 +1,17 @@
+﻿# AGENT-E2E-002b / 04_logic_bug
+
+agent_exit=-1
+elapsed_ms=197107
+demo_break=false
+scripted_runtime=false
+tool_log_hits=0
+build_exit=0
+run_exit=1
+stdout=FAIL got=-1 expected=5
+expected=hello from b04
+source_mutated=False
+PASS=False
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+greedy=1
+max_steps=4
+max_tokens=64

@@ -1,0 +1,41 @@
+﻿BATCH2_O_PROJ_ROW_002 — FINAL DISPOSITION
+========================================
+authority=CPU llama ATTN_OUT + Deep2/llama ATTN_PRE_O frozen dumps
+W=blk.0.attn_output.weight Q4_K (file layout, no 8x8 repack required for match)
+
+A/B (same W)
+------------
+prod_Q8K(deep2 X) vs deep2 ATTN_OUT     max_abs=0          PASS (engine==kernel)
+ref_blocksum(deep2 X) vs prod           max_abs~6.5e-9     PASS (kernel self-consistent)
+prod_Q8K(deep2 X) vs llama ATTN_OUT     max_abs=8.45e-5    FAIL (boundary)
+prod_Q8K(llama X) vs llama ATTN_OUT     max_abs=9.31e-9    PASS
+
+worst_row=485
+y_prod(deep2X)=0.013101196
+y_llama      =0.013016727
+y_prod(llamaX)=0.013016727  (== llama)
+
+STOP MATRIX RESULT
+------------------
+ATTN_PRE_O_0 deep2 vs llama max_abs=6.14e-6  (INSPECT, <1e-5)
+Q8_K / Q4_K decode / block dots / accum:
+  EXONERATED for O_PROJ — identical W + llama X reproduces llama Y @ ~1e-8
+
+FIRST_DIVERGENCE_FOR_ATTN_OUT_FAIL
+----------------------------------
+Not Q4_K×Q8_K kernel.
+ATTN_OUT_0 FAIL is amplification of ATTN_PRE_O_0 micro-gap (6e-6 → 8e-5 through wo).
+
+ROOT_SUBDOMAIN_RECLASSIFIED
+---------------------------
+was:  blk.0.attn_output / O_PROJ / Q4_K×Q8_K
+now:  ATTN_PRE_O_0 deep2 vs llama (pre-O input)
+      O_PROJ GEMV = CLOSED vs llama when X matches
+
+do_not_reopen=Q/K/V tokenizer Track_A Q_PRE_ROPE
+do_not_chase=O_PROJ kernel / Q4_K file decode (exonerated)
+next=localize ATTN_PRE_O_0 micro-diff (V expand / head concat / dump pairing)
+     OR raise policy if INSPECT pre-O is accepted and O gate re-baselined
+
+VERDICT=O_PROJ_KERNEL_EXONERATED
+TRACK_B_LIVE=ATTN_PRE_O_0_MICROGAP

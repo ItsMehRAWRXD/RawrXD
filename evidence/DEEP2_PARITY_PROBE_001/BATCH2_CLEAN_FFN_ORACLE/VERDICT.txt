@@ -1,0 +1,56 @@
+BATCH2_CLEAN_FFN_ORACLE / LANE1_L0_POST_ATTN
+=============================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=0
+authority_model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+abs_eps=1e-6
+
+PRECONDITION
+------------
+BATCH2_TRACK_B_POS0 = PASS (do not reopen)
+PRE_O_AUTHORITY = GQA_expand(reference_V)
+FORCE_PRE_O = PRE_O_CLEAN_expand_Vl.bin  (exact expand(llama V))
+
+ORACLE SANITY (required before any Deep2 compare)
+------------------------------------------------
+PRE_O_CLEAN == GQA_expand(V)                 PASS  max_abs=0 (exact)
+FFN_INP == EMBED + ATTN_OUT(=O(PRE_O_CLEAN)) PASS  max_abs~4.7e-10
+ORACLE_SANITY = PASS  (do not reject)
+
+LADDER Deep2 vs clean-llama @ pos0 (stop at first FAIL)
+------------------------------------------------------
+ATTN_OUT_0   PASS  max_abs=1.12e-08  largest=1454
+FFN_INP_0    PASS  max_abs=1.12e-08  largest=1454
+FFN_NORM_0   PASS  max_abs=8.34e-07  largest=485   (noise peak; WITHIN eps — NOT contamination)
+FFN_GATE_0   PASS  max_abs=3.73e-07  largest=4663
+FFN_UP_0     PASS  max_abs=2.38e-07  largest=2653
+FFN_ACT_0    PASS  max_abs=1.04e-07  largest=3915
+FFN_DOWN_0   PASS  max_abs=1.86e-08  largest=119
+POST_FFN_0   PASS  max_abs=1.86e-08  largest=119
+
+FIRST_GENUINE_FAIL = NONE
+LAYER0_POST_ATTN   = CLOSED / PASS
+
+CONTAMINATION CHECK (invalid dumps vs clean)
+--------------------------------------------
+old llama ATTN_OUT (bad PRE_O) vs clean FORCE ATTN_OUT
+  max_abs≈8.45e-5 largest=485
+→ confirms prior FFN_* “fails” were oracle contamination, not Deep2.
+
+NOTE
+----
+Index 485 under clean authority appears only as a sub-eps FFN_NORM noise peak.
+It has no standing as a Deep2 defect.
+
+DO_NOT_REOPEN
+-------------
+tokenizer | Track A | Q/K/V | PRE_O | O_PROJ | Track B pos0 | LAYER0 FFN
+
+NEXT
+----
+Advance past LAYER0_OUT to LAYER1 (ATTN_NORM_1 → …) or tip/logits under same clean authority.
+Lane 2 (LLAMA_PRE_O_DUMP_HYGIENE_001) remains optional oracle debt.
+
+dumps=
+  BATCH2_CLEAN_FFN_ORACLE/llama_*_pos0_* (prefill seqs; ignore decode-step seq~345x)
+  BATCH2_CLEAN_FFN_ORACLE/deep2/deep2_*_pos0_*

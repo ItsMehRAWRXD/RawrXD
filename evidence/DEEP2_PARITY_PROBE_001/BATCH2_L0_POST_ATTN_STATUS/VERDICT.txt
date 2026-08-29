@@ -1,0 +1,40 @@
+BATCH2_L0_POST_ATTN_STATUS
+==========================
+date=2026-08-29
+prerequisite=BATCH2_TRACK_B_POS0 = PASS (expand(V) PRE_O authority)
+
+DEEP2 SELF-CHECKS
+-----------------
+FFN_INP_0 == PROMPT_EMBED + ATTN_OUT_0     PASS  max_abs~4.7e-10
+POST_FFN_0 == LAYER_OUT_0                  (same digest/fnv in live run)
+
+CLEAN-AUTHORITY RESIDUAL
+------------------------
+clean_resid := llama_EMBED + Deep2_ATTN_OUT   # ATTN_OUT PASS-class under expand(V)
+clean_resid vs Deep2 FFN_INP_0               PASS (~embed exact + attn PASS-class)
+
+INVALIDATED LLAMA DUMPS (do not use as Deep2 fail evidence)
+----------------------------------------------------------
+llama ATTN_OUT_0 dump
+llama FFN_INP_0 / FFN_NORM_0 / FFN_DOWN_0 / POST_FFN_0 dumps
+reason = all descend from invalidated llama PRE_O (!= GQA_expand(V))
+
+Fingerprint of contamination:
+  ATTN_OUT dump gap max_abs=8.45e-5 largest=485
+  FFN_INP  dump gap max_abs=8.45e-5 largest=485  (identical — pure residual carry)
+  FFN_NORM dump gap max_abs~1.1e-2  largest=485  (RMSNorm amplification of same error)
+  later FFN gaps = contaminated-input propagation, NOT new Deep2 root cause
+
+FIRST_DEEP2_FAIL_AFTER_TRACK_B
+------------------------------
+NONE ESTABLISHED YET under clean PRE_O/ATTN_OUT authority.
+
+NEXT (choose one)
+-----------------
+A) Oracle hygiene: LLAMA_PRE_O_DUMP_HYGIENE_001 then re-dump FFN ladder
+B) FORCE_PRE_O=Deep2 expand(V) into llama probe → clean FFN_* oracle → resume:
+     FFN_NORM_0 → GATE/UP → ACT → DOWN → LAYER0_OUT
+
+DO_NOT_REOPEN
+-------------
+tokenizer | Track A | Q/K/V | PRE_O | O_PROJ | invalidated ATTN_OUT FAIL

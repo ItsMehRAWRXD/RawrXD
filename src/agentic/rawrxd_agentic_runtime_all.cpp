@@ -368,7 +368,91 @@ struct GgufMetadata {
     std::int64_t eosToken = -1;
     bool addBos = false;
     bool addEos = false;
+    // Resolved from tokenizer.ggml.tokens[id] (empty if unavailable).
+    std::string bosTokenStr;
+    std::string eosTokenStr;
+    // Vocab presence for chat markers (scanned while loading tokens).
+    bool vocabHasEndTag = false;      // <|end|>
+    bool vocabHasImEnd = false;       // <|im_end|>
+    bool vocabHasImStart = false;     // <|im_start|>
+    bool vocabHasUserTag = false;     // <|user|>
+    bool vocabHasAssistantTag = false;
+    bool vocabHasSystemTag = false;
+    bool vocabHasToolTag = false;     // <|tool|>
 };
+
+// Reverse-engineered chat render contract from GGUF jinja + vocab.
+// Sorts out mismatches like jinja saying <|end|> while vocab only has </s>,
+// or renderers inventing <|tool|> when the template never trained that role.
+struct TemplateContract {
+    std::string messageStop;   // appended after each message body
+    std::string assistantPrompt; // generation prompt suffix
+    bool jinjaUsesEosVar = false;
+    bool jinjaHasToolRole = false;
+    bool remapToolToUser = true;
+    std::string familyHint;    // diagnostic
+};
+
+static TemplateContract inferTemplateContract(const GgufMetadata& m) {
+    TemplateContract c;
+    const std::string& tmpl = m.chatTemplate;
+    const std::string eos = !m.eosTokenStr.empty() ? m.eosTokenStr : "</s>";
+
+    c.jinjaUsesEosVar = tmpl.find("eos_token") != std::string::npos;
+    // Jinja mentions of a tool role (role == 'tool' / <|tool|>).
+    c.jinjaHasToolRole =
+        tmpl.find("role'] == 'tool'") != std::string::npos ||
+        tmpl.find("role\"] == \"tool\"") != std::string::npos ||
+        tmpl.find("<|tool|>") != std::string::npos ||
+        (tmpl.find("'tool'") != std::string::npos &&
+         tmpl.find("message['role']") != std::string::npos);
+    // Heuristic: if template never defines tool handling, never emit <|tool|>.
+    c.remapToolToUser = !c.jinjaHasToolRole || !m.vocabHasToolTag;
+
+    // Message stop: follow jinja, but self-heal when the literal stop tag is absent from vocab.
+    if (c.jinjaUsesEosVar) {
+        c.messageStop = eos;
+        c.familyHint = "eos_token";
+    } else if (tmpl.find("<|im_end|>") != std::string::npos) {
+        c.messageStop = (m.vocabHasImEnd || m.vocabHasImStart) ? "<|im_end|>" : eos;
+        if (c.messageStop == eos) c.familyHint = "im_end->eos_heal";
+        else c.familyHint = "im_end";
+    } else if (tmpl.find("<|eot_id|>") != std::string::npos) {
+        c.messageStop = "<|eot_id|>";
+        c.familyHint = "eot_id";
+    } else if (tmpl.find("<|end|>") != std::string::npos) {
+        // Classic footgun: Phi-3-style jinja copied onto llama SPM vocabs that only have </s>.
+        if (!m.vocabHasEndTag) {
+            c.messageStop = eos;
+            c.familyHint = "end_tag->eos_heal";
+        } else {
+            c.messageStop = "<|end|>";
+            c.familyHint = "end_tag";
+        }
+    } else if (tmpl.find("<end_of_turn>") != std::string::npos) {
+        c.messageStop = "<end_of_turn>";
+        c.familyHint = "gemma_eot";
+    } else {
+        c.messageStop = eos;
+        c.familyHint = "default_eos";
+    }
+
+    // Assistant generation prompt from jinja last-branch patterns.
+    if (tmpl.find("<|im_start|>") != std::string::npos) {
+        c.assistantPrompt = "<|im_start|>assistant\n";
+    } else if (tmpl.find("<|start_header_id|>") != std::string::npos) {
+        c.assistantPrompt = "<|start_header_id|>assistant<|end_header_id|>\n\n";
+    } else if (tmpl.find("<|assistant|>") != std::string::npos) {
+        // TinyLlama/Zephyr jinja: {{ '<|assistant|>' }} with no trailing stop.
+        c.assistantPrompt = "<|assistant|>\n";
+    } else if (tmpl.find("<start_of_turn>") != std::string::npos) {
+        c.assistantPrompt = "<start_of_turn>model\n";
+    } else {
+        c.assistantPrompt = "assistant: ";
+    }
+
+    return c;
+}
 
 class GgufMetadataReader final {
 public:
@@ -382,6 +466,8 @@ public:
         m.tensorCount = r.read<std::uint64_t>();
         const std::uint64_t kvCount = r.read<std::uint64_t>();
         if (kvCount > 1000000ull) throw std::runtime_error("GGUF metadata count unreasonable");
+        // Tokens may appear before bos/eos ids — keep a temporary snap for resolution.
+        std::vector<std::string> tokenSnap;
         for (std::uint64_t i = 0; i < kvCount; ++i) {
             const std::string key = r.readString();
             const auto type = static_cast<GgufType>(r.read<std::uint32_t>());
@@ -393,11 +479,56 @@ public:
             if (key == "tokenizer.ggml.eos_token_id") { m.eosToken = readIntegerValue(r, type); continue; }
             if (key == "tokenizer.ggml.add_bos_token") { m.addBos = readBoolValue(r, type); continue; }
             if (key == "tokenizer.ggml.add_eos_token") { m.addEos = readBoolValue(r, type); continue; }
+            if (key == "tokenizer.ggml.tokens" && type == GgufType::Array) {
+                const auto elementType = static_cast<GgufType>(r.read<std::uint32_t>());
+                const std::uint64_t count = r.read<std::uint64_t>();
+                if (elementType != GgufType::String || count > 500000ull) {
+                    for (std::uint64_t ti = 0; ti < count; ++ti) skipValue(r, elementType);
+                    continue;
+                }
+                tokenSnap.clear();
+                tokenSnap.reserve(static_cast<std::size_t>(count));
+                for (std::uint64_t ti = 0; ti < count; ++ti) {
+                    std::string tok = r.readString();
+                    noteVocabMarker(m, tok);
+                    tokenSnap.push_back(std::move(tok));
+                }
+                continue;
+            }
             skipValue(r, type);
         }
+        resolveSpecialTokenStrings(m, tokenSnap);
         return m;
     }
 private:
+    static void noteVocabMarker(GgufMetadata& m, const std::string& tok) {
+        if (tok == "<|end|>") m.vocabHasEndTag = true;
+        else if (tok == "<|im_end|>") m.vocabHasImEnd = true;
+        else if (tok == "<|im_start|>") m.vocabHasImStart = true;
+        else if (tok == "<|user|>") m.vocabHasUserTag = true;
+        else if (tok == "<|assistant|>") m.vocabHasAssistantTag = true;
+        else if (tok == "<|system|>") m.vocabHasSystemTag = true;
+        else if (tok == "<|tool|>") m.vocabHasToolTag = true;
+    }
+    static void resolveSpecialTokenStrings(GgufMetadata& m, const std::vector<std::string>& tokens) {
+        auto at = [&](std::int64_t id) -> std::string {
+            if (id < 0 || static_cast<std::size_t>(id) >= tokens.size()) return {};
+            return tokens[static_cast<std::size_t>(id)];
+        };
+        if (m.bosTokenStr.empty()) m.bosTokenStr = at(m.bosToken);
+        if (m.eosTokenStr.empty()) m.eosTokenStr = at(m.eosToken);
+        // Llama SPM fallback when ids missing but vocab has the classics.
+        if (m.eosTokenStr.empty()) {
+            for (const auto& t : tokens) {
+                if (t == "</s>") { m.eosTokenStr = t; break; }
+            }
+        }
+        if (m.bosTokenStr.empty()) {
+            for (const auto& t : tokens) {
+                if (t == "<s>") { m.bosTokenStr = t; break; }
+            }
+        }
+    }
     static std::int64_t readIntegerValue(BinaryReader& r, GgufType type) {
         switch (type) {
         case GgufType::UInt8: return r.read<std::uint8_t>();
@@ -499,15 +630,20 @@ static std::string toolInstructionBlock(const std::vector<ToolDefinition>& tools
     if (tools.empty()) return {};
     std::ostringstream out;
     out << "You have access to local tools. "
-        << "Use tools when they are necessary to complete the task. "
+        << "You MUST use tools to inspect and modify files before claiming a fix. "
         << "Do not invent tool results.\n\n"
         << "TOOLS:\n"
         << toolsAsOpenAIJson(tools)
         << "\n\n"
-        << "When calling a tool, emit exactly one JSON object in this form:\n"
-        << "{\"name\":\"tool_name\",\"arguments\":{...}}\n"
-        << "After a tool result is provided, continue from that result. "
-        << "When the task is complete, answer normally without a tool object.";
+        << "REQUIRED tool format (exact strict JSON arguments; keys and string values MUST be double-quoted):\n"
+        << "TOOL_CALL: read_file {\"path\":\"main.c\"}\n"
+        << "TOOL_CALL: replace_in_file {\"path\":\"main.c\",\"search\":\"DOES_NOT_EXIST\",\"replace\":\"42\"}\n"
+        << "TOOL_CALL: run_command {\"command\":\"cmake --build build\"}\n"
+        << "INVALID (rejected, tool will NOT run): {path:main.c, search: \"x\", replace: \"y\"}\n"
+        << "If a tool observation reports error=schema_validation, resend the SAME tool with corrected strict JSON.\n"
+        << "After a tool observation, emit the next TOOL_CALL or a short final answer. "
+        << "Never copy or restate tool observation JSON as your reply.\n"
+        << "Do NOT write markdown code fences as a substitute for tools.";
     return out.str();
 }
 
@@ -536,10 +672,34 @@ static const char* templateFamilyName(TemplateFamily family) {
 class ChatTemplate final {
 public:
     explicit ChatTemplate(GgufMetadata metadata)
-        : metadata_(std::move(metadata)), family_(detectFamily(metadata_)) {}
+        : metadata_(std::move(metadata)),
+          family_(detectFamily(metadata_)),
+          contract_(inferTemplateContract(metadata_)) {
+        // Isolation stick: RAWRXD_CHAT_FAMILY=phi3|chatml|auto (default auto)
+        if (const char* force = std::getenv("RAWRXD_CHAT_FAMILY")) {
+            const std::string f = lower(force);
+            if (f == "phi3" || f == "zephyr" || f == "tinyllama") {
+                family_ = TemplateFamily::Phi3;
+            } else if (f == "chatml" || f == "im_start") {
+                family_ = TemplateFamily::ChatML;
+            } else if (f == "mistral") {
+                family_ = TemplateFamily::Mistral;
+            } else if (f != "auto" && !f.empty()) {
+                std::fprintf(stderr, "[ChatTemplate] unknown RAWRXD_CHAT_FAMILY=%s (keeping auto)\n", force);
+            }
+        }
+        std::printf("[ChatTemplate] family=%s heal=%s stop_bytes=%zu remap_tool=%d eos_id=%lld\n",
+                    templateFamilyName(family_),
+                    contract_.familyHint.c_str(),
+                    contract_.messageStop.size(),
+                    contract_.remapToolToUser ? 1 : 0,
+                    static_cast<long long>(metadata_.eosToken));
+        std::fflush(stdout);
+    }
 
     TemplateFamily family() const { return family_; }
     const GgufMetadata& metadata() const { return metadata_; }
+    const TemplateContract& contract() const { return contract_; }
 
     std::string render(const std::vector<ChatMessage>& messages,
                        const std::vector<ToolDefinition>& tools,
@@ -560,6 +720,7 @@ public:
 private:
     GgufMetadata metadata_;
     TemplateFamily family_ = TemplateFamily::Generic;
+    TemplateContract contract_{};
 
     static TemplateFamily detectFamily(const GgufMetadata& metadata) {
         const std::string templateLower = lower(metadata.chatTemplate);
@@ -572,10 +733,21 @@ private:
         }
         if (arch.find("qwen") != std::string::npos || name.find("qwen") != std::string::npos) return TemplateFamily::Qwen;
         if (templateLower.find("<|start_header_id|>") != std::string::npos ||
-            name.find("llama-3") != std::string::npos || name.find("llama 3") != std::string::npos) return TemplateFamily::Llama3;
-        if (arch.find("phi") != std::string::npos || templateLower.find("<|assistant|>") != std::string::npos) return TemplateFamily::Phi3;
-        if (arch.find("gemma") != std::string::npos || templateLower.find("<start_of_turn>") != std::string::npos) return TemplateFamily::Gemma;
-        if (arch.find("mistral") != std::string::npos || templateLower.find("[inst]") != std::string::npos) return TemplateFamily::Mistral;
+            name.find("llama-3") != std::string::npos || name.find("llama 3") != std::string::npos) {
+            return TemplateFamily::Llama3;
+        }
+        // Zephyr / TinyLlama-Chat / Phi-style jinja uses <|user|> + <|assistant|>.
+        if (templateLower.find("<|user|>") != std::string::npos &&
+            templateLower.find("<|assistant|>") != std::string::npos) {
+            return TemplateFamily::Phi3;
+        }
+        if (arch.find("phi") != std::string::npos) return TemplateFamily::Phi3;
+        if (arch.find("gemma") != std::string::npos || templateLower.find("<start_of_turn>") != std::string::npos) {
+            return TemplateFamily::Gemma;
+        }
+        if (arch.find("mistral") != std::string::npos || templateLower.find("[inst]") != std::string::npos) {
+            return TemplateFamily::Mistral;
+        }
         if (arch == "llama") return TemplateFamily::Mistral;
         return TemplateFamily::Generic;
     }
@@ -596,27 +768,50 @@ private:
         return result;
     }
 
-    static std::string renderChatML(const std::vector<ChatMessage>& messages,
-                                    const std::vector<ToolDefinition>& tools,
-                                    bool addGenerationPrompt, bool hermes) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    // When jinja/vocab never trained <|tool|>, fold tool results into the user role.
+    // Do NOT prefix with "TOOL_RESULT:" — TinyLlama copies that label as its next "action".
+    std::vector<ChatMessage> applyRoleHealing(std::vector<ChatMessage> messages) const {
+        if (!contract_.remapToolToUser) return messages;
+        for (auto& message : messages) {
+            if (message.role != Role::Tool) continue;
+            message.role = Role::User;
+            const std::string toolName = message.name.empty() ? "tool" : message.name;
+            const std::string callId = message.toolCallId.empty() ? "" : (" id=" + message.toolCallId);
+            message.content =
+                "Observation from `" + toolName + "`" + callId +
+                " (do not echo this block; decide the next TOOL_CALL):\n" +
+                message.content;
+        }
+        return messages;
+    }
+
+    std::string renderChatML(const std::vector<ChatMessage>& messages,
+                             const std::vector<ToolDefinition>& tools,
+                             bool addGenerationPrompt, bool hermes) const {
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
+        const std::string stop =
+            !contract_.messageStop.empty() ? contract_.messageStop : std::string("<|im_end|>");
         std::ostringstream out;
         for (const auto& message : expanded) {
             out << "<|im_start|>" << roleName(message.role) << "\n";
-            if (message.role == Role::Tool && hermes) {
+            if (hermes && message.content.find("Observation from `") == 0) {
                 out << "<tool_response>\n" << message.content << "\n</tool_response>";
             } else {
                 out << message.content;
             }
-            out << "<|im_end|>\n";
+            out << stop;
+            if (stop.empty() || stop.back() != '\n') out << "\n";
         }
-        if (addGenerationPrompt) out << "<|im_start|>assistant\n";
+        if (addGenerationPrompt) {
+            out << (contract_.assistantPrompt.empty() ? "<|im_start|>assistant\n"
+                                                       : contract_.assistantPrompt);
+        }
         return out.str();
     }
 
-    static std::string renderQwen(const std::vector<ChatMessage>& messages,
-                                   const std::vector<ToolDefinition>& tools,
-                                   bool addGenerationPrompt) {
+    std::string renderQwen(const std::vector<ChatMessage>& messages,
+                           const std::vector<ToolDefinition>& tools,
+                           bool addGenerationPrompt) const {
         std::vector<ChatMessage> expanded = messages;
         if (!tools.empty()) {
             std::ostringstream toolSystem;
@@ -642,24 +837,19 @@ private:
             }
             if (!inserted) expanded.insert(expanded.begin(), ChatMessage{Role::System, toolSystem.str(), {}, {}});
         }
+        expanded = applyRoleHealing(std::move(expanded));
         std::ostringstream out;
         for (const auto& message : expanded) {
-            out << "<|im_start|>" << roleName(message.role) << "\n";
-            if (message.role == Role::Tool) {
-                out << "<tool_response>\n" << message.content << "\n</tool_response>";
-            } else {
-                out << message.content;
-            }
-            out << "<|im_end|>\n";
+            out << "<|im_start|>" << roleName(message.role) << "\n" << message.content << "<|im_end|>\n";
         }
         if (addGenerationPrompt) out << "<|im_start|>assistant\n";
         return out.str();
     }
 
-    static std::string renderLlama3(const std::vector<ChatMessage>& messages,
-                                     const std::vector<ToolDefinition>& tools,
-                                     bool addGenerationPrompt) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    std::string renderLlama3(const std::vector<ChatMessage>& messages,
+                             const std::vector<ToolDefinition>& tools,
+                             bool addGenerationPrompt) const {
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
         std::ostringstream out;
         out << "<|begin_of_text|>";
         for (const auto& message : expanded) {
@@ -670,41 +860,49 @@ private:
         return out.str();
     }
 
-    static std::string renderPhi3(const std::vector<ChatMessage>& messages,
-                                   const std::vector<ToolDefinition>& tools,
-                                   bool addGenerationPrompt) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    std::string renderPhi3(const std::vector<ChatMessage>& messages,
+                           const std::vector<ToolDefinition>& tools,
+                           bool addGenerationPrompt) const {
+        // Contract-driven: messageStop comes from eos_token / healed <|end|>.
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
+        const std::string& stop = contract_.messageStop;
         std::ostringstream out;
         for (const auto& message : expanded) {
-            out << "<|" << roleName(message.role) << "|>\n" << message.content << "<|end|>\n";
+            const char* role =
+                message.role == Role::System ? "system" :
+                message.role == Role::Assistant ? "assistant" : "user";
+            out << "<|" << role << "|>\n" << message.content << stop;
         }
-        if (addGenerationPrompt) out << "<|assistant|>\n";
+        if (addGenerationPrompt) {
+            out << (contract_.assistantPrompt.empty() ? "<|assistant|>\n"
+                                                      : contract_.assistantPrompt);
+        }
         return out.str();
     }
 
-    static std::string renderGemma(const std::vector<ChatMessage>& messages,
-                                    const std::vector<ToolDefinition>& tools,
-                                    bool addGenerationPrompt) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    std::string renderGemma(const std::vector<ChatMessage>& messages,
+                            const std::vector<ToolDefinition>& tools,
+                            bool addGenerationPrompt) const {
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
         std::ostringstream out;
         out << "<bos>";
         for (const auto& message : expanded) {
             const char* role = message.role == Role::Assistant ? "model" : "user";
             out << "<start_of_turn>" << role << "\n";
             if (message.role == Role::System) out << "[SYSTEM]\n";
-            else if (message.role == Role::Tool) out << "[TOOL_RESULT]\n";
             out << message.content << "<end_of_turn>\n";
         }
         if (addGenerationPrompt) out << "<start_of_turn>model\n";
         return out.str();
     }
 
-    static std::string renderMistral(const std::vector<ChatMessage>& messages,
-                                      const std::vector<ToolDefinition>& tools,
-                                      bool addGenerationPrompt) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    std::string renderMistral(const std::vector<ChatMessage>& messages,
+                              const std::vector<ToolDefinition>& tools,
+                              bool addGenerationPrompt) const {
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
         std::ostringstream out;
         std::string pendingSystem;
+        const std::string stop = contract_.messageStop.empty() ? "</s>" : contract_.messageStop;
         for (const auto& message : expanded) {
             if (message.role == Role::System) { pendingSystem = message.content; continue; }
             if (message.role == Role::User) {
@@ -712,19 +910,17 @@ private:
                 if (!pendingSystem.empty()) { out << pendingSystem << "\n\n"; pendingSystem.clear(); }
                 out << message.content << " [/INST]";
             } else if (message.role == Role::Assistant) {
-                out << " " << message.content << "</s>";
-            } else if (message.role == Role::Tool) {
-                out << " [TOOL_RESULT] " << message.content << " [/TOOL_RESULT]";
+                out << " " << message.content << stop;
             }
         }
         (void)addGenerationPrompt;
         return out.str();
     }
 
-    static std::string renderGeneric(const std::vector<ChatMessage>& messages,
-                                      const std::vector<ToolDefinition>& tools,
-                                      bool addGenerationPrompt) {
-        const auto expanded = withToolSystemMessage(messages, tools);
+    std::string renderGeneric(const std::vector<ChatMessage>& messages,
+                              const std::vector<ToolDefinition>& tools,
+                              bool addGenerationPrompt) const {
+        const auto expanded = applyRoleHealing(withToolSystemMessage(messages, tools));
         std::ostringstream out;
         for (const auto& message : expanded) {
             out << roleName(message.role) << ": " << message.content << "\n";
@@ -993,6 +1189,43 @@ public:
         candidates.insert(candidates.end(), rawObjects.begin(), rawObjects.end());
         std::vector<ToolCall> calls;
         std::set<std::string> dedupe;
+        // RawrXD IDE grammar: TOOL_CALL: name {json}
+        {
+            std::size_t pos = 0;
+            while (pos < response.size()) {
+                const auto toolPos = response.find("TOOL_CALL:", pos);
+                if (toolPos == std::string::npos) break;
+                auto cursor = toolPos + std::strlen("TOOL_CALL:");
+                while (cursor < response.size() && std::isspace(static_cast<unsigned char>(response[cursor]))) ++cursor;
+                const auto nameBegin = cursor;
+                while (cursor < response.size() &&
+                       (std::isalnum(static_cast<unsigned char>(response[cursor])) ||
+                        response[cursor] == '_' || response[cursor] == '-')) {
+                    ++cursor;
+                }
+                if (cursor == nameBegin) { pos = toolPos + 1; continue; }
+                const std::string name = response.substr(nameBegin, cursor - nameBegin);
+                while (cursor < response.size() && std::isspace(static_cast<unsigned char>(response[cursor]))) ++cursor;
+                if (cursor >= response.size() || response[cursor] != '{') { pos = toolPos + 1; continue; }
+                int depth = 0;
+                const auto jsonBegin = cursor;
+                for (; cursor < response.size(); ++cursor) {
+                    if (response[cursor] == '{') ++depth;
+                    else if (response[cursor] == '}') {
+                        --depth;
+                        if (depth == 0) { ++cursor; break; }
+                    }
+                }
+                if (depth != 0) { pos = toolPos + 1; continue; }
+                const std::string args = response.substr(jsonBegin, cursor - jsonBegin);
+                const std::string fingerprint = name + "\n" + args;
+                if (dedupe.insert(fingerprint).second) {
+                    calls.push_back(ToolCall{
+                        "call_" + std::to_string(calls.size() + 1), name, args});
+                }
+                pos = cursor;
+            }
+        }
         for (const auto& candidate : candidates) parseCandidate(candidate, calls, dedupe);
         return calls;
     }
@@ -1040,16 +1273,164 @@ struct ToolResult {
     std::string tool;
     std::string output;
     int exitCode = 0;
+    std::string error;                 // e.g. "schema_validation" (empty = runtime/tool result)
+    std::vector<std::string> details;
+    bool dispatched = false;           // true only if handler executed
+
+    static ToolResult schemaFailure(const std::string& toolName,
+                                    std::vector<std::string> detailsIn) {
+        ToolResult r;
+        r.success = false;
+        r.tool = toolName;
+        r.exitCode = -3;
+        r.error = "schema_validation";
+        r.details = std::move(detailsIn);
+        r.dispatched = false;
+        // Compact message for the model (avoid blowing TinyLlama context).
+        std::ostringstream msg;
+        msg << "error=schema_validation dispatched=false. "
+            << "Fix arguments to strict JSON with quoted keys, e.g. "
+            << "TOOL_CALL: " << toolName << " {\"path\":\"main.c\"}. Details:";
+        for (const auto& d : r.details) msg << " [" << d << "]";
+        r.output = msg.str();
+        return r;
+    }
 
     std::string toJson() const {
         std::ostringstream out;
         out << "{" << "\"ok\":" << (success ? "true" : "false") << ","
             << "\"tool\":" << jsonQuote(tool) << ","
             << "\"exit_code\":" << exitCode << ","
-            << "\"output\":" << jsonQuote(output) << "}";
+            << "\"dispatched\":" << (dispatched ? "true" : "false") << ","
+            << "\"output\":" << jsonQuote(output);
+        if (!error.empty()) {
+            out << ",\"error\":" << jsonQuote(error) << ",\"details\":[";
+            for (std::size_t i = 0; i < details.size(); ++i) {
+                if (i) out << ",";
+                out << jsonQuote(details[i]);
+            }
+            out << "]";
+        }
+        out << "}";
         return out.str();
     }
 };
+
+// AGENT-TOOL-SCHEMA-002: strict JSON object (quoted keys). No silent bare-key repair.
+static bool isStrictJsonObject(std::string_view raw) {
+    const std::string trimmed = trim(std::string(raw));
+    if (trimmed.empty() || trimmed.front() != '{') return false;
+    const auto whole = scanBalancedJson(trimmed, 0);
+    if (!whole) return false;
+    std::size_t after = skipWs(trimmed, whole->end);
+    if (after != trimmed.size()) return false;
+
+    std::size_t i = skipWs(trimmed, 1);
+    if (i < trimmed.size() && trimmed[i] == '}') return true;
+    while (i < trimmed.size()) {
+        i = skipWs(trimmed, i);
+        if (i >= trimmed.size() || trimmed[i] != '"') return false; // bare key / non-JSON
+        const auto key = scanJsonString(trimmed, i);
+        if (!key) return false;
+        i = skipWs(trimmed, key->end);
+        if (i >= trimmed.size() || trimmed[i] != ':') return false;
+        ++i;
+        const auto value = scanJsonValue(trimmed, i);
+        if (!value) return false;
+        i = skipWs(trimmed, value->end);
+        if (i >= trimmed.size()) return false;
+        if (trimmed[i] == ',') { ++i; continue; }
+        if (trimmed[i] == '}') return skipWs(trimmed, i + 1) == trimmed.size();
+        return false;
+    }
+    return false;
+}
+
+static std::vector<std::string> schemaRequiredKeys(const std::string& parametersJson) {
+    std::vector<std::string> keys;
+    const auto pos = parametersJson.find("\"required\"");
+    if (pos == std::string::npos) return keys;
+    const auto bracket = parametersJson.find('[', pos);
+    if (bracket == std::string::npos) return keys;
+    const auto end = parametersJson.find(']', bracket);
+    if (end == std::string::npos) return keys;
+    const std::string arr = parametersJson.substr(bracket, end - bracket + 1);
+    std::size_t i = 0;
+    while (i < arr.size()) {
+        const auto q = arr.find('"', i);
+        if (q == std::string::npos) break;
+        const auto slice = scanJsonString(arr, q);
+        if (!slice) break;
+        keys.push_back(unescapeJsonString(arr.substr(slice->begin, slice->end - slice->begin)));
+        i = slice->end;
+    }
+    return keys;
+}
+
+struct ArgSchemaCheck {
+    bool ok = false;
+    std::vector<std::string> details;
+};
+
+static ArgSchemaCheck validateToolArguments(const ToolDefinition& def, const std::string& argumentsJson) {
+    ArgSchemaCheck check;
+    if (!isStrictJsonObject(argumentsJson)) {
+        check.details.push_back("arguments must be valid JSON");
+        check.details.push_back(
+            "use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}");
+        return check;
+    }
+    for (const auto& key : schemaRequiredKeys(def.parametersJson)) {
+        if (!jsonStringField(argumentsJson, key) && !jsonRawField(argumentsJson, key)) {
+            check.details.push_back("required argument missing: " + key);
+        } else if (jsonRawField(argumentsJson, key) && !jsonStringField(argumentsJson, key)) {
+            // present but not a JSON string — for string-typed required keys this is invalid
+            // Heuristic: if schema properties mark it as string, require string.
+            const std::string needle = "\"" + key + "\":{\"type\":\"string\"}";
+            const std::string needleSpaced = "\"" + key + "\": {\"type\": \"string\"}";
+            if (def.parametersJson.find(needle) != std::string::npos ||
+                def.parametersJson.find(needleSpaced) != std::string::npos ||
+                def.parametersJson.find("\"" + key + "\":{\"type\":\"string\"") != std::string::npos) {
+                if (!jsonStringField(argumentsJson, key)) {
+                    check.details.push_back("required string argument missing: " + key);
+                }
+            }
+        }
+    }
+    // replace_in_file: path required as string; search/replace (or aliases) required as strings.
+    if (def.name == "replace_in_file") {
+        if (!jsonStringField(argumentsJson, "path")) {
+            check.details.push_back("required string argument missing: path");
+        }
+        const bool hasSearch = jsonStringField(argumentsJson, "search").has_value() ||
+                               jsonStringField(argumentsJson, "old_string").has_value();
+        const bool hasReplace = jsonStringField(argumentsJson, "replace").has_value() ||
+                                jsonStringField(argumentsJson, "new_string").has_value();
+        if (!hasSearch) check.details.push_back("required string argument missing: search (or old_string)");
+        if (!hasReplace) check.details.push_back("required string argument missing: replace (or new_string)");
+    }
+    if (def.name == "run_command" && !jsonStringField(argumentsJson, "command")) {
+        check.details.push_back("required string argument missing: command");
+    }
+    if (def.name == "write_file") {
+        if (!jsonStringField(argumentsJson, "path"))
+            check.details.push_back("required string argument missing: path");
+        if (!jsonStringField(argumentsJson, "content"))
+            check.details.push_back("required string argument missing: content");
+    }
+    if (def.name == "read_file" && !jsonStringField(argumentsJson, "path")) {
+        check.details.push_back("required string argument missing: path");
+    }
+    // Dedupe details
+    std::set<std::string> seen;
+    std::vector<std::string> unique;
+    for (const auto& d : check.details) {
+        if (seen.insert(d).second) unique.push_back(d);
+    }
+    check.details = std::move(unique);
+    check.ok = check.details.empty();
+    return check;
+}
 
 class WorkspaceSandbox final {
 public:
@@ -1214,9 +1595,37 @@ public:
 
     ToolResult dispatch(const ToolCall& call) {
         const auto it = handlers_.find(call.name);
-        if (it == handlers_.end()) return ToolResult{false, call.name, "unknown tool: " + call.name, -1};
-        try { return it->second(call.argumentsJson); }
-        catch (const std::exception& ex) { return ToolResult{false, call.name, ex.what(), -1}; }
+        if (it == handlers_.end()) {
+            ToolResult r{false, call.name, "unknown tool: " + call.name, -1};
+            r.error = "unknown_tool";
+            r.dispatched = false;
+            return r;
+        }
+        const auto defIt = definitions_.find(call.name);
+        if (defIt == definitions_.end()) {
+            return ToolResult::schemaFailure(call.name, {"tool definition missing"});
+        }
+        const ArgSchemaCheck check = validateToolArguments(defIt->second, call.argumentsJson);
+        if (!check.ok) {
+            std::printf("[TOOL_SCHEMA] REJECT tool=%s dispatched=0 details=%zu\n",
+                        call.name.c_str(), check.details.size());
+            std::fflush(stdout);
+            return ToolResult::schemaFailure(call.name, check.details);
+        }
+        try {
+            ToolResult result = it->second(call.argumentsJson);
+            result.dispatched = true;
+            if (result.tool.empty()) result.tool = call.name;
+            std::printf("[TOOL_SCHEMA] ACCEPT tool=%s dispatched=1 ok=%d\n",
+                        call.name.c_str(), result.success ? 1 : 0);
+            std::fflush(stdout);
+            return result;
+        } catch (const std::exception& ex) {
+            ToolResult r{false, call.name, ex.what(), -1};
+            r.dispatched = true; // handler entered; runtime failure after gate
+            r.error = "tool_runtime";
+            return r;
+        }
     }
 
 private:
@@ -1225,7 +1634,7 @@ private:
     std::unordered_map<std::string, ToolDefinition> definitions_;
     std::unordered_map<std::string, Handler> handlers_;
     std::set<std::string> allowedExecutables_ {
-        "cmake", "ninja", "ctest", "git", "powershell", "pwsh",
+        "cmake", "ninja", "ctest", "git", "powershell", "pwsh", "cmd",
         "cl", "link", "msbuild", "devenv", "python", "python3"
     };
 
@@ -1292,12 +1701,14 @@ private:
             });
 
         addTool({"replace_in_file", "Replace exact text inside one workspace file.",
-                 R"({"type":"object","properties":{"path":{"type":"string"},"search":{"type":"string"},"replace":{"type":"string"},"replace_all":{"type":"boolean"}},"required":["path","search","replace"]})"},
+                 R"({"type":"object","properties":{"path":{"type":"string"},"search":{"type":"string"},"replace":{"type":"string"},"old_string":{"type":"string"},"new_string":{"type":"string"},"replace_all":{"type":"boolean"}},"required":["path"]})"},
             [&](const std::string& args) {
                 const auto path = sandbox_.resolveExisting(requiredString(args, "path"));
-                const std::string search = requiredString(args, "search");
-                const std::string replacement = requiredString(args, "replace");
-                if (search.empty()) throw std::runtime_error("search text must not be empty");
+                const std::string search = jsonStringField(args, "search")
+                    .value_or(jsonStringField(args, "old_string").value_or(""));
+                const std::string replacement = jsonStringField(args, "replace")
+                    .value_or(jsonStringField(args, "new_string").value_or(""));
+                if (search.empty()) throw std::runtime_error("search/old_string must not be empty");
                 const bool replaceAll = jsonRawField(args, "replace_all").value_or("false") == "true";
                 std::string content = readWholeFile(path, 10ull * 1024ull * 1024ull);
                 std::vector<std::size_t> matches;
@@ -1428,18 +1839,67 @@ public:
     TemplateFamily templateFamily() const { return chatTemplate_.family(); }
     bool trueStreaming() const { return deep2_.trueStreaming(); }
 
+    // TOKENIZER-PARITY / AGENT-FIRST-TOKEN: dump exact bytes at Agentic→Deep2 boundary
+    static void dumpPromptForTokenizerCert(const std::string& prompt) {
+        const bool tokCert = []() {
+            const char* e = std::getenv("RAWRXD_TOKENIZER_CERT");
+            return e && e[0] == '1';
+        }();
+        const bool firstTok = []() {
+            const char* e = std::getenv("RAWRXD_AGENT_FIRST_TOKEN");
+            return e && e[0] == '1';
+        }();
+        if (!tokCert && !firstTok) return;
+
+        const char* dir = firstTok
+            ? "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\AGENT_FIRST_TOKEN_001"
+            : "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\TOKENIZER_PARITY_001";
+        std::error_code ec;
+        std::filesystem::create_directories(dir, ec);
+        {
+            std::ofstream f(std::string(dir) + "\\rendered_prompt.bin", std::ios::binary);
+            f.write(prompt.data(), static_cast<std::streamsize>(prompt.size()));
+        }
+        {
+            std::ofstream f(std::string(dir) + "\\rendered_prompt.txt", std::ios::binary);
+            f << prompt;
+        }
+        std::printf("[AGENT] PROMPT_RENDERED bytes=%zu\n", prompt.size());
+        std::fflush(stdout);
+        std::fprintf(stderr,
+                     "[TOKENIZER_CERT] rendered_prompt_bytes=%zu dir=%s\n",
+                     prompt.size(), dir);
+        std::fflush(stderr);
+    }
+
     std::string ChatSync(const std::vector<ChatMessage>& messages,
                           const std::vector<ToolDefinition>& tools,
                           int maxTokens) {
+        std::printf("[AGENT] MODEL_READY chat_family=%s\n",
+                    templateFamilyName(chatTemplate_.family()));
+        std::fflush(stdout);
         const std::string prompt = chatTemplate_.render(messages, tools, true);
-        return deep2_.generate(prompt, maxTokens, {});
+        dumpPromptForTokenizerCert(prompt);
+        int genTokens = maxTokens;
+        if (const char* ft = std::getenv("RAWRXD_AGENT_FIRST_TOKEN"); ft && ft[0] == '1') {
+            genTokens = 1;
+        }
+        return deep2_.generate(prompt, genTokens, {});
     }
 
     std::string ChatStream(const std::vector<ChatMessage>& messages,
                             const std::vector<ToolDefinition>& tools,
                             int maxTokens,
                             const StreamCallback& callback) {
+        std::printf("[AGENT] MODEL_READY chat_family=%s\n",
+                    templateFamilyName(chatTemplate_.family()));
+        std::fflush(stdout);
         const std::string prompt = chatTemplate_.render(messages, tools, true);
+        dumpPromptForTokenizerCert(prompt);
+        int genTokens = maxTokens;
+        if (const char* ft = std::getenv("RAWRXD_AGENT_FIRST_TOKEN"); ft && ft[0] == '1') {
+            genTokens = 1;
+        }
         std::string full; bool cancelled = false;
         auto onChunk = [&](std::string_view chunk) -> bool {
             if (cancelled) return false;
@@ -1451,7 +1911,7 @@ public:
             return true;
         };
         try {
-            full = deep2_.generate(prompt, maxTokens, onChunk);
+            full = deep2_.generate(prompt, genTokens, onChunk);
             if (!cancelled && callback) {
                 const auto calls = ToolCallParser::parse(full);
                 for (const auto& call : calls) {
@@ -1505,9 +1965,15 @@ public:
                 << "\"tool_calls\":[";
             for (std::size_t j = 0; j < step.toolCalls.size(); ++j) {
                 if (j) out << ",";
-                out << "{" << "\"id\":" << jsonQuote(step.toolCalls[j].id) << ","
-                    << "\"name\":" << jsonQuote(step.toolCalls[j].name) << ","
-                    << "\"arguments\":" << step.toolCalls[j].argumentsJson << "}";
+                const auto& tc = step.toolCalls[j];
+                // Always emit arguments as a JSON string when not a strict object,
+                // so the transcript itself remains valid JSON.
+                out << "{" << "\"id\":" << jsonQuote(tc.id) << ","
+                    << "\"name\":" << jsonQuote(tc.name) << ","
+                    << "\"arguments\":";
+                if (isStrictJsonObject(tc.argumentsJson)) out << tc.argumentsJson;
+                else out << jsonQuote(tc.argumentsJson);
+                out << "}";
             }
             out << "]," << "\"tool_results\":[";
             for (std::size_t j = 0; j < step.toolResults.size(); ++j) {
@@ -1571,7 +2037,12 @@ public:
                     });
             }
             catch (const std::exception& ex) {
+                persistTranscript(transcript);
                 return AgentResult{false, false, step, {}, ex.what()};
+            }
+            catch (...) {
+                persistTranscript(transcript);
+                return AgentResult{false, false, step, {}, "non-std exception during inference"};
             }
             const auto inferEnd = std::chrono::steady_clock::now();
             record.inferenceMs = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(inferEnd - inferStart).count());
@@ -1583,6 +2054,10 @@ public:
             if (calls.empty()) {
                 transcript.add(std::move(record));
                 persistTranscript(transcript);
+                if (trim(response).empty()) {
+                    return AgentResult{false, false, step, {},
+                        "model produced an empty response (no tools, no final answer)"};
+                }
                 return AgentResult{true, false, step, response, {}};
             }
 
@@ -1603,6 +2078,11 @@ public:
             const auto toolEnd = std::chrono::steady_clock::now();
             record.toolMs = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(toolEnd - toolStart).count());
             transcript.add(std::move(record));
+            // Persist after every tool round so schema rejects survive a later crash.
+            persistTranscript(transcript);
+            std::printf("[AGENT_STEP] completed=%d next_inference=%d\n",
+                        step, step < config_.maxSteps ? 1 : 0);
+            std::fflush(stdout);
         }
         persistTranscript(transcript);
         return AgentResult{false, true, config_.maxSteps, {}, "agent reached configured step limit"};
@@ -1618,6 +2098,10 @@ private:
                "You operate only on the provided workspace and local tools. "
                "Complete the user's task end-to-end. "
                "Inspect before editing. "
+               "Tool arguments MUST be strict JSON with double-quoted keys and string values. "
+               "If a tool observation has error=schema_validation, correct the JSON and retry; "
+               "the previous call did not execute. "
+               "Never echo tool observation JSON; always respond with a TOOL_CALL or a final answer. "
                "Use exact tool results; never claim a build or test passed unless "
                "you actually ran it and observed a successful result. "
                "When a command fails, inspect the failure, modify the source if "
@@ -1649,6 +2133,8 @@ struct CliOptions {
     int maxSteps = 16;
     int maxTokens = 2048;
     bool noStream = false;
+    bool toolSchemaCert = false;  // AGENT-TOOL-SCHEMA-002 lanes A/B (no model inference)
+    fs::path schemaCertOut;       // optional evidence dir for dumps
 };
 
 static CliOptions parseCli(int argc, char** argv) {
@@ -1678,15 +2164,142 @@ static CliOptions parseCli(int argc, char** argv) {
             options.maxTokens = parsed;
         }
         else if (arg == "--no-stream") options.noStream = true;
+        else if (arg == "--tool-schema-cert") options.toolSchemaCert = true;
+        else if (arg == "--schema-cert-out") options.schemaCertOut = value(i, arg);
         else if (arg == "--help" || arg == "-h") {
-            std::cout << "RawrXD-Agentic.exe --model path|friendly-name|model:tag|sha256-blob --workspace D:\\rawrxd [--task \"...\"] [--max-steps 16] [--max-tokens 2048] [--no-stream]\n";
+            std::cout << "RawrXD-Agentic.exe --model path --workspace DIR [--task \"...\"]\n"
+                         "  [--max-steps N] [--max-tokens N] [--no-stream]\n"
+                         "  [--tool-schema-cert] [--schema-cert-out DIR]\n";
             std::exit(EXIT_SUCCESS);
         }
         else throw std::runtime_error("unknown argument: " + arg);
     }
-    if (options.model.empty()) throw std::runtime_error("--model is required");
+    if (!options.toolSchemaCert && options.model.empty())
+        throw std::runtime_error("--model is required (unless --tool-schema-cert)");
     if (options.workspace.empty()) options.workspace = fs::current_path();
     return options;
+}
+
+// AGENT-TOOL-SCHEMA-002: model-independent lanes A (malformed reject) + B (valid accept).
+static int runToolSchemaCert(const CliOptions& cli) {
+    WorkspaceSandbox sandbox(cli.workspace);
+    ToolRegistry tools(sandbox);
+    const fs::path outDir = cli.schemaCertOut.empty()
+        ? (fs::path("F:/~dev/rawrxd/evidence/AGENT_TOOL_SCHEMA_002"))
+        : cli.schemaCertOut;
+    std::error_code ec;
+    fs::create_directories(outDir, ec);
+
+    struct Case {
+        const char* lane;
+        const char* raw;
+        bool expectAccept;
+        bool expectDispatch;
+    };
+    const Case cases[] = {
+        {"A", "TOOL_CALL: replace_in_file {path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}", false, false},
+        {"A", "TOOL_CALL: run_command {command: \"cmake --build build\"}", false, false},
+        {"B", "TOOL_CALL: replace_in_file {\"path\":\"main.c\",\"search\":\"DOES_NOT_EXIST\",\"replace\":\"42\"}", true, true},
+        {"B", "TOOL_CALL: read_file {\"path\":\"main.c\"}", true, true},
+        {"B", "TOOL_CALL: run_command {\"command\":\"cmake --build build\"}", true, true},
+    };
+
+    bool laneAPass = true;
+    bool laneBPass = true;
+    std::ostringstream report;
+    report << "AGENT-TOOL-SCHEMA-002 DIRECT\n";
+
+    for (const auto& c : cases) {
+        const auto calls = ToolCallParser::parse(c.raw);
+        if (calls.empty()) {
+            report << "FAIL lane=" << c.lane << " parse_empty raw=" << c.raw << "\n";
+            if (c.lane[0] == 'A') laneAPass = false; else laneBPass = false;
+            continue;
+        }
+        const ToolCall& call = calls.front();
+        const ToolResult result = tools.dispatch(call);
+        const bool accepted = (result.error != "schema_validation");
+        const bool dispatched = result.dispatched;
+        const bool ok =
+            (accepted == c.expectAccept) &&
+            (dispatched == c.expectDispatch) &&
+            (c.expectDispatch ? true : !result.dispatched) &&
+            (c.expectAccept ? (result.error != "schema_validation") : (result.error == "schema_validation"));
+
+        report << (ok ? "PASS" : "FAIL")
+               << " lane=" << c.lane
+               << " tool=" << call.name
+               << " expect_accept=" << (c.expectAccept ? 1 : 0)
+               << " got_accept=" << (accepted ? 1 : 0)
+               << " expect_dispatch=" << (c.expectDispatch ? 1 : 0)
+               << " got_dispatch=" << (dispatched ? 1 : 0)
+               << " error=" << (result.error.empty() ? "-" : result.error)
+               << "\n";
+        report << "  result_json=" << result.toJson() << "\n";
+        if (!ok) {
+            if (c.lane[0] == 'A') laneAPass = false; else laneBPass = false;
+        }
+        // Lane A hard invariant
+        if (c.lane[0] == 'A' && result.dispatched) laneAPass = false;
+        if (c.lane[0] == 'A' && result.error != "schema_validation") laneAPass = false;
+    }
+
+    // Step-2 render dump (needs GGUF metadata for template contract; no Deep2 load).
+    if (!cli.model.empty()) {
+        try {
+            const auto meta = GgufMetadataReader::read(cli.model);
+            ChatTemplate tmpl(meta);
+            std::vector<ChatMessage> msgs;
+            msgs.push_back({Role::System, "You are the agent.", {}, {}});
+            msgs.push_back({Role::User, "Fix main.c", {}, {}});
+            msgs.push_back({Role::Assistant,
+                            "TOOL_CALL: read_file {\"path\":\"main.c\"}", {}, {}});
+            msgs.push_back({Role::Tool,
+                            "{\"ok\":true,\"tool\":\"read_file\",\"dispatched\":true,\"output\":\"int x = DOES_NOT_EXIST;\"}",
+                            "read_file", "call_1"});
+            const auto rendered = tmpl.render(msgs, tools.definitions(), true);
+            const fs::path dumpPath = outDir / "RAWRXD_AGENT_STEP2_RENDERED_PROMPT.txt";
+            writeWholeFile(dumpPath, rendered);
+            report << "STEP2_RENDER_DUMP=" << dumpPath.string() << "\n";
+            const bool teachesEcho = rendered.find("TOOL_RESULT:") != std::string::npos;
+            report << "STEP2_CONTAINS_TOOL_RESULT_LABEL=" << (teachesEcho ? 1 : 0) << "\n";
+            report << "STEP2_CONTAINS_OBSERVATION=" << (rendered.find("Observation from") != std::string::npos ? 1 : 0) << "\n";
+            report << "STEP2_ENDS_WITH_ASSISTANT_PROMPT="
+                   << (rendered.size() >= 14 &&
+                               rendered.rfind("<|assistant|>") != std::string::npos
+                           ? 1
+                           : 0)
+                   << "\n";
+        } catch (const std::exception& ex) {
+            report << "STEP2_RENDER_DUMP_FAIL=" << ex.what() << "\n";
+        }
+    } else {
+        report << "STEP2_RENDER_DUMP=skipped (pass --model for GGUF metadata)\n";
+    }
+
+    report << "LANE_A_MALFORMED_REJECT=" << (laneAPass ? "PASS" : "FAIL") << "\n";
+    report << "LANE_B_VALID_ACCEPT=" << (laneBPass ? "PASS" : "FAIL") << "\n";
+    report << "VALID_SCHEMA_LANE=" << (laneBPass ? "PASS" : "FAIL") << "\n";
+    report << "AGENT-TOOL-SCHEMA-002="
+           << ((laneAPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\n";
+
+    const std::string text = report.str();
+    std::cout << text;
+    writeWholeFile(outDir / "AGENT_TOOL_SCHEMA_002_DIRECT.txt", text);
+
+    // Lock stub
+    std::ostringstream lock;
+    lock << "{\n"
+         << "  \"gate\": \"AGENT-TOOL-SCHEMA-002\",\n"
+         << "  \"status\": \"" << ((laneAPass && laneBPass) ? "PASS" : "NOT_CERTIFIED") << "\",\n"
+         << "  \"LANE_A_MALFORMED_REJECT\": \"" << (laneAPass ? "PASS" : "FAIL") << "\",\n"
+         << "  \"LANE_B_VALID_ACCEPT\": \"" << (laneBPass ? "PASS" : "FAIL") << "\",\n"
+         << "  \"VALID_SCHEMA_LANE\": \"" << (laneBPass ? "PASS" : "FAIL") << "\",\n"
+         << "  \"note\": \"Architectural gate independent of TinyLlama. Full agent next-action is a separate defect.\"\n"
+         << "}\n";
+    writeWholeFile(outDir / "AGENT-TOOL-SCHEMA-002.lock.json", lock.str());
+
+    return (laneAPass && laneBPass) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 static void printRuntimeInfo(const NativeInferenceClient& inference, const WorkspaceSandbox& sandbox) {
@@ -1707,6 +2320,9 @@ int main(int argc, char** argv) {
     using namespace rawrxd::agentic;
     try {
         const CliOptions cli = parseCli(argc, argv);
+        if (cli.toolSchemaCert) {
+            return runToolSchemaCert(cli);
+        }
         WorkspaceSandbox sandbox(cli.workspace);
 
         const auto catalogModel =

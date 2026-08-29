@@ -228,6 +228,8 @@ static inline float vec_dot_q5_K_q8_K_single(
 static inline float vec_dot_q6_K_q8_K_single(
     const block_q6_K* RESTRICT x, const block_q8_K* RESTRICT y
 ) {
+    // Match ggml_vec_dot_q6_K_q8_K_generic scale layout:
+    // dequant uses sc[is+0], sc[is+2], sc[is+4], sc[is+6] per nibble group.
     const float d = f16_to_f32(x->d);
     float sumf = 0.0f;
 
@@ -238,21 +240,17 @@ static inline float vec_dot_q6_K_q8_K_single(
             const uint8_t ql0 = x->ql[64 * ip + il];
             const uint8_t ql32 = x->ql[64 * ip + il + 32];
             const uint8_t qh = x->qh[32 * ip + il];
-            const int8_t sc = x->scales[is];
 
-            // 4 values per il, each 6-bit
             const int q0 = ((ql0 & 0x0F) | (((qh >> 0) & 3) << 4)) - 32;
             const int q1 = ((ql32 & 0x0F) | (((qh >> 2) & 3) << 4)) - 32;
             const int q2 = ((ql0 >> 4) | (((qh >> 4) & 3) << 4)) - 32;
             const int q3 = ((ql32 >> 4) | (((qh >> 6) & 3) << 4)) - 32;
 
             const int base = 128 * ip + il;
-            sumf += d * sc * (
-                q0 * y->qs[base] +
-                q1 * y->qs[base + 32] +
-                q2 * y->qs[base + 64] +
-                q3 * y->qs[base + 96]
-            );
+            sumf += d * x->scales[is + 0] * (float)(q0 * y->qs[base]);
+            sumf += d * x->scales[is + 2] * (float)(q1 * y->qs[base + 32]);
+            sumf += d * x->scales[is + 4] * (float)(q2 * y->qs[base + 64]);
+            sumf += d * x->scales[is + 6] * (float)(q3 * y->qs[base + 96]);
         }
     }
     return sumf * y->d;

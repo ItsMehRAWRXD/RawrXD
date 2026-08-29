@@ -1,0 +1,23 @@
+﻿TOKENIZER_REBUILD_GATE
+
+FROZEN_PROMPT_SHA=FBCBBE536C2A9D6ACA83756EFA37BF85FAE05634F34AD70373CD30C723EC0EAA
+FROZEN_PROMPT_SHA_MATCH=true
+prompt_bytes=3389
+REBUILT_AGENT_TOKEN_COUNT=898
+TOKEN_35_PRESENT=false
+ALL_TOKEN_IDS_MATCH_LLAMA=true
+
+encode_authority=BPETokenizer::Encode -> RawrXD::Spm::encode
+gate_exe=F:\~dev\rawrxd\tools\bin\tokenizer_rebuild_gate.exe
+agentic_exe=F:\~dev\rawrxd\build-ninja\bin\RawrXD-Agentic.exe
+agentic_mtime=2026-08-29T13:31:26.5110884-04:00
+agentic_sha256=5F5B30A830EE95FB352EAC5582B25A86284FE0AD6628837E76B4916EDC802D6A
+
+consumers_rebuilt=InferenceEngine.lib,RawrXD-Agentic.exe,tokenizer_rebuild_gate.exe
+Deep2Engine=CanonicalTokenizer + ApplyTokenizerBundle wired
+
+VERDICT=PASS
+REBUILT_BINARY_AUTHORIZED_FOR_FORWARD_EVIDENCE=true
+
+TRACK_A=Q_PRE_ROPE (tokenizer IDs no longer explanatory for this prompt)
+TRACK_B=ATTN_OUT_0 / BATCH2_ORACLE_V3 (do not return to V_0)

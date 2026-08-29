@@ -1,0 +1,29 @@
+﻿{
+    "id":  "AGENT-E2E-002b",
+    "started_utc":  "2026-08-29T18:02:36.1901470Z",
+    "model_path":  "F:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    "model_sha256":  "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+    "demo_break":  false,
+    "scripted_runtime":  false,
+    "fa_auto_authority":  false,
+    "hexmag_status":  "frozen_out_of_chase",
+    "deep2_inference":  "authority",
+    "cases":  [
+                  {
+                      "name":  "01_compile",
+                      "agent_exit":  -1,
+                      "elapsed_ms":  43847,
+                      "source_mutated":  false,
+                      "transcript_has_tool_calls":  true,
+                      "build_exit":  1,
+                      "run_exit":  -1,
+                      "stdout":  "NO_EXE",
+                      "expected":  "hello from b01",
+                      "goal_satisfied":  false,
+                      "PASS":  false
+                  }
+              ],
+    "finished_utc":  "2026-08-29T18:03:21.6698810Z",
+    "any_pass":  false,
+    "all_pass":  false
+}

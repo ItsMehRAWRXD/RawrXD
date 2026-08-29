@@ -1,0 +1,66 @@
+﻿{
+    "gate":  "AGENT-TOOL-EFFECT-001",
+    "status":  "FAIL",
+    "frozen_at_utc":  "2026-08-29T17:35:04Z",
+    "source_case":  "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\01_compile",
+    "first_false_transition":  "SCHEMA_VALID",
+    "root_domain":  "model/tool-call generation (malformed arguments)",
+    "note":  "Do not attribute to TinyLlama capability until SCHEMA_VALID/FILE_BYTES_CHANGED ladder is green.",
+    "ladder":  {
+                   "MODEL_OUTPUT":  true,
+                   "TOOL_CALL_DETECTED":  true,
+                   "TOOL_CALL_PARSED":  true,
+                   "SCHEMA_VALID":  false,
+                   "TOOL_DISPATCHED":  true,
+                   "TOOL_RESULT_OK":  false,
+                   "FILE_BYTES_CHANGED":  false,
+                   "BUILD_EXECUTED":  true,
+                   "BUILD_EXIT_0":  false,
+                   "PROGRAM_RUN":  false,
+                   "EXPECTED_STDOUT":  false,
+                   "GOAL_SATISFIED":  false
+               },
+    "calls":  [
+                  {
+                      "index":  0,
+                      "name":  "replace_in_file",
+                      "arguments":  "{path:main.c, search: \"DOES_NOT_EXIST\", replace: \"42\"}",
+                      "parser_accept":  true,
+                      "looks_like_json":  false,
+                      "schema_valid":  false,
+                      "executed":  true,
+                      "execution_ok":  false,
+                      "result":  "missing string argument: path"
+                  },
+                  {
+                      "index":  1,
+                      "name":  "run_command",
+                      "arguments":  "{command: \"cmake --build build\"}",
+                      "parser_accept":  true,
+                      "looks_like_json":  false,
+                      "schema_valid":  false,
+                      "executed":  true,
+                      "execution_ok":  false,
+                      "result":  "missing string argument: command"
+                  }
+              ],
+    "edit_invariant":  {
+                           "call_0":  {
+                                          "tool":  "replace_in_file",
+                                          "parser_accept":  true,
+                                          "schema_valid":  false,
+                                          "execution_ok":  false,
+                                          "before_sha256_ne_after":  false,
+                                          "invariant_pass":  false
+                                      }
+                       },
+    "before_main_sha256":  "4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c",
+    "after_main_sha256":  "4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c",
+    "source_mutated":  false,
+    "build_exit":  1,
+    "run_exit":  -1,
+    "stdout":  "NO_EXE",
+    "goal_satisfied":  false,
+    "template_hypothesis":  "CLOSED (not reopened)",
+    "numerical_tracks":  "SEPARATE (Q_PRE_ROPE / O_PROJ not implicated by this transcript)"
+}

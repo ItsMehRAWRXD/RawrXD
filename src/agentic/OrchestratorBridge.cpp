@@ -68,32 +68,107 @@ RawrXD::Logging::Logger& GetLogger() {
     return RawrXD::Logging::Logger::instance();
 }
 
-// Parse tool calls from model response (simple heuristic for now)
-// TODO: replace with structured JSON parsing when model supports it
+// String/escape-aware balanced JSON object scan (matches sovereign ToolCallParser).
+// Brace depth must ignore `{`/`}` that appear inside JSON string literals so
+// replace_in_file payloads containing source braces do not truncate early.
+static bool ScanBalancedJsonObject(const std::string& text, size_t braceStart,
+                                   size_t& braceEndOut) {
+    if (braceStart >= text.size() || text[braceStart] != '{') return false;
+    bool inString = false;
+    bool escaped = false;
+    int depth = 0;
+    for (size_t i = braceStart; i < text.size(); ++i) {
+        const char c = text[i];
+        if (inString) {
+            if (escaped) escaped = false;
+            else if (c == '\\') escaped = true;
+            else if (c == '"') inString = false;
+            continue;
+        }
+        if (c == '"') {
+            inString = true;
+            continue;
+        }
+        if (c == '{') {
+            ++depth;
+        } else if (c == '}') {
+            --depth;
+            if (depth == 0) {
+                braceEndOut = i + 1;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Parse tool calls from model response.
+// Accepts:
+//   TOOL_CALL: name {...}
+//   <tool_call>{"name":"...","arguments":{...}}</tool_call>
+//   bare JSON objects with name + arguments
 std::vector<std::pair<std::string, std::string>> ParseToolCalls(const std::string& response) {
     std::vector<std::pair<std::string, std::string>> calls;
-    size_t pos = 0;
-    while (true) {
-        size_t toolPos = response.find("TOOL_CALL:", pos);
-        if (toolPos == std::string::npos) break;
-        size_t nameStart = toolPos + 10;
-        while (nameStart < response.size() && std::isspace(static_cast<unsigned char>(response[nameStart]))) ++nameStart;
-        size_t nameEnd = nameStart;
-        while (nameEnd < response.size() && !std::isspace(static_cast<unsigned char>(response[nameEnd]))) ++nameEnd;
-        std::string name = response.substr(nameStart, nameEnd - nameStart);
-        size_t braceStart = response.find('{', nameEnd);
-        if (braceStart == std::string::npos) break;
-        int depth = 1;
-        size_t braceEnd = braceStart + 1;
-        while (braceEnd < response.size() && depth > 0) {
-            if (response[braceEnd] == '{') ++depth;
-            else if (response[braceEnd] == '}') --depth;
-            ++braceEnd;
+
+    auto pushCall = [&](std::string name, std::string argsJson) {
+        if (name.empty() || argsJson.empty()) return;
+        calls.emplace_back(std::move(name), std::move(argsJson));
+    };
+
+    // Style A: TOOL_CALL: name {json}
+    {
+        size_t pos = 0;
+        while (true) {
+            size_t toolPos = response.find("TOOL_CALL:", pos);
+            if (toolPos == std::string::npos) break;
+            size_t nameStart = toolPos + 10;
+            while (nameStart < response.size() && std::isspace(static_cast<unsigned char>(response[nameStart]))) ++nameStart;
+            size_t nameEnd = nameStart;
+            while (nameEnd < response.size() && !std::isspace(static_cast<unsigned char>(response[nameEnd]))) ++nameEnd;
+            std::string name = response.substr(nameStart, nameEnd - nameStart);
+            size_t braceStart = response.find('{', nameEnd);
+            if (braceStart == std::string::npos) break;
+            size_t braceEnd = 0;
+            if (!ScanBalancedJsonObject(response, braceStart, braceEnd)) break;
+            pushCall(std::move(name), response.substr(braceStart, braceEnd - braceStart));
+            pos = braceEnd;
         }
-        std::string args = response.substr(braceStart, braceEnd - braceStart);
-        calls.emplace_back(name, args);
-        pos = braceEnd;
     }
+
+    // Style B: <tool_call> ... </tool_call> (and common aliases)
+    static const char* opens[] = {"<tool_call>", "<|tool_call|>", "<toolcall>", "<function_call>"};
+    static const char* closes[] = {"</tool_call>", "<|end_tool_call|>", "</toolcall>", "</function_call>"};
+    for (size_t wi = 0; wi < 4; ++wi) {
+        const std::string open = opens[wi];
+        const std::string close = closes[wi];
+        size_t offset = 0;
+        while (offset < response.size()) {
+            size_t b = response.find(open, offset);
+            if (b == std::string::npos) break;
+            size_t content = b + open.size();
+            size_t e = response.find(close, content);
+            if (e == std::string::npos) break;
+            const std::string body = response.substr(content, e - content);
+            try {
+                auto j = nlohmann::json::parse(body);
+                if (j.is_object() && j.contains("name")) {
+                    std::string name = j["name"].get<std::string>();
+                    std::string args = "{}";
+                    if (j.contains("arguments")) {
+                        if (j["arguments"].is_string()) args = j["arguments"].get<std::string>();
+                        else args = j["arguments"].dump();
+                    } else if (j.contains("parameters")) {
+                        if (j["parameters"].is_string()) args = j["parameters"].get<std::string>();
+                        else args = j["parameters"].dump();
+                    }
+                    pushCall(std::move(name), std::move(args));
+                }
+            } catch (...) {
+            }
+            offset = e + close.size();
+        }
+    }
+
     return calls;
 }
 
@@ -237,9 +312,17 @@ std::string OrchestratorBridge::RunAgent(const std::string& userPrompt) {
         // Execute tool calls and append results to prompt for next iteration
         std::string toolResults;
         for (size_t i = 0; i < toolCalls.size(); ++i) {
-            const std::string callId = "call_" + std::to_string(step) + "_" + std::to_string(i);
-            if (!seenToolCalls.insert(callId).second) {
-                logger.warning("OrchestratorBridge", "Duplicate tool call suppressed: " + callId);
+            // Fingerprint by name+args (not step index) so repeated identical
+            // calls across steps are suppressed — matches SovereignAgent.
+            const std::string fingerprint =
+                toolCalls[i].first + "\n" + toolCalls[i].second;
+            if (!seenToolCalls.insert(fingerprint).second) {
+                logger.warning("OrchestratorBridge",
+                    "Duplicate tool call suppressed: " + toolCalls[i].first);
+                ToolCallResult loop = ToolCallResult::Validation(
+                    "identical tool call repeated; change strategy before retrying");
+                toolResults += "Tool '" + toolCalls[i].first + "' result: " +
+                               BuildToolMessageContent(loop) + "\n";
                 continue;
             }
 
@@ -376,11 +459,44 @@ std::string OrchestratorBridge::SelectPreferredModel(bool preferCoder) const {
 }
 
 void OrchestratorBridge::SetModel(const std::string& model) {
-    auto sanitized = RawrXD::Security::InputSanitizer::instance().sanitizeModelName(model);
-    if (sanitized.wasModified) {
-        GetLogger().warning("OrchestratorBridge", "Model path sanitized from user input");
+    if (model.empty()) {
+        return;
     }
-    m_modelPath = sanitized.sanitized;
+
+    // Filesystem GGUF / absolute / relative paths must NOT go through
+    // sanitizeModelName (alphanumeric-only) — that mangles Windows paths like
+    // F:\~dev\tinyllama_fresh.gguf into F___dev_tinyllama_fresh.gguf.
+    const bool looksLikePath =
+        model.find(':') != std::string::npos ||
+        model.find('/') != std::string::npos ||
+        model.find('\\') != std::string::npos ||
+        (model.size() >= 5 &&
+         (model.compare(model.size() - 5, 5, ".gguf") == 0 ||
+          model.compare(model.size() - 5, 5, ".GGUF") == 0));
+
+    std::string resolved;
+    if (looksLikePath) {
+        auto pathSan = RawrXD::Security::InputSanitizer::instance().sanitizePath(model);
+        resolved = pathSan.sanitized;
+        if (pathSan.wasModified) {
+            GetLogger().warning("OrchestratorBridge",
+                "Model filesystem path sanitized (traversal only)");
+        }
+    } else {
+        auto nameSan = RawrXD::Security::InputSanitizer::instance().sanitizeModelName(model);
+        resolved = nameSan.sanitized;
+        if (nameSan.wasModified) {
+            GetLogger().warning("OrchestratorBridge",
+                "Model tag sanitized from user input");
+        }
+    }
+
+    // Skip redundant reload of the identical already-loaded model.
+    if (m_runtime && m_runtime->IsLoaded() && resolved == m_modelPath) {
+        return;
+    }
+
+    m_modelPath = resolved;
     if (m_runtime && !m_modelPath.empty()) {
         std::string loadError;
         if (!m_runtime->LoadModel(m_modelPath, loadError)) {

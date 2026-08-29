@@ -1,0 +1,47 @@
+O_PROJ_MULMAT_PARITY_002 — FINAL GATE
+=====================================
+date=2026-08-29
+authority=CPU llama (ggml-cpu-zen4) mul_mat with forced identical X
+ids=[1,21521,9312] pos=0
+W=blk.0.attn_output.weight Q4_K 2048x2048
+
+METHOD
+------
+Gate A: overwrite llama kqv_out-0 col0 with frozen Deep2 ATTN_PRE_O_0
+        before attn_out-0 = mul_mat(wo, kqv_out)
+        compare Y to Deep2 production Q4_K×Q8_K on same X
+
+RESULTS
+-------
+CONTROL prod(Deep2 X) vs deep2_ATTN_OUT     max_abs=0          PASS
+CONTROL prod(Deep2 X) vs llama_native_OUT   max_abs=8.45e-5    (PRE_O-induced)
+GATE_A  Deep2 vs llama_mul_mat(same X)      max_abs=1.12e-8    PASS
+
+PRIOR (ROW_002)
+  prod(llama PRE_O) vs llama_ATTN_OUT       max_abs~9.3e-9     PASS
+
+Gate B SKIPPED — Gate A closed the kernel under identical operands.
+
+AUTHORITY
+---------
+same FP32 X makes Deep2/llama match
+  => tiny PRE_O delta (6.14e-6) amplified by Q8_K quant sensitivity
+  => wo / Q4_K×Q8_K kernel CLOSED
+  => do NOT chase block integer products / accum order for this gap
+
+EXCLUSION LIST (updated)
+------------------------
+CLOSED:
+  TOKENIZER, EMBED/NORM, Q_PROJ, Q/K/V, SOFTMAX, AV, GQA/CONCAT, PRE_O LAYOUT,
+  blk.0.attn_output / wo Q4_K×Q8_K (same-operands)
+
+REMAINING (optional, not kernel):
+  PRE_O numerical INSPECT (6.14e-6) → Q8_K activation sensitivity only
+  (upstream of wo; layout already closed)
+
+LIVE for next numerical work: none on L0 attn wo path under same operands.
+Artifacts:
+  evidence/DEEP2_PARITY_PROBE_001/O_PROJ_MULMAT_PARITY_002/
+  VERDICT.txt
+  llama_ATTN_OUT_FORCE_DEEP2_X_pos0_*_seq109.bin
+  llama_force_dump.txt

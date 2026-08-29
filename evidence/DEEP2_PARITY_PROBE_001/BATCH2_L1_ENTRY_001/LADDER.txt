@@ -1,0 +1,7 @@
+BATCH2_L1_ENTRY_001
+ids=1,21521,9312 pos=0 clean_ops=FORCE_PRE_O on llama
+L0_OUT:  gate=PASS max_abs=2.235174e-008 exact=2048/2048 first_bad=-1 worst=837
+L1_NORM: gate=PASS max_abs=4.768372e-007 exact=2048/2048 first_bad=-1 worst=1447
+L1_Q_PRE:gate=PASS max_abs=9.536743e-007 exact=2048/2048 first_bad=-1 worst=424
+L1_K_PRE:gate=PASS max_abs=7.152557e-007 exact=256/256 first_bad=-1 worst=128
+L1_V:    gate=PASS max_abs=1.490116e-008 exact=256/256 first_bad=-1 worst=72

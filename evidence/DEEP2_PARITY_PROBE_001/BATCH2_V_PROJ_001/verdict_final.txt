@@ -1,0 +1,15 @@
+﻿BATCH2_V_PROJ_001 = PASS (kernel vs llama V_0)
+================================================
+root=blk.0.attn_v.weight is Q6_K (type=14), size=430080
+blk.0.attn_k.weight is Q4_K (type=12), size=294912
+pre_fix: gemv_q6_k_scalar = FP32 dequant·x → V_0 max_abs≈7.5e-4 FAIL
+post_fix: Q6_K×Q8_K (quantize_row_q8_K + vec_dot_q6_K_q8_K) → max_abs=1.86e-9 PASS
+
+V_gemv_vs_llama: PASS
+V_gemv_vs_deep2_stale_dump: FAIL (expected; old dump pre-fix)
+fresh_deep2_V_0 fnv=4b004536ead54edb L2=7.974118e-02 (matches gemv; numerical match llama)
+
+production_fix=src/deep2/QuantKernelRegistry.cpp gemv_q6_k_scalar
+also_fixed=QuantKernelRegistry_K.h vec_dot_q6_K_q8_K_single scale indexing
+
+oracle_ladder_after_redump=BATCH2_ORACLE_V3 STOP=ATTN_OUT_0

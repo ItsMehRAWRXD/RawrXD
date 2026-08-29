@@ -1,0 +1,1 @@
+﻿Fix main.c so function add returns a plus b instead of a minus b. Use tools read_file then replace_in_file or write_file then run_command to compile with cl and run b04.exe. Emit JSON tool calls with name and arguments fields. Finish when program prints hello from b04.

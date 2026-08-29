@@ -1,0 +1,25 @@
+AGENT-MULTIERROR-001 / last-mile P0 hardening notes
+baseline=d7651c5f0 (+ local P0 fixes)
+
+P0 FIXED (this pass):
+1. OrchestratorBridge::SetModel — filesystem GGUF/absolute/relative paths bypass
+   sanitizeModelName; tags still sanitized; skip redundant reload.
+2. OrchestratorBridge RunAgent — duplicate tool suppression uses name+args fingerprint
+   (was step_i callId that never collided).
+3. AgentToolHandlers::IsPathAllowed — fs::relative path-component containment
+   (was string-prefix; blocked F:\work\rawrxd-evil false-positive allow).
+4. Win32IDE AgenticBridge — when Deep2 ready, SetModel(m_deep2ModelPath) not tag.
+5. ide_agent_loop_cert --mode deep2 — requires run_exit0 + "Hello RawrXD" stdout.
+6. RawrXD-Agentic — empty model response is AGENT_FAIL (not false success).
+
+PRIOR MODEL-DRIVEN RUN (honest):
+- Phi-3-mini Q8: ACCESS_VIOLATION during Deep2 load (0xC0000005)
+- TinyLlama: loaded; ~735s generation; B3_FAIL hidden-state invalid / zero logits;
+  empty model_response; tool_calls=0; VERDICT=INCOMPLETE_OR_FAIL
+- Blocker for CANDIDATE_PASS: Deep2 must emit nonempty tool-capable text on
+  agent/tool-augmented prompts (numerical stability / long-prompt path).
+
+NEXT after P0 rebuild:
+- Re-smoke SetModel path preservation
+- scripted ide_agent_loop_cert still PASS spine
+- model-driven AGENT-MULTIERROR when Deep2 generation is stable

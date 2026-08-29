@@ -1,0 +1,92 @@
+BATCH2_SPARSE_TIP_001 — AUTHORITY RECONCILE
+============================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=1
+script=reconcile_authority.py
+
+QUESTION
+--------
+Did SPARSE_TIP_001 consume the same L1 PRE_O / wo authority as BATCH2_L1_CLEAN_001?
+
+ANSWER
+------
+NO. Sparse reused BATCH2_L1_ENTRY_001 llama dumps (FORCE_PRE_O on L0 only).
+Clean authority is BATCH2_L1_CLEAN_001 (FORCE_PRE_O_EXPAND_V on L0+L1).
+
+OPERAND TABLE (pos=0)
+---------------------
+SPARSE Deep2 PRE_O_1 vs CLEAN Deep2 PRE_O_1
+  IDENTICAL  max_abs=0  sha16=2dda47ba20fb29eb  fnv=585fa40dce84ca15
+
+SPARSE Deep2 V_1 vs CLEAN Deep2 V_1
+  IDENTICAL  max_abs=0  sha16=8bf444654a2e6c95  fnv=62ffaa40ace587d8
+
+SPARSE Deep2 ATTN_OUT_1 vs CLEAN Deep2 ATTN_OUT_1
+  IDENTICAL  max_abs=0  sha16=e9c999cea6e119e8  fnv=f71175bd40b3c201
+
+ENTRY llama PRE_O_1 / PRE_O_FORCED_1
+  ABSENT (0 bins) — L0 FORCE only
+  ENTRY FORCE log: FORCE_PRE_O=APPLIED kqv_out-0  (no kqv_out-1)
+  CLEAN FORCE log: FORCE_PRE_O=APPLIED kqv_out-0 + kqv_out-1 mode=EXPAND_V
+
+CLEAN llama PRE_O_1 vs FORCED_1
+  IDENTICAL  sha16=2c9dc908d2deb23b  fnv=94857dc36a2027b5
+
+Deep2 PRE_O_1 vs CLEAN llama FORCED_1
+  PASS  max_abs=1.49e-8
+
+ENTRY llama V_1 (seq174/177) vs CLEAN llama V_1
+  PASS  max_abs~7.45e-9  (same-order; not the fail source)
+
+WO_WEIGHT_BYTES
+  SAME model path both oracles:
+  F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  → blk.1.attn_output not divergent across harnesses
+
+SMOKING GUN — llama Y authority mismatch
+----------------------------------------
+ENTRY llama_TENS_attn_out_1 (seq231) vs CLEAN llama_ATTN_OUT_1
+  FAIL  max_abs=4.455447e-05
+  sha ENTRY=d7ed29cf51024778  CLEAN=cda89d92ac7160f6
+
+SPARSE Deep2 ATTN_OUT_1 vs ENTRY llama attn_out_1
+  FAIL  max_abs=4.455075e-05   ← exact GATE "L1_ATTN_OUT FAIL 4.45e-5"
+
+SPARSE Deep2 ATTN_OUT_1 vs CLEAN llama ATTN_OUT_1
+  PASS  max_abs=4.656613e-08   ← matches BATCH2_L1_ATTN_OUT_LOC
+
+Deep2 L1_OUT vs CLEAN llama LAYER1_OUT
+  PASS  max_abs=5.96e-08
+  (sparse L1_OUT FAIL 1.51e-3 was vs ENTRY llama_LAYER1_OUT seq252)
+
+DECISION (user rule)
+--------------------
+SPARSE_PRE_O_1 (llama wo input) != CLEAN_PRE_O_1
+  because sparse llama never had L1 forced PRE_O at all.
+
+⇒ BATCH2_SPARSE_TIP_001 L1_ATTN_OUT / L1_OUT = ORACLE/INPUT CONTAMINATION
+⇒ INVALIDATE sparse L1 fail
+⇒ do NOT reopen blk.1.attn_output / wo
+⇒ Gate A not required (already CLOSED under CLEAN; re-score PASS)
+
+SPARSE-HARNESS INVARIANT (failed)
+---------------------------------
+Required before ATTN_OUT_n:
+  llama_PRE_O_n == GQA_expand(llama_V_n)   ← NOT PROVABLE (no PRE_O_1 dump)
+  Deep2_PRE_O_n == GQA_expand(Deep2_V_n)   ← PASS (prior)
+  Deep2_V_n ~= llama_V_n                   ← PASS
+  SHA(forced PRE_O consumed by llama wo) == SHA(CLEAN PRE_O)
+                                           ← FAIL / ABSENT
+
+STATUS
+------
+blk.1.attn_output / wo     CLOSED (unchanged)
+BATCH2_L1_CLEAN_001        remains authority
+BATCH2_SPARSE_TIP_001      INVALIDATED for L1+ (wrong llama oracle)
+FIRST_DEEP2_FAIL           NONE
+
+NEXT
+----
+Re-run sparse tips ONLY under BATCH2_L1_CLEAN_001 / EXPAND_V authority
+(or fresh llama dump with RAWRXD_FORCE_PRE_O_EXPAND_V covering tip layers).
+Do not trust ENTRY_001 as sparse llama baseline.

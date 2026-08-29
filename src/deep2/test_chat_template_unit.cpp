@@ -20,8 +20,8 @@ static bool testPhi3() {
     std::string formatted = tmpl.format(messages);
     printf("Formatted: %s\n", formatted.c_str());
     
-    std::string expected = "<|system|>You are a helpful assistant.<|end|>"
-                           "<|user|>hello<|end|>"
+    std::string expected = "<|system|>\nYou are a helpful assistant.<|end|>"
+                           "<|user|>\nhello<|end|>"
                            "<|assistant|>";
     
     if (formatted == expected) {

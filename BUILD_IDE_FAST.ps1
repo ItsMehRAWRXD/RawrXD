@@ -74,7 +74,7 @@ function BuildIDE {
     Push-Location $BuildDir
     try {
         Log "  → CMake configure..." Yellow
-        cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release 2>&1 | Select-Object -First 5
+        cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_WIN32IDE=ON 2>&1 | Select-Object -First 5
         
         Log "  → MSBuild compile..." Yellow
         $msbuild = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
@@ -238,7 +238,7 @@ function BuildIDE {
     Push-Location $BuildDir
     try {
         Log "  → CMake configure..." Yellow
-        cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release 2>&1 | Select-Object -First 5
+        cmake .. -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DRAWRXD_BUILD_WIN32IDE=ON 2>&1 | Select-Object -First 5
         
         Log "  → MSBuild compile..." Yellow
         $msbuild = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"

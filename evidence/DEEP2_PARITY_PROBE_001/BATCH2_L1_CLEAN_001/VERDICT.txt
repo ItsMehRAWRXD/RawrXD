@@ -1,0 +1,66 @@
+BATCH2_L1_CLEAN_001 + SPARSE + L2 FIRST FAIL
+=============================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0
+authority=RAWRXD_FORCE_PRE_O_EXPAND_V (PRE_O:=GQA_expand(V) all layers)
+abs_eps=1e-6
+
+L1 LADDER
+---------
+ORACLE_SANITY L1 PASS (PRE_O==expand(V), FFN_INP==L0+ATTN)
+ATTN_NORM_1 .. LAYER1_OUT  ALL PASS
+LAYER1 = CLOSED
+
+SPARSE (before SwiGLU fix)
+--------------------------
+L2_OUT FIRST_SPARSE_FAIL  max_abs=6.01e-3 largest=624
+
+L2 EXPANSION (clean authority)
+------------------------------
+ATTN_NORM_2   PASS
+ATTN_OUT_2    PASS
+FFN_INP_2     PASS
+FFN_NORM_2    PASS
+FFN_GATE_2    FAIL @ 1.91e-6 (1 elem, ~1 ULP @ value~16.76)
+FFN_UP_2      PASS-class (~9.5e-7 after fix run)
+FFN_ACT_2     FAIL @ 7.22e-3 largest=5475   << first MATERIAL fail
+FFN_DOWN_2    FAIL @ 6.01e-3 largest=624
+LAYER2_OUT    FAIL @ 6.01e-3 largest=624
+
+ROOT CAUSE (Deep2 defect — not oracle)
+--------------------------------------
+Deep2Engine::SwiGLU used:
+  silu = gate * sigmoid(clamp(gate, -10, 10))
+When |gate|>10 this under-scales SiLU (gate=16.76 → clamp 10).
+Self-check: Deep2 ACT ≠ silu(G)*U by 7.3e-3 at idx 5475.
+llama ACT == silu(G)*U (~2e-6).
+
+FIX APPLIED (F:\~dev\rawrxd\src\deep2\Deep2Engine.cpp)
+------------------------------------------------------
+Stable SiLU: x>20 → x; x<-20 → 0; else x/(1+exp(-x)).
+No clamp-then-multiply-unclamped-gate.
+
+POST-FIX L2
+-----------
+FFN_ACT_2   max_abs 7.2e-3 → 4.6e-5 (clamp bug closed)
+LAYER2_OUT  max_abs 6.0e-3 → 4.6e-5
+Residual FAIL vs 1e-6 is GATE 1-ULP microgap amplified through SwiGLU×DOWN.
+
+POST-FIX SPARSE
+---------------
+L2_OUT  FAIL 4.58e-05
+L4_OUT  FAIL 4.58e-05
+L8_OUT  FAIL 4.58e-05
+L12+    grows; L21/FINAL_NORM still large
+NOTE: Deep2 FINAL_NORM dump at t==0 is mid-prefill — not tip-aligned vs llama result_norm.
+
+FIRST_DEEP2_FAIL (canonical)
+----------------------------
+domain   = L2 FFN_ACT / SwiGLU
+bug      = clamp(|gate|,10) then gate*sigmoid(clamped)
+status   = FIXED in Deep2Engine::SwiGLU
+followup = residual ULP-class GATE noise vs abs_eps=1e-6; tip FINAL_NORM alignment
+
+DO_NOT_REOPEN
+-------------
+tokenizer | Track A/B | L0 | L1 | O_PROJ | PRE_O expand authority

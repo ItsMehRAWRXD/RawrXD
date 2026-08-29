@@ -1,0 +1,15 @@
+=== 01_compile prompt ===
+Fix the compile error in main.c so the program builds and prints hello from b01.
+Inspect with tools first, then edit, build, and run.
+Emit tools using: TOOL_CALL: tool_name {"arg":"value"}
+Available tools include read_file, write_file, replace_in_file, run_command.
+Example: TOOL_CALL: read_file {"path":"main.c"}
+No canned repairs. When finished, give a short final answer without TOOL_CALL.
+
+=== 04_logic_bug prompt ===
+Fix the bug so add(2,3) returns 5, then print hello from b04.
+Inspect with tools first, then edit, build, and run.
+Emit tools using: TOOL_CALL: tool_name {"arg":"value"}
+Available tools include read_file, write_file, replace_in_file, run_command.
+No canned repairs. When finished, report what changed without TOOL_CALL.
+

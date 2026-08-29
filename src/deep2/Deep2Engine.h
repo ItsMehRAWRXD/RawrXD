@@ -452,7 +452,8 @@ public:
     bool isDeterministicGreedy() const { return deterministicGreedy_; }
 
     // Token embedding lookup (public for tree speculative decoding)
-    void embedToken(int tokenId, float* output);
+    // Returns false on FATAL_EMBED (zero/nonfinite row). Callers must abort inference.
+    bool embedToken(int tokenId, float* output);
 
     // LM head projection: hiddenDim -> vocabSize (public for tree speculative decoding)
     void computeLogits(const float* hiddenState, float* logits);

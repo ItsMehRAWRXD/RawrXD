@@ -104,23 +104,17 @@ inline void dequant_q4_k(
             ((b.scales[j + 4] >> 6) << 4);
     }
 
-    int out = 0;
-
-    for (int group = 0; group < 8; ++group) {
-        const float scale = d * (float)sc[group];
-        const float minv  = dmin * (float)mn[group];
-
-        const int qbase = group * 16;
-
-        for (int j = 0; j < 16; ++j) {
-            const uint8_t q = b.qs[qbase + j];
-
-            dst[out++] =
-                scale * (float)(q & 0x0F) - minv;
-
-            dst[out++] =
-                scale * (float)(q >> 4) - minv;
-        }
+    // ggml dequantize_row_q4_K: paired groups share one 32-byte qs window
+    const uint8_t* q = b.qs;
+    float* y = dst;
+    for (int is = 0; is < 8; is += 2) {
+        const float d1 = d * (float)sc[is];
+        const float m1 = dmin * (float)mn[is];
+        const float d2 = d * (float)sc[is + 1];
+        const float m2 = dmin * (float)mn[is + 1];
+        for (int l = 0; l < 32; ++l) *y++ = d1 * (float)(q[l] & 0x0F) - m1;
+        for (int l = 0; l < 32; ++l) *y++ = d2 * (float)(q[l] >> 4) - m2;
+        q += 32;
     }
 }
 

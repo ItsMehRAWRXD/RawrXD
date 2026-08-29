@@ -172,9 +172,16 @@ AgentResponse AgenticBridge::ExecuteAgentCommand(const std::string& prompt)
     if (!m_workspaceRoot.empty() && g_agentEngine)
         g_agentEngine->setWorkspaceRoot(m_workspaceRoot);
 
-    // E2: sync OrchestratorBridge model + workdir before routing
+    // E2: sync OrchestratorBridge model + workdir before routing.
+    // When Deep2 already holds the GGUF, pass the filesystem path (not a tag)
+    // and skip redundant SetModel if unchanged — SetModel is path-safe.
     auto& orch = RawrXD::Agent::OrchestratorBridge::Instance();
-    if (!m_modelName.empty())
+    if (m_deep2Ready && !m_deep2ModelPath.empty())
+    {
+        orch.SetModel(m_deep2ModelPath);
+        orch.SetFIMModel(m_deep2ModelPath);
+    }
+    else if (!m_modelName.empty())
     {
         orch.SetModel(m_modelName);
         orch.SetFIMModel(m_modelName);

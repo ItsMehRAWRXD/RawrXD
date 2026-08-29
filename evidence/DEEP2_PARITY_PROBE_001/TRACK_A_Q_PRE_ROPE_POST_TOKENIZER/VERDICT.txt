@@ -1,0 +1,46 @@
+TRACK_A_Q_PRE_ROPE — POST TOKENIZER_REBUILD (2026-08-29)
+=========================================================
+authority_binary=build-ninja/bin/test_generate_one_token.exe (rebuilt after TOKENIZER-PARITY-002c)
+ids=[1,21521,9312]  (forced; tokenizer-clean)
+model=tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+oracle=BATCH2_ORACLE_V3 + live STAGE_DIGEST reconfirm
+
+LADDER (pos=0, stop-rule applied)
+---------------------------------
+TOKEN_IDS          PASS   (forced 1,21521,9312)
+PROMPT_EMBED       PASS   fnv=13123758da8b244a  (exact vs llama)
+ATTN_NORM_0        PASS   fnv=b4ca919612be6c51  (exact vs llama; eps=1e-5 from GGUF)
+Q_LINEAR_INPUT_0   PASS   (= ATTN_NORM_0)
+Q_PRE_ROPE_0       PASS   numerical @ abs_eps=1e-6
+                         max_abs≈1.49e-7  (MANY_TINY_FP_DIFFS)
+                         fnvD=ced1abe971861249 ≠ fnvL=8d53927ede5ddb3f
+                         Q_PRE_ROPE_BITWISE=OPEN (do not chase)
+
+STOP_RULE RESULT
+----------------
+EMBED differs?           NO
+ATTN_NORM differs?       NO
+Q_LINEAR_INPUT matches
+  and Q_PRE_ROPE differs numerically @1e-6?  NO
+
+ROOT_DOMAIN_FOR_TRACK_A_Q = NOT_APPLICABLE (rung closed)
+Q_PROJ_GEMV A/B          = NOT REQUIRED for numerical ladder
+  (production Q already within 1e-6 of CPU llama; classification=
+   Q4K_X_Q8K_ACCUMULATION_PARITY — exonerates decode/layout/stride)
+
+FIRST_GENUINE_FAIL (unchanged)
+------------------------------
+ATTN_OUT_0  FAIL  max_abs≈8.45e-5  (>1e-5)
+  live subdomain = O_PROJ / blk.0.attn_output Q4_K×Q8_K
+  ATTN_PRE_O_0 self-consistent with expand(V) (pre-O PASS)
+
+TRACK DISPOSITION
+-----------------
+Track TOKENIZER     CLOSED
+Track A Q_PRE_ROPE  CLOSED (numerical)
+Track B ATTN_OUT_0  OPEN → descend O_PROJ only
+  ATTN_PRE_O_0 → blk.0.attn_output → O_PROJ output
+  do_not_reopen = Q/K/V / tokenizer / RMS eps
+
+VERDICT=Track_A_Q_PRE_ROPE_LOCALIZATION_COMPLETE
+NEXT=Track_B O_PROJ / attn_output GEMV

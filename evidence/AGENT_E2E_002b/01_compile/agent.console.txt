@@ -1,0 +1,54 @@
+catalog-model: tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-path: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+catalog-kind: gguf
+[ChatTemplate] family=phi3 heal=eos_token stop_bytes=4 remap_tool=1 eos_id=2
+[Deep2Engine] Loading model from: F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+[Deep2Engine] Multi-shard detected: NO (1 files in F:\~dev\rawrxd\models)
+[ReverseHotpatch] === Stage 1: ReverseHop_Discover ===
+[ReverseHotpatch] === Stage 2: ReverseUnlayer_Parse ===
+[ReverseHotpatch] === Stage 3: ReverseUnlayer_Index ===
+[ReverseHotpatch] === Stage 4: ReverseCompute_Graph ===
+[ReverseHotpatch] === Stage 5: ReverseHotpatch_Next ===
+[ReverseHotpatch] === Stage 6: ReverseHop_Verify ===
+[ReverseHotpatch] === Stage 7: ReverseHop_Commit ===
+[ReverseHotpatch] All 7 stages completed. Repairs: 0  Corruptions: 0
+[Deep2Engine] GGUF architecture: 'llama'  hidden=2048 layers=22 heads=32 kvHeads=4 inter=5632 vocab=2048
+[Deep2Engine] Tokenizer loaded: vocab=32000 bos=1 eos=2 (Spm::encode)
+[Deep2Engine] vocabSize override: metadata=2048 -> tensor=32000 (hidden=2048)
+[WO_DIAG] GGUF wo.data=000001FF55370000 rows=2048 cols=2048 type=12(Q4_K) block0 d=0x01BA dmin=0x0B26 qs[0]=0xD8
+[ResidencyManager] Initialized: maxResidentBytes=536870912, alignment=4096, granularity=65536
+[Deep2Engine] ResidencyManager initialized: maxResidentBytes=512 MB
+[ResidencyManager] this=000001FF4E4CED30  Registered 'blk.0.attn_q.weight': offset=0 bytes=2359296  |  registry_size=1  registeredBytes=2359296  maxResidentBytes=536870912
+[ResidencyManager] this=000001FF4E4CED30  Registered 'blk.11.attn_q.weight': offset=0 bytes=2359296  |  registry_size=100  registeredBytes=293691392  maxResidentBytes=536870912
+[ResidencyManager] this=000001FF4E4CED30  Registered 'output.weight': offset=0 bytes=53760000  |  registry_size=200  registeredBytes=667070464  maxResidentBytes=536870912
+[Deep2Engine] ResidencyManager: this=000001FF4E4CED30  registered=201 tensors  bytes=667078656  max=536870912
+[ThreadPool] Initializing with 16 threads...
+[ThreadPool] Initialized 16 worker threads
+[ThreadPool] Reinitializing with 16 threads...
+[ThreadPool] Reinitialized 16 worker threads
+[Deep2Engine] ThreadPool (loadModel): 16 threads
+[QuantKernelRegistry] Q4_K GEMV=00007FF62A448760 dequant=00007FF62A445C60 GetGEMV(12)=00007FF62A448760 match=1
+[IQKernels] Registered IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, IQ4_XS, IQ1_S
+[IQKernels] IQ4_NL using AVX-512 path
+[QuantKernelRegistry] CPU features: AVX512F=1 AVX512BW=1 AVX512DQ=1 AVX512VNNI=1 AVX2=1 FMA=1 F16C=1
+[QuantKernelRegistry] Registered 21 GEMV kernels, 21 dequant kernels
+[KVCache] Initializing: layers=22 maxSeqLen=2048 numHeads=4 headDim=64
+[KVCache] Formula: layers * maxSeqLen * numHeads * headDim * 2(K+V) * sizeof(float)
+[KVCache]        = 22 * 2048 * 4 * 64 * 2 * 4
+[KVCache]        = 92274688 bytes (K=46137344 + V=46137344)
+[KVCache] Total cache size: 88.00 MB
+[KVCache] Initialization complete
+[Deep2Engine] Model loaded successfully (201 tensors)
+RawrXD Sovereign Agentic Runtime
+architecture: llama
+model: tinyllama_tinyllama-1.1b-chat-v1.0
+chat-template: phi3
+deep2-streaming: whole-response
+workspace: F:\~dev\rawrxd\evidence\AGENT_E2E_002b\work_01_compile
+external inference runtime: none
+cloud API: none
+
+[AGENT] MODEL_READY chat_family=phi3
+[GREEDY] enabled=1 temperature=0.0000 topK=1
+[AGENT] PREFILL_BEGIN prompt_tokens=1063
+AGENT_EXIT=-1

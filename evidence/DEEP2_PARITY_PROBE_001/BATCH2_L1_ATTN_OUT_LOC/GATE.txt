@@ -1,0 +1,59 @@
+BATCH2_L1_ATTN_OUT_LOC — FINAL GATE
+====================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=1
+authority=BATCH2_L1_CLEAN_001 (RAWRXD_FORCE_PRE_O_EXPAND_V on L0+L1)
+harness=g:\rawrxd\tests\gate2_l1_attn_out_loc.cpp
+
+GATES (pos=0)
+-------------
+1. Deep2 L1_PRE_O vs GQA_expand(Deep2 L1_V)
+   PASS  max_abs=0 (exact)
+
+2. llama L1_PRE_O vs GQA_expand(llama L1_V)
+   PASS  max_abs=0 (exact)
+   llama_PRE_O_FORCED_1 vs expand(Vl)  PASS exact
+
+3. Deep2 L1_V vs llama L1_V
+   PASS  max_abs=1.49e-8
+
+4. Deep2 L1_ATTN_OUT vs llama L1_ATTN_OUT (clean EXPAND_V run)
+   PASS  max_abs=4.66e-8
+   Deep2 PRE_O vs expand(Vl)           PASS  max_abs=1.49e-8
+
+5. same-operands Gate A (proxy under identical expand authority)
+   X: deep2_PRE_O_1 vs llama_FORCED_1  PASS  max_abs=1.49e-8
+   Y: ATTN_OUT_1 deep2 vs llama        PASS  max_abs=4.66e-8
+   (explicit frozen-X mul_mat harness optional; operands already matched)
+
+CLASSIFICATION
+--------------
+ROOT = CLOSED / PRE_O-input-induced on unclean oracle only
+
+blk.1.attn_output / wo Q4_K×Q8_K = CLOSED (same-operands class)
+
+BATCH2_L1_ENTRY_001 native L1_ATTN_OUT FAIL @ 4.46e-5 = INVALIDATED
+  reason: compared against unclean L1 oracle (FORCE_PRE_O only on L0 in
+          BATCH2_CLEAN_FFN_ORACLE). Under EXPAND_V @ L1, gap collapses to ~5e-8.
+
+Deep2 residual L1 (FFN_INP_1 == L0_OUT + ATTN_OUT_1) remains PASS exact
+  — do not treat inherited FFN_INP fail as independent.
+
+DO_NOT
+------
+- promote L1_ATTN_OUT to Deep2 defect
+- reopen L0
+- inspect L1 FFN until re-score under this clean authority
+- sparse-tip jump until L1_ATTN_OUT re-score recorded PASS
+
+NEXT
+----
+Re-score L1_ATTN_OUT = PASS (this gate)
+→ L1_FFN_INP / L1_LAYER_OUT under BATCH2_L1_CLEAN_001
+→ only then sparse tips
+
+Artifacts
+---------
+evidence/.../BATCH2_L1_ATTN_OUT_LOC/LADDER_QUICK.txt
+evidence/.../BATCH2_L1_ATTN_OUT_LOC/GATE.txt
+dumps: evidence/.../BATCH2_L1_CLEAN_001/{deep2,llama}/

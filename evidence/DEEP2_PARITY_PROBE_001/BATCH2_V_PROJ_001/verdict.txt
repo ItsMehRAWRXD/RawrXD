@@ -1,0 +1,72 @@
+BATCH2_V_PROJ_001
+authority=CPU llama Q4_K x Q8_K mul_mat
+input=ATTN_NORM_0 frozen fnv=b4ca919612be6c51 L2=0.81059187800401478
+stop_rule=first genuine full-shape FAIL was V_0 on ORACLE_V2 ladder
+
+K_gemv_vs_deep2
+  shape=256
+  FNV_A=d61547179ccaf150
+  FNV_B=d61547179ccaf150
+  L2_A=1.3179646271773668
+  L2_B=1.3179646271773668
+  max_abs_diff=0
+  max_rel_diff=0
+  first_bad_index=-1
+  PASS/FAIL=PASS
+K_gemv_vs_llama
+  shape=256
+  FNV_A=d61547179ccaf150
+  FNV_B=f065873c7d34fcfd
+  L2_A=1.3179646271773668
+  L2_B=1.3179646086553678
+  max_abs_diff=8.9406967163085938e-08
+  max_rel_diff=2.2761069466784014e-05
+  first_bad_index=-1
+  PASS/FAIL=PASS
+K_deep2_vs_llama
+  shape=256
+  FNV_A=d61547179ccaf150
+  FNV_B=f065873c7d34fcfd
+  L2_A=1.3179646271773668
+  L2_B=1.3179646086553678
+  max_abs_diff=8.9406967163085938e-08
+  max_rel_diff=2.2761069466784014e-05
+  first_bad_index=-1
+  PASS/FAIL=PASS
+V_gemv_vs_deep2
+  shape=256
+  FNV_A=4b004536ead54edb
+  FNV_B=df87f6368ddea59a
+  L2_A=0.07974118027288174
+  L2_B=0.07925270207430278
+  max_abs_diff=0.0007501356303691864
+  max_rel_diff=1.8836702263356955
+  first_bad_index=0
+  PASS/FAIL=FAIL
+V_gemv_vs_llama
+  shape=256
+  FNV_A=4b004536ead54edb
+  FNV_B=d4e2dce085d5d6e4
+  L2_A=0.07974118027288174
+  L2_B=0.079741179178360391
+  max_abs_diff=1.862645149230957e-09
+  max_rel_diff=2.7236824186299878e-05
+  first_bad_index=-1
+  PASS/FAIL=PASS
+V_deep2_vs_llama
+  shape=256
+  FNV_A=df87f6368ddea59a
+  FNV_B=d4e2dce085d5d6e4
+  L2_A=0.07925270207430278
+  L2_B=0.079741179178360391
+  max_abs_diff=0.0007501356303691864
+  max_rel_diff=1.8836697258725794
+  first_bad_index=0
+  PASS/FAIL=FAIL
+
+weight_ptr_k=0000016661BD0000 weight_ptr_v=00000166620A0000 first64_equal_bytes=0
+
+INTERPRETATION
+If V_gemv MATCHES deep2 and DIFFS llama => Deep2 LinearW OK; llama V_0 dump not raw wv@x OR llama used different weights.
+If V_gemv MATCHES llama and DIFFS deep2 => Deep2 dump/path diverged from QuantKernelRegistry Q8_K GEMV.
+If V_gemv DIFFS both => weight dims/type/load bug in this harness.

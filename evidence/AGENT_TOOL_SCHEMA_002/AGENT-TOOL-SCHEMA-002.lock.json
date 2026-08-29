@@ -1,0 +1,8 @@
+{
+  "gate": "AGENT-TOOL-SCHEMA-002",
+  "status": "PASS",
+  "LANE_A_MALFORMED_REJECT": "PASS",
+  "LANE_B_VALID_ACCEPT": "PASS",
+  "VALID_SCHEMA_LANE": "PASS",
+  "note": "Architectural gate independent of TinyLlama. Full agent next-action is a separate defect."
+}

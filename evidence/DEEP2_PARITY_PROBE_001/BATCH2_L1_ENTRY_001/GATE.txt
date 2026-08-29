@@ -1,0 +1,59 @@
+BATCH2_L1_ENTRY_001 — L1 entry (first-divergence localization)
+==============================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0
+authority=BATCH2_CLEAN_FFN_ORACLE (FORCE_PRE_O applied at L0 only)
+harness=g:\rawrxd\tests\gate2_l1_entry.cpp → build\gate2\gate2_l1_entry.exe
+
+PREREQ
+------
+LAYER0_OUT deep2 vs llama_POST_FFN_0 (clean)  PASS  max_abs=1.86e-8
+L0 = FROZEN CLOSED — do not re-walk
+
+LADDER (pos=0)
+--------------
+stage            max_abs      gate
+LAYER0_OUT       1.86e-8      PASS
+L1_ATTN_NORM     7.15e-7      PASS
+L1_Q_PRE_ROPE    —            MISSING (instrumentation gap)
+L1_K_PRE_ROPE    —            MISSING
+L1_V             —            MISSING
+L1_ATTN_OUT      4.46e-5      FAIL   ← FIRST_FAIL
+L1_FFN_INP       4.45e-5      FAIL   (inherits ATTN_OUT delta)
+L1_LAYER_OUT     —            not scored after stop
+
+Deep2 residual (oracle-independent)
+-----------------------------------
+FFN_INP_1 == LAYER_OUT_0 + ATTN_OUT_1   PASS exact (max_abs=0)
+
+FIRST_FAIL=L1_ATTN_OUT
+
+CLASSIFICATION
+--------------
+Same-order gap as L0 native ATTN_OUT (~8e-5) after FORCE_PRE_O was only
+applied on layer 0. No L1 ATTN_PRE_O / FORCE dumps in this oracle set.
+→ Treat as **suspect L1 PRE_O / oracle contamination**, NOT an established
+  Deep2 arithmetic defect, until same-operands L1 PRE_O or O_PROJ compare.
+
+Still true: **no established Deep2 numerical defect through LAYER0_OUT**.
+L1_ATTN_NORM under clean L0 residual = PASS.
+
+DO_NOT
+------
+- re-walk L0
+- jump to sparse tips / logits while L1_ATTN_OUT is unresolved
+- treat L1_FFN_INP FAIL as independent Deep2 FFN defect
+
+NEXT
+----
+BATCH2_L1_ATTN_OUT_LOC:
+  dump L1 ATTN_PRE_O (kqv_out hygiene) + same-operands wo @ L1
+  OR FORCE_PRE_O_1 = expand(V_1) / Deep2 PRE_O_1 then re-compare ATTN_OUT_1
+
+If clean L1_ATTN_OUT PASS → continue L1_LAYER_OUT → sparse tips.
+
+Artifacts
+---------
+evidence/.../BATCH2_L1_ENTRY_001/LADDER_QUICK.txt
+evidence/.../BATCH2_L1_ENTRY_001/GATE.txt
+dumps from BATCH2_CLEAN_FFN_ORACLE/

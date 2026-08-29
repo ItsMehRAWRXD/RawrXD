@@ -1,0 +1,23 @@
+Q4K-GEMV-001=PASS
+raw_weight_bytes=MATCH
+scalar_dequant=MATCH
+block_dot_products=MATCH
+full_Q0=MATCH
+scale_unpack=MATCH
+rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon
+rms_norm_epsilon=9.999999747e-06
+ATTN_NORM_0_cert=DIFF fnv=d316184aaf1350a3
+attn_norm_l2=8.105917814e-01
+prod_vs_ggml_q8k_max_abs=0.000000000e+00 tol=1.000000000e-05 first_bad=-1
+prod_vs_ggml_fp64_max_abs=1.941382885e-03 (informational; pre-fix FP32 path)
+legacy_vs_ggml_max_abs=3.387511447e-01
+Q_ggml_fp64_fnv=701cc5c267242e9a l2=1.940769575e+00
+Q_deep2_prod_fnv=bd582cbbc153cc54 l2=1.938516748e+00 batch2_deep2_Q=DIFF
+Q_ggml_q8k_fnv=bd582cbbc153cc54 l2=1.938516748e+00 batch2_llama_Q=DIFF
+authority=ggml mul_mat Q4_K x Q8_K (vec_dot_q4_K_q8_K_generic)
+production_kernel=QuantKernelRegistry::gemv_q4_k_scalar (Q8_K path)
+hypothesis_scale_min_decode=REJECTED
+fix=LinearW_Q4_K_now_matches_llama_CPU_mul_mat
+note=legacyWrongDequantBlock = pre-fix fused nibble grouping
+decision_tree=raw_bytes|dequant|block_dots MATCH; full_Q0 via Q8_K
+do_not_advance=K/V RoPE softmax AGENT-E2E-002b until Batch-2 STAGE_DIGEST Q_0 MATCH

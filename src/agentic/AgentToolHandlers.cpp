@@ -172,18 +172,42 @@ std::string AgentToolHandlers::NormalizePath(const std::string& path) {
 }
 
 bool AgentToolHandlers::IsPathAllowed(const std::string& path) {
-    std::string normalized = NormalizePath(path);
-
     // Must be under at least one allowed root
     if (s_guardrails.allowedRoots.empty()) return true; // No restrictions configured
 
+    fs::path filePath;
+    try {
+        filePath = fs::weakly_canonical(NormalizePath(path));
+    } catch (...) {
+        filePath = fs::path(NormalizePath(path));
+    }
+
     for (const auto& root : s_guardrails.allowedRoots) {
-        std::string normRoot = NormalizePath(root);
-        if (normalized.find(normRoot) == 0) {
-            // Check deny patterns
-            if (!MatchesDenyPattern(normalized)) {
-                return true;
-            }
+        fs::path rootPath;
+        try {
+            rootPath = fs::weakly_canonical(NormalizePath(root));
+        } catch (...) {
+            rootPath = fs::path(NormalizePath(root));
+        }
+
+        std::error_code ec;
+        fs::path rel = fs::relative(filePath, rootPath, ec);
+        if (ec || rel.empty()) {
+            continue;
+        }
+        // Outside root → relative starts with ".." or is absolute after relative().
+        auto it = rel.begin();
+        if (it == rel.end()) {
+            continue;
+        }
+        if (*it == "..") {
+            continue;
+        }
+        if (rel.is_absolute()) {
+            continue;
+        }
+        if (!MatchesDenyPattern(filePath.string())) {
+            return true;
         }
     }
     return false;
@@ -457,8 +481,81 @@ ToolCallResult AgentToolHandlers::ListDir(const json& args) {
 // execute_command — Run terminal command (sandboxed)
 // ============================================================================
 
+ToolCallResult AgentToolHandlers::ValidateShellCommand(const std::string& command) {
+    // Trim
+    size_t b = 0;
+    while (b < command.size() && std::isspace(static_cast<unsigned char>(command[b]))) ++b;
+    size_t e = command.size();
+    while (e > b && std::isspace(static_cast<unsigned char>(command[e - 1]))) --e;
+    const std::string trimmed = command.substr(b, e - b);
+    if (trimmed.empty()) {
+        return ToolCallResult::Validation("command must not be empty");
+    }
+
+    // Reject cmd.exe control operators / redirection (OWASP: avoid shell chaining).
+    static const char* kForbidden[] = {
+        "&&", "||", "|", ";", "\n", "\r", ">", "<", "`", "&"
+    };
+    for (const char* tok : kForbidden) {
+        if (trimmed.find(tok) != std::string::npos) {
+            nlohmann::json meta = nlohmann::json::object();
+            meta["policy"] = "no_shell_chaining";
+            meta["token"] = tok;
+            ToolCallResult res = ToolCallResult::Sandbox(
+                std::string("shell chaining/redirection is not allowed (found '") + tok + "')");
+            res.metadata = meta;
+            return res;
+        }
+    }
+
+    // First token = executable (optional quotes); compare stem against allowlist.
+    size_t end = 0;
+    while (end < trimmed.size() && !std::isspace(static_cast<unsigned char>(trimmed[end]))) ++end;
+    std::string executable = ToLowerCopy(trimmed.substr(0, end));
+    if (executable.size() >= 2 && executable.front() == '"' && executable.back() == '"') {
+        executable = executable.substr(1, executable.size() - 2);
+    }
+    // Strip path + extension → stem (cl.exe → cl, .\foo\bar.exe → bar)
+    {
+        const auto slash = executable.find_last_of("/\\");
+        if (slash != std::string::npos) executable = executable.substr(slash + 1);
+        const auto dot = executable.rfind('.');
+        if (dot != std::string::npos && dot > 0) executable = executable.substr(0, dot);
+    }
+
+    static const char* kDefaultAllow[] = {
+        "cmake", "ninja", "ctest", "git", "powershell", "pwsh", "cmd",
+        "cl", "link", "msbuild", "devenv", "python", "python3",
+        "echo", "dir", "type", "where"
+    };
+    const std::vector<std::string>& allow =
+        s_guardrails.allowedCommands.empty()
+            ? std::vector<std::string>(std::begin(kDefaultAllow), std::end(kDefaultAllow))
+            : s_guardrails.allowedCommands;
+
+    bool allowed = false;
+    for (const auto& ac : allow) {
+        if (executable == ToLowerCopy(ac)) {
+            allowed = true;
+            break;
+        }
+    }
+    if (!allowed) {
+        nlohmann::json meta = nlohmann::json::object();
+        meta["command"] = command;
+        meta["executable"] = executable;
+        meta["policy"] = "allowedCommands";
+        ToolCallResult res = ToolCallResult::Sandbox(
+            "executable is not allow-listed: " + executable);
+        res.metadata = meta;
+        return res;
+    }
+    return ToolCallResult::Ok("ok");
+}
+
 bool AgentToolHandlers::RunProcess(const std::wstring& cmdLine, uint32_t timeoutMs,
-                                    std::string& output, uint32_t& exitCode) {
+                                    std::string& output, uint32_t& exitCode,
+                                    const std::wstring& workingDir) {
     SECURITY_ATTRIBUTES sa{};
     sa.nLength = sizeof(sa);
     sa.bInheritHandle = TRUE;
@@ -479,8 +576,9 @@ bool AgentToolHandlers::RunProcess(const std::wstring& cmdLine, uint32_t timeout
 
     PROCESS_INFORMATION pi{};
     std::wstring cmd = cmdLine;
+    const wchar_t* cwdPtr = workingDir.empty() ? nullptr : workingDir.c_str();
     BOOL created = CreateProcessW(nullptr, cmd.data(), nullptr, nullptr, TRUE,
-                                   CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+                                   CREATE_NO_WINDOW, nullptr, cwdPtr, &si, &pi);
     CloseHandle(hWrite);
 
     if (!created) {
@@ -552,6 +650,13 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args) {
     }
 
     std::string command = args["command"].get<std::string>();
+    {
+        ToolCallResult policy = ValidateShellCommand(command);
+        if (!policy.isSuccess()) {
+            return policy;
+        }
+    }
+
     uint32_t timeout = s_guardrails.commandTimeoutMs;
     if (args.contains("timeout") && args["timeout"].is_number()) {
         timeout = static_cast<uint32_t>(args["timeout"].get<int>());
@@ -559,21 +664,20 @@ ToolCallResult AgentToolHandlers::ExecuteCommand(const json& args) {
         if (timeout > 300000) timeout = 300000;
     }
 
-    // Run from primary workspace root so relative paths (sources/exes) resolve.
-    std::string wrapped = command;
+    // Prefer CreateProcess working-directory over `cd &&` so user commands
+    // never need shell chaining (forbidden by ValidateShellCommand).
+    std::wstring workingDir;
     if (!s_guardrails.allowedRoots.empty()) {
-        const std::string& root = s_guardrails.allowedRoots[0];
-        wrapped = "cd /d \"" + root + "\" && " + command;
+        workingDir = ToWide(s_guardrails.allowedRoots[0]);
     }
 
-    // Build command line via cmd.exe
-    std::wstring cmdLine = L"cmd.exe /C " + ToWide(wrapped);
+    std::wstring cmdLine = L"cmd.exe /C " + ToWide(command);
 
     std::string output;
     uint32_t exitCode = 0;
 
     auto startTime = std::chrono::steady_clock::now();
-    bool success = RunProcess(cmdLine, timeout, output, exitCode);
+    bool success = RunProcess(cmdLine, timeout, output, exitCode, workingDir);
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - startTime).count();
 
@@ -838,32 +942,11 @@ ToolCallResult AgentToolHandlers::GetDiagnostics(const json& args) {
 }
 
 // ============================================================================
-// run_shell — Guarded alias of execute_command with allowlist enforcement
+// run_shell — Alias of execute_command (same allowlist + no-chaining policy)
 // ============================================================================
 ToolCallResult AgentToolHandlers::RunShell(const json& args) {
     if (!args.contains("command") || !args["command"].is_string()) {
         return ToolCallResult::Validation("run_shell requires 'command' (string)");
-    }
-    std::string command = args["command"].get<std::string>();
-
-    // Enforce allowlist if configured
-    if (!s_guardrails.allowedCommands.empty()) {
-        std::istringstream iss(command);
-        std::string first;
-        iss >> first;
-        bool allowed = false;
-        for (const auto& ac : s_guardrails.allowedCommands) {
-            if (first == ac) { allowed = true; break; }
-        }
-        if (!allowed) {
-            nlohmann::json meta = nlohmann::json::object();
-            meta["command"] = command;
-            meta["first_token"] = first;
-            meta["policy"] = "allowedCommands";
-            ToolCallResult res = ToolCallResult::Sandbox("Command not allowed by policy: " + first);
-            res.metadata = meta;
-            return res;
-        }
     }
     return ExecuteCommand(args);
 }

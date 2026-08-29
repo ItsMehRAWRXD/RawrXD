@@ -7518,6 +7518,64 @@ if(BUILD_DEEP2_TOKEN_GATE)
     message(STATUS "[Deep2] One-token validation gate: test_generate_one_token")
 endif()
 
+# test_q4k_gemv_parity â€” BATCH2_Q4K_GEMV_001 standalone cert
+option(BUILD_DEEP2_Q4K_GEMV_PARITY "Build Q4_K GEMV parity harness" ON)
+if(BUILD_DEEP2_Q4K_GEMV_PARITY)
+    add_executable(test_q4k_gemv_parity
+        src/deep2/test_q4k_gemv_parity.cpp
+    )
+    target_link_libraries(test_q4k_gemv_parity PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_q4k_gemv_parity PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_q4k_gemv_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_q4k_gemv_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_q4k_gemv_parity
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Q4_K GEMV parity harness: test_q4k_gemv_parity")
+
+    add_executable(test_q_elemdiff
+        src/deep2/test_q_elemdiff.cpp
+    )
+    target_link_libraries(test_q_elemdiff PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_q_elemdiff PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_q_elemdiff PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_q_elemdiff PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_q_elemdiff
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Q element-diff harness: test_q_elemdiff")
+
+    add_executable(test_embed_q4k_token
+        src/deep2/test_embed_q4k_token.cpp
+    )
+    target_link_libraries(test_embed_q4k_token PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_embed_q4k_token PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_embed_q4k_token PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_embed_q4k_token PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_embed_q4k_token
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] EMBED-Q4K-001 harness: test_embed_q4k_token")
+endif()
+
 # test_chat_template -- Chat template + streaming generation test
 option(BUILD_DEEP2_CHAT_TEMPLATE "Build chat template test" ON)
 if(BUILD_DEEP2_CHAT_TEMPLATE)
@@ -13097,3 +13155,52 @@ endif()
 # RAWRXD_SOVEREIGN_FINISH_HOUR_INCLUDE
 include(cmake/RawrXDSovereignFinish.cmake)
 
+
+# test_v_proj_parity — BATCH2_V_PROJ_001
+if(TARGET InferenceEngine)
+    add_executable(test_v_proj_parity
+        src/deep2/test_v_proj_parity.cpp
+    )
+    target_link_libraries(test_v_proj_parity PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_v_proj_parity PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_v_proj_parity PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_v_proj_parity PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_v_proj_parity
+    )
+endif()
+
+if(TARGET InferenceEngine)
+    add_executable(test_attn_out_bisect src/deep2/test_attn_out_bisect.cpp)
+    target_link_libraries(test_attn_out_bisect PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_attn_out_bisect PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_attn_out_bisect PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(test_attn_out_bisect PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin OUTPUT_NAME test_attn_out_bisect)
+endif()
+
+if(TARGET InferenceEngine)
+    add_executable(test_o_proj_gemv src/deep2/test_o_proj_gemv.cpp)
+    target_link_libraries(test_o_proj_gemv PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_o_proj_gemv PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_o_proj_gemv PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(test_o_proj_gemv PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin OUTPUT_NAME test_o_proj_gemv)
+endif()
+
+if(TARGET InferenceEngine)
+    add_executable(test_o_proj_mulmat_002 src/deep2/test_o_proj_mulmat_002.cpp)
+    target_link_libraries(test_o_proj_mulmat_002 PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_o_proj_mulmat_002 PRIVATE /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_o_proj_mulmat_002 PRIVATE ${CMAKE_SOURCE_DIR}/src/deep2 ${CMAKE_SOURCE_DIR}/include)
+    set_target_properties(test_o_proj_mulmat_002 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin OUTPUT_NAME test_o_proj_mulmat_002)
+endif()

@@ -17,7 +17,9 @@
 #include <immintrin.h>
 #include <cstring>
 #include <cstdio>
+#include <cmath>
 #include <sstream>
+#include <vector>
 
 namespace Deep2 {
 
@@ -403,12 +405,12 @@ static void gemv_q8_0_scalar(
 //   scales[4..7] high bits from s[0..3] >> 6, combined with s[8..11] low 4 bits
 //   mins[4..7] high bits from s[4..7] >> 6, combined with s[8..11] high 4 bits
 //
-// CRITICAL: Q4_K uses GROUPED nibbles, not interleaved:
-//   qs[0..31]   low  nibbles -> weights 0..31
-//   qs[0..31]   high nibbles -> weights 32..63
-//   qs[32..63]  low  nibbles -> weights 64..95
-//   qs[32..63]  high nibbles -> weights 96..127
-//   ...
+// CRITICAL: Q4_K uses GROUPED nibbles (llama.cpp dequantize_row_q4_K):
+//   For each pair of 32-weight groups (64 weights total):
+//     qs[0..31] low  nibbles + scale[is+0] -> weights 0..31
+//     qs[0..31] high nibbles + scale[is+1] -> weights 32..63
+//     then qs += 32, is += 2
+//   Do NOT treat each 16-byte chunk as lo/hi within the same scale.
 
 static inline void unpack_q4_k_scales(
     const uint8_t s[12],
@@ -439,58 +441,160 @@ static inline void unpack_q4_k_scales(
     mins[7] = (s[11] >> 4) | ((s[7] >> 6) << 4);
 }
 
+// --- Q4_K GEMV (ggml mul_mat path: Q4_K × Q8_K) ---
+// BATCH2_Q4K_GEMV_001: Deep2 FP32 dequant·x matched ggml dequantize_row_q4_K,
+// but Batch-2 llama Q_0 uses quantize_row_q8_K(x) + vec_dot_q4_K_q8_K.
+// Production GEMV must follow that path to close Q_0 against llama CPU authority.
+//
+// Decode (scales/mins/nibble grouping) remains identical to dequantize_row_q4_K;
+// only the activation-side quantization + integer dot differ.
+// block_q8_K is defined in GGUFLoader.hpp.
+static inline int nearest_int_q8k(float fval) {
+    float val = fval + 12582912.f;
+    int i;
+    std::memcpy(&i, &val, sizeof(int));
+    return (i & 0x007fffff) - 0x00400000;
+}
+
+static void quantize_row_q8_K(const float* x, block_q8_K* y, size_t k) {
+    const size_t nb = k / 256;
+    for (size_t i = 0; i < nb; ++i) {
+        float max = 0.f, amax = 0.f;
+        for (int j = 0; j < 256; ++j) {
+            float ax = std::fabs(x[j]);
+            if (ax > amax) { amax = ax; max = x[j]; }
+        }
+        if (!amax) {
+            y[i].d = 0.f;
+            std::memset(y[i].qs, 0, 256);
+            std::memset(y[i].bsums, 0, sizeof(y[i].bsums));
+            x += 256;
+            continue;
+        }
+        const float iscale = -127.f / max;
+        for (int j = 0; j < 256; ++j) {
+            int v = nearest_int_q8k(iscale * x[j]);
+            y[i].qs[j] = static_cast<int8_t>(v > 127 ? 127 : v);
+        }
+        for (int j = 0; j < 16; ++j) {
+            int sum = 0;
+            for (int ii = 0; ii < 16; ++ii) sum += y[i].qs[j * 16 + ii];
+            y[i].bsums[j] = static_cast<int16_t>(sum);
+        }
+        y[i].d = 1.f / iscale;
+        x += 256;
+    }
+}
+
+// Port of ggml_vec_dot_q4_K_q8_K_generic
+static float vec_dot_q4_K_q8_K(const block_q4_K* x, const block_q8_K* y, size_t cols) {
+    const size_t nb = cols / 256;
+    static const uint32_t kmask1 = 0x3f3f3f3f;
+    static const uint32_t kmask2 = 0x0f0f0f0f;
+    static const uint32_t kmask3 = 0x03030303;
+    uint32_t utmp[4];
+    const uint8_t* scales = reinterpret_cast<const uint8_t*>(&utmp[0]);
+    const uint8_t* mins   = reinterpret_cast<const uint8_t*>(&utmp[2]);
+    int8_t  aux8[256];
+    int16_t aux16[8];
+    float   sums[8];
+    int32_t aux32[8];
+    std::memset(sums, 0, sizeof(sums));
+    float sumf = 0.f;
+    for (size_t i = 0; i < nb; ++i) {
+        const uint8_t* q4 = x[i].qs;
+        const int8_t*  q8 = y[i].qs;
+        std::memset(aux32, 0, sizeof(aux32));
+        int8_t* a = aux8;
+        for (int j = 0; j < 4; ++j) {
+            for (int l = 0; l < 32; ++l) a[l] = static_cast<int8_t>(q4[l] & 0xF);
+            a += 32;
+            for (int l = 0; l < 32; ++l) a[l] = static_cast<int8_t>(q4[l] >> 4);
+            a += 32;
+            q4 += 32;
+        }
+        std::memcpy(utmp, x[i].scales, 12);
+        utmp[3] = ((utmp[2] >> 4) & kmask2) | (((utmp[1] >> 6) & kmask3) << 4);
+        const uint32_t uaux = utmp[1] & kmask1;
+        utmp[1] = (utmp[2] & kmask2) | (((utmp[0] >> 6) & kmask3) << 4);
+        utmp[2] = uaux;
+        utmp[0] &= kmask1;
+
+        int sumi = 0;
+        for (int j = 0; j < 16; ++j) sumi += y[i].bsums[j] * mins[j / 2];
+        a = aux8;
+        int is = 0;
+        for (int j = 0; j < 8; ++j) {
+            const int32_t scale = scales[is++];
+            for (int r = 0; r < 4; ++r) {
+                for (int l = 0; l < 8; ++l) aux16[l] = static_cast<int16_t>(q8[l] * a[l]);
+                for (int l = 0; l < 8; ++l) aux32[l] += scale * aux16[l];
+                q8 += 8;
+                a += 8;
+            }
+        }
+        const float d = f16_to_f32(x[i].d) * y[i].d;
+        for (int l = 0; l < 8; ++l) sums[l] += d * static_cast<float>(aux32[l]);
+        const float dmin = f16_to_f32(x[i].dmin) * y[i].d;
+        sumf -= dmin * static_cast<float>(sumi);
+    }
+    for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
 static void gemv_q4_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-
-    for (size_t r = 0; r < rows; ++r) {
-        float acc = 0.0f;
-        const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
-
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_K& blk = rowBlocks[b];
-            float d    = f16_to_f32(blk.d);
-            float dmin = f16_to_f32(blk.dmin);
-
-            size_t base = b * 256;
-            size_t elemsInBlock = (b == blocksPerRow - 1)
-                ? (cols - base)
-                : 256;
-            if (elemsInBlock == 0) break;
-
-            uint8_t scales[8], mins[8];
-            unpack_q4_k_scales(blk.scales, scales, mins);
-
-            // Q4_K: 8 sub-blocks of 32 weights each.
-            // Sub-block j (0..7): weights j*32 + 0..31, scale[j], min[j]
-            // qs[j*16 + k] contains nibbles for weights j*32 + k (lo) and j*32 + k+16 (hi)
-            for (int j = 0; j < 8; ++j) {
-                const float dl = d * static_cast<float>(scales[j]);
-                const float ml = dmin * static_cast<float>(mins[j]);
-                const uint8_t* q = blk.qs + j * 16;
-
-                for (int k = 0; k < 16; ++k) {
-                    uint8_t byte = q[k];
-                    int idx0 = j * 32 + k;
-                    int idx1 = j * 32 + k + 16;
-
-                    if (static_cast<size_t>(idx0) < elemsInBlock) {
-                        int nibble0 = byte & 0x0F;
-                        acc += (dl * static_cast<float>(nibble0) - ml) * x[base + idx0];
+    if (cols % 256 != 0) {
+        // Fallback: FP32 dequant·x (non-ggml-mul_mat shapes)
+        const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+        size_t blocksPerRow = (cols + 255) / 256;
+        for (size_t r = 0; r < rows; ++r) {
+            float acc = 0.0f;
+            const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
+            for (size_t b = 0; b < blocksPerRow; ++b) {
+                const block_q4_K& blk = rowBlocks[b];
+                float d    = f16_to_f32(blk.d);
+                float dmin = f16_to_f32(blk.dmin);
+                size_t base = b * 256;
+                size_t elemsInBlock = (b == blocksPerRow - 1) ? (cols - base) : 256;
+                if (elemsInBlock == 0) break;
+                uint8_t scales[8], mins[8];
+                unpack_q4_k_scales(blk.scales, scales, mins);
+                const uint8_t* q = blk.qs;
+                for (int is = 0; is < 8; is += 2) {
+                    const float d1 = d * static_cast<float>(scales[is]);
+                    const float m1 = dmin * static_cast<float>(mins[is]);
+                    const float d2 = d * static_cast<float>(scales[is + 1]);
+                    const float m2 = dmin * static_cast<float>(mins[is + 1]);
+                    const size_t off0 = static_cast<size_t>(is) * 32;
+                    const size_t off1 = off0 + 32;
+                    for (int l = 0; l < 32; ++l) {
+                        if (off0 + static_cast<size_t>(l) < elemsInBlock)
+                            acc += (d1 * static_cast<float>(q[l] & 0x0F) - m1)
+                                 * x[base + off0 + static_cast<size_t>(l)];
+                        if (off1 + static_cast<size_t>(l) < elemsInBlock)
+                            acc += (d2 * static_cast<float>(q[l] >> 4) - m2)
+                                 * x[base + off1 + static_cast<size_t>(l)];
                     }
-                    if (static_cast<size_t>(idx1) < elemsInBlock) {
-                        int nibble1 = byte >> 4;
-                        acc += (dl * static_cast<float>(nibble1) - ml) * x[base + idx1];
-                    }
+                    q += 32;
                 }
             }
+            y[r] += acc;
         }
-        y[r] += acc;
+        return;
+    }
+
+    // Hot path: match llama.cpp CPU mul_mat(Q4_K, Q8_K)
+    const size_t blocksPerRow = cols / 256;
+    std::vector<block_q8_K> xQ8(blocksPerRow);
+    quantize_row_q8_K(x, xQ8.data(), cols);
+    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        y[r] += vec_dot_q4_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
     }
 }
 
@@ -687,25 +791,72 @@ static bool rxd_q6k_gemv_reference(
     return true;
 }
 
+// Port of ggml_vec_dot_q6_K_q8_K_generic (one super-block / 256 cols).
+static float vec_dot_q6_K_q8_K(const block_q6_K* x, const block_q8_K* y, size_t cols) {
+    const size_t nb = cols / 256;
+    int8_t  aux8[256];
+    int16_t aux16[8];
+    float   sums[8];
+    int32_t aux32[8];
+    std::memset(sums, 0, sizeof(sums));
+    float sumf = 0.f;
+    for (size_t i = 0; i < nb; ++i) {
+        const uint8_t* q4 = x[i].ql;
+        const uint8_t* qh = x[i].qh;
+        const int8_t*  q8 = y[i].qs;
+        std::memset(aux32, 0, sizeof(aux32));
+        int8_t* a = aux8;
+        for (int j = 0; j < 256; j += 128) {
+            for (int l = 0; l < 32; ++l) {
+                a[l +  0] = static_cast<int8_t>((q4[l +  0] & 0xF) | (((qh[l] >> 0) & 3) << 4)) - 32;
+                a[l + 32] = static_cast<int8_t>((q4[l + 32] & 0xF) | (((qh[l] >> 2) & 3) << 4)) - 32;
+                a[l + 64] = static_cast<int8_t>((q4[l +  0] >> 4) | (((qh[l] >> 4) & 3) << 4)) - 32;
+                a[l + 96] = static_cast<int8_t>((q4[l + 32] >> 4) | (((qh[l] >> 6) & 3) << 4)) - 32;
+            }
+            a  += 128;
+            q4 += 64;
+            qh += 32;
+        }
+        a = aux8;
+        int is = 0;
+        for (int j = 0; j < 256 / 16; ++j) {
+            const int scale = x[i].scales[is++];
+            for (int l = 0; l < 8; ++l) aux16[l] = static_cast<int16_t>(q8[l] * a[l]);
+            for (int l = 0; l < 8; ++l) aux32[l] += scale * aux16[l];
+            q8 += 8; a += 8;
+            for (int l = 0; l < 8; ++l) aux16[l] = static_cast<int16_t>(q8[l] * a[l]);
+            for (int l = 0; l < 8; ++l) aux32[l] += scale * aux16[l];
+            q8 += 8; a += 8;
+        }
+        const float d = f16_to_f32(x[i].d) * y[i].d;
+        for (int l = 0; l < 8; ++l) sums[l] += d * static_cast<float>(aux32[l]);
+    }
+    for (int l = 0; l < 8; ++l) sumf += sums[l];
+    return sumf;
+}
+
+// BATCH2_V_PROJ_001: TinyLlama attn_v is Q6_K (type 14), not Q4_K.
+// FP32 dequant·x matched dequantize_row_q6_K but diverged from llama mul_mat
+// (Q6_K×Q8_K) — same class of bug as Q4K-GEMV-001. Production must use Q8_K path.
 static void gemv_q6_k_scalar(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    static std::atomic<int> q6kDebugCalls{0};
-    const int call = q6kDebugCalls.fetch_add(1);
-    if (call < 4) {
-        printf("[Q6K_GEMV] ENTER call=%d w=%p x=%p y=%p rows=%zu cols=%zu\n",
-               call, (const void*)w, (const void*)x, (void*)y, rows, cols);
-        fflush(stdout);
+    if (cols % 256 != 0) {
+        // Fallback: FP32 dequant·x (non-ggml-mul_mat shapes)
+        if (!rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols)) {
+            std::fprintf(stderr, "[Q6K_REF] GEMV FAILED rows=%zu cols=%zu\n", rows, cols);
+        }
+        return;
     }
-    if (!rxd_q6k_gemv_reference(w, x, y, (int64_t)rows, (int64_t)cols)) {
-        std::fprintf(stderr, "[Q6K_REF] GEMV FAILED rows=%zu cols=%zu\n", rows, cols);
-    }
-    if (call < 4) {
-        printf("[Q6K_GEMV] EXIT call=%d\n", call);
-        fflush(stdout);
+    const size_t blocksPerRow = cols / 256;
+    std::vector<block_q8_K> xQ8(blocksPerRow);
+    quantize_row_q8_K(x, xQ8.data(), cols);
+    const block_q6_K* blocks = reinterpret_cast<const block_q6_K*>(w);
+    for (size_t r = 0; r < rows; ++r) {
+        y[r] += vec_dot_q6_K_q8_K(blocks + r * blocksPerRow, xQ8.data(), cols);
     }
 }
 
@@ -911,67 +1062,15 @@ static void gemv_f16_avx512(
     }
 }
 
-// --- Q4_K GEMV (AVX-512 fused multi-nibble unpack + FMA) ---
-// This is the "unnewmultinibbles" kernel: extracts low and high 4-bit
-// nibbles simultaneously, applies super-block scale/min, and FMA's
-// directly into the accumulator with zero scalar branching.
+// --- Q4_K GEMV (AVX-512) ---
+// Delegate to scalar until a ggml-layout SIMD kernel is re-validated.
 static void gemv_q4_k_avx512(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-    const __m512i lowMask = _mm512_set1_epi8(0x0F);
-
-    for (size_t r = 0; r < rows; ++r) {
-        __m512 acc = _mm512_setzero_ps();
-        const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
-
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float dmin = f16_to_f32(blk.dmin);
-            __m512 dVec = _mm512_set1_ps(d);
-            __m512 dminVec = _mm512_set1_ps(dmin);
-
-            // Load 128 bytes of packed nibbles (256 weights)
-            __m512i packed = _mm512_loadu_si512(reinterpret_cast<const void*>(blk.qs));
-
-            // Extract low nibbles (even-indexed weights)
-            __m512i lowNibbles = _mm512_and_si512(packed, lowMask);
-            // Extract high nibbles (odd-indexed weights)
-            __m512i highNibbles = _mm512_and_si512(_mm512_srli_epi16(packed, 4), lowMask);
-
-            // Convert first 16 low nibbles to float
-            __m128i low16 = _mm512_castsi512_si128(lowNibbles);
-            __m512 w0 = _mm512_cvtepi32_ps(_mm512_cvtepu8_epi32(low16));
-
-            // Load 16 activations
-            __m512 x0 = _mm512_loadu_ps(x + b * 256);
-
-            // FMA: acc += (w * d) * x
-            acc = _mm512_fmadd_ps(_mm512_mul_ps(w0, dVec), x0, acc);
-
-            // Process remaining nibble groups (groups 1-15, 16 values each)
-            // Uses scalar fallback for non-vectorized path - production uses permute
-            for (int g = 1; g < 16; ++g) {
-                // Extract 16 quantized values from the block
-                float blockAcc = 0.0f;
-                for (int i = 0; i < 16; ++i) {
-                    int idx = g * 16 + i;
-                    uint8_t byte = blk.qs[idx / 2];
-                    float q = (idx % 2 == 0) ? (float)(byte & 0x0F) : (float)(byte >> 4);
-                    blockAcc += q * x[b * 256 + idx];
-                }
-                // Apply scale and accumulate
-                __m512 partial = _mm512_set1_ps(blockAcc * d);
-                acc = _mm512_add_ps(acc, partial);
-            }
-        }
-        y[r] += _mm512_reduce_add_ps(acc);
-    }
+    gemv_q4_k_scalar(w, x, y, rows, cols);
 }
 
 // --- Q8_0 GEMV (AVX-512) ---
@@ -1119,79 +1218,15 @@ static void gemv_q8_0_avx2(
 }
 
 // --- Q4_K GEMV (AVX2) ---
-// block_q4_K: 256 weights in 4-bit, with super-block scales
-// Layout: uint16_t d, dmin; uint8_t scales[12]; uint8_t qs[128];
+// Delegate to scalar reference (ggml-compatible nibble layout). SIMD path
+// previously used the wrong 16-byte/same-scale packing and is not trusted.
 static void gemv_q4_k_avx2(
     const uint8_t* RESTRICT w,
     const float*  RESTRICT x,
     float*        RESTRICT y,
     size_t rows, size_t cols
 ) {
-    const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(w);
-    size_t blocksPerRow = (cols + 255) / 256;
-
-    for (size_t r = 0; r < rows; ++r) {
-        float rowAcc = 0.0f;
-        const block_q4_K* rowBlocks = blocks + r * blocksPerRow;
-
-        for (size_t b = 0; b < blocksPerRow; ++b) {
-            const block_q4_K& blk = rowBlocks[b];
-            float d = f16_to_f32(blk.d);
-            float dmin = f16_to_f32(blk.dmin);
-            
-            // Process 8 sub-blocks of 32 weights each
-            for (int sb = 0; sb < 8; ++sb) {
-                // Extract 6-bit scale and min for this sub-block from scales[12]
-                uint8_t scale_u8, min_u8;
-                get_scale_min_k4(sb, blk.scales, scale_u8, min_u8);
-                float s = d * scale_u8;
-                float m = dmin * min_u8;
-                __m256 sVec = _mm256_set1_ps(s);
-                __m256 mVec = _mm256_set1_ps(m);
-                
-                // Process 32 weights in this sub-block (16 bytes of packed nibbles)
-                size_t qsOffset = sb * 16;  // 16 bytes = 32 nibbles
-                __m128i packed = _mm_loadu_si128(reinterpret_cast<const __m128i*>(blk.qs + qsOffset));
-                
-                // Extract low nibbles (indices 0, 2, 4, ... 30)
-                __m128i lowNibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
-                // Extract high nibbles (indices 1, 3, 5, ... 31)
-                __m128i highNibbles = _mm_srli_epi16(packed, 4);
-                highNibbles = _mm_and_si128(highNibbles, _mm_set1_epi8(0x0F));
-                
-                // Process first 8 low nibbles
-                __m256i i32_lo = _mm256_cvtepu8_epi32(lowNibbles);
-                __m256 wv_lo = _mm256_cvtepi32_ps(i32_lo);
-                __m256 xv_lo = _mm256_loadu_ps(x + b * 256 + sb * 32);
-                __m256 dequant_lo = _mm256_sub_ps(_mm256_mul_ps(wv_lo, sVec), mVec);
-                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo, xv_lo, 0xF1)));
-                
-                // Process second 8 low nibbles
-                __m128i lowNibbles_hi = _mm_srli_si128(lowNibbles, 8);
-                __m256i i32_lo2 = _mm256_cvtepu8_epi32(lowNibbles_hi);
-                __m256 wv_lo2 = _mm256_cvtepi32_ps(i32_lo2);
-                __m256 xv_lo2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 8);
-                __m256 dequant_lo2 = _mm256_sub_ps(_mm256_mul_ps(wv_lo2, sVec), mVec);
-                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_lo2, xv_lo2, 0xF1)));
-                
-                // Process first 8 high nibbles
-                __m256i i32_hi = _mm256_cvtepu8_epi32(highNibbles);
-                __m256 wv_hi = _mm256_cvtepi32_ps(i32_hi);
-                __m256 xv_hi = _mm256_loadu_ps(x + b * 256 + sb * 32 + 16);
-                __m256 dequant_hi = _mm256_sub_ps(_mm256_mul_ps(wv_hi, sVec), mVec);
-                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi, xv_hi, 0xF1)));
-                
-                // Process second 8 high nibbles
-                __m128i highNibbles_hi = _mm_srli_si128(highNibbles, 8);
-                __m256i i32_hi2 = _mm256_cvtepu8_epi32(highNibbles_hi);
-                __m256 wv_hi2 = _mm256_cvtepi32_ps(i32_hi2);
-                __m256 xv_hi2 = _mm256_loadu_ps(x + b * 256 + sb * 32 + 24);
-                __m256 dequant_hi2 = _mm256_sub_ps(_mm256_mul_ps(wv_hi2, sVec), mVec);
-                rowAcc += _mm_cvtss_f32(_mm256_castps256_ps128(_mm256_dp_ps(dequant_hi2, xv_hi2, 0xF1)));
-            }
-        }
-        y[r] += rowAcc;
-    }
+    gemv_q4_k_scalar(w, x, y, rows, cols);
 }
 
 // ===========================================================================
@@ -1223,6 +1258,7 @@ static void dequant_q8_0(const uint8_t* src, float* dst, size_t n) {
 }
 
 static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
+    // Exact layout match for ggml dequantize_row_q4_K
     const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(src);
     size_t numBlocks = (n + 255) / 256;
     for (size_t b = 0; b < numBlocks; ++b) {
@@ -1232,21 +1268,22 @@ static void dequant_q4_k(const uint8_t* src, float* dst, size_t n) {
         if (!std::isfinite(dmin)) dmin = 0.0f;
         uint8_t scales[8], mins[8];
         unpack_q4_k_scales(blocks[b].scales, scales, mins);
-        for (int sb = 0; sb < 8; ++sb) {
-            float scale = d * scales[sb];
-            float min   = dmin * mins[sb];
-            const uint8_t* quants = blocks[b].qs + sb * 16;
-            for (int k = 0; k < 16; ++k) {
-                uint8_t byte = quants[k];
-                int lo = byte & 0x0F;
-                int hi = (byte >> 4) & 0x0F;
-                int idx0 = sb * 32 + k;
-                int idx1 = sb * 32 + k + 16;
-                size_t g0 = b * 256 + idx0;
-                size_t g1 = b * 256 + idx1;
-                if (g0 < n) dst[g0] = scale * lo - min;
-                if (g1 < n) dst[g1] = scale * hi - min;
+        const uint8_t* q = blocks[b].qs;
+        float* y = dst + b * 256;
+        for (int is = 0; is < 8; is += 2) {
+            const float d1 = d * static_cast<float>(scales[is]);
+            const float m1 = dmin * static_cast<float>(mins[is]);
+            const float d2 = d * static_cast<float>(scales[is + 1]);
+            const float m2 = dmin * static_cast<float>(mins[is + 1]);
+            for (int l = 0; l < 32; ++l) {
+                size_t g0 = b * 256 + static_cast<size_t>(is) * 32 + static_cast<size_t>(l);
+                size_t g1 = g0 + 32;
+                if (g0 < n) y[static_cast<size_t>(is) * 32 + static_cast<size_t>(l)] =
+                    d1 * static_cast<float>(q[l] & 0x0F) - m1;
+                if (g1 < n) y[static_cast<size_t>(is) * 32 + 32 + static_cast<size_t>(l)] =
+                    d2 * static_cast<float>(q[l] >> 4) - m2;
             }
+            q += 32;
         }
     }
 }
@@ -1727,6 +1764,11 @@ void QuantKernelRegistry::RegisterBuiltins() {
     RegisterDequant((int)GGMLType::GGML_TYPE_Q4_K, dequant_q4_k);
     // MASM linked but unverified — use scalar reference until byte-level comparison passes
     RegisterGEMV((int)GGMLType::GGML_TYPE_Q4_K, gemv_q4_k_scalar);
+    printf("[QuantKernelRegistry] Q4_K GEMV=%p dequant=%p GetGEMV(12)=%p match=%d\n",
+           (void*)(GEMVKernelFn)gemv_q4_k_scalar,
+           (void*)(DequantKernelFn)dequant_q4_k,
+           (void*)GetGEMV((int)GGMLType::GGML_TYPE_Q4_K),
+           (int)(GetGEMV((int)GGMLType::GGML_TYPE_Q4_K) == (GEMVKernelFn)gemv_q4_k_scalar));
 
     // --- Q5_K ---
     RegisterGeometry((int)GGMLType::GGML_TYPE_Q5_K, GetBlockGeometryForType((int)GGMLType::GGML_TYPE_Q5_K));

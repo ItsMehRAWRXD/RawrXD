@@ -1,0 +1,36 @@
+BATCH2_O_PROJ_GEMV_001
+X=deep2_ATTN_PRE_O_0 (GQA_expand(V) exact)
+W=blk.0.attn_output.weight type=12 rows=2048 cols=2048 size=2359296 rowBytes=1152 bpr=8
+PRE_O_vs_llama=INSPECT max_abs~6.14e-6 (not FAIL; concat layout OK)
+ATTN_OUT_vs_llama=FAIL max_abs~8.45e-5 -> O_PROJ domain
+
+prod_Q8K vs deep2_ATTN_OUT
+  max_abs=0
+  max_rel=0
+  first_bad=-1
+  PASS/FAIL=PASS
+prod_Q8K vs llama_ATTN_OUT
+  max_abs=8.446909487247467e-05
+  max_rel=1.736719327420547
+  first_bad=0
+  PASS/FAIL=FAIL
+scalar_FP32 vs llama_ATTN_OUT
+  max_abs=0.025128301931545138
+  max_rel=1.9950967837553579
+  first_bad=0
+  PASS/FAIL=FAIL
+scalar_FP32 vs prod_Q8K
+  max_abs=0.025112047092989087
+  max_rel=1.9955841566005899
+  first_bad=0
+  PASS/FAIL=FAIL
+
+rows_gt_1e-5=88/2048
+worst_row=485
+worst_abs=8.446909487247467e-05
+
+INTERPRETATION
+scalar~llama, prod differs => optimized GEMV/Q8_K/accum
+scalar~prod, both~diff llama => decode or llama arith convention (repack q4_K_8x8)
+scalar closer than prod => accumulation order/precision
+sparse bad rows => row index/tail

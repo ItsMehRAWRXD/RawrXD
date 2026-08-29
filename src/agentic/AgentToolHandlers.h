@@ -94,7 +94,10 @@ private:
     // ---- Internal helpers ----
     static std::string CreateBackup(const std::string& path);
     static bool RunProcess(const std::wstring& cmdLine, uint32_t timeoutMs,
-                           std::string& output, uint32_t& exitCode);
+                           std::string& output, uint32_t& exitCode,
+                           const std::wstring& workingDir = L"");
+    // Shared shell policy for execute_command / run_shell (sovereign-aligned).
+    static ToolCallResult ValidateShellCommand(const std::string& command);
 
     static ToolGuardrails s_guardrails;
 };

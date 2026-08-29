@@ -1,0 +1,21 @@
+O_PROJ_MULMAT_PARITY_002
+authority=CPU llama mul_mat (forced identical X) vs Deep2 Q4_K×Q8_K
+W=blk.0.attn_output.weight Q4_K rows=2048 cols=2048 bpr=8
+X=deep2_ATTN_PRE_O_0 (F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_ATTN_OUT_LOC\deep2_ATTN_PRE_O_0_pos0_layer0_full_n2048_seq008.bin)
+Y_llama_force=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\O_PROJ_MULMAT_PARITY_002\llama_ATTN_OUT_FORCE_DEEP2_X_pos0_layer0_full_n2048_seq109.bin
+
+CONTROL prod_vs_deep2_ATTN_OUT max_abs=0 gate=PASS
+CONTROL prod_vs_llama_native_ATTN_OUT max_abs=8.446909487247467e-05 (PRE_O-induced gap)
+
+GATE_A same_FP32_X+same_W
+  Deep2_Q8K_path vs llama_mul_mat(force_X) max_abs=1.1175870895385742e-08 worst_row=1454 gate=PASS
+
+AUTHORITY=same_FP32_X_makes_Deep2_llama_match — PRE_O delta amplified; wo kernel CLOSED
+
+PRIOR_ROW_002: prod(llama_PRE_O) vs llama_ATTN_OUT max_abs~9.3e-9
+  (Deep2 kernel matches llama when X is llama's PRE_O)
+
+GATE_B=SKIPPED (Gate A closed kernel)
+LIVE_STATUS=wo Q4_K×Q8_K CLOSED under identical operands
+REMAINING=quantizer/input sensitivity of tiny PRE_O delta (6.14e-6) only
+do_not_reopen=TOKENIZER EMBED NORM QKV SOFTMAX AV GQA PRE_O_LAYOUT

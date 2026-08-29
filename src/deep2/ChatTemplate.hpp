@@ -180,4 +180,142 @@ private:
     std::vector<ChatMessage> history_;
 };
 
+inline std::string RenderChatTemplate(
+    std::string_view chatTemplate,
+    const std::vector<ChatMessage>& messages,
+    bool addGenerationPrompt = true)
+{
+    // --- Fast paths for common embedded templates (exact byte control) -----
+    // TinyLlama / Zephyr / ChatML-style: <|system|>...</s><|user|>...</s><|assistant|>
+    const bool looksChatMl =
+        chatTemplate.find("<|user|>") != std::string_view::npos ||
+        chatTemplate.find("<|im_start|>") != std::string_view::npos ||
+        chatTemplate.find("<|assistant|>") != std::string_view::npos;
+
+    const bool looksLlama2 =
+        chatTemplate.find("[INST]") != std::string_view::npos;
+
+    const bool looksLlama3 =
+        chatTemplate.find("<|begin_of_text|>") != std::string_view::npos ||
+        chatTemplate.find("<|start_header_id|>") != std::string_view::npos;
+
+    auto findRole = [&](std::string_view role) -> const ChatMessage* {
+        for (const auto& m : messages) {
+            if (m.role == role) return &m;
+        }
+        return nullptr;
+    };
+
+    // Prefer structural renderers over naive Jinja substitution so whitespace
+    // and special-token boundaries match production llama.cpp chat apply.
+    if (looksLlama3) {
+        std::string out = "<|begin_of_text|>";
+        for (const auto& m : messages) {
+            out += "<|start_header_id|>";
+            out += m.role;
+            out += "<|end_header_id|>\n\n";
+            out += m.content;
+            out += "<|eot_id|>";
+        }
+        if (addGenerationPrompt) {
+            out += "<|start_header_id|>assistant<|end_header_id|>\n\n";
+        }
+        return out;
+    }
+
+    if (looksLlama2) {
+        const ChatMessage* system = findRole("system");
+        const ChatMessage* user = findRole("user");
+        std::string out;
+        if (system && !system->content.empty()) {
+            out = "[INST] <<SYS>>\n";
+            out += system->content;
+            out += "\n<</SYS>>\n\n";
+            if (user) out += user->content;
+            out += " [/INST]";
+        } else {
+            out = "[INST] ";
+            if (user) out += user->content;
+            out += " [/INST]";
+        }
+        return out;
+    }
+
+    // ChatML / TinyLlama-chat (default for empty template with chat roles)
+    if (looksChatMl || chatTemplate.empty()) {
+        // TinyLlama-1.1B-Chat uses:
+        //   <|system|>\n{sys}</s>\n<|user|>\n{user}</s>\n<|assistant|>
+        // Detect Zephyr/TinyLlama marker vs OpenAI ChatML im_start.
+        const bool imStart = chatTemplate.find("<|im_start|>") != std::string_view::npos;
+        std::string out;
+        if (imStart) {
+            for (const auto& m : messages) {
+                out += "<|im_start|>";
+                out += m.role;
+                out += "\n";
+                out += m.content;
+                out += "<|im_end|>\n";
+            }
+            if (addGenerationPrompt) {
+                out += "<|im_start|>assistant\n";
+            }
+            return out;
+        }
+
+        // TinyLlama / Phi-style role tags
+        for (const auto& m : messages) {
+            if (m.role == "system") {
+                out += "<|system|>\n";
+                out += m.content;
+                out += "</s>\n";
+            } else if (m.role == "user") {
+                out += "<|user|>\n";
+                out += m.content;
+                out += "</s>\n";
+            } else if (m.role == "assistant") {
+                out += "<|assistant|>\n";
+                out += m.content;
+                out += "</s>\n";
+            }
+        }
+        if (addGenerationPrompt) {
+            out += "<|assistant|>\n";
+        }
+        return out;
+    }
+
+    // Last resort: replace {{system}} / {{user}} / {{prompt}} placeholders.
+    std::string result(chatTemplate);
+    const ChatMessage* system = findRole("system");
+    const ChatMessage* user = findRole("user");
+    auto replaceAll = [](std::string& s, std::string_view from, std::string_view to) {
+        size_t pos = 0;
+        while ((pos = s.find(from, pos)) != std::string::npos) {
+            s.replace(pos, from.size(), to);
+            pos += to.size();
+        }
+    };
+    if (system) replaceAll(result, "{{system}}", system->content);
+    if (user) {
+        replaceAll(result, "{{user}}", user->content);
+        replaceAll(result, "{{prompt}}", user->content);
+        replaceAll(result, "{{ message }}", user->content);
+    }
+    return result;
+}
+
+inline std::string RenderChat(
+    std::string_view chatTemplate,
+    std::string_view systemPrompt,
+    std::string_view userPrompt,
+    bool addGenerationPrompt = true)
+{
+    std::vector<ChatMessage> msgs;
+    if (!systemPrompt.empty()) {
+        msgs.push_back({"system", std::string(systemPrompt)});
+    }
+    msgs.push_back({"user", std::string(userPrompt)});
+    return RenderChatTemplate(chatTemplate, msgs, addGenerationPrompt);
+}
+
 } // namespace Deep2

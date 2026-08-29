@@ -1,0 +1,65 @@
+BATCH2_FFN_LADDER_001 — L0 post-attention / FFN (clean operands)
+================================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0
+authority=CPU llama (ggml-cpu-zen4) with FORCE_PRE_O = Deep2 ATTN_PRE_O_0
+deep2 dumps=BATCH2_ORACLE_V3
+llama dumps=O_PROJ_MULMAT_PARITY_002 (forced same PRE_O → clean ATTN_OUT)
+
+PRECONDITION (from O_PROJ_MULMAT_PARITY_002 Gate A)
+----------------------------------------------------
+wo / O_PROJ CLOSED under identical operands (max_abs=1.12e-8).
+Native 8.45e-5 ATTN_OUT gap is PRE_O→Q8_K sensitivity ONLY — not a Deep2 wo defect.
+This ladder therefore uses forced-identical PRE_O so FFN sees clean ATTN_OUT.
+
+LADDER (pos=0) Deep2 vs llama_force
+-----------------------------------
+stage        max_abs      gate
+ATTN_OUT     1.12e-8      PASS
+FFN_INP      1.12e-8      PASS
+FFN_NORM     8.34e-7      PASS
+FFN_UP       2.38e-7      PASS
+FFN_GATE     (Deep2 dump added; prior run used llama only — see ACT)
+FFN_ACT      1.04e-7      PASS   [recon: silu(llama_gate)*llama_up vs deep2 FFN_ACT]
+FFN_DOWN     1.86e-8      PASS
+POST_FFN     2.24e-8      PASS
+LAYER0_OUT   2.24e-8      PASS   [deep2 LAYER_OUT_0 ≡ POST_FFN_0 exact;
+                                  vs llama POST_FFN force]
+
+FIRST_FAIL=none
+
+AUTHORITY
+---------
+Under same-authority clean PRE_O / clean ATTN_OUT operands, there is
+NO live Deep2 defect on the L0 FFN path through LAYER0_OUT.
+
+EXCLUSION / CLOSED SET (updated)
+--------------------------------
+TOKENIZER             CLOSED
+EMBED/NORM            CLOSED
+Q / K / V             CLOSED
+QK / scale / softmax  CLOSED
+AV / GQA / concat     CLOSED
+PRE_O layout          CLOSED
+O_PROJ / wo           CLOSED (identical operands)
+FFN_INP               CLOSED (clean operands)
+FFN_NORM              CLOSED
+FFN_GATE/UP/ACT       CLOSED (ACT via recon; GATE dump instrumented for next freeze)
+FFN_DOWN              CLOSED
+LAYER0_OUT / POST_FFN CLOSED
+
+NOT on critical path
+--------------------
+Native PRE_O delta ~6.14e-6 → Q8_K sensitivity → wo delta ~8.45e-5
+(numerical-characterization debt only)
+
+NEXT meaningful cert (if continuing)
+------------------------------------
+LAYER1 entry (ATTN_NORM_1 / LAYER_OUT_0 as input) with same clean-operand discipline,
+or tip/logits certification — not reopening L0 attn/FFN under identical operands.
+
+Artifacts
+---------
+evidence/DEEP2_PARITY_PROBE_001/BATCH2_FFN_LADDER_001/LADDER_QUICK.txt
+evidence/DEEP2_PARITY_PROBE_001/O_PROJ_MULMAT_PARITY_002/ (forced llama dumps)
+evidence/DEEP2_PARITY_PROBE_001/BATCH2_ORACLE_V3/ (deep2 dumps)

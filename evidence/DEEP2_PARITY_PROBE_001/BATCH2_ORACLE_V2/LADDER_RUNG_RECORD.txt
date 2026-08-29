@@ -1,0 +1,31 @@
+BATCH2_ORACLE_V2 â€” collision-proof ladder (2026-08-29)
+=======================================================
+dump_id=<stage>_pos<p>_layer<L>_<full|headH>_n<N>_seq<SSS>.bin
+sidecar=.manifest.txt (dtype, nelem, nbytes, layer, pos, head, fnv, l2)
+index=DUMP_MANIFEST.jsonl
+authority=CPU-only llama (ggml-cpu-zen4); Vulkan quarantined
+ids=[1] BOS tip / TinyLlama Q4_K_M
+abs_eps=1e-6  (PASS)  / 1e-5 INSPECT  / >1e-5 FAIL
+invalidates=BATCH2_ATTN_LADDER_NUM (filename clobber; not full-vector oracles)
+do_not_preserve=old PROMPT_FINAL_NORM divergence as evidence
+
+RUNG RECORDS (full-shape only; head=-1)
+---------------------------------------
+stage              shape  fnvD              fnvL              L2D         L2L         max_abs      max_rel      first_bad  PASS/FAIL
+PROMPT_EMBED       2048   13123758da8b244a  13123758da8b244a  (match)     (match)     0            0            -1         PASS
+ATTN_NORM_0        2048   b4ca919612be6c51  b4ca919612be6c51  (match)     (match)     0            0            -1         PASS
+Q_PRE_ROPE_0       2048   ced1abe971861249  8d53927ede5ddb3f  1.938517    1.938517    1.490116e-07 7.063572e-03 -1         PASS
+K_PRE_ROPE_0       256    d61547179ccaf150  f065873c7d34fcfd  ~1.318      ~1.318      8.940697e-08 2.276107e-05 -1         PASS
+V_0                256    df87f6368ddea59a  d4e2dce085d5d6e4  7.925270e-02 7.974118e-02 7.501356e-04 1.883670e+00 0          FAIL
+
+STOP first_genuine_full_shape_mismatch=V_0
+notes:
+  - Q/K numerical PASS @1e-6; Q bitwise remains OPEN (do not chase FNV)
+  - llama V_0 seq045==seq048 (identical); oracle not clobbered
+  - V cosine(deep2,llama)=0.99874; all 4 KV heads contribute (~1e-4 abs)
+  - prior FINAL_NORM tip divergence is NOT evidence under V2 oracles
+
+DESCEND: BATCH2_V_PROJ_001 (isolated wv GEMV vs dumps)
+
+SUPERSEDED for Deep2 V dumps: use BATCH2_ORACLE_V3 after Q6_K×Q8_K fix.
+V2 llama oracles remain valid; V2 deep2 V_0 was pre-fix FP32 path.

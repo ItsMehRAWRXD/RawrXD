@@ -322,7 +322,8 @@ if ($Target -in @('Full', 'IDE')) {
                 $configArgs = @(
                     '..',
                     '-G', "`"$gen`"",
-                    "-DCMAKE_BUILD_TYPE=$Config"
+                    "-DCMAKE_BUILD_TYPE=$Config",
+                    '-DRAWRXD_BUILD_WIN32IDE=ON'
                 )
 
                 if (Test-Path (Join-Path $BuildDir "CMakeCache.txt")) {
@@ -830,7 +831,8 @@ if ($Target -in @('Full', 'IDE')) {
                 '..',
                 '-G "Visual Studio 17 2022"',
                 '-DCMAKE_BUILD_TYPE=' + $Config,
-                '-DCMAKE_CONFIGURATION_TYPES=' + $Config
+                '-DCMAKE_CONFIGURATION_TYPES=' + $Config,
+                '-DRAWRXD_BUILD_WIN32IDE=ON'
             ) -join ' '
             
             Invoke-Build $configCmd "CMake Configuration" -Required $true

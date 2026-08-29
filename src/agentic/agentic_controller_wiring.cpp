@@ -345,8 +345,9 @@ std::string ExecuteToolBackend(const std::string& toolName, const std::map<std::
                 return "{\"error\":\"missing command\"}";
             }
 
-            static const std::vector<std::string> allowedPrefixes = {"git", "cmake", "ninja", "make", "ctest", "echo",
-                                                                     "cat", "ls",    "dir",   "pwd",  "cl"};
+            static const std::vector<std::string> allowedPrefixes = {
+                "git", "cmake", "ninja", "make", "ctest", "echo", "cat", "ls", "dir", "pwd",
+                "cl", "cmd", "link", "msbuild", "powershell", "pwsh", "python", "python3"};
 
             bool allowed = false;
             for (const auto& prefix : allowedPrefixes)

@@ -1,0 +1,51 @@
+{
+  "id": "AGENT-E2E-002b",
+  "status": "FAIL",
+  "verdict": "honest_capability_gap",
+  "demo_break": false,
+  "scripted_runtime": false,
+  "fa_auto_authority": false,
+  "hexmag": "frozen_out_of_chase",
+  "deep2_inference": "authority",
+  "model_path": "F:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+  "model_sha256": "9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0",
+  "binary": "F:\\~dev\\rawrxd\\build-win32ide-fresh\\bin\\RawrXD-Agentic.exe",
+  "harness": "scripts/RUN_AGENT_E2E_002b.ps1",
+  "proof_chain_required": [
+    "real_model_output",
+    "real_tool_decision",
+    "real_filesystem_code_action",
+    "real_build_run_verification",
+    "goal.satisfied"
+  ],
+  "cases": {
+    "01_compile": {
+      "PASS": false,
+      "goal_satisfied": false,
+      "source_mutated": false,
+      "transcript_has_tool_calls": false,
+      "build_exit": 1,
+      "run_exit": -1
+    },
+    "04_logic_bug": {
+      "PASS": false,
+      "goal_satisfied": false,
+      "source_mutated": false,
+      "transcript_has_tool_calls": false,
+      "build_exit": 0,
+      "run_exit": 1,
+      "stdout": "FAIL got=-1 expected=5"
+    }
+  },
+  "spine_ide_agent_loop_cert_deep2": {
+    "exit": -1073740791,
+    "note": "STATUS_STACK_BUFFER_OVERRUN / empty stdout; not used as substitute PASS"
+  },
+  "infrastructure_fixes_applied": [
+    "QuantKernelRegistry init on loadModel + LinearW_Range lazy init",
+    "RAWRXD_GREEDY honored in generateText",
+    "B3_STATE/KERNEL/LinearW traces default off",
+    "WARN_EMBED continue for zero byte-fallback rows (token 35)",
+    "Agentic TOOL_CALL: name {json} parser"
+  ]
+}

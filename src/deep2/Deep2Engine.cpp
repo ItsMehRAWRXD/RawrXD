@@ -13,6 +13,8 @@
 #include "GGUFLoader.hpp"
 #include "ReverseHotpatchEngine.hpp"
 #include "Tokenizer.hpp"
+#include "CanonicalTokenizer.hpp"
+#include "GGUFTokenizerLoad.hpp"
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
 #include "QuantKernelRegistry.hpp"
@@ -222,47 +224,18 @@ extern "C" void Deep2_VecDotProduct(const float* a, const float* b, float* out, 
     *out = sum;
 }
 
-// SwiGLU activation: out = x * sigmoid(y) * y - Production AVX2 implementation
-// Uses polynomial approximation for sigmoid and FMA for throughput
+// SwiGLU activation: out = silu(gate) * up  (gate=y, up=x in legacy call sites)
+// MUST match Deep2Engine::SwiGLU — no clamp-then-unclamped multiply (L2 FFN_ACT fail).
 extern "C" void Deep2_SwiGLU(const float* x, const float* y, float* out, size_t n) {
     if (n == 0) return;
-    
-    // AVX2-optimized sigmoid approximation using tanh
-    // sigmoid(x) = 0.5 * (1 + tanh(x/2))
-    // For x in [-6, 6]: tanh(x) ≈ x * (1 - x²/3 + 2x⁴/15)
-    
-    const __m256 half = _mm256_set1_ps(0.5f);
-    const __m256 one = _mm256_set1_ps(1.0f);
-    const __m256 c1 = _mm256_set1_ps(-0.3333333f);  // -1/3 for tanh approx
-    const __m256 c2 = _mm256_set1_ps(0.1333333f);   // 2/15 for tanh approx
-    
-    size_t i = 0;
-    for (; i + 8 <= n; i += 8) {
-        __m256 vx = _mm256_loadu_ps(x + i);
-        __m256 vy = _mm256_loadu_ps(y + i);
-        
-        // Compute sigmoid(vy) using fast approximation
-        // For numerical stability, clamp to [-10, 10] range
-        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-10.0f), 
-                                       _mm256_min_ps(_mm256_set1_ps(10.0f), vy));
-        
-        // sigmoid(x) ≈ 0.5 + 0.5 * tanh(x/2)
-        __m256 half_y = _mm256_mul_ps(clamped, half);
-        __m256 y2 = _mm256_mul_ps(half_y, half_y);
-        __m256 tanh_approx = _mm256_mul_ps(half_y, 
-            _mm256_fmadd_ps(y2, c1, one));
-        tanh_approx = _mm256_fmadd_ps(_mm256_mul_ps(y2, y2), c2, tanh_approx);
-        __m256 sigmoid = _mm256_fmadd_ps(tanh_approx, half, half);
-        
-        // SwiGLU: x * sigmoid(y) * y
-        __m256 result = _mm256_mul_ps(vx, _mm256_mul_ps(sigmoid, vy));
-        _mm256_storeu_ps(out + i, result);
-    }
-    
-    // Scalar remainder with standard sigmoid
-    for (; i < n; ++i) {
-        float sig = 1.0f / (1.0f + std::exp(-y[i]));
-        out[i] = x[i] * sig * y[i];
+    auto silu1 = [](float v) -> float {
+        if (v > 20.0f) return v;
+        if (v < -20.0f) return 0.0f;
+        return v / (1.0f + expf(-v));
+    };
+    // Legacy Deep2_SwiGLU(x,y,out) = x * silu(y)  (up * silu(gate))
+    for (size_t i = 0; i < n; ++i) {
+        out[i] = x[i] * silu1(y[i]);
     }
 }
 
@@ -499,24 +472,23 @@ static inline void unpackQ4KScaleMin(const uint8_t* scales, int j,
 // Dequantize Q4_K block to FP32 (256 elements per block)
 // ============================================================================
 static void dequantizeQ4KBlock(const Q4_K_Block* block, float* out) {
+    // Match ggml dequantize_row_q4_K: paired scales over 32-byte qs chunks
     float d    = fp16ToFloat(block->d);
     float dmin = fp16ToFloat(block->dmin);
+    const uint8_t* q = block->qs;
+    float* y = out;
 
-    for (int j = 0; j < 8; j++) {
-        uint8_t sc, m;
-        unpackQ4KScaleMin(block->scales, j, sc, m);
-        float scale = d * sc;
-        float min   = dmin * m;
-
-        // Each sub-block has 32 elements: 16 bytes of packed quants
-        const uint8_t* quants = block->qs + j * 16;
-        for (int k = 0; k < 16; k++) {
-            uint8_t byte = quants[k];
-            int lo = byte & 0xF;
-            int hi = (byte >> 4) & 0xF;
-            out[j * 32 + k]       = scale * lo - min;
-            out[j * 32 + k + 16]  = scale * hi - min;
-        }
+    for (int is = 0; is < 8; is += 2) {
+        uint8_t sc0, m0, sc1, m1;
+        unpackQ4KScaleMin(block->scales, is, sc0, m0);
+        unpackQ4KScaleMin(block->scales, is + 1, sc1, m1);
+        const float d1 = d * sc0;
+        const float min1 = dmin * m0;
+        const float d2 = d * sc1;
+        const float min2 = dmin * m1;
+        for (int l = 0; l < 32; ++l) *y++ = d1 * (float)(q[l] & 0xF) - min1;
+        for (int l = 0; l < 32; ++l) *y++ = d2 * (float)(q[l] >> 4) - min2;
+        q += 32;
     }
 }
 
@@ -582,8 +554,9 @@ static thread_local size_t g_q4kCalls     = 0;
 static thread_local size_t g_q4kBlocks    = 0;
 
 // ============================================================================
-// Q4_K GEMV — Fused AVX2 implementation (no stack buffer, on-the-fly dequant)
-// Processes 8 weights per sub-block with SIMD nibble unpack + FMA.
+// Q4_K GEMV — Fused AVX2 (ggml dequantize_row_q4_K nibble grouping)
+// For each scale pair (is, is+1): qs[0..31] lo → group is, qs[0..31] hi → group is+1.
+// Do NOT use per-16-byte interleaved lo/hi within one scale (pre-VAL-051 bug).
 // ============================================================================
 static void q4kGEMV(const void* weights, const float* input,
                     float* output, size_t rows, size_t cols) {
@@ -607,72 +580,62 @@ static void q4kGEMV(const void* weights, const float* input,
             const Q4_K_Block& blk = rowBlocks[b];
             float d = fp16ToFloat(blk.d);
             float dmin = fp16ToFloat(blk.dmin);
+            const uint8_t* q = blk.qs;
 
-            // Process 8 sub-blocks of 32 weights each
-            for (int sb = 0; sb < 8; ++sb) {
-                uint8_t sc, mn;
-                unpackQ4KScaleMin(blk.scales, sb, sc, mn);
-                float s = d * sc;
-                float m = dmin * mn;
-                __m256 sVec = _mm256_set1_ps(s);
-                __m256 mVec = _mm256_set1_ps(m);
+            for (int is = 0; is < 8; is += 2) {
+                uint8_t sc0, m0, sc1, m1;
+                unpackQ4KScaleMin(blk.scales, is, sc0, m0);
+                unpackQ4KScaleMin(blk.scales, is + 1, sc1, m1);
+                const float d1 = d * (float)sc0;
+                const float min1 = dmin * (float)m0;
+                const float d2 = d * (float)sc1;
+                const float min2 = dmin * (float)m1;
+                __m256 d1v = _mm256_set1_ps(d1);
+                __m256 m1v = _mm256_set1_ps(min1);
+                __m256 d2v = _mm256_set1_ps(d2);
+                __m256 m2v = _mm256_set1_ps(min2);
 
-                // Load 16 bytes of packed nibbles for this sub-block
-                __m128i packed = _mm_loadu_si128(
-                    reinterpret_cast<const __m128i*>(blk.qs + sb * 16));
+                const size_t off0 = (size_t)is * 32;
+                const size_t off1 = off0 + 32;
 
-                // Extract low nibbles (indices 0..15 within sub-block)
-                __m128i lowNibbles = _mm_and_si128(packed, _mm_set1_epi8(0x0F));
-                // Extract high nibbles (indices 16..31 within sub-block)
-                __m128i highNibbles = _mm_srli_epi16(packed, 4);
-                highNibbles = _mm_and_si128(highNibbles, _mm_set1_epi8(0x0F));
-
-                // Process low nibbles in two chunks of 8
-                for (int chunk = 0; chunk < 2; ++chunk) {
-                    int offset = sb * 32 + chunk * 8;
-                    if ((size_t)offset + 8 > elemsInBlock) break;
-                    // Bounds check: ensure we don't read past input buffer (cols elements)
-                    if ((size_t)(b * 256 + offset + 8) > cols) break;
-
-                    __m128i nibbles = (chunk == 0) ? lowNibbles
-                        : _mm_srli_si128(lowNibbles, 8);
-                    __m256i i32 = _mm256_cvtepu8_epi32(nibbles);
+                // 32 lo-nibbles → weights [off0 .. off0+31]
+                for (int chunk = 0; chunk < 4; ++chunk) {
+                    const int l0 = chunk * 8;
+                    if (off0 + (size_t)l0 + 8 > elemsInBlock) break;
+                    if (b * 256 + off0 + (size_t)l0 + 8 > cols) break;
+                    __m128i bytes = _mm_loadl_epi64(
+                        reinterpret_cast<const __m128i*>(q + l0));
+                    __m128i lo = _mm_and_si128(bytes, _mm_set1_epi8(0x0F));
+                    __m256i i32 = _mm256_cvtepu8_epi32(lo);
                     __m256 w = _mm256_cvtepi32_ps(i32);
-                    __m256 dequant = _mm256_sub_ps(_mm256_mul_ps(w, sVec), mVec);
-                    __m256 x = _mm256_loadu_ps(input + b * 256 + offset);
-                    acc = _mm256_fmadd_ps(dequant, x, acc);
+                    __m256 deq = _mm256_sub_ps(_mm256_mul_ps(w, d1v), m1v);
+                    __m256 x = _mm256_loadu_ps(input + b * 256 + off0 + (size_t)l0);
+                    acc = _mm256_fmadd_ps(deq, x, acc);
                 }
-
-                // Process high nibbles in two chunks of 8
-                for (int chunk = 0; chunk < 2; ++chunk) {
-                    int offset = sb * 32 + 16 + chunk * 8;
-                    if ((size_t)offset + 8 > elemsInBlock) break;
-                    // Bounds check: ensure we don't read past input buffer (cols elements)
-                    if ((size_t)(b * 256 + offset + 8) > cols) break;
-
-                    __m128i nibbles = (chunk == 0) ? highNibbles
-                        : _mm_srli_si128(highNibbles, 8);
-                    __m256i i32 = _mm256_cvtepu8_epi32(nibbles);
+                // 32 hi-nibbles → weights [off1 .. off1+31]
+                for (int chunk = 0; chunk < 4; ++chunk) {
+                    const int l0 = chunk * 8;
+                    if (off1 + (size_t)l0 + 8 > elemsInBlock) break;
+                    if (b * 256 + off1 + (size_t)l0 + 8 > cols) break;
+                    __m128i bytes = _mm_loadl_epi64(
+                        reinterpret_cast<const __m128i*>(q + l0));
+                    __m128i hi = _mm_and_si128(_mm_srli_epi16(bytes, 4), _mm_set1_epi8(0x0F));
+                    __m256i i32 = _mm256_cvtepu8_epi32(hi);
                     __m256 w = _mm256_cvtepi32_ps(i32);
-                    __m256 dequant = _mm256_sub_ps(_mm256_mul_ps(w, sVec), mVec);
-                    __m256 x = _mm256_loadu_ps(input + b * 256 + offset);
-                    acc = _mm256_fmadd_ps(dequant, x, acc);
+                    __m256 deq = _mm256_sub_ps(_mm256_mul_ps(w, d2v), m2v);
+                    __m256 x = _mm256_loadu_ps(input + b * 256 + off1 + (size_t)l0);
+                    acc = _mm256_fmadd_ps(deq, x, acc);
                 }
+                q += 32;
             }
         }
 
-        // Horizontal sum of accumulator
         __m128 hi128 = _mm256_extractf128_ps(acc, 1);
         __m128 lo128 = _mm256_castps256_ps128(acc);
         __m128 sum128 = _mm_add_ps(lo128, hi128);
         sum128 = _mm_hadd_ps(sum128, sum128);
         sum128 = _mm_hadd_ps(sum128, sum128);
         output[r] = _mm_cvtss_f32(sum128);
-    }
-    static bool q4kPrinted = false;
-    if (!q4kPrinted && rows > 0) {
-        q4kPrinted = true;
-        fprintf(stderr, "[Q4K_DIAG] first output=%g (rows=%zu cols=%zu)\n", output[0], rows, cols);
     }
 }
 
@@ -1962,32 +1925,34 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
-    // ── Initialize tokenizer from GGUF vocabulary ────────────────────────
-    if (!meta.vocab.empty()) {
-        tokenizer = std::make_unique<BPETokenizer>();
-        auto* bpe = static_cast<BPETokenizer*>(tokenizer.get());
-        if (bpe->LoadVocab(meta.vocab)) {
-            printf("[Deep2Engine] Tokenizer loaded: %zu tokens from GGUF\n", meta.vocab.size());
-        } else {
-            tokenizer.reset();
+    // ── Canonical tokenizer (TOKENIZER-PARITY-002c / Spm::encode) ────────
+    {
+        const std::string tokPath = firstShard.string();
+        if (!CanonicalTokenizer::Instance().LoadFromGGUF(tokPath)) {
+            fprintf(stderr, "[Deep2Engine] WARNING: CanonicalTokenizer load failed: %s\n",
+                    CanonicalTokenizer::Instance().LastError());
+        }
+        auto bundle = LoadTokenizerFromGGUF(tokPath.c_str());
+        if (bundle.ok) {
+            auto bpe = std::make_unique<BPETokenizer>();
+            if (ApplyTokenizerBundle(*bpe, bundle)) {
+                tokenizer = std::move(bpe);
+                printf("[Deep2Engine] Tokenizer loaded: vocab=%zu bos=%d eos=%d (Spm::encode)\n",
+                       tokenizer->VocabSize(),
+                       tokenizer->GetSpecialTokens().bosId,
+                       tokenizer->GetSpecialTokens().eosId);
+            }
+        }
+        if (!tokenizer && !CanonicalTokenizer::Instance().IsLoaded()) {
             if (!envFlagEnabled("RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER")) {
                 fprintf(stderr,
-                    "[Deep2Engine] ERROR: Failed to load tokenizer vocab. "
+                    "[Deep2Engine] ERROR: Failed to load canonical tokenizer. "
                     "Production load requires a real tokenizer "
                     "(set RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER=1 to override).\n");
                 return false;
             }
             fprintf(stderr, "[Deep2Engine] WARNING: byte-level tokenizer override enabled\n");
         }
-    } else {
-        if (!envFlagEnabled("RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER")) {
-            fprintf(stderr,
-                "[Deep2Engine] ERROR: No tokenizer vocabulary in GGUF. "
-                "Production load requires a real tokenizer "
-                "(set RAWRXD_DEEP2_ALLOW_BYTE_TOKENIZER=1 to override).\n");
-            return false;
-        }
-        fprintf(stderr, "[Deep2Engine] WARNING: No tokenizer vocabulary — byte-level override enabled\n");
     }
 
     // Allocate layer weights
@@ -2391,16 +2356,28 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         return false;
     }
 
-    // Re-initialize KV cache with correct dimensions
-    if (kvCache) {
-        kvCache->reset();
+    // loadModel-only clients (e.g. RawrXD-Agentic) never call initialize() —
+    // ensure thread pool, KV cache, and quant dispatch are ready here.
+    if (config.useThreadPool && !threadPool) {
+        threadPool = std::make_unique<ThreadPool>();
+        threadPool->init(config.numThreads);
+        printf("[Deep2Engine] ThreadPool (loadModel): %zu threads\n", threadPool->size());
+    }
+    Deep2::QuantKernelRegistry::Instance().Initialize();
+
+    // Always (re)build KV cache for GGUF loads — do not require a prior initialize()
+    if (config.useKVCache) {
+        if (kvCache) kvCache->reset();
         kvCache = std::make_unique<KVCache>();
         KVCacheConfig kvConfig;
         kvConfig.numLayers = modelWeights.numLayers;
-        kvConfig.maxSeqLen = config.maxSeqLen;
+        kvConfig.maxSeqLen = config.maxSeqLen > 0 ? config.maxSeqLen : 2048;
         kvConfig.numHeads = modelWeights.numKVHeads > 0 ? modelWeights.numKVHeads : modelWeights.numHeads;
         kvConfig.headDim = modelWeights.headDim;
-        kvCache->initialize(kvConfig);
+        if (!kvCache->initialize(kvConfig)) {
+            printf("[Deep2Engine] ERROR: KV cache init failed after loadModel\n");
+            return false;
+        }
     }
 
     modelWeights.loaded = true;
@@ -2789,42 +2766,41 @@ std::vector<int> Deep2Engine::tokenize(const std::string& text) {
     if (tokenizer) {
         return tokenizer->Encode(text);
     }
-    // Fallback: simple whitespace tokenization
-    std::vector<int> tokens;
-    // Use token IDs as character codes (minimal fallback)
-    for (char c : text) {
-        tokens.push_back((int)(unsigned char)c);
+    if (CanonicalTokenizer::Instance().IsLoaded()) {
+        return CanonicalTokenizer::Instance().Encode(text);
     }
-    return tokens;
+    fprintf(stderr, "[Deep2Engine] ERROR: tokenize() called with no tokenizer loaded\n");
+    return {};
 }
 
 std::string Deep2Engine::detokenize(const std::vector<int>& tokens) {
     if (tokenizer) {
         return tokenizer->Decode(tokens);
     }
-    // Fallback
-    std::string result;
-    for (int t : tokens) {
-        if (t >= 0 && t < 256) result += (char)t;
+    if (CanonicalTokenizer::Instance().IsLoaded()) {
+        return CanonicalTokenizer::Instance().Decode(tokens);
     }
-    return result;
+    return {};
 }
 
 // ============================================================================
 // Token Embedding Lookup
 // ============================================================================
-void Deep2Engine::embedToken(int tokenId, float* output) {
+bool Deep2Engine::embedToken(int tokenId, float* output) {
     if (!modelWeights.loaded || !modelWeights.tokenEmbed.data || !output) {
         if (output && config.hiddenDim > 0) {
             memset(output, 0, config.hiddenDim * sizeof(float));
         }
-        return;
+        return false;
     }
 
     // Bounds check tokenId
     if (tokenId < 0 || tokenId >= (int)modelWeights.vocabSize) {
         memset(output, 0, config.hiddenDim * sizeof(float));
-        return;
+        fprintf(stderr,
+            "[FATAL_EMBED] token=%d out of range vocabSize=%zu — inference cannot proceed.\n",
+            tokenId, modelWeights.vocabSize);
+        return false;
     }
 
     // ── Diagnostic: print token embed info once ────────────────────────
@@ -2858,9 +2834,14 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         }
         if (rowBytes > 0 && tokenId >= 0 && tokenId < (int)modelWeights.vocabSize) {
             const uint8_t* row = rawBase + tokenId * rowBytes;
-            fprintf(stderr, "[EMBED_RAW] token=%d row=%p rowBytes=%zu first32=", tokenId, row, rowBytes);
-            for (size_t i = 0; i < 32; ++i) fprintf(stderr, "%02X ", row[i]);
-            fprintf(stderr, "\n");
+            static const bool embedRaw =
+                (std::getenv("RAWRXD_DEEP2_LAYER_PROBE") != nullptr &&
+                 std::getenv("RAWRXD_DEEP2_LAYER_PROBE")[0] == '1');
+            if (embedRaw) {
+                fprintf(stderr, "[EMBED_RAW] token=%d row=%p rowBytes=%zu first32=", tokenId, row, rowBytes);
+                for (size_t i = 0; i < 32; ++i) fprintf(stderr, "%02X ", row[i]);
+                fprintf(stderr, "\n");
+            }
         }
     }
 
@@ -2924,24 +2905,11 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
             if (dequant) {
                 dequant(row, output, hiddenDim);
             } else {
-                // Fallback: manual dequant using correct block_q4_K layout
+                // Fallback: ggml-compatible Q4_K layout
                 const block_q4_K* blocks = reinterpret_cast<const block_q4_K*>(row);
                 for (size_t b = 0; b < numBlocks; ++b) {
-                    float d = fp16ToFloat(blocks[b].d);
-                    float dmin = fp16ToFloat(blocks[b].dmin);
-                    for (int sb = 0; sb < 8; ++sb) {
-                        uint8_t sc, mn;
-                        unpackQ4KScaleMin(blocks[b].scales, sb, sc, mn);
-                        float scale = d * sc;
-                        float min = dmin * mn;
-                        for (int k = 0; k < 16; ++k) {
-                            uint8_t byte = blocks[b].qs[sb * 16 + k];
-                            int lo = byte & 0x0F;
-                            int hi = (byte >> 4) & 0x0F;
-                            output[b * 256 + sb * 32 + k] = scale * lo - min;
-                            output[b * 256 + sb * 32 + k + 16] = scale * hi - min;
-                        }
-                    }
+                    dequantizeQ4KBlock(reinterpret_cast<const Q4_K_Block*>(&blocks[b]),
+                                       output + b * 256);
                 }
             }
         } else {
@@ -3239,21 +3207,29 @@ void Deep2Engine::embedToken(int tokenId, float* output) {
         elasticResidency_->ReleaseTensor(modelWeights.tokenEmbed.name);
     }
 
-    // ── P0 Hard Gate: stop inference immediately if embedding is zero ───
-    // This prevents wasting compute on 28 layers of zero propagation.
+    // ── Zero-embed policy ───────────────────────────────────────────────
+    // TinyLlama Q4_K_M has all-zero GGUF rows for some SPM byte-fallback ids
+    // (token 35 = <0x20>). Hard-aborting kills agentic Phi3 chat prefill.
+    // Match llama.cpp: tolerate the hole; keep a microscopic residual.
     float embedNorm = 0.0f;
     for (size_t i = 0; i < modelWeights.hiddenDim; ++i) {
         embedNorm += output[i] * output[i];
     }
     embedNorm = std::sqrt(embedNorm);
-    if (!std::isfinite(embedNorm) || embedNorm == 0.0f) {
-        fprintf(stderr,
-            "[FATAL_EMBED] token=%d produced invalid embedding norm=%e "
-            "type=%d data=%p — inference cannot proceed.\n",
-            tokenId, embedNorm, modelWeights.tokenEmbed.type, modelWeights.tokenEmbed.data);
-        // Zero the output to ensure downstream layers see consistent state
+    if (!std::isfinite(embedNorm) || embedNorm <= 0.0f) {
+        static std::atomic<int> zeroEmbedLogs{0};
+        if (zeroEmbedLogs.fetch_add(1) < 8) {
+            fprintf(stderr,
+                "[WARN_EMBED] token=%d zero/nonfinite embedding norm=%e type=%d "
+                "(continuing; byte-fallback holes tolerated)\n",
+                tokenId, embedNorm, modelWeights.tokenEmbed.type);
+        }
         memset(output, 0, modelWeights.hiddenDim * sizeof(float));
+        if (modelWeights.hiddenDim > 0) {
+            output[0] = 1.0e-6f;
+        }
     }
+    return true;
 }
 
 // ============================================================================
@@ -3485,43 +3461,27 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
 // ============================================================================
 void Deep2Engine::SwiGLU(const float* gate, const float* up, float* output, size_t dim) {
     if (dim == 0) return;
-    
+
+    // Stable SiLU: for |x| large, sigmoid saturates. Must NOT compute
+    // x * sigmoid(clamp(x,±10)) — that under-scales when |x|>10 (L2 FFN_ACT fail).
+    auto silu1 = [](float x) -> float {
+        if (x > 20.0f) return x;
+        if (x < -20.0f) return 0.0f;
+        return x / (1.0f + expf(-x));
+    };
+
     size_t i = 0;
-    const __m256 one = _mm256_set1_ps(1.0f);
-    
-    // AVX2 vectorized path with numerically-stable sigmoid
-    // Clamp to [-10, 10] before exp to avoid overflow/underflow
     for (; i + 8 <= dim; i += 8) {
-        __m256 g = _mm256_loadu_ps(&gate[i]);
-        __m256 u = _mm256_loadu_ps(&up[i]);
-        
-        // Stable sigmoid: clamp then compute 1/(1+exp(-x))
-        __m256 clamped = _mm256_max_ps(_mm256_set1_ps(-10.0f), 
-                                       _mm256_min_ps(_mm256_set1_ps(10.0f), g));
-        
-        __m256 neg_x = _mm256_sub_ps(_mm256_setzero_ps(), clamped);
-        // Use _mm256_exp_ps if available (AVX-512), otherwise scalar fallback for exp
-        // For AVX2, we do element-wise exp via scalar to avoid Taylor approximation errors
-        alignas(32) float g_arr[8];
-        _mm256_store_ps(g_arr, clamped);
-        alignas(32) float sig_arr[8];
+        alignas(32) float g_arr[8], u_arr[8], o_arr[8];
+        std::memcpy(g_arr, gate + i, 8 * sizeof(float));
+        std::memcpy(u_arr, up + i, 8 * sizeof(float));
         for (int j = 0; j < 8; ++j) {
-            sig_arr[j] = 1.0f / (1.0f + expf(-g_arr[j]));
+            o_arr[j] = silu1(g_arr[j]) * u_arr[j];
         }
-        __m256 sigmoid = _mm256_load_ps(sig_arr);
-        
-        // SiLU = g * sigmoid(g)
-        __m256 silu = _mm256_mul_ps(g, sigmoid);
-        
-        // output = silu * up
-        __m256 result = _mm256_mul_ps(silu, u);
-        _mm256_storeu_ps(&output[i], result);
+        std::memcpy(output + i, o_arr, 8 * sizeof(float));
     }
-    
-    // Scalar remainder with standard sigmoid
     for (; i < dim; ++i) {
-        float sig = 1.0f / (1.0f + expf(-gate[i]));
-        output[i] = gate[i] * sig * up[i];
+        output[i] = silu1(gate[i]) * up[i];
     }
 }
 
@@ -3677,9 +3637,12 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
         default: typeName = "UNKNOWN"; break;
     }
     {
+        static const bool lrTraceOn =
+            (std::getenv("RAWRXD_LINEARW_TRACE") != nullptr &&
+             std::getenv("RAWRXD_LINEARW_TRACE")[0] == '1');
         std::lock_guard<std::mutex> lock(traceMutex);
         tc = traceCount++;
-        doTrace = (tc < kMaxTrace);
+        doTrace = lrTraceOn && (tc < kMaxTrace);
         if (doTrace && !traceFile) {
             traceFile = fopen("__linearw_range_trace.txt", "w");
             if (traceFile) setvbuf(traceFile, nullptr, _IOLBF, 4096);
@@ -3732,8 +3695,11 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
     // ===================================================================
 
     // ── Kernel dispatch trace for certification proof ────────────────────
+    // Default OFF — KERNEL spam crushed Agentic to ~0.1 TPS (46MB logs).
+    // Set RAWRXD_KERNEL_TRACE=1 to re-enable (capped).
     static int dispatchLogCount = 0;
-    if (dispatchLogCount < 500) {
+    const char* kernelTrace = std::getenv("RAWRXD_KERNEL_TRACE");
+    if (kernelTrace && kernelTrace[0] == '1' && dispatchLogCount < 500) {
         ++dispatchLogCount;
         printf("[KERNEL] tensor=%s type=%s rows=%zu cols=%zu\n",
                wt.name.c_str(), typeName, rows, cols);
@@ -3741,6 +3707,7 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
 
     // ── QuantKernelRegistry dispatch (replaces inline switch) ─────────────
     auto& reg = Deep2::QuantKernelRegistry::Instance();
+    if (reg.GetRegisteredCount() == 0) reg.Initialize();
     auto kernel = reg.GetGEMV(wt.type);
     auto geom = reg.GetGeometry(wt.type);
 
@@ -3750,11 +3717,17 @@ static void LinearW_Range(const WeightTensor& wt, const float* input,
         size_t blocksPerRow = (cols + geom.elemsPerBlock - 1) / geom.elemsPerBlock;
         size_t rowBytes = blocksPerRow * geom.blockSize;
         const uint8_t* rowWeights = (const uint8_t*)wt.data + startRow * rowBytes;
-        // ── VAL-051.7: Q4_0 dispatch telemetry ─────────────────────
+        // ── VAL-051.7: Q4_0 dispatch telemetry (capped) ─────────────
         if (wt.type == (int)GGMLType::GGML_TYPE_Q4_0) {
-            fprintf(stderr,
-                "[Q4_DISPATCH] tensor=%s rows=%zu cols=%zu rowBytes=%zu kernel=Q4_0_REFERENCE\n",
-                wt.name.c_str(), rows, cols, rowBytes);
+            static int q4LogCount = 0;
+            const char* probe = std::getenv("RAWRXD_DEEP2_LAYER_PROBE");
+            const int q4LogCap = (probe && probe[0] == '1') ? 32 : 8;
+            if (q4LogCount < q4LogCap) {
+                ++q4LogCount;
+                fprintf(stderr,
+                    "[Q4_DISPATCH] tensor=%s rows=%zu cols=%zu rowBytes=%zu kernel=Q4_0_REFERENCE\n",
+                    wt.name.c_str(), rows, cols, rowBytes);
+            }
         }
         kernel(rowWeights, input, output + startRow, rows, cols);
     } else if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
@@ -4063,62 +4036,309 @@ const ModelMetadata& Deep2Engine::getModelMetadata() const {
 // ============================================================================
 namespace {
 
+struct B3VecStats {
+    double min = 0.0;
+    double max = 0.0;
+    double mean = 0.0;
+    double l2 = 0.0;
+    size_t n = 0;
+    size_t finite = 0;
+    size_t nanCount = 0;
+    size_t infCount = 0;
+};
+
+static B3VecStats B3_ComputeStats(const float* v, size_t n)
+{
+    B3VecStats s;
+    s.n = n;
+    if (!v || n == 0) return s;
+
+    double sum = 0.0;
+    double sumsq = 0.0;
+    bool haveFinite = false;
+    for (size_t i = 0; i < n; ++i) {
+        const float x = v[i];
+        if (std::isnan(x)) {
+            ++s.nanCount;
+            continue;
+        }
+        if (std::isinf(x)) {
+            ++s.infCount;
+            continue;
+        }
+        ++s.finite;
+        const double d = static_cast<double>(x);
+        sum += d;
+        sumsq += d * d;
+        if (!haveFinite) {
+            s.min = d;
+            s.max = d;
+            haveFinite = true;
+        } else {
+            if (d < s.min) s.min = d;
+            if (d > s.max) s.max = d;
+        }
+    }
+    s.mean = (s.finite > 0) ? (sum / static_cast<double>(s.finite)) : 0.0;
+    s.l2 = std::sqrt(sumsq);
+    return s;
+}
+
 static double B3_L2Norm(const float* v, size_t n)
 {
-    double sum = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        if (!std::isfinite(static_cast<double>(v[i])))
-            return -1.0;
-        sum += static_cast<double>(v[i]) * static_cast<double>(v[i]);
-    }
-    return std::sqrt(sum);
+    return B3_ComputeStats(v, n).l2;
 }
 
 static float B3_MinValue(const float* v, size_t n)
 {
-    if (n == 0) return 0.0f;
-    float x = v[0];
-    for (size_t i = 1; i < n; ++i)
-        if (v[i] < x) x = v[i];
-    return x;
+    return static_cast<float>(B3_ComputeStats(v, n).min);
 }
 
 static float B3_MaxValue(const float* v, size_t n)
 {
-    if (n == 0) return 0.0f;
-    float x = v[0];
-    for (size_t i = 1; i < n; ++i)
-        if (v[i] > x) x = v[i];
-    return x;
+    return static_cast<float>(B3_ComputeStats(v, n).max);
 }
 
 static size_t B3_CountNonFinite(const float* v, size_t n)
 {
-    size_t count = 0;
-    for (size_t i = 0; i < n; ++i) {
-        if (!std::isfinite(static_cast<double>(v[i])))
-            ++count;
+    const B3VecStats s = B3_ComputeStats(v, n);
+    return s.nanCount + s.infCount;
+}
+
+// One-shot first-bad-layer capture for TinyLlama / Deep2 Q4 diagnosis.
+// Env: RAWRXD_DEEP2_LAYER_PROBE=1 enables verbose dumps + early abort.
+static bool B3_ProbeEnabled()
+{
+    static int cached = -1;
+    if (cached < 0) {
+        const char* e = std::getenv("RAWRXD_DEEP2_LAYER_PROBE");
+        cached = (e && e[0] == '1') ? 1 : 0;
     }
-    return count;
+    return cached == 1;
+}
+
+static bool& B3_FirstBadLatched()
+{
+    static bool latched = false;
+    return latched;
+}
+
+static void B3_ResetFirstBad()
+{
+    B3_FirstBadLatched() = false;
+}
+
+static bool B3_IsResidualPhase(const char* phase)
+{
+    if (!phase) return false;
+    // Residual accumulators — these grow across layers when ATTN_O/FFN explode.
+    return std::strstr(phase, "POST_ATTN") != nullptr ||
+           std::strstr(phase, "POST_FFN") != nullptr ||
+           std::strstr(phase, "_INPUT") != nullptr ||
+           std::strcmp(phase, "ATTN_O") == 0 ||
+           std::strcmp(phase, "ATTN_OUT") == 0 ||
+           std::strcmp(phase, "FFN_DOWN") == 0;
+}
+
+static bool B3_StageDigestEnabled()
+{
+    static const bool on = (std::getenv("RAWRXD_STAGE_DIGEST") != nullptr);
+    return on;
+}
+
+static const char* B3_StageDumpDir()
+{
+    return std::getenv("RAWRXD_STAGE_DUMP_DIR");
+}
+
+// Same FNV-1a contract as AttnCert / llama_ref_parity_probe (bit-exact compare).
+static void B3_StageDigest(const char* key, size_t pos, const float* data, size_t n)
+{
+    if (!B3_StageDigestEnabled() || !data || n == 0) return;
+    double minV = 0.0, maxV = 0.0, ss = 0.0, sum = 0.0, maxAbs = 0.0;
+    bool any = false;
+    std::uint64_t h = 14695981039346656037ull;
+    int nf = 0;
+    for (size_t i = 0; i < n; ++i) {
+        const float v = data[i];
+        std::uint32_t bits = 0;
+        if (!std::isfinite(v)) {
+            ++nf;
+            bits = 0xFFFFFFFFu;
+        } else {
+            std::memcpy(&bits, &v, 4);
+            const double d = static_cast<double>(v);
+            if (!any) { minV = maxV = d; any = true; }
+            else { if (d < minV) minV = d; if (d > maxV) maxV = d; }
+            sum += d;
+            ss += d * d;
+            const double a = (d < 0.0) ? -d : d;
+            if (a > maxAbs) maxAbs = a;
+        }
+        for (int b = 0; b < 4; ++b) {
+            h ^= (bits >> (8 * b)) & 0xFFu;
+            h *= 1099511628211ull;
+        }
+    }
+    printf("[STAGE_DIGEST] side=deep2 key=%s pos=%zu n=%zu l2=%.9e max_abs=%.9e min=%.9e max=%.9e sum=%.9e fnv=%016llx nf=%d\n",
+           key, pos, n, std::sqrt(ss), maxAbs, minV, maxV, sum,
+           static_cast<unsigned long long>(h), nf);
+    fflush(stdout);
+
+    if (const char* dumpDir = B3_StageDumpDir()) {
+        // Collision-proof: deep2_<key>_pos<p>_layer0_full_n<N>_seq<SSS>.bin
+        static int s_dumpSeq = 0;
+        const int seq = ++s_dumpSeq;
+        char safeKey[128];
+        std::snprintf(safeKey, sizeof(safeKey), "%s", key);
+        for (char* p = safeKey; *p; ++p) {
+            if (*p == '/' || *p == '\\' || *p == ':' || *p == '*' || *p == '-' || *p == ' ') *p = '_';
+        }
+        char stem[1024];
+        std::snprintf(stem, sizeof(stem),
+                      "%s\\deep2_%s_pos%zu_layer0_full_n%zu_seq%03d",
+                      dumpDir, safeKey, pos, n, seq);
+        char path[1100], manPath[1100];
+        std::snprintf(path, sizeof(path), "%s.bin", stem);
+        std::snprintf(manPath, sizeof(manPath), "%s.manifest.txt", stem);
+        FILE* exist = std::fopen(path, "rb");
+        if (exist) {
+            std::fclose(exist);
+            printf("[STAGE_DUMP_COLLISION] path=%s REFUSING_OVERWRITE\n", path);
+            fflush(stdout);
+        } else {
+            FILE* f = std::fopen(path, "wb");
+            if (f) {
+                const size_t nbytes = n * sizeof(float);
+                std::fwrite(data, 1, nbytes, f);
+                std::fclose(f);
+                FILE* mf = std::fopen(manPath, "w");
+                if (mf) {
+                    std::fprintf(mf,
+                        "side=deep2\nstage=%s\npos=%zu\nlayer=0\nhead=-1\nhead_tag=full\n"
+                        "dtype=f32\nnelem=%zu\nnbytes=%zu\nfnv=%016llx\nl2=%.17g\nseq=%d\npath=%s\n",
+                        key, pos, n, nbytes, static_cast<unsigned long long>(h),
+                        std::sqrt(ss), seq, path);
+                    std::fclose(mf);
+                }
+                char idxPath[1024];
+                std::snprintf(idxPath, sizeof(idxPath), "%s\\DUMP_MANIFEST.jsonl", dumpDir);
+                FILE* idx = std::fopen(idxPath, "a");
+                if (idx) {
+                    std::fprintf(idx,
+                        "{\"side\":\"deep2\",\"stage\":\"%s\",\"pos\":%zu,\"layer\":0,\"head\":-1,"
+                        "\"nelem\":%zu,\"nbytes\":%zu,\"fnv\":\"%016llx\",\"l2\":%.17g,\"seq\":%d,\"bin\":\"%s\"}\n",
+                        key, pos, n, nbytes, static_cast<unsigned long long>(h),
+                        std::sqrt(ss), seq, path);
+                    std::fclose(idx);
+                }
+                printf("[STAGE_DUMP] %s nelem=%zu head=-1 seq=%03d fnv=%016llx\n",
+                       path, n, seq, static_cast<unsigned long long>(h));
+            }
+        }
+    }
+}
+
+static bool B3_TraceStateEnabled()
+{
+    // Default OFF — B3_STATE spam makes agentic loops unusable (multi-MB logs).
+    // Enable with RAWRXD_DEEP2_LAYER_PROBE=1 or RAWRXD_B3_TRACE=1.
+    static int cached = -1;
+    if (cached < 0) {
+        if (B3_ProbeEnabled()) {
+            cached = 1;
+        } else {
+            const char* e = std::getenv("RAWRXD_B3_TRACE");
+            cached = (e && e[0] == '1') ? 1 : 0;
+        }
+    }
+    return cached == 1;
 }
 
 static void B3_TraceState(const char* phase, size_t pos, const float* state, size_t n)
 {
-    const double norm = B3_L2Norm(state, n);
-    printf("[B3_STATE] phase=%s pos=%zu size=%zu norm=%.9e min=%.9e max=%.9e nonfinite=%zu\n",
-           phase, pos, n, norm,
-           static_cast<double>(B3_MinValue(state, n)),
-           static_cast<double>(B3_MaxValue(state, n)),
-           B3_CountNonFinite(state, n));
+    if (!B3_TraceStateEnabled() && !B3_StageDigestEnabled()) {
+        return;
+    }
+    const B3VecStats s = B3_ComputeStats(state, n);
+    if (B3_TraceStateEnabled()) {
+        printf("[B3_STATE] phase=%s pos=%zu size=%zu "
+               "min=%.9e max=%.9e mean=%.9e l2=%.9e "
+               "finite=%zu nan=%zu inf=%zu\n",
+               phase, pos, s.n,
+               s.min, s.max, s.mean, s.l2,
+               s.finite, s.nanCount, s.infCount);
+    }
+
+    if (B3_StageDigestEnabled() &&
+        (std::strcmp(phase, "PROMPT_EMBED") == 0 ||
+         std::strcmp(phase, "PROMPT_POST_LAYERS") == 0 ||
+         std::strcmp(phase, "PROMPT_FINAL_NORM") == 0)) {
+        B3_StageDigest(phase, pos, state, n);
+    }
+
+    // First-bad gate: find the earliest destroyed checkpoint, not the crash site.
+    constexpr double kNormWarn = 1.0e2;
+    constexpr double kNormAbort = 1.0e3;
+    const bool nonFinite = (s.nanCount + s.infCount) > 0;
+    const bool exploded = B3_IsResidualPhase(phase) && (s.l2 > kNormAbort);
+    const bool warn = B3_IsResidualPhase(phase) && (s.l2 > kNormWarn);
+
+    if ((nonFinite || exploded) && !B3_FirstBadLatched()) {
+        B3_FirstBadLatched() = true;
+        fprintf(stderr,
+                "[B3_FIRST_BAD] phase=%s pos=%zu l2=%.9e min=%.9e max=%.9e "
+                "nan=%zu inf=%zu finite=%zu\n",
+                phase, pos, s.l2, s.min, s.max, s.nanCount, s.infCount, s.finite);
+        fflush(stderr);
+        if (B3_ProbeEnabled()) {
+            // Abort immediately so the log ends at the first bad layer.
+            throw std::runtime_error(
+                std::string("B3_FIRST_BAD at ") + (phase ? phase : "?"));
+        }
+    } else if (warn && B3_ProbeEnabled()) {
+        fprintf(stderr, "[B3_WARN] phase=%s pos=%zu l2=%.9e (growth)\n",
+                phase, pos, s.l2);
+    }
+    fflush(stdout);
+}
+
+static bool B3_LogitsTraceEnabled()
+{
+    // Default OFF — per-token B3_LOGITS + fflush crushed Agentic to ~0.12 TPS.
+    static int cached = -1;
+    if (cached < 0) {
+        if (B3_ProbeEnabled() || B3_TraceStateEnabled()) {
+            cached = 1;
+        } else {
+            const char* e = std::getenv("RAWRXD_B3_LOGITS");
+            cached = (e && e[0] == '1') ? 1 : 0;
+        }
+    }
+    return cached == 1;
+}
+
+static bool GreedyTraceEnabled()
+{
+    static int cached = -1;
+    if (cached < 0) {
+        const char* e = std::getenv("RAWRXD_GREEDY_TRACE");
+        cached = (e && e[0] == '1') ? 1 : 0;
+    }
+    return cached == 1;
 }
 
 static void B3_TraceLogits(const char* phase, size_t pos, const float* logits, size_t n)
 {
-    printf("[B3_LOGITS] phase=%s pos=%zu size=%zu min=%.9e max=%.9e nonfinite=%zu\n",
-           phase, pos, n,
-           static_cast<double>(B3_MinValue(logits, n)),
-           static_cast<double>(B3_MaxValue(logits, n)),
-           B3_CountNonFinite(logits, n));
+    if (!B3_LogitsTraceEnabled()) return;
+    const B3VecStats s = B3_ComputeStats(logits, n);
+    printf("[B3_LOGITS] phase=%s pos=%zu size=%zu "
+           "min=%.9e max=%.9e mean=%.9e l2=%.9e "
+           "finite=%zu nan=%zu inf=%zu\n",
+           phase, pos, s.n,
+           s.min, s.max, s.mean, s.l2,
+           s.finite, s.nanCount, s.infCount);
+    fflush(stdout);
 }
 
 } // namespace
@@ -4146,6 +4366,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
     if (promptLen == 0) {
         return 0;
     }
+
+    B3_ResetFirstBad();
 
     // ── Reset KV cache and sampler state for fresh generation ──────
     reset();
@@ -4185,7 +4407,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         // Embed token using real embedding table
         float* h = hiddenStates + t * config.hiddenDim;
         ResidencyCounters::BeginEmbed();
-        embedToken(promptTokens[t], h);
+        if (!embedToken(promptTokens[t], h)) {
+            fprintf(stderr, "[B3_ABORT] prefill embed FATAL_EMBED token=%d pos=%zu\n",
+                    promptTokens[t], t);
+            fflush(stderr);
+            return 0;
+        }
         ResidencyCounters::EndEmbed();
 
         // ── B3: Trace prompt embedding ─────────────────────────────────
@@ -4208,7 +4435,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
 
             auto layerT0 = std::chrono::high_resolution_clock::now();
-            forwardLayer(layer, layerInput, layerOutput, t + 1);
+            try {
+                forwardLayer(layer, layerInput, layerOutput, t + 1);
+            } catch (const std::exception& ex) {
+                fprintf(stderr, "[B3_ABORT] prefill layer=%zu: %s\n", layer, ex.what());
+                fflush(stderr);
+                return 0;
+            }
             auto layerT1 = std::chrono::high_resolution_clock::now();
             double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
             ResidencyCounters::RecordLayerTime(layer, layerMs);
@@ -4217,6 +4450,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             float* temp = layerInput;
             layerInput = layerOutput;
             layerOutput = temp;
+
+            // Batch-2 BOS bisect: per-layer residual digest (matches llama l_out)
+            if (B3_StageDigestEnabled()) {
+                char key[64];
+                std::snprintf(key, sizeof(key), "LAYER_OUT_%zu", layer);
+                B3_StageDigest(key, t, layerInput, config.hiddenDim);
+            }
         }
 
         // The final hidden state is in layerInput after the swap
@@ -4226,13 +4466,25 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         // ── B3: Trace after final layer for prompt ────────────────────
-        B3_TraceState("PROMPT_POST_LAYERS", t, h, config.hiddenDim);
+        try {
+            B3_TraceState("PROMPT_POST_LAYERS", t, h, config.hiddenDim);
+        } catch (const std::exception& ex) {
+            fprintf(stderr, "[B3_ABORT] %s\n", ex.what());
+            return 0;
+        }
 
         // Final norm before logits (if not done in last layer)
         if (modelWeights.finalNorm.data) {
             RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
         }
         B3_TraceState("PROMPT_FINAL_NORM", t, h, config.hiddenDim);
+        if (B3_StageDigestEnabled()) {
+            // Per-position final norm (pos0..promptLen-1). Tip = last prompt token.
+            B3_StageDigest("FINAL_NORM", t, h, config.hiddenDim);
+            if (t + 1 == promptLen) {
+                B3_StageDigest("TIP_FINAL_NORM", t, h, config.hiddenDim);
+            }
+        }
 
         // Advance KV cache after processing each prompt token
         if (kvCache) {
@@ -4240,10 +4492,15 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
     }
 
+    std::printf("[AGENT] PREFILL_DONE prompt_tokens=%zu\n", promptLen);
+    std::fflush(stdout);
+
     size_t tokensGenerated = 0;
     size_t currentPos = promptLen;
 
     // Generate tokens (decode)
+    std::printf("[AGENT] DECODE_BEGIN max_out=%zu\n", maxOutputLen);
+    std::fflush(stdout);
     for (size_t t = 0; t < maxOutputLen; ++t) {
         const size_t position = currentPos;
 
@@ -4260,7 +4517,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             h = hiddenStates + inputPos * config.hiddenDim;
 
             const int inputToken = outputTokens[tokensGenerated - 1];
-            embedToken(inputToken, h);
+            if (!embedToken(inputToken, h)) {
+                fprintf(stderr, "[B3_ABORT] decode embed FATAL_EMBED token=%d gen_step=%zu\n",
+                        inputToken, t);
+                fflush(stderr);
+                break;
+            }
 
             float* layerInput = h;
             float* layerOutput = attentionOutput;
@@ -4278,7 +4540,13 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 }
 
                 auto layerT0 = std::chrono::high_resolution_clock::now();
-                forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
+                try {
+                    forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
+                } catch (const std::exception& ex) {
+                    fprintf(stderr, "[B3_ABORT] decode layer=%zu: %s\n", layer, ex.what());
+                    fflush(stderr);
+                    return tokensGenerated;
+                }
                 auto layerT1 = std::chrono::high_resolution_clock::now();
                 double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
                 ResidencyCounters::RecordLayerTime(layer, layerMs);
@@ -4305,15 +4573,40 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         ResidencyCounters::BeginLogits();
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
-        printf("[B3_LOGITS] AFTER computeLogits\n");
-        fflush(stdout);
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] AFTER computeLogits\n");
+            fflush(stdout);
+        }
+        if (B3_StageDigestEnabled() && config.vocabSize > 29892) {
+            printf("[STAGE_DIGEST] LOGIT_13=%.9f\n", logits[13]);
+            printf("[STAGE_DIGEST] LOGIT_29892=%.9f\n", logits[29892]);
+            printf("[STAGE_DIGEST] DELTA_13_minus_29892=%.9f\n",
+                   logits[13] - logits[29892]);
+            B3_StageDigest("FINAL_HIDDEN_FOR_LOGITS", position, h, config.hiddenDim);
+            B3_StageDigest("LOGITS", position, logits, config.vocabSize);
+            if (t == 0) {
+                // First decode sample = tip logits from last prompt token
+                B3_StageDigest("TIP_LOGITS", position, logits, config.vocabSize);
+                B3_StageDigest("TIP_FINAL_HIDDEN", position, h, config.hiddenDim);
+            }
+            int argmax = 0;
+            float best = logits[0];
+            for (size_t i = 1; i < config.vocabSize; ++i) {
+                if (logits[i] > best) { best = logits[i]; argmax = (int)i; }
+            }
+            printf("[STAGE_DIGEST] side=deep2 key=ARGMAX pos=%zu id=%d logit=%.9f\n",
+                   position, argmax, best);
+            fflush(stdout);
+        }
 
-        // ── B3: Trace logits ──────────────────────────────────────────
-        printf("[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=%zu\n", config.vocabSize);
-        fflush(stdout);
-        B3_TraceLogits("LOGITS", position, logits, config.vocabSize);
-        printf("[B3_LOGITS] AFTER B3_TraceLogits\n");
-        fflush(stdout);
+        // ── B3: Trace logits (opt-in) ─────────────────────────────────
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] BEFORE B3_TraceLogits vocabSize=%zu\n", config.vocabSize);
+            fflush(stdout);
+            B3_TraceLogits("LOGITS", position, logits, config.vocabSize);
+            printf("[B3_LOGITS] AFTER B3_TraceLogits\n");
+            fflush(stdout);
+        }
 
         // Hard gate: reject invalid hidden state
         const double stateNorm = B3_L2Norm(h, config.hiddenDim);
@@ -4336,30 +4629,45 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         }
 
         // Sample next token
-        printf("[B3_LOGITS] BEFORE sampleToken\n");
-        fflush(stdout);
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] BEFORE sampleToken\n");
+            fflush(stdout);
+        }
         int nextToken = sampleToken(logits);
-        printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
-        fflush(stdout);
-
-        printf("[B3_LOGITS] Storing token %d at index %zu\n", nextToken, tokensGenerated);
-        fflush(stdout);
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
+            printf("[B3_LOGITS] Storing token %d at index %zu\n", nextToken, tokensGenerated);
+            fflush(stdout);
+        }
+        if (tokensGenerated == 0) {
+            std::string piece;
+            if (tokenizer) piece = tokenizer->Decode(nextToken);
+            else piece = detokenize(std::vector<int>{nextToken});
+            std::printf("[AGENT] TOKEN id=%d piece=", nextToken);
+            for (unsigned char c : piece) {
+                if (c >= 32 && c < 127) std::printf("%c", c);
+                else std::printf("\\x%02X", c);
+            }
+            std::printf("\n");
+            std::fflush(stdout);
+        }
 
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
 
         if (onToken) {
-            printf("[B3_LOGITS] Calling onToken callback\n");
-            fflush(stdout);
-            if (!onToken(nextToken)) {
-                printf("[B3_LOGITS] onToken returned false, breaking\n");
+            if (B3_LogitsTraceEnabled()) {
+                printf("[B3_LOGITS] Calling onToken callback\n");
                 fflush(stdout);
+            }
+            if (!onToken(nextToken)) {
+                if (B3_LogitsTraceEnabled()) {
+                    printf("[B3_LOGITS] onToken returned false, breaking\n");
+                    fflush(stdout);
+                }
                 break;
             }
         }
-
-        printf("[B3_LOGITS] Checking PlasmaGovernor\n");
-        fflush(stdout);
         // ── Sovereign PlasmaGovernor: thermal throttle ────────────────────
         if (plasmaGovernorEnabled_ && plasmaGovernor_) {
             if (plasmaGovernor_->isEmergencyStopped()) {
@@ -4375,22 +4683,30 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             }
         }
 
-        printf("[B3_LOGITS] Checking EOS\n");
-        fflush(stdout);
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] Checking EOS\n");
+            fflush(stdout);
+        }
         // Check for EOS
         if (tokenizer && nextToken == tokenizer->GetSpecialTokens().eosId) {
-            printf("[B3_LOGITS] EOS detected, breaking\n");
-            fflush(stdout);
+            if (B3_LogitsTraceEnabled()) {
+                printf("[B3_LOGITS] EOS detected, breaking\n");
+                fflush(stdout);
+            }
             break;
         }
 
         currentPos++;
-        printf("[B3_LOGITS] End of generation loop iteration\n");
-        fflush(stdout);
+        if (B3_LogitsTraceEnabled()) {
+            printf("[B3_LOGITS] End of generation loop iteration\n");
+            fflush(stdout);
+        }
     }
 
-    printf("[B3_LOGITS] Generation loop exited, tokensGenerated=%zu\n", tokensGenerated);
-    fflush(stdout);
+    if (B3_LogitsTraceEnabled()) {
+        printf("[B3_LOGITS] Generation loop exited, tokensGenerated=%zu\n", tokensGenerated);
+        fflush(stdout);
+    }
 
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
@@ -4439,6 +4755,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 std::string Deep2Engine::generateText(const std::string& prompt, size_t maxTokens) {
     GenerationOptions options{};
     options.maxTokens = static_cast<uint32_t>(maxTokens);
+    // Agentic / loadModel-only clients use generateText with default sampling.
+    // Honor RAWRXD_GREEDY (and temp<=0) so certs stay deterministic.
+    if (const char* g = std::getenv("RAWRXD_GREEDY"); g && g[0] && g[0] != '0') {
+        options.temperature = 0.0f;
+        options.topK = 1;
+    }
     std::string accumulated;
     generateStream(prompt, options, [&](int32_t, const std::string& token) -> bool {
         accumulated += token;
@@ -4477,14 +4799,76 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     configureGeneration(options);
 
     std::vector<int> promptTokens = tokenize(prompt);
+
+    const bool agentFirstToken = []() {
+        const char* e = std::getenv("RAWRXD_AGENT_FIRST_TOKEN");
+        return e && e[0] == '1';
+    }();
+
+    // TOKENIZER-PARITY-002b-001: capture full Deep2 ID list before any embed abort
+    {
+        const char* enabled = std::getenv("RAWRXD_TOKENIZER_CERT");
+        if ((enabled && enabled[0] == '1') || agentFirstToken) {
+            const char* dir = agentFirstToken
+                ? "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\AGENT_FIRST_TOKEN_001"
+                : "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\TOKENIZER_PARITY_001";
+            std::error_code ec;
+            std::filesystem::create_directories(dir, ec);
+            {
+                std::ofstream idsFile(std::string(dir) + "\\deep2_ids.txt", std::ios::binary);
+                for (size_t i = 0; i < promptTokens.size(); ++i) {
+                    if (i) idsFile << ',';
+                    idsFile << promptTokens[i];
+                }
+                idsFile << '\n';
+            }
+            {
+                std::ofstream f(std::string(dir) + "\\rendered_prompt.bin", std::ios::binary);
+                f.write(prompt.data(), static_cast<std::streamsize>(prompt.size()));
+            }
+            {
+                std::ofstream f(std::string(dir) + "\\rendered_prompt.txt", std::ios::binary);
+                f << prompt;
+            }
+            std::printf("[AGENT] TOKENIZED count=%zu first=%d last=%d\n",
+                        promptTokens.size(),
+                        promptTokens.empty() ? -1 : promptTokens.front(),
+                        promptTokens.empty() ? -1 : promptTokens.back());
+            std::fflush(stdout);
+            std::fprintf(stderr, "[TOKENIZER_CERT] count=%zu\n", promptTokens.size());
+            std::fflush(stderr);
+            // Tokenizer-only cert stops here. First-token cert continues into prefill/decode.
+            if (enabled && enabled[0] == '1' && !agentFirstToken) {
+                Deep2::GenerationResult certOnly;
+                certOnly.promptTokens = promptTokens.size();
+                certOnly.generatedTokens = 0;
+                certOnly.completed = true;
+                return certOnly;
+            }
+        }
+    }
+
     if (promptTokens.empty()) {
+        std::printf("[AGENT] TOKENIZED count=0 FAIL\n");
+        std::fflush(stdout);
         return {};
     }
 
-    const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(options.maxTokens)));
+    GenerationOptions opts = options;
+    if (agentFirstToken) {
+        opts.maxTokens = 1;
+        opts.temperature = 0.0f;
+        opts.topK = 1;
+        configureGeneration(opts);
+    }
+
+    const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(opts.maxTokens)));
     std::vector<int> outputTokens(maxTokens);
     std::string streamed;
     bool wasCancelled = false;
+
+    std::printf("[AGENT] PREFILL_BEGIN prompt_tokens=%zu\n", promptTokens.size());
+    std::fflush(stdout);
 
     size_t generated = generate(
         promptTokens.data(), promptTokens.size(),
@@ -4516,6 +4900,20 @@ Deep2::GenerationResult Deep2Engine::generateStream(
     result.generatedTokens = generated;
     result.completed = generated > 0 && !wasCancelled;
     result.cancelled = wasCancelled;
+
+    if (agentFirstToken) {
+        const int firstId = generated > 0 ? outputTokens[0] : -1;
+        std::printf("[AGENT] FIRST_TOKEN id=%d generated=%zu\n", firstId, generated);
+        std::fflush(stdout);
+        const char* dir =
+            "F:\\~dev\\rawrxd\\evidence\\AGENT_E2E_002b\\AGENT_FIRST_TOKEN_001";
+        std::ofstream vf(std::string(dir) + "\\first_token.txt");
+        vf << "first_token_id=" << firstId << "\n";
+        vf << "generated=" << generated << "\n";
+        vf << "prompt_tokens=" << promptTokens.size() << "\n";
+        vf << "RESULT=" << (generated > 0 ? "PASS" : "FAIL") << "\n";
+    }
+
     return result;
 }
 
@@ -4641,6 +5039,21 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
             static_cast<std::uint32_t>(kvCache ? kvCache->currentLength() : 0);
         AttnCert::record(AttnCert::Stage::AttnNorm, 0, pos, layerTemp, hiddenDim);
     }
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_NORM_%zu", layer);
+        B3_StageDigest(key, tokPos, layerTemp, hiddenDim);
+        if (layer == 0 && tokPos == 0) {
+            // Freeze parsed epsilon in parity evidence (loader regression guard).
+            printf("[STAGE_DIGEST] rms_norm_epsilon_source=llama.attention.layer_norm_rms_epsilon\n");
+            printf("[STAGE_DIGEST] rms_norm_epsilon=%.9e\n",
+                   (double)modelWeights.normEps);
+            printf("[STAGE_DIGEST] NORM_EPS=%.9e attnNorm.type=%d\n",
+                   (double)modelWeights.normEps, lw.attnNorm.type);
+        }
+    }
 
     // 2. Attention with real Q/K/V/O projections
     ResidencyCounters::BeginAttention();
@@ -4648,6 +5061,14 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     computeAttention(layer, layerTemp, output, seqLen);
     if (profilingEnabled_ && profiler_) profiler_->endAttnOutProj(); // computeAttention handles its own sub-phases
     ResidencyCounters::EndAttention();
+
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_OUT_%zu", layer);
+        B3_StageDigest(key, tokPos, output, hiddenDim); // pre-residual attn (llama attn_out)
+    }
 
     // 3. Residual connection — AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginAttnResidual();
@@ -4682,12 +5103,24 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_TraceState(phase, layer, output, hiddenDim);
     }
     #endif
-
-    // 4. FFN / SSM RMSNorm
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "FFN_INP_%zu", layer);
+        B3_StageDigest(key, tokPos, output, hiddenDim); // post-attn residual (llama ffn_inp)
+    }    // 4. FFN / SSM RMSNorm
     if (profilingEnabled_ && profiler_) profiler_->beginFFNNorm();
     RMSNormW(lw.ffnNorm, output, layerTemp, hiddenDim, modelWeights.normEps);
     if (profilingEnabled_ && profiler_) profiler_->endFFNNorm();
     B3_TraceState("FFN_NORM", layer, layerTemp, hiddenDim);
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "FFN_NORM_%zu", layer);
+        B3_StageDigest(key, tokPos, layerTemp, hiddenDim);
+    }
 
     // 5. FFN (SwiGLU) OR SSM (Mamba) with real weight projections
     ResidencyCounters::BeginFFN();
@@ -4705,6 +5138,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNDown();
     ResidencyCounters::EndFFN();
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "FFN_DOWN_%zu", layer);
+        B3_StageDigest(key, tokPos, ffnOutput, hiddenDim);
+    }
 
     // 6. Residual connection — AVX2 vectorized
     if (profilingEnabled_ && profiler_) profiler_->beginFFNResidual();
@@ -4734,6 +5174,13 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         B3_TraceState(phase, layer, output, hiddenDim);
     }
     #endif
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "POST_FFN_%zu", layer);
+        B3_StageDigest(key, tokPos, output, hiddenDim);
+    }
 
     // ── Telemetry: Record residency wait time ──────────────────────
     if (telemetryControllerEnabled_ && telemetryController_) {
@@ -4858,6 +5305,18 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         LinearW(lw.wv, input, nullptr, vProj, kvDim);
         B3_TraceState("ATTN_V", layer, vProj, kvDim);
 
+        if (B3_StageDigestEnabled() && layer <= 2) {
+            const size_t tokPos = kvCache ? kvCache->currentLength()
+                                          : (seqLen > 0 ? seqLen - 1 : 0);
+            char key[64];
+            std::snprintf(key, sizeof(key), "Q_PRE_ROPE_%zu", layer);
+            B3_StageDigest(key, tokPos, qProj, hiddenDim);
+            std::snprintf(key, sizeof(key), "K_PRE_ROPE_%zu", layer);
+            B3_StageDigest(key, tokPos, kProj, kvDim);
+            std::snprintf(key, sizeof(key), "V_%zu", layer);
+            B3_StageDigest(key, tokPos, vProj, kvDim);
+        }
+
         // ── Qwen3.5: Apply per-head QK norm (RMSNorm) before RoPE ──
         if (lw.attnQNorm.data && lw.attnQNorm.sizeBytes > 0) {
             for (size_t h = 0; h < numHeads; ++h) {
@@ -4903,6 +5362,10 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         const size_t kvDim = numKVHeads * headDim;
         AttnCert::record(AttnCert::Stage::RopeQ, 0, pos, qProj, hiddenDim);
         AttnCert::record(AttnCert::Stage::RopeK, 0, pos, kProj, kvDim);
+        if (B3_StageDigestEnabled()) {
+            B3_StageDigest("Q_POST_ROPE_0", pos, qProj, hiddenDim);
+            B3_StageDigest("K_POST_ROPE_0", pos, kProj, kvDim);
+        }
     }
 
     // Store K, V into KV cache
@@ -5242,6 +5705,14 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
     // Output projection: [hiddenDim] -> [hiddenDim]
     // Qwen models with fused QKV may not have a separate attention output projection.
     // When absent, the concatenated head outputs (numHeads * headDim) already equal hiddenDim.
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        // Concatenated head outputs BEFORE wo — isolates O_PROJ from QK/softmax/AV.
+        const size_t tokPos = kvCache ? kvCache->currentLength()
+                                      : (seqLen > 0 ? seqLen - 1 : 0);
+        char key[64];
+        std::snprintf(key, sizeof(key), "ATTN_PRE_O_%zu", layer);
+        B3_StageDigest(key, tokPos, output, hiddenDim);
+    }
     const auto* attnOutWeight = (lw.wo.data != nullptr) ? &lw.wo :
                                  (lw.attnO.data != nullptr) ? &lw.attnO : nullptr;
     if (attnOutWeight == nullptr || attnOutWeight->data == nullptr) {
@@ -5303,6 +5774,14 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     LinearW(lw.wUp, input, nullptr, upBuf, intermediateDim);
     if (profilingEnabled_ && profiler_) profiler_->endFFNUp();
 
+    // Dump gate (pre-SiLU) before SwiGLU overwrites gateBuf with the product.
+    if (B3_StageDigestEnabled() && layer <= 2 && hasGate) {
+        const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
+        char key[64];
+        std::snprintf(key, sizeof(key), "FFN_GATE_%zu", layer);
+        B3_StageDigest(key, tokPos, gateBuf, intermediateDim);
+    }
+
     // SwiGLU: output = silu(gate) * up
     if (profilingEnabled_ && profiler_) profiler_->beginFFNSwiGLU();
     if (hasGate) {
@@ -5313,6 +5792,14 @@ void Deep2Engine::computeFFN(size_t layer, const float* input, float* output) {
     }
     if (profilingEnabled_ && profiler_) profiler_->endFFNSwiGLU();
     B3_TraceState("FFN_SWIGLU", layer, gateBuf, intermediateDim);
+    if (B3_StageDigestEnabled() && layer <= 2) {
+        const size_t tokPos = kvCache ? kvCache->currentLength() : 0;
+        char key[64];
+        std::snprintf(key, sizeof(key), "FFN_UP_%zu", layer);
+        B3_StageDigest(key, tokPos, upBuf, intermediateDim);
+        std::snprintf(key, sizeof(key), "FFN_ACT_%zu", layer);
+        B3_StageDigest(key, tokPos, gateBuf, intermediateDim);
+    }
 
     // Down projection: [intermediateDim] -> [hiddenDim]
     if (profilingEnabled_ && profiler_) profiler_->beginFFNDown();
@@ -5770,31 +6257,33 @@ void Deep2Engine::computeLogits(const float* hiddenState, float* logits) {
     // ── VAL-051.7: Clear logits before compute to prevent stale values ─
     std::fill(logits, logits + config.vocabSize, 0.0f);
 
-    // ── Diagnostic: verify hidden state and weights ────────────────────
-    float hiddenNorm = 0.0f;
-    for (size_t i = 0; i < config.hiddenDim; ++i) {
-        hiddenNorm += hiddenState[i] * hiddenState[i];
+    // ── Diagnostic: verify hidden state and weights (opt-in) ───────────
+    if (B3_LogitsTraceEnabled()) {
+        float hiddenNorm = 0.0f;
+        for (size_t i = 0; i < config.hiddenDim; ++i) {
+            hiddenNorm += hiddenState[i] * hiddenState[i];
+        }
+        hiddenNorm = std::sqrt(hiddenNorm);
+        printf("[Deep2Engine] computeLogits: hiddenState norm=%.6f (dim=%zu)\n",
+               hiddenNorm, config.hiddenDim);
+        printf("[Deep2Engine] computeLogits: lmHead type=%d rows=%zu cols=%zu data=%p\n",
+               modelWeights.lmHead.type, modelWeights.lmHead.rows,
+               modelWeights.lmHead.cols, modelWeights.lmHead.data);
+        printf("[B3_LOGITS] BEFORE LinearW type=%d rows=%zu cols=%zu data=%p\n",
+               static_cast<int>(modelWeights.lmHead.type),
+               modelWeights.lmHead.rows,
+               modelWeights.lmHead.cols,
+               modelWeights.lmHead.data);
+        fflush(stdout);
     }
-    hiddenNorm = std::sqrt(hiddenNorm);
-    printf("[Deep2Engine] computeLogits: hiddenState norm=%.6f (dim=%zu)\n",
-           hiddenNorm, config.hiddenDim);
-    printf("[Deep2Engine] computeLogits: lmHead type=%d rows=%zu cols=%zu data=%p\n",
-           modelWeights.lmHead.type, modelWeights.lmHead.rows,
-           modelWeights.lmHead.cols, modelWeights.lmHead.data);
-    fflush(stdout);
-
-    printf("[B3_LOGITS] BEFORE LinearW type=%d rows=%zu cols=%zu data=%p\n",
-           static_cast<int>(modelWeights.lmHead.type),
-           modelWeights.lmHead.rows,
-           modelWeights.lmHead.cols,
-           modelWeights.lmHead.data);
-    fflush(stdout);
 
     // lm_head: [vocabSize, hiddenDim] * hiddenState -> [vocabSize]
     LinearW(modelWeights.lmHead, hiddenState, nullptr, logits, config.vocabSize);
 
-    printf("[B3_LOGITS] AFTER LinearW\n");
-    fflush(stdout);
+    if (B3_LogitsTraceEnabled()) {
+        printf("[B3_LOGITS] AFTER LinearW\n");
+        fflush(stdout);
+    }
 }
 
 // ============================================================================
@@ -5816,9 +6305,37 @@ int Deep2Engine::sampleToken(const float* logits) {
             }
         }
         const int selected = bestToken;
-        printf("[GREEDY] enabled=1\n");
-        printf("[GREEDY] argmax=%d logit=%.6f\n", bestToken, bestLogit);
-        printf("[GREEDY] selected=%d\n", selected);
+        if (GreedyTraceEnabled()) {
+            printf("[GREEDY] enabled=1\n");
+            printf("[GREEDY] argmax=%d logit=%.6f\n", bestToken, bestLogit);
+            printf("[GREEDY] selected=%d\n", selected);
+            // Batch-2: TinyLlama ',' golden is id 29892 (1919 is a different piece)
+            auto probe = [&](int id, const char* tag) {
+                if (id >= 0 && static_cast<size_t>(id) < config.vocabSize) {
+                    printf("[GREEDY] probe %s id=%d logit=%.6f\n", tag, id, logits[id]);
+                }
+            };
+            probe(29892, "comma");
+            probe(13, "newline");
+            probe(4462, "UE");
+            probe(1919, "comma_alt_1919");
+            // Top-10 under greedy for BOS residual cert (near-miss vs 29892)
+            {
+                std::vector<std::pair<float, int>> scored;
+                scored.reserve(config.vocabSize);
+                for (size_t i = 0; i < config.vocabSize; ++i) {
+                    if (std::isfinite(logits[i])) scored.push_back({logits[i], (int)i});
+                }
+                const int k = (std::min)(10, (int)scored.size());
+                std::partial_sort(scored.begin(), scored.begin() + k, scored.end(),
+                                  [](const auto& a, const auto& b) { return a.first > b.first; });
+                printf("[GREEDY] top10:");
+                for (int i = 0; i < k; ++i) {
+                    printf(" %d:%.6f", scored[i].second, scored[i].first);
+                }
+                printf("\n");
+            }
+        }
         if (selected != bestToken) {
             fprintf(stderr, "[GREEDY] ASSERT selected(%d) != argmax(%d)\n",
                     selected, bestToken);
@@ -7035,7 +7552,12 @@ size_t Deep2Engine::generateWithMedusa(const int* promptTokens, size_t promptLen
     // Prefill: process the prompt (first forward pass)
     std::vector<float> currentHiddenState(config.hiddenDim);
     for (size_t i = 0; i < promptLen && i < config.maxSeqLen; i++) {
-        embedToken(promptTokens[i], currentHiddenState.data());
+        if (!embedToken(promptTokens[i], currentHiddenState.data())) {
+            fprintf(stderr, "[B3_ABORT] speculative prefill FATAL_EMBED token=%d pos=%zu\n",
+                    promptTokens[i], i);
+            fflush(stderr);
+            return 0;
+        }
         float* layerInput = currentHiddenState.data();
         float* layerOutput = attentionOutput;
         for (size_t layer = 0; layer < modelWeights.numLayers; layer++) {

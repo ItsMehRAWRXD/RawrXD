@@ -1,0 +1,13 @@
+BATCH2_ORACLE_V2_LADDER
+abs_eps=1e-6
+note=old_BATCH2_ATTN_LADDER_NUM_INVALID_due_to_dump_clobber
+Q_PRE_ROPE_NUMERICAL=PASS_frozen @1e-6
+Q_PRE_ROPE_BITWISE=OPEN
+
+PROMPT_EMBED       gate=PASS    shape=2048 exact=2048 max_abs=0.000000e+00 max_rel=0.000000e+00 mean=0.000000e+00 rms=0.000000e+00 first_bad=-1 largest=-1 fnvD=13123758da8b244a fnvL=13123758da8b244a seqD=900 seqL=1
+ATTN_NORM_0        gate=PASS    shape=2048 exact=2048 max_abs=0.000000e+00 max_rel=0.000000e+00 mean=0.000000e+00 rms=0.000000e+00 first_bad=-1 largest=-1 fnvD=b4ca919612be6c51 fnvL=b4ca919612be6c51 seqD=901 seqL=4
+Q_PRE_ROPE_0       gate=PASS    shape=2048 exact=309 max_abs=1.490116e-07 max_rel=7.063572e-03 mean=5.834750e-09 rms=1.011875e-08 first_bad=-1 largest=1264 fnvD=ced1abe971861249 fnvL=8d53927ede5ddb3f seqD=902 seqL=7
+K_PRE_ROPE_0       gate=PASS    shape=256 exact=38 max_abs=8.940697e-08 max_rel=2.276107e-05 mean=1.176886e-08 rms=1.794657e-08 first_bad=-1 largest=156 fnvD=d61547179ccaf150 fnvL=f065873c7d34fcfd seqD=903 seqL=51
+V_0                gate=FAIL    shape=256 exact=0 max_abs=7.501356e-04 max_rel=1.883670e+00 mean=1.990478e-04 rms=2.515180e-04 first_bad=0 largest=210 fnvD=df87f6368ddea59a fnvL=d4e2dce085d5d6e4 seqD=904 seqL=45
+
+STOP first_genuine_full_shape_mismatch=V_0

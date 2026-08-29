@@ -1,0 +1,39 @@
+BATCH2_ORACLE_V3 — post Q6_K×Q8_K fix (2026-08-29)
+=====================================================
+dump_id=<side>_<stage>_pos<p>_layer<L>_full_n<N>_seq<SSS>.bin
+sidecar=.manifest.txt + DUMP_MANIFEST.jsonl
+authority=CPU-only llama; ids=[1,21521,9312]
+abs_eps=1e-6 PASS / 1e-5 INSPECT / >1e-5 FAIL
+invalidates=BATCH2_ATTN_LADDER_NUM (clobber); V2 deep2 V dump (pre-Q6K fix FP32 path)
+do_not_preserve=old PROMPT_FINAL_NORM tip divergence
+
+ROOT CAUSE CLOSED AT V_0
+-------------------------
+blk.0.attn_v.weight type=14 Q6_K (NOT Q4_K)
+Deep2 gemv_q6_k_scalar was FP32 dequant·x; llama uses Q6_K×Q8_K mul_mat
+fix=QuantKernelRegistry.cpp gemv_q6_k_scalar → quantize_row_q8_K + vec_dot_q6_K_q8_K
+evidence=BATCH2_V_PROJ_001 (V_gemv_vs_llama PASS max_abs=1.86e-9)
+
+RUNG RECORDS (full-shape; head=-1; pos=0)
+----------------------------------------
+stage              shape  fnvD              fnvL              L2D~        L2L~        max_abs      max_rel      first_bad  PASS/FAIL
+PROMPT_EMBED       2048   13123758da8b244a  13123758da8b244a  match       match       0            0            -1         PASS
+ATTN_NORM_0        2048   b4ca919612be6c51  b4ca919612be6c51  match       match       0            0            -1         PASS
+Q_PRE_ROPE_0       2048   ced1abe971861249  8d53927ede5ddb3f  1.938517    1.938517    1.490116e-07 7.06e-03     -1         PASS
+K_PRE_ROPE_0       256    d61547179ccaf150  f065873c7d34fcfd  1.317965    1.317965    8.940697e-08 2.28e-05     -1         PASS
+V_0                256    4b004536ead54edb  d4e2dce085d5d6e4  7.974118e-2 7.974118e-2 1.862645e-09 2.72e-05     -1         PASS
+Q_POST_ROPE_0      2048   ced1abe971861249  8d53927ede5ddb3f  (same Q)    (same Q)    1.490116e-07 7.06e-03     -1         PASS
+K_POST_ROPE_0      256    d61547179ccaf150  f065873c7d34fcfd  (same K)    (same K)    8.940697e-08 2.28e-05     -1         PASS
+ATTN_OUT_0         2048   83fc0c3a8c2c8047  5fe8f56aa443709d  1.2087e-1   1.2083e-1   8.446909e-05 1.74e+00     0          FAIL
+
+STOP first_genuine_full_shape_mismatch=ATTN_OUT_0
+localization=BATCH2_ATTN_OUT_LOC/LOCALIZATION.txt
+  QK/softmax/AV/concat @pos0 = PASS (ATTN_OUT == O(GQA_expand(V)))
+  first_inside_box = O_PROJ (max_abs=8.45e-5, MANY_TINY_FP_DIFFS)
+next_descend=attn_output Q4_K×Q8_K GEMV vs llama (not Q/K/V)
+Q_PRE_ROPE_BITWISE=OPEN (do not chase FNV)
+notes:
+  - V numerical PASS moves the boundary OFF V_PROJ / OFF FINAL_NORM myth
+  - ATTN_OUT max_abs=8.45e-5 > 1e-5 → FAIL (not INSPECT)
+  - Q/K/V projections + RoPE at pos0 all PASS @1e-6
+  - ATTN_PRE_O_0 digest added for next oracle re-dump

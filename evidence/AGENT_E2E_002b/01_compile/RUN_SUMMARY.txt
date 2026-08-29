@@ -1,0 +1,18 @@
+﻿# AGENT-E2E-002b / 01_compile
+
+agent_exit=-1
+elapsed_ms=43847
+demo_break=False
+scripted_runtime=False
+model=F:\~dev\rawrxd\models\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+model_sha256=9fecc3b3cd76bba89d504f29b616eedf7da85b96540e490ca5824d3f7d2776a0
+source_before_sha256=4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c
+source_after_sha256=4f61ab79d3eb83a4dd0d042a2f8edf55cd879c2305d49bc0e9f6ba748d81200c
+source_mutated=False
+transcript_has_tool_calls=True
+build_exit=1
+run_exit=-1
+stdout=NO_EXE
+expected=hello from b01
+goal.satisfied=False
+PASS=False

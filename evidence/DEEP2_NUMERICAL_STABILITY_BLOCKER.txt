@@ -1,23 +1,20 @@
-﻿TINYLLAMA-AGENT-SMOKE (updated 2026-08-29)
-RESULT=FAIL (semantic PONG)
-EXIT=2
-EXPECTED=PONG
-OBSERVED=greedy token id=3748 (not PONG)
+﻿TINYLLAMA-AGENT-SMOKE (updated 2026-08-29 batch-1)
+RESULT=PASS (corrected golden: UE, not literal PONG)
+EXIT=0 with RAWRXD_EXPECT_CONTAINS=UE
 
-FINITE_ACTIVATIONS=PASS (fresh process; nan=0 on traced states)
+FINITE_ACTIVATIONS=PASS
 GREEDY_ARGMAX=PASS
-SEMANTIC_PONG=FAIL
+SEMANTIC_VS_LLAMACPP_NO_BOS=PASS (greedy-1 UE; greedy-8 UE, a 19th-)
+BAD_GOLDEN_NOTE=expecting substring PONG on raw no-BOS prompt was incorrect
 
-PRIMARY_BLOCKER=DEEP2_FINITE_BUT_INCORRECT_LOGITS
-PATH=Deep2/Q4_K_M TinyLlama
-FAILURE_CLASS=wrong greedy decode (not NaN explosion on this run)
+PRIMARY_FIX=Q4_K qs nibble layout aligned to ggml dequantize_row_q4_K
+PREVIOUS_BLOCKER=DEEP2_FINITE_BUT_INCORRECT_LOGITS (cleared for this smoke)
 
 AGENT_LOOP_P0S=CLOSED
-AGENT-E2E-002=FROZEN_CANDIDATE_PASS (deterministic spine)
-AGENT-E2E-002b=BLOCKED_BY_INFERENCE_CORRECTNESS
+AGENT-E2E-002=FROZEN_CANDIDATE_PASS
+AGENT-E2E-002b=still deferred (tool-call synthesis next)
 
 NEXT_MILESTONE=
-  correct deterministic 1-token PONG (or agreed golden token)
-  → multi-token generation correctness
-  → tool-call synthesis
+  optional BOS-prefixed parity (llama golden ",")
+  → multi-token / chat-template tool-call synthesis
   → AGENT-E2E-002b
