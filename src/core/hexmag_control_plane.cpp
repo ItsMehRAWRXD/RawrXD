@@ -2,6 +2,7 @@
 // hexmag_control_plane.cpp — Policy gate + MASM HexMag swarm integration
 // ============================================================================
 #include "core/hexmag_control_plane.hpp"
+#include "core/hexmag_oracle_binder.hpp"
 #include "agentic/HexMagAction.hpp"
 
 #include <cstring>
@@ -242,6 +243,65 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     out.needInput = drained.needInput;
     out.emittedFinal = drained.emittedFinal;
     out.eventLog = std::move(log);
+
+    // NEED_INPUT latch: never invoke Oracle/Deep2; never resurrect FINAL
+    if (drained.needInput) {
+        out.success = false;
+        out.error = ans.empty() ? "INSUFFICIENT_INFORMATION" : ans;
+        out.answer = out.error;
+        out.claimState = ClaimState::MissingInput;
+        out.needInput = true;
+        out.goalSatisfied = false;
+        out.emittedFinal = drained.emittedFinal;
+        out.oracleInvoked = false;
+        out.deep2Invoked = false;
+        out.candidateSource = "none";
+        return out;
+    }
+
+    // Optional Oracle/Deep2 binder — candidates only; FINAL via existing gates
+    {
+        auto gens = oracleBinderGenerators();
+        if (!gens.empty()) {
+            BinderRequest br;
+            br.prompt = prompt;
+            br.context = context;
+            br.needInputLatched = false; // already returned above if latched
+            auto brOut = runOracleBinder(br, gens, oracleBinderVerifier());
+            out.oracleInvoked = brOut.oracleInvoked;
+            out.deep2Invoked = brOut.deep2Invoked;
+            out.candidateSource = candidateSourceName(brOut.selected.source);
+            out.selectedCandidate = brOut.selected.text;
+            out.provenance += "oracle_binder: " + brOut.detail + "\n";
+            if (!brOut.selectionEvidence.empty())
+                out.provenance += brOut.selectionEvidence + "\n";
+
+            if (brOut.success) {
+                out.success = true;
+                out.answer = brOut.claim.text;
+                out.claimState = brOut.claim.state;
+                out.goalSatisfied = true;
+                // Binder does not emit MASM FINAL; gate decision is C++ only
+                out.emittedFinal = false;
+                out.provenance += "FINAL allowed by existing gates (oracle candidate + verifier)\n";
+                return out;
+            }
+
+            // Binder active ⇒ MASM stub FINAL cannot override candidate rejection
+            out.success = false;
+            out.goalSatisfied = false;
+            out.emittedFinal = false;
+            out.error = brOut.error.empty()
+                ? "FINAL_GATE: oracle candidate not verified"
+                : brOut.error;
+            out.answer = brOut.selected.text.empty() ? ans : brOut.selected.text;
+            out.claimState = brOut.claim.state;
+            return out;
+        }
+    }
+
+    out.candidateSource = "masm";
+    out.selectedCandidate = ans;
 
     Claim claim = claimFromSwarmAnswer(ans, out.goalSatisfied);
     claim.directiveId = missionId;

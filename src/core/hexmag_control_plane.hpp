@@ -25,6 +25,10 @@ struct AskResult {
     bool goalSatisfied = false;
     bool needInput = false;     // HX_EVT_NEED_INPUT observed
     bool emittedFinal = false;  // HX_EVT_ANSWER_FINAL observed
+    bool oracleInvoked = false;
+    bool deep2Invoked = false;
+    std::string candidateSource;    // oracle|deep2|scripted|masm
+    std::string selectedCandidate;  // raw selected candidate (never FINAL authority)
     ClaimState claimState = ClaimState::Candidate;
     std::string provenance; // directive explain chain
     std::string eventLog;

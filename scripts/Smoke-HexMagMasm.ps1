@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-  HexMag MASM unit smoke + E2E + repeat-tuner cert (integration pack).
+  HexMag MASM smoke + NEED_INPUT + Oracle binder + W0-001 (weightless prototype).
+  Keep-it-simple critical path: IR → workspace → intent → synth → evidence → HexMag gates.
 #>
 param([string]$OutDir = "")
 $ErrorActionPreference = "Stop"
@@ -36,13 +37,20 @@ $exeUnit = Join-Path $OutDir "hexmag_swarm_smoke.exe"
 $exeE2E = Join-Path $OutDir "hexmag_e2e_smoke.exe"
 $exeCert = Join-Path $OutDir "hexmag_repeat_tuner_cert.exe"
 $exeNeed = Join-Path $OutDir "hexmag_need_input_cert.exe"
+$exeBind = Join-Path $OutDir "hexmag_oracle_binder_cert.exe"
+$exeW0 = Join-Path $OutDir "w0_001_cert.exe"
 $cppUnit = Join-Path $Root "tests\hexmag_swarm_smoke.cpp"
 $cppE2E = Join-Path $Root "tests\hexmag_e2e_smoke.cpp"
 $cppCert = Join-Path $Root "tests\hexmag_repeat_tuner_cert.cpp"
 $cppNeed = Join-Path $Root "tests\hexmag_need_input_cert.cpp"
+$cppBind = Join-Path $Root "tests\hexmag_oracle_binder_cert.cpp"
+$cppW0 = Join-Path $Root "tests\w0_001_cert.cpp"
 $cpCpp = Join-Path $Root "src\core\hexmag_control_plane.cpp"
+$obCpp = Join-Path $Root "src\core\hexmag_oracle_binder.cpp"
+$w0Cpp = Join-Path $Root "src\deep2w0\W0Engine.cpp"
 $inc = Join-Path $Root "src"
 $incAgentic = Join-Path $Root "src\agentic"
+$fixW0 = Join-Path $Root "tests\fixtures\w0_001"
 
 Push-Location (Join-Path $Root "src\asm")
 try {
@@ -56,28 +64,40 @@ $cmd = @"
 call "$vcvars" >nul
 cd /d "$OutDir"
 
-echo === 1/4 unit swarm smoke ===
+echo === 1/6 unit swarm smoke ===
 cl /nologo /EHsc /O2 /DRAWR_HAS_MASM /I "$inc" "$cppUnit" /Fe:"$exeUnit" /link /nologo "$obj" "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeUnit"
 if errorlevel 1 exit /b 1
 
-echo === 2/4 E2E policy+control plane ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppE2E" "$cpCpp" /Fe:"$exeE2E" /link /nologo "$obj" "$objTuner" kernel32.lib
+echo === 2/6 E2E policy+control plane ===
+cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppE2E" "$cpCpp" "$obCpp" /Fe:"$exeE2E" /link /nologo "$obj" "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeE2E"
 if errorlevel 1 exit /b 1
 
-echo === 3/4 repeat tuner cert (integration pack) ===
+echo === 3/6 repeat tuner cert ===
 cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$incAgentic" /I "$inc" "$cppCert" /Fe:"$exeCert" /link /nologo "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeCert"
 if errorlevel 1 exit /b 1
 
-echo === 4/4 NEED_INPUT observability cert ===
-cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppNeed" "$cpCpp" /Fe:"$exeNeed" /link /nologo "$obj" "$objTuner" kernel32.lib
+echo === 4/6 NEED_INPUT cert ===
+cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppNeed" "$cpCpp" "$obCpp" /Fe:"$exeNeed" /link /nologo "$obj" "$objTuner" kernel32.lib
 if errorlevel 1 exit /b 1
 "$exeNeed"
+if errorlevel 1 exit /b 1
+
+echo === 5/6 Oracle binder cert ===
+cl /nologo /EHsc /O2 /std:c++20 /DRAWR_HAS_MASM /I "$inc" "$cppBind" "$cpCpp" "$obCpp" /Fe:"$exeBind" /link /nologo "$obj" "$objTuner" kernel32.lib
+if errorlevel 1 exit /b 1
+"$exeBind"
+if errorlevel 1 exit /b 1
+
+echo === 6/6 W0-001 weightless prototype ===
+cl /nologo /EHsc /O2 /std:c++20 /I "$inc" "$cppW0" "$w0Cpp" "$obCpp" /Fe:"$exeW0" /link /nologo kernel32.lib
+if errorlevel 1 exit /b 1
+"$exeW0" "$fixW0"
 if errorlevel 1 exit /b 1
 
 exit /b 0
