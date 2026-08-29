@@ -1,18 +1,13 @@
-NEXT_CERT todos (live)
+﻿NEXT_CERT todos (live)
 ======================
+HEXMAG (FROZEN) — do not touch unless regression
+
 PARITY
-  DONE: SPARSE_TIP_NUMERICAL_FLOOR_001 (L0..8 tip_eps=5e-5; FFN_GATE_2 @5475)
-  DONE: FIRST_LAYER_ABOVE_FLOOR=L10 (L9 still floor magnitude; L10 dual FAIL)
-  ACTIVE: body-localize L10 (ATTN_NORM..LAYER_OUT) — not L21
-  OPTIONAL A2: FFN_GATE_2 bit-exact GEMV (1ULP removability; do not hostage campaign)
-  BLOCKED: LOGITS/ARGMAX until above-floor forward controlled
-  DO_NOT: treat 4.58e-5 floor == L12 4.6e-4 growth
-
-AGENT
-  DONE: schema_pre_dispatch (AGENT-TOOL-SCHEMA-002 A/R/B)
-  DONE: AGENT_SCHEMA_RETRY_001 MODEL_RETRY (STRICT reject -> Deep2 correct -> 1 dispatch)
-  NEXT: failed-tool strategy retry (HexMag mutate on tool fail)
-  THEN: successful repair loop / full agent E2E
-  CLOSED: HEXMAG_POLYMORPHIC_REPEAT_TUNER_001 (tuner isolation)
-
-DO_NOT_REOPEN: SiLU / wo / <=L1 / schema pre-dispatch / L2..L8 tip floor
+  DONE: L0..L8 tip floor; FIRST_LAYER_ABOVE_FLOOR=L10
+  DONE: L10_GATE_SAME_OPERAND — GEMV CLOSED
+  DONE: L10_FFN_INP_SAME_SOURCE — FFN_GATE_10 INHERITED
+        ATTN_OUT PASS; FFN_INP abs 4.58e-5; RESID_IN=INP-ATTN carries it;
+        same-weight RMSNorm faithful; GEMV closed under frozen NORM
+  NEXT: TODO_L10_RESID_IN_LOCALIZE (L9→L10 entry / residual-in)
+  THEN: TODO_RESUME_TIPS_AFTER_L10
+  DO_NOT_REOPEN: SiLU / wo / <=L1 / L2..L8 floor / L10 GEMV / HexMag

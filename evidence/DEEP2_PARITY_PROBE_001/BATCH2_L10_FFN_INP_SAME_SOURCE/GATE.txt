@@ -1,0 +1,55 @@
+BATCH2_L10_FFN_INP_SAME_SOURCE — TODO_L10_FFN_INP_SAME_SOURCE
+============================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 layer=10
+harness=src/deep2/test_l10_ffn_inp_same_source.cpp
+body_authority=BATCH2_L10_BODY_001 (earliest pos0 seq pairing)
+
+QUESTION
+--------
+Does FFN_INP_10 already contain the divergence, and is the ~3.6e-5
+native FFN_GATE_10 gap inherited vs a native gate-path root?
+
+NATIVE (matches L10_BODY magnitudes)
+------------------------------------
+ATTN_OUT_10   dual=PASS     max_abs=5.96e-8
+FFN_INP_10    abs=FAIL      max_abs=4.58e-5   ← FIRST_ABS_FAIL locus
+RESID_IN      abs=FAIL      max_abs=4.58e-5   (FFN_INP − ATTN_OUT)
+FFN_NORM_10   max_abs=1.91e-6
+FFN_GATE_10   dual=FAIL     max_abs=3.60e-5
+
+SAME-WEIGHT RMSNorm (scalar, eps=1e-5)
+--------------------------------------
+RMS(INP_d) ≈ native NORM_d     dual=PASS (faithful)
+RMS(INP_l) ≈ native NORM_l     dual=PASS (faithful)
+RMS(INP_d) vs RMS(INP_l)       dual=PASS max_abs=4.77e-7
+  → same recipe attenuates INP delta; does not invent new FAIL class
+
+SAME-OPERAND GATE (prior)
+-------------------------
+BATCH2_L10_GATE_SAME_OPERAND: A1==A2_q8k==llama FORCE
+  max_abs(gate)~2.09e-7 → GEMV CLOSED
+
+VERDICT
+-------
+FFN_GATE_10_INHERITED
+root_class=upstream_FFN_INP / RESID_IN (layer entry into residual add)
+stop_condition:
+  FFN_INP differs
+  + same-weight RMSNorm faithful to each side
+  + same-operand GATE remains numerically correct
+  = FFN_GATE_10 is inherited, not root
+
+DO_NOT_reopen=SiLU / L10 GEMV / ATTN_OUT_10 (PASS) / HexMag
+
+NEXT
+----
+TODO_L10_RESID_IN_LOCALIZE
+  Localize RESID_IN = FFN_INP−ATTN_OUT vs L9_OUT / layer-10 entry
+THEN TODO_RESUME_TIPS_AFTER_L10 (L10_OUT→L12→…→LOGITS)
+
+Artifacts
+---------
+REPORT.txt  GATE.txt
+frozen_FFN_INP_10_deep2.bin  frozen_FFN_NORM_from_INP_d.bin
+optional live: RAWRXD_FORCE_FFN_INP_BIN (llama_ref_parity_probe)

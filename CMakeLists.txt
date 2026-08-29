@@ -235,6 +235,10 @@ option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fall
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
 option(RAWRXD_ENABLE_VALIDATION "Enable RawrXD runtime validation instrumentation (tensor dumping for llama.cpp parity)" ON)
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
+option(RAWRXD_BUILD_RAWRENGINE "Build RawrEngine.exe (set OFF for Win32IDE-only configure/P1)" ON)
+if(RAWRXD_BUILD_WIN32IDE AND NOT RAWRXD_BUILD_RAWRENGINE)
+    message(STATUS "[P1] RawrEngine target isolated (RAWRXD_BUILD_RAWRENGINE=OFF) — Win32IDE-only configure")
+endif()
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
         message(FATAL_ERROR "[ProductionLane] RAWRXD_BUILD_CLI=ON is incompatible with RAWRXD_PRODUCTION_STRIP_STUB_SOURCES=ON (rawrxd CLI links compatibility shims).")
@@ -3168,6 +3172,7 @@ add_subdirectory(src/generation)
 # =============================================================================
 add_subdirectory(rguf_source)
 
+if(RAWRXD_BUILD_RAWRENGINE)
 # RawrEngine needs specific ASM kernels for Deep2 and Sovereign Q4K
 set(RAWR_ENGINE_ASM_SOURCES
     src/deep2/sovereign_deep2_kernels.asm
@@ -3183,7 +3188,9 @@ set_source_files_properties(${RAWR_ENGINE_ASM_SOURCES} PROPERTIES LANGUAGE ASM_M
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
+    if(TARGET RawrEngine)
     add_dependencies(RawrEngine regen-ssot-beacons verify-ssot-ext-ownership)
+    endif()
 endif()
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3202,7 +3209,9 @@ endif()
 # Lane B: curated sources already include required stubs.
 
 # Link RE library and OMEGA-1 Engine into RawrEngine
+if(TARGET RawrEngine)
 target_link_libraries(RawrEngine PRIVATE RawrXD-RE-Library Omega1Engine)
+endif()
 
 target_include_directories(RawrEngine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -3240,7 +3249,9 @@ target_include_directories(RawrEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/gpu
 )
 
+if(TARGET RawrEngine)
 target_link_libraries(RawrEngine PRIVATE Threads::Threads)
+endif()
 
 # Avoid duplicate register_sovereign_engines (real impl in sovereign_engines.cpp)
 target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_SOVEREIGN_ENGINES=1)
@@ -3264,6 +3275,7 @@ target_compile_definitions(RawrEngine PRIVATE
 # Sources used by missing_handler_stubs: debugger engine + symbols + Ollama client
 # Lane B is deliberately minimal; do not pull these subsystems in.
 if(NOT RAWR_ENGINE_LANE_B)
+    if(TARGET RawrEngine)
     target_sources(RawrEngine PRIVATE
         src/core/native_debugger_engine.cpp
         src/core/native_debugger_symbols.cpp
@@ -3275,9 +3287,12 @@ if(NOT RAWR_ENGINE_LANE_B)
         src/inference/NegativeSpaceProfiler.cpp
         # src/core/asm_symbols_stub.cpp  # Removed - has compile errors and duplicates symbols
     )
+    endif()
     # rawrengine_missing_stubs.cpp removed - duplicates symbols from unlinked_symbols_batch_*.cpp
     if(RAWR_SSOT_PROVIDER_UPPER STREQUAL "EXT" OR RAWR_SSOT_PROVIDER_UPPER STREQUAL "STUBS")
+        if(TARGET RawrEngine)
         target_sources(RawrEngine PRIVATE src/core/auto_feature_stub_impl.cpp)
+        endif()
     endif()
 endif()
 
@@ -3292,13 +3307,16 @@ if(WIN32)
         d3d12 dxgi dxcore
     )
     # Link static CRT libraries explicitly for static runtime
+    if(TARGET RawrEngine)
     target_link_libraries(RawrEngine PRIVATE
         libcmt.lib libcpmt.lib libvcruntime.lib libucrt.lib
     )
+    endif()
     if(NOT MSVC)
         target_link_libraries(RawrEngine PRIVATE gomp)
     endif()
 endif()
+endif() # RAWRXD_BUILD_RAWRENGINE
 
 # =============================================================================
 # Standalone Gold Deployment: RawrXD_Gold.exe
@@ -3577,7 +3595,9 @@ target_include_directories(RawrXD_Gold PRIVATE
 )
 
 if(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
-    target_include_directories(RawrEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
+    if(TARGET RawrEngine)
+        target_include_directories(RawrEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
+    endif()
     target_include_directories(RawrXD_Gold PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
 endif()
 
@@ -4455,7 +4475,7 @@ if(MSVC)
     )
 
     # Link MASM objects into RawrEngine (disabled in Lane B headless minimal).
-    if(NOT RAWR_ENGINE_LANE_B)
+    if(TARGET RawrEngine AND NOT RAWR_ENGINE_LANE_B)
         target_link_libraries(RawrEngine PRIVATE ${MASM_OBJECTS})
         add_dependencies(RawrEngine masm_kernels)
     endif()
@@ -4508,8 +4528,10 @@ if(MSVC)
     add_dependencies(RawrXD_NanoQuant nanoquant_asm)
 
     # Link NanoQuant into main targets
-    target_link_libraries(RawrEngine PRIVATE RawrXD_NanoQuant)
-    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_NANOQUANT=1)
+    if(TARGET RawrEngine)
+        target_link_libraries(RawrEngine PRIVATE RawrXD_NanoQuant)
+        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_NANOQUANT=1)
+    endif()
     target_link_libraries(RawrXD_Gold PRIVATE RawrXD_NanoQuant)
     target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_NANOQUANT=1)
 
@@ -4528,15 +4550,17 @@ include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
     message(STATUS "[Vulkan] Found SDK: ${Vulkan_INCLUDE_DIRS}")
-    target_include_directories(RawrEngine PRIVATE ${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(RawrEngine PRIVATE Vulkan::Vulkan)
-    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+    if(TARGET RawrEngine)
+        target_include_directories(RawrEngine PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(RawrEngine PRIVATE Vulkan::Vulkan)
+        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+    endif()
     # Gold target
     target_include_directories(RawrXD_Gold PRIVATE ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(RawrXD_Gold PRIVATE Vulkan::Vulkan)
     target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
 else()
-    # Try manual path — D: first, then C:
+    # Try manual path ? D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
     if(NOT _VK_SDK_DIRS)
         file(GLOB _VK_SDK_DIRS "C:/VulkanSDK/1.*")
@@ -4545,43 +4569,51 @@ else()
         list(SORT _VK_SDK_DIRS)
         list(GET _VK_SDK_DIRS -1 _VK_SDK_DIR)
         message(STATUS "[Vulkan] Manual SDK: ${_VK_SDK_DIR}")
-        target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
-        target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
-        target_link_libraries(RawrEngine PRIVATE vulkan-1)
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+        if(TARGET RawrEngine)
+            target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
+            target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
+            target_link_libraries(RawrEngine PRIVATE vulkan-1)
+            target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+        endif()
         # Gold target
         target_include_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Include")
         target_link_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Lib")
         target_link_libraries(RawrXD_Gold PRIVATE vulkan-1)
         target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
     else()
-        message(STATUS "[Vulkan] SDK not found — GPU compute uses CPU fallback")
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
+        message(STATUS "[Vulkan] SDK not found ? GPU compute uses CPU fallback")
+        if(TARGET RawrEngine)
+            target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
+        endif()
         target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=0)
     endif()
 endif()
 
-# RawrCodex.asm uses ADDR32 relocations — require /LARGEADDRESSAWARE:NO
+# RawrCodex.asm uses ADDR32 relocations ? require /LARGEADDRESSAWARE:NO
 if(MSVC)
-    target_link_options(RawrEngine PRIVATE /LARGEADDRESSAWARE:NO)
-    # Do NOT set /ENTRY - let CMake/MSVC use default entry point
-    # /ENTRY bypasses CRT initialization which causes _purecall unresolved
-    if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        set(_RAWR_ENGINE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrEngine.map")
-        set(_RAWR_ENGINE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrEngine.map")
-        target_link_options(RawrEngine PRIVATE
-            "/MAP:${_RAWR_ENGINE_MAP_PATH}"
-            /MAPINFO:EXPORTS
-        )
-        add_custom_command(TARGET RawrEngine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_ENGINE_MAP_PATH}" "${_RAWR_ENGINE_MAP_AUDIT_PATH}"
-            VERBATIM
-        )
+    if(TARGET RawrEngine)
+        target_link_options(RawrEngine PRIVATE /LARGEADDRESSAWARE:NO)
+        # Do NOT set /ENTRY - let CMake/MSVC use default entry point
+        # /ENTRY bypasses CRT initialization which causes _purecall unresolved
+        if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+            set(_RAWR_ENGINE_MAP_PATH "${CMAKE_BINARY_DIR}/bin/RawrEngine.map")
+            set(_RAWR_ENGINE_MAP_AUDIT_PATH "${CMAKE_BINARY_DIR}/RawrEngine.map")
+            target_link_options(RawrEngine PRIVATE
+                "/MAP:${_RAWR_ENGINE_MAP_PATH}"
+                /MAPINFO:EXPORTS
+            )
+            add_custom_command(TARGET RawrEngine POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_RAWR_ENGINE_MAP_PATH}" "${_RAWR_ENGINE_MAP_AUDIT_PATH}"
+                VERBATIM
+            )
+        endif()
     endif()
 endif()
 
 if(NOT MSVC)
-    target_compile_options(RawrEngine PRIVATE -march=native -O3 -w -mavx2 -mfma -fopenmp)
+    if(TARGET RawrEngine)
+        target_compile_options(RawrEngine PRIVATE -march=native -O3 -w -mavx2 -mfma -fopenmp)
+    endif()
 endif()
 
 # =============================================================================
@@ -6102,11 +6134,13 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endif()
 
+    if(TARGET RawrEngine)
     target_compile_definitions(RawrEngine PRIVATE
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
         RAWRXD_DISABLE_DUPLICATE_SHIMS=1
     )
+    endif()
     target_compile_definitions(RawrXD_Gold PRIVATE
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
@@ -6831,7 +6865,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # PRODUCTION POLICY ENFORCEMENT
     # =========================================================================
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
+        if(TARGET RawrEngine)
         EnforceNoStubs(RawrEngine)
+        endif()
         EnforceNoStubs(RawrXD_Gold)
         EnforceNoStubs(RawrXD-InferenceEngine)
     endif()
@@ -7918,6 +7954,23 @@ if(BUILD_LAYER_HARNESS)
         MSVC_RUNTIME_LIBRARY "MultiThreaded"
     )
     message(STATUS "[Deep2] Single-layer harness: layer_harness")
+
+    add_executable(test_l10_ffn_inp_same_source
+        src/deep2/test_l10_ffn_inp_same_source.cpp
+        src/deep2/GGUFLoader.cpp
+    )
+    target_include_directories(test_l10_ffn_inp_same_source PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    if(MSVC)
+        target_compile_options(test_l10_ffn_inp_same_source PRIVATE /EHsc /W3 /std:c++20)
+    endif()
+    set_target_properties(test_l10_ffn_inp_same_source PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    message(STATUS "[Deep2] L10 FFN_INP same-source: test_l10_ffn_inp_same_source")
 endif()
 
 # qwen35_attn_contract — Establish Qwen3.5 full-attention contract

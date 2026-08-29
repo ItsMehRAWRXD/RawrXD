@@ -141,6 +141,112 @@ static int parseLayerSuffix(const char* name, const char* prefix) {
     return (int)v;
 }
 
+// Gate A (FFN): overwrite ffn_norm-L with frozen Deep2 FFN_NORM_L bytes so
+// subsequent ffn_gate / ffn_up mul_mat share identical operands.
+static std::vector<float> g_forceFfnNorm;
+static bool g_forceFfnNormLoaded = false;
+static int g_forceFfnNormHits = 0;
+static int g_forceFfnNormLayer = -1;
+
+// Same-source FFN_INP: overwrite ffn_inp-L before RMSNorm so FFN_NORM/GATE
+// consume Deep2's frozen post-attn residual (TODO_L10_FFN_INP_SAME_SOURCE).
+static std::vector<float> g_forceFfnInp;
+static bool g_forceFfnInpLoaded = false;
+static int g_forceFfnInpHits = 0;
+static int g_forceFfnInpLayer = -1;
+
+static bool loadForceFfnNorm() {
+    if (g_forceFfnNormLoaded) return !g_forceFfnNorm.empty();
+    g_forceFfnNormLoaded = true;
+    const char* p = std::getenv("RAWRXD_FORCE_FFN_NORM_BIN");
+    if (!p || !p[0]) return false;
+    if (const char* lyr = std::getenv("RAWRXD_FORCE_FFN_NORM_LAYER"))
+        g_forceFfnNormLayer = std::atoi(lyr);
+    else
+        g_forceFfnNormLayer = 10;
+    FILE* f = std::fopen(p, "rb");
+    if (!f) {
+        std::fprintf(stderr, "FORCE_FFN_NORM=FAIL open %s\n", p);
+        return false;
+    }
+    g_forceFfnNorm.resize(2048);
+    const size_t n = std::fread(g_forceFfnNorm.data(), sizeof(float), 2048, f);
+    std::fclose(f);
+    if (n != 2048) {
+        std::fprintf(stderr, "FORCE_FFN_NORM=FAIL read n=%zu want=2048\n", n);
+        g_forceFfnNorm.clear();
+        return false;
+    }
+    std::printf("FORCE_FFN_NORM=LOADED path=%s n=2048 layer=%d\n", p, g_forceFfnNormLayer);
+    fflush(stdout);
+    return true;
+}
+
+static bool loadForceFfnInp() {
+    if (g_forceFfnInpLoaded) return !g_forceFfnInp.empty();
+    g_forceFfnInpLoaded = true;
+    const char* p = std::getenv("RAWRXD_FORCE_FFN_INP_BIN");
+    if (!p || !p[0]) return false;
+    if (const char* lyr = std::getenv("RAWRXD_FORCE_FFN_INP_LAYER"))
+        g_forceFfnInpLayer = std::atoi(lyr);
+    else
+        g_forceFfnInpLayer = 10;
+    FILE* f = std::fopen(p, "rb");
+    if (!f) {
+        std::fprintf(stderr, "FORCE_FFN_INP=FAIL open %s\n", p);
+        return false;
+    }
+    g_forceFfnInp.resize(2048);
+    const size_t n = std::fread(g_forceFfnInp.data(), sizeof(float), 2048, f);
+    std::fclose(f);
+    if (n != 2048) {
+        std::fprintf(stderr, "FORCE_FFN_INP=FAIL read n=%zu want=2048\n", n);
+        g_forceFfnInp.clear();
+        return false;
+    }
+    std::printf("FORCE_FFN_INP=LOADED path=%s n=2048 layer=%d\n", p, g_forceFfnInpLayer);
+    fflush(stdout);
+    return true;
+}
+
+static void maybeForceFfnNorm(struct ggml_tensor* t) {
+    if (!t || !t->data || t->type != GGML_TYPE_F32) return;
+    if (!loadForceFfnNorm()) return;
+    const int layer = parseLayerSuffix(t->name, "ffn_norm-");
+    if (layer < 0 || layer != g_forceFfnNormLayer || t->ne[0] != 2048) return;
+    const int n_tok = (int)(t->ne[1] > 0 ? t->ne[1] : 1);
+    const size_t stride = t->nb[1] / sizeof(float);
+    const bool allCols = (std::getenv("RAWRXD_FORCE_FFN_NORM_ALL") != nullptr);
+    const int nWrite = allCols ? n_tok : 1;
+    for (int i = 0; i < nWrite; ++i) {
+        float* col = (float*)t->data + (size_t)i * stride;
+        std::memcpy(col, g_forceFfnNorm.data(), 2048 * sizeof(float));
+    }
+    ++g_forceFfnNormHits;
+    std::printf("FORCE_FFN_NORM=APPLIED ffn_norm-%d cols=%d/%d hit=%d\n",
+                layer, nWrite, n_tok, g_forceFfnNormHits);
+    fflush(stdout);
+}
+
+static void maybeForceFfnInp(struct ggml_tensor* t) {
+    if (!t || !t->data || t->type != GGML_TYPE_F32) return;
+    if (!loadForceFfnInp()) return;
+    const int layer = parseLayerSuffix(t->name, "ffn_inp-");
+    if (layer < 0 || layer != g_forceFfnInpLayer || t->ne[0] != 2048) return;
+    const int n_tok = (int)(t->ne[1] > 0 ? t->ne[1] : 1);
+    const size_t stride = t->nb[1] / sizeof(float);
+    const bool allCols = (std::getenv("RAWRXD_FORCE_FFN_INP_ALL") != nullptr);
+    const int nWrite = allCols ? n_tok : 1;
+    for (int i = 0; i < nWrite; ++i) {
+        float* col = (float*)t->data + (size_t)i * stride;
+        std::memcpy(col, g_forceFfnInp.data(), 2048 * sizeof(float));
+    }
+    ++g_forceFfnInpHits;
+    std::printf("FORCE_FFN_INP=APPLIED ffn_inp-%d cols=%d/%d hit=%d\n",
+                layer, nWrite, n_tok, g_forceFfnInpHits);
+    fflush(stdout);
+}
+
 static void maybeForceKqvOut(struct ggml_tensor* t) {
     if (!t || !t->data || t->type != GGML_TYPE_F32) return;
     const int layer = parseLayerSuffix(t->name, "kqv_out-");
@@ -378,11 +484,32 @@ static bool cbEval(struct ggml_tensor* t, bool ask, void* /*user_data*/) {
             : parseLayerSuffix(name, isQ ? "Qcur-" : (isK ? "Kcur-" : "Vcur-")))
         : -1;
 
+    const bool forceFfnNorm = (std::getenv("RAWRXD_FORCE_FFN_NORM_BIN") != nullptr);
+    int forceFfnLayer = 10;
+    if (const char* p = std::getenv("RAWRXD_FORCE_FFN_NORM_LAYER")) forceFfnLayer = std::atoi(p);
+    const bool forceFfnInp = (std::getenv("RAWRXD_FORCE_FFN_INP_BIN") != nullptr);
+    int forceFfnInpLayer = 10;
+    if (const char* p = std::getenv("RAWRXD_FORCE_FFN_INP_LAYER")) forceFfnInpLayer = std::atoi(p);
+
     bool want = listAll ||
         (std::strcmp(name, "result_norm") == 0) ||
         (std::strcmp(name, "result_output") == 0) ||
         (std::strcmp(name, "embd") == 0) ||
         (std::strncmp(name, "embd-", 5) == 0);
+    // Same-operand FFN Gate A: must observe ffn_norm (to inject) + gate/up (to score).
+    if (forceFfnNorm) {
+        want = want ||
+            (lyrFfnNorm == forceFfnLayer) ||
+            (lyrFfnGate == forceFfnLayer) ||
+            (lyrFfnUp == forceFfnLayer);
+    }
+    if (forceFfnInp) {
+        want = want ||
+            (lyrFfnInp == forceFfnInpLayer) ||
+            (lyrFfnNorm == forceFfnInpLayer) ||
+            (lyrFfnGate == forceFfnInpLayer) ||
+            (lyrFfnUp == forceFfnInpLayer);
+    }
     if (sparseMode) {
         // Clean-authority sparse: force path (V+kqv all layers) + selected l_out + tip
         want = want ||
@@ -542,6 +669,11 @@ static bool cbEval(struct ggml_tensor* t, bool ask, void* /*user_data*/) {
         return true;
     }
 
+    // Inject frozen Deep2 FFN_INP before RMSNorm (same-source ownership).
+    if (lyrFfnInp >= 0) maybeForceFfnInp(t);
+    // Inject frozen Deep2 FFN_NORM before gate/up consume it.
+    if (lyrFfnNorm >= 0) maybeForceFfnNorm(t);
+
     const int n_embd = (int)t->ne[0];
     const int n_tok = (int)t->ne[1] > 0 ? (int)t->ne[1] : 1;
     if (n_embd <= 0) return true;
@@ -557,16 +689,35 @@ static bool cbEval(struct ggml_tensor* t, bool ask, void* /*user_data*/) {
         std::snprintf(canonBuf, sizeof(canonBuf), "ATTN_OUT_%d", lyrAttnOut);
         canon = canonBuf;
     } else if (lyrFfnInp >= 0) {
-        std::snprintf(canonBuf, sizeof(canonBuf), "FFN_INP_%d", lyrFfnInp);
+        if (forceFfnInp && lyrFfnInp == forceFfnInpLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_INP_FORCE_DEEP2_%d", lyrFfnInp);
+        else
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_INP_%d", lyrFfnInp);
         canon = canonBuf;
     } else if (lyrFfnNorm >= 0) {
-        std::snprintf(canonBuf, sizeof(canonBuf), "FFN_NORM_%d", lyrFfnNorm);
+        // After force: dump as FFN_NORM_FORCE_DEEP2_X when injection armed.
+        if (forceFfnNorm && lyrFfnNorm == forceFfnLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_NORM_FORCE_DEEP2_X_%d", lyrFfnNorm);
+        else if (forceFfnInp && lyrFfnNorm == forceFfnInpLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_NORM_FORCE_DEEP2_INP_%d", lyrFfnNorm);
+        else
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_NORM_%d", lyrFfnNorm);
         canon = canonBuf;
     } else if (lyrFfnGate >= 0) {
-        std::snprintf(canonBuf, sizeof(canonBuf), "FFN_GATE_%d", lyrFfnGate);
+        if (forceFfnNorm && lyrFfnGate == forceFfnLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_GATE_FORCE_DEEP2_X_%d", lyrFfnGate);
+        else if (forceFfnInp && lyrFfnGate == forceFfnInpLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_GATE_FORCE_DEEP2_INP_%d", lyrFfnGate);
+        else
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_GATE_%d", lyrFfnGate);
         canon = canonBuf;
     } else if (lyrFfnUp >= 0) {
-        std::snprintf(canonBuf, sizeof(canonBuf), "FFN_UP_%d", lyrFfnUp);
+        if (forceFfnNorm && lyrFfnUp == forceFfnLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_UP_FORCE_DEEP2_X_%d", lyrFfnUp);
+        else if (forceFfnInp && lyrFfnUp == forceFfnInpLayer)
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_UP_FORCE_DEEP2_INP_%d", lyrFfnUp);
+        else
+            std::snprintf(canonBuf, sizeof(canonBuf), "FFN_UP_%d", lyrFfnUp);
         canon = canonBuf;
     } else if (lyrFfnAct >= 0) {
         std::snprintf(canonBuf, sizeof(canonBuf), "FFN_ACT_%d", lyrFfnAct);

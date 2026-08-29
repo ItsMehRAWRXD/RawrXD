@@ -1,0 +1,63 @@
+BATCH2_L10_FFN_INP_SAME_SOURCE
+TODO=TODO_L10_FFN_INP_SAME_SOURCE
+ids=[1,21521,9312] pos=0 layer=10
+question=Does FFN_INP_10 already contain divergence under same pre-FFN class;
+         is ~3.6e-5 GATE gap inherited vs native gate-path?
+policy: dual PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6)
+
+dumps:
+  ATTN_OUT_d=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_ATTN_OUT_10_pos0_layer0_full_n2048_seq058.bin
+  ATTN_OUT_l=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\llama\llama_ATTN_OUT_10_pos0_layer0_full_n2048_seq1498.bin
+  FFN_INP_d=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_FFN_INP_10_pos0_layer0_full_n2048_seq059.bin
+  FFN_INP_l=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\llama\llama_FFN_INP_10_pos0_layer0_full_n2048_seq1501.bin
+  FFN_NORM_d=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_FFN_NORM_10_pos0_layer0_full_n2048_seq060.bin
+  FFN_NORM_l=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\llama\llama_FFN_NORM_10_pos0_layer0_full_n2048_seq1504.bin
+  FFN_GATE_d=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\deep2\deep2_FFN_GATE_10_pos0_layer0_full_n5632_seq061.bin
+  FFN_GATE_l=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_BODY_001\llama\llama_FFN_GATE_10_pos0_layer0_full_n5632_seq1507.bin
+
+NATIVE PAIRWISE (no force)
+ATTN_OUT_10                  abs=PASS   dual=PASS    max_abs=5.960464e-08 max_rel=2.398082e-03 first=0 largest=411 max_ulp=32768 exact=0
+                             fnvA=2434fe02aa03d8a4 fnvB=3005df1da822429b
+FFN_INP_10                   abs=FAIL   dual=FAIL    max_abs=4.577637e-05 max_rel=4.615302e-03 first=0 largest=624 max_ulp=41376 exact=0
+                             fnvA=a37c11763a7b4492 fnvB=03f144c94fe1b185
+FFN_NORM_10                  abs=FAIL   dual=FAIL    max_abs=1.907349e-06 max_rel=4.615338e-03 first=0 largest=624 max_ulp=51490 exact=0
+                             fnvA=107e38ac59308a62 fnvB=0456ef6a351f88a5
+FFN_GATE_10                  abs=FAIL   dual=FAIL    max_abs=3.599748e-05 max_rel=5.596329e-02 first=0 largest=4741 max_ulp=822920 exact=0
+                             fnvA=688218c0787f60a3 fnvB=f0411acba8aeb851
+RESID_IN_(INP-ATTN_OUT)      abs=FAIL   dual=FAIL    max_abs=4.577637e-05 max_rel=6.090122e-03 first=0 largest=624 max_ulp=80512 exact=0
+                             fnvA=62b10ac3b3efe58a fnvB=3938659f2165c201
+
+SAME-WEIGHT RMSNorm (scalar double accum, eps=1e-5)
+RMS(INP_d) vs NORM_d         abs=FAIL   dual=PASS    max_abs=1.907349e-06 max_rel=4.814464e-07 first=0 largest=624 max_ulp=6 exact=0
+                             fnvA=606c107371ce4119 fnvB=107e38ac59308a62
+RMS(INP_l) vs NORM_l         abs=PASS   dual=PASS    max_abs=4.768372e-07 max_rel=2.091803e-07 first=0 largest=1661 max_ulp=2 exact=0
+                             fnvA=f4de2a0899e54430 fnvB=0456ef6a351f88a5
+RMS(INP_d) vs RMS(INP_l)     abs=PASS   dual=PASS    max_abs=4.768372e-07 max_rel=4.615518e-03 first=0 largest=1661 max_ulp=51492 exact=0
+                             fnvA=606c107371ce4119 fnvB=f4de2a0899e54430
+same-source self-check       abs=PASS   dual=PASS    max_abs=0.000000e+00 max_rel=0.000000e+00 first=-1 largest=-1 max_ulp=0 exact=1
+                             fnvA=606c107371ce4119 fnvB=606c107371ce4119
+
+frozen_FFN_INP_10=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_FFN_INP_SAME_SOURCE\frozen_FFN_INP_10_deep2.bin fnv=a37c11763a7b4492
+frozen_FFN_NORM_from_INP_d=F:\~dev\rawrxd\evidence\DEEP2_PARITY_PROBE_001\BATCH2_L10_FFN_INP_SAME_SOURCE\frozen_FFN_NORM_from_INP_d.bin fnv=606c107371ce4119
+
+FORCE_FFN_INP llama dumps: (none yet — run probe with RAWRXD_FORCE_FFN_INP_BIN)
+
+PRIOR: BATCH2_L10_GATE_SAME_OPERAND — GEMV CLOSED under frozen FFN_NORM_10
+  A1==A2_q8k==llama FORCE  max_abs(gate)~2.09e-7
+
+ATTRIBUTION
+  ATTN_OUT_10 dual OK                 = 1
+  FFN_INP_10 differs (native)         = 1
+  residual-in (INP-ATTN) differs      = 1  (upstream layer state)
+  RMSNorm faithful to each side NORM  = 1
+  RMS(INP_d) vs RMS(INP_l) propagates = 0
+  native FFN_GATE_10 dual FAIL        = 1
+  same-operand GEMV CLOSED (prior)    = 1
+
+VERDICT=FFN_GATE_10_INHERITED_FROM_UPSTREAM_FFN_INP
+stop_condition_met:
+  FFN_INP differs
+  + same-weight RMSNorm reproduces each side / propagates INP delta
+  + same-operand GATE remains numerically correct (prior cert)
+  = FFN_GATE_10 is inherited, not root
+NEXT=TODO_RESUME_TIPS_AFTER_L10 (or localize residual-in / L9_OUT)
