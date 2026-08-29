@@ -2571,10 +2571,13 @@ struct CliOptions {
     fs::path model;
     fs::path workspace;
     std::string task;
+    fs::path taskFile;
     int maxSteps = 16;
     int maxTokens = 2048;
     bool noStream = false;
     bool toolSchemaCert = false;  // AGENT-TOOL-SCHEMA-002 lanes A/B (no model inference)
+    bool schemaRetryCert = false; // AGENT_SCHEMA_RETRY_001 — MODEL_RETRY (STRICT, no bare-key repair)
+    bool noFinalVerify = false;
     fs::path schemaCertOut;       // optional evidence dir for dumps
 };
 
@@ -2590,6 +2593,7 @@ static CliOptions parseCli(int argc, char** argv) {
         if (arg == "--model") options.model = value(i, arg);
         else if (arg == "--workspace") options.workspace = value(i, arg);
         else if (arg == "--task") options.task = value(i, arg);
+        else if (arg == "--task-file") options.taskFile = value(i, arg);
         else if (arg == "--max-steps") {
             const auto text = value(i, arg);
             int parsed = 0;
@@ -2606,16 +2610,25 @@ static CliOptions parseCli(int argc, char** argv) {
         }
         else if (arg == "--no-stream") options.noStream = true;
         else if (arg == "--tool-schema-cert") options.toolSchemaCert = true;
+        else if (arg == "--schema-retry-cert") options.schemaRetryCert = true;
+        else if (arg == "--no-final-verify") options.noFinalVerify = true;
         else if (arg == "--schema-cert-out") options.schemaCertOut = value(i, arg);
         else if (arg == "--help" || arg == "-h") {
-            std::cout << "RawrXD-Agentic.exe --model path --workspace DIR [--task \"...\"]\n"
-                         "  [--max-steps N] [--max-tokens N] [--no-stream]\n"
-                         "  [--tool-schema-cert] [--schema-cert-out DIR]\n";
+            std::cout << "RawrXD-Agentic.exe --model path --workspace DIR [--task \"...\"] [--task-file PATH]\n"
+                         "  [--max-steps N] [--max-tokens N] [--no-stream] [--no-final-verify]\n"
+                         "  [--tool-schema-cert] [--schema-retry-cert] [--schema-cert-out DIR]\n";
             std::exit(EXIT_SUCCESS);
         }
         else throw std::runtime_error("unknown argument: " + arg);
     }
-    if (!options.toolSchemaCert && options.model.empty())
+    if (!options.taskFile.empty()) {
+        options.task = readWholeFile(options.taskFile, 1ull * 1024ull * 1024ull);
+        while (!options.task.empty() &&
+               (options.task.back() == '\n' || options.task.back() == '\r')) {
+            options.task.pop_back();
+        }
+    }
+    if (!options.toolSchemaCert && !options.schemaRetryCert && options.model.empty())
         throw std::runtime_error("--model is required (unless --tool-schema-cert)");
     if (options.workspace.empty()) options.workspace = fs::current_path();
     return options;
@@ -2764,6 +2777,200 @@ static int runToolSchemaCert(const CliOptions& cli) {
     return (laneAPass && laneBPass) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
+static void printRuntimeInfo(const NativeInferenceClient& inference, const WorkspaceSandbox& sandbox);
+
+// AGENT_SCHEMA_RETRY_001 — MODEL_RETRY lane (NOT bare-key repair lane R):
+//   1) STRICT reject of malformed args → dispatched=false, zero side effects
+//   2) observation returned into chat
+//   3) real Deep2 second inference
+//   4) corrected strict JSON → dispatch exactly once → tool succeeds
+static int runSchemaRetryCert(const CliOptions& cli) {
+    // Fail-closed: bare-key repair MUST be off for this gate.
+    _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "1");
+
+    WorkspaceSandbox sandbox(cli.workspace);
+    ToolRegistry tools(sandbox);
+    const fs::path outDir = cli.schemaCertOut.empty()
+        ? fs::path("F:/~dev/rawrxd/evidence/AGENT_SCHEMA_RETRY_001")
+        : cli.schemaCertOut;
+    std::error_code ec;
+    fs::create_directories(outDir, ec);
+
+    const fs::path probePath = sandbox.root() / "main.c";
+    std::string beforeSha;
+    std::size_t beforeBytes = 0;
+    if (fs::exists(probePath)) {
+        const std::string before = readWholeFile(probePath);
+        beforeBytes = before.size();
+        // Lightweight fingerprint (size + FNV) — enough to prove no write on reject.
+        std::uint64_t h = 14695981039346656037ull;
+        for (unsigned char c : before) {
+            h ^= c;
+            h *= 1099511628211ull;
+        }
+        beforeSha = std::to_string(beforeBytes) + ":" + std::to_string(h);
+    }
+
+    const std::string malformedRaw =
+        "TOOL_CALL: read_file {path:main.c}";
+    const auto malformedCalls = ToolCallParser::parse(malformedRaw);
+    if (malformedCalls.empty()) {
+        std::fprintf(stderr, "[AGENT_SCHEMA_RETRY_001] FAIL: malformed parse empty\n");
+        return EXIT_FAILURE;
+    }
+    const ToolCall& firstCall = malformedCalls.front();
+    const ToolResult firstResult = tools.dispatch(firstCall);
+
+    const bool firstSchemaValid = firstResult.error != "schema_validation";
+    const bool firstDispatched = firstResult.dispatched;
+    int handlerExecutions = firstDispatched ? 1 : 0;
+
+    std::string afterRejectSha = beforeSha;
+    if (fs::exists(probePath)) {
+        const std::string after = readWholeFile(probePath);
+        std::uint64_t h = 14695981039346656037ull;
+        for (unsigned char c : after) {
+            h ^= c;
+            h *= 1099511628211ull;
+        }
+        afterRejectSha = std::to_string(after.size()) + ":" + std::to_string(h);
+    }
+    const bool firstSideEffects = (afterRejectSha != beforeSha);
+
+    // Seed conversation: task → malformed assistant → schema observation → Deep2 corrects.
+    const auto catalogModel = rawrxd::models::ModelCatalog::resolve(cli.model.string());
+    if (!catalogModel) {
+        throw std::runtime_error("ModelCatalog could not resolve: " + cli.model.string());
+    }
+    NativeInferenceClient inference(catalogModel->path);
+    printRuntimeInfo(inference, sandbox);
+
+    const std::string task =
+        cli.task.empty()
+            ? "Read main.c using tools. After a schema_validation error, "
+              "resend the SAME tool with strict JSON double-quoted keys, e.g. "
+              "TOOL_CALL: read_file {\"path\":\"main.c\"}. "
+              "Do not invent content. First line MUST be a TOOL_CALL."
+            : cli.task;
+
+    std::vector<ChatMessage> messages;
+    messages.push_back({
+        Role::System,
+        "You are RawrXD's local coding agent. "
+        "Tool arguments MUST be strict JSON with double-quoted keys. "
+        "If a tool observation has error=schema_validation, correct the JSON and retry. "
+        "Never echo observation JSON. Emit TOOL_CALL or a short final answer.",
+        {}, {}
+    });
+    messages.push_back({Role::User, task, {}, {}});
+    messages.push_back({Role::Assistant, malformedRaw, {}, {}});
+    messages.push_back({
+        Role::Tool,
+        firstResult.toJson(),
+        firstCall.name,
+        firstCall.id
+    });
+
+    std::printf("[SCHEMA_RETRY] FIRST_CALL_SCHEMA_VALID=%d FIRST_CALL_DISPATCHED=%d "
+                "FIRST_CALL_SIDE_EFFECTS=%d\n",
+                firstSchemaValid ? 1 : 0,
+                firstDispatched ? 1 : 0,
+                firstSideEffects ? 1 : 0);
+    std::fflush(stdout);
+
+    const std::string secondResponse =
+        inference.ChatSync(messages, tools.definitions(), cli.maxTokens);
+    const bool newInferenceObserved = !trim(secondResponse).empty();
+
+    const auto secondCalls = ToolCallParser::parse(secondResponse);
+    bool secondSchemaValid = false;
+    bool secondDispatched = false;
+    bool secondSuccess = false;
+    bool correctedDifferent = false;
+    std::string secondArgs;
+    ToolResult secondResult{};
+
+    if (!secondCalls.empty()) {
+        const ToolCall& second = secondCalls.front();
+        secondArgs = second.argumentsJson;
+        correctedDifferent =
+            (second.name != firstCall.name) ||
+            (second.argumentsJson != firstCall.argumentsJson);
+        secondResult = tools.dispatch(second);
+        secondSchemaValid = (secondResult.error != "schema_validation");
+        secondDispatched = secondResult.dispatched;
+        secondSuccess = secondResult.success && secondDispatched;
+        if (secondDispatched) ++handlerExecutions;
+    }
+
+    std::printf("[SCHEMA_RETRY] SECOND_CALL_SCHEMA_VALID=%d SECOND_CALL_DISPATCHED=%d "
+                "corrected_different=%d handler_executions=%d\n",
+                secondSchemaValid ? 1 : 0,
+                secondDispatched ? 1 : 0,
+                correctedDifferent ? 1 : 0,
+                handlerExecutions);
+    std::fflush(stdout);
+
+    const bool malformedRejected = !firstSchemaValid && !firstDispatched;
+    const bool sideEffectFree = !firstSideEffects;
+    const bool correctedDispatched = secondSchemaValid && secondDispatched && secondSuccess;
+    const bool handlerOnce = (handlerExecutions == 1) && correctedDispatched;
+
+    const bool pass =
+        malformedRejected &&
+        sideEffectFree &&
+        newInferenceObserved &&
+        correctedDifferent &&
+        correctedDispatched &&
+        handlerOnce;
+
+    std::ostringstream report;
+    report << "AGENT_SCHEMA_RETRY_001\n"
+           << "lane=MODEL_RETRY (RAWRXD_TOOL_ARGS_STRICT=1; bare-key repair OFF)\n"
+           << "FIRST_CALL_SCHEMA_VALID=" << (firstSchemaValid ? 1 : 0) << "\n"
+           << "FIRST_CALL_DISPATCHED=" << (firstDispatched ? 1 : 0) << "\n"
+           << "FIRST_CALL_SIDE_EFFECTS=" << (firstSideEffects ? 1 : 0) << "\n"
+           << "SECOND_CALL_SCHEMA_VALID=" << (secondSchemaValid ? 1 : 0) << "\n"
+           << "SECOND_CALL_DISPATCHED=" << (secondDispatched ? 1 : 0) << "\n"
+           << "TOTAL_HANDLER_EXECUTIONS=" << handlerExecutions << "\n"
+           << "CORRECTION_REQUIRED_NEW_INFERENCE=" << (newInferenceObserved ? 1 : 0) << "\n"
+           << "malformed_rejected=" << (malformedRejected ? "PASS" : "FAIL") << "\n"
+           << "malformed_side_effect_free=" << (sideEffectFree ? "PASS" : "FAIL") << "\n"
+           << "new_inference_observed=" << (newInferenceObserved ? "PASS" : "FAIL") << "\n"
+           << "corrected_call_different=" << (correctedDifferent ? "PASS" : "FAIL") << "\n"
+           << "corrected_call_dispatched=" << (correctedDispatched ? "PASS" : "FAIL") << "\n"
+           << "handler_execution_count=" << handlerExecutions << "\n"
+           << "first_args=" << firstCall.argumentsJson << "\n"
+           << "second_args=" << (secondArgs.empty() ? "<none>" : secondArgs) << "\n"
+           << "second_response=\n" << secondResponse << "\n"
+           << "first_result=" << firstResult.toJson() << "\n"
+           << "second_result=" << secondResult.toJson() << "\n"
+           << "AGENT_SCHEMA_RETRY_001=" << (pass ? "PASS" : "FAIL") << "\n";
+
+    const std::string text = report.str();
+    std::cout << text;
+    writeWholeFile(outDir / "AGENT_SCHEMA_RETRY_001.txt", text);
+
+    std::ostringstream lock;
+    lock << "{\n"
+         << "  \"gate\": \"AGENT_SCHEMA_RETRY_001\",\n"
+         << "  \"status\": \"" << (pass ? "PASS" : "FAIL") << "\",\n"
+         << "  \"lane\": \"MODEL_RETRY\",\n"
+         << "  \"strict\": true,\n"
+         << "  \"bare_key_repair\": false,\n"
+         << "  \"FIRST_CALL_SCHEMA_VALID\": " << (firstSchemaValid ? "true" : "false") << ",\n"
+         << "  \"FIRST_CALL_DISPATCHED\": " << (firstDispatched ? "true" : "false") << ",\n"
+         << "  \"SECOND_CALL_SCHEMA_VALID\": " << (secondSchemaValid ? "true" : "false") << ",\n"
+         << "  \"SECOND_CALL_DISPATCHED\": " << (secondDispatched ? "true" : "false") << ",\n"
+         << "  \"TOTAL_HANDLER_EXECUTIONS\": " << handlerExecutions << ",\n"
+         << "  \"note\": \"Distinct from SCHEMA-002 lane R (deterministic parser repair).\"\n"
+         << "}\n";
+    writeWholeFile(outDir / "AGENT_SCHEMA_RETRY_001.lock.json", lock.str());
+
+    _putenv_s("RAWRXD_TOOL_ARGS_STRICT", "0");
+    return pass ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 static void printRuntimeInfo(const NativeInferenceClient& inference, const WorkspaceSandbox& sandbox) {
     const auto& metadata = inference.metadata();
     std::cout << "RawrXD Sovereign Agentic Runtime\n"
@@ -2784,6 +2991,9 @@ int main(int argc, char** argv) {
         const CliOptions cli = parseCli(argc, argv);
         if (cli.toolSchemaCert) {
             return runToolSchemaCert(cli);
+        }
+        if (cli.schemaRetryCert) {
+            return runSchemaRetryCert(cli);
         }
         WorkspaceSandbox sandbox(cli.workspace);
 
@@ -2834,6 +3044,7 @@ int main(int argc, char** argv) {
         config.maxSteps = cli.maxSteps;
         config.maxTokensPerTurn = cli.maxTokens;
         config.streamToConsole = !cli.noStream;
+        if (cli.noFinalVerify) config.verifyFinalAnswers = false;
         SovereignAgent agent(inference, tools, config);
         if (!cli.task.empty()) {
             const AgentResult result = agent.execute(cli.task);

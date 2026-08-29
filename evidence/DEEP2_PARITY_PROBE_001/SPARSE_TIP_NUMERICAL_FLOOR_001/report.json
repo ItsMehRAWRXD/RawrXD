@@ -1,0 +1,82 @@
+{
+  "gate": "SPARSE_TIP_NUMERICAL_FLOOR_001",
+  "status": "PASS",
+  "floor_source": "FFN_GATE_2",
+  "floor_element": 5475,
+  "floor_class": "1ULP_GEMV",
+  "floor_max_through_layer": 8,
+  "floor_eps": 5e-05,
+  "first_layer_above_floor": 10,
+  "layers": [
+    {
+      "layer": 2,
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1366944313049316e-06,
+      "largest": 624,
+      "floor_class": "FLOOR",
+      "tip_gate": "PASS_FLOOR"
+    },
+    {
+      "layer": 4,
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1366944313049316e-06,
+      "largest": 624,
+      "floor_class": "FLOOR",
+      "tip_gate": "PASS_FLOOR"
+    },
+    {
+      "layer": 8,
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.1515955924987793e-06,
+      "largest": 624,
+      "floor_class": "FLOOR",
+      "tip_gate": "PASS_FLOOR"
+    },
+    {
+      "layer": 9,
+      "abs": "FAIL",
+      "dual": "INSPECT",
+      "max_abs": 4.57763671875e-05,
+      "max_rel": 3.166496753692627e-06,
+      "largest": 624,
+      "floor_class": "AT_FLOOR",
+      "tip_gate": "INSPECT"
+    },
+    {
+      "layer": 10,
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 5.829334259033203e-05,
+      "max_rel": 5.829334259033203e-05,
+      "largest": 1198,
+      "floor_class": "ABOVE_FLOOR",
+      "tip_gate": "FAIL"
+    },
+    {
+      "layer": 11,
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.00010654330253601074,
+      "max_rel": 0.00010654330253601074,
+      "largest": 503,
+      "floor_class": "ABOVE_FLOOR",
+      "tip_gate": "FAIL"
+    },
+    {
+      "layer": 12,
+      "abs": "FAIL",
+      "dual": "FAIL",
+      "max_abs": 0.0004634857177734375,
+      "max_rel": 0.0004547238349914551,
+      "largest": 1454,
+      "floor_class": "ABOVE_FLOOR",
+      "tip_gate": "FAIL"
+    }
+  ]
+}

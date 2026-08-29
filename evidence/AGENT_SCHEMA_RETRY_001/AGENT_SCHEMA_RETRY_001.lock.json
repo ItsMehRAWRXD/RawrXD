@@ -1,0 +1,13 @@
+{
+  "gate": "AGENT_SCHEMA_RETRY_001",
+  "status": "PASS",
+  "lane": "MODEL_RETRY",
+  "strict": true,
+  "bare_key_repair": false,
+  "FIRST_CALL_SCHEMA_VALID": false,
+  "FIRST_CALL_DISPATCHED": false,
+  "SECOND_CALL_SCHEMA_VALID": true,
+  "SECOND_CALL_DISPATCHED": true,
+  "TOTAL_HANDLER_EXECUTIONS": 1,
+  "note": "Distinct from SCHEMA-002 lane R (deterministic parser repair)."
+}

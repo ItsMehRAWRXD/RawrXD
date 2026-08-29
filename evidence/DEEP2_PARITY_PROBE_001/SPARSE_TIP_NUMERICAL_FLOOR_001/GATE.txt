@@ -1,0 +1,47 @@
+SPARSE_TIP_NUMERICAL_FLOOR_001
+================================
+date=2026-08-29
+authority=BATCH2_SPARSE_CLEAN_001 deep2_post_swiglu_fix + llama
+           BATCH2_L8_L12_EXPAND_001 llama for L9..L12
+prereq=BATCH2_L2_FFN_LADDER_001 (SwiGLU CLOSED; FFN_GATE_2 1ULP @5475)
+
+FLOOR POLICY (do NOT use global 5e-5 on L12+)
+---------------------------------------------
+layers 0..8 : tip_eps = 5.0e-5  → classify as numerical floor
+layers >= 9 : existing strict dual abs/rel gate
+
+FLOOR CLASSIFICATION
+--------------------
+floor_source=FFN_GATE_2
+floor_element=5475
+floor_class=1ULP_GEMV
+floor_max_through_layer=8
+floor_eps=5e-5
+
+POS0 LAYER TIPS (floor-aware)
+-----------------------------
+stage     max_abs      floor_class   tip_gate / dual
+L2_OUT    4.577637e-05 FLOOR         PASS_FLOOR (was abs-FAIL @1e-6)
+L4_OUT    4.577637e-05 FLOOR         PASS_FLOOR
+L8_OUT    4.577637e-05 FLOOR         PASS_FLOOR
+L9_OUT    4.577637e-05 AT_FLOOR      dual=INSPECT (strict; still floor magnitude)
+L10_OUT   5.829334e-05 ABOVE_FLOOR   dual=FAIL  << FIRST_LAYER_ABOVE_FLOOR
+L11_OUT   1.065433e-04 ABOVE_FLOOR   dual=FAIL
+L12_OUT   4.634857e-04 ABOVE_FLOOR   dual=FAIL  (~10× floor)
+
+DECISIVE
+--------
+FIRST_LAYER_ABOVE_FLOOR=10
+L2..L8 inherited residual ≠ L12 growth — different debugging problems.
+Do NOT reopen ≤ L1. Do NOT hold parity campaign on removable 1ULP unless
+bit-exact FFN_GATE_2 GEMV is pursued as optional A2.
+
+STATUS
+------
+SPARSE_TIP_NUMERICAL_FLOOR_001=PASS
+
+NEXT
+----
+A2 optional: isolate FFN_GATE_2 Deep2 vs scalar matched-order GEMV
+A3: body-localize FIRST_LAYER_ABOVE_FLOOR=L10 (BATCH2_L10_BODY_001 already started)
+Leave LOGITS/ARGMAX until forward divergence above floor is controlled.

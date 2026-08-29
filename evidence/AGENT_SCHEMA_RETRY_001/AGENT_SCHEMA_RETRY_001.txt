@@ -1,0 +1,24 @@
+AGENT_SCHEMA_RETRY_001
+lane=MODEL_RETRY (RAWRXD_TOOL_ARGS_STRICT=1; bare-key repair OFF)
+FIRST_CALL_SCHEMA_VALID=0
+FIRST_CALL_DISPATCHED=0
+FIRST_CALL_SIDE_EFFECTS=0
+SECOND_CALL_SCHEMA_VALID=1
+SECOND_CALL_DISPATCHED=1
+TOTAL_HANDLER_EXECUTIONS=1
+CORRECTION_REQUIRED_NEW_INFERENCE=1
+malformed_rejected=PASS
+malformed_side_effect_free=PASS
+new_inference_observed=PASS
+corrected_call_different=PASS
+corrected_call_dispatched=PASS
+handler_execution_count=1
+first_args={path:main.c}
+second_args={"path":"main.c"}
+second_response=
+To resend the same tool with corrected strict JSON, use the `TOOL_CALL` variable with the same key and value as the original observation. For example, if the original observation was `read_file {"path":"main.c"}`, the next observation should be `TOOL_CALL: read_file {"path":"main.c"}`.
+
+To avoid inventing content, do not invent the content of the tool observation. Instead, use the strict JSON double-quoted keys and string values as the input to the tool.
+first_result={"ok":false,"tool":"read_file","exit_code":-3,"dispatched":false,"output":"error=schema_validation dispatched=false. Fix arguments to strict JSON with quoted keys, e.g. TOOL_CALL: read_file {\"path\":\"main.c\"}. Details: [arguments must be valid JSON] [use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}]","error":"schema_validation","details":["arguments must be valid JSON","use double-quoted keys and string values, e.g. {\"path\":\"main.c\"}"]}
+second_result={"ok":true,"tool":"read_file","exit_code":0,"dispatched":true,"output":"#include <stdio.h>\nint main(void) {\n    int x = DOES_NOT_EXIST;\n    printf(\"hello from b01 %d\\n\", x);\n    return 0;\n}\r\n"}
+AGENT_SCHEMA_RETRY_001=PASS

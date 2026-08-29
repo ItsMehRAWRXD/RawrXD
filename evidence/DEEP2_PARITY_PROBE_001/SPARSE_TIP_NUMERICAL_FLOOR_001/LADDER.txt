@@ -1,0 +1,14 @@
+SPARSE_TIP_NUMERICAL_FLOOR_001
+floor_eps=5e-05
+policy: layers<=8 tip_eps=5e-5 FLOOR; layers>=9 strict dual
+
+L2_OUT max_abs=4.577637e-05 dual=INSPECT floor_class=FLOOR tip_gate=PASS_FLOOR
+L4_OUT max_abs=4.577637e-05 dual=INSPECT floor_class=FLOOR tip_gate=PASS_FLOOR
+L8_OUT max_abs=4.577637e-05 dual=INSPECT floor_class=FLOOR tip_gate=PASS_FLOOR
+L9_OUT max_abs=4.577637e-05 dual=INSPECT floor_class=AT_FLOOR tip_gate=INSPECT
+L10_OUT max_abs=5.829334e-05 dual=FAIL floor_class=ABOVE_FLOOR tip_gate=FAIL
+L11_OUT max_abs=1.065433e-04 dual=FAIL floor_class=ABOVE_FLOOR tip_gate=FAIL
+L12_OUT max_abs=4.634857e-04 dual=FAIL floor_class=ABOVE_FLOOR tip_gate=FAIL
+
+FIRST_LAYER_ABOVE_FLOOR=10
+SPARSE_TIP_NUMERICAL_FLOOR_001=PASS

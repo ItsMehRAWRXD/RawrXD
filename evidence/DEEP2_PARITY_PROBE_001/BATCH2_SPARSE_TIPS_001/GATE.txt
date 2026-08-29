@@ -1,0 +1,62 @@
+BATCH2_SPARSE_TIPS_001 — sparse tips under FORCE L0..21 (post SwiGLU)
+====================================================================
+date=2026-08-29
+ids=[1,21521,9312] pos=0 abs_eps=1e-6
+authority=BATCH2_SPARSE_CLEAN_001
+  llama/                 FORCE_EXPAND_V APPLIED=22 SKIP=0 (kqv_out-0..21)
+  deep2_post_swiglu_fix/
+harness=g:\rawrxd\tests\gate2_sparse_tips.cpp
+prereq=BATCH2_L2_FFN_LADDER_001 (SwiGLU CLOSED; residual ULP documented)
+
+PRE-FIX (stale deep2/ — do not use)
+-----------------------------------
+L2_OUT max_abs=6.01e-3  ← clamp SwiGLU (CLOSED)
+
+POST-FIX sparse tips (--all)
+----------------------------
+stage        max_abs     note
+L2_OUT       4.58e-5     FIRST_FAIL @ abs_eps=1e-6; same floor as L2 FFN_ACT
+L4_OUT       4.58e-5     same residual floor (largest=624)
+L8_OUT       4.58e-5     same residual floor
+L12_OUT      4.63e-4     growth
+L16_OUT      2.76e-3     growth
+L21_OUT      1.98e+1     large — do not localize as tip-only until L2 residual retired
+FINAL_NORM   2.98e+1     also suspect dump/tip alignment (see L1_CLEAN VERDICT)
+
+LOGITS / ARGMAX
+---------------
+llama LOGITS pos0 present  ARGMAX=13
+deep2 LOGITS only pos3     SKIP (not tip-aligned)
+ARGMAX deep2               OPEN — need deep2_LOGITS_pos0 dump
+
+FIRST_FAIL
+----------
+L2_OUT max_abs=4.577637e-05
+Disposition: expand L2 band → see BATCH2_L2_FFN_LADDER_001
+  SwiGLU clamp = CLOSED
+  residual = FFN_GATE_2 1 ULP @ idx5475 → ACT/LAYER amplify
+Do NOT reopen <= L1.
+Do NOT treat L21/FINAL_NORM magnitudes as independent tip defects yet.
+
+STATUS
+------
+Gate1 / tokenizer          CLOSED
+L0 / L1                    CLOSED
+L2 SwiGLU material bug     CLOSED
+L2..L8 ULP tip floor       CLOSED — SPARSE_TIP_NUMERICAL_FLOOR_001 (tip_eps=5e-5)
+FIRST_LAYER_ABOVE_FLOOR    L10 (max_abs=5.83e-5; dual FAIL)
+L12 growth (~10x floor)    OPEN — body-localize at L10, not L21
+tip.final_norm / logits    BLOCKED until above-floor divergence controlled
+
+NEXT
+----
+A2 optional: FFN_GATE_2 Deep2 vs scalar matched-order GEMV (1ULP removability)
+A3: body-localize L10 (BATCH2_L10_BODY_001) — FIRST_LAYER_ABOVE_FLOOR
+Do NOT equate 4.58e-5 floor with L12 4.6e-4 growth.
+B: AGENT_SCHEMA_RETRY_001 MODEL_RETRY — see evidence/AGENT_SCHEMA_RETRY_001
+
+Artifacts
+---------
+evidence/.../SPARSE_TIP_NUMERICAL_FLOOR_001/
+build/gate2/gate2_sparse_tips_all.out.txt
+evidence/.../BATCH2_SPARSE_TIPS_001/GATE.txt

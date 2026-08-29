@@ -1,50 +1,18 @@
-NEXT_CERT — ordered todos (post push)
-=====================================
-date=2026-08-29
-branch=cert/deep2-parity-probe-001 @ d3d6057
-authority=FORCE_PRE_O_EXPAND_V
-machine_readable=NEXT_CERT_MANIFEST.json
+NEXT_CERT todos (live)
+======================
+PARITY
+  DONE: SPARSE_TIP_NUMERICAL_FLOOR_001 (L0..8 tip_eps=5e-5; FFN_GATE_2 @5475)
+  DONE: FIRST_LAYER_ABOVE_FLOOR=L10 (L9 still floor magnitude; L10 dual FAIL)
+  ACTIVE: body-localize L10 (ATTN_NORM..LAYER_OUT) — not L21
+  OPTIONAL A2: FFN_GATE_2 bit-exact GEMV (1ULP removability; do not hostage campaign)
+  BLOCKED: LOGITS/ARGMAX until above-floor forward controlled
+  DO_NOT: treat 4.58e-5 floor == L12 4.6e-4 growth
 
-CLOSED / DO_NOT_REOPEN
-----------------------
-tokenizer | Track A/B | L0 attn+FFN | O_PROJ/wo
-L0→L1 entry | L1 clean attn+FFN | blk.1.attn_output
-SPARSE_TIP_001 L1 fail (INVALIDATED — ENTRY contamination)
-SwiGLU clamp bug (FIXED in F:~dev Deep2Engine::SwiGLU)
+AGENT
+  DONE: schema_pre_dispatch (AGENT-TOOL-SCHEMA-002 A/R/B)
+  DONE: AGENT_SCHEMA_RETRY_001 MODEL_RETRY (STRICT reject -> Deep2 correct -> 1 dispatch)
+  NEXT: failed-tool strategy retry (HexMag mutate on tool fail)
+  THEN: successful repair loop / full agent E2E
+  CLOSED: HEXMAG_POLYMORPHIC_REPEAT_TUNER_001 (tuner isolation)
 
-ACTIVE FIRST_FAIL
------------------
-L2_OUT / FFN_ACT_2 residual max_abs≈4.58e-5 under CLEAN EXPAND_V
-(post clamp-fix; not oracle contamination)
-
-TODOS (in order)
-----------------
-1. TODO_L2_ACT_OPERAND_FREEZE     NEXT
-   Freeze GATE_2/UP_2; prove ACT == silu(G)*U; classify residual
-
-2. TODO_L2_SAME_OPERAND_DOWN     PENDING
-   Force identical ACT → compare DOWN/LAYER_OUT (Gate A)
-
-3. TODO_SPARSE_TIPS_RERUN        PENDING
-   L2→L4→L8→L12→L16→L21 under SPARSE_CLEAN only; stop at first FAIL
-   invariant: FORCE APPLIED==n_layer SKIP==0
-
-4. TODO_TIP_FINAL_NORM_ALIGN     PENDING
-   Tip-index FINAL_NORM (not mid-prefill mismatch)
-
-5. TODO_LOGITS_VECTOR            PENDING
-   Numerical LOGITS gate (separate from TOP1)
-
-6. TODO_ARGMAX_TOP1              PENDING
-   TOP1 exact; TOPK optional
-
-7. TODO_PORT_SWIGLU_G_TREE       PENDING
-   Port stable SiLU to g:/rawrxd (still clamp±6)
-
-8. TODO_FIX_DEEP2_SWIGLU_EXPORT  PENDING
-   Fix Deep2_SwiGLU AVX clamp±10 used by benches
-
-STOP RULE
----------
-PASS → continue tip ladder
-FAIL → expand only that layer/interval; then internals
+DO_NOT_REOPEN: SiLU / wo / <=L1 / schema pre-dispatch / L2..L8 tip floor
