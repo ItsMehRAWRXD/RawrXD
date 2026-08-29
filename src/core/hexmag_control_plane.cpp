@@ -2,6 +2,7 @@
 // hexmag_control_plane.cpp — Policy gate + MASM HexMag swarm integration
 // ============================================================================
 #include "core/hexmag_control_plane.hpp"
+#include "agentic/HexMagAction.hpp"
 
 #include <cstring>
 #include <mutex>
@@ -224,9 +225,19 @@ AskResult askWithAutoStart(const std::string& prompt, const std::string& context
     claim.directiveId = missionId;
     claim.generationId = HexMag_Tuner_GenerationId();
 
-    // FINAL GATE — confidence irrelevant
-    if (!allowFinal(claim)) {
-        if (claim.state == ClaimState::MissingInput) {
+    // Map ClaimState → HexMagAction finalize class (unsupported_claim_emission=FORBIDDEN)
+    ClaimFinalizeClass fin = ClaimFinalizeClass::Unverified;
+    if (claim.state == ClaimState::Proven) fin = ClaimFinalizeClass::Proven;
+    else if (claim.state == ClaimState::Verified || claim.verified())
+        fin = ClaimFinalizeClass::Verified;
+    else if (claim.state == ClaimState::MissingInput) fin = ClaimFinalizeClass::MissingInput;
+    else if (claim.state == ClaimState::Contradicted) fin = ClaimFinalizeClass::Contradicted;
+    else if (claim.state == ClaimState::FinalRejected) fin = ClaimFinalizeClass::Unknown;
+
+    // FINAL GATE — confidence irrelevant; HexMagAction + allowFinal both required
+    if (!allowFinal(claim) || !isAllowedFinalClaim(fin)) {
+        if (claim.state == ClaimState::MissingInput
+            || fin == ClaimFinalizeClass::MissingInput) {
             out.success = false;
             out.error = ans.empty() ? "INSUFFICIENT_INFORMATION" : ans;
             out.answer = out.error;

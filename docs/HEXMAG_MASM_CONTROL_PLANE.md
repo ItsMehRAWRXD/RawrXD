@@ -57,18 +57,24 @@ agent minting and failure-directed repeat tuning (wrong → mutate genome → ne
 | Layer | Location |
 |-------|----------|
 | Control plane (canonical) | `src/asm/RawrXD_HexMag_Swarm.asm` |
-| C++ mirror | `src/core/hexmag_swarm.hpp` |
-| Actions / finalize classes | `src/agentic/HexMagAction.hpp` |
+| Repeat tuner (MASM) | `src/asm/RawrXD_HexMag_RepeatTuner.asm` |
+| C++ / IDE facade | `src/core/hexmag_control_plane.*` |
+| RepeatSession bridge | `src/agentic/HexMagRepeatTunerBridge.hpp` |
+| Actions / finalize classes | `src/agentic/HexMagAction.hpp` (gated in control plane) |
 | Runtime mode toggle | `src/agentic/AgentRuntimeController.hpp` |
-| Smoke | `tests/hexmag_swarm_smoke.cpp` |
+| Smoke / cert | `scripts/Smoke-HexMagMasm.ps1` |
 | Architecture V2 | `docs/HEXMAG_ARCH_V2.md` |
-| Python reference | `RawrXD-ModelLoader/services/hexmag/` |
+| Python reference | `RawrXD-ModelLoader/services/hexmag/` (REFERENCE/CI only) |
+
+**Name collision:** tool `hexmag_swarm` in `subagent_core.cpp` = NativeAgent fan-out,
+not the MASM control plane.
 
 ```text
 HexMag Swarm
 = no learned weights / tokenizer / inference math / model dependency
 = question-conditioned ephemeral responders
-= generate-on-contact (contract); recursive loop INCOMPLETE on MASM
+= generate-on-contact; recursive refine/respawn/deflate CERTIFIED in MASM smoke
+  (scripts/Smoke-HexMagMasm.ps1: unit + E2E + HEXMAG_POLYMORPHIC_REPEAT_TUNER_001)
 ```
 
 ## Label split
@@ -98,15 +104,11 @@ hexmag.verify → llm.answer.final → hexmag.deflate
 
 ## Next implementation target (MASM)
 
-**Not** more Python bot specialization.
+Loop **candidate → reverse → spawn/refine → final → deflate** is smoke-certified.
+Remaining product gap: attach ReasoningOracle / Deep2 for non-stub candidates and
+emit `HX_EVT_NEED_INPUT` on informational deficits.
 
-Implement on the control plane:
-
-```text
-candidate → reverse → spawn/refine → final → deflate
-```
-
-When that loop is demonstrated in smoke, flip:
+Status already flipped:
 
 ```text
 HEXMAG_RECURSIVE_REFINEMENT=COMPLETE
@@ -117,12 +119,18 @@ HEXMAG_POST_FINAL_DEFLATION=COMPLETE
 ## Certification (current smoke)
 
 ```text
-HEXMAG_SWARM_CONTROL_PLANE = CERTIFIED   # fixed handoff chain
+HEXMAG_SWARM_CONTROL_PLANE = CERTIFIED   # handoff + refine + deflate
 HEXMAG_WEIGHTED_MODEL      = FALSE
-HEXMAG_GENERATE_ON_CONTACT = TRUE        # contract
-HEXMAG_RECURSIVE_*         = INCOMPLETE  # measurable gap
+HEXMAG_GENERATE_ON_CONTACT = TRUE
+HEXMAG_RECURSIVE_*         = COMPLETE    # smoke + cert harness
+HEXMAG_REPEAT_TUNER        = COMPLETE    # HEXMAG_POLYMORPHIC_REPEAT_TUNER_001
+HEXMAG_IDE_CLIENT          = MASM        # hexmag_control_plane (not FastAPI stubs)
 DEEP2_PARITY_AUTHORITY     = UNCHANGED
 ```
+
+Note: MASM codegen candidates are still **deterministic stub variants** until a
+ReasoningOracle/Deep2 binder is attached; the *control-plane loop* is what is
+certified COMPLETE. Python FastAPI remains REFERENCE/CI only.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\Smoke-HexMagMasm.ps1
@@ -133,6 +141,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Smoke-HexMagMasm.ps1
 - `HexMag_Init` / `HexMag_Shutdown`
 - `HexMag_SubmitGoal` / `HexMag_Step` / `HexMag_PollEvent` / `HexMag_RunToSatisfied`
 - `HexMag_BotCount` / `HexMag_GetState`
+- `HexMag_SetParallelAgents` / `HexMag_GetParallelAgents` (Cursor-style swarm width 1–8)
+- `HexMag_Feedback` / tuner exports (`HexMag_Tuner_*`)
 
 **Deps:** `VirtualAlloc` / `VirtualFree` / `OutputDebugStringA` only.
 
