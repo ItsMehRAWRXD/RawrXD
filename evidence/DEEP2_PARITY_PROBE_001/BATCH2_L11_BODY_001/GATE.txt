@@ -1,0 +1,43 @@
+BATCH2_L11_BODY_001
+============================================================
+date=2026-08-29
+prereq=e53bac4b0 L10_OUT INHERITED_FROM_FFN_DOWN (L10 CLOSED)
+authority=EXPAND_V + REF_CB_MAX_LAYER=12 + Deep2 STAGE_DUMP_LAYERS=10,11,12
+pairing=earliest pos0 seq
+ids=[1,21521,9312]
+
+L11 input freeze
+----------------
+  L11_IN (=L10_OUT)  dual=FAIL  max_abs=5.829e-05  amp_vs_L10_CERT=1.000  class=inherited
+  ATTN_OUT_11        dual=PASS  max_abs=1.192e-07  class=CLOSED
+  FFN_INP_11         dual=FAIL  max_abs=5.826e-05  amp_vs_L11_IN=1.000   class=inherited
+  (FFN_INP amp_vs ATTN is spurious: ATTN is ~0; residual carries L11_IN)
+
+L11 FFN ladder
+--------------
+  FFN_NORM_11  dual=INSPECT max_abs=4.802e-06  class=inherited (RMS shrink)
+  FFN_GATE_11  dual=FAIL    max_abs=1.688e-04  amp_vs_NORM~35x   class=amplification
+  FFN_UP_11    dual=FAIL    max_abs=9.619e-05  class=inherited
+  FFN_ACT_11   dual=FAIL    max_abs=1.491e-05  class=inherited (SwiGLU not root)
+  FFN_DOWN_11  dual=FAIL    max_abs=1.067e-04  amp_vs_ACT~7x    class=amplification
+  L11_OUT      dual=FAIL    max_abs=1.065e-04  amp_vs_DOWN=0.998 class=inherited
+  L11 growth vs L10_OUT: 5.83e-5 -> 1.07e-4 (~1.83x) via FFN_GATE/DOWN amp of inherited carrier
+
+L12 (explain 1.07e-4 -> 4.64e-4)
+-------------------------------
+  L12_IN (=L11_OUT)  max_abs=1.065e-04  class=inherited
+  ATTN_OUT_12        max_abs=5.073e-04  amp_vs_L12_IN=4.76  class=amplification
+  FFN_INP_12         max_abs=4.943e-04  amp_vs_ATTN=0.97   class=inherited
+  FFN_GATE_12        max_abs=5.295e-04  class=amplification (GEMV amp of NORM)
+  FFN_DOWN_12        max_abs=1.656e-04  class=inherited
+  L12_OUT            max_abs=4.635e-04  ~FFN_INP footprint  class=inherited_from_ATTN_residual
+  L12 jump dominated by ATTN_OUT_12 amplification of inherited L11 tip; not a new L10-class root
+
+VERDICT=AMPLIFICATION
+  L11/L12 growth fully explained by propagation + FFN/ATTN amplification of
+  the certified L10_OUT inherited error. No native same-input divergence opened.
+  Do not reopen L10. Do not chase L16/L21 yet.
+
+DO_NOT_reopen=L10 / GEMV / GATE-as-root / SiLU / HexMag / GBS / P1
+RESID_IN_localize=still DEFERRED (L11/L12 do not point back)
+NEXT=tip-align FINAL_NORM -> LOGITS (deep2 pos0 vs llama pos0)

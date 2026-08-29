@@ -4,12 +4,12 @@ HEXMAG (FROZEN) — do not touch unless regression
 GBS / P1     — independent tracks; unchanged by Deep2 certs
 
 PARITY
-  DONE: L10_FFN_INP_SAME_SOURCE (7ee02e8b3) — GATE inherited from RESID_IN
-  DONE: L10_OUT_RESCORE — L10_OUT INHERITED_FROM_FFN_DOWN
-        body_recon max_abs=5.83e-5 ≈ FFN_DOWN 5.81e-5
-  NEXT: TODO_SPARSE_GROWTH_L11_L12
-        L11 1.07e-4 amp → L12 4.64e-4 amp → L16/L21 strong growth
-        classify inherited | amplification | native at each boundary
-  THEN: tip-aligned FINAL_NORM → LOGITS (deep2 LOGITS currently pos3)
-  DEFERRED: RESID_IN L9 entry localize (optional; not blocking sparse advance)
-  DO_NOT_REOPEN: L10 GEMV / GATE-as-root / SiLU / HexMag / GBS / P1
+  DONE: L10_FFN_INP_SAME_SOURCE (7ee02e8b3)
+  DONE: L10_OUT_RESCORE (e53bac4b0) — INHERITED_FROM_FFN_DOWN
+  DONE: L11_BODY / L12 growth (BATCH2_L11_BODY_001) — VERDICT=AMPLIFICATION
+        L11_IN inherits L10_OUT; ATTN_OUT_11 CLOSED; FFN_GATE/DOWN amp to 1.07e-4
+        L12 jump via ATTN_OUT_12 amp (4.76x); L12_OUT ~ FFN_INP residual
+  NEXT: TODO_FINAL_NORM_LOGITS — tip-align pos0 (deep2 pos3 non-authoritative)
+  DEFERRED: RESID_IN localize (L11/L12 do not point back)
+  DO_NOT_REOPEN: L10 / L11-L12-as-root / SiLU / HexMag / GBS / P1
+  DO_NOT_CHASE: L16/L21 until tip-align closed

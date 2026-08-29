@@ -1,0 +1,46 @@
+BATCH2_L11_BODY_001
+prereq=e53bac4b0 L10_OUT=INHERITED_FROM_FFN_DOWN; L10 CLOSED
+authority=EXPAND_V + REF_CB_MAX_LAYER=12 + Deep2 STAGE_DUMP_LAYERS=10,11,12
+pairing=earliest pos0 seq
+dual: PASS if abs<=1e-6 OR (abs<=1e-4 AND rel<=1e-6); INSPECT if abs<=1e-4 AND rel<=5e-6
+
+stage          dual          max_abs     mean_abs           L2      max_rel  argmax  amp_vs_prev class                files
+L11_IN         FAIL     5.829334e-05 1.209028e-05 6.983431e-04 5.829334e-05    1198        1.000 inherited            deep2_LAYER_OUT_10_pos0_layer0_full_n2048_seq066.bin | llama_LAYER10_OUT_pos0_layer0_full_n2048_seq1519.bin
+ATTN_OUT_11    PASS     1.192093e-07 1.713397e-08 1.002783e-06 1.192093e-07     411        0.002 CLOSED               deep2_ATTN_OUT_11_pos0_layer0_full_n2048_seq072.bin | llama_ATTN_OUT_11_pos0_layer0_full_n2048_seq1645.bin
+FFN_INP_11     FAIL     5.826354e-05 1.208934e-05 6.982959e-04 5.826354e-05    1198      488.750 candidate_new_root   deep2_FFN_INP_11_pos0_layer0_full_n2048_seq073.bin | llama_FFN_INP_11_pos0_layer0_full_n2048_seq1648.bin
+FFN_NORM_11    INSPECT  4.801899e-06 9.424070e-07 5.486785e-05 4.801899e-06    1198        0.082 inherited            deep2_FFN_NORM_11_pos0_layer0_full_n2048_seq074.bin | llama_FFN_NORM_11_pos0_layer0_full_n2048_seq1651.bin
+FFN_GATE_11    FAIL     1.687706e-04 2.159240e-05 2.048901e-03 1.687706e-04    3834       35.147 candidate_new_root   deep2_FFN_GATE_11_pos0_layer0_full_n5632_seq075.bin | llama_FFN_GATE_11_pos0_layer0_full_n5632_seq1654.bin
+FFN_UP_11      FAIL     9.618513e-05 1.853480e-05 1.739877e-03 9.618513e-05    1641        0.570 inherited            deep2_FFN_UP_11_pos0_layer0_full_n5632_seq076.bin | llama_FFN_UP_11_pos0_layer0_full_n5632_seq1657.bin
+FFN_ACT_11     FAIL     1.490861e-05 1.292711e-06 1.419443e-04 1.490861e-05    2028        0.155 inherited            deep2_FFN_ACT_11_pos0_layer0_full_n5632_seq077.bin | llama_FFN_ACT_11_pos0_layer0_full_n5632_seq1660.bin
+FFN_DOWN_11    FAIL     1.067165e-04 2.224312e-05 1.279348e-03 1.067165e-04      67        7.158 candidate_new_root   deep2_FFN_DOWN_11_pos0_layer0_full_n2048_seq078.bin | llama_FFN_DOWN_11_pos0_layer0_full_n2048_seq1663.bin
+L11_OUT        FAIL     1.065433e-04 2.597828e-05 1.476454e-03 1.065433e-04     503        0.998 inherited            deep2_LAYER_OUT_11_pos0_layer0_full_n2048_seq080.bin | llama_LAYER11_OUT_pos0_layer0_full_n2048_seq1666.bin
+L12_IN         FAIL     1.065433e-04 2.597828e-05 1.476454e-03 1.065433e-04     503        1.000 inherited            deep2_LAYER_OUT_11_pos0_layer0_full_n2048_seq080.bin | llama_LAYER11_OUT_pos0_layer0_full_n2048_seq1666.bin
+ATTN_OUT_12    FAIL     5.072858e-04 9.607491e-05 5.522255e-03 5.072858e-04    1358        4.761 amplification        deep2_ATTN_OUT_12_pos0_layer0_full_n2048_seq086.bin | llama_ATTN_OUT_12_pos0_layer0_full_n2048_seq1792.bin
+FFN_INP_12     FAIL     4.943088e-04 9.940041e-05 5.706215e-03 4.943088e-04    1358        0.974 inherited            deep2_FFN_INP_12_pos0_layer0_full_n2048_seq087.bin | llama_FFN_INP_12_pos0_layer0_full_n2048_seq1795.bin
+FFN_NORM_12    FAIL     4.498241e-05 8.045237e-06 4.645265e-04 4.498241e-05    1358        0.091 inherited            deep2_FFN_NORM_12_pos0_layer0_full_n2048_seq088.bin | llama_FFN_NORM_12_pos0_layer0_full_n2048_seq1798.bin
+FFN_GATE_12    FAIL     5.294681e-04 7.444818e-05 7.149731e-03 5.294681e-04    2395       11.771 candidate_new_root   deep2_FFN_GATE_12_pos0_layer0_full_n5632_seq089.bin | llama_FFN_GATE_12_pos0_layer0_full_n5632_seq1801.bin
+FFN_UP_12      FAIL     2.800673e-04 6.214706e-05 5.842442e-03 2.800673e-04    2420        0.529 inherited            deep2_FFN_UP_12_pos0_layer0_full_n5632_seq090.bin | llama_FFN_UP_12_pos0_layer0_full_n5632_seq1804.bin
+FFN_ACT_12     FAIL     1.465529e-04 4.630053e-06 5.266978e-04 1.465529e-04    1251        0.523 inherited            deep2_FFN_ACT_12_pos0_layer0_full_n5632_seq091.bin | llama_FFN_ACT_12_pos0_layer0_full_n5632_seq1807.bin
+FFN_DOWN_12    FAIL     1.655533e-04 3.867707e-05 2.195642e-03 1.655533e-04    1979        1.130 inherited            deep2_FFN_DOWN_12_pos0_layer0_full_n2048_seq092.bin | llama_FFN_DOWN_12_pos0_layer0_full_n2048_seq1810.bin
+L12_OUT        FAIL     4.634857e-04 1.062118e-04 6.039737e-03 4.547238e-04    1454        2.800 amplification        deep2_LAYER_OUT_12_pos0_layer0_full_n2048_seq094.bin | llama_LAYER12_OUT_pos0_layer0_full_n2048_seq1813.bin
+
+CLASSIFICATION
+--------------
+  L10_OUT_CERT max_abs=5.828e-05 (frozen)
+  L11_IN       max_abs=5.829e-05 dual=FAIL class=inherited amp_vs_L10=1.000
+  ATTN_OUT_11  max_abs=1.192e-07 dual=PASS class=CLOSED
+  L11_OUT      max_abs=1.065e-04 dual=FAIL class=inherited
+  L12_OUT      max_abs=4.635e-04 dual=FAIL class=amplification
+
+JUMPS (ratio>1.25)
+  ATTN_OUT_11 -> FFN_INP_11: 1.192e-07 -> 5.826e-05  ratio=488.750  candidate_new_root
+  FFN_NORM_11 -> FFN_GATE_11: 4.802e-06 -> 1.688e-04  ratio=35.147  candidate_new_root
+  FFN_ACT_11 -> FFN_DOWN_11: 1.491e-05 -> 1.067e-04  ratio=7.158  candidate_new_root
+  L12_IN -> ATTN_OUT_12: 1.065e-04 -> 5.073e-04  ratio=4.761  amplification
+  FFN_NORM_12 -> FFN_GATE_12: 4.498e-05 -> 5.295e-04  ratio=11.771  candidate_new_root
+  FFN_DOWN_12 -> L12_OUT: 1.656e-04 -> 4.635e-04  ratio=2.800  amplification
+
+VERDICT=AMPLIFICATION
+  L11/L12 growth explained by propagation of inherited L10_OUT error;
+  no new native root localized; L10 remains CLOSED.
+NEXT=tip-align FINAL_NORM → LOGITS (pos0); do not chase L16/L21 yet
