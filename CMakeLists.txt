@@ -7585,6 +7585,52 @@ if(BUILD_DEEP2_STREAMING)
     message(STATUS "[Deep2] Streaming test: test_streaming")
 endif()
 
+# deep2_streamer_cert — STREAMER-CERT-001: Full streaming certification harness
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON)
+if(BUILD_DEEP2_STREAMER_CERT)
+    add_executable(deep2_streamer_cert
+        src/deep2/deep2_streamer_cert.cpp
+    )
+    target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_streamer_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_streamer_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_streamer_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_streamer_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
+endif()
+
+# test_deterministic_replay — STREAMER-CERT-001: deterministic replay gate
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DETERMINISTIC_REPLAY "Build deterministic replay certification gate" ON)
+if(BUILD_DETERMINISTIC_REPLAY)
+    add_executable(test_deterministic_replay
+        src/deep2/test_deterministic_replay.cpp
+    )
+    target_link_libraries(test_deterministic_replay PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(test_deterministic_replay PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(test_deterministic_replay PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(test_deterministic_replay PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_deterministic_replay
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Deterministic replay gate: test_deterministic_replay")
+endif()
+
 # dump_qwen35_meta — Dump Qwen3.5 GGUF metadata + tensor topology
 # ═══════════════════════════════════════════════════════════════════════════════
 option(BUILD_DUMP_QWEN35_META "Build Qwen3.5 metadata dump tool" ON)
@@ -7685,50 +7731,6 @@ option(BUILD_VAL_051_3 "Build VAL-051.3 multi-token generation gate" ON)
 if(BUILD_VAL_051_3)
     add_executable(test_val_051_3_multi_token
         src/deep2/test_val_051_3_multi_token.cpp
-        src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(test_val_051_3_multi_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -7738,6 +7740,7 @@ if(BUILD_VAL_051_3)
         ${CMAKE_SOURCE_DIR}/include
     )
     target_link_libraries(test_val_051_3_multi_token PRIVATE
+        InferenceEngine
         kernel32
         user32
     )
@@ -7755,53 +7758,6 @@ option(BUILD_VAL_051_5 "Build VAL-051.5 15-token KV stability gate" ON)
 if(BUILD_VAL_051_5)
     add_executable(val_051_5_fifteen_token
         tests/val_051_5_fifteen_token.cpp
-        src/deep2/Deep2Engine.cpp
-        src/deep2/K2GlobalTensorIndex.cpp
-        src/deep2/GGUFLoader.cpp
-        src/deep2/ThreadPool.cpp
-        src/deep2/KVCache.cpp
-        src/deep2/QuantKernelRegistry.cpp
-        src/deep2/MoERouter.cpp
-        src/deep2/MoEWeightProxy.cpp
-        src/deep2/MoEWeightsLoader.cpp
-        src/deep2/DeepSeekMoELoader.cpp
-        src/deep2/TensorHop.cpp
-        src/deep2/MoEArchitectureParser.cpp
-        src/deep2/Deep2ExecutionGraph.cpp
-        src/deep2/ReverseHotpatchEngine.cpp
-        src/deep2/ReverseIntegration.cpp
-        src/deep2/DualGPUHook.cpp
-        src/deep2/ReverseTensorRecovery.cpp
-        src/deep2/StreamEngine.cpp
-        src/deep2/StreamRouter.cpp
-        src/deep2/FusedInferenceKernel.cpp
-        src/deep2/MedusaDecoder.cpp
-        src/deep2/WarmupScheduler.cpp
-        src/deep2/NUFusedPacker.cpp
-        src/deep2/CompressedKVCache.cpp
-        src/deep2/NVMeStream.cpp
-        src/deep2/SlidingWindowEngine.cpp
-        src/deep2/HotPatcher.cpp
-        src/deep2/HotPatcherSafety.cpp
-        src/deep2/AntiPatcher.cpp
-        src/deep2/TrailBrake.cpp
-        src/deep2/PatchCache.cpp
-        src/deep2/BottleTTL.cpp
-        src/deep2/GoalSystem.cpp
-        src/deep2/CPUFrequency.cpp
-        src/deep2/ResidencyManager.cpp
-        src/deep2/ResidencyLease.cpp
-        src/deep2/VAL0517BaselineFixture.cpp
-        src/deep2/mars/VRAMManager.cpp
-        src/deep2/mars/TensorHotpatch.cpp
-        src/deep2/mars/DualGPUBackend.cpp
-        src/deep2/mars/MARSController.cpp
-        src/reverse/ReverseEngine.cpp
-        src/reverse/ReverseModelLoader.cpp
-        src/deep2/sovereign_deep2_kernels.asm
-        src/deep2/sovereign_q4k_gemv.asm
-        src/deep2/sovereign_moe_fused.asm
-        src/sampling/advanced_sampler.cpp
     )
     if(MSVC)
         target_compile_options(val_051_5_fifteen_token PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
@@ -7811,6 +7767,7 @@ if(BUILD_VAL_051_5)
         ${CMAKE_SOURCE_DIR}/include
     )
     target_link_libraries(val_051_5_fifteen_token PRIVATE
+        InferenceEngine
         kernel32
         user32
     )

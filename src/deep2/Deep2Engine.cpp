@@ -3929,6 +3929,22 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         return 0;
     }
 
+    if (!promptTokens || !outputTokens || maxOutputLen == 0) {
+        return 0;
+    }
+    if (promptLen == 0) {
+        return 0;
+    }
+
+    // ── Reset KV cache and sampler state for fresh generation ──────
+    reset();
+
+    const size_t remainingContext = config.maxSeqLen > promptLen ? config.maxSeqLen - promptLen : 0;
+    if (remainingContext == 0) {
+        return 0;
+    }
+    maxOutputLen = std::min(maxOutputLen, remainingContext);
+
     // ── Defensive config validation gate ──────────────────────────────
     // Reject generation if the runtime config does not match the loaded
     // model dimensions.  This prevents buffer overruns when the lifecycle
@@ -4018,94 +4034,63 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 
     // Generate tokens (decode)
     for (size_t t = 0; t < maxOutputLen; ++t) {
-        // ── VAL-051.7: Monotonic position tracking ─────────────────
-        // Position is the ACTUAL decode position (0..promptLen-1 are prompt).
-        // First generated token is at position = promptLen.
         const size_t position = currentPos;
 
-        // Use the correct position in hiddenStates buffer
-        float* h = (t == 0 && promptLen > 0)
-            ? hiddenStates + (promptLen - 1) * config.hiddenDim
-            : hiddenStates + position * config.hiddenDim;
+        float* h = nullptr;
 
-        // ── Production Profiler: begin token ─────────────────────────
-        if (profilingEnabled_ && profiler_) {
-            profiler_->beginToken((uint32_t)t, (uint32_t)position);
-            profiler_->setModelInfo(
-                modelWeights.loaded ? "loaded" : "none",
-                0, // quant_bits determined from weights
-                config.hiddenDim,
-                config.numLayers,
-                config.numHeads);
-            profiler_->beginEmbed();
-        }
-
-        // Embed the new token for this decode step (only for t > 0; t==0 uses last prompt hidden state)
         if (t == 0 && promptLen > 0) {
-            // Step 0: h already contains the last prompt token's hidden state from prefill.
-            // Do NOT re-embed; the prefill already computed it.
+            // Step 0: sample directly from the final prefill hidden state.
+            // The prefill already computed, layered, and normed the last prompt token.
+            h = hiddenStates + (promptLen - 1) * config.hiddenDim;
+            // Do NOT re-embed or forward. Logits are ready from prefill.
         } else {
-            embedToken(outputTokens[tokensGenerated - 1], h);
-        }
+            // Step N>0: embed the previously sampled token and forward it.
+            const size_t inputPos = promptLen + (t - 1);
+            h = hiddenStates + inputPos * config.hiddenDim;
 
-        if (profilingEnabled_ && profiler_) {
-            profiler_->endEmbed();
-        }
+            const int inputToken = outputTokens[tokensGenerated - 1];
+            embedToken(inputToken, h);
 
-        // ── VAL-051.7: Forward timing ─────────────────────────────────
-        ResidencyCounters::BeginForward();
+            float* layerInput = h;
+            float* layerOutput = attentionOutput;
 
-        // Forward through all layers
-        float* layerInput = h;
-        float* layerOutput = attentionOutput;
+            for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
+                // ── Batch 15: Prefetch next layer weights into residency ──
+                if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
+                    const auto& nextLw = modelWeights.layers[layer + 1];
+                    auto prefetchWt = [&](const WeightTensor& wt) {
+                        if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
+                    };
+                    prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
+                    prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
+                    prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                }
 
-        for (size_t layer = 0; layer < modelWeights.numLayers; ++layer) {
-            // ── Batch 15: Prefetch next layer weights into residency ──
-            if (elasticResidencyEnabled_ && elasticResidency_ && layer + 1 < modelWeights.numLayers) {
-                const auto& nextLw = modelWeights.layers[layer + 1];
-                auto prefetchWt = [&](const WeightTensor& wt) {
-                    if (!wt.name.empty()) elasticResidency_->PrefetchToGpu(wt.name, static_cast<uint32_t>(layer + 1));
-                };
-                prefetchWt(nextLw.wq); prefetchWt(nextLw.wk); prefetchWt(nextLw.wv); prefetchWt(nextLw.wo);
-                prefetchWt(nextLw.attnNorm); prefetchWt(nextLw.ffnNorm);
-                prefetchWt(nextLw.wGate); prefetchWt(nextLw.wUp); prefetchWt(nextLw.wDown);
+                auto layerT0 = std::chrono::high_resolution_clock::now();
+                forwardLayer(layer, layerInput, layerOutput, inputPos + 1);
+                auto layerT1 = std::chrono::high_resolution_clock::now();
+                double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
+                ResidencyCounters::RecordLayerTime(layer, layerMs);
+                float* temp = layerInput;
+                layerInput = layerOutput;
+                layerOutput = temp;
             }
 
-            auto layerT0 = std::chrono::high_resolution_clock::now();
-            forwardLayer(layer, layerInput, layerOutput, position + 1);
-            auto layerT1 = std::chrono::high_resolution_clock::now();
-            double layerMs = std::chrono::duration<double, std::milli>(layerT1 - layerT0).count();
-            ResidencyCounters::RecordLayerTime(layer, layerMs);
-            float* temp = layerInput;
-            layerInput = layerOutput;
-            layerOutput = temp;
+            if (layerInput != h) {
+                memcpy(h, layerInput, config.hiddenDim * sizeof(float));
+            }
+
+            if (modelWeights.finalNorm.data) {
+                RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
+            }
+
+            // The generated token has now entered the KV cache.
+            if (kvCache) {
+                kvCache->advance();
+            }
         }
 
-        ResidencyCounters::EndForward();
-
-        // After layer loop, layerInput holds the final hidden state.
-        // Copy it back to h so the next decode step starts from the correct state.
-        if (layerInput != h) {
-            memcpy(h, layerInput, config.hiddenDim * sizeof(float));
-        }
-
-        // Final norm before logits (if not done in last layer)
-        if (profilingEnabled_ && profiler_) {
-            profiler_->beginFinalNorm();
-        }
-        // Note: final norm is typically the last layer's output norm; if model has separate final_norm:
-        if (modelWeights.finalNorm.data) {
-            RMSNormW(modelWeights.finalNorm, h, h, config.hiddenDim, modelWeights.normEps);
-        }
-        // ── B3: Trace after final norm ─────────────────────────────────
-        B3_TraceState("FINAL_NORM", position, h, config.hiddenDim);
-
-        if (profilingEnabled_ && profiler_) {
-            profiler_->endFinalNorm();
-            profiler_->beginLogits();
-        }
-
-        // Compute logits: lm_head * hiddenState
+        // Compute logits
         ResidencyCounters::BeginLogits();
         computeLogits(h, logits);
         ResidencyCounters::EndLogits();
@@ -4118,11 +4103,6 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         B3_TraceLogits("LOGITS", position, logits, config.vocabSize);
         printf("[B3_LOGITS] AFTER B3_TraceLogits\n");
         fflush(stdout);
-
-        if (profilingEnabled_ && profiler_) {
-            profiler_->endLogits();
-            profiler_->beginSampling();
-        }
 
         // Hard gate: reject invalid hidden state
         const double stateNorm = B3_L2Norm(h, config.hiddenDim);
@@ -4151,18 +4131,12 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
         printf("[B3_LOGITS] AFTER sampleToken token=%d\n", nextToken);
         fflush(stdout);
 
-        if (profilingEnabled_ && profiler_) {
-            profiler_->endSampling();
-            TokenProfile tp = profiler_->endToken();
-            profileHistory_.push_back(tp);
-        }
-
         printf("[B3_LOGITS] Storing token %d at index %zu\n", nextToken, tokensGenerated);
         fflush(stdout);
 
         outputTokens[tokensGenerated] = nextToken;
         tokensGenerated++;
-        
+
         if (onToken) {
             printf("[B3_LOGITS] Calling onToken callback\n");
             fflush(stdout);
@@ -4185,19 +4159,10 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
                 uint32_t pause_us = plasmaGovernor_->coolingPauseMicros();
                 if (pause_us > 0) {
                     printf("[Deep2Engine] PlasmaGovernor cooling pause: %u us\n", pause_us);
-                    // Use actual sleep instead of busy-wait spin loop
                     std::this_thread::sleep_for(std::chrono::microseconds(pause_us));
                 }
             }
         }
-
-        printf("[B3_LOGITS] Advancing KV cache\n");
-        fflush(stdout);
-        // Advance KV cache BEFORE next forward so attention sees correct position
-        if (kvCache) {
-            kvCache->advance();
-        }
-        currentPos++;
 
         printf("[B3_LOGITS] Checking EOS\n");
         fflush(stdout);
@@ -4207,6 +4172,8 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
             fflush(stdout);
             break;
         }
+
+        currentPos++;
         printf("[B3_LOGITS] End of generation loop iteration\n");
         fflush(stdout);
     }
@@ -4259,14 +4226,73 @@ size_t Deep2Engine::generate(const int* promptTokens, size_t promptLen,
 // Generate Text (high-level API)
 // ============================================================================
 std::string Deep2Engine::generateText(const std::string& prompt, size_t maxTokens) {
+    GenerationOptions options{};
+    options.maxTokens = static_cast<uint32_t>(maxTokens);
+    std::string accumulated;
+    generateStream(prompt, options, [&](int32_t, const std::string& token) -> bool {
+        accumulated += token;
+        return true;
+    });
+    return accumulated;
+}
+
+Deep2::GenerationResult Deep2Engine::generateStream(
+    const std::string& prompt,
+    const GenerationOptions& options,
+    TokenCallback callback)
+{
+    // Configure sampler from generation options
+    if (options.temperature <= 0.0f || options.topK <= 1) {
+        sampler = std::make_unique<rawrxd::sampling::GreedySampler>();
+    } else {
+        if (options.topP < 1.0f && options.topP > 0.0f) {
+            sampler = std::make_unique<rawrxd::sampling::TopPSampler>(options.temperature, options.topP);
+        } else {
+            sampler = std::make_unique<rawrxd::sampling::TopKSampler>(static_cast<int>(options.topK), options.temperature);
+        }
+    }
+
     std::vector<int> promptTokens = tokenize(prompt);
+    if (promptTokens.empty()) {
+        return {};
+    }
+
+    const size_t maxTokens = static_cast<size_t>(std::max(0, static_cast<int>(options.maxTokens)));
     std::vector<int> outputTokens(maxTokens);
+    std::string streamed;
+    bool wasCancelled = false;
 
-    size_t generated = generate(promptTokens.data(), promptTokens.size(),
-                                 outputTokens.data(), maxTokens);
+    size_t generated = generate(
+        promptTokens.data(), promptTokens.size(),
+        outputTokens.data(), maxTokens,
+        nullptr,
+        [&](int tokenId) -> bool {
+            if (tokenizer && tokenId == tokenizer->GetSpecialTokens().eosId) {
+                return false; // EOS terminates generation
+            }
+            std::string piece;
+            if (tokenizer) {
+                piece = tokenizer->Decode(tokenId);
+            } else {
+                piece = detokenize(std::vector<int>{tokenId});
+            }
+            streamed += piece;
+            if (callback) {
+                bool keepGoing = callback(static_cast<int32_t>(tokenId), piece);
+                if (!keepGoing) {
+                    wasCancelled = true;
+                    return false;
+                }
+            }
+            return true;
+        });
 
-    outputTokens.resize(generated);
-    return detokenize(outputTokens);
+    GenerationResult result;
+    result.promptTokens = promptTokens.size();
+    result.generatedTokens = generated;
+    result.completed = generated > 0 && !wasCancelled;
+    result.cancelled = wasCancelled;
+    return result;
 }
 
 std::string Deep2Engine::generateChat(const std::string& userMessage,
