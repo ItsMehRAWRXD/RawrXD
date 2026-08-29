@@ -207,6 +207,8 @@ endif()
 
 option(RAWRXD_BUILD_WIN32IDE "Build the legacy Win32IDE target" OFF)
 option(RAWRXD_BUILD_CLI "Build the rawrxd CLI console target" OFF)
+option(RAWRXD_BUILD_RAWRENGINE "Build the headless RawrEngine target" ON)
+option(RAWRXD_BUILD_GOLD "Build the RawrXD_Gold standalone target" ON)
 option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units from production targets" OFF)
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
@@ -1925,6 +1927,10 @@ add_subdirectory(src/ceo)
 # =============================================================================
 add_subdirectory(src/repository)
 
+# P1: isolate headless RawrEngine so Win32IDE configure is not blocked by
+# stale RawrEngine-only inventory (e.g. missing BuildIntelligence.cpp).
+# Default ON preserves existing full-tree builds; P1 uses -DRAWRXD_BUILD_RAWRENGINE=OFF.
+if(RAWRXD_BUILD_RAWRENGINE)
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
@@ -2043,10 +2049,15 @@ if(WIN32)
     endif()
 endif()
 
+else()
+    message(STATUS "[P1] RAWRXD_BUILD_RAWRENGINE=OFF — skipping RawrEngine target (Win32IDE isolation)")
+endif() # RAWRXD_BUILD_RAWRENGINE
+
 # =============================================================================
 # Standalone Gold Deployment: RawrXD_Gold.exe
 # All MASM modules linked, zero unresolved externals, static CRT
 # =============================================================================
+if(RAWRXD_BUILD_GOLD)
 set(GOLD_UNDERSCORE_SOURCES ${SOURCES})
 list(REMOVE_ITEM GOLD_UNDERSCORE_SOURCES
     src/core/rawrengine_command_handlers.cpp
@@ -2269,8 +2280,12 @@ target_include_directories(RawrXD_Gold PRIVATE
 )
 
 if(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES)
-    target_include_directories(RawrEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
-    target_include_directories(RawrXD_Gold PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
+    if(TARGET RawrEngine)
+        target_include_directories(RawrEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
+    endif()
+    if(TARGET RawrXD_Gold)
+        target_include_directories(RawrXD_Gold PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/test_harness)
+    endif()
 endif()
 
 target_link_libraries(RawrXD_Gold PRIVATE Threads::Threads)
@@ -2373,6 +2388,9 @@ target_sources(RawrXD_Gold PRIVATE
 # Vulkan SDK for Gold build — linked later after find_package(Vulkan)
 
 message(STATUS "[Gold] Standalone deployment target: RawrXD_Gold.exe (all MASM linked)")
+else()
+    message(STATUS "[P1] RAWRXD_BUILD_GOLD=OFF — skipping RawrXD_Gold target")
+endif() # RAWRXD_BUILD_GOLD
 
 # ═══════════════════════════════════════════════════════════════════
 # MASM x64 Assembly — Phase 20/21 AVX-512 Requantization + Swarm Streaming
@@ -3147,17 +3165,21 @@ if(MSVC)
     )
 
     # Link MASM objects into RawrEngine (disabled in Lane B headless minimal).
-    if(NOT RAWR_ENGINE_LANE_B)
+    if(TARGET RawrEngine AND NOT RAWR_ENGINE_LANE_B)
         target_link_libraries(RawrEngine PRIVATE ${MASM_OBJECTS})
         add_dependencies(RawrEngine masm_kernels)
     endif()
 
     # Link MASM objects into RawrXD_Gold
-    target_link_libraries(RawrXD_Gold PRIVATE ${MASM_OBJECTS})
+    if(TARGET RawrXD_Gold)
+        target_link_libraries(RawrXD_Gold PRIVATE ${MASM_OBJECTS})
+        add_dependencies(RawrXD_Gold masm_kernels)
+    endif()
 
-    # Ensure MASM objects are built before linking
-    add_custom_target(masm_kernels DEPENDS ${MASM_OBJECTS})
-    add_dependencies(RawrXD_Gold masm_kernels)
+    # Ensure MASM objects are built before linking (shared custom target)
+    if(NOT TARGET masm_kernels)
+        add_custom_target(masm_kernels DEPENDS ${MASM_OBJECTS})
+    endif()
 
     # =========================================================================
     # NanoQuant Engine — Sub-1-Bit Quantization Static Library
@@ -3192,10 +3214,14 @@ if(MSVC)
     add_dependencies(RawrXD_NanoQuant nanoquant_asm)
 
     # Link NanoQuant into main targets
-    target_link_libraries(RawrEngine PRIVATE RawrXD_NanoQuant)
-    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_NANOQUANT=1)
-    target_link_libraries(RawrXD_Gold PRIVATE RawrXD_NanoQuant)
-    target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_NANOQUANT=1)
+    if(TARGET RawrEngine)
+        target_link_libraries(RawrEngine PRIVATE RawrXD_NanoQuant)
+        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_NANOQUANT=1)
+    endif()
+    if(TARGET RawrXD_Gold)
+        target_link_libraries(RawrXD_Gold PRIVATE RawrXD_NanoQuant)
+        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_NANOQUANT=1)
+    endif()
 
     message(STATUS "[NanoQuant] Sub-1-bit quantization engine enabled (NQ_1 + NQ_R4)")
     else()
@@ -3212,13 +3238,16 @@ include(${CMAKE_SOURCE_DIR}/cmake/RawrXD-Vulkan-Fix.cmake OPTIONAL)
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
     message(STATUS "[Vulkan] Found SDK: ${Vulkan_INCLUDE_DIRS}")
-    target_include_directories(RawrEngine PRIVATE ${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(RawrEngine PRIVATE Vulkan::Vulkan)
-    target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
-    # Gold target
-    target_include_directories(RawrXD_Gold PRIVATE ${Vulkan_INCLUDE_DIRS})
-    target_link_libraries(RawrXD_Gold PRIVATE Vulkan::Vulkan)
-    target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+    if(TARGET RawrEngine)
+        target_include_directories(RawrEngine PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(RawrEngine PRIVATE Vulkan::Vulkan)
+        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+    endif()
+    if(TARGET RawrXD_Gold)
+        target_include_directories(RawrXD_Gold PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(RawrXD_Gold PRIVATE Vulkan::Vulkan)
+        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+    endif()
 else()
     # Try manual path — D: first, then C:
     file(GLOB _VK_SDK_DIRS "D:/VulkanSDK/1.*")
@@ -3229,24 +3258,31 @@ else()
         list(SORT _VK_SDK_DIRS)
         list(GET _VK_SDK_DIRS -1 _VK_SDK_DIR)
         message(STATUS "[Vulkan] Manual SDK: ${_VK_SDK_DIR}")
-        target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
-        target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
-        target_link_libraries(RawrEngine PRIVATE vulkan-1)
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
-        # Gold target
-        target_include_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Include")
-        target_link_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Lib")
-        target_link_libraries(RawrXD_Gold PRIVATE vulkan-1)
-        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+        if(TARGET RawrEngine)
+            target_include_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Include")
+            target_link_directories(RawrEngine PRIVATE "${_VK_SDK_DIR}/Lib")
+            target_link_libraries(RawrEngine PRIVATE vulkan-1)
+            target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=1)
+        endif()
+        if(TARGET RawrXD_Gold)
+            target_include_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Include")
+            target_link_directories(RawrXD_Gold PRIVATE "${_VK_SDK_DIR}/Lib")
+            target_link_libraries(RawrXD_Gold PRIVATE vulkan-1)
+            target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=1)
+        endif()
     else()
         message(STATUS "[Vulkan] SDK not found — GPU compute uses CPU fallback")
-        target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
-        target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=0)
+        if(TARGET RawrEngine)
+            target_compile_definitions(RawrEngine PRIVATE RAWR_HAS_VULKAN=0)
+        endif()
+        if(TARGET RawrXD_Gold)
+            target_compile_definitions(RawrXD_Gold PRIVATE RAWR_HAS_VULKAN=0)
+        endif()
     endif()
 endif()
 
 # RawrCodex.asm uses ADDR32 relocations — require /LARGEADDRESSAWARE:NO
-if(MSVC)
+if(MSVC AND TARGET RawrEngine)
     target_link_options(RawrEngine PRIVATE /LARGEADDRESSAWARE:NO)
     # Do NOT set /ENTRY - let CMake/MSVC use default entry point
     # /ENTRY bypasses CRT initialization which causes _purecall unresolved
@@ -3264,7 +3300,7 @@ if(MSVC)
     endif()
 endif()
 
-if(NOT MSVC)
+if(NOT MSVC AND TARGET RawrEngine)
     target_compile_options(RawrEngine PRIVATE -march=native -O3 -w -mavx2 -mfma -fopenmp)
 endif()
 
@@ -4480,15 +4516,19 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         endif()
     endif()
 
-    target_compile_definitions(RawrEngine PRIVATE
-        RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
-        RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-        RAWRXD_DISABLE_DUPLICATE_SHIMS=1
-    )
-    target_compile_definitions(RawrXD_Gold PRIVATE
-        RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
-        RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
-    )
+    if(TARGET RawrEngine)
+        target_compile_definitions(RawrEngine PRIVATE
+            RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
+            RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
+            RAWRXD_DISABLE_DUPLICATE_SHIMS=1
+        )
+    endif()
+    if(TARGET RawrXD_Gold)
+        target_compile_definitions(RawrXD_Gold PRIVATE
+            RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
+            RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
+        )
+    endif()
     target_compile_definitions(InferenceEngine PRIVATE
         RAWRXD_HAS_MW_KERNEL=${RAWRXD_HAS_MW_KERNEL_FLAG}
         RAWRXD_HAS_PROMPT_ENGINE=${RAWRXD_HAS_PROMPT_ENGINE_FLAG}
@@ -5045,9 +5085,15 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     # PRODUCTION POLICY ENFORCEMENT
     # =========================================================================
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
-        EnforceNoStubs(RawrEngine)
-        EnforceNoStubs(RawrXD_Gold)
-        EnforceNoStubs(RawrXD-InferenceEngine)
+        if(TARGET RawrEngine)
+            EnforceNoStubs(RawrEngine)
+        endif()
+        if(TARGET RawrXD_Gold)
+            EnforceNoStubs(RawrXD_Gold)
+        endif()
+        if(TARGET RawrXD-InferenceEngine)
+            EnforceNoStubs(RawrXD-InferenceEngine)
+        endif()
     endif()
     # Enforce both: (1) No stubs linked, (2) link_stubs_gate.cpp shrinking.
     # Explicit fallback builds may retain compatibility units by design.
