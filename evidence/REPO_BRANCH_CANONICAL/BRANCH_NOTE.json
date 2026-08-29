@@ -1,0 +1,12 @@
+﻿{
+  "asOf": "2026-08-29",
+  "remote": "closure-origin",
+  "githubDefaultBranch": "master",
+  "engineeringBranch": "main",
+  "main": "d7651c5f0ca72c0a21724167d25b7529861c0267",
+  "agentE2E001": "03c0e3651e2696edcb6d1a49bc6fc47d1982578a",
+  "master": "365daa6f393d8449769e52398e2c2347b1ed543a",
+  "masterVsMainLeftRight": [1, 4048],
+  "nextGate": "AGENT-E2E-002",
+  "recommendation": "Set GitHub default branch to main"
+}
