@@ -3193,8 +3193,9 @@ static void initRoPETables(size_t maxSeqLen, size_t headDim, float theta) {
     
     for (size_t pos = 0; pos < maxSeqLen; ++pos) {
         for (size_t i = 0; i < headDim; i += 2) {
-            // Standard RoPE: freq = 1 / theta^(2i / headDim)
-            float freq = 1.0f / powf(theta, (float)(2 * i) / headDim);
+            // Standard RoPE: freq = 1 / theta^(i / headDim)
+            // i already steps by 2, so i/headDim gives 0, 2/headDim, 4/headDim, ...
+            float freq = 1.0f / powf(theta, (float)i / headDim);
             float angle = pos * freq;
             size_t idx = pos * headDim + i;
             g_ropeCosTable[idx] = cosf(angle);
@@ -3225,6 +3226,11 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
     const float* cosTable = &g_ropeCosTable[pos * headDim];
     const float* sinTable = &g_ropeSinTable[pos * headDim];
     
+    // ── RoPE energy invariant: rotation must preserve pair norm ──
+    auto pair_energy = [](float a, float b) -> double {
+        return double(a) * a + double(b) * b;
+    };
+
     for (size_t h = 0; h < numHeads; ++h) {
         float* qh = q + h * headDim;
         for (size_t i = 0; i < headDim; i += 2) {
@@ -3232,8 +3238,16 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             float sinA = sinTable[i] * scaling;
             float q0 = qh[i];
             float q1 = qh[i + 1];
+            double before = pair_energy(q0, q1);
             qh[i]     = q0 * cosA - q1 * sinA;
             qh[i + 1] = q0 * sinA + q1 * cosA;
+            double after = pair_energy(qh[i], qh[i + 1]);
+            double err = std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+            if (err > 1.0e-5) {
+                fprintf(stderr, "[D2_ROPE_FAIL] Q pos=%zu head=%zu pair=%zu before=%.17g after=%.17g rel=%.9g\n",
+                        pos, h, i / 2, before, after, err);
+                std::abort();
+            }
         }
     }
     for (size_t h = 0; h < numKVHeads; ++h) {
@@ -3243,8 +3257,16 @@ void Deep2Engine::applyRoPE(float* q, float* k, size_t headDim, size_t numHeads,
             float sinA = sinTable[i] * scaling;
             float k0 = kh[i];
             float k1 = kh[i + 1];
+            double before = pair_energy(k0, k1);
             kh[i]     = k0 * cosA - k1 * sinA;
             kh[i + 1] = k0 * sinA + k1 * cosA;
+            double after = pair_energy(kh[i], kh[i + 1]);
+            double err = std::fabs(after - before) / std::max(1.0e-20, std::fabs(before));
+            if (err > 1.0e-5) {
+                fprintf(stderr, "[D2_ROPE_FAIL] K pos=%zu head=%zu pair=%zu before=%.17g after=%.17g rel=%.9g\n",
+                        pos, h, i / 2, before, after, err);
+                std::abort();
+            }
         }
     }
 }
@@ -4872,16 +4894,32 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
                     }
                 }
 
-                // Pass 2: softmax
+                // Pass 2: softmax with invariant check
                 float sumExp = 0.0f;
+                float minP = FLT_MAX;
+                float maxP = -FLT_MAX;
                 for (size_t pos = 0; pos < attend; ++pos) {
                     scoreBuf[pos] = expf(scoreBuf[pos] - maxScore);
+                    if (!std::isfinite(scoreBuf[pos])) {
+                        fprintf(stderr, "[D2_SOFTMAX_FAIL] nonfinite exp at pos=%zu\n", pos);
+                        std::abort();
+                    }
                     sumExp += scoreBuf[pos];
+                    minP = std::min(minP, scoreBuf[pos]);
+                    maxP = std::max(maxP, scoreBuf[pos]);
                 }
                 if (sumExp < 1e-12f) sumExp = 1e-12f;
                 float invSum = 1.0f / sumExp;
                 for (size_t pos = 0; pos < attend; ++pos) {
                     scoreBuf[pos] *= invSum;
+                }
+                // ── Softmax invariant: sum must be ~1, no negative probs ──
+                double sumCheck = 0.0;
+                for (size_t pos = 0; pos < attend; ++pos) sumCheck += scoreBuf[pos];
+                if (std::fabs(sumCheck - 1.0) > 1.0e-4 || minP < -1.0e-6f || maxP > 1.000001f) {
+                    fprintf(stderr, "[D2_SOFTMAX_FAIL] L=%zu H=%zu sum=%.9g min=%.9g max=%.9g n=%zu\n",
+                            layer, h, sumCheck, minP, maxP, attend);
+                    std::abort();
                 }
 
                 // Pass 3: weighted sum of values — AVX2

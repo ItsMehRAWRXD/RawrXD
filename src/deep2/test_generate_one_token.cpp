@@ -6,9 +6,22 @@
 #include "Deep2Engine.h"
 #include "gguf_embedded_tokenizer.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using namespace Deep2;
 
+static void deep2_enable_utf8_console() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+}
+
 int main(int argc, char** argv) {
+    deep2_enable_utf8_console();
+
     const char* modelPath = argc > 1 ? argv[1] : "G:\\OllamaModels\\Phi-3-mini-4k-instruct-q8_0.gguf";
 
     printf("[TEST] Token Generation Test\n");
@@ -103,5 +116,15 @@ int main(int argc, char** argv) {
 
     printf("[TEST] Returning 0\n");
     fflush(stdout);
+
+    // ── Fast-exit teardown A/B: bypass CRT teardown to test for destructor crash ──
+    if (std::getenv("RAWRXD_CERT_FAST_EXIT")) {
+#ifdef _WIN32
+        ::ExitProcess(0);
+#else
+        std::_Exit(0);
+#endif
+    }
+
     return 0;
 }
