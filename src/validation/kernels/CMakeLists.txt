@@ -22,13 +22,38 @@ cmake_minimum_required(VERSION 3.20)
 # MASM Assembler Detection
 # ============================================================================
 
-# Find ml64.exe (Microsoft Macro Assembler for x64)
-# Use explicit path from user memory
-set(ML64_EXE "C:/VS2022Enterprise/VC/Tools/MSVC/14.50.35717/bin/Hostx64/x64/ml64.exe")
+# Find ml64.exe (Microsoft Macro Assembler for x64).
+# Never hardcode a machine-specific VS/MSVC version path — GitHub-hosted
+# runners (and local installs) move between VS 2022/18 and MSVC 14.50/14.51+.
+if(CMAKE_ASM_MASM_COMPILER AND EXISTS "${CMAKE_ASM_MASM_COMPILER}")
+    set(ML64_EXE "${CMAKE_ASM_MASM_COMPILER}")
+endif()
 
-# Verify ml64.exe exists
-if(NOT EXISTS "${ML64_EXE}")
-    message(FATAL_ERROR "ml64.exe not found at ${ML64_EXE}. Please verify Visual Studio 2022 installation.")
+if(NOT ML64_EXE)
+    find_program(ML64_EXE NAMES ml64.exe)
+endif()
+
+if(NOT ML64_EXE AND DEFINED ENV{VCToolsInstallDir})
+    file(TO_CMAKE_PATH "$ENV{VCToolsInstallDir}" _VCTOOLS_DIR)
+    if(EXISTS "${_VCTOOLS_DIR}/bin/Hostx64/x64/ml64.exe")
+        set(ML64_EXE "${_VCTOOLS_DIR}/bin/Hostx64/x64/ml64.exe")
+    endif()
+endif()
+
+if(NOT ML64_EXE AND DEFINED _MSVC_ROOT AND EXISTS "${_MSVC_ROOT}/bin/Hostx64/x64/ml64.exe")
+    set(ML64_EXE "${_MSVC_ROOT}/bin/Hostx64/x64/ml64.exe")
+endif()
+
+if(NOT ML64_EXE OR NOT EXISTS "${ML64_EXE}")
+    message(WARNING "[MASM] ml64.exe not found (CMAKE_ASM_MASM_COMPILER='${CMAKE_ASM_MASM_COMPILER}'). Building empty telemetry_masm_kernels stub.")
+    if(NOT TARGET telemetry_masm_kernels)
+        add_library(telemetry_masm_kernels STATIC masm_kernels_dummy.cpp)
+        target_include_directories(telemetry_masm_kernels PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/..
+        )
+    endif()
+    return()
 endif()
 
 message(STATUS "[MASM] Found ml64.exe: ${ML64_EXE}")

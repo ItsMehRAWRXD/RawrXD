@@ -24,6 +24,8 @@
 // Dummy types to allow compilation without Vulkan SDK
 // Only define if not already defined by real Vulkan headers
 #ifndef VK_VERSION_1_0
+#ifndef RAWR_VULKAN_STUB_TYPES
+#define RAWR_VULKAN_STUB_TYPES
 typedef void* VkDevice;
 typedef void* VkInstance;
 typedef void* VkPhysicalDevice;
@@ -81,6 +83,7 @@ inline void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice, uint32_t*
 }
 inline void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice, VkPhysicalDeviceMemoryProperties*) {}
 
+#endif // RAWR_VULKAN_STUB_TYPES
 #endif // VK_VERSION_1_0
 #endif // !RAWR_VULKAN_AVAILABLE
 

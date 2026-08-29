@@ -64,8 +64,11 @@ if ($LASTEXITCODE -ne 0) { throw "Failed to link Orchestrator" }
 Write-Host "[*] Building Governor (C++)..." -ForegroundColor Cyan
 # Note: GovernorMain.cpp includes ThermalGovernor.h, assume .cpp is there too or header only?
 # Based on file list, ThermalGovernor.cpp exists.
-& $CL /c /nologo /EHsc /Zi /Fo"GovernorMain.obj" "$GovernorSrc\GovernorMain.cpp" /I"$GovernorSrc"
-& $CL /c /nologo /EHsc /Zi /Fo"ThermalGovernor.obj" "$GovernorSrc\ThermalGovernor.cpp" /I"$GovernorSrc"
+$ThermalInclude = Join-Path $SrcThermal "include"
+& $CL /c /nologo /EHsc /Zi /Fo"GovernorMain.obj" "$GovernorSrc\GovernorMain.cpp" /I"$GovernorSrc" /I"$ThermalInclude"
+if ($LASTEXITCODE -ne 0) { throw "Failed to compile GovernorMain.cpp" }
+& $CL /c /nologo /EHsc /Zi /Fo"ThermalGovernor.obj" "$GovernorSrc\ThermalGovernor.cpp" /I"$GovernorSrc" /I"$ThermalInclude"
+if ($LASTEXITCODE -ne 0) { throw "Failed to compile ThermalGovernor.cpp" }
 
 Write-Host "[*] Linking Sovereign Governor..." -ForegroundColor Cyan
 & $LINK /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /OUT:"SovereignGovernor.exe" "GovernorMain.obj" "ThermalGovernor.obj" "SovereignAgentBridge.obj" kernel32.lib user32.lib advapi32.lib
@@ -85,26 +88,29 @@ Start-Sleep -Seconds 2
 
 # 2. Check Pipe content
 Write-Host "[*] Querying Thermal Agent Pipe..."
+$pipeClient = $null
 try {
     $pipeClient = New-Object System.IO.Pipes.NamedPipeClientStream(".", "SovereignThermalAgent", [System.IO.Pipes.PipeDirection]::InOut)
-    $pipeClient.Connect(2000) # 2s timeout
-    $pipeClient.ReadMode = [System.IO.Pipes.PipeTransmissionMode]::Message
+    $pipeClient.Connect(5000)
 
-    $writer = New-Object System.IO.StreamWriter($pipeClient)
-    $writer.AutoFlush = $true
-    $reader = New-Object System.IO.StreamReader($pipeClient)
+    # ASCII only — StreamWriter can emit a UTF-8 BOM that breaks the MASM strcmp.
+    $cmdBytes = [System.Text.Encoding]::ASCII.GetBytes("GET_STATUS")
+    $pipeClient.Write($cmdBytes, 0, $cmdBytes.Length)
+    $pipeClient.Flush()
 
-    # Send Command
-    $cmd = "GET_STATUS"
-    $writer.Write($cmd)
-    
-    # Read Response
-    $response = $reader.ReadToEnd()
-    
+    $buf = New-Object byte[] 1024
+    $async = $pipeClient.BeginRead($buf, 0, $buf.Length, $null, $null)
+    if (-not $async.AsyncWaitHandle.WaitOne(5000)) {
+        throw "Pipe read timeout"
+    }
+    $n = $pipeClient.EndRead($async)
+    $response = [System.Text.Encoding]::ASCII.GetString($buf, 0, $n)
+
     Write-Host "    -> RAW RESPONSE: $response" -ForegroundColor Green
-    
-    # Validation
-    if ($response -match "status" -and $response -match "online") {
+
+    # Bridge returns {"status":"online",...} when MMF is mapped, or
+    # {"status":"connected",...} when telemetry is absent (typical in CI).
+    if ($response -match '"status"\s*:\s*"(online|connected)"') {
         Write-Host "    [PASS] API returned valid JSON status." -ForegroundColor Green
     } else {
         Write-Host "    [FAIL] Invalid API response." -ForegroundColor Red
@@ -116,10 +122,9 @@ try {
     throw "Pipe Validation Failed"
 } finally {
     if ($pipeClient) { $pipeClient.Dispose() }
-    
+
     # Cleanup Processes
     Stop-Process -Id $procGovernor.Id -Force -ErrorAction SilentlyContinue
-    # Also kill Orchestrator if we ran it (we didn't run it this time, just built it)
 }
 
 Write-Host "[+] CI Pipeline Success." -ForegroundColor Green

@@ -5,6 +5,11 @@ build_*/
 **/build_*/
 build-*/
 **/build-*/
+# Source modules that live under a "build" directory (not CMake output)
+!src/build/
+!src/build/**
+!src/sovereign/build/
+!src/sovereign/build/**
 build-arm64/
 **/build-arm64/
 bin/

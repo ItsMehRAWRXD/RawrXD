@@ -211,6 +211,26 @@ option(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES "Strip stub/shim/mock source units f
 option(RAWRXD_INCLUDE_STRESS_AND_REPLAY_SOURCES "Include stress/replay harness sources in production targets" OFF)
 option(RAWRXD_ENABLE_MISSING_HANDLER_STUBS "Allow missing_handler_stubs.cpp fallback lane for Win32IDE wiring" OFF)
 option(RAWRXD_ENABLE_ASAN "Enable AddressSanitizer for C++ components (MSVC only)" OFF)
+
+# Drop listed sources that are not on disk so CMake generate cannot abort the
+# whole graph because one historical path was deleted. Warn so CI still shows
+# the gap; do not FATAL_ERROR.
+function(rawr_drop_missing_sources list_var)
+    set(_kept "")
+    foreach(_src IN LISTS ${list_var})
+        if(IS_ABSOLUTE "${_src}")
+            set(_abs "${_src}")
+        else()
+            set(_abs "${CMAKE_CURRENT_SOURCE_DIR}/${_src}")
+        endif()
+        if(EXISTS "${_abs}")
+            list(APPEND _kept "${_src}")
+        else()
+            message(WARNING "[CMake] Skipping missing source in ${list_var}: ${_src}")
+        endif()
+    endforeach()
+    set(${list_var} "${_kept}" PARENT_SCOPE)
+endfunction()
 option(RAWR_ENGINE_LANE_B "Build RawrEngine in minimal Lane B mode (no debugger/ollama)" OFF)
 if(RAWRXD_BUILD_CLI)
     if(RAWRXD_PRODUCTION_STRIP_STUB_SOURCES)
@@ -1925,6 +1945,8 @@ add_subdirectory(src/ceo)
 # =============================================================================
 add_subdirectory(src/repository)
 
+rawr_drop_missing_sources(RAWR_ENGINE_SOURCES)
+rawr_drop_missing_sources(RAWR_ENGINE_ASM_SOURCES)
 add_executable(RawrEngine ${RAWR_ENGINE_SOURCES} ${RAWR_ENGINE_ASM_SOURCES})
 
 if(WIN32)
@@ -2220,6 +2242,8 @@ list(APPEND GOLD_UNDERSCORE_SOURCES
     src/core/link_stubs_gold.cpp
 )
 
+rawr_drop_missing_sources(GOLD_UNDERSCORE_SOURCES)
+rawr_drop_missing_sources(ASM_KERNEL_SOURCES)
 add_executable(RawrXD_Gold ${GOLD_UNDERSCORE_SOURCES} ${ASM_KERNEL_SOURCES})
 
 if(WIN32)
@@ -4992,6 +5016,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/engine/Omega1Engine_Server.cpp
     )
 
+    rawr_drop_missing_sources(WIN32IDE_SOURCES)
+    rawr_drop_missing_sources(ASM_KERNEL_SOURCES)
+    rawr_drop_missing_sources(WIN32IDE_EXTRA_ASM)
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)

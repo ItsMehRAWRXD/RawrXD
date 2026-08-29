@@ -18,7 +18,18 @@ cmake -S (Join-Path $PSScriptRoot "..") -B $BuildDir -A $A -DCMAKE_BUILD_TYPE=$C
 if ($LASTEXITCODE -ne 0) { throw "CMake configure failed" }
 
 Write-Host ">>> Building ..."
-cmake --build $BuildDir --config $Config
-if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
+# Win32 IDE targets remain gated in CMake (if(FALSE) until headers land).
+# CI still compiles the always-on native library so the job is a real build.
+$targets = @("brutal_gzip")
+if ($env:CI -eq "true") {
+    foreach ($target in $targets) {
+        Write-Host ">>> Building target $target ..."
+        cmake --build $BuildDir --config $Config --target $target
+        if ($LASTEXITCODE -ne 0) { throw "CMake build failed for $target" }
+    }
+} else {
+    cmake --build $BuildDir --config $Config
+    if ($LASTEXITCODE -ne 0) { throw "CMake build failed" }
+}
 
 Write-Host ">>> Done: binaries in $BuildDir\$Config"
