@@ -1,0 +1,12 @@
+﻿LOCALIZATION = delayed post–File-New / COMCTL32 path (evidence only)
+
+```
+FAULT_OWNER             = UNKNOWN
+FAULT_SITE              = COMCTL32.dll + 0x7D422
+CANDIDATE_CONTROL       = msctls_statusbar32 (CWP final; SB_GETTEXTLENGTHW=0x40D)
+DELAYED_AV_STACK        = RETAINED
+COMPONENT_BLAME         = NONE
+REPAIR                  = NOT STARTED
+```
+
+See LOCALIZE_CWP_CHILD.txt for full CWP ring + IDE frame map resolution.

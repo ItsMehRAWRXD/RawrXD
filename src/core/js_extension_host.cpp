@@ -353,6 +353,7 @@ JSExtensionHost::JSExtensionHost()
     , m_queueEvent(nullptr)
     , m_nextTimerId(1)
     , m_initialized(false)
+    , m_shutdownCompleted(false)
     , m_hostThread(nullptr)
     , m_running(false)
     , m_stats{}
@@ -372,6 +373,9 @@ bool JSExtensionHost::isInitialized() const {
 // ============================================================================
 
 PatchResult JSExtensionHost::initialize() {
+    std::lock_guard<std::mutex> life(m_lifecycleMutex);
+    if (m_shutdownCompleted)
+        return PatchResult::error("JSExtensionHost shut down; re-init refused");
     if (m_initialized) return PatchResult::error("Already initialized");
 
     OutputDebugStringA("[JSExtensionHost] Initializing QuickJS runtime...\n");
@@ -569,14 +573,38 @@ PatchResult JSExtensionHost::initialize() {
 }
 
 PatchResult JSExtensionHost::shutdown() {
-    if (!m_initialized) return PatchResult::error("Not initialized");
+    // Serialize concurrent onDestroy / main_win32 / destructor callers.
+    HANDLE hostThread = nullptr;
+    HANDLE queueEvent = nullptr;
+    JSRuntime* rt = nullptr;
+    JSContext* mainCtx = nullptr;
+    {
+        std::lock_guard<std::mutex> life(m_lifecycleMutex);
+        if (!m_initialized) {
+            m_shutdownCompleted = true;
+            return PatchResult::ok("JSExtensionHost already shut down");
+        }
+        OutputDebugStringA("[JSExtensionHost] Shutting down...\n");
 
-    OutputDebugStringA("[JSExtensionHost] Shutting down...\n");
+        rt = static_cast<JSRuntime*>(m_jsRuntime);
+        mainCtx = static_cast<JSContext*>(m_jsContext);
+        hostThread = m_hostThread;
+        queueEvent = m_queueEvent;
+        m_hostThread = nullptr;
 
-    // ---- Signal shutdown ----
-    m_running.store(false);
+        // CRITICAL ORDER: detach module loader WHILE runtime is still alive and
+        // BEFORE joining the host thread / FreeRuntime. Otherwise a host-thread
+        // require() past the m_initialized guard races FreeRuntime → 0xC0000005
+        // in moduleLoader (WM_DESTROY / observed 0xC000041D).
+        if (rt)
+            JS_SetModuleLoaderFunc(rt, nullptr, nullptr, nullptr);
 
-    // Post a shutdown message
+        m_running.store(false, std::memory_order_release);
+        m_initialized = false;
+        m_shutdownCompleted = true;
+        // Keep m_jsRuntime/m_jsContext until after host thread join.
+    }
+
     {
         std::lock_guard<std::mutex> lock(m_queueMutex);
         JSMessage msg;
@@ -587,63 +615,63 @@ PatchResult JSExtensionHost::shutdown() {
         msg.completionCtx = nullptr;
         m_messageQueue.push(std::move(msg));
     }
-    if (m_queueEvent) SetEvent(m_queueEvent);
+    if (queueEvent)
+        SetEvent(queueEvent);
 
-    // ---- Wait for host thread ----
-    if (m_hostThread) {
-        WaitForSingleObject(m_hostThread, 5000);
-        CloseHandle(m_hostThread);
-        m_hostThread = nullptr;
+    if (hostThread) {
+        WaitForSingleObject(hostThread, 5000);
+        CloseHandle(hostThread);
+        hostThread = nullptr;
     }
 
-    // ---- Deactivate all extensions ----
+    {
+        std::lock_guard<std::mutex> life(m_lifecycleMutex);
+        m_jsRuntime = nullptr;
+        m_jsContext = nullptr;
+        if (queueEvent == nullptr)
+            queueEvent = m_queueEvent;
+        m_queueEvent = nullptr;
+    }
+
+    // Drop extensions without JS deactivate (eval re-entered moduleLoader → AV).
     {
         std::lock_guard<std::mutex> lock(m_extensionsMutex);
         for (auto& [id, state] : m_extensions) {
-            if (state->activated) {
-                // Execute deactivate() if it exists
-                if (state->hasDeactivate && state->jsContext) {
-                    JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
-                    JS_Eval(extCtx, "if(typeof deactivate==='function')deactivate();",
-                            52, "<deactivate>", JS_EVAL_TYPE_GLOBAL);
-                }
-                state->activated = false;
-            }
-            // Free extension-specific JS context if separate
-            if (state->jsContext && state->jsContext != m_jsContext) {
-                JS_FreeContext(static_cast<JSContext*>(state->jsContext));
+            (void)id;
+            if (!state)
+                continue;
+            state->activated = false;
+            if (state->jsContext && state->jsContext != mainCtx) {
+                JSContext* extCtx = static_cast<JSContext*>(state->jsContext);
+                JS_SetContextOpaque(extCtx, nullptr);
+                JS_FreeContext(extCtx);
             }
             state->jsContext = nullptr;
         }
         m_extensions.clear();
     }
 
-    // ---- Cleanup timers ----
     {
         std::lock_guard<std::mutex> lock(m_timerMutex);
         m_timers.clear();
     }
 
-    // ---- Free QuickJS ----
-    if (m_jsContext) {
-        JS_FreeContext(static_cast<JSContext*>(m_jsContext));
-        m_jsContext = nullptr;
+    if (mainCtx) {
+        JS_SetContextOpaque(mainCtx, nullptr);
+        JS_FreeContext(mainCtx);
+        mainCtx = nullptr;
     }
-    if (m_jsRuntime) {
-        JS_FreeRuntime(static_cast<JSRuntime*>(m_jsRuntime));
-        m_jsRuntime = nullptr;
+    if (rt) {
+        JS_FreeRuntime(rt);
+        rt = nullptr;
     }
-
-    // ---- Cleanup event ----
-    if (m_queueEvent) {
-        CloseHandle(m_queueEvent);
-        m_queueEvent = nullptr;
+    if (queueEvent) {
+        CloseHandle(queueEvent);
+        queueEvent = nullptr;
     }
 
-    // ---- Shutdown polyfill engine ----
     PolyfillEngine::instance().shutdown();
 
-    m_initialized = false;
     OutputDebugStringA("[JSExtensionHost] Shutdown complete\n");
     return PatchResult::ok("JSExtensionHost shutdown");
 }
@@ -1848,24 +1876,43 @@ void JSExtensionHost::bindVSCodeExtensions(void* ctx) {
 //   4. Auto-generate polyfill via PolyfillEngine
 //   5. Return error with migration guide
 
-// Static wrapper for C function pointer compatibility
+// Static wrapper for C function pointer compatibility — SEH containment so an
+// AV inside require resolution cannot escape as 0xC000041D from a callback.
 JSModuleDef* JSExtensionHost::moduleLoaderWrapper(JSContext* ctx, const char* moduleName, void* opaque) {
+#if defined(_MSC_VER)
+    JSModuleDef* result = nullptr;
+    __try {
+        result = JSExtensionHost::moduleLoader(ctx, moduleName, opaque);
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        OutputDebugStringA("[JSExtensionHost] moduleLoader SEH swallowed\n");
+        result = nullptr;
+    }
+    return result;
+#else
     return JSExtensionHost::moduleLoader(ctx, moduleName, opaque);
+#endif
 }
 
 JSModuleDef* JSExtensionHost::moduleLoader(JSContext* cx, const char* moduleName, void* hostPtr) {
-    JSExtensionHost* host = static_cast<JSExtensionHost*>(hostPtr);
+    // Fail closed on any teardown / null opaque — this is the frozen fault owner
+    // for WM_DESTROY ACCESS_VIOLATION (observed exit 0xC000041D).
+    if (!moduleName || !cx || !hostPtr)
+        return nullptr;
 
-    if (!moduleName || !cx) return nullptr;
+    JSExtensionHost* host = static_cast<JSExtensionHost*>(hostPtr);
+    if (host->m_shutdownCompleted)
+        return nullptr;
+    if (!host->m_initialized || !host->m_running.load(std::memory_order_acquire))
+        return nullptr;
+    if (!host->m_jsRuntime)
+        return nullptr;
 
     char info[512];
     std::snprintf(info, sizeof(info),
                   "[JSExtensionHost] require('%s')\n", moduleName);
     OutputDebugStringA(info);
 
-    if (host) {
-        host->m_stats.requireCalls++;
-    }
+    host->m_stats.requireCalls++;
 
     // ---- Step 1: 'vscode' module → return global vscode object ----
     if (std::strcmp(moduleName, "vscode") == 0) {

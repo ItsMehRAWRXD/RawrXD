@@ -34,6 +34,24 @@
 #ifndef WM_APP_DEFERRED_INIT
 #define WM_APP_DEFERRED_INIT (WM_APP + 100) // Heavy initialization
 #endif
+#ifndef WM_APP_PS_SESSION_BRINGUP
+#define WM_APP_PS_SESSION_BRINGUP (WM_APP + 320) // Off-create PowerShell session
+#endif
+#ifndef WM_APP_RUN_MENU_PROBE
+#define WM_APP_RUN_MENU_PROBE (WM_APP + 321) // Deferred P1 menu E2E probe
+#endif
+#ifndef WM_APP_MENU_IDLE_STABLE
+#define WM_APP_MENU_IDLE_STABLE (WM_APP + 322) // P1 menu lifetime idle-stable trace
+#endif
+#ifndef WM_APP_RESTORE_SESSION
+#define WM_APP_RESTORE_SESSION (WM_APP + 323) // Off-WM_CREATE session restore
+#endif
+#ifndef WM_APP_RESTORE_MODEL
+#define WM_APP_RESTORE_MODEL (WM_APP + 324) // Async model restore after session metadata
+#endif
+#ifndef WM_APP_RESTORE_CWD
+#define WM_APP_RESTORE_CWD (WM_APP + 325) // Deferred workingDirectory (never sync in restore)
+#endif
 
 #ifndef _Return_type_success_
 #define _Return_type_success_(expr)
@@ -254,6 +272,10 @@ class Win32IDE
     friend void onCreateChildrenTrampoline(void* self, HWND hwnd);
     friend void deferredInitTrampoline(void* self);
     friend void bgInitBody(void* self);
+    friend void onCreateLateStepTrampoline(void* self, HWND hwnd, int step);
+    friend void onCreateChildrenStepTrampoline(void* self, HWND hwnd, int step);
+    friend void onCommandCpp(void* self, HWND hwnd, int id, HWND ctl, UINT code);
+    friend void onDestroyCpp(void* self);
 
   public:
     void runWorkspaceSearchFromDialog(const std::string& query);
@@ -288,7 +310,19 @@ class Win32IDE
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
-    void setEngineManager(EngineManager* mgr) { m_engineManager = mgr; }
+    void setEngineManager(EngineManager* mgr)
+    {
+        m_engineManager = mgr;
+        // P0: do NOT PostMessage(WM_APP+201) here. Flushing model-load during
+        // post_create_2 pump dispatches 0x80c9 → loadGGUFModel → uncaught SEH
+        // 0xE06D7363 and kills startup. Keep pending; flush only after
+        // markStartupPumpsComplete() (or explicit user model open).
+        if (mgr && m_pendingApp201ModelLoad)
+        {
+            // Leave m_pendingApp201ModelLoad set; optional late flush.
+            OutputDebugStringA("[setEngineManager] pending WM_APP+201 held (no mid-pump flush)\n");
+        }
+    }
     void setCodexUltimate(CodexUltimate* codex) { m_codexUltimate = codex; }
 
     bool createWindow();
@@ -496,8 +530,24 @@ class Win32IDE
     void initFileWatcher();
     void shutdownFileWatcher();
 
+    /// Call after post-createWindow message pumps finish (P0 SEH guard for WM_APP+201).
+    /// Sets the gate, then posts a deferred model-load flush when a path/pending load exists.
+    void markStartupPumpsComplete();
+    bool startupPumpsComplete() const { return m_startupPumpsComplete; }
+    bool pendingApp201ModelLoad() const { return m_pendingApp201ModelLoad; }
+    bool pendingSessionRestore() const { return m_pendingSessionRestore; }
+    void armPendingSessionRestore() { m_pendingSessionRestore = true; }
+    void clearPendingSessionRestore() { m_pendingSessionRestore = false; }
+
   private:
     EngineManager* m_engineManager = nullptr;
+    // Set when WM_APP+201 arrives before EngineManager is wired; flushed by setEngineManager.
+    bool m_pendingApp201ModelLoad = false;
+    bool m_pendingSessionRestore = false;
+    std::string m_pendingRestoreCwd;
+    bool m_p1GgufDeferredFlushPosted = false;
+    /// When false, WM_APP+201 model-load must not run (startup pumps / pre-paint).
+    bool m_startupPumpsComplete = false;
     CodexUltimate* m_codexUltimate = nullptr;
 
     // Window procedure
@@ -507,10 +557,13 @@ class Win32IDE
     LRESULT handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void onCreate(HWND hwnd);
     void onCreateChildren(HWND hwnd);  // Deferred UI creation to prevent stack overflow
+    void onCreateLateStep(int step, HWND hwnd);       // P1 phase-progress localization
+    void onCreateChildrenStep(int step, HWND hwnd);   // P1 deferred-child localization
     void deferredHeavyInit();
     static DWORD WINAPI deferredHeavyInitThreadProc(LPVOID param);
     void onDestroy();
     void onSize(int width, int height);
+    void layoutAiChatChildren();
     void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
 
     // DPI scaling
@@ -1741,6 +1794,8 @@ class Win32IDE
     HWND m_hwndFloatingContent;
 
     HMENU m_hMenu;
+    bool m_mainMenuBuilt = false;
+    void ensureMainMenuAttached();
     HWND m_hwndToolbar;
     HWND m_hwndTitleLabel;
     HWND m_hwndBtnMinimize;
@@ -2284,6 +2339,8 @@ class Win32IDE
     void stopPowerShellExecution();
     void clearPowerShellConsole();
     void appendPowerShellOutput(const std::string& text, COLORREF color = RGB(200, 200, 200));
+    // P1_UI_ENCODING_001: ASCII/UTF-8 probe through console + status bar (no GGUF)
+    void runUiEncodingProbe();
     // PowerShell History Management
     void addPowerShellHistory(const std::string& command);
     void navigatePowerShellHistoryUp();
@@ -2349,6 +2406,8 @@ class Win32IDE
     // AI CHAT PANEL IMPLEMENTATION
     // ========================================================================
     void createChatPanel();
+    // P1_UI_WINDOW_OWNERSHIP_001 — EnumWindows + dock-root asserts (debug + stderr)
+    void dumpUiWindowOwnership(const char* phaseTag);
     void HandleCopilotSend();
     void HandleCopilotClear();
     void HandleCopilotStreamUpdate(const char* token, size_t length = 0);
@@ -3496,6 +3555,8 @@ class Win32IDE
     // Global shutdown flag — checked by detached threads before accessing members
     std::atomic<bool> m_shuttingDown{false};
     bool isShuttingDown() const { return m_shuttingDown.load(std::memory_order_acquire); }
+    // onDestroy idempotency — WM_DESTROY / duplicate paths must not re-enter teardown
+    std::atomic<bool> m_destroyCompleted{false};
 
     // Active detached-thread counter — destructor waits for this to reach 0
     std::atomic<int> m_activeDetachedThreads{0};
@@ -4582,6 +4643,8 @@ class Win32IDE
     // ========================================================================
     // Lifecycle
     void initVSCodeExtensionAPI();
+    // Detach QuickJS hosts only (safe in parent WM_DESTROY before children).
+    void detachJSExtensionHosts();
     void shutdownVSCodeExtensionAPI();
 
     // Command handlers (IDM_VSCEXT_API_* range)
@@ -6032,6 +6095,8 @@ class Win32IDE
     static constexpr int IDM_T1_FUZZY_SYMBOLS = 12032;
     static constexpr int IDM_T1_SETTINGS_GUI = 12040;
     static constexpr int IDM_T1_SETTINGS_RESET = 12042;
+    static constexpr int IDM_T1_RESOURCE_MAP = 12043;
+    static constexpr int IDM_T1_TUNER_SUGGEST = 12044;
     static constexpr int IDM_T1_WELCOME_SHOW = 12050;
     static constexpr int IDM_T1_WELCOME_CLONE = 12051;
     static constexpr int IDM_T1_WELCOME_OPEN_FOLDER = 12052;
@@ -6123,6 +6188,8 @@ class Win32IDE
     void initSettingsGUI();
     void showSettingsGUI();
     void showSettingsGUIDialog();
+    void showResourceMapDialog();
+    void showTunerSuggestDialog();
     void buildSettingsSchema();
     void createSettingsControls(HWND hwndParent);
     void onSettingsCategorySelect(int categoryIndex);

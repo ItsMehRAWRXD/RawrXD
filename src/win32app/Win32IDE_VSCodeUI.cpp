@@ -2,6 +2,7 @@
 // Activity Bar, Secondary Sidebar, Panel (Terminal/Output/Problems/Debug Console), Enhanced Status Bar
 
 #include "Win32IDE.h"
+#include "Win32Utf8.hpp"
 #include "../ui/tool_action_status.h"
 #include <commctrl.h>
 #include <richedit.h>
@@ -232,11 +233,18 @@ void Win32IDE::createSecondarySidebar(HWND hwndParent)
 {
     m_secondarySidebarVisible = true;
     m_secondarySidebarWidth = 320;
+
+    // Prefer createChatPanel() as the sole docked Chat host. Do not orphan a second pane.
+    if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
+    {
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createSecondarySidebar IDEMPOTENT — reuse chat host\n");
+        return;
+    }
     
     // Create the secondary sidebar container
     m_hwndSecondarySidebar = CreateWindowExA(
         WS_EX_CLIENTEDGE, "STATIC", "",
-        WS_CHILD | WS_VISIBLE,
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         0, 0, m_secondarySidebarWidth, 600,
         hwndParent, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
     
@@ -727,85 +735,96 @@ void Win32IDE::createEnhancedStatusBar(HWND hwndParent)
     m_statusBarInfo.languageMode = "Plain Text";
     m_statusBarInfo.copilotActive = true;
     m_statusBarInfo.copilotSuggestions = 0;
-    
-    // Create status bar with multiple parts
-    m_hwndStatusBar = CreateWindowExA(
-        0, STATUSCLASSNAMEA, "",
+
+    INITCOMMONCONTROLSEX icc{ sizeof(icc), ICC_BAR_CLASSES | ICC_WIN95_CLASSES };
+    InitCommonControlsEx(&icc);
+
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar)) {
+        DestroyWindow(m_hwndStatusBar);
+        m_hwndStatusBar = nullptr;
+    }
+    m_hwndStatusBar = CreateWindowExW(
+        0, STATUSCLASSNAMEW, L"",
         WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
         0, 0, 0, 0,
         hwndParent, (HMENU)IDC_STATUS_BAR, m_hInstance, nullptr);
-    
-    // Set up parts - 12 parts for all status items
-    // [Remote][Branch][Sync][Errors][Warnings] ... [Line:Col][Spaces][Encoding][EOL][Language][Copilot]
-    int parts[] = { 80, 150, 200, 250, 300, -1, 380, 440, 510, 560, 650, 700 };
-    SendMessage(m_hwndStatusBar, SB_SETPARTS, 12, (LPARAM)parts);
-    
-    // Set initial text
+    if (!m_hwndStatusBar) {
+        m_hwndStatusBar = CreateStatusWindowW(
+            WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP, L"", hwndParent, IDC_STATUS_BAR);
+    }
+    // ANSI CreateWindowExA / STATUSCLASSNAMEA = FORBIDDEN (P1_UI_ENCODING_002).
+    if (!m_hwndStatusBar)
+        return;
+    if (!IsWindowUnicode(m_hwndStatusBar)) {
+        DestroyWindow(m_hwndStatusBar);
+        m_hwndStatusBar = nullptr;
+        return;
+    }
+
+    // Proportional parts filled on each onSize from client width.
+    int parts[] = { 120, 220, 320, 400, 480, 560, 640, 720, 800, 880, 980, -1 };
+    SendMessageW(m_hwndStatusBar, SB_SETPARTS, 12, (LPARAM)parts);
+
     updateEnhancedStatusBar();
 }
 
 void Win32IDE::updateEnhancedStatusBar()
 {
     if (!m_hwndStatusBar) return;
+
+    auto setPart = [this](int part, const std::string& utf8) {
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, part, utf8);
+    };
     
     // Part 0: Remote indicator (if connected)
-    if (!m_statusBarInfo.remoteName.empty()) {
-        std::string remoteText = ">< " + m_statusBarInfo.remoteName;
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)remoteText.c_str());
-    } else {
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)"");
-    }
+    if (!m_statusBarInfo.remoteName.empty())
+        setPart(0, ">< " + m_statusBarInfo.remoteName);
+    else
+        setPart(0, "");
     
     // Part 1: Branch indicator
-    std::string branchText = "<> " + m_statusBarInfo.branchName;
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 1, (LPARAM)branchText.c_str());
+    setPart(1, "<> " + m_statusBarInfo.branchName);
     
     // Part 2: Sync status (ahead/behind)
     std::ostringstream syncOss;
     if (m_statusBarInfo.syncAhead > 0 || m_statusBarInfo.syncBehind > 0) {
-        syncOss << m_statusBarInfo.syncAhead << "↑ " << m_statusBarInfo.syncBehind << "↓";
+        syncOss << m_statusBarInfo.syncAhead << "\xE2\x86\x91 "
+                << m_statusBarInfo.syncBehind << "\xE2\x86\x93";
     }
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 2, (LPARAM)syncOss.str().c_str());
+    setPart(2, syncOss.str());
     
     // Part 3: Errors count
-    std::ostringstream errOss;
-    errOss << "X " << m_statusBarInfo.errors;
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 3, (LPARAM)errOss.str().c_str());
+    setPart(3, "X " + std::to_string(m_statusBarInfo.errors));
     
     // Part 4: Warnings count
-    std::ostringstream warnOss;
-    warnOss << "! " << m_statusBarInfo.warnings;
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 4, (LPARAM)warnOss.str().c_str());
+    setPart(4, "! " + std::to_string(m_statusBarInfo.warnings));
     
     // Part 5: Spacer / file info
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 5, (LPARAM)"");
+    setPart(5, "");
     
     // Part 6: Line and Column
-    std::ostringstream lineColOss;
-    lineColOss << "Ln " << m_statusBarInfo.line << ", Col " << m_statusBarInfo.column;
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 6, (LPARAM)lineColOss.str().c_str());
+    setPart(6, "Ln " + std::to_string(m_statusBarInfo.line) +
+                   ", Col " + std::to_string(m_statusBarInfo.column));
     
     // Part 7: Spaces/Tabs
-    std::ostringstream spacesOss;
-    spacesOss << (m_statusBarInfo.useSpaces ? "Spaces: " : "Tab Size: ") << m_statusBarInfo.spacesOrTabWidth;
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 7, (LPARAM)spacesOss.str().c_str());
+    setPart(7, std::string(m_statusBarInfo.useSpaces ? "Spaces: " : "Tab Size: ") +
+                   std::to_string(m_statusBarInfo.spacesOrTabWidth));
     
     // Part 8: Encoding
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 8, (LPARAM)m_statusBarInfo.encoding.c_str());
+    setPart(8, m_statusBarInfo.encoding);
     
     // Part 9: End of Line
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 9, (LPARAM)m_statusBarInfo.eolSequence.c_str());
+    setPart(9, m_statusBarInfo.eolSequence);
     
     // Part 10: Language Mode
-    SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 10, (LPARAM)m_statusBarInfo.languageMode.c_str());
+    setPart(10, m_statusBarInfo.languageMode);
     
-    // Part 11: Copilot status
     // Part 11: Backend / AI status — initial render (IDT_GPU_TELEMETRY refreshes live counters)
     {
         std::string backendText = getActiveBackendName();
         if (!m_statusBarInfo.copilotActive)
             backendText += " (off)";
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 11, (LPARAM)backendText.c_str());
+        setPart(11, backendText);
     }
 }
 

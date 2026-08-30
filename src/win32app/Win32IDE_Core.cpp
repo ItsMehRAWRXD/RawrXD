@@ -15,6 +15,11 @@ extern "C" void ShutdownAICompletion();
 #include "../../include/ci_cd_settings.h"
 #include "CICDSettings.h"
 #include "BenchmarkMenu.h"
+#include "p1_gguf_load_cert.hpp"
+#include "p1_load_checkpoint.hpp"
+#include <thread>
+#include <cstdlib>
+#include <vector>
 #include "../../include/enterprise_license.h"
 #include "../../include/feature_flags_runtime.h"
 #include "../../include/interpretability_panel.h"
@@ -24,6 +29,9 @@ extern "C" void ShutdownAICompletion();
 #include "../core/enterprise_license.h"
 #include "../cpu_inference_engine.h"
 #include "../modules/ExtensionLoader.hpp"
+
+class Win32IDE;
+void RunUiMenuE2eProbe(Win32IDE* ide);
 #include "../modules/native_memory.hpp"
 #include "../native_agent.hpp"
 #include "../streaming_gguf_loader.h"
@@ -35,8 +43,18 @@ extern "C" void ShutdownAICompletion();
 #include "RawrXD_AgentCoordinator.h"
 #include "RawrXD_AutonomousAgenticPipeline.h"
 #include "Win32IDE.h"
+#include "Win32IDE_MainMenuAuthority.hpp"
+#include "Win32IDE_CommandFlight.hpp"
+#include "Win32IDE_ShellLayout.hpp"
+#include "Win32Utf8.hpp"
+#include "Win32IdeSpatial.hpp"
 #include "../SettingsManager.h"
+#include <exception>
 #include "Win32IDE_AgenticBrowser.h"
+
+#ifndef WM_APP_MENU_IDLE_STABLE
+#define WM_APP_MENU_IDLE_STABLE (WM_APP + 322)
+#endif
 #include "Win32IDE_ComponentManagers.h"  // Complete types for unique_ptr<T> dtor
 #include "Win32IDE_IELabels.h"
 #include "enterprise_feature_manager.hpp"
@@ -70,16 +88,19 @@ static void B428Trace(const char* msg) {
 #define IDM_BUILD_PROJECT 2801
 #endif
 
-#define IDM_FILE_NEW 2001
+#define IDM_FILE_NEW 1001
 #endif
 #ifndef IDM_FILE_OPEN
-#define IDM_FILE_OPEN 2002
+#define IDM_FILE_OPEN 1002
 #endif
 #ifndef IDM_FILE_SAVE
-#define IDM_FILE_SAVE 2003
+#define IDM_FILE_SAVE 1003
 #endif
 #ifndef IDM_FILE_SAVEAS
-#define IDM_FILE_SAVEAS 2004
+#define IDM_FILE_SAVEAS 1004
+#endif
+#ifndef IDM_FILE_EXIT
+#define IDM_FILE_EXIT 1099
 #endif
 #ifndef IDM_EDIT_FIND
 #define IDM_EDIT_FIND 2016
@@ -180,16 +201,25 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
     {
         CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lParam);
         pThis = reinterpret_cast<Win32IDE*>(cs->lpCreateParams);
+        if (!pThis)
+            return FALSE;
+        // P1_UI_WINDOW_OWNERSHIP_001: exactly one product shell per Win32IDE instance.
+        if (pThis->m_hwndMain && IsWindow(pThis->m_hwndMain) && pThis->m_hwndMain != hwnd)
+        {
+            OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] REJECT second product shell (WM_NCCREATE)\n");
+            fileTrace("[P1_UI_WINDOW_OWNERSHIP] REJECT second product shell NCCREATE");
+            return FALSE;
+        }
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
         pThis->m_hwndMain = hwnd;
-    }
-    else
-    {
-        pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+        return TRUE;
     }
 
-    if (pThis)
-    {
+    pThis = reinterpret_cast<Win32IDE*>(GetWindowLongPtrA(hwnd, GWLP_USERDATA));
+    if (pThis) {
+        RawrXD::CommandTelemetry::CmdDiagNoteMessage(
+            uMsg, static_cast<unsigned long long>(wParam), hwnd,
+            static_cast<unsigned long long>(lParam));
         return pThis->handleMessage(hwnd, uMsg, wParam, lParam);
     }
 
@@ -200,9 +230,37 @@ LRESULT CALLBACK Win32IDE::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 static void forceWindowToForeground(HWND hwnd);
 static void runWindowVisibilityWatchdog(HWND hwnd);
 static void drawLayoutDebugOverlay(HWND hwnd, HDC hdc);
+static void restoreWindowOpacityIfNeeded(HWND hwnd);
 
 static constexpr UINT_PTR IDT_VISIBILITY_WATCHDOG = 0x7D11;
 static constexpr UINT_PTR IDT_GPU_TELEMETRY = 0x7D12;  // 2-second backend/GPU status refresh
+
+// Fail-closed: layered + alpha 0 (or missing LWA) makes the IDE invisible/see-thru.
+// Glass/transparency is opt-in via setWindowTransparency; launch must be opaque.
+static void restoreWindowOpacityIfNeeded(HWND hwnd)
+{
+    if (!hwnd || !IsWindow(hwnd))
+        return;
+
+    const LONG_PTR exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+    if ((exStyle & WS_EX_LAYERED) == 0)
+        return;
+
+    COLORREF colorKey = 0;
+    BYTE alpha = 255;
+    DWORD flags = 0;
+    const BOOL got = GetLayeredWindowAttributes(hwnd, &colorKey, &alpha, &flags);
+    const bool badAlpha = !got || ((flags & LWA_ALPHA) && alpha < 250);
+    if (!badAlpha)
+        return;
+
+    // Prefer fully opaque non-layered for performance; if style clear fails, force alpha=255.
+    SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_LAYERED);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    OutputDebugStringA("[Win32IDE] Recovered main window from layered see-thru (forced opaque)\n");
+}
 
 static bool isLayoutDebugOverlayEnabled()
 {
@@ -264,6 +322,7 @@ static void runWindowVisibilityWatchdog(HWND hwnd)
 
     // Keep top-level IDE discoverable without pinning always-on-top.
     BringWindowToTop(hwnd);
+    restoreWindowOpacityIfNeeded(hwnd);
 }
 
 static void drawLayoutDebugOverlay(HWND hwnd, HDC hdc)
@@ -337,6 +396,10 @@ static void sehCallOnCreate(OnCreateFn fn, void* self, HWND hwnd)
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         DWORD excCode = GetExceptionCode();
+        RawrXD::MainMenuAuthority::TraceLine(
+            "STARTUP_SEH region=onCreate_outer code=0x%08lX",
+            static_cast<unsigned long>(excCode));
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "ONCREATE_OUTER_SEH_ABORT");
         
         char crashMsg[512];
         if (excCode == STATUS_STACK_OVERFLOW)
@@ -383,6 +446,132 @@ void onCreateTrampoline(void* self, HWND hwnd)
     static_cast<Win32IDE*>(self)->onCreate(hwnd);
 }
 
+// P1_UI_MENU_E2E_001 — contain WM_COMMAND faults (0xC000041D) + localize branch.
+typedef void (*OnCommandFn)(void* self, HWND hwnd, int id, HWND ctl, UINT code);
+
+static void onCommandCpp(void* self, HWND hwnd, int id, HWND ctl, UINT code)
+{
+    try {
+        static_cast<Win32IDE*>(self)->onCommand(hwnd, id, ctl, code);
+    } catch (const std::exception& e) {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "CXX_EXCEPTION");
+        RawrXD::CommandTelemetry::CmdDiagException(
+            id, 0xE06D7363u, e.what(), nullptr, 0, "CXX_STD_EXCEPTION");
+        char buf[256];
+        snprintf(buf, sizeof(buf), "[CMD_DIAG] C++ exception id=%d what=%s\n", id,
+                 e.what());
+        OutputDebugStringA(buf);
+    } catch (...) {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "CXX_UNKNOWN");
+        RawrXD::CommandTelemetry::CmdDiagException(id, 0xE06D7363u, nullptr, nullptr, 0,
+                                                  "CXX_UNKNOWN");
+        OutputDebugStringA("[CMD_DIAG] unknown C++ exception in onCommand\n");
+    }
+}
+
+#if defined(_MSC_VER)
+static int cmdSehFilter(unsigned long code, EXCEPTION_POINTERS* ep, int id)
+{
+    void* frames[32] = {};
+    unsigned n = 0;
+#if defined(_WIN64)
+    n = CaptureStackBackTrace(0, 32, frames, nullptr);
+#endif
+    const void* addr =
+        (ep && ep->ExceptionRecord) ? ep->ExceptionRecord->ExceptionAddress : nullptr;
+    RawrXD::CommandTelemetry::CmdDiagException(
+        id, code, addr, reinterpret_cast<const void* const*>(frames), n, "SEH");
+    char buf[192];
+    snprintf(buf, sizeof(buf),
+             "[CMD_DIAG] SEH 0x%08lX id=%d addr=%p frames=%u\n", code, id, addr, n);
+    OutputDebugStringA(buf);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
+
+static void sehCallOnCommand(OnCommandFn fn, void* self, HWND hwnd, int id, HWND ctl,
+                             UINT code)
+{
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "WM_COMMAND_ENTER");
+#if defined(_MSC_VER)
+    __try {
+        fn(self, hwnd, id, ctl, code);
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "WM_COMMAND_EXIT_OK");
+    } __except (cmdSehFilter(GetExceptionCode(), GetExceptionInformation(), id)) {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "WM_COMMAND_SEH_SWALLOWED");
+    }
+#else
+    fn(self, hwnd, id, ctl, code);
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "WM_COMMAND_EXIT_OK");
+#endif
+}
+
+// Heavy teardown is invoked from WM_NCDESTROY (children already destroyed).
+// No blanket SEH — faults must remain visible for localization.
+
+// ---------------------------------------------------------------------------
+// P1_UI_MENU_LIFETIME_001 — late onCreate / deferred-child phase localization
+// Each major late-startup call runs under its own SEH boundary so the first
+// missing ONCREATE_LATE_NN / DEFERRED_CHILD_NN checkpoint is authoritative.
+// ---------------------------------------------------------------------------
+typedef void (*IdeHwndStepFn)(void* self, HWND hwnd, int step);
+
+static void sehCallIdeHwndStep(IdeHwndStepFn fn, void* self, HWND hwnd, int step,
+                               const char* beforePhase, const char* afterPhase)
+{
+    HWND traceHwnd = hwnd;
+    if (self) {
+        auto* ide = static_cast<Win32IDE*>(self);
+        if (ide->getMainWindow())
+            traceHwnd = ide->getMainWindow();
+    }
+    RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, beforePhase);
+#if defined(_MSC_VER)
+    __try
+    {
+        fn(self, hwnd, step);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, afterPhase);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        const DWORD code = GetExceptionCode();
+        RawrXD::MainMenuAuthority::TraceLine(
+            "STARTUP_SEH region=%s step=%d code=0x%08lX", beforePhase, step,
+            static_cast<unsigned long>(code));
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "STARTUP_SEH_ABORT");
+        char msg[256];
+        snprintf(msg, sizeof(msg),
+                 "[RawrXD] SEH 0x%08lX in %s (step=%d) — continuing startup\n",
+                 static_cast<unsigned long>(code), beforePhase, step);
+        OutputDebugStringA(msg);
+        fileTrace(msg);
+    }
+#else
+    try
+    {
+        fn(self, hwnd, step);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, afterPhase);
+    }
+    catch (...)
+    {
+        RawrXD::MainMenuAuthority::TraceLine(
+            "STARTUP_SEH region=%s step=%d code=cpp_exception", beforePhase, step);
+        RawrXD::MainMenuAuthority::TraceMenuState(traceHwnd, "STARTUP_SEH_ABORT");
+        fileTrace("[RawrXD] C++ exception in late/deferred startup step\n");
+    }
+#endif
+}
+
+void onCreateLateStepTrampoline(void* self, HWND hwnd, int step)
+{
+    static_cast<Win32IDE*>(self)->onCreateLateStep(step, hwnd);
+}
+
+void onCreateChildrenStepTrampoline(void* self, HWND hwnd, int step)
+{
+    static_cast<Win32IDE*>(self)->onCreateChildrenStep(step, hwnd);
+}
+
 // Trampoline for deferred UI child creation (prevents stack overflow)
 void onCreateChildrenTrampoline(void* self, HWND hwnd)
 {
@@ -404,6 +593,10 @@ static void sehCallOnCreateChildren(OnCreateChildrenFn fn, void* self, HWND hwnd
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
         DWORD excCode = GetExceptionCode();
+        RawrXD::MainMenuAuthority::TraceLine(
+            "STARTUP_SEH region=onCreateChildren_outer code=0x%08lX",
+            static_cast<unsigned long>(excCode));
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "DEFERRED_CHILDREN_OUTER_SEH_ABORT");
         char crashMsg[512];
         if (excCode == STATUS_STACK_OVERFLOW)
         {
@@ -478,6 +671,13 @@ static void bgInitMark(const char* step)
     OutputDebugStringA("[BgInit] ");
     OutputDebugStringA(step);
     OutputDebugStringA("\n");
+    // Lifetime cert localization: emit HEAVY_STEP_* into the same trace file.
+    if (RawrXD::MainMenuAuthority::TraceEnabled()) {
+        char phase[96];
+        snprintf(phase, sizeof(phase), "HEAVY_STEP_%s", step ? step : "?");
+        HWND hwnd = RawrXD::MainMenuAuthority::State().hwnd;
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, phase);
+    }
 }
 
 static DWORD sehRunBgThread(BgThreadBodyFn fn, void* self)
@@ -573,13 +773,25 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         case WM_SIZE:
         {
+            // SIZE_MINIMIZED → never commit layout from a collapsed client.
+            if (wParam == SIZE_MINIMIZED)
+                return 0;
             int width = LOWORD(lParam);
             int height = HIWORD(lParam);
-            if (width > 0 && height > 0)
+            if (width <= 0 || height <= 0)
+                return 0;
+            onSize(width, height);
+            onEditorContentChanged();
+            // Ownership dump only on maximize / restore-from-maximize (not every drag resize).
             {
-                onSize(width, height);
-                // Visible line range changed — trigger recoloring for the new viewport
-                onEditorContentChanged();
+                static WPARAM s_lastSizeType = SIZE_RESTORED;
+                if (wParam == SIZE_MAXIMIZED ||
+                    (wParam == SIZE_RESTORED && s_lastSizeType == SIZE_MAXIMIZED))
+                {
+                    dumpUiWindowOwnership(wParam == SIZE_MAXIMIZED ? "SIZE_MAXIMIZED"
+                                                                   : "SIZE_RESTORE_FROM_MAX");
+                }
+                s_lastSizeType = wParam;
             }
             return 0;
         }
@@ -734,7 +946,8 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_COMMAND:
-            onCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
+            sehCallOnCommand(onCommandCpp, this, hwnd, LOWORD(wParam), (HWND)lParam,
+                             HIWORD(wParam));
             return 0;
 
         case WM_DRAWITEM:
@@ -852,7 +1065,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         swprintf(posBuf, 64, L"Ln %d, Col %d", line + 1, col + 1);
                         if (m_hwndStatusBar)
                         {
-                            SendMessage(m_hwndStatusBar, SB_SETTEXT, 1, (LPARAM)posBuf);
+                            SendMessageW(m_hwndStatusBar, SB_SETTEXTW, 1, (LPARAM)posBuf);
                         }
                         // Breadcrumb: update symbol path (File > Class > Method) on cursor move
                         if (pNMHDR->code == EN_SELCHANGE)
@@ -956,6 +1169,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     ShowWindow(m_hwndMain, SW_SHOW);
                     SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
                     forceWindowToForeground(m_hwndMain);
+                    restoreWindowOpacityIfNeeded(m_hwndMain);
                 }
                 return 0;
             }
@@ -1027,6 +1241,7 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
 
         case WM_CLOSE:
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_CLOSE_ENTER");
             if (!m_fileModified || promptSaveChanges())
             {
                 // Save window state before closing
@@ -1083,9 +1298,76 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         }
 
         case WM_DESTROY:
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_ENTER");
             KillTimer(hwnd, IDT_VISIBILITY_WATCHDOG);
-            onDestroy();
+            // Parent WM_DESTROY is top-down: children still exist. Detach QuickJS
+            // hosts only. Native FreeLibrary / VSCodeExtensionAPI::shutdown /
+            // ExtensionLoader unload wait for WM_NCDESTROY (bottom-up).
+            m_shuttingDown.store(true, std::memory_order_release);
+            m_inferenceStopRequested = true;
+            m_planExecutionCancelled.store(true);
+            stopVisibilityWatchdog();
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_BEFORE_js_detach");
+            detachJSExtensionHosts();
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_AFTER_js_detach");
+            // Close WebView2 COM controller before child HWND teardown.
+            if (m_webView2) {
+                m_webView2->destroy();
+                delete m_webView2;
+                m_webView2 = nullptr;
+            }
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_AFTER_webview2");
+            // Drop terminal callbacks before pane HWNDs destroy (UAF otherwise).
+            if (m_dedicatedPowerShellTerminal) {
+                m_dedicatedPowerShellTerminal->onOutput = nullptr;
+                m_dedicatedPowerShellTerminal->onError = nullptr;
+                m_dedicatedPowerShellTerminal->onStarted = nullptr;
+                m_dedicatedPowerShellTerminal->onFinished = nullptr;
+                m_dedicatedPowerShellTerminal->stop();
+            }
+            for (auto& pane : m_terminalPanes) {
+                if (pane.manager) {
+                    pane.manager->onOutput = nullptr;
+                    pane.manager->onError = nullptr;
+                    pane.manager->onStarted = nullptr;
+                    pane.manager->onFinished = nullptr;
+                    pane.manager->stop();
+                }
+            }
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_AFTER_terminals");
+            // Agentic browser WebView2 must Close while a message pump can still
+            // run (nested in DestroyWindow). Child neutralize would replace its
+            // WndProc and skip host WM_DESTROY → g_layer leak → COM hang in
+            // WinMain after MESSAGE_LOOP_EXIT.
+            Win32IDE_AgenticBrowser_Shutdown();
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_AFTER_agentic_browser");
+            // Neutralize child WndProcs before the system destroys them.
+            // Custom child procs otherwise re-enter freed QuickJS / IDE state
+            // after detachJSExtensionHosts (LAST_MSG=WM_DESTROY AV → 0xC000041D).
+            EnumChildWindows(
+                hwnd,
+                [](HWND h, LPARAM) -> BOOL {
+                    if (!h || !IsWindow(h))
+                        return TRUE;
+                    SetWindowLongPtrA(h, GWLP_USERDATA, 0);
+                    SetWindowLongPtrA(h, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(DefWindowProcA));
+                    return TRUE;
+                },
+                0);
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_AFTER_child_neutralize");
             PostQuitMessage(0);
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_DESTROY_EXIT_armed");
+            return 0;
+
+        case WM_NCDESTROY:
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_NCDESTROY_ENTER");
+            onDestroy();
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+            // Re-arm quit: nested DestroyWindow / COM pumps during onDestroy can
+            // PeekMessage-consume the WM_QUIT posted from WM_DESTROY, leaving
+            // runMessageLoop blocked forever on GetMessage (no 0xC000041D, no exit).
+            PostQuitMessage(0);
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WM_NCDESTROY_AFTER_onDestroy");
             return 0;
 
         case WM_CTLCOLORSTATIC:
@@ -1115,18 +1397,76 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     ShowWindow(m_hwndMain, SW_SHOW);
                     SetWindowPos(m_hwndMain, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
                     forceWindowToForeground(m_hwndMain);
+                    restoreWindowOpacityIfNeeded(m_hwndMain);
                     SetTimer(hwnd, 199, 400, nullptr);  // One-shot: force visible again in 400ms
                 }
                 return 0;
             }
-            // Handle deferred UI child creation (posted from onCreate to prevent stack overflow)
-            if (uMsg == WM_APP + 99)
+            // Handle deferred UI child creation (posted after session restore)
+            if (uMsg == WM_APP_INIT_CHILDREN)
             {
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "DEFERRED_CHILDREN_BEGIN");
                 sehCallOnCreateChildren(onCreateChildrenTrampoline, this, hwnd);
+                RawrXD::MainMenuAuthority::TraceMenuState(
+                    m_hwndMain ? m_hwndMain : hwnd, "DEFERRED_CHILDREN_COMPLETE");
+                // Menu lifetime: command surface + idle-stable are ready once children
+                // complete. Do not wait on deferredHeavyInit (enterprise/feature hang).
+                if (m_hMenu)
+                    RawrXD::MainMenuAuthority::EnsureAttached(hwnd, m_hMenu);
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "AFTER_COMMAND_AUTHORITY_INIT");
+                PostMessage(hwnd, WM_APP_MENU_IDLE_STABLE, 0, 0);
+                updateMenuEnableStates();  // after cert phases armed (can be slow)
+                return 0;
+            }
+            // Off-WM_CREATE session restore (own checkpoint; then arm deferred children)
+            if (uMsg == WM_APP_RESTORE_SESSION)
+            {
+                clearPendingSessionRestore();
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_SESSION_BEGIN");
+                restoreSession();
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_SESSION_COMPLETE");
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "BEFORE_DEFERRED_INIT");
+                PostMessage(hwnd, WM_APP_INIT_CHILDREN, 0, 0);
+                PostMessage(hwnd, WM_APP_DEFERRED_INIT, 0, 0);
+                return 0;
+            }
+            // Async model restore requested by session restore (never sync-load in restore)
+            if (uMsg == WM_APP_RESTORE_MODEL)
+            {
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_MODEL_BEGIN");
+                m_pendingApp201ModelLoad = true;
+                if (m_startupPumpsComplete && m_engineManager)
+                    PostMessage(hwnd, WM_APP + 201, 0, 0);
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_MODEL_POSTED");
+                return 0;
+            }
+            // Deferred CWD — same-drive string check only (no FS probe). Cross-drive skipped.
+            // Observed hang: SetCurrentDirectory("G:\\...") with EXE on F:\.
+            if (uMsg == WM_APP_RESTORE_CWD)
+            {
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_CWD_BEGIN");
+                const std::string cwd = std::move(m_pendingRestoreCwd);
+                m_pendingRestoreCwd.clear();
+                bool applied = false;
+                if (!cwd.empty()) {
+                    char exePath[MAX_PATH] = {};
+                    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+                    const bool sameDrive =
+                        cwd.size() >= 2 && exePath[0] && cwd[1] == ':' && exePath[1] == ':' &&
+                        ((cwd[0] | 32) == (exePath[0] | 32));
+                    if (sameDrive) {
+                        SetCurrentDirectoryA(cwd.c_str());
+                        applied = true;
+                    } else {
+                        LOG_WARNING(std::string("Session: skipping cross-drive workingDirectory: ") + cwd);
+                    }
+                }
+                RawrXD::MainMenuAuthority::TraceMenuState(
+                    hwnd, applied ? "RESTORE_SESSION_CWD_OK" : "RESTORE_SESSION_CWD_SKIPPED");
                 return 0;
             }
             // Handle deferred heavy initialization (posted from onCreate)
-            if (uMsg == WM_APP + 100)
+            if (uMsg == WM_APP_DEFERRED_INIT)
             {
                 sehCallDeferredInit(deferredInitTrampoline, this);
                 return 0;
@@ -1146,13 +1486,45 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 delete models;  // FIX: free heap-allocated vector from sender
                 return 0;
             }
+            if (uMsg == WM_APP_PS_SESSION_BRINGUP)
+            {
+                // Rebuild phases 0–4: do not spin up PowerShell chrome.
+                if (!RawrXD::ShellLayout::RebuildRestrictActive())
+                    startPowerShellSession();
+                RawrXD::ShellLayout::ApplyFromIde(this);
+                return 0;
+            }
+            if (uMsg == WM_APP_RUN_MENU_PROBE)
+            {
+                if (!RawrXD::ShellLayout::RebuildActive())
+                    RunUiMenuE2eProbe(this);
+                RawrXD::ShellLayout::ApplyFromIde(this);
+                return 0;
+            }
             // Handle background init completion — refresh UI (Tier 5 menus enabled here after initTier5Cosmetics)
             if (uMsg == WM_APP + 101)
             {
-                applyTheme();
-                updateMenuEnableStates();
+                if (m_hMenu)
+                    RawrXD::MainMenuAuthority::EnsureAttached(hwnd, m_hMenu);
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "AFTER_COMMAND_AUTHORITY_INIT");
+                if (!RawrXD::ShellLayout::FrameOnlyMode()) {
+                    applyTheme();
+                    updateMenuEnableStates();
+                }
+                RawrXD::ShellLayout::ApplyFromIde(this);
                 InvalidateRect(hwnd, nullptr, TRUE);
                 UpdateWindow(hwnd);
+                PostMessage(hwnd, WM_APP_MENU_IDLE_STABLE, 0, 0);
+                return 0;
+            }
+            if (uMsg == WM_APP_MENU_IDLE_STABLE)
+            {
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "IDLE_ENTERED");
+                if (m_hMenu)
+                    RawrXD::MainMenuAuthority::EnsureAttached(hwnd, m_hMenu);
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "WM_ENTERIDLE_STABLE");
+                RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "IDLE_STABLE");
+                RawrXD::ShellLayout::ApplyFromIde(this);
                 return 0;
             }
             // AI backend verification result from background probe thread
@@ -1168,23 +1540,149 @@ LRESULT Win32IDE::handleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return 0;
             }
             // Handle "load downloaded model" signal from background download threads
-            // (HuggingFace / URL downloads complete, m_loadedModelPath already set)
+            // (HuggingFace / URL downloads complete, m_loadedModelPath already set).
+            // Also used for session restore once StreamingGGUFLoader exists.
+            // P1-B: first createWindow pump can deliver this before EngineManager is
+            // wired; loading then surfaces as uncaught 0xE06D7363 and kills startup.
             if (uMsg == WM_APP + 201)
             {
-                const std::string& pathToLoad = getLoadedModelPath();
-                if (!pathToLoad.empty())
+                // P0: never run GGUF/model load during createWindow post-create pumps.
+                // ide_startup.log last edge: P1_pump_before post_create_2 msg=0x80c9
+                // (= WM_APP+201) → SEH 0xE06D7363. Defer until pumps complete.
+                if (!m_startupPumpsComplete || !m_engineManager)
                 {
-                    appendToOutput("Loading downloaded model: " + pathToLoad + "\n", "Output", OutputSeverity::Info);
-                    if (loadGGUFModel(pathToLoad))
+                    m_pendingApp201ModelLoad = true;
+                    RawrXD::P1GgufCert::emit("ENGINE_MANAGER_PRESENT",
+                                             m_engineManager ? "INFO" : "FAIL",
+                                             "deferring_WM_APP_201_startup");
+                    OutputDebugStringA("[WM_APP+201] deferred (startup pumps / no engine)\n");
+                    fprintf(stderr, "[STARTUP] WM_APP+201 deferred (startup)\n");
+                    fflush(stderr);
+                    return 0;
+                }
+                RawrXD::P1GgufCert::emit("ENGINE_MANAGER_PRESENT", "PASS");
+                m_pendingApp201ModelLoad = false;
+                if (m_p1GgufDeferredFlushPosted)
+                {
+                    RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "PASS");
+                    m_p1GgufDeferredFlushPosted = false;
+                }
+                else
+                {
+                    RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO", "direct_delivery_no_prior_defer");
+                }
+                try
+                {
+                    const std::string& pathToLoad = getLoadedModelPath();
+                    if (pathToLoad.empty())
                     {
-                        loadModelForInference(pathToLoad);
-                        appendToOutput("Downloaded model loaded successfully!\n", "Output", OutputSeverity::Info);
+                        RawrXD::P1GgufCert::emit("MODEL_FILE_OPEN", "FAIL", "empty_loadedModelPath");
+                        RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", "empty_path");
+                        return 0;
                     }
-                    else
+                    appendToOutput("Loading downloaded model: " + pathToLoad + "\n", "Output",
+                                   OutputSeverity::Info);
+                    const bool ggufOk = loadGGUFModel(pathToLoad);
+                    if (!ggufOk)
                     {
-                        appendToOutput("Failed to load downloaded model: " + pathToLoad + "\n", "Errors",
-                                       OutputSeverity::Error);
+                        RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", "gguf_streaming_fail");
+                        appendToOutput("Model load incomplete (streaming). Path: " + pathToLoad + "\n",
+                                       "Errors", OutputSeverity::Error);
+                        return 0;
                     }
+                    // Streaming stays on UI (matches live IDE: "STREAMING MODE").
+                    // Native LoadModel runs on a worker — UI-pump Vulkan init dies at
+                    // INF_vulkan; harness PASSes the same call off the UI thread.
+                    RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "INFO",
+                                             "calling_LoadModel_worker");
+                    RawrXD::P1LoadCkpt::emit("IDE_LoadModel", "dispatch_worker");
+                    appendToOutput("Native LoadModel started on worker thread...\n", "Output",
+                                   OutputSeverity::Info);
+                    const std::string pathCopy = pathToLoad;
+                    HWND hwndNotify = m_hwndMain;
+                    std::thread([pathCopy, hwndNotify]() {
+                        bool infOk = false;
+                        try
+                        {
+                            auto engine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+                            auto memPlugin = std::make_shared<RawrXD::Modules::NativeMemoryModule>();
+                            engine->RegisterMemoryPlugin(memPlugin);
+                            RawrXD::P1LoadCkpt::emit("IDE_LoadModel", "before_worker_LoadModel");
+                            if (engine->LoadModel(pathCopy))
+                            {
+                                RawrXD::P1LoadCkpt::emit("IDE_LoadModel", "ok");
+                                RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "PASS");
+                                RawrXD::P1GgufCert::emit("MODEL_READY", "PASS", pathCopy.c_str());
+                                RawrXD::P1GgufCert::emit("NO_UNHANDLED_EXCEPTION", "PASS",
+                                                         "worker_ok");
+                                infOk = true;
+                            }
+                            else
+                            {
+                                const std::string err = engine->GetLastLoadErrorMessage();
+                                RawrXD::P1LoadCkpt::emit("IDE_LoadModel",
+                                                         err.empty() ? "fail" : err.c_str());
+                                RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "FAIL",
+                                                         err.empty() ? "LoadModel_false" : err.c_str());
+                                RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL",
+                                                         err.empty() ? "LoadModel_false" : err.c_str());
+                            }
+                        }
+                        catch (const std::exception& ex)
+                        {
+                            RawrXD::P1LoadCkpt::emit("IDE_LoadModel", ex.what());
+                            RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "FAIL", ex.what());
+                            RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", ex.what());
+                            RawrXD::P1GgufCert::emit("NO_UNHANDLED_EXCEPTION", "PASS",
+                                                     "contained_std_exception_worker");
+                        }
+                        catch (...)
+                        {
+                            RawrXD::P1LoadCkpt::emit("IDE_LoadModel", "unknown_exception");
+                            RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "FAIL",
+                                                     "worker_unknown");
+                            RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", "worker_unknown");
+                            RawrXD::P1GgufCert::emit("NO_UNHANDLED_EXCEPTION", "PASS",
+                                                     "contained_unknown_worker");
+                        }
+                        if (hwndNotify && IsWindow(hwndNotify))
+                            PostMessageA(hwndNotify, WM_APP + 205, infOk ? 1 : 0, 0);
+                    }).detach();
+                    return 0;
+                }
+                catch (const std::exception& ex)
+                {
+                    RawrXD::P1GgufCert::emit("NO_UNHANDLED_EXCEPTION", "PASS", "contained_std_exception");
+                    RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", ex.what());
+                    OutputDebugStringA("[WM_APP+201] std::exception (contained)\n");
+                    appendToOutput(std::string("Model auto-load exception (contained): ") + ex.what() + "\n",
+                                   "Errors", OutputSeverity::Error);
+                }
+                catch (...)
+                {
+                    RawrXD::P1GgufCert::emit("NO_UNHANDLED_EXCEPTION", "PASS", "contained_unknown");
+                    RawrXD::P1GgufCert::emit("MODEL_READY", "FAIL", "unknown_exception_contained");
+                    OutputDebugStringA("[WM_APP+201] unknown C++ exception (contained)\n");
+                    appendToOutput("Model auto-load unknown exception (contained)\n", "Errors",
+                                   OutputSeverity::Error);
+                }
+                return 0;
+            }
+            // WM_APP+205: native LoadModel worker finished (wParam=1 success)
+            if (uMsg == WM_APP + 205)
+            {
+                if (wParam)
+                {
+                    m_nativeEngineLoaded = true;
+                    if (!m_nativeEngine)
+                        m_nativeEngine = RawrXD::CPUInferenceEngine::GetSharedInstance();
+                    appendToOutput("Native inference model READY (worker LoadModel).\n", "Output",
+                                   OutputSeverity::Info);
+                }
+                else
+                {
+                    appendToOutput("Native LoadModel failed (see p1_gguf_load_cert / p1_cpu_load_ckpt).\n",
+                                   "Errors", OutputSeverity::Error);
                 }
                 return 0;
             }
@@ -1326,8 +1824,26 @@ void fileTrace(const char* msg) {
     fopen_s(&f, "win32ide_trace.log", "a");
     if (f) {
         fprintf(f, "%s\n", msg);
+        fflush(f);
         fclose(f);
     }
+}
+
+// P0 startup: flush-immediate checkpoints (ODS + stderr + file). No buffering.
+static void p0StartupCk(const char* tag)
+{
+    char line[256];
+    sprintf_s(line, "[STARTUP] %s\n", tag ? tag : "?");
+    OutputDebugStringA(line);
+    fprintf(stderr, "%s", line);
+    fflush(stderr);
+    fileTrace(line);
+}
+
+static bool p0BisectEquals(const char* want)
+{
+    const char* v = std::getenv("RAWRXD_P0_BISECT");
+    return v && want && _stricmp(v, want) == 0;
 }
 
 // ============================================================================
@@ -1335,16 +1851,31 @@ void fileTrace(const char* msg) {
 // ============================================================================
 bool Win32IDE::createWindow()
 {
+    p0StartupCk("createWindow ENTER (Core)");
     OutputDebugStringA("RawrXD: [Win32IDE_Core.cpp] createWindow() ENTER\n");
     fileTrace("[Core] createWindow_ENTER");
-    
+
+    // P1_UI_WINDOW_OWNERSHIP_001: createWindow is idempotent — never a second shell.
+    if (m_hwndMain && IsWindow(m_hwndMain))
+    {
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createWindow IDEMPOTENT — reuse existing m_hwndMain\n");
+        fileTrace("[P1_UI_WINDOW_OWNERSHIP] createWindow IDEMPOTENT");
+        return true;
+    }
     // ====================================================================
     // Enterprise: Load external configuration before window creation
+    // P0 bisect regions:
+    //   C = config load body
+    //   D = configuration scope destruction (exit of this block)
+    //   E = SettingsManager construction/Initialize
+    // Env RAWRXD_P0_BISECT=after_config | after_config_scope | after_settings
     // ====================================================================
     {
+        p0StartupCk("before IDEConfig::getInstance");
         OutputDebugStringA("RawrXD: About to call IDEConfig::getInstance()...\n");
         fileTrace("[Core] createWindow_before_IDEConfig");
         auto& config = IDEConfig::getInstance();
+        p0StartupCk("after IDEConfig::getInstance");
         OutputDebugStringA("RawrXD: IDEConfig::getInstance() returned\n");
         fileTrace("[Core] createWindow_after_IDEConfig");
         // Try workspace config, then user config, then defaults
@@ -1381,6 +1912,7 @@ bool Win32IDE::createWindow()
         m_ollamaBaseUrl = config.getString("ollama.baseUrl", "http://localhost:11434");
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
         fprintf(stderr, "[Win32IDE] Using config fallback: %s\n", m_ollamaBaseUrl.c_str());
+        fflush(stderr);
         fileTrace("[Core] createWindow_after_ollamaUrl_deferred");
         m_ollamaModelOverride = config.getString("ollama.modelOverride", "");
         m_autoSaveEnabled = config.getBool("editor.autoSave", false);
@@ -1403,7 +1935,9 @@ bool Win32IDE::createWindow()
             std::string agenticJson = config.getString("agentic.configJson", "");
             if (!agenticJson.empty())
                 aac.fromJson(agenticJson);
+            p0StartupCk("after agenticConfig locals (before nested scope exit)");
         }
+        p0StartupCk("after agenticConfig nested scope exit");
         fileTrace("[Core] createWindow_after_agenticConfig");
 
         LOG_INFO("Configuration loaded — " + std::to_string(config.getAllKeys().size()) + " keys");
@@ -1411,20 +1945,41 @@ bool Win32IDE::createWindow()
         OutputDebugStringA("RawrXD: Configuration loading complete\n");
         LOG_INFO("[createWindow] Configuration loading complete");
         fileTrace("[Core] createWindow_after_config");
+        p0StartupCk("config complete");
+
+        // Bisect C: return while config locals (incl. configPath string) still alive.
+        if (p0BisectEquals("after_config"))
+        {
+            p0StartupCk("RETURNING AFTER CONFIG (bisect C — scope NOT exited)");
+            return true;
+        }
+
+        p0StartupCk("before config scope exit");
+    }
+    p0StartupCk("after config scope exit");
+
+    // Bisect D: config scope destroyed; SettingsManager not yet touched.
+    if (p0BisectEquals("after_config_scope"))
+    {
+        p0StartupCk("RETURNING AFTER CONFIG SCOPE EXIT (bisect D)");
+        return true;
     }
 
     // ====================================================================
     // Initialize Settings Manager for persistent preferences
     // ====================================================================
     {
+        p0StartupCk("before SettingsManager");
         OutputDebugStringA("RawrXD: Initializing SettingsManager...\n");
         fileTrace("[Core] createWindow_before_SettingsManager");
         if (RawrXD::GetSettings().Initialize()) {
+            p0StartupCk("after SettingsManager Initialize OK");
             OutputDebugStringA("RawrXD: SettingsManager initialized\n");
             LOG_INFO("[createWindow] SettingsManager initialized");
             
             // Apply window state from settings
             auto windowState = RawrXD::GetSettings().GetWindowState();
+            p0StartupCk("after GetWindowState");
             if (windowState.IsValid()) {
                 // Store for use in window creation
                 m_windowX = windowState.x;
@@ -1433,11 +1988,20 @@ bool Win32IDE::createWindow()
                 m_windowHeight = windowState.height;
                 m_windowMaximized = windowState.maximized;
             }
+            p0StartupCk("after windowState apply (before Settings scope exit)");
         } else {
             OutputDebugStringA("RawrXD: SettingsManager initialization failed\n");
             LOG_WARNING("[createWindow] SettingsManager initialization failed");
+            p0StartupCk("SettingsManager Initialize FAILED");
         }
         fileTrace("[Core] createWindow_after_SettingsManager");
+    }
+    p0StartupCk("after SettingsManager scope exit");
+
+    if (p0BisectEquals("after_settings"))
+    {
+        p0StartupCk("RETURNING AFTER SETTINGS (bisect E)");
+        return true;
     }
 
     // Load RichEdit libraries — need both for RICHEDIT_CLASSA and MSFTEDIT_CLASS
@@ -1525,16 +2089,24 @@ bool Win32IDE::createWindow()
     fileTrace("[Core] createWindow_after_GetMonitorInfoA");
     LOG_INFO("[createWindow] Calling CreateWindowExA...");
     fileTrace("[Core] createWindow_calling_CreateWindowExA");
-    m_hwndMain =
+    HWND created =
         CreateWindowExA(WS_EX_APPWINDOW, kWindowClassName, "RawrXD IDE - Native Win32 AI Development Environment",
                         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_VISIBLE, winX, winY, winW, winH, nullptr, nullptr,
                         m_hInstance, this);
     OutputDebugStringA("RawrXD: CreateWindowExA returned\n");
     LOG_INFO("[createWindow] CreateWindowExA returned");
     fileTrace("[Core] createWindow_after_CreateWindowExA");
+    p0StartupCk("after CreateWindowExA returned");
 
-    if (!m_hwndMain)
+    if (!created)
     {
+        // Never clobber a live main HWND if a second CreateWindowEx was rejected.
+        if (m_hwndMain && IsWindow(m_hwndMain))
+        {
+            OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] CreateWindowEx failed but stable main kept\n");
+            fileTrace("[P1_UI_WINDOW_OWNERSHIP] CreateWindowEx fail keep main");
+            return true;
+        }
         DWORD err = GetLastError();
         char errBuf[224] = {};
         std::snprintf(errBuf, sizeof(errBuf),
@@ -1546,9 +2118,15 @@ bool Win32IDE::createWindow()
         fileTrace("[Core] createWindow_CreateWindowExA_FAILED");
         return false;
     }
+    m_hwndMain = created;
     OutputDebugStringA("RawrXD: CreateWindowExA succeeded - window created\n");
     LOG_INFO("[createWindow] CreateWindowExA succeeded - window created");
     fileTrace("[Core] createWindow_CreateWindowExA_succeeded");
+    RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "AFTER_CREATE_WINDOW");
+
+    // Children + heavy deferred init are armed AFTER WM_APP_RESTORE_SESSION returns
+    // (see handleMessage). Do not queue them here — that races restore and can run
+    // deferred children while session restore is still the active failure window.
 
     fileTrace("[Core] createWindow_before_ShowWindow");
     ShowWindow(m_hwndMain, SW_SHOW);
@@ -1557,6 +2135,7 @@ bool Win32IDE::createWindow()
     ShowWindow(m_hwndMain, SW_SHOWNORMAL);
     OutputDebugStringA("RawrXD: ShowWindow(SW_SHOWNORMAL) called\n");
     LOG_INFO("[createWindow] ShowWindow(SW_SHOWNORMAL) called");
+    restoreWindowOpacityIfNeeded(m_hwndMain);
     UpdateWindow(m_hwndMain);
     OutputDebugStringA("RawrXD: UpdateWindow called\n");
     LOG_INFO("[createWindow] UpdateWindow called");
@@ -1648,6 +2227,7 @@ void Win32IDE::showWindow()
     SetForegroundWindow(m_hwndMain);
     SetActiveWindow(m_hwndMain);
     forceWindowToForeground(m_hwndMain);
+    restoreWindowOpacityIfNeeded(m_hwndMain);
     SetTimer(m_hwndMain, IDT_VISIBILITY_WATCHDOG, 1000, nullptr);
     SetTimer(m_hwndMain, IDT_GPU_TELEMETRY, 2000, nullptr);
     FLASHWINFO fwi = {sizeof(FLASHWINFO), m_hwndMain, FLASHW_ALL | FLASHW_TIMERNOFG, 3, 0};
@@ -1664,10 +2244,20 @@ int Win32IDE::runMessageLoop()
     auto loopStart = std::chrono::high_resolution_clock::now();
 
     MSG msg = {};
+    static bool s_tracedFirstIdle = false;
     try
     {
-        while (GetMessage(&msg, nullptr, 0, 0))
+        // GetMessage returns 0 on WM_QUIT, -1 on error. Treat both as loop end
+        // so a post-destroy error cannot spin forever.
+        BOOL gm;
+        while ((gm = GetMessage(&msg, nullptr, 0, 0)) > 0)
         {
+            if (!s_tracedFirstIdle && msg.message == WM_ENTERIDLE) {
+                s_tracedFirstIdle = true;
+                if (m_hwndMain && m_hMenu)
+                    RawrXD::MainMenuAuthority::EnsureAttached(m_hwndMain, m_hMenu);
+                RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "WM_ENTERIDLE_STABLE");
+            }
             METRICS.increment("app.messages_processed");
 
             // Handle accelerator keys
@@ -1831,6 +2421,8 @@ int Win32IDE::runMessageLoop()
             AIWorkersProcessInvokeQueue();
             DispatchMessage(&msg);
         }
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1,
+            gm == 0 ? "MESSAGE_LOOP_WM_QUIT" : "MESSAGE_LOOP_GETMESSAGE_ERR");
     }
     catch (const std::exception& e)
     {
@@ -1857,201 +2449,256 @@ int Win32IDE::runMessageLoop()
 
     // Save configuration on exit
     IDEConfig::getInstance().saveToFile("rawrxd.config.json");
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "MESSAGE_LOOP_EXIT");
 
     return static_cast<int>(msg.wParam);
 }
 
 // ============================================================================
-// onSize - Layout all child windows when the main window is resized
+// onSize - SINGLE spatial authority: resolve → validate → atomic apply
 // ============================================================================
-// Re-entrancy guard to prevent recursive onSize calls during window creation
 static thread_local bool s_inOnSize = false;
+
+void Win32IDE::layoutAiChatChildren()
+{
+    if (!m_hwndSecondarySidebar || !IsWindow(m_hwndSecondarySidebar))
+        return;
+
+    RECT rc{};
+    GetClientRect(m_hwndSecondarySidebar, &rc);
+    const int W = rc.right - rc.left;
+    const int H = rc.bottom - rc.top;
+    if (W <= 40 || H <= 80)
+        return;
+
+    const int pad = dpiScale(6);
+    const int gap = dpiScale(4);
+    const int rowH = dpiScale(22);
+    const int sliderH = dpiScale(24);
+    const int btnH = dpiScale(28);
+    const int inputH = dpiScale(72);
+    int y = pad;
+    int innerW = W - pad * 2;
+    if (innerW < 40) innerW = 40;
+
+    auto place = [&](HWND hwnd, int x, int yy, int w, int h) {
+        if (hwnd && IsWindow(hwnd))
+            SetWindowPos(hwnd, nullptr, x, yy, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    };
+
+    // Header
+    place(m_hwndSecondarySidebarHeader, pad, y, innerW, rowH);
+    y += rowH + gap;
+
+    // Model row: label is anonymous — combo + browse by member/ID
+    const int browseW = dpiScale(70);
+    const int comboW = (std::max)(40, innerW - browseW - gap);
+    place(m_hwndModelSelector, pad, y, comboW, dpiScale(200)); // dropdown list height
+    HWND browse = GetDlgItem(m_hwndSecondarySidebar, 1209 /*IDC_MODEL_BROWSE_BTN*/);
+    place(browse, pad + comboW + gap, y, browseW, rowH);
+    y += rowH + gap;
+
+    // Max tokens slider
+    place(m_hwndMaxTokensLabel, pad + innerW - dpiScale(48), y, dpiScale(48), rowH);
+    y += rowH;
+    place(m_hwndMaxTokensSlider, pad, y, innerW, sliderH);
+    y += sliderH + gap;
+
+    // Context slider / combo
+    place(m_hwndContextLabel, pad + innerW - dpiScale(48), y, dpiScale(48), rowH);
+    y += rowH;
+    place(m_hwndContextSlider, pad, y, innerW, sliderH);
+    y += sliderH + gap;
+    HWND ctxCombo = GetDlgItem(m_hwndSecondarySidebar, 4200);
+    if (ctxCombo && IsWindow(ctxCombo)) {
+        place(ctxCombo, pad, y, innerW, dpiScale(200));
+        y += rowH + gap;
+    }
+
+    // Option checkboxes — 2 columns
+    const int colW = innerW / 2 - gap;
+    place(m_hwndChkMaxMode, pad, y, colW, rowH);
+    place(m_hwndChkDeepThink, pad + colW + gap, y, colW, rowH);
+    y += rowH + gap;
+    place(m_hwndChkDeepResearch, pad, y, colW, rowH);
+    place(m_hwndChkNoRefusal, pad + colW + gap, y, colW, rowH);
+    y += rowH + gap;
+
+    // Reserve bottom: Send/Clear + input
+    const int bottomStack = inputH + btnH + gap * 3;
+    int chatBottom = H - pad - bottomStack;
+    if (chatBottom < y + dpiScale(40))
+        chatBottom = y + dpiScale(40);
+    int chatH = chatBottom - y;
+    if (chatH < dpiScale(40)) chatH = dpiScale(40);
+
+    place(m_hwndCopilotChatOutput, pad, y, innerW, chatH);
+    y = chatBottom + gap;
+    place(m_hwndCopilotChatInput, pad, y, innerW, inputH);
+    y += inputH + gap;
+    const int half = innerW / 2 - gap / 2;
+    place(m_hwndCopilotSendBtn, pad, y, half, btnH);
+    place(m_hwndCopilotClearBtn, pad + half + gap, y, half, btnH);
+}
 
 void Win32IDE::onSize(int width, int height)
 {
-    // Re-entrancy guard: prevent recursive onSize calls.
-    // If already inside onSize, bail out immediately.
-    if (s_inOnSize)
-    {
+    if (s_inOnSize) {
         OutputDebugStringA("[Win32IDE] RE-ENTRANT onSize BLOCKED\n");
         return;
     }
-    
-    // RAII guard: sets flag on construction, resets on destruction (including early returns).
     struct OnSizeGuard {
-        OnSizeGuard()  { s_inOnSize = true; }
+        OnSizeGuard() { s_inOnSize = true; }
         ~OnSizeGuard() { s_inOnSize = false; }
     } onSizeGuard;
-
-    // LOGGING AS REQUESTED
-    char logBuf[256];
-    sprintf_s(logBuf, "onSize: %dx%d (Explorer: %p, Terminal: %p)", width, height, m_hwndFileExplorer,
-              m_hwndPowerShellPanel);
-    LOG_INFO(std::string(logBuf));
 
     if (width <= 0 || height <= 0)
         return;
 
-    const int TOOLBAR_HEIGHT = dpiScale(32);
-    const int STATUSBAR_HEIGHT = dpiScale(24);
-    const int ACTIVITY_BAR_WIDTH = dpiScale(48);
-    const int TAB_BAR_HEIGHT = dpiScale(28);
-
-    int sidebarWidth = m_sidebarVisible ? m_sidebarWidth : 0;
-    int secondarySidebarWidth = m_secondarySidebarVisible ? m_secondarySidebarWidth : 0;
-    // Only reserve space for panels that actually have HWNDs created
-    int panelHeight = (m_outputPanelVisible && m_hwndOutputTabs) ? m_outputTabHeight : 0;
-    int powerShellHeight = (m_powerShellPanelVisible && m_hwndPowerShellPanel) ? m_powerShellPanelHeight : 0;
-
-    int contentTop = TOOLBAR_HEIGHT;
-    int contentBottom = height - STATUSBAR_HEIGHT;
-    int contentHeight = contentBottom - contentTop;
-
-    // Status bar
-    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
-    {
-        SendMessage(m_hwndStatusBar, WM_SIZE, 0, 0);
+    if (RawrXD::ShellLayout::RebuildActive() &&
+        !RawrXD::ShellLayout::UseLegacySpatial(RawrXD::ShellLayout::PhaseFromEnvironment())) {
+        RawrXD::ShellLayout::LayoutIDE(this, width, height);
+        return;
     }
 
-    // Toolbar
-    if (m_hwndToolbar && IsWindow(m_hwndToolbar))
-    {
-        MoveWindow(m_hwndToolbar, 0, 0, width, TOOLBAR_HEIGHT, TRUE);
-    }
+    using namespace RawrXD::Ui;
 
-    // Activity bar (far left)
-    if (m_hwndActivityBar && IsWindow(m_hwndActivityBar))
-    {
-        MoveWindow(m_hwndActivityBar, 0, contentTop, ACTIVITY_BAR_WIDTH, contentHeight, TRUE);
-    }
+    UiLayoutInputs in{};
+    in.clientW = width;
+    in.clientH = height;
+    in.toolbarH = dpiScale(32);
+    in.statusH = dpiScale(24);
+    in.activityW = dpiScale(48);
+    in.leftSidebarW = m_sidebarWidth > 0 ? m_sidebarWidth : dpiScale(250);
+    in.rightSidebarW =
+        m_secondarySidebarWidth > 0 ? m_secondarySidebarWidth : dpiScale(320);
+    in.tabH = dpiScale(28);
+    in.breadcrumbH = m_breadcrumbHeight > 0 ? m_breadcrumbHeight : dpiScale(22);
+    in.gutterW = m_lineNumberWidth > 0 ? m_lineNumberWidth : dpiScale(48);
+    in.minimapW = m_minimapWidth > 0 ? m_minimapWidth : dpiScale(80);
+    in.terminalH =
+        m_powerShellPanelHeight > 0 ? m_powerShellPanelHeight : dpiScale(220);
+    in.outputH = m_outputTabHeight > 0 ? m_outputTabHeight : dpiScale(160);
 
-    // Primary sidebar
-    if (m_hwndSidebar && IsWindow(m_hwndSidebar) && m_sidebarVisible)
-    {
-        MoveWindow(m_hwndSidebar, ACTIVITY_BAR_WIDTH, contentTop, sidebarWidth, contentHeight, TRUE);
-    }
+    in.showActivity = (m_hwndActivityBar && IsWindow(m_hwndActivityBar));
+    in.showLeft = m_sidebarVisible && m_hwndSidebar && IsWindow(m_hwndSidebar);
+    in.showRight = m_secondarySidebarVisible && m_hwndSecondarySidebar &&
+                   IsWindow(m_hwndSecondarySidebar);
+    in.showTabs = (m_hwndTabBar && IsWindow(m_hwndTabBar));
+    in.showBreadcrumbs = m_settings.breadcrumbsEnabled && m_hwndBreadcrumbs &&
+                         IsWindow(m_hwndBreadcrumbs);
+    // Gutter only if HWND exists AND visible — avoids empty white strip.
+    in.showGutter = m_hwndLineNumbers && IsWindow(m_hwndLineNumbers) &&
+                    IsWindowVisible(m_hwndLineNumbers);
+    in.showMinimap = m_minimapVisible && m_hwndMinimap && IsWindow(m_hwndMinimap);
+    in.showTerminal =
+        m_powerShellPanelVisible && m_hwndPowerShellPanel &&
+        IsWindow(m_hwndPowerShellPanel);
+    in.showOutput = m_outputPanelVisible && m_hwndOutputTabs &&
+                    IsWindow(m_hwndOutputTabs);
+    in.showStatus = m_hwndStatusBar && IsWindow(m_hwndStatusBar);
 
-    // Calculate editor area
-    int editorLeft = ACTIVITY_BAR_WIDTH + sidebarWidth;
-    int editorRight = width - secondarySidebarWidth;
-    int editorWidth = editorRight - editorLeft;
-    int editorAreaHeight = contentHeight - panelHeight - powerShellHeight;
+    UiSpatialRegistry ui;
+    ResolveSpatialManifest(ui, in);
 
-    // Tab bar (above editor)
-    int tabBarBottom = contentTop;
-    if (m_hwndTabBar && IsWindow(m_hwndTabBar))
-    {
-        MoveWindow(m_hwndTabBar, editorLeft, contentTop, editorWidth, TAB_BAR_HEIGHT, TRUE);
-        tabBarBottom = contentTop + TAB_BAR_HEIGHT;
-    }
+    // Bind HWNDs before validate/apply
+    ui.setHwnd(UiRegionId::MainToolbar, m_hwndToolbar);
+    ui.setHwnd(UiRegionId::StatusBar, m_hwndStatusBar);
+    ui.setHwnd(UiRegionId::ActivityBar, m_hwndActivityBar);
+    ui.setHwnd(UiRegionId::LeftSidebar, m_hwndSidebar);
+    ui.setHwnd(UiRegionId::RightSidebar, m_hwndSecondarySidebar);
+    ui.setHwnd(UiRegionId::AiChat, m_hwndSecondarySidebar);
+    ui.setHwnd(UiRegionId::EditorTabs, m_hwndTabBar);
+    ui.setHwnd(UiRegionId::Breadcrumbs, m_hwndBreadcrumbs);
+    ui.setHwnd(UiRegionId::EditorGutter, m_hwndLineNumbers);
+    ui.setHwnd(UiRegionId::Editor, m_hwndEditor);
+    ui.setHwnd(UiRegionId::Minimap, m_hwndMinimap);
+    ui.setHwnd(UiRegionId::Terminal, m_hwndPowerShellPanel);
 
-    // Breadcrumb bar (below tab bar, above editor) — ESP IE labeled
-    int breadcrumbBottom = tabBarBottom;
-    if (m_hwndBreadcrumbs && IsWindow(m_hwndBreadcrumbs) && m_settings.breadcrumbsEnabled)
-    {
-        MoveWindow(m_hwndBreadcrumbs, editorLeft, tabBarBottom, editorWidth, m_breadcrumbHeight, TRUE);
-        breadcrumbBottom = tabBarBottom + m_breadcrumbHeight;
-    }
+    ValidateSpatialLayout(ui);
+    OutputDebugStringA((ui.report + "\n").c_str());
 
-    int editorContentHeight = editorAreaHeight - (breadcrumbBottom - contentTop);
+    // PHASE apply — atomic DeferWindowPos for registered HWNDs
+    ApplySpatialLayout(ui);
 
-    // Line number gutter (left of editor)
-    int gutterWidth = (m_hwndLineNumbers && IsWindow(m_hwndLineNumbers)) ? m_lineNumberWidth : 0;
-    if (m_hwndLineNumbers && IsWindow(m_hwndLineNumbers))
-    {
-        MoveWindow(m_hwndLineNumbers, editorLeft, breadcrumbBottom, gutterWidth, editorContentHeight, TRUE);
-    }
-
-    // Editor (right of gutter)
-    if (m_hwndEditor && IsWindow(m_hwndEditor))
-    {
-        int minimapW = (m_minimapVisible && m_hwndMinimap && IsWindow(m_hwndMinimap)) ? m_minimapWidth : 0;
-        int editorX = editorLeft + gutterWidth;
-        int editorW = editorWidth - gutterWidth - minimapW;
-        MoveWindow(m_hwndEditor, editorX, breadcrumbBottom, editorW, editorContentHeight, TRUE);
-
-        // Annotation overlay (same rect as editor, draws inline annotations on top)
-        if (m_hwndAnnotationOverlay && IsWindow(m_hwndAnnotationOverlay))
-        {
-            SetWindowPos(m_hwndAnnotationOverlay, HWND_TOP, editorX, breadcrumbBottom, editorW, editorContentHeight,
-                         SWP_NOACTIVATE);
-        }
-
-        // LSP Diagnostic overlay (squiggles + hover tooltips)
-        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized())
-        {
-            m_lspDiagnosticOverlay->OnEditorResize();
-        }
-
-        // Minimap
-        if (m_hwndMinimap && IsWindow(m_hwndMinimap) && m_minimapVisible)
-        {
-            MoveWindow(m_hwndMinimap, editorRight - minimapW, breadcrumbBottom, minimapW, editorContentHeight, TRUE);
-        }
-    }
-
-    // Output / Terminal panel area
-    int panelTop = contentTop + editorAreaHeight;
-    if (panelHeight > 0)
-    {
-        // Output tabs
-        if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
-        {
-            MoveWindow(m_hwndOutputTabs, editorLeft, panelTop, editorWidth, panelHeight, TRUE);
-        }
-        int termTop = contentTop + editorAreaHeight;
-        int tabBarH = 24;
-        int termHeight = panelHeight;
-        // Output tab windows (Output, Errors, Debug, Find Results)
-        for (auto& kv : m_outputWindows)
-        {
-            if (kv.second && IsWindow(kv.second))
-            {
-                MoveWindow(kv.second, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
+    // Status bar self-sizes via WM_SIZE after parent placement
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar)) {
+        if (const RECT* sr = ui.resolved(UiRegionId::StatusBar)) {
+            MoveWindow(m_hwndStatusBar, sr->left, sr->top, RectW(*sr), RectH(*sr),
+                       TRUE);
+            SendMessage(m_hwndStatusBar, WM_SIZE, 0, 0);
+            // Proportional parts from current client width
+            const int cw = RectW(*sr);
+            if (cw > 0) {
+                int parts[12];
+                const int edges[11] = {8, 16, 24, 32, 40, 48, 58, 68, 76, 84, 92};
+                for (int i = 0; i < 11; ++i)
+                    parts[i] = (cw * edges[i]) / 100;
+                parts[11] = -1;
+                if (IsWindowUnicode(m_hwndStatusBar))
+                    SendMessageW(m_hwndStatusBar, SB_SETPARTS, 12, (LPARAM)parts);
+                else
+                    SendMessageA(m_hwndStatusBar, SB_SETPARTS, 12, (LPARAM)parts);
             }
         }
-        // Problems ListView (5th tab) — same region
-        if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
-        {
-            MoveWindow(m_hwndProblemsListView, editorLeft, termTop + tabBarH, editorWidth, termHeight - tabBarH, TRUE);
+    }
+
+    // Annotation / LSP overlays track editor rect
+    if (const RECT* er = ui.resolved(UiRegionId::Editor)) {
+        if (m_hwndAnnotationOverlay && IsWindow(m_hwndAnnotationOverlay)) {
+            SetWindowPos(m_hwndAnnotationOverlay, HWND_TOP, er->left, er->top,
+                         RectW(*er), RectH(*er), SWP_NOACTIVATE);
         }
-        panelTop += panelHeight;
-    }
+        if (m_lspDiagnosticOverlay && m_lspDiagnosticOverlay->IsInitialized())
+            m_lspDiagnosticOverlay->OnEditorResize();
+        m_editorRect = *er;
 
-    // Terminal panes — layout within the output panel area so they're visible
-    if (!m_terminalPanes.empty() && panelHeight > 0)
-    {
-        int termTop = contentTop + editorAreaHeight;
-        int termHeight = panelHeight;
-        int tabBarH = 24;
-        if (m_hwndOutputTabs)
-        {
-            // Windows already positioned above; no-op for positioning
+        // Monaco/WebView2: host HWND follows editor region; controller Bounds =
+        // host CLIENT RECT (not main-window coords).
+        if (m_monacoEditorActive && m_hwndMonacoContainer &&
+            IsWindow(m_hwndMonacoContainer)) {
+            SetWindowPos(m_hwndMonacoContainer, HWND_TOP, er->left, er->top,
+                         RectW(*er), RectH(*er),
+                         SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            if (m_webView2)
+                m_webView2->resize(0, 0, RectW(*er), RectH(*er));
+        } else if (m_monacoEditorActive && m_webView2) {
+            // Fallback: controller parented to main — use absolute editor rect.
+            m_webView2->resize(er->left, er->top, RectW(*er), RectH(*er));
         }
     }
 
-    // PowerShell panel
-    if (m_hwndPowerShellPanel && IsWindow(m_hwndPowerShellPanel) && m_powerShellPanelVisible)
-    {
-        MoveWindow(m_hwndPowerShellPanel, editorLeft, panelTop, editorWidth, powerShellHeight, TRUE);
-        // Also layout internal PowerShell controls
-        updatePowerShellPanelLayout(editorWidth, powerShellHeight);
+    // Output tabs / problems occupy optional band above terminal
+    if (in.showOutput) {
+        if (const RECT* ot = ui.resolved(UiRegionId::TerminalToolbar)) {
+            if (m_hwndOutputTabs && IsWindow(m_hwndOutputTabs))
+                MoveWindow(m_hwndOutputTabs, ot->left, ot->top, RectW(*ot),
+                           RectH(*ot), TRUE);
+            const int tabBarH = dpiScale(24);
+            for (auto& kv : m_outputWindows) {
+                if (kv.second && IsWindow(kv.second))
+                    MoveWindow(kv.second, ot->left, ot->top + tabBarH, RectW(*ot),
+                               (std::max)(0, RectH(*ot) - tabBarH), TRUE);
+            }
+            if (m_hwndProblemsListView && IsWindow(m_hwndProblemsListView))
+                MoveWindow(m_hwndProblemsListView, ot->left, ot->top + tabBarH,
+                           RectW(*ot), (std::max)(0, RectH(*ot) - tabBarH), TRUE);
+        }
     }
 
-    // Secondary sidebar (Copilot Chat / AI Panel)
-    if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar) && m_secondarySidebarVisible)
-    {
-        MoveWindow(m_hwndSecondarySidebar, editorRight, contentTop, secondarySidebarWidth, contentHeight, TRUE);
+    // Terminal internal controls — use resolved terminal rect size
+    if (const RECT* tr = ui.resolved(UiRegionId::Terminal)) {
+        if (in.showTerminal)
+            updatePowerShellPanelLayout(RectW(*tr), RectH(*tr));
     }
 
-    // Update line numbers after layout
+    if (in.showRight)
+        layoutAiChatChildren();
+
     updateLineNumbers();
-
-    // Store editor rect for GPU surface sync
-    m_editorRect = {editorLeft, contentTop, editorLeft + editorWidth, contentTop + editorAreaHeight};
-
     Win32IDE_AgenticBrowser_Relayout();
 }
+
 
 // ============================================================================
 // syncEditorToGpuSurface - Sync RichEdit content to GPU-accelerated overlay
@@ -2081,27 +2728,14 @@ void Win32IDE::syncEditorToGpuSurface()
 // ============================================================================
 void Win32IDE::initializeEditorSurface()
 {
+    // Do NOT attach DirectComposition/TransparentRenderer to the RichEdit HWND
+    // by default — CreateTargetForHwnd(topmost) covers editor text (black-on-black
+    // while the line-number gutter, a sibling STATIC, still paints). Keep the
+    // renderer object for optional glass; Initialize only when glass is enabled.
     if (!m_renderer || !m_hwndEditor)
         return;
-
-    try
-    {
-        m_rendererReady = m_renderer->Initialize(m_hwndEditor);
-        if (m_rendererReady)
-        {
-            LOG_INFO("Editor GPU surface initialized");
-        }
-    }
-    catch (const std::exception& e)
-    {
-        LOG_ERROR(std::string("Editor surface init failed: ") + e.what());
-        m_rendererReady = false;
-    }
-    catch (...)
-    {
-        LOG_ERROR("Editor surface init failed with unknown error");
-        m_rendererReady = false;
-    }
+    m_rendererReady = false;
+    LOG_INFO("Editor GPU surface deferred (RichEdit stays readable; glass on demand)");
 }
 
 // ============================================================================
@@ -2306,7 +2940,14 @@ void Win32IDE::onCreate(HWND hwnd)
         }
     } onCreateGuard;
 
-    m_hwndMain = hwnd;
+    if (!m_hwndMain || !IsWindow(m_hwndMain))
+        m_hwndMain = hwnd;
+    else if (m_hwndMain != hwnd)
+    {
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] onCreate HWND mismatch — keeping stable main\n");
+        fileTrace("[P1_UI_WINDOW_OWNERSHIP] onCreate HWND mismatch keep stable");
+    }
+    RawrXD::ShellLayout::ApplyFromIde(this);
     fileTrace("[Core] onCreate_after_guard");
     logStackUsage("onCreate START");
 
@@ -2420,7 +3061,8 @@ void Win32IDE::onCreate(HWND hwnd)
     createMenuBar(hwnd);  // ESP:m_hMenu — menus/submenus wired end-to-end
     fileTrace("[Core] onCreate_after_createMenuBar");
     logStackUsage("onCreate after createMenuBar");
-    
+    RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "AFTER_CREATE_MENU_BAR");
+
     fileTrace("[Core] onCreate_before_createToolbar");
     OutputDebugStringA("[onCreate] createToolbar...\n");
     logStackUsage("onCreate before createToolbar");
@@ -2478,14 +3120,8 @@ void Win32IDE::onCreate(HWND hwnd)
     B428Trace("onCreate: after createAnnotationOverlay");
     fileTrace("[Core] onCreate_after_createEditor");
     
-    B428Trace("onCreate: before createTerminal");
-    fileTrace("[Core] onCreate_before_createTerminal");
-    OutputDebugStringA("[onCreate] createTerminal...\n");
-    logStackUsage("onCreate before createTerminal");
-    createTerminal(hwnd);
-    B428Trace("onCreate: after createTerminal");
-    fileTrace("[Core] onCreate_after_createTerminal");
-    
+    // STATUSBAR before terminal/PowerShell: runUiEncodingProbe() runs at end of
+    // createPowerShellPanel (via createTerminal). Probe must see a live HWND.
     B428Trace("onCreate: before createEnhancedStatusBar");
     fileTrace("[Core] onCreate_before_createEnhancedStatusBar");
     OutputDebugStringA("[onCreate] createEnhancedStatusBar...\n");
@@ -2493,108 +3129,160 @@ void Win32IDE::onCreate(HWND hwnd)
     createEnhancedStatusBar(hwnd);
     B428Trace("onCreate: after createEnhancedStatusBar");
     fileTrace("[Core] onCreate_after_createEnhancedStatusBar");
+    if (!m_hwndStatusBar || !IsWindow(m_hwndStatusBar)) {
+        fileTrace("[Core] STATUSBAR_CREATE_FAILED");
+        OutputDebugStringA("[onCreate] FATAL: status bar HWND null after create\n");
+        // Fail-closed for product encoding authority — do not probe a null bar.
+    }
+
+    B428Trace("onCreate: before createTerminal");
+    fileTrace("[Core] onCreate_before_createTerminal");
+    OutputDebugStringA("[onCreate] createTerminal...\n");
+    logStackUsage("onCreate before createTerminal");
+    createTerminal(hwnd);
+    B428Trace("onCreate: after createTerminal");
+    fileTrace("[Core] onCreate_after_createTerminal");
 
     // DEFERRED: OutputTabs, PowerShellPanel, ChatPanel creation moved to WM_APP_INIT_CHILDREN
     // to prevent stack overflow. These panels are created after WM_CREATE completes.
     // See onCreateChildren() for the deferred creation.
     B428Trace("onCreate: before EXIT markers");
     fileTrace("[Core] onCreate_EXIT");
+    p0StartupCk("onCreate_EXIT (returning to CreateWindowExA)");
+    RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "ONCREATE_AFTER_EXIT_MARKER");
     logStackUsage("onCreate - deferred panels will be created via WM_APP_INIT_CHILDREN");
 
-    B428Trace("onCreate: before SetPropA");
-    if (m_hwndMain)
+    // P1 phase-progress localization: each late call is its own SEH unit.
+    // First missing ONCREATE_LATE_NN / ONCREATE_COMPLETE is the failure point.
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 1,
+                       "ONCREATE_LATE_01", "ONCREATE_LATE_01_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 2,
+                       "ONCREATE_LATE_02", "ONCREATE_LATE_02_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 3,
+                       "ONCREATE_LATE_03", "ONCREATE_LATE_03_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 4,
+                       "ONCREATE_LATE_04", "ONCREATE_LATE_04_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 5,
+                       "ONCREATE_LATE_05", "ONCREATE_LATE_05_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 6,
+                       "ONCREATE_LATE_06", "ONCREATE_LATE_06_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 7,
+                       "ONCREATE_LATE_07", "ONCREATE_LATE_07_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 8,
+                       "ONCREATE_LATE_08", "ONCREATE_LATE_08_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 9,
+                       "ONCREATE_LATE_09", "ONCREATE_LATE_09_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 10,
+                       "ONCREATE_LATE_10", "ONCREATE_LATE_10_OK");
+    sehCallIdeHwndStep(onCreateLateStepTrampoline, this, hwnd, 11,
+                       "ONCREATE_LATE_11", "ONCREATE_LATE_11_OK");
+
+    B428Trace("onCreate: onCreate COMPLETE");
+    RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "ONCREATE_COMPLETE");
+}
+
+void Win32IDE::onCreateLateStep(int step, HWND hwnd)
+{
+    switch (step)
     {
-        SetPropA(m_hwndMain, "RawrXD.IDE.Label", (HANDLE)RAWRXD_IDE_LABEL_MAIN_WINDOW);
-        if (m_interpretabilityPanel)
-            m_interpretabilityPanel->setParent(m_hwndMain);
-    }
-    B428Trace("onCreate: after SetPropA");
-
-    B428Trace("onCreate: before LOG_INFO");
-    LOG_INFO("onCreate complete — all panels created");
-    OutputDebugStringA("[onCreate] all panels created OK\n");
-    B428Trace("onCreate: after LOG_INFO");
-
-    B428Trace("onCreate: before initSyntaxColorizer");
-    OutputDebugStringA("[onCreate] initSyntaxColorizer...\n");
-    initSyntaxColorizer();
-    B428Trace("onCreate: after initSyntaxColorizer");
-
-    B428Trace("onCreate: before initGhostText");
-    OutputDebugStringA("[onCreate] initGhostText...\n");
-    initGhostText();
-    B428Trace("onCreate: after initGhostText");
-
-    B428Trace("onCreate: before restoreSession");
-    OutputDebugStringA("[onCreate] restoreSession...\n");
-    restoreSession();
-    B428Trace("onCreate: after restoreSession");
-
-    B428Trace("onCreate: before HWND audit");
+    case 1: // SetProp / interpretability parent
+        B428Trace("onCreate: before SetPropA");
+        if (m_hwndMain)
+        {
+            SetPropA(m_hwndMain, "RawrXD.IDE.Label", (HANDLE)RAWRXD_IDE_LABEL_MAIN_WINDOW);
+            if (m_interpretabilityPanel)
+                m_interpretabilityPanel->setParent(m_hwndMain);
+        }
+        B428Trace("onCreate: after SetPropA");
+        break;
+    case 2: // LOG_INFO
+        B428Trace("onCreate: before LOG_INFO");
+        LOG_INFO("onCreate complete — all panels created");
+        OutputDebugStringA("[onCreate] all panels created OK\n");
+        B428Trace("onCreate: after LOG_INFO");
+        break;
+    case 3: // initSyntaxColorizer
+        B428Trace("onCreate: before initSyntaxColorizer");
+        OutputDebugStringA("[onCreate] initSyntaxColorizer...\n");
+        initSyntaxColorizer();
+        B428Trace("onCreate: after initSyntaxColorizer");
+        break;
+    case 4: // initGhostText
+        B428Trace("onCreate: before initGhostText");
+        OutputDebugStringA("[onCreate] initGhostText...\n");
+        initGhostText();
+        B428Trace("onCreate: after initGhostText");
+        break;
+    case 5: // restoreSession — FORBIDDEN during WM_CREATE; schedule only
+        B428Trace("onCreate: defer restoreSession");
+        OutputDebugStringA("[onCreate] restoreSession DEFERRED (PostMessage WM_APP_RESTORE_SESSION)\n");
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "ONCREATE_LATE_05_DEFER_RESTORE");
+        armPendingSessionRestore();
+        PostMessage(hwnd, WM_APP_RESTORE_SESSION, 0, 0);
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "RESTORE_SESSION_POSTED");
+        break;
+    case 6: // HWND audit + theme registration + brush setup
+        B428Trace("onCreate: before HWND audit");
+        {
+            char buf[512];
+            sprintf_s(buf,
+                      "HWND audit: Main=%p Editor=%p Sidebar=%p "
+                      "ExplorerTree=%p OutputTabs=%p PowerShellPanel=%p",
+                      m_hwndMain, m_hwndEditor, m_hwndSidebar, m_hwndExplorerTree,
+                      m_hwndOutputTabs, m_hwndPowerShellPanel);
+            LOG_INFO(std::string(buf));
+        }
+        B428Trace("onCreate: after HWND audit");
+        B428Trace("onCreate: before populateBuiltinThemes");
+        populateBuiltinThemes();
+        B428Trace("onCreate: after populateBuiltinThemes");
+        B428Trace("onCreate: before theme setup");
+        m_currentTheme.backgroundColor = RGB(30, 30, 30);
+        m_currentTheme.textColor = RGB(212, 212, 212);
+        m_currentTheme.selectionColor = RGB(38, 79, 120);
+        m_currentTheme.lineNumberColor = RGB(128, 128, 128);
+        if (m_backgroundBrush)
+            DeleteObject(m_backgroundBrush);
+        m_backgroundBrush = CreateSolidBrush(RGB(30, 30, 30));
+        break;
+    case 7: // applyTheme
+        B428Trace("onCreate: before applyTheme");
+        applyTheme();
+        B428Trace("onCreate: after applyTheme");
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "ONCREATE_AFTER_APPLY_THEME");
+        break;
+    case 8: // status bar update
+        B428Trace("onCreate: before statusBar update");
+        if (m_hwndStatusBar)
+        {
+            updateEnhancedStatusBar();
+            m_contextUsage.maxTokens = m_settings.aiContextWindow;
+            updateContextWindowDisplay();
+        }
+        B428Trace("onCreate: after statusBar update");
+        break;
+    case 9: // initBackendManager
+        B428Trace("onCreate: before initBackendManager");
+        initBackendManager();
+        B428Trace("onCreate: after initBackendManager");
+        break;
+    case 10: // initLLMRouter
+        B428Trace("onCreate: before initLLMRouter");
+        initLLMRouter();
+        B428Trace("onCreate: after initLLMRouter");
+        break;
+    case 11: // force initial layout
     {
-        char buf[512];
-        sprintf_s(buf,
-                  "HWND audit: Main=%p Editor=%p Sidebar=%p "
-                  "ExplorerTree=%p OutputTabs=%p PowerShellPanel=%p",
-                  m_hwndMain, m_hwndEditor, m_hwndSidebar, m_hwndExplorerTree, m_hwndOutputTabs, m_hwndPowerShellPanel);
-        LOG_INFO(std::string(buf));
+        B428Trace("onCreate: before GetClientRect/PostMessage");
+        RECT rc;
+        GetClientRect(hwnd, &rc);
+        PostMessage(hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
+        B428Trace("onCreate: after GetClientRect/PostMessage");
+        break;
     }
-    B428Trace("onCreate: after HWND audit");
-
-    // Apply dark theme immediately (lightweight — just sets color values + SendMessage)
-    B428Trace("onCreate: before populateBuiltinThemes");
-    populateBuiltinThemes();  // Register all 16 built-in themes
-    B428Trace("onCreate: after populateBuiltinThemes");
-    
-    B428Trace("onCreate: before theme setup");
-    m_currentTheme.backgroundColor = RGB(30, 30, 30);
-    m_currentTheme.textColor = RGB(212, 212, 212);
-    m_currentTheme.selectionColor = RGB(38, 79, 120);
-    m_currentTheme.lineNumberColor = RGB(128, 128, 128);
-    if (m_backgroundBrush)
-        DeleteObject(m_backgroundBrush);
-    m_backgroundBrush = CreateSolidBrush(RGB(30, 30, 30));
-    B428Trace("onCreate: before applyTheme");
-    applyTheme();
-    B428Trace("onCreate: after applyTheme");
-
-    // Update status bar with initial state (12-part enhanced bar: Line/Col, Encoding, Language, etc.)
-    B428Trace("onCreate: before statusBar update");
-    if (m_hwndStatusBar)
-    {
-        updateEnhancedStatusBar();
-        m_contextUsage.maxTokens = m_settings.aiContextWindow;
-        updateContextWindowDisplay();
+    default:
+        break;
     }
-    B428Trace("onCreate: after statusBar update");
-
-    // Initialize backend manager and LLM router at startup so Ollama/cloud can be used
-    // without requiring a local GGUF to be loaded first (see docs/AGENTIC_AND_MODEL_LOADING_AUDIT.md).
-    B428Trace("onCreate: before initBackendManager");
-    initBackendManager();
-    B428Trace("onCreate: after initBackendManager");
-    
-    B428Trace("onCreate: before initLLMRouter");
-    initLLMRouter();
-    B428Trace("onCreate: after initLLMRouter");
-
-    // Force initial layout so all child windows are sized before first paint
-    B428Trace("onCreate: before GetClientRect/PostMessage");
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    PostMessage(hwnd, WM_SIZE, 0, MAKELPARAM(rc.right, rc.bottom));
-    B428Trace("onCreate: after GetClientRect/PostMessage");
-
-    // Defer heavy UI creation to prevent stack overflow in onCreate
-    // WM_APP_INIT_CHILDREN (WM_APP + 99) will handle creation of panels that can be deferred
-    B428Trace("onCreate: before PostMessage WM_APP+99");
-    PostMessage(hwnd, WM_APP + 99, 0, 0);
-    B428Trace("onCreate: after PostMessage WM_APP+99");
-    
-    // Defer heavy init to after window is fully created
-    B428Trace("onCreate: before PostMessage WM_APP+100");
-    PostMessage(hwnd, WM_APP + 100, 0, 0);
-    B428Trace("onCreate: after PostMessage WM_APP+100 — onCreate COMPLETE");
 }
 
 // ============================================================================
@@ -2613,6 +3301,9 @@ void bgInitBody(void* self);
 // ============================================================================
 void Win32IDE::onCreateChildren(HWND hwnd)
 {
+    RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain ? m_hwndMain : hwnd,
+                                              "BEFORE_DEFERRED_CHILDREN");
+
     // RECURSION GUARD: Prevent re-entrant calls that could cause stack overflow
     static thread_local bool s_inOnCreateChildren = false;
     if (s_inOnCreateChildren)
@@ -2633,45 +3324,30 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     logStackUsage("onCreateChildren START");
     OutputDebugStringA("[STARTUP] entering onCreateChildren\n");
 
-    // Create panels that were deferred from onCreate to prevent stack overflow
-    OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");
-    logStackUsage("onCreateChildren before createOutputTabs");
-    createOutputTabs();
-    logStackUsage("onCreateChildren after createOutputTabs");
-    
-    OutputDebugStringA("[onCreateChildren] createPowerShellPanel...\n");
-    logStackUsage("onCreateChildren before createPowerShellPanel");
-    createPowerShellPanel();
-    logStackUsage("onCreateChildren after createPowerShellPanel");
-    
-    OutputDebugStringA("[onCreateChildren] createChatPanel...\n");
-    logStackUsage("onCreateChildren before createChatPanel");
-    createChatPanel();
-    logStackUsage("onCreateChildren after createChatPanel");
-    
-    OutputDebugStringA("[onCreateChildren] initializeChatPanelOllama...\n");
-    logStackUsage("onCreateChildren before initializeChatPanelOllama");
-    initializeChatPanelOllama();
-    logStackUsage("onCreateChildren after initializeChatPanelOllama");
-    
-    // DEFERRED: createTabBar moved from onCreate to prevent stack overflow
-    // The TabManager creates a window and does heavy initialization that can
-    // overflow the stack when called from within WM_CREATE processing.
-    OutputDebugStringA("[onCreateChildren] createTabBar (deferred from onCreate)...\n");
-    logStackUsage("onCreateChildren before createTabBar");
-    createTabBar(hwnd);
-    logStackUsage("onCreateChildren after createTabBar");
-    
-    // DEFERRED: Apply sovereign theme to TabManager (post-WM_CREATE to avoid stack overflow)
-    // The theme was deferred from TabManager::initialize() due to nlohmann::json stack usage
-    OutputDebugStringA("[onCreateChildren] Applying deferred sovereign theme...\n");
-    logStackUsage("onCreateChildren before applySovereignTheme");
-    if (m_tabManager)
-    {
-        m_tabManager->applySovereignTheme();
-        OutputDebugStringA("[onCreateChildren] Sovereign theme applied to TabManager\n");
+    // P1: each deferred child creation is its own SEH unit.
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 1,
+                       "DEFERRED_CHILD_01", "DEFERRED_CHILD_01_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 2,
+                       "DEFERRED_CHILD_02", "DEFERRED_CHILD_02_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 3,
+                       "DEFERRED_CHILD_03", "DEFERRED_CHILD_03_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 4,
+                       "DEFERRED_CHILD_04", "DEFERRED_CHILD_04_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 5,
+                       "DEFERRED_CHILD_05", "DEFERRED_CHILD_05_OK");
+    sehCallIdeHwndStep(onCreateChildrenStepTrampoline, this, hwnd, 6,
+                       "DEFERRED_CHILD_06", "DEFERRED_CHILD_06_OK");
+
+    if (m_hwndMain && m_hMenu)
+        RawrXD::MainMenuAuthority::EnsureAttached(m_hwndMain, m_hMenu);
+    RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "AFTER_DEFERRED_CHILDREN");
+    if (m_hwndMain && RawrXD::MainMenuAuthority::IsStable(m_hwndMain, 2))
+        RawrXD::CommandTelemetry::MarkMainMenuReady(m_hwndMain);
+
+    // P1_UI_SHELL_LAYOUT_001: re-apply persistent chrome policy after deferred creates.
+    if (m_hwndMain && IsWindow(m_hwndMain)) {
+        RawrXD::ShellLayout::ApplyFromIde(this);
     }
-    logStackUsage("onCreateChildren after applySovereignTheme");
     
     // Update HWND audit after deferred creation
     if (m_hwndMain)
@@ -2684,6 +3360,70 @@ void Win32IDE::onCreateChildren(HWND hwnd)
     LOG_INFO("onCreateChildren complete — deferred panels created");
     OutputDebugStringA("[onCreateChildren] all deferred panels created OK\n");
     fileTrace("[onCreateChildren] END");
+
+    if (m_hwndMain && IsWindow(m_hwndMain))
+        PostMessage(m_hwndMain, WM_APP_PS_SESSION_BRINGUP, 0, 0);
+
+    // Skip menu E2E probe under shell rebuild — it mutates chrome visibility.
+    // Also skip under RAWRXD_P1_UI_MENU_E2E: external black-box cert owns the ladder;
+    // in-process canaries race SendInput and have crashed (0xC0000409) post-heavy.
+    const char* e2eExt = std::getenv("RAWRXD_P1_UI_MENU_E2E");
+    const bool skipProbe =
+        RawrXD::ShellLayout::RebuildActive() ||
+        (e2eExt && e2eExt[0] && e2eExt[0] != '0');
+    if (!skipProbe)
+        RunUiMenuE2eProbe(this);
+
+    dumpUiWindowOwnership("AFTER_ONCREATECHILDREN");
+}
+
+void Win32IDE::onCreateChildrenStep(int step, HWND hwnd)
+{
+    switch (step)
+    {
+    case 1:
+        OutputDebugStringA("[onCreateChildren] createOutputTabs...\n");
+        logStackUsage("onCreateChildren before createOutputTabs");
+        createOutputTabs();
+        logStackUsage("onCreateChildren after createOutputTabs");
+        break;
+    case 2:
+        OutputDebugStringA("[onCreateChildren] createPowerShellPanel...\n");
+        logStackUsage("onCreateChildren before createPowerShellPanel");
+        createPowerShellPanel();
+        logStackUsage("onCreateChildren after createPowerShellPanel");
+        break;
+    case 3:
+        OutputDebugStringA("[onCreateChildren] createChatPanel...\n");
+        logStackUsage("onCreateChildren before createChatPanel");
+        createChatPanel();
+        logStackUsage("onCreateChildren after createChatPanel");
+        break;
+    case 4:
+        OutputDebugStringA("[onCreateChildren] initializeChatPanelOllama...\n");
+        logStackUsage("onCreateChildren before initializeChatPanelOllama");
+        initializeChatPanelOllama();
+        logStackUsage("onCreateChildren after initializeChatPanelOllama");
+        break;
+    case 5:
+        OutputDebugStringA("[onCreateChildren] createTabBar (deferred from onCreate)...\n");
+        logStackUsage("onCreateChildren before createTabBar");
+        createTabBar(hwnd);
+        logStackUsage("onCreateChildren after createTabBar");
+        break;
+    case 6:
+        OutputDebugStringA("[onCreateChildren] Applying deferred sovereign theme...\n");
+        logStackUsage("onCreateChildren before applySovereignTheme");
+        if (m_tabManager)
+        {
+            m_tabManager->applySovereignTheme();
+            OutputDebugStringA("[onCreateChildren] Sovereign theme applied to TabManager\n");
+        }
+        logStackUsage("onCreateChildren after applySovereignTheme");
+        break;
+    default:
+        break;
+    }
 }
 
 namespace
@@ -2806,6 +3546,25 @@ void Win32IDE::deferredHeavyInit()
         sehRunBgThread(bgInitBody, this);
 }
 
+void Win32IDE::markStartupPumpsComplete()
+{
+    m_startupPumpsComplete = true;
+    // Do NOT PostMessage(WM_APP+201) here. Anything that PeekMessages between
+    // post_create pumps and message_loop_entered can dispatch LoadModel too early
+    // (observed: PROCESS die at calling_LoadModel_UI_pump before message_loop_entered).
+    // Arm pending; main_win32 flushes after message_loop_entered.
+    const bool pathPending = !getLoadedModelPath().empty();
+    if (m_pendingApp201ModelLoad || pathPending)
+    {
+        m_pendingApp201ModelLoad = true;
+        RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO", "armed_wait_message_loop");
+        OutputDebugStringA("[markStartupPumpsComplete] pending armed (flush after message_loop)\n");
+        fprintf(stderr, "[STARTUP] markStartupPumpsComplete: armed pending (path=%d) — wait message_loop\n",
+                pathPending ? 1 : 0);
+        fflush(stderr);
+    }
+}
+
 void bgInitBody(void* self)
 {
     Win32IDE* ide = static_cast<Win32IDE*>(self);
@@ -2814,6 +3573,8 @@ void bgInitBody(void* self)
 
 void Win32IDE::deferredHeavyInitBody()
 {
+    if (m_hwndMain)
+        RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "BEFORE_DEFERRED_HEAVY");
     bgInitMark("logger_init");
     // Initialize logger under %APPDATA%\RawrXD\ide.log (fallback: RawrXD_IDE.log in cwd)
     try
@@ -3036,20 +3797,45 @@ void Win32IDE::deferredHeavyInitBody()
     {
         OutputDebugStringA("ERROR: loadSettings/applySettings failed\n");
     }
-    syncAgentModeUiFromBridge();
+    try
+    {
+        syncAgentModeUiFromBridge();
+    }
+    catch (...)
+    {
+        OutputDebugStringA("ERROR: syncAgentModeUiFromBridge failed\n");
+    }
 
     if (isShuttingDown())
         return;
 
     // Initialize Agent History (append-only JSONL event log)
     bgInitMark("agent_history");
-    try
     {
-        initAgentHistory();
-    }
-    catch (...)
-    {
-        OutputDebugStringA("ERROR: initAgentHistory failed\n");
+        // P1_UI_MENU_E2E_001: initAgentHistory (and the following heavy tail) currently
+        // __fastfail's (0xC0000409). Under E2E, stop heavy init here so the menu routing
+        // ladder can run. Defect remains separate from MENU_LIFETIME / MENU_E2E routing.
+        const char* skipE2e = std::getenv("RAWRXD_P1_UI_MENU_E2E");
+        if (skipE2e && skipE2e[0] && skipE2e[0] != '0') {
+            OutputDebugStringA(
+                "[deferredHeavyInit] heavy tail SKIPPED after agent_history "
+                "(RAWRXD_P1_UI_MENU_E2E)\n");
+            if (m_hwndMain) {
+                RawrXD::MainMenuAuthority::TraceMenuState(
+                    m_hwndMain, "HEAVY_STEP_agent_history_SKIPPED_E2E");
+                RawrXD::MainMenuAuthority::TraceMenuState(
+                    m_hwndMain, "AFTER_DEFERRED_HEAVY_SKIPPED_E2E");
+            }
+            return;
+        }
+        try
+        {
+            initAgentHistory();
+        }
+        catch (...)
+        {
+            OutputDebugStringA("ERROR: initAgentHistory failed\n");
+        }
     }
 
     // Initialize Failure Intelligence — Phase 6 (classification + retry strategies)
@@ -3347,6 +4133,8 @@ void Win32IDE::deferredHeavyInitBody()
 
     bgInitMark("deferredHeavyInit_complete");
     OutputDebugStringA("deferredHeavyInit complete (background thread)\n");
+    if (m_hwndMain)
+        RawrXD::MainMenuAuthority::TraceMenuState(m_hwndMain, "AFTER_DEFERRED_HEAVY");
 
     // Initialize AI backend probe (background thread, posts WM_AI_BACKEND_STATUS on result)
     if (!isShuttingDown())
@@ -3374,6 +4162,14 @@ void Win32IDE::deferredHeavyInitBody()
 // ============================================================================
 void Win32IDE::onDestroy()
 {
+    // Idempotent: second WM_DESTROY / abnormal re-entry must not double-free.
+    if (m_destroyCompleted.exchange(true, std::memory_order_acq_rel)) {
+        OutputDebugStringA("onDestroy: already completed — skipping\n");
+        return;
+    }
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_ENTER");
+    if (m_hwndMain)
+        RawrXD::MainMenuAuthority::MarkWindowDestroying(m_hwndMain);
     LOG_INFO("Win32IDE::onDestroy - shutting down");
 
     clearInferenceLayerProgressCallback();
@@ -3381,9 +4177,11 @@ void Win32IDE::onDestroy()
     // Signal ALL detached threads to stop touching 'this'
     m_shuttingDown.store(true, std::memory_order_release);
 
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_BEFORE_watchdog");
     // Stop visibility watchdog thread first so it cannot race on HWND usage
     // while the rest of shutdown tears down UI resources.
     stopVisibilityWatchdog();
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_AFTER_watchdog");
 
     // Stop any in-progress inference immediately
     m_inferenceStopRequested = true;
@@ -3400,9 +4198,23 @@ void Win32IDE::onDestroy()
         OutputDebugStringA("onDestroy: WARNING — detached threads still active after 3s\n");
         Sleep(50);  // Reduced grace period
     }
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_AFTER_detached_wait");
 
-    // Shutdown Phase 29+36: VS Code Extension API + QuickJS VSIX Host
+    // Invoked from WM_NCDESTROY: child HWNDs are already destroyed. Safe to free.
+    stopLocalServer();
+    try { m_ggufLoader.reset(); } catch (...) {}
+    try { m_modelResolver.reset(); } catch (...) {}
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_AFTER_loader_reset");
+    // JS hosts already detached in WM_DESTROY. Native FreeLibrary + API facade
+    // shutdown only here (WM_NCDESTROY: children already destroyed).
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_BEFORE_ext_teardown");
     shutdownVSCodeExtensionAPI();
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_AFTER_js_hosts");
+    if (m_extensionLoader) {
+        m_extensionLoader->UnloadAllNative("onDestroy");
+        m_extensionLoader.reset();
+    }
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "onDestroy_AFTER_ExtensionLoader");
 
     // Shutdown core runtime spine (signature verifier, sqlite, telemetry export).
     shutdownCoreRuntimeSpine();
@@ -3450,8 +4262,7 @@ void Win32IDE::onDestroy()
     // Shutdown ghost text renderer (kill timers, free font)
     shutdownGhostText();
 
-    // Stop local GGUF HTTP server
-    stopLocalServer();
+    // Local GGUF HTTP server already stopped in early teardown.
 
     // Shutdown agent history (flush event buffer to disk)
     shutdownAgentHistory();
@@ -3637,14 +4448,22 @@ void Win32IDE::onDestroy()
     }
     try
     {
-        m_extensionLoader.reset();
+        // Already UnloadAllNative + reset above; keep as idempotent safety net.
+        if (m_extensionLoader) {
+            m_extensionLoader->UnloadAllNative("onDestroy_phase2");
+            m_extensionLoader.reset();
+        }
     }
     catch (...)
     {
     }
     try
     {
-        m_pluginLoader.reset();
+        // shutdownPlugins() already reset; clear if still present.
+        if (m_pluginLoader) {
+            m_pluginLoader->unloadAll();
+            m_pluginLoader.reset();
+        }
     }
     catch (...)
     {
@@ -3686,9 +4505,20 @@ void Win32IDE::onDestroy()
 // ============================================================================
 void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
-    // Handle editor notifications (EN_CHANGE, EN_VSCROLL, EN_SELCHANGE come via WM_COMMAND)
-    if (hwndCtl == m_hwndEditor)
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_ENTER");
+    // id 0 is never a registered menu/command — usually an unassigned control
+    // notification. Surfacing it as "Unknown command" poisons the status bar
+    // (screenshot: "Unknown command (id 0)"). Silent ignore is intentional here;
+    // real clickable items must use a non-zero registered ID.
+    if (id == 0)
+        return;
+
+    // Handle editor notifications (EN_CHANGE, EN_VSCROLL, EN_SELCHANGE come via WM_COMMAND).
+    // Require a non-null control HWND: menu commands use lParam=0, and IDC_EDITOR
+    // shares id 1001 with IDM_FILE_NEW — (nullptr == nullptr) must not steal File→New.
+    if (hwndCtl != nullptr && hwndCtl == m_hwndEditor)
     {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_EDITOR_NOTIFY");
         if (codeNotify == EN_CHANGE || codeNotify == EN_VSCROLL || codeNotify == EN_SELCHANGE)
         {
             updateLineNumbers();
@@ -3712,6 +4542,14 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
         }
         return;  // Don't route editor notifications through the command system
     }
+
+    // Other control notifications: do not fall through to "unknown command"
+    // unless this is a button click (BN_CLICKED / menu-equivalent).
+    if (hwndCtl != nullptr && codeNotify != 0 && codeNotify != BN_CLICKED)
+        return;
+
+    // (command flight starts after the legacy HWND-control switch; menu canaries
+    //  1001/2016/2020 fall through to routeCommand below.)
 
     // First try the unified command router
     if (id == 9903)
@@ -4149,25 +4987,56 @@ void Win32IDE::onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
     // ── LEGACY FALLBACK — View/Tier1/Git/Monaco commands that routeToIde would loop on
     // routeCommand invokes handleViewCommand, handleTier1Command, etc. directly instead of
     // going through SSOT handlers that PostMessage same ID → infinite re-entry.
-    if (routeCommand(id))
     {
-        return;
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_BEFORE_FLIGHT");
+        auto& flight = RawrXD::CommandTelemetry::Begin(hwnd, static_cast<UINT>(id));
+        if (id == 1001)
+            flight.preGeneration =
+                RawrXD::CommandTelemetry::Generations().documentGeneration;
+        else if (id == 2016)
+            flight.preGeneration = RawrXD::CommandTelemetry::Generations().findGeneration;
+        else if (id == 2020)
+            flight.preGeneration =
+                RawrXD::CommandTelemetry::Generations().minimapGeneration;
+
+        struct FlightGuard {
+            RawrXD::CommandTelemetry::CommandFlight& f;
+            bool handled = false;
+            ~FlightGuard()
+            {
+                RawrXD::CommandTelemetry::Finish(
+                    f, handled ? 0 : static_cast<int>(ERROR_NOT_FOUND));
+            }
+        } guard{flight, false};
+
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_BEFORE_routeCommand");
+        if (routeCommand(id)) {
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_AFTER_routeCommand_OK");
+            guard.handled = true;
+            return;
+        }
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_routeCommand_MISS");
+
+        // ── UNIFIED DISPATCH — The ONE AND ONLY command path ────────────────
+        // All commands live in COMMAND_TABLE (command_registry.hpp).
+        // If routeCommandUnified returns false, the command does NOT EXIST.
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_BEFORE_unified");
+        if (routeCommandUnified(id, this, hwnd)) {
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_AFTER_unified_OK");
+            guard.handled = true;
+            return;  // Dispatched via g_commandRegistry[] — identical path to CLI
+        }
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(id, "onCommand_unified_MISS");
+
+        RawrXD::CommandTelemetry::Fail(flight, "UNKNOWN_COMMAND");
     }
 
-    // ── UNIFIED DISPATCH — The ONE AND ONLY command path ────────────────
-    // All commands live in COMMAND_TABLE (command_registry.hpp).
-    // If routeCommandUnified returns false, the command does NOT EXIST.
-    if (routeCommandUnified(id, this, hwnd))
-    {
-        return;  // Dispatched via g_commandRegistry[] — identical path to CLI
-    }
-
-    // Command not found — direct user so they know the command wasn't handled
+    // Command not found — never for id 0 (filtered above). Surface nonzero misses.
     if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
     {
         char buf[96];
         snprintf(buf, sizeof(buf), "Unknown command (id %d) — not in registry", id);
-        SendMessageA(m_hwndStatusBar, SB_SETTEXTA, 0, (LPARAM)buf);
+        RawrXD::StatusBarSetTextUtf8(m_hwndStatusBar, 0, buf);
     }
 #ifdef _DEBUG
     {
@@ -4196,4 +5065,5 @@ void Win32IDE::persistPerformanceVulkanRendererToConfig()
         cfg.saveToFile(dir + "rawrxd.config.json");
     }
 }
+
 

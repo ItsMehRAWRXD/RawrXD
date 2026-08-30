@@ -1,0 +1,30 @@
+﻿P1_UI_MENU_E2E_001 NORMAL_CLOSE_PROOF
+SHA256=78B2861F4F6F232583EE9B927131A392D652A5EDC636D1B7F520620E0553A7D1
+PID=22252
+MODE=WM_CLOSE after settle E2E=1 CMD_DIAG=1
+MAIN=1443180 at_sec=0
+POST_WM_CLOSE
+CLOSE_TIMEOUT_KILL
+EXIT=0xFFFFFFFF
+NO_AV_OR_CALLBACK_FATAL=True
+NCDESTROY_COMPLETE=False
+NORMAL_CLOSE_PASS=False
+DESTROY_CRUMBS=17
+16:37:00.566 id=-1 step=WM_DESTROY_ENTER
+16:37:00.566 id=-1 step=WM_DESTROY_BEFORE_js_detach
+16:37:00.566 id=-1 step=WM_DESTROY_AFTER_js_detach
+16:37:00.567 id=-1 step=WM_DESTROY_AFTER_webview2
+16:37:00.576 id=-1 step=WM_DESTROY_AFTER_terminals
+16:37:00.576 id=-1 step=WM_DESTROY_AFTER_child_neutralize
+16:37:00.578 id=-1 step=WM_DESTROY_EXIT_armed
+16:37:00.579 id=-1 step=WM_NCDESTROY_ENTER
+16:37:00.581 id=-1 step=onDestroy_ENTER
+16:37:00.581 id=-1 step=onDestroy_BEFORE_watchdog
+16:37:00.582 id=-1 step=onDestroy_AFTER_watchdog
+16:37:00.582 id=-1 step=onDestroy_AFTER_detached_wait
+16:37:00.583 id=-1 step=onDestroy_AFTER_loader_reset
+16:37:00.583 id=-1 step=onDestroy_BEFORE_ext_teardown
+16:37:00.584 id=-1 step=onDestroy_AFTER_js_hosts
+16:37:00.584 id=-1 step=onDestroy_AFTER_ExtensionLoader
+16:37:00.590 id=-1 step=WM_NCDESTROY_AFTER_onDestroy
+FIRST_CHANCE=absent

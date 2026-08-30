@@ -1,0 +1,58 @@
+P1_UI_MENU_E2E_001 — symbolized first-chance (diagnosis; REPAIR NOT STARTED)
+
+FROZEN
+```
+CLOSE_TEARDOWN      = FAIL / REOPENED
+TEARDOWN_EXONERATED = NO
+P1_UI_MENU_E2E_001  = BLOCKED
+FAULT_OWNER         = UNKNOWN   (product WndProc symbol not on AV frame)
+REPAIR              = NOT STARTED
+```
+
+LOCALIZATION_BUILD_SHA (RVA-instrumented diag; not the frozen 00768A39 proof SHA)
+  F5E54073F6A52B4B806CC4953CA59DBAA331D488ADE337CBCE7636E1C762CD4F
+  (same fail pattern as 00768A39: File.New → dead before leaf #2 exit=0xC000041D)
+
+REPRO
+  p1_ui_menu_e2e_cert --wm-command --max-items 6 --allow-sha-drift
+  + RAWRXD_P1_CMD_DIAG=1
+
+ORIGINATING FIRST-CHANCE
+  KIND              = VEH_FATAL_CANDIDATE
+  EXCEPTION_CODE    = 0xC0000005
+  LAST_MSG          = 0x0046 (WM_WINDOWPOSCHANGING)  [also observed 0x0020 WM_SETCURSOR on relaunch]
+  LAST_WPARAM       = 0
+  LAST_HWND/CLASS   = RawrXD_IDE_MainWindow
+  WP_HWND/CLASS     = RawrXD_IDE_MainWindow (from last WINDOWPOS*)
+  TID               = (varies)
+  EXCEPTION_ADDR    = COMCTL32.dll + RVA 0x7D422   ← STABLE across hits
+  FAULT_MODULE      = COMCTL32.dll (WinSxS common-controls 6.0.26100.…)
+  EXE_MODULE_BASE   = (ASLR)
+
+STACK (module-attributed)
+  [0..2]  ntdll
+  [3..5]  COMCTL32.dll   ← AV site
+  [6..8]  USER32.dll
+  [9]     ntdll
+  [10]    win32u.dll
+  [11]    USER32.dll
+  [12]    RawrXD-Win32IDE.exe  RVA 0x337B09  ≈ runMessageLoop+0x2F9
+  [13]    RawrXD-Win32IDE.exe  RVA 0x1C4BB   ≈ WinMainImpl+0x19EB
+  [14]    RawrXD-Win32IDE.exe  RVA 0x33117   ≈ WinMain+0x37
+  [15]    RawrXD-Win32IDE.exe  RVA 0x1C894DE ≈ __scrt_common_main_seh+0x106
+  [16]    KERNEL32
+  [17]    ntdll
+
+INTERPRETATION
+  AV occurs inside COMCTL32 while USER32 is dispatching WM_WINDOWPOSCHANGING
+  from the IDE message loop after E2E File.New. Product code on the stack is
+  only the DispatchMessage / WinMain callers — not a named IDE handler frame.
+  FAULT_OWNER remains UNKNOWN pending identification of which common-control
+  HWND / subclass is entered (status bar / toolbar / rebar / tab likely).
+
+SEPARATE
+  Close-teardown common ownership with this stack: NOT PROVEN.
+
+NEXT (still diagnosis)
+  Identify which child HWND is receiving WM_WINDOWPOSCHANGING at the AV
+  (GWLP_WNDPROC / class name breadcrumb) before any repair auth.

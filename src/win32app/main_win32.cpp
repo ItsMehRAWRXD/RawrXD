@@ -29,6 +29,7 @@
 #include "HeadlessIDE.h"
 #include "Win32IDE.h"
 #include "Win32IDE_AgenticBrowser.h"
+#include "Win32IDE_CommandFlight.hpp"
 #include <commctrl.h>
 #include <dbghelp.h>
 #include <shellscalingapi.h>
@@ -41,6 +42,7 @@
 #endif
 #pragma comment(lib, "dbghelp.lib")
 #include "../agent/quantum_agent_orchestrator.hpp"
+#include "p1_gguf_load_cert.hpp"
 #include "rawrxd/runtime/RuntimeSurfaceBootstrap.hpp"
 #include <algorithm>
 #include <chrono>
@@ -275,11 +277,27 @@ static bool hasHeadlessFlag(LPSTR lpCmdLine)
 }
 
 // Helper: check if launch args request help only (avoid long-running headless)
+// IMPORTANT: must NOT match the "-h" substring inside "--headless".
 static bool hasHeadlessHelpFlag(LPSTR lpCmdLine)
 {
-    if (!lpCmdLine)
+    if (!lpCmdLine || !*lpCmdLine)
         return false;
-    return strstr(lpCmdLine, "--help") != nullptr || strstr(lpCmdLine, "-h") != nullptr;
+
+    auto hasToken = [](const char* cmd, const char* token) -> bool {
+        const size_t n = std::strlen(token);
+        const char* p = cmd;
+        while ((p = std::strstr(p, token)) != nullptr) {
+            const bool leftOk = (p == cmd) || std::isspace(static_cast<unsigned char>(p[-1]));
+            const char next = p[n];
+            const bool rightOk = (next == '\0') || std::isspace(static_cast<unsigned char>(next));
+            if (leftOk && rightOk)
+                return true;
+            p += n;
+        }
+        return false;
+    };
+
+    return hasToken(lpCmdLine, "--help") || hasToken(lpCmdLine, "-h");
 }
 
 static void printHeadlessQuickHelp()
@@ -342,6 +360,65 @@ static bool runDispatchProbe(uint32_t commandId, std::string& diag)
 
     auto result = RawrXD::Dispatch::dispatchByGuiId(commandId, ctx);
     return result.status == RawrXD::Dispatch::DispatchStatus::OK;
+}
+
+// file.open (1002) is CmdExposure::BOTH and headless-capable when given a path.
+// Empty-args headless probe is an invalid contract (Usage: !open <filename> → HANDLER_ERROR).
+static bool runFileOpenHeadlessProbe(std::string& diag, std::string& detailOut)
+{
+    char tempDir[MAX_PATH] = {};
+    const DWORD n = GetTempPathA(MAX_PATH, tempDir);
+    const std::string tmp = (n > 0) ? std::string(tempDir) : std::string(".");
+    const std::string path = tmp + "rawrxd_selftest_file_open.tmp";
+    {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        if (!out)
+        {
+            detailOut = "temp write failed: " + path;
+            return false;
+        }
+        out << "rawrxd-file-open-probe\n";
+    }
+
+    // Negative contract: empty args → HANDLER_ERROR (missing filename), not OK.
+    {
+        CommandContext emptyCtx{};
+        emptyCtx.rawInput = "file.open";
+        emptyCtx.args = "";
+        emptyCtx.commandId = 1002u;
+        emptyCtx.isGui = false;
+        emptyCtx.isHeadless = true;
+        emptyCtx.outputFn = selfTestOutputSink;
+        emptyCtx.outputUserData = &diag;
+        const auto emptyResult = RawrXD::Dispatch::dispatchByCanonical("file.open", emptyCtx);
+        if (emptyResult.status != RawrXD::Dispatch::DispatchStatus::HANDLER_ERROR)
+        {
+            DeleteFileA(path.c_str());
+            detailOut = "empty-args expected HANDLER_ERROR, got status=" +
+                        std::to_string(static_cast<int>(emptyResult.status));
+            return false;
+        }
+    }
+
+    // Positive contract: valid temp path → OK.
+    CommandContext ctx{};
+    ctx.rawInput = "file.open";
+    ctx.args = path.c_str();
+    ctx.commandId = 1002u;
+    ctx.isGui = false;
+    ctx.isHeadless = true;
+    ctx.outputFn = selfTestOutputSink;
+    ctx.outputUserData = &diag;
+    const auto result = RawrXD::Dispatch::dispatchByCanonical("file.open", ctx);
+    DeleteFileA(path.c_str());
+    if (result.status != RawrXD::Dispatch::DispatchStatus::OK)
+    {
+        detailOut = "path open expected OK, got status=" +
+                    std::to_string(static_cast<int>(result.status)) + " path=" + path;
+        return false;
+    }
+    detailOut = path;
+    return true;
 }
 
 static bool runCanonicalProbe(const char* canonical, std::string& diag)
@@ -423,8 +500,19 @@ static int runStartupSelfTest()
     // 2) Command dispatch sanity (representative WM_COMMAND IDs)
     {
         std::string diag;
-        const uint32_t ids[] = {1002u, 2028u, 3200u, 4009u, 10000u};
+        std::string fileOpenDetail;
         bool ok = true;
+        if (!runFileOpenHeadlessProbe(diag, fileOpenDetail))
+        {
+            ok = false;
+            fail("dispatch-file.open", fileOpenDetail);
+        }
+        else
+        {
+            pass("dispatch-file.open", fileOpenDetail);
+        }
+        // Remaining IDs: empty-args headless OK probes (not dialog-gated).
+        const uint32_t ids[] = {2028u, 3200u, 4009u, 10000u};
         for (uint32_t id : ids)
         {
             if (!runDispatchProbe(id, diag))
@@ -434,7 +522,7 @@ static int runStartupSelfTest()
             }
         }
         if (ok)
-            pass("dispatch-probe", "5 representative command IDs");
+            pass("dispatch-probe", "file.open path contract + 4 representative IDs");
     }
 
     // 3) VSCExt status/list commands
@@ -839,6 +927,71 @@ static void pumpMessages()
     }
 }
 
+// P1-B: per-message trace for post-createWindow pump localization.
+// Logs hwnd/msg before DispatchMessage so ide_startup.log pins the throwing edge.
+// P0: never dispatch WM_APP+201 (0x80c9) during these pumps — that path is GGUF load.
+// Dropped messages must be re-posted after markStartupPumpsComplete (s_skippedApp201).
+static bool s_skippedApp201 = false;
+static bool s_skippedRestoreSession = false;
+
+static void pumpMessagesTraced(const char* tag)
+{
+    MSG msg;
+    int n = 0;
+    while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT)
+            break;
+        char detail[224];
+        std::snprintf(detail, sizeof(detail), "%s n=%d hwnd=%p msg=0x%x wp=0x%llx lp=0x%llx", tag, n,
+                      reinterpret_cast<void*>(msg.hwnd), static_cast<unsigned>(msg.message),
+                      static_cast<unsigned long long>(msg.wParam),
+                      static_cast<unsigned long long>(static_cast<ULONG_PTR>(msg.lParam)));
+        startupTrace("P1_pump_before", detail);
+
+        // 0x80c9 == WM_APP+201 — model-load; SEH 0xE06D7363 observed mid-dispatch.
+        if (msg.message == (WM_APP + 201))
+        {
+            s_skippedApp201 = true;
+            startupTrace("P1_pump_SKIP_WM_APP_201", detail);
+            fprintf(stderr, "[STARTUP] pump skip WM_APP+201 (0x80c9) tag=%s (re-post after pumps)\n", tag);
+            fflush(stderr);
+            ++n;
+            continue;
+        }
+        // Session restore must not run inside post-create pumps — defer to live message loop.
+        if (msg.message == WM_APP_RESTORE_SESSION)
+        {
+            s_skippedRestoreSession = true;
+            startupTrace("P1_pump_SKIP_RESTORE_SESSION", detail);
+            fprintf(stderr, "[STARTUP] pump skip WM_APP_RESTORE_SESSION tag=%s\n", tag);
+            fflush(stderr);
+            ++n;
+            continue;
+        }
+
+        try
+        {
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+        }
+        catch (const std::exception& ex)
+        {
+            char what[320];
+            std::snprintf(what, sizeof(what), "%s what=%s", detail, ex.what());
+            startupTrace("P1_pump_cpp_exception", what);
+            throw;
+        }
+        catch (...)
+        {
+            startupTrace("P1_pump_cpp_exception_unknown", detail);
+            throw;
+        }
+        startupTrace("P1_pump_after", detail);
+        ++n;
+    }
+}
+
 // Force main window visible and to foreground (SetForegroundWindow often fails when
 // launched by another process; AttachThreadInput + BringWindowToTop works around it).
 // Also moves the window onto the primary monitor if placement is off-screen (e.g. disconnected monitor).
@@ -999,15 +1152,67 @@ static bool runPhase(const std::string& name, Win32IDE& ide, HINSTANCE, LPSTR lp
             return false;
         }
         startupTrace("createWindow_ok");
-        pumpMessages();
+        RawrXD::P1GgufCert::reset();
+        RawrXD::P1GgufCert::emit("PRODUCT_PATH", "INFO", "Win32IDE_session_WM_APP_201");
+        // P1-B localization: markers between every post-createWindow step so
+        // ide_startup.log shows last *_ok before uncaught C++ exception 0xE06D7363.
+        startupTrace("P1_post_create_00");
+        pumpMessagesTraced("post_create_1");
+        startupTrace("P1_post_create_01_pump1_ok");
+
         s_engine_mgr = new EngineManager();
+        startupTrace("P1_post_create_02_engine_mgr_ok");
+
         s_codex = new CodexUltimate();
+        startupTrace("P1_post_create_03_codex_ok");
+
         ide.setEngineManager(s_engine_mgr);
+        startupTrace("P1_post_create_04_set_engine_ok");
+
         ide.setCodexUltimate(s_codex);
-        pumpMessages();
+        startupTrace("P1_post_create_05_set_codex_ok");
+
+        pumpMessagesTraced("post_create_2");
+        startupTrace("P1_post_create_06_pump2_ok");
 
         // Initialize file watcher for file explorer
         ide.initFileWatcher();
+        startupTrace("P1_post_create_07_filewatcher_ok");
+
+        // P0: pumps finished — open WM_APP+201 gate + single flush via markStartupPumpsComplete
+        // (S2: session-restore GGUF only after pumps, on the live message loop).
+        const bool hadSkip = s_skippedApp201;
+        const bool hadRestoreSkip = s_skippedRestoreSession;
+        ide.markStartupPumpsComplete();
+        startupTrace("P1_post_create_08_pumps_complete");
+        if (hadRestoreSkip || ide.pendingSessionRestore())
+        {
+            HWND hwnd = ide.getMainWindow();
+            if (hwnd && IsWindow(hwnd))
+            {
+                ide.armPendingSessionRestore();
+                PostMessage(hwnd, WM_APP_RESTORE_SESSION, 0, 0);
+                startupTrace("P1_post_create_08b_repost_RESTORE_SESSION");
+                fprintf(stderr, "[STARTUP] WM_APP_RESTORE_SESSION re-armed after pumps\n");
+                fflush(stderr);
+            }
+            s_skippedRestoreSession = false;
+        }
+        if (hadSkip || ide.pendingApp201ModelLoad())
+        {
+            startupTrace("P1_post_create_09_repost_WM_APP_201",
+                         hadSkip ? "after_pump_skip" : "path_or_pending");
+            fprintf(stderr, "[STARTUP] WM_APP+201 flush armed (skip=%d pending=%d)\n",
+                    hadSkip ? 1 : 0, ide.pendingApp201ModelLoad() ? 1 : 0);
+            fflush(stderr);
+            RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO", "repost_after_startup_pumps");
+            s_skippedApp201 = false;
+        }
+        else
+        {
+            fprintf(stderr, "[STARTUP] post_create pumps complete (no WM_APP+201 to flush)\n");
+            fflush(stderr);
+        }
 
         // High-risk bootstrap lane (engine + MMF + JS + sandbox).
         // Default OFF to avoid startup heap corruption; opt-in with:
@@ -1928,6 +2133,7 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     // Explorer, shortcuts, or different CWD. Prevents silent failures on init.
     // ========================================================================
     setCwdToExeDirectory();
+    RawrXD::CommandTelemetry::CmdDiagMarkArmed();
     RawrXD::Runtime::bootstrapRuntimeSurface();
 
     // Check environment first for forced console
@@ -2081,11 +2287,26 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             delete s_startupLog;
             s_startupLog = nullptr;
         }
-        // Allocate a console for stdout/stderr (WinMain doesn't have one)
-        AllocConsole();
-        freopen("CONOUT$", "w", stdout);
-        freopen("CONOUT$", "w", stderr);
-        freopen("CONIN$", "r", stdin);
+        // Allocate a console for stdout/stderr (WinMain doesn't have one),
+        // but preserve pipes when the launcher already redirected stdout/stderr
+        // (product-runtime / CI smoke capture).
+        {
+            const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            const HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+            const DWORD outType = hOut ? GetFileType(hOut) : FILE_TYPE_UNKNOWN;
+            const DWORD errType = hErr ? GetFileType(hErr) : FILE_TYPE_UNKNOWN;
+            const bool outRedirected = (outType == FILE_TYPE_PIPE || outType == FILE_TYPE_DISK);
+            const bool errRedirected = (errType == FILE_TYPE_PIPE || errType == FILE_TYPE_DISK);
+            if (!outRedirected || !errRedirected)
+            {
+                AllocConsole();
+                if (!outRedirected)
+                    freopen("CONOUT$", "w", stdout);
+                if (!errRedirected)
+                    freopen("CONOUT$", "w", stderr);
+                freopen("CONIN$", "r", stdin);
+            }
+        }
 
         // Fast-exit help path to avoid hangs when only --headless/--help are provided
         if (hasHeadlessHelpFlag(lpCmdLine) || (lpCmdLine && strlen(lpCmdLine) == 0))
@@ -2247,6 +2468,37 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     startupTrace("message_loop_entered");
     OutputDebugStringA("[main_win32] ⭐ MESSAGE LOOP STARTING ⭐\n");
 
+    // P1-2 S2: pin CPU inference on the product path (UI-thread Vulkan aborts at INF_vulkan).
+    // Harness still validates AUTO/Vulkan off-UI separately.
+    _putenv_s("RAWRXD_FORCE_CPU_INFERENCE", "1");
+
+    // Session restore must run on the live loop (never under WM_CREATE / post-create pumps).
+    if (ide.pendingSessionRestore())
+    {
+        HWND hwnd = ide.getMainWindow();
+        if (hwnd && IsWindow(hwnd))
+        {
+            PostMessage(hwnd, WM_APP_RESTORE_SESSION, 0, 0);
+            startupTrace("P1_message_loop_flush_RESTORE_SESSION");
+            fprintf(stderr, "[STARTUP] message_loop: posted WM_APP_RESTORE_SESSION\n");
+            fflush(stderr);
+        }
+    }
+
+    // Flush deferred session-restore GGUF load only after the live loop is armed.
+    if (ide.pendingApp201ModelLoad())
+    {
+        HWND hwnd = ide.getMainWindow();
+        if (hwnd && IsWindow(hwnd))
+        {
+            PostMessageA(hwnd, WM_APP + 201, 0, 0);
+            startupTrace("P1_message_loop_flush_WM_APP_201");
+            fprintf(stderr, "[STARTUP] message_loop: posted WM_APP+201 flush (FORCE_CPU=1)\n");
+            fflush(stderr);
+            RawrXD::P1GgufCert::emit("DEFERRED_LOAD_FLUSHED", "INFO", "flush_after_message_loop_entered");
+        }
+    }
+
     // Post delayed force-visible so the window is brought to front once the loop runs
     PostMessage(ide.getMainWindow(), WM_APP + 199, 0, 0);
 
@@ -2284,7 +2536,9 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     // The IDE's onDestroy() already ran (from WM_DESTROY), but the Win32IDE
     // object is still alive on the stack. Clear its dangling pointers first.
     // ========================================================================
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_message_loop");
     Win32IDE_AgenticBrowser_Shutdown();
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_agentic_browser");
     ide.setEngineManager(nullptr);
     ide.setCodexUltimate(nullptr);
 
@@ -2294,7 +2548,9 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     {
         OutputDebugStringA("[main_win32] Integrated runtime shutdown (Transcendence)...\n");
         startupTrace("integrated_runtime_shutdown");
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_integrated_runtime");
         RawrXD::IntegratedRuntime::shutdown();
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_integrated_runtime");
         OutputDebugStringA("[main_win32] Integrated runtime shutdown complete\n");
     }
 
@@ -2369,12 +2625,14 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
 
     // Shutdown cross-process state and JS extension host
     {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_js_host_final");
         auto& jsHost = JSExtensionHost::instance();
         if (jsHost.isInitialized())
         {
             jsHost.shutdown();
             OutputDebugStringA("[main_win32] JS Extension Host shutdown\n");
         }
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_js_host_final");
 
         auto& mmf = RawrXDStateMmf::instance();
         if (mmf.isInitialized())
@@ -2383,9 +2641,11 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
             mmf.shutdown();
             OutputDebugStringA("[main_win32] MMF cross-process state shutdown\n");
         }
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_mmf");
     }
 
     // Cleanup engine resources (IDE no longer holds pointers to these)
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_delete_engines");
     try
     {
         if (s_codex)
@@ -2408,28 +2668,35 @@ static int WinMainImpl(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow)
     catch (...)
     {
     }
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_delete_engines");
 
     // ========================================================================
     // CRASH CONTAINMENT UNINSTALL — Cathedral teardown
     // ========================================================================
     {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_crash_uninstall");
         auto& ledger = RawrXD::Patch::PatchRollbackLedger::Global();
         ledger.flushJournal();
         ledger.shutdown();
         RawrXD::Crash::Uninstall();
         OutputDebugStringA("[main_win32] Cathedral crash containment uninstalled\n");
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_crash_uninstall");
     }
 
     // ========================================================================
     // ENTERPRISE LICENSE SHUTDOWN — Final teardown (after all subsystems)
     // ========================================================================
     {
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_enterprise");
         RawrXD::EnterpriseLicense::Instance().Shutdown();
         OutputDebugStringA("[main_win32] Enterprise License System shutdown\n");
+        RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_AFTER_enterprise");
     }
 
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_BEFORE_export_artifacts");
     exportCommandArtifacts("runtime-exit");
 
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(-1, "WINMAIN_RETURN");
     return exitCode;
 } // WinMainImpl
 

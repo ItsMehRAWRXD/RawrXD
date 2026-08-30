@@ -1,0 +1,19 @@
+SETTLE IDE sender isolation (no repair)
+
+```
+FAULT_OWNER              = IDE_SENDER_CANDIDATE
+CERT_READSTATUS0         = NOT OBSERVED
+READSTATUS0_LINK         = UNPROVEN
+REPAIR                   = NOT STARTED
+```
+
+Observed (SHA D74C9009…, CMD_DIAG=1, no cert process):
+  IDE_SB_GETTEXTW_OWNER.txt
+    BEGIN/END runUiEncodingProbe_SAVE_PREV  HWND=…02808B6 MSG=0x040D PART=0
+    BEGIN/END runUiEncodingProbe            HWND=…02808B6 MSG=0x040D PART=0
+  CERT_READSTATUS0_INFLIGHT = absent
+  IDE_GETTEXT_INFLIGHT at fatal = absent (reads completed; no VEH fatal sink)
+
+Demote cert ReadStatus0 to hypothesis requiring separate proof.
+Named FAULT_OWNER=IDE/runUiEncodingProbe requires fatal COMCTL32 hit
+while IDE_GETTEXT_INFLIGHT tag is live (predicate in GATE.txt).

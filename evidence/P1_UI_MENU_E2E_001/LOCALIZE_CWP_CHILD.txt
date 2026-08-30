@@ -1,0 +1,49 @@
+P1_UI_MENU_E2E_001 — CWP child localization (diagnosis; REPAIR NOT STARTED)
+
+LIVE_DIAG_SHA = CD1ECF056732F96DDE66CB2CEB57334A6EE3F65879022ECFDB3D378315549808
+CWP_HOOK      = 1
+Artifact      = FIRST_CHANCE_WM_COMMAND.txt (copied from build-ninja bin)
+
+FAULT SITE (unchanged / stable)
+  MODULE            = COMCTL32.dll (WinSxS common-controls 6.0.26100.*)
+  EXCEPTION_RVA     = 0x7D422
+  EXCEPTION_CODE    = 0xC0000005
+
+LAST DISPATCH CONTEXT (this hit)
+  LAST_MSG          = 0x0111 WM_COMMAND
+  LAST_WPARAM       = 0x40003F4  → id=1012 (IDC_OUTPUT_EDIT_GENERAL), notify=EN_UPDATE (0x400)
+  LAST_CLASS        = RawrXD_IDE_MainWindow
+  NOTE              = Not File.New id; EN_UPDATE on general output edit at fatal time.
+
+CWP RING (last 24 interesting CallWndProc events before AV)
+  Dominated by WM_PAINT (0x000F) on RICHEDIT/Edit/Button/Static/SysTab/Combo/trackbar…
+  FINAL ENTRY:
+    CWP[23]=msg=0x040D hwnd=… class=msctls_statusbar32
+    0x040D = WM_USER+13 = SB_GETTEXTLENGTHW
+
+IDE FRAMES (preferred VA = EXE_MODULE_BASE slide; map Preferred=0x400000)
+  FRAME IDE #1  RVA 0x321A88  ≈ Win32IDE::WindowProc + 0xC8
+  FRAME IDE #2  RVA 0x32A6D2  ≈ Win32IDE::handleMessage + 0xDE2
+  (dispatch callers only — no named File.New / status helper on AV frame)
+
+ALSO ON STACK
+  uxtheme.dll frames — themed common-control paint/measure path
+
+INTERPRETATION (not ownership)
+  Last COMCTL32-class window activity in the CWP ring is msctls_statusbar32
+  receiving SB_GETTEXTLENGTHW immediately before COMCTL32!0x7D422 AV.
+  That names a CANDIDATE_CONTROL for further localization, not FAULT_OWNER.
+  LAST_MSG EN_UPDATE(1012) is concurrent context on the main HWND — do not
+  blame output-edit ownership from correlation alone.
+
+```
+FAULT_OWNER             = UNKNOWN
+CANDIDATE_CONTROL       = msctls_statusbar32  (CWP final; SB_GETTEXTLENGTHW)
+FAULT_SITE              = COMCTL32.dll + 0x7D422
+COMPONENT_BLAME         = NONE (candidate only)
+REPAIR                  = NOT STARTED
+```
+
+NEXT
+  Tie status-bar HWND to Win32IDE::m_hwndStatusBar / SB_SETTEXT after File.New
+  vs EN_UPDATE(1012) ordering with breadcrumbs; still no repair.

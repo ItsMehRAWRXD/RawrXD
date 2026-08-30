@@ -16,6 +16,7 @@
 #include "../modules/vscode_extension_api.h"
 #include "../modules/vsix_loader.h"
 #include "quickjs_extension_host.h"
+#include "../core/js_extension_host.hpp"
 
 #include <commdlg.h>    // OPENFILENAMEW, GetOpenFileNameW, GetSaveFileNameW
 #include <cstdio>
@@ -181,18 +182,32 @@ void Win32IDE::initVSCodeExtensionAPI() {
     }
 }
 
-void Win32IDE::shutdownVSCodeExtensionAPI() {
-    if (!m_vscExtAPIInitialized) return;
+void Win32IDE::detachJSExtensionHosts() {
+    // Parent WM_DESTROY runs BEFORE child HWND teardown. Detach QuickJS /
+    // moduleLoader here so children cannot re-enter a live host. Do NOT
+    // FreeLibrary / UnloadAllNative / DestroyWindow panels here — that AV's
+    // during subsequent child WM_DESTROY (0xC0000005 → 0xC000041D).
+    QuickJSExtensionHost::instance().shutdown();
+    JSExtensionHost::instance().shutdown();
+}
 
-    // Phase 36: Shutdown QuickJS host first (before C++ API shutdown)
-    auto& jsHost = QuickJSExtensionHost::instance();
-    jsHost.shutdown();
-    appendToOutput("[Phase 36] QuickJS Extension Host shut down\r\n");
+void Win32IDE::shutdownVSCodeExtensionAPI() {
+    // Teardown order (explicit, idempotent):
+    //   1) Per-extension QuickJS runtimes (QuickJSExtensionHost)
+    //   2) Global JSExtensionHost (moduleLoader opaque cleared before FreeRuntime)
+    //   3) C++ VS Code Extension API facade (FreeLibrary — NCDESTROY / onDestroy only)
+    // Native ExtensionLoader HMODULEs are unloaded by onDestroy after this.
+    detachJSExtensionHosts();
+
+    if (!m_vscExtAPIInitialized) {
+        OutputDebugStringA("[Phase 29/36] extension hosts shut down (API was not init)\n");
+        return;
+    }
 
     auto& api = vscode::VSCodeExtensionAPI::instance();
     api.shutdown();
     m_vscExtAPIInitialized = false;
-    appendToOutput("[Phase 29] VS Code Extension API shut down\r\n");
+    OutputDebugStringA("[Phase 29] VS Code Extension API shut down\n");
 }
 
 // ============================================================================

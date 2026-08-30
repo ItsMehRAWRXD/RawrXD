@@ -18,6 +18,7 @@
 #include "IDEConfig.h"
 #include "Win32IDE.h"
 #include "Win32IDE_Types.h"
+#include "Win32IDE_CommandFlight.hpp"
 #include "win32_feature_adapter.h"
 
 
@@ -159,16 +160,16 @@ static constexpr size_t MAX_AGENT_CHECKPOINTS = 32;
 
 // Menu command IDs (with guards to avoid redefinition from Win32IDE.cpp)
 #ifndef IDM_FILE_NEW
-#define IDM_FILE_NEW 2001
+#define IDM_FILE_NEW 1001
 #endif
 #ifndef IDM_FILE_OPEN
-#define IDM_FILE_OPEN 2002
+#define IDM_FILE_OPEN 1002
 #endif
 #ifndef IDM_FILE_SAVE
-#define IDM_FILE_SAVE 2003
+#define IDM_FILE_SAVE 1003
 #endif
 #ifndef IDM_FILE_SAVEAS
-#define IDM_FILE_SAVEAS 2004
+#define IDM_FILE_SAVEAS 1004
 #endif
 #ifndef IDM_FILE_SAVEALL
 #define IDM_FILE_SAVEALL 1005
@@ -201,7 +202,7 @@ static constexpr size_t MAX_AGENT_CHECKPOINTS = 32;
 #define IDM_FILE_MODEL_QUICK_LOAD 1035
 #endif
 #ifndef IDM_FILE_EXIT
-#define IDM_FILE_EXIT 2005
+#define IDM_FILE_EXIT 1099
 #endif
 
 // Enterprise/Professional feature entry points (menu wiring) — use non-UI ID range to avoid collisions with View
@@ -403,24 +404,49 @@ static FuzzyResult fuzzyMatchScore(const std::string& query, const std::string& 
 
 bool Win32IDE::routeCommand(int commandId)
 {
-    // Route to appropriate handler based on command ID range
-    if (commandId >= 1000 && commandId < 2000)
+    using namespace RawrXD::CommandTelemetry;
+    CommandFlight* flight = Current();
+
+    // Route to appropriate handler based on command ID range.
+    // File menu uses IDM_FILE_* = 1001–1099 (COMMAND_TABLE); legacy 2001–2005 also file.
+    // Both must hit handleFileCommand — never the edit range (was silent no-op E2E break).
+    if ((commandId >= 1000 && commandId < 2000) ||
+        (commandId >= 2001 && commandId <= 2005))
     {
+        if (flight) {
+            Resolved(*flight, LogicalIdForRawId(static_cast<UINT>(commandId)),
+                     LogicalNameForRawId(static_cast<UINT>(commandId)));
+            HandlerEntered(*flight);
+        }
         handleFileCommand(commandId);
         return true;
     }
-    else if (commandId >= 2000 && commandId < 2020)
+    else if (commandId >= 2007 && commandId < 2020)
     {
+        if (flight) {
+            Resolved(*flight, LogicalIdForRawId(static_cast<UINT>(commandId)),
+                     LogicalNameForRawId(static_cast<UINT>(commandId)));
+            HandlerEntered(*flight);
+        }
         handleEditCommand(commandId);
         return true;
     }
     else if (commandId >= 2020 && commandId < 3000)
     {
+        if (flight) {
+            Resolved(*flight, LogicalIdForRawId(static_cast<UINT>(commandId)),
+                     LogicalNameForRawId(static_cast<UINT>(commandId)));
+            HandlerEntered(*flight);
+        }
         handleViewCommand(commandId);
         return true;
     }
     else if (commandId >= 3000 && commandId < 4000)
     {
+        if (flight) {
+            Resolved(*flight, static_cast<uint32_t>(commandId), "VIEW_BAND");
+            HandlerEntered(*flight);
+        }
         handleViewCommand(commandId);
         return true;
     }
@@ -683,6 +709,8 @@ bool Win32IDE::routeCommand(int commandId)
         return handleFlagshipCommand(commandId);
     }
 
+    if (flight)
+        Fail(*flight, "UNKNOWN_COMMAND");
     return false;
 }
 
@@ -824,7 +852,9 @@ void Win32IDE::handleFileCommand(int commandId)
     {
         // COMMAND_TABLE file IDs (1001-1099) — palette/CLI dispatch; same behavior as menu
         case 1001:  // file.new
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(commandId, "handleFileCommand_NEW");
             newFile();
+            RawrXD::CommandTelemetry::CmdDiagBreadcrumb(commandId, "handleFileCommand_NEW_DONE");
             if (m_hwndStatusBar)
                 SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"New file created");
             break;
@@ -848,31 +878,9 @@ void Win32IDE::handleFileCommand(int commandId)
         case 1020:  // file.recentClear
             clearRecentFiles();
             break;
-        case 1099:  // file.exit
+        case 1099:  // file.exit / IDM_FILE_EXIT
             if (!m_fileModified || promptSaveChanges())
                 PostQuitMessage(0);
-            break;
-        case IDM_FILE_NEW:
-            newFile();
-            SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "New file created");
-            break;
-
-        case IDM_FILE_OPEN:
-            openFile();
-            break;
-
-        case IDM_FILE_SAVE:
-            if (saveFile())
-            {
-                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "File saved");
-            }
-            break;
-
-        case IDM_FILE_SAVEAS:
-            if (saveFileAs())
-            {
-                SendMessage(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM) "File saved as new name");
-            }
             break;
 
         case IDM_FILE_LOAD_MODEL:
@@ -897,13 +905,6 @@ void Win32IDE::handleFileCommand(int commandId)
 
         case IDM_FILE_MODEL_QUICK_LOAD:
             quickLoadGGUFModel();
-            break;
-
-        case IDM_FILE_EXIT:
-            if (!m_fileModified || promptSaveChanges())
-            {
-                PostQuitMessage(0);
-            }
             break;
 
         default:
@@ -10818,6 +10819,8 @@ void Win32IDE::buildCommandRegistry()
     m_commandRegistry.push_back({IDM_T1_BREADCRUMBS_TOGGLE, "View: Toggle Breadcrumbs", "", "View"});
     m_commandRegistry.push_back({IDM_T1_FUZZY_PALETTE, "View: Fuzzy Command Palette", "", "View"});
     m_commandRegistry.push_back({IDM_T1_SETTINGS_GUI, "View: Settings", "", "View"});
+    m_commandRegistry.push_back({IDM_T1_RESOURCE_MAP, "View: Resource Map", "", "View"});
+    m_commandRegistry.push_back({IDM_T1_TUNER_SUGGEST, "View: Tuner Suggest", "", "View"});
     m_commandRegistry.push_back({IDM_T1_WELCOME_SHOW, "View: Welcome Page", "", "View"});
 
     // Terminal commands (IDs match handleTerminalCommand: 4001–4010)
@@ -12211,6 +12214,34 @@ void Win32IDE::createMonacoEditor(HWND hwnd)
 
     LOG_INFO("Creating WebView2 + Monaco editor...");
 
+    // Dedicated host HWND in the spatial editor region — WebView2 Bounds are
+    // host-client-relative; parenting to main with {0,0,w,h} left a black hole.
+    RECT er = m_editorRect;
+    if ((er.right - er.left) <= 0 || (er.bottom - er.top) <= 0) {
+        RECT clientRect{};
+        GetClientRect(hwnd, &clientRect);
+        er.left = 250;
+        er.top = 80;
+        er.right = clientRect.right;
+        er.bottom = (std::max)(er.top + 100, clientRect.bottom - 200);
+    }
+
+    if (!m_hwndMonacoContainer || !IsWindow(m_hwndMonacoContainer)) {
+        m_hwndMonacoContainer = CreateWindowExW(
+            0, L"STATIC", L"",
+            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+            er.left, er.top, er.right - er.left, er.bottom - er.top,
+            hwnd, nullptr, m_hInstance, nullptr);
+    } else {
+        SetWindowPos(m_hwndMonacoContainer, HWND_TOP, er.left, er.top,
+                     er.right - er.left, er.bottom - er.top, SWP_SHOWWINDOW);
+    }
+
+    if (!m_hwndMonacoContainer) {
+        LOG_ERROR("Failed to create Monaco host HWND");
+        return;
+    }
+
     m_webView2 = new WebView2Container();
 
     // Set callbacks
@@ -12245,23 +12276,20 @@ void Win32IDE::createMonacoEditor(HWND hwnd)
     m_webView2->setErrorCallback([](const char* error, void* userData)
                                  { LOG_ERROR(std::string("Monaco error: ") + error); }, this);
 
-    // Get editor area bounds
-    RECT clientRect;
-    GetClientRect(hwnd, &clientRect);
-    int editorX = 250;  // After sidebar
-    int editorY = 80;   // After tab bar + title bar
-    int editorW = clientRect.right - editorX;
-    int editorH = clientRect.bottom - editorY - 200;  // Leave room for panel + status
+    // Host-client Bounds — not main-window absolute coords.
+    m_webView2->resize(0, 0, er.right - er.left, er.bottom - er.top);
 
-    m_webView2->resize(editorX, editorY, editorW, editorH);
-
-    // Start async initialization
-    WebView2Result result = m_webView2->initialize(hwnd);
+    // Start async initialization against the dedicated host
+    WebView2Result result = m_webView2->initialize(m_hwndMonacoContainer);
     if (!result.success)
     {
         LOG_ERROR(std::string("WebView2 init failed: ") + result.detail);
         delete m_webView2;
         m_webView2 = nullptr;
+        if (m_hwndMonacoContainer) {
+            DestroyWindow(m_hwndMonacoContainer);
+            m_hwndMonacoContainer = nullptr;
+        }
 
         // Show user-friendly message
         MessageBoxA(hwnd,
@@ -12296,6 +12324,11 @@ void Win32IDE::destroyMonacoEditor()
     delete m_webView2;
     m_webView2 = nullptr;
     m_monacoEditorActive = false;
+
+    if (m_hwndMonacoContainer && IsWindow(m_hwndMonacoContainer)) {
+        DestroyWindow(m_hwndMonacoContainer);
+        m_hwndMonacoContainer = nullptr;
+    }
 
     // Show RichEdit again
     if (m_hwndEditor)

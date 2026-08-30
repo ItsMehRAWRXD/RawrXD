@@ -423,21 +423,23 @@ bool EnterpriseLicense::Initialize()
 // ============================================================================
 void EnterpriseLicense::Shutdown()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    // Process-exit path: a license poll/callback thread may hold m_mutex.
+    // Blocking here hangs WinMain after clean QuickJS/ExtensionLoader teardown.
+    std::unique_lock<std::mutex> lock(m_mutex, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+        LOG_INFO("[EnterpriseLicense] Shutdown skipped — mutex busy (process exiting)");
+        return;
+    }
 
     if (!m_initialized)
         return;
 
-    Enterprise_Shutdown();
-
-    LicenseState oldState = m_lastState;
+    // Skip MASM Enterprise_Shutdown (DeleteCriticalSection on partial init hangs).
     m_lastState = LicenseState::Invalid;
     m_initialized = false;
-
-    if (oldState != LicenseState::Invalid)
-    {
-        notifyStateChange(oldState, LicenseState::Invalid);
-    }
+    m_callbacks.clear();
+    lock.unlock();
 
     LOG_INFO("[EnterpriseLicense] License subsystem shut down");
 }

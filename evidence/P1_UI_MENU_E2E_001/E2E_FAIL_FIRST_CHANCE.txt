@@ -1,0 +1,54 @@
+P1_UI_MENU_E2E_001 — E2E fail localization (diagnosis only; REPAIR NOT STARTED)
+
+FROZEN
+```
+CLOSE_TEARDOWN      = FAIL / REOPENED
+TEARDOWN_EXONERATED = NO
+P1_UI_MENU_E2E_001  = BLOCKED
+FAULT_OWNER         = UNKNOWN
+REPAIR              = NOT STARTED
+```
+
+BINARY_SHA = 00768A39154489D6EED3CCC1A755C16F0F2978B010F759DEFB8CB224142EDC35
+
+REPRO (official ladder conditions)
+  Tool: p1_ui_menu_e2e_cert.exe --wm-command --max-items 6 --allow-sha-drift
+  Env:  RAWRXD_P1_CMD_DIAG=1 RAWRXD_P1_UI_MENU_E2E=1
+  Log:  evidence/P1_UI_MENU_E2E_001/E2E_CERT_REPRO.txt
+  Observed:
+    [FEATURE_FAIL] #1 id=1001 File.New
+    [RELAUNCH] process dead before leaf #2 id=1002 exit=0xC000041D
+    (same pattern for remaining required leaves)
+
+ORIGINATING FIRST-CHANCE (retained; not wiped mid-ladder)
+  Artifact: FIRST_CHANCE_WM_COMMAND.txt
+  KIND            = VEH_FATAL_CANDIDATE
+  EXCEPTION_CODE  = 0xC0000005
+  LAST_MSG        = 0x0046  (WM_WINDOWPOSCHANGING)
+  LAST_WPARAM     = 0
+  TID             = 18792
+  EXCEPTION_ADDR  = 00000000166CD422
+  FRAME_COUNT     = 18
+  FRAME[3]        = 00000000166CD422
+  FRAME[4]        = 00000000166CCD89
+  FRAME[5]        = 00000000166CBF20
+  FRAME[6..]      = (see FIRST_CHANCE_WM_COMMAND.txt)
+  NOTE: addresses are ASLR-absolute; native symbolization pending (no cdb in PATH).
+        FAULT_OWNER remains UNKNOWN until stack is resolved.
+
+NON-DISPOSITIVE (same SHA)
+  Intentional WM_CLOSE x6 / File.New-only probe without cert relaunch:
+    did not produce exit 0xC000041D in this session.
+  Clean close does not exonerate CLOSE_TEARDOWN.
+
+CLASSIFICATION
+  E2E delayed fatal after File.New under cert conditions retains
+  first-chance LAST_MSG=WM_WINDOWPOSCHANGING.
+  That is correlation for the E2E fail path — not yet a named fault owner.
+  Close-teardown vs WINDOWPOSCHANGING common ownership: NOT PROVEN (no shared
+  symbolized stack). Keep WINDOWPOSCHANGING as the E2E-path LAST_MSG evidence;
+  do not merge into CLOSE_TEARDOWN repair without owner ID + greenlight.
+
+NEXT
+  Symbolize FRAME[3..5] against PDB/map + runtime image base from a live hit.
+  Do not start repair until FAULT_OWNER is identified and authorized.

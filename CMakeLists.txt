@@ -974,6 +974,58 @@ if(WIN32)
     message(STATUS "VAL-051.2.A: Real Token Proof Harness configured")
 
     # =====================================================================
+    # P1: Minimal CPUInferenceEngine::LoadModel harness (TinyLlama / 0xC0000409)
+    # =====================================================================
+    add_executable(p1_cpu_loadmodel_harness
+        tools/p1_cpu_loadmodel_harness.cpp
+    )
+    target_link_libraries(p1_cpu_loadmodel_harness PRIVATE InferenceEngine)
+    set_target_properties(p1_cpu_loadmodel_harness PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        EXCLUDE_FROM_DEFAULT_BUILD TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        MSVC_RUNTIME_LIBRARY "MultiThreaded"
+    )
+    target_include_directories(p1_cpu_loadmodel_harness PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/tokenizer
+        ${CMAKE_SOURCE_DIR}/include/core
+    )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_SDK_ROOT)
+        target_include_directories(p1_cpu_loadmodel_harness PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_link_libraries(p1_cpu_loadmodel_harness PRIVATE "${RAWR_VULKAN_LIB}" dxgi)
+        target_compile_definitions(p1_cpu_loadmodel_harness PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND VULKAN_INCLUDE_DIR)
+        target_include_directories(p1_cpu_loadmodel_harness PRIVATE ${VULKAN_INCLUDE_DIR})
+        target_link_libraries(p1_cpu_loadmodel_harness PRIVATE dxgi)
+        target_compile_definitions(p1_cpu_loadmodel_harness PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN AND Vulkan_FOUND)
+        target_include_directories(p1_cpu_loadmodel_harness PRIVATE ${Vulkan_INCLUDE_DIRS})
+        target_link_libraries(p1_cpu_loadmodel_harness PRIVATE Vulkan::Vulkan dxgi)
+        target_compile_definitions(p1_cpu_loadmodel_harness PRIVATE RAWR_HAS_VULKAN=1)
+    elseif(RAWR_ENABLE_VULKAN)
+        target_compile_definitions(p1_cpu_loadmodel_harness PRIVATE RAWR_HAS_VULKAN=0)
+        target_link_libraries(p1_cpu_loadmodel_harness PRIVATE dxgi)
+    else()
+        target_link_libraries(p1_cpu_loadmodel_harness PRIVATE dxgi)
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UM_VER)
+        set_property(TARGET p1_cpu_loadmodel_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UM_VER}/um/x64\"")
+    endif()
+    if(DEFINED _WIN10_SDK_ROOT AND DEFINED _SDK_UCRT_VER)
+        set_property(TARGET p1_cpu_loadmodel_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_WIN10_SDK_ROOT}/Lib/${_SDK_UCRT_VER}/ucrt/x64\"")
+    endif()
+    if(DEFINED _MSVC_ROOT)
+        set_property(TARGET p1_cpu_loadmodel_harness APPEND_STRING PROPERTY LINK_FLAGS " /LIBPATH:\"${_MSVC_ROOT}/lib/x64\"")
+    endif()
+    target_link_libraries(p1_cpu_loadmodel_harness PRIVATE
+        kernel32 user32 gdi32 winspool shell32 ole32 oleaut32 uuid comdlg32 advapi32 version ws2_32
+    )
+    message(STATUS "P1: CPUInferenceEngine::LoadModel harness configured")
+
+    # =====================================================================
     # VAL-051.5: 32-Token KV / Autoregressive Stability Gate
     # =====================================================================
     add_executable(val_051_5_32_token_kv_stability
@@ -2667,6 +2719,8 @@ set(SOURCES
     src/deep2/DualGPUHook.cpp
     src/deep2/ReverseTensorRecovery.cpp
     src/deep2/StreamEngine.cpp
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
     src/deep2/ShardRouterIntegration.cpp
     src/deep2/Deep2IDEIntegration.cpp
     src/deep2/Deep2ModelRuntime.cpp
@@ -4760,8 +4814,13 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/DualGPUHook.cpp
     src/deep2/ReverseTensorRecovery.cpp
     src/deep2/StreamEngine.cpp
+    src/deep2/execution_policy/ExecutionPolicy.cpp
+    src/deep2/execution_policy/ExecutionPolicyStore.cpp
+    src/deep2/execution_policy/PlacementPlan.cpp
+    src/deep2/execution_policy/ExecutionPolicyApply.cpp
     src/deep2/ShardRouterIntegration.cpp
     src/deep2/Deep2IDEIntegration.cpp
+    src/deep2/IOCPGGUFLoader.cpp
     src/deep2/Deep2ModelRuntime.cpp
     src/deep2/FabricTensorTable.cpp
     src/deep2/ReverseIntegration.cpp
@@ -5182,7 +5241,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
-        src/win32app/Win32IDE_Window.cpp
+        # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
+        # fought Core via /FORCE:MULTIPLE and risked a second product shell.
+        src/win32app/Win32IDE_WindowOwnership.cpp
         src/win32app/Win32IDE_Accelerators.cpp
         src/win32app/IV280Bridge.cpp
         src/win32app/IMultiFileSearchWidget.cpp
@@ -5216,6 +5277,9 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_Autonomy.cpp
         src/win32app/Win32IDE_PowerShell.cpp
         src/win32app/Win32IDE_PowerShellPanel.cpp
+        src/win32app/Win32IDE_CommandFlight.cpp
+        src/win32app/Win32IDE_ShellLayout.cpp
+        src/win32app/Win32IDE_MenuE2eProbe.cpp
         src/win32app/Win32IDE_Session.cpp
         src/win32app/Win32IDE_GGUFInspector.cpp
         src/win32app/Win32IDE_FileOps.cpp
@@ -5330,30 +5394,30 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/agentic/AgentOllamaClient.cpp
 
         # Unlinked symbols batches - provide real implementations for link closure
+        # batch_004 excluded: duplicates RawrXD_Hotpatch_Kernel / Snapshot / Watchdog ASM.
         src/core/unlinked_symbols_batch_001.cpp
-        src/core/unlinked_symbols_batch_002.cpp  # ADDED: Provides matmul_kernel_avx2, ggml_gemm_q4_0
+        src/core/unlinked_symbols_batch_002.cpp  # ggml/matmul; asm_pyre_* gated when RAWRXD_HAS_ASM_PYRE
         src/core/unlinked_symbols_batch_003.cpp
-        src/core/unlinked_symbols_batch_004.cpp  # ADDED: Provides asm_watchdog_init
+        # src/core/unlinked_symbols_batch_004.cpp  # EXCLUDED: asm_hotpatch_*/asm_snapshot_* → ASM
+        src/core/win32ide_watchdog_init.cpp        # sole C provider for asm_watchdog_init
         src/core/unlinked_symbols_batch_005.cpp
-        src/core/unlinked_symbols_batch_006.cpp  # ADDED: Provides asm_mesh_init, asm_mesh_quorum_vote, asm_mesh_crdt_merge
-        src/core/unlinked_symbols_batch_007.cpp  # ADDED: Provides asm_mesh_fedavg_aggregate, asm_mesh_zkp_generate, asm_speciator_*
-        src/core/unlinked_symbols_batch_008.cpp  # ADDED: Provides asm_neural_*, asm_hwsynth_*
-        src/core/unlinked_symbols_batch_009.cpp  # ADDED: Provides asm_hwsynth_profile_dataflow, asm_hwsynth_predict_perf
-        src/core/unlinked_symbols_batch_010.cpp  # ADDED: Provides SO_InitializeVulkan
+        src/core/unlinked_symbols_batch_006.cpp
+        src/core/unlinked_symbols_batch_007.cpp
+        src/core/unlinked_symbols_batch_008.cpp
+        src/core/unlinked_symbols_batch_009.cpp
+        src/core/unlinked_symbols_batch_010.cpp
         src/core/unlinked_symbols_batch_011.cpp
         src/core/unlinked_symbols_batch_012.cpp
-        src/core/unlinked_symbols_batch_018.cpp  # ADDED: Provides asm_gguf_loader_close, asm_lsp_bridge_shutdown, asm_spengine_cpu_optimize
-        src/core/unlinked_symbols_batch_019.cpp
-        src/core/unlinked_symbols_batch_020.cpp
-        src/core/unlinked_symbols_batch_021.cpp  # ADDED: Provides AnnotationOverlay, ANSIParser, SettingsManager, AgentCoordinator, Deep2_SwiGLU, BraidedLoader, ModelConversionDialog, handleAIStopGeneration
-        src/ANSIParser.cpp  # ADDED: Real ANSIParser implementation (replaces stub in unlinked_symbols_batch_021.cpp)
-        src/vulkan_kernel_bridge.cpp  # ADDED: Real Vulkan compute bridge for RawrXD_VulkanBridge.asm
+        # Prefer single provider for symbols that also live in batch_001/005 (ODR).
+        # src/core/unlinked_symbols_batch_018.cpp
+        # src/core/unlinked_symbols_batch_019.cpp
+        # src/core/unlinked_symbols_batch_020.cpp
+        src/core/unlinked_symbols_batch_021.cpp
+        src/ANSIParser.cpp
+        src/vulkan_kernel_bridge.cpp
 
-        # ASM link stubs for missing symbols
-        # src/core/asm_link_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_001.cpp (asm_lsp_bridge_shutdown, asm_gguf_loader_close)
-        src/gguf_d3d12_bridge.cpp  # ADDED: Real implementation (was gguf_d3d12_bridge_stub.cpp)
-        # src/core/rtp_stubs.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_003.cpp (RTP_* functions)
-        src/rdna3_bridge.cpp  # ADDED: Real RDNA3 GPU dispatcher bridge
+        src/gguf_d3d12_bridge.cpp
+        src/rdna3_bridge.cpp
         # src/core/ollama_provider_stub.cpp  # REMOVED: Real implementation in src/agentic/OllamaProvider.cpp
         # src/core/gguf_runner_stub.cpp  # REMOVED: Real implementations in unlinked_symbols_batch_002.cpp (matmul_kernel_avx2, ggml_gemm_q4_0)
         src/llm_adapter/rawrxd_ggufrunner_signals.cpp
@@ -6006,6 +6070,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/deep2/DualGPUHook.cpp
         src/deep2/ReverseTensorRecovery.cpp
         src/deep2/StreamEngine.cpp
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
         src/deep2/ShardRouterIntegration.cpp
         src/deep2/Deep2IDEIntegration.cpp
         src/deep2/IOCPGGUFLoader.cpp
@@ -6826,6 +6892,40 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/engine/Omega1Engine_Server.cpp
     )
 
+    # ═══════════════════════════════════════════════════════════════
+    # P1_UI_WINDOW_OWNERSHIP_001 — partial ODR purge (tests/mains only).
+    # Broader stub removal (batch_021 / ssot / LSP / CursorParity) caused
+    # LNK1120×334; those need symbol-level dedupe, not TU deletion.
+    # ═══════════════════════════════════════════════════════════════
+    list(REMOVE_ITEM WIN32IDE_SOURCES
+        src/deep2/TheDualityExample.cpp
+        src/deep2/Deep2Server_Minimal.cpp
+        src/deep2/Deep2Server_Sovereign.cpp
+        src/deep2/Deep2APIServer_Complete.cpp
+        src/deep2/GGUFVerifier.cpp
+        src/deep2/GGUFLoader_Fixed.cpp
+        # keep MASMKernelStubs.cpp — provides Dequant_Q4_0_AVX2 / rmsnorm / softmax / silu / flash_attn
+        src/deep2/dump_tensors.cpp
+        src/deep2/Deep2Engine_KernelTest.cpp
+        src/deep2/moe_microbench.cpp
+        src/deep2/moe_simple_bench.cpp
+        src/deep2/moe_test.cpp
+        src/deep2/moe_validation_test.cpp
+        src/deep2/router_bench.cpp
+        src/deep2/router_latency_test.cpp
+        src/deep2/test_api_server.cpp
+        src/deep2/test_real_gguf_load.cpp
+        src/deep2/test_real_gguf_validate.cpp
+        src/deep2/test_tool_limit_hotpatch.cpp
+        src/deep2/VAL063_Deep2Certification.cpp
+        src/deep2/VAL038_Benchmark_Harness.cpp
+        src/deep2/deep2_end_to_end_bench.cpp
+        src/deep2/deep2_moe_bench_standalone.cpp
+        src/deep2/deep2_benchmark_main.cpp
+        src/deep2/deep2_server_main.cpp
+    )
+    message(STATUS "[Win32IDE] Partial ODR purge: Deep2 test/main TUs removed")
+
     add_executable(RawrXD-Win32IDE WIN32 ${WIN32IDE_SOURCES} ${ASM_KERNEL_SOURCES} ${WIN32IDE_EXTRA_ASM})
 
     # Set MSVC runtime library for Win32IDE (static CRT to match RawrEngine)
@@ -6914,8 +7014,11 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
             "/MAP:${_IDE_MAP_PATH}"
             /MAPINFO:EXPORTS
             /MANIFEST:NO
-            /FORCE:MULTIPLE
+            "/FORCE:MULTIPLE"
         )
+        # FORCE still required: ssot↔auto_feature, batch_021 stubs↔real TUs, omega C↔batch,
+        # v280↔batch_001, CursorParity↔SemanticIndex, etc. Surgical ASM fixes landed;
+        # full FORCE removal blocked on symbol-level dedupe (see evidence LNK2005 inventory).
         # Mirror the map at the build root for audit tools that scan ${CMAKE_BINARY_DIR}.
         add_custom_command(TARGET RawrXD-Win32IDE POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_IDE_MAP_PATH}" "${_IDE_MAP_AUDIT_PATH}"
@@ -6944,6 +7047,7 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE HAS_BRUTAL_GZIP_MASM=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_MASM_GLOBALS_LINKED=1)
         target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWR_HAS_MASM=1)
+        target_compile_definitions(RawrXD-Win32IDE PRIVATE RAWRXD_HAS_ASM_PYRE=1)
     endif()
 
     # =========================================================================
@@ -7726,6 +7830,293 @@ if(BUILD_DEEP2_STREAMER_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
+endif()
+
+# deep2_mars_e2e — MARS dual-GPU placement + hotpatch + generate smoke
+# ═══════════════════════════════════════════════════════════════════════════════
+option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" ON)
+if(BUILD_DEEP2_MARS_E2E)
+    add_executable(deep2_mars_e2e
+        src/deep2/deep2_mars_e2e.cpp
+    )
+    target_link_libraries(deep2_mars_e2e PRIVATE InferenceEngine)
+    if(MSVC)
+        target_compile_options(deep2_mars_e2e PRIVATE /O2 /arch:AVX2 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_mars_e2e PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_mars_e2e PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_mars_e2e
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] MARS E2E smoke harness: deep2_mars_e2e")
+endif()
+
+option(BUILD_TEST_MARS_CONTROLLER "Build standalone MARS controller unit smoke" ON)
+if(BUILD_TEST_MARS_CONTROLLER)
+    add_executable(test_mars_controller
+        src/deep2/mars/test_mars_controller.cpp
+        src/deep2/mars/MARSController.cpp
+        src/deep2/mars/TensorHotpatch.cpp
+        src/deep2/mars/DualGPUBackend.cpp
+        src/deep2/mars/VRAMManager.cpp
+    )
+    if(MSVC)
+        target_compile_options(test_mars_controller PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(test_mars_controller PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    set_target_properties(test_mars_controller PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME test_mars_controller
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] MARS controller unit smoke: test_mars_controller")
+endif()
+
+# deep2_execution_policy_smoke — user-owned ExecutionPolicy validate/store
+option(BUILD_DEEP2_EXECUTION_POLICY_SMOKE "Build ExecutionPolicy smoke harness" ON)
+if(BUILD_DEEP2_EXECUTION_POLICY_SMOKE)
+    add_executable(deep2_execution_policy_smoke
+        src/deep2/deep2_execution_policy_smoke.cpp
+        src/deep2/execution_policy/ExecutionPolicy.cpp
+        src/deep2/execution_policy/ExecutionPolicyStore.cpp
+        src/deep2/execution_policy/PlacementPlan.cpp
+        src/deep2/execution_policy/ExecutionPolicyApply.cpp
+    )
+    if(MSVC)
+        target_compile_options(deep2_execution_policy_smoke PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(deep2_execution_policy_smoke PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+    )
+    set_target_properties(deep2_execution_policy_smoke PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_execution_policy_smoke
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] ExecutionPolicy smoke: deep2_execution_policy_smoke")
+endif()
+
+# p1_ide_exec_policy_apply_001 — IDE load enforces ExecutionPolicy placement
+option(BUILD_P1_IDE_EXEC_POLICY_APPLY "Build P1_IDE_EXEC_POLICY_APPLY_001 harness" ON)
+if(BUILD_P1_IDE_EXEC_POLICY_APPLY)
+    add_executable(p1_ide_exec_policy_apply_001
+        src/deep2/p1_ide_exec_policy_apply_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ide_exec_policy_apply_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_ide_exec_policy_apply_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_ide_exec_policy_apply_001 PRIVATE InferenceEngine)
+    set_target_properties(p1_ide_exec_policy_apply_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ide_exec_policy_apply_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 IDE exec policy apply: p1_ide_exec_policy_apply_001")
+endif()
+
+# p1_ide_exec_policy_live_gguf_001 — real GGUF → residency → generate
+option(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF "Build P1_IDE_EXEC_POLICY_LIVE_GGUF_001" ON)
+if(BUILD_P1_IDE_EXEC_POLICY_LIVE_GGUF)
+    add_executable(p1_ide_exec_policy_live_gguf_001
+        src/deep2/p1_ide_exec_policy_live_gguf_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ide_exec_policy_live_gguf_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_ide_exec_policy_live_gguf_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_ide_exec_policy_live_gguf_001 PRIVATE InferenceEngine)
+    set_target_properties(p1_ide_exec_policy_live_gguf_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ide_exec_policy_live_gguf_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 IDE exec policy LIVE GGUF: p1_ide_exec_policy_live_gguf_001")
+endif()
+
+# p1_real_speedup_001 — external wall REAL_SPEEDUP (frozen contract)
+option(BUILD_P1_REAL_SPEEDUP "Build P1_REAL_SPEEDUP_001 gate" ON)
+if(BUILD_P1_REAL_SPEEDUP)
+    add_executable(p1_real_speedup_001
+        src/deep2/p1_real_speedup_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_real_speedup_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_real_speedup_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_real_speedup_001 PRIVATE InferenceEngine PowrProf)
+    set_target_properties(p1_real_speedup_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_real_speedup_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 REAL_SPEEDUP gate: p1_real_speedup_001")
+endif()
+
+# p1_repeatability_trial_validity_diag_001 — MeasuredGenerate acceptance diagnostic
+option(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG
+    "Build P1_REPEATABILITY_TRIAL_VALIDITY_DIAG_001" ON)
+if(BUILD_P1_REPEATABILITY_TRIAL_VALIDITY_DIAG)
+    add_executable(p1_repeatability_trial_validity_diag_001
+        src/deep2/p1_repeatability_trial_validity_diag_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_repeatability_trial_validity_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_repeatability_trial_validity_diag_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_repeatability_trial_validity_diag_001 PRIVATE InferenceEngine PowrProf)
+    set_target_properties(p1_repeatability_trial_validity_diag_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_repeatability_trial_validity_diag_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 repeatability trial validity diag")
+endif()
+
+option(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG
+    "Build P1_POLICY_SHA_LIFECYCLE_DIAG_001" ON)
+if(BUILD_P1_POLICY_SHA_LIFECYCLE_DIAG)
+    add_executable(p1_policy_sha_lifecycle_diag_001
+        src/deep2/p1_policy_sha_lifecycle_diag_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_policy_sha_lifecycle_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_policy_sha_lifecycle_diag_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_policy_sha_lifecycle_diag_001 PRIVATE InferenceEngine PowrProf)
+    set_target_properties(p1_policy_sha_lifecycle_diag_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_policy_sha_lifecycle_diag_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 policy SHA lifecycle diag")
+endif()
+
+option(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG
+    "Build P1_REPEATABILITY_STATE_DRIFT_DIAG_001" ON)
+if(BUILD_P1_REPEATABILITY_STATE_DRIFT_DIAG)
+    add_executable(p1_repeatability_state_drift_diag_001
+        src/deep2/p1_repeatability_state_drift_diag_001.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_repeatability_state_drift_diag_001 PRIVATE /O2 /EHsc /W3 /std:c++20)
+    endif()
+    target_include_directories(p1_repeatability_state_drift_diag_001 PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src
+    )
+    target_link_libraries(p1_repeatability_state_drift_diag_001 PRIVATE InferenceEngine PowrProf)
+    set_target_properties(p1_repeatability_state_drift_diag_001 PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_repeatability_state_drift_diag_001
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] P1 repeatability state drift diag")
+endif()
+
+# p1_ui_encoding_cert — P1_UI_ENCODING_001 (UTF-8→UTF-16 Win32 boundary)
+option(BUILD_P1_UI_ENCODING_CERT "Build UI encoding certification harness" ON)
+if(BUILD_P1_UI_ENCODING_CERT)
+    add_executable(p1_ui_encoding_cert
+        src/win32app/p1_ui_encoding_cert.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ui_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
+        target_compile_definitions(p1_ui_encoding_cert PRIVATE UNICODE _UNICODE)
+    endif()
+    target_include_directories(p1_ui_encoding_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/win32app
+    )
+    target_link_libraries(p1_ui_encoding_cert PRIVATE comctl32 user32 gdi32)
+    set_target_properties(p1_ui_encoding_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ui_encoding_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Win32] UI encoding cert: p1_ui_encoding_cert")
+endif()
+
+# p1_ui_menu_e2e_cert — P1_UI_MENU_E2E_001 (black-box menu SendInput certification)
+option(BUILD_P1_UI_MENU_E2E_CERT "Build UI menu E2E certification harness" ON)
+if(BUILD_P1_UI_MENU_E2E_CERT)
+    add_executable(p1_ui_menu_e2e_cert
+        src/win32app/p1_ui_menu_e2e_cert.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ui_menu_e2e_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
+        target_compile_definitions(p1_ui_menu_e2e_cert PRIVATE UNICODE _UNICODE)
+    endif()
+    target_link_libraries(p1_ui_menu_e2e_cert PRIVATE comctl32 user32 gdi32 advapi32)
+    set_target_properties(p1_ui_menu_e2e_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ui_menu_e2e_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Win32] UI menu E2E cert: p1_ui_menu_e2e_cert")
+endif()
+
+# p1_ui_sidebar_encoding_cert — P1_UI_SIDEBAR_ENCODING_001 (ListView W-struct sidebar headers)
+option(BUILD_P1_UI_SIDEBAR_ENCODING_CERT "Build sidebar ListView encoding certification harness" ON)
+if(BUILD_P1_UI_SIDEBAR_ENCODING_CERT)
+    add_executable(p1_ui_sidebar_encoding_cert
+        src/win32app/p1_ui_sidebar_encoding_cert.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ui_sidebar_encoding_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
+        target_compile_definitions(p1_ui_sidebar_encoding_cert PRIVATE UNICODE _UNICODE)
+    endif()
+    target_link_libraries(p1_ui_sidebar_encoding_cert PRIVATE comctl32 user32 gdi32 advapi32)
+    set_target_properties(p1_ui_sidebar_encoding_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ui_sidebar_encoding_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Win32] UI sidebar encoding cert: p1_ui_sidebar_encoding_cert")
+endif()
+
+option(BUILD_P1_UI_MENU_LIFETIME_CERT "Build UI menu lifetime certification harness" ON)
+if(BUILD_P1_UI_MENU_LIFETIME_CERT)
+    add_executable(p1_ui_menu_lifetime_cert
+        src/win32app/p1_ui_menu_lifetime_cert.cpp
+    )
+    if(MSVC)
+        target_compile_options(p1_ui_menu_lifetime_cert PRIVATE /O2 /EHsc /W3 /std:c++20 /utf-8)
+        target_compile_definitions(p1_ui_menu_lifetime_cert PRIVATE UNICODE _UNICODE)
+    endif()
+    target_link_libraries(p1_ui_menu_lifetime_cert PRIVATE user32)
+    set_target_properties(p1_ui_menu_lifetime_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME p1_ui_menu_lifetime_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Win32] UI menu lifetime cert: p1_ui_menu_lifetime_cert")
 endif()
 
 # deep2_parity_cert — PARITY-CERT-001: Deep2 token dump (ZERO llama/Ollama link deps)

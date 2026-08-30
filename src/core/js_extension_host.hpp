@@ -427,7 +427,10 @@ private:
     uint64_t                    m_nextTimerId;
 
     // ---- State ----
+    // Lifecycle mutex serializes initialize/shutdown vs background_boot.
+    mutable std::mutex  m_lifecycleMutex;
     bool                m_initialized;
+    bool                m_shutdownCompleted; // forever refuse re-init after shutdown
     HANDLE              m_hostThread;
     std::atomic<bool>   m_running;
 

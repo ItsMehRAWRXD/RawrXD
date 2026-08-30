@@ -1,0 +1,5 @@
+RAWRXD_P1_CMD_DIAG=1
+VEH=1
+UNHANDLED_FILTER=1
+CWP_HOOK=1
+CWD=F:\~dev\rawrxd\build-ninja\bin

@@ -1,0 +1,12 @@
+﻿P1_UI_MENU_E2E_001 CLOSE_TEARDOWN_MULTI
+SHA256=00768A39154489D6EED3CCC1A755C16F0F2978B010F759DEFB8CB224142EDC35
+TEARDOWN_EXONERATED=NO
+T1 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:13.674 id=-1 step=WINMAIN_RETURN
+T2 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:19.827 id=-1 step=WINMAIN_RETURN
+T3 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:25.961 id=-1 step=WINMAIN_RETURN
+T4 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:32.087 id=-1 step=WINMAIN_RETURN
+T5 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:38.211 id=-1 step=WINMAIN_RETURN
+T6 exit=0x00000000 bad=False ncd=True winmain=True last=17:44:44.339 id=-1 step=WINMAIN_RETURN
+T7_AFTER_FILENEW DIED_SETTLE=0x00000000 ncd=False bad=True
+BAD_COUNT=1
+CLOSE_TEARDOWN_STABLE=False

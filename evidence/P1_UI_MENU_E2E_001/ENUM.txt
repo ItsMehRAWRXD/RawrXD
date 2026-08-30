@@ -1,0 +1,874 @@
+﻿============================================================
+P1_UI_MENU_E2E_001 ΓÇö 858-leaf menu routing ladder
+IDE: F:\~dev\rawrxd\build-win32ide-fresh\bin\RawrXD-Win32IDE.exe
+EXE_SHA_LIVE=25BB462599DCA0CE3D95BBEF0EE3E737E61E867C7524C250DE7D12E73BC8C044
+EXE_SHA_EXPECT=25BB462599DCA0CE3D95BBEF0EE3E737E61E867C7524C250DE7D12E73BC8C044
+EXE_SHA_MATCH=PASS
+DISPATCH_MODE=SENDINPUT
+============================================================
+PRECONDITIONS
+  MENU_LIFETIME_GATE=PASS (assumed / SHA match)
+  EXE_SHA_MATCH=PASS
+  MENU_AUTHORITY_LIVE_EQ_FROZEN=PASS
+  MENU_GENERATION=1
+  MENU_COUNT=23
+  UNAUTHORIZED_MUTATION_COUNT=0
+TOP_LEVEL_MENUS=23 LEAF_COMMANDS=858
+  id=1001 enabled=1 label=&New path=0,0
+  id=1002 enabled=1 label=&Open path=0,1
+  id=1003 enabled=0 label=&Save path=0,2
+  id=1004 enabled=0 label=Save &As path=0,3
+  id=1030 enabled=1 label=Load &Model (GGUF)... path=0,5
+  id=1099 enabled=1 label=E&xit path=0,7
+  id=10400 enabled=1 label=&Build Solution	Ctrl+B path=1,0
+  id=10401 enabled=1 label=&Clean path=1,1
+  id=10402 enabled=1 label=Re&build path=1,2
+  id=2016 enabled=1 label=&Find...	Ctrl+F path=2,0
+  id=2017 enabled=1 label=&Replace...	Ctrl+H path=2,1
+  id=2018 enabled=1 label=Find &Next	F3 path=2,2
+  id=2019 enabled=1 label=Find &Previous	Shift+F3 path=2,3
+  id=2012 enabled=1 label=Insert &Snippet... path=2,5
+  id=2013 enabled=1 label=Copy with &Formatting path=2,7
+  id=2014 enabled=1 label=Paste &Plain Text path=2,8
+  id=2015 enabled=1 label=Clipboard &History... path=2,9
+  id=2020 enabled=1 label=&Minimap path=3,0
+  id=12020 enabled=1 label=&Breadcrumbs path=3,1
+  id=2021 enabled=1 label=&Output Tabs path=3,2
+  id=2025 enabled=1 label=Output &Panel path=3,3
+  id=2022 enabled=1 label=Module &Browser path=3,4
+  id=2024 enabled=1 label=&Floating Panel path=3,5
+  id=3101 enabled=1 label=Dark+ (Default) path=3,7,0
+  id=3102 enabled=1 label=Light+ path=3,7,1
+  id=3103 enabled=1 label=Monokai path=3,7,3
+  id=3104 enabled=1 label=Dracula path=3,7,4
+  id=3105 enabled=1 label=Nord path=3,7,5
+  id=3114 enabled=1 label=One Dark Pro path=3,7,6
+  id=3106 enabled=1 label=Solarized Dark path=3,7,8
+  id=3107 enabled=1 label=Solarized Light path=3,7,9
+  id=3109 enabled=1 label=Gruvbox Dark path=3,7,10
+  id=3110 enabled=1 label=Catppuccin Mocha path=3,7,11
+  id=3111 enabled=1 label=Tokyo Night path=3,7,12
+  id=3108 enabled=1 label=├ó┼í┬í Cyberpunk Neon path=3,7,14
+  id=3115 enabled=1 label=├░┼╕┼Æ┼á SynthWave '84 path=3,7,15
+  id=3112 enabled=1 label=├░┼╕ΓÇ¥┬Ñ RawrXD Crimson path=3,7,16
+  id=3116 enabled=1 label=Abyss path=3,7,17
+  id=3113 enabled=1 label=High Contrast path=3,7,18
+  id=3200 enabled=1 label=100% (Opaque) path=3,8,0
+  id=3201 enabled=1 label=90% path=3,8,1
+  id=3202 enabled=1 label=80% path=3,8,2
+  id=3203 enabled=1 label=70% path=3,8,3
+  id=3204 enabled=1 label=60% path=3,8,4
+  id=3205 enabled=1 label=50% path=3,8,5
+  id=3206 enabled=1 label=40% path=3,8,6
+  id=3210 enabled=1 label=Custom Slider... path=3,8,8
+  id=3211 enabled=1 label=Toggle On/Off path=3,8,9
+  id=2023 enabled=1 label=Theme &Picker... path=3,9
+  id=3030 enabled=1 label=Syntax &Highlighting path=3,10
+  id=3031 enabled=1 label=&Vision Encoder path=3,11
+  id=3032 enabled=1 label=&Semantic Index path=3,12
+  id=2026 enabled=1 label=Use Streaming Loader (Low Memory) path=3,14
+  id=2027 enabled=1 label=Enable Vulkan Renderer (experimental) path=3,15
+  id=7057 enabled=1 label=Agent &Panel path=3,17
+  id=11550 enabled=1 label=Extension &Marketplace path=3,19
+  id=3060 enabled=1 label=&Collaboration path=3,20
+  id=11568 enabled=0 label=Telemetry &Dashboard... path=3,22
+  id=11590 enabled=0 label=&Emoji Picker path=3,23
+  id=4001 enabled=1 label=&PowerShell path=4,0
+  id=4002 enabled=1 label=&Command Prompt path=4,1
+  id=4003 enabled=0 label=&Stop Terminal path=4,3
+  id=4007 enabled=1 label=Split &Horizontal	Ctrl+Shift+H path=4,4
+  id=4008 enabled=1 label=Split &Vertical	Ctrl+Shift+V path=4,5
+  id=4010 enabled=1 label=&Clear All Terminals path=4,6
+  id=3010 enabled=1 label=Start &Profiling path=5,0
+  id=3011 enabled=1 label=Stop P&rofiling path=5,1
+  id=3012 enabled=1 label=Profile &Results... path=5,2
+  id=3013 enabled=1 label=&Analyze Script path=5,4
+  id=3014 enabled=1 label=GGUF Model &Inspector path=5,5
+  id=9706 enabled=1 label=Show/Hide &Voice Panel	Ctrl+Shift+U path=5,7,0
+  id=9700 enabled=1 label=&Record / Stop	F9 path=5,7,2
+  id=9701 enabled=1 label=&Push-to-Talk	Ctrl+Shift+V path=5,7,3
+  id=9702 enabled=1 label=Text-to-&Speech path=5,7,4
+  id=9703 enabled=1 label=&Join/Leave Room path=5,7,6
+  id=9704 enabled=1 label=Audio &Devices... path=5,7,7
+  id=9705 enabled=1 label=&Metrics... path=5,7,8
+  id=10200 enabled=1 label=Toggle Voice Automation	Ctrl+Shift+A path=5,8,0
+  id=10206 enabled=1 label=Stop Speaking	Escape path=5,8,1
+  id=10202 enabled=1 label=Next Voice	Ctrl+Shift+] path=5,8,3
+  id=10203 enabled=1 label=Previous Voice	Ctrl+Shift+[ path=5,8,4
+  id=10204 enabled=1 label=Increase Speech Rate	Ctrl+Shift+= path=5,8,6
+  id=10205 enabled=1 label=Decrease Speech Rate	Ctrl+Shift+- path=5,8,7
+  id=11610 enabled=1 label=&Connect path=5,9,0
+  id=11611 enabled=1 label=&Disconnect path=5,9,1
+  id=11612 enabled=1 label=Show &Status path=5,9,3
+  id=11613 enabled=1 label=&Config... path=5,9,4
+  id=11614 enabled=1 label=&Send Test Message path=5,9,5
+  id=9810 enabled=1 label=&Create Backup Now	Ctrl+Shift+B path=5,10,0
+  id=9811 enabled=1 label=&Restore from Backup... path=5,10,1
+  id=9812 enabled=1 label=Toggle &Auto-Backup path=5,10,3
+  id=9813 enabled=1 label=&List Backups... path=5,10,4
+  id=9814 enabled=1 label=&Prune Old Backups path=5,10,5
+  id=9820 enabled=1 label=Toggle Resource &Monitor path=5,11,0
+  id=9823 enabled=1 label=&Resource Status... path=5,11,1
+  id=9821 enabled=1 label=Alert &History... path=5,11,3
+  id=9822 enabled=1 label=&Dismiss All Alerts path=5,11,4
+  id=9800 enabled=1 label=Γî¿ &Keyboard Shortcuts...	Ctrl+K Ctrl+S path=5,13
+  id=11570 enabled=0 label=Keyboard Shortcut &Editor... path=5,14
+  id=9830 enabled=1 label=&SLO Dashboard... path=5,15
+  id=9550 enabled=1 label=Scan for &Secrets path=6,0
+  id=9551 enabled=1 label=Run &SAST Scan path=6,1
+  id=9552 enabled=1 label=Scan &Dependencies (SCA) path=6,2
+  id=3050 enabled=1 label=&Refresh List path=7,0
+  id=3051 enabled=1 label=&Import Module... path=7,2
+  id=3052 enabled=1 label=&Export Module... path=7,3
+  id=4002 enabled=1 label=Command &Reference path=8,0
+  id=4003 enabled=1 label=PowerShell &Documentation path=8,1
+  id=4004 enabled=1 label=&Search Help... path=8,2
+  id=4001 enabled=1 label=&About path=8,4
+  id=9500 enabled=1 label=Show &Dashboard	Ctrl+Shift+A path=9,0
+  id=9501 enabled=1 label=&Run Full Audit path=9,1
+  id=9502 enabled=1 label=Detect &Stubs path=9,2
+  id=9503 enabled=1 label=Check &Menu Wiring path=9,3
+  id=9504 enabled=1 label=Run Component &Tests path=9,4
+  id=9505 enabled=1 label=&Export Report... path=9,5
+  id=9506 enabled=1 label=&Quick Stats path=9,6
+  id=10500 enabled=1 label=&Start Debugging	F5 path=10,0
+  id=10501 enabled=1 label=S&top Debugging	Shift+F5 path=10,1
+  id=10502 enabled=1 label=&Continue	F5 path=10,3
+  id=10503 enabled=1 label=Step &Over	F10 path=10,4
+  id=10504 enabled=1 label=Step &Into	F11 path=10,5
+  id=10505 enabled=1 label=Step O&ut	Shift+F11 path=10,6
+  id=10506 enabled=1 label=Toggle &Breakpoint	F9 path=10,8
+  id=10507 enabled=1 label=Show &Call Stack path=10,9
+  id=10508 enabled=1 label=Show &Variables path=10,10
+  id=10509 enabled=1 label=Show &Watch path=10,11
+  id=10510 enabled=1 label=&Attach to Process... path=10,13
+  id=10511 enabled=1 label=&Detach path=10,14
+  id=3020 enabled=0 label=&Status	Ctrl+G path=11,0
+  id=3021 enabled=0 label=&Commit...	Ctrl+Shift+C path=11,1
+  id=3022 enabled=0 label=&Push path=11,2
+  id=3023 enabled=0 label=P&ull path=11,3
+  id=3024 enabled=0 label=&Git Panel	Ctrl+Shift+G path=11,4
+  id=4100 enabled=1 label=Start &Agent Loop path=12,0
+  id=4200 enabled=1 label=&Max Mode (Thread Unlock) path=12,2,0
+  id=4201 enabled=1 label=&Deep Thinking (CoT) path=12,2,1
+  id=4202 enabled=1 label=Deep &Research (FileSystem) path=12,2,2
+  id=4203 enabled=1 label=&No Refusal Mode path=12,2,3
+  id=4210 enabled=1 label=4K (Standard) path=12,3,0
+  id=4211 enabled=1 label=32K (Large) path=12,3,1
+  id=4212 enabled=1 label=64K (X-Large) path=12,3,2
+  id=4213 enabled=1 label=128K (Ultra) path=12,3,3
+  id=4214 enabled=1 label=256K (Mega) path=12,3,4
+  id=4215 enabled=1 label=512K (Giga) path=12,3,5
+  id=4216 enabled=1 label=1M (Tera - Memory Plugin) path=12,3,6
+  id=4241 enabled=1 label=Use &Titan Kernel path=12,5
+  id=4242 enabled=1 label=800B Dual-Engine &Status path=12,6
+  id=4218 enabled=1 label=Multi-Agent: &Enable path=12,8
+  id=4219 enabled=1 label=Multi-Agent: &Disable path=12,9
+  id=4240 enabled=1 label=Multi-Agent: &Status path=12,10
+  id=4101 enabled=1 label=&Execute Command... path=12,12
+  id=4107 enabled=1 label=View Agent &Memory path=12,14
+  id=4108 enabled=1 label=&Clear Agent Memory path=12,15
+  id=4109 enabled=1 label=&Export Agent Memory path=12,16
+  id=4120 enabled=1 label=&Bounded Agent Loop path=12,18
+  id=4110 enabled=1 label=Agent: Execute Prompt &Chain path=12,20,0
+  id=4111 enabled=1 label=Agent: Execute &HexMag Swarm path=12,20,1
+  id=4112 enabled=1 label=SubAgent: &Todo List path=12,20,3
+  id=4113 enabled=1 label=SubAgent: Clear &Todo path=12,20,4
+  id=4114 enabled=1 label=SubAgent: &Status path=12,20,5
+  id=4150 enabled=1 label=&Toggle Auto Loop path=12,22,0
+  id=4151 enabled=1 label=&Start Autonomy path=12,22,1
+  id=4152 enabled=1 label=Sto&p Autonomy path=12,22,2
+  id=4153 enabled=1 label=Set &Goal... path=12,22,4
+  id=4154 enabled=1 label=Show &Status path=12,22,5
+  id=4155 enabled=1 label=Show &Memory Snapshot path=12,22,6
+  id=4102 enabled=1 label=&Configure Model... path=12,24
+  id=4103 enabled=1 label=View &Tools path=12,25
+  id=4104 enabled=1 label=View &Status path=12,26
+  id=4163 enabled=1 label=Autonomous &Communicator path=12,27
+  id=4105 enabled=1 label=&Stop Agent path=12,28
+  id=4164 enabled=1 label=&Unified Telemetry Core path=13,0
+  id=9001 enabled=1 label=&Show Hotpatch Status path=14,0
+  id=9016 enabled=1 label=&Toggle Hotpatch System path=14,1
+  id=9014 enabled=1 label=Show &Event Log path=14,2
+  id=9015 enabled=1 label=&Reset Statistics path=14,3
+  id=9002 enabled=1 label=&Apply Memory Patch... path=14,5,0
+  id=9003 enabled=1 label=&Revert Memory Patch... path=14,5,1
+  id=9004 enabled=1 label=&Apply Byte Patch... path=14,6,0
+  id=9005 enabled=1 label=&Search && Replace Pattern... path=14,6,1
+  id=9006 enabled=1 label=&Add Server Patch... path=14,7,0
+  id=9007 enabled=1 label=&Remove Server Patch... path=14,7,1
+  id=9008 enabled=1 label=Token &Bias Injection... path=14,8,0
+  id=9009 enabled=1 label=Output &Rewrite Rule... path=14,8,1
+  id=9010 enabled=1 label=Stream &Termination Rule... path=14,8,2
+  id=9011 enabled=1 label=Custom &Validator... path=14,8,3
+  id=9017 enabled=1 label=Show Proxy &Stats path=14,8,4
+  id=9018 enabled=1 label=Set target &TPS... path=14,10
+  id=9012 enabled=1 label=Save Preset... path=14,11
+  id=9013 enabled=1 label=Load Preset... path=14,12
+  id=4150 enabled=1 label=&Toggle Auto Loop path=15,0
+  id=4151 enabled=1 label=&Start Autonomy path=15,1
+  id=4152 enabled=1 label=Sto&p Autonomy path=15,2
+  id=4153 enabled=1 label=Set &Goal... path=15,4
+  id=4154 enabled=1 label=Show &Status path=15,5
+  id=4155 enabled=1 label=Show &Memory Snapshot path=15,6
+  id=4160 enabled=1 label=Pipeline: &Run once path=15,8
+  id=4161 enabled=1 label=Pipeline: Start &autonomous loop path=15,9
+  id=4162 enabled=1 label=Pipeline: S&top autonomous loop path=15,10
+  id=4300 enabled=1 label=&Analyze Binary	Ctrl+R path=16,0
+  id=4320 enabled=1 label=Set binary from &active document path=16,1
+  id=4321 enabled=1 label=Set binary from &debug target path=16,2
+  id=4322 enabled=1 label=Set binary from &build output... path=16,3
+  id=4323 enabled=1 label=Disassemble at current &RIP (debugger) path=16,4
+  id=4301 enabled=1 label=&Disassemble	Ctrl+D path=16,5
+  id=4302 enabled=1 label=Dump &Binary	Ctrl+B path=16,6
+  id=4316 enabled=1 label=Decompiler &View	Ctrl+Shift+D path=16,8
+  id=4303 enabled=1 label=&Compile Source	Ctrl+F7 path=16,10
+  id=4308 enabled=1 label=Control &Flow Graph path=16,12
+  id=4309 enabled=1 label=Recover F&unctions path=16,13
+  id=4310 enabled=1 label=De&mangle Symbols path=16,14
+  id=4311 enabled=1 label=&SSA Lifting	Ctrl+Shift+S path=16,15
+  id=4312 enabled=1 label=R&ecursive Disassembly	Ctrl+Shift+R path=16,16
+  id=4313 enabled=1 label=&Type Recovery	Ctrl+Shift+T path=16,17
+  id=4314 enabled=1 label=Data &Flow Analysis path=16,18
+  id=4304 enabled=1 label=C&ompare Binaries path=16,20
+  id=4305 enabled=1 label=Detect &Vulnerabilities path=16,21
+  id=4306 enabled=1 label=Export to &IDA Pro path=16,23
+  id=4307 enabled=1 label=Export to &Ghidra path=16,24
+  id=4315 enabled=1 label=&License Info path=16,26
+  id=10600 enabled=1 label=Detect Engine... path=17,0,0
+  id=10601 enabled=1 label=Open Project... path=17,0,1
+  id=10602 enabled=1 label=Close Project path=17,0,2
+  id=10603 enabled=1 label=Project Status path=17,0,3
+  id=10604 enabled=1 label=Build Project path=17,1,0
+  id=10608 enabled=1 label=Compile Scripts/C++ path=17,1,1
+  id=10673 enabled=1 label=Generate Project Files (UE) path=17,1,3
+  id=10674 enabled=1 label=Live Coding Toggle (UE) path=17,1,4
+  id=10675 enabled=1 label=Cook Content (UE) path=17,1,5
+  id=10676 enabled=1 label=Package Project (UE) path=17,1,6
+  id=10605 enabled=1 label=Play / Enter PIE path=17,2,0
+  id=10606 enabled=1 label=Stop Play Mode path=17,2,1
+  id=10607 enabled=1 label=Pause/Resume path=17,2,2
+  id=10612 enabled=1 label=Start Debug path=17,3,0
+  id=10613 enabled=1 label=Stop Debug path=17,3,1
+  id=10614 enabled=1 label=Set Breakpoint... path=17,3,2
+  id=10609 enabled=1 label=Start Profiler path=17,4,0
+  id=10610 enabled=1 label=Stop Profiler path=17,4,1
+  id=10611 enabled=1 label=Capture Snapshot path=17,4,2
+  id=10650 enabled=1 label=New C# Script... path=17,5,0
+  id=10651 enabled=1 label=Scene List path=17,5,1
+  id=10652 enabled=1 label=Asset Browser path=17,5,2
+  id=10653 enabled=1 label=Package Manager path=17,5,3
+  id=10670 enabled=1 label=New C++ Class... path=17,6,0
+  id=10671 enabled=1 label=New Module... path=17,6,1
+  id=10672 enabled=1 label=New Plugin... path=17,6,2
+  id=10677 enabled=1 label=Level List path=17,6,3
+  id=10678 enabled=1 label=Blueprint List path=17,6,4
+  id=10615 enabled=1 label=AI Project Summary path=17,7,0
+  id=10616 enabled=1 label=AI Scene Description path=17,7,1
+  id=10617 enabled=1 label=Engine Installations path=17,9
+  id=10618 enabled=1 label=Help path=17,10
+  id=10700 enabled=1 label=Run &All Barrels	Ctrl+Shift+F12 path=18,0,0
+  id=10701 enabled=1 label=Barrel 1: &Shadow Patch path=18,0,2
+  id=10702 enabled=1 label=Barrel 2: &Cluster Hammer path=18,0,3
+  id=10703 enabled=1 label=Barrel 3: S&emantic Index path=18,0,4
+  id=10704 enabled=1 label=&Cancel Running Test path=18,2
+  id=10705 enabled=1 label=&Status path=18,3
+  id=10706 enabled=1 label=View &Report path=18,5
+  id=10707 enabled=1 label=&Export JSON... path=18,6
+  id=10708 enabled=1 label=C&onfigure... path=18,8
+  id=10709 enabled=1 label=&Help path=18,9
+  id=10800 enabled=1 label=&Initialize All path=19,0
+  id=10801 enabled=1 label=Overall &Status path=19,1
+  id=10802 enabled=1 label=&Performance Counters path=19,2
+  id=10810 enabled=1 label=&Initialize Index path=19,4,0
+  id=10811 enabled=1 label=Insert &Embedding... path=19,4,1
+  id=10812 enabled=1 label=&Search Nearest... path=19,4,2
+  id=10813 enabled=1 label=&Delete Node... path=19,4,3
+  id=10814 enabled=1 label=S&tatus path=19,4,5
+  id=10815 enabled=1 label=&Benchmark path=19,4,6
+  id=10820 enabled=1 label=&Begin Transaction path=19,5,0
+  id=10821 enabled=1 label=&Add File Op... path=19,5,1
+  id=10822 enabled=1 label=&Commit path=19,5,2
+  id=10823 enabled=1 label=&Status path=19,5,4
+  id=10830 enabled=1 label=&Init Document path=19,6,0
+  id=10831 enabled=1 label=Insert &Text... path=19,6,1
+  id=10832 enabled=1 label=&Delete Text... path=19,6,2
+  id=10833 enabled=1 label=&Status path=19,6,4
+  id=10840 enabled=1 label=Extract &Context path=19,7,0
+  id=10841 enabled=1 label=Set &Branch... path=19,7,1
+  id=10803 enabled=1 label=&Help path=19,9
+  id=11500 enabled=1 label=Export &JSON... path=20,0,0
+  id=11501 enabled=1 label=Export &CSV... path=20,0,1
+  id=11502 enabled=1 label=Export &Prometheus... path=20,0,2
+  id=11503 enabled=1 label=Export &OTLP... path=20,0,3
+  id=11504 enabled=1 label=&Audit Log... path=20,0,5
+  id=11505 enabled=1 label=&Verify Chain path=20,0,6
+  id=11506 enabled=1 label=Auto-Export: &Start path=20,0,8
+  id=11507 enabled=1 label=Auto-Export: Sto&p path=20,0,9
+  id=11510 enabled=1 label=&New Session path=20,1,0
+  id=11511 enabled=1 label=&End Session path=20,1,1
+  id=11512 enabled=1 label=&Approve All Changes path=20,1,3
+  id=11513 enabled=1 label=&Reject All Changes path=20,1,4
+  id=11514 enabled=1 label=Show &Transcript path=20,1,6
+  id=11515 enabled=1 label=Show &Metrics path=20,1,7
+  id=11520 enabled=1 label=&Parse @-Mentions path=20,2,0
+  id=11521 enabled=1 label=&Available Mentions path=20,2,1
+  id=11522 enabled=1 label=Assemble &Context path=20,2,2
+  id=11523 enabled=1 label=&Register Custom... path=20,2,3
+  id=11530 enabled=1 label=Load &Image... path=20,3,0
+  id=11531 enabled=1 label=&Paste from Clipboard path=20,3,1
+  id=11532 enabled=1 label=&Screenshot path=20,3,2
+  id=11533 enabled=1 label=&Build Multimodal Payload path=20,3,3
+  id=11534 enabled=1 label=View IDE &GUI / Auto-correct path=20,3,4
+  id=11540 enabled=1 label=Extract &Method path=20,5,0
+  id=11541 enabled=1 label=Extract &Variable path=20,5,1
+  id=11542 enabled=1 label=&Rename Symbol path=20,5,2
+  id=11543 enabled=1 label=&Organize Includes path=20,5,3
+  id=11544 enabled=1 label=Convert to &auto path=20,5,4
+  id=11545 enabled=1 label=Remove &Dead Code path=20,5,5
+  id=11546 enabled=1 label=&Show All Refactorings path=20,5,7
+  id=11547 enabled=1 label=&Load Plugin... path=20,5,8
+  id=11550 enabled=1 label=&Detect Language path=20,6,0
+  id=11551 enabled=1 label=&List All Languages path=20,6,1
+  id=11552 enabled=1 label=Load &Plugin... path=20,6,2
+  id=11553 enabled=1 label=&Set Language for File path=20,6,3
+  id=11560 enabled=1 label=&Build Index path=20,7,0
+  id=11561 enabled=1 label=&Fuzzy Search path=20,7,1
+  id=11562 enabled=1 label=Find &References path=20,7,2
+  id=11563 enabled=1 label=Show &Dependencies path=20,7,3
+  id=11564 enabled=1 label=&Type Hierarchy path=20,7,4
+  id=11565 enabled=1 label=&Call Graph path=20,7,5
+  id=11566 enabled=1 label=Find C&ycles path=20,7,6
+  id=11567 enabled=1 label=Load &Plugin... path=20,7,8
+  id=11570 enabled=1 label=&Generate Resource... path=20,9,0
+  id=11571 enabled=1 label=Generate &Project Scaffold path=20,9,1
+  id=11572 enabled=1 label=&List Templates path=20,9,2
+  id=11573 enabled=1 label=&Search Templates path=20,9,3
+  id=11574 enabled=1 label=Load P&lugin... path=20,9,4
+  id=4210 enabled=1 label=ai.context4k path=21,0,0
+  id=4211 enabled=1 label=ai.context32k path=21,0,1
+  id=4212 enabled=1 label=ai.context64k path=21,0,2
+  id=4213 enabled=1 label=ai.context128k path=21,0,3
+  id=4214 enabled=1 label=ai.context256k path=21,0,4
+  id=4215 enabled=1 label=ai.context512k path=21,0,5
+  id=4216 enabled=1 label=ai.context1m path=21,0,6
+  id=4200 enabled=1 label=ai.maxMode path=21,1,0
+  id=4201 enabled=1 label=ai.deepThinking path=21,1,1
+  id=4202 enabled=1 label=ai.deepResearch path=21,1,2
+  id=4203 enabled=1 label=ai.noRefusal path=21,1,3
+  id=401 enabled=1 label=ai.inlineComplete path=21,1,4
+  id=402 enabled=1 label=ai.chatMode path=21,1,5
+  id=403 enabled=1 label=ai.explainCode path=21,1,6
+  id=404 enabled=1 label=ai.refactor path=21,1,7
+  id=405 enabled=1 label=ai.generateTests path=21,1,8
+  id=406 enabled=1 label=ai.generateDocs path=21,1,9
+  id=407 enabled=1 label=ai.fixErrors path=21,1,10
+  id=408 enabled=1 label=ai.optimizeCode path=21,1,11
+  id=409 enabled=1 label=ai.modelSelect path=21,1,12
+  id=410 enabled=1 label=ai.stopGeneration path=21,1,13
+  id=5082 enabled=1 label=asm.parseSymbols path=21,2,0
+  id=5083 enabled=1 label=asm.gotoLabel path=21,2,1
+  id=5084 enabled=1 label=asm.findLabelRefs path=21,2,2
+  id=5085 enabled=1 label=asm.symbolTable path=21,2,3
+  id=5086 enabled=1 label=asm.instructionInfo path=21,2,4
+  id=5087 enabled=1 label=asm.registerInfo path=21,2,5
+  id=5088 enabled=1 label=asm.analyzeBlock path=21,2,6
+  id=5089 enabled=1 label=asm.callGraph path=21,2,7
+  id=5090 enabled=1 label=asm.dataFlow path=21,2,8
+  id=5091 enabled=1 label=asm.detectConvention path=21,2,9
+  id=5092 enabled=1 label=asm.showSections path=21,2,10
+  id=5093 enabled=1 label=asm.clearSymbols path=21,2,11
+  id=4100 enabled=1 label=agent.loop path=21,3,0
+  id=4101 enabled=1 label=agent.execute path=21,3,1
+  id=4102 enabled=1 label=agent.configure path=21,3,2
+  id=4103 enabled=1 label=agent.viewTools path=21,3,3
+  id=4104 enabled=1 label=agent.viewStatus path=21,3,4
+  id=4105 enabled=1 label=agent.stop path=21,3,5
+  id=4296 enabled=1 label=agent.auditDrive path=21,3,6
+  id=4106 enabled=1 label=agent.memory path=21,3,7
+  id=4107 enabled=1 label=agent.memoryView path=21,3,8
+  id=4108 enabled=1 label=agent.memoryClear path=21,3,9
+  id=4109 enabled=1 label=agent.memoryExport path=21,3,10
+  id=4120 enabled=1 label=agent.boundedLoop path=21,3,11
+  id=44014 enabled=1 label=agent.autonomous path=21,3,12
+  id=9500 enabled=1 label=audit.dashboard path=21,4,0
+  id=9501 enabled=1 label=audit.runFull path=21,4,1
+  id=9502 enabled=1 label=audit.detectStubs path=21,4,2
+  id=9503 enabled=1 label=audit.checkMenus path=21,4,3
+  id=9504 enabled=1 label=audit.runTests path=21,4,4
+  id=9505 enabled=1 label=audit.exportReport path=21,4,5
+  id=9506 enabled=1 label=audit.quickStats path=21,4,6
+  id=4150 enabled=1 label=autonomy.toggle path=21,5,0
+  id=4151 enabled=1 label=autonomy.start path=21,5,1
+  id=4152 enabled=1 label=autonomy.stop path=21,5,2
+  id=4153 enabled=1 label=autonomy.goal path=21,5,3
+  id=4154 enabled=1 label=autonomy.status path=21,5,4
+  id=4155 enabled=1 label=autonomy.memory path=21,5,5
+  id=5037 enabled=1 label=backend.switchLocal path=21,6,0
+  id=5038 enabled=1 label=backend.switchOllama path=21,6,1
+  id=5039 enabled=1 label=backend.switchOpenAI path=21,6,2
+  id=5040 enabled=1 label=backend.switchClaude path=21,6,3
+  id=5041 enabled=1 label=backend.switchGemini path=21,6,4
+  id=5042 enabled=1 label=backend.status path=21,6,5
+  id=5043 enabled=1 label=backend.switcher path=21,6,6
+  id=5044 enabled=1 label=backend.configure path=21,6,7
+  id=5045 enabled=1 label=backend.healthCheck path=21,6,8
+  id=5046 enabled=1 label=backend.setApiKey path=21,6,9
+  id=5047 enabled=1 label=backend.saveConfigs path=21,6,10
+  id=5130 enabled=1 label=confidence.status path=21,7,0
+  id=5131 enabled=1 label=confidence.setPolicy path=21,7,1
+  id=12000 enabled=1 label=tier1.smoothScroll path=21,8,0
+  id=12001 enabled=1 label=tier1.minimapEnhanced path=21,8,1
+  id=12020 enabled=1 label=tier1.breadcrumbs path=21,8,2
+  id=12030 enabled=1 label=tier1.fuzzyPalette path=21,8,3
+  id=12040 enabled=1 label=tier1.settingsGUI path=21,8,4
+  id=12050 enabled=1 label=tier1.welcomePage path=21,8,5
+  id=12060 enabled=1 label=tier1.fileIcons path=21,8,6
+  id=12070 enabled=1 label=tier1.tabDrag path=21,8,7
+  id=12080 enabled=1 label=tier1.splitVertical path=21,8,8
+  id=12081 enabled=1 label=tier1.splitHorizontal path=21,8,9
+  id=12082 enabled=1 label=tier1.splitGrid path=21,8,10
+  id=12083 enabled=1 label=tier1.splitClose path=21,8,11
+  id=12084 enabled=1 label=tier1.splitFocusNext path=21,8,12
+  id=12090 enabled=1 label=tier1.autoUpdate path=21,8,13
+  id=12091 enabled=1 label=tier1.updateDismiss path=21,8,14
+  id=5157 enabled=1 label=dbg.launch path=21,9,0
+  id=5158 enabled=1 label=dbg.attach path=21,9,1
+  id=5159 enabled=1 label=dbg.detach path=21,9,2
+  id=5160 enabled=1 label=dbg.go path=21,9,3
+  id=5161 enabled=1 label=dbg.stepOver path=21,9,4
+  id=5162 enabled=1 label=dbg.stepInto path=21,9,5
+  id=5163 enabled=1 label=dbg.stepOut path=21,9,6
+  id=5164 enabled=1 label=dbg.break path=21,9,7
+  id=5165 enabled=1 label=dbg.kill path=21,9,8
+  id=5166 enabled=1 label=dbg.addBp path=21,9,9
+  id=5167 enabled=1 label=dbg.removeBp path=21,9,10
+  id=5168 enabled=1 label=dbg.enableBp path=21,9,11
+  id=5169 enabled=1 label=dbg.clearBps path=21,9,12
+  id=5170 enabled=1 label=dbg.listBps path=21,9,13
+  id=5171 enabled=1 label=dbg.addWatch path=21,9,14
+  id=5172 enabled=1 label=dbg.removeWatch path=21,9,15
+  id=5173 enabled=1 label=dbg.registers path=21,9,16
+  id=5174 enabled=1 label=dbg.stack path=21,9,17
+  id=5175 enabled=1 label=dbg.memory path=21,9,18
+  id=5176 enabled=1 label=dbg.disasm path=21,9,19
+  id=5177 enabled=1 label=dbg.modules path=21,9,20
+  id=5178 enabled=1 label=dbg.threads path=21,9,21
+  id=5179 enabled=1 label=dbg.switchThread path=21,9,22
+  id=5180 enabled=1 label=dbg.evaluate path=21,9,23
+  id=5181 enabled=1 label=dbg.setRegister path=21,9,24
+  id=5182 enabled=1 label=dbg.searchMemory path=21,9,25
+  id=5183 enabled=1 label=dbg.symbolPath path=21,9,26
+  id=5184 enabled=1 label=dbg.status path=21,9,27
+  id=11100 enabled=1 label=disk.listDrives path=21,10,0
+  id=11101 enabled=1 label=disk.scanPartitions path=21,10,1
+  id=2001 enabled=1 label=edit.undo path=21,11,0
+  id=2002 enabled=1 label=edit.redo path=21,11,1
+  id=2003 enabled=1 label=edit.cut path=21,11,2
+  id=2004 enabled=1 label=edit.copy path=21,11,3
+  id=2005 enabled=1 label=edit.paste path=21,11,4
+  id=2006 enabled=1 label=edit.selectAll path=21,11,5
+  id=2012 enabled=1 label=edit.snippet path=21,11,6
+  id=2013 enabled=1 label=edit.copyFormat path=21,11,7
+  id=2014 enabled=1 label=edit.pastePlain path=21,11,8
+  id=2015 enabled=1 label=edit.clipboardHistory path=21,11,9
+  id=2016 enabled=1 label=edit.find path=21,11,10
+  id=2017 enabled=1 label=edit.replace path=21,11,11
+  id=2018 enabled=1 label=edit.findNext path=21,11,12
+  id=2019 enabled=1 label=edit.findPrev path=21,11,13
+  id=2007 enabled=1 label=edit.undo.legacy path=21,11,14
+  id=2008 enabled=1 label=edit.redo.legacy path=21,11,15
+  id=2009 enabled=1 label=edit.cut.legacy path=21,11,16
+  id=2010 enabled=1 label=edit.copy.legacy path=21,11,17
+  id=2011 enabled=1 label=edit.paste.legacy path=21,11,18
+  id=208 enabled=1 label=edit.selectAll.ide path=21,11,19
+  id=209 enabled=1 label=edit.multicursorAdd path=21,11,20
+  id=210 enabled=1 label=edit.multicursorRemove path=21,11,21
+  id=211 enabled=1 label=edit.gotoLine path=21,11,22
+  id=9300 enabled=1 label=editor.richedit path=21,12,0
+  id=9301 enabled=1 label=editor.webview2 path=21,12,1
+  id=9302 enabled=1 label=editor.monacocore path=21,12,2
+  id=9303 enabled=1 label=editor.cycle path=21,12,3
+  id=9304 enabled=1 label=editor.status path=21,12,4
+  id=11400 enabled=1 label=embedding.encode path=21,13,0
+  id=1001 enabled=1 label=file.new path=21,14,0
+  id=1002 enabled=1 label=file.open path=21,14,1
+  id=1003 enabled=1 label=file.save path=21,14,2
+  id=1004 enabled=1 label=file.saveAs path=21,14,3
+  id=1005 enabled=1 label=file.saveAll path=21,14,4
+  id=1006 enabled=1 label=file.close path=21,14,5
+  id=1010 enabled=1 label=file.recentFiles path=21,14,6
+  id=1020 enabled=1 label=file.recentClear path=21,14,7
+  id=1030 enabled=1 label=file.loadModel path=21,14,8
+  id=1031 enabled=1 label=file.modelFromHF path=21,14,9
+  id=1032 enabled=1 label=file.modelFromOllama path=21,14,10
+  id=1033 enabled=1 label=file.modelFromURL path=21,14,11
+  id=1034 enabled=1 label=file.modelUnified path=21,14,12
+  id=1035 enabled=1 label=file.quickLoad path=21,14,13
+  id=1099 enabled=1 label=file.exit path=21,14,14
+  id=105 enabled=1 label=file.autoSave path=21,14,15
+  id=106 enabled=1 label=file.closeFolder path=21,14,16
+  id=108 enabled=1 label=file.openFolder path=21,14,17
+  id=109 enabled=1 label=file.newWindow path=21,14,18
+  id=110 enabled=1 label=file.closeTab path=21,14,19
+  id=10619 enabled=1 label=unreal.init path=21,15,0
+  id=10620 enabled=1 label=unreal.attach path=21,15,1
+  id=10621 enabled=1 label=unity.init path=21,15,2
+  id=10622 enabled=1 label=unity.attach path=21,15,3
+  id=9600 enabled=1 label=gauntlet.run path=21,16,0
+  id=9601 enabled=1 label=gauntlet.export path=21,16,1
+  id=3020 enabled=1 label=git.status path=21,17,0
+  id=3021 enabled=1 label=git.commit path=21,17,1
+  id=3022 enabled=1 label=git.push path=21,17,2
+  id=3023 enabled=1 label=git.pull path=21,17,3
+  id=3024 enabled=1 label=git.diff path=21,17,4
+  id=5118 enabled=1 label=gov.status path=21,18,0
+  id=5119 enabled=1 label=gov.submit path=21,18,1
+  id=5120 enabled=1 label=gov.killAll path=21,18,2
+  id=5121 enabled=1 label=gov.taskList path=21,18,3
+  id=11200 enabled=1 label=governor.status path=21,18,4
+  id=11201 enabled=1 label=governor.setPowerLevel path=21,18,5
+  id=4001 enabled=1 label=help.about path=21,19,0
+  id=4002 enabled=1 label=help.cmdref path=21,19,1
+  id=4003 enabled=1 label=help.psdocs path=21,19,2
+  id=4004 enabled=1 label=help.search path=21,19,3
+  id=601 enabled=1 label=help.docs path=21,19,4
+  id=603 enabled=1 label=help.shortcuts path=21,19,5
+  id=9001 enabled=1 label=hotpatch.status path=21,20,0
+  id=9002 enabled=1 label=hotpatch.memApply path=21,20,1
+  id=9003 enabled=1 label=hotpatch.memRevert path=21,20,2
+  id=9004 enabled=1 label=hotpatch.byteApply path=21,20,3
+  id=9005 enabled=1 label=hotpatch.byteSearch path=21,20,4
+  id=9006 enabled=1 label=hotpatch.serverAdd path=21,20,5
+  id=9007 enabled=1 label=hotpatch.serverRemove path=21,20,6
+  id=9008 enabled=1 label=hotpatch.proxyBias path=21,20,7
+  id=9009 enabled=1 label=hotpatch.proxyRewrite path=21,20,8
+  id=9010 enabled=1 label=hotpatch.proxyTerminate path=21,20,9
+  id=9011 enabled=1 label=hotpatch.proxyValidate path=21,20,10
+  id=9012 enabled=1 label=hotpatch.presetSave path=21,20,11
+  id=9013 enabled=1 label=hotpatch.presetLoad path=21,20,12
+  id=9014 enabled=1 label=hotpatch.eventLog path=21,20,13
+  id=9015 enabled=1 label=hotpatch.resetStats path=21,20,14
+  id=9016 enabled=1 label=hotpatch.toggleAll path=21,20,15
+  id=9017 enabled=1 label=hotpatch.proxyStats path=21,20,16
+  id=5094 enabled=1 label=hybrid.complete path=21,21,0
+  id=5095 enabled=1 label=hybrid.diagnostics path=21,21,1
+  id=5096 enabled=1 label=hybrid.smartRename path=21,21,2
+  id=5097 enabled=1 label=hybrid.analyzeFile path=21,21,3
+  id=5098 enabled=1 label=hybrid.autoProfile path=21,21,4
+  id=5099 enabled=1 label=hybrid.status path=21,21,5
+  id=5100 enabled=1 label=hybrid.symbolUsage path=21,21,6
+  id=5101 enabled=1 label=hybrid.explainSymbol path=21,21,7
+  id=5102 enabled=1 label=hybrid.annotateDiag path=21,21,8
+  id=5103 enabled=1 label=hybrid.streamAnalyze path=21,21,9
+  id=5104 enabled=1 label=hybrid.semanticPrefetch path=21,21,10
+  id=5105 enabled=1 label=hybrid.correctionLoop path=21,21,11
+  id=5058 enabled=1 label=lsp.startAll path=21,22,0
+  id=5059 enabled=1 label=lsp.stopAll path=21,22,1
+  id=5060 enabled=1 label=lsp.status path=21,22,2
+  id=5061 enabled=1 label=lsp.gotoDef path=21,22,3
+  id=5062 enabled=1 label=lsp.findRefs path=21,22,4
+  id=5063 enabled=1 label=lsp.rename path=21,22,5
+  id=5064 enabled=1 label=lsp.hover path=21,22,6
+  id=5065 enabled=1 label=lsp.diagnostics path=21,22,7
+  id=5066 enabled=1 label=lsp.restart path=21,22,8
+  id=5067 enabled=1 label=lsp.clearDiag path=21,22,9
+  id=5068 enabled=1 label=lsp.symbolInfo path=21,22,10
+  id=5069 enabled=1 label=lsp.configure path=21,22,11
+  id=5070 enabled=1 label=lsp.saveConfig path=21,22,12
+  id=9200 enabled=1 label=lspServer.start path=21,23,0
+  id=9201 enabled=1 label=lspServer.stop path=21,23,1
+  id=9202 enabled=1 label=lspServer.status path=21,23,2
+  id=9203 enabled=1 label=lspServer.reindex path=21,23,3
+  id=9204 enabled=1 label=lspServer.stats path=21,23,4
+  id=9205 enabled=1 label=lspServer.publishDiag path=21,23,5
+  id=9206 enabled=1 label=lspServer.config path=21,23,6
+  id=9207 enabled=1 label=lspServer.exportSyms path=21,23,7
+  id=9208 enabled=1 label=lspServer.launchStdio path=21,23,8
+  id=11300 enabled=1 label=marketplace.list path=21,24,0
+  id=11301 enabled=1 label=marketplace.install path=21,24,1
+  id=11001 enabled=1 label=model.list path=21,25,0
+  id=11002 enabled=1 label=model.load path=21,25,1
+  id=11003 enabled=1 label=model.unload path=21,25,2
+  id=11004 enabled=1 label=model.quantize path=21,25,3
+  id=11005 enabled=1 label=model.finetune path=21,25,4
+  id=3050 enabled=1 label=modules.refresh path=21,26,0
+  id=3051 enabled=1 label=modules.import path=21,26,1
+  id=3052 enabled=1 label=modules.export path=21,26,2
+  id=9100 enabled=1 label=view.monacoToggle path=21,27,0
+  id=9101 enabled=1 label=view.monacoDevtools path=21,27,1
+  id=9102 enabled=1 label=view.monacoReload path=21,27,2
+  id=9103 enabled=1 label=view.monacoZoomIn path=21,27,3
+  id=9104 enabled=1 label=view.monacoZoomOut path=21,27,4
+  id=9105 enabled=1 label=view.monacoSyncTheme path=21,27,5
+  id=5106 enabled=1 label=multi.generate path=21,28,0
+  id=5107 enabled=1 label=multi.setMax path=21,28,1
+  id=5108 enabled=1 label=multi.selectPreferred path=21,28,2
+  id=5109 enabled=1 label=multi.compare path=21,28,3
+  id=5110 enabled=1 label=multi.stats path=21,28,4
+  id=5111 enabled=1 label=multi.templates path=21,28,5
+  id=5112 enabled=1 label=multi.toggleTemplate path=21,28,6
+  id=5113 enabled=1 label=multi.prefs path=21,28,7
+  id=5114 enabled=1 label=multi.latest path=21,28,8
+  id=5115 enabled=1 label=multi.status path=21,28,9
+  id=5116 enabled=1 label=multi.clearHistory path=21,28,10
+  id=5117 enabled=1 label=multi.applyPreferred path=21,28,11
+  id=9400 enabled=1 label=pdb.load path=21,29,0
+  id=9401 enabled=1 label=pdb.fetch path=21,29,1
+  id=9402 enabled=1 label=pdb.status path=21,29,2
+  id=9403 enabled=1 label=pdb.cacheClear path=21,29,3
+  id=9404 enabled=1 label=pdb.enable path=21,29,4
+  id=9405 enabled=1 label=pdb.resolve path=21,29,5
+  id=9410 enabled=1 label=pdb.imports path=21,29,6
+  id=9411 enabled=1 label=pdb.exports path=21,29,7
+  id=9412 enabled=1 label=pdb.iatStatus path=21,29,8
+  id=50600 enabled=1 label=beacon.halfPulse path=21,30,0
+  id=50601 enabled=1 label=beacon.full path=21,30,1
+  id=50602 enabled=1 label=beacon.status path=21,30,2
+  id=5200 enabled=1 label=plugin.panel path=21,31,0
+  id=5201 enabled=1 label=plugin.load path=21,31,1
+  id=5202 enabled=1 label=plugin.unload path=21,31,2
+  id=5203 enabled=1 label=plugin.unloadAll path=21,31,3
+  id=5204 enabled=1 label=plugin.refresh path=21,31,4
+  id=5205 enabled=1 label=plugin.scanDir path=21,31,5
+  id=5206 enabled=1 label=plugin.status path=21,31,6
+  id=5207 enabled=1 label=plugin.toggleHotload path=21,31,7
+  id=5208 enabled=1 label=plugin.configure path=21,31,8
+  id=10000 enabled=1 label=vscext.status path=21,31,9
+  id=10001 enabled=1 label=vscext.reload path=21,31,10
+  id=10002 enabled=1 label=vscext.listCommands path=21,31,11
+  id=10003 enabled=1 label=vscext.listProviders path=21,31,12
+  id=10004 enabled=1 label=vscext.diagnostics path=21,31,13
+  id=10005 enabled=1 label=vscext.extensions path=21,31,14
+  id=10006 enabled=1 label=vscext.stats path=21,31,15
+  id=10007 enabled=1 label=vscext.loadNative path=21,31,16
+  id=10008 enabled=1 label=vscext.deactivateAll path=21,31,17
+  id=10009 enabled=1 label=vscext.exportConfig path=21,31,18
+  id=11600 enabled=1 label=prompt.classify path=21,32,0
+  id=9800 enabled=1 label=qw.shortcutEditor path=21,33,0
+  id=9801 enabled=1 label=qw.shortcutReset path=21,33,1
+  id=9810 enabled=1 label=qw.backupCreate path=21,33,2
+  id=9811 enabled=1 label=qw.backupRestore path=21,33,3
+  id=9812 enabled=1 label=qw.backupAutoToggle path=21,33,4
+  id=9813 enabled=1 label=qw.backupList path=21,33,5
+  id=9814 enabled=1 label=qw.backupPrune path=21,33,6
+  id=9820 enabled=1 label=qw.alertToggleMonitor path=21,33,7
+  id=9821 enabled=1 label=qw.alertShowHistory path=21,33,8
+  id=9822 enabled=1 label=qw.alertDismissAll path=21,33,9
+  id=9823 enabled=1 label=qw.alertResourceStatus path=21,33,10
+  id=9830 enabled=1 label=qw.sloDashboard path=21,33,11
+  id=5126 enabled=1 label=replay.status path=21,34,0
+  id=5127 enabled=1 label=replay.showLast path=21,34,1
+  id=5128 enabled=1 label=replay.export path=21,34,2
+  id=5129 enabled=1 label=replay.checkpoint path=21,34,3
+  id=4300 enabled=1 label=re.analyze path=21,35,0
+  id=4301 enabled=1 label=re.disassemble path=21,35,1
+  id=4302 enabled=1 label=re.dumpbin path=21,35,2
+  id=4303 enabled=1 label=re.compile path=21,35,3
+  id=4304 enabled=1 label=re.compare path=21,35,4
+  id=4305 enabled=1 label=re.detectVulns path=21,35,5
+  id=4306 enabled=1 label=re.exportIDA path=21,35,6
+  id=4307 enabled=1 label=re.exportGhidra path=21,35,7
+  id=4308 enabled=1 label=re.cfgAnalysis path=21,35,8
+  id=4309 enabled=1 label=re.functions path=21,35,9
+  id=4310 enabled=1 label=re.demangle path=21,35,10
+  id=4311 enabled=1 label=re.ssaLift path=21,35,11
+  id=4312 enabled=1 label=re.recursiveDisasm path=21,35,12
+  id=4313 enabled=1 label=re.typeRecovery path=21,35,13
+  id=4314 enabled=1 label=re.dataFlow path=21,35,14
+  id=4315 enabled=1 label=re.licenseInfo path=21,35,15
+  id=4316 enabled=1 label=re.decompilerView path=21,35,16
+  id=4317 enabled=1 label=re.decompRename path=21,35,17
+  id=4318 enabled=1 label=re.decompSync path=21,35,18
+  id=4319 enabled=1 label=re.decompClose path=21,35,19
+  id=8001 enabled=1 label=decomp.renameVar path=21,35,20
+  id=8002 enabled=1 label=decomp.gotoDef path=21,35,21
+  id=8003 enabled=1 label=decomp.findRefs path=21,35,22
+  id=8004 enabled=1 label=decomp.copyLine path=21,35,23
+  id=8005 enabled=1 label=decomp.copyAll path=21,35,24
+  id=8006 enabled=1 label=decomp.gotoAddr path=21,35,25
+  id=8100 enabled=1 label=reveng.disassemble path=21,35,26
+  id=8101 enabled=1 label=reveng.decompile path=21,35,27
+  id=8102 enabled=1 label=reveng.findVulns path=21,35,28
+  id=5048 enabled=1 label=router.enable path=21,36,0
+  id=5049 enabled=1 label=router.disable path=21,36,1
+  id=5050 enabled=1 label=router.status path=21,36,2
+  id=5051 enabled=1 label=router.decision path=21,36,3
+  id=5052 enabled=1 label=router.setPolicy path=21,36,4
+  id=5053 enabled=1 label=router.capabilities path=21,36,5
+  id=5054 enabled=1 label=router.fallbacks path=21,36,6
+  id=5055 enabled=1 label=router.saveConfig path=21,36,7
+  id=5056 enabled=1 label=router.routePrompt path=21,36,8
+  id=5057 enabled=1 label=router.resetStats path=21,36,9
+  id=5071 enabled=1 label=router.whyBackend path=21,36,10
+  id=5072 enabled=1 label=router.pinTask path=21,36,11
+  id=5073 enabled=1 label=router.unpinTask path=21,36,12
+  id=5074 enabled=1 label=router.showPins path=21,36,13
+  id=5075 enabled=1 label=router.heatmap path=21,36,14
+  id=5076 enabled=1 label=router.ensembleEnable path=21,36,15
+  id=5077 enabled=1 label=router.ensembleDisable path=21,36,16
+  id=5078 enabled=1 label=router.ensembleStatus path=21,36,17
+  id=5079 enabled=1 label=router.simulate path=21,36,18
+  id=5080 enabled=1 label=router.simulateLast path=21,36,19
+  id=5081 enabled=1 label=router.costStats path=21,36,20
+  id=5122 enabled=1 label=safety.status path=21,37,0
+  id=5123 enabled=1 label=safety.resetBudget path=21,37,1
+  id=5124 enabled=1 label=safety.rollback path=21,37,2
+  id=5125 enabled=1 label=safety.violations path=21,37,3
+  id=44019 enabled=1 label=security.updateSig path=21,38,0
+  id=44020 enabled=1 label=security.pluginSig path=21,38,1
+  id=4110 enabled=1 label=subagent.chain path=21,39,0
+  id=4111 enabled=1 label=subagent.swarm path=21,39,1
+  id=4112 enabled=1 label=subagent.todoList path=21,39,2
+  id=4113 enabled=1 label=subagent.todoClear path=21,39,3
+  id=4114 enabled=1 label=subagent.status path=21,39,4
+  id=5132 enabled=1 label=swarm.status path=21,40,0
+  id=5133 enabled=1 label=swarm.startLeader path=21,40,1
+  id=5134 enabled=1 label=swarm.startWorker path=21,40,2
+  id=5135 enabled=1 label=swarm.startHybrid path=21,40,3
+  id=5136 enabled=1 label=swarm.stop path=21,40,4
+  id=5137 enabled=1 label=swarm.listNodes path=21,40,5
+  id=5138 enabled=1 label=swarm.addNode path=21,40,6
+  id=5139 enabled=1 label=swarm.removeNode path=21,40,7
+  id=5140 enabled=1 label=swarm.blacklistNode path=21,40,8
+  id=5141 enabled=1 label=swarm.buildSources path=21,40,9
+  id=5142 enabled=1 label=swarm.buildCmake path=21,40,10
+  id=5143 enabled=1 label=swarm.startBuild path=21,40,11
+  id=5144 enabled=1 label=swarm.cancelBuild path=21,40,12
+  id=5145 enabled=1 label=swarm.cacheStatus path=21,40,13
+  id=5146 enabled=1 label=swarm.cacheClear path=21,40,14
+  id=5147 enabled=1 label=swarm.config path=21,40,15
+  id=5148 enabled=1 label=swarm.discovery path=21,40,16
+  id=5149 enabled=1 label=swarm.taskGraph path=21,40,17
+  id=5150 enabled=1 label=swarm.events path=21,40,18
+  id=5151 enabled=1 label=swarm.stats path=21,40,19
+  id=5152 enabled=1 label=swarm.resetStats path=21,40,20
+  id=5153 enabled=1 label=swarm.workerStatus path=21,40,21
+  id=5154 enabled=1 label=swarm.workerConnect path=21,40,22
+  id=5155 enabled=1 label=swarm.workerDisconnect path=21,40,23
+  id=5156 enabled=1 label=swarm.fitnessTest path=21,40,24
+  id=9900 enabled=1 label=telemetry.toggle path=21,41,0
+  id=9901 enabled=1 label=telemetry.exportJson path=21,41,1
+  id=9902 enabled=1 label=telemetry.exportCsv path=21,41,2
+  id=9903 enabled=1 label=telemetry.dashboard path=21,41,3
+  id=9904 enabled=1 label=telemetry.clear path=21,41,4
+  id=9905 enabled=1 label=telemetry.snapshot path=21,41,5
+  id=44018 enabled=1 label=telemetry.perf path=21,41,6
+  id=4005 enabled=1 label=terminal.new path=21,42,0
+  id=4006 enabled=1 label=terminal.kill path=21,42,1
+  id=4007 enabled=1 label=terminal.splitH path=21,42,2
+  id=4008 enabled=1 label=terminal.splitV path=21,42,3
+  id=4009 enabled=1 label=terminal.splitCode path=21,42,4
+  id=4010 enabled=1 label=terminal.list path=21,42,5
+  id=3001 enabled=1 label=terminal.ps.legacy path=21,42,6
+  id=3002 enabled=1 label=terminal.cmd.legacy path=21,42,7
+  id=3003 enabled=1 label=terminal.stop.legacy path=21,42,8
+  id=3004 enabled=1 label=terminal.splitH.legacy path=21,42,9
+  id=3005 enabled=1 label=terminal.splitV.legacy path=21,42,10
+  id=3006 enabled=1 label=terminal.clearAll.legacy path=21,42,11
+  id=3100 enabled=1 label=theme.base path=21,43,0
+  id=3101 enabled=1 label=theme.darkPlus path=21,43,1
+  id=3102 enabled=1 label=theme.lightPlus path=21,43,2
+  id=3103 enabled=1 label=theme.monokai path=21,43,3
+  id=3104 enabled=1 label=theme.dracula path=21,43,4
+  id=3105 enabled=1 label=theme.nord path=21,43,5
+  id=3106 enabled=1 label=theme.solarizedDark path=21,43,6
+  id=3107 enabled=1 label=theme.solarizedLight path=21,43,7
+  id=3108 enabled=1 label=theme.cyberpunk path=21,43,8
+  id=3109 enabled=1 label=theme.gruvbox path=21,43,9
+  id=3110 enabled=1 label=theme.catppuccin path=21,43,10
+  id=3111 enabled=1 label=theme.tokyoNight path=21,43,11
+  id=3112 enabled=1 label=theme.rawrxdCrimson path=21,43,12
+  id=3113 enabled=1 label=theme.highContrast path=21,43,13
+  id=3114 enabled=1 label=theme.oneDarkPro path=21,43,14
+  id=3115 enabled=1 label=theme.synthwave84 path=21,43,15
+  id=3116 enabled=1 label=theme.abyss path=21,43,16
+  id=3010 enabled=1 label=tools.profileStart path=21,44,0
+  id=3011 enabled=1 label=tools.profileStop path=21,44,1
+  id=3012 enabled=1 label=tools.profileResults path=21,44,2
+  id=3013 enabled=1 label=tools.analyzeScript path=21,44,3
+  id=501 enabled=1 label=tools.commandPalette path=21,44,4
+  id=502 enabled=1 label=tools.settings path=21,44,5
+  id=503 enabled=1 label=tools.extensions path=21,44,6
+  id=504 enabled=1 label=tools.terminal path=21,44,7
+  id=505 enabled=1 label=tools.build path=21,44,8
+  id=506 enabled=1 label=tools.debug path=21,44,9
+  id=44016 enabled=1 label=ui.toolStatus path=21,44,10
+  id=43000 enabled=1 label=transcendence.cursorParity path=21,45,0
+  id=43001 enabled=1 label=transcendence.omegaOrch path=21,45,1
+  id=43002 enabled=1 label=transcendence.meshBrain path=21,45,2
+  id=43003 enabled=1 label=transcendence.speciator path=21,45,3
+  id=43004 enabled=1 label=transcendence.neuralBridge path=21,45,4
+  id=43005 enabled=1 label=transcendence.selfHost path=21,45,5
+  id=43006 enabled=1 label=transcendence.hwSynth path=21,45,6
+  id=43007 enabled=1 label=transcendence.coordinator path=21,45,7
+  id=43008 enabled=1 label=transcendence.vulkanRenderer path=21,45,8
+  id=43009 enabled=1 label=transcendence.osExplorer path=21,45,9
+  id=43010 enabled=1 label=transcendence.mcpHooks path=21,45,10
+  id=43011 enabled=1 label=transcendence.iocpWatcher path=21,45,11
+  id=43012 enabled=1 label=transcendence.autoHealer path=21,45,12
+  id=43013 enabled=1 label=transcendence.consentPrompt path=21,45,13
+  id=3200 enabled=1 label=view.transparency100 path=21,46,0
+  id=3201 enabled=1 label=view.transparency90 path=21,46,1
+  id=3202 enabled=1 label=view.transparency80 path=21,46,2
+  id=3203 enabled=1 label=view.transparency70 path=21,46,3
+  id=3204 enabled=1 label=view.transparency60 path=21,46,4
+  id=3205 enabled=1 label=view.transparency50 path=21,46,5
+  id=3206 enabled=1 label=view.transparency40 path=21,46,6
+  id=3210 enabled=1 label=view.transparencySet path=21,46,7
+  id=3211 enabled=1 label=view.transparencyToggle path=21,46,8
+  id=44015 enabled=1 label=ui.chatRenderer path=21,47,0
+  id=44017 enabled=1 label=ui.chatPanel path=21,47,1
+  id=2020 enabled=1 label=view.minimap path=21,48,0
+  id=2021 enabled=1 label=view.outputTabs path=21,48,1
+  id=2022 enabled=1 label=view.moduleBrowser path=21,48,2
+  id=2023 enabled=1 label=view.themeEditor path=21,48,3
+  id=2024 enabled=1 label=view.floatingPanel path=21,48,4
+  id=2025 enabled=1 label=view.outputPanel path=21,48,5
+  id=2026 enabled=1 label=view.streamingLoader path=21,48,6
+  id=2027 enabled=1 label=view.vulkanRenderer path=21,48,7
+  id=2028 enabled=1 label=view.sidebar path=21,48,8
+  id=2029 enabled=1 label=view.terminal path=21,48,9
+  id=301 enabled=1 label=view.toggleSidebar path=21,48,10
+  id=302 enabled=1 label=view.toggleTerminal path=21,48,11
+  id=303 enabled=1 label=view.toggleOutput path=21,48,12
+  id=304 enabled=1 label=view.toggleFullscreen path=21,48,13
+  id=305 enabled=1 label=view.zoomIn path=21,48,14
+  id=306 enabled=1 label=view.zoomOut path=21,48,15
+  id=307 enabled=1 label=view.zoomReset path=21,48,16
+  id=11500 enabled=1 label=vision.analyze path=21,49,0
+  id=9700 enabled=1 label=voice.record path=21,50,0
+  id=9701 enabled=1 label=voice.ptt path=21,50,1
+  id=9702 enabled=1 label=voice.speak path=21,50,2
+  id=9703 enabled=1 label=voice.joinRoom path=21,50,3
+  id=9704 enabled=1 label=voice.devices path=21,50,4
+  id=9705 enabled=1 label=voice.metrics path=21,50,5
+  id=9706 enabled=1 label=voice.togglePanel path=21,50,6
+  id=9707 enabled=1 label=voice.modePtt path=21,50,7
+  id=9708 enabled=1 label=voice.modeContinuous path=21,50,8
+  id=9709 enabled=1 label=voice.modeDisabled path=21,50,9
+  id=10200 enabled=1 label=voice.autoToggle path=21,50,10
+  id=10201 enabled=1 label=voice.autoSettings path=21,50,11
+  id=10202 enabled=1 label=voice.autoNextVoice path=21,50,12
+  id=10203 enabled=1 label=voice.autoPrevVoice path=21,50,13
+  id=10204 enabled=1 label=voice.autoRateUp path=21,50,14
+  id=10205 enabled=1 label=voice.autoRateDown path=21,50,15
+  id=10206 enabled=1 label=voice.autoStop path=21,50,16
+  id=12330 enabled=1 label=&Model Comparison path=22,0,0
+  id=12331 enabled=1 label=&Batch Processing path=22,0,1
+  id=12332 enabled=1 label=Custom &Stop Sequences path=22,0,2
+  id=12333 enabled=1 label=&Grammar Constraints path=22,0,3
+  id=12334 enabled=1 label=&LoRA Adapter path=22,0,4
+  id=12335 enabled=1 label=&Response Cache path=22,0,5
+  id=12336 enabled=1 label=Prompt &Library path=22,0,6
+  id=12337 enabled=1 label=Session &Export/Import path=22,0,7
+  id=12338 enabled=1 label=Model &Sharding path=22,0,8
+  id=12339 enabled=1 label=&Tensor Parallelism path=22,0,9
+  id=12340 enabled=1 label=&Pipeline Parallelism path=22,0,10
+  id=12341 enabled=1 label=Custom &Quantization Schemes path=22,0,11
+  id=3042 enabled=1 label=Multi-&GPU Load Balance path=22,2
+  id=3043 enabled=1 label=&Dynamic Batch Sizing path=22,3
+  id=3044 enabled=1 label=&API Key Management path=22,4
+  id=3045 enabled=1 label=&Audit Logs path=22,5
+  id=3046 enabled=1 label=&RawrTuner IDE path=22,6
+  id=3047 enabled=1 label=800B &Dual-Engine path=22,7

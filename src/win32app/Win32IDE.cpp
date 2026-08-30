@@ -21,8 +21,13 @@
 #include "feature_registry_panel.h"
 #include "lsp/RawrXD_LSPServer.h"
 #include "multi_response_engine.h"
+#include "p1_gguf_load_cert.hpp"
 #include "resource.h"
 #include "../ANSIParser.h"
+#include "../deep2/Deep2IDEIntegration.hpp"
+#include "../deep2/execution_policy/ExecutionPolicyBridge.hpp"
+#include "Win32IDE_MainMenuAuthority.hpp"
+#include "Win32IDE_CommandFlight.hpp"
 
 // AI Completion System Integration (VAL-063)
 // Forward declarations from ai_completion_real.cpp
@@ -86,57 +91,9 @@ Win32IDE* g_pMainIDE = nullptr;
 
 static std::wstring utf8ToWide(const std::string& utf8);
 
+// Provided by model_streamer_x64.asm (ASM_KERNEL_SOURCES). Do not define here — LNK2005.
 extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege();
 extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError);
-
-// Fix #1: Implement missing extern "C" functions for memory privilege and large page mapping
-extern "C" unsigned __int64 RawrXD_EnableSeLockMemoryPrivilege() {
-    HANDLE hToken = nullptr;
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
-        return GetLastError();
-    }
-    
-    TOKEN_PRIVILEGES tp{};
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    
-    if (!LookupPrivilegeValueW(nullptr, SE_LOCK_MEMORY_NAME, &tp.Privileges[0].Luid)) {
-        CloseHandle(hToken);
-        return GetLastError();
-    }
-    
-    if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), nullptr, nullptr)) {
-        CloseHandle(hToken);
-        return GetLastError();
-    }
-    
-    CloseHandle(hToken);
-    return 0; // SUCCESS
-}
-
-extern "C" void* RawrXD_MapModelView2MB(HANDLE hMap, uint64_t off, size_t sz, uint64_t* outBaseOrError) {
-    if (!hMap || hMap == INVALID_HANDLE_VALUE) {
-        if (outBaseOrError) *outBaseOrError = ERROR_INVALID_HANDLE;
-        return nullptr;
-    }
-    
-    // Align offset to 2MB boundary for large pages
-    uint64_t alignedOff = off & ~((uint64_t)(2 * 1024 * 1024) - 1);
-    uint64_t offsetDelta = off - alignedOff;
-    size_t totalSize = sz + offsetDelta;
-    
-    void* base = MapViewOfFile(hMap, FILE_MAP_READ | FILE_MAP_WRITE, 
-                               (DWORD)(alignedOff >> 32), (DWORD)(alignedOff & 0xFFFFFFFF), 
-                               totalSize);
-    
-    if (!base) {
-        if (outBaseOrError) *outBaseOrError = GetLastError();
-        return nullptr;
-    }
-    
-    if (outBaseOrError) *outBaseOrError = 0;
-    return static_cast<char*>(base) + offsetDelta;
-}
 
 static uint64_t qpcNowU64()
 {
@@ -710,13 +667,13 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDC_STATUS_COPILOT 1410
 #define IDC_STATUS_NOTIFICATIONS 1411
 
-/* Menu IDs: 2001+ to avoid overlap with IDC_* (1001+) in WM_COMMAND */
-#define IDM_FILE_NEW 2001
-#define IDM_FILE_OPEN 2002
-#define IDM_FILE_SAVE 2003
-#define IDM_FILE_SAVEAS 2004
+/* File menu IDs — COMMAND_TABLE SSOT (1001-1099); never 2001-2005 (edit band) */
+#define IDM_FILE_NEW 1001
+#define IDM_FILE_OPEN 1002
+#define IDM_FILE_SAVE 1003
+#define IDM_FILE_SAVEAS 1004
 #define IDM_FILE_LOAD_MODEL 1030
-#define IDM_FILE_EXIT 2005
+#define IDM_FILE_EXIT 1099
 
 /* Voice Automation (Tools > Voice Automation) — Phase 44 TTS; dispatched in Win32IDE_Commands 10200–10300 */
 #define IDM_VOICE_AUTO_TOGGLE 10200
@@ -935,10 +892,19 @@ static void buildCommandsMenuFromCommandTable(HMENU mainMenu)
 // Win32IDE_IELabels.h)
 void Win32IDE::createMenuBar(HWND hwnd)
 {
+    static bool s_mainMenuBuilt = false;
+
     if (!m_hMenu)
         m_hMenu = CreateMenu();
     if (!m_hMenu)
         return;
+
+    if (s_mainMenuBuilt) {
+        RawrXD::MainMenuAuthority::EnsureAttached(hwnd, m_hMenu);
+        return;
+    }
+
+    RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "BEFORE_CREATE_MENU_BAR");
 
     // Status bar is initialized in onCreate after createStatusBar (see Win32IDE_Core.cpp).
 
@@ -1358,7 +1324,12 @@ void Win32IDE::createMenuBar(HWND hwnd)
         AppendMenuW(m_hMenu, MF_POPUP, (UINT_PTR)hEntMenu, L"&Enterprise");
     }
 
-    SetMenu(hwnd, m_hMenu);
+    if (RawrXD::MainMenuAuthority::ReplaceMainMenu(hwnd, m_hMenu, "CREATE_MENU_BAR")) {
+        s_mainMenuBuilt = true;
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "AFTER_SETMENU");
+    } else {
+        RawrXD::MainMenuAuthority::TraceMenuState(hwnd, "SETMENU_FAILED");
+    }
 }
 
 // NOTE: Win32IDE destructor lives in `Win32IDE_Core.cpp`.
@@ -1697,16 +1668,29 @@ void Win32IDE::recreateFonts()
 
 void Win32IDE::createEditor(HWND hwnd)
 {
-    // WS_EX_COMPOSITED reduces flicker by double-buffering the client area
-    m_hwndEditor = CreateWindowExW(WS_EX_CLIENTEDGE | WS_EX_COMPOSITED, RICHEDIT_CLASSW, L"",
-                                   WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL |
-                                       ES_AUTOHSCROLL | ES_WANTRETURN,
-                                   0, 0, 0, 0, hwnd, (HMENU)IDC_EDITOR, m_hInstance, nullptr);
-    if (!m_hwndEditor)
-    {
+    // Prefer MsftEdit; fall back to RichEdit20. Avoid WS_EX_COMPOSITED on the
+    // first attempt — it can fail CreateWindowEx on some hosts.
+    LoadLibraryW(L"msftedit.dll");
+    LoadLibraryW(L"riched20.dll");
 
+    auto tryCreate = [&](const wchar_t* cls, DWORD exStyle) -> HWND {
+        return CreateWindowExW(exStyle, cls, L"",
+                               WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE |
+                                   ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN,
+                               0, 0, 0, 0, hwnd, (HMENU)(INT_PTR)IDC_EDITOR, m_hInstance,
+                               nullptr);
+    };
+
+    m_hwndEditor = tryCreate(MSFTEDIT_CLASS, WS_EX_CLIENTEDGE);
+    if (!m_hwndEditor)
+        m_hwndEditor = tryCreate(RICHEDIT_CLASSW, WS_EX_CLIENTEDGE);
+    if (!m_hwndEditor)
+        m_hwndEditor = tryCreate(RICHEDIT_CLASSW, WS_EX_CLIENTEDGE | WS_EX_COMPOSITED);
+    if (!m_hwndEditor) {
+        OutputDebugStringA("[createEditor] FAILED — no RichEdit HWND\n");
         return;
     }
+    SetWindowLongPtrW(m_hwndEditor, GWLP_ID, (LONG_PTR)IDC_EDITOR);
 
     m_currentDpi = getDpi();
     recreateFonts();
@@ -2058,7 +2042,9 @@ void Win32IDE::createSidebar(HWND hwnd)
 
 void Win32IDE::newFile()
 {
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_ENTER");
     appendToOutput("File > New clicked\n", "Output", OutputSeverity::Info);
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_AFTER_append");
     if (m_fileModified)
     {
         int result = MessageBoxW(m_hwndMain, L"File has been modified. Save changes?", L"Save", MB_YESNOCANCEL);
@@ -2074,14 +2060,31 @@ void Win32IDE::newFile()
         }
     }
 
+    auto* flight = RawrXD::CommandTelemetry::Current();
+    const uint64_t preGen = RawrXD::CommandTelemetry::Generations().documentGeneration;
+    if (flight)
+        flight->preGeneration = preGen;
+
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_BEFORE_setWindowText");
     setWindowText(m_hwndEditor, "");
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_AFTER_setWindowText");
     m_currentFile.clear();
     m_fileModified = false;
     updateTitleBarText();
-    SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"New file");
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_AFTER_title");
+    if (m_hwndStatusBar && IsWindow(m_hwndStatusBar))
+        SendMessageW(m_hwndStatusBar, SB_SETTEXT, 0, (LPARAM)L"New file");
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_BEFORE_updateMenuEnableStates");
     updateMenuEnableStates();
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_BEFORE_syncEditorToGpuSurface");
     syncEditorToGpuSurface();
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_AFTER_sync");
     appendToOutput("New file created successfully\n", "Output", OutputSeverity::Info);
+
+    const uint64_t postGen = RawrXD::CommandTelemetry::BumpDocumentGeneration();
+    if (flight)
+        RawrXD::CommandTelemetry::EffectCommitted(*flight, postGen);
+    RawrXD::CommandTelemetry::CmdDiagBreadcrumb(1001, "newFile_EXIT_OK");
 }
 
 void Win32IDE::openFile()
@@ -2577,15 +2580,14 @@ void Win32IDE::appendText(HWND hwnd, const std::string& text)
     GETTEXTLENGTHEX gtl;
     gtl.flags = GTL_DEFAULT;
     gtl.codepage = CP_UNICODE;
-    LONG length = SendMessage(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
+    LONG length = SendMessageW(hwnd, EM_GETTEXTLENGTHEX, (WPARAM)&gtl, 0);
 
-    SendMessage(hwnd, EM_SETSEL, length, length);
+    SendMessageW(hwnd, EM_SETSEL, length, length);
 
+    // EM_REPLACESEL W — same Unicode append path as PowerShell probe (avoid
+    // EM_SETTEXTEX+1200 Latin drop seen on P1_UI_ENCODING_002).
     std::wstring wtext = utf8ToWide(text);
-    SETTEXTEX st;
-    st.flags = ST_DEFAULT;
-    st.codepage = CP_UNICODE;
-    SendMessageW(hwnd, EM_SETTEXTEX, (WPARAM)&st, (LPARAM)wtext.c_str());
+    SendMessageW(hwnd, EM_REPLACESEL, FALSE, (LPARAM)wtext.c_str());
 
     if (hwnd == m_hwndEditor)
     {
@@ -2656,18 +2658,23 @@ void Win32IDE::applyTheme()
         DeleteObject(m_backgroundBrush);
     m_backgroundBrush = CreateSolidBrush(m_currentTheme.backgroundColor);
 
-    // 2. Editor: background + default text format (SCF_DEFAULT, not SCF_ALL,
-    //    so syntax coloring tokens are preserved until the next colorize pass)
+    // 2. Editor: background + readable text (SCF_ALL so welcome/typed text
+    //    is not left black after a zeroed theme / SCF_DEFAULT-only pass)
     if (m_hwndEditor)
     {
-        SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, m_currentTheme.backgroundColor);
+        COLORREF bg = m_currentTheme.backgroundColor;
+        COLORREF fg = m_currentTheme.textColor;
+        if (fg == 0 || fg == bg)
+            fg = m_currentTheme.darkMode ? RGB(212, 212, 212) : RGB(30, 30, 30);
+        SendMessage(m_hwndEditor, EM_SETBKGNDCOLOR, 0, bg);
 
         CHARFORMAT2W cf;
         ZeroMemory(&cf, sizeof(cf));
         cf.cbSize = sizeof(cf);
         cf.dwMask = CFM_COLOR;
-        cf.crTextColor = m_currentTheme.textColor;
+        cf.crTextColor = fg;
         cf.dwEffects = 0;
+        SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
         SendMessageW(m_hwndEditor, EM_SETCHARFORMAT, SCF_DEFAULT, (LPARAM)&cf);
     }
 
@@ -2688,10 +2695,15 @@ void Win32IDE::applyTheme()
     // 4. Deep apply to all surfaces (sidebar, activity bar, tabs, status bar, panels)
     applyThemeToAllControls();
 
-    // 5. Transparency — only touch the top-level window
-    if (m_currentTheme.windowAlpha < 255)
+    // 5. Transparency — only touch the top-level window when glass is intentional.
+    // Never apply windowAlpha==0 (invisible). Opaque is default.
+    if (m_currentTheme.windowAlpha > 0 && m_currentTheme.windowAlpha < 255)
     {
         setWindowTransparency(m_currentTheme.windowAlpha);
+    }
+    else if (m_currentTheme.windowAlpha == 0 || !m_transparencyEnabled)
+    {
+        setWindowTransparency(255);
     }
 
     // 6. Force full repaint + update menu states
@@ -3416,6 +3428,7 @@ void Win32IDE::scrollToMinimapPosition(int y)
 
 void Win32IDE::toggleMinimap()
 {
+    const bool before = m_minimapVisible;
     m_minimapVisible = !m_minimapVisible;
     if (m_hwndMinimap)
     {
@@ -3430,6 +3443,14 @@ void Win32IDE::toggleMinimap()
     RECT rc;
     GetClientRect(m_hwndMain, &rc);
     onSize(rc.right, rc.bottom);
+
+    if (before != m_minimapVisible) {
+        const uint64_t gen = RawrXD::CommandTelemetry::BumpMinimapGeneration();
+        if (auto* flight = RawrXD::CommandTelemetry::Current()) {
+            flight->preGeneration = gen - 1;
+            RawrXD::CommandTelemetry::EffectCommitted(*flight, gen);
+        }
+    }
 }
 #endif
 
@@ -4040,6 +4061,12 @@ void Win32IDE::showFindDialog()
     if (m_hwndFindDialog && IsWindow(m_hwndFindDialog))
     {
         SetForegroundWindow(m_hwndFindDialog);
+        ShowWindow(m_hwndFindDialog, SW_SHOW);
+        const uint64_t gen = RawrXD::CommandTelemetry::BumpFindGeneration();
+        if (auto* flight = RawrXD::CommandTelemetry::Current()) {
+            flight->preGeneration = gen - 1;
+            RawrXD::CommandTelemetry::EffectCommitted(*flight, gen);
+        }
         return;
     }
 
@@ -4073,6 +4100,16 @@ void Win32IDE::showFindDialog()
     }
 
     ShowWindow(m_hwndFindDialog, SW_SHOW);
+
+    const bool visible = m_hwndFindDialog && IsWindow(m_hwndFindDialog) &&
+                         IsWindowVisible(m_hwndFindDialog);
+    if (visible) {
+        const uint64_t gen = RawrXD::CommandTelemetry::BumpFindGeneration();
+        if (auto* flight = RawrXD::CommandTelemetry::Current()) {
+            flight->preGeneration = gen - 1;
+            RawrXD::CommandTelemetry::EffectCommitted(*flight, gen);
+        }
+    }
 }
 
 void Win32IDE::showReplaceDialog()
@@ -4973,11 +5010,13 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         std::string error = "Error: GGUF Loader not initialized";
         appendToOutput(error, "Errors", OutputSeverity::Error);
         LOG_ERROR(error);
+        RawrXD::P1GgufCert::emit("MODEL_FILE_OPEN", "FAIL", "gguf_loader_null");
         return false;
     }
 
     appendToOutput("Loading GGUF model: " + filepath + "\n", "Output", OutputSeverity::Info);
     appendToOutput("This may take a moment for large files...\n", "Output", OutputSeverity::Info);
+    RawrXD::P1GgufCert::emit("MODEL_PATH", "INFO", filepath.c_str());
 
     try
     {
@@ -4988,8 +5027,10 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             std::string error = "❌ Failed to open GGUF file: " + filepath + "\nCheck if file exists and is readable.";
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
+            RawrXD::P1GgufCert::emit("MODEL_FILE_OPEN", "FAIL", filepath.c_str());
             return false;
         }
+        RawrXD::P1GgufCert::emit("MODEL_FILE_OPEN", "PASS", filepath.c_str());
 
         appendToOutput("[2/5] Parsing header...\n", "Output", OutputSeverity::Info);
         if (!m_ggufLoader->ParseHeader())
@@ -4999,6 +5040,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
+            RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", "ParseHeader");
             return false;
         }
 
@@ -5010,6 +5052,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
+            RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", "ParseMetadata");
             return false;
         }
 
@@ -5023,8 +5066,10 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
             appendToOutput(error, "Errors", OutputSeverity::Error);
             ErrorReporter::report(error, m_hwndMain);
             m_ggufLoader->Close();
+            RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", "BuildTensorIndex");
             return false;
         }
+        RawrXD::P1GgufCert::emit("GGUF_PARSE", "PASS");
 
         // Pre-load embedding zone for inference preparation
         appendToOutput("[5/5] Pre-loading embedding zone...\n", "Output", OutputSeverity::Info);
@@ -5039,6 +5084,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         std::string error = "❌ Exception loading GGUF file:\n" + std::string(e.what()) + "\n\nFile: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
+        RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", e.what());
         return false;
     }
     catch (...)
@@ -5046,6 +5092,7 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
         std::string error = "❌ Unknown exception loading GGUF file: " + filepath;
         appendToOutput(error + "\n", "Errors", OutputSeverity::Error);
         ErrorReporter::report(error, m_hwndMain);
+        RawrXD::P1GgufCert::emit("GGUF_PARSE", "FAIL", "unknown_exception");
         return false;
     }
 
@@ -5054,6 +5101,17 @@ bool Win32IDE::loadGGUFModel(const std::string& filepath)
     m_currentModelMetadata = m_ggufLoader->GetMetadata();
     m_modelTensors = m_ggufLoader->GetAllTensorInfo();  // Get tensor info for backward compatibility
 
+    {
+        char meta[192];
+        snprintf(meta, sizeof(meta), "layers=%u vocab=%u tensors=%zu",
+                 static_cast<unsigned>(m_currentModelMetadata.layer_count),
+                 static_cast<unsigned>(m_currentModelMetadata.vocab_size), m_modelTensors.size());
+        const bool metaOk =
+            m_currentModelMetadata.layer_count > 0 && m_currentModelMetadata.vocab_size > 0 && !m_modelTensors.empty();
+        RawrXD::P1GgufCert::emit("MODEL_METADATA_VALID", metaOk ? "PASS" : "FAIL", meta);
+        if (!metaOk)
+            return false;
+    }
     // Log success with memory savings information
     size_t currentMemory = m_ggufLoader->GetCurrentMemoryUsage();
     std::string info = "✅ Model loaded successfully (STREAMING MODE)!\n";
@@ -6251,6 +6309,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
             METRICS.gauge("model.loaded", 1.0);
             METRICS.increment("model.load_success");
             appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
+            RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "PASS", "AgenticBridge.LoadModel");
 
             wireLayerProgressToOutputPanel();
 
@@ -6259,10 +6318,27 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
             // without dragging Lane B CLI/bench harness into the UI.
             appendStreamerPostLoadCheck(this, filepath);
 
-            // Sync current UI state
-            m_agenticBridge->SetContextSize("4K");
-            if (m_hwndContextSlider)
-                SendMessage(m_hwndContextSlider, TBM_SETPOS, TRUE, 0);
+            // Honor ExecutionPolicy context — never silently force 4K over policy.
+            {
+                using namespace ::Deep2::Exec;
+                EnsurePolicyLoaded();
+                const int ctxTok = PolicyContextTokens();
+                if (ctxTok >= 1048576)
+                    m_agenticBridge->SetContextSize("1M");
+                else if (ctxTok >= 524288)
+                    m_agenticBridge->SetContextSize("512k");
+                else if (ctxTok >= 262144)
+                    m_agenticBridge->SetContextSize("256k");
+                else if (ctxTok >= 131072)
+                    m_agenticBridge->SetContextSize("128k");
+                else if (ctxTok >= 65536)
+                    m_agenticBridge->SetContextSize("64k");
+                else if (ctxTok >= 32768)
+                    m_agenticBridge->SetContextSize("32k");
+                else if (ctxTok > 0)
+                    m_agenticBridge->SetContextSize("4K");
+                // else: leave bridge/slider unchanged (no silent override)
+            }
 
             return true;
         }
@@ -6270,6 +6346,8 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
 
     METRICS.increment("model.load_failures");
     METRICS.gauge("model.loaded", 0.0);
+    RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "FAIL",
+                             m_agenticBridge ? "LoadModel_false" : "agenticBridge_null");
     std::string detail;
     if (m_agenticBridge)
     {
@@ -7006,15 +7084,26 @@ void Win32IDE::createChatPanel()
         return;
     }
 
-    m_hwndSecondarySidebar = CreateWindowExW(WS_EX_CLIENTEDGE, L"STATIC", L"", WS_CHILD | WS_VISIBLE, 0, 0, 300, 600,
-                                             m_hwndMain, (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
+    if (m_hwndSecondarySidebar && IsWindow(m_hwndSecondarySidebar))
+    {
+        OutputDebugStringA("[P1_UI_WINDOW_OWNERSHIP] createChatPanel IDEMPOTENT — reuse sidebar\n");
+        return;
+    }
+
+    m_hwndSecondarySidebar = CreateWindowExW(
+        WS_EX_CLIENTEDGE, L"STATIC", L"",
+        WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, 0, 0, 300, 600, m_hwndMain,
+        (HMENU)IDC_SECONDARY_SIDEBAR, m_hInstance, nullptr);
 
     if (!m_hwndSecondarySidebar)
     {
         return;
     }
     SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_USERDATA, (LONG_PTR)this);
-    m_oldSidebarProc = (WNDPROC)SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_WNDPROC, (LONG_PTR)SidebarProc);
+    // Must use SidebarProcImpl (AI panel) — SidebarProc is the LEFT explorer and
+    // DefWindowProc on STATIC swallows child BN_CLICKED (Send never reaches onCommand).
+    m_oldSidebarProc = (WNDPROC)SetWindowLongPtr(m_hwndSecondarySidebar, GWLP_WNDPROC,
+                                                 (LONG_PTR)SidebarProcImpl);
 
     m_hwndSecondarySidebarHeader = CreateWindowExW(0, L"STATIC", L"AI Chat", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 5, 290,
                                                    25, m_hwndSecondarySidebar, nullptr, m_hInstance, nullptr);
@@ -7184,7 +7273,6 @@ void Win32IDE::populateModelSelector()
     if (!m_hwndModelSelector)
         return;
 
-    // Preserve prior selection if possible
     std::string previousSelection;
     int prevIdx = (int)SendMessage(m_hwndModelSelector, CB_GETCURSEL, 0, 0);
     if (prevIdx >= 0)
@@ -7194,40 +7282,59 @@ void Win32IDE::populateModelSelector()
         previousSelection = wideToUtf8(prevBuf);
     }
 
-    // Clear existing items
     SendMessage(m_hwndModelSelector, CB_RESETCONTENT, 0, 0);
 
-    m_availableModels.clear();
-
-    // Only populate if user has selected model directories
+    // Seed default model dirs when Browse has not run yet
     if (m_userModelDirectories.empty())
     {
-        // No directories selected - list remains empty
-        return;
+        auto tryAdd = [this](const std::string& p) {
+            if (p.empty()) return;
+            if (GetFileAttributesA(p.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+            for (const auto& d : m_userModelDirectories)
+                if (d == p) return;
+            m_userModelDirectories.push_back(p);
+        };
+        if (const char* e = std::getenv("RAWRXD_MODELS_PATH")) tryAdd(e);
+        if (const char* e = std::getenv("RAWRXD_OLLAMA_PATH")) tryAdd(e);
+        if (const char* e = std::getenv("OLLAMA_MODELS")) tryAdd(e);
+        tryAdd(PathResolver::getModelsPath());
+        tryAdd("F:\\OllamaModels");
+        tryAdd("D:\\OllamaModels");
+        tryAdd("C:\\OllamaModels");
+        tryAdd("F:\\~dev");  // local GGUF drop zone used on this host
+        const char* user = getenv("USERNAME");
+        if (user && user[0])
+            tryAdd(std::string("C:\\Users\\") + user + "\\OllamaModels");
     }
 
-    // Use backend directory listing for each user-selected directory
+    m_availableModels.clear();
     for (const auto& dir : m_userModelDirectories)
     {
-        std::vector<std::string> modelsFromDir = getModelsFromDirectory(dir);
-        for (const auto& model : modelsFromDir)
+        auto modelsFromDir = getModelsFromDirectory(dir);
+        m_availableModels.insert(m_availableModels.end(), modelsFromDir.begin(), modelsFromDir.end());
+    }
+
+    // Prefer discovery scan results if dirs yielded nothing
+    if (m_availableModels.empty() && m_modelDiscoveryEnabled && !m_modelPaths.empty())
+    {
+        for (const auto& path : m_modelPaths)
         {
-            m_availableModels.push_back(model);
+            std::string name = path;
+            size_t slash = name.find_last_of("\\/");
+            if (slash != std::string::npos) name = name.substr(slash + 1);
+            size_t dot = name.find_last_of('.');
+            if (dot != std::string::npos) name = name.substr(0, dot);
+            if (!name.empty()) m_availableModels.push_back(name);
         }
     }
 
-    // Remove duplicates
     std::sort(m_availableModels.begin(), m_availableModels.end());
-    auto last = std::unique(m_availableModels.begin(), m_availableModels.end());
-    m_availableModels.erase(last, m_availableModels.end());
+    m_availableModels.erase(std::unique(m_availableModels.begin(), m_availableModels.end()),
+                            m_availableModels.end());
 
-    // Populate combobox
     for (const auto& model : m_availableModels)
-    {
         SendMessageW(m_hwndModelSelector, CB_ADDSTRING, 0, (LPARAM)utf8ToWide(model).c_str());
-    }
 
-    // Restore prior selection when possible
     int selectedIdx = -1;
     if (!previousSelection.empty())
     {
@@ -7240,12 +7347,9 @@ void Win32IDE::populateModelSelector()
             }
         }
     }
-
-    // Set selected item
     if (!m_availableModels.empty())
     {
-        if (selectedIdx < 0)
-            selectedIdx = 0;
+        if (selectedIdx < 0) selectedIdx = 0;
         SendMessage(m_hwndModelSelector, CB_SETCURSEL, selectedIdx, 0);
     }
 }
@@ -7253,19 +7357,58 @@ void Win32IDE::populateModelSelector()
 std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& directory)
 {
     std::vector<std::string> models;
+    auto pushModelName = [&](const std::string& name) {
+        if (name.empty()) return;
+        std::string display = name;
+        size_t dotPos = display.find_last_of('.');
+        if (dotPos != std::string::npos) display = display.substr(0, dotPos);
+        if (!display.empty()) models.push_back(display);
+    };
 
-    // Check if local server is running
-    if (!m_localServerRunning.load())
+    // Filesystem scan — no list-server required. Top-level + one subdir level
+    // (avoids walking huge trees like F:\~dev\rawrxd).
+    try
     {
-        // Local server not running yet - return empty list
-        // Models will be populated when directories are selected and server is running
-        return models;
+        namespace fs = std::filesystem;
+        auto considerFile = [&](const fs::directory_entry& entry) {
+            if (!entry.is_regular_file()) return;
+            std::string name = entry.path().filename().string();
+            std::string ext = entry.path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(),
+                           [](unsigned char c) { return (char)::tolower(c); });
+            if (ext == ".gguf")
+                pushModelName(name);
+        };
+        if (fs::exists(directory) && fs::is_directory(directory))
+        {
+            for (const auto& entry : fs::directory_iterator(
+                     directory, fs::directory_options::skip_permission_denied))
+            {
+                considerFile(entry);
+                if (!entry.is_directory()) continue;
+                try
+                {
+                    for (const auto& child : fs::directory_iterator(
+                             entry.path(), fs::directory_options::skip_permission_denied))
+                    {
+                        considerFile(child);
+                        if (models.size() >= 500) break;
+                    }
+                }
+                catch (...) {}
+                if (models.size() >= 500) break;
+            }
+        }
     }
+    catch (...)
+    {
+        // fall through to optional HTTP path
+    }
+    if (!models.empty() || !m_localServerRunning.load())
+        return models;
 
-    // Make HTTP request to /api/list-directory
     std::string url = "http://localhost:" + std::to_string(m_settings.localServerPort) + "/api/list-directory";
     std::string requestBody = "{\"path\":\"" + directory + "\",\"depth\":1,\"maxEntries\":10000}";
-
     std::string response = makeHttpRequest(url, "POST", requestBody, "application/json");
     if (response.empty())
     {
@@ -7273,7 +7416,6 @@ std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& dir
         return models;
     }
 
-    // Parse JSON response using nlohmann/json
     try
     {
         auto jsonResponse = nlohmann::json::parse(response);
@@ -7281,28 +7423,14 @@ std::vector<std::string> Win32IDE::getModelsFromDirectory(const std::string& dir
         {
             for (const auto& entry : jsonResponse["entries"])
             {
-                if (entry.contains("name") && entry.contains("type"))
-                {
-                    std::string name = entry["name"];
-                    std::string type = entry["type"];
-
-                    // Check if it's a file and has GGUF extension
-                    if (type == "file" && !name.empty())
-                    {
-                        std::string ext = name.substr(name.find_last_of('.') + 1);
-                        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-                        if (ext == "gguf" || ext == "bin" || ext == "ggml")
-                        {
-                            // Remove extension for display
-                            size_t dotPos = name.find_last_of('.');
-                            if (dotPos != std::string::npos)
-                            {
-                                std::string displayName = name.substr(0, dotPos);
-                                models.push_back(displayName);
-                            }
-                        }
-                    }
-                }
+                if (!entry.contains("name") || !entry.contains("type")) continue;
+                std::string name = entry["name"];
+                std::string type = entry["type"];
+                if (type != "file" || name.empty()) continue;
+                std::string ext = name.substr(name.find_last_of('.') + 1);
+                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                if (ext == "gguf" || ext == "bin" || ext == "ggml")
+                    pushModelName(name);
             }
         }
     }
@@ -9521,24 +9649,47 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
         {
             if (pThis)
             {
-                int controlId = LOWORD(wParam);
-                int notifyCode = HIWORD(wParam);
-                // Route button clicks from AI Chat panel controls
+                const int controlId = LOWORD(wParam);
+                const int notifyCode = HIWORD(wParam);
+
+                if (controlId == IDC_COPILOT_SEND_BTN &&
+                    (notifyCode == BN_CLICKED || notifyCode == 0))
+                {
+                    pThis->HandleCopilotSend();
+                    return 0;
+                }
+                if (controlId == IDC_COPILOT_CLEAR_BTN &&
+                    (notifyCode == BN_CLICKED || notifyCode == 0))
+                {
+                    pThis->HandleCopilotClear();
+                    return 0;
+                }
+                if (controlId == IDC_MODEL_BROWSE_BTN &&
+                    (notifyCode == BN_CLICKED || notifyCode == 0))
+                {
+                    pThis->handleModelBrowse();
+                    return 0;
+                }
+                if (controlId == IDC_MODEL_SELECTOR && notifyCode == CBN_SELCHANGE)
+                {
+                    pThis->onModelSelectionChanged();
+                    return 0;
+                }
+
                 if (controlId == IDC_AI_MAX_MODE && notifyCode == BN_CLICKED)
-                {
                     pThis->onAIModeMax();
-                }
                 else if (controlId == IDC_AI_DEEP_THINK && notifyCode == BN_CLICKED)
-                {
                     pThis->onAIModeDeepThink();
-                }
                 else if (controlId == IDC_AI_DEEP_RESEARCH && notifyCode == BN_CLICKED)
-                {
                     pThis->onAIModeDeepResearch();
-                }
                 else if (controlId == IDC_AI_NO_REFUSAL && notifyCode == BN_CLICKED)
-                {
                     pThis->onAIModeNoRefusal();
+                else if (pThis->m_hwndMain && IsWindow(pThis->m_hwndMain) &&
+                         (notifyCode == BN_CLICKED || notifyCode == 0 ||
+                          notifyCode == CBN_SELCHANGE || notifyCode == EN_CHANGE))
+                {
+                    // Forward remaining AI-panel control traffic to main onCommand
+                    return SendMessage(pThis->m_hwndMain, WM_COMMAND, wParam, lParam);
                 }
             }
             return 0;

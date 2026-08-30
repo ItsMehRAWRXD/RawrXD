@@ -1,0 +1,27 @@
+P1_UI_MENU_E2E_001 — destroy harden / close proof authority
+
+```
+EARLY FILE-LOCK FAILURES      = HISTORICAL / ACCOUNTED
+DESTROY-HARDEN BUILD          = COMPLETE
+CLOSE PROOF                   = PASS / RETAINED
+CERTIFIED CLOSE SHA           = 00768A39154489D6EED3CCC1A755C16F0F2978B010F759DEFB8CB224142EDC35
+P1_UI_MENU_E2E_001            = BLOCKED
+E2E STOP REASON               = settle 0xC000041D on relaunches
+```
+
+CORRECTION WITHDRAWN
+  Prior “CLOSE_TEARDOWN = FAIL / REOPENED” disposition is withdrawn.
+  Certified close proof for 00768A39… remains valid.
+
+TEARDOWN ORDER (landed)
+  WM_DESTROY: arm → detachJSExtensionHosts → WebView2/terminals → child neutralize → PostQuitMessage
+  WM_NCDESTROY: onDestroy (idempotent ExtensionLoader + remaining) → clear USERDATA
+
+LIVE EXE (measured)
+  Path = build-ninja\bin\RawrXD-Win32IDE.exe
+  SHA  = 00768A39154489D6EED3CCC1A755C16F0F2978B010F759DEFB8CB224142EDC35
+  (= CERTIFIED CLOSE SHA; prior relink A47F5FCD… is superseded on disk)
+
+CLOSED GATES
+  P1_UI_MENU_LIFETIME_001 = PASS / CLOSED (HASHES.txt not rewritten)
+  P1_UI_MENU_E2E_001      = BLOCKED (settle 0xC000041D; independent of close proof)
