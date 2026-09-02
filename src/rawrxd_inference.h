@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -13,6 +14,11 @@
 // Phase 46: Vulkan support with graceful fallback for dual GPU testing
 // Include vulkan_compute.h from include directory for consistent Vulkan type definitions
 #include "../include/vulkan_compute.h"
+#include "win32app/p1_load_checkpoint.hpp"
+
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "../include/P1PRA_ProcessState.hpp"
+#endif
 
 // Define RAWR_VULKAN_AVAILABLE based on whether real Vulkan is available
 #if defined(RAWR_ENABLE_VULKAN) || defined(RAWR_HAS_VULKAN)
@@ -277,6 +283,7 @@ class RawrXDInference
 
     bool Initialize(const wchar_t* modelPath, const char* vocabPath, const char* mergesPath, Backend backend)
     {
+        RawrXD::P1LoadCkpt::emit("INF_Initialize", "enter");
         m_lastLoadErrorMessage.clear();
         loader.SetLoadErrorCallback([this](const std::string& stage, const std::string& message)
                                     { m_lastLoadErrorMessage = stage + ": " + message; });
@@ -296,6 +303,7 @@ class RawrXDInference
         VkDevice device = VK_NULL_HANDLE;
         VkPhysicalDevice physDevice = VK_NULL_HANDLE;
 
+        RawrXD::P1LoadCkpt::emit("INF_vulkan", useVulkan ? "attempt" : "skip");
 #if RAWR_VULKAN_AVAILABLE
         if (useVulkan)
         {
@@ -330,10 +338,13 @@ class RawrXDInference
         (void)useVulkan;
         printf("[RawrXD] CPU-only mode (Vulkan not compiled in)\n");
 #endif
+        RawrXD::P1LoadCkpt::emit("INF_vulkan", device ? "device_ok" : "cpu_null_device");
 
         printf("[RawrXD] Stage: loader.Load\n");
+        RawrXD::P1LoadCkpt::emit("INF_loader_Load", "before");
         if (!loader.Load(modelPath, device, physDevice))
         {
+            RawrXD::P1LoadCkpt::emit("INF_loader_Load", "fail");
             if (m_lastLoadErrorMessage.empty())
             {
                 m_lastLoadErrorMessage = loader.GetLastLoadErrorMessage();
@@ -341,7 +352,9 @@ class RawrXDInference
             printf("[RawrXD] Failed to load model\n");
             return false;
         }
+        RawrXD::P1LoadCkpt::emit("INF_loader_Load", "ok");
 
+        RawrXD::P1LoadCkpt::emit("INF_model_config", "alloc");
         RawrXDTransformer::Config cfg{};  // Zero-init all fields
         cfg.dim = loader.getDim();
         cfg.n_layers = loader.getLayers();
@@ -363,6 +376,15 @@ class RawrXDInference
         cfg.hidden_dim = (loader.getFFNDim() > 0) ? loader.getFFNDim() : cfg.dim * 4;
         cfg.n_ctx = 2048;  // Conservative context for CPU-only mode
         cfg.seq_len = 2048;
+        {
+            if (const char* ctxEnv = std::getenv("RAWRXD_INFERENCE_CTX")) {
+                const int v = atoi(ctxEnv);
+                if (v >= 128 && v <= 8192) {
+                    cfg.n_ctx = v;
+                    cfg.seq_len = v;
+                }
+            }
+        }
         cfg.rope_theta = 10000.0f;
         cfg.rms_norm_eps = 1e-5f;
 
@@ -370,17 +392,27 @@ class RawrXDInference
         // B009-P4: Configurable residency pool size (default 4 GB = 4096 MB)
         cfg.weight_residency_pool_max_bytes = s_residencyPoolMaxBytes;
 
+        {
+            char detail[192];
+            snprintf(detail, sizeof(detail), "dim=%d layers=%d heads=%d kv=%d vocab=%d hidden=%d ctx=%d", cfg.dim,
+                     cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
+            RawrXD::P1LoadCkpt::emit("INF_model_config", detail);
+        }
         printf("[RawrXD] Config: dim=%d layers=%d heads=%d kv_heads=%d vocab=%d hidden=%d ctx=%d\n", cfg.dim,
                cfg.n_layers, cfg.n_heads, cfg.n_kv_heads, cfg.vocab_size, cfg.hidden_dim, cfg.n_ctx);
         printf("[RawrXD] Stage: transformer.Initialize\n");
+        RawrXD::P1LoadCkpt::emit("INF_transformer_Initialize", "before");
         transformer.Initialize(device, physDevice, cfg, &loader);
+        RawrXD::P1LoadCkpt::emit("INF_transformer_Initialize", "after");
 
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "make_scheduler");
         m_swarmScheduler = RawrXD::Swarm::makeSwarmSchedulerWithLoader(&loader);
         RawrXD::Swarm::SchedulerConfig swarmCfg;
         swarmCfg.enableAsyncPrefetchThread = true;
         swarmCfg.admitFirstSliceOnExecutePlan = false;
         swarmCfg.prefetchAheadLayers = 2;
         swarmCfg.prefetchIoPollMs = 4;
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "configure");
         (void)m_swarmScheduler->configure(swarmCfg);
 
         std::vector<RawrXD::Swarm::ModelSlice> swarmPlan;
@@ -422,11 +454,16 @@ class RawrXDInference
                 printf("[RawrXD] Swarm plan: file/layer stripe fallback (%u slices)\n", nl);
             }
         }
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "submitPlan");
         (void)m_swarmScheduler->submitPlan(std::move(swarmPlan));
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "executePlan_before");
         (void)m_swarmScheduler->executePlan();
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "executePlan_after");
         transformer.SetSwarmScheduler(m_swarmScheduler.get());
+        RawrXD::P1LoadCkpt::emit("INF_swarm", "ownership_to_transformer");
 
         printf("[RawrXD] Stage: tokenizer.Load\n");
+        RawrXD::P1LoadCkpt::emit("INF_tokenizer", "before");
         if (vocabPath != nullptr) {
             tokenizer.Load(vocabPath);
         } else {
@@ -435,15 +472,18 @@ class RawrXDInference
         const auto& ggufVocab = loader.getVocabulary();
         if (!ggufVocab.empty()) {
             printf("[RawrXD] Stage: tokenizer.SetVocabulary (%zu tokens from GGUF)\n", ggufVocab.size());
+            RawrXD::P1LoadCkpt::emit("INF_tokenizer", "SetVocabulary");
             tokenizer.SetVocabulary(ggufVocab);
         } else {
             printf("[RawrXD] Warning: no vocabulary found in GGUF; tokenizer will use byte-level fallback\n");
         }
+        RawrXD::P1LoadCkpt::emit("INF_tokenizer", "after");
         m_contextLimit = static_cast<uint32_t>(cfg.n_ctx);
         m_lastLogits.clear();
 
         printf("[RawrXD] Inference engine READY\n");
         m_initialized = true;
+        RawrXD::P1LoadCkpt::emit("INF_Initialize", "READY");
         return true;
     }
 
@@ -581,6 +621,10 @@ class RawrXDInference
         printf("[STREAM] calling Forward() for prefill, tokens=%zu\n", tokens.size());
         auto logits = transformer.Forward(tokens, 0);
         printf("[STREAM] Forward() returned, logits.size()=%zu\n", logits.size());
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        if (P1PRA_RequestActive())
+            P1PRA_OnForward();
+#endif
         m_lastLogits = logits;
         uint32_t absolutePos = static_cast<uint32_t>(tokens.size());
 
@@ -611,6 +655,10 @@ class RawrXDInference
 
             uint32_t nextToken = sampler.Sample(logits.data(), logits.size(), tokens);
             printf("[STREAM] candidate token=%u\n", nextToken);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            if (P1PRA_RequestActive())
+                P1PRA_OnSample();
+#endif
             if (nextToken >= vocabSize)
             {
                 nextToken %= vocabSize;
@@ -632,12 +680,20 @@ class RawrXDInference
             printf("[STREAM] calling Forward() for decode, absolutePos=%u\n", absolutePos);
             logits = transformer.Forward(nextTokVec, absolutePos);
             printf("[STREAM] Forward() decode returned, logits.size()=%zu\n", logits.size());
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            if (P1PRA_RequestActive())
+                P1PRA_OnForward();
+#endif
             absolutePos++;
             m_lastLogits = logits;
 
             if (callback)
             {
                 const std::string piece = tokenizer.Decode({nextToken});
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                if (P1PRA_RequestActive() && !piece.empty())
+                    P1PRA_OnDecode(static_cast<std::uint64_t>(piece.size()));
+#endif
                 printf("[STREAM] invoking callback token=%u\n", nextToken);
                 try
                 {

@@ -307,6 +307,8 @@ class Win32IDE
         Running              // Fully initialized
     };
 
+    enum class AppShellMode { Command, Work };
+
     Win32IDE(HINSTANCE hInstance);
     ~Win32IDE();
 
@@ -334,6 +336,8 @@ class Win32IDE
     static DWORD WINAPI VisibilityWatchdogThread(LPVOID param);
     void openModel();
     bool loadModelForInference(const std::string& filepath);
+    bool finishLoadModelForInferenceUI(const std::string& filepath, bool bridgeOk);
+    void onCommandModelLoadWorkerDone(bool ok, const std::string& path);
 
     // Test agent access
     HWND getMainWindow() const { return m_hwndMain; }
@@ -345,6 +349,9 @@ class Win32IDE
     HWND getLineNumbers() const { return m_hwndLineNumbers; }
     HWND getTabBar() const { return m_hwndTabBar; }
     WNDPROC getOldTabBarProc() const { return m_oldTabBarProc; }
+    AppShellMode getShellMode() const { return m_shellMode; }
+    bool isCommandHomeShell() const { return m_shellMode == AppShellMode::Command; }
+    void applyShellModeChrome();
 
     // Agentic Framework — Full Agentic IDE owns the bridge (single entry point: src/full_agentic_ide/)
     std::unique_ptr<full_agentic_ide::FullAgenticIDE> m_fullAgenticIDE;
@@ -1670,7 +1677,7 @@ class Win32IDE
 
     // AI Inference State
     InferenceConfig m_inferenceConfig;
-    bool m_inferenceRunning;
+    std::atomic<bool> m_inferenceRunning;
     bool m_inferenceStopRequested;
     std::string m_currentInferencePrompt;
     std::string m_currentInferenceResponse;
@@ -2141,6 +2148,76 @@ class Win32IDE
     HWND m_hwndMaxTokensSlider;
     HWND m_hwndMaxTokensLabel;
 
+    // RawrXD Command surface (primary launch UI)
+    AppShellMode m_shellMode = AppShellMode::Command;
+    HWND m_hwndCommandHost = nullptr;
+    HWND m_hwndCommandLeftRail = nullptr;
+    HWND m_hwndTopContextBar = nullptr;
+    HWND m_hwndCommandConversation = nullptr;
+    HWND m_hwndCommandOutputHdr = nullptr;
+    HWND m_hwndCommandOutput = nullptr;
+    HWND m_hwndActivityStrip = nullptr;
+    HWND m_hwndActivityStripText = nullptr;
+    HWND m_hwndCommandComposer = nullptr;
+    HWND m_hwndCommandFooter = nullptr;
+    HWND m_hwndCmdModelCombo = nullptr;
+    HWND m_hwndCmdModeCombo = nullptr;
+    HWND m_hwndSteeringBelt = nullptr;
+    HWND m_hwndModelHubHdr = nullptr;
+    HWND m_hwndModelRecList = nullptr;
+    HWND m_hwndModelLocalList = nullptr;
+    HWND m_hwndModelHubStatus = nullptr;
+    HWND m_hwndCmdApprovalBadge = nullptr;
+    std::vector<std::string> m_cmdModelInventoryPaths;
+    HBRUSH m_cmdBgBrush = nullptr;
+    HBRUSH m_cmdPanelBrush = nullptr;
+    HFONT m_cmdUIFont = nullptr;
+    void createCommandSurface(HWND parent);
+    void layoutCommandSurface(int cw, int ch);
+    void enterCommandMode();
+    void enterWorkMode();
+    void bindCommandSessionFromWorkspace();
+    void refreshCommandContextBar();
+    void refreshCommandLeftRail();
+    void refreshCommandFooter();
+    void handleCommandSend(HWND cmdHostHint = nullptr);
+    void handleCommandStop();
+    void handleCommandApprove();
+    void handleCommandDeny();
+    void resumeCommandJournal();
+    void refreshCommandActivityStrip();
+    void refreshCommandModelHub();
+    void handleCommandModelLoad();
+    void handleCommandModelBrowse();
+    void handleCommandModelUnload();
+    void handleCommandModelReload();
+    void handleCommandInferenceCancel();
+    bool unloadModelForInference();
+    std::string assembleCommandInferenceContext(const std::string& userMsg,
+                                                std::size_t byteBudget = 12288) const;
+    bool stageCommandBuildEdit(const std::string& path, const std::string& newContent);
+    void runAgentCommandInTerminal(const std::string& command);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    void p1praWitnessModelLoadReady();
+    void p1praAdvanceRequestProductPath();
+    void p1praCompleteProductRequest(const char* steerModeLabel, bool streamOk);
+#endif
+  public:
+    void appendCommandConversation(const std::string& line, bool ensureNewline = true);
+    void appendCommandOutput(const std::string& line, bool ensureNewline = true);
+    void appendCommandConversationStream(const std::string& chunk);
+#ifdef RAWRXD_PRODUCT100
+    void product100Init();
+    void product100Shutdown();
+    void product100GitStatus();
+    void product100GitDiff();
+    void product100SearchLiteral(const std::string& query);
+    std::string product100DescribeError(int code, const std::string& detail);
+    static void __stdcall product100TextSink(const wchar_t* channel, const wchar_t* text, void* user);
+#endif
+    static LRESULT CALLBACK CommandHostProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+  private:
     // AI Mode Toggles
     HWND m_hwndChkMaxMode;
     HWND m_hwndChkDeepThink;
@@ -6676,7 +6753,7 @@ class Win32IDE
     // Agent Ollama Client
     bool m_ollamaClientInitialized = false;
     bool m_ollamaConnected = false;
-    std::string m_ollamaEndpoint = "http://localhost:11434";
+    std::string m_ollamaEndpoint;  // empty unless OPTIONAL_OLLAMA build
     std::string m_ollamaStatus = "Not connected";
     uint64_t m_ollamaLastConnectedMs = 0;
 

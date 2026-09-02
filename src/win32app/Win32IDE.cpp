@@ -1,6 +1,7 @@
 // Win32IDE.cpp - RawrXD Win32 IDE Implementation - g87
 // Build timestamp: 2026-03-31
 #include "Win32IDE.h"
+#include <atomic>
 #include "../../Ship/RawrXD_AutonomousAgenticPipeline.h"  // Full type for unique_ptr destructor
 #include "../../include/PathResolver.h"
 #include "../../include/rawrxd_version.h"
@@ -27,6 +28,10 @@
 #include "../deep2/Deep2IDEIntegration.hpp"
 #include "../deep2/execution_policy/ExecutionPolicyBridge.hpp"
 #include "Win32IDE_MainMenuAuthority.hpp"
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+#include "P1PRA_ProcessState.hpp"
+#include "../core/GpuDecodeEfficiency.hpp"
+#endif
 #include "Win32IDE_CommandFlight.hpp"
 
 // AI Completion System Integration (VAL-063)
@@ -615,6 +620,8 @@ static std::string wideToUtf8(const wchar_t* wide)
 #define IDC_AI_CONTEXT_LABEL 1207
 #define IDC_MODEL_SELECTOR 1208
 #define IDC_MODEL_BROWSE_BTN 1209
+#define IDC_MAX_TOKENS_SLIDER 1210
+#define IDC_MAX_TOKENS_LABEL 1211
 
 // Panel (Bottom) - Terminal, Output, Problems, Debug Console
 #define IDC_PANEL_CONTAINER 1300
@@ -813,7 +820,8 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
       m_modelOperationActive(false), m_modelOperationCancelled(false), m_modelProgressPercent(0.0f),
       m_hwndModelProgressBar(nullptr), m_hwndModelProgressLabel(nullptr), m_hwndModelProgressContainer(nullptr),
       m_hwndModelCancelBtn(nullptr), m_sessionRestored(false), m_annotationsVisible(true), m_annotationFont(nullptr),
-      m_hwndAnnotationOverlay(nullptr), m_nativePipelineReady(false), m_tabManager(nullptr)
+      m_hwndAnnotationOverlay(nullptr), m_nativePipelineReady(false), m_tabManager(nullptr),
+      m_inferenceRunning{false}, m_inferenceStopRequested(false)
 {
     // ============================================================
     // MINIMAL CONSTRUCTOR — all heavy init deferred to onCreate()
@@ -835,8 +843,8 @@ Win32IDE::Win32IDE(HINSTANCE hInstance)
     GetCurrentDirectoryA(MAX_PATH, currentDir);
     m_gitRepoPath = currentDir;
 
-    // Default Ollama configuration
-    m_ollamaBaseUrl = "http://localhost:11434";
+    // LOCAL_ONLY_001: no Ollama URL resurrection (empty = Deep2/GGUF only)
+    m_ollamaBaseUrl = "";
     m_ollamaModelOverride = "";
 
     m_nativeEngineLoaded = false;
@@ -960,6 +968,10 @@ void Win32IDE::createMenuBar(HWND hwnd)
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_USE_VULKAN_RENDERER, L"Enable Vulkan Renderer (experimental)");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_AGENT_PANEL, L"Agent &Panel");
+    AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(hViewMenu, MF_STRING, IDM_CMD_ENTER_COMMAND, L"ScreenPilot &Command Home\tCtrl+Shift+1");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_CMD_ENTER_WORK, L"&Work Mode Editor\tCtrl+Shift+W");
+    AppendMenuW(hViewMenu, MF_STRING, IDM_CMD_NEW_TASK, L"Command &New Task");
     AppendMenuW(hViewMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hViewMenu, MF_STRING, IDM_MARKETPLACE_SHOW, L"Extension &Marketplace");
     AppendMenuW(hViewMenu, MF_STRING, IDM_VIEW_COLLABORATION, L"&Collaboration");
@@ -4041,20 +4053,7 @@ int Win32IDE::getPanelAreaWidth() const
 }
 
 // ============================================================================
-// Search and Replace Implementation
-// ============================================================================
-
-#define IDD_FIND 5001
-#define IDD_REPLACE 5002
-#define IDC_FIND_TEXT 5010
-#define IDC_REPLACE_TEXT 5011
-#define IDC_CASE_SENSITIVE 5020
-#define IDC_WHOLE_WORD 5021
-#define IDC_USE_REGEX 5022
-#define IDC_BTN_FIND_NEXT 5030
-#define IDC_BTN_REPLACE 5031
-#define IDC_BTN_REPLACE_ALL 5032
-#define IDC_BTN_CLOSE 5033
+// Search and Replace Implementation (control IDs in resource.h)
 
 void Win32IDE::showFindDialog()
 {
@@ -5765,12 +5764,12 @@ bool Win32IDE::isModelLoaded() const
 
 std::string Win32IDE::sendMessageToModel(const std::string& message)
 {
-    // Allow chat when agentic bridge is initialized (local model or Ollama/cloud via routeInferenceRequest)
+    // LOCAL_ONLY_001: chat requires a loaded local GGUF / agentic bridge (no Ollama/cloud)
     bool canChat = isModelLoaded() || (m_agenticBridge && m_agenticBridge->IsInitialized());
     if (!canChat)
     {
-        return "Error: No model loaded. Load a GGUF (File > Open / Load Model) or set up Ollama/backend in Backend "
-               "Switcher.";
+        return "LOCAL_ONLY_001: FAIL_CLOSED — No GGUF loaded. Load a local model (File > Open / Load Model). "
+               "Ollama/HTTP backends are forbidden.";
     }
 
     // Phase 8B/8C: Route through LLM router (if enabled) or backend manager
@@ -5784,13 +5783,7 @@ std::string Win32IDE::sendMessageToModel(const std::string& message)
         }
     }
 
-    // First try: send through local Ollama if available
-    std::string llmResponse;
-    if (trySendToOllama(message, llmResponse))
-    {
-        m_chatHistory.push_back({message, llmResponse});
-        return llmResponse;
-    }
+    // LOCAL_ONLY_001: Ollama/HTTP path removed (NETWORK_FALLBACK=FORBIDDEN)
 
     // Fallback: Local CPU Inference (Real Logic)
     if (m_ggufLoader)
@@ -6290,58 +6283,49 @@ bool Win32IDE::ensureAgenticBridgeHasModel(const std::string& path)
     return false;
 }
 
-bool Win32IDE::loadModelForInference(const std::string& filepath)
+static void applyAgenticBridgeContextSize(AgenticBridge* bridge)
 {
-    SCOPED_METRIC("model.load");
-    METRICS.increment("model.load_attempts");
-    appendToOutput("Loading model: " + filepath + "\n", "System", OutputSeverity::Info);
+    if (!bridge)
+        return;
+    using namespace ::Deep2::Exec;
+    EnsurePolicyLoaded();
+    const int ctxTok = PolicyContextTokens();
+    if (ctxTok >= 1048576)
+        bridge->SetContextSize("1M");
+    else if (ctxTok >= 524288)
+        bridge->SetContextSize("512k");
+    else if (ctxTok >= 262144)
+        bridge->SetContextSize("256k");
+    else if (ctxTok >= 131072)
+        bridge->SetContextSize("128k");
+    else if (ctxTok >= 65536)
+        bridge->SetContextSize("64k");
+    else if (ctxTok >= 32768)
+        bridge->SetContextSize("32k");
+    else if (ctxTok > 0)
+        bridge->SetContextSize("4K");
+}
 
-    if (!m_agenticBridge)
+bool Win32IDE::finishLoadModelForInferenceUI(const std::string& filepath, bool bridgeOk)
+{
+    if (bridgeOk)
     {
-        initializeAgenticBridge();
-    }
-
-    if (m_agenticBridge)
-    {
-        if (m_agenticBridge->LoadModel(filepath))
+        setLoadedModelPath(filepath);
+        METRICS.gauge("model.loaded", 1.0);
+        METRICS.increment("model.load_success");
+        appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
+        RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "PASS", "AgenticBridge.LoadModel");
+        wireLayerProgressToOutputPanel();
         {
-            setLoadedModelPath(filepath);
-            METRICS.gauge("model.loaded", 1.0);
-            METRICS.increment("model.load_success");
-            appendToOutput("Model loaded successfully into Agentic Bridge.\n", "System", OutputSeverity::Info);
-            RawrXD::P1GgufCert::emit("INFERENCE_ENGINE_CREATED", "PASS", "AgenticBridge.LoadModel");
-
-            wireLayerProgressToOutputPanel();
-
-            // Lane A "Gold" integration: run a tiny post-load streamer self-check.
-            // This verifies (a) privilege attempt, (b) 2MB mapper alignment, (c) map/unmap sanity,
-            // without dragging Lane B CLI/bench harness into the UI.
-            appendStreamerPostLoadCheck(this, filepath);
-
-            // Honor ExecutionPolicy context — never silently force 4K over policy.
-            {
-                using namespace ::Deep2::Exec;
-                EnsurePolicyLoaded();
-                const int ctxTok = PolicyContextTokens();
-                if (ctxTok >= 1048576)
-                    m_agenticBridge->SetContextSize("1M");
-                else if (ctxTok >= 524288)
-                    m_agenticBridge->SetContextSize("512k");
-                else if (ctxTok >= 262144)
-                    m_agenticBridge->SetContextSize("256k");
-                else if (ctxTok >= 131072)
-                    m_agenticBridge->SetContextSize("128k");
-                else if (ctxTok >= 65536)
-                    m_agenticBridge->SetContextSize("64k");
-                else if (ctxTok >= 32768)
-                    m_agenticBridge->SetContextSize("32k");
-                else if (ctxTok > 0)
-                    m_agenticBridge->SetContextSize("4K");
-                // else: leave bridge/slider unchanged (no silent override)
+            char skipBuf[8] = {};
+            if (GetEnvironmentVariableA("RAWRXD_SKIP_STREAMER_POSTLOAD", skipBuf,
+                                        (DWORD)sizeof(skipBuf)) == 0 ||
+                skipBuf[0] == '0') {
+                appendStreamerPostLoadCheck(this, filepath);
             }
-
-            return true;
         }
+        applyAgenticBridgeContextSize(m_agenticBridge);
+        return true;
     }
 
     METRICS.increment("model.load_failures");
@@ -6350,9 +6334,7 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
                              m_agenticBridge ? "LoadModel_false" : "agenticBridge_null");
     std::string detail;
     if (m_agenticBridge)
-    {
         detail = m_agenticBridge->GetLastModelLoadError();
-    }
     if (!detail.empty())
     {
         showModelLoadError(detail);
@@ -6364,6 +6346,21 @@ bool Win32IDE::loadModelForInference(const std::string& filepath)
         appendToOutput("Failed to load model: " + filepath + "\n", "System", OutputSeverity::Error);
     }
     return false;
+}
+
+bool Win32IDE::loadModelForInference(const std::string& filepath)
+{
+    SCOPED_METRIC("model.load");
+    METRICS.increment("model.load_attempts");
+    appendToOutput("Loading model: " + filepath + "\n", "System", OutputSeverity::Info);
+
+    if (!m_agenticBridge)
+        initializeAgenticBridge();
+
+    if (m_agenticBridge && m_agenticBridge->LoadModel(filepath))
+        return finishLoadModelForInferenceUI(filepath, true);
+
+    return finishLoadModelForInferenceUI(filepath, false);
 }
 
 bool Win32IDE::initializeInference()
@@ -6436,6 +6433,9 @@ bool Win32IDE::initializeInference()
         }
         else
         {
+            m_nativeEngineLoaded = true;
+            InitAICompletion();
+            SetCompletionBackendNative(static_cast<void*>(engine));
             OutputDebugStringA("[AUDIT] Model already loaded in native engine\n");
         }
     }
@@ -6530,156 +6530,16 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
         return routeWithIntelligence(prompt);
     }
 
-    // Attempt real remote/local inference via Ollama if configured
-    auto performOllama = [&](const std::string& promptText) -> std::string
-    {
-        if (m_ollamaBaseUrl.empty())
-            return "";
-        // Expect base URL like http://localhost:11434
-        std::string base = m_ollamaBaseUrl;
-        if (base.rfind("http://", 0) != 0 && base.rfind("https://", 0) != 0)
-            return "";
-        bool https = base.rfind("https://", 0) == 0;
-        std::string withoutProto = base.substr(base.find("://") + 3);
-        std::string host;
-        int port = https ? 443 : 80;
-        size_t colonPos = withoutProto.find(':');
-        size_t slashPos = withoutProto.find('/');
-        if (colonPos != std::string::npos)
-        {
-            host = withoutProto.substr(0, colonPos);
-            std::string portStr = withoutProto.substr(
-                colonPos + 1, (slashPos == std::string::npos ? withoutProto.size() : slashPos) - (colonPos + 1));
-            port = atoi(portStr.c_str());
-        }
-        else
-        {
-            host = (slashPos == std::string::npos) ? withoutProto : withoutProto.substr(0, slashPos);
-            // Default Ollama port
-            if (!https)
-                port = 11434;
-        }
-        std::wstring whost(host.begin(), host.end());
-        HINTERNET hSession = WinHttpOpen(L"RawrXDIDE/1.0", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, 0);
-        if (!hSession)
-            return "";
-        HINTERNET hConnect = WinHttpConnect(hSession, whost.c_str(), (INTERNET_PORT)port, 0);
-        if (!hConnect)
-        {
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/generate", NULL, WINHTTP_NO_REFERER,
-                                                WINHTTP_DEFAULT_ACCEPT_TYPES, https ? WINHTTP_FLAG_SECURE : 0);
-        if (!hRequest)
-        {
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        // Build JSON body
-        std::string modelTag;
-        if (!m_ollamaModelOverride.empty())
-            modelTag = m_ollamaModelOverride;
-        else
-        {
-            // Derive from loaded path
-            modelTag = m_loadedModelPath;
-            size_t pos = modelTag.find_last_of("\\/");
-            if (pos != std::string::npos)
-                modelTag = modelTag.substr(pos + 1);
-        }
-        // Basic escaping of quotes in prompt
-        std::string escPrompt;
-        escPrompt.reserve(promptText.size() + 16);
-        for (char c : promptText)
-        {
-            if (c == '"')
-                escPrompt += "\\\"";
-            else if (c == '\n')
-                escPrompt += "\\n";
-            else
-                escPrompt += c;
-        }
-        std::string body =
-            std::string("{\"model\":\"") + modelTag + "\",\"prompt\":\"" + escPrompt + "\",\"stream\":false}";
-        std::wstring wHeaders = L"Content-Type: application/json";
-        BOOL bResults = WinHttpSendRequest(hRequest, wHeaders.c_str(), (DWORD)-1L, (LPVOID)body.c_str(),
-                                           (DWORD)body.size(), (DWORD)body.size(), 0);
-        if (!bResults)
-        {
-            WinHttpCloseHandle(hRequest);
-            WinHttpCloseHandle(hConnect);
-            WinHttpCloseHandle(hSession);
-            return "";
-        }
-        bResults = WinHttpReceiveResponse(hRequest, NULL);
-        std::string raw;
-        if (bResults)
-        {
-            DWORD dwSize = 0;
-            do
-            {
-                if (!WinHttpQueryDataAvailable(hRequest, &dwSize))
-                    break;
-                if (!dwSize)
-                    break;
-                std::string chunk;
-                chunk.resize(dwSize);
-                DWORD dwRead = 0;
-                if (!WinHttpReadData(hRequest, chunk.data(), dwSize, &dwRead))
-                    break;
-                if (dwRead)
-                    raw.append(chunk.data(), dwRead);
-            } while (dwSize > 0);
-        }
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        if (raw.empty())
-            return "";
-        // Naive JSON parse: look for "response":"..."
-        std::string out;
-        size_t pos = raw.rfind("\"response\":\"");
-        if (pos != std::string::npos)
-        {
-            pos += 12;  // start after marker
-            while (pos < raw.size())
-            {
-                char c = raw[pos++];
-                if (c == '"')
-                    break;  // end of string (assumes not escaped)
-                if (c == '\\')
-                {
-                    if (pos < raw.size())
-                    {
-                        char next = raw[pos++];
-                        if (next == 'n')
-                            out += '\n';
-                        else
-                            out += next;
-                    }
-                }
-                else
-                    out += c;
-            }
-        }
-        return out.empty() ? raw : out;
-    };
+    // LOCAL_ONLY_001: Ollama/HTTP path removed — never soft-stub on network miss
+    (void)0;
 
-    std::string remote = performOllama(prompt);
-    if (!remote.empty())
-        return remote;
-
-    // Fallback structured guidance if no remote inference available
     std::string modelName =
         m_loadedModelPath.empty() ? "None" : m_loadedModelPath.substr(m_loadedModelPath.find_last_of("\\/") + 1);
 
-    // Fallback: Native CPU Inference Engine
+    // Local CPU Inference Engine
     if (m_nativeEngine && m_nativeEngineLoaded)
     {
         RawrXD::CPUInferenceEngine* engine = static_cast<RawrXD::CPUInferenceEngine*>(m_nativeEngine.get());
-        // If engine doesn't have a model loaded, try to load current one
         if (!engine->IsModelLoaded() && !m_loadedModelPath.empty())
         {
             engine->LoadModel(m_loadedModelPath);
@@ -6687,19 +6547,17 @@ std::string Win32IDE::generateResponse(const std::string& prompt)
 
         if (engine->IsModelLoaded())
         {
-            // Use Generate method for inference
             std::vector<int32_t> tokens = engine->Tokenize(prompt);
             std::vector<int32_t> output = engine->Generate(tokens, 100);
             return engine->Detokenize(output);
         }
         else
         {
-            return "Error: No model loaded in Native CPU Engine.";
+            return "LOCAL_ONLY_001: FAIL_CLOSED — No model loaded in Native CPU Engine.";
         }
     }
 
-    return std::string("[Native Engine Error]\nModel: ") + modelName + "\nPrompt: " + prompt +
-           "\n(Ollama unavailable and Native Engine not ready)";
+    return std::string("LOCAL_ONLY_001: FAIL_CLOSED — Deep2/GGUF backend not ready.\nModel: ") + modelName;
 }
 
 void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<void(const std::string&, bool)> callback)
@@ -6709,26 +6567,51 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
     OutputDebugStringA("[AUDIT] generateResponseAsync() called\n");
 
-    if (m_inferenceRunning)
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    // #region agent log
+    P1PRA_AgentDbg("H6", "generateResponseAsync", "entry",
+                   m_inferenceRunning.load(std::memory_order_acquire) ? 1u : 0u,
+                   static_cast<unsigned long>(GetCurrentThreadId()), 0);
+    // #endregion agent log
+#endif
+
+    if (m_inferenceRunning.load(std::memory_order_acquire))
     {
         METRICS.increment("inference.async_requests_rejected");
         OutputDebugStringA("[AUDIT] Inference already running - rejecting request\n");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+        P1PRA_Witness("P1PRA_INFERENCE", "reject_busy");
+        P1PRA_AgentDbg("H6", "generateResponseAsync", "reject_busy",
+                       1u, static_cast<unsigned long>(GetCurrentThreadId()), 0);
+#endif
         if (callback)
-            callback("Inference already in progress.", true);
+            callback("", true);
         return;
     }
 
-    m_inferenceRunning = true;
+    m_inferenceRunning.store(true, std::memory_order_release);
     m_inferenceStopRequested = false;
     m_currentInferencePrompt = prompt;
     m_inferenceCallback = callback;
 
     OutputDebugStringA("[AUDIT] Starting inference thread\n");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+    P1PRA_Witness("P1PRA_INFERENCE", "worker_spawn");
+#endif
 
     // Launch dedicated inference thread using Native Agentic Bridge
     m_inferenceThread = std::thread(
         [this, prompt]()
         {
+            struct InferenceRunningGuard {
+                Win32IDE* ide;
+                explicit InferenceRunningGuard(Win32IDE* self) : ide(self) {}
+                ~InferenceRunningGuard() {
+                    if (ide)
+                        ide->m_inferenceRunning = false;
+                }
+            } runningGuard(this);
+
             OutputDebugStringA("[AUDIT] Inference worker thread started\n");
             DetachedThreadGuard _guard(m_activeDetachedThreads, m_shuttingDown);
             if (_guard.cancelled)
@@ -6737,6 +6620,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 m_inferenceRunning = false;
                 return;
             }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_ThreadWitness("inference_worker_enter");
+#endif
             if (!m_agenticBridge)
             {
                 OutputDebugStringA("[AUDIT] Agentic bridge missing - attempting to create\n");
@@ -6745,8 +6631,11 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
                 if (!m_agenticBridge)
                 {
                     OutputDebugStringA("[AUDIT] FAILED to create agentic bridge\n");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                    P1PRA_Witness("P1PRA_INFERENCE", "bridge_missing");
+#endif
                     if (m_inferenceCallback)
-                        m_inferenceCallback("Error: Agentic Bridge not initialized.", true);
+                        m_inferenceCallback("", true);
                     m_inferenceRunning = false;
                     return;
                 }
@@ -6758,20 +6647,28 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
             // Set callback to route NativeAgent stream to the UI
             OutputDebugStringA("[AUDIT] Setting up output callback for streaming\n");
+            auto streamed = std::make_shared<std::atomic<bool>>(false);
             m_agenticBridge->SetOutputCallback(
-                [this](const std::string& type, const std::string& msg)
+                [this, streamed](const std::string& type, const std::string& msg)
                 {
                     if (m_inferenceStopRequested || isShuttingDown())
                         return;
-                    // "stream" type is what we send to chat UI
-                    if (m_inferenceCallback)
+                    if (m_inferenceCallback && !msg.empty())
                     {
+                        streamed->store(true, std::memory_order_relaxed);
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                        if (P1PRA_RequestActive()) {
+                            rawrxd::GpuDecodeEfficiencyAuthority::Instance()
+                                .SampleDuringDecode();
+                        }
+#endif
                         static int tokenCount = 0;
                         tokenCount++;
                         if (tokenCount <= 5 || tokenCount % 50 == 0)
                         {
                             char buf[128];
-                            snprintf(buf, sizeof(buf), "[AUDIT] Streaming token %d (len=%zu)\n", tokenCount, msg.length());
+                            snprintf(buf, sizeof(buf), "[AUDIT] Streaming token %d (len=%zu)\n", tokenCount,
+                                     msg.length());
                             OutputDebugStringA(buf);
                         }
                         m_inferenceCallback(msg, false);
@@ -6780,8 +6677,9 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
             // Execute via agent bridge (supports /edit, /think, etc.)
             OutputDebugStringA("[AUDIT] Executing agent command\n");
-            m_agenticBridge->ExecuteAgentCommand(prompt);
+            const AgentResponse resp = m_agenticBridge->ExecuteAgentCommand(prompt);
             OutputDebugStringA("[AUDIT] Agent command completed\n");
+            m_currentInferenceResponse = resp.content;
 
             // Phase 4B: Choke Point 4 — hookPostGeneration after streaming inference
             // Note: For streaming responses, the full output was already sent via callback.
@@ -6809,12 +6707,44 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 
             m_inferenceRunning = false;
             OutputDebugStringA("[AUDIT] Inference thread completing\n");
-            if (m_inferenceCallback && !isShuttingDown())
+            if (m_inferenceCallback)
             {
-                OutputDebugStringA("[AUDIT] Calling final callback (complete=true)\n");
-                m_inferenceCallback("", true);  // Finalize
+                const bool shuttingDown = isShuttingDown();
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                if (shuttingDown)
+                    P1PRA_Witness("P1PRA_CALLBACK_SUPPRESSED", "shutdown");
+#endif
+                if (!shuttingDown)
+                {
+                    if (!streamed->load(std::memory_order_relaxed))
+                    {
+                        if (!resp.content.empty())
+                            m_inferenceCallback(resp.content, false);
+                        else
+                        {
+                            const std::string err =
+                                (resp.type == AgentResponseType::AGENT_ERROR)
+                                    ? (resp.content.empty() ? "Agent error (no detail)." : resp.content)
+                                    : "No response from local model. Load a .gguf under Engine control, then retry.";
+                            m_inferenceCallback(err, false);
+                        }
+                    }
+                    OutputDebugStringA("[AUDIT] Calling final callback (complete=true)\n");
+                    m_inferenceCallback("", true);  // Finalize
+                }
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+                else if (P1PRA_RequestActive())
+                {
+                    p1praCompleteProductRequest("Build",
+                                                P1PRA_RealProductRequestPass(
+                                                    streamed->load(std::memory_order_relaxed)));
+                }
+#endif
             }
             OutputDebugStringA("[AUDIT] Inference thread finished\n");
+#ifdef RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+            P1PRA_ThreadWitness("inference_worker_exit");
+#endif
         });
 
     m_inferenceThread.detach();
@@ -6823,6 +6753,7 @@ void Win32IDE::generateResponseAsync(const std::string& prompt, std::function<vo
 void Win32IDE::stopInference()
 {
     m_inferenceStopRequested = true;
+    m_inferenceRunning = false;
 }
 
 void Win32IDE::setInferenceConfig(const InferenceConfig& config)
@@ -7147,7 +7078,7 @@ void Win32IDE::createChatPanel()
 
     m_hwndMaxTokensSlider =
         CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_VISIBLE | TBS_HORZ | TBS_NOTICKS, 5, 80, 290, 25,
-                        m_hwndSecondarySidebar, (HMENU)IDC_COPILOT_CLEAR_BTN, m_hInstance, nullptr);
+                        m_hwndSecondarySidebar, (HMENU)IDC_MAX_TOKENS_SLIDER, m_hInstance, nullptr);
 
     CreateWindowExW(0, L"STATIC", L"Context:", WS_CHILD | WS_VISIBLE | SS_LEFT, 5, 110, 80, 18, m_hwndSecondarySidebar,
                     nullptr, m_hInstance, nullptr);
@@ -7541,32 +7472,48 @@ void Win32IDE::HandleCopilotSend()
     SCOPED_METRIC("chat.send_message");
     METRICS.increment("chat.messages_sent");
 
-    if (!m_hwndCopilotChatInput || !m_hwndCopilotChatOutput)
+    // Prefer live child HWNDs — member pointers can go stale after layout recreate.
+    HWND input = (m_hwndCopilotChatInput && IsWindow(m_hwndCopilotChatInput))
+                     ? m_hwndCopilotChatInput
+                     : (m_hwndSecondarySidebar ? GetDlgItem(m_hwndSecondarySidebar, IDC_COPILOT_CHAT_INPUT)
+                                               : nullptr);
+    HWND output = (m_hwndCopilotChatOutput && IsWindow(m_hwndCopilotChatOutput))
+                      ? m_hwndCopilotChatOutput
+                      : (m_hwndSecondarySidebar ? GetDlgItem(m_hwndSecondarySidebar, IDC_COPILOT_CHAT_OUTPUT)
+                                                : nullptr);
+    if (!input || !output)
+    {
+        OutputDebugStringA("[HandleCopilotSend] missing input/output HWND\n");
         return;
+    }
+    m_hwndCopilotChatInput = input;
+    m_hwndCopilotChatOutput = output;
 
     wchar_t inputBuffer[4096] = {0};
-    GetWindowTextW(m_hwndCopilotChatInput, inputBuffer, 4095);
+    GetWindowTextW(input, inputBuffer, 4095);
     const std::string userMessage = wideToUtf8(inputBuffer);
     if (userMessage.empty())
+    {
+        OutputDebugStringA("[HandleCopilotSend] empty input — ignore\n");
         return;
+    }
 
-    // IDE → HexMagRuntimeController → FinalizePolicy → existing Copilot render path.
-    // When accepted, clear input here; otherwise leave it for HandleCopilotSend_Ollama.
-    if (tryHexMagControllerCopilotSend(userMessage))
+    OutputDebugStringA(("[HandleCopilotSend] sending len=" + std::to_string(userMessage.size()) + "\n").c_str());
+
+    // Prefer local/Ollama chat path by default when HexMag route is off or declines.
+    if (m_settings.hexmagRouteCopilotPanel && tryHexMagControllerCopilotSend(userMessage))
     {
         const std::string displayText = "\n[User]: " + userMessage + "\n\n[AI]: ";
-        const int len = GetWindowTextLengthW(m_hwndCopilotChatOutput);
+        const int len = GetWindowTextLengthW(output);
         if (len > 0)
-            SendMessage(m_hwndCopilotChatOutput, EM_SETSEL, len, len);
-        SendMessageW(m_hwndCopilotChatOutput, EM_REPLACESEL, FALSE,
-                     (LPARAM)utf8ToWide(displayText).c_str());
-        SetWindowTextW(m_hwndCopilotChatInput, L"");
+            SendMessage(output, EM_SETSEL, len, len);
+        SendMessageW(output, EM_REPLACESEL, FALSE, (LPARAM)utf8ToWide(displayText).c_str());
+        SetWindowTextW(input, L"");
         m_chatHistory.push_back({"user", userMessage});
         m_lastCopilotUserPrompt = userMessage;
         return;
     }
 
-    // Fallback: local GGUF / Ollama chat path.
     HandleCopilotSend_Ollama();
 }
 
@@ -9220,7 +9167,7 @@ void Win32IDE::openModelFromURL()
 
     // Example label
     HWND hExample = CreateWindowExA(
-        0, "STATIC", "Example: https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q4_K_M.gguf",
+        0, "STATIC", "Example: local-hf://TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q4_K_M.gguf",
         WS_CHILD | WS_VISIBLE | SS_LEFT, 16, 76, 520, 18, hDlg, nullptr, m_hInstance, nullptr);
     SendMessage(hExample, WM_SETFONT, (WPARAM)m_hFontUI, TRUE);
 
@@ -9625,7 +9572,7 @@ LRESULT CALLBACK Win32IDE::EditorSubclassProc(HWND hwnd, UINT uMsg, WPARAM wPara
 // ============================================================================
 LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    Win32IDE* pThis = (Win32IDE*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -9647,50 +9594,61 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
         case WM_COMMAND:
         {
-            if (pThis)
+            const int controlId = LOWORD(wParam);
+            const int notifyCode = HIWORD(wParam);
+            OutputDebugStringA(("[AI panel WM_COMMAND] id=" + std::to_string(controlId) +
+                                " code=" + std::to_string(notifyCode) + "\n")
+                                   .c_str());
+
+            if (!pThis)
+                return 0;
+
+            // BN_CLICKED is 0 — treat notifyCode 0 as click for pushbuttons
+            const bool clicked = (notifyCode == BN_CLICKED || notifyCode == 0);
+
+            if (controlId == IDC_COPILOT_SEND_BTN && clicked)
             {
-                const int controlId = LOWORD(wParam);
-                const int notifyCode = HIWORD(wParam);
+                pThis->HandleCopilotSend();
+                return 0;
+            }
+            if (controlId == IDC_COPILOT_CLEAR_BTN && clicked)
+            {
+                pThis->HandleCopilotClear();
+                return 0;
+            }
+            if (controlId == IDC_MODEL_BROWSE_BTN && clicked)
+            {
+                pThis->handleModelBrowse();
+                return 0;
+            }
+            if (controlId == IDC_MODEL_SELECTOR && notifyCode == CBN_SELCHANGE)
+            {
+                pThis->onModelSelectionChanged();
+                return 0;
+            }
 
-                if (controlId == IDC_COPILOT_SEND_BTN &&
-                    (notifyCode == BN_CLICKED || notifyCode == 0))
-                {
-                    pThis->HandleCopilotSend();
-                    return 0;
-                }
-                if (controlId == IDC_COPILOT_CLEAR_BTN &&
-                    (notifyCode == BN_CLICKED || notifyCode == 0))
-                {
-                    pThis->HandleCopilotClear();
-                    return 0;
-                }
-                if (controlId == IDC_MODEL_BROWSE_BTN &&
-                    (notifyCode == BN_CLICKED || notifyCode == 0))
-                {
-                    pThis->handleModelBrowse();
-                    return 0;
-                }
-                if (controlId == IDC_MODEL_SELECTOR && notifyCode == CBN_SELCHANGE)
-                {
-                    pThis->onModelSelectionChanged();
-                    return 0;
-                }
+            if (controlId == IDC_AI_MAX_MODE && notifyCode == BN_CLICKED)
+                pThis->onAIModeMax();
+            else if (controlId == IDC_AI_DEEP_THINK && notifyCode == BN_CLICKED)
+                pThis->onAIModeDeepThink();
+            else if (controlId == IDC_AI_DEEP_RESEARCH && notifyCode == BN_CLICKED)
+                pThis->onAIModeDeepResearch();
+            else if (controlId == IDC_AI_NO_REFUSAL && notifyCode == BN_CLICKED)
+                pThis->onAIModeNoRefusal();
+            else if (pThis->m_hwndMain && IsWindow(pThis->m_hwndMain) &&
+                     (clicked || notifyCode == CBN_SELCHANGE || notifyCode == EN_CHANGE))
+            {
+                return SendMessage(pThis->m_hwndMain, WM_COMMAND, wParam, lParam);
+            }
+            return 0;
+        }
 
-                if (controlId == IDC_AI_MAX_MODE && notifyCode == BN_CLICKED)
-                    pThis->onAIModeMax();
-                else if (controlId == IDC_AI_DEEP_THINK && notifyCode == BN_CLICKED)
-                    pThis->onAIModeDeepThink();
-                else if (controlId == IDC_AI_DEEP_RESEARCH && notifyCode == BN_CLICKED)
-                    pThis->onAIModeDeepResearch();
-                else if (controlId == IDC_AI_NO_REFUSAL && notifyCode == BN_CLICKED)
-                    pThis->onAIModeNoRefusal();
-                else if (pThis->m_hwndMain && IsWindow(pThis->m_hwndMain) &&
-                         (notifyCode == BN_CLICKED || notifyCode == 0 ||
-                          notifyCode == CBN_SELCHANGE || notifyCode == EN_CHANGE))
-                {
-                    // Forward remaining AI-panel control traffic to main onCommand
-                    return SendMessage(pThis->m_hwndMain, WM_COMMAND, wParam, lParam);
-                }
+        case WM_HSCROLL:
+        {
+            if (pThis && (HWND)lParam == pThis->m_hwndMaxTokensSlider)
+            {
+                int pos = (int)SendMessage(pThis->m_hwndMaxTokensSlider, TBM_GETPOS, 0, 0);
+                pThis->onMaxTokensChanged(pos);
             }
             return 0;
         }
@@ -9698,19 +9656,14 @@ LRESULT CALLBACK Win32IDE::SidebarProcImpl(HWND hwnd, UINT uMsg, WPARAM wParam, 
         case WM_SIZE:
         {
             if (pThis)
-            {
                 pThis->updateSecondarySidebarContent();
-            }
             return 0;
         }
     }
 
-    // Forward to the original sidebar window procedure
     if (pThis && pThis->m_oldSidebarProc)
-    {
-        return CallWindowProcA(pThis->m_oldSidebarProc, hwnd, uMsg, wParam, lParam);
-    }
-    return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+        return CallWindowProc(pThis->m_oldSidebarProc, hwnd, uMsg, wParam, lParam);
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 // ============================================================================
