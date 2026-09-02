@@ -6,6 +6,7 @@
 
 #include "extension_marketplace.hpp"
 #include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <sstream>
 #include <cstring>
@@ -335,11 +336,21 @@ ExtResult ExtensionMarketplace::installFromVsix(const std::string& vsixPath) {
     manifest.installPath = targetDir;
     manifest.installedAt = static_cast<uint64_t>(
         std::chrono::system_clock::now().time_since_epoch().count());
+    manifest.packageFormat = static_cast<uint32_t>(ExtensionPackageFormat::VsCodeVsix);
+    manifest.sourceIde = "VS Code";
 
     // Parse the real manifest if it exists
     std::string manifestPath = targetDir + "package.json";
     if (std::filesystem::exists(manifestPath)) {
         parseManifest(manifestPath, manifest);
+    }
+    if (std::filesystem::exists(targetDir + "extension.vsixmanifest") &&
+        !std::filesystem::exists(manifestPath)) {
+        manifest.packageFormat =
+            static_cast<uint32_t>(ExtensionPackageFormat::VisualStudioVsix);
+        manifest.sourceIde = "Visual Studio";
+        parseForeignManifest(ExtensionPackageFormat::VisualStudioVsix,
+                             targetDir, manifest);
     }
 
     installed_[manifest.id] = manifest;
@@ -353,6 +364,429 @@ ExtResult ExtensionMarketplace::installFromVsix(const std::string& vsixPath) {
     emitEvent(evt);
 
     return ExtResult::ok("Extension installed from VSIX");
+}
+
+const IdeExtensionFormatInfo* ExtensionMarketplace::ideExtensionCatalog(
+    size_t& outCount)
+{
+    // Top 25 IDEs → primary package formats (shared ecosystems collapse).
+    static const IdeExtensionFormatInfo kCatalog[kTopIdeExtensionCatalogCount] = {
+        {"Visual Studio",   ExtensionPackageFormat::VisualStudioVsix, ".vsix",
+         "extension.vsixmanifest", true, false},
+        {"VS Code",         ExtensionPackageFormat::VsCodeVsix, ".vsix",
+         "package.json", true, true},
+        {"IntelliJ IDEA",   ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"PyCharm",         ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"WebStorm",        ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"Android Studio",  ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"Xcode",           ExtensionPackageFormat::XcodeBundle, ".appex,.plugin",
+         "Info.plist", true, false},
+        {"Eclipse",         ExtensionPackageFormat::EclipseBundle, ".jar,.zip",
+         "plugin.xml", true, false},
+        {"CLion",           ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"PhpStorm",        ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"GoLand",          ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"Sublime Text",    ExtensionPackageFormat::SublimePackage, ".sublime-package",
+         "*.sublime-package", true, false},
+        {"Zed",             ExtensionPackageFormat::ZedExtension, ".zip,.tar.gz",
+         "extension.toml", true, false},
+        {"Fleet",           ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"Cursor",          ExtensionPackageFormat::VsCodeVsix, ".vsix",
+         "package.json", true, true},
+        {"Neovim",          ExtensionPackageFormat::NeovimPack, ".zip,.tar.gz,.git",
+         "plugin/,lua/", true, false},
+        {"GNU Emacs",       ExtensionPackageFormat::EmacsPackage, ".tar,.el,.tar.gz",
+         "*-pkg.el", true, false},
+        {"Rider",           ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"RubyMine",        ExtensionPackageFormat::JetBrainsPlugin, ".zip,.jar",
+         "META-INF/plugin.xml", true, false},
+        {"NetBeans",        ExtensionPackageFormat::NetBeansNBM, ".nbm,.jar",
+         "Info/info.xml", true, false},
+        {"Qt Creator",      ExtensionPackageFormat::QtCreatorPlugin, ".dll,.zip",
+         "plugin.json", true, false},
+        {"Nova",            ExtensionPackageFormat::NovaExtension, ".novaextension",
+         "extension.json", true, false},
+        {"Windsurf",        ExtensionPackageFormat::VsCodeVsix, ".vsix",
+         "package.json", true, true},
+        {"VSCodium",        ExtensionPackageFormat::VsCodeVsix, ".vsix",
+         "package.json", true, true},
+        {"Lapce",           ExtensionPackageFormat::LapcePlugin, ".zip,.toml",
+         "plugin.toml", true, false},
+    };
+    outCount = kTopIdeExtensionCatalogCount;
+    return kCatalog;
+}
+
+const char* ExtensionMarketplace::packageFormatName(ExtensionPackageFormat fmt) {
+    switch (fmt) {
+    case ExtensionPackageFormat::VsCodeVsix:       return "VS Code VSIX";
+    case ExtensionPackageFormat::VisualStudioVsix: return "Visual Studio VSIX";
+    case ExtensionPackageFormat::JetBrainsPlugin:  return "JetBrains Plugin";
+    case ExtensionPackageFormat::EclipseBundle:    return "Eclipse Bundle";
+    case ExtensionPackageFormat::SublimePackage:   return "Sublime Package";
+    case ExtensionPackageFormat::NeovimPack:       return "Neovim Pack";
+    case ExtensionPackageFormat::EmacsPackage:     return "Emacs Package";
+    case ExtensionPackageFormat::XcodeBundle:      return "Xcode Bundle";
+    case ExtensionPackageFormat::NetBeansNBM:      return "NetBeans NBM";
+    case ExtensionPackageFormat::ZedExtension:     return "Zed Extension";
+    case ExtensionPackageFormat::QtCreatorPlugin:  return "Qt Creator Plugin";
+    case ExtensionPackageFormat::NovaExtension:    return "Nova Extension";
+    case ExtensionPackageFormat::AtomPackage:      return "Atom Package";
+    case ExtensionPackageFormat::LapcePlugin:      return "Lapce Plugin";
+    case ExtensionPackageFormat::NativeDll:        return "Native DLL";
+    case ExtensionPackageFormat::RawrPlugin:       return "RawrXD Plugin";
+    case ExtensionPackageFormat::PythonWheel:      return "Python Wheel";
+    case ExtensionPackageFormat::JsModule:         return "JS Module";
+    default:                                       return "Unknown";
+    }
+}
+
+ExtensionPackageFormat ExtensionMarketplace::detectPackageFormat(
+    const std::string& packagePath) const
+{
+    namespace fs = std::filesystem;
+    if (!fs::exists(packagePath))
+        return ExtensionPackageFormat::Unknown;
+
+    std::string ext = fs::path(packagePath).extension().string();
+    for (auto& c : ext) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+
+    if (ext == ".dll")       return ExtensionPackageFormat::NativeDll;
+    if (ext == ".rawrpkg")   return ExtensionPackageFormat::RawrPlugin;
+    if (ext == ".whl" || ext == ".egg")
+        return ExtensionPackageFormat::PythonWheel;
+    if (ext == ".js")        return ExtensionPackageFormat::JsModule;
+    if (ext == ".sublime-package")
+        return ExtensionPackageFormat::SublimePackage;
+    if (ext == ".nbm")       return ExtensionPackageFormat::NetBeansNBM;
+    if (ext == ".novaextension")
+        return ExtensionPackageFormat::NovaExtension;
+    if (ext == ".appex" || ext == ".plugin")
+        return ExtensionPackageFormat::XcodeBundle;
+    if (ext == ".el")        return ExtensionPackageFormat::EmacsPackage;
+
+    // .vsix / zip / jar / tar: sniff after extract or by name patterns
+    if (ext == ".vsix") {
+        // Prefer VS Code; refined after unpack if only vsixmanifest
+        return ExtensionPackageFormat::VsCodeVsix;
+    }
+    if (ext == ".jar" || ext == ".zip" || ext == ".tar" || ext == ".gz" ||
+        ext == ".tgz") {
+        // Content sniff via tar listing is heavy; use filename heuristics
+        std::string stem = fs::path(packagePath).stem().string();
+        for (auto& c : stem) c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+        if (stem.find("jetbrains") != std::string::npos ||
+            stem.find("intellij") != std::string::npos)
+            return ExtensionPackageFormat::JetBrainsPlugin;
+        if (stem.find("eclipse") != std::string::npos)
+            return ExtensionPackageFormat::EclipseBundle;
+        if (stem.find("zed") != std::string::npos)
+            return ExtensionPackageFormat::ZedExtension;
+        if (stem.find("lapce") != std::string::npos)
+            return ExtensionPackageFormat::LapcePlugin;
+        if (stem.find("nvim") != std::string::npos ||
+            stem.find("neovim") != std::string::npos)
+            return ExtensionPackageFormat::NeovimPack;
+        if (ext == ".jar")
+            return ExtensionPackageFormat::EclipseBundle;
+        return ExtensionPackageFormat::JetBrainsPlugin;
+    }
+
+    if (fs::is_directory(packagePath)) {
+        if (fs::exists(packagePath + "/META-INF/plugin.xml"))
+            return ExtensionPackageFormat::JetBrainsPlugin;
+        if (fs::exists(packagePath + "/package.json"))
+            return ExtensionPackageFormat::VsCodeVsix;
+        if (fs::exists(packagePath + "/extension.toml"))
+            return ExtensionPackageFormat::ZedExtension;
+        if (fs::exists(packagePath + "/plugin.toml"))
+            return ExtensionPackageFormat::LapcePlugin;
+        if (fs::exists(packagePath + "/plugin") ||
+            fs::exists(packagePath + "/lua"))
+            return ExtensionPackageFormat::NeovimPack;
+        if (fs::exists(packagePath + "/Info.plist"))
+            return ExtensionPackageFormat::XcodeBundle;
+        if (fs::exists(packagePath + "/plugin.xml"))
+            return ExtensionPackageFormat::EclipseBundle;
+        if (fs::exists(packagePath + "/plugin.json"))
+            return ExtensionPackageFormat::QtCreatorPlugin;
+    }
+
+    return ExtensionPackageFormat::Unknown;
+}
+
+ExtResult ExtensionMarketplace::installFromPackage(const std::string& packagePath) {
+    if (!std::filesystem::exists(packagePath))
+        return ExtResult::error("Package file not found", 2);
+
+    ExtensionPackageFormat fmt = detectPackageFormat(packagePath);
+
+    if (fmt == ExtensionPackageFormat::VsCodeVsix ||
+        fmt == ExtensionPackageFormat::VisualStudioVsix) {
+        return installFromVsix(packagePath);
+    }
+
+    if (fmt == ExtensionPackageFormat::NativeDll ||
+        fmt == ExtensionPackageFormat::JsModule ||
+        fmt == ExtensionPackageFormat::RawrPlugin) {
+        // Copy into install tree as opaque host package
+        std::lock_guard<std::mutex> lock(marketplaceMutex_);
+        ExtensionManifest manifest;
+        std::string stem = std::filesystem::path(packagePath).stem().string();
+        manifest.publisher = "local";
+        manifest.name = stem;
+        manifest.id = "local." + stem;
+        manifest.version = "0.0.1";
+        manifest.vsixPath = packagePath;
+        manifest.packageFormat = static_cast<uint32_t>(fmt);
+        manifest.sourceIde = packageFormatName(fmt);
+        manifest.isEnabled = true;
+
+        ExtResult pr = checkPolicy(manifest);
+        if (!pr.success) return pr;
+
+        std::string targetDir = installDir_ + manifest.id + "/";
+        std::filesystem::create_directories(targetDir);
+        std::filesystem::copy_file(
+            packagePath,
+            targetDir + std::filesystem::path(packagePath).filename().string(),
+            std::filesystem::copy_options::overwrite_existing);
+        manifest.installPath = targetDir;
+        manifest.installedAt = static_cast<uint64_t>(
+            std::chrono::system_clock::now().time_since_epoch().count());
+        installed_[manifest.id] = manifest;
+        states_[manifest.id] = ExtensionState::INSTALLED;
+        return ExtResult::ok(std::string("Installed ") + packageFormatName(fmt));
+    }
+
+    // Archive-based foreign IDE formats
+    std::lock_guard<std::mutex> lock(marketplaceMutex_);
+    ExtensionManifest manifest;
+    std::string stem = std::filesystem::path(packagePath).stem().string();
+    manifest.publisher = "imported";
+    manifest.name = stem;
+    manifest.id = "imported." + stem;
+    manifest.version = "0.0.1";
+    manifest.vsixPath = packagePath;
+    manifest.packageFormat = static_cast<uint32_t>(fmt);
+    manifest.sourceIde = packageFormatName(fmt);
+    manifest.isEnabled = true;
+    if (std::filesystem::is_regular_file(packagePath))
+        manifest.fileSize = std::filesystem::file_size(packagePath);
+
+    ExtResult pr = checkPolicy(manifest);
+    if (!pr.success) return pr;
+
+    std::string targetDir = installDir_ + manifest.id + "/";
+    ExtResult er;
+    if (std::filesystem::is_directory(packagePath)) {
+        std::filesystem::create_directories(targetDir);
+        std::filesystem::copy(packagePath, targetDir,
+            std::filesystem::copy_options::recursive |
+            std::filesystem::copy_options::overwrite_existing);
+        er = ExtResult::ok("Directory package copied");
+    } else {
+        er = extractZipPackage(packagePath, targetDir);
+    }
+    if (!er.success) return er;
+
+    // Refine format from extracted markers
+    if (std::filesystem::exists(targetDir + "META-INF/plugin.xml"))
+        fmt = ExtensionPackageFormat::JetBrainsPlugin;
+    else if (std::filesystem::exists(targetDir + "extension.toml"))
+        fmt = ExtensionPackageFormat::ZedExtension;
+    else if (std::filesystem::exists(targetDir + "plugin.toml"))
+        fmt = ExtensionPackageFormat::LapcePlugin;
+    else if (std::filesystem::exists(targetDir + "package.json")) {
+        fmt = ExtensionPackageFormat::VsCodeVsix;
+        parseManifest(targetDir + "package.json", manifest);
+    } else if (std::filesystem::exists(targetDir + "plugin.xml"))
+        fmt = ExtensionPackageFormat::EclipseBundle;
+    else if (std::filesystem::exists(targetDir + "Info/info.xml"))
+        fmt = ExtensionPackageFormat::NetBeansNBM;
+    else if (std::filesystem::exists(targetDir + "Info.plist"))
+        fmt = ExtensionPackageFormat::XcodeBundle;
+    else if (std::filesystem::exists(targetDir + "plugin.json"))
+        fmt = ExtensionPackageFormat::QtCreatorPlugin;
+    else if (std::filesystem::exists(targetDir + "extension.json"))
+        fmt = ExtensionPackageFormat::NovaExtension;
+    else if (std::filesystem::exists(targetDir + "plugin") ||
+             std::filesystem::exists(targetDir + "lua"))
+        fmt = ExtensionPackageFormat::NeovimPack;
+
+    manifest.packageFormat = static_cast<uint32_t>(fmt);
+    manifest.sourceIde = packageFormatName(fmt);
+    parseForeignManifest(fmt, targetDir, manifest);
+
+    manifest.installPath = targetDir;
+    manifest.installedAt = static_cast<uint64_t>(
+        std::chrono::system_clock::now().time_since_epoch().count());
+    installed_[manifest.id] = manifest;
+    states_[manifest.id] = ExtensionState::INSTALLED;
+
+    const std::string installDetail = std::string("Installed ") + packageFormatName(fmt);
+    MarketplaceEvent evt;
+    evt.type = MarketplaceEvent::EXTENSION_INSTALLED;
+    evt.extensionId = manifest.id;
+    evt.detail = installDetail.c_str();
+    emitEvent(evt);
+
+    return ExtResult::ok(installDetail);
+}
+
+ExtResult ExtensionMarketplace::parseForeignManifest(
+    ExtensionPackageFormat fmt,
+    const std::string& installDir,
+    ExtensionManifest& manifest)
+{
+    namespace fs = std::filesystem;
+    auto readText = [](const std::string& path) -> std::string {
+        std::ifstream in(path, std::ios::binary);
+        if (!in) return {};
+        std::ostringstream ss;
+        ss << in.rdbuf();
+        return ss.str();
+    };
+
+    auto grabAttr = [](const std::string& xml, const char* key) -> std::string {
+        std::string needle = std::string(key) + "=\"";
+        auto pos = xml.find(needle);
+        if (pos == std::string::npos) return {};
+        pos += needle.size();
+        auto end = xml.find('"', pos);
+        if (end == std::string::npos) return {};
+        return xml.substr(pos, end - pos);
+    };
+
+    switch (fmt) {
+    case ExtensionPackageFormat::JetBrainsPlugin: {
+        std::string xml = readText(installDir + "/META-INF/plugin.xml");
+        if (xml.empty()) xml = readText(installDir + "META-INF/plugin.xml");
+        if (!xml.empty()) {
+            auto id = grabAttr(xml, "id");
+            if (id.empty()) {
+                auto p = xml.find("<id>");
+                if (p != std::string::npos) {
+                    p += 4;
+                    auto e = xml.find("</id>", p);
+                    if (e != std::string::npos) id = xml.substr(p, e - p);
+                }
+            }
+            auto ver = grabAttr(xml, "version");
+            auto namePos = xml.find("<name>");
+            if (namePos != std::string::npos) {
+                namePos += 6;
+                auto e = xml.find("</name>", namePos);
+                if (e != std::string::npos)
+                    manifest.displayName = xml.substr(namePos, e - namePos);
+            }
+            if (!id.empty()) {
+                manifest.id = id;
+                manifest.name = id;
+            }
+            if (!ver.empty()) manifest.version = ver;
+            manifest.publisher = "jetbrains";
+        }
+        break;
+    }
+    case ExtensionPackageFormat::EclipseBundle: {
+        std::string xml = readText(installDir + "/plugin.xml");
+        if (xml.empty()) xml = readText(installDir + "plugin.xml");
+        auto id = grabAttr(xml, "id");
+        auto ver = grabAttr(xml, "version");
+        auto name = grabAttr(xml, "name");
+        if (!id.empty()) { manifest.id = id; manifest.name = id; }
+        if (!ver.empty()) manifest.version = ver;
+        if (!name.empty()) manifest.displayName = name;
+        manifest.publisher = "eclipse";
+        break;
+    }
+    case ExtensionPackageFormat::ZedExtension:
+    case ExtensionPackageFormat::LapcePlugin: {
+        std::string tomlPath = (fmt == ExtensionPackageFormat::ZedExtension)
+            ? installDir + "/extension.toml"
+            : installDir + "/plugin.toml";
+        if (!fs::exists(tomlPath))
+            tomlPath = (fmt == ExtensionPackageFormat::ZedExtension)
+                ? installDir + "extension.toml"
+                : installDir + "plugin.toml";
+        std::string toml = readText(tomlPath);
+        auto findKey = [&](const char* key) -> std::string {
+            std::string lineKey = std::string(key) + " = ";
+            auto p = toml.find(lineKey);
+            if (p == std::string::npos) return {};
+            p += lineKey.size();
+            while (p < toml.size() && (toml[p] == '"' || toml[p] == ' ')) ++p;
+            auto e = p;
+            while (e < toml.size() && toml[e] != '"' && toml[e] != '\n') ++e;
+            return toml.substr(p, e - p);
+        };
+        auto id = findKey("id");
+        if (id.empty()) id = findKey("name");
+        auto ver = findKey("version");
+        if (!id.empty()) { manifest.id = id; manifest.name = id; }
+        if (!ver.empty()) manifest.version = ver;
+        manifest.publisher = (fmt == ExtensionPackageFormat::ZedExtension)
+            ? "zed" : "lapce";
+        break;
+    }
+    case ExtensionPackageFormat::NetBeansNBM: {
+        std::string xml = readText(installDir + "/Info/info.xml");
+        if (xml.empty()) xml = readText(installDir + "Info/info.xml");
+        auto cn = grabAttr(xml, "codenamebase");
+        if (!cn.empty()) { manifest.id = cn; manifest.name = cn; }
+        auto ver = grabAttr(xml, "specification-version");
+        if (!ver.empty()) manifest.version = ver;
+        manifest.publisher = "netbeans";
+        break;
+    }
+    case ExtensionPackageFormat::NovaExtension:
+    case ExtensionPackageFormat::QtCreatorPlugin:
+    case ExtensionPackageFormat::AtomPackage: {
+        std::string jp = installDir + "/extension.json";
+        if (!fs::exists(jp)) jp = installDir + "/plugin.json";
+        if (!fs::exists(jp)) jp = installDir + "/package.json";
+        if (fs::exists(jp)) parseManifest(jp, manifest);
+        break;
+    }
+    case ExtensionPackageFormat::SublimePackage:
+        manifest.publisher = "sublime";
+        break;
+    case ExtensionPackageFormat::NeovimPack:
+        manifest.publisher = "neovim";
+        break;
+    case ExtensionPackageFormat::EmacsPackage:
+        manifest.publisher = "emacs";
+        break;
+    case ExtensionPackageFormat::XcodeBundle:
+        manifest.publisher = "apple";
+        break;
+    case ExtensionPackageFormat::VisualStudioVsix: {
+        std::string vm = installDir + "/extension.vsixmanifest";
+        if (!fs::exists(vm)) vm = installDir + "extension.vsixmanifest";
+        std::string xml = readText(vm);
+        auto id = grabAttr(xml, "Id");
+        if (id.empty()) id = grabAttr(xml, "id");
+        if (!id.empty()) { manifest.id = id; manifest.name = id; }
+        manifest.publisher = "visualstudio";
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (manifest.displayName.empty())
+        manifest.displayName = manifest.name;
+    return ExtResult::ok("Foreign manifest parsed");
 }
 
 ExtResult ExtensionMarketplace::installFromRegistry(
@@ -775,15 +1209,20 @@ ExtResult ExtensionMarketplace::resolveDependencies(
 
 ExtResult ExtensionMarketplace::extractVsix(const std::string& vsixPath,
                                               const std::string& targetDir) {
+    return extractZipPackage(vsixPath, targetDir);
+}
+
+ExtResult ExtensionMarketplace::extractZipPackage(const std::string& packagePath,
+                                                    const std::string& targetDir) {
     std::filesystem::create_directories(targetDir);
 
-    // VSIX files are ZIP archives — extract using Win32 Shell API or manual unzip
+    // ZIP-compatible packages — extract using Win32 Shell API or manual unzip
 #ifdef _WIN32
     // Use Shell32 CopyHere for ZIP extraction (available on all Windows)
     // First, try lightweight manual ZIP parsing for .vsix
-    std::ifstream vsixFile(vsixPath, std::ios::binary);
+    std::ifstream vsixFile(packagePath, std::ios::binary);
     if (!vsixFile.is_open())
-        return ExtResult::error("Cannot open VSIX", 7);
+        return ExtResult::error("Cannot open package archive", 7);
 
     // Read file into memory for ZIP parsing
     vsixFile.seekg(0, std::ios::end);
@@ -803,10 +1242,10 @@ ExtResult ExtensionMarketplace::extractVsix(const std::string& vsixPath,
     if (zipData[0] != 'P' || zipData[1] != 'K' ||
         zipData[2] != 0x03 || zipData[3] != 0x04) {
         // Not a ZIP — fall back to plain copy
-        std::string destPath = targetDir + "/extension.vsix";
-        std::filesystem::copy_file(vsixPath, destPath,
+        std::string destPath = targetDir + "/extension.pkg";
+        std::filesystem::copy_file(packagePath, destPath,
             std::filesystem::copy_options::overwrite_existing);
-        return ExtResult::ok("VSIX copied (not a valid ZIP)");
+        return ExtResult::ok("Package copied (not a valid ZIP)");
     }
 
     // Walk local file headers to extract entries
@@ -867,27 +1306,27 @@ ExtResult ExtensionMarketplace::extractVsix(const std::string& vsixPath,
     }
 
     if (extractedCount == 0) {
-        // Fallback: copy raw VSIX
-        std::string destPath = targetDir + "/extension.vsix";
-        std::filesystem::copy_file(vsixPath, destPath,
+        // Fallback: copy raw package
+        std::string destPath = targetDir + "/extension.pkg";
+        std::filesystem::copy_file(packagePath, destPath,
             std::filesystem::copy_options::overwrite_existing);
     }
 
     {
         thread_local char _okBuf[256];
-        snprintf(_okBuf, sizeof(_okBuf), "VSIX extracted (%d files)", extractedCount);
+        snprintf(_okBuf, sizeof(_okBuf), "Package extracted (%d files)", extractedCount);
         return ExtResult::ok(_okBuf);
     }
 #else
     // POSIX: use system unzip
-    std::string cmd = "unzip -o \"" + vsixPath + "\" -d \"" + targetDir + "\"";
+    std::string cmd = "unzip -o \"" + packagePath + "\" -d \"" + targetDir + "\"";
     int ret = system(cmd.c_str());
     if (ret != 0) {
         thread_local char _errBuf[256];
         snprintf(_errBuf, sizeof(_errBuf), "unzip failed with code %d", ret);
         return ExtResult::error(_errBuf, 7);
     }
-    return ExtResult::ok("VSIX extracted via unzip");
+    return ExtResult::ok("Package extracted via unzip");
 #endif
 }
 

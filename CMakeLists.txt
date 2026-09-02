@@ -5242,6 +5242,10 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         src/win32app/Win32IDE_CoreRuntimeSpine.cpp
         src/win32app/Win32IDE_Commands.cpp
         src/win32app/Win32IDE_CommandSurface.cpp
+        src/command/CommandBroker.cpp
+        src/command/CommandEventJournal.cpp
+        src/command/SessionBinder.cpp
+        src/command/CapabilityProfile.cpp
         src/win32app/Win32IDE_VSCodeUI.cpp
         # Win32IDE_Window.cpp removed: duplicate createWindow/WindowProc/onCreate
         # fought Core via /FORCE:MULTIPLE and risked a second product shell.
@@ -5744,9 +5748,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         # Phase 34: Telemetry Export
         src/win32app/Win32IDE_Telemetry.cpp
 
-        # Phase 36: MCP Integration ΓÇö Model Context Protocol Server + Client
-        # src/mcp_integration.cpp  # excluded: structurally broken, needs rewrite
-        src/mcp_integration_stub.cpp  # stub to satisfy linker
+        # Phase 36: MCP Integration — Model Context Protocol Server + Client
+        src/mcp_integration.cpp
         src/win32app/Win32IDE_MCP.cpp
 
         # Phase 36: Flight Recorder ΓÇö memory-mapped binary ring-buffer logger
@@ -6553,6 +6556,24 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
     list(REMOVE_ITEM WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
     list(APPEND WIN32IDE_SOURCES src/core/ai_agent_masm_core_impl.cpp)
 
+    # Post-filter link closure: real production TUs excluded by strict *_fallback* / *_stub* regex.
+    foreach(_rawrxd_link_closure IN ITEMS
+        src/core/cot_fallback_system.cpp
+        src/agentic_model_streamer_bridge.cpp
+        src/core/GpuDecodeEfficiency.cpp
+        src/core/AmdGpuPowerBackend.cpp
+        src/deep2/K2NativeStreamGate.cpp
+        src/deep2/K2MLAAttention.cpp
+        src/deep2/K2TokenEmbedding.cpp
+        src/win32app/ScreenPilotModelHub.cpp
+        src/marketplace/extension_package_local.cpp
+    )
+        if(EXISTS "${CMAKE_SOURCE_DIR}/${_rawrxd_link_closure}")
+            list(APPEND WIN32IDE_SOURCES "${_rawrxd_link_closure}")
+        else()
+            message(WARNING "[Win32IDE] Link-closure unit missing, skipping: ${_rawrxd_link_closure}")
+        endif()
+    endforeach()
 
     # Pre-append strict guard: Verify no stubs were auto-added earlier
     if(RAWRXD_STRICT_AGENTIC_REALITY AND NOT RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK)
@@ -6560,7 +6581,8 @@ if(WIN32 AND RAWRXD_BUILD_WIN32IDE)
         foreach(_rawrxd_src IN LISTS WIN32IDE_SOURCES)
             if(_rawrxd_src MATCHES "(_stubs\\.cpp$|/stubs\\.cpp$|_stubs\\.asm$|/stubs\\.asm$|/.*_stub\\.(cpp|asm)$|/stub_.*\\.(cpp|asm)$|/shim_.*\\.(cpp|asm)$|/.*_(mock|fake)\\.(cpp|asm)$|/.*(mock_|fake_).*(\\.cpp|\\.asm)$|/link_stubs_.*\\.(cpp|asm)$|/.*_shims?\\.(cpp|asm)$|/.*_link_shims?\\.(cpp|asm)$|/.*_fallback[^/]*\\.(cpp|asm)$)" OR
                _rawrxd_src MATCHES "(missing_handler|/stubs\\.(cpp|asm)$|_stub\\.(cpp|asm)$|stub_|shim_|shims?\\.(cpp|asm)$|mock_|fake_|_(mock|fake)\\.(cpp|asm)$)")
-                if(NOT _rawrxd_src MATCHES "ai_agent_masm_core_impl\\.cpp$")
+                if(NOT _rawrxd_src MATCHES "ai_agent_masm_core_impl\\.cpp$" AND
+                   NOT _rawrxd_src MATCHES "cot_fallback_system\\.cpp$")
                     list(APPEND _RAWRXD_FORBIDDEN_WIN32IDE_SOURCES_POST "${_rawrxd_src}")
                 endif()
             endif()
