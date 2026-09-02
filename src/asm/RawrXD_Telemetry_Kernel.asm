@@ -228,8 +228,14 @@ IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     mov  qword ptr [rsp+56], rax
     call P1PRA_UtcCfSnapAll
     add  rsp, 88
+    mov  r11, rsp
+    sub  rsp, 8
+    mov  rcx, r11
+    mov  edx, P1PRA_UtcCfShadowSub56
+    call P1PRA_UtcRspSnapLight
+    add  rsp, 8
 ENDIF
-    sub  rsp, 40h
+    sub  rsp, 48h
     mov  dword ptr [rsp+32], CREATE_ALWAYS
     mov  dword ptr [rsp+40], 80h
     mov  qword ptr [rsp+48], 0
@@ -242,7 +248,7 @@ IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     mov  rcx, rax
     call P1PRA_UtcHandleSnap
 ENDIF
-    add  rsp, 40h
+    add  rsp, 48h
 IFDEF RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
     P1PRA_UtcWitnessEnter szUtcCfPostcall, P1PRA_UtcCfPostcall
     P1PRA_UtcWitnessExit szUtcCfPostcall
