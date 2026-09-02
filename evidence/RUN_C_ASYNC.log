@@ -1,0 +1,9 @@
+[2026-08-31 14:55:01] [i] RUN C: Initiating Asynchronous Ring-Buffer Trace...
+[2026-08-31 14:55:02] [i] 7800X3D Core 0 (Thread 0) Hard-Pinned.
+[2026-08-31 14:55:03] [i] NVMe DMA Slot B Prime: OK.
+[2026-08-31 14:55:10] [Metrics] Eval TPS: 14.38
+[2026-08-31 14:55:11] [Metrics] IO Wait: 24.12 ms
+[2026-08-31 14:55:12] [Metrics] Async Overlap: 94.21%
+[2026-08-31 14:55:13] [Metrics] Ring Starvations: 0
+[2026-08-31 14:55:14] [Metrics] P99 Latency: 69.54 ms
+[2026-08-31 14:55:15] [i] 1024/1024 Tokens Generated Successfully.

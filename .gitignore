@@ -1,0 +1,102 @@
+# Build artifacts
+build/
+build-*/
+build_prod/
+out/
+*.obj
+*.o
+*.lib
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.log
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.vcxproj
+*.vcxproj.filters
+*.sln
+CMakeSettings.json
+compile_commands.json
+
+# Qt
+*_autogen/
+moc_*.cpp
+moc_*.cpp.d
+*.qm
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+
+# IDE
+.vscode/
+.idea/
+.clangd
+
+# OS
+.DS_Store
+Thumbs.db
+
+# RawrXD specific
+tmp/
+models/
+models-mnt
+audit_results/source_inventory.json
+backups/
+
+# Python
+.venv/
+ggml_env/
+__pycache__/
+
+# Zig
+zig-out/
+zig-cache/
+
+# Cache
+.cache
+.exrc
+.stablelm
+.gpt-2
+
+# Model files
+*.gguf
+ggml-model-f16.bin
+OllamaModels/
+OllamaModels - Copy/
+
+# Vim
+*.sw?
+
+# Graphviz
+*.dot
+*.d
+
+# ARM headers (generated)
+src/arm_neon.h
+tests/arm_neon.h
+
+# Batch files (generated)
+*.bat
+
+# Embedded git repositories (added by push script)
+temp/RawrXD-clean/
+temp/RawrXD-pr/
+temp/RawrXD-pr3/
+temp/RawrXD-q8-wire/
+temp/agentic/Everything_MyCopilot_IDE/
+src/
+
+# Stale worktree checkouts (broken D:/ gitdir pointers)
+.worktrees/
+__clean_copilot_branch/
+__phase7a_clean/
+rawrxd-ci-bootstrap/
+rawrxd_phase7a/
