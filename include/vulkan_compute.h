@@ -187,6 +187,7 @@ public:
     ~VulkanCompute();
 
     bool Initialize();
+    bool InitializeSolo(const char* nameNeedle);
     bool LoadShader(const std::string& name, const std::string& spirv_path);
     bool CreateComputePipeline(const std::string& shader_name);
     VulkanTensor TransferGGUFTensor(const std::string& tensor_name,
@@ -268,6 +269,7 @@ private:
     bool CreateInstance();
     bool SelectPhysicalDevice();
     bool CreateLogicalDevice();
+    std::string solo_needle_;
     bool CreateCommandPool();
     bool LoadSPIRVCode(const std::string& path, std::vector<uint32_t>& code);
     uint32_t FindMemoryType(uint32_t type_filter, VkMemoryPropertyFlags properties);

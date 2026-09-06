@@ -40,21 +40,24 @@ VulkanCompute::~VulkanCompute() {
 }
 
 bool VulkanCompute::Initialize() {
-    // Check if Vulkan is available at runtime
-    #ifdef _WIN32
+#ifdef _WIN32
     HMODULE vulkanDll = LoadLibraryA("vulkan-1.dll");
     if (!vulkanDll) {
         printf("[VulkanCompute] Vulkan runtime not available (vulkan-1.dll not found)\n");
         return false;
     }
     FreeLibrary(vulkanDll);
-    #endif
-    
+#endif
     if (!CreateInstance()) return false;
     if (!SelectPhysicalDevice()) return false;
     if (!CreateLogicalDevice()) return false;
     if (!CreateCommandPool()) return false;
     return true;
+}
+
+bool VulkanCompute::InitializeSolo(const char* nameNeedle) {
+    solo_needle_ = nameNeedle && nameNeedle[0] ? nameNeedle : "R9700";
+    return Initialize();
 }
 
 void VulkanCompute::Cleanup() {
@@ -195,9 +198,17 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
         std::string spirvPath = "src/backend/gemv.spv";
         std::ifstream file(spirvPath, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
-            // Try relative to working directory
-            spirvPath = "gemv.spv";
-            file.open(spirvPath, std::ios::binary | std::ios::ate);
+            const char* candidates[] = {
+                "gemv.spv",
+                "bin/gemv.spv",
+                "G:/~dev/rawrxd/src/backend/gemv.spv",
+                "G:\\~dev\\rawrxd\\src\\backend\\gemv.spv",
+                "G:/~dev/rawrxd/build-ninja/bin/gemv.spv",
+            };
+            for (const char* c : candidates) {
+                file.open(c, std::ios::binary | std::ios::ate);
+                if (file.is_open()) { spirvPath = c; break; }
+            }
             if (!file.is_open()) {
                 printf("[DispatchGEMV] FAIL: cannot open gemv.spv\n");
                 return false;
@@ -285,13 +296,14 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
         }
         printf("[DispatchGEMV] Compute pipeline created OK\n");
 
-        // Descriptor pool
+        // Descriptor pool — reset each DispatchGEMV (maxSets=1 otherwise exhausts)
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         poolSize.descriptorCount = 3;
         VkDescriptorPoolCreateInfo dpInfo{};
         dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        dpInfo.maxSets = 1;
+        dpInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        dpInfo.maxSets = 64;
         dpInfo.poolSizeCount = 1;
         dpInfo.pPoolSizes = &poolSize;
         if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS) {
@@ -304,15 +316,15 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
             gemv_ds_layout_ = nullptr;
             return false;
         }
-        printf("[DispatchGEMV] Descriptor pool created OK\n");
         gemv_pipeline_created_ = true;
     }
+
+    vkResetDescriptorPool(device_, gemv_desc_pool_, 0);
 
     // --- 2. Allocate GPU buffers ---
     size_t weightBytes = (size_t)rows * cols * sizeof(float);
     size_t inputBytes  = (size_t)cols * sizeof(float);
     size_t outputBytes = (size_t)rows * sizeof(float);
-    printf("[DispatchGEMV] Allocating buffers: weight=%zu input=%zu output=%zu\n", weightBytes, inputBytes, outputBytes);
 
     auto createDeviceBuffer = [&](size_t size, VkBufferUsageFlags usage) -> std::pair<VkBuffer, VkDeviceMemory> {
         VkBufferCreateInfo bufInfo{};
@@ -346,13 +358,11 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     auto [outputBuf, outputMem]   = createDeviceBuffer(outputBytes, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 
     if (!weightBuf || !inputBuf || !outputBuf) {
-        printf("[DispatchGEMV] FAIL: buffer allocation failed\n");
         if (weightBuf) { vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr); }
         if (inputBuf)  { vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr); }
         if (outputBuf) { vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr); }
         return false;
     }
-    printf("[DispatchGEMV] Buffers allocated OK\n");
 
     // --- 3. Upload data via staging buffer ---
     auto uploadViaStaging = [&](const void* data, size_t size, VkBuffer dstBuf) {
@@ -410,7 +420,6 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
 
     uploadViaStaging(weights, weightBytes, weightBuf);
     uploadViaStaging(input, inputBytes, inputBuf);
-    printf("[DispatchGEMV] Upload via staging OK\n");
 
     // --- 4. Dispatch compute shader ---
     VkCommandBufferAllocateInfo allocInfo{};
@@ -463,7 +472,6 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     vkCmdPushConstants(cmdBuf, gemv_pipeline_layout_, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pushConsts), pushConsts);
     vkCmdDispatch(cmdBuf, (rows + 255) / 256, 1, 1);
     vkEndCommandBuffer(cmdBuf);
-    printf("[DispatchGEMV] Command buffer recorded OK\n");
 
     VkFence fence = nullptr;
     VkFenceCreateInfo fenceInfo{};
@@ -483,9 +491,7 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
         vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
         return false;
     }
-    printf("[DispatchGEMV] Queue submit OK, waiting on fence...\n");
     vkWaitForFences(device_, 1, &fence, VK_TRUE, 10000000000ULL);
-    printf("[DispatchGEMV] Fence signaled OK\n");
 
     // --- 5. Download result ---
     VkBufferCreateInfo readbackInfo{};
@@ -535,7 +541,6 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     vkMapMemory(device_, readbackMem, 0, outputBytes, 0, &mappedOut);
     memcpy(output, mappedOut, outputBytes);
     vkUnmapMemory(device_, readbackMem);
-    printf("[DispatchGEMV] Download result OK\n");
 
     // --- 6. Cleanup ---
     vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
@@ -547,7 +552,6 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
     vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
 
-    printf("[DispatchGEMV] SUCCESS\n");
     return true;
 }
 
@@ -709,6 +713,23 @@ bool VulkanCompute::CreateInstance() {
     return true;
 }
 
+static bool VkNameHas(const char* hay, const char* needle) {
+    if (!hay || !needle || !*needle) return false;
+    const size_t nlen = std::strlen(needle);
+    for (const char* p = hay; *p; ++p) {
+        size_t i = 0;
+        while (p[i] && i < nlen) {
+            char a = p[i], b = needle[i];
+            if (a >= 'a' && a <= 'z') a = (char)(a - 32);
+            if (b >= 'a' && b <= 'z') b = (char)(b - 32);
+            if (a != b) break;
+            ++i;
+        }
+        if (i == nlen) return true;
+    }
+    return false;
+}
+
 bool VulkanCompute::SelectPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -721,25 +742,46 @@ bool VulkanCompute::SelectPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
     physical_device_ = VK_NULL_HANDLE;
-    for (const auto& device : devices) {
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(device, &props);
-        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            physical_device_ = device;
+    int bestRank = -1;
+    uint64_t bestVram = 0;
+    for (uint32_t i = 0; i < deviceCount; ++i) {
+        VkPhysicalDeviceProperties props{};
+        vkGetPhysicalDeviceProperties(devices[i], &props);
+        printf("[VulkanCompute] DETECTED phys[%u] type=%u %s\n",
+               i, props.deviceType, props.deviceName);
+        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            continue;
+        if (!solo_needle_.empty() && !VkNameHas(props.deviceName, solo_needle_.c_str()) &&
+            !(VkNameHas(solo_needle_.c_str(), "R9700") && VkNameHas(props.deviceName, "AI PRO")))
+            continue;
+        int rank = 1;
+        if (VkNameHas(props.deviceName, "R9700") || VkNameHas(props.deviceName, "AI PRO"))
+            rank = 3;
+        else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+            rank = 2;
+        VkPhysicalDeviceMemoryProperties mem{};
+        vkGetPhysicalDeviceMemoryProperties(devices[i], &mem);
+        uint64_t vram = 0;
+        for (uint32_t h = 0; h < mem.memoryHeapCount; ++h) {
+            if (mem.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+                vram = (std::max)(vram, (uint64_t)mem.memoryHeaps[h].size);
+        }
+        if (rank > bestRank || (rank == bestRank && vram > bestVram)) {
+            bestRank = rank;
+            bestVram = vram;
+            physical_device_ = devices[i];
             device_info_.device_name = props.deviceName;
             device_info_.vendor_id = props.vendorID;
             device_info_.device_id = props.deviceID;
-            break;
         }
     }
     if (physical_device_ == VK_NULL_HANDLE) {
-        physical_device_ = devices[0];
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(physical_device_, &props);
-        device_info_.device_name = props.deviceName;
-        device_info_.vendor_id = props.vendorID;
-        device_info_.device_id = props.deviceID;
+        printf("[VulkanCompute] no eligible compute device (needle=%s)\n",
+               solo_needle_.empty() ? "(none)" : solo_needle_.c_str());
+        return false;
     }
+    printf("[VulkanCompute] OPEN_ONE %s (others unused)\n",
+           device_info_.device_name.c_str());
 
     VkPhysicalDeviceMemoryProperties memProps;
     vkGetPhysicalDeviceMemoryProperties(physical_device_, &memProps);
@@ -874,6 +916,7 @@ VulkanCompute::VulkanCompute() {}
 VulkanCompute::~VulkanCompute() {}
 
 bool VulkanCompute::Initialize() { return false; }
+bool VulkanCompute::InitializeSolo(const char*) { return false; }
 
 bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float* output,
                                  uint32_t rows, uint32_t cols) {

@@ -45,7 +45,39 @@ Memory policy: **VRAM-first, PCIe-minimal, RAM-as-staging-only**.
 | TinyLlama 1.1B Q4_K_M (now) | **12.27** | **12.09** (~+44%) |
 | Phi-3-mini Q8_0 | **2.61** | **2.57** |
 
-## Fastest-path hierarchy (64 GB + R9700 + 7800 XT)
+## Next gate (do not skip to MULTIGPU)
+
+`GPU_COUNT=3` is the 7800X3D iGPU plus two discrete cards. That is host topology, not compute.
+
+```text
+CURRENT
+CPU_NATIVE 10/10
+      │
+      ▼
+STREAMER_GPU_SOLO_001   R9700 real GGUF decode (enumerate 3, open 1)
+      │
+      ▼
+STREAMER_GPU_SOLO_002   7800XT real GGUF decode
+      │
+      ▼
+STREAMER_SPECULATIVE_001
+      │
+      ▼
+STREAMER_MULTIGPU_001
+      │
+      ▼
+STREAMER_AUTOTUNE_001
+```
+
+Do **not** jump to speculative or layer-shard until R9700 solo can execute the target model.
+
+Stable CPU reference is **MULTI15 decode ~12.1–12.6 tok/s**. Do not replace the frozen **8.52 BENCH_64** baseline with the unstable 3.42 rerun; compare lane-to-identical-lane only.
+
+Vulkan: discover all physical devices, `vkCreateDevice` only on the R9700. iGPU and 7800 XT stay DETECTED/UNUSED.
+
+
+
+## Fastest-path hierarchy (after solo gates)
 
 ```text
 Model fits fully in R9700 32 GB?

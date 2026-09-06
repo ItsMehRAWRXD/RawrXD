@@ -7845,6 +7845,9 @@ option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
         src/deep2/deep2_streamer_cert.cpp
+        src/deep2/StreamerGpuSoloGate.cpp
+        src/asm/GpuSolo_Score.asm
+        src/asm/GpuSolo_Pick.asm
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7861,7 +7864,71 @@ if(BUILD_DEEP2_STREAMER_CERT)
         OUTPUT_NAME deep2_streamer_cert
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
+    set_source_files_properties(
+        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
+        PROPERTIES LANGUAGE ASM_MASM)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
+endif()
+
+# STREAMER_GPU_SOLO_001 — enumerate 3 adapters, open R9700 only (no GGUF GPU claim)
+option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 R9700-solo device gate" ON)
+if(BUILD_DEEP2_GPU_SOLO_CERT)
+    add_executable(deep2_gpu_solo_cert
+        src/deep2/deep2_gpu_solo_cert.cpp
+        src/deep2/StreamerGpuSoloGate.cpp
+        src/deep2/StreamerGpuSoloVk.cpp
+        src/asm/GpuSolo_Score.asm
+        src/asm/GpuSolo_Pick.asm
+    )
+    target_link_libraries(deep2_gpu_solo_cert PRIVATE dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_solo_cert PRIVATE /O2 /EHsc /W4 /std:c++20)
+        if(RAWR_ENABLE_VULKAN)
+            target_compile_definitions(deep2_gpu_solo_cert PRIVATE RAWR_ENABLE_VULKAN=1)
+        endif()
+    endif()
+    target_include_directories(deep2_gpu_solo_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_solo_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_solo_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    set_source_files_properties(
+        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
+        PROPERTIES LANGUAGE ASM_MASM)
+    message(STATUS "[Deep2] GPU solo gate: deep2_gpu_solo_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build R9700 solo GGUF decode cert" ON)
+if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
+    add_executable(deep2_gpu_solo_decode_cert
+        src/deep2/deep2_gpu_solo_decode_cert.cpp
+        src/deep2/StreamerGpuSoloGate.cpp
+        src/asm/GpuSolo_Score.asm
+        src/asm/GpuSolo_Pick.asm
+    )
+    target_link_libraries(deep2_gpu_solo_decode_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_solo_decode_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_solo_decode_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_solo_decode_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_solo_decode_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    set_source_files_properties(
+        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
+        PROPERTIES LANGUAGE ASM_MASM)
+    message(STATUS "[Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert")
 endif()
 
 # deep2_mars_e2e ΓÇö MARS dual-GPU placement + hotpatch + generate smoke

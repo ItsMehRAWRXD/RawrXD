@@ -7001,64 +7001,67 @@ rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
 
 void Deep2Engine::enableVulkan(bool enable) {
     if (enable && !vulkanInitialized_) {
+        const char* needle = std::getenv("DEEP2_GPU_SELECT");
+        if (!needle || !*needle) needle = "R9700";
         vulkanCompute_ = std::make_unique<CPUInference::VulkanCompute>();
-        if (vulkanCompute_->Initialize()) {
+        if (vulkanCompute_->InitializeSolo(needle)) {
             vulkanInitialized_ = true;
             vulkanEnabled_ = true;
-            printf("[Deep2Engine] Vulkan GPU backend initialized on: %s\n",
-                   vulkanCompute_->GetDeviceInfo().device_name.c_str());
+            printf("[Deep2Engine] Vulkan SOLO on: %s (needle=%s)\n",
+                   vulkanCompute_->GetDeviceInfo().device_name.c_str(), needle);
         } else {
-            fprintf(stderr, "[Deep2Engine] Vulkan initialization failed — falling back to CPU\n");
+            fprintf(stderr, "[Deep2Engine] Vulkan SOLO init failed — CPU fail-safe\n");
             vulkanCompute_.reset();
             vulkanEnabled_ = false;
         }
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
-        printf("[Deep2Engine] Vulkan GPU backend re-enabled\n");
     } else {
         vulkanEnabled_ = false;
-        printf("[Deep2Engine] Vulkan GPU backend disabled — using CPU\n");
     }
 }
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
                                   float* output, size_t outDim) {
-    // Phase A: FP32 Vulkan GEMV dispatch — production-ready path
     if (!vulkanInitialized_ || !vulkanEnabled_ || !vulkanCompute_) {
-        return false;
-    }
-    // Only FP32 weights are supported by the Vulkan compute shader (for now)
-    if (wt.type != (int)GGMLType::GGML_TYPE_F32) {
+        ++vulkanGemvFail_;
         return false;
     }
     if (!wt.data || !input || !output || wt.rows == 0 || wt.cols == 0) {
+        ++vulkanGemvFail_;
         return false;
     }
-    if (outDim != wt.rows) {
-        fprintf(stderr, "[VULKAN_GEMV] WARN: outDim(%zu) != wt.rows(%zu) for %s\n",
-                outDim, wt.rows, wt.name.c_str());
+    const float* wF32 = nullptr;
+    if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
+        wF32 = reinterpret_cast<const float*>(wt.data);
+    } else {
+        auto it = vulkanWeightF32_.find(wt.name);
+        if (it == vulkanWeightF32_.end()) {
+            auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
+            if (!deq) {
+                ++vulkanGemvFail_;
+                return false;
+            }
+            std::vector<float> buf(wt.rows * wt.cols);
+            deq(reinterpret_cast<const uint8_t*>(wt.data), buf.data(), buf.size());
+            it = vulkanWeightF32_.emplace(wt.name, std::move(buf)).first;
+        }
+        wF32 = it->second.data();
     }
-
-    printf("[VULKAN_GEMV] tensor=%s type=F32 rows=%zu cols=%zu backend=Vulkan\n",
-           wt.name.c_str(), wt.rows, wt.cols);
-
-    bool ok = vulkanCompute_->DispatchGEMV(
-        (const float*)wt.data,
-        input,
-        output,
+    const bool ok = vulkanCompute_->DispatchGEMV(
+        wF32, input, output,
         static_cast<uint32_t>(wt.rows),
         static_cast<uint32_t>(wt.cols));
-
-    auto& reg = Deep2::QuantKernelRegistry::Instance();
     if (ok) {
-        reg.GetBatch21Counters().vulkanComputeSubmissions.fetch_add(1, std::memory_order_relaxed);
-    } else {
-        reg.GetBatch21Counters().vulkanComputeFailures.fetch_add(1, std::memory_order_relaxed);
-        fprintf(stderr, "[VULKAN_GEMV] FAIL: DispatchGEMV failed for %s — falling back to CPU\n",
-                wt.name.c_str());
-        return false;
+        ++vulkanGemvOk_;
+        QuantKernelRegistry::Instance().GetBatch21Counters()
+            .vulkanComputeSubmissions.fetch_add(1, std::memory_order_relaxed);
+        return true;
     }
-    return true;
+    ++vulkanGemvFail_;
+    QuantKernelRegistry::Instance().GetBatch21Counters()
+        .vulkanComputeFailures.fetch_add(1, std::memory_order_relaxed);
+    return false;
 }
 
 // ============================================================================

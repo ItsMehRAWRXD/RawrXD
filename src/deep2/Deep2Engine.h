@@ -385,11 +385,13 @@ public:
     bool isSovereignRuntimeEnabled() const { return sovereignRuntimeEnabled_; }
     rawrxd::SovereignOutOfCoreRuntime* getSovereignRuntime() const;
 
-    // Vulkan GPU backend
+    // Vulkan GPU backend (STREAMER_GPU_SOLO_001: open one device via DEEP2_GPU_SELECT)
     void enableVulkan(bool enable);
     bool isVulkanEnabled() const { return vulkanEnabled_; }
     bool isVulkanInitialized() const { return vulkanInitialized_; }
     CPUInference::VulkanCompute* getVulkanCompute() const { return vulkanCompute_.get(); }
+    uint64_t vulkanGemvSuccessCount() const { return vulkanGemvOk_; }
+    uint64_t vulkanGemvFallbackCount() const { return vulkanGemvFail_; }
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 
@@ -639,6 +641,9 @@ private:
     std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
+    uint64_t vulkanGemvOk_ = 0;
+    uint64_t vulkanGemvFail_ = 0;
+    std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     
     // Ollama model loading temp file cleanup
     std::string tempOllamaGGUFPath_;

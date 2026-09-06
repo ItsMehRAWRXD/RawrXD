@@ -17,6 +17,7 @@
 // ============================================================================
 
 #include "Deep2Engine.h"
+#include "StreamerGpuSoloGate.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
@@ -28,8 +29,6 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-#include <dxgi.h>
-#pragma comment(lib, "dxgi.lib")
 #endif
 
 using namespace Deep2;
@@ -137,53 +136,41 @@ static void printPerfBlock(const char* tag, const InferenceStats& s) {
            s.tokensPerSecond, s.latencyMs);
 }
 
-// Host vs compute topology witnesses (STREAMER_MULTIGPU disposition).
-static unsigned countHostGpusDxgi() {
-#ifdef _WIN32
-    IDXGIFactory* factory = nullptr;
-    if (FAILED(CreateDXGIFactory(__uuidof(IDXGIFactory),
-                                 reinterpret_cast<void**>(&factory))) ||
-        !factory)
-        return 0;
-    unsigned n = 0;
-    IDXGIAdapter* adapter = nullptr;
-    for (UINT i = 0; factory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
-        if (!adapter)
-            continue;
-        DXGI_ADAPTER_DESC desc{};
-        if (SUCCEEDED(adapter->GetDesc(&desc))) {
-            // Skip Microsoft Basic Render Driver / software.
-            if (desc.VendorId != 0x1414)
-                ++n;
-        }
-        adapter->Release();
-        adapter = nullptr;
-    }
-    factory->Release();
-    return n;
-#else
-    return 0;
-#endif
-}
-
 static void emitComputeTopologyWitnesses(FILE* extra, bool streamerPass,
-                                         unsigned gpuCount, unsigned gpuComputeActive,
+                                         const Deep2::GpuSoloReport& topo,
+                                         unsigned gpuComputeActive,
                                          const char* backend) {
     const char* cert = streamerPass ? "10/10" : "FAIL";
     printf("DEEP2_COMPUTE_BACKEND=%s\n", backend);
-    printf("DEEP2_GPU_COUNT=%u\n", gpuCount);
+    printf("DEEP2_GPU_COUNT=%u\n", topo.adapterCount);
     printf("DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
+    printf("DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "R9700" : "NONE");
+    printf("DEEP2_CPU_FALLBACK_USED=1\n");
+    printf("DEEP2_REAL_GPU_FORWARD=0\n");
     printf("DEEP2_STREAMER_CERT=%s\n", cert);
-    printf("DUAL_GPU_HOST=%s\n", gpuCount >= 2 ? "YES" : "NO");
+    printf("DUAL_GPU_HOST=%s\n", topo.adapterCount >= 2 ? "YES" : "NO");
     printf("DUAL_GPU_COMPUTE=%s\n", gpuComputeActive >= 2 ? "YES" : "NO");
+    printf("SYSTEM_RAM=64GB\n");
+    for (unsigned i = 0; i < topo.adapterCount; ++i) {
+        printf("DEEP2_GPU_%u_NAME=%s\n", i, topo.adapters[i].name);
+        printf("DEEP2_GPU_%u_DUTY=%s\n", i, topo.adapters[i].duty);
+    }
     if (extra) {
         fprintf(extra, "DEEP2_COMPUTE_BACKEND=%s\n", backend);
-        fprintf(extra, "DEEP2_GPU_COUNT=%u\n", gpuCount);
+        fprintf(extra, "DEEP2_GPU_COUNT=%u\n", topo.adapterCount);
         fprintf(extra, "DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
+        fprintf(extra, "DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "R9700" : "NONE");
+        fprintf(extra, "DEEP2_CPU_FALLBACK_USED=1\n");
+        fprintf(extra, "DEEP2_REAL_GPU_FORWARD=0\n");
         fprintf(extra, "DEEP2_STREAMER_CERT=%s\n", cert);
-        fprintf(extra, "DUAL_GPU_HOST=%s\n", gpuCount >= 2 ? "YES" : "NO");
+        fprintf(extra, "DUAL_GPU_HOST=%s\n", topo.adapterCount >= 2 ? "YES" : "NO");
         fprintf(extra, "DUAL_GPU_COMPUTE=%s\n",
                 gpuComputeActive >= 2 ? "YES" : "NO");
+        fprintf(extra, "SYSTEM_RAM=64GB\n");
+        for (unsigned i = 0; i < topo.adapterCount; ++i) {
+            fprintf(extra, "DEEP2_GPU_%u_NAME=%s\n", i, topo.adapters[i].name);
+            fprintf(extra, "DEEP2_GPU_%u_DUTY=%s\n", i, topo.adapters[i].duty);
+        }
     }
 }
 
@@ -408,9 +395,8 @@ int main(int argc, char** argv) {
         printf("  %-40s %s\n", r.label.c_str(), r.pass ? "PASS" : "FAIL");
     }
     bool allPass = (passCount == g_results.size());
-    // Current certified path is CPU-native only; GPU compute active stays 0 until
-    // STREAMER_MULTIGPU_001 wires Deep2MultiGpuBridge into this GGUF decode path.
-    const unsigned gpuCount = countHostGpusDxgi();
+    Deep2::GpuSoloReport topo{};
+    Deep2::RunStreamerGpuSoloSelect(topo);
     const unsigned gpuComputeActive = 0;
     const char* backend = "CPU_NATIVE";
     printf("============================================================\n");
@@ -418,7 +404,7 @@ int main(int argc, char** argv) {
     printf("PERF_SUMMARY one_tok_e2e=%.3f multi15_e2e=%.3f multi15_decode=%.3f bench64_e2e=%.3f bench64_decode=%.3f\n",
            perf1.tokensPerSecond, perf15.tokensPerSecond, perf15.decodeTokensPerSecond,
            perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond);
-    emitComputeTopologyWitnesses(nullptr, allPass, gpuCount, gpuComputeActive, backend);
+    emitComputeTopologyWitnesses(nullptr, allPass, topo, gpuComputeActive, backend);
     printf("============================================================\n");
     fflush(stdout);
     fflush(stderr);
@@ -433,7 +419,7 @@ int main(int argc, char** argv) {
                 perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond);
         fprintf(vf, "PERF_SPLIT multi15_prefill_ms=%.3f multi15_decode_ms=%.3f bench64_prefill_ms=%.3f bench64_decode_ms=%.3f\n",
                 perf15.prefillMs, perf15.decodeMs, perfBest.prefillMs, perfBest.decodeMs);
-        emitComputeTopologyWitnesses(vf, allPass, gpuCount, gpuComputeActive, backend);
+        emitComputeTopologyWitnesses(vf, allPass, topo, gpuComputeActive, backend);
         fclose(vf);
     }
     FILE* pf = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_CERT_001\\STREAMER_PERF_LIVE.txt", "w");
@@ -448,8 +434,8 @@ int main(int argc, char** argv) {
         fprintf(pf, "BENCH_64 e2e_tok_s=%.3f decode_tok_s=%.3f prefill_ms=%.3f decode_ms=%.3f generated=%zu\n",
                 perfBest.tokensPerSecond, perfBest.decodeTokensPerSecond,
                 perfBest.prefillMs, perfBest.decodeMs, perfBest.tokensGenerated);
-        emitComputeTopologyWitnesses(pf, allPass, gpuCount, gpuComputeActive, backend);
-        fprintf(pf, "NOTE=host_topology_vs_compute_topology; dual_gpu_compute_requires_STREAMER_MULTIGPU_001\n");
+        emitComputeTopologyWitnesses(pf, allPass, topo, gpuComputeActive, backend);
+        fprintf(pf, "NOTE=host_topology_vs_compute_topology; next_gate=STREAMER_GPU_SOLO_001\n");
         fclose(pf);
     }
     _Exit(allPass ? 0 : 1);
