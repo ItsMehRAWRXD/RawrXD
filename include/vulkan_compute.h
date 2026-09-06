@@ -306,8 +306,20 @@ private:
     VkPipelineLayout gemv_pipeline_layout_ = nullptr;
     VkDescriptorSetLayout gemv_ds_layout_ = nullptr;
     VkDescriptorPool gemv_desc_pool_ = nullptr;
+    VkDescriptorSet gemv_ds_ = nullptr;  // once; update bindings per GEMV
     bool gemv_pipeline_created_ = false;
+    uint64_t gemv_desc_allocs_ = 0;
+    uint64_t gemv_desc_reuses_ = 0;
+    uint64_t gemv_attempts_ = 0;
+    uint64_t gemv_success_ = 0;
 
+public:
+    uint64_t GemvDescriptorAllocations() const { return gemv_desc_allocs_; }
+    uint64_t GemvDescriptorReuses() const { return gemv_desc_reuses_; }
+    uint64_t GemvAttempts() const { return gemv_attempts_; }
+    uint64_t GemvSuccess() const { return gemv_success_; }
+
+private:
     VulkanDeviceInfo device_info_;
     std::unordered_map<std::string, ComputeShader> shaders_;
     std::vector<VulkanTensor> uploaded_tensors_;

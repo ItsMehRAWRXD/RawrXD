@@ -4805,6 +4805,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/K2NativeStreamGate.cpp
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
+    src/deep2/Deep2DeviceManager.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
@@ -5104,6 +5105,8 @@ endif()
             src/deep2/sovereign_q8_0_gemv.asm
             src/deep2/sovereign_fp16_gemv.asm
             src/deep2/QuantKB.asm
+            src/asm/Deep2Device_Score.asm
+            src/asm/Deep2Device_Pick.asm
             # Known invalid ml64 scaffold in repository copy; keep C++ pyre_compute.cpp path active.
             # src/asm/RawrXD_Pyre_Compute.asm
         )
@@ -7846,8 +7849,6 @@ if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
         src/deep2/deep2_streamer_cert.cpp
         src/deep2/StreamerGpuSoloGate.cpp
-        src/asm/GpuSolo_Score.asm
-        src/asm/GpuSolo_Pick.asm
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7864,21 +7865,19 @@ if(BUILD_DEEP2_STREAMER_CERT)
         OUTPUT_NAME deep2_streamer_cert
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
-    set_source_files_properties(
-        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
-        PROPERTIES LANGUAGE ASM_MASM)
     message(STATUS "[Deep2] Streamer certification harness: deep2_streamer_cert")
 endif()
 
-# STREAMER_GPU_SOLO_001 — enumerate 3 adapters, open R9700 only (no GGUF GPU claim)
-option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 R9700-solo device gate" ON)
+# STREAMER_GPU_SOLO_001 — SingleGpu plan: enum all, open one primary (no GGUF claim yet)
+option(BUILD_DEEP2_GPU_SOLO_CERT "Build Deep2 SingleGpu device gate" ON)
 if(BUILD_DEEP2_GPU_SOLO_CERT)
     add_executable(deep2_gpu_solo_cert
         src/deep2/deep2_gpu_solo_cert.cpp
         src/deep2/StreamerGpuSoloGate.cpp
         src/deep2/StreamerGpuSoloVk.cpp
-        src/asm/GpuSolo_Score.asm
-        src/asm/GpuSolo_Pick.asm
+        src/deep2/Deep2DeviceManager.cpp
+        src/asm/Deep2Device_Score.asm
+        src/asm/Deep2Device_Pick.asm
     )
     target_link_libraries(deep2_gpu_solo_cert PRIVATE dxgi)
     if(MSVC)
@@ -7891,24 +7890,25 @@ if(BUILD_DEEP2_GPU_SOLO_CERT)
         ${CMAKE_SOURCE_DIR}/src/deep2
         ${CMAKE_SOURCE_DIR}/include
     )
+    if(RAWR_ENABLE_VULKAN AND RAWR_VULKAN_INCLUDE)
+        target_include_directories(deep2_gpu_solo_cert PRIVATE "${RAWR_VULKAN_INCLUDE}")
+        target_compile_definitions(deep2_gpu_solo_cert PRIVATE RAWR_ENABLE_VULKAN=1 RAWR_HAS_VULKAN=1)
+    endif()
     set_target_properties(deep2_gpu_solo_cert PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         OUTPUT_NAME deep2_gpu_solo_cert
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     set_source_files_properties(
-        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
+        src/asm/Deep2Device_Score.asm src/asm/Deep2Device_Pick.asm
         PROPERTIES LANGUAGE ASM_MASM)
     message(STATUS "[Deep2] GPU solo gate: deep2_gpu_solo_cert")
 endif()
 
-option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build R9700 solo GGUF decode cert" ON)
+option(BUILD_DEEP2_GPU_SOLO_DECODE_CERT "Build SingleGpu GGUF decode cert" ON)
 if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     add_executable(deep2_gpu_solo_decode_cert
         src/deep2/deep2_gpu_solo_decode_cert.cpp
-        src/deep2/StreamerGpuSoloGate.cpp
-        src/asm/GpuSolo_Score.asm
-        src/asm/GpuSolo_Pick.asm
     )
     target_link_libraries(deep2_gpu_solo_decode_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
@@ -7925,9 +7925,6 @@ if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
         OUTPUT_NAME deep2_gpu_solo_decode_cert
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
-    set_source_files_properties(
-        src/asm/GpuSolo_Score.asm src/asm/GpuSolo_Pick.asm
-        PROPERTIES LANGUAGE ASM_MASM)
     message(STATUS "[Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert")
 endif()
 

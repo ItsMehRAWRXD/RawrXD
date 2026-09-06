@@ -1,6 +1,6 @@
-// deep2_gpu_solo_decode_cert.cpp — STREAMER_GPU_SOLO_001 GGUF multi15 on R9700
+// deep2_gpu_solo_decode_cert.cpp — generic single-GPU path (AUTO → best_compute)
 #include "Deep2Engine.h"
-#include "StreamerGpuSoloGate.hpp"
+#include "Deep2DeviceManager.hpp"
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -16,14 +16,14 @@ using namespace Deep2;
 
 int main(int argc, char** argv) {
     SetEnvironmentVariableA("DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1", "1");
-    if (!getenv("DEEP2_GPU_SELECT"))
-        SetEnvironmentVariableA("DEEP2_GPU_SELECT", "R9700");
     const char* model = argc > 1 ? argv[1]
         : "G:\\~dev\\rawrxd\\models\\tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf";
-    printf("STREAMER_GPU_SOLO_001 DECODE\nModel: %s\n", model);
+    printf("STREAMER_GPU_SOLO_001 (generic single-GPU)\nModel: %s\n", model);
 
-    GpuSoloReport topo{};
-    RunStreamerGpuSoloSelect(topo);
+    DeviceManagerSnapshot snap{};
+    Deep2Device_Enumerate(snap);
+    Deep2Device_ApplyPolicy(snap);
+    Deep2Device_EmitWitnesses(nullptr, snap);
 
     Deep2Engine engine;
     if (!engine.loadModel(model)) { printf("FAIL loadModel\n"); return 1; }
@@ -39,8 +39,11 @@ int main(int argc, char** argv) {
 
     const bool vk = engine.isVulkanEnabled();
     std::string selected = "(none)";
-    if (vk && engine.getVulkanCompute())
-        selected = engine.getVulkanCompute()->GetDeviceInfo().device_name;
+    CPUInference::VulkanCompute* vc = nullptr;
+    if (vk) {
+        vc = engine.getVulkanCompute();
+        if (vc) selected = vc->GetDeviceInfo().device_name;
+    }
 
     GenerationOptions opts{};
     opts.maxTokens = 15; opts.temperature = 0.0f; opts.topK = 1; opts.seed = 42;
@@ -55,31 +58,33 @@ int main(int argc, char** argv) {
 
     const uint64_t ok = engine.vulkanGemvSuccessCount();
     const uint64_t fail = engine.vulkanGemvFallbackCount();
+    const uint64_t dAlloc = vc ? vc->GemvDescriptorAllocations() : 0;
+    const uint64_t dReuse = vc ? vc->GemvDescriptorReuses() : 0;
     const unsigned active = (vk && ok > 0) ? 1u : 0u;
-    const char* backend = active ? "GPU" : (vk ? "CPU_FALLBACK" : "CPU_NATIVE");
-    printf("DEEP2_COMPUTE_BACKEND=%s\n", backend);
+    const unsigned realGemv = ok > 1 ? 1u : 0u;
     printf("DEEP2_GPU_SELECTED=%s\n", selected.c_str());
     printf("DEEP2_GPU_COMPUTE_ACTIVE=%u\n", active);
     printf("DEEP2_CPU_FALLBACK_USED=%u\n", fail > 0 ? 1u : 0u);
-    printf("DEEP2_REAL_WEIGHT_LAYERS=%llu\n", (unsigned long long)ok);
-    printf("DEEP2_REAL_GPU_FORWARD=%u\n", ok > 0 ? 1u : 0u);
-    printf("DEEP2_GPU_COUNT=%u\n", topo.adapterCount);
-    printf("DUAL_GPU_HOST=%s\n", topo.adapterCount >= 2 ? "YES" : "NO");
-    printf("multi15_tokens=%zu e2e_tok_s=%.3f gemv_ok=%llu fail=%llu\n",
-           n, e2e, (unsigned long long)ok, (unsigned long long)fail);
+    printf("DEEP2_REAL_GPU_GEMV=%u\n", realGemv);
+    printf("DEEP2_REAL_GPU_FORWARD=%u\n", 0u);
+    printf("DEEP2_GPU_DESCRIPTOR_ALLOCATIONS=%llu\n", (unsigned long long)dAlloc);
+    printf("DEEP2_GPU_DESCRIPTOR_REUSES=%llu\n", (unsigned long long)dReuse);
+    printf("DEEP2_GPU_GEMV_SUCCESS=%llu\n", (unsigned long long)ok);
+    printf("multi15_tokens=%zu e2e_tok_s=%.3f\n", n, e2e);
+    printf("STREAMER_GPU_SOLO_BLOCKER=%s\n",
+           realGemv ? "UPLOAD_BOUND_NO_RESIDENT_WEIGHTS" : "NO_GPU_GEMV");
 
     FILE* f = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_GPU_SOLO_001\\DECODE_TINYLLAMA.txt", "w");
     if (f) {
-        fprintf(f, "model=%s\nDEEP2_COMPUTE_BACKEND=%s\nDEEP2_GPU_SELECTED=%s\n",
-                model, backend, selected.c_str());
-        fprintf(f, "DEEP2_GPU_COMPUTE_ACTIVE=%u\nDEEP2_CPU_FALLBACK_USED=%u\n",
-                active, fail > 0 ? 1u : 0u);
-        fprintf(f, "DEEP2_REAL_WEIGHT_LAYERS=%llu\nDEEP2_REAL_GPU_FORWARD=%u\n",
-                (unsigned long long)ok, ok > 0 ? 1u : 0u);
-        fprintf(f, "multi15_tokens=%zu e2e_tok_s=%.3f gemv_ok=%llu gemv_fail=%llu\n",
-                n, e2e, (unsigned long long)ok, (unsigned long long)fail);
+        Deep2Device_EmitWitnesses(f, snap);
+        fprintf(f, "DEEP2_GPU_SELECTED=%s\nDEEP2_REAL_GPU_GEMV=%u\nDEEP2_REAL_GPU_FORWARD=0\n",
+                selected.c_str(), realGemv);
+        fprintf(f, "DEEP2_GPU_DESCRIPTOR_ALLOCATIONS=%llu\nDEEP2_GPU_DESCRIPTOR_REUSES=%llu\n",
+                (unsigned long long)dAlloc, (unsigned long long)dReuse);
+        fprintf(f, "DEEP2_GPU_GEMV_SUCCESS=%llu\nmulti15_e2e_tok_s=%.3f\n",
+                (unsigned long long)ok, e2e);
         fprintf(f, "CPU_REF_multi15_decode=12.1-12.6\n");
         fclose(f);
     }
-    return (vk && ok > 0 && n > 0) ? 0 : 2;
+    return (vk && ok > 1 && dAlloc == 1 && n > 0) ? 0 : 2;
 }

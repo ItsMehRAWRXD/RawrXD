@@ -1,5 +1,6 @@
-// StreamerGpuSoloVk.cpp — enumerate all Vulkan physdevs, CreateDevice on R9700 only
+// StreamerGpuSoloVk.cpp — enum all physdevs; CreateDevice on planned primary only
 #include "StreamerGpuSoloGate.hpp"
+#include "Deep2DeviceManager.hpp"
 #include <cstring>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -19,6 +20,23 @@
 #endif
 
 namespace Deep2 {
+namespace {
+bool HasI(const char* s, const char* n) noexcept {
+    if (!s || !n || !*n) return false;
+    for (; *s; ++s) {
+        const char* a = s; const char* b = n;
+        while (*a && *b) {
+            char ca = *a, cb = *b;
+            if (ca >= 'a' && ca <= 'z') ca = (char)(ca - 32);
+            if (cb >= 'a' && cb <= 'z') cb = (char)(cb - 32);
+            if (ca != cb) break;
+            ++a; ++b;
+        }
+        if (!*b) return true;
+    }
+    return false;
+}
+} // namespace
 
 int RunStreamerGpuSoloVkProbe(GpuSoloReport& out) noexcept {
     out.vkCreateSelected = 0;
@@ -27,27 +45,36 @@ int RunStreamerGpuSoloVkProbe(GpuSoloReport& out) noexcept {
     return 0;
 #else
 #ifdef _WIN32
-    HMODULE dll = LoadLibraryA("vulkan-1.dll");
-    if (!dll) {
-        out.blocker = "VULKAN_LOADER_ABSENT";
+    Deep2DevicePlan plan{};
+    Deep2Device_Enumerate(plan);
+    Deep2Device_ApplyPolicy(plan);
+    const char* wantName = Deep2Device_VulkanNeedle(plan);
+    if (!wantName || !*wantName) {
+        out.blocker = "NO_COMPUTE_PRIMARY";
         return 0;
     }
+
+    HMODULE dll = LoadLibraryA("vulkan-1.dll");
+    if (!dll) { out.blocker = "VULKAN_LOADER_ABSENT"; return 0; }
     auto pCreateInst = (PFN_vkCreateInstance)GetProcAddress(dll, "vkCreateInstance");
     auto pDestroyInst = (PFN_vkDestroyInstance)GetProcAddress(dll, "vkDestroyInstance");
     auto pEnum = (PFN_vkEnumeratePhysicalDevices)GetProcAddress(dll, "vkEnumeratePhysicalDevices");
     auto pProps = (PFN_vkGetPhysicalDeviceProperties)GetProcAddress(dll, "vkGetPhysicalDeviceProperties");
+    auto pMem = (PFN_vkGetPhysicalDeviceMemoryProperties)GetProcAddress(dll, "vkGetPhysicalDeviceMemoryProperties");
     auto pQFam = (PFN_vkGetPhysicalDeviceQueueFamilyProperties)
         GetProcAddress(dll, "vkGetPhysicalDeviceQueueFamilyProperties");
     auto pCreateDev = (PFN_vkCreateDevice)GetProcAddress(dll, "vkCreateDevice");
     auto pDestroyDev = (PFN_vkDestroyDevice)GetProcAddress(dll, "vkDestroyDevice");
-    if (!pCreateInst || !pDestroyInst || !pEnum || !pProps || !pQFam || !pCreateDev || !pDestroyDev) {
+    if (!pCreateInst || !pDestroyInst || !pEnum || !pProps || !pMem || !pQFam ||
+        !pCreateDev || !pDestroyDev) {
         FreeLibrary(dll);
         out.blocker = "VULKAN_PROC_ABSENT";
         return 0;
     }
+
     VkApplicationInfo app{};
     app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app.pApplicationName = "Deep2GpuSolo";
+    app.pApplicationName = "Deep2DeviceSolo";
     app.apiVersion = VK_API_VERSION_1_2;
     VkInstanceCreateInfo ci{};
     ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -58,43 +85,62 @@ int RunStreamerGpuSoloVkProbe(GpuSoloReport& out) noexcept {
         out.blocker = "VK_CREATE_INSTANCE_FAIL";
         return 0;
     }
+
     uint32_t n = 0;
     pEnum(inst, &n, nullptr);
     out.vkPhysCount = n;
     VkPhysicalDevice phys[8]{};
     if (n > 8) n = 8;
     pEnum(inst, &n, phys);
+
     VkPhysicalDevice want = VK_NULL_HANDLE;
+    uint64_t bestVram = 0;
     for (uint32_t i = 0; i < n; ++i) {
         VkPhysicalDeviceProperties props{};
         pProps(phys[i], &props);
         printf("DEEP2_VK_PHYS_%u_NAME=%s TYPE=%u\n", i, props.deviceName, props.deviceType);
-        const char* p = props.deviceName;
-        bool hit = false;
-        for (; *p; ++p) {
-            if ((p[0] == 'R' || p[0] == 'r') && p[1] == '9' && p[2] == '7' && p[3] == '0' && p[4] == '0')
-                hit = true;
-            if ((p[0] == 'A' || p[0] == 'a') && (p[1] == 'I' || p[1] == 'i') && p[2] == ' ' &&
-                (p[3] == 'P' || p[3] == 'p'))
-                hit = true;
+        if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+            continue;
+        if (!HasI(props.deviceName, wantName) && !HasI(wantName, props.deviceName)) {
+            bool hit = false;
+            const char* t = wantName;
+            while (*t) {
+                while (*t == ' ' || *t == '(' || *t == ')') ++t;
+                char tok[32]{};
+                size_t k = 0;
+                while (*t && *t != ' ' && *t != '(' && k + 1 < sizeof(tok))
+                    tok[k++] = *t++;
+                if (k >= 4 && HasI(props.deviceName, tok)) { hit = true; break; }
+            }
+            if (!hit) continue;
         }
-        if (hit) want = phys[i];
+        VkPhysicalDeviceMemoryProperties mem{};
+        pMem(phys[i], &mem);
+        uint64_t vram = 0;
+        for (uint32_t h = 0; h < mem.memoryHeapCount; ++h) {
+            if (mem.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+                if (mem.memoryHeaps[h].size > vram) vram = mem.memoryHeaps[h].size;
+        }
+        if (!want || vram > bestVram) {
+            want = phys[i];
+            bestVram = vram;
+        }
     }
     if (!want) {
         pDestroyInst(inst, nullptr);
         FreeLibrary(dll);
-        out.blocker = "VK_R9700_NOT_IN_ENUM";
+        out.blocker = "VK_PRIMARY_NOT_IN_ENUM";
         return 0;
     }
+
     uint32_t qn = 0;
     pQFam(want, &qn, nullptr);
     VkQueueFamilyProperties qf[8]{};
     if (qn > 8) qn = 8;
     pQFam(want, &qn, qf);
     uint32_t qidx = 0;
-    for (uint32_t i = 0; i < qn; ++i) {
+    for (uint32_t i = 0; i < qn; ++i)
         if (qf[i].queueFlags & VK_QUEUE_COMPUTE_BIT) { qidx = i; break; }
-    }
     float pri = 1.0f;
     VkDeviceQueueCreateInfo qci{};
     qci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -106,18 +152,16 @@ int RunStreamerGpuSoloVkProbe(GpuSoloReport& out) noexcept {
     dci.queueCreateInfoCount = 1;
     dci.pQueueCreateInfos = &qci;
     VkDevice dev = VK_NULL_HANDLE;
-    VkResult cr = pCreateDev(want, &dci, nullptr, &dev);
-    if (cr == VK_SUCCESS && dev) {
+    if (pCreateDev(want, &dci, nullptr, &dev) == VK_SUCCESS && dev) {
         out.vkCreateSelected = 1;
         pDestroyDev(dev, nullptr);
+        out.blocker = "GGUF_DECODE_NOT_ON_GPU";
     } else {
         out.vkCreateSelected = 0;
         out.blocker = "VK_CREATE_DEVICE_FAIL";
     }
     pDestroyInst(inst, nullptr);
     FreeLibrary(dll);
-    if (out.vkCreateSelected == 1 && out.openIndex >= 0)
-        out.blocker = "GGUF_DECODE_NOT_ON_GPU";
     return out.vkCreateSelected;
 #else
     out.blocker = "VULKAN_PROBE_NON_WIN32";

@@ -1,33 +1,15 @@
-STREAMER_GPU_SOLO_001 GATE STATUS — 2026-09-06
-================================================
-
-CPU floor (immutable):
-  TinyLlama multi15 decode ≈ 12.1–12.6 tok/s
-  BENCH_64 frozen baseline = 8.52 (do not replace with 3.42)
-
-Device policy PROVEN:
-  enumerate 3 adapters (iGPU + R9700 + 7800XT)
-  OPEN_ONE = AMD Radeon AI PRO R9700
-  7800XT / iGPU = DETECTED / UNUSED
-  DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1=1
-
-TinyLlama Q4_K_M multi15 (deep2_gpu_solo_decode_cert):
-  DEEP2_COMPUTE_BACKEND=GPU
-  DEEP2_GPU_SELECTED=AMD Radeon AI PRO R9700
-  DEEP2_GPU_COMPUTE_ACTIVE=1
-  DEEP2_CPU_FALLBACK_USED=0
-  DEEP2_REAL_GPU_FORWARD=1
-  DEEP2_REAL_WEIGHT_LAYERS=2325   (GEMV submits)
-  gemv_ok=2325 gemv_fail=0
-  multi15 e2e_tok_s=0.567
-
-Interpretation:
-  Real GGUF LinearW hits R9700 VkDevice (no silent CPU for claimed GPU path).
-  TPS is worse than CPU because each GEMV still uploads full dequant F32 weights
-  over PCIe every call (DispatchGEMV staging path). Resident VRAM weights are
-  the next optimization inside SOLO_001 — not MULTIGPU yet.
-
-GATE:
-  STREAMER_GPU_SOLO_001 = DEVICE_OPEN + REAL_GPU_FORWARD  PASS
-  STREAMER_GPU_SOLO_001 = TPS_BEATS_CPU                 FAIL (expected; upload-bound)
-  Next: resident weight buffers on R9700, then SOLO_002 (7800XT), then SPEC.
+STREAMER_GPU_SOLO_001=IN_PROGRESS
+DEEP2_EXEC_PATH=SINGLE_GPU
+DEEP2_PLAN_REASON=auto_best_compute
+DEEP2_DEVICE_COUNT_DETECTED=3
+DEEP2_DEVICE_COUNT_OPENED=1
+DEEP2_VK_CREATE_SELECTED=1
+DEEP2_REAL_GPU_GEMV=1
+DEEP2_REAL_GPU_FORWARD=0
+DEEP2_GPU_DESCRIPTOR_ALLOCATIONS=1
+DEEP2_GPU_DESCRIPTOR_REUSES=2325
+DEEP2_GPU_GEMV_SUCCESS=2325
+DEEP2_CPU_FALLBACK_USED=0
+BLOCKER=UPLOAD_BOUND_NO_RESIDENT_WEIGHTS
+NOTE=generic SingleGpu path; primary is inventory fact not architecture
+UPDATED=2026-09-06

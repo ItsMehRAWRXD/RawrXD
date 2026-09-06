@@ -56,7 +56,8 @@ bool VulkanCompute::Initialize() {
 }
 
 bool VulkanCompute::InitializeSolo(const char* nameNeedle) {
-    solo_needle_ = nameNeedle && nameNeedle[0] ? nameNeedle : "R9700";
+    // Empty needle → best discrete by VRAM (DeviceManager supplies name when known).
+    solo_needle_ = nameNeedle && nameNeedle[0] ? nameNeedle : "";
     return Initialize();
 }
 
@@ -82,6 +83,7 @@ void VulkanCompute::Cleanup() {
             vkDestroyDescriptorPool(device_, gemv_desc_pool_, nullptr);
             gemv_desc_pool_ = nullptr;
         }
+        gemv_ds_ = nullptr;
         gemv_pipeline_created_ = false;
         
         // Free staging buffer
@@ -296,14 +298,13 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
         }
         printf("[DispatchGEMV] Compute pipeline created OK\n");
 
-        // Descriptor pool — reset each DispatchGEMV (maxSets=1 otherwise exhausts)
+        // Descriptor pool sized for ONE persistent set (update bindings per GEMV).
         VkDescriptorPoolSize poolSize{};
         poolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         poolSize.descriptorCount = 3;
         VkDescriptorPoolCreateInfo dpInfo{};
         dpInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        dpInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        dpInfo.maxSets = 64;
+        dpInfo.maxSets = 1;
         dpInfo.poolSizeCount = 1;
         dpInfo.pPoolSizes = &poolSize;
         if (vkCreateDescriptorPool(device_, &dpInfo, nullptr, &gemv_desc_pool_) != VK_SUCCESS) {
@@ -316,10 +317,23 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
             gemv_ds_layout_ = nullptr;
             return false;
         }
+        VkDescriptorSetAllocateInfo onceAlloc{};
+        onceAlloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        onceAlloc.descriptorPool = gemv_desc_pool_;
+        onceAlloc.descriptorSetCount = 1;
+        onceAlloc.pSetLayouts = &gemv_ds_layout_;
+        if (vkAllocateDescriptorSets(device_, &onceAlloc, &gemv_ds_) != VK_SUCCESS || !gemv_ds_) {
+            printf("[DispatchGEMV] FAIL: persistent vkAllocateDescriptorSets\n");
+            return false;
+        }
+        ++gemv_desc_allocs_;
         gemv_pipeline_created_ = true;
+        printf("[DispatchGEMV] persistent descriptor set allocated (once)\n");
     }
 
-    vkResetDescriptorPool(device_, gemv_desc_pool_, 0);
+    ++gemv_attempts_;
+    if (gemv_ds_)
+        ++gemv_desc_reuses_;
 
     // --- 2. Allocate GPU buffers ---
     size_t weightBytes = (size_t)rows * cols * sizeof(float);
@@ -430,15 +444,9 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     VkCommandBuffer cmdBuf = nullptr;
     vkAllocateCommandBuffers(device_, &allocInfo, &cmdBuf);
 
-    VkDescriptorSetAllocateInfo dsAllocInfo{};
-    dsAllocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    dsAllocInfo.descriptorPool = gemv_desc_pool_;
-    dsAllocInfo.descriptorSetCount = 1;
-    dsAllocInfo.pSetLayouts = &gemv_ds_layout_;
-    VkDescriptorSet ds = nullptr;
-    VkResult dsResult = vkAllocateDescriptorSets(device_, &dsAllocInfo, &ds);
-    if (dsResult != VK_SUCCESS) {
-        printf("[DispatchGEMV] FAIL: vkAllocateDescriptorSets result=%d\n", (int)dsResult);
+    VkDescriptorSet ds = gemv_ds_;
+    if (!ds) {
+        printf("[DispatchGEMV] FAIL: persistent descriptor set null\n");
         vkFreeCommandBuffers(device_, command_pool_, 1, &cmdBuf);
         vkDestroyBuffer(device_, weightBuf, nullptr); vkFreeMemory(device_, weightMem, nullptr);
         vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
@@ -552,6 +560,7 @@ bool VulkanCompute::DispatchGEMV(const float* weights, const float* input, float
     vkDestroyBuffer(device_, inputBuf, nullptr); vkFreeMemory(device_, inputMem, nullptr);
     vkDestroyBuffer(device_, outputBuf, nullptr); vkFreeMemory(device_, outputMem, nullptr);
 
+    ++gemv_success_;
     return true;
 }
 
@@ -751,14 +760,25 @@ bool VulkanCompute::SelectPhysicalDevice() {
                i, props.deviceType, props.deviceName);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             continue;
-        if (!solo_needle_.empty() && !VkNameHas(props.deviceName, solo_needle_.c_str()) &&
-            !(VkNameHas(solo_needle_.c_str(), "R9700") && VkNameHas(props.deviceName, "AI PRO")))
+        // Name filter only when needle set; never hard-code SKU ranks.
+        if (!solo_needle_.empty() && !VkNameHas(props.deviceName, solo_needle_.c_str())) {
+            // Token match: accept if any >=4-char token from needle appears.
+            bool hit = false;
+            const char* t = solo_needle_.c_str();
+            while (*t) {
+                while (*t == ' ' || *t == '(' || *t == ')') ++t;
+                char tok[32]{};
+                size_t k = 0;
+                while (*t && *t != ' ' && *t != '(' && k + 1 < sizeof(tok))
+                    tok[k++] = *t++;
+                if (k >= 4 && VkNameHas(props.deviceName, tok)) { hit = true; break; }
+            }
+            if (!hit) continue;
+        }
+        if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+            props.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
             continue;
-        int rank = 1;
-        if (VkNameHas(props.deviceName, "R9700") || VkNameHas(props.deviceName, "AI PRO"))
-            rank = 3;
-        else if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-            rank = 2;
+        int rank = 2; // discrete/virtual
         VkPhysicalDeviceMemoryProperties mem{};
         vkGetPhysicalDeviceMemoryProperties(devices[i], &mem);
         uint64_t vram = 0;
@@ -766,6 +786,7 @@ bool VulkanCompute::SelectPhysicalDevice() {
             if (mem.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
                 vram = (std::max)(vram, (uint64_t)mem.memoryHeaps[h].size);
         }
+        // Prefer larger VRAM; rank is secondary (all discrete equal).
         if (rank > bestRank || (rank == bestRank && vram > bestVram)) {
             bestRank = rank;
             bestVram = vram;

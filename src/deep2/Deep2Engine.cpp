@@ -18,6 +18,7 @@
 #include "../sampling/advanced_sampler.hpp"
 #include "MoERouter.hpp"
 #include "QuantKernelRegistry.hpp"
+#include "Deep2DeviceManager.hpp"
 #include "AttnCertProbe.hpp"
 #include "SsmCertProbe.hpp"
 #include "MlaCertProbe.hpp"
@@ -3848,11 +3849,10 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
-    // --- Vulkan GPU dispatch path (FP32/FP16 only) ---
+    // --- Vulkan GPU dispatch (STREAMER_GPU_SOLO_001: real weight GEMV on opened device) ---
     if (vulkanEnabled_ && vulkanInitialized_ && vulkanCompute_) {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         if (tryVulkanGEMV(wtEffective, input, output, outDim)) {
-            // GPU dispatch succeeded — apply bias and return
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) {
                     output[i] += bias[i];
@@ -3866,20 +3866,31 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
                 g_linearwByType[typeIdx].totalMs += linearwMs;
                 g_linearwByType[typeIdx].totalMACs += rows * cols;
             }
-            // Telemetry: Record GPU dispatch latency
             if (telemetryControllerEnabled_ && telemetryController_) {
                 auto tGpuDispatch1 = std::chrono::high_resolution_clock::now();
                 auto gpuDispatchNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
                     tGpuDispatch1 - tGpuDispatch0).count();
                 telemetryController_->record_gpu_dispatch(static_cast<uint64_t>(gpuDispatchNs));
             }
-            // Release Elastic residency after successful GPU compute
             if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
                 elasticResidency_->ReleaseTensor(wt.name);
             }
             return;
         }
-        // GPU dispatch failed — fall through to CPU path (do not early-return).
+        // Gate-killing: never silently substitute CPU transformer GEMV while solo GPU is claimed.
+        if (vulkanStrictNoCpuFallback_) {
+            vulkanStrictViolation_ = true;
+            fprintf(stderr,
+                    "[STREAMER_GPU_SOLO_001] FATAL: GPU LinearW failed for '%s' "
+                    "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
+                    wt.name.c_str(), wtEffective.type, rows, cols);
+            fflush(stderr);
+            if (acquired && elasticResidencyEnabled_ && elasticResidency_ && !wt.name.empty()) {
+                elasticResidency_->ReleaseTensor(wt.name);
+            }
+            return;
+        }
+        // Non-strict: fall through to CPU (CPU_NATIVE fail-safe only).
     }
     auto tQuant0 = std::chrono::high_resolution_clock::now();
     if (threadPool && rows >= 64) {
@@ -7001,23 +7012,49 @@ rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
 
 void Deep2Engine::enableVulkan(bool enable) {
     if (enable && !vulkanInitialized_) {
-        const char* needle = std::getenv("DEEP2_GPU_SELECT");
-        if (!needle || !*needle) needle = "R9700";
+        Deep2DevicePlan snap{};
+        Deep2Device_Enumerate(snap);
+        Deep2Device_ApplyPolicy(snap);
+        Deep2Device_EmitWitnesses(nullptr, snap);
+        if (snap.plan.policy == GpuPolicy::CpuOnly || snap.plan.primaryIndex < 0) {
+            fprintf(stderr, "[Deep2Engine] GPU policy → CPU_NATIVE (no device open)\n");
+            vulkanEnabled_ = false;
+            vulkanStrictNoCpuFallback_ = false;
+            return;
+        }
+        const char* needle = Deep2Device_VulkanNeedle(snap);
+        if (!needle || !*needle)
+            needle = snap.plan.primaryName;
         vulkanCompute_ = std::make_unique<CPUInference::VulkanCompute>();
         if (vulkanCompute_->InitializeSolo(needle)) {
             vulkanInitialized_ = true;
             vulkanEnabled_ = true;
-            printf("[Deep2Engine] Vulkan SOLO on: %s (needle=%s)\n",
-                   vulkanCompute_->GetDeviceInfo().device_name.c_str(), needle);
+            vulkanGemvOk_ = 0;
+            vulkanGemvFail_ = 0;
+            vulkanGpuWeightBytes_ = 0;
+            vulkanGpuTensorBytes_ = 0;
+            vulkanRealWeightLayers_ = 0;
+            vulkanStrictViolation_ = false;
+            vulkanWeightSeen_.clear();
+            if (const char* s = std::getenv("DEEP2_GPU_SOLO_STRICT")) {
+                vulkanStrictNoCpuFallback_ = !(s[0] == '0' && s[1] == '\0');
+            } else {
+                vulkanStrictNoCpuFallback_ = true;
+            }
+            printf("[Deep2Engine] Vulkan single-GPU open: %s (needle=%s strict=%d)\n",
+                   vulkanCompute_->GetDeviceInfo().device_name.c_str(), needle,
+                   vulkanStrictNoCpuFallback_ ? 1 : 0);
         } else {
-            fprintf(stderr, "[Deep2Engine] Vulkan SOLO init failed — CPU fail-safe\n");
+            fprintf(stderr, "[Deep2Engine] Vulkan open failed — CPU fail-safe\n");
             vulkanCompute_.reset();
             vulkanEnabled_ = false;
+            vulkanStrictNoCpuFallback_ = false;
         }
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
     } else {
         vulkanEnabled_ = false;
+        vulkanStrictNoCpuFallback_ = false;
     }
 }
 
@@ -7032,28 +7069,42 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         return false;
     }
     const float* wF32 = nullptr;
+    size_t elems = wt.rows * wt.cols;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
         wF32 = reinterpret_cast<const float*>(wt.data);
     } else {
-        auto it = vulkanWeightF32_.find(wt.name);
+        std::string key = wt.name.empty()
+            ? ("anon_" + std::to_string(wt.type) + "_" + std::to_string(wt.rows) + "x" +
+               std::to_string(wt.cols))
+            : wt.name;
+        auto it = vulkanWeightF32_.find(key);
         if (it == vulkanWeightF32_.end()) {
             auto deq = QuantKernelRegistry::Instance().GetDequant(wt.type);
             if (!deq) {
                 ++vulkanGemvFail_;
                 return false;
             }
-            std::vector<float> buf(wt.rows * wt.cols);
+            std::vector<float> buf(elems);
             deq(reinterpret_cast<const uint8_t*>(wt.data), buf.data(), buf.size());
-            it = vulkanWeightF32_.emplace(wt.name, std::move(buf)).first;
+            it = vulkanWeightF32_.emplace(std::move(key), std::move(buf)).first;
         }
         wF32 = it->second.data();
+        elems = it->second.size();
     }
+    const uint64_t weightBytes = elems * sizeof(float);
+    const uint64_t inputBytes = wt.cols * sizeof(float);
+    const uint64_t outputBytes = wt.rows * sizeof(float);
     const bool ok = vulkanCompute_->DispatchGEMV(
         wF32, input, output,
         static_cast<uint32_t>(wt.rows),
         static_cast<uint32_t>(wt.cols));
     if (ok) {
         ++vulkanGemvOk_;
+        vulkanGpuWeightBytes_ += weightBytes;
+        vulkanGpuTensorBytes_ += weightBytes + inputBytes + outputBytes;
+        if (!wt.name.empty() && vulkanWeightSeen_.emplace(wt.name, 1).second) {
+            ++vulkanRealWeightLayers_;
+        }
         QuantKernelRegistry::Instance().GetBatch21Counters()
             .vulkanComputeSubmissions.fetch_add(1, std::memory_order_relaxed);
         return true;

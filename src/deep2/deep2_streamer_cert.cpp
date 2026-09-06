@@ -144,7 +144,7 @@ static void emitComputeTopologyWitnesses(FILE* extra, bool streamerPass,
     printf("DEEP2_COMPUTE_BACKEND=%s\n", backend);
     printf("DEEP2_GPU_COUNT=%u\n", topo.adapterCount);
     printf("DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
-    printf("DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "R9700" : "NONE");
+    printf("DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "PRIMARY" : "NONE");
     printf("DEEP2_CPU_FALLBACK_USED=1\n");
     printf("DEEP2_REAL_GPU_FORWARD=0\n");
     printf("DEEP2_STREAMER_CERT=%s\n", cert);
@@ -159,7 +159,7 @@ static void emitComputeTopologyWitnesses(FILE* extra, bool streamerPass,
         fprintf(extra, "DEEP2_COMPUTE_BACKEND=%s\n", backend);
         fprintf(extra, "DEEP2_GPU_COUNT=%u\n", topo.adapterCount);
         fprintf(extra, "DEEP2_GPU_COMPUTE_ACTIVE=%u\n", gpuComputeActive);
-        fprintf(extra, "DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "R9700" : "NONE");
+        fprintf(extra, "DEEP2_GPU_SELECTED=%s\n", topo.openIndex >= 0 ? "PRIMARY" : "NONE");
         fprintf(extra, "DEEP2_CPU_FALLBACK_USED=1\n");
         fprintf(extra, "DEEP2_REAL_GPU_FORWARD=0\n");
         fprintf(extra, "DEEP2_STREAMER_CERT=%s\n", cert);

@@ -387,11 +387,17 @@ public:
 
     // Vulkan GPU backend (STREAMER_GPU_SOLO_001: open one device via DEEP2_GPU_SELECT)
     void enableVulkan(bool enable);
+    void setVulkanStrictNoCpuFallback(bool strict) { vulkanStrictNoCpuFallback_ = strict; }
+    bool isVulkanStrictNoCpuFallback() const { return vulkanStrictNoCpuFallback_; }
     bool isVulkanEnabled() const { return vulkanEnabled_; }
     bool isVulkanInitialized() const { return vulkanInitialized_; }
     CPUInference::VulkanCompute* getVulkanCompute() const { return vulkanCompute_.get(); }
     uint64_t vulkanGemvSuccessCount() const { return vulkanGemvOk_; }
     uint64_t vulkanGemvFallbackCount() const { return vulkanGemvFail_; }
+    uint64_t vulkanGpuWeightBytes() const { return vulkanGpuWeightBytes_; }
+    uint64_t vulkanGpuTensorBytes() const { return vulkanGpuTensorBytes_; }
+    uint64_t vulkanRealWeightLayers() const { return vulkanRealWeightLayers_; }
+    bool vulkanStrictViolation() const { return vulkanStrictViolation_; }
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 
@@ -641,9 +647,15 @@ private:
     std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
+    bool vulkanStrictNoCpuFallback_ = false;
+    bool vulkanStrictViolation_ = false;
     uint64_t vulkanGemvOk_ = 0;
     uint64_t vulkanGemvFail_ = 0;
+    uint64_t vulkanGpuWeightBytes_ = 0;
+    uint64_t vulkanGpuTensorBytes_ = 0;
+    uint64_t vulkanRealWeightLayers_ = 0;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
+    std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     
     // Ollama model loading temp file cleanup
     std::string tempOllamaGGUFPath_;

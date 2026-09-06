@@ -1,4 +1,4 @@
-// deep2_gpu_solo_cert.cpp — STREAMER_GPU_SOLO_001: R9700-only open, no GGUF claim
+// deep2_gpu_solo_cert.cpp — STREAMER_GPU_SOLO_001: open one primary (generic)
 #define _CRT_SECURE_NO_WARNINGS
 #include "StreamerGpuSoloGate.hpp"
 #include <cstdio>
@@ -17,7 +17,7 @@ int main() {
     r.backend = "CPU_NATIVE";
     r.gateStatus = "SEALED_BLOCKED";
     if (r.openIndex < 0)
-        r.blocker = "R9700_NOT_FOUND";
+        r.blocker = "NO_COMPUTE_PRIMARY";
     else if (r.vkCreateSelected == 1)
         r.blocker = "GGUF_DECODE_NOT_ON_GPU";
     FILE* vf = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_CERT_001\\STREAMER_GPU_SOLO_001.txt", "w");
