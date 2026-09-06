@@ -4799,6 +4799,12 @@ set(INFERENCE_ENGINE_SOURCES
     src/deep2/RawrXDInferenceAdapter.cpp
     src/deep2/KimiK2Config.cpp
     src/deep2/K2MLAWeights.cpp
+    # Real K2/GPU providers required by Deep2Engine + ExecutionPolicyApply (no stubs).
+    src/deep2/K2MLAAttention.cpp
+    src/deep2/K2TokenEmbedding.cpp
+    src/deep2/K2NativeStreamGate.cpp
+    src/core/AmdGpuPowerBackend.cpp
+    src/core/GpuDecodeEfficiency.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
@@ -5064,7 +5070,7 @@ target_link_libraries(InferenceEngine PUBLIC Threads::Threads)
 
 if(WIN32)
     target_link_libraries(InferenceEngine PUBLIC
-        shlwapi psapi dbghelp winhttp bcrypt advapi32 crypt32 dxgi
+        shlwapi psapi dbghelp winhttp bcrypt advapi32 crypt32 dxgi pdh
     )
 endif()
 
@@ -7839,9 +7845,6 @@ option(BUILD_DEEP2_STREAMER_CERT "Build Deep2 streamer certification harness" ON
 if(BUILD_DEEP2_STREAMER_CERT)
     add_executable(deep2_streamer_cert
         src/deep2/deep2_streamer_cert.cpp
-        src/core/GpuDecodeEfficiency.cpp
-        src/core/AmdGpuPowerBackend.cpp
-        src/deep2/K2NativeStreamGate.cpp
     )
     target_link_libraries(deep2_streamer_cert PRIVATE InferenceEngine dxgi)
     if(MSVC)
