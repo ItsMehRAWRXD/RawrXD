@@ -7928,6 +7928,29 @@ if(BUILD_DEEP2_GPU_SOLO_DECODE_CERT)
     message(STATUS "[Deep2] GPU solo decode cert: deep2_gpu_solo_decode_cert")
 endif()
 
+option(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT "Build 0/1/N DeviceManager portability cert" ON)
+if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
+    add_executable(deep2_topology_portability_cert
+        src/deep2/deep2_topology_portability_cert.cpp
+    )
+    target_link_libraries(deep2_topology_portability_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_topology_portability_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_topology_portability_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_topology_portability_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_topology_portability_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Topology portability cert: deep2_topology_portability_cert")
+endif()
+
 # deep2_mars_e2e ΓÇö MARS dual-GPU placement + hotpatch + generate smoke
 # ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" ON)

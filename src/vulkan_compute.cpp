@@ -717,6 +717,32 @@ static bool VkNameHas(const char* hay, const char* needle) {
     return false;
 }
 
+static bool VkTokenGeneric(const char* tok) {
+    return VkNameHas("AMD NVIDIA INTEL RADEON GEFORCE RTX GTX GRAPHICS ADAPTER SERIES", tok);
+}
+
+// Higher = better needle fidelity. Generic vendor tokens ignored.
+static int VkNeedleScore(const char* deviceName, const char* needle) {
+    if (!needle || !*needle) return 0;
+    if (VkNameHas(deviceName, needle) || VkNameHas(needle, deviceName)) return 1000;
+    int score = 0;
+    int needed = 0;
+    const char* t = needle;
+    while (*t) {
+        while (*t == ' ' || *t == '(' || *t == ')') ++t;
+        char tok[32]{};
+        size_t k = 0;
+        while (*t && *t != ' ' && *t != '(' && *t != ')' && k + 1 < sizeof(tok))
+            tok[k++] = *t++;
+        if (k < 3) continue;
+        if (VkTokenGeneric(tok)) continue;
+        ++needed;
+        if (VkNameHas(deviceName, tok)) score += (k >= 4) ? 10 : 4;
+    }
+    if (needed == 0) return VkNameHas(deviceName, needle) ? 1 : 0;
+    return score;
+}
+
 bool VulkanCompute::SelectPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -729,6 +755,7 @@ bool VulkanCompute::SelectPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
     physical_device_ = VK_NULL_HANDLE;
+    int bestNeedle = -1;
     int bestRank = -1;
     uint64_t bestVram = 0;
     for (uint32_t i = 0; i < deviceCount; ++i) {
@@ -738,25 +765,16 @@ bool VulkanCompute::SelectPhysicalDevice() {
                i, props.deviceType, props.deviceName);
         if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             continue;
-        // Name filter only when needle set; never hard-code SKU ranks.
-        if (!solo_needle_.empty() && !VkNameHas(props.deviceName, solo_needle_.c_str())) {
-            // Token match: accept if any >=4-char token from needle appears.
-            bool hit = false;
-            const char* t = solo_needle_.c_str();
-            while (*t) {
-                while (*t == ' ' || *t == '(' || *t == ')') ++t;
-                char tok[32]{};
-                size_t k = 0;
-                while (*t && *t != ' ' && *t != '(' && k + 1 < sizeof(tok))
-                    tok[k++] = *t++;
-                if (k >= 4 && VkNameHas(props.deviceName, tok)) { hit = true; break; }
-            }
-            if (!hit) continue;
-        }
         if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
             props.deviceType != VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
             continue;
-        int rank = 2; // discrete/virtual
+
+        int needleScore = 0;
+        if (!solo_needle_.empty()) {
+            needleScore = VkNeedleScore(props.deviceName, solo_needle_.c_str());
+            if (needleScore <= 0) continue;
+        }
+        int rank = 2;
         VkPhysicalDeviceMemoryProperties mem{};
         vkGetPhysicalDeviceMemoryProperties(devices[i], &mem);
         uint64_t vram = 0;
@@ -764,8 +782,13 @@ bool VulkanCompute::SelectPhysicalDevice() {
             if (mem.memoryHeaps[h].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
                 vram = (std::max)(vram, (uint64_t)mem.memoryHeaps[h].size);
         }
-        // Prefer larger VRAM; rank is secondary (all discrete equal).
-        if (rank > bestRank || (rank == bestRank && vram > bestVram)) {
+        // Needle fidelity wins; then discrete rank; then VRAM.
+        const bool better =
+            needleScore > bestNeedle ||
+            (needleScore == bestNeedle && rank > bestRank) ||
+            (needleScore == bestNeedle && rank == bestRank && vram > bestVram);
+        if (better) {
+            bestNeedle = needleScore;
             bestRank = rank;
             bestVram = vram;
             physical_device_ = devices[i];
@@ -786,7 +809,6 @@ bool VulkanCompute::SelectPhysicalDevice() {
     vkGetPhysicalDeviceMemoryProperties(physical_device_, &memProps);
     device_info_.memory_props = memProps;
 
-    // Find compute queue family
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physical_device_, &queueFamilyCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
