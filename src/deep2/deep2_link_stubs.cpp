@@ -16,6 +16,7 @@ namespace CPUInference {
 VulkanCompute::VulkanCompute() {}
 VulkanCompute::~VulkanCompute() {}
 bool VulkanCompute::Initialize() { return false; }
+bool VulkanCompute::InitializeSolo(const char*) { return false; }
 bool VulkanCompute::DispatchGEMV(const float*, const float*, float*, unsigned int, unsigned int) {
     return false;
 }

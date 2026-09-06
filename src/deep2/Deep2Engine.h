@@ -399,6 +399,8 @@ public:
     uint64_t vulkanGemvSuccessCount() const { return vulkanGemvOk_; }
     uint64_t vulkanGemvFallbackCount() const { return vulkanGemvFail_; }
     uint64_t vulkanUnplannedFallbacks() const { return vulkanUnplannedFallbacks_; }
+    uint64_t plannedCpuGemvOps() const { return plannedCpuGemvOps_; }
+    uint64_t plannedGpuGemvOps() const { return plannedGpuGemvOps_; }
     uint64_t vulkanGpuWeightBytes() const { return vulkanGpuWeightBytes_; }
     uint64_t vulkanGpuTensorBytes() const { return vulkanGpuTensorBytes_; }
     uint64_t vulkanRealWeightLayers() const { return vulkanRealWeightLayers_; }
@@ -416,6 +418,8 @@ public:
     void enableCompressedKV(bool enable, KVQuantType quantType = KVQuantType::KV_Q8_0);
     void enableNVMeStreaming(bool enable, const std::string& modelPath = "");
     void enableSlidingWindow(bool enable, size_t windowSize = 4096);
+    // Turn on the full VAL-000 + Sovereign + GPU stack (fail-soft per feature).
+    void enableAllEnhancements();
     
     // BigDaddyG Reverse Engine integration
     void enableReverseAnalysis(bool enable);
@@ -665,6 +669,8 @@ private:
     uint64_t vulkanGpuTensorBytes_ = 0;
     uint64_t vulkanRealWeightLayers_ = 0;
     uint64_t vulkanUnplannedFallbacks_ = 0;
+    uint64_t plannedCpuGemvOps_ = 0;
+    uint64_t plannedGpuGemvOps_ = 0;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     int parseWeightLayerIndex(const std::string& name) const;

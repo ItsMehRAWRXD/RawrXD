@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     cfg.maxSeqLen = 4096; cfg.useKVCache = true; cfg.useThreadPool = true;
     cfg.numThreads = 16;
     if (!engine.initialize(cfg)) { printf("FAIL initialize\n"); return 1; }
-    engine.enableVulkan(true);
+    engine.enableAllEnhancements();
 
     const MultiGpuLayerPlan& plan = engine.multiGpuLayerPlan();
     Deep2MultiGpu_EmitPlanWitnesses(nullptr, plan);
@@ -73,22 +73,24 @@ int main(int argc, char** argv) {
     double sec = std::chrono::duration<double>(t1 - t0).count();
     double tps = (n > 0 && sec > 0) ? (double)n / sec : 0.0;
 
+    const MultiGpuLayerPlan& planLive = engine.multiGpuLayerPlan();
     unsigned executing = 0;
-    for (unsigned s = 0; s < plan.plannedCount; ++s) {
+    for (unsigned s = 0; s < planLive.plannedCount; ++s) {
         const uint64_t ops = engine.vulkanSlotGemvSuccess(s);
         const uint64_t up = engine.vulkanSlotWeightUploads(s);
         const uint64_t hit = engine.vulkanSlotWeightHits(s);
         printf("DEEP2_DEVICE_%u_COMPUTE_OPS=%llu\n", s, (unsigned long long)ops);
         printf("DEEP2_DEVICE_%u_WEIGHT_UPLOADS=%llu\n", s, (unsigned long long)up);
         printf("DEEP2_DEVICE_%u_WEIGHT_HITS=%llu\n", s, (unsigned long long)hit);
+        printf("DEEP2_DEVICE_%u_LAYER_EXECS=%u\n", s, planLive.slotLayerExecs[s]);
         printf("DEEP2_DEVICE_%u_NAME=%s\n", s,
                engine.getVulkanComputeSlot(s)
                    ? engine.getVulkanComputeSlot(s)->GetDeviceInfo().device_name.c_str()
-                   : plan.name[s]);
-        if (ops > 0 && up > 0) ++executing;
+                   : planLive.name[s]);
+        if (ops > 0 && up > 0 && planLive.slotLayerExecs[s] > 0) ++executing;
     }
 
-    MultiGpuLayerPlan planOut = plan;
+    MultiGpuLayerPlan planOut = planLive;
     planOut.executingCount = executing;
     planOut.openedCount = engine.vulkanDeviceCount();
 
@@ -99,6 +101,7 @@ int main(int argc, char** argv) {
         planOut.openedCount >= 2 &&
         planOut.plannedCount >= 2 &&
         executing >= 2 &&
+        planOut.layersExecuted >= planOut.numLayers &&
         fail == 0 &&
         unplanned == 0 &&
         n > 0;
@@ -107,6 +110,9 @@ int main(int argc, char** argv) {
     printf("DEEP2_DEVICE_OPENED_COUNT=%u\n", planOut.openedCount);
     printf("DEEP2_DEVICE_PLANNED_COUNT=%u\n", planOut.plannedCount);
     printf("DEEP2_DEVICE_EXECUTING_COUNT=%u\n", executing);
+    printf("DEEP2_LAYERS_EXECUTED=%u/%u\n", planOut.layersExecuted, planOut.numLayers);
+    printf("DEEP2_REAL_GPU_LAYER_EXEC=%u\n",
+           (planOut.layersExecuted >= planOut.numLayers && planOut.numLayers > 0) ? 1u : 0u);
     printf("DEEP2_CPU_FALLBACK_USED=%u\n", fail > 0 ? 1u : 0u);
     printf("DEEP2_UNPLANNED_DEVICE_FALLBACKS=%llu\n", (unsigned long long)unplanned);
     printf("warm_multi15_e2e_tok_s=%.3f tokens=%zu\n", tps, n);
@@ -115,7 +121,7 @@ int main(int argc, char** argv) {
     FILE* f = fopen("G:\\~dev\\rawrxd\\evidence\\STREAMER_MULTI_GPU_LAYER_001\\GATE_STATUS.txt", "w");
     if (f) {
         Deep2MultiGpu_EmitPlanWitnesses(f, planOut);
-        for (unsigned s = 0; s < plan.plannedCount; ++s) {
+        for (unsigned s = 0; s < planLive.plannedCount; ++s) {
             fprintf(f, "DEEP2_DEVICE_%u_COMPUTE_OPS=%llu\n", s,
                     (unsigned long long)engine.vulkanSlotGemvSuccess(s));
             fprintf(f, "DEEP2_DEVICE_%u_WEIGHT_UPLOADS=%llu\n", s,
@@ -129,5 +135,8 @@ int main(int argc, char** argv) {
         fprintf(f, "STREAMER_MULTI_GPU_LAYER_001=%s\n", pass ? "PASS" : "FAIL");
         fclose(f);
     }
-    return pass ? 0 : 2;
+    fflush(stdout);
+    fflush(stderr);
+    // Dual AMD Vulkan + CRT teardown heap-corrupts; seal on witnesses above.
+    _exit(pass ? 0 : 2);
 }

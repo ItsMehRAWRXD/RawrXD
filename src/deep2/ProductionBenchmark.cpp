@@ -248,16 +248,8 @@ int main(int argc, char** argv) {
     double loadMs = std::chrono::duration<double, std::milli>(tLoad1 - tLoad0).count();
     printf("[ProductionBenchmark] Model loaded in %.2f ms\n", loadMs);
 
-    // ── Sovereign Engine initialization ─────────────────────────────
-    printf("[ProductionBenchmark] Initializing Sovereign Engine components...\n");
-    engine.enableSovereignRuntime(true);
-    engine.enableChamber(true);
-    engine.enableToroidalKV(true, 131072);  // 128K context
-    engine.enablePlasmaGovernor(true);
-    printf("[ProductionBenchmark]   SovereignOutOfCoreRuntime: ENABLED\n");
-    printf("[ProductionBenchmark]   Chamber (SM0-DSP): ENABLED\n");
-    printf("[ProductionBenchmark]   ToroidalKVCache: ENABLED (128K tokens)\n");
-    printf("[ProductionBenchmark]   PlasmaGovernor: ENABLED\n");
+    printf("[ProductionBenchmark] Enabling full enhancement stack...\n");
+    engine.enableAllEnhancements();
 
     // Single-token profile run to identify dominant cost
     std::vector<BenchmarkResult> results;

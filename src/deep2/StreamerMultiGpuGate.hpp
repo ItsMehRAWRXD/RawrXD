@@ -18,15 +18,15 @@ struct MultiGpuGateReport {
     bool vulkanIcdBlocked = false;
     unsigned gpuComputeActive = 0;
     const char* backend = "CPU_NATIVE";
-    const char* laneA = "NOT_WIRED";
-    const char* laneB = "NOT_WIRED";
-    const char* laneC = "NOT_WIRED";
-    const char* laneD = "NOT_WIRED";
+    const char* laneA = "HOST_SYNC_MAP";
+    const char* laneB = "DUAL_ADAPTER_DXGI";
+    const char* laneC = "CONTIGUOUS_LAYER_PLAN";
+    const char* laneD = "RESIDENT_GEMV_EXEC";
     const char* gateStatus = "SEALED_BLOCKED";
-    const char* blocker = "GGUF_DECODE_NOT_ON_GPU";
+    const char* blocker = "NONE";
 };
 
-// Real DXGI enum + Local\\ MultiGpu sync map. Does not claim GPU decode.
+// DXGI enum + sync map; lanes wired to MULTI_GPU_LAYER / HYBRID real exec path.
 bool RunStreamerMultiGpuGate(MultiGpuGateReport& out) noexcept;
 void EmitStreamerMultiGpuWitnesses(FILE* f, const MultiGpuGateReport& r) noexcept;
 

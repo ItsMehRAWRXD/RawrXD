@@ -11,6 +11,7 @@ enum class GpuPolicy : uint8_t {
     Single = 2,
     Multi = 3,
     UserList = 4,
+    Hybrid = 5,
 };
 
 enum class ExecMode : uint8_t {
@@ -18,6 +19,7 @@ enum class ExecMode : uint8_t {
     SingleGpu = 1,
     MultiGpuShard = 2,
     Speculative = 3,
+    Hybrid = 4,
 };
 
 enum class DeviceDuty : uint8_t {

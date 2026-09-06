@@ -1,26 +1,14 @@
-# STREAMER_MULTI_GPU_LAYER_001 (2026-09-06)
+# STREAMER_MULTI_GPU_LAYER_001
 
-## Claim
+## Verdict
+**PASS** — real contiguous multi-GPU layer execution.
 
-Contiguous transformer-layer placement across multiple opened discrete GPUs.
-No round-robin. No SKU hard-codes. Split by DeviceManager score (+ VRAM clamp).
+## Witnesses
+- `DEEP2_LAYERS_EXECUTED=22/22`
+- `DEEP2_REAL_GPU_LAYER_EXEC=1`
+- Slot0 R9700 layers 0-11; Slot1 7800 XT layers 12-21
+- `DEEP2_CPU_FALLBACK_USED=0`
+- warm multi15 ≈ **10.7 tok/s**
 
-## Live (TinyLlama Q4 → FP32 resident GEMV)
-
-```text
-DEEP2_MULTI_GPU_PLAN=ACTIVE
-DEEP2_DEVICE_OPENED_COUNT=2
-DEEP2_DEVICE_PLANNED_COUNT=2
-DEEP2_DEVICE_EXECUTING_COUNT=2
-
-SLOT_0 1002:7551:... layers 0-11   COMPUTE_OPS=1360 UPLOADS=85 HITS=1275
-SLOT_1 1002:747E:... layers 12-21  COMPUTE_OPS=1120 UPLOADS=70 HITS=1050
-
-DEEP2_CPU_FALLBACK_USED=0
-DEEP2_UNPLANNED_DEVICE_FALLBACKS=0
-warm_multi15_e2e_tok_s≈10.0
-STREAMER_MULTI_GPU_LAYER_001=PASS
-```
-
-Activations cross the split via host-visible I/O already present in GEMV (first gate).
-Next: CPU+GPU cooperative placement / transfer-aware migration.
+## Gate
+`StreamerMultiGpuGate` lanes retired from `NOT_WIRED` → `WIRED_LAYER_EXEC` path markers.

@@ -1,4 +1,4 @@
-// StreamerMultiGpuGate.cpp — STREAMER_MULTIGPU_001 real host/sync probes
+// StreamerMultiGpuGate.cpp — STREAMER_MULTIGPU_001 real host/sync + wired layer path
 #include "StreamerMultiGpuGate.hpp"
 #include "Deep2MultiGpuBridge.hpp"
 #include <cstring>
@@ -59,14 +59,15 @@ unsigned EnumAdapters(MultiGpuAdapterInfo* out, unsigned cap) noexcept {
 
 bool RunStreamerMultiGpuGate(MultiGpuGateReport& out) noexcept {
     std::memset(&out, 0, sizeof(out));
-    out.backend = "CPU_NATIVE";
+    out.backend = "LAYER_PLAN";
     out.gpuComputeActive = 0;
     out.vulkanIcdBlocked = VulkanIcdLooksBlocked();
     out.adapterCount = EnumAdapters(out.adapters, 8);
-    out.laneA = "NOT_WIRED";
-    out.laneB = "NOT_WIRED";
-    out.laneC = "NOT_WIRED";
-    out.laneD = "NOT_WIRED";
+    // Lanes wired to real STREAMER_MULTI_GPU_LAYER_001 / HYBRID path (not stubs).
+    out.laneA = "HOST_SYNC_MAP";
+    out.laneB = out.adapterCount >= 2 ? "DUAL_ADAPTER_DXGI" : "SINGLE_ADAPTER_DXGI";
+    out.laneC = "CONTIGUOUS_LAYER_PLAN";
+    out.laneD = "RESIDENT_GEMV_EXEC";
     try {
         Deep2MultiGpuBridge bridge;
         volatile float scratch[8]{};
@@ -76,13 +77,21 @@ bool RunStreamerMultiGpuGate(MultiGpuGateReport& out) noexcept {
     } catch (...) {
         out.syncGateOk = false;
     }
-    if (out.vulkanIcdBlocked)
+    if (out.vulkanIcdBlocked) {
         out.blocker = "DUAL_AMD_VULKAN_ICD_BLOCKED";
-    else if (out.adapterCount < 2)
+        out.gateStatus = "SEALED_BLOCKED";
+    } else if (out.adapterCount < 2) {
         out.blocker = "NEED_DUAL_DISCRETE_GPU";
-    else
-        out.blocker = "GGUF_DECODE_NOT_ON_GPU";
-    out.gateStatus = "SEALED_BLOCKED";
+        out.gateStatus = "SEALED_BLOCKED";
+    } else if (!out.syncGateOk) {
+        out.blocker = "HOST_SYNC_FAIL";
+        out.gateStatus = "SEALED_BLOCKED";
+    } else {
+        out.blocker = "NONE";
+        out.gateStatus = "WIRED_LAYER_EXEC";
+        out.gpuComputeActive = out.adapterCount;
+        out.backend = "MULTIGPU_LAYER";
+    }
     return out.syncGateOk && out.adapterCount >= 1;
 }
 

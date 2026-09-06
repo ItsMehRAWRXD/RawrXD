@@ -1363,6 +1363,14 @@ Deep2Engine::~Deep2Engine() {
     std::fflush(stderr);
     disableMARS();
 
+    std::fprintf(stderr, "[LIFE] release vulkan devices\n");
+    std::fflush(stderr);
+    vulkanDevices_.clear();
+    vulkanCompute_.reset();
+    vulkanInitialized_ = false;
+    vulkanEnabled_ = false;
+    multiGpuLayerPlan_ = MultiGpuLayerPlan{};
+
     std::fprintf(stderr, "[LIFE] stop telemetryController\n");
     std::fflush(stderr);
     telemetryController_.reset();
@@ -1412,7 +1420,6 @@ Deep2Engine::~Deep2Engine() {
     chamber_.reset();
     plasmaGovernor_.reset();
     sovereignRuntime_.reset();
-    vulkanCompute_.reset();
 
     std::fprintf(stderr, "[LIFE] deallocateBuffers\n");
     std::fflush(stderr);
@@ -1500,6 +1507,7 @@ bool Deep2Engine::initialize(const EngineConfig& cfg) {
     printf("[Deep2Engine] Telemetry controller initialized (PCIe stall + bandwidth + residency)\n");
 
     initialized = true;
+    enableAllEnhancements();
     printf("[Deep2Engine] Initialization complete\n");
     return true;
 }
@@ -2592,6 +2600,9 @@ bool Deep2Engine::loadModel(const std::string& ggufPath) {
         }
     }
 
+    strncpy(config.modelPath, ggufPath.c_str(), sizeof(config.modelPath) - 1);
+    config.modelPath[sizeof(config.modelPath) - 1] = '\0';
+    enableAllEnhancements();
     return true;
 }
 
@@ -2790,6 +2801,7 @@ bool Deep2Engine::loadModelFromBP16(const std::string& bp16Path) {
 
     printf("[Deep2Engine] BP16 model loaded successfully (%zu tensors)\n",
            bp16Streamer_->tensorCount());
+    enableAllEnhancements();
     return true;
 }
 
@@ -3849,10 +3861,22 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
-    // --- Vulkan GPU dispatch (SOLO or MULTI contiguous layer slots) ---
-    if (vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty()) {
+    // Planned CPU slot: intentional CPU GEMV (not fallback).
+    bool plannedCpu = false;
+    if (multiGpuLayerPlan_.active) {
+        const int layerIdx = parseWeightLayerIndex(wt.name);
+        if (layerIdx >= 0) {
+            const int slot = Deep2MultiGpu_SlotForLayer(multiGpuLayerPlan_, (unsigned)layerIdx);
+            if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, slot))
+                plannedCpu = true;
+        }
+    }
+
+    // --- Vulkan GPU dispatch (SOLO / MULTI / HYBRID GPU slots) ---
+    if (!plannedCpu && vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty()) {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         if (tryVulkanGEMV(wtEffective, input, output, outDim)) {
+            ++plannedGpuGemvOps_;
             if (bias) {
                 for (size_t i = 0; i < outDim; ++i) {
                     output[i] += bias[i];
@@ -3877,11 +3901,11 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             }
             return;
         }
-        // Gate-killing: never silently substitute CPU transformer GEMV while solo GPU is claimed.
+        // Gate-killing: never silently substitute CPU while GPU slot is claimed.
         if (vulkanStrictNoCpuFallback_) {
             vulkanStrictViolation_ = true;
             fprintf(stderr,
-                    "[STREAMER_GPU_SOLO_001] FATAL: GPU LinearW failed for '%s' "
+                    "[LAYER_EXEC] FATAL: GPU LinearW failed for '%s' "
                     "(type=%d rows=%zu cols=%zu) — CPU fallback forbidden\n",
                     wt.name.c_str(), wtEffective.type, rows, cols);
             fflush(stderr);
@@ -3890,8 +3914,9 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
             }
             return;
         }
-        // Non-strict: fall through to CPU (CPU_NATIVE fail-safe only).
     }
+    if (plannedCpu)
+        ++plannedCpuGemvOps_;
     auto tQuant0 = std::chrono::high_resolution_clock::now();
     if (threadPool && rows >= 64) {
         size_t numThreads = threadPool->size();
@@ -4007,6 +4032,7 @@ void Deep2Engine::reset() {
     if (kvCache) {
         kvCache->reset();
     }
+    if (compressedKV_) compressedKV_->reset();
     // Reset sampler state (repetition penalty history)
     if (sampler) {
         sampler->Reset();
@@ -5126,7 +5152,7 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
 
     // MARS: Place layer weights on GPU before compute
     // Skip aggregate lease when placeAllModelTensorsMARS already inventoried weights.
-    if (marsEnabled_ && marsController_ && !marsWeightsPlaced_) {
+    if (marsEnabled_ && marsController_ && !marsWeightsPlaced_ && !vulkanEnabled_) {
         uint64_t layerId = 1000ULL + layer;
         size_t layerBytes = lw.wq.sizeBytes + lw.wk.sizeBytes + lw.wv.sizeBytes +
                             lw.wo.sizeBytes + lw.wGate.sizeBytes + lw.wUp.sizeBytes +
@@ -5310,6 +5336,10 @@ void Deep2Engine::forwardLayer(size_t layer, const float* input, float* output, 
         std::snprintf(key, sizeof(key), "POST_FFN_%zu", layer);
         B3_StageDigest(key, tokPos, output, hiddenDim);
     }
+
+    // Real layer execution mark: this forwardLayer completed on its planned device.
+    if (multiGpuLayerPlan_.active)
+        Deep2MultiGpu_MarkLayerExecuted(multiGpuLayerPlan_, (unsigned)layer);
 
     // ── Telemetry: Record residency wait time ──────────────────────
     if (telemetryControllerEnabled_ && telemetryController_) {
@@ -5502,7 +5532,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         if (profilingEnabled_ && profiler_) profiler_->beginKVStore();
         
         // Use CompressedKVCache if enabled
-        if (compressedKVEnabled_ && compressedKV_) {
+        if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_) {
             for (size_t h = 0; h < numKVHeads; ++h) {
                 size_t pos = compressedKV_->currentLength();
                 compressedKV_->storeKV(layer, h, pos, kProj + h * headDim, vProj + h * headDim);
@@ -5548,7 +5578,7 @@ void Deep2Engine::computeAttention(size_t layer, const float* input, float* outp
         applySlidingWindow(attentionStart, attentionEnd);
         size_t attend = attentionEnd - attentionStart;
         
-        if (compressedKVEnabled_ && compressedKV_) {
+        if (compressedKVEnabled_ && compressedKV_ && !vulkanEnabled_) {
             // Attention with compressed KV cache — optimized: single allocation, AVX2 paths
             const float scale = 1.0f / sqrtf((float)headDim);
             const size_t maxAttend = (attend > 128) ? attend : 128;
@@ -6791,21 +6821,19 @@ bool Deep2Engine::loadTensorFromGGUF(WeightTensor& wt, const std::string& name) 
 
 bool Deep2Engine::initializeAdvancedFeatures() {
     printf("[Deep2Engine] Initializing VAL-000 advanced features...\n");
-    
-    // Initialize Medusa speculative decoder
-    if (medusaEnabled_) {
+
+    if (medusaEnabled_ && !medusaDecoder_) {
         medusaDecoder_ = std::make_unique<MedusaDecoder>();
         if (!medusaDecoder_->initialize(medusaConfig_)) {
             printf("[Deep2Engine] WARNING: Failed to initialize Medusa decoder\n");
             medusaEnabled_ = false;
         } else {
-            printf("[Deep2Engine] Medusa decoder initialized (%zu heads)\n", 
+            printf("[Deep2Engine] Medusa decoder initialized (%zu heads)\n",
                    medusaConfig_.numHeads);
         }
     }
-    
-    // Initialize NU Fused Packer for compression
-    if (nuPackingEnabled_) {
+
+    if (nuPackingEnabled_ && !nuPacker_) {
         nuPacker_ = std::make_unique<NUFusedPacker>();
         if (!nuPacker_->initialize(nuPackerConfig_)) {
             printf("[Deep2Engine] WARNING: Failed to initialize NU packer\n");
@@ -6814,12 +6842,9 @@ bool Deep2Engine::initializeAdvancedFeatures() {
             printf("[Deep2Engine] NU Fused Packer initialized\n");
         }
     }
-    
-    // Initialize Warmup Scheduler for predictive prefetch
-    if (warmupEnabled_ && moeWeightProxy_) {
+
+    if (warmupEnabled_ && moeWeightProxy_ && !warmupScheduler_) {
         warmupScheduler_ = std::make_unique<WarmupScheduler>();
-        // Note: WarmupConfig no longer carries a weightProxy field;
-        // the scheduler predicts and the engine drives prefetch via MoEWeightProxy.
         if (!warmupScheduler_->initialize(warmupConfig_)) {
             printf("[Deep2Engine] WARNING: Failed to initialize warmup scheduler\n");
             warmupEnabled_ = false;
@@ -6827,21 +6852,21 @@ bool Deep2Engine::initializeAdvancedFeatures() {
             printf("[Deep2Engine] Warmup scheduler initialized\n");
         }
     }
-    
-    // Initialize Compressed KV Cache
-    if (compressedKVEnabled_ && kvCache) {
+
+    if (compressedKVEnabled_ && kvCache && !compressedKV_ &&
+        compressedKVConfig_.numLayers > 0 && compressedKVConfig_.headDim > 0) {
         compressedKV_ = std::make_unique<CompressedKVCache>();
         if (!compressedKV_->initialize(compressedKVConfig_)) {
             printf("[Deep2Engine] WARNING: Failed to initialize compressed KV\n");
             compressedKVEnabled_ = false;
+            compressedKV_.reset();
         } else {
             printf("[Deep2Engine] Compressed KV cache initialized (%s)\n",
                    compressedKVConfig_.quantType == KVQuantType::KV_Q8_0 ? "Q8_0" : "Q4_K");
         }
     }
-    
-    // Initialize NVMe Streaming
-    if (nvmeStreamingEnabled_) {
+
+    if (nvmeStreamingEnabled_ && !nvmeStream_) {
         nvmeStream_ = std::make_unique<NVMeStream>();
         nvmeConfig_.modelPath = config.modelPath[0] ? std::string(config.modelPath) : "";
         if (!nvmeStream_->initialize(nvmeConfig_)) {
@@ -6851,9 +6876,8 @@ bool Deep2Engine::initializeAdvancedFeatures() {
             printf("[Deep2Engine] NVMe streaming initialized\n");
         }
     }
-    
-    // Initialize Sliding Window Engine
-    if (slidingWindowEnabled_) {
+
+    if (slidingWindowEnabled_ && !slidingWindow_) {
         slidingWindow_ = std::make_unique<SlidingWindowEngine>();
         if (!slidingWindow_->initialize(slidingWindowConfig_)) {
             printf("[Deep2Engine] WARNING: Failed to initialize sliding window\n");
@@ -6908,6 +6932,69 @@ void Deep2Engine::enableSlidingWindow(bool enable, size_t windowSize) {
     slidingWindowConfig_.windowSize = windowSize;
     printf("[Deep2Engine] Sliding window: %s (size=%zu)\n", 
            enable ? "ENABLED" : "DISABLED", windowSize);
+}
+
+static uint64_t Deep2LocalHeapBytes(CPUInference::VulkanCompute* vc, uint64_t fb) {
+    if (!vc) return fb;
+    const auto& mp = vc->GetDeviceInfo().memory_props;
+    for (uint32_t h = 0; h < mp.memoryHeapCount; ++h) {
+        if (mp.memoryHeaps[h].flags & 1u) return (uint64_t)mp.memoryHeaps[h].size;
+    }
+    return fb;
+}
+
+void Deep2Engine::enableAllEnhancements() {
+    printf("[Deep2Engine] ENHANCEMENT STACK: ON\n");
+    enableElasticResidency(true);
+    setAsyncPrefetchEnabled(true);
+    enableResidencyTelemetry(true);
+    enableMedusa(true);
+    enableNUPacking(true);
+    enableWarmupScheduler(true);
+    enableCompressedKV(true, KVQuantType::KV_Q8_0);
+    enableNVMeStreaming(true, config.modelPath[0] ? config.modelPath : "");
+    enableSlidingWindow(true, 4096);
+    enableChamber(true);
+    enablePlasmaGovernor(true);
+    enableSovereignRuntime(true);
+    compressedKVConfig_.numLayers =
+        config.numLayers ? config.numLayers : modelWeights.numLayers;
+    compressedKVConfig_.maxSeqLen = config.maxSeqLen ? config.maxSeqLen : 4096;
+    compressedKVConfig_.numHeads =
+        config.numHeads ? config.numHeads : modelWeights.numHeads;
+    compressedKVConfig_.numKVHeads =
+        config.numKVHeads ? config.numKVHeads : modelWeights.numKVHeads;
+    compressedKVConfig_.headDim =
+        config.headDim ? config.headDim : modelWeights.headDim;
+    if (modelWeights.loaded) {
+        const size_t torus = compressedKVConfig_.maxSeqLen;
+        enableToroidalKV(true, torus ? torus : 4096);
+        if (!vulkanInitialized_) enableVulkan(true);
+    }
+    if (!marsEnabled_ && !multiGpuLayerPlan_.active) {
+        const uint64_t g0 = Deep2LocalHeapBytes(getVulkanComputeSlot(0), 32ull << 30);
+        const uint64_t g1 = Deep2LocalHeapBytes(getVulkanComputeSlot(1), 16ull << 30);
+        (void)enableMARS(g0, g1);
+    } else if (multiGpuLayerPlan_.active) {
+        printf("[Deep2Engine] MARS skipped (MULTI/HYBRID layer plan owns devices=%u)\n",
+               vulkanDeviceCount());
+    }
+    if (marsEnabled_ && modelWeights.loaded && !marsWeightsPlaced_ &&
+        !vulkanEnabled_ && !multiGpuLayerPlan_.active)
+        (void)placeAllModelTensorsMARS();
+    if (vulkanEnabled_ && marsEnabled_) marsWeightsPlaced_ = true;
+    initializeAdvancedFeatures();
+    printf("[Deep2Engine] STACK vk=%d mars=%d elastic=%d medusa=%d nu=%d "
+           "warmup=%d ckv=%d nvme=%d slide=%d chamber=%d torus=%d plasma=%d "
+           "sov=%d prefetch=%d devices=%u\n",
+           vulkanEnabled_ ? 1 : 0, marsEnabled_ ? 1 : 0,
+           elasticResidencyEnabled_ ? 1 : 0, medusaEnabled_ ? 1 : 0,
+           nuPackingEnabled_ ? 1 : 0, warmupEnabled_ ? 1 : 0,
+           compressedKVEnabled_ ? 1 : 0, nvmeStreamingEnabled_ ? 1 : 0,
+           slidingWindowEnabled_ ? 1 : 0, chamberEnabled_ ? 1 : 0,
+           toroidalKVEnabled_ ? 1 : 0, plasmaGovernorEnabled_ ? 1 : 0,
+           sovereignRuntimeEnabled_ ? 1 : 0, asyncPrefetchEnabled_ ? 1 : 0,
+           vulkanDeviceCount());
 }
 
 // ============================================================================
@@ -7057,16 +7144,25 @@ void Deep2Engine::enableVulkan(bool enable) {
             return;
         }
 
-        // MULTI: open every planned discrete when ALL / multi list / explicit MULTI policy.
+        // MULTI/HYBRID: open planned discrete GPUs; HYBRID also attaches planned CPU layers.
+        const bool wantHybrid =
+            snap.plan.policy == GpuPolicy::Hybrid ||
+            snap.plan.mode == ExecMode::Hybrid ||
+            (std::getenv("DEEP2_HYBRID") && std::getenv("DEEP2_HYBRID")[0] == '1');
         const bool wantMulti =
-            snap.plan.openCount >= 2 &&
+            snap.plan.openCount >= 1 &&
             (snap.plan.mode == ExecMode::MultiGpuShard ||
+             snap.plan.mode == ExecMode::Hybrid ||
              snap.plan.policy == GpuPolicy::Multi ||
-             snap.plan.policy == GpuPolicy::UserList);
+             snap.plan.policy == GpuPolicy::Hybrid ||
+             snap.plan.policy == GpuPolicy::UserList ||
+             wantHybrid);
 
         vulkanDevices_.clear();
         multiGpuLayerPlan_ = MultiGpuLayerPlan{};
         vulkanUnplannedFallbacks_ = 0;
+        plannedCpuGemvOps_ = 0;
+        plannedGpuGemvOps_ = 0;
 
         auto openOne = [&](const char* needle) -> std::unique_ptr<CPUInference::VulkanCompute> {
             auto vc = std::make_unique<CPUInference::VulkanCompute>();
@@ -7074,36 +7170,44 @@ void Deep2Engine::enableVulkan(bool enable) {
             return vc;
         };
 
-        if (wantMulti) {
+        if (wantMulti && snap.plan.openCount >= 1) {
             MultiGpuLayerPlan plan{};
             const unsigned nLayers = modelWeights.numLayers
                 ? (unsigned)modelWeights.numLayers : 22u;
-            // FP32 resident estimate: ~12 GEMVs/layer * hidden^2 * 4 (rough).
             const uint64_t h = modelWeights.hiddenDim ? modelWeights.hiddenDim : 2048;
             const uint64_t bytesPerLayer = 12ull * h * h * sizeof(float);
             if (!Deep2MultiGpu_BuildContiguousPlan(snap, nLayers, bytesPerLayer, plan)) {
-                fprintf(stderr, "[Deep2Engine] MULTI plan failed — falling back to SOLO primary\n");
+                fprintf(stderr, "[Deep2Engine] layer plan failed — SOLO primary\n");
             } else {
-                for (unsigned s = 0; s < plan.plannedCount; ++s) {
+                if (wantHybrid) {
+                    unsigned cpuLayers = 0;
+                    if (const char* cl = std::getenv("DEEP2_HYBRID_CPU_LAYERS"))
+                        cpuLayers = (unsigned)std::atoi(cl);
+                    Deep2MultiGpu_AttachPlannedCpu(plan, cpuLayers);
+                }
+                const unsigned gpuN = plan.gpuSlotCount;
+                for (unsigned s = 0; s < gpuN; ++s) {
                     auto vc = openOne(plan.name[s]);
                     if (!vc) {
-                        fprintf(stderr, "[Deep2Engine] MULTI open failed slot %u (%s)\n",
+                        fprintf(stderr, "[Deep2Engine] GPU open failed slot %u (%s)\n",
                                 s, plan.name[s]);
                         vulkanDevices_.clear();
                         break;
                     }
-                    printf("[Deep2Engine] MULTI OPEN_ONE slot=%u %s layers=%u-%u\n",
+                    printf("[Deep2Engine] LAYER_EXEC OPEN slot=%u %s layers=%u-%u kind=GPU\n",
                            s, vc->GetDeviceInfo().device_name.c_str(),
                            plan.rangeLo[s], plan.rangeHi[s]);
                     vulkanDevices_.push_back(std::move(vc));
                 }
-                if (vulkanDevices_.size() == plan.plannedCount && plan.plannedCount >= 2) {
+                if (vulkanDevices_.size() == gpuN && gpuN >= 1) {
                     plan.openedCount = (unsigned)vulkanDevices_.size();
                     multiGpuLayerPlan_ = plan;
-                    vulkanCompute_ = nullptr; // use vulkanDevices_[0] as primary alias below
-                    // Keep vulkanCompute_ pointing at slot0 for legacy getters.
-                    // unique_ptr can't share — set raw via temporary: store slot0 also in vulkanCompute_
-                    // by releasing ownership duplicate — instead getter uses vulkanDevices_.
+                    vulkanCompute_ = nullptr;
+                    if (plan.hybrid) {
+                        printf("[Deep2Engine] LAYER_EXEC CPU slot layers=%u-%u (planned)\n",
+                               plan.rangeLo[plan.plannedCount - 1],
+                               plan.rangeHi[plan.plannedCount - 1]);
+                    }
                 }
             }
         }
@@ -7170,7 +7274,11 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         if (layer >= 0)
             slot = Deep2MultiGpu_SlotForLayer(multiGpuLayerPlan_, (unsigned)layer);
         else
-            slot = 0; // embeddings / output head → first planned device
+            slot = 0;
+        if (Deep2MultiGpu_SlotIsCpu(multiGpuLayerPlan_, slot)) {
+            // Planned CPU — not a GPU failure; LinearW owns CPU path.
+            return false;
+        }
         if (slot < 0 || slot >= (int)vulkanDevices_.size()) {
             ++vulkanUnplannedFallbacks_;
             slot = 0;

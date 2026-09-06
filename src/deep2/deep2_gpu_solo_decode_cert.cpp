@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     cfg.maxSeqLen = 4096; cfg.useKVCache = true; cfg.useThreadPool = true;
     cfg.numThreads = 16;
     if (!engine.initialize(cfg)) { printf("FAIL initialize\n"); return 1; }
-    engine.enableVulkan(true);
+    engine.enableAllEnhancements();
 
     const bool vk = engine.isVulkanEnabled();
     std::string selected = "(none)";

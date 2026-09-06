@@ -69,8 +69,9 @@ GpuPolicy ParsePolicy() noexcept {
     if (!p || !*p) p = std::getenv("DEEP2_GPU_POLICY");
     if (!p || !*p) return GpuPolicy::Auto;
     if (HasI(p, "CPU")) return GpuPolicy::CpuOnly;
-    if (HasI(p, "SINGLE")) return GpuPolicy::Single;
-    if (HasI(p, "MULTI")) return GpuPolicy::Multi;
+    if (HasI(p, "SINGLE") || HasI(p, "SOLO")) return GpuPolicy::Single;
+    if (HasI(p, "HYBRID")) return GpuPolicy::Hybrid;
+    if (HasI(p, "MULTI") || HasI(p, "ALL")) return GpuPolicy::Multi;
     if (HasI(p, "LIST") || HasI(p, "USER")) return GpuPolicy::UserList;
     return GpuPolicy::Auto;
 }
@@ -222,10 +223,42 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
         }
         SetPrimary(plan, snap.devices[plan.openIndexes[0]]);
         plan.opened = plan.openCount;
-        plan.mode = plan.opened > 1 ? ExecMode::MultiGpuShard : ExecMode::SingleGpu;
-        plan.backend = plan.opened > 1 ? "MULTIGPU" : "GPU";
-        plan.reason = "user_device_list";
-        plan.policy = GpuPolicy::UserList;
+        if (plan.policy == GpuPolicy::Hybrid) {
+            plan.mode = ExecMode::Hybrid;
+            plan.backend = "HYBRID";
+            plan.reason = "hybrid_device_list";
+        } else {
+            plan.mode = plan.opened > 1 ? ExecMode::MultiGpuShard : ExecMode::SingleGpu;
+            plan.backend = plan.opened > 1 ? "MULTIGPU" : "GPU";
+            plan.reason = "user_device_list";
+            plan.policy = GpuPolicy::UserList;
+        }
+        for (unsigned i = 0; i < plan.openCount; ++i) {
+            const int di = plan.openIndexes[i];
+            snap.devices[di].duty = (di == plan.primaryIndex)
+                ? DeviceDuty::ComputePrimary : DeviceDuty::ComputeSecondary;
+        }
+        return true;
+    }
+
+    // HYBRID / MULTI (no explicit list): open all discrete; planner places layers.
+    if (plan.policy == GpuPolicy::Hybrid || plan.policy == GpuPolicy::Multi) {
+        for (unsigned i = 0; i < snap.deviceCount && plan.openCount < 8; ++i) {
+            if (!snap.devices[i].integrated && snap.devices[i].score >= 10)
+                plan.openIndexes[plan.openCount++] = snap.devices[i].index;
+        }
+        if (plan.openCount == 0) {
+            plan.reason = "no_discrete_gpu";
+            return false;
+        }
+        SetPrimary(plan, snap.devices[plan.openIndexes[0]]);
+        plan.opened = plan.openCount;
+        plan.mode = (plan.policy == GpuPolicy::Hybrid) ? ExecMode::Hybrid
+                    : (plan.opened > 1 ? ExecMode::MultiGpuShard : ExecMode::SingleGpu);
+        plan.backend = (plan.policy == GpuPolicy::Hybrid) ? "HYBRID"
+                       : (plan.opened > 1 ? "MULTIGPU" : "GPU");
+        plan.reason = (plan.policy == GpuPolicy::Hybrid) ? "auto_hybrid_all_discrete"
+                                                        : "auto_multi_all_discrete";
         for (unsigned i = 0; i < plan.openCount; ++i) {
             const int di = plan.openIndexes[i];
             snap.devices[di].duty = (di == plan.primaryIndex)
@@ -251,8 +284,7 @@ bool Deep2Device_ApplyPolicy(DeviceManagerSnapshot& snap) noexcept {
     SetPrimary(plan, snap.devices[best]);
     plan.mode = ExecMode::SingleGpu;
     plan.backend = "GPU";
-    plan.reason = (plan.policy == GpuPolicy::Multi) ? "auto_single_until_multi_ready"
-                                                    : "auto_best_compute";
+    plan.reason = "auto_best_compute";
     snap.devices[best].duty = DeviceDuty::ComputePrimary;
     return true;
 }
@@ -272,6 +304,7 @@ void Deep2Device_EmitWitnesses(FILE* f, const DeviceManagerSnapshot& snap) noexc
         const char* execPath = "CPU_NATIVE";
         if (p.mode == ExecMode::SingleGpu) execPath = "SINGLE_GPU";
         else if (p.mode == ExecMode::MultiGpuShard) execPath = "MULTIGPU";
+        else if (p.mode == ExecMode::Hybrid) execPath = "HYBRID";
         else if (p.mode == ExecMode::Speculative) execPath = "SPECULATIVE";
         fprintf(o, "DEEP2_EXEC_PATH=%s\n", execPath);
         fprintf(o, "DEEP2_EXEC_MODE=%u\n", (unsigned)p.mode);

@@ -7975,6 +7975,29 @@ if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
     message(STATUS "[Deep2] Multi-GPU layer cert: deep2_multi_gpu_layer_cert")
 endif()
 
+option(BUILD_DEEP2_HYBRID_ALL_HW_CERT "Build CPU+GPU hybrid planned-layer cert" ON)
+if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
+    add_executable(deep2_hybrid_all_hw_cert
+        src/deep2/deep2_hybrid_all_hw_cert.cpp
+    )
+    target_link_libraries(deep2_hybrid_all_hw_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_hybrid_all_hw_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_hybrid_all_hw_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_hybrid_all_hw_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_hybrid_all_hw_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Hybrid all-HW cert: deep2_hybrid_all_hw_cert")
+endif()
+
 # deep2_mars_e2e ΓÇö MARS dual-GPU placement + hotpatch + generate smoke
 # ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 option(BUILD_DEEP2_MARS_E2E "Build Deep2 MARS end-to-end smoke harness" ON)
