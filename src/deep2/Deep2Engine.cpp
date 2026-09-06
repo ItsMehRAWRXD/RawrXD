@@ -3849,8 +3849,8 @@ void Deep2Engine::LinearW(const WeightTensor& wt, const float* input,
     // --- CRITICAL FIX: zero output before accumulate-style kernels ---
     memset(output, 0, outDim * sizeof(float));
 
-    // --- Vulkan GPU dispatch (STREAMER_GPU_SOLO_001: real weight GEMV on opened device) ---
-    if (vulkanEnabled_ && vulkanInitialized_ && vulkanCompute_) {
+    // --- Vulkan GPU dispatch (SOLO or MULTI contiguous layer slots) ---
+    if (vulkanEnabled_ && vulkanInitialized_ && !vulkanDevices_.empty()) {
         auto tGpuDispatch0 = std::chrono::high_resolution_clock::now();
         if (tryVulkanGEMV(wtEffective, input, output, outDim)) {
             if (bias) {
@@ -7007,8 +7007,42 @@ rawrxd::SovereignOutOfCoreRuntime* Deep2Engine::getSovereignRuntime() const {
 }
 
 // ============================================================================
-// Vulkan GPU Backend Integration
+// Vulkan GPU Backend Integration (SOLO + MULTI contiguous layers)
 // ============================================================================
+
+int Deep2Engine::parseWeightLayerIndex(const std::string& name) const {
+    // "blk.12.attn_q.weight" -> 12; non-block tensors -> -1 (primary slot)
+    if (name.size() < 5 || name.compare(0, 4, "blk.") != 0) return -1;
+    unsigned v = 0;
+    size_t i = 4;
+    if (i >= name.size() || name[i] < '0' || name[i] > '9') return -1;
+    while (i < name.size() && name[i] >= '0' && name[i] <= '9') {
+        v = v * 10u + (unsigned)(name[i] - '0');
+        ++i;
+    }
+    return (int)v;
+}
+
+CPUInference::VulkanCompute* Deep2Engine::getVulkanComputeSlot(unsigned slot) const {
+    if (slot < vulkanDevices_.size()) return vulkanDevices_[slot].get();
+    if (slot == 0) return vulkanCompute_.get();
+    return nullptr;
+}
+
+uint64_t Deep2Engine::vulkanSlotGemvSuccess(unsigned slot) const {
+    auto* vc = getVulkanComputeSlot(slot);
+    return vc ? vc->GemvSuccess() : 0;
+}
+
+uint64_t Deep2Engine::vulkanSlotWeightUploads(unsigned slot) const {
+    auto* vc = getVulkanComputeSlot(slot);
+    return vc ? vc->GemvWeightUploads() : 0;
+}
+
+uint64_t Deep2Engine::vulkanSlotWeightHits(unsigned slot) const {
+    auto* vc = getVulkanComputeSlot(slot);
+    return vc ? vc->GemvWeightHits() : 0;
+}
 
 void Deep2Engine::enableVulkan(bool enable) {
     if (enable && !vulkanInitialized_) {
@@ -7022,33 +7056,94 @@ void Deep2Engine::enableVulkan(bool enable) {
             vulkanStrictNoCpuFallback_ = false;
             return;
         }
-        const char* needle = Deep2Device_VulkanNeedle(snap);
-        if (!needle || !*needle)
-            needle = snap.plan.primaryName;
-        vulkanCompute_ = std::make_unique<CPUInference::VulkanCompute>();
-        if (vulkanCompute_->InitializeSolo(needle)) {
-            vulkanInitialized_ = true;
-            vulkanEnabled_ = true;
-            vulkanGemvOk_ = 0;
-            vulkanGemvFail_ = 0;
-            vulkanGpuWeightBytes_ = 0;
-            vulkanGpuTensorBytes_ = 0;
-            vulkanRealWeightLayers_ = 0;
-            vulkanStrictViolation_ = false;
-            vulkanWeightSeen_.clear();
-            if (const char* s = std::getenv("DEEP2_GPU_SOLO_STRICT")) {
-                vulkanStrictNoCpuFallback_ = !(s[0] == '0' && s[1] == '\0');
+
+        // MULTI: open every planned discrete when ALL / multi list / explicit MULTI policy.
+        const bool wantMulti =
+            snap.plan.openCount >= 2 &&
+            (snap.plan.mode == ExecMode::MultiGpuShard ||
+             snap.plan.policy == GpuPolicy::Multi ||
+             snap.plan.policy == GpuPolicy::UserList);
+
+        vulkanDevices_.clear();
+        multiGpuLayerPlan_ = MultiGpuLayerPlan{};
+        vulkanUnplannedFallbacks_ = 0;
+
+        auto openOne = [&](const char* needle) -> std::unique_ptr<CPUInference::VulkanCompute> {
+            auto vc = std::make_unique<CPUInference::VulkanCompute>();
+            if (!vc->InitializeSolo(needle)) return nullptr;
+            return vc;
+        };
+
+        if (wantMulti) {
+            MultiGpuLayerPlan plan{};
+            const unsigned nLayers = modelWeights.numLayers
+                ? (unsigned)modelWeights.numLayers : 22u;
+            // FP32 resident estimate: ~12 GEMVs/layer * hidden^2 * 4 (rough).
+            const uint64_t h = modelWeights.hiddenDim ? modelWeights.hiddenDim : 2048;
+            const uint64_t bytesPerLayer = 12ull * h * h * sizeof(float);
+            if (!Deep2MultiGpu_BuildContiguousPlan(snap, nLayers, bytesPerLayer, plan)) {
+                fprintf(stderr, "[Deep2Engine] MULTI plan failed — falling back to SOLO primary\n");
             } else {
-                vulkanStrictNoCpuFallback_ = true;
+                for (unsigned s = 0; s < plan.plannedCount; ++s) {
+                    auto vc = openOne(plan.name[s]);
+                    if (!vc) {
+                        fprintf(stderr, "[Deep2Engine] MULTI open failed slot %u (%s)\n",
+                                s, plan.name[s]);
+                        vulkanDevices_.clear();
+                        break;
+                    }
+                    printf("[Deep2Engine] MULTI OPEN_ONE slot=%u %s layers=%u-%u\n",
+                           s, vc->GetDeviceInfo().device_name.c_str(),
+                           plan.rangeLo[s], plan.rangeHi[s]);
+                    vulkanDevices_.push_back(std::move(vc));
+                }
+                if (vulkanDevices_.size() == plan.plannedCount && plan.plannedCount >= 2) {
+                    plan.openedCount = (unsigned)vulkanDevices_.size();
+                    multiGpuLayerPlan_ = plan;
+                    vulkanCompute_ = nullptr; // use vulkanDevices_[0] as primary alias below
+                    // Keep vulkanCompute_ pointing at slot0 for legacy getters.
+                    // unique_ptr can't share — set raw via temporary: store slot0 also in vulkanCompute_
+                    // by releasing ownership duplicate — instead getter uses vulkanDevices_.
+                }
             }
-            printf("[Deep2Engine] Vulkan single-GPU open: %s (needle=%s strict=%d)\n",
-                   vulkanCompute_->GetDeviceInfo().device_name.c_str(), needle,
-                   vulkanStrictNoCpuFallback_ ? 1 : 0);
+        }
+
+        if (vulkanDevices_.empty()) {
+            const char* needle = Deep2Device_VulkanNeedle(snap);
+            if (!needle || !*needle) needle = snap.plan.primaryName;
+            auto vc = openOne(needle);
+            if (!vc) {
+                fprintf(stderr, "[Deep2Engine] Vulkan open failed — CPU fail-safe\n");
+                vulkanEnabled_ = false;
+                vulkanStrictNoCpuFallback_ = false;
+                return;
+            }
+            printf("[Deep2Engine] Vulkan single-GPU open: %s (needle=%s)\n",
+                   vc->GetDeviceInfo().device_name.c_str(), needle);
+            vulkanDevices_.push_back(std::move(vc));
+        }
+
+        vulkanCompute_.reset();
+        // Alias primary for getVulkanCompute(): recreate isn't needed if we update getter.
+        // Keep a non-owning convention: getVulkanCompute returns devices[0].
+        vulkanInitialized_ = true;
+        vulkanEnabled_ = true;
+        vulkanGemvOk_ = 0;
+        vulkanGemvFail_ = 0;
+        vulkanGpuWeightBytes_ = 0;
+        vulkanGpuTensorBytes_ = 0;
+        vulkanRealWeightLayers_ = 0;
+        vulkanStrictViolation_ = false;
+        vulkanWeightSeen_.clear();
+        if (const char* s = std::getenv("DEEP2_GPU_SOLO_STRICT")) {
+            vulkanStrictNoCpuFallback_ = !(s[0] == '0' && s[1] == '\0');
         } else {
-            fprintf(stderr, "[Deep2Engine] Vulkan open failed — CPU fail-safe\n");
-            vulkanCompute_.reset();
-            vulkanEnabled_ = false;
-            vulkanStrictNoCpuFallback_ = false;
+            vulkanStrictNoCpuFallback_ = true;
+        }
+        if (multiGpuLayerPlan_.active) {
+            Deep2MultiGpu_EmitPlanWitnesses(nullptr, multiGpuLayerPlan_);
+            printf("[Deep2Engine] MULTI contiguous layers ACTIVE devices=%u strict=%d\n",
+                   multiGpuLayerPlan_.openedCount, vulkanStrictNoCpuFallback_ ? 1 : 0);
         }
     } else if (enable && vulkanInitialized_) {
         vulkanEnabled_ = true;
@@ -7060,7 +7155,7 @@ void Deep2Engine::enableVulkan(bool enable) {
 
 bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
                                   float* output, size_t outDim) {
-    if (!vulkanInitialized_ || !vulkanEnabled_ || !vulkanCompute_) {
+    if (!vulkanInitialized_ || !vulkanEnabled_ || vulkanDevices_.empty()) {
         ++vulkanGemvFail_;
         return false;
     }
@@ -7068,6 +7163,25 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
         ++vulkanGemvFail_;
         return false;
     }
+
+    int slot = 0;
+    if (multiGpuLayerPlan_.active) {
+        const int layer = parseWeightLayerIndex(wt.name);
+        if (layer >= 0)
+            slot = Deep2MultiGpu_SlotForLayer(multiGpuLayerPlan_, (unsigned)layer);
+        else
+            slot = 0; // embeddings / output head → first planned device
+        if (slot < 0 || slot >= (int)vulkanDevices_.size()) {
+            ++vulkanUnplannedFallbacks_;
+            slot = 0;
+        }
+    }
+    CPUInference::VulkanCompute* vc = vulkanDevices_[(size_t)slot].get();
+    if (!vc) {
+        ++vulkanGemvFail_;
+        return false;
+    }
+
     const float* wF32 = nullptr;
     size_t elems = wt.rows * wt.cols;
     if (wt.type == (int)GGMLType::GGML_TYPE_F32) {
@@ -7094,7 +7208,6 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
     const uint64_t weightBytes = elems * sizeof(float);
     const uint64_t inputBytes = wt.cols * sizeof(float);
     const uint64_t outputBytes = wt.rows * sizeof(float);
-    // Stable cache key: name hash if present, else host pointer identity.
     uint64_t cacheKey = 0;
     if (!wt.name.empty()) {
         cacheKey = 14695981039346656037ull;
@@ -7106,7 +7219,7 @@ bool Deep2Engine::tryVulkanGEMV(const WeightTensor& wt, const float* input,
     } else {
         cacheKey = (uint64_t)(uintptr_t)wF32 ^ ((uint64_t)wt.rows << 32) ^ (uint64_t)wt.cols;
     }
-    const bool ok = vulkanCompute_->DispatchGEMV(
+    const bool ok = vc->DispatchGEMV(
         wF32, input, output,
         static_cast<uint32_t>(wt.rows),
         static_cast<uint32_t>(wt.cols),

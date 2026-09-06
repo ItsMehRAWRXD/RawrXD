@@ -37,6 +37,7 @@
 #include "SovereignOutOfCoreRuntime.hpp"
 // Vulkan GPU backend
 #include "vulkan_compute.h"
+#include "Deep2MultiGpuLayerPlan.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -385,19 +386,26 @@ public:
     bool isSovereignRuntimeEnabled() const { return sovereignRuntimeEnabled_; }
     rawrxd::SovereignOutOfCoreRuntime* getSovereignRuntime() const;
 
-    // Vulkan GPU backend (STREAMER_GPU_SOLO_001: open one device via DEEP2_GPU_SELECT)
+    // Vulkan GPU backend (SOLO or MULTI contiguous-layer)
     void enableVulkan(bool enable);
     void setVulkanStrictNoCpuFallback(bool strict) { vulkanStrictNoCpuFallback_ = strict; }
     bool isVulkanStrictNoCpuFallback() const { return vulkanStrictNoCpuFallback_; }
     bool isVulkanEnabled() const { return vulkanEnabled_; }
     bool isVulkanInitialized() const { return vulkanInitialized_; }
-    CPUInference::VulkanCompute* getVulkanCompute() const { return vulkanCompute_.get(); }
+    CPUInference::VulkanCompute* getVulkanCompute() const { return getVulkanComputeSlot(0); }
+    CPUInference::VulkanCompute* getVulkanComputeSlot(unsigned slot) const;
+    unsigned vulkanDeviceCount() const { return (unsigned)vulkanDevices_.size(); }
+    const MultiGpuLayerPlan& multiGpuLayerPlan() const { return multiGpuLayerPlan_; }
     uint64_t vulkanGemvSuccessCount() const { return vulkanGemvOk_; }
     uint64_t vulkanGemvFallbackCount() const { return vulkanGemvFail_; }
+    uint64_t vulkanUnplannedFallbacks() const { return vulkanUnplannedFallbacks_; }
     uint64_t vulkanGpuWeightBytes() const { return vulkanGpuWeightBytes_; }
     uint64_t vulkanGpuTensorBytes() const { return vulkanGpuTensorBytes_; }
     uint64_t vulkanRealWeightLayers() const { return vulkanRealWeightLayers_; }
     bool vulkanStrictViolation() const { return vulkanStrictViolation_; }
+    uint64_t vulkanSlotGemvSuccess(unsigned slot) const;
+    uint64_t vulkanSlotWeightUploads(unsigned slot) const;
+    uint64_t vulkanSlotWeightHits(unsigned slot) const;
     // GPU dispatch for GEMV: returns true if dispatched on GPU, false if CPU fallback needed
     bool tryVulkanGEMV(const WeightTensor& wt, const float* input, float* output, size_t outDim);
 
@@ -643,8 +651,10 @@ private:
     bool plasmaGovernorEnabled_ = false;
     bool sovereignRuntimeEnabled_ = false;
 
-    // Vulkan GPU backend
+    // Vulkan GPU backend (slot 0 = primary; extras for MULTI contiguous plan)
     std::unique_ptr<CPUInference::VulkanCompute> vulkanCompute_;
+    std::vector<std::unique_ptr<CPUInference::VulkanCompute>> vulkanDevices_;
+    MultiGpuLayerPlan multiGpuLayerPlan_{};
     bool vulkanEnabled_ = false;
     bool vulkanInitialized_ = false;
     bool vulkanStrictNoCpuFallback_ = false;
@@ -654,8 +664,10 @@ private:
     uint64_t vulkanGpuWeightBytes_ = 0;
     uint64_t vulkanGpuTensorBytes_ = 0;
     uint64_t vulkanRealWeightLayers_ = 0;
+    uint64_t vulkanUnplannedFallbacks_ = 0;
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
+    int parseWeightLayerIndex(const std::string& name) const;
     
     // Ollama model loading temp file cleanup
     std::string tempOllamaGGUFPath_;

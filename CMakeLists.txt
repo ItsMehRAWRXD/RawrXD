@@ -4806,6 +4806,7 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/AmdGpuPowerBackend.cpp
     src/core/GpuDecodeEfficiency.cpp
     src/deep2/Deep2DeviceManager.cpp
+    src/deep2/Deep2MultiGpuLayerPlan.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
@@ -7949,6 +7950,29 @@ if(BUILD_DEEP2_TOPOLOGY_PORTABILITY_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] Topology portability cert: deep2_topology_portability_cert")
+endif()
+
+option(BUILD_DEEP2_MULTI_GPU_LAYER_CERT "Build contiguous multi-GPU layer placement cert" ON)
+if(BUILD_DEEP2_MULTI_GPU_LAYER_CERT)
+    add_executable(deep2_multi_gpu_layer_cert
+        src/deep2/deep2_multi_gpu_layer_cert.cpp
+    )
+    target_link_libraries(deep2_multi_gpu_layer_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_multi_gpu_layer_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_multi_gpu_layer_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_multi_gpu_layer_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_multi_gpu_layer_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] Multi-GPU layer cert: deep2_multi_gpu_layer_cert")
 endif()
 
 # deep2_mars_e2e ΓÇö MARS dual-GPU placement + hotpatch + generate smoke
