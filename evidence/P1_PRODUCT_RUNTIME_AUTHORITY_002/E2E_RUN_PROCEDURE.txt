@@ -1,0 +1,26 @@
+P1PRA_002_E2E — live witness procedure
+======================================
+
+1. set RAWRXD_EVIDENCE_ROOT=f:\~dev\rawrxd\evidence
+2. Launch build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+3. Engine control → Load / Browse a real .gguf
+4. Steer mode = Build (or Agent)
+5. Send a short prompt (e.g. "ping")
+6. Wait for STREAM_END
+7. Inspect:
+     evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\E2E.log
+
+Required:
+  LOAD_MODEL=PASS
+  COMMAND_SEND=PASS
+  P1PRA_ENTER=1
+  P1PRA_STAGE_CHAIN=COMPLETE
+  REAL_INFERENCE_ENGINE=1
+  STREAM_BEGIN=1
+  STREAM_END=1
+  FINALIZE=0
+  LEASE_RELEASED=1
+  EXIT=0
+  SYNTHETIC_FALLBACK=0
+  P1PRA_SYMBOL_LINKED=1
+  EXE_SHA256=6D80501BADFFD437060F58881B6E55E5D09849B3218BAEE858AFBF4140A2CA4F

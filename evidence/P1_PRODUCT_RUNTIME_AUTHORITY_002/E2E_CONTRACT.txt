@@ -1,0 +1,47 @@
+P1PRA_002_E2E_PRODUCT_AUTHORITY — contract
+==========================================
+
+Purpose: sole remaining release authority witness.
+Not a feature gate. Not a numbered VAL test.
+
+## Required RUN fields (single physical Send after Load)
+
+LOAD_MODEL=PASS
+COMMAND_SEND=PASS
+P1PRA_ENTER=1
+P1PRA_STAGE_CHAIN=COMPLETE
+REAL_INFERENCE_ENGINE=1
+STREAM_BEGIN=1
+STREAM_END=1
+FINALIZE=0
+LEASE_RELEASED=1
+EXIT=0
+
+## Required identity fields
+
+EXE_SHA256=<hash>
+MODEL_PATH=<actual gguf>
+STEER_MODE=<Plan|Build|Agent>
+SYNTHETIC_FALLBACK=0
+P1PRA_SYMBOL_LINKED=1
+
+## Physical stage chain (strict +1)
+
+USER_PROMPT
+  → ROUTER
+  → GGUF_OPEN
+  → WEIGHT_ACCESS
+  → FORWARD
+  → SAMPLE
+  → DECODE
+  → UI_EMIT
+  → P1PRA_Finalize == 0
+
+## Failure policy
+
+FINALIZE != 0  →  fail at P1PRA finalization/authority seam
+                 unless an earlier stage field is missing/failed.
+
+## Evidence path
+
+%RAWRXD_EVIDENCE_ROOT%\P1_PRODUCT_RUNTIME_AUTHORITY_002\E2E.log

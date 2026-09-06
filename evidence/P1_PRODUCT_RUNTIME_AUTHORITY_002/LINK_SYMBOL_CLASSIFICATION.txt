@@ -1,0 +1,44 @@
+P1PRA_002 — Win32IDE linker blocker classification (15 externals)
+================================================================
+
+Root cause (both families): RAWRXD_ALLOW_AGENTIC_STUB_FALLBACK=OFF (default strict lane)
+stripped fallback/stub TUs while real providers were excluded or filtered twice.
+
+MCPServer (11 symbols) — ALL Case A
+-----------------------------------
+  MCPServer::MCPServer()
+  MCPServer::~MCPServer()
+  MCPServer::initialize(ServerInfo const&)
+  MCPServer::shutdown()
+  MCPServer::registerResource(...)
+  MCPServer::registerPrompt(...)
+  MCPServer::listTools() const
+  MCPServer::listResources() const
+  MCPServer::listPrompts() const
+  MCPServer::handleMessage(string const&)
+  registerBuiltinTools(MCPServer&)
+
+  Definition: src/mcp_integration.cpp (RawrXD::MCP, include/mcp_integration.h)
+  Was linked as: src/mcp_integration_stub.cpp (stripped by strict lane regex .*_stub\.cpp$)
+  Real TU was commented out in CMake as "structurally broken" (wrong header: src/mcp_integration.h)
+
+  Repair: link src/mcp_integration.cpp; #include "../include/mcp_integration.h"
+
+CoTFallbackSystem (4 symbols) — ALL Case A
+------------------------------------------
+  CoTFallbackSystem::instance()
+  CoTFallbackSystem::disableCoT(string const&)
+  CoTFallbackSystem::enableCoT()
+  CoTFallbackSystem::isCoTAvailable() const
+
+  Definition: src/core/cot_fallback_system.cpp (+ cot_fallback_system.hpp)
+  Required by: src/core/unified_hotpatch_manager.cpp (already in Win32IDE)
+  Was appended via fallback list then removed by strict lane regex .*_fallback[^/]*\.cpp$
+
+  Repair: append src/core/cot_fallback_system.cpp AFTER stub/fallback filters;
+          exempt from STRICT_AGENTIC_REALITY _fallback name gate (real production TU).
+
+Case B (ABI mismatch): 0
+Case C (no implementation): 0
+
+Post-repair link: PASS (build_p1pra_win32ide/bin/RawrXD-Win32IDE.exe)

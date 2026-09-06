@@ -1,0 +1,38 @@
+P1PRA_002 PRODUCT STATE FREEZE
+==============================
+Frozen: 2026-08-31
+
+## Disposition (authoritative)
+
+| Gate                              | Status  |
+| --------------------------------- | ------- |
+| MODEL_STREAMER_PRODUCT_PATH       | WIRED   |
+| STREAMER_VRAM_APERTURE_001        | PASS    |
+| AGENTIC_AUTONOMOUS_TEMPLATE_001   | WIRED   |
+| WIN32IDE_LINK                     | PASS    |
+| RC1 / PRODUCT_INFERENCE_AUTHORITY | HOLD    |
+
+## Product claim (bounded)
+
+RawrXD has a real local-model streaming inference path and behaviorally
+distinct Plan/Build/Agent execution modes. Release authority remains
+intentionally held pending P1PRA_002 end-to-end finalization witness.
+
+## Explicitly frozen — do not expand before E2E proof
+
+- No new agentic/streamer features
+- No VAL-numbered gate work
+- No Ollama/HTTP product path
+- Slice 6 USER_PROMPT source remains integrated
+
+## Next gate only
+
+P1PRA_002_E2E_PRODUCT_AUTHORITY  (see E2E_CONTRACT.txt)
+
+If FINALIZE != 0, attribute failure to the P1PRA finalization/authority
+seam unless the transcript proves an earlier stage failed.
+
+## Reconclusion notes (2026-09-01)
+
+See RECONCLUSION_REGISTER.txt. WIRED/PASS rows here mean link-time or code-path
+presence, not P1PRA E2E certification. RC1 remains HOLD until E2E_CONTRACT passes.

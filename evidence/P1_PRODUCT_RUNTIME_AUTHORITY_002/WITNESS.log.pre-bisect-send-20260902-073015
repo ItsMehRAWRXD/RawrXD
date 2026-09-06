@@ -1,0 +1,11 @@
+2026-09-02 00:28:47 RA_AUTH_INIT=ok
+2026-09-02 00:28:52 P1PRA_HUB=count=128
+2026-09-02 00:28:53 P1PRA_FAULT=code=C0000005 tid=29104 rip=00000000237E097D rsp=00000000153F5B50 op=write target=000000000000000A stage=0 telemetry_stage=0 utc_stage=0
+2026-09-02 00:28:53 P1PRA_THREAD_START=owner=deferred_heavy_init tid=23620
+2026-09-02 00:28:53 P1PRA_DHI=logger_init_enter tid=23620
+2026-09-02 00:28:53 P1PRA_DHI=logger_init_exit tid=23620
+2026-09-02 00:28:53 P1PRA_DHI=streaming_gguf_loader_enter tid=23620
+2026-09-02 00:28:53 P1PRA_DHI=streaming_gguf_loader_exit tid=23620
+2026-09-02 00:28:53 P1PRA_DHI=enterprise_license_enter tid=23620
+2026-09-02 00:28:53 P1PRA_FAULT=code=C0000005 tid=29104 rip=0000000000459304 rsp=00000000153F6540 op=read target=FFFFFFFFFFFFFFFF stage=3 telemetry_stage=0 utc_stage=0
+2026-09-02 00:28:53 P1PRA_FAULT=code=C0000005 tid=23620 rip=00000000022076E3 rsp=0000000024C1D6C8 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0

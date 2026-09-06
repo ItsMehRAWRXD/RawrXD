@@ -1,0 +1,48 @@
+BISECT_DHI live capture — status
+================================
+Generated: 2026-09-02 (attempt after PID 35528 report)
+
+CANDIDATE EXE (verified at script start)
+  path: F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+  sha256 prefix: CB41ADB4…
+  git: 4ecdfe85aef90850714fc5400559828cfa3c93a0
+
+CAPTURE ATTEMPT
+  target: live RawrXD-Win32IDE (PID 35528 class: worker_ok, no wndproc_route)
+  result: NOT CAPTURED
+  blockers:
+    1) x64 cdb.exe not present (Windows Kits Debuggers not installed)
+    2) No RawrXD-Win32IDE process running at attempt time
+
+PARTIAL ARTIFACTS (log copy only, no dump/stacks)
+  F:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\BISECT_DHI_20260902-071700\
+  F:\~dev\rawrxd\evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\BISECT_DHI_20260902-071703\
+
+TWO-FAILURE CLASSIFICATION (from witness epochs)
+  PID 25752 lane: model_ready → Send post → process exit (crash before dispatch)
+  PID 35528 lane: worker_ok → process alive → no P1PRA_SEND=wndproc_route (UI blocked)
+
+ENTERPRISE LICENSE AV (repeatable, SEH-contained)
+  P1PRA_FAULT target=FFFFFFFFFFFFFFF8 during enterprise_license_enter (DHI tid)
+  enterprise_license_exit witnessed on other runs → SEH thunk catches, not fatal alone
+  Source: Win32IDE_Core.cpp initializeEnterpriseSubsystems() steps 1–6
+          wrapped by initializeEnterpriseSubsystemsSafe() __try/__except
+
+PHASE10 (not causal alone)
+  phase10_enter without exit on some runs; other runs show phase10_exit
+  Source: Win32IDE_Core.cpp deferredHeavyInitBody() initPhase10() ~4096–4107
+
+SOURCE BOUNDARIES (next bisect cuts)
+  deferred_heavy_init thread: Win32IDE_Core.cpp deferredHeavyInitThreadProc → bgInitBody → deferredHeavyInitBody
+  DHI scopes: P1PRA_DHI_SCOPE macros ~3727–4398 (P1PRA_ProcessState.cpp P1PRA_DhiEnter/Exit)
+  enterprise_license: deferredHeavyInitBody ~3782–3793 → initializeEnterpriseSubsystemsSafe
+  UTC_InitTelemetry: Win32IDE_Telemetry.cpp initTelemetry (RAWRXD_SKIP_UTC_MASM diagnostic only)
+  Send route: Win32IDE_CommandSurface.cpp handleCommandSend / wndproc_route witnesses
+
+NEXT (before any rebuild)
+  1) Install Windows SDK Debugging Tools (x64 cdb)
+  2) Reproduce PID 35528 state (alive after worker_ok, E2E hung)
+  3) Run user CDB script immediately; preserve alive_no_send.dmp + alive_no_send.cdb.txt
+  4) Read UI-thread stack from dump → pick one cut (lock wait / enterprise / UTC / 097D writer)
+
+P1PRA_RC1: HOLD (no fresh hook chain; no live dump)

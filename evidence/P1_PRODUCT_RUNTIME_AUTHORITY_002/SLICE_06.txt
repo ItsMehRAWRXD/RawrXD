@@ -1,0 +1,27 @@
+P1PRA_002_SLICE_06 — REAL USER_PROMPT (frozen)
+==============================================
+
+Hook: Win32IDE::handleCommandSend() in Win32IDE_CommandSurface.cpp
+      immediately after empty-prompt rejection, before steer/dispatch.
+
+Not hooked: Win32IDE_ChatWindow.cpp (Ollama HTTP path — out of P1PRA_002 scope)
+
+MASM: P1PRA_BeginUserPrompt(state, prompt*, byteCount) -> REQUEST_ID
+
+Evidence fields (append to RUN.log on each accepted send):
+  P1PRA_REQUEST_ID
+  P1PRA_USER_PROMPT_COUNT
+  P1PRA_USER_PROMPT_BYTES
+  P1PRA_USER_PROMPT_TSC
+  P1PRA_USER_PROMPT_THREAD_ID
+  P1PRA_CURRENT_STAGE=USER_PROMPT
+  P1PRA_002_SLICE_06=PASS (when counters valid)
+  P1PRA_FINALIZE != 0 (required — gate must not complete)
+
+Acceptance:
+  REAL_CHAT_SUBMIT=PASS
+  INFERENCE_BEHAVIOR_CHANGED=NO
+  PRODUCT_INFERENCE_AUTHORITY=NOT_CERTIFIED
+  RAWRXD_V1_0_0_RC1=HOLD
+
+Next slice only: USER_PROMPT -> REAL_ROUTER_DISPATCH (Slice 7)

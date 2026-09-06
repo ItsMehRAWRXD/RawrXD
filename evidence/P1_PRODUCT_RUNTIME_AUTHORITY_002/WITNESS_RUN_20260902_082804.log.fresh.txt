@@ -1,0 +1,8 @@
+﻿2026-09-02 08:28:12 P1PRA_HUB=count=128
+2026-09-02 08:28:12 P1PRA_UI=gpu_probe_skip_env
+2026-09-02 08:28:12 P1PRA_UI=gpu_probe_enter
+2026-09-02 08:28:12 P1PRA_UI=gpu_probe_exit
+2026-09-02 08:28:12 P1PRA_HUB=count=128
+2026-09-02 08:28:12 P1PRA_DHI=skip_env_deferred_heavy_init
+2026-09-02 08:28:12 P1PRA_FAULT=code=C0000005 tid=33164 rip=0000000000AF9304 rsp=00000000157A66F0 op=read target=FFFFFFFFFFFFFFFF stage=0 telemetry_stage=0 utc_stage=0
+

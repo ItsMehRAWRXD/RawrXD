@@ -1,0 +1,12 @@
+﻿2026-09-02 08:31:18 RA_AUTH_INIT=ok
+2026-09-02 08:31:24 P1PRA_HUB=count=128
+2026-09-02 08:31:24 P1PRA_UI=gpu_probe_skip_env
+2026-09-02 08:31:24 P1PRA_UI=gpu_probe_enter
+2026-09-02 08:31:24 P1PRA_UI=gpu_probe_exit
+2026-09-02 08:31:24 P1PRA_HUB=count=128
+2026-09-02 08:31:24 P1PRA_UI=dhi_entry
+2026-09-02 08:31:24 P1PRA_DHI=skip_env_deferred_heavy_init
+2026-09-02 08:31:24 P1PRA_UI=deferred_heavy_init_skip_return
+2026-09-02 08:31:24 P1PRA_UI=wm_app_deferred_init_done
+2026-09-02 08:31:24 P1PRA_FAULT=code=C0000005 tid=12928 rip=0000000000199304 rsp=00000000151F6350 op=read target=FFFFFFFFFFFFFFFF stage=0 telemetry_stage=0 utc_stage=0
+

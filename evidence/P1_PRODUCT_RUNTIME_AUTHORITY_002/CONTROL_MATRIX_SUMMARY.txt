@@ -1,0 +1,8 @@
+
+Label         Exe                                                         ExitCode AliveNote                  
+-----         ---                                                         -------- ---------                  
+CONTROL_NINJA F:\~dev\rawrxd\build-ninja\bin\RawrXD-Win32IDE.exe                 1 harness_fail_no_load_status
+CONTROL_P1PRA F:\~dev\rawrxd\build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe        1 crashed_or_exited          
+
+
+

@@ -1,0 +1,270 @@
+P1PRA_002 — SOURCE-TO-MANIFESTATION RECONCLUSION RESULTS
+Generated: 2026-09-01 (reconclusion manifest implementation)
+Rule: facts and supersession only — no release verdict.
+
+================================================================================
+SECTION A — DOCUMENT RECONCILIATION (A1–A6)
+================================================================================
+
+Supersession order (authoritative → historical):
+  1. PRODUCT_STATE_FREEZE.txt (2026-08-31) — disposition + next gate pointer
+  2. E2E_CONTRACT.txt — release authority witness fields (FREEZE L30)
+  3. E2E_RUN_PROCEDURE.txt — operational steps mirroring E2E_CONTRACT
+  4. SLICE_06.txt — frozen milestone slice (USER_PROMPT only)
+  5. README.txt — Batch 1 lane bootstrap (predates hook wiring in source)
+
+A1 FINALIZE polarity (SLICE_06 vs E2E_CONTRACT)
+  SLICE_06 L19: P1PRA_FINALIZE != 0 required (slice must not complete).
+  E2E_CONTRACT L16: FINALIZE=0 required (full chain must complete).
+  Reconciliation: different lifecycle phases. SLICE_06 is a mid-integration
+  gate; E2E_CONTRACT is end-state authority. Both can be true at different times.
+  Source: appendRunLog writes P1PRA_FINALIZE_NONZERO=PASS when finalize!=0 at
+  startup/user_prompt (P1PRA_ProcessState.cpp). E2E OnRequestComplete writes
+  FINALIZE= from P1PRA_Finalize at request end.
+
+A2 README "hooks not wired" vs E2E 8-stage chain
+  README L5 written for Batch 1 (MASM + singleton only).
+  Source now wires P1PRA_On* in Win32IDE_CommandSurface.cpp and Win32IDE.cpp
+  under RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY.
+  Steer path: p1praAdvanceRequestProductPath() (guards P1PRA_RequestActive).
+  Load path: p1praWitnessModelLoadReady() (witness only, no stage advance).
+  Reconciliation: README is stale relative to source; E2E_CONTRACT matches source
+  intent. FREEZE L26 confirms Slice 6 integrated; does not repeat README L5.
+
+A3 FREEZE "MODEL_STREAMER WIRED" vs README Batch 1
+  FREEZE references separate gates (MODEL_STREAMER_PRODUCT_PATH, etc.).
+  README describes P1PRA Batch 1 evidence lane only.
+  Reconciliation: orthogonal gate families; FREEZE product claim is bounded by
+  HOLD on PRODUCT_INFERENCE_AUTHORITY until E2E passes.
+
+A4 README field P1PRA_STARTUP_FINALIZE_MASK
+  No writer in tree. P1PRA_ProcessState.cpp L620 emits PROCESS_START_FINALIZE=.
+  P1PRA_RESET_COUNT, EXE_PATH, PID, P1PRA_FAIL_MASK — not emitted by appendRunLog.
+  Reconciliation: README expected fields are documentation drift; live writer is
+  appendRunLog() field set (lines 618–654).
+
+A5 E2E_RUN_PROCEDURE EXE_SHA256 pin
+  Procedure L26: 6D80501BADFFD437060F58881B6E55E5D09849B3218BAEE858AFBF4140A2CA4F
+  Current build_p1pra_win32ide exe (2026-09-01): D8EABBD81F01ED8BC90D1189122D926BBA900FA82094E71484DD8FB6AB3D5948
+  Source: P1PRA_GetExeSha256Hex() in P1PRA_ProcessState.cpp; wired in
+  p1praCompleteProductRequest (Win32IDE_CommandSurface.cpp L243).
+  Reconciliation: procedure hash is stale pin; source now emits live hash when
+  rebuilt. Historical E2E blocks show EXE_SHA256= empty (pre-wire).
+
+A6 E2E.log deleted at harness start
+  run_e2e_product_authority.ps1 L24 Remove-Item $e2e.
+  Reconciliation: absence of E2E.log in evidence root after harness run is
+  expected until a passing run completes; embedded copies in SEND_WITNESS_*.log
+  are the preserved artifacts. Use trace_reconclusion_e2e.ps1 to preserve logs.
+
+================================================================================
+SECTION B — NUMERIC ID / HWND NAMESPACE (B1–B5)
+================================================================================
+
+B1–B4: IDC_CMD_* (resource.h 12501–12502) vs MINIMAP/UPDATE timer IDs
+  (Win32IDE_Tier1Cosmetics.cpp 12501–12502).
+  Win32 API fact: SetTimer(hwnd, id, ...) timer IDs do not create child HWNDs
+  with GetDlgCtrlID. Child controls use HMENU id at CreateWindow time.
+  Reconciliation: numeric collision is documentation hazard only; not a runtime
+  HWND identity collision.
+
+B5: E2E FindByCtrlId($main, 12501..) vs control parent
+  Controls created on m_hwndCommandHost (Win32IDE_CommandSurface.cpp L936–993).
+  E2E script uses EnumChildWindows recursive search from main HWND.
+  Evidence: SEND_WITNESS_UTC_BISECT.log L4–5 reports composer/send/list/load
+  HWNDs found; harness reaches model_status= and RUN.log user_prompt=PASS.
+  Reconciliation: deep child enumeration from main reaches command-host
+  children; automation is functional. HWND values differ per run (expected).
+
+================================================================================
+SECTION C — HOOK MANIFESTATION MAP (verified call sites)
+================================================================================
+
+All P1PRA_On* call sites gated by RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY except
+WM_APP+209 route logging (Win32IDE_Core.cpp L227–230 outside ifdef).
+
+Open C-gap: Plan mode (CommandSurface L1085–1091) returns without
+p1praCompleteProductRequest — P1PRA_RequestActive may remain true.
+
+Instrumentation added (this pass): P1PRA_HOOK witness lines on each stage hook
+entry with adv=0|1 and counter snapshot (P1PRA_ProcessState.cpp witnessStageHook).
+
+================================================================================
+SECTION D — STAGE CHAIN vs WITNESS COUNTERS (D1–D7)
+================================================================================
+
+Historical embedded E2E (SEND_WITNESS_UTC_BISECT3.log ts=14:52:27):
+  P1PRA_CURRENT_STAGE=WEIGHT_ACCESS
+  ROUTER=1 GGUF=1 WEIGHT=2176177120 FORWARD=0 SAMPLE=0 DECODE=0 UI=0
+  STREAM_BEGIN=1 STREAM_END=1 (meta from callback streamOk, pre-physical-wire)
+  FINALIZE=1  P1PRA_RESULT_STATUS=stream_ok
+  WITNESS: no P1PRA_HOOK lines (predates hook instrumentation)
+
+D1 Meta STREAM_* vs physical counters
+  Before fix: meta.streamBegin/End followed streamOk bool only.
+  After fix: meta uses P1PRA_PhysicalStreamWitnessed(); WITNESS adds
+  P1PRA_STREAM_PHYS=witnessed|not_witnessed; RESULT_STATUS requires both.
+
+D2 WEIGHT_ACCESS from p1praFileSizeBytes (disk stat), not tensor mmap.
+  Manifestation: file size bytes in counter; engine load path separate
+  (p1_cpu_load_ckpt.txt CIE_/LOADER_ traces).
+
+D3 p1praMarkProductPathReady on load (L455) when no active request
+  advanceTo guard returns false — load-time call is no-op on MASM state.
+  Steer-time call (L1077) runs after OnAcceptedUserPrompt — active request.
+
+D4–D6 FORWARD=0 on historical runs
+  Inference worker calls OnForward/OnSample when P1PRA_RequestActive()
+  (Win32IDE.cpp L6628). OnDecode requires stage SAMPLE (ProcessState L804).
+  UI stream on inference thread can race if FORWARD not advanced — hooks now
+  log adv=0 with stage counters for next run.
+
+D5 Inference-busy reject path
+  Win32IDE.cpp L6572–6576: P1PRA_INFERENCE reject_busy witness; callback("", true)
+  (empty token — streamSaw stays false in Build lambda). Historical bisect3
+  stream_ok with FORWARD=0 is consistent with pre-physical-wire meta, not
+  with reject_busy path (non-empty reject message was removed).
+
+D7 Same-second witness burst (18:15:22)
+  Ordering within second: accepted → CALLBACK_ENTER → FINALIZE_RC=1 → E2E_WRITE.
+  Sub-second ordering requires P1PRA_HOOK lines on rebuilt binary.
+
+================================================================================
+SECTION E — DEFERRED-INIT FAULT (E1–E3)
+================================================================================
+
+Fault A (SEND_WITNESS_UTC_BISECT3.log L40, ts=14:52:23):
+  P1PRA_FAULT C0000005 read target=0000000000000040
+  stage=33 (P1PRA_DHI_TELEMETRY) telemetry_stage=7 (TLM_MASM_KERNEL_INIT)
+  utc_stage=18 (P1PRA_UTC_CF_CALL)
+  Source map: RawrXD_Telemetry_Kernel.asm L266–269 P1PRA_UtcWitnessEnterFlat
+  szUtcCfCall then call CreateFileA. target=0x40 = null+offset read pattern.
+  Last witness before fault: cf_call_enter (not cf_call_exit).
+
+Fault B (WITNESS.log tail 18:15:18):
+  rip=00007FF930CEB1EB stage=33 utc_stage=67 (COUNTER_RESET_RING_IDX)
+  After state_pub_set_init_exit, counter_reset_metrics_exit — post-CreateFileA
+  success path partially executed.
+
+E2 Process continued; Send accepted seconds later on both runs.
+  Telemetry partial-init effect on inference: not isolated in evidence.
+
+E3 E2E env (run_e2e_product_authority.ps1): VK_ICD disabled, CPU-only flags.
+  Fault occurs in UTC_InitTelemetry / CreateFileA bisect — host path specific
+  to telemetry log open, not Vulkan load path.
+
+================================================================================
+SECTION F — E2E HARNESS ↔ PRODUCT (F1–F5)
+================================================================================
+
+F1 WM_APP+209: harness L56, Win32IDE_Core.cpp L1728 — no shared #define.
+F2 GWLP_USERDATA: set WM_NCCREATE (Core L217); E2E userdata nonzero in transcripts.
+F3 SafeProcessE2EPostState: PostMessage wParam=0 lParam=0; falls back to
+   GetWindowLongPtrW USERDATA (ProcessState L460–461).
+F4 appendRunLog calls P1PRA_Finalize read-only check each phase — increments
+   finalize_count in MASM state (asm L190) but does not clear chain.
+F5 RUN.log: written to evidence root during run; control matrix copies to
+   CONTROL_P1PRA/; root copy removed/overwritten between matrix legs.
+
+================================================================================
+SECTION G — BUILD / LINK (G1–G4)
+================================================================================
+
+G1 build_p1pra_win32ide: RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY=ON (CMakeCache L625)
+G2 build-ninja: RAWRXD_BUILD_WIN32IDE=ON; RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY
+   absent (defaults OFF) — different binary.
+G3 Exe fingerprints (2026-09-01):
+   P1PRA: SHA256=D8EABBD81F01ED8BC90D1189122D926BBA900FA82094E71484DD8FB6AB3D5948
+          SIZE=327230464
+   NINJA: SHA256=B0DA79FB976B89CFC7AA425FE800FBE297FD098BAB82A3C1239C57078E10F1EB
+          SIZE=323483136
+G4 LINK_SYMBOL_CLASSIFICATION.txt: link PASS for p1pra build.
+   CONTROL_MATRIX_SUMMARY.txt: P1PRA ExitCode=1 crashed_or_exited;
+   NINJA ExitCode=1 harness_fail_no_load_status.
+   Reconciliation: link PASS ≠ E2E PASS; control matrix compares P1PRA-enabled
+   vs non-P1PRA ninja build under same harness — not flag-matched control.
+
+================================================================================
+SECTION H — STARTUP FINALIZE SEMANTICS (H1–H3)
+================================================================================
+
+H1 Startup: P1PRA_Finalize on empty chain returns 1 (asm L234–236).
+   RUN.log PROCESS_START_FINALIZE=FAIL is expected fail-closed behavior.
+H2 SLICE_06 finalize!=0 at slice gate vs E2E finalize=0 at authority gate —
+   see A1.
+H3 P1PRA_FINALIZE_NONZERO=PASS in RUN.log labels startup non-zero as pass for
+   fail-closed witness; E2E FINALIZE=0 is request-completion pass.
+
+================================================================================
+SECTION I — EVIDENCE ARTIFACT BINDING (I1–I5)
+================================================================================
+
+I1 SEND_WITNESS_UTC_BISECT*.log — E2E harness transcripts + embedded E2E blocks;
+   BISECT3 has full E2E counter dump; BISECT/BISECT2 vary in fault timing.
+   SEND_WITNESS_TLM_BISECT.log / SEND_WITNESS_DHI_BISECT.log — telemetry/DHI focus.
+
+I2 BUILD_*.log — incremental ninja rebuild logs; last touched TU per log:
+   SKIP_STREAMER → Win32IDE.cpp
+   WORKER_LOAD → Win32IDE_Product100Wire.cpp (+ load worker path)
+   CPU_ONLY_LOAD / POSTLOAD_UI / DEFERRED_SKIP / LOAD_MUTEX → CommandSurface.cpp
+   DIRECT_CPU_LOAD → Win32IDE_AgenticBridge.cpp
+   CALLBACK_FIX → Product100Wire.cpp
+   SHOWERROR_FIX → Win32IDE_StreamingUX.cpp
+   INFERENCE_CTX → Product100Wire.cpp (RAWRXD_INFERENCE_CTX env)
+   P1PRA_WITNESS → full relink with witness lane
+
+I3 E2E_RERUN*.log — earlier harness attempts; E2E_RERUN_WITNESS.log notes
+   E2E.log MISSING. Superseded by SEND_WITNESS_UTC_BISECT3 embedded block for
+   counter analysis.
+
+I4 p1_cpu_load_ckpt.txt — CPUInferenceEngine/LOADER checkpoint trace
+   (CIE_LoadModel, LOADER_Load, XFMR_Initialize) for Phi-3 GGUF on G:\OllamaModels.
+   Source: CPU inference load path, not P1PRA_ProcessState.
+
+I5 P1_PRODUCT_GATE.txt (2026-08-29) — prior gate family (P1_GGUF_LOAD, COPILOT_CHAIN
+   BLOCKED). Separate from P1PRA_002 lane; FREEZE supersedes for RC disposition.
+
+================================================================================
+SECTION J — SEARCH DEAD ENDS (confirmed)
+================================================================================
+
+WM_APP_P1PRA symbol: 0 matches (use WM_APP+209 or add shared define).
+E2E.log / RUN.log in evidence root: absent between matrix runs (harness deletes/copies).
+P1PRA_HOOK in historical WITNESS: absent until rebuild with witnessStageHook.
+
+================================================================================
+NEXT RUN INSTRUCTIONS (instrumented)
+================================================================================
+
+1. Rebuild: ninja -C build_p1pra_win32ide RawrXD-Win32IDE
+2. Run: evidence\P1_PRODUCT_RUNTIME_AUTHORITY_002\trace_reconclusion_e2e.ps1
+3. Inspect: WITNESS.log for P1PRA_HOOK adv=1 chain; E2E.log for physical STREAM_*.
+
+================================================================================
+SECTION K — INSTRUMENTED RUN 2026-09-01 19:05 (post-rebuild)
+================================================================================
+
+Build: ninja -C build_p1pra_win32ide RawrXD-Win32IDE — PASS
+New exe SHA256: D8EABBD81F01ED8BC90D1189122D926BBA900FA82094E71484DD8FB6AB3D5948
+
+E2E trace_reconclusion_e2e.ps1: exit=1
+  Failure: IDE process exited during model load (exit=-1073741819 = 0xC0000005)
+  HWND discovery: composer/send/list/load found via deep enum from main (B5 confirmed)
+
+WITNESS tail (19:06:05) before crash:
+  P1PRA_UTC symbol=UTC_InitTelemetry ptr=... export=0000000000000000 match=0
+    module_path=build_p1pra_win32ide\bin\RawrXD-Win32IDE.exe
+  P1PRA_FAULT C0000005 read target=FFFFFFFFFFFFFFFF
+    stage=33 (DHI_TELEMETRY) telemetry_stage=7 (TLM_MASM_KERNEL_INIT)
+    utc_stage=63 (UTC_CF_SHADOW_RSP_PRE) — before cf_call/CreateFileA in this run
+  P1PRA_HOOK lines: none (crash before Send; hooks only fire on accepted prompt path)
+
+Stage-chain edges fired this run: none past startup/deferred_init.
+Prior bisect3 run (14:52:27): ROUTER/GGUF/WEIGHT adv implied by counters;
+  FORWARD/SAMPLE/DECODE/UI not fired; stream_ok was meta-only (pre-physical-wire).
+
+Code changes this pass:
+  - P1PRA_HOOK witness on each stage hook (P1PRA_ProcessState.cpp witnessStageHook)
+  - P1PRA_STREAM_PHYS witness (CommandSurface p1praCompleteProductRequest)
+  - p1praAdvanceRequestProductPath guards P1PRA_RequestActive (D3 resolved in source)
+  - p1praWitnessModelLoadReady: load witness without stage advance (D3)

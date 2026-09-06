@@ -1,0 +1,11 @@
+﻿2026-09-02 08:49:58 P1PRA_UI=gpu_telemetry_timer_suppressed
+2026-09-02 08:50:04 P1PRA_HUB=count=128
+2026-09-02 08:50:04 P1PRA_UI=gpu_probe_skip_env
+2026-09-02 08:50:04 P1PRA_UI=gpu_probe_enter
+2026-09-02 08:50:04 P1PRA_UI=gpu_probe_exit
+2026-09-02 08:50:04 P1PRA_HUB=count=128
+2026-09-02 08:50:04 P1PRA_UI=dhi_entry
+2026-09-02 08:50:04 P1PRA_DHI=skip_env_deferred_heavy_init
+2026-09-02 08:50:04 P1PRA_UI=deferred_heavy_init_skip_return
+2026-09-02 08:50:04 P1PRA_UI=wm_app_deferred_init_done
+

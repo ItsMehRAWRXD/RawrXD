@@ -1,0 +1,51 @@
+# P1PRA_002 Reconclusion Register
+# Reconciles contradictions between evidence docs. Updated: 2026-09-01.
+
+## 1. README vs PRODUCT_STATE_FREEZE
+
+| Doc | Claim |
+|-----|-------|
+| README.txt | Batch 1 only; "Inference hooks (items 6–15) not wired yet" |
+| PRODUCT_STATE_FREEZE.txt | MODEL_STREAMER_PRODUCT_PATH=WIRED, AGENTIC_AUTONOMOUS_TEMPLATE_001=WIRED |
+
+**Resolution:** FREEZE "WIRED" means link-time / code-path presence, not P1PRA E2E certification.
+README refers to P1PRA stage-chain hooks (FORWARD..UI_EMIT) not yet witnessing COMPLETE.
+Both can be true: code wired, E2E not certified.
+
+## 2. SLICE_06 vs E2E_CONTRACT finalize
+
+| Doc | Expectation |
+|-----|-------------|
+| SLICE_06.txt | P1PRA_FINALIZE != 0 required (gate must not complete at USER_PROMPT only) |
+| E2E_CONTRACT.txt | FINALIZE=0 after full chain USER_PROMPT..UI_EMIT |
+
+**Resolution:** Different gates. Slice 06 = partial integration witness. E2E = release authority.
+Slice 06 PASS does not imply E2E PASS.
+
+## 3. stream_ok vs MASM counters
+
+**Was:** P1PRA_RESULT_STATUS=stream_ok while FORWARD/SAMPLE/DECODE/UI counters = 0.
+**Cause (reconcluded):** generateResponseAsync busy-reject passed non-empty token + complete=true,
+treating error text as stream proof. meta.streamBegin/End used bool not physical counters.
+**Fix:** reject_busy uses callback("",true); stream meta from P1PRA_PhysicalStreamWitnessed().
+
+## 4. WIN32IDE_LINK=PASS vs RUN.log FAIL
+
+FREEZE WIN32IDE_LINK=PASS = linker succeeded (see LINK_SYMBOL_CLASSIFICATION.txt).
+RUN.log P1_PRODUCT_RUNTIME_AUTHORITY_002=FAIL = runtime authority chain incomplete.
+Not contradictory.
+
+## 5. INFERENCE_BEHAVIOR_CHANGED=NO
+
+appendRunLog always writes NO until physical stream chain completes.
+Does not contradict FREEZE bounded product claim (code exists; certification HOLD).
+
+## 6. E2E binary lane
+
+Only build_p1pra_win32ide has RAWRXD_P1_PRODUCT_RUNTIME_AUTHORITY=ON.
+build-ninja and build_win32ide must not be used for P1PRA E2E (see reconclusion/A4_BINARY_LANE.txt).
+
+## 7. Startup vs runtime FINALIZE
+
+PROCESS_START_FINALIZE=FAIL at boot is fail-closed by design (empty chain).
+E2E FINALIZE=0 is required only after full send chain (see A2_STARTUP_FINALIZE.txt).

@@ -1,0 +1,29 @@
+GPU_DECODE_EFFICIENCY_CERTIFICATION
+=====================================
+Metric: tokens_per_watt_gpu = decode_TPS / average_real_gpu_watts
+Scope: GPU package power only (tokens_per_watt_system reserved)
+
+Authoritative writer:
+  rawrxd::GpuDecodeEfficiencyAuthority::EndAndPublish()
+  -> METRICS gauges inference.*
+  -> evidence/P1_PRODUCT_RUNTIME_AUTHORITY_002/gpu_decode_efficiency.ndjson
+
+Sensor sources (priority order):
+  1. ADL2_OverdriveN_PerformanceStatus (atiadlxx.dll)
+  2. PDH_AMD_GPU_Power counter
+  Never: OverclockGov_ReadPowerDraw, MASM stubs, hardcoded watts
+
+Invalid state:
+  inference.gpu_power_valid=0
+  inference.avg_gpu_power_watts=-1
+  inference.tokens_per_watt_gpu=-1
+  E2E.log GPU_POWER_VALID=0 (no TOKENS_PER_WATT_GPU line)
+
+LowestPower policy:
+  AutoPlanner skips power objective when GpuPowerValidForPolicy() is false
+
+Verification:
+  1. Rebuild build_p1pra_win32ide
+  2. Run E2E harness (physical Send after Load)
+  3. Inspect E2E.log for GPU_POWER_VALID, TOKENS_PER_WATT_GPU
+  4. Inspect gpu_decode_efficiency.ndjson for sensor_source, sample_count, qpc_*

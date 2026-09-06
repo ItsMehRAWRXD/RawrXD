@@ -1,0 +1,26 @@
+﻿MINIDUMP_REVERSE_ENGINEERING_212315
+Dump=F:\~dev\rawrxd\build-win32ide-fresh\bin\crash_dumps\RawrXD_20260901_212315_C0000005.dmp
+Witness=P1PRA_FAULT tid=31804 rip=0x3DCBC4 rsp=0x151FF980 op=read target=0x8 utc_stage=67
+
+Exception
+  Code=C0000005 (access violation)
+  Rip=0x3DCBC4 (module RVA 0x1ACBC4 @ image base 0x230000)
+  Rsp=0x151FF980
+  Rcx=0x139BA698
+  Rdx=0x0
+  Fault=read null+8 (nullptr method field / list node _Next)
+
+Map symbol (p1pra build map, preferred base 0x400000 => VA 0x5ACBC4)
+  std::_Free_non_head<...> in autonomous_orchestrator.cpp.obj @ 0x5ACBB0
+  Fault RIP is +0x14 bytes into that STL list-head destructor
+
+Classification
+  NOT the post-SAMPLE inference-worker fault (those were tid~6052/28020, write target=0xA, rip~0x2324097D).
+  This dump is a background-thread null deref during std::list node teardown in AutonomousOrchestrator.
+  WITNESS.log has NO P1PRA_SEND / P1PRA_HOOK=SAMPLE lines at 21:23:15 — not on DECODE certification path.
+
+Binary note
+  Dump cwd binary lane: build-win32ide-fresh (not build_p1pra_win32ide). Use P1PRA exe for RC1.
+
+RC1 inference boundary fix (already in p1pra sources)
+  Gate ADL2 probe to UI thread via InitGpuPowerProbeMainThread(); inference worker BeginDecodeWindow is QPC-only off-thread.

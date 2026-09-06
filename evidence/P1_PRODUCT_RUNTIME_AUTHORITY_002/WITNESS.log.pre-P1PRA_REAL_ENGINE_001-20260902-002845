@@ -1,0 +1,61 @@
+2026-09-02 00:08:20 RA_AUTH_INIT=ok
+2026-09-02 00:08:26 P1PRA_HUB=count=128
+2026-09-02 00:08:26 P1PRA_FAULT=code=C0000005 tid=25596 rip=000000001D45097D rsp=0000000014FF5BE0 op=write target=000000000000000A stage=0 telemetry_stage=0 utc_stage=0
+2026-09-02 00:08:26 P1PRA_THREAD_START=owner=deferred_heavy_init tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=logger_init_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=logger_init_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=streaming_gguf_loader_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=streaming_gguf_loader_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=enterprise_license_enter tid=8968
+2026-09-02 00:08:26 P1PRA_FAULT=code=C0000005 tid=8968 rip=0000000001E99A53 rsp=000000001E0FD8D8 op=write target=FFFFFFFFFFFFFFF8 stage=3 telemetry_stage=0 utc_stage=0
+2026-09-02 00:08:26 P1PRA_DHI=enterprise_license_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=cpu_inference_engine_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=cpu_inference_engine_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=transparent_renderer_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=transparent_renderer_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=powershell_state_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=powershell_state_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=code_snippets_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=code_snippets_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=native_agent_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=native_agent_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=extension_loader_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=extension_loader_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agentic_bridge_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agentic_bridge_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=ai_panels_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=ai_panels_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=ghost_text_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=ghost_text_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=failure_detector_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=failure_detector_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agent_panel_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agent_panel_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=load_apply_settings_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=load_apply_settings_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agent_history_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=agent_history_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=failure_intelligence_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=failure_intelligence_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=model_resolver_enter tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=model_resolver_exit tid=8968
+2026-09-02 00:08:26 P1PRA_DHI=gpu_backend_bridge_enter tid=8968
+2026-09-02 00:08:26 P1PRA_LOAD=worker_dispatch
+2026-09-02 00:08:26 P1PRA_LOAD=worker_thread_spawned
+2026-09-02 00:08:26 P1PRA_LOAD=worker_enter
+2026-09-02 00:08:26 P1PRA_THREAD_START=owner=cmd_load_worker tid=30608
+2026-09-02 00:08:26 P1PRA_LOAD=path_begin
+2026-09-02 00:08:26 P1PRA_LOAD=path_ok
+2026-09-02 00:08:26 P1PRA_DHI=gpu_backend_bridge_exit tid=8968
+2026-09-02 00:08:26 P1PRA_LOAD=engine_ptr=0000000021C316D0
+2026-09-02 00:08:26 P1PRA_DHI=phase10_enter tid=8968
+2026-09-02 00:08:26 P1PRA_LOAD=worker_snap bridge=0000000021C316D0 path_ptr=0000000021B68720 path_len=48 path_hash=0b1c391d406e5652 hwnd=00000000020A0C48 tid=30608
+2026-09-02 00:08:26 P1PRA_LOAD=before_load
+2026-09-02 00:08:26 P1PRA_LOAD=bridge_load_enter
+2026-09-02 00:08:26 P1PRA_LOAD=member_addrs
+2026-09-02 00:08:26 P1PRA_LOAD=bridge=0000000021C316D0 deep2Ready_addr=0000000021C31972 modelName_addr=0000000021C31750 loadErrorCallback_addr=0000000021C31908 ide_addr=0000000014FF90B8
+2026-09-02 00:08:26 P1PRA_LOAD=backend_select_enter
+2026-09-02 00:08:26 P1PRA_LOAD=backend=cpu
+2026-09-02 00:08:26 P1PRA_LOAD=backend_select_exit
+2026-09-02 00:08:26 P1PRA_LOAD=gguf_load_begin
+2026-09-02 00:08:26 P1PRA_THREAD_START=owner=swarm_prefetch_io tid=26960

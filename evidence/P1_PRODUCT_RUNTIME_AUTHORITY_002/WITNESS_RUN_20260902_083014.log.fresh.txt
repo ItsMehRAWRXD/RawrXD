@@ -1,0 +1,8 @@
+﻿2026-09-02 08:30:21 P1PRA_HUB=count=128
+2026-09-02 08:30:21 P1PRA_UI=gpu_probe_skip_env
+2026-09-02 08:30:21 P1PRA_UI=gpu_probe_enter
+2026-09-02 08:30:21 P1PRA_UI=gpu_probe_exit
+2026-09-02 08:30:22 P1PRA_HUB=count=128
+2026-09-02 08:30:22 P1PRA_UI=dhi_entry
+2026-09-02 08:30:22 P1PRA_DHI=skip_env_deferred_heavy_init
+
