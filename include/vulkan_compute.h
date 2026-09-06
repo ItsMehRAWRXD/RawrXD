@@ -214,6 +214,50 @@ public:
     // GEMV dispatch — resident DEVICE_LOCAL weights; host-visible act I/O
     bool DispatchGEMV(const float* weights, const float* input, float* output,
                       uint32_t rows, uint32_t cols, uint64_t cacheKey = 0);
+
+    // ---- STREAMER_GPU_FORWARD_OPS_001: device-resident layer path ----
+    struct DeviceBuf {
+        VkBuffer buffer = nullptr;
+        VkDeviceMemory memory = nullptr;
+        size_t bytes = 0;
+    };
+    bool EnsureForwardArena(uint32_t hidden, uint32_t inter, uint32_t nHeads,
+                            uint32_t nKv, uint32_t headDim, uint32_t maxSeq,
+                            uint32_t nLayers = 32);
+    bool UploadHidden(const float* host, uint32_t n);
+    bool DownloadHidden(float* host, uint32_t n);
+    bool CopyArenaHiddenTo(VulkanCompute& dst, uint32_t n); // ownership handoff
+    bool DispatchGemvDevice(const float* weights, uint64_t cacheKey,
+                            DeviceBuf& in, DeviceBuf& out,
+                            uint32_t rows, uint32_t cols);
+    bool DispatchRmsNorm(DeviceBuf& in, DeviceBuf& w, DeviceBuf& out,
+                         uint32_t n, float eps);
+    bool DispatchResidualAdd(DeviceBuf& a, DeviceBuf& b, DeviceBuf& out, uint32_t n);
+    bool DispatchRope(DeviceBuf& q, DeviceBuf& k, uint32_t headDim, uint32_t nHeads,
+                      uint32_t nKv, uint32_t pos, float theta);
+    bool DispatchAttnDecode(DeviceBuf& q, DeviceBuf& kCache, DeviceBuf& vCache,
+                            DeviceBuf& out, uint32_t headDim, uint32_t nHeads,
+                            uint32_t nKv, uint32_t seq, float scale,
+                            uint32_t layer);
+    bool DispatchSwiGLU(DeviceBuf& gate, DeviceBuf& up, DeviceBuf& out, uint32_t n);
+    bool AppendKV(DeviceBuf& kTok, DeviceBuf& vTok, uint32_t kvDim, uint32_t pos,
+                  uint32_t layer);
+    DeviceBuf& ArenaHidden();
+    DeviceBuf& ArenaResidual();
+    DeviceBuf& ArenaNormed();
+    DeviceBuf& ArenaQ();
+    DeviceBuf& ArenaK();
+    DeviceBuf& ArenaV();
+    DeviceBuf& ArenaAttn();
+    DeviceBuf& ArenaGate();
+    DeviceBuf& ArenaUp();
+    DeviceBuf& ArenaDown();
+    DeviceBuf& ArenaFFNAct();
+    DeviceBuf& ArenaAttnW(); // RMSNorm attn weight
+    DeviceBuf& ArenaFfnW();
+    DeviceBuf& ArenaKCache();
+    DeviceBuf& ArenaVCache();
+    bool UploadNormWeight(DeviceBuf& dst, const float* w, uint32_t n);
     
     VulkanDeviceInfo GetDeviceInfo() const { return device_info_; }
     bool IsAMDDevice() const { return device_info_.vendor_id == 0x1002; }
@@ -339,6 +383,40 @@ private:
     bool UploadToDeviceLocal(const void* src, size_t size, VkBuffer dst);
     bool EnsureHostIo(size_t inBytes, size_t outBytes);
     void ReleaseGemvResidents();
+    void ReleaseForwardArena();
+    bool LoadComputePipeline(const char* spvName, uint32_t nBind, uint32_t pcBytes,
+                             VkPipeline& pipe, VkPipelineLayout& layout,
+                             VkDescriptorSetLayout& dsLayout, VkDescriptorPool& pool,
+                             VkDescriptorSet& ds);
+    bool SubmitOne(VkCommandBuffer cmd);
+    bool DownloadDeviceLocal(VkBuffer src, void* dst, size_t size);
+    bool CopyDeviceToDevice(VkBuffer src, VkBuffer dst, size_t size);
+
+    // Forward-resident arena + pipelines
+    DeviceBuf fwd_hidden_{}, fwd_residual_{}, fwd_normed_{};
+    DeviceBuf fwd_q_{}, fwd_k_{}, fwd_v_{}, fwd_attn_{};
+    DeviceBuf fwd_gate_{}, fwd_up_{}, fwd_down_{}, fwd_ffn_act_{};
+    DeviceBuf fwd_attn_w_{}, fwd_ffn_w_{};
+    DeviceBuf fwd_k_cache_{}, fwd_v_cache_{};
+    uint32_t fwd_hidden_n_ = 0, fwd_inter_n_ = 0, fwd_kv_dim_ = 0, fwd_max_seq_ = 0;
+    uint32_t fwd_n_layers_ = 0;
+    bool fwd_arena_ready_ = false;
+
+    VkPipeline rms_pipe_ = nullptr; VkPipelineLayout rms_layout_ = nullptr;
+    VkDescriptorSetLayout rms_dsl_ = nullptr; VkDescriptorPool rms_pool_ = nullptr;
+    VkDescriptorSet rms_ds_ = nullptr;
+    VkPipeline add_pipe_ = nullptr; VkPipelineLayout add_layout_ = nullptr;
+    VkDescriptorSetLayout add_dsl_ = nullptr; VkDescriptorPool add_pool_ = nullptr;
+    VkDescriptorSet add_ds_ = nullptr;
+    VkPipeline rope_pipe_ = nullptr; VkPipelineLayout rope_layout_ = nullptr;
+    VkDescriptorSetLayout rope_dsl_ = nullptr; VkDescriptorPool rope_pool_ = nullptr;
+    VkDescriptorSet rope_ds_ = nullptr;
+    VkPipeline attn_pipe_ = nullptr; VkPipelineLayout attn_layout_ = nullptr;
+    VkDescriptorSetLayout attn_dsl_ = nullptr; VkDescriptorPool attn_pool_ = nullptr;
+    VkDescriptorSet attn_ds_ = nullptr;
+    VkPipeline swiglu_pipe_ = nullptr; VkPipelineLayout swiglu_layout_ = nullptr;
+    VkDescriptorSetLayout swiglu_dsl_ = nullptr; VkDescriptorPool swiglu_pool_ = nullptr;
+    VkDescriptorSet swiglu_ds_ = nullptr;
 
 public:
     uint64_t GemvDescriptorAllocations() const { return gemv_desc_allocs_; }

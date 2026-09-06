@@ -87,6 +87,21 @@ void VulkanCompute::Cleanup() {
         gemv_ds_ = nullptr;
         gemv_pipeline_created_ = false;
         ReleaseGemvResidents();
+        ReleaseForwardArena();
+        // Forward-resident pipelines / arena (STREAMER_GPU_FORWARD_OPS_001)
+        ReleaseForwardArena();
+        auto killPipe = [&](VkPipeline& p, VkPipelineLayout& l, VkDescriptorSetLayout& d,
+                            VkDescriptorPool& pool) {
+            if (p) { vkDestroyPipeline(device_, p, nullptr); p = nullptr; }
+            if (l) { vkDestroyPipelineLayout(device_, l, nullptr); l = nullptr; }
+            if (d) { vkDestroyDescriptorSetLayout(device_, d, nullptr); d = nullptr; }
+            if (pool) { vkDestroyDescriptorPool(device_, pool, nullptr); pool = nullptr; }
+        };
+        killPipe(rms_pipe_, rms_layout_, rms_dsl_, rms_pool_); rms_ds_ = nullptr;
+        killPipe(add_pipe_, add_layout_, add_dsl_, add_pool_); add_ds_ = nullptr;
+        killPipe(rope_pipe_, rope_layout_, rope_dsl_, rope_pool_); rope_ds_ = nullptr;
+        killPipe(attn_pipe_, attn_layout_, attn_dsl_, attn_pool_); attn_ds_ = nullptr;
+        killPipe(swiglu_pipe_, swiglu_layout_, swiglu_dsl_, swiglu_pool_); swiglu_ds_ = nullptr;
         
         // Free staging buffer
         if (staging_buffer_) {
@@ -206,7 +221,8 @@ bool VulkanCompute::CreateDeviceLocalBuffer(size_t size, VkBuffer& buf, VkDevice
     VkBufferCreateInfo bi{};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = size;
-    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if (vkCreateBuffer(device_, &bi, nullptr, &buf) != VK_SUCCESS) return false;
     VkMemoryRequirements mr{};
@@ -229,7 +245,8 @@ bool VulkanCompute::CreateHostVisibleBuffer(size_t size, VkBuffer& buf, VkDevice
     VkBufferCreateInfo bi{};
     bi.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bi.size = size;
-    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+    bi.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     bi.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     if (vkCreateBuffer(device_, &bi, nullptr, &buf) != VK_SUCCESS) return false;
     VkMemoryRequirements mr{};
@@ -657,15 +674,6 @@ bool VulkanCompute::ExecuteRoPE(float* embeddings, uint32_t dim, uint32_t seq_po
     return false;
 }
 
-bool VulkanCompute::ExecuteRMSNorm(float* data, uint32_t size, float epsilon) {
-    (void)data; (void)size; (void)epsilon;
-    return false;
-}
-
-bool VulkanCompute::ExecuteSiLU(float* data, uint32_t size) {
-    (void)data; (void)size;
-    return false;
-}
 
 bool VulkanCompute::ExecuteSoftmax(float* data, uint32_t size) {
     (void)data; (void)size;

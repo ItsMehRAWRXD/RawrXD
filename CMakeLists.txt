@@ -4807,6 +4807,8 @@ set(INFERENCE_ENGINE_SOURCES
     src/core/GpuDecodeEfficiency.cpp
     src/deep2/Deep2DeviceManager.cpp
     src/deep2/Deep2MultiGpuLayerPlan.cpp
+    src/deep2/Deep2Engine_GpuForward.cpp
+    src/vulkan_fwd_resident.cpp
     src/deep2/K2MoEWeights.cpp
     src/deep2/K2GlobalTensorIndex.cpp
     src/deep2/Deep2Bridge.cpp
@@ -7996,6 +7998,29 @@ if(BUILD_DEEP2_HYBRID_ALL_HW_CERT)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     )
     message(STATUS "[Deep2] Hybrid all-HW cert: deep2_hybrid_all_hw_cert")
+endif()
+
+option(BUILD_DEEP2_GPU_FORWARD_OPS_CERT "Build STREAMER_GPU_FORWARD_OPS_001 cert" ON)
+if(BUILD_DEEP2_GPU_FORWARD_OPS_CERT)
+    add_executable(deep2_gpu_forward_ops_cert
+        src/deep2/deep2_gpu_forward_ops_cert.cpp
+    )
+    target_link_libraries(deep2_gpu_forward_ops_cert PRIVATE InferenceEngine dxgi)
+    if(MSVC)
+        target_compile_options(deep2_gpu_forward_ops_cert PRIVATE /O2 /arch:AVX512 /EHsc /W4 /std:c++20)
+    endif()
+    target_include_directories(deep2_gpu_forward_ops_cert PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_SOURCE_DIR}/src/deep2
+        ${CMAKE_SOURCE_DIR}/src/core
+        ${CMAKE_SOURCE_DIR}/include
+    )
+    set_target_properties(deep2_gpu_forward_ops_cert PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        OUTPUT_NAME deep2_gpu_forward_ops_cert
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+    )
+    message(STATUS "[Deep2] GPU forward ops cert: deep2_gpu_forward_ops_cert")
 endif()
 
 # deep2_mars_e2e ΓÇö MARS dual-GPU placement + hotpatch + generate smoke

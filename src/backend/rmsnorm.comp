@@ -1,0 +1,25 @@
+#version 450
+layout(local_size_x = 256) in;
+layout(binding = 0) readonly buffer In { float x[]; };
+layout(binding = 1) readonly buffer W { float w[]; };
+layout(binding = 2) writeonly buffer Out { float y[]; };
+layout(push_constant) uniform PC { uint n; float eps; } pc;
+shared float red[256];
+shared float inv_s;
+void main() {
+  uint lid = gl_LocalInvocationID.x;
+  float partial = 0.0;
+  for (uint i = lid; i < pc.n; i += 256u)
+    partial += x[i] * x[i];
+  red[lid] = partial;
+  barrier();
+  for (uint s = 128u; s > 0u; s >>= 1u) {
+    if (lid < s) red[lid] += red[lid + s];
+    barrier();
+  }
+  if (lid == 0u)
+    inv_s = inversesqrt(red[0] / float(pc.n) + pc.eps);
+  barrier();
+  for (uint i = lid; i < pc.n; i += 256u)
+    y[i] = x[i] * inv_s * w[i];
+}

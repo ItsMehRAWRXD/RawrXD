@@ -38,6 +38,7 @@
 // Vulkan GPU backend
 #include "vulkan_compute.h"
 #include "Deep2MultiGpuLayerPlan.hpp"
+#include "Deep2GpuForward.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -401,6 +402,15 @@ public:
     uint64_t vulkanUnplannedFallbacks() const { return vulkanUnplannedFallbacks_; }
     uint64_t plannedCpuGemvOps() const { return plannedCpuGemvOps_; }
     uint64_t plannedGpuGemvOps() const { return plannedGpuGemvOps_; }
+    const GpuForwardCounters& gpuForwardCounters() const;
+    void resetGpuForwardCounters();
+    bool isRealGpuForward() const;
+    bool ensureGpuForwardArena(unsigned slot);
+    bool forwardLayerGpuResident(uint32_t layer, unsigned slot,
+                                 bool uploadEntry, bool downloadExit);
+    bool forwardGpuContiguousRange(unsigned slot, uint32_t lo, uint32_t hi,
+                                   const float* hostIn, float* hostOut);
+    bool forwardGpuMultiMap(const float* hostIn, float* hostOut);
     uint64_t vulkanGpuWeightBytes() const { return vulkanGpuWeightBytes_; }
     uint64_t vulkanGpuTensorBytes() const { return vulkanGpuTensorBytes_; }
     uint64_t vulkanRealWeightLayers() const { return vulkanRealWeightLayers_; }
@@ -671,6 +681,7 @@ private:
     uint64_t vulkanUnplannedFallbacks_ = 0;
     uint64_t plannedCpuGemvOps_ = 0;
     uint64_t plannedGpuGemvOps_ = 0;
+    GpuForwardCounters gpuFwd_{};
     std::unordered_map<std::string, std::vector<float>> vulkanWeightF32_;
     std::unordered_map<std::string, uint8_t> vulkanWeightSeen_;
     int parseWeightLayerIndex(const std::string& name) const;

@@ -1,38 +1,38 @@
 #version 450
 layout(local_size_x = 256) in;
-
-layout(binding = 0) buffer Logits {
-    float logits[];
-};
-
-layout(binding = 1) writeonly buffer Output {
-    float probs[];
-};
-
-layout(push_constant) uniform PushConstants {
-    float temperature;
-    uint vocabSize;
-} push;
-
+layout(binding = 0) buffer Data { float x[]; };
+layout(push_constant) uniform PC { uint n; } pc;
+shared float red[256];
+shared float mx_s;
+shared float sum_s;
 void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    
-    // Find max for numerical stability
-    float maxLogit = -1e20;
-    for (uint i = 0; i < push.vocabSize; i++) {
-        maxLogit = max(maxLogit, logits[i]);
-    }
-    
-    // Compute exp and sum
-    float sum = 0.0;
-    for (uint i = 0; i < push.vocabSize; i++) {
-        float expVal = exp((logits[i] - maxLogit) / push.temperature);
-        sum += expVal;
-        probs[i] = expVal;
-    }
-    
-    // Normalize
-    for (uint i = 0; i < push.vocabSize; i++) {
-        probs[i] /= sum;
-    }
+  uint lid = gl_LocalInvocationID.x;
+  float partial_max = -3.4e38;
+  for (uint i = lid; i < pc.n; i += 256u)
+    partial_max = max(partial_max, x[i]);
+  red[lid] = partial_max;
+  barrier();
+  for (uint s = 128u; s > 0u; s >>= 1u) {
+    if (lid < s) red[lid] = max(red[lid], red[lid + s]);
+    barrier();
+  }
+  if (lid == 0u) mx_s = red[0];
+  barrier();
+  float partial_sum = 0.0;
+  for (uint i = lid; i < pc.n; i += 256u) {
+    float e = exp(x[i] - mx_s);
+    x[i] = e;
+    partial_sum += e;
+  }
+  red[lid] = partial_sum;
+  barrier();
+  for (uint s = 128u; s > 0u; s >>= 1u) {
+    if (lid < s) red[lid] += red[lid + s];
+    barrier();
+  }
+  if (lid == 0u) sum_s = red[0] + 1e-12;
+  barrier();
+  float inv = 1.0 / sum_s;
+  for (uint i = lid; i < pc.n; i += 256u)
+    x[i] *= inv;
 }
